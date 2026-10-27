@@ -99,7 +99,8 @@ export async function launchChrome({ prefix = 'tw-check-', profile, fresh = true
 
 /** push a page's page errors and console errors onto `errors`, except console errors whose text matches `ignore` (null: none) or whose source url matches `ignoreUrl` */
 export function collectErrors(page, errors, ignore = NOISE, ignoreUrl = null) {
-  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  // the stack's first app frames, so a rare error can be placed (T-1544)
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message + (e.stack ? ' @ ' + e.stack.split('\n').slice(1, 4).map((l) => l.trim().replace(/^at /, '').replace(/https?:\/\/[^/]+\//, '')).join(' < ') : '')));
   page.on('console', (m) => { if (m.type() === 'error' && !ignore?.test(m.text()) && !ignoreUrl?.test(m.location()?.url ?? '')) errors.push(m.text()); });
 }
 
@@ -107,14 +108,15 @@ export function collectErrors(page, errors, ignore = NOISE, ignoreUrl = null) {
 export const importSave = (page, bytes) => page.evaluate((data) => { const b = Uint8Array.from(data).buffer; const t = performance.now(); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, Array.from(bytes));
 
 /**
- * Wait for a demand final. Strict: the newest solve's final, none waiting. `strict: false` takes the
+ * Wait for a demand final. Strict: the newest solve's final, none waiting, never a cached result's
+ * (version 0: shown before the network arrives, it can be the only entry, T-1539). `strict: false` takes the
  * view as it is; `after` wants a version above it; `held` also waits for the clock to start;
  * `lines` wants more lines than that.
  */
 export const demandFinal = (page, { timeout = 300000, polling = 500, strict = true, after = null, held = false, lines = null } = {}) =>
   page.waitForFunction(({ strict, after, held, lines }) => {
     const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-    return !!v && (!strict || (s && v.version === s.version)) && v.final && !d.client.waiting
+    return !!v && (!strict || (s && v.version === s.version && v.version !== 0)) && v.final && !d.client.waiting
       && (after === null || v.version > after) && (!held || !window.tw.clock.held.peek()) && (lines === null || v.lines.size > lines);
   }, { strict, after, held, lines }, { timeout, polling });
 

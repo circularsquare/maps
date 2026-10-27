@@ -121,6 +121,7 @@ impl TrackWorld {
 
     /// Derive everything from the inputs (after a load or a bulk build).
     pub fn reload(&mut self) {
+        self.svc.changed_all = true;
         self.net.touch_all();
         let t = self.net.take_touch();
         self.net.derive(&t);
@@ -441,8 +442,7 @@ impl TrackWorld {
     }
 
     fn commit(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
-        let cost_before = self.net.total_cost();
-        let built_before = self.net.built_cost();
+        let (cost_before, built_before) = self.net.total_and_built_cost();
         let again = op.clone();
         let switch = match &op {
             Op::AutoTrains { id, auto, .. } if self.net.line_auto.get(*id as usize).is_some_and(|a| a.is_some() != auto.is_some()) => Some(*id),
@@ -455,7 +455,8 @@ impl TrackWorld {
             // water mask, say) must not block fixing things nearby.
             let _ = self.apply_raw(inv);
             let t2 = self.net.take_touch();
-            self.net.derive(&t2);
+            let der2 = self.net.derive(&t2);
+            self.note_lines(&t2, &der2);
             let before = self.check(&t, &der);
             let added: Vec<Issue> = issues.into_iter().filter(|i| !before.iter().any(|b| same_issue(i, b))).collect();
             if !added.is_empty() {
@@ -463,24 +464,7 @@ impl TrackWorld {
             }
             (inv, t, der) = self.apply_and_derive(again)?;
         }
-        // Lines to rebuild: set directly, on touched track, or stopping at a touched station.
-        let mut lines: Vec<u32> = t.lines.clone();
-        for &e in &der.edges {
-            lines.extend_from_slice(self.net.lines_on_edge(e));
-        }
-        if !t.stations.is_empty() {
-            for l in 0..self.net.line_count() as u32 {
-                if self.net.line_ok(l) && self.net.line_stops(l).iter().any(|s| t.stations.binary_search(s).is_ok()) {
-                    lines.push(l);
-                }
-            }
-        }
-        // a bus line's stops follow the stations near its route and the routes it crosses (T-1464)
-        if !t.stations.is_empty() || !t.lines.is_empty() {
-            lines.extend(self.net.bus_lines());
-        }
-        lines.sort_unstable();
-        lines.dedup();
+        let lines = self.lines_touched(&t, &der);
         let junction_touched = der.nodes.iter().any(|&n| self.net.node_ok(n) && self.net.node_ports[n as usize].n >= 3);
         // A station touched with no line stopping there still changes passing lines' platforms.
         let cap_dirty = !der.crossings.is_empty() || junction_touched || !t.stations.is_empty();
@@ -512,8 +496,7 @@ impl TrackWorld {
                 resources.push(r as u32);
             }
         }
-        let cost_after = self.net.total_cost();
-        let built_after = self.net.built_cost();
+        let (cost_after, built_after) = self.net.total_and_built_cost();
         let r = EditResult {
             dirty: Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc },
             cost_before,
@@ -526,16 +509,48 @@ impl TrackWorld {
         Ok((r, inv))
     }
 
+    /// Lines to rebuild after an edit: set directly, on touched track, or stopping at a touched station.
+    fn lines_touched(&self, t: &super::net::Touch, der: &super::net::Derived) -> Vec<u32> {
+        let mut lines: Vec<u32> = t.lines.clone();
+        for &e in &der.edges {
+            lines.extend_from_slice(self.net.lines_on_edge(e));
+        }
+        if !t.stations.is_empty() {
+            for l in 0..self.net.line_count() as u32 {
+                if self.net.line_ok(l) && self.net.line_stops(l).iter().any(|s| t.stations.binary_search(s).is_ok()) {
+                    lines.push(l);
+                }
+            }
+        }
+        // a bus line's stops follow the stations near its route and the routes it crosses (T-1464)
+        if !t.stations.is_empty() || !t.lines.is_empty() {
+            lines.extend(self.net.bus_lines());
+        }
+        lines.sort_unstable();
+        lines.dedup();
+        lines
+    }
+
+    /// T-1382: what the net was changed under these lines, whether or not their service is rebuilt
+    /// (an edit refused after its check, a sketch, a batch rolled back leave the net touched and
+    /// derived but the service as it was): the clock worker reads their rows again.
+    fn note_lines(&mut self, t: &super::net::Touch, der: &super::net::Derived) {
+        let lines = self.lines_touched(t, der);
+        self.svc.note_changed(&lines);
+    }
+
     fn apply_and_derive(&mut self, op: Op) -> Result<(Op, super::net::Touch, super::net::Derived), Vec<Issue>> {
         let inv = match self.apply_raw(op) {
             Ok(i) => i,
             Err(e) => {
-                self.net.take_touch();
+                let t = self.net.take_touch();
+                self.note_lines(&t, &Default::default());
                 return Err(vec![e]);
             }
         };
         let t = self.net.take_touch();
         let der = self.net.derive(&t);
+        self.note_lines(&t, &der);
         Ok((inv, t, der))
     }
 

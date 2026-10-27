@@ -81,9 +81,10 @@ import { choosing, startGameWait } from "./game/loading";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
-import { startOpenFit } from "./ui/locate";
-import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
-import { startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
+import { fitAhead, startOpenFit } from "./ui/locate";
+import { realmsAhead } from "./game/realms";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
+import { netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
@@ -213,6 +214,8 @@ if (SYNTH) {
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
         followTrack(renderer.net, world.peek()); // T-1047
+        // the placers that follow the network (the select tool's squares) run on map frames, which a paused game has none of (T-1537)
+        map.triggerRepaint();
       }
       views.networkChanged();
       blueprintBox.refreshHighlight();
@@ -519,7 +522,14 @@ render(h(ToolNotes, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
-onStationsAhead(stationsAhead);
+onStationsAhead((frame, xy) => {
+  stationsAhead(frame, xy);
+  // T-1539: the camera on the loading save's network now, so its cached figures can show before it is worked out
+  if (perfOff("cacheAhead")) return;
+  if (client.fitPending) fitAhead(frame, xy);
+  realmsAhead(frame, xy);
+});
+onNetAhead(netAhead);
 
 // ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
 if (!urlChoice) showStartMenu((choice) => {

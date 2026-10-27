@@ -426,6 +426,7 @@ export async function deleteSlot(key: string): Promise<void> {
   const done = committed(s.transaction);
   await req(s.delete(key));
   await req(s.delete(SYNC_PREFIX + key));
+  await req(s.delete(AHEAD_PREFIX + key));
   // and its demand cache (T-328) and backups (T-744)
   for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`))) s.delete(k);
   await done;
@@ -494,18 +495,44 @@ export async function readDemandCache<T>(hash: string, slot: string): Promise<T 
   }
 }
 
-/** Store a slot's demand result for a network hash, removing the slot's older one. */
+/** Store a slot's demand result for a network hash, removing the slot's older one; and, T-1539, the
+ * slot's pointer to it from the save inputs whose load works out that network (`ahead.save`), if any. */
 export async function writeDemandCache(slot: string, hash: string, v: unknown): Promise<boolean> {
+  const save = (v as { ahead?: { save?: string } } | null)?.ahead?.save;
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
     const key = `${DEMAND_PREFIX}${slot}:${hash}`;
     for (const k of await req(s.getAllKeys())) if (typeof k === "string" && k !== key && k.startsWith(`${DEMAND_PREFIX}${slot}:`)) s.delete(k);
     await req(s.put(v, key));
+    if (save) await req(s.put({ save, hash }, AHEAD_PREFIX + slot));
+    else s.delete(AHEAD_PREFIX + slot);
     await done;
     return true;
   } catch {
     return false;
+  }
+}
+
+// T-1539: each slot's pointer from the key of a save's network inputs to its demand result, which
+// then holds that network: a load shows the result before its network is worked out. Small, so a
+// load reads every slot's to find its own.
+const AHEAD_PREFIX = "ahead:";
+
+/** The demand result kept for the save inputs `save` (demandCache.ts `saveNetKey`), if any. */
+export async function readDemandAhead<T>(save: string): Promise<T | null> {
+  try {
+    const s = await store("readonly");
+    const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && k.startsWith(AHEAD_PREFIX));
+    for (const k of keys) {
+      const a = (await req(s.get(k))) as { save: string; hash: string } | undefined;
+      if (a?.save !== save) continue;
+      const v = (await req(s.get(`${DEMAND_PREFIX}${k.slice(AHEAD_PREFIX.length)}:${a.hash}`))) as T | undefined;
+      if (v) return v;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 

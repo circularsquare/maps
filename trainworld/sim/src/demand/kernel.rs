@@ -4815,6 +4815,11 @@ impl Loads {
     pub fn zero(n_st: usize, n_rn: usize) -> Loads {
         Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn] }
     }
+    /// Every figure times `k` (T-1538's estimate of one period from another).
+    pub fn scaled(&self, k: f32) -> Loads {
+        let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
+        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, rn_fare_x: s(&self.rn_fare_x) }
+    }
 }
 
 /// Each destination's strategy is walked from its farthest nodes towards it. Station flow
@@ -4863,6 +4868,32 @@ pub fn xfer_index(g: &Graph) -> XferIndex {
         }
     }
     XferIndex { at, len }
+}
+
+/// The transfers in `xfer` (laid out by `ix`) added up by the route node riders board at after
+/// changing: `transfer_pairs` with every node marked, summed by its second node (T-1530).
+pub fn transfers_in(g: &Graph, ix: &XferIndex, xfer: &[f32]) -> Vec<f32> {
+    let s = g.n_st;
+    let mut out = vec![0.0f32; g.n - s];
+    if xfer.len() != ix.len {
+        return out;
+    }
+    for v in s..g.n {
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let slot = ix.at[e];
+            if slot == NONE {
+                continue;
+            }
+            let to = g.adj_to[e] as usize;
+            for (k, d) in (g.adj_off[to] as usize..g.adj_off[to + 1] as usize).enumerate() {
+                let x = xfer[slot as usize + k];
+                if x > 0.0 {
+                    out[g.adj_to[d] as usize - s] += x;
+                }
+            }
+        }
+    }
+    out
 }
 
 /// The transfers in `xfer` (laid out by `ix`) with either end at a route node marked in `sel`

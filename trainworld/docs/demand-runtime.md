@@ -26,7 +26,8 @@ from the packs they hold (`MarketPacks.market`) whenever packs open or close: si
 composition is 15-90 ms natively for one to seven packs (the first a worker composes 0.3 s more),
 and the page still sends the
 market packs downloaded together in one `open` once none is still downloading, and a worker opens
-the `open`s waiting for it together, one composition for them all (T-889). **Packs close when
+the market packs waiting for it together, one composition for them all (T-889), and city packs one
+at a time (T-1533, "The zone in view first" below). **Packs close when
 nobody needs them** (T-301): a zone that is
 neither viewed, beside the view, reached by a station nor part of the load in hand closes in every
 worker (bare or not) once it has been so for 60 s, or at once when more than two such zones are
@@ -108,9 +109,9 @@ notes/T-174.md and notes/demand-measurements.md.
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
 5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers
 by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
-that puts both periods of a demand level on one worker (2 workers: both peaks), when they are dealt
-out level by level (high, then medium, then low: 0, 1, 4 and 2, 3), so an edit to one level's trains
-has its two periods solved side by side (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
+that puts two periods of a demand level on one worker (2 workers: high demand's three periods), when they are dealt
+out level by level (high, then medium, then low: 0, 1, 2, 3 and 4 in that order, to workers 0, 1, 0, 1, 0), so an edit to one level's trains
+has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
 commuters by mode right after a round is published, when every worker is already part way into
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
@@ -192,7 +193,8 @@ every station pair's route cost (its logsums) and, for its assignment, each dest
 (about 130 KB a destination on Japan's whole network, 1.1 GB in all). When the strategies would pass
 256 MB (`MARKET_STRATEGY_BYTES`) and no population on the worker has searched the period's graph,
 its destinations are searched one at a time, twice: the first sweep keeps every destination's route
-costs and the first 256 MB of strategies, the second assigns each destination's column of trips,
+costs (and the costs with the planned first wait, T-1430, a column at a time as each search ends,
+never a list of them: T-1482) and the first 256 MB of strategies, the second assigns each destination's column of trips,
 searching it again unless kept (no more: in WASM the heap grows a piece at a time for them, T-780).
 The longer trips' zone pairs are dealt in chunks ([regional.md](regional.md) 5.1, T-780), so their
 table, the far-zone table and the logsums shrink with the pairs. The cities' cached tables go first (the market solves last in its
@@ -213,7 +215,7 @@ run times and trains an hour are unchanged; `set_fares` with the same fare keeps
 worker keeps a period only when every population of the cluster kept it and each holds it from a whole
 solve of the cluster's period with the same inputs (`psig`, per period like `sig`), since the crowding
 is the cluster's; the other periods are solved from free flow. A train-count change at one level
-re-solves two periods (one at the low level), a new station or a fare change all five.
+re-solves that level's periods (three at high, one at medium or low), a new station or a fare change all five.
 `?perfOff=periods` re-solves every period of a cluster solved.
 
 After an edit (a solve without the round barrier) the clusters to solve go one after another, the
@@ -241,3 +243,30 @@ and one about the first group's zone after its final is answered at once. Otherw
 step through the rounds together. The worker adds
 cities up in the registry's order, never the order their packs opened in, so a network's figures
 are the same to the bit however it was loaded. T-392, T-393, notes/T-326.md.
+
+**The zone in view first** (T-1533, notes/T-1533.md). Every queue the zone in view passes through
+takes it first. Its pack downloads at high fetch priority, ahead of the markets and the other zones
+(`ensure`, `stationsAhead`); each worker opens it ahead of the packs waiting (`open.first`, and a
+`first` message moves it up when the view reaches a zone whose pack is already queued); a worker
+opens city packs one at a time and market packs together after them, and the page sends a game's
+market packs only once its city packs are in, since composing China's 370 holds a worker for a
+minute; the aux worker opens one pack at a time, so the bubbles' questions are answered in
+between. While a whole solve waits for packs still downloading or opening, the zone in view, once
+open in every worker and with no figures yet, is solved alone with no market (`solve.only`, a
+**rough solve**, `?perfOff=rough` off): it starts ahead of the opens waiting, which wait for its
+free-flow round, and its rounds show as estimates (never final: the card, the held clock and the
+cache wait for the whole solve, whose figures replace them). A cached result shown beats it. After
+an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
+lines their first figures (T-324) without waiting for its last round.
+**One period first** (T-1538, `?perfOff=estimate` off). A worker holds two or three of the five
+periods (the pool is at most 3), and on a big network each period's free flow takes seconds. So
+in a rough solve, and in that free-flow round after an edit, a worker solves its first period
+and estimates its others from it (`DemandApi::estimate`, `EverydayApi::estimate`, a few ms a
+population): the period's own network and graph, the first period's mode choice, loads and places
+scaled by the two periods' trips (commutes by the periods' shares, everyday trips purpose by
+purpose); the market, which has no estimate, is solved (accuracy: notes/T-1538.md). After an edit the estimates go out as the preview, then the worker solves those periods, which
+replaces them whole, so the cluster's rounds and final are the same to the bit. A rough solve
+crowds on from its estimates, and is never kept for a whole solve to reuse. While a solve steps through
+its rounds, the bubbles' sums for a weekend or one purpose, which only the live state holds, are
+asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
+round still show while the zone has none.

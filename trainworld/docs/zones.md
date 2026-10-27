@@ -476,7 +476,7 @@ select tool its land has a hover naming it with "Click to load" [T-1151]. Its zo
 dead space for the view: no bubbles, labels, outlines, loading greys or bars, no name in the top
 bar, and no pack, boundary or water mask fetched for viewing. Demand, the market and money never
 read it, so every figure is the same whatever is shown; a selection's far ends still draw over a
-dark realm. Before the first game is in, and when `outlines.json` is missing, every zone shows; a
+dark realm. Before the first game's stations are read (from its save as it loads, T-1539), and when `outlines.json` is missing, every zone shows; a
 zone with no realm always shows.
 
 **Track** [T-1047, `game/trackZones.ts`]: a zone is crossed by track when a point of the track's

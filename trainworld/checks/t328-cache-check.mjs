@@ -20,6 +20,7 @@ const BASE = process.env.BASE ?? 'http://localhost:6151/';
 const MODE = process.env.MODE ?? 'reload';
 const LABEL = process.env.LABEL ?? 'run';
 const RUNS = Number(process.env.RUNS ?? 3);
+const QUERY = process.env.QUERY ? `&${process.env.QUERY}` : ''; // more URL parameters (perfOff=...)
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const { ctx, close } = await launchChrome({ profile: join(OUT, 'profile'), fresh: false });
 
@@ -118,7 +119,7 @@ async function dump() {
 }
 /** one page load: events, the first final view's signature, the fresh final's */
 async function reload() {
-  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}${QUERY}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
   await waitSolved();
   await page.waitForTimeout(1500); // the cache write after the final
@@ -140,7 +141,7 @@ const out = { mode: MODE, label: LABEL, base: BASE, runs: [], errors };
 let ok = true;
 try {
   if (MODE === 'prepare') {
-    await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}${QUERY}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     const bytes = await readFile(REAL_SAVE);
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
@@ -180,19 +181,20 @@ try {
     const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {
       const o = indexedDB.open('anitabuilder', 1);
       o.onsuccess = () => {
-        const st = o.result.transaction('saves', 'readwrite').objectStore('saves');
+        const tx = o.result.transaction('saves', 'readwrite'), st = tx.objectStore('saves');
+        // resolved once committed: a reload right after a put's success could abort it (T-1539)
+        let n = 0;
+        tx.oncomplete = () => res(n);
         const k = st.getAllKeys();
         k.onsuccess = () => {
           const keys = k.result.filter((x) => typeof x === 'string' && x.startsWith('demand:'));
-          if (!keys.length) return res(0);
-          let n = 0;
           for (const key of keys) {
             const g = st.get(key);
             g.onsuccess = () => {
               const v = g.result;
               if (field === 'build') v.build = 'x' + v.build;
               else v.packs[Object.keys(v.packs)[0]] = 'x';
-              st.put(v, key).onsuccess = () => { if (++n === keys.length) res(n); };
+              st.put(v, key).onsuccess = () => { n++; };
             };
           }
         };

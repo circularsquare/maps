@@ -16,6 +16,7 @@ import type { DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand,
 import type { DemandDay } from "../game/days";
 import type { PurposeKey } from "../game/purposes";
 import type { ModeSplit } from "../game/types";
+import type { NetworkSnapshot } from "./protocol";
 
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
@@ -35,7 +36,7 @@ export interface CacheKey {
   packs: Record<string, string>;
 }
 
-type Stations = [number, number, number][]; // place, boardings, alightings
+type Stations = ([number, number, number] | [number, number, number, number])[]; // place, boardings, alightings, transfers if known (T-1530)
 interface StoredView {
   split: ModeSplit;
   trainShareByPeriod: [string, number][];
@@ -50,7 +51,21 @@ type CityFigures = Pick<DemandView, "split" | "trainShareByPeriod" | "tripsPerDa
 interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; intercity: Omit<IntercityDemand, "version"> | null }
 /** `modes`: the viewed zone's bubbles on a weekday, all purposes (`CellModes`' six arrays one after
  * another, pack cell order), when they were on show as the result landed */
-export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array } }
+export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array }; ahead?: CacheAhead }
+/** T-1539: the network a load of a save works out, when this result is that network's: `save` the
+ * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
+export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
+
+/** T-1539: a key of what a save's network snapshot is made from: its track bytes (ids dense) and the
+ * header fields the snapshot reads. Equal keys give the same snapshot under the same build (the
+ * stored result's key carries the build). */
+export async function saveNetKey(track: Uint8Array, h: { city?: string; fares?: unknown; fleet?: number; fleetFast?: number; fleetBus?: number; mode?: string }): Promise<string> {
+  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ?? null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
+  const all = new Uint8Array(track.length + head.length);
+  all.set(track);
+  all.set(head, track.length);
+  return sha256(all);
+}
 
 /** The service demand reads, as demandClient's `Service`. */
 interface Svc {
@@ -105,7 +120,7 @@ export function sameKey(a: CacheKey, b: CacheKey): string | null {
  * they come from the aux worker again). */
 export function toStored(days: DayDemand[], cities: CityId[], ids: { stationIds: string[]; lineIds: string[] }): StoredDay[] {
   const st = new Map(ids.stationIds.map((id, i) => [id, i])), ln = new Map(ids.lineIds.map((id, i) => [id, i]));
-  const stations = (m: Map<string, StationDemand>): Stations => [...m].map(([id, s]) => [st.get(id)!, s.boardings, s.alightings]);
+  const stations = (m: Map<string, StationDemand>): Stations => [...m].map(([id, s]) => s.transfers === undefined ? [st.get(id)!, s.boardings, s.alightings] : [st.get(id)!, s.boardings, s.alightings, s.transfers]);
   return days.map((d) => {
     const v = d.view!;
     const view: StoredView = {
@@ -122,7 +137,7 @@ export function toStored(days: DayDemand[], cities: CityId[], ids: { stationIds:
 
 /** The stored days as the page shows them, under `CACHE_VERSION`, with today's ids. */
 export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; lineIds: string[] }): DayDemand[] {
-  const stations = (s: Stations) => new Map(s.map(([i, b, a]) => [ids.stationIds[i], { boardings: b, alightings: a }]));
+  const stations = (s: Stations) => new Map(s.map(([i, b, a, t]): [string, StationDemand] => [ids.stationIds[i], t === undefined ? { boardings: b, alightings: a } : { boardings: b, alightings: a, transfers: t }]));
   return stored.days.map((d, day) => {
     const v = d.view;
     const view: DemandView = {

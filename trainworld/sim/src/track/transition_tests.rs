@@ -192,10 +192,10 @@ fn a_change_on_shared_track_moves_no_other_train() {
     let (mut w, ns) = corridor(6);
     let long = line(&mut w, &ns, [8.0, 6.0, 3.0]);
     let short = line(&mut w, &ns[1..5], [8.0, 6.0, 3.0]);
-    counts(&mut w, long, [10, 4, 4]);
-    counts(&mut w, short, [8, 3, 3]);
-    edit_at(&mut w, MIDDAY, "shared, more", |w| counts(w, long, [10, 6, 4]));
-    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "shared, fewer", |w| counts(w, long, [10, 2, 4]));
+    counts(&mut w, long, [2, 4, 4]);
+    counts(&mut w, short, [3, 3, 3]);
+    edit_at(&mut w, MIDDAY, "shared, more", |w| counts(w, long, [4, 4, 4]));
+    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "shared, fewer", |w| counts(w, long, [1, 4, 4]));
 }
 
 #[test]
@@ -206,8 +206,8 @@ fn a_change_on_full_track_moves_no_train() {
     let short = line(&mut w, &ns[1..4], [8.0, 3.0, 1.0]);
     counts(&mut w, long, [40, 40, 2]);
     counts(&mut w, short, [40, 40, 2]);
-    edit_at(&mut w, MIDDAY, "full, fewer", |w| counts(w, long, [40, 3, 2]));
-    edit_at(&mut w, MIDDAY + 4.0 * 3600.0, "full, fewer again", |w| counts(w, long, [40, 2, 2]));
+    edit_at(&mut w, MIDDAY, "full, fewer", |w| counts(w, long, [3, 40, 2]));
+    edit_at(&mut w, MIDDAY + 4.0 * 3600.0, "full, fewer again", |w| counts(w, long, [2, 40, 2]));
 }
 
 #[test]
@@ -225,21 +225,21 @@ fn loops_and_reversals_change_without_moving_a_train() {
     let mut stops = ns.clone();
     stops.push(ns[0]);
     let c = line(&mut w, &stops, [12.0, 6.0, 3.0]);
-    counts(&mut w, c, [8, 4, 2]);
+    counts(&mut w, c, [4, 8, 2]);
     edit_at(&mut w, MIDDAY, "circle, more", |w| counts(w, c, [8, 8, 2]));
-    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "circle, fewer", |w| counts(w, c, [8, 2, 2]));
+    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "circle, fewer", |w| counts(w, c, [2, 8, 2]));
 
     let (mut w, [a, m, _, k]) = balloon_fixture();
     let b = line(&mut w, &[a, m, k, m, a], [12.0, 6.0, 3.0]);
-    counts(&mut w, b, [8, 4, 2]);
+    counts(&mut w, b, [4, 8, 2]);
     edit_at(&mut w, MIDDAY, "balloon, more", |w| counts(w, b, [8, 8, 2]));
-    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "balloon, fewer", |w| counts(w, b, [8, 2, 2]));
+    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "balloon, fewer", |w| counts(w, b, [2, 8, 2]));
 
     let (mut w, [_, t, _, m, br]) = reversal_fixture();
     let r = line(&mut w, &[br, t, m], [6.0, 3.0, 0.0]);
-    counts(&mut w, r, [6, 2, 2]);
-    edit_at(&mut w, MIDDAY, "reversing, more", |w| counts(w, r, [6, 3, 2]));
-    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "reversing, fewer", |w| counts(w, r, [6, 1, 2]));
+    counts(&mut w, r, [2, 6, 2]);
+    edit_at(&mut w, MIDDAY, "reversing, more", |w| counts(w, r, [3, 6, 2]));
+    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "reversing, fewer", |w| counts(w, r, [1, 6, 2]));
 }
 
 #[test]
@@ -248,10 +248,10 @@ fn a_game_saved_while_trains_change_over_loads_the_same() {
     let (mut w, ns) = corridor(6);
     let long = line(&mut w, &ns, [8.0, 6.0, 3.0]);
     let short = line(&mut w, &ns[1..5], [8.0, 6.0, 3.0]);
-    counts(&mut w, long, [10, 4, 4]);
-    counts(&mut w, short, [8, 3, 3]);
+    counts(&mut w, long, [2, 4, 4]);
+    counts(&mut w, short, [3, 3, 3]);
     let before = w.svc.before_edit(&w.net, MIDDAY);
-    counts(&mut w, long, [10, 6, 4]);
+    counts(&mut w, long, [4, 4, 4]);
     w.svc.note_changes(&w.net, &before, MIDDAY);
     let t = MIDDAY + 600.0;
     w.svc.prune_eras(&w.net, t);
@@ -262,21 +262,21 @@ fn a_game_saved_while_trains_change_over_loads_the_same() {
     assert_eq!(back.svc.eras, w.svc.eras);
     assert_eq!(back.svc.shifts, w.svc.shifts);
     // the same trips, to well under a second: the rates a load settles again agree to about 1e-3 s
-    // over an hour's departures
+    // a departure, summed over those since the level's stretch began (6:00, here five hours back)
     let (a, b) = (back.svc.trips(&back.net, t, t + 3600.0), w.svc.trips(&w.net, t, t + 3600.0));
     assert_eq!(a.len(), b.len());
     for (x, y) in a.iter().zip(&b) {
-        assert!((x.line, x.run) == (y.line, y.run) && (x.draw - y.draw).abs() < 0.01 && (x.end - y.end).abs() < 0.01, "{x:?} against {y:?}");
+        assert!((x.line, x.run) == (y.line, y.run) && (x.draw - y.draw).abs() < 0.5 && (x.end - y.end).abs() < 0.5, "{x:?} against {y:?}");
     }
     assert_smooth(&mut back, t, t + 3.0 * 3600.0, t, "after loading");
 }
 
 #[test]
-fn a_change_just_before_a_new_period_moves_no_train() {
+fn a_change_just_before_a_new_level_moves_no_train() {
     let (mut w, ns) = corridor(7);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
     counts(&mut w, id, [9, 6, 3]);
-    // the evening peak starts at 16:00
-    edit_at(&mut w, 2.0 * 86400.0 + 15.9 * 3600.0, "before the peak", |w| counts(w, id, [12, 4, 3]));
+    // the evening starts at 20:00
+    edit_at(&mut w, 2.0 * 86400.0 + 19.9 * 3600.0, "before the evening", |w| counts(w, id, [12, 4, 3]));
 }
 

@@ -84,8 +84,9 @@ export type ToDemand =
    * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
    * no station reaches, opened for its bubbles and city figures alone (no rail, so no solve needs
    * it); a later `open` of the same pack without `bare` adds it to the solves as well. `drives`
-   * (T-279): the routed drives (market-drives.bin), with the rows */
-  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; drives?: Uint8Array; bare?: boolean }
+   * (T-279): the routed drives (market-drives.bin), with the rows. `first` (T-1533): the zone in
+   * view's pack, opened ahead of the opens waiting and on its own */
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; drives?: Uint8Array; bare?: boolean; first?: boolean }
   /** T-301: close city packs and zones' market packs (`markets`) no longer needed, freeing their
    * WASM memory for the next pack; `bare`: the aux worker's bare copies. A pack the solve in hand
    * covers closes when that solve ends, unless an `open` of it comes first. Answered by `closed`. */
@@ -106,6 +107,11 @@ export type ToDemand =
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */
       first?: CityId;
+      /** T-1533: a rough solve of these zones alone (no market), while the packs a whole solve needs
+       * still open: it starts ahead of the opens waiting, which wait for it */
+      only?: CityId[];
+      /** T-1538 `?perfOff=estimate`: no period's first figures estimated from another's */
+      exact0?: boolean;
       /** T-1174: every market part made afresh from the newest composition, as a worker started
        * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
       freshParts?: boolean }
@@ -115,6 +121,8 @@ export type ToDemand =
    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
+  /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */
+  | { kind: "first"; id: CityId }
   /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
   | { kind: "corridorsAgain" }
   /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
@@ -280,6 +288,11 @@ export type FromDemand =
       /** per route node, US$ in the period: the fare curve's extra on the trips first boarding there
        * (T-1143, the sims' `fare_extra`; all 0 for a straight line) */
       fareX?: Float32Array;
+      /** riders boarding at each route node after changing lines in the period, every purpose
+       * (T-1530, the sims' `transfers_in`), one block of route nodes per kind of day
+       * (`DEMAND_DAYS` order), each population's scaled as its `transfers_day` scales its pairs:
+       * the stations' transfers without a query */
+      xferIn?: Float32Array;
       /**
        * The same `seg`, `board` and `alight` split by trip purpose (T-158, the map's purpose
        * filter): `keys` (game/purposes.ts `PurposeKey`) and, per key in that order, one block of

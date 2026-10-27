@@ -102,9 +102,13 @@ radius, 18 to 56 px, times the square root of riders over 140,000, and a circle 
 never under a tenth of that radius) [T-722]: **origins** are riders starting their rail trip at the
 station, **transfers** riders changing lines there, **total** every boarding there (origins plus
 transfers). From the demand solve shown, for the day shown, every purpose whatever the purpose
-filter: boardings are the solve's per station, transfers its transfer pairs over every station
-(`complexTransfers`) counted at the station the rider boards, origins the rest; the last split
-stays while a new solve's is asked for.
+filter: boardings are the solve's per station, transfers the riders boarding there after changing
+lines, origins the rest. The transfers come with the figures [T-1530]: each period's result carries
+them per route node and kind of day (the sims' `transfers_in`, each population's scaled by the
+factor the query scales its pairs by), so every round, estimate, new line's first figures and
+cached result shows its split at once. For a solve's final the transfer pairs over every station (`complexTransfers`, counted at
+the station the rider boards) are then asked of the workers and replace them, so the final split is
+the query's; the last split stays while a newer one is asked for.
 
 Drawn on a canvas of their own over the demand bubbles and under the station names, biggest first,
 redrawn with each map frame. Entries are blue and transfers green (light #2456e0 and #169a50, dark

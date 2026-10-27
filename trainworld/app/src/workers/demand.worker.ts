@@ -24,6 +24,7 @@ import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, HOME_CITY, l
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
+import { DEMAND_DAYS } from "../game/days";
 import { scaledKnots } from "../game/fareCurve";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
@@ -76,7 +77,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" | "debugPanic" | "periods" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -90,6 +91,8 @@ let stageGroup = 0;
 const ready = new Set<JobCluster>();
 /** the group the city's cluster is solved in (undefined: kept, or in no cluster) */
 const cityGroup = (city: CityId) => { const c = jobClusters.find((c) => c.cities.includes(city)); return c ? groupOf.get(c) : undefined; };
+/** `day_factors()`, read once */
+let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
@@ -454,14 +457,24 @@ let closeEpoch = 0;
 let oneByOne = false;
 
 function openQueued(epoch: number): Promise<void> {
-  // a macrotask, so the opens already posted are delivered and join this one
-  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => {
-    const first = openQueue[0];
+  // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
+  // rough solve of the zone in view runs
+  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => roughRun ?? undefined).then(() => {
+    let first = openQueue[0];
     // taken up by an earlier batch, or after a close that comes before it in the chain
     if (!first || first.epoch !== epoch) return;
+    // T-1533: city packs before market packs: a rough solve needs no market, and composing a big
+    // game's market (hundreds of packs) holds the worker up for a minute
+    if (!first.msg.packs.length && !aux) {
+      let j = openQueue.findIndex((q) => q.epoch === epoch && q.msg.packs.length > 0 && !!q.msg.first);
+      if (j < 0) j = openQueue.findIndex((q) => q.epoch === epoch && q.msg.packs.length > 0);
+      if (j > 0) { openQueue.unshift(...openQueue.splice(j, 1)); first = openQueue[0]; }
+    }
     const isBare = !!first.msg.bare && aux;
+    // T-1533: only market packs open together (one composition for them all); a city pack opens on
+    // its own, so the zone in view's, moved ahead (`first`), waits for one pack at most
     let n = 1;
-    while (!oneByOne && n < openQueue.length && openQueue[n].epoch === epoch && (!!openQueue[n].msg.bare && aux) === isBare) n++;
+    while (!oneByOne && !aux && !first.msg.packs.length && n < openQueue.length && openQueue[n].epoch === epoch && !openQueue[n].msg.packs.length) n++;
     const batch = openQueue.splice(0, n).map((q) => q.msg);
     if (!started || dead) return;
     try {
@@ -478,7 +491,21 @@ function openQueued(epoch: number): Promise<void> {
     } catch (err) {
       failed(err);
     }
+    startRough();
   });
+}
+
+/** T-1533: a rough solve of the zone in view running; the opens waiting wait for it */
+let roughRun: Promise<void> | null = null;
+let roughEnd: (() => void) | null = null;
+function setRough(on: boolean) {
+  if (on && !roughRun) roughRun = new Promise<void>((r) => (roughEnd = r));
+  else if (!on && roughRun) { roughEnd?.(); roughRun = roughEnd = null; }
+}
+const roughReady = (job: Extract<ToDemand, { kind: "solve" }>) => !!job.only?.every((id) => cities.has(id));
+/** A rough solve starts as soon as its zones are open here, ahead of the opens still waiting. */
+function startRough() {
+  if (pending?.only && started && !busy && !dead && roughReady(pending)) void run();
 }
 
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
@@ -520,7 +547,10 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // between populations (its job keeps the cities it started with); T-889: those waiting together
     // open together
     const epoch = closeEpoch;
-    openQueue.push({ msg, epoch });
+    // T-1533: the zone in view's pack goes ahead of the opens waiting since the last close
+    let at = openQueue.length;
+    if (msg.first) while (at > 0 && openQueue[at - 1].epoch === epoch && !openQueue[at - 1].msg.first) at--;
+    openQueue.splice(at, 0, { msg, epoch });
     opening = opening.then(() => openQueued(epoch));
   } else if (msg.kind === "close") {
     closeEpoch++;
@@ -533,11 +563,21 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
     pending = pending?.freshParts && !msg.freshParts ? { ...msg, freshParts: true } : msg;
     wake?.();
-    void opening.then(() => { if (started && !busy) run(); });
+    if (msg.only) startRough();
+    else void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "go") {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
+  } else if (msg.kind === "first") {
+    const i = openQueue.findIndex((q) => q.msg.packs.some((p) => p.id === msg.id));
+    if (i > 0) {
+      const [e] = openQueue.splice(i, 1);
+      e.msg.first = true;
+      let at = i;
+      while (at > 0 && openQueue[at - 1].epoch === e.epoch && !openQueue[at - 1].msg.first) at--;
+      openQueue.splice(at, 0, e);
+    }
   } else if (msg.kind === "corridorsAgain") {
     sentTables.clear();
   } else if (msg.kind === "periods") {
@@ -603,7 +643,9 @@ const CITY_ORDER = new Map(CITIES.map((c, i) => [c.id, i]));
 
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
 function query(msg: Query) {
-  if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && BY_ROUND.has(msg.kind) && !aux) {
+  // (T-1533: and the bubbles' sums read from the live state: a weekend's, one purpose's)
+  const byRound = BY_ROUND.has(msg.kind) || msg.kind === "purposeModes" || (msg.kind === "subSums" && ((msg as { day?: number }).day ?? 0) !== 0);
+  if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && byRound && !aux) {
     const { version, round } = msg;
     // T-402: a zone in a later group of the solve in hand waits for that group's round
     const g = version === current ? cityGroup(msg.city) ?? stageGroup : stageGroup;
@@ -1119,11 +1161,17 @@ async function run() {
   busy = true;
   try {
     while (pending && started && !dead) {
+      // T-1533: a rough solve waits until its zones are open here (`startRough`)
+      if (pending.only && !roughReady(pending)) break;
+      setRough(!!pending.only);
       closeDeferred();
       if (dealt) deal();
       wasm_heap_peak(true);
-      const job = pending;
+      let job = pending;
       pending = null;
+      // (a worker's fresh market parts are for the next whole solve, not a rough one)
+      if (job.only && job.freshParts) { freshCarry = true; job = { ...job, freshParts: false }; }
+      else if (!job.only && freshCarry) { freshCarry = false; job = { ...job, freshParts: true }; }
       const n = job.net;
       setWorldFrame(n.frame);
       let setupMs = 0;
@@ -1131,14 +1179,16 @@ async function run() {
       // in the registry's order, not the order the packs happened to open in: the figures are added
       // up in it, so the same network gives the same figures to the bit however the packs arrived
       const byRegistry = <T,>(list: [CityId, T][]) => list.sort((x, y) => CITY_ORDER.get(x[0])! - CITY_ORDER.get(y[0])!);
-      const jobLocal = byRegistry([...cities]);
-      const jobEveryday = byRegistry([...everyday].filter(([id]) => cities.has(id)));
+      // T-1533: a rough solve covers its zones alone
+      const only = job.only ? new Set(job.only) : null;
+      const jobLocal = byRegistry([...cities].filter(([id]) => !only || only.has(id)));
+      const jobEveryday = byRegistry([...everyday].filter(([id]) => cities.has(id) && (!only || only.has(id))));
       jobCities = new Set(jobLocal.map(([id]) => id));
       // T-1174: after a worker is replaced, every worker composes its market afresh from the packs
       // open now, as the replacement did, so all hold the same market and corridor table
       // (T-1205: not in a worker started since, whose one composition is already from every pack open:
       // a second, fresh corridors and all, left a replacement's memory about 30% above its need)
-      if (job.freshParts && marketPacks && solvedOnce) {
+      if (job.freshParts && marketPacks && solvedOnce && !only) {
         const old = [...new Set([...marketParts.values(), ...(intercity ? [intercity] : [])])];
         marketParts.clear();
         intercity = null;
@@ -1147,7 +1197,7 @@ async function run() {
         marketPacks.forget_corridors();
         recompose();
       }
-      const regional = intercity;
+      const regional = only ? null : intercity;
       // T-326: each cluster on its own network; one this worker has solved on the same network
       // keeps its populations' results, untouched
       for (const [id, a] of jobLocal) if (!boxes.has(id)) boxes.set(id, cellBox(a.cell_xy()));
@@ -1290,7 +1340,7 @@ async function run() {
       // One round of period q for the cluster. Periods are independent. Every population of a
       // cluster advances from one frozen load vector of the whole cluster, never from whichever
       // population happened to run first. False if a newer network came meanwhile.
-      const step = async (c: JobCluster, round: number, q: number): Promise<boolean> => {
+      const step = async (c: JobCluster, round: number, q: number, skip?: Set<Population>): Promise<boolean> => {
         // the cluster's segment loads, boardings and alightings per route node: the crowding and
         // the waits for full trains (T-188) the round is solved with
         const N = jobNodes;
@@ -1310,6 +1360,7 @@ async function run() {
         const total = round > 0 ? loads() : null;
         for (const a of c.solveOrder) {
           if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; a.debug_panic(); }
+          if (total === null && skip?.has(a)) continue;
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
           // a population's pass is up to a second of one call: let a waiting query or a newer
@@ -1335,6 +1386,18 @@ async function run() {
         }
         return true;
       };
+      // T-1538: period `to`'s first figures estimated from `from`'s free flow, a few ms a population
+      // (`DemandApi::estimate`); the market, which has none, is solved, and goes in `done` so the
+      // step that solves `to` later skips it. False if a population could not estimate.
+      const estimate = (c: JobCluster, from: number, to: number, done: Set<Population>): boolean => {
+        for (const a of c.solveOrder) {
+          if (a instanceof IntercityApi) { a.solve(to); done.add(a); }
+          else if (!a.estimate(from, to)) return false;
+        }
+        for (const a of c.pops) { const b = boardsOf(a); b.free[to] = a.board(to); b.rounds[to] = undefined; }
+        return true;
+      };
+      let estimated = false;
       // T-1255: per route node of the whole network, the riders coming to the platforms of clusters
       // `cs` in period q: the free-flow pass's boardings, at least the rounds' (before the cap)
       const comeOf = (cs: JobCluster[], q: number): Float32Array => {
@@ -1343,13 +1406,40 @@ async function run() {
         for (let k = 0; k < free.length; k++) free[k] = Math.max(free[k], rounds[k]);
         return free;
       };
+      // T-1530: the transfers in at each route node of the whole network, every kind of day: a
+      // population's weekday figures times the factor its `transfers_day` scales its pairs by
+      const xferDays = (cs: JobCluster[], q: number): Float32Array => {
+        const N = jobNodes, D = DEMAND_DAYS.length, out = new Float32Array(D * N);
+        const table = dayTable ??= day_factors(), K = 2 + EVERYDAY_KEYS.length, P = PERIODS.length;
+        const f = (day: number, p: number) => (day === 0 ? 1 : table[(day * K + p) * P + q] ?? 1);
+        for (const c of cs)
+          for (const a of c.pops) {
+            const v = a.transfers_in(q);
+            if (!v.length) continue;
+            const map = viewOf(c, a).nodeGlobal;
+            const kinds = a instanceof EverydayApi ? a.kind_totals(q) : null;
+            for (let day = 0; day < D; day++) {
+              let k = 1;
+              if (a instanceof DemandApi) k = f(day, 0);
+              else if (a instanceof IntercityApi) k = f(day, K - 1);
+              else if (kinds && day !== 0) {
+                // the purposes' transfers are kept together: their rail riders' mean factor
+                let rail = 0, weighted = 0;
+                for (let i = 0; 3 * i + 1 < kinds.length; i++) { rail += kinds[3 * i + 1]; weighted += kinds[3 * i + 1] * f(day, 1 + i); }
+                k = rail > 0 ? weighted / rail : 0;
+              }
+              for (let j = 0, o = day * N; j < map.length; j++) out[o + map[j]] += v[j] * k;
+            }
+          }
+        return out;
+      };
       // period q's figures over the clusters `cs` (all of them for a result), as the state stands
-      const figures = (q: number, round: number, ms: number, cs: JobCluster[]) => {
+      const figures =(q: number, round: number, ms: number, cs: JobCluster[]) => {
         // in the job's order: the summary adds the cities up in it
         const ids = jobLocal.map(([id]) => id).filter((id) => cs.some((c) => c.cities.includes(id)));
         // the market's figures are all its parts' as they stand, whichever clusters are asked for
         const market = regional && cs.some((c) => c.market) ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
-        const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q)), fareX = sumAll(cs, a => a.fare_extra(q));
+        const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q)), fareX = sumAll(cs, a => a.fare_extra(q)), xferIn = xferDays(cs, q);
         // the account's riders coming: everyone who would ride where the queue turned riders away
         // (their trains carry no more), the riders who ride elsewhere, so the account's boardings
         // stay demand's
@@ -1383,20 +1473,38 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         const t = market?.corridorTable;
         const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
-        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
+        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       for (const c of early) {
         setUp(c);
-        for (let round = 0; round <= job.rounds && !stale; round++) {
+        // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
+        // the shown result (T-324), rather than at the cluster's last round
+        const preview = job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first);
+        const sendPreview = () => {
           for (const q of mine) {
-            if (c.reuse & (1 << q)) continue;
-            await yieldNow();
-            if (pending || !(await step(c, round, q))) { stale = true; break; }
-            release_skims();
+            const { msg, transfer } = figures(q, 0, 0, [c]);
+            sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
           }
+        };
+        for (let round = 0; round <= job.rounds && !stale; round++) {
+          let previewed = false;
+          const done = new Map<number, Set<Population>>();
+          const todo = mine.filter((q) => !(c.reuse & (1 << q)));
+          for (const q of todo) {
+            await yieldNow();
+            if (pending || !(await step(c, round, q, done.get(q)))) { stale = true; break; }
+            release_skims();
+            // T-1538: the other periods estimated from the first one's free flow, so the preview
+            // goes now; they are solved after it, replacing the estimates
+            if (preview && round === 0 && !previewed && !job.exact0 && todo.length > 1) {
+              const rest = todo.filter((r) => r !== q);
+              if (rest.every((r) => { const d = new Set<Population>(); done.set(r, d); return estimate(c, q, r, d); })) { sendPreview(); previewed = true; }
+            }
+          }
+          if (!stale && round === 0 && preview && !previewed) sendPreview();
         }
         if (stale) break;
         solved(c);
@@ -1461,7 +1569,15 @@ async function run() {
             // The period is part way between rounds until every population has had it; a query in
             // between (the yields below) must not read it.
             roundsHeld[q] = -2;
-            for (const c of late) if (!(c.reuse & (1 << q)) && !(await step(c, round, q))) { stale = true; break; }
+            // T-1538: a rough solve's free flow is the worker's first period alone, its others
+            // estimated from it
+            const from = mine.find((r) => !(late.some((c) => c.reuse & (1 << r))));
+            const est = round === 0 && !!only && !job.exact0 && from !== undefined && from !== q;
+            for (const c of late) {
+              if (c.reuse & (1 << q)) continue;
+              if (est && estimate(c, from, q, new Set())) { estimated = true; continue; }
+              if (!(await step(c, round, q))) { stale = true; break; }
+            }
             release_skims();
             if (stale) break;
             roundsHeld[q] = round;
@@ -1487,8 +1603,11 @@ async function run() {
               setupMs = 0;
             }
           }
+          // T-1533: a rough solve's estimate is out: the opens waiting go on between its populations
+          if (only && round === 0) setRough(false);
         }
-        if (!stale) for (const c of late) solved(c);
+        // (a rough solve from estimates is never kept for a whole solve to reuse)
+        if (!stale && !estimated) for (const c of late) solved(c);
       }
       if (!stale) {
         solvedOnce = true;
@@ -1499,5 +1618,7 @@ async function run() {
     failed(err);
   }
   busy = false;
+  setRough(false);
   if (!dead) closeDeferred();
 }
+let freshCarry = false;

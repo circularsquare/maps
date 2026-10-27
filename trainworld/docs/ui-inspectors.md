@@ -149,13 +149,13 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406], then
+  "High demand: 06:00 to 20:00"; weekends use the same hours) [T-406, T-1536], then
   "How many trains run in this time interval. (Which time interval a scheduled train falls into is
   determined by when the train reaches the midpoint of its route.)" (the steppers have no such
   hover) [T-823, T-835, T-1242]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
-  [T-1255] (the level's periods averaged by those platforms' riders; High is its two peaks), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
+  [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 3, yellow at 6, orange at 9, red at 15 and a deep red from 25 (`crowdColour` in
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "Where trains come full,
@@ -383,7 +383,11 @@ the Build tab's quote has rows for bus routes and new buses.
   Remove station in a second, then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
-  passage (two platforms and a walkway); in complex view only the passage. Each is outlined when
+  passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
+  passage, the first two for every station of the complex at once [T-1528]: built at all of them or
+  none, a complex where only some have it shows as not built and a click builds it at the rest,
+  priced one station's price at each station that has none, and a click on a built one removes it
+  from all. Each is outlined when
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
   in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing

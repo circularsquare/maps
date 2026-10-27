@@ -88,6 +88,12 @@ Web first, so it can be shared as a link.
   profiles; a state built at another draw anchor is taken at once. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
+  The worker itself reads from the track model only the rows an edit changed: it keeps the last
+  rows, the track model lists the lines whose service or net was touched and the stations whose name
+  was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382). The
+  run profiles' phase tables are kept per line the same way and laid end to end only when a line's
+  differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
+  once for a node while the node and the mask stay as they are (T-1540).
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and
@@ -184,7 +190,9 @@ Web first, so it can be shared as a link.
   round has landed (`HOLD_ROUND`, `holdDone`; Anita, T-347). A viewed zone open bare is final from
   its opening: a new game (no station) opens its viewed zone bare, its solve covers the market
   alone, and the card goes when the bare figures arrive (T-351). The cached result
-  (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
+  (section 11) is drawn behind the loading card without releasing it, and so are the zone in view's
+  first figures from a rough solve or an estimate (T-1533, [demand-runtime.md](demand-runtime.md)
+  "The zone in view first"). A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   **Startup order** (main.ts) [T-677]: the page sets up the map, overlay and UI, then waits on the
   start menu ([ui-panels.md](ui-panels.md) "Start menu"); the pick starts the demand pool, then the
@@ -409,6 +417,15 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the
   market's corridor table (shared by the days) copied once and transferred to it.
+  **Ahead of the network** (T-1539): a result whose network is the one a load worked out from its
+  save also holds that network snapshot and the key of the save's network inputs (a SHA-256 of the
+  save's track bytes, which a save numbers densely, and the header fields the snapshot reads:
+  `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
+  load starts (`netAhead`), before it works the network out (17-42 s on the China save), and the
+  page shows the result through the same key checks, on the stored network; the network that
+  arrives is compared with it: the same one takes its place with no second look, a different one
+  takes the result down and is looked up as on any load (`?perfOff=cacheAhead` waits for the
+  network as before).
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.
 - **Games on the account** [T-988; `workers/cloud.ts`, `game/accountGames.ts`; the server's routes

@@ -228,16 +228,30 @@ fn day_order() -> [usize; 5] {
     o
 }
 
-/// Period `p` of `day` for run `r` of a pattern: (first departure, headway, departures), or None
-/// without service.
-fn period_points(lat: &Lattice, r: usize, day: i64, p: usize) -> Option<(f64, f64, i64)> {
-    let lev = PERIOD_LEVEL[p];
+/// The day's stretches of one level: runs of consecutive periods at the same level, as (first,
+/// last) period, in day order. Departures are laid out per stretch, so a level that spans several
+/// periods keeps one headway across their boundaries (T-1536).
+pub(crate) fn level_stretches() -> Vec<(usize, usize)> {
+    let mut out: Vec<(usize, usize)> = vec![];
+    for p in day_order() {
+        match out.last_mut() {
+            Some((_, last)) if PERIOD_LEVEL[*last] == PERIOD_LEVEL[p] && PERIOD_HOURS[*last].1 == PERIOD_HOURS[p].0 => *last = p,
+            _ => out.push((p, p)),
+        }
+    }
+    out
+}
+
+/// A stretch (`level_stretches`) of `day` for run `r` of a pattern: (first departure, headway,
+/// departures), or None without service.
+fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usize)) -> Option<(f64, f64, i64)> {
+    let lev = PERIOD_LEVEL[first];
     let tph = lat.tph[lev] as f64;
     if tph <= 0.0 {
         return None;
     }
     let hw = 3600.0 / tph;
-    let (h0, h1) = PERIOD_HOURS[p];
+    let (h0, h1) = (PERIOD_HOURS[first].0, PERIOD_HOURS[last].1);
     // a period followed by no service runs to its own end, so a line's last trains of the evening
     // or of a peak are not pulled early (T-835)
     let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.tph[PERIOD_LEVEL[q]]);
@@ -279,28 +293,28 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
 }
 
 /// One run's departures from a pattern in `[a, b)` of the line's local time, with level and
-/// headway: per period, `start - lead + off + k * headway`, leaving out any closer than half a
-/// headway after the period before's last (MIN_GAP_SHARE). A pure function of the pattern, so every
-/// window agrees.
+/// headway: per stretch of one level (`level_stretches`), `start - lead + off + k * headway`,
+/// leaving out any closer than half a headway after the stretch before's last (MIN_GAP_SHARE). A
+/// pure function of the pattern, so every window agrees.
 pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
     if !(b > a) {
         return;
     }
-    let order = day_order();
+    let stretches = level_stretches();
     let d0 = (a / DAY_S).floor() as i64;
     let d1 = (b / DAY_S).floor() as i64;
-    // the last departure before day d0: the day before's last period with service
+    // the last departure before day d0: the day before's last stretch with service
     let mut last: Option<f64> = None;
-    for &p in order.iter().rev() {
-        if let Some((ps, hw, n)) = period_points(lat, r, d0 - 1, p) {
+    for &s in stretches.iter().rev() {
+        if let Some((ps, hw, n)) = stretch_points(lat, r, d0 - 1, s) {
             last = Some(ps + (n - 1) as f64 * hw);
             break;
         }
     }
-    // the next day's first periods start `lead` before it
+    // the next day's first stretch starts `lead` before it
     for day in d0..=d1 + 1 {
-        for &p in &order {
-            let Some((ps, hw, n)) = period_points(lat, r, day, p) else { continue };
+        for &s in &stretches {
+            let Some((ps, hw, n)) = stretch_points(lat, r, day, s) else { continue };
             let mut k0 = 0i64;
             if let Some(l) = last {
                 while k0 < n && ps + k0 as f64 * hw - l < MIN_GAP_SHARE * hw {
@@ -310,7 +324,7 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
             if k0 >= n {
                 continue;
             }
-            let lev = PERIOD_LEVEL[p] as u8;
+            let lev = PERIOD_LEVEL[s.0] as u8;
             let mut k = k0.max(((a - ps) / hw).floor() as i64 - 1).max(k0);
             while k < n {
                 let d = ps + k as f64 * hw;
@@ -351,6 +365,11 @@ pub struct Service {
     /// Per line, trains running when an edit changed their profile: (run, departure, seconds
     /// their drawing is moved by), so each carries on from where it was (T-206). Pruned with eras.
     pub shifts: Vec<Vec<(u8, f64, f64)>>,
+    /// T-1382: the lines whose service was rebuilt, rescheduled or had its profiles recomputed, or
+    /// that the net was changed under (`note_changed`), since `take_changed`, and whether to take
+    /// them all (a world just made or reloaded).
+    changed: Vec<u32>,
+    pub changed_all: bool,
 }
 
 fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
@@ -729,7 +748,40 @@ impl Service {
             v.dedup();
         }
         d.demand = demand;
+        self.note_changed(rebuilt);
+        self.note_changed(rescheduled);
+        self.note_changed(&d.recomputed);
         d
+    }
+
+    pub fn note_changed(&mut self, lines: &[u32]) {
+        if self.changed.len() > 1 << 20 {
+            self.changed.clear();
+            self.changed_all = true;
+        }
+        self.changed.extend_from_slice(lines);
+    }
+
+    /// The lines whose service changed since the last call, ascending; `[u32::MAX]` for all of them.
+    pub fn take_changed(&mut self) -> Vec<u32> {
+        let mut v = std::mem::take(&mut self.changed);
+        if std::mem::take(&mut self.changed_all) {
+            return vec![u32::MAX];
+        }
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
+    /// `take_changed` without taking.
+    pub fn peek_changed(&self) -> Vec<u32> {
+        if self.changed_all {
+            return vec![u32::MAX];
+        }
+        let mut v = self.changed.clone();
+        v.sort_unstable();
+        v.dedup();
+        v
     }
 
     /// Every line from scratch.

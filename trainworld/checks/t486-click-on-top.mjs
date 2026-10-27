@@ -42,15 +42,23 @@ try {
   }, P);
   await page.waitForTimeout(1500);
   const box = await page.evaluate(() => window.tw.map.getContainer().getBoundingClientRect().toJSON());
+  // the select tool's squares are placed in the map's frames (map/endMarkers.ts); the network landing
+  // asks for one (T-1537), so a paused game shows them without a nudge
+  const squares = () => page.evaluate((P) => {
+    const b = window.tw.map.getContainer().getBoundingClientRect();
+    const shown = [...document.querySelectorAll('.pi-mark')].filter((m) => m.style.display !== 'none').map((m) => { const r = m.getBoundingClientRect(); return [r.x + r.width / 2 - b.x, r.y + r.height / 2 - b.y]; });
+    return { shown: shown.length, onEnd: shown.filter(([x, y]) => Math.hypot(x - P.x, y - P.y) < 6).length };
+  }, P);
+  await page.waitForFunction(() => [...document.querySelectorAll('.pi-mark')].some((m) => m.style.display !== 'none'), undefined, { timeout: 10000 }).catch(() => {});
   const clickAt = async (x, y) => {
     await page.evaluate(() => { window.tw.selection.value = null; });
     await page.mouse.click(box.left + x, box.top + y);
     await page.waitForTimeout(300);
     return page.evaluate(() => window.tw.selection.value);
   };
-  const marks = await page.evaluate(() => [...document.querySelectorAll('.pi-mark')].filter((m) => m.style.display !== 'none').length);
+  const marks = await squares();
   const onEnd = await clickAt(P.x, P.y);
-  report('click on a track end over a bubble', ok && marks > 0 && onEnd?.kind === 'track', `(route ${ok}, ${marks} squares drawn, selected ${onEnd?.kind ?? 'nothing'}; the bubble is ${P.kind})`);
+  report('click on a track end over a bubble', ok && marks.onEnd === 1 && onEnd?.kind === 'track', `(route ${ok}, ${marks.shown} squares drawn, ${marks.onEnd} on the end, selected ${onEnd?.kind ?? 'nothing'}; the bubble is ${P.kind})`);
   const off = await clickAt(P.x + 25, P.y);
   report('click on the bubble beside it', off?.kind === P.kind, `(selected ${off?.kind ?? 'nothing'})`);
   const tip = await page.evaluate((P) => window.twViews.hover(P.x, P.y), P);

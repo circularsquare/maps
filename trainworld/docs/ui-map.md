@@ -576,9 +576,11 @@ York, whatever the game).
 Below zoom 2.5 (`CITY_MARKS_MIN_ZOOM`: the whole world) there are no circles, no hover, no click and no
 overview city bubbles [T-1046, T-1048, T-1049]. Shade and circles are hidden behind the start menu,
 and so are the city bubbles: the start menu's world map is blank. So is the map while a game loads
-(`mapBlank` in `game/loading.ts`: from the start menu's pick or a whole-game load until the loading card
-goes and the clock is released): no shade, circles, zone outlines, outside shade, loading grey, city
-bubbles or labels over the basemap; they all arrive in one step, with no fade [T-1051].
+(`mapBlank` in `game/loading.ts`: from the start menu's pick or a whole-game load until the zone in
+view's first figures of that game are in, a cached result, a rough solve's or an estimate [T-1533], or
+else until the loading card goes and the clock is released): no shade, circles, zone outlines, outside
+shade, loading grey, city bubbles or labels over the basemap; they all arrive in one step, with no fade
+[T-1051]. The card and the held clock stay until the final [T-347].
 
 ## Globe
 

@@ -345,3 +345,40 @@ fn levels_fine_is_today_coarse_keeps_rail() {
     assert!(DemandApi::at_level(&h, &b, 2).is_err());
     assert!(bias.abs() < 0.005, "rail {:+.3}% on average", 100.0 * bias);
 }
+
+/// T-1538: a period estimated from another's free flow has its own trips, and solving it after
+/// replaces the estimate whole: its figures are a fresh solve's to the bit.
+#[test]
+fn estimate_keeps_trips_and_solve_replaces_it() {
+    let (h, b, net) = small_zone();
+    let hop_km = net.hop_km();
+    let setup = || {
+        let mut a = DemandApi::new(&h, &b).unwrap();
+        let mut e = EverydayApi::beside_with(&a, &h, &b, &[]).unwrap();
+        a.set_network(&net.st_xy, &net.line_n, &net.stops, &net.times, &net.tph, &net.cars).unwrap();
+        e.set_network(&net.st_xy, &net.line_n, &net.stops, &net.times, &net.tph, &net.cars).unwrap();
+        a.set_fares(2.9, 0.1, &hop_km).unwrap();
+        e.set_fares(2.9, 0.1, &hop_km).unwrap();
+        (a, e)
+    };
+    let (mut a, mut e) = setup();
+    let (mut fa, mut fe) = setup();
+    assert!(!a.estimate(0, 1), "nothing to estimate from");
+    a.solve(0);
+    e.solve(0);
+    assert!(!a.estimate(0, 0) && !a.estimate(0, PERIODS));
+    let no_ms = |s: Vec<f64>| s.into_iter().enumerate().filter(|&(i, _)| i != 4).map(|(_, v)| v.to_bits()).collect::<Vec<_>>();
+    let bits = |v: Vec<f32>| v.into_iter().map(f32::to_bits).collect::<Vec<_>>();
+    for q in 1..PERIODS {
+        assert!(a.estimate(0, q) && e.estimate(0, q));
+        fa.solve(q);
+        fe.solve(q);
+        let near = |x: f64, y: f64| (x - y).abs() <= 1e-6 * y.abs().max(1.0);
+        assert!(near(a.summary(q)[1], fa.summary(q)[1]) && near(e.summary(q)[1], fe.summary(q)[1]), "period {q}: the estimate's trips are the period's");
+        assert!(a.summary(q)[2] > 0.0 && e.summary(q)[2] > 0.0, "period {q}: the estimate has rail");
+        a.solve(q);
+        e.solve(q);
+        assert!(no_ms(a.summary(q)) == no_ms(fa.summary(q)) && no_ms(e.summary(q)) == no_ms(fe.summary(q)), "period {q}: summaries to the bit");
+        assert!(bits(a.seg(q)) == bits(fa.seg(q)) && bits(e.seg(q)) == bits(fe.seg(q)) && bits(a.board(q)) == bits(fa.board(q)), "period {q}: loads to the bit");
+    }
+}

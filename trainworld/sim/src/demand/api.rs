@@ -382,6 +382,11 @@ impl SubOut {
     fn empty() -> SubOut {
         SubOut { rail_home: vec![], rail_work: vec![], walk_lost_home: vec![], walk_lost_work: vec![], acc_home: vec![], acc_work: vec![], od: vec![] }
     }
+    /// Every figure times `k` (T-1538's estimate of one period from another).
+    fn scaled(&self, k: f32) -> SubOut {
+        let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
+        SubOut { rail_home: s(&self.rail_home), rail_work: s(&self.rail_work), walk_lost_home: s(&self.walk_lost_home), walk_lost_work: s(&self.walk_lost_work), acc_home: s(&self.acc_home), acc_work: s(&self.acc_work), od: s(&self.od) }
+    }
     fn msa(&mut self, new: &SubOut, round: usize) {
         msa(&mut self.rail_home, &new.rail_home, round);
         msa(&mut self.rail_work, &new.rail_work, round);
@@ -1135,6 +1140,39 @@ impl DemandApi {
         true
     }
 
+    /// T-1538: a first estimate of period `to` from period `from`'s free-flow solve, in a few ms:
+    /// `to`'s own network and graph, `from`'s mode choice, loads and places scaled by the two
+    /// periods' trips (each a share of the day's). Only for figures shown before `to` is solved;
+    /// `solve(to)` replaces it whole. False unless `from` is solved at free flow.
+    pub fn estimate(&mut self, from: usize, to: usize) -> bool {
+        let Some(svc) = &self.svc else { return false };
+        let Some(Some(src)) = self.per.get(from) else { return false };
+        if to >= PERIODS || to == from || src.round != 0 {
+            return false;
+        }
+        let p = self.params(to);
+        let trips = self.gr.total * p.period_share as f64;
+        let k = if src.trips > 0.0 { trips / src.trips } else { 0.0 };
+        let net = Self::period_net(svc, to);
+        let mut g = build_graph(&net, &p);
+        if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
+            return false;
+        }
+        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
+            *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
+        }
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        let no_crowding = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &no_crowding);
+        let xi = xfer_index(&g);
+        let xfer = if xi.len == src.xi.len { src.xfer.iter().map(|x| x * k as f32).collect() } else { vec![0.0; xi.len] };
+        let mut rail_d = src.rail_d.clone();
+        rail_d.scale(k);
+        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, walk: src.walk * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer };
+        self.per[to] = Some(est);
+        true
+    }
+
     /// One crowding round for period `q` (a penalty per segment from the averaged loads, then
     /// search, mode choice and assignment again, averaged in). False if `q` has no solve yet.
     pub fn crowd(&mut self, q: usize) -> bool {
@@ -1299,6 +1337,11 @@ impl DemandApi {
     /// it first board: what the trips pay beyond the base and the first stretch's rate per km.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
         self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x, self.base.fare_w))
+    }
+    /// Riders in period `q` boarding at each route node after changing lines (T-1530); empty when
+    /// the period has no result.
+    pub fn transfers_in(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| transfers_in(&st.g, &st.xi, &st.xfer))
     }
     /// `transfers` on a kind of day (T-260): each period's riders times the commute's load factor.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

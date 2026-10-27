@@ -21,8 +21,8 @@
 //            (before T-326)
 //   periods  a cluster the demand workers solve re-solves every period, even those an edit
 //            did not touch (before T-124)
-//   spread   periods go to the demand workers by index alone, so 2 workers put both peaks on
-//            one (before T-124)
+//   spread   periods go to the demand workers by index alone, so 2 workers put three of high
+//            demand's periods on two (before T-124)
 //   split    the market's zones count as one, so every network it reaches is one cluster
 //            (before T-409)
 //   reach    every city's demand solves on its whole cluster, not the stations it reaches
@@ -41,6 +41,12 @@
 //            every frame (before T-1207)
 //   restart  an idle demand worker well above its memory need is never restarted (before T-1205)
 //   cap      the demand pool keeps its solving workers whatever their memory (before T-1205)
+//   cacheAhead  a loading save's cached demand result waits for its network, and the camera for
+//            its first state (before T-1539)
+//   estimate a worker's first figures wait for every one of its periods' free flow, none estimated
+//            from its first period's (before T-1538)
+//   splitAhead the station bubbles' origins and transfers wait for the transfer pairs asked of the
+//            workers, not the transfers the results carry (before T-1530)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -53,5 +59,5 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

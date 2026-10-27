@@ -55,7 +55,7 @@ import {
   demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { choosing, demandIdle, gameLoadArmed, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
+import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
@@ -77,7 +77,7 @@ import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
 import { saveSlotsState } from "./clockClient";
-import { readDemandCache, writeDemandCache } from "./saveFile";
+import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 
 /**
@@ -125,7 +125,7 @@ function cityOfPlace(place: number) {
  */
 /**
  * The periods solving worker `i` of `n` owns: by index (`q % n`), unless that gives one worker both
- * periods of a demand level (2 workers: both peaks), when they are dealt out level by level. An edit
+ * periods of a demand level (2 workers: high demand's three), when they are dealt out level by level. An edit
  * to one level's trains re-solves only that level's periods (T-124), so they go to different workers.
  */
 export function periodsOfWorker(i: number, n: number): number[] {
@@ -273,6 +273,8 @@ interface Solve {
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
+  /** T-1533: a rough solve of the zone in view alone, sent while a whole solve waits for packs; never final */
+  rough?: boolean;
   /** T-326: the last worker's clusters kept and solved */
   clusters?: [number, number];
   /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
@@ -634,7 +636,7 @@ class DemandClient {
   /** its bubbles, if it kept them */
   private cachedModes: StoredDemand["modes"] | null = null;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
-  cacheLog: { at: number; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean } } | null = null;
+  cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
 
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
@@ -655,7 +657,19 @@ class DemandClient {
     effect(() => { tool.value; this.prefetchViewed(); });
     // T-1373: a superholiday's rush days near or gone redo the shown views with them or without
     effect(() => { rushRun.value; this.refreshDays(); });
+    // T-1533: a game load's first figures for the zone in view show the map behind the card
+    effect(() => {
+      const seq = gameLoadSeq.value;
+      if (seq !== this.figSeq) { this.figSeq = seq; this.figDays = demandByDay.peek(); }
+      // (zoomed out, or over dead space, no zone is in view: any figures of the load)
+      const inView = !!viewedZone.value && zonesLoadForView.value;
+      const days = demandByDay.value;
+      if (days !== this.figDays && (inView ? cityDemandViews.value.has(activeCity.value) : !!days[0]?.view)) viewFiguresIn();
+    });
   }
+
+  private figSeq = -1;
+  private figDays: unknown = null;
 
   /** Worker `i`, its WASM started at once; packs follow as they arrive (T-149). Messages from a
    * worker replaced (T-1174) or retired (T-1205) since are dropped; the aux worker's index moves
@@ -710,17 +724,22 @@ class DemandClient {
       if (a?.svc !== svc || this.status.startsWith("failed")) return;
       const reached = this.reachedSet(svc);
       if (!reached?.size) return;
+      // T-1533: the zone in view's pack first, then the markets, then the other zones
+      const viewed = activeCity.peek();
+      const zones = [...this.withoutBroken(new Set(reached))].sort((x, y) => Number(y === viewed) - Number(x === viewed));
+      const fetchZone = (id: CityId) => {
+        if (this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
+        this.prefetched.add(id);
+        this.fetchCity(id, "full");
+      };
+      if (zones[0] === viewed) fetchZone(viewed);
       for (const id of new Set([...reached, ...this.nearOf(svc).markets])) {
         const item = marketItem(id);
         if (this.fetching.has(item) || this.broken.has(item)) continue;
         a.markets.add(id);
         this.fetchMarket(id);
       }
-      for (const id of this.withoutBroken(new Set(reached))) {
-        if (this.fetching.has(id) || this.fetchingUndecided.has(id)) continue;
-        this.prefetched.add(id);
-        this.fetchCity(id, "full");
-      }
+      for (const id of zones) fetchZone(id);
       this.progress();
     });
   }
@@ -895,12 +914,15 @@ class DemandClient {
     // T-318; T-889: not while a loaded game's network is on its way (the camera moving to its view
     // may pass over dead space, which hid the card for a moment)
     demandIdle.value = known?.size === 0 && !gameLoadArmed();
-    // over dead space with no station in reach there is nothing to open, the market included
-    if (need.size) for (const id of this.wantsMarket(this.latest())) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
-    if (known) this.settleAhead(known);
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
+    // T-1533: the zone in view's pack first, ahead of the markets and the other zones
+    const viewed = activeCity.peek();
+    if (need.has(viewed)) this.want(viewed, reached === null ? null : reached.has(viewed));
+    // over dead space with no station in reach there is nothing to open, the market included
+    if (need.size) for (const id of this.wantsMarket(this.latest())) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
+    if (known) this.settleAhead(known);
     // T-729: the save's list of zones reached
     if (reached?.size) addOpened(reached);
     for (const id of need) this.want(id, reached === null ? null : reached.has(id));
@@ -1040,10 +1062,10 @@ class DemandClient {
 
   /** Download one pack file, tried again after a failure (T-484: a server restarting or a pack
    * being replaced fails a fetch for a moment). */
-  private async download(file: string): Promise<Uint8Array> {
+  private async download(file: string, high = false): Promise<Uint8Array> {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await this.downloadOnce(file);
+        return await this.downloadOnce(file, high);
       } catch (err) {
         if (attempt >= RETRY_MS.length) throw err;
         await new Promise((r) => setTimeout(r, RETRY_MS[attempt]));
@@ -1055,8 +1077,10 @@ class DemandClient {
    * .bin and they are fetched again if it changed meanwhile (T-484: a pack rewritten mid-load). */
   private async downloadPack(id: CityId): Promise<[Uint8Array, Uint8Array]> {
     for (let attempt = 0; ; attempt++) {
-      const [header, bin] = await Promise.all([this.download(`${id}.json`), this.download(`${id}.bin`)]);
-      const again = await this.download(`${id}.json`);
+      // T-1533: the zone in view's pack ahead of the other downloads waiting for a connection
+      const high = id === activeCity.peek();
+      const [header, bin] = await Promise.all([this.download(`${id}.json`, high), this.download(`${id}.bin`, high)]);
+      const again = await this.download(`${id}.json`, high);
       if (sameBytes(header, again)) return [header, bin];
       if (attempt >= RETRY_MS.length) throw new Error(`${id}.json kept changing while it loaded`);
       await new Promise((r) => setTimeout(r, RETRY_MS[attempt]));
@@ -1064,8 +1088,8 @@ class DemandClient {
   }
 
   /** Download one pack file once, counting its bytes as they arrive. */
-  private async downloadOnce(file: string): Promise<Uint8Array> {
-    const r = await fetch(file === MARKET_ROWS ? file : dataUrl(file));
+  private async downloadOnce(file: string, high = false): Promise<Uint8Array> {
+    const r = await fetch(file === MARKET_ROWS ? file : dataUrl(file), high ? { priority: "high" } as RequestInit : undefined);
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
     this.downloads.set(file, d);
@@ -1114,7 +1138,8 @@ class DemandClient {
       for (const m of ms ?? []) if (m.pack.byteLength) transfer.push(m.pack.buffer as ArrayBuffer);
       if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
       if (dr) transfer.push(dr.buffer as ArrayBuffer);
-      const send = () => w.postMessage(msg, transfer);
+      // T-1533: the zone in view's pack as it is sent (a held one may go seconds later)
+      const send = () => w.postMessage(pack?.id === activeCity.peek() ? { ...msg, first: true } : msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
       else send();
     });
@@ -1154,10 +1179,10 @@ class DemandClient {
       const pack = { id, header: new TextDecoder().decode(header), bin: own };
       // T-328: hashed before the bytes go to the workers (WebCrypto copies them at the call)
       if (!bare) this.hashPack(id, [header, bin]);
-      if (!bare) return this.post({ pack });
-      const msg: ToDemand = { kind: "open", packs: [pack], bare: true };
+      if (!bare) { this.post({ pack }); return this.postMarkets(); }
+      const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(id === activeCity.peek() ? { first: true } : {}) };
       this.workers[this.computeN].postMessage(msg, [own]);
-    }).catch((err) => this.unreachable(id, id, `city pack ${id}: ${String(err)}`));
+    }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
 
   /** T-377: a zone's market pack, to every solving worker. */
@@ -1191,6 +1216,9 @@ class DemandClient {
   private heldRows: Uint8Array | null = null;
   private postMarkets() {
     if ((this.marketsDownloading.size && !perfOff("batchOpen")) || !this.marketsHeld.length) return;
+    // T-1533: and after the city packs still downloading or held: a worker composing a big game's
+    // market (a minute for China's 370) would hold up the zone in view's pack and its rough solve
+    if (this.held?.length || [...this.fetching].some((id) => !isMarket(id) && !this.bytes.has(id))) return;
     // (one closed or given up on meanwhile is not sent)
     const held = this.marketsHeld.filter((m) => this.fetching.has(marketItem(m.id)));
     this.marketsHeld = [];
@@ -1332,7 +1360,7 @@ class DemandClient {
         const w = this.waiting;
         this.waiting = null;
         this.dispatch(w.svc, w.arrivedAt);
-      }
+      } else this.roughSoon(this.waiting.svc, need);
       return;
     }
     const s = this.cur;
@@ -1341,6 +1369,42 @@ class DemandClient {
     // a city opened since the newest solve (also one that finished loading after the view moved
     // away again: it is open, so solve it rather than leave its load unfinished)
     if ([...need].some((id) => !s.cities.includes(id)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
+  }
+
+  /**
+   * T-1533: while a whole solve waits for packs still downloading or opening (a big game's load, a
+   * zone just reached), the zone in view, once open in every worker, is solved alone with no market
+   * (`only`): its figures and bubbles show as an estimate within seconds, and the whole solve's
+   * replace them. Not when the zone in view already has figures (a cached result, an earlier solve).
+   */
+  private roughSoon(svc: Service, need: Set<CityId> | null) {
+    const id = activeCity.peek();
+    if (perfOff("rough") || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
+    if (this.rough?.svc === svc && this.rough.id === id) return;
+    // a zone with figures is solved rough only for lines new since them, which take its free-flow
+    // round's figures as a whole solve's would (T-324); its other figures stay
+    const shown = cityDemandViews.peek().has(id);
+    if (shown && !this.hasNewLines(svc)) return;
+    this.rough = { svc, id };
+    const { net, layout } = packService(svc);
+    const version = ++this.version;
+    this.pushed.clear();
+    const now = performance.now();
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], showEstimates: !shown, rough: true };
+    this.log.push(this.cur);
+    if (this.log.length > 50) this.log.shift();
+    demandUpdating.value = true;
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ...(perfOff("estimate") ? { exact0: true } : {}) };
+    for (const w of this.workers) w.postMessage(msg);
+  }
+  private rough: { svc: Service; id: CityId } | null = null;
+  /** `svc` has lines the shown result has no figures for (new, or their stops changed) */
+  private hasNewLines(svc: Service): boolean {
+    const v = demandView.peek()?.version;
+    const base = this.log.find((x) => x.version === v);
+    if (!base) return false;
+    const had = new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
+    return svc.lines.some((l) => had.get(l.id) !== l.stops.join(","));
   }
 
   /** Resolves when `item` is open in every worker, or bare in the aux worker (false if the pool
@@ -1645,12 +1709,14 @@ class DemandClient {
 
   /** A whole game's network arrived: show its cached final result if there is one for exactly this
    * network, these packs and this build, and nothing of its solve is shown yet. */
-  private async tryCache(svc: Service) {
-    const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now() });
+  private async tryCache(svc: Service, ahead?: StoredDemand) {
+    const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now(), ...(ahead ? { ahead: true } : {}) });
+    // T-1539: found ahead of the network, it stands while that save still loads and no network came
+    const late = () => (ahead ? this.early?.svc !== svc || !gameLoadArmed() : this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0 && !this.cur.rough));
     try {
       const canon = canonical(svc);
       const hash = (log.hash = await sha256(canon.text));
-      const stored = await readDemandCache<StoredDemand>(hash, saveSlotsState.peek().active);
+      const stored = ahead ?? await readDemandCache<StoredDemand>(hash, saveSlotsState.peek().active);
       log.readMs = performance.now() - log.at;
       if (!stored) return void (log.miss = "none");
       // the zones it covered must be the ones this solve will cover
@@ -1663,8 +1729,10 @@ class DemandClient {
       if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
       const why = sameKey(stored, await this.keyFor(cities, markets));
       if (why) return void (log.miss = why);
-      if (this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0) || this.status.startsWith("failed")) return void (log.miss = "late");
+      // (T-1533: a rough solve's estimate gives way to it)
+      if (late() || this.status.startsWith("failed")) return void (log.miss = "late");
       this.applyCache(svc, canon, stored, hash, cities);
+      if (ahead && this.early) this.early.shown = true;
       log.shownAt = performance.now();
     } catch (err) {
       log.miss = "error: " + String(err);
@@ -1684,7 +1752,14 @@ class DemandClient {
     this.cachedCities = new Set(cities);
     this.cachedHash = hash;
     this.cachedModes = stored.modes ?? null;
+    this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
+    // T-1533: a rough solve under way gives way, so the packs it holds back open at once (a rough
+    // solve of no zone, without the barrier, ends the worker's at its next look)
+    if (this.cur?.rough) {
+      const version = ++this.version;
+      for (const w of this.workers) w.postMessage({ kind: "solve", version, net: packService(this.cur.svc).net, rounds: ROUNDS, only: [] } satisfies ToDemand);
+    }
     demandByDay.value = days;
     this.addBareViews();
     demandUpdating.value = true; // "Updating demand" until the fresh final
@@ -1711,14 +1786,18 @@ class DemandClient {
     // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
     const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
-    // the result shown at load is the same one, unless it can now add its bubbles
-    if (hash === this.cachedHash && (this.cachedModes || !cm)) return;
+    // T-1539: the network the loaded save worked out, so the next load of it shows this at once
+    const lk = this.loadKey;
+    const ahead = lk?.snapshot && lk.svcKey === JSON.stringify(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
+    // the result shown at load is the same one, unless it can now add its bubbles or its network
+    if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
-    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}) } satisfies StoredDemand);
+    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
-    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok };
+    this.cachedAhead = ahead?.save ?? null;
+    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok, ...(ahead ? { ahead: true } : {}) };
   }
 
   /**
@@ -1778,6 +1857,7 @@ class DemandClient {
 
   /** T-421: the zone in view has its final: the solve's, or its cluster's solved ahead (T-402). */
   private viewHasFinal(s: Solve): boolean {
+    if (s.rough) return false;
     if (s.published >= HOLD_ROUND) return true;
     const a = s.ahead, c = a && s.clusterRes?.get(a.key);
     return !!c && c.published >= ROUNDS && [...this.viewedSet()].every((id) => a.cities.includes(id));
@@ -1819,6 +1899,8 @@ class DemandClient {
     const frame = worldFrameEpoch.peek();
     if (c === this.focusCity && frame === this.focusFrame) return;
     this.focusFrame = frame;
+    // T-1533: the zone now in view, if its pack waits to open in a worker, opens next there
+    if (c !== this.focusCity && ((this.fetching.has(c) && !this.opened.has(c)) || (this.fetchingBare.has(c) && !this.bareOpen.has(c)))) for (const w of this.workers) w.postMessage({ kind: "first", id: c } satisfies ToDemand);
     this.focusCity = c;
     this.focusEpoch++;
     this.cellsP = null;
@@ -2109,7 +2191,7 @@ class DemandClient {
       this.start.workers[i] = { wasmMs: msg.wasmMs, openMs: msg.openMs, warmMs: msg.warmMs, memBytes: msg.memBytes };
       this.noteMem(i, msg.memBytes, msg.heap);
       // T-173: worker 0 has warmed the everyday code up; the held city packs may go
-      if (i === 0 && this.held) { const held = this.held; this.held = null; held.forEach((send) => send()); }
+      if (i === 0 && this.held) { const held = this.held; this.held = null; held.forEach((send) => send()); this.postMarkets(); }
       if (!periodsMatch(msg.periods, PERIOD_STRIDE))
         console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_LEVEL", msg.periods);
       if (!this.periodTable.length && i < this.computeN) this.periodTable = msg.periods;
@@ -2229,7 +2311,7 @@ class DemandClient {
       // T-327: every worker has the round, so the next may start
       if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: s.ahead ? 1 : 0 } satisfies ToDemand);
       this.publish(s, round);
-      if (round === ROUNDS) { this.refreshing = false; this.lastStir = performance.now(); this.memSoon(); void this.measurePage(); }
+      if (round === ROUNDS && !s.rough) { this.refreshing = false; this.lastStir = performance.now(); this.memSoon(); void this.measurePage(); }
       if (round > 0) s.byRound[round - 1] = []; // release previous typed-array snapshots
     }
     this.progress();
@@ -2238,12 +2320,21 @@ class DemandClient {
 
   /** A network from the clock worker (T-025), or the test network. */
   submitNetwork(snap: NetworkSnapshot) {
-    const svc = serviceFromSnapshot(snap);
+    let svc = serviceFromSnapshot(snap);
     const key = JSON.stringify(svc);
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
     if (gameLoad && this.ahead) this.ahead.arrived = true;
+    // T-1539: the network the loaded save works out, for the cache written for it; and the one a
+    // cached result shown ahead of it was for: the same network is that very service
+    const early = this.early;
+    this.early = null;
+    if (gameLoad && this.loadKey && !this.loadKey.svcKey) Object.assign(this.loadKey, { svcKey: key, snapshot: snap });
+    else if (gameLoad) this.loadKey = null;
+    if (early) this.aheadLog = { at: performance.now(), same: early.key === key, shown: !!early.shown };
+    if (early?.key === key) svc = early.svc;
+    else if (early?.shown) this.dropEarly(early.svc);
     if (key === this.lastKey) {
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
@@ -2260,8 +2351,50 @@ class DemandClient {
       this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since, shares: this.job.shares } : {}) };
     }
     this.send(svc, performance.now());
-    // T-328: a whole game's network: its last final result may be kept beside the save
-    if (this.hold && this.cacheOn) void this.tryCache(svc);
+    // T-328: a whole game's network: its last final result may be kept beside the save (shown
+    // already if it was found ahead of the network, T-1539)
+    if (this.hold && this.cacheOn && !(early?.shown && svc === early.svc)) void this.tryCache(svc);
+  }
+
+  // --- T-1539: a loading save's cached result, shown before its network arrives ---
+
+  /** the loading save's network key, and the network its load sent (for the cache written for it) */
+  private loadKey: { key: string; svcKey?: string; snapshot?: NetworkSnapshot } | null = null;
+  /** the network of the cached result found for the loading save, and whether it is shown */
+  private early: { svc: Service; key: string; shown?: boolean } | null = null;
+  /** the save key of the cached result shown, if it held one */
+  private cachedAhead: string | null = null;
+  /** the network's arrival after a cached result found ahead of it: when, and whether it was the same */
+  aheadLog: { at: number; same: boolean; shown: boolean } | null = null;
+
+  /**
+   * A save is loading whose network inputs have key `key` (demandCache.ts `saveNetKey`). A cached
+   * result written for the network a load of the same inputs worked out holds that network, so it
+   * shows now, through the same checks as at the network's arrival (`tryCache`), while the clock
+   * worker works the network out again. The network that arrives is compared with it.
+   */
+  netAhead(key: string) {
+    this.loadKey = { key };
+    this.early = null;
+    if (!this.cacheOn || perfOff("cacheAhead") || this.status.startsWith("failed")) return;
+    void (async () => {
+      const stored = await readDemandAhead<StoredDemand>(key);
+      if (!stored?.ahead || stored.ahead.save !== key || this.loadKey?.key !== key || !gameLoadArmed()) return;
+      const svc = serviceFromSnapshot(stored.ahead.snapshot);
+      this.early = { svc, key: JSON.stringify(svc) };
+      await this.tryCache(svc, stored);
+    })();
+  }
+
+  /** The network arrived and is not the one the cached result shown ahead of it was for. */
+  private dropEarly(svc: Service) {
+    const i = this.log.findIndex((s) => s.version === CACHE_VERSION && s.svc === svc);
+    if (i >= 0) this.log.splice(i, 1);
+    if (!this.cacheShown()) return;
+    this.cachedCities = new Set();
+    this.cachedHash = this.cachedAhead = null;
+    this.cachedModes = null;
+    demandByDay.value = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
   }
 
   /** Solve the current network again under a new version (timing runs). */
@@ -2302,7 +2435,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
     this.freshParts = false;
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
@@ -2469,14 +2602,14 @@ class DemandClient {
           continue;
         }
         let mask = 0;
-        for (const r of byMask(await this.ask((id) => ({ kind: "purposeModes", id, version: at.version, purpose: kind }), undefined, [], other, at))) {
+        for (const r of byMask(await this.ask((id) => ({ kind: "purposeModes", id, version: at.version, purpose: kind }), undefined, [], other, other === undefined ? this.liveAt(at) : at))) {
           if (r.kind !== "purposeModes" || !r.modes) return null;
           mask |= r.mask;
           if (r.modes.length === modes.length) for (let k = 0; k < modes.length; k++) modes[k] += r.modes[k];
         }
         if (mask !== ALL_PERIODS) return null;
       }
-      if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || demandView.peek()?.round !== round || shownDay.peek() !== day) return null;
+      if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || shownDay.peek() !== day) return null;
       const n = cells.n;
       const b = (k: number) => modes.subarray(k * n, (k + 1) * n);
       return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) };
@@ -2555,6 +2688,14 @@ class DemandClient {
     return p;
   }
 
+  /** T-1533: while a solve's estimates step through the rounds every worker is soon past the round
+   * shown, and a question about it comes back empty (a weekend's sums are never pushed): it is asked
+   * of the next round instead, which each worker answers on reaching it (T-327). */
+  private liveAt(at: Target): Target {
+    const t = this.target();
+    return t?.wait && t.version === at.version && t.round > at.round ? t : at;
+  }
+
   cellModes(everydayToo = true, zone?: CityId): Promise<CellModes | null> {
     this.syncFocus();
     // `zone`: a nearby zone's legs (T-276), not cached here
@@ -2583,7 +2724,7 @@ class DemandClient {
       // every worker sent its sums with the round (no question to a worker busy with the next
       // round); asked for only when one is missing. A weekend's are always asked for (T-260).
       const sent = day === 0 ? this.pushed.get(`${at.version}:${at.round}:${city}`) : undefined;
-      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
+      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
       // the bit (T-328: the cached bubbles are compared with the fresh ones)
       for (const r of [...parts].sort((a, b) => a.mask - b.mask)) {
@@ -2599,7 +2740,9 @@ class DemandClient {
       if (!sums || mask !== ALL_PERIODS) return null;
       const [r] = await this.ask((id) => ({ kind: "cellModes", id, version: at.version, sums: sums! }), [this.computeN], [sums.buffer], other, at);
       if (r?.kind !== "cellModes" || !r.modes) return null;
-      if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || demandView.peek()?.round !== round || shownDay.peek() !== day) return null;
+      // (T-1533: a later round of the same solve published meanwhile still takes these: its bubbles ask
+      // again, and an older round's beat none while a slow answer chases the rounds)
+      if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || shownDay.peek() !== day) return null;
       // Bubbles now count trip legs at each home/activity pair, both directions.
       // Old commuter queries count one person; convert before adding everyday travel.
       // (work alone for the purpose filter, T-158: `everydayToo` false)
@@ -3092,7 +3235,7 @@ class DemandClient {
     if (round === 0) s.firstAt = performance.now();
     if (s === this.cur) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     // T-232: a round before the final one is shown only when nothing final would be held instead
-    const final = round >= ROUNDS;
+    const final = round >= ROUNDS && !s.rough;
     const res = s.results as Result[];
     if (!final && !s.showEstimates) {
       // T-324: lines new or changed since the shown result have no figures; theirs come from the
@@ -3183,6 +3326,8 @@ class DemandClient {
   private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array }, round: number) {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;
+    // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
+    if (round === 0 && !final && !s.showEstimates && !perfOff("early")) return this.publishNewLines(s, res);
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     this.inOrder(async () => {
       const shown = demandByDay.peek()[0].view;
@@ -3315,6 +3460,11 @@ export function startDemand(city = HOME_CITY, newGame = false) {
 /** T-889: a loading save's built stations (clockClient's onStationsAhead). */
 export function stationsAhead(frame: FrameSpec, xy: Float64Array) {
   if (!TEST) client?.stationsAhead(frame, xy);
+}
+
+/** T-1539: a loading save's network key (clockClient's onNetAhead). */
+export function netAhead(key: string) {
+  if (!TEST) client?.netAhead(key);
 }
 
 /** Hand the clock worker's NetworkSnapshot to the pool (from clockClient's onNetworkSnapshot). */

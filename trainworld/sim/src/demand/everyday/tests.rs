@@ -130,7 +130,8 @@ fn schedules_and_directional_service_are_independent() {
         assert!(a.solve(q));
     }
     assert_eq!(a.summary(0)[2], 0.0);
-    assert!(a.summary(1)[2] > 0.0);
+    assert_eq!(a.summary(1)[2], 0.0);
+    assert!(a.summary(3)[2] > 0.0);
     assert_eq!(a.summary(4)[2], 0.0);
     // Return costs must see their own route: make homeward hops extremely slow.
     let times = [

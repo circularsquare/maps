@@ -25,8 +25,10 @@ import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from 
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
-import { UPGRADE_BITS } from "../game/upgrades";
+import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
+import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
@@ -904,11 +906,6 @@ async function masksForLoaded(net: Uint8Array) {
 
 // ---------------------------------------------------------------- state for the main thread
 
-/** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
-function autoOf(v: ArrayLike<number>): [number, number, number] | null {
-  return v.length === 3 ? [v[0], v[1], v[2]] : null;
-}
-
 function hex(c: number) {
   return "#" + c.toString(16).padStart(6, "0");
 }
@@ -923,6 +920,7 @@ function forget(all = false) {
     edgeDrawn.clear();
     edgeSpeedDrawn.clear();
     lineDrawn.clear();
+    stateRows.reset();
     postWhole();
     return;
   }
@@ -941,23 +939,20 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
   return out;
 }
 
+/** what `StateRows` needs of the worker */
+const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow };
+/** the rows of the last states, read again only where the track model says something changed (T-1382);
+ * `?patch=0` reads them whole */
+const stateRows = new StateRows();
+
 function buildState(): ClockState {
   const tq0 = performance.now();
   const a = api!;
-  const ei = a.edges_info();
-  const offEdges = new Set<number>(a.off_edges());
-  const hsrEdges = new Set<number>(a.hsr_edges());
-  const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
-  const crossovers = new Map<number, number>(Array.from(crossoverIds, (id, k) => [id, crossoverPartners[k] === 0xffffffff ? -1 : crossoverPartners[k]]));
-  const offStations = new Set<number>(a.off_stations());
-  const edges: ClockEdge[] = [];
+  if (patchMode === "0") stateRows.reset();
+  stateRows.bind(a, frame);
+  const edges = stateRows.edges(a);
   const drawn: Float32Array[] = [];
-  for (let i = 0; i < ei.length; i += 10) {
-    const id = ei[i];
-    edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), hsr: hsrEdges.has(id), crossover: crossovers.has(id), partner: crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6],
-      vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
-    });
+  for (const { id } of edges) {
     let d = edgeDrawn.get(id);
     if (!d) {
       const r = a.edge_render(id);
@@ -975,49 +970,17 @@ function buildState(): ClockState {
   }
   const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
-  const ni = a.nodes_info();
-  const nodes: ClockNode[] = [];
   const ups = upgradesOf(a);
-  for (let i = 0; i < ni.length; i += 10) {
-    const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
-    nodes.push({
-      id: ni[i], x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying: ni[i + 6] === 1,
-      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), upgrades: ups.get(ni[i]) ?? 0, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
-    });
-  }
+  const nodes = stateRows.nodes(a, rowEnv, ups);
+  const stationCount = nodes.length;
   const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
-  const li = a.lines_info();
-  const lines: ClockLine[] = [];
-  const lu = a.line_upkeep(LEVEL_HOURS), upkeepOf = new Map<number, number>();
-  for (let k = 0; k + 1 < lu.length; k += 2) upkeepOf.set(lu[k], lu[k + 1]);
-  for (let i = 0; i < li.length; i += 22) {
-    const id = li[i];
-    const ok = li[i + 2] === 1, running = li[i + 3] === 1;
-    const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
-    lines.push({
-      upkeep: upkeepOf.get(id) ?? 0,
-      id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
-      lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(a.line_auto(id)), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
-      stops: [...a.line_stops(id)], path: [...a.line_path(id)],
-      fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
-      stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
-      fast: a.line_fast(id),
-      stretchSpeeds: ok ? [...a.line_stretch_speeds(id)] : [],
-      buildCost: ok && !running ? a.line_build_cost(id) : 0,
-      trainCost: ok && !running ? a.line_train_cost(id) : 0,
-      shift: a.line_shift(id),
-      // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
-      passed: [...a.passed_stations(id)],
-      reversals: [...a.line_reversals(id)],
-      endTurns: [...a.line_end_turns(id)],
-      loopKind: a.line_loop(id),
-      ...(a.is_bus(id) ? { bus: busRow(a, id, nodes) } : {}),
-    });
-  }
+  const lines = stateRows.lines(a, rowEnv, nodes);
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
-  const nodeAt = new Map(nodes.map((n) => [n.id, n]));
+  if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
+  // a bus line's stops that are no station were added to the nodes by its row
+  const busNodes = new Map(nodes.slice(stationCount).map((n) => [n.id, n]));
   lineFirstStops = new Map(lines.map((l) => {
-    const n = nodeAt.get(l.stops[0]);
+    const n = stateRows.nodeRow(l.stops[0]) ?? busNodes.get(l.stops[0]);
     return [l.id, n ? [n.lng, n.lat] : null];
   }));
   placeLineCountries();
@@ -1053,16 +1016,26 @@ function buildState(): ClockState {
     return out;
   });
   const crossings = markPoints(a.crossings_info(), 5);
-  timing.sRest = performance.now() - tq3;
+  const tq4 = performance.now(); timing.sRest = tq4 - tq3;
+  const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
+  const tq4a = performance.now(); timing.sFull = tq4a - tq4;
+  const [totalCost, builtCost] = a.costs();
+  const blueprintCost = Math.max(totalCost - builtCost, 0);
+  const tq4b = performance.now(); timing.sSums = tq4b - tq4a;
+  const blueprintItems = Array.from(a.blueprint_cost_items());
+  const tq5 = performance.now(); timing.sCosts = tq5 - tq4; timing.sQuote = tq5 - tq4b;
+  const phases = stateRows.phases(a);
+  timing.sPhases = performance.now() - tq5; timing.nPhaseLines = stateRows.phaseReads;
+  if (patchMode === "check" && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
   return {
     version: ++version,
     markers,
-    fullTrack: [0, 1, 2].map((lev) => a.full_track(lev)),
+    fullTrack,
     crossings,
     cash: a.cash(),
-    builtCost: a.built_cost(),
-    blueprintCost: a.blueprint_cost(),
-    blueprintItems: Array.from(a.blueprint_cost_items()),
+    builtCost,
+    blueprintCost,
+    blueprintItems,
     canUndo: a.can_undo(),
     canRedo: a.can_redo(),
     edges,
@@ -1072,7 +1045,7 @@ function buildState(): ClockState {
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
-      phases: a.phases(),
+      phases,
       meta,
       samples,
       lineTable,
@@ -1845,6 +1818,9 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // T-889: the demand pool opens the zones the built stations reach while the network is worked out
   const st = TrackApi.save_stations(net);
   if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3) });
+  // T-1539: the demand result kept for this save's network can show while the network is worked out
+  // (China's 17-42 s); awaited here, since the load below holds the worker
+  if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
   await openNetwork(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
@@ -1961,28 +1937,32 @@ function sendState(service = false, effectiveAt?: number) {
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
   const r = s.render;
-  // the per-edge arrays stay here (T-1029): the network carries what the main thread needs of them
-  s.render = { phases: r.phases, meta: r.meta, samples: r.samples, lineTable: r.lineTable };
+  // the per-edge arrays stay here (T-1029): the network carries what the main thread needs of them.
+  // `r.phases` is the rows' own array (T-1540), never transferred: a copy goes where it is wanted.
+  s.render = { phases: NO_PHASES, meta: r.meta, samples: r.samples, lineTable: r.lineTable };
   if (service && running === runningLines && posted.net) {
     s.service = true;
     s.ms = [t1 - t0, 0];
     timing.state = t1 - t0;
-    keepPosted("phases", r.phases);
+    s.render.phases = r.phases.slice();
+    posted.arrays.set("phases", r.phases);
     keepPosted("meta", r.meta);
-    postState(s, [r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+    postState(s, [s.render.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
     timing.post = performance.now() - t1;
     sendTrips();
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   runningLines = running;
-  const n = networkFromState({ ...s, render: r }, netCache, true);
+  // T-1528: complexes only where a waiting room or car park is drawn once for one
+  const complexOf = s.nodes.some((x) => ((x.upgrades ?? 0) & (UPGRADE.parkRide | UPGRADE.waitingRoom)) !== 0) ? complexOfNodes() : undefined;
+  const n = networkFromState({ ...s, render: r, complexOf }, netCache, true);
   const t2 = performance.now();
-  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r }) : undefined));
+  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r, complexOf }) : undefined));
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
-  const bufs = new Set<ArrayBufferLike>([r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+  const bufs = new Set<ArrayBufferLike>([r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   for (const st of [out.track, out.lines]) for (const v of Object.values(st)) if (ArrayBuffer.isView(v) && v.byteLength) bufs.add(v.buffer);
   for (const k of SAME_FIELDS) { const v = out[k]; if (v) bufs.add(v.buffer); }
   for (const v of out.edgePts.values()) bufs.add(v.buffer);
@@ -1998,7 +1978,7 @@ function sendState(service = false, effectiveAt?: number) {
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "junctions", "marks"] as const;
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post
@@ -2020,6 +2000,7 @@ function postWhole() {
 
 const bytesOf = (v: ArrayBufferView) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
 function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): boolean {
+  if (a === b) return true;
   if (!a || a.byteLength !== b.byteLength || a.constructor !== b.constructor) return false;
   if (a.byteLength % 4 === 0 && a.byteOffset % 4 === 0 && b.byteOffset % 4 === 0) {
     const x = new Int32Array(a.buffer, a.byteOffset, a.byteLength / 4), y = new Int32Array(b.buffer, b.byteOffset, b.byteLength / 4);
@@ -2033,6 +2014,15 @@ function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): boolean 
 function keepPosted(k: string, v: ArrayBufferView) {
   posted.arrays.set(k, (v as Float32Array).slice());
 }
+/** the phase tables of the rows (`StateRows.phases`) are kept by reference, since the rows never
+ * change that array, and a copy is posted */
+function keepPostedField(out: NetworkBuffers, k: SameField, v: ArrayBufferView) {
+  if (k !== "phases") return keepPosted(k, v);
+  posted.arrays.set(k, v);
+  out.phases = (v as Float32Array).slice();
+}
+/** the phase tables of a state that does not use them (the network's are posted as changes) */
+const NO_PHASES = new Float32Array(0);
 
 /** The network as it is posted: whole (a copy of its edges' points in one buffer), or with
  * `patch` and the fields the client already has left out. */
@@ -2070,16 +2060,17 @@ function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers
       at += p.length;
     }
     out.edgePts = mine;
-    for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPosted(k, v); }
+    for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPostedField(out, k, v); }
   } else {
     const patch = { ...n.patch!, same: [] as string[], modes, ranges };
     for (const k of SAME_FIELDS) {
       const v = n[k];
       if (!v) continue;
-      if (sameBytes(posted.arrays.get(k), v)) {
+      // the phase tables are one array until a table changes (`StateRows.phases`)
+      if (k === "phases" ? posted.arrays.get(k) === v : sameBytes(posted.arrays.get(k), v)) {
         patch.same.push(k);
         (out as Record<SameField, unknown>)[k] = undefined;
-      } else keepPosted(k, v);
+      } else keepPostedField(out, k, v);
     }
     const changed = new Map<number, Float32Array>();
     const was = posted.net!.pts;
@@ -2109,6 +2100,18 @@ function checkNet(n: NetworkBuffers, full: NetworkBuffers) {
   }
   // the patch's runs rebuild the strokes from the last build's
   if (bad.length) console.error(`T-1029 check: the network built from the cache differs from a full build in ${bad.join(", ")}`);
+}
+
+/** `?patch=check`: the rows just read against a fresh read of the whole model (T-1382). The fresh
+ * read leaves the kept rows alone and its bus rows are the same ones. Pricing a planned line (an ok
+ * line not running) runs a trial that moves headway lines a little, so with one the lines are not
+ * compared here; checks/t1382-rows.mjs compares them with two models. */
+function checkRows(got: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] }, a: TrackApi, ups: Map<number, number>) {
+  const full = new StateRows().read(a, rowEnv, frame, ups);
+  const planned = got.lines.some((l) => l.ok && !l.running);
+  const keys: ("edges" | "nodes" | "lines")[] = planned ? ["edges", "nodes"] : ["edges", "nodes", "lines"];
+  const bad = keys.filter((k) => !sameValue(got[k], full[k]));
+  if (bad.length) console.error(`T-1382 check: the ${bad.join(", ")} read from changes differ from a full read`);
 }
 
 /** Rows field for field, arrays and typed arrays by value. */
@@ -2226,13 +2229,6 @@ function bookCharge(seq: number, charge: number, trains: number) {
   heldCharges.set(seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
 }
 
-/** Each station's upgrade bits (T-1281), by node; stations without any are left out. */
-function upgradesOf(a: TrackApi): Map<number, number> {
-  const u = a.station_upgrades(), out = new Map<number, number>();
-  for (let k = 0; k + 1 < u.length; k += 2) out.set(u[k], u[k + 1]);
-  return out;
-}
-
 // ---------------------------------------------------------------- the snapshot demand runs on
 
 /** T-1380: the complexes of the snapshot's built stations and of every station (`complexOfNodes`),
@@ -2261,7 +2257,7 @@ function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
       const u = ups.get(ni[i]);
-      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
+      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
       geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
     }
   }

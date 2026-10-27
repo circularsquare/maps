@@ -1361,3 +1361,7 @@ mod related_tests;
 /// T-1281: station upgrades.
 #[cfg(test)]
 mod upgrade_tests;
+
+/// T-1382: the changes the clock worker reads its state rows again for.
+#[cfg(test)]
+mod changed_tests;

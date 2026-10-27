@@ -252,7 +252,7 @@ fn periods_an_edit_did_not_touch_are_kept_exactly() {
     api.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
     api.set_fares(2.0, 0.1, &hop).unwrap();
     let kept = api.solved_mask();
-    assert_eq!(kept, 0b11010, "the medium and low periods are kept");
+    assert_eq!(kept, 0b11000, "the medium and low periods are kept");
     solve(&mut api, 0b11111 & !kept);
     let (mut fresh, ..) = small();
     fresh.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
@@ -995,6 +995,29 @@ fn walking_transfers_and_merged_stations() {
     assert!(walk > 1.02, "walking transfers: boardings / entries {walk}");
     assert!(merged > 1.02, "merged station transfers: {merged}");
     assert_eq!(st_far, st_near + 1);
+}
+
+/// T-1530: `transfers_in` is `transfers_day`'s weekday pairs added up by the node riders board at.
+#[test]
+fn transfers_in_sums_the_pairs_by_boarding_node() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    api.solve(0);
+    assert!(api.crowd_with_external(0, &api.seg(0)));
+    let into = api.transfers_in(0);
+    let nr = api.board(0).len();
+    assert_eq!(into.len(), nr);
+    let pairs = api.transfers_day(&vec![1u8; nr], 0);
+    let mut want = vec![0.0f64; nr];
+    for t in pairs.chunks(3) {
+        want[t[1] as usize] += t[2] as f64;
+    }
+    let total: f64 = want.iter().sum();
+    assert!(total > 0.0, "the two lines share a station, so some riders change");
+    for (a, b) in into.iter().zip(&want) {
+        assert!((*a as f64 - b).abs() <= 1e-3 * b.max(1.0), "{a} against {b}");
+    }
+    assert!(api.transfers_in(3).is_empty(), "no result for an unsolved period");
 }
 
 /// T-176: transfers on the real New York network (nyc_real_track.json), commutes and the

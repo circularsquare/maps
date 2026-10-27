@@ -21,7 +21,7 @@ const SECTIONS: [string, [string, string][]][] = [
     ["Shift click", "Place track and keep drawing"],
     ["Double click, Enter", "Stop drawing track, or finish a bus line"],
     ["Backspace, right click", "Take back the last piece of track or bus point"],
-    ["Right click a bus point", "Delete it"],
+    ["Right click or hold a bus point", "Delete it"],
     ["Drag a bus point", "Move it"],
     ["Click a bus route's end", "Draw from that end, or finish at the one in use"],
     ["Caps Lock", "Turn keep placing on or off"],

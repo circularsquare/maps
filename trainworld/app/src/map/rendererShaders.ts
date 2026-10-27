@@ -5,7 +5,7 @@ import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
 import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { PROJECT_GLSL } from "./gl";
-import { PARK_HALF, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_PARK, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 export const TEX_W = 2048;
 export const LINES_W = 1024;
@@ -285,7 +285,7 @@ uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_Z
                          // units per px there; the width on the ground, and the least on screen (T-553)
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
-uniform highp int u_room; // the annexes joined to the boxes instead (T-1416): 1 waiting rooms, 2 P tiles
+uniform highp int u_room; // 1: the waiting rooms joined to the boxes instead (T-1416)
 uniform float u_pixel;
 in vec3 a_st;
 in vec2 a_axis;          // half the platform along its track at its middle, local units
@@ -297,7 +297,7 @@ in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform s
                          // it is full
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
-flat out vec3 v_size;    // half length, half width; 1 a waiting room, 2 a P tile, 3 a terminal
+flat out vec3 v_size;    // half length, half width; 1 a waiting room, 3 a terminal
 flat out float v_dot;    // the dot's radius, 0 for a platform
 flat out float v_alpha;
 flat out vec4 v_crowd;
@@ -333,7 +333,7 @@ void main() {
   bool boxes = u_boxes > 0.5;
   bool sel = a_sel > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
-  bool noAnnex = u_room > 0 && (!boxes || (flags & (u_room == 1 ? ${ST_ROOM} : ${ST_PARK})) == 0 || (u_room == 2 && u_layer == 2));
+  bool noAnnex = u_room > 0 && (!boxes || (flags & ${ST_ROOM}) == 0);
   if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
@@ -400,19 +400,16 @@ void main() {
       hi += ${TERMINAL_EAR.toFixed(2)} * u_ring;
     }
     if (u_room > 0) {
-      // T-1416: an annex joined to the box's side at its middle, its inner edge inside the box's
-      // rim so the two are one white shape with one outline; the waiting room then the P tile along
-      // the platform's way, on the side annexSide.ts picked. As stationGeometry.ts stationAnnexes.
-      // The waiting room's riders stand in it from its middle out (T-219's fill).
-      bool room = (flags & ${ST_ROOM}) != 0, park = (flags & ${ST_PARK}) != 0;
+      // T-1416: the waiting room, joined to the box's side at its middle, its inner edge inside the
+      // box's rim so the two are one white shape with one outline, on the side facilityPlace.ts
+      // picked (T-1528). As stationGeometry.ts stationAnnexes. Its riders stand in it from its
+      // middle out (T-219's fill).
       vec2 qm = q[${PLATFORM_POINTS >> 1}];
       vec2 dl = q[${(PLATFORM_POINTS >> 1) + 1}] - q[${(PLATFORM_POINTS >> 1) - 1}];
       dl = length(dl) > 1e-6 ? normalize(dl) : vec2(1.0, 0.0);
       vec2 nl = vec2(-dl.y, dl.x);
       if (nl.y * ((flags & ${ST_FLIP}) != 0 ? 1.0 : -1.0) < 0.0) nl = -nl;
-      float rl = clamp(0.35 * hl, 1.2 * hw, 2.5 * hw), pa = ${PARK_HALF.toFixed(2)} * hw;
-      float span = (room ? 2.0 * rl : 0.0) + (park ? 2.0 * pa : 0.0) + (room && park ? 2.0 * u_ring : 0.0);
-      float l = u_room == 1 ? rl : pa, d = u_room == 1 ? hw : pa, at = u_room == 1 ? -0.5 * span + rl : 0.5 * span - pa;
+      float l = clamp(0.35 * hl, 1.2 * hw, 2.5 * hw), d = hw, at = 0.0;
       float edge = min(min(dot(centreAt(q, at - l) - qm, nl), dot(centreAt(q, at) - qm, nl)), dot(centreAt(q, at + l) - qm, nl));
       vec2 rc = qm + dl * at + nl * (edge + hw - 2.0 * u_ring - u_pixel + d);
       shift = along * rc.x + across * rc.y;
@@ -507,10 +504,6 @@ flat in float v_hot;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
-float sdSeg(vec2 p, vec2 a, vec2 b) {
-  vec2 ab = b - a;
-  return length(p - a - ab * clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0));
-}
 void main() {
   // along and across the platform's own centre line (T-254); a dot's own frame
   ${qUnpack("v_q")}
@@ -519,7 +512,7 @@ void main() {
   float inner = clamp(0.5 - d - u_ring, 0.0, 1.0);
   // T-1416, T-1527: a terminal's buffer stop, the platform's -axis end where the track ends, is a
   // dark bar wider than the box so it shows past a train standing in it; v_size.z 1 a waiting
-  // room, 2 a P tile, 3 a buffer stop
+  // room, 3 a buffer stop
   bool terminal = v_dot <= 0.0 && v_size.z > 2.5;
   float cap = terminal ? ${TERMINAL_CAP.toFixed(2)} * u_ring : u_ring;
   if (terminal) {
@@ -550,15 +543,6 @@ void main() {
       float r = length(s);
       float cover = share > 0.995 ? 1.0 : clamp(share * 6.2831853 * r - turn * r + 0.5, 0.0, 1.0) * clamp(turn * r + 0.5, 0.0, 1.0);
       col = mix(col, v_crowd.y > 0.5 ? u_bad : u_crowd_rgb, cover);
-    }
-    if (v_size.z > 1.5 && v_size.z < 2.5) {
-      // the park and ride's P (T-1416), upright on the screen: a stem, and a bowl on its top half
-      vec2 s = vec2(dot(v_p, v_scr.xy), dot(v_p, v_scr.zw));
-      float H = 0.6 * (v_size.y - u_ring), w = max(1.0, 0.36 * H);
-      float g = sdSeg(s, vec2(-0.5 * H, -H), vec2(-0.5 * H, H));
-      vec2 bc = vec2(0.0, 0.5 * H);
-      float bowl = s.x > 0.0 ? abs(length(s - bc) - 0.5 * H) : min(sdSeg(s, vec2(-0.5 * H, H), vec2(0.0, H)), sdSeg(s, vec2(-0.5 * H, 0.0), vec2(0.0, 0.0)));
-      col = mix(col, u_ink, clamp(0.5 * w - min(g, bowl) + 0.5, 0.0, 1.0));
     }
     o = vec4(col * a, a);
   } else {

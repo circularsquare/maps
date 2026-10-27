@@ -2652,27 +2652,32 @@ impl IntercityApi {
         let mut held = 0;
         let mut km = if self.need_km() { vec![0f32; s * s] } else { vec![] };
         let (mut col, mut dep) = (vec![], vec![]);
-        let mut entry: Vec<(u32, u32, f32)> = vec![];
+        // `Skims::entry_r` built as the sweep goes: a search writes only its destination's column of
+        // `r`, so `re` is `r` from the first destination with an entry cost on, each later column
+        // copied and its entries put in. (T-1482: listing every entry first grew a list past a GB
+        // on all of Japan, by doubling, which ran a worker out of its 4 GB.)
+        let mut re: Vec<f32> = vec![];
         for dst in (0..s).filter(|&d| self.want[d]) {
             let d = search.run(dst, Some(&mut r));
             if !km.is_empty() {
                 self.put_km(g, d.view(), dst, &mut col, &mut dep, &mut km);
             }
-            entry.extend(d.entry.iter().map(|&(src, c)| (src, dst as u32, c)));
+            if re.is_empty() && !d.entry.is_empty() {
+                re = r.clone();
+            } else if !re.is_empty() {
+                for src in 0..s {
+                    re[src * s + dst] = r[src * s + dst];
+                }
+            }
+            for &(src, c) in d.entry.iter() {
+                re[src as usize * s + dst] = c;
+            }
             if held + d.bytes() <= keep_bytes {
                 held += d.bytes();
                 kept[dst] = Some(d);
             }
         }
-        let re = (!entry.is_empty()).then(|| {
-            let mut re = r.clone();
-            for &(src, dst, c) in &entry {
-                re[src as usize * s + dst as usize] = c;
-            }
-            re
-        });
-        drop(entry);
-        let d = self.demand(g, &r, re.as_deref().unwrap_or(&r), p, q, &km);
+        let d = self.demand(g, &r, if re.is_empty() { &r } else { &re }, p, q, &km);
         drop(re);
         drop(r);
         drop(km);
@@ -3739,6 +3744,10 @@ impl IntercityApi {
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x, self.base.fare_w))
+    }
+    /// As `DemandApi::transfers_in`.
+    pub fn transfers_in(&self, q: usize) -> Vec<f32> {
+        self.per(q).map_or(vec![], |s| transfers_in(&s.g, &s.xi, &s.xfer))
     }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
