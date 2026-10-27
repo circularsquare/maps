@@ -21,19 +21,20 @@ import { UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
-import { circleColours, circleList, stationCircles, type Circle } from "./stationCircles";
+import { circleColour, circleColours, circleList, stationCircles, type Circle } from "./stationCircles";
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
 
 /** A ridership circle's riders (T-482, T-722, T-1448), as the station ridership choice counts: under
- * Total its entries and transfers apart, each by its colour on the map. The circles count every
+ * Total its entries and transfers apart, each after a dot in its end colour, and the total after a
+ * dot in the circle's own, between them (T-1531). The circles count every
  * purpose, whatever the purpose filter says. */
 function circleLines(c: Pick<Circle, "riders" | "transfers">): TipLine[] {
   const m = display.peek().stationUse, day = shownDayPhrase.peek(), col = circleColours();
   const out: TipLine[] = m === "total"
-    ? [`${forecast(c.riders)} riders ${day}`, part(col.entries, `${forecast(c.riders - c.transfers)} entries`), part(col.transfers, `${forecast(c.transfers)} transfers`)]
+    ? [part(circleColour(c.transfers / c.riders, col), `${forecast(c.riders)} riders ${day}`), part(col.entries, `${forecast(c.riders - c.transfers)} entries`), part(col.transfers, `${forecast(c.transfers)} transfers`)]
     : [part(m === "origins" ? col.entries : col.transfers, `${forecast(c.riders)} ${m === "origins" ? "entries" : "transfers"} ${day}`)];
   if (purposeFilter.peek() !== "all") out.push("All purposes");
   return out;

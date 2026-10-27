@@ -221,7 +221,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
   "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
   notes/T-1168.md, T-1391]: an icon after "Stops" (two lines crossing at a station; hover "Show
-  related lines" / "Hide related lines", one setting for every line, off at first and kept while
+  related lines" / "Hide related lines", one setting for every line, on at first and kept while
   the page is open, kept while stops are edited, the stations passed then between the rows) draws
   the stops with the lines related to the line (`TrackApi.line_related`,
   `game/relatedLayout.ts`, `RelatedStops.tsx`): the line straight down the middle of the drawing; each

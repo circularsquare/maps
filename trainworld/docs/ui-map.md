@@ -218,7 +218,7 @@ map's end squares too), a rail line's a circle. A new bus line is named "Bus n" 
 number) and shows n as its symbol.
 ## Stations
 
-- **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039; the rim, the terminal end bars and the selection outline are the map's dark grey in light and a warm grey #8f8b85 in dark, `stationInk` in `game/shadeTable.ts`, T-1432) at
+- **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039; the rim, a terminal's buffer stop and the selection outline are the map's dark grey in light and a warm grey #8f8b85 in dark, `stationInk` in `game/shadeTable.ts`, T-1432) at
   the platform's middle. Radius 1.7/4.3/5/7.4 px at zoom 9/11/12/15 for an ordinary station, 2.4/5.6/6.6/9.5
   px for one served by more than one line (`stationRadii`; linear between, held outside), never narrower than the lines through
   it, the rim 1.5 px at zoom 13. A complex's dots are one shape: every dark disc is drawn first,
