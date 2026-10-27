@@ -110,6 +110,8 @@ export type ToDemand =
       /** T-1533: a rough solve of these zones alone (no market), while the packs a whole solve needs
        * still open: it starts ahead of the opens waiting, which wait for it */
       only?: CityId[];
+      /** T-1538 `?perfOff=estimate`: no period's first figures estimated from another's */
+      exact0?: boolean;
       /** T-1174: every market part made afresh from the newest composition, as a worker started
        * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
       freshParts?: boolean }

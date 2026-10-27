@@ -4,10 +4,10 @@
 //
 // A realm is shown when the game has a station or track in it (blueprint or built; T-1047), it holds
 // the start zone, or the player showed it this session (`showRealm`; not saved); a game started on the
-// map with nothing built shows them all (T-1133). Only what is drawn
-// and loaded for viewing follows: demand, the market and money never read this. Everything is shown
-// before the first game is in, and for good when the zones' coarse outlines are missing (T-1006: the
-// shade is cut from them); a zone with no realm is always shown.
+// map with nothing built shows them all (T-1133). Only what is drawn and loaded for viewing follows:
+// demand, the market and money never read this. Everything is shown before the first game's
+// stations are read (T-1539: from its save, ahead of its first state), and for good when the zones'
+// coarse outlines are missing (T-1006: the shade is cut from them); a zone with no realm is always shown.
 
 import { computed, effect, signal } from "@preact/signals";
 import type { MultiPolygon } from "geojson";
@@ -16,6 +16,7 @@ import { CITIES, cityById, cityNear, cityWithin, outlinesIn, zoneBox, zonesTouch
 import { world } from "./world";
 import { trackZones } from "./trackZones";
 import { coarseOutlines, inOutline } from "../map/coarseOutlines";
+import { makeFrame, type FrameSpec } from "./frame";
 
 export interface Realm { id: string; name: string; countries?: string[]; units?: Record<string, string[] | "*"> }
 export const REALMS = (realmsJson as { realms: Realm[] }).realms;
@@ -123,9 +124,10 @@ const built = signal<ReadonlySet<string>>(new Set());
 
 const ALL_REALMS: ReadonlySet<string> = new Set(REALM_SPOTS.keys());
 
-/** The realms shown; null when every zone is (before the first game, or with no outlines). */
+/** The realms shown; null when every zone is (before the first game's stations, or with no outlines). */
 export const shownRealms = computed<ReadonlySet<string> | null>(() => {
-  if (realmsOff.value || !gameIn.value) return null;
+  if (realmsOff.value) return null;
+  if (!gameIn.value) return aheadRealms.value;
   const out = new Set([...built.value, ...clicked.value]);
   const s = startRealm.value;
   if (s) out.add(s);
@@ -172,6 +174,19 @@ export function setGameStart(start: CityId | null | undefined) {
   waitFor = world.peek();
 }
 let waitFor: unknown;
+
+/** T-1539: the realms of the first game's built stations as its save is read (`stationsAhead`), shown
+ * until its first state, so its cached figures drawn before then show only its realms. */
+const aheadRealms = signal<ReadonlySet<string> | null>(null);
+export function realmsAhead(frame: FrameSpec, xy: Float64Array) {
+  if (gameIn.peek()) return;
+  const f = makeFrame(frame), out = new Set<string>();
+  for (let k = 0; k + 1 < xy.length; k += 2) {
+    const r = realmOfPlace(...f.toLonLat(xy[k], xy[k + 1]));
+    if (r) out.add(r);
+  }
+  aheadRealms.value = out.size ? out : null;
+}
 
 /** The realms with a station, from each world snapshot (stations placed by position, kept by id). */
 export function followStations(): () => void {

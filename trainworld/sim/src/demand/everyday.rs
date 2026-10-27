@@ -1668,6 +1668,67 @@ impl EverydayApi {
         });
         true
     }
+    /// T-1538: `DemandApi::estimate`: period `to` from `from`'s free-flow solve, each purpose's
+    /// figures scaled by its trips in the two periods, the pairs' mode shares kept.
+    pub fn estimate(&mut self, from: usize, to: usize) -> bool {
+        let Some(svc) = &self.engine.svc else {
+            return false;
+        };
+        let Some(Some(src)) = self.per.get(from) else {
+            return false;
+        };
+        if to >= PERIODS || to == from || src.round != 0 {
+            return false;
+        }
+        let (h0, h1) = PERIOD_HOURS[to];
+        let p = Params {
+            period: to,
+            period_share: 1.0,
+            period_hours: (h1 - h0) as f32,
+            peak_hour_factor: PEAK_HOUR_FACTOR[to],
+            ..self.engine.base.everyday()
+        };
+        let net = DemandApi::period_net(svc, to);
+        let mut g = build_graph(&net, &p);
+        if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
+            return false;
+        }
+        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
+            *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
+        }
+        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+        let fac = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &fac);
+        let xi = xfer_index(&g);
+        // per purpose kind, its trips in `to` over those in `from`
+        let kinds = self.totals.len();
+        let ratio: Vec<f32> = (0..kinds)
+            .map(|k| {
+                let (a, b) = (OUTWARD[k][from] + RETURN[k][from], OUTWARD[k][to] + RETURN[k][to]);
+                if a > 0.0 { b / a } else { 0.0 }
+            })
+            .collect();
+        let probability = src.probability.clone();
+        let walk_lost: Vec<f64> = src.walk_lost.iter().zip(&ratio).map(|(w, &r)| w * r as f64).collect();
+        let (trips, rail, walk) = self.mode_totals(to, &probability, &walk_lost);
+        let k = if src.rail > 0.0 { (rail / src.rail) as f32 } else { 0.0 };
+        let parts: Vec<Part> = src.parts.iter().zip(&ratio).map(|(pt, &r)| Part { seg: pt.seg.iter().map(|x| x * r).collect(), rn_board: pt.rn_board.iter().map(|x| x * r).collect(), rn_alight: pt.rn_alight.iter().map(|x| x * r).collect() }).collect();
+        let mut loads = src.loads.scaled(k);
+        for (v, f) in [(&mut loads.seg, 0), (&mut loads.rn_board, 1), (&mut loads.rn_alight, 2)] {
+            v.iter_mut().for_each(|x| *x = 0.0);
+            for pt in &parts {
+                let src = [&pt.seg, &pt.rn_board, &pt.rn_alight][f];
+                for (x, y) in v.iter_mut().zip(src) {
+                    *x += y;
+                }
+            }
+        }
+        let xfer = if xi.len == src.xi.len { src.xfer.iter().map(|x| x * k).collect() } else { vec![0.0; xi.len] };
+        let mut rail_d = src.rail_d;
+        rail_d.scale(k as f64);
+        self.per[to] = Some(Period { rail_d, walk_lost, net, p, g, loads, parts, probability, round: 0, ms: 0.0, fac, uniform: true, seen: vec![], trips, rail, walk, xi, xfer });
+        true
+    }
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(Some(st)) = self.per.get(q) else {
             return false;

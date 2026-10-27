@@ -1337,7 +1337,7 @@ async function run() {
       // One round of period q for the cluster. Periods are independent. Every population of a
       // cluster advances from one frozen load vector of the whole cluster, never from whichever
       // population happened to run first. False if a newer network came meanwhile.
-      const step = async (c: JobCluster, round: number, q: number): Promise<boolean> => {
+      const step = async (c: JobCluster, round: number, q: number, skip?: Set<Population>): Promise<boolean> => {
         // the cluster's segment loads, boardings and alightings per route node: the crowding and
         // the waits for full trains (T-188) the round is solved with
         const N = jobNodes;
@@ -1357,6 +1357,7 @@ async function run() {
         const total = round > 0 ? loads() : null;
         for (const a of c.solveOrder) {
           if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; a.debug_panic(); }
+          if (total === null && skip?.has(a)) continue;
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
           // a population's pass is up to a second of one call: let a waiting query or a newer
@@ -1382,6 +1383,18 @@ async function run() {
         }
         return true;
       };
+      // T-1538: period `to`'s first figures estimated from `from`'s free flow, a few ms a population
+      // (`DemandApi::estimate`); the market, which has none, is solved, and goes in `done` so the
+      // step that solves `to` later skips it. False if a population could not estimate.
+      const estimate = (c: JobCluster, from: number, to: number, done: Set<Population>): boolean => {
+        for (const a of c.solveOrder) {
+          if (a instanceof IntercityApi) { a.solve(to); done.add(a); }
+          else if (!a.estimate(from, to)) return false;
+        }
+        for (const a of c.pops) { const b = boardsOf(a); b.free[to] = a.board(to); b.rounds[to] = undefined; }
+        return true;
+      };
+      let estimated = false;
       // T-1255: per route node of the whole network, the riders coming to the platforms of clusters
       // `cs` in period q: the free-flow pass's boardings, at least the rounds' (before the cap)
       const comeOf = (cs: JobCluster[], q: number): Float32Array => {
@@ -1437,21 +1450,31 @@ async function run() {
       };
       for (const c of early) {
         setUp(c);
-        for (let round = 0; round <= job.rounds && !stale; round++) {
+        // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
+        // the shown result (T-324), rather than at the cluster's last round
+        const preview = job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first);
+        const sendPreview = () => {
           for (const q of mine) {
-            if (c.reuse & (1 << q)) continue;
-            await yieldNow();
-            if (pending || !(await step(c, round, q))) { stale = true; break; }
-            release_skims();
+            const { msg, transfer } = figures(q, 0, 0, [c]);
+            sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
           }
-          // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
-          // the shown result (T-324), rather than at the cluster's last round
-          if (!stale && round === 0 && job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first)) {
-            for (const q of mine) {
-              const { msg, transfer } = figures(q, 0, 0, [c]);
-              sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
+        };
+        for (let round = 0; round <= job.rounds && !stale; round++) {
+          let previewed = false;
+          const done = new Map<number, Set<Population>>();
+          const todo = mine.filter((q) => !(c.reuse & (1 << q)));
+          for (const q of todo) {
+            await yieldNow();
+            if (pending || !(await step(c, round, q, done.get(q)))) { stale = true; break; }
+            release_skims();
+            // T-1538: the other periods estimated from the first one's free flow, so the preview
+            // goes now; they are solved after it, replacing the estimates
+            if (preview && round === 0 && !previewed && !job.exact0 && todo.length > 1) {
+              const rest = todo.filter((r) => r !== q);
+              if (rest.every((r) => { const d = new Set<Population>(); done.set(r, d); return estimate(c, q, r, d); })) { sendPreview(); previewed = true; }
             }
           }
+          if (!stale && round === 0 && preview && !previewed) sendPreview();
         }
         if (stale) break;
         solved(c);
@@ -1516,7 +1539,15 @@ async function run() {
             // The period is part way between rounds until every population has had it; a query in
             // between (the yields below) must not read it.
             roundsHeld[q] = -2;
-            for (const c of late) if (!(c.reuse & (1 << q)) && !(await step(c, round, q))) { stale = true; break; }
+            // T-1538: a rough solve's free flow is the worker's first period alone, its others
+            // estimated from it
+            const from = mine.find((r) => !(late.some((c) => c.reuse & (1 << r))));
+            const est = round === 0 && !!only && !job.exact0 && from !== undefined && from !== q;
+            for (const c of late) {
+              if (c.reuse & (1 << q)) continue;
+              if (est && estimate(c, from, q, new Set())) { estimated = true; continue; }
+              if (!(await step(c, round, q))) { stale = true; break; }
+            }
             release_skims();
             if (stale) break;
             roundsHeld[q] = round;
@@ -1545,7 +1576,8 @@ async function run() {
           // T-1533: a rough solve's estimate is out: the opens waiting go on between its populations
           if (only && round === 0) setRough(false);
         }
-        if (!stale) for (const c of late) solved(c);
+        // (a rough solve from estimates is never kept for a whole solve to reuse)
+        if (!stale && !estimated) for (const c of late) solved(c);
       }
       if (!stale) {
         solvedOnce = true;

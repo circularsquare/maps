@@ -256,7 +256,16 @@ open in every worker and with no figures yet, is solved alone with no market (`s
 free-flow round, and its rounds show as estimates (never final: the card, the held clock and the
 cache wait for the whole solve, whose figures replace them). A cached result shown beats it. After
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
-lines their first figures (T-324) without waiting for its last round. While a solve steps through
+lines their first figures (T-324) without waiting for its last round.
+**One period first** (T-1538, `?perfOff=estimate` off). A worker holds two or three of the five
+periods (the pool is at most 3), and on a big network each period's free flow takes seconds. So
+in a rough solve, and in that free-flow round after an edit, a worker solves its first period
+and estimates its others from it (`DemandApi::estimate`, `EverydayApi::estimate`, a few ms a
+population): the period's own network and graph, the first period's mode choice, loads and places
+scaled by the two periods' trips (commutes by the periods' shares, everyday trips purpose by
+purpose); the market, which has no estimate, is solved (accuracy: notes/T-1538.md). After an edit the estimates go out as the preview, then the worker solves those periods, which
+replaces them whole, so the cluster's rounds and final are the same to the bit. A rough solve
+crowds on from its estimates, and is never kept for a whole solve to reuse. While a solve steps through
 its rounds, the bubbles' sums for a weekend or one purpose, which only the live state holds, are
 asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
 round still show while the zone has none.

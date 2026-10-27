@@ -660,7 +660,8 @@ registry centre and zoom, or over New York with none [T-310].
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
 - A saved game opens with its built stations all in view (every station if none is built), as soon
-  as the game's first state arrives, before its demand: padding 70 px, no closer than zoom 12 so one
+  as the clock worker has read them from the save (`stationsAhead`, T-1539), and again at its first
+  state (the same view), before its demand: padding 70 px, no closer than zoom 12 so one
   station is not shown at street level. A save with no stations opens on the zone it started in, else
   the world map. The view is not saved. A pick from this menu, a slot opened in the saves panel and
   an imported file fit; `?continue=1` and a raw `import` message (checks) keep the camera

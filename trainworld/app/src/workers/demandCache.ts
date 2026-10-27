@@ -16,6 +16,7 @@ import type { DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand,
 import type { DemandDay } from "../game/days";
 import type { PurposeKey } from "../game/purposes";
 import type { ModeSplit } from "../game/types";
+import type { NetworkSnapshot } from "./protocol";
 
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
@@ -50,7 +51,21 @@ type CityFigures = Pick<DemandView, "split" | "trainShareByPeriod" | "tripsPerDa
 interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; intercity: Omit<IntercityDemand, "version"> | null }
 /** `modes`: the viewed zone's bubbles on a weekday, all purposes (`CellModes`' six arrays one after
  * another, pack cell order), when they were on show as the result landed */
-export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array } }
+export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array }; ahead?: CacheAhead }
+/** T-1539: the network a load of a save works out, when this result is that network's: `save` the
+ * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
+export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
+
+/** T-1539: a key of what a save's network snapshot is made from: its track bytes (ids dense) and the
+ * header fields the snapshot reads. Equal keys give the same snapshot under the same build (the
+ * stored result's key carries the build). */
+export async function saveNetKey(track: Uint8Array, h: { city?: string; fares?: unknown; fleet?: number; fleetFast?: number; fleetBus?: number; mode?: string }): Promise<string> {
+  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ?? null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
+  const all = new Uint8Array(track.length + head.length);
+  all.set(track);
+  all.set(head, track.length);
+  return sha256(all);
+}
 
 /** The service demand reads, as demandClient's `Service`. */
 interface Svc {

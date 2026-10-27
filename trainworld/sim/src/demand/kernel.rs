@@ -4815,6 +4815,11 @@ impl Loads {
     pub fn zero(n_st: usize, n_rn: usize) -> Loads {
         Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn] }
     }
+    /// Every figure times `k` (T-1538's estimate of one period from another).
+    pub fn scaled(&self, k: f32) -> Loads {
+        let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
+        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, rn_fare_x: s(&self.rn_fare_x) }
+    }
 }
 
 /// Each destination's strategy is walked from its farthest nodes towards it. Station flow

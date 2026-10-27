@@ -543,6 +543,8 @@ export type FromClock =
   | { kind: "left"; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
+  /** T-1539: the save being loaded: the key of its network's inputs (demandCache.ts `saveNetKey`) */
+  | { kind: "netAhead"; key: string }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
   | { kind: "terrain"; id: string; bytes: ArrayBuffer }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from

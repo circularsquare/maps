@@ -4,6 +4,7 @@
 
 import { effect, untracked } from "@preact/signals";
 import { activeCity, CITIES, viewedZone } from "../game/cities";
+import { makeFrame, type FrameSpec } from "../game/frame";
 import { fitView } from "../game/loading";
 import { openedZones } from "../game/openedZones";
 import { display } from "../game/ui";
@@ -65,8 +66,23 @@ function fitOpened() {
   const built = all.filter((s) => s.built);
   const at = built.length ? built : all;
   if (!at.length) return viewStart([...(openedZones.peek() ?? [])][0]);
-  const lng = at.map((s) => s.lng), lat = at.map((s) => s.lat);
-  map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: OPEN_MAX_ZOOM, duration: 0 });
+  fitAll(at.map((s) => s.lng), at.map((s) => s.lat));
+}
+
+/** T-1539: the same fit from a loading save's built stations (`stationsAhead`, x, y in `frame`), as
+ * soon as they are read: the game's figures can show before its first state. */
+export function fitAhead(frame: FrameSpec, xy: Float64Array) {
+  const f = makeFrame(frame), lng: number[] = [], lat: number[] = [];
+  for (let k = 0; k + 1 < xy.length; k += 2) {
+    const [x, y] = f.toLonLat(xy[k], xy[k + 1]);
+    lng.push(x);
+    lat.push(y);
+  }
+  if (lng.length) fitAll(lng, lat);
+}
+
+function fitAll(lng: number[], lat: number[]) {
+  live.map?.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: OPEN_MAX_ZOOM, duration: 0 });
 }
 
 /** The map fitted to a line's stops. */

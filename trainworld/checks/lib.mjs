@@ -107,14 +107,15 @@ export function collectErrors(page, errors, ignore = NOISE, ignoreUrl = null) {
 export const importSave = (page, bytes) => page.evaluate((data) => { const b = Uint8Array.from(data).buffer; const t = performance.now(); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, Array.from(bytes));
 
 /**
- * Wait for a demand final. Strict: the newest solve's final, none waiting. `strict: false` takes the
+ * Wait for a demand final. Strict: the newest solve's final, none waiting, never a cached result's
+ * (version 0: shown before the network arrives, it can be the only entry, T-1539). `strict: false` takes the
  * view as it is; `after` wants a version above it; `held` also waits for the clock to start;
  * `lines` wants more lines than that.
  */
 export const demandFinal = (page, { timeout = 300000, polling = 500, strict = true, after = null, held = false, lines = null } = {}) =>
   page.waitForFunction(({ strict, after, held, lines }) => {
     const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-    return !!v && (!strict || (s && v.version === s.version)) && v.final && !d.client.waiting
+    return !!v && (!strict || (s && v.version === s.version && v.version !== 0)) && v.final && !d.client.waiting
       && (after === null || v.version > after) && (!held || !window.tw.clock.held.peek()) && (lines === null || v.lines.size > lines);
   }, { strict, after, held, lines }, { timeout, polling });
 

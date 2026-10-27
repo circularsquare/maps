@@ -104,6 +104,11 @@ let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array) => void) | null = n
 export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array) => void) {
   stationsAheadSink = f;
 }
+let netAheadSink: ((key: string) => void) | null = null;
+/** T-1539: call `f` with a loading save's `saveNetKey`, before its first snapshot. */
+export function onNetAhead(f: (key: string) => void) {
+  netAheadSink = f;
+}
 
 
 type StateKind = "load" | "redraw" | "network" | "state";
@@ -550,6 +555,8 @@ export class ClockClient {
   private fitNext = false;
   private fitState = false;
   fitNextGame() { this.fitNext = true; }
+  /** the game loading now was opened by the player (T-1539: its built stations fit the camera ahead) */
+  get fitPending() { return this.fitNext; }
   /** T-1196: what to do once the worker has saved and let go of the game in hand */
   private onLeft: (() => void) | null = null;
   leave(pending: PendingLoad | undefined, then: () => void) {
@@ -761,6 +768,9 @@ export class ClockClient {
         break;
       case "stationsAhead":
         stationsAheadSink?.(msg.frame, msg.xy);
+        break;
+      case "netAhead":
+        netAheadSink?.(msg.key);
         break;
       case "terrain":
         addTerrainGrid(msg.id, msg.bytes);

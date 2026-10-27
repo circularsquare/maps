@@ -4,7 +4,9 @@
 // on the world save, a new line (its first figures), and the bubbles turned off and on. Target 5 s.
 // Cases KNOWN to miss it on this machine are reported and do not fail the check (notes/T-1533.md).
 //   BASE=http://localhost:6101/ node trainworld/checks/t1533-view-first.mjs
-// CASES=load,pan,line,view (default all but china); CHINA=1 adds china; OUT a JSON of every sample.
+// CASES=load,pan,line,view (default all but china); CHINA=1 adds china (T-1539: then the save picked
+// again zoomed out, its cached result before its network); OUT a JSON of every sample; QUERY more
+// URL parameters for every page (perfOff=estimate,cacheAhead: before T-1538 and T-1539).
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { launchChrome, importSave, demandFinal, buildLine, collectErrors, REAL_SAVE, MAPS, ARTIFACTS, ANGLE } from './lib.mjs';
@@ -13,6 +15,7 @@ const BASE = process.env.BASE ?? 'http://localhost:6101/';
 const TARGET = Number(process.env.TARGET ?? 5000);
 const CASES = (process.env.CASES ?? 'load,pan,line,view').split(',').concat(process.env.CHINA === '1' ? ['china'] : []);
 const OUT = process.env.OUT ?? null;
+const Q = process.env.QUERY ? `&${process.env.QUERY}` : '';
 const WORLD_SAVE = `${ARTIFACTS}world-map-day73.save`;
 // (at the maps root of the main tree, which an agent tree does not copy)
 const CHINA_SAVE = process.env.CHINA_SAVE ?? [`${MAPS}t1156-all-china.save`, 'C:/Users/anita/projects/maps/t1156-all-china.save'].find((f) => existsSync(f));
@@ -48,7 +51,7 @@ async function until(page, t0, ok, limit) {
 
 /** a save into the browser's slot, the bubbles on, then the start menu */
 async function prepare(page, file) {
-  await page.goto(`${BASE}?debug=1&continue=1&paused=1`);
+  await page.goto(`${BASE}?debug=1&continue=1&paused=1${Q}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw.lastSaved, undefined, { timeout: 180000 });
   const before = await page.evaluate(() => window.tw.lastSaved.peek() ?? 0);
   await importSave(page, await readFile(file));
@@ -60,7 +63,7 @@ async function prepare(page, file) {
   await page.waitForTimeout(500);
 }
 async function pick(page) {
-  await page.goto(`${BASE}?debug=1`);
+  await page.goto(`${BASE}?debug=1${Q}`);
   await page.waitForSelector('.start-menu .start-save', { timeout: 60000 });
   return page.evaluate(() => { const t = performance.now(); document.querySelector('.start-menu .start-save').click(); return t; });
 }
@@ -138,7 +141,7 @@ if (CASES.includes('pan')) await withPage(async (page) => {
 });
 
 if (CASES.includes('line')) await withPage(async (page) => {
-  await page.goto(`${BASE}?new=1&debug=1`);
+  await page.goto(`${BASE}?new=1&debug=1${Q}`);
   await page.waitForFunction(() => !!window.twDemand && !!window.twViews && !!window.tw?.map, undefined, { timeout: 120000 });
   await demandFinal(page, { held: true, timeout: 300000 });
   await page.evaluate(() => { const d = window.tw.display; d.value = { ...d.value, commuters: true, commuterEnd: 'work' }; });
@@ -162,6 +165,13 @@ if (CASES.includes('china')) await withPage(async (page) => {
   const r = await until(page, t0, (s) => s.ms > 600 && bubbles(s), 900000);
   row('china wuhan', r.ms, '(jumped to while the save loads)');
   all.push({ name: 'china wuhan', samples: r.samples });
+  // T-1539: picked again, zoomed out on no zone: its cached result, ahead of the clock worker's network
+  await demandFinal(page, { held: true, timeout: 900000 });
+  await page.waitForFunction(() => !!window.twDemand.client.cacheLog?.wrote, undefined, { timeout: 120000 }).catch(() => {});
+  const t1 = await pick(page);
+  const c = await until(page, t1, (s) => s.zoom <= 8.5 && s.inter > 0, 600000);
+  row('china cached', c.ms, '(zoomed out, its cached result)');
+  all.push({ name: 'china cached', samples: c.samples });
 });
 
 if (OUT) await writeFile(OUT, JSON.stringify({ rows, errors, all }, null, 1));

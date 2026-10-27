@@ -77,7 +77,7 @@ import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
 import { saveSlotsState } from "./clockClient";
-import { readDemandCache, writeDemandCache } from "./saveFile";
+import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 
 /**
@@ -636,7 +636,7 @@ class DemandClient {
   /** its bubbles, if it kept them */
   private cachedModes: StoredDemand["modes"] | null = null;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
-  cacheLog: { at: number; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean } } | null = null;
+  cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
 
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
@@ -1394,7 +1394,7 @@ class DemandClient {
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id] };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ...(perfOff("estimate") ? { exact0: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
   }
   private rough: { svc: Service; id: CityId } | null = null;
@@ -1709,12 +1709,14 @@ class DemandClient {
 
   /** A whole game's network arrived: show its cached final result if there is one for exactly this
    * network, these packs and this build, and nothing of its solve is shown yet. */
-  private async tryCache(svc: Service) {
-    const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now() });
+  private async tryCache(svc: Service, ahead?: StoredDemand) {
+    const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now(), ...(ahead ? { ahead: true } : {}) });
+    // T-1539: found ahead of the network, it stands while that save still loads and no network came
+    const late = () => (ahead ? this.early?.svc !== svc || !gameLoadArmed() : this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0 && !this.cur.rough));
     try {
       const canon = canonical(svc);
       const hash = (log.hash = await sha256(canon.text));
-      const stored = await readDemandCache<StoredDemand>(hash, saveSlotsState.peek().active);
+      const stored = ahead ?? await readDemandCache<StoredDemand>(hash, saveSlotsState.peek().active);
       log.readMs = performance.now() - log.at;
       if (!stored) return void (log.miss = "none");
       // the zones it covered must be the ones this solve will cover
@@ -1728,8 +1730,9 @@ class DemandClient {
       const why = sameKey(stored, await this.keyFor(cities, markets));
       if (why) return void (log.miss = why);
       // (T-1533: a rough solve's estimate gives way to it)
-      if (this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0 && !this.cur.rough) || this.status.startsWith("failed")) return void (log.miss = "late");
+      if (late() || this.status.startsWith("failed")) return void (log.miss = "late");
       this.applyCache(svc, canon, stored, hash, cities);
+      if (ahead && this.early) this.early.shown = true;
       log.shownAt = performance.now();
     } catch (err) {
       log.miss = "error: " + String(err);
@@ -1749,6 +1752,7 @@ class DemandClient {
     this.cachedCities = new Set(cities);
     this.cachedHash = hash;
     this.cachedModes = stored.modes ?? null;
+    this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
     // T-1533: a rough solve under way gives way, so the packs it holds back open at once (a rough
     // solve of no zone, without the barrier, ends the worker's at its next look)
@@ -1782,14 +1786,18 @@ class DemandClient {
     // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
     const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
-    // the result shown at load is the same one, unless it can now add its bubbles
-    if (hash === this.cachedHash && (this.cachedModes || !cm)) return;
+    // T-1539: the network the loaded save worked out, so the next load of it shows this at once
+    const lk = this.loadKey;
+    const ahead = lk?.snapshot && lk.svcKey === JSON.stringify(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
+    // the result shown at load is the same one, unless it can now add its bubbles or its network
+    if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
-    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}) } satisfies StoredDemand);
+    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
-    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok };
+    this.cachedAhead = ahead?.save ?? null;
+    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok, ...(ahead ? { ahead: true } : {}) };
   }
 
   /**
@@ -2312,12 +2320,21 @@ class DemandClient {
 
   /** A network from the clock worker (T-025), or the test network. */
   submitNetwork(snap: NetworkSnapshot) {
-    const svc = serviceFromSnapshot(snap);
+    let svc = serviceFromSnapshot(snap);
     const key = JSON.stringify(svc);
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
     if (gameLoad && this.ahead) this.ahead.arrived = true;
+    // T-1539: the network the loaded save works out, for the cache written for it; and the one a
+    // cached result shown ahead of it was for: the same network is that very service
+    const early = this.early;
+    this.early = null;
+    if (gameLoad && this.loadKey && !this.loadKey.svcKey) Object.assign(this.loadKey, { svcKey: key, snapshot: snap });
+    else if (gameLoad) this.loadKey = null;
+    if (early) this.aheadLog = { at: performance.now(), same: early.key === key, shown: !!early.shown };
+    if (early?.key === key) svc = early.svc;
+    else if (early?.shown) this.dropEarly(early.svc);
     if (key === this.lastKey) {
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
@@ -2334,8 +2351,50 @@ class DemandClient {
       this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since, shares: this.job.shares } : {}) };
     }
     this.send(svc, performance.now());
-    // T-328: a whole game's network: its last final result may be kept beside the save
-    if (this.hold && this.cacheOn) void this.tryCache(svc);
+    // T-328: a whole game's network: its last final result may be kept beside the save (shown
+    // already if it was found ahead of the network, T-1539)
+    if (this.hold && this.cacheOn && !(early?.shown && svc === early.svc)) void this.tryCache(svc);
+  }
+
+  // --- T-1539: a loading save's cached result, shown before its network arrives ---
+
+  /** the loading save's network key, and the network its load sent (for the cache written for it) */
+  private loadKey: { key: string; svcKey?: string; snapshot?: NetworkSnapshot } | null = null;
+  /** the network of the cached result found for the loading save, and whether it is shown */
+  private early: { svc: Service; key: string; shown?: boolean } | null = null;
+  /** the save key of the cached result shown, if it held one */
+  private cachedAhead: string | null = null;
+  /** the network's arrival after a cached result found ahead of it: when, and whether it was the same */
+  aheadLog: { at: number; same: boolean; shown: boolean } | null = null;
+
+  /**
+   * A save is loading whose network inputs have key `key` (demandCache.ts `saveNetKey`). A cached
+   * result written for the network a load of the same inputs worked out holds that network, so it
+   * shows now, through the same checks as at the network's arrival (`tryCache`), while the clock
+   * worker works the network out again. The network that arrives is compared with it.
+   */
+  netAhead(key: string) {
+    this.loadKey = { key };
+    this.early = null;
+    if (!this.cacheOn || perfOff("cacheAhead") || this.status.startsWith("failed")) return;
+    void (async () => {
+      const stored = await readDemandAhead<StoredDemand>(key);
+      if (!stored?.ahead || stored.ahead.save !== key || this.loadKey?.key !== key || !gameLoadArmed()) return;
+      const svc = serviceFromSnapshot(stored.ahead.snapshot);
+      this.early = { svc, key: JSON.stringify(svc) };
+      await this.tryCache(svc, stored);
+    })();
+  }
+
+  /** The network arrived and is not the one the cached result shown ahead of it was for. */
+  private dropEarly(svc: Service) {
+    const i = this.log.findIndex((s) => s.version === CACHE_VERSION && s.svc === svc);
+    if (i >= 0) this.log.splice(i, 1);
+    if (!this.cacheShown()) return;
+    this.cachedCities = new Set();
+    this.cachedHash = this.cachedAhead = null;
+    this.cachedModes = null;
+    demandByDay.value = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
   }
 
   /** Solve the current network again under a new version (timing runs). */
@@ -2376,7 +2435,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
     this.freshParts = false;
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
@@ -3401,6 +3460,11 @@ export function startDemand(city = HOME_CITY, newGame = false) {
 /** T-889: a loading save's built stations (clockClient's onStationsAhead). */
 export function stationsAhead(frame: FrameSpec, xy: Float64Array) {
   if (!TEST) client?.stationsAhead(frame, xy);
+}
+
+/** T-1539: a loading save's network key (clockClient's onNetAhead). */
+export function netAhead(key: string) {
+  if (!TEST) client?.netAhead(key);
 }
 
 /** Hand the clock worker's NetworkSnapshot to the pool (from clockClient's onNetworkSnapshot). */

@@ -411,6 +411,15 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the
   market's corridor table (shared by the days) copied once and transferred to it.
+  **Ahead of the network** (T-1539): a result whose network is the one a load worked out from its
+  save also holds that network snapshot and the key of the save's network inputs (a SHA-256 of the
+  save's track bytes, which a save numbers densely, and the header fields the snapshot reads:
+  `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
+  load starts (`netAhead`), before it works the network out (17-42 s on the China save), and the
+  page shows the result through the same key checks, on the stored network; the network that
+  arrives is compared with it: the same one takes its place with no second look, a different one
+  takes the result down and is looked up as on any load (`?perfOff=cacheAhead` waits for the
+  network as before).
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.
 - **Games on the account** [T-988; `workers/cloud.ts`, `game/accountGames.ts`; the server's routes
