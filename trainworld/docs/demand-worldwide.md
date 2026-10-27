@@ -841,6 +841,12 @@ notes/T-420.md has the tables.
   a pack counts as many people as the world field around it, its jobs only moving where in it trips
   end. Where Kontur and a pack's census differ (the Northeast's near pairs rose 2-7% on the switch
   from the zones' own normaliser) the pack's near pairs move by the gap.
+- **A zone's stations** (T-1506, docs/regional.md 5.2). Each zone end keeps its 8 best-weighted
+  stations, then up to 10 with a slot each for track none of those is on, so an inter-city station
+  not linked to a big city's metro is still in the lists of the zones near it. Why it may not carry over: a city with
+  more than two unlinked rail networks near one zone (separate suburban, metro and high-speed
+  operators with no shared stations) still loses some. Check: the trip explorer's served share on
+  a country's main inter-city pairs, against the share of trips with a station in reach.
 - **An inter-city trip's planned wait** (T-1430, docs/regional.md 5.1). The market's inter-city
   trips wait at their first boarding the least of half the headway, 5 minutes plus a sixth of the
   headway, and 30 minutes, with no tolerance penalty: a planned trip leaves on average a quarter of
