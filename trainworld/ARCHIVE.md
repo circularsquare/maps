@@ -1,5 +1,6 @@
 # Archive
 
+- T-1533 [P1] The city in view shows its demand within about 5 seconds. Done 2026-10-27 (tree t1533, not landed): the zone in view first in download, open and solve (a rough solve of it alone), the map shown at its first figures, bubbles kept through the rounds; real save cached 3 s, China jump 3-6 s, new line 1 s; cold real save 16-23 s. notes/T-1533.md, checks/t1533-view-first.mjs.
 - T-1517 [P3] Bus route editing on touch. Done 2026-10-27 (tree t1517, not landed): a finger drags a bus point without panning, and a press held 500 ms deletes it (the lift adds nothing). `checks/t1517-bus-touch.mjs`; docs/ui-building.md.
 - T-1537 [P3] Repaint when paused. Done 2026-10-27 (tree t1517, not landed): a new network asks for a map frame, so the select tool's squares show on fresh track in a paused game; the workaround is out of `checks/t486-click-on-top.mjs`.
 - T-1507 [P3] A China test save with real high-speed service. Done 2026-10-27 (tree t1507, not landed: its check only): `t1507-all-china-hsr.save` at the maps root, high-speed trains, ten missing end stations (line 114 now starts in Beijing) and a Wuhan stop added, 13 stops moved to the metro, 31 passages; longer boardings 36,457 to 1,071,774. notes/T-1507.md.
