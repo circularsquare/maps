@@ -287,7 +287,7 @@ reached with Tab keeps it. Buttons show the browser's focus ring for keyboard fo
 map beside the dock, under the tab row, listing only the controls no button shows: the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
-the blueprint tool), the keys (tool numbers, T, N, L, A, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (tool numbers, T, N, L, A, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
 the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
