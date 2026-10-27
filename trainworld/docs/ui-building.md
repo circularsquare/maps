@@ -96,6 +96,7 @@ mouse moving again takes it back).
   is dropped; the tool stays on), and for track and open-ground stations the elevation (its number
   on its colour; a tap opens the seven elevations above the bar) and the track type (a tap steps
   Double, Quad, High speed).
+- **Bus points** drag with a finger and are deleted by holding one (Drawing a bus line, T-1517).
 - **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
   a fling is no tap (MapLibre's own rule).
 - **Select tool**: a one-finger drag pans; a tap adds the piece under it to the pick or takes it
@@ -140,10 +141,12 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   node dragged (`setCurveLabel`, `map/tools.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
   [T-727d].
-- **Loose ends** [T-416, T-1485; `map/endMarkers.ts`]: while the track or station tool is on, a
+- **Loose ends** [T-416, T-1485, T-1522, T-1534; `map/endMarkers.ts`]: while the track or station tool is on, a
   small hollow ring in the accent colour marks each loose end (a node with one piece of track and
-  no station), blueprint or built, within 160 px of the pointer, and only where the network draws
-  that track (a screen with no hovering pointer shows them all). A track click on one starts or continues the route from it; the
+  no station) within 160 px of the pointer, and only where the track is visibly drawn: built track
+  and active blueprints, not a switched-off blueprint, and not a piece under 4 px long on screen at
+  the current zoom (a screen with no hovering pointer shows them all). None show while the pointer is off
+  the map, which includes over the view tabs or any other control laid on it. A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end, its platform running
   back along the track through the joints of a drawn route as a platform on a piece does [T-860].
   The markers take no presses, and show from zoom 9.
@@ -200,6 +203,10 @@ the tag by the pointer gives the road length and the price.
   back. A right click on a point deletes it, its neighbours joined by a new leg; a right click
   elsewhere or Backspace takes back the active end. Over a point the tag says "Drag to move" and
   "Right click to delete", led by what a click there does, and the network's hover is left out.
+  With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
+  not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
+  deletes it (the phone buzzes) and the lift adds nothing. A press that does not move and is lifted
+  sooner is a tap, as in Building by touch.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).

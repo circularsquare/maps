@@ -2123,14 +2123,19 @@ pub fn wait_factor(net: &Network, s: usize) -> f32 {
     if net.ups(s) & upgrades::WAITING_ROOM != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
 }
 
+/// Past the `ride_lines` cheapest, a place's rides take up to this many more (T-1511): the
+/// cheapest line of each track component none of those is on.
+pub const RIDE_TRACK_MAX: usize = 2;
+
 /// The ride options from each place (its zone, x, y), CSR, for every layer (local commutes and
 /// everyday trips, the regional market, T-362's long trips): walks come from `build_access` per
 /// cell, rides from here. For each line, its station with the cheapest ride within `ride_max_m`;
-/// then the stations of the `ride_lines` cheapest lines. The drive is the whole-trip drive's
-/// (`drive_min_f` with the zones' routed factor) from the place, in its zone, to the station's
-/// zone; at the station, the cheaper of parking there and `d_drop` at the home end, `d_drop` at
-/// the far end.
-pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize, f32, f32)], end: End) -> (Vec<u32>, Vec<Ride>) {
+/// then the stations of the `ride_lines` cheapest lines, and with `track` (each station's track
+/// component and whether a train line stops there) up to `RIDE_TRACK_MAX` stations on track the
+/// cheapest lines miss. The drive is the whole-trip drive's (`drive_min_f` with the zones' routed
+/// factor) from the place, in its zone, to the station's zone; at the station, the cheaper of
+/// parking there and `d_drop` at the home end, `d_drop` at the far end.
+pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize, f32, f32)], end: End, track: Option<(&[u32], &[bool])>) -> (Vec<u32>, Vec<Ride>) {
     let mut off = vec![0u32; places.len() + 1];
     let mut out = vec![];
     if p.ride_lines == 0 || net.n_stations() == 0 {
@@ -2193,6 +2198,20 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                     out.push((s, cost, d, t));
                 }
             }
+            if let Some((comp, on_train)) = track {
+                let mut comps: Vec<u32> = out[start..].iter().map(|e| comp[e.0 as usize]).collect();
+                let top = comps.len();
+                for &l in seen.iter().skip(p.ride_lines) {
+                    if comps.len() >= top + RIDE_TRACK_MAX {
+                        break;
+                    }
+                    let (cost, s, d, t) = best[l as usize];
+                    if on_train[s as usize] && !comps.contains(&comp[s as usize]) {
+                        comps.push(comp[s as usize]);
+                        out.push((s, cost, d, t));
+                    }
+                }
+            }
             for &l in &seen {
                 best[l as usize] = (f32::INFINITY, NONE, 0.0, 0.0);
             }
@@ -2201,6 +2220,42 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
         off[pi + 1] = out.len() as u32;
     }
     (off, out)
+}
+
+/// Whether each station has a train line: one with trains in some period and no bus-only stop.
+pub fn on_train(net: &Network) -> Vec<bool> {
+    let mut out = vec![false; net.n_stations()];
+    for l in 0..net.n_lines() {
+        let stops = net.stops(l);
+        if stops.iter().any(|&s| net.bus_only(s as usize)) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
+            continue;
+        }
+        for &s in stops {
+            out[s as usize] = true;
+        }
+    }
+    out
+}
+
+/// Each station's component of the graph (edges taken both ways), named by its lowest station.
+pub fn station_components(g: &Graph) -> Vec<u32> {
+    let mut parent: Vec<u32> = (0..g.n as u32).collect();
+    fn find(p: &mut [u32], mut i: u32) -> u32 {
+        while p[i as usize] != i {
+            p[i as usize] = p[p[i as usize] as usize];
+            i = p[i as usize];
+        }
+        i
+    }
+    for a in 0..g.n {
+        for e in g.adj_off[a] as usize..g.adj_off[a + 1] as usize {
+            let (ra, rb) = (find(&mut parent, a as u32), find(&mut parent, g.adj_to[e]));
+            if ra != rb {
+                parent[ra.max(rb) as usize] = ra.min(rb);
+            }
+        }
+    }
+    (0..g.n_st as u32).map(|s| find(&mut parent, s)).collect()
 }
 
 /// Ride-only subzones group homes beyond every walk by squares of this many zones a side
@@ -2291,7 +2346,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
     for (g, &(pop, x, y)) in gsum.iter().enumerate() {
         places.push((g_rep[g].0 as usize, (x / pop) as f32, (y / pop) as f32));
     }
-    let (ride_off, rides) = access_options(zones, net, p, &places, End::Home);
+    let (ride_off, rides) = access_options(zones, net, p, &places, End::Home, None);
     let place_ride = |pl: usize| &rides[ride_off[pl] as usize..ride_off[pl + 1] as usize];
     // a group with rides is a subzone
     let mut group_sub = vec![NONE; gsum.len()];

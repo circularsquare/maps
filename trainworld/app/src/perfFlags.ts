@@ -21,8 +21,8 @@
 //            (before T-326)
 //   periods  a cluster the demand workers solve re-solves every period, even those an edit
 //            did not touch (before T-124)
-//   spread   periods go to the demand workers by index alone, so 2 workers put both peaks on
-//            one (before T-124)
+//   spread   periods go to the demand workers by index alone, so 2 workers put three of high
+//            demand's periods on two (before T-124)
 //   split    the market's zones count as one, so every network it reaches is one cluster
 //            (before T-409)
 //   reach    every city's demand solves on its whole cluster, not the stations it reaches

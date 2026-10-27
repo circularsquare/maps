@@ -1,13 +1,15 @@
 // Station ridership circles (T-482, T-1448): one circle per station complex, its area the riders a
 // day the station ridership choice counts, drawn on a 2D canvas of its own over the demand bubbles'
-// canvas and under the station names. Entries are blue and transfers green; under Total the circle
-// is both, the transfers an inner disc of their own share of the area (DECISIONS 2026-10-26).
+// canvas and under the station names. Entries are blue and transfers green; a circle is one colour
+// between them by its transfers' share, so Total's are shaded and Origins' and Transfers' are the ends
+// (DECISIONS 2026-10-26, T-1531).
 // Redrawn with each MapLibre frame and when the figures change, never per train frame.
 
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
 import { demandView, type DemandView } from "../game/demand";
+import { mixOklab } from "../game/palette";
 import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
 import { display, shade, stopEditing, type StationUseMode } from "../game/ui";
@@ -26,13 +28,24 @@ export function stationScale(ridersPerDay: number): number {
   return ridersPerDay > 0 ? Math.max(STATION_MIN_SCALE, Math.sqrt(ridersPerDay / STATION_FULL)) : 0;
 }
 
-/** Entries blue, transfers green, per shade: the colours, how opaque their discs are, and the land
- * colour their edges are cased in. */
+/** Entries blue, transfers green, per shade: the two end colours, how opaque a disc is, and the land
+ * colour its thin edge is cased in. A circle is one colour between the ends, by its transfers' share. */
 export const CIRCLE_COLOURS = {
-  light: { entries: "#2456e0", transfers: "#169a50", entriesFill: 0.14, transfersFill: 0.26, casing: "#f3eee5" },
-  dark: { entries: "#8aa6ff", transfers: "#52d68e", entriesFill: 0.2, transfersFill: 0.3, casing: "#292520" },
+  light: { entries: "#2456e0", transfers: "#169a50", fill: 0.2, casing: "#f3eee5" },
+  dark: { entries: "#8aa6ff", transfers: "#52d68e", fill: 0.26, casing: "#292520" },
 };
 export const circleColours = () => CIRCLE_COLOURS[shade.peek()];
+
+const mixed = new Map<string, string>();
+/** A circle's colour: the entries blue at no transfers, the transfers green at all of them, between
+ * by the share (T-1531); 32 steps, kept. */
+export function circleColour(share: number, col = circleColours()): string {
+  const step = Math.round(Math.min(1, Math.max(0, share)) * 32);
+  const key = `${col.entries}${col.transfers}${step}`;
+  let c = mixed.get(key);
+  if (!c) mixed.set(key, (c = mixOklab(col.entries, col.transfers, step / 32)));
+  return c;
+}
 
 export interface Circle {
   /** its stations' mean position, local units */
@@ -180,39 +193,26 @@ export class StationCircles {
 /** The one instance, for the hover (networkTips.ts); set by `startDemandViews`. */
 export const stationCircles: { now: StationCircles | null } = { now: null };
 
-/** A circle of radius `r` at (x, y), `t` of its riders transfers: the whole disc entries, an inner
- * disc of the transfers' share of the area, each edge over a thin casing of the land so it holds
- * against the bubbles beneath. */
+/** A circle of radius `r` at (x, y), `t` of its riders transfers: one disc in the colour for that
+ * share, with a thin faint edge over an even fainter casing of the land, so it holds against the
+ * bubbles beneath. */
 function drawCircle(g: CanvasRenderingContext2D, x: number, y: number, r: number, t: number, col: (typeof CIRCLE_COLOURS)["light"]) {
-  const ri = r * Math.sqrt(Math.min(1, Math.max(0, t)));
-  const disc = (fill: string, alpha: number, outer: number, inner: number) => {
-    g.globalAlpha = alpha;
-    g.fillStyle = fill;
-    g.beginPath();
-    g.arc(x, y, outer, 0, FULL);
-    if (inner > 0) g.arc(x, y, inner, 0, FULL, true);
-    g.fill();
-  };
-  const edge = (stroke: string, at: number) => {
-    g.beginPath();
-    g.arc(x, y, Math.max(0.5, at - 1), 0, FULL);
-    g.globalAlpha = 0.55;
-    g.strokeStyle = col.casing;
-    g.lineWidth = 3.5;
-    g.stroke();
-    g.globalAlpha = 0.95;
-    g.strokeStyle = stroke;
-    g.lineWidth = 1.75;
-    g.stroke();
-  };
-  if (t < 1) {
-    disc(col.entries, col.entriesFill, r, ri);
-    edge(col.entries, r);
-  }
-  if (ri > 0.5) {
-    disc(col.transfers, col.transfersFill, ri, 0);
-    edge(col.transfers, ri);
-  }
+  const colour = circleColour(t, col);
+  g.beginPath();
+  g.arc(x, y, r, 0, FULL);
+  g.globalAlpha = col.fill;
+  g.fillStyle = colour;
+  g.fill();
+  g.beginPath();
+  g.arc(x, y, Math.max(0.5, r - 0.5), 0, FULL);
+  g.globalAlpha = 0.3;
+  g.strokeStyle = col.casing;
+  g.lineWidth = 2.5;
+  g.stroke();
+  g.globalAlpha = 0.5;
+  g.strokeStyle = colour;
+  g.lineWidth = 1;
+  g.stroke();
   g.globalAlpha = 1;
 }
 const FULL = Math.PI * 2;

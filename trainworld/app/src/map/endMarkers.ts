@@ -1,14 +1,15 @@
 // Point markers on the map (T-416). While the track or station tool is on, a ring at each loose end
-// (a node with one piece of track and no station), blueprint or built, near the pointer: where a
+// (a node with one piece of track and no station), built or an active blueprint, near the pointer: where a
 // line is continued or a station goes at the end of one. With the select tool, a square marker at
 // every blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions.
 // They take no presses; the tools and the node drag work on the nodes underneath as before.
 
 import type { Map as MlMap } from "maplibre-gl";
+import type { TrackEdge } from "../game/types";
 import { display, tool } from "../game/ui";
 import { world } from "../game/world";
 import { effect } from "@preact/signals";
-import { toLocal } from "./geo";
+import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import type { Overlay } from "./overlay";
@@ -25,28 +26,44 @@ const BADGE_CELL = 3;
 /** T-1485: loose ends show within this of the pointer, CSS px; every one in a city at once, many on
  * faint unserved or switched-off track, read as stray stations */
 const NEAR_PX = 160;
+/** T-1534: a loose end on a stub shorter than this on screen has no ring: the track cannot be seen */
+const MIN_STUB_PX = 4;
 /** a screen with no hovering pointer (touch) shows them all */
 const NO_HOVER = typeof matchMedia === "function" && matchMedia("(hover: none)").matches;
 
 export class EndMarkers {
   private box: HTMLDivElement;
   private marks: HTMLDivElement[] = [];
-  private pts: { lx: number; ly: number }[] = [];
+  /** `stub`: a loose end's track, local units; the ring is left off while it is under `MIN_STUB_PX` long */
+  private pts: { lx: number; ly: number; stub?: Float32Array }[] = [];
+  private scratch = [0, 0, 0, 0];
   private kind: Kind | null = null;
   private version = -1;
   private net: unknown = null;
   /** the pointer over the map, CSS px, or null when it is off the map */
   private pointer: [number, number] | null = null;
+  /** the map's box on the page, read again after a resize */
+  private rect: DOMRect | null = null;
+  private anchorV = -1;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = document.createElement("div");
     this.box.className = "tool-marks";
     map.getContainer().appendChild(this.box);
     overlay.afterMapFrame.push(() => this.place());
-    map.on("mousemove", (e) => {
-      this.pointer = [e.point.x, e.point.y];
+    // T-1522: from the window, not MapLibre's mousemove, which stops while the map is dragged and over
+    // anything laid on the map (the view tabs, a card), and left the rings round where it last was
+    addEventListener("pointermove", (e) => {
+      const on = e.target instanceof Node && map.getCanvasContainer().contains(e.target);
+      if (on) {
+        this.rect ??= map.getContainer().getBoundingClientRect();
+        this.pointer = [e.clientX - this.rect.left, e.clientY - this.rect.top];
+      } else if (this.pointer) this.pointer = null;
+      else return;
       if (this.wanted() === "loose") this.place();
-    });
+    }, { passive: true });
+    map.on("resize", () => (this.rect = null));
+    addEventListener("resize", () => (this.rect = null));
     map.getContainer().addEventListener("mouseleave", () => {
       this.pointer = null;
       this.place();
@@ -66,22 +83,50 @@ export class EndMarkers {
   /** The points to mark, found again only when the tool or the world changes. */
   private refresh(kind: Kind) {
     const w = world.peek(), net = this.overlay.renderer.net;
-    const v = w?.version ?? -1;
-    if (kind === this.kind && v === this.version && net === this.net) return;
+    const v = w?.version ?? -1, av = anchor().version;
+    // the points are in local units, so they go stale when the draw anchor moves
+    if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV) return;
     this.kind = kind;
     this.version = v;
     this.net = net;
+    this.anchorV = av;
     this.pts = [];
     if (!w) return;
     // only where the network draws the track: a mark is never left on its own (T-1485)
-    const drawnAt = new Set<number>();
-    for (const e of w.edges) if (net?.edgePts.has(e.id)) drawnAt.add(e.a).add(e.b);
+    const edgeAt = new Map<number, TrackEdge>(), drawnAt = new Set<number>();
+    for (const e of w.edges) {
+      if (!net?.edgePts.has(e.id)) continue;
+      drawnAt.add(e.a).add(e.b);
+      edgeAt.set(e.a, e).set(e.b, e);
+    }
     for (const n of w.nodes.values()) {
       if (n.platform > 0 || n.bus || !drawnAt.has(n.id)) continue;
       if (kind === "loose" ? n.ports !== 1 : n.builtPorts !== 0) continue;
+      let stub: Float32Array | undefined;
+      if (kind === "loose") {
+        // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
+        const e = edgeAt.get(n.id);
+        if (!e || (!e.built && e.off)) continue;
+        stub = net?.edgePts.get(e.id);
+      }
       const [lx, ly] = toLocal(n.lng, n.lat);
-      this.pts.push({ lx, ly });
+      this.pts.push({ lx, ly, stub });
     }
+  }
+
+  /** Whether a stub of track is `MIN_STUB_PX` or more long on the screen now. */
+  private visible(stub: Float32Array): boolean {
+    const o = this.scratch;
+    let len = 0;
+    this.overlay.toScreenInto(stub[0], stub[1], o, 0);
+    for (let k = 3; k < stub.length; k += 3) {
+      this.overlay.toScreenInto(stub[k], stub[k + 1], o, 2);
+      len += Math.hypot(o[2] - o[0], o[3] - o[1]);
+      if (len >= MIN_STUB_PX) return true;
+      o[0] = o[2];
+      o[1] = o[3];
+    }
+    return false;
   }
 
   /** Whether a select tool's square is drawn within `HIT_PX` of a screen point: drawn over the demand
@@ -131,6 +176,7 @@ export class EndMarkers {
         if (x < -8 || y < -8 || x > w + 8 || y > h + 8) continue;
         if (near && (x - near[0]) ** 2 + (y - near[1]) ** 2 > NEAR_PX * NEAR_PX) continue;
         if (kind === "drag" && this.badged(p.lx, p.ly)) continue;
+        if (p.stub && !this.visible(p.stub)) continue;
         if (k >= MAX_MARKS) break;
         let m = this.marks[k];
         if (!m) {

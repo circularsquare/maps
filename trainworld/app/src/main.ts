@@ -213,6 +213,8 @@ if (SYNTH) {
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
         followTrack(renderer.net, world.peek()); // T-1047
+        // the placers that follow the network (the select tool's squares) run on map frames, which a paused game has none of (T-1537)
+        map.triggerRepaint();
       }
       views.networkChanged();
       blueprintBox.refreshHighlight();

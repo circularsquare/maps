@@ -183,6 +183,13 @@ export function colourDistanceFrom(hex: string): (other: string) => number {
   };
 }
 
+/** The colour `t` (0-1) of the way from hex `from` to hex `to`, evened in OKLab as the ramp is, as hex. */
+export function mixOklab(from: string, to: string, t: number): string {
+  const a = toOklab(from), b = toOklab(to), u = Math.min(1, Math.max(0, t));
+  const [r, g, bl] = fromOklab([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u]);
+  return "#" + [r, g, bl].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 function buildRamp(from: string, to: string): Uint8ClampedArray {
   const a = toOklab(from), b = toOklab(to), out = new Uint8ClampedArray(256 * 3);
   for (let i = 0; i < 256; i++) {

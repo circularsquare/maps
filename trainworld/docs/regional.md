@@ -188,8 +188,11 @@ loads the lines, so they add up to its entries and exits.
 The regional layer rides to stations as the local layer does ([demand-mode.md](demand-mode.md) 4.3, T-371),
 through the same `kernel::access_options` [T-373]: from each 2 km zone of the market's sites
 (their homes and jobs, as a local zone's, give the drive's speeds and the parking), the cheapest
-station of each of the 6 cheapest lines within 15 km, at `p_ride` 15 + 2.66 x the drive (T-916) + at the
-station a cost that depends on the end:
+station of each of the 6 cheapest lines within 15 km, then up to 2 more, the cheapest line of each
+track component none of those 6 is on, its station needing a line with trains [T-1511]: so a zone in
+a city of many metro lines still rides to an inter-city station not linked to the metro, and that
+station can take its slot in the access list (5.2). The local layers keep the 6 alone. Each ride
+costs `p_ride` 15 + 2.66 x the drive (T-916) + at the station a cost that depends on the end:
 
 - **Commutes between zones**: at the home end, the cheaper of parking at the station and a
   drop-off (`d_drop` 10), when the two zones' centres are 5 km or more apart (`ride_min_km`); the

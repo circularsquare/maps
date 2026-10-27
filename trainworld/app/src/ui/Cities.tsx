@@ -128,7 +128,7 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
           <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
         </span>
       </span>
-      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train rides per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
+      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train trips per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
       <span class={"val w-money c-cities c-money" + (counted && net(sum) * 1e6 <= -500 ? " neg" : "")} data-tip={counted ? moneyTip("the world", { d: sum, yesterday }) : undefined}>{counted ? money(net(sum) * 1e6) : "–"}</span>
       <span class="val w-points c-cities" data-tip={pointsTip}>{pointsShort(pastAll)}</span>
     </li>
@@ -168,8 +168,8 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
     <div class="cities-box">
       <SortHead sort={citySort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "train", label: "Train", tip: "Sort by the train share of rides", first: -1, cls: "w-citybar c-cities" },
-        { key: "rides", label: "Rides", tip: "Sort by train rides per day", first: -1, cls: "w-riders c-cities" },
+        { key: "train", label: "Train", tip: "Sort by the train share of trips", first: -1, cls: "w-citybar c-cities" },
+        { key: "rides", label: "Trips", tip: "Sort by train trips per day", first: -1, cls: "w-riders c-cities" },
         { key: "money", label: "Profit", tip: "Sort by profit a day, fares minus running trains and upkeep", first: -1, cls: "w-money c-cities c-money" },
         { key: "points", label: "Points", tip: "Sort by points in the past 24 hours", first: -1, cls: "w-points c-cities" },
       ]} />
@@ -193,7 +193,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
                   <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
                 </span>
               </span>
-              <span class="val w-riders c-cities" data-tip={v ? `${count(v.railTripsPerDay)} train rides per day${where}` : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
+              <span class="val w-riders c-cities" data-tip={v ? `${count(v.railTripsPerDay)} train trips per day${where}` : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
               <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
               <PointsCell id={r.id} name={r.name} />
             </li>

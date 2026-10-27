@@ -1,6 +1,6 @@
 // T-1434: opening day. A planned line is constructed; its stations get a bunting under their names
-// for one game day, its Lines tab riders count up from 0, and "bung" plays once (a construct's "ke-cha"
-// is 2 buffers + 2 oscillators, the bung 1 + 1). Screenshots light and dark at zoom 13 and 15 go in
+// for one game day, its Lines tab riders count up from 0, and "bung" plays once (a construct's snap
+// is 1 buffer, the bung 1 + 1 oscillator). Screenshots light and dark at zoom 13 and 15 go in
 // artifacts/trainworld/t1434/. From the maps root, with a running dev server:
 //   node trainworld/checks/t1434-opening.mjs <port>
 import { mkdir, readFile } from 'node:fs/promises';
@@ -81,7 +81,7 @@ try {
   const nums = compact.map(([, r]) => Number((r ?? '').replace(/,/g, ''))).filter((n) => Number.isFinite(n));
   check('the riders cell starts at 0 and rises to a figure', nums.length >= 3 && nums[0] === 0 && nums.at(-1) > 0 && nums.every((n, i) => i === 0 || n >= nums[i - 1]), JSON.stringify(nums));
   const snd1 = await page.evaluate(() => ({ ...window.__snd }));
-  check('construct plus the opening: ke-cha and one bung', snd1.buf - snd0.buf === 3 && snd1.osc - snd0.osc === 3, JSON.stringify({ buf: snd1.buf - snd0.buf, osc: snd1.osc - snd0.osc }));
+  check('construct plus the opening: a snap and one bung', snd1.buf - snd0.buf === 2 && snd1.osc - snd0.osc === 1, JSON.stringify({ buf: snd1.buf - snd0.buf, osc: snd1.osc - snd0.osc }));
 
   // the bunting under the names
   const labels = await page.evaluate(() => [...document.querySelectorAll('.stn-label.opening')].map((e) => ({ t: e.textContent, hidden: e.style.visibility === 'hidden', rib: e.style.getPropertyValue('--rib') })));

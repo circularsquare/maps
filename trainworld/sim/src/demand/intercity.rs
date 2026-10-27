@@ -2229,40 +2229,6 @@ fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &[u32], on_t
     }
     v
 }
-/// Whether each station has a train line: one with trains in some period and no bus-only stop.
-fn on_train(net: &super::network::Network) -> Vec<bool> {
-    let mut out = vec![false; net.n_stations()];
-    for l in 0..net.n_lines() {
-        let stops = net.stops(l);
-        if stops.iter().any(|&s| net.bus_only(s as usize)) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
-            continue;
-        }
-        for &s in stops {
-            out[s as usize] = true;
-        }
-    }
-    out
-}
-/// Each station's component of the graph (edges taken both ways), named by its lowest station.
-fn station_components(g: &Graph) -> Vec<u32> {
-    let mut parent: Vec<u32> = (0..g.n as u32).collect();
-    fn find(p: &mut [u32], mut i: u32) -> u32 {
-        while p[i as usize] != i {
-            p[i as usize] = p[p[i as usize] as usize];
-            i = p[i as usize];
-        }
-        i
-    }
-    for a in 0..g.n {
-        for e in g.adj_off[a] as usize..g.adj_off[a + 1] as usize {
-            let (ra, rb) = (find(&mut parent, a as u32), find(&mut parent, g.adj_to[e]));
-            if ra != rb {
-                parent[ra.max(rb) as usize] = ra.min(rb);
-            }
-        }
-    }
-    (0..g.n_st as u32).map(|s| find(&mut parent, s)).collect()
-}
 
 /// T-409: the pack's own data is shared (`Rc`) by every market `beside` it; the rest is one
 /// network's.
@@ -3044,6 +3010,8 @@ impl IntercityApi {
         // band, where nearly every trip between zones falls
         let theta = self.base.band_unsoftened(self.base.n_bands() - 1);
         let mut walks: Vec<(usize, f32)> = Vec::with_capacity(K);
+        let comp = station_components(&build_graph(&net0, &self.base));
+        let on_train = on_train(&net0);
         for g in &m.groups {
             // the stations in this group's frame
             let mut net = net0.clone();
@@ -3066,8 +3034,10 @@ impl IntercityApi {
             }
             let acc = build_access(&g.city, &net, &self.base);
             // T-373: rides from each site's 2 km zone
-            let (h_off, h_rides) = access_options(&g.kz, &net, &self.base, &g.kplace, End::Home);
-            let (f_off, f_rides) = access_options(&g.kz, &net, &self.base, &g.kplace, End::Far);
+            // T-1511: and a ride to each track component the cheapest lines miss
+            let track = Some((&comp[..], &on_train[..]));
+            let (h_off, h_rides) = access_options(&g.kz, &net, &self.base, &g.kplace, End::Home, track);
+            let (f_off, f_rides) = access_options(&g.kz, &net, &self.base, &g.kplace, End::Far, track);
             for c in 0..g.city.len() {
                 let z = m.cell_zone[g.lo + c];
                 let zz = &m.zones[z];
@@ -3095,8 +3065,6 @@ impl IntercityApi {
                 }
             }
         }
-        let comp = station_components(&build_graph(&net0, &self.base));
-        let on_train = on_train(&net0);
         let lists = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> { maps.into_iter().map(|mm| access_list(mm, positive, &comp, &on_train)).collect() };
         self.access = lists(weights, false);
         self.access_work = lists(work, false);

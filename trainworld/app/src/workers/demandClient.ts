@@ -125,7 +125,7 @@ function cityOfPlace(place: number) {
  */
 /**
  * The periods solving worker `i` of `n` owns: by index (`q % n`), unless that gives one worker both
- * periods of a demand level (2 workers: both peaks), when they are dealt out level by level. An edit
+ * periods of a demand level (2 workers: high demand's three), when they are dealt out level by level. An edit
  * to one level's trains re-solves only that level's periods (T-124), so they go to different workers.
  */
 export function periodsOfWorker(i: number, n: number): number[] {

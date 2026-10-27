@@ -11,7 +11,7 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_ROOM, stationAnnexes, stationCoords, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -22,6 +22,8 @@ import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
+import { ParkingLots } from "./parkingLots";
+import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
 
@@ -171,6 +173,8 @@ export class NetworkRenderer {
   private probeU: Record<string, WebGLUniformLocation | null> = {};
   /** crossings, flat junctions, ramps and portals (T-629, T-655) */
   readonly marks = new GradeMarks();
+  /** the complexes' car parks (T-1528) */
+  readonly lots = new ParkingLots();
   private res: { del: () => void }[] = [];
   private previewRes: { del: () => void }[] = [];
   private track: StrokeVao | null = null;
@@ -316,7 +320,7 @@ export class NetworkRenderer {
       let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
         if (this.drawnSelected(i) !== sel) continue;
-        const annexed = !dots && (n.stations[i * 3 + 2] & (ST_ROOM | ST_PARK)) !== 0;
+        const annexed = !dots && (n.stations[i * 3 + 2] & ST_ROOM) !== 0;
         if (reach) {
           // an annex reaches about two box widths past the box (T-1416)
           const x = n.stations[i * 3], y = n.stations[i * 3 + 1], r = reach.r[i] * perLoc + extra * (annexed ? 3 : 1);
@@ -375,18 +379,28 @@ export class NetworkRenderer {
   private annexesOf(i: number, s: StationShape) {
     return this.stationStyle.boxes ? stationAnnexes(s, Math.round(this.net!.stations[i * 3 + 2]), this.stationStyle.ringPx) : [];
   }
-  /** The upgrade drawn at a point on station `i` (T-1416), its UPGRADE bit, or 0: an annex, or a
-   * terminal's thick end. */
+  /** The upgrade drawn at a point on station `i` (T-1416), its UPGRADE bit, or 0: the waiting room,
+   * a terminal's thick end, or the car park whose hover names station `i` (T-1528). */
   upgradeAt(i: number, px: number, py: number, project: Project): number {
     const n = this.net;
     if (!n || !this.stationStyle.boxes || i < 0 || i >= n.stationCount) return 0;
     const s = this.drawnShapeOf(i, project);
-    for (const x of this.annexesOf(i, s)) if (insideStation(x.shape, px, py, 1)) return x.kind === ANNEX_ROOM ? UPGRADE.waitingRoom : UPGRADE.parkRide;
-    if ((Math.round(n.stations[i * 3 + 2]) & ST_TERMINAL) && insideStation(s, px, py, 2)) {
+    for (const x of this.annexesOf(i, s)) if (insideStation(x.shape, px, py, 1) && x.kind === ANNEX_ROOM) return UPGRADE.waitingRoom;
+    const flags = Math.round(n.stations[i * 3 + 2]);
+    if ((flags & ST_TERMINAL) && (flags & ST_BUFFER) && insideStation(s, px, py, 2)) {
       const [a] = stationCoords(s, px, py);
-      if (Math.abs(a) > s.halfLength - TERMINAL_CAP * this.stationStyle.ringPx - 2) return UPGRADE.terminal;
+      if (a < TERMINAL_CAP * this.stationStyle.ringPx + 2 - s.halfLength) return UPGRADE.terminal;
+    }
+    if (!insideStation(s, px, py, 2)) {
+      const k = this.lotAt(px, py, project);
+      if (k >= 0 && this.lots.lots[k * LOT_STRIDE + 8] === i) return UPGRADE.parkRide;
     }
     return 0;
+  }
+  /** The car park drawn under a point (T-1528), its index in `lots.lots`, or -1: drawn from
+   * STATION_BOX_ZOOM in. */
+  lotAt(px: number, py: number, project: Project): number {
+    return this.stationStyle.boxes ? this.lots.at(px, py, project) : -1;
   }
   /** A selected station drawn at a point, or -1 (picking: it is above the demand bubbles). */
   selectedStationAt(px: number, py: number, project: Project, padding = 2): number {
@@ -412,7 +426,7 @@ export class NetworkRenderer {
   lineWidths: Float32Array | null = null;
   /** the network has blueprint track: it and its lines are drawn after the rest (T-695) */
   hasBlueprint = false;
-  /** ST_ROOM and ST_PARK if some station has one (T-1416), each drawn in a station draw of its own */
+  /** ST_ROOM if some box draws a waiting room (T-1416), drawn in a station draw of its own */
   private annexes = 0;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => [...rgbf(LEVEL_COLOURS[l as 3])]));
   private get ink() { return rgbf(shadeColours().stationInk); }
@@ -453,6 +467,7 @@ export class NetworkRenderer {
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
+    this.lots.init(gl);
     this.bubbles.init(gl);
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
@@ -704,6 +719,7 @@ export class NetworkRenderer {
     this.probeVao = null;
     this.net = n;
     this.marks.setNetwork(n.marks);
+    this.lots.setNetwork(n.lots);
     const oldTrack = this.track, oldLines = this.lines;
     this.track = this.strokes(n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
     this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null);
@@ -718,7 +734,7 @@ export class NetworkRenderer {
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
     this.annexes = 0;
-    for (let i = 0; i < n.stationCount; i++) this.annexes |= n.stations[i * 3 + 2] & (ST_ROOM | ST_PARK);
+    for (let i = 0; i < n.stationCount; i++) this.annexes |= n.stations[i * 3 + 2] & ST_ROOM;
     this.lineWidths = null;
     const same = new Set(patch?.same ?? []);
     const put = (name: keyof typeof this.tex, field: string | null, make: () => [ArrayBufferView, "r32f" | "rg32f" | "rgba32f" | "rgba8", number]) => {
@@ -998,6 +1014,8 @@ export class NetworkRenderer {
     const wTrack = interp(zoom, [[9, 0.4], [12, 1.8], [15, 3]]) * dpr * k;
     const wSel = interp(zoom, [[9, 0.5], [12, 2.1], [15, 3]]) * dpr * k;
     const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr * k;
+    // the complexes' car parks under everything else (T-1528)
+    if (zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (!view && this.buses.any && !opt.byLevel && !opt.bySpeed) {
       const sh = shadeColours();
@@ -1240,7 +1258,7 @@ export class NetworkRenderer {
         gl.bindVertexArray(this.stationVao);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
         if (annexes && boxes && this.annexes) {
-          for (const [kind, bit] of [[ANNEX_ROOM, ST_ROOM], [ANNEX_PARK, ST_PARK]]) {
+          for (const [kind, bit] of [[ANNEX_ROOM, ST_ROOM]]) {
             if (!(this.annexes & bit)) continue;
             gl.uniform1i(su.u_room, kind);
             gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
