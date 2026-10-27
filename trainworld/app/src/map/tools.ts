@@ -999,7 +999,7 @@ export class Tools {
   // ---------------------------------------------------------------- delete (T-096)
 
   /** What a click with the delete tool would remove: a station, a flyover, else a stretch of
-   * track (lines are removed from the Lines tab). */
+   * track, else a bus line (train lines are removed from the Lines tab). */
   private deletePick(px: number, py: number): (Removable & { lx: number; ly: number }) | null {
     const w = world.peek();
     const n = this.overlay.renderer.net;
@@ -1031,6 +1031,13 @@ export class Tools {
           if (d < bd) [bd, e] = [d, edge];
         }
       if (e >= 0) return { kind: "track", edge: e, lx: s.lx, ly: s.ly };
+    }
+    // a bus line has no track: under the rail, so only where no rail is (T-1513)
+    const buses = this.overlay.renderer.buses;
+    if (buses.any) {
+      const line = buses.stopAt(this.overlay, px, py)?.line ?? buses.lineAt(this.overlay, px, py);
+      const at = this.overlay.screenToLocal(px, py);
+      if (line >= 0 && at) return { kind: "bus", line, lx: at[0], ly: at[1] };
     }
     return null;
   }
@@ -1560,7 +1567,7 @@ export class Tools {
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
-      if (d && d.kind !== "track") {
+      if (d && d.kind !== "track" && d.kind !== "bus") {
         this.ring.style.display = "";
         put(this.ring, d.lx, d.ly);
       } else this.ring.style.display = "none";
