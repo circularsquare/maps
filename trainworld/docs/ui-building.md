@@ -140,10 +140,11 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   node dragged (`setCurveLabel`, `map/tools.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
   [T-727d].
-- **Loose ends** [T-416, T-1485; `map/endMarkers.ts`]: while the track or station tool is on, a
+- **Loose ends** [T-416, T-1485, T-1522; `map/endMarkers.ts`]: while the track or station tool is on, a
   small hollow ring in the accent colour marks each loose end (a node with one piece of track and
   no station), blueprint or built, within 160 px of the pointer, and only where the network draws
-  that track (a screen with no hovering pointer shows them all). A track click on one starts or continues the route from it; the
+  that track (a screen with no hovering pointer shows them all). None show while the pointer is off
+  the map, which includes over the view tabs or any other control laid on it. A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end, its platform running
   back along the track through the joints of a drawn route as a platform on a piece does [T-860].
   The markers take no presses, and show from zoom 9.
