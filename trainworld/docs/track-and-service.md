@@ -764,12 +764,13 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
   km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,
   `kernel::trip_km`). The assignment puts that extra, the trips times the curve's extra at their
-  pair's km, on the route nodes where they first board, split as they split (`Loads::rn_fare_x`,
-  each population's `fare_extra`); the trip explorer shows each route's extra on its rides by km.
-  Fare income is the first stretch's base on each of demand's trips and its rate on their
-  passenger-km per period, plus demand's extra on the line it is counted at (`LineDemand.fareX`,
-  `app/src/game/money.ts`; on a weekend the extra follows each route node's boardings), so demand
-  and income charge the same trips the same fares. Changing the fare
+  pair's km, on the stretches they ride, each by its km, split as they split (`Loads::rn_fare_x`,
+  each population's `fare_extra`, T-1516); the trip explorer shows each route's extra on its rides
+  by km. So a trip that changes lines pays each line the base share of its boarding and the curve's
+  fare a km on that line's km, and no line's fares go below zero. Fare income is the first stretch's base on
+  each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the
+  line it is counted at (`LineDemand.fareX`, `app/src/game/money.ts`; on a weekend the extra follows
+  each stretch's riders), so demand and income charge the same trips the same fares. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

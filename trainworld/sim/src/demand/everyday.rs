@@ -525,6 +525,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let mut use_k: Vec<(u32, f32)> = vec![];
     let mut dep: Vec<(u32, f32)> = vec![];
     let mut km: Vec<f32> = vec![];
+    let mut fxq: Vec<f32> = vec![];
     let bent = !g.fare_curve.is_line();
     let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
     for dst in 0..s {
@@ -549,7 +550,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
             if bent {
                 let st = sk.strategy(slot);
                 trip_km(g, st, dst, &mut km, &mut dep);
-                board_extra(g, st, dst, |src| flow[src].iter().sum(), &km, &mut dep, &mut l.rn_fare_x);
+                board_extra(g, st, dst, |src| flow[src].iter().sum(), &km, &mut dep, &mut fxq, &mut l.rn_fare_x);
             }
             let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
             match (&sk.next[slot], &sk.order[slot]) {

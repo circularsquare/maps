@@ -381,7 +381,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
   port 6160 by default, about four minutes),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
-  selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
+  selects the track, beside it the bubble), `t1515-click-priority.mjs` (a click on a rail line, bus
+  line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
+  network the bubble; port 6115 by default, about two minutes), `t1516-fares-never-negative.mjs`
+  (a new game and the real save with a bus feeder under a tapering fare curve: no line's fares a
+  day below zero; port 6116 by default, about six minutes), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
   `t658-lanes.mjs` (the real save: the overlay at zoom 12 and 15 pixel for pixel the baseline
   build's, 8800 by default; either of double track's two tracks picks the line at 17.5; two

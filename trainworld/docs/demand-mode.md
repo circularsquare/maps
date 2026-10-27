@@ -54,7 +54,7 @@ length. The regional market takes the curve unscaled at India's weight (the same
 every country at its default scale), and the plane's fare at the departing country's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
 its strategy (the riders' split over lines by their departures), and the assignment counts that
-correction where the trips first board, for fare income. Crowding multiplies ride time
+correction on the lines the trips ride, by their km on each, for fare income (T-1516). Crowding multiplies ride time
 without multiplying fare (T-067).
 
 **Walking** (Anita, T-558) is a third mode: its share is that of a logit among rail, the car and
