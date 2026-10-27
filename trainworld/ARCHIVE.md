@@ -1,5 +1,10 @@
 # Archive
 
+- T-1531 [P2] Station bubbles look. Done 2026-10-26 (tree t1524): one disc shaded blue to green by the transfers' share (OKLab, end colours kept), a 1 px faint edge; Total's hover total gets a dot in the disc's colour.
+- T-1529 [P2] Related lines on by default. Done 2026-10-26 (tree t1524): the toggle was never stored, so the signal now starts true.
+- T-1527 [P2] Terminal bar at one end only. Done 2026-10-26 (tree t1524): the buffer stop is drawn, and hovers, only where the track ends (flag 512); a terminal with track both sides has none.
+- T-1524 [P2] Drop the font selector. Done 2026-10-26 (tree t1524): Nunito only, the Settings row and code gone, a stored font choice dropped on load.
+
 - T-1532 [P2] Sounds: track and construction use the station's snap. Done 2026-10-26 (tree t1525): track placed and any construct play the snap; the fft recording and the synthesised "ke-cha" are out of the game (`public/sounds/track.wav` stays, unused). `checks/t1413-triggers.mjs`.
 - T-1526 [P2] The car count stepper dropped quick clicks. Done 2026-10-26 (tree t1525): it counted from the length of the last render; it now folds its clicks like the train count (`pendingCars`, `stepLineCars` in game/world.ts). Train count and headway steppers were already fine. `checks/t1526-steppers.mjs`.
 - T-1525 [P2] "Trips" for what people want to take, "rides"/"riders" for the player's system. Done 2026-10-26 (tree t1525): mode split tips, the world and city trip counts, the Cities Trips column, the trip explorer's route shares, the mode mix tip, the walk and drive notes.
