@@ -304,6 +304,11 @@ pub struct Row {
     /// written to market-rows.json
     #[serde(default, skip_serializing_if = "is_zero")]
     fw: f64,
+    /// T-1521: what a car costs to run a km of road leaving here, US$ (the app adds it from the
+    /// country's fuel and tolls, game/income.ts); 0 or absent: `CAR_USD_PER_KM`. Never written to
+    /// market-rows.json
+    #[serde(default, skip_serializing_if = "is_zero")]
+    cu: f64,
     /// T-1431: its people's income groups as the app gives them (game/income.ts, never written to
     /// market-rows.json): per group its share of the longer trips and the factor on `fw` its riders
     /// weigh every mode's money at, up to `GROUPS` pairs; absent: one group at `fw`
@@ -355,6 +360,8 @@ struct Place {
     park: f64,
     /// its row's `fw` (0: `FARE_MIN_PER_USD`)
     fw: f64,
+    /// its row's `cu` (0: `CAR_USD_PER_KM`)
+    cu: f64,
     /// T-1431: its income groups (share of the longer trips, factor on `fw`), the first `ng`;
     /// none: one group at `fw`
     gr: [(f32, f32); GROUPS],
@@ -367,6 +374,10 @@ impl Place {
     /// Perceived minutes a dollar costs a rider of average income leaving here.
     fn w(&self) -> f32 {
         if self.fw > 0. { self.fw as f32 } else { FARE_MIN_PER_USD }
+    }
+    /// What a car costs to run a km of road from here, US$.
+    fn car_usd(&self) -> f32 {
+        if self.cu > 0. { self.cu as f32 } else { CAR_USD_PER_KM }
     }
     /// Its income groups: each one's share of the longer trips and the factor on `w` its riders
     /// weigh money at.
@@ -428,6 +439,8 @@ struct PairRule {
     /// T-279: the routed drive's minutes and road km over the rule's (`Drive`)
     rt: f32,
     rk: f32,
+    /// T-1521: the car's running cost a km of road, US$, the two places' mean (0: `CAR_USD_PER_KM`)
+    cu: f32,
 }
 /// T-1431: the modes but rail of one zone pair for one rider: the reference mode's perceived minutes
 /// (the car's, or with no car the plane's), the weight of every mode but rail against it, the
@@ -447,7 +460,7 @@ impl PairRule {
     }
     /// A longer trip's car over a zone pair of this place pair, `d` km apart, to parking `park`.
     fn car_cost(&self, d: f32, park: f32) -> Cost {
-        routed_car(d, park, self.rt, self.rk).plus(self.cross)
+        routed_car(d, park, self.rt, self.rk, if self.cu > 0. { self.cu } else { CAR_USD_PER_KM }).plus(self.cross)
     }
     /// The car the place pair's split is decided on: centre to centre, the two places' mean parking.
     fn split_car(&self, p: &Place, q: &Place) -> Cost {
@@ -522,6 +535,7 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &
     let d = if r.car { drives.get(i, j) } else { Drive::RULE };
     r.cross = if r.car && i != j { crossing_cost((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
     (r.rt, r.rk) = (d.rt, d.rk);
+    r.cu = 0.5 * (p.car_usd() + q.car_usd());
     let (split, w) = (r.split_car(p, q), p.w());
     r.air = p.groups().iter().map(|&(t, f)| t * r.alt(split, split, w * f, mp).air).sum();
     r
@@ -931,20 +945,21 @@ fn drive_min(d: f32) -> f32 {
 }
 /// The road is this times the straight line.
 const ROAD_DETOUR: f32 = 1.25;
-/// T-276: what a car costs to run a km, dollars (AAA 2024), and the people sharing it on a
-/// longer trip (NHTS: about two).
+/// T-276: what a car costs to run a km, dollars (AAA 2024), where a place's row gives no country
+/// figure (T-1521), and the people sharing it on a longer trip (NHTS: about two).
 const CAR_USD_PER_KM: f32 = 0.15;
 const LONG_OCCUPANCY: f32 = 2.;
 /// T-276: a longer trip's car over `d` km to a zone where parking costs `park` perceived minutes,
 /// at `FARE_MIN_PER_USD` (tests).
 #[cfg(test)]
 fn car_min(d: f32, park: f32) -> f32 {
-    routed_car(d, park, 1., 1.).at(FARE_MIN_PER_USD)
+    routed_car(d, park, 1., 1., CAR_USD_PER_KM).at(FARE_MIN_PER_USD)
 }
 /// A longer trip's car over `d` km to parking `park`, with the rule's minutes and road km times
-/// `rt` and `rk` (T-279, `Drive`): parking and the running cost each person's, shared by two.
-fn routed_car(d: f32, park: f32, rt: f32, rk: f32) -> Cost {
-    Cost { min: drive_min(d) * rt + park / LONG_OCCUPANCY, usd: d * ROAD_DETOUR * rk * CAR_USD_PER_KM / LONG_OCCUPANCY }
+/// `rt` and `rk` (T-279, `Drive`), the car costing `usd_km` a km of road: parking and the running
+/// cost each person's, shared by two.
+fn routed_car(d: f32, park: f32, rt: f32, rk: f32, usd_km: f32) -> Cost {
+    Cost { min: drive_min(d) * rt + park / LONG_OCCUPANCY, usd: d * ROAD_DETOUR * rk * usd_km / LONG_OCCUPANCY }
 }
 /// A car carried over water by a shuttle or ferry where the landmass's fixed link takes no cars
 /// at its own price (T-712): the fare per car in dollars and the minutes beyond the straight drive.
@@ -975,9 +990,8 @@ const AIR_TERMINAL_MIN: f64 = 90.;
 const AIR_KMH: f64 = 750.;
 const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;
-/// T-1431: the base refitted against published rail and air shares with riders by income group
-/// (notes/T-1431.md).
-const AIR_FARE_USD: f64 = 30.;
+/// T-1521: published average economy fares at market rates, one world fare (notes/T-1521.md).
+const AIR_FARE_USD: f64 = 100.;
 const AIR_USD_PER_KM: f64 = 0.05;
 /// T-1430: the wait for a flight, whose frequency is not modelled: rail's planned first wait
 /// (`kernel::planned_board_cost`) at a flight every 2 hours.
@@ -1633,6 +1647,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
                 pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).cloned().collect();
                 pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
                 pl.fw = if r.fw.is_finite() && r.fw > 0. { r.fw } else { 0. };
+                pl.cu = if r.cu.is_finite() && r.cu > 0. { r.cu } else { 0. };
                 (pl.gr, pl.ng) = income_groups(&r.fg)?;
                 for &(j, t) in &r.near {
                     if (j as usize) < np && t.is_finite() && t >= 0. {
@@ -2039,6 +2054,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
             air: pl.air.clone(),
             park: pl.park,
             fw: 0.,
+            cu: 0.,
             fg: vec![],
         });
     }

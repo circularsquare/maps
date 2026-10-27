@@ -13,8 +13,8 @@ import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zone
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { letterOf } from "../game/lineLetter";
-import { faresOf, START_FARE, type Fares } from "../game/fareCurve";
-import { FARE_BASELINE, incomeScale, tidyScale } from "../game/income";
+import { faresOf, START_FARE, START_NODES, type Fares } from "../game/fareCurve";
+import { FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -39,17 +39,19 @@ const SNAPSHOT_DEBOUNCE_MS = 500;
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
 const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
-/** Default fare curve: `START_FARE` as three nodes. */
-const START_FARES: Fares = { ...faresOf(undefined, START_FARE), scales: {}, baseline: FARE_BASELINE };
-/** A save's fares (T-1277): one from before the baseline was New York's fares, so its curve is
- * divided by the home country's scale; the player's scales kept. */
+const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
+/** A save's fares. One from before T-1277 kept New York's fares, so its curve is divided by the home
+ * country's scale; one from before T-1521 (no `basis`) is turned to the market-rate rule with every
+ * fare weighing as it did (game/income.ts). */
 function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   if (!f) return { ...START_FARES };
-  const s = f.baseline ? 1 : incomeScale(cityById(HOME_CITY).country);
-  const g = s === 1 ? f : { base: f.base / s, perKm: f.perKm / s, nodes: f.nodes?.map(([k, v]) => [k, v / s] as [number, number]) };
+  const old = f.basis !== "usd";
+  const home = cityById(HOME_CITY).country;
+  const k = !old ? 1 : oldCurveFactor(home) / (f.baseline ? 1 : oldIncomeScale(home));
+  const g = k === 1 ? f : { base: f.base * k, perKm: f.perKm * k, nodes: f.nodes?.map(([km, v]) => [km, v * k] as [number, number]) };
   const scales: Record<string, number> = {};
-  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = tidyScale(v);
-  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE };
+  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : tidyScale(v);
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd" };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -2536,7 +2538,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd" };
       return { r: 0 };
     case "fareScale": {
       const scales = { ...fares.scales };

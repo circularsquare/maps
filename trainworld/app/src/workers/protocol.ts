@@ -254,7 +254,7 @@ export interface MoneyState {
   busRouteKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd" };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
