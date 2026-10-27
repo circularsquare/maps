@@ -266,7 +266,22 @@ population): the period's own network and graph, the first period's mode choice,
 scaled by the two periods' trips (commutes by the periods' shares, everyday trips purpose by
 purpose); the market, which has no estimate, is solved (accuracy: notes/T-1538.md). After an edit the estimates go out as the preview, then the worker solves those periods, which
 replaces them whole, so the cluster's rounds and final are the same to the bit. A rough solve
-crowds on from its estimates, and is never kept for a whole solve to reuse. While a solve steps through
+crowds on from its estimates, and is never kept for a whole solve to reuse.
+**One period in parts** (T-1543, `?perfOff=parts` off). With two or more solving workers, both
+free-flow rounds shown first are instead one period (the morning peak) solved by every solving
+worker together, each a part of its origins:
+the commutes' origin zones and the everyday layer's pairs dealt round-robin (`set_part(k, n)`,
+`kernel::mode_choice_part`), every other period estimated from each part, and each part's figures
+sent as a `result` with `part` for every period; the page adds a period's parts up (`addParts`).
+Every figure is a sum over origins, so the parts add up to the whole period's: the trips and the
+walking with no rail are the first part's, the market's figures (solved whole, in each worker's own
+periods) its holder's, the local fare reach worked out again from the added sums (`fareRaw`), and
+the bubbles' sums of a rough round sent by every worker over all five periods. Each worker then
+drops the other periods and solves its own as before (a rough solve its first period and
+estimates; after an edit every one), so the rounds after and the final are the same to the bit;
+its own round-0 figures stand in for a period whose parts did not all come (a worker that kept a
+period sends none) and change nothing once the parts are shown. Each part still finds every
+station's strategies, so a part costs a little over half a whole period, not a third. While a solve steps through
 its rounds, the bubbles' sums for a weekend or one purpose, which only the live state holds, are
 asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
 round still show while the zone has none.

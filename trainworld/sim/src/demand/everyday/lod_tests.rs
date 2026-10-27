@@ -346,6 +346,137 @@ fn levels_fine_is_today_coarse_keeps_rail() {
     assert!(bias.abs() < 0.005, "rail {:+.3}% on average", 100.0 * bias);
 }
 
+/// T-1543: one period's free flow solved in `n` parts of the origins (and the other periods
+/// estimated from each part) against the whole, figure by figure: the worst gap between the
+/// parts' sum and the whole's, as a share of the figure's largest value. Then each part's copy
+/// solves the period whole again, which must be a fresh solve's to the bit.
+fn parts_against_whole(h: &str, b: &[u8], net: &RealNet, n: u32, from: usize) -> Vec<(String, usize, f64)> {
+    let hop_km = net.hop_km();
+    let setup = || {
+        let mut a = DemandApi::new(h, b).unwrap();
+        let mut e = EverydayApi::beside_with(&a, h, b, &[]).unwrap();
+        a.set_network(&net.st_xy, &net.line_n, &net.stops, &net.times, &net.tph, &net.cars).unwrap();
+        e.set_network(&net.st_xy, &net.line_n, &net.stops, &net.times, &net.tph, &net.cars).unwrap();
+        a.set_fares(2.9, 0.1, &hop_km).unwrap();
+        e.set_fares(2.9, 0.1, &hop_km).unwrap();
+        (a, e)
+    };
+    // every figure a result carries, per period, and the bubbles' sums over every period
+    let figures = |a: &DemandApi, e: &EverydayApi, q: usize| -> Vec<(&'static str, Vec<f64>)> {
+        let f = |v: Vec<f32>| v.into_iter().map(|x| x as f64).collect::<Vec<f64>>();
+        let pick = |s: Vec<f64>| [1, 2, 3, 5, 10, 11, 12].iter().map(|&k| s[k]).collect::<Vec<f64>>();
+        vec![
+            ("commute seg", f(a.seg(q))),
+            ("commute board", f(a.board(q))),
+            ("commute alight", f(a.alight(q))),
+            ("commute transfers", f(a.transfers_in(q))),
+            ("commute fare extra", f(a.fare_extra(q))),
+            ("commute load of crush", f(a.load_of_crush(q))),
+            ("commute summary", pick(a.summary(q))),
+            ("everyday seg", f(e.seg(q))),
+            ("everyday board", f(e.board(q))),
+            ("everyday parts", f(e.part_loads(q))),
+            ("everyday transfers", f(e.transfers_in(q))),
+            ("everyday fare extra", f(e.fare_extra(q))),
+            ("everyday summary", pick(e.summary(q))),
+            ("everyday kinds", e.kind_totals(q)),
+        ]
+    };
+    let (mut wa, mut we) = setup();
+    // each copy finds its own strategies, as in its own worker
+    release_skims();
+    let t = now_ms();
+    assert!(wa.solve(from));
+    let ta = now_ms() - t;
+    assert!(we.solve(from));
+    println!("whole: commutes {ta:.0} ms, everyday {:.0} ms", now_ms() - t - ta);
+    for q in (0..PERIODS).filter(|&q| q != from) {
+        assert!(wa.estimate(from, q) && we.estimate(from, q));
+    }
+    let mut parts: Vec<(DemandApi, EverydayApi)> = (0..n).map(|_| setup()).collect();
+    let t0 = now_ms();
+    for (k, (a, e)) in parts.iter_mut().enumerate() {
+        a.set_part(k as u32, n);
+        e.set_part(k as u32, n);
+        release_skims();
+        let t = now_ms();
+        assert!(a.solve(from));
+        let ta = now_ms() - t;
+        assert!(e.solve(from));
+        println!("part {k} of {n}: commutes {ta:.0} ms, everyday {:.0} ms", now_ms() - t - ta);
+        for q in (0..PERIODS).filter(|&q| q != from) {
+            assert!(a.estimate(from, q) && e.estimate(from, q));
+        }
+    }
+    println!("{n} parts {:.0} ms in all", now_ms() - t0);
+    let mut out = vec![];
+    for q in 0..PERIODS {
+        let whole = figures(&wa, &we, q);
+        let each: Vec<_> = parts.iter().map(|(a, e)| figures(a, e, q)).collect();
+        for (i, (name, w)) in whole.iter().enumerate() {
+            let scale = w.iter().fold(0f64, |m, x| m.max(x.abs())).max(1e-9);
+            let gap = (0..w.len()).map(|j| (each.iter().map(|p| p[i].1[j]).sum::<f64>() - w[j]).abs()).fold(0.0, f64::max) / scale;
+            out.push((name.to_string(), q, gap));
+        }
+    }
+    // the bubbles: the commutes' sums and the everyday layer's legs per cell, over every period
+    let sums = |v: Vec<Vec<f32>>| -> Vec<f64> { (0..v[0].len()).map(|j| v.iter().map(|x| x[j] as f64).sum()).collect() };
+    for (name, w, p) in [
+        ("commute sums", wa.sub_sums(), sums(parts.iter().map(|(a, _)| a.sub_sums()).collect())),
+        ("everyday cell modes", we.cell_modes(), sums(parts.iter().map(|(_, e)| e.cell_modes()).collect())),
+    ] {
+        let scale = w.iter().fold(0f32, |m, x| m.max(x.abs())).max(1e-9) as f64;
+        let gap = w.iter().zip(&p).map(|(&x, &y)| (x as f64 - y).abs()).fold(0.0, f64::max) / scale;
+        out.push((name.to_string(), PERIODS, gap));
+    }
+    // each part's copy solves the period whole again, as after the parts' figures are out
+    let (mut fa, mut fe) = setup();
+    assert!(fa.solve(from) && fe.solve(from));
+    let bits = |v: Vec<f32>| v.into_iter().map(f32::to_bits).collect::<Vec<_>>();
+    let no_ms = |s: Vec<f64>| s.into_iter().enumerate().filter(|&(i, _)| i != 4).map(|(_, v)| v.to_bits()).collect::<Vec<_>>();
+    for (a, e) in parts.iter_mut() {
+        a.set_part(0, 1);
+        e.set_part(0, 1);
+        for q in (0..PERIODS).filter(|&q| q != from) {
+            a.forget_period(q);
+            e.forget_period(q);
+        }
+        assert!(a.solved_mask() == 1 << from && e.solved_mask() == 1 << from);
+        assert!(a.solve(from) && e.solve(from));
+        assert!(no_ms(a.summary(from)) == no_ms(fa.summary(from)) && no_ms(e.summary(from)) == no_ms(fe.summary(from)), "solved whole again: summaries to the bit");
+        assert!(bits(a.seg(from)) == bits(fa.seg(from)) && bits(e.seg(from)) == bits(fe.seg(from)) && bits(a.transfers_in(from)) == bits(fa.transfers_in(from)) && bits(e.transfers_in(from)) == bits(fe.transfers_in(from)), "solved whole again: loads to the bit");
+        assert!(bits(a.sub_sums()) == bits(fa.sub_sums()) && bits(e.cell_modes()) == bits(fe.cell_modes()), "solved whole again: sums to the bit");
+    }
+    out
+}
+
+/// T-1543: the parts of a period's origins add up to the whole period, and the parts' copies then
+/// solve it whole to the bit. The everyday layer's estimated periods scale each part's transfers
+/// and fare extras by its own pairs' rail (`EverydayApi::estimate`), so they are near, not equal.
+#[test]
+fn origin_parts_add_up_to_the_period() {
+    let (h, b, net) = small_zone();
+    for (name, q, gap) in parts_against_whole(&h, &b, &net, 3, 0) {
+        let near = name.starts_with("everyday") && q != 0 && (name.ends_with("transfers") || name.ends_with("fare extra"));
+        assert!(gap < if near { 0.05 } else { 1e-4 }, "{name}, period {q}: the parts' sum is {:.2e} of the largest figure off the whole", gap);
+    }
+}
+
+/// T-1543 on New York's real network, timed (`TW_PARTS=3`, `--ignored --nocapture`).
+#[test]
+#[ignore]
+fn origin_parts_on_new_york() {
+    let n: u32 = std::env::var("TW_PARTS").map_or(3, |v| v.parse().unwrap());
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let (h, b) = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
+    let net = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json")).0;
+    let gaps = parts_against_whole(&h, &b, &net, n, 0);
+    for (name, q, gap) in gaps.iter().filter(|g| g.2 > 1e-6) {
+        println!("{name}, period {q}: {gap:.2e}");
+    }
+    println!("worst: {:?}", gaps.iter().map(|g| g.2).fold(0.0, f64::max));
+}
+
 /// T-1538: a period estimated from another's free flow has its own trips, and solving it after
 /// replaces the estimate whole: its figures are a fresh solve's to the bit.
 #[test]

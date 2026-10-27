@@ -266,6 +266,76 @@ export function flowsBody(p: Float32Array, purposeParts: PurposePart[]): Omit<Fl
 
 /** The parts of a period's result (`FromDemand` "result") the day views read. */
 export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
+type PeriodResult = Extract<FromDemand, { kind: "result" }>;
+/**
+ * T-1543: one period's result from its parts (`result.part`, one from each solving worker, a part
+ * of its origins each): every figure added up, the market's taken from the part that holds it, and
+ * the local fare sensitivity's reach worked out again from the added sums (`fareRaw`). The round,
+ * the cluster and the version are the first part's; the times the longest part's.
+ */
+export function addParts(list: readonly PeriodResult[]): PeriodResult {
+  const [first] = list;
+  const market = list.find((r) => r.intercitySummary.length) ?? first;
+  const sum = <T extends Float32Array>(get: (r: PeriodResult) => T | undefined): T | undefined => {
+    let out: T | undefined;
+    for (const r of list) {
+      const v = get(r);
+      if (!v) continue;
+      if (!out) out = v.slice() as T;
+      else for (let k = 0; k < out.length; k++) out[k] += v[k] ?? 0;
+    }
+    return out;
+  };
+  // per zone: everything added but the round (0) and the time (4)
+  const byZone = (get: (r: PeriodResult) => Record<CityId, number[]> | undefined, times: boolean) => {
+    const out: Record<CityId, number[]> = {};
+    for (const r of list)
+      for (const [id, v] of Object.entries(get(r) ?? {})) {
+        const o = (out[id] ??= []);
+        for (let k = 0; k < v.length; k++) o[k] = !times ? (o[k] ?? 0) + v[k] : k === 0 ? v[k] : k === 4 ? Math.max(o[k] ?? 0, v[k]) : (o[k] ?? 0) + v[k];
+      }
+    return out;
+  };
+  const most = (get: (r: PeriodResult) => number) => Math.max(...list.map(get));
+  const summary = first.summary.slice();
+  for (const k of [1, 2, 3, 5]) summary[k] = list.reduce((s, r) => s + (r.summary[k] ?? 0), 0);
+  summary[4] = most((r) => r.summary[4] ?? 0);
+  let fareSense = first.fareSense;
+  if (list.every((r) => r.fareRaw) && market.fareSense) {
+    const [d, dKm, rail, km] = [0, 1, 2, 3].map((k) => list.reduce((s, r) => s + r.fareRaw![k], 0));
+    // demand.worker.ts `figures`: the sensitivity-weighted mean km over the rider-weighted one
+    const reach = d < 0 && km > 0 && rail > 0 ? dKm / d / (km / rail) : 1;
+    fareSense = [d, market.fareSense[1], reach, market.fareSense[3]];
+  }
+  const { part: _p, fareRaw: _f, ...base } = first;
+  return {
+    ...base,
+    summary,
+    fareSense,
+    citySummary: byZone((r) => r.citySummary, true),
+    cityParts: list.some((r) => r.cityParts) ? byZone((r) => r.cityParts, false) : undefined,
+    intercitySummary: market.intercitySummary,
+    intercityParts: market.intercityParts,
+    corridorKey: market.corridorKey,
+    corridorTable: market.corridorTable,
+    corridorShares: market.corridorShares,
+    corridorRail: market.corridorRail,
+    corridorModes: market.corridorModes,
+    elsewhere: market.elsewhere,
+    seg: sum((r) => r.seg)!,
+    board: sum((r) => r.board)!,
+    alight: sum((r) => r.alight)!,
+    arrive: sum((r) => r.arrive),
+    loadOfCrush: sum((r) => r.loadOfCrush)!,
+    fareX: sum((r) => r.fareX),
+    xferIn: sum((r) => r.xferIn),
+    parts: first.parts && { keys: first.parts.keys, seg: sum((r) => r.parts?.seg)!, board: sum((r) => r.parts?.board)!, alight: sum((r) => r.parts?.alight)!, ...(list.some((r) => r.parts?.lean) ? { lean: sum((r) => r.parts?.lean) } : {}) },
+    ms: most((r) => r.ms),
+    setupMs: most((r) => r.setupMs),
+    memBytes: most((r) => r.memBytes),
+  };
+}
+
 /** A result's fields `DayResult` names, without the rest (the corridor table and modes are large and
  * read elsewhere). */
 export function dayResultOf(r: DayResult): DayResult {

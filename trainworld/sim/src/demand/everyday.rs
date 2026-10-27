@@ -731,6 +731,10 @@ struct Period {
     /// Transfers platform to platform, every purpose together (T-176), averaged like the loads.
     xi: XferIndex,
     xfer: Vec<f32>,
+    /// T-1543: the part of the pairs solved (`DemandApi::set_part`), as the commutes' part of the
+    /// origins: the pairs dealt round-robin, the trips and the walking with no rail in the first
+    /// part, so the parts' figures add up to the whole's.
+    part: (u32, u32),
 }
 
 #[wasm_bindgen]
@@ -1114,7 +1118,11 @@ impl EverydayApi {
             }
             let density = self.engine.z.density();
             let park: Vec<(f32, f32, f32)> = (0..self.engine.z.n).map(|j| p.park_parts(&self.engine.z, j)).collect();
+            let (part, parts) = self.engine.part;
             for (i, pair) in self.pairs.iter().enumerate() {
+                if parts > 1 && i as u32 % parts != part {
+                    continue;
+                }
                 if pair.kind() as usize != od_kind {
                     if od_used {
                         cols.pack(&mut od, s, od_kind);
@@ -1228,15 +1236,21 @@ impl EverydayApi {
         });
         (probability, loads, parts, xfer, walk_lost, rail_d)
     }
-    /// Trips, rail trips and walking trips (less `walk_lost`, the walkers rail takes) in period `q`.
-    fn mode_totals(&self, q: usize, probability: &[[f32; 2]], walk_lost: &[f64]) -> (f64, f64, f64) {
+    /// Trips, rail trips and walking trips (less `walk_lost`, the walkers rail takes) in period `q`,
+    /// of `part` (`Period::part`).
+    fn mode_totals(&self, q: usize, probability: &[[f32; 2]], walk_lost: &[f64], part: (u32, u32)) -> (f64, f64, f64) {
         let mut trips = 0.0;
         let mut walk = 0.0;
         let mut rail = 0.0;
+        let lead = part.0 == 0;
         for kind in 0..self.totals.len() {
             let share = (OUTWARD[kind][q] + RETURN[kind][q]) as f64;
-            trips += self.totals[kind] * share;
-            walk += self.walks[kind] * share - walk_lost[kind];
+            if lead {
+                trips += self.totals[kind] * share;
+                walk += self.walks[kind] * share - walk_lost[kind];
+            } else {
+                walk -= walk_lost[kind];
+            }
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let r = pair.trips as f64
@@ -1244,7 +1258,7 @@ impl EverydayApi {
                     + RETURN[pair.kind() as usize][q] as f64 * probability[i][1] as f64);
             rail += r;
         }
-        (trips, rail, walk.max(0.0))
+        (trips, rail, if part.1 > 1 { walk } else { walk.max(0.0) })
     }
 }
 
@@ -1645,8 +1659,10 @@ impl EverydayApi {
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
         let (probability, loads, parts, xfer, walk_lost, rail_d) = self.pass(&g, &p, q, &xi);
-        let (trips, rail, walk) = self.mode_totals(q, &probability, &walk_lost);
+        let part = self.engine.part;
+        let (trips, rail, walk) = self.mode_totals(q, &probability, &walk_lost, part);
         self.per[q] = Some(Period {
+            part,
             rail_d,
             walk_lost,
             net,
@@ -1710,7 +1726,7 @@ impl EverydayApi {
             .collect();
         let probability = src.probability.clone();
         let walk_lost: Vec<f64> = src.walk_lost.iter().zip(&ratio).map(|(w, &r)| w * r as f64).collect();
-        let (trips, rail, walk) = self.mode_totals(to, &probability, &walk_lost);
+        let (trips, rail, walk) = self.mode_totals(to, &probability, &walk_lost, src.part);
         let k = if src.rail > 0.0 { (rail / src.rail) as f32 } else { 0.0 };
         let parts: Vec<Part> = src.parts.iter().zip(&ratio).map(|(pt, &r)| Part { seg: pt.seg.iter().map(|x| x * r).collect(), rn_board: pt.rn_board.iter().map(|x| x * r).collect(), rn_alight: pt.rn_alight.iter().map(|x| x * r).collect() }).collect();
         let mut loads = src.loads.scaled(k);
@@ -1726,8 +1742,19 @@ impl EverydayApi {
         let xfer = if xi.len == src.xi.len { src.xfer.iter().map(|x| x * k).collect() } else { vec![0.0; xi.len] };
         let mut rail_d = src.rail_d;
         rail_d.scale(k as f64);
-        self.per[to] = Some(Period { rail_d, walk_lost, net, p, g, loads, parts, probability, round: 0, ms: 0.0, fac, uniform: true, seen: vec![], trips, rail, walk, xi, xfer });
+        let part = src.part;
+        self.per[to] = Some(Period { rail_d, walk_lost, net, p, g, loads, parts, probability, round: 0, ms: 0.0, fac, uniform: true, seen: vec![], trips, rail, walk, xi, xfer, part });
         true
+    }
+    /// T-1543: `DemandApi::set_part`, over the pairs.
+    pub fn set_part(&mut self, k: u32, n: u32) {
+        self.engine.set_part(k, n);
+    }
+    /// T-1543: `DemandApi::forget_period`.
+    pub fn forget_period(&mut self, q: usize) {
+        if let Some(p) = self.per.get_mut(q) {
+            *p = None;
+        }
     }
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(Some(st)) = self.per.get(q) else {
@@ -1766,7 +1793,7 @@ impl EverydayApi {
                 msa(&mut old.rn_board, &new.rn_board, st.round);
                 msa(&mut old.rn_alight, &new.rn_alight, st.round);
             }
-            let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost);
+            let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost, st.part);
             st.trips = trips;
             st.rail = rail;
             st.walk = walk;
@@ -1835,7 +1862,7 @@ impl EverydayApi {
             }
         }
         // the pairs' shares by where they set out, their sum the entries kept
-        let (_, rail, _) = self.mode_totals(q, &st.probability, &st.walk_lost);
+        let (_, rail, _) = self.mode_totals(q, &st.probability, &st.walk_lost, st.part);
         if rail > 0.0 {
             let f = (st.rail * all / rail) as f32;
             for pr in st.probability.iter_mut() {
@@ -1844,7 +1871,7 @@ impl EverydayApi {
             }
             st.walk_lost.iter_mut().for_each(|v| *v *= f as f64);
         }
-        let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost);
+        let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost, st.part);
         if st.rail > 0.0 {
             st.rail_d.scale(rail / st.rail);
         }
@@ -1866,7 +1893,8 @@ impl EverydayApi {
                     s.rail,
                     s.walk,
                     s.ms,
-                    self.pairs.len() as f64,
+                    // a part's pairs (T-1543): those dealt to it
+                    ((self.pairs.len() as u32 + s.part.1 - 1 - s.part.0) / s.part.1) as f64,
                     0.0,
                     0.0,
                     0.0,
@@ -1958,6 +1986,13 @@ impl EverydayApi {
         let mut out = vec![0.0; 3 * nk];
         for kind in 0..nk {
             let share = (OUTWARD[kind][q] + RETURN[kind][q]) as f64;
+            // a part's (T-1543) as `mode_totals` has it
+            if st.part.1 > 1 {
+                let lead = st.part.0 == 0;
+                out[3 * kind] = if lead { self.totals[kind] * share } else { 0.0 };
+                out[3 * kind + 2] = if lead { self.walks[kind] * share } else { 0.0 } - st.walk_lost[kind];
+                continue;
+            }
             out[3 * kind] = self.totals[kind] * share;
             out[3 * kind + 2] = (self.walks[kind] * share - st.walk_lost[kind]).max(0.0);
         }
@@ -2048,7 +2083,12 @@ impl EverydayApi {
                     Some(m) => m >> q & 1 == 1,
                     None => self.per[q].is_some(),
                 };
-                if held {
+                // T-1543: a part of the pairs counts its pairs' samples, the first part those of none
+                let own = match &self.per[q] {
+                    Some(st) if st.part.1 > 1 => if pi == NONE { st.part.0 == 0 } else { pi % st.part.1 == st.part.0 },
+                    _ => true,
+                };
+                if held && own {
                     let (o, r) = (share_out(day, p, q), share_ret(day, p, q));
                     total += w * (o + r);
                     if let (true, Some(st)) = (pi != NONE, &self.per[q]) {

@@ -357,6 +357,10 @@ pub(crate) struct Period {
     /// Transfers platform to platform (T-176): the slots of `g`, averaged like the loads.
     xi: XferIndex,
     xfer: Vec<f32>,
+    /// T-1543: the part of the origins solved (`DemandApi::part`). A part's figures add up with
+    /// the other parts' to the whole's: the trips and the walking with no rail are the first
+    /// part's alone, and each part's walking is less the walkers its own rail trips take.
+    part: (u32, u32),
 }
 
 /// A pass's rail trips by place (`kernel::ModeOut`), both directions of the period's commutes
@@ -475,6 +479,8 @@ pub struct DemandApi {
     reusable: bool,
     /// The level the zone was opened at (`at_level`), which its everyday layer samples by.
     pub(crate) lod: Lod,
+    /// T-1543 (`set_part`): the part of the origins `solve` covers, part k of n; (0, 1) all.
+    pub(crate) part: (u32, u32),
 }
 
 /// Per period: start hour, end hour, demand level (0 high, 1 medium, 2 low), share of trips to
@@ -575,7 +581,7 @@ impl DemandApi {
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l) = with_skims(g, p, &self.want, |sk| {
             let er = station_exp(sk, p);
-            let mo = mode_choice(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr);
+            let mo = mode_choice_part(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part);
             drop(er);
             // the trips home: the same station pairs reversed
             let s = g.n_st;
@@ -782,6 +788,7 @@ impl DemandApi {
             layout_same: false,
             reusable: false,
             lod: self.lod,
+            part: (0, 1),
         }
     }
     /// The home weights access and subzones are built on (`with_weights`).
@@ -879,7 +886,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1136,7 +1143,8 @@ impl DemandApi {
         } else {
             (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty(), FareSense::default())
         };
-        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
+        let walk0 = if self.part.0 == 0 { walk0 } else { 0.0 };
+        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer, part: self.part });
         true
     }
 
@@ -1168,9 +1176,24 @@ impl DemandApi {
         let xfer = if xi.len == src.xi.len { src.xfer.iter().map(|x| x * k as f32).collect() } else { vec![0.0; xi.len] };
         let mut rail_d = src.rail_d.clone();
         rail_d.scale(k);
-        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, walk: src.walk * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer };
+        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, walk: src.walk * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer, part: src.part };
         self.per[to] = Some(est);
         true
+    }
+
+    /// T-1543: the next `solve`s cover part `k` of `n` of the origins (`kernel::mode_choice_part`),
+    /// so that copies in `n` workers solve one period together, the page adding their figures up;
+    /// `set_part(0, 1)` all of them again. Such a period is for figures shown before the period is
+    /// solved whole (it is never crowded on), as `estimate`'s.
+    pub fn set_part(&mut self, k: u32, n: u32) {
+        self.part = if n > 1 && k < n { (k, n) } else { (0, 1) };
+    }
+
+    /// T-1543: drop period `q`'s result (a part's, held for a period this worker does not solve).
+    pub fn forget_period(&mut self, q: usize) {
+        if let Some(p) = self.per.get_mut(q) {
+            *p = None;
+        }
     }
 
     /// One crowding round for period `q` (a penalty per segment from the averaged loads, then
@@ -1300,13 +1323,14 @@ impl DemandApi {
     /// Period `q`: round (0 = free flow), trips, rail trips, walked trips, ms of the last stage,
     /// subzone pairs, segments over seats at the busiest hour, worst load as a share of crush,
     /// rider-weighted p50 and p90 crowding penalty, and (T-1300) the fare sensitivity
-    /// (`FareSense`: d, d_km, km). Empty if `q` has no solve.
+    /// (`FareSense`: d, d_km, km). Empty if `q` has no solve. A part of the origins (T-1543) has
+    /// the trips only in its first part and no crowding figures, which would not add up.
     pub fn summary(&self, q: usize) -> Vec<f64> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
-        let (_, cs) = crowd_factors(&st.g, &st.net, &st.avg, &st.p);
+        let (_, cs) = if st.part.1 > 1 { (vec![], CrowdStats { segs_over_seats: 0, segs: 0, max_load_of_crush: 0.0, p50: 0.0, p90: 0.0 }) } else { crowd_factors(&st.g, &st.net, &st.avg, &st.p) };
         vec![
             st.round as f64,
-            st.trips,
+            if st.part.0 == 0 { st.trips } else { 0.0 },
             st.rail,
             st.walk,
             st.ms,

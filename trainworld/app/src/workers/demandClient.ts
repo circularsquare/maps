@@ -68,7 +68,7 @@ import { addOpened } from "../game/openedZones";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
 import type { BareFigures, DemandNetwork, FromDemand, Heap, OpenRejected, ToDemand } from "./demandProtocol";
-import { dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
+import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
 import { primeDealt } from "../game/farChunks";
 import { driveLevels, type DriveInput, type DriveLevel, type DriveSquares } from "../game/drives";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
@@ -286,6 +286,8 @@ interface Solve {
   /** T-402: the cluster in view, stepped through its rounds alone ahead of the rest (a solve with
    * the barrier, `plan.ahead`): its cities and key in `clusterRes` */
   ahead?: { cities: CityId[]; key: string };
+  /** T-1543: the parts of a period's result in so far, by cluster key, round and period */
+  partsIn?: Map<string, Result[]>;
 }
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
@@ -1395,7 +1397,7 @@ class DemandClient {
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
     const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ...(perfOff("estimate") ? { exact0: true } : {}) };
-    for (const w of this.workers) w.postMessage(msg);
+    this.postSolve(msg);
   }
   private rough: { svc: Service; id: CityId } | null = null;
   /** `svc` has lines the shown result has no figures for (new, or their stops changed) */
@@ -2272,6 +2274,22 @@ class DemandClient {
       }
       return;
     }
+    if (msg.part) {
+      // T-1543: a part of a period's origins: the period goes on once every part is in, added up,
+      // unless its worker's own result came first
+      s.memBytes[i] = msg.memBytes;
+      const key = `${msg.cluster?.cities.join(",") ?? ""}:${msg.summary[0]}:${msg.period}`;
+      const m = (s.partsIn ??= new Map());
+      const list = m.get(key) ?? [];
+      m.set(key, list);
+      list[msg.part[0]] = msg;
+      if (list.filter(Boolean).length < msg.part[1]) return;
+      m.delete(key);
+      const round = msg.summary[0];
+      const had = msg.cluster ? s.clusterRes?.get(msg.cluster.cities.join(","))?.byRound[round]?.[msg.period] : s.byRound[round]?.[msg.period];
+      if (!had) this.receive(i, addParts(list));
+      return;
+    }
     if (msg.cluster) {
       // T-392: one cluster solved ahead of the rest: a round of it is shown once every period of it
       // is in. Its rounds land in order: with the barrier (T-402) no worker starts one before every
@@ -2282,7 +2300,8 @@ class DemandClient {
       let e = m.get(key);
       if (!e) m.set(key, (e = { byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1 }));
       const res = e.byRound[round];
-      if (!res) return;
+      // (T-1543: a worker's own result after the parts were shown changes nothing shown)
+      if (!res || round <= e.published) return;
       res[msg.period] = msg;
       if (!res.every(Boolean) || round <= e.published) return;
       e.published = round;
@@ -2296,7 +2315,8 @@ class DemandClient {
       return;
     }
     const results = s.byRound[msg.summary[0]];
-    if (!results) return;
+    // (T-1543: a worker's own result after the parts were shown changes nothing shown)
+    if (!results || msg.summary[0] <= s.published) return;
     results[msg.period] = msg;
     (s.roundFirstAt ??= [])[msg.summary[0]] ??= performance.now();
     (s.periodMs[msg.period] ??= [])[msg.summary[0]] = msg.ms;
@@ -2437,8 +2457,14 @@ class DemandClient {
     demandSolving.value = null;
     const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
     this.freshParts = false;
-    for (const w of this.workers) w.postMessage(msg);
+    this.postSolve(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
+  }
+
+  /** A solve to every worker, each solving worker told its part of the origins (T-1543). */
+  private postSolve(msg: Extract<ToDemand, { kind: "solve" }>) {
+    const n = perfOff("parts") ? 1 : this.computeN;
+    this.workers.forEach((w, i) => w.postMessage(n > 1 && i < n ? { ...msg, part: [i, n] } : msg));
   }
 
   // --- Demand views (T-078; types and meaning in game/demand.ts) ---------------------------------

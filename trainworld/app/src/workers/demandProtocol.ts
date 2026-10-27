@@ -112,6 +112,11 @@ export type ToDemand =
       only?: CityId[];
       /** T-1538 `?perfOff=estimate`: no period's first figures estimated from another's */
       exact0?: boolean;
+      /** T-1543: this solving worker's part k of n: a free-flow round shown before it is solved (a
+       * rough solve's, the zone in view's preview after an edit) is one period solved in n parts of
+       * its origins, every period estimated from each part, sent as `result`s with `part` that the
+       * page adds up (`?perfOff=parts`: none) */
+      part?: [number, number];
       /** T-1174: every market part made afresh from the newest composition, as a worker started
        * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
       freshParts?: boolean }
@@ -311,6 +316,12 @@ export type FromDemand =
        * still the whole network's, zero off the cluster. T-402: in a solve with the barrier, the
        * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]` */
       cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array };
+      /** T-1543: one worker's part k of n of the period's origins (`solve.part`): every figure is the
+       * part's, to be added to the other parts', the market's only in the worker holding the period.
+       * `fareRaw`: the sums `fareSense`'s local reach is worked out from (rail trips per curve
+       * dollar, the same times km, rail trips, their km), which add up where reaches do not */
+      part?: [number, number];
+      fareRaw?: [number, number, number, number];
     }
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
    * keeps. `ahead` (T-402, a solve with the barrier): the cities of the cluster in view, stepped

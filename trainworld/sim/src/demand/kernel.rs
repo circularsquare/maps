@@ -4160,6 +4160,13 @@ pub(crate) fn walk_kept(acc: &[(u32, f32, f32, u32)], eg: &[(u32, f32, f32, u32)
 }
 
 pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail) -> ModeOut {
+    mode_choice_part(z, gr, sz, er, walk_tab, walk_max, s, p, nr, (0, 1))
+}
+
+/// `mode_choice` over part `k` of `n` of the origin zones, dealt round-robin (T-1543): every
+/// figure is a sum over origins, so the parts' figures add up to the whole's (`trips_total` is
+/// the whole's in every part).
+pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32)) -> ModeOut {
     let share = p.period_share as f64;
     // T-1059: Anita's walking rule, with the strategies' walks between stations (`Skims::walk`)
     let rule = p.walk_rule > 0.0 && walk_tab.len() == s * s && walk_max.len() == s;
@@ -4346,7 +4353,10 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
     let mut visit: Vec<[f32; 4]> = Vec::with_capacity(dz.len());
     let mut visit_w: Vec<f32> = Vec::with_capacity(dz.len());
     let mut visit_b: Vec<u8> = Vec::with_capacity(dz.len());
-    for &i in &ozones {
+    for (oi, &i) in ozones.iter().enumerate() {
+        if n > 1 && oi as u32 % n != k {
+            continue;
+        }
         let base = gr.base(z, i);
         let us = &sz.zo[sz.zo_off[i] as usize..sz.zo_off[i + 1] as usize];
         let ou_zone: f32 = us.iter().map(|&u| ou[u as usize]).sum();
