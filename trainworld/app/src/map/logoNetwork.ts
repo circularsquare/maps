@@ -41,7 +41,7 @@ type P = [number, number];
 type C = [number, number] | [number, number, { r?: number; rev?: true }];
 /** A stroke: its corner points (upright, y up from its row's baseline) or a circle, where trains stop
  * besides its ends (points near it), its palette colour. */
-interface Stroke { pts?: C[]; circle?: [number, number, number]; stops?: P[]; colour: number }
+interface Stroke { pts?: C[]; circle?: [number, number, number]; stops?: P[]; colour: number; bare?: true }
 
 /** The two rows, x-height 56, ascenders to 96; "world" set right so "trains" sits over its "wor".
  * Stations are the ends and the stops listed. */
@@ -50,12 +50,12 @@ const ROWS: { strokes: Stroke[]; dx: number }[] = [
     // the lead-in turning up the t's stem to a switchback at its top, back down past the fork and
     // on along the baseline into the r
     { pts: [[-70, 0], [10, 0, { r: 30 }], [10, 96, { rev: true }], [10, 0], [40, 0], [40, 56], [64, 56]], stops: [[10, 68]], colour: 1 },
-    // the t's bar, across the stem
-    { pts: [[-12, 68], [34, 68]], colour: 0 },
+    // the t's bar, across the stem, bare
+    { pts: [[-12, 68], [34, 68]], colour: 1, bare: true },
     // the a: round its bowl, up its stem and back, on along the baseline, up the i and back
     { pts: [[114, 52], [78, 52, { r: 18 }], [78, 0, { r: 18 }], [114, 0, { r: 18 }], [114, 53, { rev: true }], [114, 0], [144, 0], [144, 56, { rev: true }], [144, 0], [162, 0]], stops: [[144, 30]], colour: 2 },
-    // the i's dot
-    { circle: [146, 80, 10], colour: 11 },
+    // the i's dot, bare
+    { circle: [146, 80, 10], colour: 11, bare: true },
     // from the i's foot the n (as wide as the o), then the s squiggling up
     { pts: [[150, 0], [176, 0], [176, 56], [214, 56], [214, 0], [250, 0], [250, 28], [226, 28, { r: 14 }], [226, 56, { r: 14 }], [252, 56]], stops: [[195, 56]], colour: 4 },
   ] },
@@ -66,9 +66,9 @@ const ROWS: { strokes: Stroke[]; dx: number }[] = [
     { pts: [[50, 0], [120, 0, { r: 18 }], [120, 52, { r: 18 }], [80, 52, { r: 18 }], [80, 0, { r: 18 }], [140, 0], [140, 56], [164, 56]], stops: [[100, 52]], colour: 0 },
     // the l, along the baseline, round the d's bowl and up its stem
     { pts: [[180, 96], [180, 0], [242, 0], [242, 52, { r: 18 }], [206, 52, { r: 18 }], [206, 0, { r: 18 }], [242, 0], [244, 96]], stops: [[196, 0], [211, 42]], colour: 5 },
-    // the exclamation mark: its stem, and a dot like the i's
-    { pts: [[272, 96], [272, 30]], colour: 1 },
-    { circle: [272, 12, 9], colour: 11 },
+    // the exclamation mark: its stem, and a bare dot like the i's, both pink
+    { pts: [[272, 96], [272, 30]], colour: 11 },
+    { circle: [272, 12, 9], colour: 11, bare: true },
   ] },
 ];
 
@@ -211,7 +211,7 @@ export function logoNetwork(): LogoNetwork {
     for (const p of s.stops ?? []) at(path.near(place(p, row.dx, ri)));
     for (const i of revs) stops.push({ arrive: path.cum[i] - hD, leave: path.cum[i] + hD, rev: true });
     stops.sort((a, b) => a.arrive - b.arrive);
-    return { path, stops, colour: s.colour };
+    return { path, stops, colour: s.colour, bare: !!s.bare };
   }));
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const s of strokes) for (const [x, y] of s.path.p) {
@@ -263,8 +263,9 @@ export function logoNetwork(): LogoNetwork {
     lineCars.push(1);
     lineIds.push(String(li));
     const stops = s.stops.map((x) => ({ arrive: x.arrive * M, leave: x.leave * M, rev: x.rev }));
+    // a bare stroke (the dots, the t's bar) has no stations and no train
     stops.forEach((x, k) => {
-      if (x.rev || (s.path.closed && k === stops.length - 1)) return;
+      if (s.bare || x.rev || (s.path.closed && k === stops.length - 1)) return;
       const end = !s.path.closed && (k === 0 || k === stops.length - 1);
       // a terminal's node is the track's end, its platform running back along the track from there
       addStation(path, end ? (k === 0 ? 0 : len) : x.arrive);
@@ -284,7 +285,7 @@ export function logoNetwork(): LogoNetwork {
     }
     // the train leaves at a different moment on each line, so they are not all in step
     const off = ((li * 0.37) % 1) * cycle;
-    for (let dep = off - 2 * cycle; dep < 3600 + cycle; dep += cycle) {
+    for (let dep = off - 2 * cycle; !s.bare && dep < 3600 + cycle; dep += cycle) {
       trips.push(li * 6, dep);
       ends.push(dep + cycle / 2);
       trips.push(li * 6 + 3, dep + cycle / 2);

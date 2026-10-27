@@ -196,6 +196,11 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   `research/intercity-review.md`), in a world of zones (T-276). Plausible is the bar.
 - **Performance is open work** (2026-10-15, replacing "content first"): quantify each item's impact
   and do the high-impact ones and those that let the game scale to hundreds of cities first.
+  An approximation that buys a big speed or memory gain is welcome when a player is unlikely to
+  see anything they could tell is wrong (Anita, 2026-10-27): judge by what is visible and
+  checkable in play, not by exactness; say what the lie is in DECISIONS.md.
+- **Buses are settled** (Anita, 2026-10-27, after T-1576/T-1577): dense feeders may stay crowded
+  ("lots of factors affect real bus demand"); no further bus tuning unless she asks.
 - **Live feel** (2026-10-13): a figure that would change often if every train and passenger were
   simulated (money, riders, waiting counts) moves smoothly, not once an hour.
 - **No dividers within a section** (Anita, 2026-10-24): rows of one section (the fare rows, a list's

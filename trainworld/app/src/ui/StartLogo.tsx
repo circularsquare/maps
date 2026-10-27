@@ -9,9 +9,11 @@ import { NetworkRenderer, type DrawOptions } from "../map/renderer";
 import { LOGO_ZOOM, logoNetwork } from "../map/logoNetwork";
 
 /** game seconds a second: the trains' pace in the menu */
-const TIME_SCALE = 7;
+const TIME_SCALE = 10.5;
 /** the logo's largest scale on a wide screen, of its design size */
 const MAX_SCALE = 1.05;
+/** T-1593: the logo this share of the size it could take (Anita: "25% smaller") */
+const SIZE = 0.75;
 const OPTIONS: DrawOptions = { showTrains: true, byLevel: false, selLine: -1, selEdge: -1, selStation: -1, flatMarks: false, hollowTrains: true };
 
 /** what the checks read (`window.twLogo`): frames drawn, their draws' ms on the CPU, and a stop for
@@ -37,7 +39,7 @@ export function StartLogo() {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const fit = () => {
       const avail = Math.max(120, Math.min(window.innerWidth - 32, 1400));
-      scale = Math.min(MAX_SCALE, avail / net.w);
+      scale = SIZE * Math.min(MAX_SCALE, avail / net.w);
       const dpr = window.devicePixelRatio || 1;
       const w = net.w * scale, h = net.h * scale;
       canvas.style.width = w + "px";

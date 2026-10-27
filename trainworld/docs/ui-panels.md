@@ -657,14 +657,15 @@ registry centre and zoom, or over New York with none [T-310].
   that, 10 s at most), and the account's games not in this browser follow the browser's as cards
   with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
   With no saved game (a first visit) it opens straight on the new game sheet [T-1441]. The dock and top bar are taken out of the page and the
-  map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
-  the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
+  map controls hidden, so the map fills the page; it is centred around 10° E, 20° N one zoom closer
+  than the zoom at which the world from 60° S to 75° N covers the page [T-927, T-1593;
   `worldCover`], with the zone outlines, outside shade and every basemap name hidden until the pick [T-974, T-1567]. The menu takes every key outside itself, and nothing loads behind it but the map.
 - Over the card (and the new game sheet) the logo [T-1567; `ui/StartLogo.tsx`,
   `map/logoNetwork.ts`], after Anita's sketch: "trains" over "world!" in joined-up script slanted
   forward, its curves of one radius before the slant, switchbacks where a curve would be tighter,
   each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
-  cross, as a complex's do), and one train a line, a white pill, running with stops, drawn by the game's own
+  cross, as a complex's do), and one train a line, a white pill, running with stops (the two dots and
+  the t's bar are bare lines, no stations or train) [T-1593], drawn by the game's own
   network renderer at zoom 15 in a canvas of its own straight over the map, scaled to the screen; the
   menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
   one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"

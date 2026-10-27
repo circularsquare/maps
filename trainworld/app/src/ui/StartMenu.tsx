@@ -47,12 +47,13 @@ export function choiceFromUrl(): GameChoice | null {
   return null;
 }
 
-/** T-927: the view behind the menu, the band of the world from 60° S to 75° N covering the page:
- * all of it on a wide screen, its centre on a narrow one. Mercator y of 75° N is 2.028, of 60° S
- * -1.317, so the band is 3.345 / 2π of the world's 512 px tile height at zoom 0. */
+/** T-927: the view behind the menu, centred around 10° E, 20° N: one zoom closer (T-1593, Anita:
+ * "twice as zoomed in") than the zoom at which the band of the world from 60° S to 75° N covers the
+ * page. Mercator y of 75° N is 2.028, of 60° S -1.317, so the band is 3.345 / 2π of the world's
+ * 512 px tile height at zoom 0. */
 export function worldCover(el: HTMLElement): { center: [number, number]; zoom: number } {
   const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
-  return { center: [10, 20], zoom: Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
+  return { center: [10, 20], zoom: 1 + Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
 }
 
 /** T-1567: the logo over the menu, in place of the welcome heading; `?logo=0` leaves it out (the

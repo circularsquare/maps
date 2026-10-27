@@ -1,7 +1,12 @@
 # Archive
 
+- T-1593 [P2] Logo follow-ups. Done 2026-10-27: both dots and the t's bar bare lines, the bar blue, the ! pink (its stem keeps two stations and a train); logo 25% smaller, trains 50% faster, the menu's map one zoom closer. `artifacts/trainworld/review/logo_v9.png`.
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way.
 
+- T-1575 [P3] 42nd St bus pushed riders into cars. Closed 2026-10-27 without its own fix: after T-1576 and T-1577 the same bus adds 3,601 rail trips and takes 2,403 drivers off the road. notes/T-1466.md.
+- T-1466 [P3] Bus ridership against real buses. Done 2026-10-27: analysis, then T-1576 and T-1577 built; Manhattan avenue buses now near the M15, suburbs in range, dense Brooklyn feeders still 2-3x real (left, Anita may revisit). notes/T-1466.md.
+- T-1577 [P2] Bus speed by place. Done 2026-10-27: a bus runs at min(18 km/h, 70% of the car's local street speed there), 11.55 in the densest centres, from each zone's pack; a short bus between two train stations now pays the boarding cost. Manhattan avenue 2,060 to 2,470 a km; 42nd St adds rail trips. notes/T-1466.md "T-1577".
+- T-1558 [P2] T-1169 stage 2: exact memory fixes. Done 2026-10-27: sparse `StationGrid`, pair rules for open places only, counted `od_c`, 4-byte `site_key`; figures equal to the bit on New York, all-China and Japan. All-China peak 2,036 to 1,537 MB (held 1,563 to 1,375), Japan peak 2,900 to 2,705. notes/T-1169.md "Stage 2".
 - T-1586 [P2] Tidy: artifacts, DECISIONS/ARCHIVE split, notes, checks. Done 2026-10-27: artifacts/trainworld 25.4 to 11.7 GB (images, superseded world_run batches and finished tasks' dumps deleted, the rest grouped); DECISIONS and ARCHIVE entries before 2026-10-20 in `DECISIONS-to-2026-10-19.md` and `ARCHIVE-to-2026-10-19.md`; 48 notes into `notes/archive/` by id range; 81 one-off checks into `checks/old/`. notes/T-1586.md.
 - T-1576 [P2] Bus tuning from T-1466. Done 2026-10-27: 6 perceived minutes on every bus boarding (`BUS_BOARD_MIN`, changes onto a bus included), corridor 300 m, running cost $9 a bus-km; riders fall 26-62%, Manhattan avenue 2,800 a km. notes/T-1466.md "T-1576".
 - T-1567 [P2] A landing screen: the name in rail lines with trains. Done 2026-10-27 after seven rounds on Anita's sketch: "trains" over "world!" in slanted script, the game's renderer over the bare map, one train a line; the welcome heading gone (`?logo=0` restores it). notes/T-1567.md.
