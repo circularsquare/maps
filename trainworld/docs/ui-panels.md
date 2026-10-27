@@ -110,7 +110,7 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
-  everyday outings, school and university), so the shares are of rides per day, not people [T-342].
+  everyday outings, school and university), so the shares are of trips per day, not people [T-342].
   The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]); the
   bar's hover gives all three shares with their counts and the total [T-1107]. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -128,8 +128,8 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   the train rides summed over every city with a built station and a demand view, as the Cities
   tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
   whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
-  (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion rides a day in
-  the world (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under
+  (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion trips a day in
+  the world (8.2 billion people at about 3 trips each, `WORLD_RIDES`), so it is usually well under
   1% [T-1301], the walking and driving taking the rest in the cities' own proportions. No goal ticks.
   Its hover gives the train trips a day and in how many cities, the share of the world's rides and
   how they are reached, then the cities' own split as a city's hover gives it.
@@ -448,7 +448,7 @@ row "World" that sums them [T-857, T-1110] (a trophy after its name opens the le
 are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
-same hover), its train rides per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
+same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
 construction, left out of the figure, when there were any; losses red), and its points, those of the
 past 24 game hours, changing once a game hour, to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure, points a day with the
