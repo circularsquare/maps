@@ -127,7 +127,7 @@ function SignedIn({ a }: { a: AccountView }) {
       </div>
     </form>}
     <div class="acct-btns acct-sec">
-      <button class={"btn text" + (panel === "signout" ? " on" : "")} data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={async () => {
+      <button class={"btn text" + (panel === "signout" ? " on" : "")} data-tip="Signs out of trainsworld and noritetsu in this browser" onClick={async () => {
         // T-988: with this account's games in this browser, whether they stay is asked first
         if (gamesOn() && await tiedHere()) { setPanel("signout"); return; }
         signOut();

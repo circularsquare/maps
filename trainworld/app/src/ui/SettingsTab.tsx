@@ -66,6 +66,8 @@ export function SettingsTab() {
           </label>
         </div>
       )}
+      <div class="h">Station circles</div>
+      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} tip={`Station circles at ${Math.round(d.stationCircleSize * 100)}% of their usual size`} set={(v) => setDisplay("stationCircleSize", v)} />
       {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
       <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays, a Saturday and a Sunday over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
         <span>Day</span>
@@ -104,7 +106,7 @@ export function SettingsTab() {
           <span data-tip="Draw real-world railways on the base map">Real network</span>
         </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
-          <span data-tip="Shade hills and mountains on the base map. Track on gentle slopes costs 1.25 times as much, on hills 1.6 and on mountains 2.5, except in bored tunnels (elevation -2 and -3).">Terrain</span>
+          <span data-tip="Shade hills and mountains on the base map. Track on hills costs 1.25 or 1.6 times as much, the steeper the more, and on mountains 2.5, except in bored tunnels (elevation -2 and -3).">Terrain</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>

@@ -34,10 +34,10 @@ try {
   // The checks read the start curve and the scale from the game, set curves in the dollars shown, and
   // read them back in the dollars shown.
   const { D, S } = await page.evaluate(async () => {
-    const { START_FARE, faresOf } = await import('/src/game/fareCurve.ts');
+    const { START_NODES } = await import('/src/game/fareCurve.ts');
     const { fareScale } = await import('/src/game/income.ts');
     const { HOME_CITY, cityById } = await import('/src/game/cities.ts');
-    return { D: faresOf(undefined, START_FARE).nodes, S: fareScale(cityById(HOME_CITY).country, {}) };
+    return { D: START_NODES, S: fareScale(cityById(HOME_CITY).country, {}) };
   });
   const DEFAULT = JSON.stringify(D);
   /** a test curve in the dollars shown: $1.50 + $0.10 a km through 20 and 100 km */
@@ -51,7 +51,7 @@ try {
   const waitNodes = (want) => page.waitForFunction((want) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === want, want, { timeout: 30000 }).catch(() => {});
   const waitChange = (before) => page.waitForFunction((b) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== b, before, { timeout: 30000 }).catch(() => {});
   const setNodes = async (shown) => { const nodes = toBase(shown); await page.evaluate((nodes) => window.tw.client.edit({ op: 'fares', nodes }), nodes); await waitNodes(JSON.stringify(nodes)); await page.waitForTimeout(200); };
-  // each row's text with its spaces dropped ("0-20km+$0.10perkm"); the first row is "Fares here"
+  // each row's text with its spaces dropped ("0-20km+$0.10perkm"); the first row is the fare scale ("Fares in <country>")
   const rowsText = () => page.$$eval('ul.fare-rows > li', (ls) => ls.map((l) => l.textContent.replace(/\s+/g, '')));
   const click = async (sel) => { const before = await nodesNow(); await page.click(sel); await waitChange(before); await page.waitForTimeout(150); return shownNow(); };
   const type = async (label, text) => {

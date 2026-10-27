@@ -12,7 +12,7 @@ import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "..
 import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
-import { Actions, Icon, SegBar } from "../widgets";
+import { Icon, SegBar } from "../widgets";
 import { pctOf } from "./tripText";
 import type { City } from "../../game/cities";
 import { builtCities } from "../../game/worldTotals";
@@ -32,7 +32,7 @@ function TripsBar({ label, tip, what, parts, goals }: { label: string; tip?: str
         <span class="grow" data-tip={tip}>{label}</span>
         <span class="val" data-tip={`${exact(all)} ${what} ${shownDayPhrase.value}`}>{count(all)}</span>
       </div>
-      {/* T-1437: the goals over the city's own split, as on the top bar */}
+      {/* T-1437: the goals over the city's own split (T-1551: only here, not on the top bar) */}
       {goals ? <div class="goal-bar">{bar}<GoalTicks city={goals} /></div> : bar}
     </li>
   );
@@ -77,12 +77,10 @@ export function CityInspector({ id }: { id: string }) {
       <div class="title">
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
-      </div>
-      <Actions>
         <button class="btn icon" data-tip={`Go to ${city.name}`} aria-label={`Go to ${city.name}`} onClick={() => goTo({ kind: "city", name: city.name, city })}>
           <Icon.locate />
         </button>
-      </Actions>
+      </div>
       <CityFigures city={city} built={built} />
       {!market ? (
         <p class="muted">Calculating demand</p>

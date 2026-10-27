@@ -129,6 +129,8 @@ export interface DrawOptions {
   hotStations?: number[];
   /** T-1248: lines, track and trains drawn this many times their width; absent: 1 */
   lineScale?: number;
+  /** T-1567: every train one pill, white with a rim of its line's colour (the start menu's logo) */
+  hollowTrains?: boolean;
 }
 
 interface StrokeVao {
@@ -479,7 +481,7 @@ export class NetworkRenderer {
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1040,11 +1042,13 @@ export class NetworkRenderer {
     const shades = shadeColours();
     gl.uniform3fv(u.u_sel, rgbf(shades.mapInk));
     gl.uniform3fv(u.u_casing_rgb, rgbf(shades.casing));
-    // T-819, T-1284: 2 px of red dashes either side, outside the casing, of a line on full track, 1 px of casing colour round them
+    // T-819, T-1284, T-1549: up to 1.5 px of red dashes either side, outside the casing, of a line on full
+    // track, 0.5 px of casing colour round them; both scaled down with zoom, so far out they stay a hairline
     const fullPass = this.anyFull;
+    const fullScale = interp(zoom, [[9, 0.3], [12, 0.6], [15, 1]]) * dpr * k;
     gl.uniform1i(u.u_full_pass, 0);
-    gl.uniform1f(u.u_full_px, 4 * dpr);
-    gl.uniform1f(u.u_full_out, 2 * dpr);
+    gl.uniform1f(u.u_full_px, 3 * fullScale);
+    gl.uniform1f(u.u_full_out, 1 * fullScale);
     gl.uniform1f(u.u_full_dash, 8 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));
     gl.uniform1i(u.u_ghost, 0);
@@ -1334,7 +1338,9 @@ export class NetworkRenderer {
     // No trains zoomed far out (T-205).
     this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
-      this.detailedTrains = zoom >= STATION_BOX_ZOOM;
+      this.detailedTrains = zoom >= STATION_BOX_ZOOM && !opt.hollowTrains;
+      gl.useProgram(this.trainProg);
+      gl.uniform1i(this.trainU.u_hollow, opt.hollowTrains ? 1 : 0);
       const tw = interp(zoom, TRAIN_PX) * dpr * k;
       gl.useProgram(this.trainProg);
       setCamera(gl, this.trainU, lc);

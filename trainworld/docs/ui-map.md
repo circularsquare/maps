@@ -40,13 +40,15 @@ under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fet
 stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
 sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
 white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
-them with the rest. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
+them with the rest. A terrain tile is held back until the basemap's vector tile over the same ground has loaded (a
+`twdem://` protocol in `basemap.ts`; 3 s at most), so the shade and the water and land appear
+together [T-1552]. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
 terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were left aside: no terms
 for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
 cut from GEDTM30 (notes/T-1270.md).
 
 **The class tint** [T-1270 stage 3]: with Terrain on and a build tool on (track, station, delete,
-blueprint), gentle slopes, hills and mountains get a faint brown wash, stronger by class (light:
+blueprint), hills (both classes) and mountains get a faint brown wash, stronger by class (light:
 brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
 the grids the clock worker put in the track model (a "terrain" message per zone, `game/terrain.ts`),
 so it shows exactly what is charged and nothing for a zone not loaded. `map/terrainTint.ts` draws
@@ -127,11 +129,13 @@ the class under the pointer: "Hills, track costs 1.6x".
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
-    1.5 px each side outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in
+    1.5 px each side at most outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in
     `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
     its casing between and a neighbouring line's casing covers the band where they touch, with
-    1 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
-    reads as a stripe on a red or orange line, and its
+    0.5 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
+    reads as a stripe on a red or orange line; band and outline scale with zoom (30% at zoom 9, 60%
+    at 12, full from 15; `fullScale` in `map/renderer.ts`, T-1549), and the band's red is mixed 25%
+    towards the casing's colour, and its
     body darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
     with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
     from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
@@ -436,11 +440,13 @@ those who got on, less the load carried on.
   tool other than select is on they take no pointer events, so a press reaches what is under them.
   With select, a tag that opens nothing of its own (not a junction) selects what is under it, its
   station first.
-- **Reversal icons** [T-797; `map/reversalMarks.ts`]: over every station where a line's trains
+- **Reversal icons** [T-797, T-1581; `map/reversalMarks.ts`]: over every station where a line's trains
   reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) and every bare track end
-  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), a 30 px amber disc with
+  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), an amber disc with
   a dark U-turn arrow, floating on a short stem just above the place so the stop editing marker
-  on it stays clickable. It keeps its size at every zoom and never hides for names or zoom, so a
+  on it stays clickable. Like the built junction badges it is small (18 px, a 1 px outline, a 1 px
+  stem) unless a placing tool is on (track, station, line, blueprint or bus: 30 px, a 2 px outline),
+  switching at once. It keeps its size at every zoom and never hides for names or zoom, so a
   reversal, most often an accident, shows from far out; it shows during stop editing too. Hover
   (a game tag) names the station ("Track end" at a bare end), each line "<line> reverses here", and
   that 12 trains an hour at most reverse there (from each side, at a station). With select, a click selects the first of those lines (not

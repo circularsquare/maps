@@ -1,48 +1,45 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session ee78dc43-077b-4b8e-9cf9-ac5bb7367793, since 2026-10-26
-Updated: 2026-10-27 morning (winding down at Anita's ask)
+Orchestrator: session 7735d270-22c0-47bd-b8fa-dca6f93e8773, name maps-82, since 2026-10-27
+Updated: 2026-10-27 (commit round)
 
-Read trainworld/CLAUDE.md and TASKS.md first. History of this session: notes/handoff-2026-10-26.md.
+Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master c5bc407e. 8800 runs 26aed847 (T-1521 realistic fares and everything before), smoke 20/20
-  light and dark, real save 12,483,326 rail trips a day. Main tree demand WASM current.
-- Nothing published since 2026-10-25b; much has landed since (deploy only on Anita's word).
-- Landed 2026-10-26/27: Canada 49/50 (T-1239, T-1377), income groups (T-1431), realistic fares
-  (T-1521), access fixes (T-1506, T-1511), superholiday rush days (T-1373), service levels
-  (T-1536), buses on roads with editing (T-1465, T-1512-1517), car parks (T-1528), view-first demand
-  and estimates (T-1533, T-1538, T-1539, T-1530), edit speed (T-1380-1382, T-1540), Japan OOM fix
-  (T-1482), many UI items. ARCHIVE.md has each.
-- Uncommitted: Anita's TODO.md (never commit), notes/t1150/run/ (196 MB run output, never
-  commit), notes/T-1546/ (T-1546's agent, commit with its notes).
-- Core cap 10 (Anita is on the machine). `python cores.py list` at maps root.
+- Commit round 2026-10-27: T-1547-1554 (two UI batches), T-1564 (airports 135), T-1565/1566
+  (station circles), T-1568 (rename to trainsworld), T-1567 logo v5 behind `?logo=1`, T-1581
+  (small reversal icons), T-1169 stage 1 notes. Smoke 20/20 on dev before commit (real save
+  12,483,326), t1554 check passes. 8800: see the commit after this file's.
+- Nothing published since 2026-10-25b (deploy only on Anita's word). shonei-server 6d9196d (error
+  text says trainsworld) committed, not deployed: Anita says leave it.
+- Never commit: Anita's TODO.md, notes/t1150/run/ (196 MB).
+- Core cap 10. `python cores.py list` at maps root.
+- Stray Vites seen listening at 6160 (pid 27204, T-1169's, finished) and 6198 (pid 19308, logo
+  agent's?) — harmless; stop by PID only if sure.
 
-## In flight (agents of the old session ee78dc43 / maps-52, which lands T-1543 and relays the
-## other two, then messages the new orchestrator (maps-82) that it is done)
-- T-1543 rough period split over workers: Opus, tree .tw-trees/t1543 (branch tw/t1543). Done when
-  ARCHIVE has T-1543 and notes/T-1543.md exists. Land with scratchpad land_wasm.ps1 or by hand:
-  commit in tree, merge master in, `npm run wasm` in tree app, typecheck, cargo test
-  `--release --features demand`, merge tw/t1543, rebuild 8800, smoke both shades, `npm run wasm`
-  in main app, `agent-tree.mjs remove t1543`.
-- T-1466 bus ridership vs real buses: Sonnet, analysis only, notes/T-1466.md; tree t1466 to remove.
-- T-1546 rail against plane at 4-5 h: Opus, analysis only, notes/T-1546.md (scripts in
-  notes/T-1546/). Keep Anita's rulings: one world plane fare, same money weight for every mode,
-  0.4x long trips, no car upkeep, 15 km ride reach.
+## In flight
+- T-1558 memory stage 2 (exact fixes; finals identical): Sonnet aba2af67a79bdeb61, tree
+  .tw-trees/t1558 (branch tw/t1558 from b03b751f), Vite 6120-6129, 4 cores, may file T-1578-1579.
+  Land: smoke in tree, `agent-tree.mjs land t1558 "<sentence>"`, remove, `npm run wasm` in main app.
+- T-1567 logo: v5 done behind `?logo=1` (Opus a59c94fa4d8cd48e7, resume it). Waiting on Anita's
+  look; my notes: t's crossbar busy (3 stations), the a reads a bit like a u. When it goes in,
+  the welcome heading goes.
 
 ## Next
-1. Land T-1543; relay T-1466 and T-1546 to Anita.
-2. High priority (Anita): memory per zone and worker, T-1169 with T-1545 (market's 1.4 GB
-   temporaries). Opus.
-3. TODO.md items T-1547 to T-1554 (UI batch 1547/1548/1549/1551/1552; 1550/1553/1554). Sonnet
-   mostly; T-1554 changes the fare scale's baseline (saves must load with the same fares).
-4. Demand calibration before more world: T-1546, T-1542 (US car), T-1508 (big far pairs too few
-   trips), T-1374 (superholidays stage 3), T-1520 (income groups' cost).
-5. Rest of the world is lower priority than calibration (Anita 2026-10-27).
+1. After this commit: rebuild 8800, smoke light and dark, give Anita the test list.
+2. T-1576 bus tuning (Anita yes: 6 min boarding cost on every bus boarding incl. changes, 300 m,
+   $9/km), then T-1577 (speed by place). Sonnet; reruns t1466 checks.
+3. Memory: after T-1558, T-1559, then T-1545 (Opus, window over destination zones), T-1223.
+   T-1560 waits (Anita).
+4. Calibration before more world: T-1542 (US car), T-1508, T-1374, T-1520. Also T-1575 (42nd St
+   bus pushes riders to cars), T-1580 (t1148 period-shares check stale), T-1561.
+5. Rest of the world after calibration (Anita 2026-10-27).
+Ids handed out through T-1581.
 
 ## Anita's standing asks
 - Several agents going and one compute job; use idle cores; batch rebuilds.
 - Usage week to ~11-01: Sonnet for settled work, Opus for design, data correctness, unknown bugs.
-- Link every image as a clickable workspace-relative markdown link.
+- Link every image as a clickable workspace-relative markdown link; give a full absolute path when
+  she asks where something is.
 - Long jobs claim cores in cores.py; refused steps: change and retry, don't stall.
 - Someday tasks are real open tasks.

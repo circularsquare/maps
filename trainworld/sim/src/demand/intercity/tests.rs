@@ -916,8 +916,8 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let nod = air_packs(false).into_iter().enumerate().map(|(i, p)| if i == 0 { with_air(&p, &[(0.1, 50.)], &[], None) } else { p }).collect::<Vec<_>>();
     let b = IntercityApi::new(&composition(&nod, Some(&rows_json(&nod)))).unwrap();
     assert!(b.m.pr(0, 2).air < r02.air);
-    // rail against air on a far pair (T-1521's plane): 3 hours on the
-    // train takes about half, 6 hours few
+    // rail against air on a far pair (T-1521's plane, T-1564's 135 airport minutes): 3 hours on the
+    // train takes nearly all, 6 hours a fifth
     let ratio = |a: &mut IntercityApi, hours: f32| {
         far_line(a, hours);
         assert!(a.solve(0));
@@ -929,7 +929,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
         rail / (rail + air)
     };
     let (fast, slow) = (ratio(&mut a, 3.), ratio(&mut a, 6.));
-    assert!(fast > 0.3 && fast < 0.9 && slow < 0.2 && slow < fast, "rail of rail and air: 3 h {fast}, 6 h {slow}");
+    assert!(fast > 0.8 && fast < 1. && slow > 0.1 && slow < 0.3 && slow < fast, "rail of rail and air: 3 h {fast}, 6 h {slow}");
     // across the sea the far pair is all air, and still served by rail where track joins it
     let packs = air_packs(true);
     let rows = rows_json(&packs);

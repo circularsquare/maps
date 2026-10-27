@@ -50,7 +50,7 @@ export const CAR_KMH = 85;
 export const DRIVE_FIXED_MIN = 15;
 /** people sharing the car on a longer trip */
 export const CAR_SHARED_BY = 2;
-export const AIR_TERMINAL_MIN = 90;
+export const AIR_TERMINAL_MIN = 135;
 /** T-1430: the wait for a flight, whose frequency is not modelled (rail's planned first wait at a
  * flight every 2 hours) */
 export const AIR_WAIT_MIN = 25;

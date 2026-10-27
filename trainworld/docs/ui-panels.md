@@ -117,8 +117,9 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
-  **The zone's goals** [T-1437, `ui/GoalTicks.tsx`] are ticks over the bar at train shares of 10%,
-  20%, 30% and 40% (`GOAL_SHARES`), laid over it so nothing moves: a reached goal's tick is 2 px in
+  **The zone's goals** [T-1437, `ui/GoalTicks.tsx`; on the city panel's "Within" bar only, not on
+  this one, T-1551] are ticks over the bar at train shares of 10%,
+  20%, 30% and 40% (`GOAL_SHARES`), laid over it so nothing moves, 1 px past the bar at either side: a reached goal's tick is 2 px in
   the text colour, an unreached one 1 px muted; under the 10% tick is the star, 7 px, filled in the
   accent colour once earned, an outline before. Each tick's hover names the goal and, once reached,
   when ("Goal: 20% train share, reached on Monday, day 71, at 14:08", the zone's local time). A
@@ -298,7 +299,8 @@ modifier) puts `ui-hidden` on the page, whose rule in `style.css` hides the dock
 notes, the map's control rows, search, blueprint bars, trouble list, loading card, touch bar, debug
 panel and MapLibre's controls; the map, network, bubbles, station labels and hover tags stay, and the
 map takes the room. F2 or Esc brings it back (Esc first, before every other Esc). Listed in the
-Controls panel as "F2".
+Controls panel as "F2". While hidden, moving the mouse shows "Press F2 to show the UI" at the top
+centre; it disappears 3 s after the mouse stops [T-1548].
 
 **Confirmations** [T-113]: a centred dialog headed "Confirm?" [T-1242] with operation-specific text, cancel
 and action buttons. Cancel has initial focus, Tab stays inside, Escape cancels, focus returns when
@@ -313,7 +315,7 @@ panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099]; Demand b
 commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
-100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
+100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
@@ -415,10 +417,11 @@ and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
 and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
-"Fares here" with the country's scale in a stepper, "11.6x", stepping by 0.1 from 0.1 to 19.9 (a
-click types one), its hover naming the country, the multiple of India's and the scale by income;
-once the player has set one, an undo icon beside it ("Back to 2.8x, the scale by income")
-returns to the income's [T-1277]. Then one row
+"Fares in Japan" (the country in view, on a line of its own, wrapping where long) above its scale in a
+stepper as a multiple of Japan's fares, "1.00x" (Japan's default; India 0.16x, the US 1.90x), stepping by
+0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth of a baseline unit), its hover naming the
+country, the multiple of Japan's and the scale by income; once the player has set one, an undo icon beside
+it ("Back to 1.90x, the scale by income") returns to the income's [T-1277, T-1554]. Then one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
@@ -502,7 +505,7 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   lines, stations and cash. A slot with no stored picture shows "No picture yet" until it is next
   saved. Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
   - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
-    (hover "Make a copy"), download (hover "Download as a file", `anitabuilder-nyc-day-12.save`),
+    (hover "Make a copy"), download (hover "Download as a file", `trainsworld-nyc-day-12.save`),
     clock (hover "Earlier versions"), and Save.
   - **Every other card in this browser**: download (its last save in this browser, read from
     storage) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
@@ -645,7 +648,7 @@ registry centre and zoom, or over New York with none [T-310].
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on a card over the bare map, in the loading card's look: "Welcome to
-  anitabuilder!" with "Build trains around the world!" under it [T-1242] (the account button at
+  trainsworld!" with "Build trains around the world!" under it [T-1242] (the account button at
   its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
@@ -655,6 +658,16 @@ registry centre and zoom, or over New York with none [T-310].
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
   `worldCover`], with the zone outlines, outside shade and the basemap's city, town and village names hidden until the pick [T-974]. The menu takes every key outside itself, and nothing loads behind it but the map.
+- With `?logo=1` only (off by default: Anita is drawing her own logo, and when one goes in the
+  card's "Welcome to trainsworld!" heading goes), over the card (and the new game sheet) the
+  prototype logo [T-1567; `ui/StartLogo.tsx`,
+  `map/logoNetwork.ts`], after Anita's sketch: "trains" over "world" in joined-up script slanted
+  forward, its curves of one radius before the slant, switchbacks where a curve would be tighter,
+  each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
+  cross, as a complex's do), and one train a line, a white pill, running with stops, drawn by the game's own
+  network renderer at zoom 15 in a canvas of its own on a plain panel, scaled to the screen. With the
+  logo the card has no "Welcome to trainsworld!" heading. The trains are the only motion; with
+  reduced motion asked for, one still frame.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has

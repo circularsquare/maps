@@ -135,7 +135,7 @@ air by hours on the train: notes/T-712.md.
   them too. Airports' access drives keep the rule.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
-  people-weighted over the place's zones), 90 minutes at the airports, 25 minutes until the flight
+  people-weighted over the place's zones), 135 minutes at the airports (both ends together, T-1564), 25 minutes until the flight
   (its frequency is not modelled: rail's planned first wait at a flight every 2 hours, T-1430), the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
   a fare of $100 plus 5 cents a km (T-1521, published average economy fares at market rates, one world fare) at each income group's minutes a dollar (the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by

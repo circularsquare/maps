@@ -205,7 +205,13 @@ const CONNECTOR_WHITE = 0.3;
 export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): number {
   return CONNECTOR_WHITE * Math.max(0, st.radius[0] - st.ringPx) + st.ringPx;
 }
-export function stationHaloRadius(zoom: number) { return interp(zoom, [[9, 18], [12, 40], [15, 56]]); }
+/** The ridership circles' radius for a station of STATION_FULL riders (T-1566): it follows the
+ * zoom at the square root of the map's own scale, so two zoom levels out (a quarter the area) halve
+ * it, and is held between a floor and a ceiling so it never vanishes or gets huge. */
+export const HALO_REF_ZOOM = 12, HALO_REF_PX = 40, HALO_MIN_PX = 14, HALO_MAX_PX = 72;
+export function stationHaloRadius(zoom: number) {
+  return Math.min(HALO_MAX_PX, Math.max(HALO_MIN_PX, HALO_REF_PX * 2 ** (0.5 * (zoom - HALO_REF_ZOOM))));
+}
 /** The dark rim of a station, CSS px. */
 export function stationRing(zoom: number) { return interp(zoom, [[9, 1.2], [13, 2]]); }
 /** A dot's dark rim (and its connectors'), CSS px: a quarter thinner than a box's (T-322, Anita: "a

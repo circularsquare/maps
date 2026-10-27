@@ -3,8 +3,8 @@
 
 import { signal } from "@preact/signals";
 
-// T-1394: plain names (Anita suggested "slanted / hills / mountain"), DECISIONS.md
-export const TERRAIN_NAMES = ["Flat", "Gentle slope", "Hills", "Mountains"] as const;
+// T-1547: classes 1 and 2 are both "Hills"; the multiplier shown beside the name tells them apart
+export const TERRAIN_NAMES = ["Flat", "Hills", "Hills", "Mountains"] as const;
 export const TERRAIN_FACTORS = [1, 1.25, 1.6, 2.5] as const;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 

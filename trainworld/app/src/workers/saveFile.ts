@@ -206,9 +206,9 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
   try {
     raw = await pipe(file, new DecompressionStream("gzip"));
   } catch {
-    throw new Error("This file is not an anitabuilder save.");
+    throw new Error("This file is not a trainsworld save.");
   }
-  if (raw.length < 8 || new TextDecoder().decode(raw.subarray(0, 4)) !== SAVE_MAGIC) throw new Error("This file is not an anitabuilder save.");
+  if (raw.length < 8 || new TextDecoder().decode(raw.subarray(0, 4)) !== SAVE_MAGIC) throw new Error("This file is not a trainsworld save.");
   const n = new DataView(raw.buffer, raw.byteOffset).getUint32(4, true);
   let header: SaveHeader;
   try {
@@ -216,7 +216,7 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
   } catch {
     throw new Error("This save is damaged.");
   }
-  if (header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error("This file is not an anitabuilder save.");
+  if (header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error("This file is not a trainsworld save.");
   if (header.format > SAVE_FORMAT) throw new Error("This save is from a newer version of the game.");
   return { header, track: raw.slice(8 + n) };
 }

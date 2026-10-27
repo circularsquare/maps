@@ -1,6 +1,6 @@
-// Reversal icons (T-797, docs/ui-map.md): a large U-turn sign over every station or bare track end
-// where a line's trains reverse partway, the same size at every zoom so an unintended reversal shows from far
-// out. It floats just above the station, clear of the stop editing marker on it. Hovering it names
+// Reversal icons (T-797, docs/ui-map.md): a U-turn sign over every station or bare track end
+// where a line's trains reverse partway, one size at every zoom (30 px with a placing tool on, 18 px
+// otherwise, like the junction badges) so an unintended reversal shows from far out. It floats just above the station, clear of the stop editing marker on it. Hovering it names
 // the lines that reverse there; a click selects the first of them (not while stops are edited).
 
 import { effect } from "@preact/signals";
@@ -15,7 +15,9 @@ import type { Overlay } from "./overlay";
 /** the most trains an hour reversing at one side of a station (sim `REVERSAL_LIMIT_S`) */
 const REVERSALS_AN_HOUR = 12;
 
-const ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 19.5V10a4.75 4.75 0 0 1 9.5 0v7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M12.8 13.4l4.2 4.3 4.2-4.3" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const PLACING = new Set<string>(["track", "station", "line", "blueprint", "bus"]);
+
+const ICON =`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 19.5V10a4.75 4.75 0 0 1 9.5 0v7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M12.8 13.4l4.2 4.3 4.2-4.3" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 interface Item {
   el: HTMLDivElement;
@@ -71,6 +73,8 @@ export class ReversalMarks {
       // with a build tool on, presses on an icon reach the map underneath (as the capacity tags)
       const pass = tool.value !== "select";
       this.box.classList.toggle("pass", pass);
+      // full size while a placing tool is on, small otherwise, as the junction badges (T-1581)
+      this.box.classList.toggle("small", !PLACING.has(tool.value));
       if (pass) this.tip.style.display = "none";
     });
     effect(() => {

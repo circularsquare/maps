@@ -13,6 +13,7 @@ import { CHOICE_PARAMS, type GameChoice } from "../workers/clockClient";
 import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
+import { StartLogo } from "./StartLogo";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
 import { accountList, accountOnly, cardOf, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
@@ -54,6 +55,9 @@ export function worldCover(el: HTMLElement): { center: [number, number]; zoom: n
   return { center: [10, 20], zoom: Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
 }
 
+/** T-1567: the prototype logo over the menu, until Anita's own logo replaces it. */
+const LOGO = new URLSearchParams(location.search).get("logo") === "1";
+
 /** T-988: the start menu waits this long at most for the account before opening a game anyway. */
 const SETTLE_WAIT_MS = 10_000;
 
@@ -84,16 +88,16 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   };
   const now = Date.now();
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
-  if (sheet) return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
-    <div class="start-box new-game-box">
+  // T-1567: the prototype logo, `?logo=1` only, stays mounted over both, so its trains run on when the sheet opens
+  // with the logo the welcome heading goes (Anita), the logo naming the menu
+  return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
+    {LOGO && <StartLogo />}
+    {sheet ? <div class="start-box new-game-box">
       <h1 id="start-title" class="big">New game</h1>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
-    </div>
-  </div>;
-  return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
-    <div class="start-box">
+    </div> : <div class="start-box">
       <AccountButton kind="start" />
-      <h1 id="start-title" class="big">Welcome to anitabuilder!</h1>
+      {!LOGO && <h1 id="start-title" class="big">Welcome to trainsworld!</h1>}
       <p class="start-tag">Build trains around the world!</p>
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length + account.length > 0 && <>
@@ -108,7 +112,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
           </li>)}
         </ul>
       </>}
-    </div>
+    </div>}
   </div>;
 }
 

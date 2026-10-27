@@ -9,7 +9,7 @@ a new solve. The built rule reproduces `demand` (PairRule::alt, rail_logsum_x, m
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "artifacts", "trainworld", "T-1546"))
+OUT = os.environ.get("T1546_DIR") or os.path.abspath(os.path.join(HERE, "..", "..", "..", "artifacts", "trainworld", "T-1546"))
 
 PUB = {"sha-bei": 86, "bei-gua": 25, "tyo-osa": 85, "tyo-fuk": 11, "par-lyo": 90, "par-mar": 77, "mad-bar": 78,
        "lon-cit": 45, "nyc-wdc": 79, "nyc-bos": 53}
@@ -19,7 +19,7 @@ NAMES = {"sha": "Shanghai", "bei": "Beijing", "gua": "Guangzhou", "tyo": "Tokyo"
          "nyc": "New York", "wdc": "Washington", "bos": "Boston"}
 
 # built constants (intercity.rs)
-TERM, WAIT, KMH, FIXED, NODIRECT = 90., 25., 750., 30., 60.
+TERM, WAIT, KMH, FIXED, NODIRECT = float(os.environ.get("T1546_TERM", 90)), 25., 750., 30., 60.  # T1546_TERM: the dump's own airport minutes (T-1564: 135)
 
 # A variant: changes to the plane's minutes and to rail. Keys:
 #   acc: "place" (built: the place's people-weighted mean drive per airport) or "zone" (the zone's own)

@@ -12,11 +12,32 @@ function set(hidden: boolean) {
   if (root.classList.contains(CLASS) === hidden) return;
   root.classList.toggle(CLASS, hidden);
   if (hidden) helpOpen.value = false;
+  else { clearTimeout(hintTimer); hint?.classList.remove("on"); }
   live.map?.resize(); // the map takes the dock's and the bar's room
+}
+
+// T-1548: with the interface hidden, moving the mouse shows a small reminder at the top centre until
+// the mouse has been still for HINT_MS; it is hidden outright, with no fade (Anita: no CSS transitions).
+const HINT_MS = 3000;
+let hint: HTMLElement | null = null;
+let hintTimer = 0;
+
+function showHint() {
+  if (!document.documentElement.classList.contains(CLASS)) return;
+  if (!hint) {
+    hint = document.createElement("div");
+    hint.className = "ui-hint";
+    hint.textContent = `Press ${HIDE_UI_KEY} to show the UI`;
+    document.body.appendChild(hint);
+  }
+  hint.classList.add("on");
+  clearTimeout(hintTimer);
+  hintTimer = window.setTimeout(() => hint?.classList.remove("on"), HINT_MS);
 }
 
 /** Capture-phase, so Esc comes back before any panel's own Esc; the keys are ignored with a modifier held. */
 export function hideUiKey() {
+  window.addEventListener("pointermove", showHint, true);
   window.addEventListener("keydown", (e) => {
     const hidden = document.documentElement.classList.contains(CLASS);
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;

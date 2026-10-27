@@ -1,6 +1,6 @@
 // A region's goals (T-1437) as ticks over a mode split bar, at their train shares, the star's small
-// star under its tick. Laid over the bar, so nothing around it moves. Used by the top bar and the
-// city view; the bar's parent is `position: relative`.
+// star under its tick. Laid over the bar, so nothing around it moves. Used by the city panel;
+// the bar's parent is `position: relative`.
 
 import type { City } from "../game/cities";
 import { clockTime, dayOf } from "../game/format";

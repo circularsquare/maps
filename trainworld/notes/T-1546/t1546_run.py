@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 TW = os.path.abspath(os.path.join(HERE, "..", ".."))
 MAPS = os.path.dirname(TW)
-OUT = os.path.join(MAPS, "artifacts", "trainworld", "T-1546")
+OUT = os.environ.get("T1546_DIR") or os.path.join(MAPS, "artifacts", "trainworld", "T-1546")
 R3 = os.path.join(MAPS, "artifacts", "trainworld", "T-1521", "corridor")
 CRATE, JOBS = sys.argv[1], int(sys.argv[2])
 EXE = max(glob.glob(os.path.join(CRATE, "sim", "target", "release", "deps", "trainworld_sim-*.exe")), key=os.path.getmtime)

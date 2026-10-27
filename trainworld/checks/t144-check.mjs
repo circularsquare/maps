@@ -110,7 +110,7 @@ near(s.dot,stationRadii(15)[1],'transfer dot');assert.ok(insideStation(s,10+s.do
 near(stationShape(0,0,straight,1,project,{...style,boxes:false,linePx:40},false).dot,0.5*0.6*40+2.5,'a dot covers a plain line at its width now');
 assert.equal(STATION_BOX_ZOOM,14,'boxes from zoom 14 (T-553)');assert.ok(BOX_WIDTH_ZOOM>=STATION_BOX_ZOOM,'the box width is set at or after the first box zoom');
 assert.ok(STATIONS_ZOOM>=9&&STATIONS_ZOOM<STATION_BOX_ZOOM,'stations hidden further out than the dots');
-near(stationRadii(11)[0],(2.2+1.6*2/3)*1.32,'T-313, T-322: 32% wider than T-189\'s');assert.ok(stationRadii(9)[0]<stationRadii(10)[0]&&stationRadii(10)[0]<stationRadii(11)[0],'T-542: dots shrink going out from 11');near(stationRadii(15)[0],5.6*1.32);near(stationHaloRadius(15),56);
+near(stationRadii(11)[0],(2.2+1.6*2/3)*1.32,'T-313, T-322: 32% wider than T-189\'s');assert.ok(stationRadii(9)[0]<stationRadii(10)[0]&&stationRadii(10)[0]<stationRadii(11)[0],'T-542: dots shrink going out from 11');near(stationRadii(15)[0],5.6*1.32);near(stationHaloRadius(12),40);near(stationHaloRadius(10),20,'T-1566: two zoom levels out halve the radius');near(stationHaloRadius(15),72,'T-1566: held at the ceiling');near(stationHaloRadius(8),14,'T-1566: floor');
 
 // --- the network's stations
 function state(reverse=false){

@@ -57,6 +57,13 @@ const DEM = "terrain-dem";
 const HILLSHADE = "hillshade";
 const WATER_OVER_SHADE = "water_over_shade";
 const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+/** T-1552: the style names the terrain tiles through this protocol, which holds each tile back until
+ * the basemap's vector tile for the same ground has loaded, so the shade never shows over bare land
+ * where the water is still coming. */
+const DEM_PROTOCOL = "twdem";
+const VECTOR_SOURCE = "openmaptiles";
+/** Longest a terrain tile waits for the basemap's (ms), for a vector tile that never loads (a 404 fires no event). */
+const DEM_WAIT_MS = 3000;
 const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles</a>';
 
 /** Positron's place layers that name a settlement, each with a black dot icon. */
@@ -109,11 +116,66 @@ const atContrast = (v: unknown, how: Fade, land: string, contrast: number) =>
 /** Basemap symbol layers (not ours), whose visibility the "map labels" setting controls. */
 let basemapSymbols: string[] = [];
 
-/** Loads Positron into the map, restyled. Call once, right after creating the map. */
 /** The first symbol layer's id: layers added before it draw under the basemap's labels. */
 export const firstSymbolId = (map: maplibregl.Map) => map.getStyle().layers.find((l) => l.type === "symbol")?.id;
 
+// T-1552: the highest zoom of a loaded basemap vector tile at or under each "z/x/y" tile (so a loaded
+// tile marks itself and every ancestor), and the zoom the basemap is loading at now. A terrain tile
+// (256 px, so its zoom runs 1-2 above the 512 px vector tiles') is ready to show once a vector tile at
+// the current zoom is in over the same ground.
+const vectorTop = new Map<string, number>();
+let vectorZ = 0;
+const demWaiting: { z: number; x: number; y: number; done: () => void }[] = [];
+
+function vectorReady(z: number, x: number, y: number) {
+  const k = Math.min(vectorZ, z);
+  return (vectorTop.get(`${k}/${x >> (z - k)}/${y >> (z - k)}`) ?? -1) >= vectorZ;
+}
+
+function vectorLoaded(z: number, x: number, y: number) {
+  for (let k = 0; k <= z; k++) {
+    const key = `${k}/${x >> (z - k)}/${y >> (z - k)}`;
+    if ((vectorTop.get(key) ?? -1) < z) vectorTop.set(key, z);
+  }
+  for (const w of demWaiting.slice()) if (vectorReady(w.z, w.x, w.y)) w.done();
+}
+
+function vectorWait(z: number, x: number, y: number, signal: AbortSignal): Promise<void> {
+  // a macrotask on, so the basemap's own tile requests of the same pass have set `vectorZ`
+  return new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
+    if (vectorReady(z, x, y) || signal.aborted) return;
+    return new Promise<void>((resolve) => {
+      const w = { z, x, y, done: () => { clearTimeout(timer); signal.removeEventListener("abort", w.done); demWaiting.splice(demWaiting.indexOf(w), 1); resolve(); } };
+      const timer = setTimeout(w.done, DEM_WAIT_MS);
+      signal.addEventListener("abort", w.done);
+      demWaiting.push(w);
+    });
+  });
+}
+
+let demProtocolAdded = false;
+function addDemProtocol() {
+  if (demProtocolAdded) return;
+  demProtocolAdded = true;
+  maplibregl.addProtocol(DEM_PROTOCOL, async (params, abort) => {
+    const m = /^[a-z]+:\/\/(\d+)\/(\d+)\/(\d+)/.exec(params.url);
+    if (!m) throw new Error(`bad terrain tile url ${params.url}`);
+    const [z, x, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const bytes = fetch(TERRAIN_TILES.replace("{z}", m[1]).replace("{x}", m[2]).replace("{y}", m[3]), { signal: abort.signal })
+      .then((r) => { if (!r.ok) throw new Error(`terrain tile ${r.status}`); return r.arrayBuffer(); });
+    await Promise.all([bytes, vectorWait(z, x, y, abort.signal)]);
+    return { data: await bytes };
+  });
+}
+
+/** Loads Positron into the map, restyled. Call once, right after creating the map. */
 export function loadBasemap(map: maplibregl.Map) {
+  addDemProtocol();
+  map.on("sourcedataloading", (e) => { if (e.sourceId === VECTOR_SOURCE && e.coord) vectorZ = e.coord.canonical.z; });
+  map.on("sourcedata", (e) => {
+    const c = e.sourceId === VECTOR_SOURCE && e.tile?.state === "loaded" ? e.coord?.canonical : null;
+    if (c) vectorLoaded(c.z, c.x, c.y);
+  });
   // Arabic and Hebrew names (world view) are drawn unjoined and reversed without it. Lazy: fetched
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).
   if (maplibregl.getRTLTextPluginStatus() === "unavailable") maplibregl.setRTLTextPlugin(RTL_PLUGIN, true).catch(() => {});
@@ -142,7 +204,7 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
   const at = style.layers.findIndex((l) => l.id === "waterway");
   const water = style.layers.find((l) => l.id === "water");
   if (at >= 0 && water) {
-    style.sources[DEM] = { type: "raster-dem", tiles: [TERRAIN_TILES], encoding: "terrarium", tileSize: 256, maxzoom: 12, attribution: TERRAIN_CREDIT };
+    style.sources[DEM] = { type: "raster-dem", tiles: [`${DEM_PROTOCOL}://{z}/{x}/{y}`], encoding: "terrarium", tileSize: 256, maxzoom: 12, attribution: TERRAIN_CREDIT };
     const visibility = display.peek().hillshade ? "visible" : "none";
     style.layers.splice(at, 0,
       { id: HILLSHADE, type: "hillshade", source: DEM, layout: { visibility }, paint: {} },

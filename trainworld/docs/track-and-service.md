@@ -654,7 +654,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   is charged at the dearer of its two levels with the factor counted. Stations, junctions,
   crossings and upkeep take no factor; nothing is refused for steep ground; grades do not slow trains.
 
-  | Class | Flat | Gentle slope | Hills | Mountains |
+  | Class | Flat | Hills (low) | Hills (high) | Mountains |
   |---|---|---|---|---|
   | Mean slope | under 2° | 2-5° | 5-10° | 10° and over |
   | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
@@ -773,8 +773,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   never cheaper, so no fare is below the base or falls with distance. **Fares by country**
   (T-1277, `app/src/game/income.ts`): the curve is set for India, the baseline, and each country
   charges it times its fare scale: by default (its GDP per head at market rates over India's)^0.7 in
-  tenths (the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521), or the player's own, 0.1 to 19.9
-  (`Fares.scales`, saved with the fares; only the player's are kept). A new game's curve (T-1521,
+  tenths (the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521), or the player's own, 0.1 to 19.9 to a
+  hundredth (`Fares.scales`, saved with the fares; only the player's are kept). The Money tab shows a
+  scale divided by Japan's default (6.1), so Japan reads 1.00x and India 0.16x (`shownScale`,
+  `storedScale`; T-1554): display only, the saved scales and curve stay in India's units. A new game's curve (T-1521,
   `START_NODES`) has nodes at 0, 20 and 100 km at $0.1293, $0.3017 and $2.0259: in New York $1.50
   + $0.10 a km to 20 km, then $0.25 a km ($3.50 at 20 km, $23.50 at 100). It matches published
   standard-class fares in ten countries at market rates at 50-150 km and 300-1,200 km; metro fares

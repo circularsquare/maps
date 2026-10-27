@@ -21,7 +21,6 @@ import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { pointsPast24h, pointsPerDay, pointsShort } from "../game/points";
 import { Icon } from "./widgets";
-import { GoalTicks } from "./GoalTicks";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
 import { START_CASH } from "../workers/saveFile";
@@ -257,7 +256,6 @@ export function TopBar() {
               <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
               <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
             </span>
-            {city && <GoalTicks city={city} />}
           </span>
           <b class={"lg pct" + (far ? " trips" : "")}>{pct(s.train)}</b>
         </div>

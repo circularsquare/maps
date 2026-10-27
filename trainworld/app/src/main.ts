@@ -38,6 +38,7 @@ import { openedZones } from "./game/openedZones";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
 import { stationIndexOf, tripAt } from "./map/network";
+import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
 import { carryGrids, pick } from "./map/pick";
 import { carryEdgeGrid } from "./map/snapIndex";
@@ -294,6 +295,8 @@ const NET_FIRST = new Set(["line", "station", "train"]);
 let netFirstAt = { x: NaN, y: NaN, t: 0, hit: false };
 const netFirst = (x: number, y: number) => {
   if (tool.peek() !== "select" || linking.peek() !== null) return false;
+  // T-1550: with the zone bubbles drawn (zoom 8.5 and below, `OVERVIEW_ZOOM`) the lines are a few pixels across them and a bubble is the target
+  if (cityOverview.peek()) return false;
   // a pointer move asks this several times (the tag, the cursor, the track tag): one pick serves them
   const t = performance.now();
   if (netFirstAt.x === x && netFirstAt.y === y && t - netFirstAt.t < 8) return netFirstAt.hit;

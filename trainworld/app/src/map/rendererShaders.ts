@@ -211,7 +211,7 @@ void main() {
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
   // T-1152: a weaker edge towards the casing's colour, not see-through, which would bead at the joints
-  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : fullOut ? u_casing_rgb : full ? mix(u_casing_rgb, u_full_rgb, fs) : u_casing_rgb;
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : fullOut ? u_casing_rgb : full ? mix(u_casing_rgb, u_full_rgb, 0.75 * fs) : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -828,6 +828,7 @@ uniform vec3 u_bad;
 uniform highp int u_pass;
 uniform vec3 u_ink;
 uniform vec3 u_band;
+uniform bool u_hollow;
 out vec4 o;
 ${SHAPE_GLSL}
 void main() {
@@ -869,7 +870,10 @@ void main() {
   }
   // a full train's red edge is wider than the white one, so it reads at a glance (T-207; T-218,
   // Anita: "not super noticeable", 50% thicker than T-207's 2.6 px)
-  vec3 col = mix(core, rim, clamp(d + (v_fill > 1.5 ? 3.9 : 1.7), 0.0, 1.0));
+  float rimW = v_fill > 1.5 ? 3.9 : 1.7;
+  // the start menu's logo (T-1567): white inside a rim of the line's colour
+  if (u_hollow) { core = vec3(1.0); rim = v_color / 0.48; rimW = max(1.7, 0.28 * v_px.y); }
+  vec3 col = mix(core, rim, clamp(d + rimW, 0.0, 1.0));
   o = vec4(col * a, a);
 }`;
 

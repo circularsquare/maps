@@ -19,7 +19,7 @@ import type { Overlay } from "./overlay";
 import { stationHaloRadius, STATIONS_ZOOM } from "./stationGeometry";
 
 /** Circle area is proportional to riders a day (T-722, no cap). The radius is
- * `stationHaloRadius(zoom)` times this scale, so STATION_FULL riders have that radius at any zoom; a
+ * `stationHaloRadius(zoom)` times the size setting (T-1565) times this scale, so STATION_FULL riders have that radius at any zoom; a
  * circle with any riders is never smaller than STATION_MIN_SCALE of it. 140,000 puts the real New
  * York save's biggest total (Penn Station's complex, 681,000) at 100 px radius at zoom 13 (Anita:
  * the largest about 200 px across). */
@@ -141,6 +141,7 @@ export class StationCircles {
       shade.value;
       stopEditing.value;
       void display.value.stationUse;
+      void display.value.stationCircleSize;
       this.invalidate();
     });
   }
@@ -164,7 +165,7 @@ export class StationCircles {
     this.placed = [];
     const net = this.overlay.renderer.net, w = world.peek(), dv = demandView.peek(), mode = modeNow(), zoom = this.map.getZoom();
     if (!net || !w || !dv || mode === "none" || zoom < STATIONS_ZOOM || !this.overlay.cam) return;
-    const R = stationHaloRadius(zoom), at: [number, number] = [NaN, NaN];
+    const R = stationHaloRadius(zoom) * display.peek().stationCircleSize, at: [number, number] = [NaN, NaN];
     for (const c of circleList(net, w, dv, mode)) {
       this.overlay.toScreenInto(c.x, c.y, at);
       const r = R * stationScale(c.riders);

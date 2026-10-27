@@ -986,7 +986,8 @@ fn crossing_cost(a: (&str, f64), b: (&str, f64)) -> Cost {
 /// T-378 (notes/T-362.md "Modes"), T-712: air door to door, minutes at the airports, cruise speed
 /// and the flight's fixed minutes on the great circle, the extra minutes with no direct flight, the
 /// fare (a flat base: published average fares barely rise with distance, notes/T-712.md).
-const AIR_TERMINAL_MIN: f64 = 90.;
+/// 90 before departure and 45 from landing to the kerb, both ends together (T-1564, notes/T-1546.md).
+const AIR_TERMINAL_MIN: f64 = 135.;
 const AIR_KMH: f64 = 750.;
 const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;

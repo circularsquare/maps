@@ -6,7 +6,7 @@ import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
 import { scaleNodes, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
-import { FARE_BASELINE, fareScale, incomeScale, SCALE_STEP, tidyScale } from "../game/income";
+import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
 import { scopeZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
@@ -69,19 +69,23 @@ function countryName(iso: string): string {
   }
 }
 
-/** T-1277: the fare scale where the panel looks: a stepper by tenths, typed on a click, and a button
- * back to the income's scale once the player has set one. */
+/** T-1277: the fare scale where the panel looks, in multiples of Japan's fares (T-1554): a stepper
+ * by 0.05, typed on a click, and a button back to the income's scale once the player has set one. */
 function FareScaleRow({ country, scale, own }: { country: string; scale: number; own: boolean }) {
-  const set = (v: number) => void setFareScale(country, tidyScale(v));
-  const income = incomeScale(country);
+  const set = (v: number) => void setFareScale(country, storedScale(v));
+  const income = shownScale(incomeScale(country));
   const name = countryName(country);
+  const shown = shownScale(scale);
+  const japan = countryName(DISPLAY_BASELINE);
+  const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
-      <span class="fr-what" data-tip={`Fares shown for ${name}: ${scale.toFixed(1)} times those in ${countryName(FARE_BASELINE)}, where the curve is set. By income it would be ${income.toFixed(1)}.`}>Fares here</span>
-      <Stepper value={`${scale.toFixed(1)}x`} wide label="fares here" onStep={(d) => set(scale + d * SCALE_STEP)}
-        type={{ text: scale.toFixed(1), set, tip: `Fares in ${name} as a multiple of those in ${countryName(FARE_BASELINE)}. Click to type one.` }} />
+      <span class="fr-head" data-tip={`Fares in ${name}: ${shown.toFixed(2)} times those in ${japan}. By income they would be ${income.toFixed(2)}.`}>{`Fares in ${name}`}</span>
+      <span />
+      <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
+        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}. Click to type one.` }} />
       {own
-        ? <button class="btn icon" aria-label="Back to the income's scale" data-tip={`Back to ${income.toFixed(1)}x, the scale by income`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
+        ? <button class="btn icon" aria-label="Back to the income's scale" data-tip={`Back to ${text(income)}, the scale by income`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
         : <span />}
     </li>
   );

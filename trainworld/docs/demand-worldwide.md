@@ -883,7 +883,7 @@ notes/T-420.md has the tables.
 - **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses fly
   (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
-  have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 25 minutes
+  have airports: drives to the airports, 135 minutes there for both ends together (90 before departure and 45 after landing, Monmousseau et al. 2021; T-1564, Anita 2026-10-27), 25 minutes
   until the flight (its frequency unmodelled: rail's planned first wait at a flight every 2 hours,
   T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km (T-1521, published average airfares at market rates, one world fare) at each
   income group's minutes a dollar (T-1431, above; a corridor's split between car and plane is

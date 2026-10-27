@@ -98,8 +98,11 @@ station ridership row on the map ("The demand selector" above): None (default), 
 Total, remembered per browser. One circle per station complex, at the mean position of its
 constructed stations, grouped exactly as the complexes are, the player's links included [T-1449: no
 longer a setting]. Area proportional to riders per day with no cap (the radius is the zoom's circle
-radius, 18 to 56 px, times the square root of riders over 140,000, and a circle with any riders is
-never under a tenth of that radius) [T-722]: **origins** are riders starting their rail trip at the
+radius, times the Settings size [T-1565], times the square root of riders over 140,000, and a circle
+with any riders is never under a tenth of that radius) [T-722]. The zoom's circle radius is 40 px at
+zoom 12 and follows the zoom at the square root of the map's scale, 2^(0.5 x (zoom - 12)), so two
+levels out halves it, held between 14 and 72 px; worked out in each map frame, so it keeps up with
+a zoom [T-1566]: **origins** are riders starting their rail trip at the
 station, **transfers** riders changing lines there, **total** every boarding there (origins plus
 transfers). From the demand solve shown, for the day shown, every purpose whatever the purpose
 filter: boardings are the solve's per station, transfers the riders boarding there after changing
@@ -284,7 +287,8 @@ riders counters keep their own smoothing (Live feel).
   centres are in it (T-881), else the far-end bubbles, and opens the trip explorer between the two
   groups. Escape while drawing drops
   the box. A rail or bus line, station or train within its own pick reach comes before a bubble
-  for clicks, the hover tag and the cursor [T-1515]; elsewhere a bubble takes them, with its wider
+  for clicks, the hover tag and the cursor [T-1515], except while the zone bubbles are drawn (zoom 8.5 and
+  below, `OVERVIEW_ZOOM`), where a bubble comes first [T-1550]; elsewhere a bubble takes them, with its wider
   reach past a small disc, and comes before bare track and junctions. Visible bubbles take priority
   for starting a box, but not over dragging a blueprint point [T-474]. Escape or an empty click
   clears the selection.

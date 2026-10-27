@@ -15,13 +15,13 @@ view's own rows below.
 
 [T-1438; `ui/inspector/CityInspector.tsx` with `CityDetails.tsx`] A city or zone picked by its
 inter-city bubble zoomed out, or by a click on its row in the Cities tab (a double click there moves
-the camera, as in the Stations tab). Under the title and the go-to icon, rows: **Train share** (the
+the camera, as in the Stations tab). The go-to icon sits on the title's line, at its right; under it, rows: **Train share** (the
 zone's, as the top bar gives it; hover the split with counts), and for a zone with a built station
 **Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
 tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
 star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
 [T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): within
-the zone, with the goal ticks over its mode bar as on the top bar, to other places, the top three
+the zone, with the goal ticks over its mode bar, to other places, the top three
 destinations. Then, for a zone with a built station: **By purpose**, the purpose bar of the
 inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
 **Top lines**, the five lines with most boardings at the zone's stations in the past 24 hours
@@ -156,7 +156,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   running line one dot before each level's name grades the level on today's kind of day by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
-  at 3, yellow at 6, orange at 9, red at 15 and a deep red from 25 (`crowdColour` in
+  at 3, yellow at 6, orange at 9, red at 15, crimson at 20, plum at 25, purple at 35 and indigo from 50 (T-1553; `crowdColour` in
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "Where trains come full,
   riders face a wait of 11 min on average for a train with room" (or "Riders get on the first train
@@ -534,7 +534,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   to Hokkaido (each person's fare and its minutes) and Effective time, whose hover is the sum; the
   parts follow from the sim's minutes and mean distance by the rule (`carPartsOf` in
   `game/marketRule.ts`), parking the rest; **By plane** where the pair flies (one far place): the
-  drives to and from the airports, 90 minutes at them, the flight, the fare and the effective
+  drives to and from the airports, 135 minutes at them, the flight, the fare and the effective
   time, from the market rows; Train by period (only when rail is in play). The routes are drawn
   on the map as a local trip's, from the selection's busiest cell to the far end's centre. Rail
   is not worked out when a place's zone at either end is not open in the game [T-991]: the panel

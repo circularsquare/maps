@@ -1,6 +1,6 @@
-# anitabuilder (trainworld) — spec
+# trainsworld (trainworld) — spec
 
-**anitabuilder** is the game's name wherever a player sees it (page title, UI, file names a player
+**trainsworld** is the game's name wherever a player sees it (page title, UI, file names a player
 saves), lowercase. **trainworld** stays the internal name: this folder, the crate, packages, the
 serve.py registration and code. A browser game for building rail on a real world map, in the line
 of Subway Builder and NIMBY Rails: Subway Builder's data-driven demand, NIMBY Rails' whole world,
@@ -259,20 +259,20 @@ running train: added ones enter at a terminal, removed ones leave at one, and th
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
-[T-805], times the ground's terrain class (flat 1x, gentle slope 1.25x, hills 1.6x, mountains 2.5x) at
+[T-805], times the ground's terrain class (flat 1x, hills 1.25x or 1.6x, mountains 2.5x; the player sees both hill classes as "Hills") at
 every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; Settings can
 shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
 US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. The curve is set for India (a lower-middle-income baseline) and each country charges it times its fare scale, by default its GDP per head at market rates over India's to the power 0.7 in tenths (the US 11.6), or the player's own, set in the Money tab for the country of the selected station or city, else the one in view; a trip pays its starting country's [T-1277].
+using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. The curve is set for India (a lower-middle-income baseline) and each country charges it times its fare scale, by default its GDP per head at market rates over India's to the power 0.7 in tenths (the US 11.6), or the player's own, set in the Money tab for the country of the selected station or city, else the one in view, shown there as a multiple of Japan's fares (Japan 1.00x) though kept in India's units; a trip pays its starting country's [T-1277, T-1554].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
 T-694]. A city's goals are train shares of 10%, 20%, 30% and 40%, each kept once reached: the 10%
-one is a star in the Cities list [T-685], and all are ticks on the top bar's split and listed as
-goals reached in the city view [T-1437, T-1438].
+one is a star in the Cities list [T-685], and all are ticks on the trips bar in the city view, where they are also listed as
+goals reached [T-1437, T-1438, T-1551].
 
 Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between
 clicks (straight where they do not serve), stops place themselves at the train

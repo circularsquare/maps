@@ -16,15 +16,21 @@ export const FARE_Y_REF = 90000;
 export const FARE_E = 0.7;
 /** India, the largest lower-middle-income country (GDP per head about $2,700). */
 export const FARE_BASELINE = "IN";
-/** The player's fare scales go from this to `SCALE_MAX` in steps of `SCALE_STEP`. */
+/** The player's fare scales (in baseline units, as stored) go from this to `SCALE_MAX`. */
 export const SCALE_MIN = 0.1;
 export const SCALE_MAX = 19.9;
-export const SCALE_STEP = 0.1;
+/** T-1554: the panel shows a scale as a multiple of Japan's fares: Japan's default scale (6.1
+ * baseline units) reads 1.00x, India's 0.16x, the US's 1.90x. Display only: the game stores and
+ * charges baseline units, so no save changes. */
+export const DISPLAY_BASELINE = "JP";
+/** The panel's step, in its own units. */
+export const SHOWN_STEP = 0.05;
 
 const T = table as { usd: Record<string, number>; gdp: Record<string, number>; car?: Record<string, number>; quint?: Record<string, number[]> };
 const GDP = T.usd;
 const gdpOf = (country: string | undefined): number => (country && GDP[country]) || GDP[FARE_BASELINE];
 const tenth = (v: number) => Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 10) / 10));
+const hundredth = (v: number) => Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 100) / 100));
 
 /** Perceived minutes a fare dollar costs a rider from `country`. */
 export const fareWeight = (country: string | undefined): number => FARE_W_REF * (gdpOf(country) / FARE_Y_REF) ** -FARE_E;
@@ -33,7 +39,7 @@ export const incomeScale = (country: string | undefined): number => tenth((gdpOf
 /** The fare scale in `country`: the player's, else its income's. */
 export function fareScale(country: string | undefined, scales: Record<string, number> | undefined): number {
   const own = country ? scales?.[country] : undefined;
-  return own !== undefined && Number.isFinite(own) ? tenth(own) : incomeScale(country);
+  return own !== undefined && Number.isFinite(own) ? hundredth(own) : incomeScale(country);
 }
 /** T-1286: per country the player set a scale for, that scale over its income's, where not 1: the
  * factor the regional market weighs fares from there at. */
@@ -45,8 +51,11 @@ export function fareFactors(scales: Record<string, number> | undefined): Record<
   }
   return out;
 }
-/** A player's scale as kept: a tenth within range. */
-export const tidyScale = tenth;
+/** A player's scale as kept: a hundredth within range (T-1554; saved ones are tenths). */
+export const tidyScale = hundredth;
+/** A scale in the panel's terms (Japan's default is 1), and back to what is stored. */
+export const shownScale = (stored: number): number => stored / incomeScale(DISPLAY_BASELINE);
+export const storedScale = (shown: number): number => tidyScale(shown * incomeScale(DISPLAY_BASELINE));
 
 // T-1521: a save from before kept its curve and scales under T-1277's rule (GDP per head at PPP, to
 // the 0.5). It loads with its home country's fares weighing exactly as they did (others within the
@@ -61,7 +70,7 @@ export const oldIncomeScale = (c: string | undefined): number =>
 export const oldCurveFactor = (home: string | undefined): number =>
   (OLD.w * (oldGdp(home) / OLD.y) ** -OLD.e * oldIncomeScale(home)) / (fareWeight(home) * incomeScale(home));
 /** A player's scale for `country` from a save under the old rule. */
-export const scaleFromOld = (country: string, s: number): number => tidyScale((s / oldIncomeScale(country)) * incomeScale(country));
+export const scaleFromOld = (country: string, s: number): number => tenth((s / oldIncomeScale(country)) * incomeScale(country));
 
 /** T-1521: what a car costs to run a km in `country`, US$ (fuel and distance tolls,
  * countryIncome.json `car`); the US's where a country has none. */

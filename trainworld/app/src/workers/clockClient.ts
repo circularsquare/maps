@@ -237,13 +237,13 @@ let current: ClockClient | null = null;
 export function exportGame() {
   current?.post({ kind: "export" });
 }
-/** A save's bytes downloaded as "anitabuilder-<name>-day-<day>.save". */
+/** A save's bytes downloaded as "trainsworld-<name>-day-<day>.save". */
 function downloadSave(bytes: Uint8Array, name: string, day: number) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
   const named = name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  a.download = `anitabuilder-${named || "game"}-day-${day}.save`;
+  a.download = `trainsworld-${named || "game"}-day-${day}.save`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
 }

@@ -175,7 +175,7 @@ There is no built-in liking for the train. Rail and the car are compared on time
   a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
   Tunnel takes no cars). No tolls at borders.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
-  90 minutes at the airports, 25 minutes until the flight (the train's planned wait below at a
+  135 minutes at the airports (both ends together), 25 minutes until the flight (the train's planned wait below at a
   flight every 2 hours), the flight at 750 km/h plus 30 minutes (an hour more with no direct
   flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, the
   same everywhere.

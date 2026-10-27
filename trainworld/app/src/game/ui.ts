@@ -62,6 +62,8 @@ export interface DisplaySettings {
   bubbleSize: number;
   /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 10% under it */
   bubbleOpacity: number;
+  /** T-1565: the station ridership circles' size, as a multiple of their own (0.5-2; map/stationCircles.ts) */
+  stationCircleSize: number;
   /** T-795: how fine the bubbles are, in steps of one aggregation level: 0 groups trips as before
    * the setting existed (res 8 from zoom 11.8 in), 1 is a level finer (the default), and the finest
    * res 9 is never passed (map/demandOverlay.ts `bubbleLevel`) */
@@ -123,6 +125,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   commuterEnd: "home",
   bubbleSize: 1,
   bubbleOpacity: 0.9,
+  stationCircleSize: 1,
   bubbleDetail: 1,
   bubbleColours: "ramp",
   rampFrom: DEFAULT_RAMP.from,
