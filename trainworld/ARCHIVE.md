@@ -1,5 +1,7 @@
 # Archive
 
+- T-1482 [P2] Japan's solve sent twice. Done 2026-10-27 (tree t1482, not landed): a worker ran out of its 4 GB in the market pass (T-1430's list of entry costs grown by doubling), was replaced and the solve re-sent; now built column by column, worker peak 3.6 to 2.9 GB, figures unchanged. notes/T-1482.md.
+- T-1544 [P3] "Invalid value used as weak map key". Done 2026-10-27 (tree t1482, not landed): commuterView's bubble ask carried on after the anchor and focus changed in one task (a loaded game's first state) and sent to a null worker; it stops now. `checks/t1544-focus-race.mjs`, notes/T-1482.md.
 - T-1540 [P3] The clock worker reads less of the model each edit. Done 2026-10-27 (tree t1540, not landed): phase tables kept per line, cost sums in one pass with the water under a node kept; Japan at 6x, building the state 53 to 30 ms, the whole edit 301 to 239 ms, the model's edit 53 to 29 ms. `edges_info` and `line_upkeep` left (about 2.5 and 1 ms). `checks/t1382-rows.mjs`, notes/T-1029.md.
 - T-1530 [P2] Station bubbles' transfers and a new line's stations sooner. Done 2026-10-27 (tree t1530, not landed): results carry each station's transfers; the split shows with the figures (load 49 s to 10 s, real-save new line's Origins 54 s to 11 s), finals unchanged. notes/T-1530.md.
 - T-1539 [P2] A slot's cached result before the clock worker's network. Done 2026-10-27 (tree t1538, not landed): keyed by the save's network inputs, holding its network; camera and realms from the save's stations; China zoomed out 9.5 s to 5 s. notes/T-1538.md.
