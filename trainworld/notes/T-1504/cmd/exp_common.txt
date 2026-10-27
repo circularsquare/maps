@@ -1,0 +1,18 @@
+// (appended to each experiment command) wait for a new final, then the weekday's riders by purpose
+// on the high-speed lines and the explorer on the named pairs
+const v0 = window.twDemand.view().version;
+const t0 = performance.now();
+for (;;) {
+  await new Promise((r) => setTimeout(r, 2000));
+  const d = window.twDemand, s = d.log.at(-1), v = d.view();
+  if (v && v.version > v0 && v.final && s && v.version === s.version && !d.client.waiting) break;
+  if (performance.now() - t0 > 1500000) return { note, timeout: true };
+}
+await new Promise((r) => setTimeout(r, 3000));
+const v = window.twDemand.days()[0].view;
+const purposes = {};
+for (const [p, d] of v.purposes ?? []) { let sum = 0; const hsr = {}; for (const [id, l] of d.lines) { sum += l.ridersPerDay; if (Number(id) >= 113) hsr[id] = Math.round(l.ridersPerDay); } purposes[p] = { sum: Math.round(sum), hsr }; }
+const P = { bei: 2688, sha: 17, gua: 2594, shz: 2598, wuh: 2624, chs: 2675, tia: 2701, nan: 2694, zhe: 2710 };
+const pairs = {};
+for (const [a, b] of [['bei', 'sha'], ['gua', 'shz'], ['wuh', 'chs'], ['bei', 'tia'], ['sha', 'nan'], ['bei', 'wuh'], ['bei', 'zhe'], ['wuh', 'gua'], ['bei', 'gua']]) pairs[`${a}-${b}`] = await window.__t.ask(P[a], P[b]);
+return { note, rail: v.railTripsPerDay, secs: Math.round((performance.now() - t0) / 1000), purposes, pairs };
