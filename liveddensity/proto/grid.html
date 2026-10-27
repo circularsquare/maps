@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Population-weighted population density</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0a0a; --ink: #eee; --body: #ccc; --muted: #888; --value: #aaa; --accent: #6889a8; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; }
+#top { position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 16px 20px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#title { font-size: 20px; font-weight: 700; margin: 0 auto 0 0; }
+.seg { display: inline-flex; gap: 4px; margin-left: 6px; }
+.seg button {
+  height: 30px; min-width: 30px; padding: 0 8px; background: none; border: 1px solid #555; border-radius: 6px;
+  color: #ccc; font: inherit; font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.seg button svg { width: 16px; height: 16px; display: block; }
+.seg button:hover { border-color: var(--accent); color: var(--ink); }
+.seg button.active { border-color: var(--accent); color: var(--accent); }
+#grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px 14px; padding: 4px 20px 28px; }
+.grp { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 14px 0 -2px; font-size: 15px; font-weight: 700; }
+.grp .rule { flex: 1; height: 2px; border-radius: 1px; opacity: .55; }
+.grp .n { color: var(--muted); font-weight: 400; font-size: 13px; font-variant-numeric: tabular-nums; }
+.t { position: relative; min-width: 0; }
+.t .hd { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; line-height: 15px; }
+.t .nm { color: var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t .md { font-variant-numeric: tabular-nums; flex: none; }
+.t svg { display: block; width: 100%; height: 46px; }
+.t.small .nm { color: var(--muted); }
+.t.big .nm { color: var(--ink); font-weight: 700; }
+#scale { display: block; }
+@media (max-width: 600px) {
+  #top { padding: 12px 16px 8px; }
+  #title { flex-basis: 100%; font-size: 18px; }
+  .seg { margin-left: 0; }
+  #grid { grid-template-columns: repeat(3, 1fr); gap: 12px 10px; padding: 4px 16px 24px; }
+  .t .hd { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div id="top">
+  <h1 id="title">Population-weighted population density</h1>
+  <span class="seg" id="years"></span>
+  <span class="seg" id="grids"></span>
+  <span class="seg" id="sorts">
+    <button data-v="median" title="Sort by median density"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.5 15V9h3v6M4.5 15V3h4v12M8.5 15V6.5h3V15M11.5 15V10h3v5M0.5 15h15"/></svg></button>
+    <button data-v="pop" title="Sort by population"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="8" cy="4.5" r="2.5"/><path d="M3 15c0-3.5 2.2-5.5 5-5.5s5 2 5 5.5"/></svg></button>
+  </span>
+</div>
+<svg width="0" height="0" style="position:absolute"><defs id="defs"></defs></svg>
+<div id="grid"></div>
+<script>
+const X_MIN = 1, X_MAX = 5.6, PER = Math.log10(2), KERNEL = [1, 2, 3, 2, 1];
+const URBAN_1KM = [Math.log10(300), Math.log10(1500)];
+const VW = 200, VH = 46;   // each tile's drawing box
+const RAMP = [[0.3, .91, .12, 140], [1.6, .83, .16, 110], [2.48, .75, .16, 75],
+              [3.18, .67, .18, 45], [3.9, .59, .20, 22], [4.6, .51, .20, 340]]
+  .map(([x, L, C, h]) => [x, L, C * Math.cos(h * Math.PI / 180), C * Math.sin(h * Math.PI / 180)]);
+function rampAt(x, dL = 0) {
+  let i = 0;
+  while (i < RAMP.length - 2 && x > RAMP[i + 1][0]) i++;
+  const a = RAMP[i], b = RAMP[i + 1], t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+  const L = a[1] + (b[1] - a[1]) * t + dL, A = a[2] + (b[2] - a[2]) * t, B = a[3] + (b[3] - a[3]) * t;
+  const l = (L + .3963377774 * A + .2158037573 * B) ** 3, m = (L - .1055613458 * A - .0638541728 * B) ** 3,
+        s = (L - .0894841775 * A - 1.291485548 * B) ** 3;
+  return '#' + [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s,
+                -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+    .map(v => { v = Math.min(1, Math.max(0, v)); v = v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055;
+                return Math.round(v * 255).toString(16).padStart(2, '0'); }).join('');
+}
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en');
+let data, year = 2025, grid = '1km', sort = 'median';
+const cache = new Map();
+
+function curve(iso, g = grid, yr = year) {
+  const key = g + yr + iso;
+  if (cache.has(key)) return cache.get(key);
+  const h = data.hist[g]?.[yr]?.[iso];
+  let out = null;
+  if (h && h.v.length) {
+    const { lo, step, n } = data.bins, share = new Float64Array(n);
+    let total = 0;
+    h.v.forEach((v, j) => { if (h.o + j < n) { share[h.o + j] = v; total += v; } });
+    if (total > 0) {
+      const y = new Float64Array(n);
+      let c = 0, median = null;
+      for (let i = 0; i < n; i++) { share[i] /= total; const p = c; c += share[i]; if (median === null && c >= .5) median = lo + (i + (.5 - p) / share[i]) * step; }
+      for (let i = 0; i < n; i++) { let s = 0; for (let j = -2; j <= 2; j++) { const t = i + j; if (t >= 0 && t < n) s += share[t] * KERNEL[j + 2]; } y[i] = s / 9 / step * PER * 100; }
+      let peak = 0; for (let i = 0; i < n; i++) if (lo + i * step >= X_MIN) peak = Math.max(peak, y[i]);
+      out = { y, median, peak };
+    }
+  }
+  cache.set(key, out);
+  return out;
+}
+function refPeak() {
+  const peaks = [];
+  for (const yr of data.years) for (const iso in data.hist[grid]?.[yr] || {})
+    if (data.countries[iso]?.pop[yr] >= 1e6) { const c = curve(iso, grid, yr); if (c) peaks.push(c.peak); }
+  peaks.sort((a, b) => a - b);
+  return peaks[Math.floor(peaks.length * .9)];
+}
+
+function render() {
+  for (const [id, v] of [['years', year], ['grids', grid], ['sorts', sort]]) for (const b of $(id).children) b.classList.toggle('active', b.dataset.v === String(v));
+  let st = '';
+  for (let x = X_MIN; x <= X_MAX + 1e-9; x += 0.1) st += `<stop offset="${((x - X_MIN) / (X_MAX - X_MIN)).toFixed(4)}" stop-color="${rampAt(x)}"/>`;
+  $('defs').innerHTML = `<linearGradient id="gr" gradientUnits="userSpaceOnUse" x1="0" x2="${VW}" y1="0" y2="0">${st}</linearGradient>`;
+  const { lo, step, n } = data.bins;
+  const i0 = Math.floor((X_MIN - lo) / step), i1 = Math.min(n - 1, Math.ceil((X_MAX - lo) / step));
+  const sx = v => (v - X_MIN) / (X_MAX - X_MIN) * VW;
+  const k = (VH - 4) / refPeak() * 0.8;
+  const pop = iso => data.countries[iso].pop[year] ?? 0;
+  const list = Object.keys(data.countries).filter(iso => pop(iso) >= 1000 && curve(iso)).map(iso => ({ iso, c: curve(iso) }));
+  if (sort === 'median') list.sort((a, b) => b.c.median - a.c.median);
+  else list.sort((a, b) => pop(b.iso) - pop(a.iso));
+  // with the median sort on the 1 km grid, a heading where the median person moves from city to town to rural cells
+  const urban = grid === '1km' && sort === 'median' ? URBAN_1KM : null;
+  const cls = c => !urban ? -1 : c.median >= urban[1] ? 2 : c.median >= urban[0] ? 1 : 0;
+  const words = ['rural', 'towns', 'cities'], mids = [2, Math.log10(700), 3.9];
+  let html = '', last = null;
+  for (const { iso, c } of list) {
+    const g = cls(c);
+    if (urban && g !== last) {
+      const cnt = list.filter(d => cls(d.c) === g).length;
+      html += `<div class="grp" style="color:${rampAt(mids[g], .08)}">${words[g]} <span class="n">${cnt}</span><span class="rule" style="background:${rampAt(mids[g])}"></span></div>`;
+      last = g;
+    }
+    let d = `M${sx(lo + (i0 + .5) * step).toFixed(1)},${VH}`;
+    for (let i = i0; i <= i1; i++) d += `L${sx(lo + (i + .5) * step).toFixed(1)},${(VH - Math.min(c.y[i] * k, VH - 1)).toFixed(1)}`;
+    d += `L${sx(lo + (i1 + .5) * step).toFixed(1)},${VH}Z`;
+    const mx = sx(c.median).toFixed(1);
+    const size = pop(iso) >= 5e7 ? 'big' : pop(iso) < 1e6 ? 'small' : '';
+    html += `<div class="t ${size}" title="${data.countries[iso].name}"><div class="hd"><span class="nm">${data.countries[iso].name}</span><span class="md" style="color:${rampAt(c.median, .1)}">${fmt(10 ** c.median)}</span></div>` +
+      `<svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none"><line x1="0" x2="${VW}" y1="${VH - .5}" y2="${VH - .5}" stroke="#222"/>` +
+      (grid === '1km' ? URBAN_1KM.map(u => `<line x1="${sx(u)}" x2="${sx(u)}" y1="0" y2="${VH}" stroke="#222" vector-effect="non-scaling-stroke"/>`).join('') : '') +
+      `<path d="${d}" fill="url(#gr)"${size === 'small' ? ' fill-opacity=".6"' : ''}/>` +
+      `<line x1="${mx}" x2="${mx}" y1="${VH * .1}" y2="${VH}" stroke="#fff" stroke-opacity=".75" vector-effect="non-scaling-stroke"/></svg></div>`;
+  }
+  $('grid').innerHTML = html;
+}
+
+fetch('../data/hist.json').then(r => r.json()).then(d => {
+  data = d;
+  const q = location.hash.slice(1).split('/');
+  if (d.years.includes(+q[0])) year = +q[0];
+  if (d.grids.includes(q[1])) grid = q[1];
+  if (['median', 'pop'].includes(q[2])) sort = q[2];
+  for (const y of d.years) { const b = document.createElement('button'); b.textContent = y; b.dataset.v = y; b.onclick = () => { year = y; render(); }; $('years').appendChild(b); }
+  for (const g of d.grids) { const b = document.createElement('button'); b.textContent = g; b.dataset.v = g; b.onclick = () => { grid = g; render(); }; $('grids').appendChild(b); }
+  for (const b of $('sorts').children) b.onclick = () => { sort = b.dataset.v; render(); };
+  render();
+});
+</script>
+</body>
+</html>

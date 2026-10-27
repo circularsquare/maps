@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Population-weighted population density</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0a0a; --ink: #eee; --body: #ccc; --muted: #888; --value: #aaa; --accent: #6889a8; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; }
+#top { position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 16px 20px 0; }
+#head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#title { font-size: 20px; font-weight: 700; margin: 0 auto 0 0; }
+.seg { display: inline-flex; gap: 4px; margin-left: 6px; }
+.seg button {
+  height: 30px; min-width: 30px; padding: 0 8px; background: none; border: 1px solid #555; border-radius: 6px;
+  color: #ccc; font: inherit; font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.seg button svg { width: 16px; height: 16px; display: block; }
+.seg button:hover { border-color: var(--accent); color: var(--ink); }
+.seg button.active { border-color: var(--accent); color: var(--accent); }
+#axis { display: block; margin: 6px -20px 0; }
+#rows { display: block; margin: 0 0 24px; }
+.tick text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.band-lbl { fill: #0a0a0a; font-size: 11px; font-weight: 700; }
+.nm { fill: var(--body); font-size: 12px; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.md { font-size: 11px; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+#tip { position: fixed; pointer-events: none; display: none; z-index: 4; background: rgba(10,10,10,.9); border: 1px solid #333; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+#tip .h { font-weight: 700; } #tip .sub { color: var(--muted); font-size: 12px; }
+@media (max-width: 600px) {
+  #top { padding: 12px 16px 0; }
+  #axis { margin: 6px -16px 0; }
+  #title { flex-basis: 100%; font-size: 18px; }
+  .seg { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div id="top">
+  <div id="head">
+    <h1 id="title">Population-weighted population density</h1>
+    <span class="seg" id="years"></span>
+    <span class="seg" id="grids"></span>
+    <span class="seg" id="sorts">
+      <button data-v="median" title="Sort by median density"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.5 15V9h3v6M4.5 15V3h4v12M8.5 15V6.5h3V15M11.5 15V10h3v5M0.5 15h15"/></svg></button>
+      <button data-v="pop" title="Sort by population"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="8" cy="4.5" r="2.5"/><path d="M3 15c0-3.5 2.2-5.5 5-5.5s5 2 5 5.5"/></svg></button>
+      <button data-v="name" title="Sort by name"><svg viewBox="0 0 16 16" fill="currentColor"><text x="0.5" y="12.5" font-family="Nunito, sans-serif" font-weight="700" font-size="11">Az</text></svg></button>
+    </span>
+  </div>
+  <svg id="axis"></svg>
+</div>
+<svg id="rows"></svg>
+<div id="tip"></div>
+<script>
+const X_MIN = 1, X_MAX = 5.6, PER = Math.log10(2), KERNEL = [1, 2, 3, 2, 1];
+const URBAN_1KM = [Math.log10(300), Math.log10(1500)];
+const RAMP = [[0.3, .91, .12, 140], [1.6, .83, .16, 110], [2.48, .75, .16, 75],
+              [3.18, .67, .18, 45], [3.9, .59, .20, 22], [4.6, .51, .20, 340]]
+  .map(([x, L, C, h]) => [x, L, C * Math.cos(h * Math.PI / 180), C * Math.sin(h * Math.PI / 180)]);
+function rampAt(x, dL = 0) {
+  let i = 0;
+  while (i < RAMP.length - 2 && x > RAMP[i + 1][0]) i++;
+  const a = RAMP[i], b = RAMP[i + 1], t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+  const L = a[1] + (b[1] - a[1]) * t + dL, A = a[2] + (b[2] - a[2]) * t, B = a[3] + (b[3] - a[3]) * t;
+  const l = (L + .3963377774 * A + .2158037573 * B) ** 3, m = (L - .1055613458 * A - .0638541728 * B) ** 3,
+        s = (L - .0894841775 * A - 1.291485548 * B) ** 3;
+  return '#' + [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s,
+                -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+    .map(v => { v = Math.min(1, Math.max(0, v)); v = v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055;
+                return Math.round(v * 255).toString(16).padStart(2, '0'); }).join('');
+}
+function gradient(id, x0, x1, dL = 0) {
+  let s = '';
+  for (let x = X_MIN; x <= X_MAX + 1e-9; x += 0.1) s += `<stop offset="${((x - X_MIN) / (X_MAX - X_MIN)).toFixed(4)}" stop-color="${rampAt(x, dL)}"/>`;
+  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x1}" y1="0" y2="0">${s}</linearGradient>`;
+}
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en');
+let data, year = 2025, grid = '1km', sort = 'median';
+const cache = new Map();
+
+function curve(iso, g = grid, yr = year) {
+  const key = g + yr + iso;
+  if (cache.has(key)) return cache.get(key);
+  const h = data.hist[g]?.[yr]?.[iso];
+  let out = null;
+  if (h && h.v.length) {
+    const { lo, step, n } = data.bins, share = new Float64Array(n);
+    let total = 0;
+    h.v.forEach((v, j) => { if (h.o + j < n) { share[h.o + j] = v; total += v; } });
+    if (total > 0) {
+      const y = new Float64Array(n);
+      let c = 0, median = null;
+      for (let i = 0; i < n; i++) {
+        share[i] /= total;
+        const prev = c; c += share[i];
+        if (median === null && c >= .5) median = lo + (i + (.5 - prev) / share[i]) * step;
+      }
+      for (let i = 0; i < n; i++) { let s = 0; for (let j = -2; j <= 2; j++) { const t = i + j; if (t >= 0 && t < n) s += share[t] * KERNEL[j + 2]; } y[i] = s / 9 / step * PER * 100; }
+      let peak = 0;
+      for (let i = 0; i < n; i++) if (lo + i * step >= X_MIN) peak = Math.max(peak, y[i]);
+      out = { y, median, peak };
+    }
+  }
+  cache.set(key, out);
+  return out;
+}
+function refPeak() {
+  const peaks = [];
+  for (const yr of data.years) for (const iso in data.hist[grid]?.[yr] || {})
+    if (data.countries[iso]?.pop[yr] >= 1e6) { const c = curve(iso, grid, yr); if (c) peaks.push(c.peak); }
+  peaks.sort((a, b) => a - b);
+  return peaks[Math.floor(peaks.length * .9)];
+}
+
+function render() {
+  for (const [id, v] of [['years', year], ['grids', grid], ['sorts', sort]]) for (const b of $(id).children) b.classList.toggle('active', b.dataset.v === String(v));
+  const W = document.documentElement.clientWidth, narrow = W < 600;
+  const gx = narrow ? 16 : 20;
+  const m = { l: gx, r: gx };
+  const iw = W - m.l - m.r;
+  const sx = v => m.l + (v - X_MIN) / (X_MAX - X_MIN) * iw;
+  const { lo, step, n } = data.bins;
+  const i0 = Math.max(0, Math.floor((X_MIN - lo) / step)), i1 = Math.min(n - 1, Math.ceil((X_MAX - lo) / step));
+  const bx = i => sx(lo + (i + .5) * step);
+
+  // axis: ticks over the band
+  const urban = grid === '1km' ? URBAN_1KM : [];
+  let a = `<defs>${gradient('ga', sx(X_MIN), sx(X_MAX))}</defs>`;
+  const xt = narrow ? ['10', '100', '1k', '10k', '100k'] : ['10', '100', '1,000', '10,000', '100,000'];
+  xt.forEach((t, d) => a += `<g class="tick"><text x="${sx(d + 1)}" y="13" text-anchor="${d ? 'middle' : 'start'}">${t}</text></g>`);
+  a += `<text class="tick" x="${W - m.r}" y="13" text-anchor="end"><tspan fill="#888" font-size="12">${narrow ? '' : 'people per km²'}</tspan></text>`;
+  a += `<rect x="${sx(X_MIN)}" y="19" width="${iw}" height="14" rx="3" fill="url(#ga)"/>`;
+  const edges = [X_MIN, ...urban, X_MAX], words = ['rural', 'towns', 'cities'];
+  for (const u of urban) a += `<rect x="${sx(u) - 1}" y="19" width="2" height="14" fill="var(--bg)"/>`;
+  if (urban.length) for (let k = 0; k < 3; k++) {
+    const w = sx(edges[k + 1]) - sx(edges[k]);
+    if (w > 40) a += `<text class="band-lbl" x="${(sx(edges[k]) + sx(edges[k + 1])) / 2}" y="30" text-anchor="middle">${words[k]}</text>`;
+  }
+  const AH = 40;
+  $('axis').setAttribute('width', W); $('axis').setAttribute('height', AH); $('axis').innerHTML = a;
+
+  const list = Object.keys(data.countries).filter(iso => (data.countries[iso].pop[year] ?? 0) >= 1000 && curve(iso)).map(iso => ({ iso, c: curve(iso) }));
+  const pop = iso => data.countries[iso].pop[year] ?? 0;
+  if (sort === 'median') list.sort((a, b) => b.c.median - a.c.median);
+  else if (sort === 'pop') list.sort((a, b) => pop(b.iso) - pop(a.iso));
+  else list.sort((a, b) => data.countries[a.iso].name.localeCompare(data.countries[b.iso].name));
+
+  // rows overlap: each ridge can rise three rows into the ones above it
+  const rowH = narrow ? 15 : 16, amp = rowH * 3, cap = rowH * 5.5;
+  const k = amp / refPeak();
+  const pad = cap + 4;
+  const H = pad + list.length * rowH + 12;
+  let h = `<defs>${gradient('gf', sx(X_MIN), sx(X_MAX))}${gradient('gs', sx(X_MIN), sx(X_MAX), .1)}
+    <linearGradient id="vf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient>
+    <mask id="fade" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#vf)"/></mask></defs>`;
+  for (let d = 1; d <= 5; d++) h += `<line x1="${sx(d)}" x2="${sx(d)}" y1="0" y2="${H}" stroke="#161616"/>`;
+  for (const u of urban) h += `<line x1="${sx(u)}" x2="${sx(u)}" y1="0" y2="${H}" stroke="#262626" stroke-dasharray="2 4"/>`;
+  const geom = [];
+  list.forEach(({ iso, c }, r) => {
+    const base = pad + (r + 1) * rowH;
+    // the ridge runs only where it is at least a quarter pixel tall
+    let a0 = i1, a1 = i0, start = null;
+    for (let i = i0; i <= i1; i++) {
+      const hy = c.y[i] * k;
+      if (hy > .5) { a0 = Math.min(a0, i); a1 = i; }
+      if (start === null && hy > 1.2) start = bx(i);
+    }
+    let top = '';
+    for (let i = a0; i <= a1; i++) top += (i === a0 ? 'M' : 'L') + bx(i).toFixed(1) + ',' + (base - Math.min(c.y[i] * k, cap)).toFixed(1);
+    const area = `M${bx(a0).toFixed(1)},${base}` + top.replace('M', 'L') + `L${bx(a1).toFixed(1)},${base}Z`;
+    // small countries fainter, so the big ones lead; heights stay comparable
+    const op = Math.max(.42, Math.min(1, .42 + .58 * (Math.log10(pop(iso)) - 5.5) / 2));
+    // a solid backing hides the rows behind, then the faded colour, then a bright edge
+    h += `<path d="${area}" fill="var(--bg)"/>`;
+    h += `<g opacity="${op.toFixed(2)}">`;
+    h += `<path d="${area}" fill="url(#gf)" mask="url(#fade)"/>`;
+    h += `<path d="${top}" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linejoin="round"/>`;
+    h += `<path d="${top}" fill="none" stroke="url(#gs)" stroke-width="1.1" stroke-linejoin="round"/>`;
+    h += `</g>`;
+    // median: a short white stem from the baseline
+    const mi = Math.round((c.median - lo) / step - .5), mx = sx(c.median), my = base - Math.min(c.y[mi] * k, cap);
+    h += `<line x1="${mx}" x2="${mx}" y1="${base}" y2="${my}" stroke="#fff" stroke-opacity=".7" stroke-width="1"/>`;
+    // the name sits where the ridge starts
+    const name = data.countries[iso].name, md = fmt(10 ** c.median);
+    const tw = name.length * 6.3 + md.length * 6 + 8;
+    const lx = Math.max(m.l + tw, (start ?? sx(2)) - 6);
+    h += `<text class="lab" x="${lx}" y="${base - 3}" text-anchor="end" opacity="${Math.max(.6, op).toFixed(2)}"><tspan class="nm">${name}</tspan><tspan class="md" dx="5" fill="${rampAt(c.median, .12)}">${md}</tspan></text>`;
+    geom.push({ iso, c, base });
+  });
+  $('rows').setAttribute('width', W); $('rows').setAttribute('height', H); $('rows').innerHTML = h;
+  // a dark card behind each name, so the thin rural tail does not run through it
+  for (const t of $('rows').querySelectorAll('.lab')) {
+    const b = t.getBBox(), r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('x', b.x - 3); r.setAttribute('y', b.y + 1); r.setAttribute('width', b.width + 6); r.setAttribute('height', b.height - 2);
+    r.setAttribute('fill', '#0a0a0a'); r.setAttribute('rx', 2);
+    t.before(r);
+  }
+  $('rows').onmousemove = e => {
+    const r = $('rows').getBoundingClientRect(), py = e.clientY - r.top;
+    const i = Math.floor((py - pad) / rowH), g = geom[i], tip = $('tip');
+    if (!g) { tip.style.display = 'none'; return; }
+    tip.innerHTML = `<div class="h">${data.countries[g.iso].name}</div><div class="sub">${fmt(pop(g.iso))} people. Median ${fmt(10 ** g.c.median)} per km²</div>`;
+    tip.style.display = 'block';
+    tip.style.left = Math.min(e.clientX + 14, W - tip.offsetWidth - 8) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+  };
+  $('rows').onmouseleave = () => $('tip').style.display = 'none';
+}
+
+fetch('../data/hist.json').then(r => r.json()).then(d => {
+  data = d;
+  const q = location.hash.slice(1).split('/');
+  if (d.years.includes(+q[0])) year = +q[0];
+  if (d.grids.includes(q[1])) grid = q[1];
+  if (['median', 'pop', 'name'].includes(q[2])) sort = q[2];
+  for (const y of d.years) { const b = document.createElement('button'); b.textContent = y; b.dataset.v = y; b.onclick = () => { year = y; render(); }; $('years').appendChild(b); }
+  for (const g of d.grids) { const b = document.createElement('button'); b.textContent = g; b.dataset.v = g; b.onclick = () => { grid = g; render(); }; $('grids').appendChild(b); }
+  for (const b of $('sorts').children) b.onclick = () => { sort = b.dataset.v; render(); };
+  render();
+});
+let lastW = 0;
+new ResizeObserver(() => { const w = document.documentElement.clientWidth; if (data && w !== lastW) { lastW = w; render(); } }).observe(document.body);
+</script>
+</body>
+</html>

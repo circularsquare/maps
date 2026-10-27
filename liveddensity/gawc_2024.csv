@@ -1,0 +1,336 @@
+tier,city
+Alpha++,London
+Alpha++,New York
+Alpha+,Hong Kong
+Alpha+,Beijing
+Alpha+,Singapore
+Alpha+,Shanghai
+Alpha+,Paris
+Alpha+,Dubai
+Alpha+,Tokyo
+Alpha+,Sydney
+Alpha,Seoul
+Alpha,Milan
+Alpha,Toronto
+Alpha,Frankfurt
+Alpha,Chicago
+Alpha,Jakarta
+Alpha,Sao Paulo
+Alpha,Mexico City
+Alpha,Mumbai
+Alpha,Madrid
+Alpha,Warsaw
+Alpha,Guangzhou
+Alpha,Istanbul
+Alpha,Amsterdam
+Alpha,Bangkok
+Alpha,Los Angeles
+Alpha,Kuala Lumpur
+Alpha-,Luxembourg
+Alpha-,Taipei
+Alpha-,Shenzhen
+Alpha-,Brussels
+Alpha-,Zurich
+Alpha-,Buenos Aires
+Alpha-,Melbourne
+Alpha-,San Francisco
+Alpha-,Riyadh
+Alpha-,Santiago
+Alpha-,Düsseldorf
+Alpha-,Stockholm
+Alpha-,Washington DC
+Alpha-,Vienna
+Alpha-,Lisbon
+Alpha-,Munich
+Alpha-,Dublin
+Alpha-,Houston
+Alpha-,Berlin
+Alpha-,Johannesburg
+Alpha-,Boston
+Alpha-,New Delhi
+Beta+,Bogota
+Beta+,Ho Chi Minh City
+Beta+,Rome
+Beta+,Bangalore
+Beta+,Budapest
+Beta+,Athens
+Beta+,Hamburg
+Beta+,Doha
+Beta+,Chengdu
+Beta+,Miami
+Beta+,Tianjin
+Beta+,Dallas
+Beta+,Atlanta (GA)
+Beta+,Auckland
+Beta+,Barcelona
+Beta+,Hangzhou
+Beta+,Bucharest
+Beta+,Lima
+Beta+,Montreal
+Beta+,Prague
+Beta,Chongqing
+Beta,Tel Aviv
+Beta,Brisbane
+Beta,Cairo
+Beta,Hanoi
+Beta,Nanjing
+Beta,Oslo
+Beta,Perth
+Beta,Abu Dhabi
+Beta,Copenhagen
+Beta,Manama
+Beta,Wuhan
+Beta,Manila
+Beta,Xiamen
+Beta,Nairobi
+Beta,Kiev
+Beta,Geneva
+Beta,Jinan
+Beta,Calgary
+Beta,Zhengzhou
+Beta,Shenyang
+Beta,Dalian
+Beta,Suzhou
+Beta-,Qingdao
+Beta-,Casablanca
+Beta-,Changsha
+Beta-,Beirut
+Beta-,Port Louis
+Beta-,Denver
+Beta-,Lagos
+Beta-,Belgrade
+Beta-,Montevideo
+Beta-,Vancouver
+Beta-,Seattle
+Beta-,Manchester
+Beta-,Sofia
+Beta-,Bratislava
+Beta-,Rio de Janeiro
+Beta-,Lyon
+Beta-,Xi’an
+Beta-,Helsinki
+Beta-,Kunming
+Beta-,Zagreb
+Beta-,Nicosia
+Beta-,Karachi
+Beta-,Caracas
+Beta-,Hefei
+Beta-,Stuttgart
+Beta-,Panama City
+Beta-,Chennai
+Beta-,Philadelphia
+Gamma+,Tunis
+Gamma+,Fuzhou
+Gamma+,Guatemala City
+Gamma+,Hyderabad
+Gamma+,Cape Town
+Gamma+,Dhaka
+Gamma+,Porto
+Gamma+,Austin
+Gamma+,San Diego
+Gamma+,Minneapolis
+Gamma+,Antwerp
+Gamma+,Almaty
+Gamma+,Amman
+Gamma+,Santo Domingo
+Gamma+,Rotterdam
+Gamma+,Adelaide
+Gamma+,Lahore
+Gamma+,Colombo
+Gamma+,Taiyuan
+Gamma+,Kuwait City
+Gamma,Monterrey
+Gamma,Osaka
+Gamma,Haikou
+Gamma,Tbilisi
+Gamma,Tampa
+Gamma,Tirana
+Gamma,Quito
+Gamma,Nashville
+Gamma,Islamabad
+Gamma,Kampala
+Gamma,San Salvador
+Gamma,Muscat
+Gamma,Phnom Penh
+Gamma,Birmingham (UK)
+Gamma,Pune
+Gamma,Ningbo
+Gamma,Harbin
+Gamma,San Jose (CA)
+Gamma,Bologna
+Gamma,San José (Costa Rica)
+Gamma,Ahmedabad
+Gamma,Bristol
+Gamma,Tegucigalpa
+Gamma,Riga
+Gamma,Detroit
+Gamma-,Poznan
+Gamma-,Labuan
+Gamma-,Charlotte
+Gamma-,Pittsburgh
+Gamma-,Valencia (Spain)
+Gamma-,Edinburgh
+Gamma-,Jeddah
+Gamma-,Turin
+Gamma-,Katowice
+Gamma-,Baku
+Gamma-,Penang
+Gamma-,Dar es Salaam
+Gamma-,Wellington
+Gamma-,Managua
+Gamma-,Cleveland
+Gamma-,Nanchang
+Gamma-,Changchun
+Gamma-,Cali
+Gamma-,St Louis
+Gamma-,Ljubljana
+Gamma-,Baltimore
+Gamma-,Bilbao
+Gamma-,Marseille
+Gamma-,Surabaya
+Gamma-,Accra
+High Sufficiency,Izmir
+High Sufficiency,Harare
+High Sufficiency,Maputo
+High Sufficiency,Vilnius
+High Sufficiency,Macao
+High Sufficiency,Gothenburg
+High Sufficiency,Raleigh
+High Sufficiency,Queretaro
+High Sufficiency,Glasgow
+High Sufficiency,Zhuhai
+High Sufficiency,Phoenix
+High Sufficiency,Dakar
+High Sufficiency,Cincinnati
+High Sufficiency,Skopje
+High Sufficiency,Kansas City
+High Sufficiency,Limassol
+High Sufficiency,La Paz
+High Sufficiency,Leeds
+High Sufficiency,Guayaquil
+High Sufficiency,Hartford
+High Sufficiency,Belfast
+High Sufficiency,Indianapolis
+High Sufficiency,Algiers
+High Sufficiency,Shijiazhuang
+High Sufficiency,Lusaka
+High Sufficiency,Guadalajara
+Sufficiency,Strasbourg
+Sufficiency,Columbus
+Sufficiency,Ankara
+Sufficiency,Johor Bahru
+Sufficiency,Ottawa
+Sufficiency,Wroclaw
+Sufficiency,Urumqi
+Sufficiency,Christchurch
+Sufficiency,Douala
+Sufficiency,Tashkent
+Sufficiency,Lausanne
+Sufficiency,Málaga
+Sufficiency,Wuxi
+Sufficiency,George Town (Cayman Islands)
+Sufficiency,Salt Lake City
+Sufficiency,Tallinn
+Sufficiency,Nantes
+Sufficiency,Medellin
+Sufficiency,Edmonton
+Sufficiency,Utrecht
+Sufficiency,Taichung
+Sufficiency,Campinas
+Sufficiency,Lille
+Sufficiency,Abuja
+Sufficiency,Yangon
+Sufficiency,Krakow
+Sufficiency,Jacksonville
+Sufficiency,Southampton
+Sufficiency,San Antonio
+Sufficiency,Belo Horizonte
+Sufficiency,Leipzig
+Sufficiency,Newcastle
+Sufficiency,Naples
+Sufficiency,Curitiba
+Sufficiency,Luanda
+Sufficiency,Abidjan
+Sufficiency,Milwaukee
+Sufficiency,Nassau
+Sufficiency,Gaborone
+Sufficiency,Puebla
+Sufficiency,Toulouse
+Sufficiency,Brasilia
+Sufficiency,Podgorica
+Sufficiency,Kaohsiung
+Sufficiency,Bern
+Sufficiency,Porto Alegre
+Sufficiency,Malmö
+Sufficiency,Des Moines
+Sufficiency,Guiyang
+Sufficiency,Nice
+Sufficiency,Tijuana
+Sufficiency,Nanning
+Sufficiency,Canberra
+Sufficiency,Nürnberg
+Sufficiency,Port of Spain
+Sufficiency,Cordoba
+Sufficiency,Sarajevo
+Sufficiency,Foshan
+Sufficiency,Bordeaux
+Sufficiency,Florence
+Sufficiency,Oklahoma City
+Sufficiency,Astana
+Sufficiency,Genoa
+Sufficiency,Nagoya
+Sufficiency,Lanzhou
+Sufficiency,Durban
+Sufficiency,Dongguan
+Sufficiency,Portland
+Sufficiency,San Juan
+Sufficiency,Bergen
+Sufficiency,Yerevan
+Sufficiency,Richmond
+Sufficiency,Santa Cruz
+Sufficiency,Asuncion
+Sufficiency,Sacramento
+Sufficiency,Cebu
+Sufficiency,Hohhot
+Sufficiency,Cologne
+Sufficiency,The Hague
+Sufficiency,Birmingham (AL)
+Sufficiency,Las Vegas
+Sufficiency,Ciudad Juarez
+Sufficiency,Winnipeg
+Sufficiency,Orlando
+Sufficiency,Windhoek
+Sufficiency,Hannover
+Sufficiency,Louisville
+Sufficiency,Aberdeen
+Sufficiency,Liege
+Sufficiency,Liverpool
+Sufficiency,Basel
+Sufficiency,Tulsa
+Sufficiency,Mannheim
+Sufficiency,Palo Alto
+Sufficiency,San Pedro Sula
+Sufficiency,Seville
+Sufficiency,Recife
+Sufficiency,Alexandria
+Sufficiency,Moscow
+Sufficiency,Vientiane
+Sufficiency,Tangshan
+Sufficiency,Ulan Bator
+Sufficiency,Salvador
+Sufficiency,Memphis
+Sufficiency,Yinchuan
+Sufficiency,Linz
+Sufficiency,Calcutta
+Sufficiency,Halifax
+Sufficiency,San Luis Potosí
+Sufficiency,Barranquilla
+Sufficiency,Libreville
+Sufficiency,Lodz
+Sufficiency,Hamilton
+Sufficiency,Dresden
+Sufficiency,Arhus
+Sufficiency,Baoding
+Sufficiency,Wenzhou
+Sufficiency,Blantyre
+Sufficiency,Nottingham

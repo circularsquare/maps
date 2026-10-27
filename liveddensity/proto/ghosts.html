@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Population-weighted population density</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0a0a; --ink: #eee; --body: #ccc; --muted: #888; --value: #aaa; --accent: #6889a8; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; overflow: hidden; }
+#app { display: flex; flex-direction: column; height: 100%; padding: 16px 20px 12px; }
+#head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+#title { font-size: 20px; font-weight: 700; margin: 0 auto 0 0; }
+.seg { display: inline-flex; gap: 4px; margin-left: 6px; }
+.seg button {
+  height: 30px; min-width: 30px; padding: 0 8px; background: none; border: 1px solid #555; border-radius: 6px;
+  color: #ccc; font: inherit; font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.seg button:hover { border-color: var(--accent); color: var(--ink); }
+.seg button.active { border-color: var(--accent); color: var(--accent); }
+#bar { display: flex; flex-wrap: wrap; gap: 8px; min-height: 30px; margin-bottom: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 6px 0 10px; border: 1px solid #555; border-radius: 6px; color: var(--body); font-size: 14px; white-space: nowrap; }
+.chip .sw { width: 14px; height: 3px; border-radius: 2px; }
+.chip button { background: none; border: none; color: var(--muted); cursor: pointer; font: inherit; font-size: 15px; padding: 0 4px; }
+.chip button:hover { color: var(--ink); }
+#chartwrap { position: relative; flex: 1; min-height: 0; }
+#chart { display: block; width: 100%; height: 100%; }
+.tick text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.axis-title { fill: var(--muted); font-size: 12px; }
+.band-lbl { fill: #0a0a0a; font-size: 11px; font-weight: 700; }
+.lbl { font-size: 13px; font-weight: 700; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.mv { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+.gh { fill: none; stroke: #fff; stroke-width: .8; }
+#tip { position: absolute; pointer-events: none; display: none; z-index: 4; background: rgba(10,10,10,.9); border: 1px solid #333; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+#tip .h { font-weight: 700; } #tip .sub { color: var(--muted); font-size: 12px; }
+@media (max-width: 600px) { #app { padding: 12px 16px 10px; } #title { flex-basis: 100%; font-size: 18px; } .seg { margin-left: 0; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="head">
+    <h1 id="title">Population-weighted population density</h1>
+    <span class="seg" id="years"></span>
+    <span class="seg" id="grids"></span>
+  </div>
+  <div id="bar"></div>
+  <div id="chartwrap"><svg id="chart"></svg><div id="tip"></div></div>
+</div>
+<script>
+const COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#c8c8c8', '#9085e9', '#e66767'];
+const X_MIN = 1, X_MAX = 5.6, PER = Math.log10(2), KERNEL = [1, 2, 3, 2, 1];
+const URBAN_1KM = [Math.log10(300), Math.log10(1500)];
+const RAMP = [[0.3, .91, .12, 140], [1.6, .83, .16, 110], [2.48, .75, .16, 75],
+              [3.18, .67, .18, 45], [3.9, .59, .20, 22], [4.6, .51, .20, 340]]
+  .map(([x, L, C, h]) => [x, L, C * Math.cos(h * Math.PI / 180), C * Math.sin(h * Math.PI / 180)]);
+function rampAt(x, dL = 0) {
+  let i = 0;
+  while (i < RAMP.length - 2 && x > RAMP[i + 1][0]) i++;
+  const a = RAMP[i], b = RAMP[i + 1], t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+  const L = a[1] + (b[1] - a[1]) * t + dL, A = a[2] + (b[2] - a[2]) * t, B = a[3] + (b[3] - a[3]) * t;
+  const l = (L + .3963377774 * A + .2158037573 * B) ** 3, m = (L - .1055613458 * A - .0638541728 * B) ** 3,
+        s = (L - .0894841775 * A - 1.291485548 * B) ** 3;
+  return '#' + [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s,
+                -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+    .map(v => { v = Math.min(1, Math.max(0, v)); v = v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055;
+                return Math.round(v * 255).toString(16).padStart(2, '0'); }).join('');
+}
+function gradient(id, x0, x1) {
+  let s = '';
+  for (let x = X_MIN; x <= X_MAX + 1e-9; x += 0.1) s += `<stop offset="${((x - X_MIN) / (X_MAX - X_MIN)).toFixed(4)}" stop-color="${rampAt(x)}"/>`;
+  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x1}" y1="0" y2="0">${s}</linearGradient>`;
+}
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en');
+const fmtD = n => n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en');
+let data, year = 2025, grid = '1km', sel = [], units = new Map();
+const subFiles = new Map(), cache = new Map();
+const isUnit = id => id.includes(':');
+const ent = id => isUnit(id) ? units.get(id) : data.countries[id];
+const nameOf = id => ent(id)?.name ?? id;
+const popOf = id => { const p = ent(id)?.pop || {}; return p[year] ?? p[2020] ?? 0; };
+const nested = id => isUnit(id) && sel.some(p => p.id === units.get(id)?.parent);
+const hue = s => (isUnit(s.id) && sel.find(p => p.id === units.get(s.id)?.parent)?.color) || s.color;
+
+function rawHist(id) {
+  if (!isUnit(id)) return data.hist[grid]?.[year]?.[id];
+  return subFiles.get(units.get(id)?.parent)?.hist?.[grid]?.[year]?.[id];
+}
+function curve(id) {
+  const key = grid + year + id + (nested(id) ? '^' : '');
+  if (cache.has(key)) return cache.get(key);
+  const h = rawHist(id);
+  if (!h) return null;
+  const { lo, step, n } = data.bins, share = new Float64Array(n);
+  let total = 0;
+  h.v.forEach((v, j) => { if (h.o + j < n) { share[h.o + j] = v; total += v; } });
+  if (!total) return null;
+  let norm = total;
+  if (nested(id)) { norm = 0; for (const v of data.hist[grid][year][units.get(id).parent].v) norm += v; }
+  const y = new Float64Array(n);
+  let c = 0, median = null;
+  for (let i = 0; i < n; i++) { share[i] /= total; const p = c; c += share[i]; if (median === null && c >= .5) median = lo + (i + (.5 - p) / share[i]) * step; }
+  for (let i = 0; i < n; i++) { let s = 0; for (let j = -2; j <= 2; j++) { const t = i + j; if (t >= 0 && t < n) s += share[t] * KERNEL[j + 2]; } y[i] = s / 9 / step * PER * 100 * total / norm; }
+  let peak = 0, pk = 0;
+  for (let i = 0; i < n; i++) if (lo + i * step >= X_MIN && y[i] > peak) { peak = y[i]; pk = i; }
+  const out = { y, median, peak, pk };
+  cache.set(key, out);
+  return out;
+}
+function loadSub(iso) {
+  if (subFiles.has(iso)) return;
+  subFiles.set(iso, null);
+  fetch(`../data/sub/${iso}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({})).then(j => { subFiles.set(iso, j); render(); });
+}
+function toggle(id) {
+  if (sel.some(s => s.id === id)) sel = sel.filter(s => s.id !== id);
+  else if (sel.length < COLORS.length) { const used = new Set(sel.map(s => s.color)); sel.push({ id, color: COLORS.find(c => !used.has(c)) }); if (isUnit(id)) loadSub(units.get(id).parent); }
+  cache.clear(); render();
+}
+
+let geom = null;
+function render() {
+  for (const [id, v] of [['years', year], ['grids', grid]]) for (const b of $(id).children) b.classList.toggle('active', b.dataset.v === String(v));
+  const bar = $('bar'); bar.innerHTML = '';
+  for (const s of sel) {
+    const el = document.createElement('span'); el.className = 'chip';
+    const sw = isUnit(s.id) ? `background:repeating-linear-gradient(90deg,${hue(s)} 0 4px,transparent 4px 6px)` : `background:${hue(s)}`;
+    el.innerHTML = `<span class="sw" style="${sw}"></span>${nameOf(s.id)}<button title="Remove">✕</button>`;
+    el.querySelector('button').onclick = () => toggle(s.id);
+    bar.appendChild(el);
+  }
+  const svg = $('chart'), W = svg.clientWidth, H = svg.clientHeight;
+  if (!W || !H) return;
+  const narrow = W < 600;
+  const urban = grid === '1km' ? URBAN_1KM : [];
+  const m = { l: narrow ? 30 : 52, r: narrow ? 4 : 16, t: 24, b: 76 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const { lo, step, n } = data.bins;
+  const i0 = Math.floor((X_MIN - lo) / step), i1 = Math.min(n - 1, Math.ceil((X_MAX - lo) / step));
+  const sx = v => m.l + (v - X_MIN) / (X_MAX - X_MIN) * iw;
+  const bx = i => sx(lo + (i + .5) * step);
+  const curves = sel.map(s => ({ s, c: curve(s.id) })).filter(d => d.c);
+  let yMax = 0; for (const { c } of curves) yMax = Math.max(yMax, c.peak);
+  yMax = Math.max(10, Math.ceil(yMax * 1.12 / 5) * 5);
+  const sy = v => m.t + ih - Math.min(v, yMax * 1.04) / yMax * ih;
+  const line = c => { let d = ''; for (let i = i0; i <= i1; i++) d += (i === i0 ? 'M' : 'L') + bx(i).toFixed(1) + ',' + sy(c.y[i]).toFixed(1); return d; };
+
+  let h = `<defs>${gradient('gr', sx(X_MIN), sx(X_MAX))}<clipPath id="clip"><rect x="${m.l}" y="${m.t - 6}" width="${iw}" height="${ih + 6}"/></clipPath></defs>`;
+  const yStep = yMax > 20 ? 10 : 5;
+  for (let v = 0; v <= yMax; v += yStep) {
+    if (v) h += `<line x1="${m.l}" x2="${m.l + iw}" y1="${sy(v)}" y2="${sy(v)}" stroke="#1c1c1c"/>`;
+    h += `<g class="tick"><text x="${m.l - 6}" y="${sy(v) + 4}" text-anchor="end">${v}%</text></g>`;
+  }
+  // every country as a faint line: bigger countries a little brighter
+  const ghosts = [];
+  let g = `<g clip-path="url(#clip)">`;
+  for (const iso in data.countries) {
+    if (popOf(iso) < 1e6 || sel.some(s => s.id === iso)) continue;
+    const c = curve(iso); if (!c) continue;
+    const op = Math.max(.03, Math.min(.12, .03 + .09 * (Math.log10(popOf(iso)) - 6) / 2.2));
+    ghosts.push({ id: iso, c });
+    g += `<path class="gh" data-id="${iso}" d="${line(c)}" stroke-opacity="${op.toFixed(3)}"/>`;
+  }
+  h += g + `<path id="hl" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity=".8"/>`;
+  // selected: the area under each curve takes the density ramp, the line takes its own colour
+  for (const { s, c } of curves) {
+    const d = line(c);
+    h += `<path d="${d}L${bx(i1)},${sy(0)}L${bx(i0)},${sy(0)}Z" fill="url(#gr)" fill-opacity="${isUnit(s.id) ? .4 : .14}"/>`;
+  }
+  for (const { s, c } of curves)
+    h += `<path d="${line(c)}" fill="none" stroke="var(--bg)" stroke-width="5" stroke-opacity=".8"/><path d="${line(c)}" fill="none" stroke="${hue(s)}" stroke-width="2.25" stroke-linejoin="round"${isUnit(s.id) ? ' stroke-dasharray="6 3"' : ''}/>`;
+  h += `</g>`;
+  // medians: a stem to the curve and the value under the axis
+  const meds = curves.map(({ s, c }) => ({ s, c, x: sx(c.median) })).sort((a, b) => a.x - b.x);
+  let lastX = -1e9, row = 0;
+  for (const md of meds) {
+    const mi = Math.round((md.c.median - lo) / step - .5);
+    h += `<line x1="${md.x}" x2="${md.x}" y1="${sy(0)}" y2="${sy(md.c.y[mi])}" stroke="${hue(md.s)}" stroke-width="1.25" stroke-dasharray="1 3" stroke-linecap="round"/>`;
+    h += `<circle cx="${md.x}" cy="${sy(md.c.y[mi])}" r="3.5" fill="${hue(md.s)}" stroke="var(--bg)" stroke-width="1.5"/>`;
+    const t = fmtD(10 ** md.c.median);
+    row = md.x - lastX < t.length * 7 + 8 ? row + 1 : 0;
+    if (row < 3) h += `<text class="mv" x="${md.x}" y="${sy(0) + 14 + row * 13}" text-anchor="middle" fill="${hue(md.s)}">${t}</text>`;
+    if (!row) lastX = md.x;
+  }
+  // band and ticks
+  const by = sy(0) + 44;
+  h += `<rect x="${sx(X_MIN)}" y="${by}" width="${iw}" height="6" rx="3" fill="url(#gr)"/>`;
+  for (const u of urban) h += `<rect x="${sx(u) - 1}" y="${by}" width="2" height="6" fill="var(--bg)"/>`;
+  const xt = narrow ? ['10', '100', '1k', '10k', '100k'] : ['10', '100', '1,000', '10,000', '100,000'];
+  xt.forEach((t, d) => h += `<g class="tick"><text x="${sx(d + 1)}" y="${by + 20}" text-anchor="${d ? 'middle' : 'start'}">${t}</text></g>`);
+  if (!narrow) h += `<text class="axis-title" x="${m.l + iw}" y="${by + 20}" text-anchor="end">people per km²</text>`;
+  h += `<text class="axis-title" x="${m.l - (narrow ? 28 : 44)}" y="${m.t - 10}">share of people</text>`;
+  // names at each peak
+  const placed = [];
+  for (const { s, c } of [...curves].sort((a, b) => b.c.peak - a.c.peak)) {
+    const w = nameOf(s.id).length * 7.6 + 6;
+    let x = bx(c.pk), y = sy(c.peak) - 9;
+    for (let moved = true; moved;) { moved = false; for (const q of placed) if (Math.abs(q.x - x) < (q.w + w) / 2 && Math.abs(q.y - y) < 15) { y = q.y - 15; moved = true; } }
+    y = Math.max(y, m.t + 4); x = Math.min(Math.max(x, m.l + w / 2), m.l + iw - w / 2);
+    placed.push({ x, y, w });
+    h += `<text class="lbl" x="${x}" y="${y}" text-anchor="middle" fill="${hue(s)}">${nameOf(s.id)}</text>`;
+  }
+  svg.innerHTML = h;
+  geom = { m, iw, ih, sx, sy, ghosts, curves, lo, step, line };
+}
+
+// hover: the line nearest the pointer lights up; click adds it
+function nearest(e) {
+  if (!geom) return null;
+  const { m, iw, sy, ghosts, lo, step } = geom;
+  const r = $('chart').getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  if (px < m.l || px > m.l + iw) return null;
+  const i = Math.round((X_MIN + (px - m.l) / iw * (X_MAX - X_MIN) - lo) / step - .5);
+  let best = null, bd = 14;
+  for (const gh of ghosts) { const d = Math.abs(sy(gh.c.y[i]) - py); if (d < bd) { bd = d; best = gh; } }
+  return best && { ...best, px, py };
+}
+$('chart').addEventListener('mousemove', e => {
+  const hit = nearest(e), hl = $('hl'), tip = $('tip');
+  if (!hit) { hl?.setAttribute('d', ''); tip.style.display = 'none'; return; }
+  hl.setAttribute('d', geom.line(hit.c));
+  tip.innerHTML = `<div class="h">${nameOf(hit.id)}</div><div class="sub">median ${fmtD(10 ** hit.c.median)} per km²</div>`;
+  tip.style.display = 'block';
+  tip.style.left = (hit.px + 14 + tip.offsetWidth > $('chart').clientWidth ? hit.px - 14 - tip.offsetWidth : hit.px + 14) + 'px';
+  tip.style.top = Math.max(0, hit.py - 40) + 'px';
+});
+$('chart').addEventListener('mouseleave', () => { $('hl')?.setAttribute('d', ''); $('tip').style.display = 'none'; });
+$('chart').addEventListener('click', e => { const hit = nearest(e); if (hit) toggle(hit.id); });
+
+fetch('../data/hist.json').then(r => r.json()).then(async d => {
+  data = d;
+  const j = await fetch('../data/sub/index.json').then(r => r.ok ? r.json() : null).catch(() => null);
+  units = new Map((j?.units || []).map(u => [u.id, u]));
+  const q = decodeURIComponent(location.hash.slice(1)).split('/');
+  const ids = (q[0] || 'CHN,USA,BGD').split(',').filter(i => ent(i));
+  ids.forEach((id, k) => { sel.push({ id, color: COLORS[k] }); if (isUnit(id)) loadSub(units.get(id).parent); });
+  if (d.years.includes(+q[1])) year = +q[1];
+  if (d.grids.includes(q[2])) grid = q[2];
+  for (const y of d.years) { const b = document.createElement('button'); b.textContent = y; b.dataset.v = y; b.onclick = () => { year = y; cache.clear(); render(); }; $('years').appendChild(b); }
+  for (const g of d.grids) { const b = document.createElement('button'); b.textContent = g; b.dataset.v = g; b.onclick = () => { grid = g; cache.clear(); render(); }; $('grids').appendChild(b); }
+  render();
+});
+new ResizeObserver(() => data && render()).observe($('chartwrap'));
+</script>
+</body>
+</html>

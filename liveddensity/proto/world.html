@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Population-weighted population density</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0a0a; --ink: #eee; --body: #ccc; --muted: #888; --value: #aaa; --accent: #6889a8; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; overflow: hidden; }
+#app { display: flex; flex-direction: column; height: 100%; padding: 16px 20px 12px; }
+#head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+#title { font-size: 20px; font-weight: 700; margin: 0 auto 0 0; }
+.seg { display: inline-flex; gap: 4px; margin-left: 6px; }
+.seg button {
+  height: 30px; min-width: 30px; padding: 0 8px; background: none; border: 1px solid #555; border-radius: 6px;
+  color: #ccc; font: inherit; font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.seg button:hover { border-color: var(--accent); color: var(--ink); }
+.seg button.active { border-color: var(--accent); color: var(--accent); }
+#hero { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+#hero b { color: var(--ink); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+#chartwrap { position: relative; flex: 1; min-height: 0; }
+#chart { display: block; width: 100%; height: 100%; }
+.tick text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.axis-title { fill: var(--muted); font-size: 12px; }
+.lay { cursor: pointer; }
+.lay:hover { filter: brightness(1.25); }
+.cl { fill: #0a0a0a; fill-opacity: .82; font-weight: 700; pointer-events: none; }
+.share { fill: #0a0a0a; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.band-word { fill: #0a0a0a; font-size: 12px; }
+.med text { fill: var(--ink); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+#tip { position: absolute; pointer-events: none; display: none; z-index: 4; background: rgba(10,10,10,.9); border: 1px solid #333; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+#tip .h { font-weight: 700; } #tip .sub { color: var(--muted); font-size: 12px; }
+@media (max-width: 600px) {
+  #app { padding: 12px 16px 10px; }
+  #title { flex-basis: 100%; font-size: 18px; }
+  .seg { margin-left: 0; }
+  #hero { flex-direction: column; gap: 0; }
+  #hero b { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="head">
+    <h1 id="title">Population-weighted population density</h1>
+    <span class="seg" id="years"></span>
+    <span class="seg" id="grids"></span>
+  </div>
+  <div id="hero"><b id="total"></b><span>people, by the density of the cell they live in</span></div>
+  <div id="chartwrap"><svg id="chart"></svg><div id="tip"></div></div>
+</div>
+<script>
+const X_MIN = 1, X_MAX = 5.6, PER = Math.log10(2), KERNEL = [1, 2, 3, 2, 1];
+const URBAN_1KM = [Math.log10(300), Math.log10(1500)];
+const RAMP = [[0.3, .91, .12, 140], [1.6, .83, .16, 110], [2.48, .75, .16, 75],
+              [3.18, .67, .18, 45], [3.9, .59, .20, 22], [4.6, .51, .20, 340]]
+  .map(([x, L, C, h]) => [x, L, C * Math.cos(h * Math.PI / 180), C * Math.sin(h * Math.PI / 180)]);
+function rampAt(x, dL = 0) {
+  let i = 0;
+  while (i < RAMP.length - 2 && x > RAMP[i + 1][0]) i++;
+  const a = RAMP[i], b = RAMP[i + 1], t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+  const L = a[1] + (b[1] - a[1]) * t + dL, A = a[2] + (b[2] - a[2]) * t, B = a[3] + (b[3] - a[3]) * t;
+  const l = (L + .3963377774 * A + .2158037573 * B) ** 3, m = (L - .1055613458 * A - .0638541728 * B) ** 3,
+        s = (L - .0894841775 * A - 1.291485548 * B) ** 3;
+  return '#' + [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s,
+                -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+    .map(v => { v = Math.min(1, Math.max(0, v)); v = v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055;
+                return Math.round(v * 255).toString(16).padStart(2, '0'); }).join('');
+}
+function gradient(id, x0, x1, dL = 0) {
+  let s = '';
+  for (let x = X_MIN; x <= X_MAX + 1e-9; x += 0.1) s += `<stop offset="${((x - X_MIN) / (X_MAX - X_MIN)).toFixed(4)}" stop-color="${rampAt(x, dL)}"/>`;
+  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x1}" y1="0" y2="0">${s}</linearGradient>`;
+}
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(1) + ' billion' : n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en');
+const fmtD = n => Math.round(n).toLocaleString('en');
+let data, year = 2025, grid = '1km';
+
+// people per doubling of density, per bin, smoothed: absolute, not shares
+function people(iso) {
+  const h = data.hist[grid]?.[year]?.[iso];
+  if (!h) return null;
+  const { step, n } = data.bins, raw = new Float64Array(n), y = new Float64Array(n), r = 2, ks = 9;
+  h.v.forEach((v, j) => { if (h.o + j < n) raw[h.o + j] = v; });
+  for (let i = 0; i < n; i++) { let s = 0; for (let j = -r; j <= r; j++) { const t = i + j; if (t >= 0 && t < n) s += raw[t] * KERNEL[j + r]; } y[i] = s / ks / step * PER; }
+  return { raw, y };
+}
+
+function render() {
+  for (const [id, v] of [['years', year], ['grids', grid]]) for (const b of $(id).children) b.classList.toggle('active', b.dataset.v === String(v));
+  const svg = $('chart'), W = svg.clientWidth, H = svg.clientHeight;
+  const narrow = W < 600;
+  const { lo, step, n } = data.bins;
+  const i0 = Math.floor((X_MIN - lo) / step), i1 = Math.ceil((X_MAX - lo) / step) - 1;
+  const m = { l: narrow ? 0 : 52, r: narrow ? 0 : 16, t: 22, b: 66 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const sx = v => m.l + (v - X_MIN) / (X_MAX - X_MIN) * iw;
+  const bx = i => sx(lo + (i + .5) * step);
+
+  const layers = [];
+  const world = new Float64Array(n), worldRaw = new Float64Array(n);
+  for (const iso in data.countries) {
+    const p = people(iso);
+    if (!p) continue;
+    let tot = 0; for (const v of p.raw) tot += v;
+    if (tot < 1000) continue;
+    layers.push({ iso, ...p, tot });
+    for (let i = 0; i < n; i++) { world[i] += p.y[i]; worldRaw[i] += p.raw[i]; }
+  }
+  // biggest at the bottom so the big shapes stay their own shape
+  // by 2025 size in every year, so a country keeps its place when the year changes
+  const p25 = iso => data.countries[iso].pop[2025] || 0;
+  layers.sort((a, b) => p25(b.iso) - p25(a.iso));
+  // the y scale is fixed per grid over every year, so 1975 is visibly smaller
+  const yMax = grid === '1km' ? 1.2e9 : 1.5e9;
+  const sy = v => m.t + ih - v / yMax * ih;
+  let total = 0; for (const v of worldRaw) total += v;
+  $('total').textContent = fmt(total);
+
+  let h = `<defs>${gradient('g0', sx(X_MIN), sx(X_MAX))}${gradient('g1', sx(X_MIN), sx(X_MAX), -0.06)}</defs>`;
+  // grid
+  const yStep = 2e8;
+  for (let v = yStep; v < yMax; v += yStep) {
+    h += `<line x1="${m.l}" x2="${m.l + iw}" y1="${sy(v)}" y2="${sy(v)}" stroke="#1c1c1c"/>`;
+    const t = v >= 1e9 ? +(v / 1e9).toFixed(1) + 'B' : v / 1e6 + 'M';
+    h += narrow ? `<g class="tick"><text x="${m.l}" y="${sy(v) - 4}">${t}</text></g>`
+                : `<g class="tick"><text x="${m.l - 8}" y="${sy(v) + 4}" text-anchor="end">${t}</text></g>`;
+  }
+  const base = new Float64Array(n);
+  const paths = [], labels = [], placed = [];
+  layers.forEach((L, k) => {
+    let up = '', down = '';
+    for (let i = i0; i <= i1; i++) up += (i === i0 ? 'M' : 'L') + bx(i).toFixed(1) + ',' + sy(base[i] + L.y[i]).toFixed(1);
+    for (let i = i1; i >= i0; i--) down += 'L' + bx(i).toFixed(1) + ',' + sy(base[i]).toFixed(1);
+    const big = L.tot > 5e7;
+    paths.push(`<path class="lay" data-k="${k}" d="${up}${down}Z" fill="url(#g${k % 2})" stroke="#0a0a0a" stroke-width="${big ? 1 : .35}" stroke-opacity="${big ? .9 : .55}"/>`);
+    // label where the layer is thickest, if the text fits
+    const name = data.countries[L.iso].name;
+    let best = -1, bt = 0;
+    for (let i = i0 + 10; i <= i1 - 10; i++) { const t = sy(base[i]) - sy(base[i] + L.y[i]); if (t > bt) { bt = t; best = i; } }
+    const fs = Math.max(11, Math.min(narrow ? 13 : 16, bt * 0.55));
+    const tw = name.length * fs * 0.62;
+    if (best > 0 && bt >= 13) {
+      // the layer must stay thick enough over the text's width
+      const half = Math.ceil(tw / 2 / (iw / ((X_MAX - X_MIN) / step)));
+      let ok = true;
+      for (let i = best - half; i <= best + half; i++) if (i < i0 || i > i1 || sy(base[i]) - sy(base[i] + L.y[i]) < fs * 0.95) { ok = false; break; }
+      if (bx(best) - tw / 2 < 2 || bx(best) + tw / 2 > W - 2) ok = false;
+      const lx = bx(best), ly = sy(base[best] + L.y[best] / 2) + fs * 0.36;
+      if (ok && !placed.some(p => Math.abs(p.x - lx) < (p.w + tw) / 2 + 4 && Math.abs(p.y - ly) < (p.fs + fs) / 2 + 1)) {
+        placed.push({ x: lx, y: ly, w: tw, fs });
+        labels.push(`<text class="cl" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="${fs.toFixed(1)}" text-anchor="middle">${name}</text>`);
+      }
+    }
+    for (let i = 0; i < n; i++) base[i] += L.y[i];
+  });
+  h += paths.join('') + labels.join('');
+
+  // world median
+  let c = 0, med = null;
+  for (let i = 0; i < n; i++) { const prev = c; c += worldRaw[i]; if (med === null && c >= total / 2) med = lo + (i + (total / 2 - prev) / worldRaw[i]) * step; }
+  const mx = sx(med);
+  let peakY = 0; for (let i = i0; i <= i1; i++) peakY = Math.max(peakY, world[i]);
+  h += `<g class="med"><line x1="${mx}" x2="${mx}" y1="${m.t + 4}" y2="${m.t + ih}" stroke="#eee" stroke-width="1" stroke-dasharray="2 3"/>`;
+  h += `<text x="${mx + 6}" y="${m.t + 14}">median ${fmtD(10 ** med)} per km²</text></g>`;
+
+  // band with shares of the world's people in each class
+  const by = m.t + ih + 8, bh = 18;
+  const breaks = grid === '1km' ? URBAN_1KM : [];
+  const edges = [X_MIN, ...breaks, X_MAX];
+  h += `<rect x="${sx(X_MIN)}" y="${by}" width="${iw}" height="${bh}" rx="3" fill="url(#g0)"/>`;
+  for (const u of breaks) h += `<rect x="${sx(u) - 1}" y="${by}" width="2" height="${bh}" fill="var(--bg)"/>`;
+  if (breaks.length) {
+    const words = ['rural', 'towns', 'cities'];
+    for (let k = 0; k < 3; k++) {
+      let s = 0;
+      for (let i = 0; i < n; i++) { const x = lo + (i + .5) * step; if ((k === 0 || x >= edges[k]) && (k === 2 || x < edges[k + 1])) s += worldRaw[i]; }
+      const cx = (sx(edges[k]) + sx(edges[k + 1])) / 2, w = sx(edges[k + 1]) - sx(edges[k]);
+      const pct = Math.round(s / total * 100) + '%';
+      const txt = w > 90 ? `<tspan class="band-word">${words[k]} </tspan>${pct}` : pct;
+      h += `<text class="share" x="${cx}" y="${by + 13}" text-anchor="middle">${txt}</text>`;
+    }
+  }
+  const xt = narrow ? ['10', '100', '1k', '10k', '100k'] : ['10', '100', '1,000', '10,000', '100,000'];
+  xt.forEach((t, d) => h += `<g class="tick"><text x="${sx(d + 1)}" y="${by + bh + 16}" text-anchor="${d ? 'middle' : 'start'}">${t}</text></g>`);
+  h += `<text class="axis-title" x="${m.l + iw / 2}" y="${H - 4}" text-anchor="middle">people per km²</text>`;
+  svg.innerHTML = h;
+  svg.onmousemove = e => {
+    const t = e.target.closest('.lay'), tip = $('tip');
+    if (!t) { tip.style.display = 'none'; return; }
+    const L = layers[+t.dataset.k], r = svg.getBoundingClientRect();
+    tip.innerHTML = `<div class="h">${data.countries[L.iso].name}</div><div class="sub">${fmt(L.tot)} people</div>`;
+    tip.style.display = 'block';
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    tip.style.left = (px + 14 + tip.offsetWidth > W ? px - 14 - tip.offsetWidth : px + 14) + 'px';
+    tip.style.top = Math.max(0, py - 20) + 'px';
+  };
+  svg.onmouseleave = () => $('tip').style.display = 'none';
+}
+
+fetch('../data/hist.json').then(r => r.json()).then(d => {
+  data = d;
+  const q = location.hash.slice(1).split('/');
+  if (d.years.includes(+q[0])) year = +q[0];
+  if (d.grids.includes(q[1])) grid = q[1];
+  for (const y of d.years) { const b = document.createElement('button'); b.textContent = y; b.dataset.v = y; b.onclick = () => { year = y; render(); }; $('years').appendChild(b); }
+  for (const g of d.grids) { const b = document.createElement('button'); b.textContent = g; b.dataset.v = g; b.onclick = () => { grid = g; render(); }; $('grids').appendChild(b); }
+  render();
+});
+// redraw when the box changes size, including when the font arrives and the hero line grows
+new ResizeObserver(() => data && render()).observe($('chartwrap'));
+</script>
+</body>
+</html>

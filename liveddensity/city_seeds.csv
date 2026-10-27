@@ -1,0 +1,288 @@
+source,parent,name
+capital,AFG,Kabul
+capital,AGO,Luanda
+capital,ALB,Tirana
+capital,ARE,Abu Dhabi
+capital,ARG,Buenos Aires
+capital,ARM,Yerevan
+capital,AUS,Canberra
+capital,AUT,Vienna
+capital,AZE,Baku
+capital,BDI,Gitega
+capital,BEL,Brussels
+capital,BEN,Porto-Novo
+capital,BFA,Ouagadougou
+capital,BGD,Dhaka
+capital,BGR,Sofia
+capital,BHR,Manama
+capital,BIH,Sarajevo
+capital,BLR,Minsk
+capital,BOL,Sucre
+capital,BOL,La Paz
+capital,BRA,Brasília
+capital,BTN,Thimphu
+capital,BWA,Gaborone
+capital,CAF,Bangui
+capital,CAN,Ottawa
+capital,CHE,Bern
+capital,CHL,Santiago
+capital,CHN,Beijing
+capital,CIV,Yamoussoukro
+capital,CMR,Yaoundé
+capital,COD,Kinshasa
+capital,COG,Brazzaville
+capital,COL,Bogotá
+capital,CRI,San José
+capital,CUB,Havana
+capital,CYP,Nicosia
+capital,CZE,Prague
+capital,DEU,Berlin
+capital,DJI,Djibouti
+capital,DNK,Copenhagen
+capital,DOM,Santo Domingo
+capital,DZA,Algiers
+capital,ECU,Quito
+capital,EGY,Cairo
+capital,ERI,Asmara
+capital,ESP,Madrid
+capital,EST,Tallinn
+capital,ETH,Addis Ababa
+capital,FIN,Helsinki
+capital,FRA,Paris
+capital,GAB,Libreville
+capital,GBR,London
+capital,GEO,Tbilisi
+capital,GHA,Accra
+capital,GIN,Conakry
+capital,GMB,Banjul
+capital,GNB,Bissau
+capital,GNQ,Malabo
+capital,GRC,Athens
+capital,GTM,Guatemala City
+capital,HND,Tegucigalpa
+capital,HRV,Zagreb
+capital,HTI,Port-au-Prince
+capital,HUN,Budapest
+capital,IDN,Jakarta
+capital,IND,New Delhi
+capital,IRL,Dublin
+capital,IRN,Tehran
+capital,IRQ,Baghdad
+capital,ISR,Jerusalem
+capital,ITA,Rome
+capital,JAM,Kingston
+capital,JOR,Amman
+capital,JPN,Tokyo
+capital,KAZ,Astana
+capital,KEN,Nairobi
+capital,KGZ,Bishkek
+capital,KHM,Phnom Penh
+capital,KOR,Seoul
+capital,KWT,Kuwait City
+capital,LAO,Vientiane
+capital,LBN,Beirut
+capital,LBR,Monrovia
+capital,LBY,Tripoli
+capital,LKA,Sri Jayawardenepura Kotte
+capital,LSO,Maseru
+capital,LTU,Vilnius
+capital,LVA,Riga
+capital,MAR,Rabat
+capital,MDA,Chișinău
+capital,MDG,Antananarivo
+capital,MEX,Mexico City
+capital,MKD,Skopje
+capital,MLI,Bamako
+capital,MMR,Naypyidaw
+capital,MNG,Ulaanbaatar
+capital,MOZ,Maputo
+capital,MRT,Nouakchott
+capital,MUS,Port Louis
+capital,MWI,Lilongwe
+capital,MYS,Kuala Lumpur
+capital,NAM,Windhoek
+capital,NER,Niamey
+capital,NGA,Abuja
+capital,NIC,Managua
+capital,NLD,Amsterdam
+capital,NOR,Oslo
+capital,NPL,Kathmandu
+capital,NZL,Wellington
+capital,OMN,Muscat
+capital,PAK,Islamabad
+capital,PAN,Panama City
+capital,PER,Lima
+capital,PHL,Manila
+capital,PNG,Port Moresby
+capital,POL,Warsaw
+capital,PRI,San Juan
+capital,PRK,Pyongyang
+capital,PRT,Lisbon
+capital,PRY,Asunción
+capital,PSE,Ramallah
+capital,QAT,Doha
+capital,ROU,Bucharest
+capital,RUS,Moscow
+capital,RWA,Kigali
+capital,SAU,Riyadh
+capital,SDN,Khartoum
+capital,SEN,Dakar
+capital,SGP,Singapore
+capital,SLE,Freetown
+capital,SLV,San Salvador
+capital,SOM,Mogadishu
+capital,SRB,Belgrade
+capital,SSD,Juba
+capital,SVK,Bratislava
+capital,SVN,Ljubljana
+capital,SWE,Stockholm
+capital,SWZ,Mbabane
+capital,SYR,Damascus
+capital,TCD,N'Djamena
+capital,TGO,Lomé
+capital,THA,Bangkok
+capital,TJK,Dushanbe
+capital,TKM,Ashgabat
+capital,TLS,Dili
+capital,TTO,Port of Spain
+capital,TUN,Tunis
+capital,TUR,Ankara
+capital,TWN,Taipei
+capital,TZA,Dodoma
+capital,UGA,Kampala
+capital,UKR,Kyiv
+capital,URY,Montevideo
+capital,USA,Washington
+capital,UZB,Tashkent
+capital,VEN,Caracas
+capital,VNM,Hanoi
+capital,XKX,Pristina
+capital,YEM,Sanaa
+capital,ZAF,Pretoria
+capital,ZMB,Lusaka
+capital,ZWE,Harare
+GaWC,GBR,London
+GaWC,USA,New York
+GaWC,HKG,Hong Kong
+GaWC,CHN,Beijing
+GaWC,SGP,Singapore
+GaWC,CHN,Shanghai
+GaWC,FRA,Paris
+GaWC,ARE,Dubai
+GaWC,JPN,Tokyo
+GaWC,AUS,Sydney
+GaWC,KOR,Seoul
+GaWC,ITA,Milan
+GaWC,CAN,Toronto
+GaWC,DEU,Frankfurt
+GaWC,USA,Chicago
+GaWC,IDN,Jakarta
+GaWC,BRA,São Paulo
+GaWC,MEX,Mexico City
+GaWC,IND,Mumbai
+GaWC,ESP,Madrid
+GaWC,POL,Warsaw
+GaWC,CHN,Guangzhou
+GaWC,TUR,Istanbul
+GaWC,NLD,Amsterdam
+GaWC,THA,Bangkok
+GaWC,USA,Los Angeles
+GaWC,MYS,Kuala Lumpur
+GaWC,LUX,Luxembourg
+GaWC,TWN,Taipei
+GaWC,CHN,Shenzhen
+GaWC,BEL,Brussels
+GaWC,CHE,Zurich
+GaWC,ARG,Buenos Aires
+GaWC,AUS,Melbourne
+GaWC,USA,San Francisco
+GaWC,SAU,Riyadh
+GaWC,CHL,Santiago
+GaWC,DEU,Düsseldorf
+GaWC,SWE,Stockholm
+GaWC,USA,Washington
+GaWC,AUT,Vienna
+GaWC,PRT,Lisbon
+GaWC,DEU,Munich
+GaWC,IRL,Dublin
+GaWC,USA,Houston
+GaWC,DEU,Berlin
+GaWC,ZAF,Johannesburg
+GaWC,USA,Boston
+GaWC,IND,New Delhi
+GaWC,COL,Bogotá
+GaWC,VNM,Ho Chi Minh City
+GaWC,ITA,Rome
+GaWC,IND,Bengaluru
+GaWC,HUN,Budapest
+GaWC,GRC,Athens
+GaWC,DEU,Hamburg
+GaWC,QAT,Doha
+GaWC,CHN,Chengdu
+GaWC,USA,Miami
+GaWC,CHN,Tianjin
+GaWC,USA,Dallas
+GaWC,USA,Atlanta
+GaWC,NZL,Auckland
+GaWC,ESP,Barcelona
+GaWC,CHN,Hangzhou
+GaWC,ROU,Bucharest
+GaWC,PER,Lima
+GaWC,CAN,Montreal
+GaWC,CZE,Prague
+GaWC,CHN,Chongqing
+GaWC,ISR,Tel Aviv
+GaWC,AUS,Brisbane
+GaWC,EGY,Cairo
+GaWC,VNM,Hanoi
+GaWC,CHN,Nanjing
+GaWC,NOR,Oslo
+GaWC,AUS,Perth
+GaWC,ARE,Abu Dhabi
+GaWC,DNK,Copenhagen
+GaWC,BHR,Manama
+GaWC,CHN,Wuhan
+GaWC,PHL,Manila
+GaWC,CHN,Xiamen
+GaWC,KEN,Nairobi
+GaWC,UKR,Kyiv
+GaWC,CHE,Geneva
+GaWC,CHN,Jinan
+GaWC,CAN,Calgary
+GaWC,CHN,Zhengzhou
+GaWC,CHN,Shenyang
+GaWC,CHN,Dalian
+GaWC,CHN,Suzhou
+GaWC,CHN,Qingdao
+GaWC,MAR,Casablanca
+GaWC,CHN,Changsha
+GaWC,LBN,Beirut
+GaWC,MUS,Port Louis
+GaWC,USA,Denver
+GaWC,NGA,Lagos
+GaWC,SRB,Belgrade
+GaWC,URY,Montevideo
+GaWC,CAN,Vancouver
+GaWC,USA,Seattle
+GaWC,GBR,Manchester
+GaWC,BGR,Sofia
+GaWC,SVK,Bratislava
+GaWC,BRA,Rio de Janeiro
+GaWC,FRA,Lyon
+GaWC,CHN,Xi'an
+GaWC,FIN,Helsinki
+GaWC,CHN,Kunming
+GaWC,HRV,Zagreb
+GaWC,CYP,Nicosia
+GaWC,PAK,Karachi
+GaWC,VEN,Caracas
+GaWC,CHN,Hefei
+GaWC,DEU,Stuttgart
+GaWC,PAN,Panama City
+GaWC,IND,Chennai
+GaWC,USA,Philadelphia
+added,GBR,Edinburgh
+added,JPN,Kyoto
+added,ITA,Venice
+added,SAU,Mecca
+added,USA,Honolulu
