@@ -18,7 +18,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. History of this session: notes/han
   commit), notes/T-1546/ (T-1546's agent, commit with its notes).
 - Core cap 10 (Anita is on the machine). `python cores.py list` at maps root.
 
-## In flight (agents of this session; their reports come here)
+## In flight (agents of the old session ee78dc43 / maps-52, which lands T-1543 and relays the
+## other two, then messages the new orchestrator (maps-82) that it is done)
 - T-1543 rough period split over workers: Opus, tree .tw-trees/t1543 (branch tw/t1543). Done when
   ARCHIVE has T-1543 and notes/T-1543.md exists. Land with scratchpad land_wasm.ps1 or by hand:
   commit in tree, merge master in, `npm run wasm` in tree app, typecheck, cargo test
