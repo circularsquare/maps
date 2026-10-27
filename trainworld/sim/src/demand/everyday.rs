@@ -1978,6 +1978,11 @@ impl EverydayApi {
             .map(|k| (self.walks[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
             .collect()
     }
+    /// Riders in period `q` boarding at each route node after changing lines, every purpose (T-1530).
+    pub fn transfers_in(&self, q: usize) -> Vec<f32> {
+        let Some(Some(st)) = self.per.get(q) else { return vec![] };
+        transfers_in(&st.g, &st.xi, &st.xfer)
+    }
     /// `transfers` on a kind of day (T-260). The purposes' transfers are kept together, so each
     /// period's are scaled by its rail riders' mean load factor that day.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

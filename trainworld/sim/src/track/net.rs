@@ -389,6 +389,13 @@ pub struct Network {
     names_all: bool,
     /// Edge prices worked out again outside an edit (water or terrain installed), since `take_repriced`.
     repriced: bool,
+    /// T-1540: whether each node lies on water, kept as (x, y, mask epoch, answer) and used only
+    /// while the node is where it was and the mask the one it was asked of (`node_is_wet`).
+    node_wet: std::cell::RefCell<Vec<(f64, f64, u32, bool)>>,
+    /// Counts the masks installed, so a kept answer from an earlier mask is not used.
+    mask_epoch: u32,
+    /// Off: every node is asked of the mask each time (the rows check compares the two).
+    pub wet_cache: bool,
 }
 
 /// Slack in a Dijkstra key.
@@ -616,11 +623,38 @@ impl Network {
             names_changed: vec![],
             names_all: true,
             repriced: false,
+            node_wet: Default::default(),
+            mask_epoch: 0,
+            wet_cache: true,
         }
+    }
+
+    /// Whether the node lies on water (`water_mask.is_water` at it), asked of the mask once while the
+    /// node and the mask stay as they are: stations are priced on every edit and every state.
+    pub fn node_is_wet(&self, n: usize) -> bool {
+        let (x, y) = (self.node_x[n], self.node_y[n]);
+        if !self.wet_cache {
+            return self.water_mask.is_water(x, y);
+        }
+        let mut kept = self.node_wet.borrow_mut();
+        if kept.len() <= n {
+            kept.resize(n + 1, (f64::NAN, f64::NAN, u32::MAX, false));
+        }
+        let k = &mut kept[n];
+        if k.2 == self.mask_epoch && k.0 == x && k.1 == y {
+            return k.3;
+        }
+        let wet = self.water_mask.is_water(x, y);
+        *k = (x, y, self.mask_epoch, wet);
+        wet
     }
 
     pub fn take_repriced(&mut self) -> bool {
         std::mem::take(&mut self.repriced)
+    }
+
+    pub fn repriced(&self) -> bool {
+        self.repriced
     }
 
     /// The nodes whose station name was set (or cleared) since the last call, ascending; `[u32::MAX]`
@@ -1157,6 +1191,7 @@ impl Network {
 
     pub fn set_water_mask(&mut self, mask: Box<dyn WaterMask>) {
         self.water_mask = mask;
+        self.mask_epoch = self.mask_epoch.wrapping_add(1);
         for e in 0..self.edge_count() as u32 {
             if self.edge_ok(e) {
                 self.touch.edges.push(e);
@@ -1170,6 +1205,7 @@ impl Network {
     /// a mask with long track drawn). Nothing else an edge derives depends on water.
     pub fn add_water(&mut self, mask: Box<dyn WaterMask>, b: [f64; 4]) {
         self.water_mask = mask;
+        self.mask_epoch = self.mask_epoch.wrapping_add(1);
         self.rework_ground(b, true);
     }
 
@@ -1745,10 +1781,11 @@ impl Network {
         }
         for n in 0..self.node_count() {
             if !self.node_alive[n] { continue; }
-            let wet = self.water_mask.is_water(self.node_x[n], self.node_y[n]);
+            // asked only where a price needs it: most nodes need none
+            let is_wet = || self.node_is_wet(n);
             let level = self.node_level[n];
             if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
-                let tracks = self.node_tracks(n as u32);
+                let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
                 add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
                 let ups = self.node_upgrades[n];
                 if ups != 0 {
@@ -1760,6 +1797,7 @@ impl Network {
                 && self.priced_ends(nn, |e| self.edge_built[e]) < 3
                 && self.priced_ends(nn, |e| self.edge_built[e] || !self.edge_off[e]) >= 3
             {
+                let wet = is_wet();
                 let base = cost::junction_cost(level, false, wet);
                 add(2, level, 0, wet, false, 1.0, base);
                 if self.node_flying[n] {
@@ -1824,6 +1862,60 @@ impl Network {
             }
         }
         c + self.passages_cost(false) + self.bus_cost(false)
+    }
+
+    /// `(total_cost(), built_cost())` in one pass: the same sums in the same order, so equal to the
+    /// bit, with a station priced once and the water under a node asked of the mask only when the
+    /// node or the mask is new (`node_is_wet`; `total_cost` and `built_cost` ask every time, and the
+    /// rows check compares them with this) (T-1540).
+    pub fn total_and_built_cost(&self) -> (f64, f64) {
+        let (mut t, mut b) = (0.0, 0.0);
+        for e in 0..self.edge_count() {
+            if self.edge_alive[e] {
+                t += self.edge_cost[e];
+                if self.edge_built[e] {
+                    b += self.edge_cost[e];
+                }
+            }
+        }
+        for n in 0..self.node_count() {
+            if !self.node_alive[n] {
+                continue;
+            }
+            let wet = || self.node_is_wet(n);
+            if self.node_platform[n] > 0 {
+                let station =cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                let upgrades = self.upgrades_cost(n);
+                t += station;
+                t += upgrades;
+                if self.node_built[n] {
+                    b += station;
+                    b += upgrades;
+                }
+            }
+            let (all, built) = (self.priced_ends(n as u32, |_| true) >= 3, self.priced_ends(n as u32, |e| self.edge_built[e]) >= 3);
+            if all || built {
+                let junction = cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
+                if all {
+                    t += junction;
+                }
+                if built {
+                    b += junction;
+                }
+            }
+        }
+        for x in &self.crossings {
+            if let CrossKind::Flat(level) = x.kind {
+                if self.priced_crossing(x) {
+                    let price = cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
+                    t += price;
+                    if self.edge_built[x.e1 as usize] && self.edge_built[x.e2 as usize] {
+                        b += price;
+                    }
+                }
+            }
+        }
+        (t + self.passages_cost(false) + self.bus_cost(false), b + self.passages_cost(true) + self.bus_cost(true))
     }
 
     /// Build cost of what is constructed, US$M (SPEC 6.4): constructed edges and stations, a

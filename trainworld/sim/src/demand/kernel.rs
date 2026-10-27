@@ -4870,6 +4870,32 @@ pub fn xfer_index(g: &Graph) -> XferIndex {
     XferIndex { at, len }
 }
 
+/// The transfers in `xfer` (laid out by `ix`) added up by the route node riders board at after
+/// changing: `transfer_pairs` with every node marked, summed by its second node (T-1530).
+pub fn transfers_in(g: &Graph, ix: &XferIndex, xfer: &[f32]) -> Vec<f32> {
+    let s = g.n_st;
+    let mut out = vec![0.0f32; g.n - s];
+    if xfer.len() != ix.len {
+        return out;
+    }
+    for v in s..g.n {
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let slot = ix.at[e];
+            if slot == NONE {
+                continue;
+            }
+            let to = g.adj_to[e] as usize;
+            for (k, d) in (g.adj_off[to] as usize..g.adj_off[to + 1] as usize).enumerate() {
+                let x = xfer[slot as usize + k];
+                if x > 0.0 {
+                    out[g.adj_to[d] as usize - s] += x;
+                }
+            }
+        }
+    }
+    out
+}
+
 /// The transfers in `xfer` (laid out by `ix`) with either end at a route node marked in `sel`
 /// (one byte per route node), as triples (route node in, route node out, riders), appended to
 /// `out`. Route nodes are indices from 0 (node - n_st), the order of `Loads::seg`.

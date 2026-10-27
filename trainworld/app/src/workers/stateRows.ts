@@ -9,7 +9,9 @@
 //    set (`take_name_changes`);
 //  - a line's heavy rows (name, stops, path, timetable, stretch speeds, passed stations, reversals)
 //    are kept, and read again only for the lines the model says its service rebuilt, rescheduled or
-//    recomputed (`take_changed_lines`), which is every line an edit can change them for.
+//    recomputed (`take_changed_lines`), which is every line an edit can change them for;
+//  - the phase tables of the run profiles (`phases`, 10 MB on Japan) are kept per line the same way
+//    and laid end to end only when a line's differ (T-1540).
 // The result is the same as `new StateRows().read(...)` on the same model, rows field for field
 // (checks/t1382-rows.mjs; `?patch=check` compares them in the page).
 import type { TrackApi } from "../wasm/track/sim";
@@ -95,6 +97,22 @@ export class StateRows {
   private nodeRows = new Map<number, ClockNode>();
   private names = new Map<number, string>();
   private lineKept = new Map<number, LineKept>();
+  /** each line's phase tables (`line_phases`), by id, and all of them laid end to end as `phases`
+   * answers (T-1540): the same array until a line's tables change */
+  private phaseTables = new Map<number, Float32Array>();
+  private phaseAll: Float32Array | null = null;
+  /** the tables changed since `phaseAll` was laid out, which of them, and whether any changed in length */
+  private phaseStale = false;
+  private phaseDirty = new Set<number>();
+  private phaseLayout = false;
+  /** lines whose tables the last `lines` found may have changed, and the lines it read */
+  private phasePending = new Set<number>();
+  private phaseSeen = new Set<number>();
+  /** how many lines' tables the last `lines` read */
+  phaseReads = 0;
+  /** past this many lines to read the tables of, one call for all of them is quicker (T-1540; the
+   * rows check sets it to 0 to cover that way as well) */
+  static wholePhases = 48;
 
   /** Forget every row: the next read is a full one. */
   reset() {
@@ -103,6 +121,12 @@ export class StateRows {
     this.nodeRows.clear();
     this.names.clear();
     this.lineKept.clear();
+    this.phaseTables.clear();
+    this.phaseAll = null;
+    this.phaseStale = this.phaseLayout = false;
+    this.phaseDirty.clear();
+    this.phasePending.clear();
+    this.phaseSeen = new Set();
   }
 
   /** A kept model node's row (not a bus stop's). */
@@ -219,6 +243,7 @@ export class StateRows {
     const kept = this.lineKept;
     const seen = new Set<number>();
     const read: LineRead[] = [];
+    const refresh = new Set<number>();
     for (let i = 0; i < li.length; i += 22) {
       const id = li[i];
       seen.add(id);
@@ -226,6 +251,7 @@ export class StateRows {
       const bus = a.is_bus(id);
       const prev = kept.get(id);
       const fresh = all || bus || !prev || dirty.has(id) || prev.row.ok !== ok || prev.row.running !== running;
+      if (fresh) refresh.add(id);
       read.push({
         i, id, ok, running, bus, prev, fresh,
         heavy: fresh ? this.heavy(a, id, ok) : prev!.heavy,
@@ -269,6 +295,86 @@ export class StateRows {
       out.push(row);
     }
     if (kept.size > seen.size) for (const id of kept.keys()) if (!seen.has(id)) kept.delete(id);
+    for (const id of refresh) this.phasePending.add(id);
+    this.phaseSeen = seen;
+    return out;
+  }
+
+  /** Every line's phase tables laid end to end, as `TrackApi.phases` answers, read after `lines`
+   * and after whatever else the state prices (pricing a planned line, and the construct-all quote,
+   * run trials that recompute profiles: the lines they note as changed are read here, and again by
+   * the next `lines`). The same array as last time while no line's tables changed; never to be
+   * transferred or changed. */
+  phases(a: TrackApi): Float32Array {
+    const ids = new Set(this.phasePending);
+    this.phasePending.clear();
+    const moved = a.peek_changed_lines();
+    if (moved.length && moved[0] === ALL) for (const id of this.phaseSeen) ids.add(id);
+    else for (const id of moved) if (this.phaseSeen.has(id)) ids.add(id);
+    this.phaseReads = ids.size;
+    if (ids.size > StateRows.wholePhases) this.splitPhases(a);
+    else {
+      for (const id of ids) this.readPhases(a, id);
+      for (const id of this.phaseTables.keys()) if (!this.phaseSeen.has(id)) this.dropPhases(id);
+    }
+    return this.phaseStale || !this.phaseAll ? this.layOutPhases() : this.phaseAll;
+  }
+
+  /** A line's phase tables, kept if they are the same. */
+  private readPhases(a: TrackApi, id: number) {
+    const t = a.line_phases(id), old = this.phaseTables.get(id);
+    if (old ? sameNumbers(old, t) : t.length === 0) return;
+    this.phaseStale = true;
+    this.phaseDirty.add(id);
+    if (old?.length !== t.length) this.phaseLayout = true;
+    if (t.length) this.phaseTables.set(id, t); else this.phaseTables.delete(id);
+  }
+
+  private dropPhases(id: number) {
+    this.phaseTables.delete(id);
+    this.phaseStale = this.phaseLayout = true;
+  }
+
+  /** All the lines' tables in one call, for an edit that changed many of them (a call each costs
+   * more past `wholePhases`): the answer is that array, and each line's table a view of it. */
+  private splitPhases(a: TrackApi) {
+    const whole = a.phases(), meta = a.profile_meta();
+    this.phaseTables.clear();
+    for (const id of this.phaseSeen) {
+      const m = id * 6 * 4;
+      if (m + 24 > meta.length) continue;
+      let count = 0;
+      for (let p = 0; p < 6; p++) count += meta[m + p * 4 + 1];
+      if (count > 0) this.phaseTables.set(id, whole.subarray(meta[m] * 4, (meta[m] + count) * 4));
+    }
+    this.phaseAll = whole;
+    this.phaseStale = this.phaseLayout = false;
+    this.phaseDirty.clear();
+  }
+
+  /** The tables end to end in line order: a copy of the last array with the changed tables written
+   * over theirs when none changed in length, otherwise all of them laid out again. */
+  private layOutPhases(): Float32Array {
+    const ids = [...this.phaseTables.keys()].sort((x, y) => x - y);
+    let out: Float32Array;
+    if (this.phaseAll && !this.phaseLayout) {
+      out = this.phaseAll.slice();
+      let at = 0;
+      for (const id of ids) {
+        const t = this.phaseTables.get(id)!;
+        if (this.phaseDirty.has(id)) out.set(t, at);
+        at += t.length;
+      }
+    } else {
+      let n = 0;
+      for (const id of ids) n += this.phaseTables.get(id)!.length;
+      out = new Float32Array(n);
+      let at = 0;
+      for (const id of ids) { const t = this.phaseTables.get(id)!; out.set(t, at); at += t.length; }
+    }
+    this.phaseAll = out;
+    this.phaseStale = this.phaseLayout = false;
+    this.phaseDirty.clear();
     return out;
   }
 

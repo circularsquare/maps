@@ -442,8 +442,7 @@ impl TrackWorld {
     }
 
     fn commit(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
-        let cost_before = self.net.total_cost();
-        let built_before = self.net.built_cost();
+        let (cost_before, built_before) = self.net.total_and_built_cost();
         let again = op.clone();
         let switch = match &op {
             Op::AutoTrains { id, auto, .. } if self.net.line_auto.get(*id as usize).is_some_and(|a| a.is_some() != auto.is_some()) => Some(*id),
@@ -497,8 +496,7 @@ impl TrackWorld {
                 resources.push(r as u32);
             }
         }
-        let cost_after = self.net.total_cost();
-        let built_after = self.net.built_cost();
+        let (cost_after, built_after) = self.net.total_and_built_cost();
         let r = EditResult {
             dirty: Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc },
             cost_before,

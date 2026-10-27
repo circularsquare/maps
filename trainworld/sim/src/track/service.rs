@@ -773,6 +773,17 @@ impl Service {
         v
     }
 
+    /// `take_changed` without taking.
+    pub fn peek_changed(&self) -> Vec<u32> {
+        if self.changed_all {
+            return vec![u32::MAX];
+        }
+        let mut v = self.changed.clone();
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
     /// Every line from scratch.
     pub fn update_all(&mut self, net: &Network) -> ServiceDirty {
         let all: Vec<u32> = (0..net.line_count() as u32).collect();

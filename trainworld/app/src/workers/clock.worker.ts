@@ -1016,12 +1016,15 @@ function buildState(): ClockState {
   const crossings = markPoints(a.crossings_info(), 5);
   const tq4 = performance.now(); timing.sRest = tq4 - tq3;
   const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
-  const builtCost = a.built_cost();
-  const blueprintCost = Math.max(a.total_cost() - builtCost, 0);
+  const tq4a = performance.now(); timing.sFull = tq4a - tq4;
+  const [totalCost, builtCost] = a.costs();
+  const blueprintCost = Math.max(totalCost - builtCost, 0);
+  const tq4b = performance.now(); timing.sSums = tq4b - tq4a;
   const blueprintItems = Array.from(a.blueprint_cost_items());
-  const tq5 = performance.now(); timing.sCosts = tq5 - tq4;
-  const phases = a.phases();
-  timing.sPhases = performance.now() - tq5;
+  const tq5 = performance.now(); timing.sCosts = tq5 - tq4; timing.sQuote = tq5 - tq4b;
+  const phases = stateRows.phases(a);
+  timing.sPhases = performance.now() - tq5; timing.nPhaseLines = stateRows.phaseReads;
+  if (patchMode === "check" && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
   return {
     version: ++version,
     markers,
@@ -1932,15 +1935,17 @@ function sendState(service = false, effectiveAt?: number) {
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
   const r = s.render;
-  // the per-edge arrays stay here (T-1029): the network carries what the main thread needs of them
-  s.render = { phases: r.phases, meta: r.meta, samples: r.samples, lineTable: r.lineTable };
+  // the per-edge arrays stay here (T-1029): the network carries what the main thread needs of them.
+  // `r.phases` is the rows' own array (T-1540), never transferred: a copy goes where it is wanted.
+  s.render = { phases: NO_PHASES, meta: r.meta, samples: r.samples, lineTable: r.lineTable };
   if (service && running === runningLines && posted.net) {
     s.service = true;
     s.ms = [t1 - t0, 0];
     timing.state = t1 - t0;
-    keepPosted("phases", r.phases);
+    s.render.phases = r.phases.slice();
+    posted.arrays.set("phases", r.phases);
     keepPosted("meta", r.meta);
-    postState(s, [r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+    postState(s, [s.render.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
     timing.post = performance.now() - t1;
     sendTrips();
     return;
@@ -1955,7 +1960,7 @@ function sendState(service = false, effectiveAt?: number) {
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
-  const bufs = new Set<ArrayBufferLike>([r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+  const bufs = new Set<ArrayBufferLike>([r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   for (const st of [out.track, out.lines]) for (const v of Object.values(st)) if (ArrayBuffer.isView(v) && v.byteLength) bufs.add(v.buffer);
   for (const k of SAME_FIELDS) { const v = out[k]; if (v) bufs.add(v.buffer); }
   for (const v of out.edgePts.values()) bufs.add(v.buffer);
@@ -1993,6 +1998,7 @@ function postWhole() {
 
 const bytesOf = (v: ArrayBufferView) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
 function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): boolean {
+  if (a === b) return true;
   if (!a || a.byteLength !== b.byteLength || a.constructor !== b.constructor) return false;
   if (a.byteLength % 4 === 0 && a.byteOffset % 4 === 0 && b.byteOffset % 4 === 0) {
     const x = new Int32Array(a.buffer, a.byteOffset, a.byteLength / 4), y = new Int32Array(b.buffer, b.byteOffset, b.byteLength / 4);
@@ -2006,6 +2012,15 @@ function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): boolean 
 function keepPosted(k: string, v: ArrayBufferView) {
   posted.arrays.set(k, (v as Float32Array).slice());
 }
+/** the phase tables of the rows (`StateRows.phases`) are kept by reference, since the rows never
+ * change that array, and a copy is posted */
+function keepPostedField(out: NetworkBuffers, k: SameField, v: ArrayBufferView) {
+  if (k !== "phases") return keepPosted(k, v);
+  posted.arrays.set(k, v);
+  out.phases = (v as Float32Array).slice();
+}
+/** the phase tables of a state that does not use them (the network's are posted as changes) */
+const NO_PHASES = new Float32Array(0);
 
 /** The network as it is posted: whole (a copy of its edges' points in one buffer), or with
  * `patch` and the fields the client already has left out. */
@@ -2043,16 +2058,17 @@ function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers
       at += p.length;
     }
     out.edgePts = mine;
-    for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPosted(k, v); }
+    for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPostedField(out, k, v); }
   } else {
     const patch = { ...n.patch!, same: [] as string[], modes, ranges };
     for (const k of SAME_FIELDS) {
       const v = n[k];
       if (!v) continue;
-      if (sameBytes(posted.arrays.get(k), v)) {
+      // the phase tables are one array until a table changes (`StateRows.phases`)
+      if (k === "phases" ? posted.arrays.get(k) === v : sameBytes(posted.arrays.get(k), v)) {
         patch.same.push(k);
         (out as Record<SameField, unknown>)[k] = undefined;
-      } else keepPosted(k, v);
+      } else keepPostedField(out, k, v);
     }
     const changed = new Map<number, Float32Array>();
     const was = posted.net!.pts;
