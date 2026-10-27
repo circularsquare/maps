@@ -8,7 +8,7 @@ import { Money } from "../MoneyText";
 import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
-import { crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
+import { crowding, runningToday, today, useToday, waitText } from "../../game/today";
 import { accountVersion, CAR_M, CRUSH_PER_CAR } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -22,7 +22,7 @@ import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
-import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepTrainCount, trainsShown, world, linesById, linesByNum } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
@@ -252,32 +252,31 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
 /** T-477, T-515, T-1255: one dot per demand level, graded by `crowding` of the riders at the
  * platforms where trains come full (`BUSY_PLATFORM_S` in boarding.rs: their wait for a train with
  * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
- * averaged by those riders. The hover names the stop with the most rider-minutes waited
- * (`line_periods`' tail, per period and stop). */
+ * averaged by those riders. The hover gives each of the level's periods its trains full and riders
+ * turned away (T-1523: the pooled figure can rank a few bad platforms above a worse period spread
+ * over many), and names the stop with the most rider-minutes waited (`line_periods`' tail). */
 export function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
-  let trains = 0, full = 0, weight = 0, wait = 0, score = 0, gone = 0;
-  let worst: { name: string; wait: number; score: number } | null = null;
+  let trains = 0, weight = 0, wait = 0;
+  const lines: string[] = [];
   const n = stops.length, tail = PERIODS.length * PERIOD_STRIDE, at = new Array<number>(n).fill(0);
   for (let i = 0; i < PERIODS.length; i++) {
-    if (PERIODS[i].demand !== d) continue;
+    const p = PERIODS[i];
+    if (p.demand !== d) continue;
     const o = i * PERIOD_STRIDE;
     if (!(v[o] > 0)) continue;
     const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
-    trains += v[o]; full += v[o + 1]; weight += c.weight; gone += v[o + 8] ?? 0;
-    wait += c.wait * c.weight; score += c.score * c.weight;
-    if (!worst || c.score > worst.score) worst = { name: PERIODS[i].name, wait: c.wait, score: c.score };
+    const gone = v[o + 8] ?? 0;
+    trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
+    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])} of ${count(v[o])} trains full` + (gone >= 1 ? `, ${count(gone)} riders went another way` : ""));
     if (v.length >= tail + PERIODS.length * n) for (let k = 0; k < n; k++) at[k] += v[tail + i * n + k];
   }
   if (!(trains > 0)) return null;
-  const avg = weight > 0 ? { wait: wait / weight, score: score / weight } : { wait: 0, score: 0 };
-  const grade = crowdGrade(avg.score);
+  const avgWait = weight > 0 ? wait / weight : 0;
   const most = at.reduce((b, x, k) => (x > at[b] ? k : b), 0);
-  const tip = (avg.wait >= 0.05 ? `Where trains come full, riders face a wait of ${waitText(avg.wait)} on average for a train with room` : "Riders get on the first train with room")
-    + `\n${count(full)}/${count(trains)} trains are full`
-    + (gone >= 1 ? `\n${count(gone)} riders found the platform too full and went another way` : "")
-    + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "")
-    + (avg.wait >= 0.05 && at[most] > 0 && stops[most] ? `\nMost of the waiting is at ${stops[most]}` : "");
-  return <i class="crowd-dot" style={{ background: crowdColour(avg.wait) }} data-tip={tip} />;
+  const tip = (avgWait >= 0.05 ? `Where trains come full, riders face a wait of ${waitText(avgWait)} on average for a train with room` : "Riders get on the first train with room")
+    + lines.map((s) => `\n${s}`).join("")
+    + (avgWait >= 0.05 && at[most] > 0 && stops[most] ? `\nMost of the waiting is at ${stops[most]}` : "");
+  return <i class="crowd-dot" style={{ background: crowdColour(avgWait) }} data-tip={tip} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -428,7 +427,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   if (!plats.length || !st.cars) return null;
   const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
-  const cars = Math.min(st.cars, cap);
+  const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
   const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
   const tip = (to: number) => {
     let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
@@ -440,10 +439,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     }
     return t + "\n" + capText;
   };
-  const step = (d: number) => {
-    const to = Math.max(1, Math.min(cap, cars + d));
-    if (to !== cars) void edit({ op: "lineCars", line: l.num, cars: to >= cap ? 0 : to });
-  };
+  const step = (d: number) => stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
   return (
     <ul class="rows">
       <li>

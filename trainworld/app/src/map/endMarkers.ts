@@ -8,7 +8,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { display, tool } from "../game/ui";
 import { world } from "../game/world";
 import { effect } from "@preact/signals";
-import { toLocal } from "./geo";
+import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import type { Overlay } from "./overlay";
@@ -37,16 +37,28 @@ export class EndMarkers {
   private net: unknown = null;
   /** the pointer over the map, CSS px, or null when it is off the map */
   private pointer: [number, number] | null = null;
+  /** the map's box on the page, read again after a resize */
+  private rect: DOMRect | null = null;
+  private anchorV = -1;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = document.createElement("div");
     this.box.className = "tool-marks";
     map.getContainer().appendChild(this.box);
     overlay.afterMapFrame.push(() => this.place());
-    map.on("mousemove", (e) => {
-      this.pointer = [e.point.x, e.point.y];
+    // T-1522: from the window, not MapLibre's mousemove, which stops while the map is dragged and over
+    // anything laid on the map (the view tabs, a card), and left the rings round where it last was
+    addEventListener("pointermove", (e) => {
+      const on = e.target instanceof Node && map.getCanvasContainer().contains(e.target);
+      if (on) {
+        this.rect ??= map.getContainer().getBoundingClientRect();
+        this.pointer = [e.clientX - this.rect.left, e.clientY - this.rect.top];
+      } else if (this.pointer) this.pointer = null;
+      else return;
       if (this.wanted() === "loose") this.place();
-    });
+    }, { passive: true });
+    map.on("resize", () => (this.rect = null));
+    addEventListener("resize", () => (this.rect = null));
     map.getContainer().addEventListener("mouseleave", () => {
       this.pointer = null;
       this.place();
@@ -66,11 +78,13 @@ export class EndMarkers {
   /** The points to mark, found again only when the tool or the world changes. */
   private refresh(kind: Kind) {
     const w = world.peek(), net = this.overlay.renderer.net;
-    const v = w?.version ?? -1;
-    if (kind === this.kind && v === this.version && net === this.net) return;
+    const v = w?.version ?? -1, av = anchor().version;
+    // the points are in local units, so they go stale when the draw anchor moves
+    if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV) return;
     this.kind = kind;
     this.version = v;
     this.net = net;
+    this.anchorV = av;
     this.pts = [];
     if (!w) return;
     // only where the network draws the track: a mark is never left on its own (T-1485)

@@ -28,11 +28,8 @@ try {
       play(off, comp);
       return Array.from((await off.startRendering()).getChannelData(0)).slice(Math.round(SR * 0.95));
     };
-    const rnd = () => 0.5;
     return {
-      'build-kecha': await render(0.6, (c, d) => v.keCha(c, d, 1, LEVEL, rnd)),
       'station-bung': await render(0.7, (c, d) => v.bung(c, d, 1, LEVEL)),
-      'all-in-a-row': await render(1.8, (c, d) => { v.keCha(c, d, 1.05, LEVEL, rnd); v.bung(c, d, 1.85, LEVEL); }),
     };
   }, { SR });
 

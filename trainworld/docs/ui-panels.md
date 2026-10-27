@@ -9,10 +9,10 @@ Cuter than Subway Builder and NIMBY Rails: a little pastel, a little Japanese, a
 still minimal with the map first. **The style applies to the UI only** (dock, panels, buttons,
 bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
-- **Nunito** (Zen Maru Gothic for kana and kanji; the font is a Settings choice, T-703) everywhere, station names, map DOM controls and form controls included (the
+- **Nunito** (Zen Maru Gothic for kana and kanji, T-703) everywhere, station names, map DOM controls and form controls included (the
   map container inherits it rather than MapLibre's Helvetica) [T-101]. Few font sizes and weights:
   3 sizes and 2 weights at most (the T-009 mock's, `mock/`). The basemap's labels are Zen Maru
-  Gothic whatever the font setting, Regular only, faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
+  Gothic, Regular only, faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
   Noto Sans merged in for other scripts); kana and kanji are drawn in the system font for now
   [T-057, notes/T-056.md].
 - **Few colour tokens**: background, text, one accent, plus `--bad`, `--warn` and `--yellow` for warnings, as
@@ -110,7 +110,7 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
-  everyday outings, school and university), so the shares are of rides per day, not people [T-342].
+  everyday outings, school and university), so the shares are of trips per day, not people [T-342].
   The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]); the
   bar's hover gives all three shares with their counts and the total [T-1107]. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -128,8 +128,8 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   the train rides summed over every city with a built station and a demand view, as the Cities
   tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
   whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
-  (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion rides a day in
-  the world (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under
+  (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion trips a day in
+  the world (8.2 billion people at about 3 trips each, `WORLD_RIDES`), so it is usually well under
   1% [T-1301], the walking and driving taking the rest in the cities' own proportions. No goal ticks.
   Its hover gives the train trips a day and in how many cities, the share of the world's rides and
   how they are reached, then the cities' own split as a city's hover gives it.
@@ -316,7 +316,7 @@ choice (Train share by default [T-833], which shows two colour pickers labelled 
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -327,14 +327,13 @@ circles are a row on the map instead, under the demand buttons [T-1448].
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
 text of the map's DOM tags and the hover tag; the map itself is never scaled.
 
-**Font** [T-698, T-703]: Nunito (default), Zen Maru Gothic, M PLUS Rounded 1c or Kosugi Maru (one
-weight, so bold is synthesised), remembered per browser. Nunito is self-hosted (`public/fonts/`,
+**Font** [T-698, T-703, T-1524]: Nunito, the only font and not a setting; a font choice stored
+by an older version is dropped on load. Nunito is self-hosted (`public/fonts/`,
 Latin and Latin extended subsets of the variable file, about 75 kB, SIL OFL) and has no Japanese, so
 kana and kanji fall back to Zen Maru Gothic, which `index.html` loads from Google Fonts. The panels,
-station names and map controls follow the `--font` variable (`game/fonts.ts`, `game/ui.ts`); the
-other choices' stylesheets are fetched from Google Fonts (all SIL OFL) only when first chosen, and
-station names and capacity tags are measured again once a font has loaded. The map's own labels are
-glyph tiles and stay Zen Maru Gothic.
+station names and map controls follow the `--font` variable (`style.css`; `game/fonts.ts` loads the
+files), and station names and capacity tags are measured again once it has loaded. The map's own
+labels are glyph tiles and are Zen Maru Gothic.
 
 **Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
 speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the
@@ -448,7 +447,7 @@ row "World" that sums them [T-857, T-1110] (a trophy after its name opens the le
 are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
-same hover), its train rides per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
+same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
 construction, left out of the figure, when there were any; losses red), and its points, those of the
 past 24 game hours, changing once a game hour, to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure, points a day with the

@@ -4,7 +4,7 @@
 
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, type DemandDay } from "./days";
-import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
+import { loadNunito } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
@@ -73,8 +73,6 @@ export interface DisplaySettings {
   rampTo: string;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
-  /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
-  font: FontKey;
   /** T-464, T-262: the day the demand views show: the average day, a weekday, a Saturday or a
    * Sunday. A stored "today" (T-266's old default) or "weekend" (before T-262) reads as the average.
    * The trains and platforms follow the clock whatever this says. */
@@ -130,7 +128,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
   uiScale: 0.9,
-  font: DEFAULT_FONT,
   dayShown: "average",
   usUnits: false,
   moreCores: false,
@@ -165,15 +162,15 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
-// `complexView` (one ridership circle per station complex is the only way since T-1449): dropped
-// from storage
-const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, ...migratedDisplay } = oldDisplay ?? {};
-// T-703: the font and size defaults changed, and settings stored before had saved the old ones with
-// everything else, so both are dropped once
-if ((saved.v ?? 1) < 3) delete migratedDisplay.font, delete migratedDisplay.uiScale;
+// `complexView` (one ridership circle per station complex is the only way since T-1449), nor `font`
+// (Nunito is the only font, T-1524): dropped from storage
+const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, ...migratedDisplay } = oldDisplay ?? {};
+// T-703: the size default changed, and settings stored before had saved the old one with
+// everything else, so it is dropped once
+if ((saved.v ?? 1) < 3) delete migratedDisplay.uiScale;
 // T-727: the real network became a default (faint), and the old default (off) was stored
 if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 // T-812: the ramp's default went from pink-green to the mode red and blue; the old default was stored
@@ -232,8 +229,9 @@ export const citySort = signal<ListSort<"name" | "train" | "rides" | "money" | "
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
 export const purposeFilter = signal<PurposeFilter>("all");
 /** T-1168: the line panel's stops drawn with the lines related to the line; one setting for every
- * line, kept while the page is open. */
-export const relatedLines = signal(false);
+ * line, on at first (T-1529) and kept while the page is open. Not stored, so there is no old choice
+ * to carry over. */
+export const relatedLines = signal(true);
 /** Platform length for new stations, m. */
 export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the
@@ -319,14 +317,9 @@ export const uiScale = computed(() => {
 effect(() => {
   document.documentElement.style.setProperty("--ui", String(uiScale.value));
 });
-/** T-698: the panels' font as the `--font` variable. Text measured in the old font (station names,
- * capacity tags) is measured again by the "tw-fontchange" event once the new one has loaded. */
-effect(() => {
-  const k = FONT_KEYS.includes(display.value.font) ? display.value.font : DEFAULT_FONT;
-  if (k === DEFAULT_FONT) document.documentElement.style.removeProperty("--font");
-  else document.documentElement.style.setProperty("--font", fontStack(k));
-  void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
-});
+// Text measured before Nunito has loaded (station names, capacity tags) is measured again by the
+// "tw-fontchange" event.
+void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
   try {

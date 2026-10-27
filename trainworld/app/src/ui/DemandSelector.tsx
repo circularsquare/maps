@@ -78,7 +78,7 @@ const STATION_OPTIONS = [
   ["none", "None", undefined],
   ["origins", "Origins", "Riders starting a trip at each station"],
   ["transfers", "Transfers", "Riders changing lines at each station"],
-  ["total", "Total", "Riders starting a trip (blue) and changing lines (green) at each station"],
+  ["total", "Total", "Riders at each station, blue where they start a trip and green where they change lines"],
 ] as const;
 
 /** Station ridership (T-482, on the map since T-1448): circles by the riders a day boarding at each

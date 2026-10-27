@@ -44,6 +44,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     pitchWithRotate: false,
   });
   map.touchZoomRotate.disableRotation();
+  warnOnNetworkFailure(map);
   wheelGapsByEventTime(map);
   loadBasemap(map);
   map.on("load", () => {
@@ -51,6 +52,17 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   });
   followProjection(map);
   return map;
+}
+
+/** T-1510: a fetch that fails outright (the page is being left, the network or a server is down) is
+ * a warning: MapLibre's default handler prints it as a console error, which smoke counts. Any other
+ * map error is logged as MapLibre would. */
+function warnOnNetworkFailure(map: maplibregl.Map) {
+  map.on("error", (e) => {
+    const err = e.error;
+    if (err instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(err.message)) console.warn(`Map: ${(e as { sourceId?: string }).sourceId ?? "a resource"} did not load (${err.message})`);
+    else console.error(err);
+  });
 }
 
 /** T-033: the Settings choice of the flat map or the globe, MapLibre's "globe" (a globe out to zoom

@@ -136,7 +136,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
   `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which click
-  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised voices, T-1413, and the sample player),
+  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised bung, T-1413, and the sample player),
   `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
   all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
@@ -461,7 +461,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
-  `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map; about a minute, port 6152 by default; T-1485),
+  `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map or on a control over it while keys pan, near the pointer after a drag pan, none once the tool changes; about a minute, port 6152 by default; T-1485, T-1522),
   `t1500-change-trip.mjs [url]` (Shanghai - Wuhan and Wuhan - Beijing sharing a station, metro lines at both ends: the trip explorer between Shanghai and Beijing finds the change at Wuhan in every period, new game and after a save and load; about 4 minutes; T-1500),
   `t1513-bus-delete.mjs [port]` (the delete tool on a planned and a constructed bus line: the tag, removing at once, the question, undo; T-1513),
   `t1465-bus-roads.mjs [port]` (a bus drawn with the mouse in Manhattan, San Francisco, Lisbon and Dongguan: it follows drawn roads, plausible road length, no hairpin turns, cheap pointer moves, Edit route keeps the corners, far from roads stays straight; then legs across divided roads found in Dongguan, Berlin and Shenzhen (T-1512); screenshots to artifacts/trainworld/t1465/; about 2 minutes, port 6365 by default; T-1465),

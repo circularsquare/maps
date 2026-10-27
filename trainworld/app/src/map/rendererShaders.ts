@@ -5,7 +5,7 @@ import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
 import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { PROJECT_GLSL } from "./gl";
-import { PARK_HALF, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PARK_HALF, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_PARK, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 export const TEX_W = 2048;
 export const LINES_W = 1024;
@@ -393,8 +393,8 @@ void main() {
     hi = mx.y + hw + ext + 1.0;
     xl = mn.x - hw - ext - 1.0;
     xh = mx.x + hw + ext + 1.0;
-    // a terminal's ends are drawn thick (T-1416, the fragment shader)
-    if ((flags & ${ST_TERMINAL}) != 0) {
+    // a terminal's buffer stop end is drawn thick (T-1416, T-1527, the fragment shader)
+    if ((flags & ${ST_TERMINAL}) != 0 && (flags & ${ST_BUFFER}) != 0) {
       v_size.z = 3.0;
       lo -= ${TERMINAL_EAR.toFixed(2)} * u_ring;
       hi += ${TERMINAL_EAR.toFixed(2)} * u_ring;
@@ -517,13 +517,14 @@ void main() {
   vec2 f = v_dot > 0.0 ? v_p : polyFrame(v_p, q);
   float d = v_dot > 0.0 ? length(v_p) - v_dot : boxSdf(f, v_size.xy);
   float inner = clamp(0.5 - d - u_ring, 0.0, 1.0);
-  // T-1416: a terminal's ends are dark bars wider than the box, like buffer stops, so they show
-  // past a train standing in it; v_size.z 1 a waiting room, 2 a P tile
+  // T-1416, T-1527: a terminal's buffer stop, the platform's -axis end where the track ends, is a
+  // dark bar wider than the box so it shows past a train standing in it; v_size.z 1 a waiting
+  // room, 2 a P tile, 3 a buffer stop
   bool terminal = v_dot <= 0.0 && v_size.z > 2.5;
   float cap = terminal ? ${TERMINAL_CAP.toFixed(2)} * u_ring : u_ring;
   if (terminal) {
-    inner *= clamp(v_size.x - cap - abs(f.x) + 0.5, 0.0, 1.0);
-    d = min(d, boxSdf(vec2(abs(f.x) - v_size.x + 0.5 * cap, f.y), vec2(0.5 * cap, v_size.y + ${TERMINAL_EAR.toFixed(2)} * u_ring)));
+    inner *= clamp(f.x + v_size.x - cap + 0.5, 0.0, 1.0);
+    d = min(d, boxSdf(vec2(f.x + v_size.x - 0.5 * cap, f.y), vec2(0.5 * cap, v_size.y + ${TERMINAL_EAR.toFixed(2)} * u_ring)));
   }
   float outer = clamp(0.5 - d, 0.0, 1.0);
   if (u_layer == 0) {
@@ -565,7 +566,7 @@ void main() {
     // far as its share of the room to stand there, like a train's gauge; red once full (T-559);
     // right up to the rim (T-1121)
     vec2 p = f;
-    float reach = v_size.x - cap;
+    float reach = v_size.x - (terminal && p.x < 0.0 ? cap : u_ring);
     // close in on double track (T-658) each side's riders stand on their own platform, from its
     // track out to the rim: the + side's trains travel along the axis, keeping right, so their
     // track and platform are on the + side
