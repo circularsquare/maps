@@ -365,6 +365,11 @@ pub struct Service {
     /// Per line, trains running when an edit changed their profile: (run, departure, seconds
     /// their drawing is moved by), so each carries on from where it was (T-206). Pruned with eras.
     pub shifts: Vec<Vec<(u8, f64, f64)>>,
+    /// T-1382: the lines whose service was rebuilt, rescheduled or had its profiles recomputed, or
+    /// that the net was changed under (`note_changed`), since `take_changed`, and whether to take
+    /// them all (a world just made or reloaded).
+    changed: Vec<u32>,
+    pub changed_all: bool,
 }
 
 fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
@@ -743,7 +748,29 @@ impl Service {
             v.dedup();
         }
         d.demand = demand;
+        self.note_changed(rebuilt);
+        self.note_changed(rescheduled);
+        self.note_changed(&d.recomputed);
         d
+    }
+
+    pub fn note_changed(&mut self, lines: &[u32]) {
+        if self.changed.len() > 1 << 20 {
+            self.changed.clear();
+            self.changed_all = true;
+        }
+        self.changed.extend_from_slice(lines);
+    }
+
+    /// The lines whose service changed since the last call, ascending; `[u32::MAX]` for all of them.
+    pub fn take_changed(&mut self) -> Vec<u32> {
+        let mut v = std::mem::take(&mut self.changed);
+        if std::mem::take(&mut self.changed_all) {
+            return vec![u32::MAX];
+        }
+        v.sort_unstable();
+        v.dedup();
+        v
     }
 
     /// Every line from scratch.

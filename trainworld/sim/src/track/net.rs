@@ -383,6 +383,12 @@ pub struct Network {
     /// carried over to a loaded network like the water mask.
     pub time_zones: super::localtime::TimeZones,
     pub touch: Touch,
+    /// T-1382: the nodes whose station name was set since `take_name_changes`, for the clock
+    /// worker's cache of names; `names_all` while nothing has been taken from this network yet.
+    names_changed: Vec<u32>,
+    names_all: bool,
+    /// Edge prices worked out again outside an edit (water or terrain installed), since `take_repriced`.
+    repriced: bool,
 }
 
 /// Slack in a Dijkstra key.
@@ -607,7 +613,26 @@ impl Network {
             terrain: Terrain::default(),
             time_zones: Default::default(),
             touch: Touch::default(),
+            names_changed: vec![],
+            names_all: true,
+            repriced: false,
         }
+    }
+
+    pub fn take_repriced(&mut self) -> bool {
+        std::mem::take(&mut self.repriced)
+    }
+
+    /// The nodes whose station name was set (or cleared) since the last call, ascending; `[u32::MAX]`
+    /// when every name is new to the caller (a network not asked before).
+    pub fn take_name_changes(&mut self) -> Vec<u32> {
+        let mut v = std::mem::take(&mut self.names_changed);
+        if std::mem::replace(&mut self.names_all, false) {
+            return vec![u32::MAX];
+        }
+        v.sort_unstable();
+        v.dedup();
+        v
     }
 
     // ---------------------------------------------------------------- ids
@@ -1051,6 +1076,11 @@ impl Network {
             }
         }
         self.touch.stations.push(node);
+        if self.names_changed.len() > 1 << 20 {
+            self.names_changed.clear();
+            self.names_all = true;
+        }
+        self.names_changed.push(node);
         self.touch_node(node);
         Ok(old)
     }
@@ -1154,6 +1184,7 @@ impl Network {
     /// Work out again the water (when `water`) or the terrain, and the price, of the edges reaching
     /// into `b`.
     fn rework_ground(&mut self, b: [f64; 4], water: bool) {
+        self.repriced = true;
         let frame = self.frame;
         for e in 0..self.edge_count() as u32 {
             let i = e as usize;

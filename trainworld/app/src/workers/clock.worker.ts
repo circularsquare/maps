@@ -28,6 +28,7 @@ import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
@@ -903,11 +904,6 @@ async function masksForLoaded(net: Uint8Array) {
 
 // ---------------------------------------------------------------- state for the main thread
 
-/** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
-function autoOf(v: ArrayLike<number>): [number, number, number] | null {
-  return v.length === 3 ? [v[0], v[1], v[2]] : null;
-}
-
 function hex(c: number) {
   return "#" + c.toString(16).padStart(6, "0");
 }
@@ -922,6 +918,7 @@ function forget(all = false) {
     edgeDrawn.clear();
     edgeSpeedDrawn.clear();
     lineDrawn.clear();
+    stateRows.reset();
     postWhole();
     return;
   }
@@ -940,23 +937,20 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
   return out;
 }
 
+/** what `StateRows` needs of the worker */
+const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow };
+/** the rows of the last states, read again only where the track model says something changed (T-1382);
+ * `?patch=0` reads them whole */
+const stateRows = new StateRows();
+
 function buildState(): ClockState {
   const tq0 = performance.now();
   const a = api!;
-  const ei = a.edges_info();
-  const offEdges = new Set<number>(a.off_edges());
-  const hsrEdges = new Set<number>(a.hsr_edges());
-  const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
-  const crossovers = new Map<number, number>(Array.from(crossoverIds, (id, k) => [id, crossoverPartners[k] === 0xffffffff ? -1 : crossoverPartners[k]]));
-  const offStations = new Set<number>(a.off_stations());
-  const edges: ClockEdge[] = [];
+  if (patchMode === "0") stateRows.reset();
+  stateRows.bind(a, frame);
+  const edges = stateRows.edges(a);
   const drawn: Float32Array[] = [];
-  for (let i = 0; i < ei.length; i += 10) {
-    const id = ei[i];
-    edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), hsr: hsrEdges.has(id), crossover: crossovers.has(id), partner: crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6],
-      vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
-    });
+  for (const { id } of edges) {
     let d = edgeDrawn.get(id);
     if (!d) {
       const r = a.edge_render(id);
@@ -974,49 +968,17 @@ function buildState(): ClockState {
   }
   const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
-  const ni = a.nodes_info();
-  const nodes: ClockNode[] = [];
   const ups = upgradesOf(a);
-  for (let i = 0; i < ni.length; i += 10) {
-    const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
-    nodes.push({
-      id: ni[i], x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying: ni[i + 6] === 1,
-      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), upgrades: ups.get(ni[i]) ?? 0, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
-    });
-  }
+  const nodes = stateRows.nodes(a, rowEnv, ups);
+  const stationCount = nodes.length;
   const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
-  const li = a.lines_info();
-  const lines: ClockLine[] = [];
-  const lu = a.line_upkeep(LEVEL_HOURS), upkeepOf = new Map<number, number>();
-  for (let k = 0; k + 1 < lu.length; k += 2) upkeepOf.set(lu[k], lu[k + 1]);
-  for (let i = 0; i < li.length; i += 22) {
-    const id = li[i];
-    const ok = li[i + 2] === 1, running = li[i + 3] === 1;
-    const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
-    lines.push({
-      upkeep: upkeepOf.get(id) ?? 0,
-      id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
-      lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(a.line_auto(id)), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
-      stops: [...a.line_stops(id)], path: [...a.line_path(id)],
-      fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
-      stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
-      fast: a.line_fast(id),
-      stretchSpeeds: ok ? [...a.line_stretch_speeds(id)] : [],
-      buildCost: ok && !running ? a.line_build_cost(id) : 0,
-      trainCost: ok && !running ? a.line_train_cost(id) : 0,
-      shift: a.line_shift(id),
-      // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
-      passed: [...a.passed_stations(id)],
-      reversals: [...a.line_reversals(id)],
-      endTurns: [...a.line_end_turns(id)],
-      loopKind: a.line_loop(id),
-      ...(a.is_bus(id) ? { bus: busRow(a, id, nodes) } : {}),
-    });
-  }
+  const lines = stateRows.lines(a, rowEnv, nodes);
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
-  const nodeAt = new Map(nodes.map((n) => [n.id, n]));
+  if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
+  // a bus line's stops that are no station were added to the nodes by its row
+  const busNodes = new Map(nodes.slice(stationCount).map((n) => [n.id, n]));
   lineFirstStops = new Map(lines.map((l) => {
-    const n = nodeAt.get(l.stops[0]);
+    const n = stateRows.nodeRow(l.stops[0]) ?? busNodes.get(l.stops[0]);
     return [l.id, n ? [n.lng, n.lat] : null];
   }));
   placeLineCountries();
@@ -1052,16 +1014,23 @@ function buildState(): ClockState {
     return out;
   });
   const crossings = markPoints(a.crossings_info(), 5);
-  timing.sRest = performance.now() - tq3;
+  const tq4 = performance.now(); timing.sRest = tq4 - tq3;
+  const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
+  const builtCost = a.built_cost();
+  const blueprintCost = Math.max(a.total_cost() - builtCost, 0);
+  const blueprintItems = Array.from(a.blueprint_cost_items());
+  const tq5 = performance.now(); timing.sCosts = tq5 - tq4;
+  const phases = a.phases();
+  timing.sPhases = performance.now() - tq5;
   return {
     version: ++version,
     markers,
-    fullTrack: [0, 1, 2].map((lev) => a.full_track(lev)),
+    fullTrack,
     crossings,
     cash: a.cash(),
-    builtCost: a.built_cost(),
-    blueprintCost: a.blueprint_cost(),
-    blueprintItems: Array.from(a.blueprint_cost_items()),
+    builtCost,
+    blueprintCost,
+    blueprintItems,
     canUndo: a.can_undo(),
     canRedo: a.can_redo(),
     edges,
@@ -1071,7 +1040,7 @@ function buildState(): ClockState {
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
-      phases: a.phases(),
+      phases,
       meta,
       samples,
       lineTable,
@@ -2115,6 +2084,18 @@ function checkNet(n: NetworkBuffers, full: NetworkBuffers) {
   if (bad.length) console.error(`T-1029 check: the network built from the cache differs from a full build in ${bad.join(", ")}`);
 }
 
+/** `?patch=check`: the rows just read against a fresh read of the whole model (T-1382). The fresh
+ * read leaves the kept rows alone and its bus rows are the same ones. Pricing a planned line (an ok
+ * line not running) runs a trial that moves headway lines a little, so with one the lines are not
+ * compared here; checks/t1382-rows.mjs compares them with two models. */
+function checkRows(got: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] }, a: TrackApi, ups: Map<number, number>) {
+  const full = new StateRows().read(a, rowEnv, frame, ups);
+  const planned = got.lines.some((l) => l.ok && !l.running);
+  const keys: ("edges" | "nodes" | "lines")[] = planned ? ["edges", "nodes"] : ["edges", "nodes", "lines"];
+  const bad = keys.filter((k) => !sameValue(got[k], full[k]));
+  if (bad.length) console.error(`T-1382 check: the ${bad.join(", ")} read from changes differ from a full read`);
+}
+
 /** Rows field for field, arrays and typed arrays by value. */
 function sameValue(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -2230,13 +2211,6 @@ function bookCharge(seq: number, charge: number, trains: number) {
   heldCharges.set(seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
 }
 
-/** Each station's upgrade bits (T-1281), by node; stations without any are left out. */
-function upgradesOf(a: TrackApi): Map<number, number> {
-  const u = a.station_upgrades(), out = new Map<number, number>();
-  for (let k = 0; k + 1 < u.length; k += 2) out.set(u[k], u[k + 1]);
-  return out;
-}
-
 // ---------------------------------------------------------------- the snapshot demand runs on
 
 /** T-1380: the complexes of the snapshot's built stations and of every station (`complexOfNodes`),
@@ -2265,7 +2239,7 @@ function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
       const u = ups.get(ni[i]);
-      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
+      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
       geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
     }
   }

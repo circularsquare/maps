@@ -14930,6 +14930,18 @@
       {
         "name": "Saanich",
         "regionName": "Saanich region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
       }
     ],
     "rule": {
@@ -15175,7 +15187,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19438745.0,
+      "localTrips": 19438750.0,
       "box": [
         -80.274,
         43.032,
@@ -60250,7 +60262,7 @@
       ],
       "place": 3676,
       "country": "CA",
-      "localTrips": 13027740.0,
+      "localTrips": 13027741.0,
       "realm": "canada"
     },
     {
@@ -60276,7 +60288,7 @@
       ],
       "place": 3677,
       "country": "CA",
-      "localTrips": 4102289.0,
+      "localTrips": 4102293.0,
       "realm": "canada"
     },
     {
@@ -60302,7 +60314,7 @@
       ],
       "place": 3678,
       "country": "CA",
-      "localTrips": 3269851.0,
+      "localTrips": 3269854.0,
       "realm": "canada"
     },
     {
@@ -60380,7 +60392,7 @@
       ],
       "place": 3681,
       "country": "CA",
-      "localTrips": 2840565.0,
+      "localTrips": 2840567.0,
       "realm": "canada"
     },
     {
@@ -60406,7 +60418,7 @@
       ],
       "place": 3682,
       "country": "CA",
-      "localTrips": 2487272.0,
+      "localTrips": 2487276.0,
       "realm": "canada"
     },
     {
@@ -60432,7 +60444,7 @@
       ],
       "place": 3683,
       "country": "CA",
-      "localTrips": 2435877.0,
+      "localTrips": 2435879.0,
       "realm": "canada"
     },
     {
@@ -60458,7 +60470,7 @@
       ],
       "place": 3684,
       "country": "CA",
-      "localTrips": 1911310.0,
+      "localTrips": 1911313.0,
       "realm": "canada"
     },
     {
@@ -60484,7 +60496,7 @@
       ],
       "place": 3685,
       "country": "CA",
-      "localTrips": 1346605.0,
+      "localTrips": 1346607.0,
       "realm": "canada"
     },
     {
@@ -60510,7 +60522,7 @@
       ],
       "place": 3686,
       "country": "CA",
-      "localTrips": 1093436.0,
+      "localTrips": 1093437.0,
       "realm": "canada"
     },
     {
@@ -60536,7 +60548,7 @@
       ],
       "place": 3687,
       "country": "CA",
-      "localTrips": 918408.0,
+      "localTrips": 918410.0,
       "realm": "canada"
     },
     {
@@ -60562,7 +60574,7 @@
       ],
       "place": 3688,
       "country": "CA",
-      "localTrips": 1147720.0,
+      "localTrips": 1147721.0,
       "realm": "canada"
     },
     {
@@ -60614,7 +60626,7 @@
       ],
       "place": 3690,
       "country": "CA",
-      "localTrips": 955798.0,
+      "localTrips": 955801.0,
       "realm": "canada"
     },
     {
@@ -60718,7 +60730,7 @@
       ],
       "place": 3694,
       "country": "CA",
-      "localTrips": 435397.0,
+      "localTrips": 435399.0,
       "realm": "canada"
     },
     {
@@ -60744,7 +60756,7 @@
       ],
       "place": 3695,
       "country": "CA",
-      "localTrips": 435716.0,
+      "localTrips": 435672.0,
       "realm": "canada"
     },
     {
@@ -60847,7 +60859,7 @@
       ],
       "place": 3699,
       "country": "CA",
-      "localTrips": 7917081.0,
+      "localTrips": 7901443.0,
       "realm": "canada"
     },
     {
@@ -60873,7 +60885,7 @@
       ],
       "place": 3700,
       "country": "CA",
-      "localTrips": 514617.0,
+      "localTrips": 514534.0,
       "realm": "canada"
     },
     {
@@ -60899,7 +60911,7 @@
       ],
       "place": 3702,
       "country": "CA",
-      "localTrips": 426585.0,
+      "localTrips": 426509.0,
       "realm": "canada"
     },
     {
@@ -60924,7 +60936,7 @@
       ],
       "place": 3703,
       "country": "CA",
-      "localTrips": 4643835.0,
+      "localTrips": 4644353.0,
       "realm": "canada"
     },
     {
@@ -60949,7 +60961,7 @@
       ],
       "place": 3704,
       "country": "CA",
-      "localTrips": 4130179.0,
+      "localTrips": 4130823.0,
       "realm": "canada"
     },
     {
@@ -60975,7 +60987,7 @@
       ],
       "place": 3705,
       "country": "CA",
-      "localTrips": 1421507.0,
+      "localTrips": 1420465.0,
       "realm": "canada"
     },
     {
@@ -61001,7 +61013,7 @@
       ],
       "place": 3706,
       "country": "CA",
-      "localTrips": 1418818.0,
+      "localTrips": 1418756.0,
       "realm": "canada"
     },
     {
@@ -61027,7 +61039,7 @@
       ],
       "place": 3707,
       "country": "CA",
-      "localTrips": 1017154.0,
+      "localTrips": 1017274.0,
       "realm": "canada"
     },
     {
@@ -61053,7 +61065,7 @@
       ],
       "place": 3708,
       "country": "CA",
-      "localTrips": 683769.0,
+      "localTrips": 683869.0,
       "realm": "canada"
     },
     {
@@ -61079,7 +61091,7 @@
       ],
       "place": 3709,
       "country": "CA",
-      "localTrips": 547489.0,
+      "localTrips": 547456.0,
       "realm": "canada"
     },
     {
@@ -61105,7 +61117,7 @@
       ],
       "place": 3710,
       "country": "CA",
-      "localTrips": 409776.0,
+      "localTrips": 409842.0,
       "realm": "canada"
     },
     {
@@ -61131,7 +61143,7 @@
       ],
       "place": 3711,
       "country": "CA",
-      "localTrips": 371761.0,
+      "localTrips": 371874.0,
       "realm": "canada"
     },
     {
@@ -61157,7 +61169,7 @@
       ],
       "place": 3712,
       "country": "CA",
-      "localTrips": 325835.0,
+      "localTrips": 325832.0,
       "realm": "canada"
     },
     {
@@ -61183,7 +61195,7 @@
       ],
       "place": 3713,
       "country": "CA",
-      "localTrips": 220805.0,
+      "localTrips": 220818.0,
       "realm": "canada"
     },
     {
@@ -61339,7 +61351,7 @@
       ],
       "place": 3719,
       "country": "CA",
-      "localTrips": 309073.0,
+      "localTrips": 309072.0,
       "realm": "canada"
     },
     {
@@ -61417,7 +61429,7 @@
       ],
       "place": 3722,
       "country": "CA",
-      "localTrips": 483073.0,
+      "localTrips": 483078.0,
       "realm": "canada"
     },
     {
@@ -61443,7 +61455,7 @@
       ],
       "place": 3724,
       "country": "CA",
-      "localTrips": 1817948.0,
+      "localTrips": 1817998.0,
       "realm": "canada"
     },
     {
@@ -61469,7 +61481,33 @@
       ],
       "place": 3725,
       "country": "CA",
-      "localTrips": 449152.0,
+      "localTrips": 448954.0,
+      "realm": "canada"
+    },
+    {
+      "id": "six",
+      "name": "Saanich",
+      "kind": "zone",
+      "origin": {
+        "lon": -123.3579,
+        "lat": 48.4245
+      },
+      "center": [
+        -123.3579,
+        48.4245
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -128.461,
+        48.29,
+        -123.017,
+        51.346
+      ],
+      "place": 3730,
+      "country": "CA",
+      "localTrips": 2518335.0,
       "realm": "canada"
     }
   ]
