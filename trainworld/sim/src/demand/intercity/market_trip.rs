@@ -36,7 +36,7 @@ impl IntercityApi {
         }
         for (i, &f) in share.iter().enumerate() {
             let key = ((xy[2 * i] / SITE_M).floor() as i32, (xy[2 * i + 1] / SITE_M).floor() as i32, market as usize);
-            let Some(&c) = m.site_key.get(&key) else { continue };
+            let Some(c) = m.site_at(key) else { continue };
             let f = (f as f64).clamp(0., 1.);
             let z = m.cell_zone[c];
             let (g, ci) = m.site(c);
@@ -59,7 +59,7 @@ impl IntercityApi {
         }
         for (i, &f) in share.iter().enumerate() {
             let key = ((xy[2 * i] / SITE_M).floor() as i32, (xy[2 * i + 1] / SITE_M).floor() as i32, market as usize);
-            let Some(&c) = m.site_key.get(&key) else { continue };
+            let Some(c) = m.site_at(key) else { continue };
             let z = m.cell_zone[c];
             let (g, ci) = m.site(c);
             let zz = &m.zones[z];

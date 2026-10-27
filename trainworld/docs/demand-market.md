@@ -17,9 +17,9 @@ place's row carries its income groups (`fg`, from the app's `marketWorld`), and 
 choice is worked out per group with every mode's dollars at that group's minutes a dollar
 (`PairRule::alt`), added up by the groups' trips; their rail fares need the stations' expected fare
 km (`pair_km`) whenever a place has groups. **What is kept per
-pair** (T-1204): a composition keeps the rules of the pairs with an open place at one end (each
-open place's row and column, about 250 KB a place); any other pair's is worked out when asked,
-which only `corridor_modes` does. The corridors' figures that depend on the places alone (each
+pair** (T-1204, T-1558): a composition keeps the rules of the pairs between two open places (a
+table of the open places by the open places); any other pair's is worked out when asked, as
+`corridor_modes`, the trip explorer and the rows' near lists do. The corridors' figures that depend on the places alone (each
 place pair's longer trips and commutes a day, the departures to places with no zone, the totals:
 `Corridors`) are worked out at a worker's first composition, about 0.3 s natively, and kept by
 `MarketPacks` for every later one, since with the world's rows they are the same whichever packs

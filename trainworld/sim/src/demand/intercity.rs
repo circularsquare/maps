@@ -597,7 +597,7 @@ struct Market {
     comp_of_gid: Vec<u32>,
     groups: Vec<Group>,
     cell_zone: Vec<usize>,
-    site_key: HashMap<(i32, i32, usize), usize>,
+    site_key: SiteKeys,
     /// commutes: home zone (here), work zone (global id), commuters a day; by home zone and by
     /// work zone (only those open), CSR
     commutes: Vec<(u32, u32, f32)>,
@@ -615,10 +615,23 @@ struct Market {
     /// world with rows (`MarketPacks`)
     cw: Rc<Corridors>,
 }
-/// T-1204: the pair rules with an open place at one end: each open place's row (its pairs with
-/// every place, `out`) and column (`inn`). Any other pair's rule is worked out when asked, which
-/// only `corridor_modes` and the trip explorer between two places that are not open do (the
-/// corridors' trips, `Market::corridors_of`, work out their factors themselves).
+/// Each 600 m square's first site (global index), the squares (x, y, place) in order, searched by
+/// bisection on keys worked out from the sites (`Market::site_at`): 4 bytes a square (T-1558).
+#[derive(Default)]
+struct SiteKeys(Vec<u32>);
+impl SiteKeys {
+    /// From each site's key in site order; a square's first site is kept.
+    fn of(keys: impl Iterator<Item = (i32, i32, usize)>) -> SiteKeys {
+        let mut v: Vec<_> = keys.enumerate().map(|(s, (x, y, p))| (x, y, p as u32, s as u32)).collect();
+        v.sort_unstable();
+        v.dedup_by_key(|e| (e.0, e.1, e.2));
+        SiteKeys(v.iter().map(|e| e.3).collect())
+    }
+}
+/// T-1204, T-1558: the pair rules of the open places among themselves (`out`, the open places' k x k
+/// table). Any other pair's rule is worked out when asked, which `corridor_modes`, the trip
+/// explorer and the rows' near lists do (the corridors' trips, `Market::corridors_of`, work out
+/// their factors themselves).
 #[derive(Default)]
 struct Rules {
     /// per place, its index among the open places, or `u32::MAX`
@@ -626,7 +639,6 @@ struct Rules {
     /// the open places, ascending
     open: Vec<usize>,
     out: Vec<PairRule>,
-    inn: Vec<PairRule>,
 }
 /// T-1204: the market's corridors (unordered place pairs a <= b, numbered as a loop over a then
 /// b: `Market::corridor`) and their figures that depend on the places alone: their longer trips a
@@ -767,6 +779,26 @@ fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize
     }
     (-((top + sum.ln()) / th as f64) as f32, sum)
 }
+/// The terms `rail_logsum_x` would give for the same arguments, counted into `cnt` by the station
+/// each of its two entries in `SparseOdBuilder` goes to (T-1558).
+fn rail_term_counts(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], x: Option<(&FareX, f32)>, cnt: &mut [u32]) {
+    for &(sa, wa) in a {
+        if wa <= 0. {
+            continue;
+        }
+        let row = &r[sa * s..(sa + 1) * s];
+        for &(sb, wb) in b {
+            let cost = match x {
+                None => row[sb] + fare,
+                Some((fx, d)) => row[sb] + fare + d * fx.fare(sa, sb, s),
+            };
+            if !(sa == sb || wb <= 0. || !cost.is_finite()) {
+                cnt[sa] += 1;
+                cnt[sb] += 1;
+            }
+        }
+    }
+}
 struct Period {
     net: super::network::Network,
     p: Params,
@@ -849,8 +881,8 @@ impl SparseOd {
     fn of(s: usize, mut adds: Vec<(u32, u32, f32)>) -> SparseOd {
         // stable: a pair's riders stay in the order they were added
         adds.sort_by_key(|e| (e.0, e.1));
-        let mut od = SparseOd { off: vec![0; s + 1], src: vec![], v: vec![] };
-        let mut i = 0;
+        // each pair's sum is written over the list's own front, so the list is the only large copy
+        let (mut i, mut n) = (0, 0);
         while i < adds.len() {
             let (d, o) = (adds[i].0, adds[i].1);
             let mut sum = 0f32;
@@ -858,6 +890,11 @@ impl SparseOd {
                 sum += adds[i].2;
                 i += 1;
             }
+            adds[n] = (d, o, sum);
+            n += 1;
+        }
+        let mut od = SparseOd { off: vec![0; s + 1], src: Vec::with_capacity(n), v: Vec::with_capacity(n) };
+        for &(d, o, sum) in &adds[..n] {
             od.src.push(o);
             od.v.push(sum);
             od.off[d as usize + 1] += 1;
@@ -866,6 +903,65 @@ impl SparseOd {
             od.off[d + 1] += od.off[d];
         }
         od
+    }
+}
+/// `SparseOd::of` for a list whose entries are counted by destination first: each is placed in its
+/// destination's range as it comes, so no list of all of them in the order added is held, and a
+/// destination's entries are in the order they were added (T-1558).
+struct SparseOdBuilder {
+    /// destination `d`'s range starts at `off[d]` and has been filled up to `fill[d]`
+    off: Vec<u32>,
+    fill: Vec<u32>,
+    src: Vec<u32>,
+    v: Vec<f32>,
+}
+impl SparseOdBuilder {
+    fn new(cnt: &[u32]) -> Self {
+        let mut off = vec![0u32; cnt.len() + 1];
+        for (d, &c) in cnt.iter().enumerate() {
+            off[d + 1] = off[d] + c;
+        }
+        let n = off[cnt.len()] as usize;
+        SparseOdBuilder { fill: off[..cnt.len()].to_vec(), off, src: vec![0; n], v: vec![0.; n] }
+    }
+    #[inline]
+    fn push(&mut self, d: u32, o: u32, riders: f32) {
+        let k = self.fill[d as usize] as usize;
+        self.src[k] = o;
+        self.v[k] = riders;
+        self.fill[d as usize] += 1;
+    }
+    /// Each destination's origins ascending, a pair's riders added in the order they came.
+    fn finish(self) -> SparseOd {
+        let SparseOdBuilder { off, fill, mut src, mut v } = self;
+        let s = fill.len();
+        let mut od_off = vec![0u32; s + 1];
+        let mut seg: Vec<(u32, f32)> = vec![];
+        let mut n = 0;
+        for d in 0..s {
+            seg.clear();
+            seg.extend((off[d] as usize..fill[d] as usize).map(|k| (src[k], v[k])));
+            // stable: a pair's riders stay in the order they were added
+            seg.sort_by_key(|e| e.0);
+            let mut i = 0;
+            while i < seg.len() {
+                let o = seg[i].0;
+                let mut sum = 0f32;
+                while i < seg.len() && seg[i].0 == o {
+                    sum += seg[i].1;
+                    i += 1;
+                }
+                src[n] = o;
+                v[n] = sum;
+                n += 1;
+            }
+            od_off[d + 1] = n as u32;
+        }
+        src.truncate(n);
+        v.truncate(n);
+        src.shrink_to_fit();
+        v.shrink_to_fit();
+        SparseOd { off: od_off, src, v }
     }
 }
 struct Demand {
@@ -1037,16 +1133,14 @@ impl Market {
             ((a.x - b.x).hypot(a.y - b.y) / 1000.) as f64
         }
     }
-    /// The ordered pair (i, j)'s rule: an open place's row or column, else worked out (T-1204).
+    /// The ordered pair (i, j)'s rule: from the table when both places are open, else worked out
+    /// (T-1204, T-1558).
     #[inline(always)]
     fn pr(&self, i: usize, j: usize) -> PairRule {
-        let np = self.places.len();
         let r = &self.rules;
         let (si, sj) = (r.slot[i], r.slot[j]);
-        if si != u32::MAX {
-            r.out[si as usize * np + j]
-        } else if sj != u32::MAX {
-            r.inn[sj as usize * np + i]
+        if si != u32::MAX && sj != u32::MAX {
+            r.out[si as usize * r.open.len() + sj as usize]
         } else {
             pair_rule(&self.places, &self.countries, &self.rule, self.ground, &self.mp, &self.drives, i, j)
         }
@@ -1106,8 +1200,8 @@ impl Market {
             let share = 0.5 * (if p.g > 0. { z.g / p.g } else { 0. } + if p.a > 0. { z.a / p.a } else { 0. });
             return self.place_eachway(z.place, j) * share;
         }
-        let q = &self.places[j];
-        (self.directed(z.place, j, z.g, z.t, q.a, q.ta, r.km) + self.directed(j, z.place, q.g, q.t, z.a, z.ta, r.km)) * 0.5
+        let (q, back) = (&self.places[j], self.pr(j, z.place));
+        (self.directed_by(r.b, r.rel, z.g, z.t, q.a, q.ta, r.km) + self.directed_by(back.b, back.rel, q.g, q.t, z.a, z.ta, r.km)) * 0.5
     }
     /// The corridor of places i and j (either order): pairs a <= b numbered a then b.
     fn corridor(&self, i: usize, j: usize) -> usize {
@@ -1149,6 +1243,17 @@ impl Market {
     }
     fn n_sites(&self) -> usize {
         self.cell_zone.len()
+    }
+    /// Site `s`'s 600 m square and place (`site_at`'s key).
+    fn site_key_of(&self, s: usize) -> (i32, i32, usize) {
+        let (g, i) = self.site(s);
+        ((g.city.x[i] / SITE_M).floor() as i32, (g.city.y[i] / SITE_M).floor() as i32, self.zones[self.cell_zone[s]].place)
+    }
+    /// The first site in a 600 m square (x, y) of a place.
+    fn site_at(&self, key: (i32, i32, usize)) -> Option<usize> {
+        let v = &self.site_key.0;
+        let i = v.partition_point(|&s| self.site_key_of(s as usize) < key);
+        v.get(i).map(|&s| s as usize).filter(|&s| self.site_key_of(s) == key)
     }
     /// T-1204: the corridors' figures (`Corridors`): each corridor's longer trips a day (as
     /// `place_eachway` gives them, its pair factors worked out here rather than kept), the
@@ -1719,11 +1824,9 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
             rules.open.push(p);
         }
     }
-    rules.out.reserve_exact(rules.open.len() * np);
-    rules.inn.reserve_exact(rules.open.len() * np);
+    rules.out.reserve_exact(rules.open.len() * rules.open.len());
     for &i in &rules.open {
-        rules.out.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, i, j)));
-        rules.inn.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, j, i)));
+        rules.out.extend(rules.open.iter().map(|&j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, i, j)));
     }
     let grouped = places.iter().any(|p| p.groups().iter().any(|g| g.1 != 1.));
     let mut m = Market {
@@ -1745,7 +1848,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         comp_of_gid: vec![u32::MAX; n_gid],
         groups,
         cell_zone,
-        site_key: HashMap::new(),
+        site_key: SiteKeys::default(),
         commutes: vec![],
         c_home: (vec![], vec![]),
         c_work: (vec![], vec![]),
@@ -1895,12 +1998,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         _ => Rc::new(m.corridors_of(from_rows.then_some(&commute_rows[..]))),
     };
     // ---- each 600 m square's site
-    let mut site_key = HashMap::new();
-    for s in 0..m.n_sites() {
-        let (g, i) = m.site(s);
-        let key = ((g.city.x[i] / SITE_M).floor() as i32, (g.city.y[i] / SITE_M).floor() as i32, m.zones[m.cell_zone[s]].place);
-        site_key.entry(key).or_insert(s);
-    }
+    let site_key = SiteKeys::of((0..m.n_sites()).map(|s| m.site_key_of(s)));
     m.site_key = site_key;
     Ok(m)
 }
@@ -2802,8 +2900,18 @@ impl IntercityApi {
         // T-276: commutes between zones, chosen as the local layer chooses: once per commuter on
         // this period's service from home to work, the trip home on the same station pair reversed
         let pc = commute_params();
-        // (destination, origin, riders) as they come
-        let mut od_c: Vec<(u32, u32, f32)> = vec![];
+        // (destination, origin, riders) as they come, two for each term, placed by destination in a
+        // list counted first (T-1558)
+        let mut od_c = {
+            let mut cnt = vec![0u32; s];
+            for cp in &self.cpairs {
+                let (h, wg, _) = self.m.commutes[cp.c as usize];
+                let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
+                let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
+                rail_term_counts(r, s, p.fare_min, home, &self.access_cw[wz], fx_of(h), &mut cnt);
+            }
+            SparseOdBuilder::new(&cnt)
+        };
         let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
         let mut c_cor = vec![0f64; self.m.n_open_corridors()];
         for (ci, cp) in self.cpairs.iter().enumerate() {
@@ -2825,8 +2933,8 @@ impl IntercityApi {
             let (hc, wc) = (col[h] as usize, col[wz] as usize);
             for &(sa, sb, v) in &terms {
                 let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
-                od_c.push((sb, sa, a));
-                od_c.push((sa, sb, b));
+                od_c.push(sb, sa, a);
+                od_c.push(sa, sb, b);
                 let (sa, sb) = (sa as usize, sb as usize);
                 put(&mut st, sa, wc, a);
                 put(&mut st, sb, nz + hc, a);
@@ -2874,7 +2982,8 @@ impl IntercityApi {
             }
         }
         e.od = od_e.into_iter().map(|v| SparseOd::of(s, v)).collect();
-        Demand { od, od_r, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
+        let od_c = od_c.finish();
+        Demand { od, od_r, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).
@@ -3654,13 +3763,13 @@ impl IntercityApi {
     /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
     /// (neither: near places on two landmasses). The same whatever the network.
     pub fn corridor_modes(&self) -> Vec<f32> {
-        // (an open place's pairs from its row; the others' modes alone worked out, T-1204)
+        // (a pair of open places from the table; the others' modes alone worked out, T-1204)
         let m = &self.m;
         let mut out = Vec::with_capacity(2 * m.n_corridors());
         // T-1277: a plane's fare weighs the departing country's, so the two ways can differ; a
         // corridor's split is their mean
         let way = |a: usize, b: usize| -> (bool, f32) {
-            if m.rules.slot[a] != u32::MAX || m.rules.slot[b] != u32::MAX {
+            if m.rules.slot[a] != u32::MAX && m.rules.slot[b] != u32::MAX {
                 let r = m.pr(a, b);
                 (r.car, r.air)
             } else {
@@ -3810,7 +3919,7 @@ impl IntercityApi {
         let mut matched = 0.;
         for (i, &f) in share.iter().enumerate() {
             let key = ((xy[2 * i] / SITE_M).floor() as i32, (xy[2 * i + 1] / SITE_M).floor() as i32, market as usize);
-            let Some(&c) = m.site_key.get(&key) else { continue };
+            let Some(c) = m.site_at(key) else { continue };
             let f = (f as f64).clamp(0., 1.);
             matched += 1.;
             let z = m.cell_zone[c];

@@ -1727,7 +1727,7 @@ fn sampled_selection_rail_stays_within_trips() {
     solve_all(&mut api);
     let m = &api.m;
     let pop = |c: usize| { let (g, ci) = m.site(c); g.city.pop[ci] };
-    let mut keys: Vec<((i32, i32, usize), usize)> = m.site_key.iter().map(|(&k, &c)| (k, c)).collect();
+    let mut keys: Vec<((i32, i32, usize), usize)> = m.site_key.0.iter().map(|&s| (m.site_key_of(s as usize), s as usize)).collect();
     keys.sort_by(|a, b| pop(b.1).total_cmp(&pop(a.1)).then(a.0.cmp(&b.0)));
     let (np, ng) = (m.places.len(), m.n_gid);
     let head = 1 + 8 * np;
@@ -2025,4 +2025,24 @@ fn rides_reserve_track_components() {
     let (_, with) = access_options(&g.kz, &net, &p, &place, End::Home, Some((&comp, &on_train)));
     assert_eq!(st(&with[..p.ride_lines]), st(&plain));
     assert_eq!(st(&with[p.ride_lines..]), vec![first(8), first(10)], "the next unlinked lines, the one without trains passed over");
+}
+#[test]
+fn sparse_od_builder_matches_of() {
+    // T-1558: entries placed by destination give the sparse table `SparseOd::of` gives, to the bit
+    let s = 9;
+    let mut x = 12345u32;
+    let mut next = |m: u32| { x = x.wrapping_mul(1664525).wrapping_add(1013904223); (x >> 8) % m };
+    let adds: Vec<(u32, u32, f32)> = (0..400).map(|_| (next(s), next(s), (next(1000) as f32) * 0.37 + 1e-3 * next(7) as f32)).collect();
+    let mut cnt = vec![0u32; s as usize];
+    for a in &adds {
+        cnt[a.0 as usize] += 1;
+    }
+    let mut b = SparseOdBuilder::new(&cnt);
+    for a in &adds {
+        b.push(a.0, a.1, a.2);
+    }
+    let (got, want) = (b.finish(), SparseOd::of(s as usize, adds));
+    assert_eq!(got.off, want.off);
+    assert_eq!(got.src, want.src);
+    assert_eq!(got.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>());
 }

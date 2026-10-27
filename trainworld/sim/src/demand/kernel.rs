@@ -1751,13 +1751,16 @@ pub struct Access {
     pub ex: Vec<Option<std::sync::Arc<Vec<(u32, f32)>>>>,
 }
 
-/// Station lookup grid with buckets the size of the walk cutoff.
+/// Station lookup grid with buckets the size of the walk cutoff; only occupied buckets are stored
+/// (a dense grid over a continent-wide network is gigabytes, T-1558).
 struct StationGrid {
     minx: f32,
     miny: f32,
     size: f32,
     w: i32,
     h: i32,
+    /// Occupied buckets' ids (`gx * h + gy`), sorted; bucket `i` holds `items[off[i]..off[i + 1]]`.
+    keys: Vec<u64>,
     off: Vec<u32>,
     items: Vec<u32>,
 }
@@ -1771,31 +1774,31 @@ impl StationGrid {
         let maxy = net.st_y.iter().cloned().fold(f32::NEG_INFINITY, f32::max) + pad;
         let w = ((maxx - minx) / size) as i32 + 1;
         let h = ((maxy - miny) / size) as i32 + 1;
-        let b = |s: usize| (((net.st_x[s] - minx) / size) as i32 * h + ((net.st_y[s] - miny) / size) as i32) as usize;
-        let mut off = vec![0u32; (w * h + 1) as usize];
-        for s in 0..net.n_stations() {
-            off[b(s) + 1] += 1;
+        let b = |s: usize| (((net.st_x[s] - minx) / size) as i64 * h as i64 + ((net.st_y[s] - miny) / size) as i64) as u64;
+        let mut by_bucket: Vec<(u64, u32)> = (0..net.n_stations()).map(|s| (b(s), s as u32)).collect();
+        by_bucket.sort_unstable();
+        let mut keys: Vec<u64> = vec![];
+        let mut off: Vec<u32> = vec![];
+        for (i, &(k, _)) in by_bucket.iter().enumerate() {
+            if keys.last() != Some(&k) {
+                keys.push(k);
+                off.push(i as u32);
+            }
         }
-        for i in 0..(w * h) as usize {
-            off[i + 1] += off[i];
-        }
-        let mut fill = off.clone();
-        let mut items = vec![0u32; net.n_stations()];
-        for s in 0..net.n_stations() {
-            let k = b(s);
-            items[fill[k] as usize] = s as u32;
-            fill[k] += 1;
-        }
-        StationGrid { minx, miny, size, w, h, off, items }
+        off.push(by_bucket.len() as u32);
+        let items = by_bucket.iter().map(|&(_, s)| s).collect();
+        StationGrid { minx, miny, size, w, h, keys, off, items }
     }
     fn near(&self, x: f32, y: f32, mut f: impl FnMut(u32)) {
         let bx = ((x - self.minx) / self.size).floor() as i32;
         let by = ((y - self.miny) / self.size).floor() as i32;
         for gx in (bx - 1).max(0)..=(bx + 1).min(self.w - 1) {
             for gy in (by - 1).max(0)..=(by + 1).min(self.h - 1) {
-                let k = (gx * self.h + gy) as usize;
-                for &s in &self.items[self.off[k] as usize..self.off[k + 1] as usize] {
-                    f(s);
+                let k = (gx as i64 * self.h as i64 + gy as i64) as u64;
+                if let Ok(i) = self.keys.binary_search(&k) {
+                    for &s in &self.items[self.off[i] as usize..self.off[i + 1] as usize] {
+                        f(s);
+                    }
                 }
             }
         }
