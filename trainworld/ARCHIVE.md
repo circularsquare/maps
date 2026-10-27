@@ -1,5 +1,7 @@
 # Archive
 
+- T-1517 [P3] Bus route editing on touch. Done 2026-10-27 (tree t1517, not landed): a finger drags a bus point without panning, and a press held 500 ms deletes it (the lift adds nothing). `checks/t1517-bus-touch.mjs`; docs/ui-building.md.
+- T-1537 [P3] Repaint when paused. Done 2026-10-27 (tree t1517, not landed): a new network asks for a map frame, so the select tool's squares show on fresh track in a paused game; the workaround is out of `checks/t486-click-on-top.mjs`.
 - T-1507 [P3] A China test save with real high-speed service. Done 2026-10-27 (tree t1507, not landed: its check only): `t1507-all-china-hsr.save` at the maps root, high-speed trains, ten missing end stations (line 114 now starts in Beijing) and a Wuhan stop added, 13 stops moved to the metro, 31 passages; longer boardings 36,457 to 1,071,774. notes/T-1507.md.
 - T-1535 [P3] Fare checks in the baseline's dollars. Done 2026-10-27 (tree t1518, not landed): `t883-fare-curve.mjs` takes the loaded save's curve and builds its test curves on it, with the income formula using each stop's fare scale; `t1201-fare-rows.mjs` sets and reads curves in the dollars shown (start curve and scale read from the game) and its row indexes skip the "Fares here" row.
 - T-1534 [P3] Loose-end rings only on visible track. Done 2026-10-27 (tree t1518, not landed): no ring on a switched-off blueprint or a piece under 4 px long on screen; built and active blueprints keep theirs. DECISIONS.md; `checks/t1485-end-marks.mjs`.
