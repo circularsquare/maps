@@ -42,14 +42,13 @@ try {
   }, P);
   await page.waitForTimeout(1500);
   const box = await page.evaluate(() => window.tw.map.getContainer().getBoundingClientRect().toJSON());
-  // the select tool's squares are placed in the map's frames (map/endMarkers.ts), and a paused game
-  // draws none once the new track has landed: ask for one, then wait for the square at the end
+  // the select tool's squares are placed in the map's frames (map/endMarkers.ts); the network landing
+  // asks for one (T-1537), so a paused game shows them without a nudge
   const squares = () => page.evaluate((P) => {
     const b = window.tw.map.getContainer().getBoundingClientRect();
     const shown = [...document.querySelectorAll('.pi-mark')].filter((m) => m.style.display !== 'none').map((m) => { const r = m.getBoundingClientRect(); return [r.x + r.width / 2 - b.x, r.y + r.height / 2 - b.y]; });
     return { shown: shown.length, onEnd: shown.filter(([x, y]) => Math.hypot(x - P.x, y - P.y) < 6).length };
   }, P);
-  await page.evaluate(() => window.tw.map.triggerRepaint());
   await page.waitForFunction(() => [...document.querySelectorAll('.pi-mark')].some((m) => m.style.display !== 'none'), undefined, { timeout: 10000 }).catch(() => {});
   const clickAt = async (x, y) => {
     await page.evaluate(() => { window.tw.selection.value = null; });
