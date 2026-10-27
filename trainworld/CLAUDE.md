@@ -95,6 +95,9 @@ Briefs carry only the task; these hold for every agent.
 - **CPU**: at most 10 of 16 cores in all, every agent together, while Anita is using the machine;
   12-15 overnight or while she is away (Anita, 2026-10-22). Long jobs claim their cores in the
   shared ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
+  A browser load counts its demand workers too (about a core each, plus the page): a headless load
+  of a big save took 5 cores on a 4-core claim and starved Anita's game (2026-10-27); cap the
+  page's solving workers to fit the claim.
 - **While a join runs, nothing else writes `data/packs`**, any country's packs included: each unit's
   re-gate compares every registered pack against its snapshot and parks the unit on any change (a walk
   rerun parked China's Henan, 2026-10-24).

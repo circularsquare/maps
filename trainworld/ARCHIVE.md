@@ -1,8 +1,12 @@
 # Archive
 
-- T-1593 [P2] Logo follow-ups. Done 2026-10-27: both dots and the t's bar bare lines, the bar blue, the ! pink (its stem keeps two stations and a train); logo 25% smaller, trains 50% faster, the menu's map one zoom closer. `artifacts/trainworld/review/logo_v9.png`.
-Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way.
+Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1580 [P3] `t1148-market-rule.mjs` day-share part failed. Done 2026-10-27: the check was stale (it read 5 kinds of day, the sim has 7 since T-1373's rush days); `marketRule.ts`'s `longerShare` was right, so players saw nothing wrong. The check passes in full.
+- T-1079 [P2] `world_run.start_vite` took any server on its port for its own. Done 2026-10-27: it now stops when the port is taken before starting, and when its own Vite exits while the URL answers; tested against a dummy server.
+- T-955 [P2] MSAA on the network canvas. Done 2026-10-27: dropping it leaves stroke side edges stair-stepped (STROKE_FS rounds only caps; stations, trains and crowds match), so MSAA stays below dpr 3 and goes at dpr 3+ where steps are a third of a CSS px. DECISIONS.
+- T-1559 [P2] T-1169 stage 2b: market packs held in less room. Done 2026-10-27: `ZoneIn` keeps sites, `cell_pop` and index arrays in 2-4 bytes an entry, each column checked to be exact; figures equal to the bit on New York, all-China, Japan. All-China held 1,374 to 1,196 MB a worker. notes/T-1169.md "Stage 2b".
+- T-1593 [P2] Logo follow-ups. Done 2026-10-27: both dots and the t's bar bare lines, the bar blue, the ! pink (its stem keeps two stations and a train); logo 25% smaller, trains 50% faster, the menu's map one zoom closer. `artifacts/trainworld/review/logo_v9.png`.
 - T-1575 [P3] 42nd St bus pushed riders into cars. Closed 2026-10-27 without its own fix: after T-1576 and T-1577 the same bus adds 3,601 rail trips and takes 2,403 drivers off the road. notes/T-1466.md.
 - T-1466 [P3] Bus ridership against real buses. Done 2026-10-27: analysis, then T-1576 and T-1577 built; Manhattan avenue buses now near the M15, suburbs in range, dense Brooklyn feeders still 2-3x real (left, Anita may revisit). notes/T-1466.md.
 - T-1577 [P2] Bus speed by place. Done 2026-10-27: a bus runs at min(18 km/h, 70% of the car's local street speed there), 11.55 in the densest centres, from each zone's pack; a short bus between two train stations now pays the boarding cost. Manhattan avenue 2,060 to 2,470 a km; 42nd St adds rail trips. notes/T-1466.md "T-1577".

@@ -10,9 +10,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   T-1576 (6 min boarding cost, 300 m, $9/bus-km), fare scale on one line, station circles off by
   default, tidy stages 1-2 (DECISIONS/ARCHIVE split at 2026-10-20 into *-to-2026-10-19.md).
   Before it 2340733d (UI batches, airports 135, rename, station circle scaling, reversal icons).
-- 8800 runs 172383a3 (T-1577 bus speed by place, on T-1558 06c7692a, tidy ef30e01c, a3d5fdd1),
-  cargo 433 pass, smoke 20/20 light and dark, real save 12,483,326. T-1466 and T-1575 archived
-  (uncommitted TASKS/ARCHIVE edit). Ids handed out through T-1592.
+- 8800 runs d746b717 (T-1559 market packs compact: all-China 3 workers fit, 354 -> 276 s; on
+  T-1593 062b915b), cargo 434, smoke 20/20 light and dark, real save 12,483,326. Uncommitted:
+  ARCHIVE.md header line moved back to the top. Ids handed out through T-1597.
+  Logo agent a59c94fa4d8cd48e7 at ~414k tokens: next logo round goes to a fresh agent
+  (notes/T-1567.md has everything).
 - Nothing published since 2026-10-25b (deploy only on Anita's word). shonei-server 6d9196d (error
   text says trainsworld) committed, not deployed: Anita says leave it.
 - Never commit Anita's TODO.md.
@@ -23,12 +25,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 ## In flight
 - T-1558 LANDED 06c7692a (all-China peak/worker 2.04 -> 1.54 GB, Japan 2.90 -> 2.71, figures
   identical); cargo 425 pass; 8800 rebuilt from 06c7692a, smoke 20/20 light and dark.
-- T-1559 memory stage 2b (market packs held once): same Sonnet aba2af67a79bdeb61, tree
-  .tw-trees/t1559 (from 06c7692a), Vite 6120-6129, 4 cores, may file T-1591-1592.
-- After T-1559: T-1545 stage 3 (Opus), and time a cold all-Japan load before/after (Anita asked
-  how load scales with stations; answered: market s x s tables quadratic, routing, pack opening).
+- T-1559 LANDED d746b717.
+- T-1545 stage 3 (market by destination window, drops 2nd sweep; approximations OK per Anita;
+  times cold Japan/China/NY loads before/after): Opus a979d3cad6318c51f, tree .tw-trees/t1545
+  (from d746b717), Vite 6120-6129, 4 cores, may file T-1594-1597.
 - T-1586 tidy DONE, committed ef30e01c (no app change, 8800 not rebuilt). Kept-if-unsure list in
   notes/T-1586.md (Canada/US join backups, t279, t1543, publish/).
+
+- Small fixes T-1580 (t1148 check), T-1079 (start_vite port), T-955 (drop MSAA; review/t955_*.png):
+  Sonnet ad7d0c87358402b6f, main tree, Vite 6150-6159, 2 cores, may file T-1598.
+- Calibration analysis T-1508 (big far pairs low) and T-1542 (US car strong): Opus
+  af7ed93def3f73878, no code, 2 cores, notes/T-1508.md + T-1542 section; may file T-1599.
+  Proposals go to Anita.
 
 ## Next
 1. Land T-1558 and T-1577 as they finish; commit T-1586 stages 3-4; rebuild 8800.
@@ -39,6 +47,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 Ids handed out through T-1590.
 
 ## Anita's standing asks
+- 2026-10-27 ~15:45: keep at least 4 cores free for about an hour (to ~16:45): T-1545 told to stay
+  within its 4 incl. browser workers; no 8800 rebuilds or smokes meanwhile.
 - Performance: approximations welcome when a player can't tell (CLAUDE.md, 2026-10-27). Brief
   T-1545 / T-782 agents with it.
 - Buses settled: no more tuning unless she asks.

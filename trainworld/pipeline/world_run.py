@@ -1057,7 +1057,15 @@ class Run:
         return shipped
 
     def start_vite(self, L):
+        import socket
         import urllib.request
+        # T-1079: a server already on the port would answer the poll below and be taken for ours
+        for host in ("127.0.0.1", "::1"):
+            try:
+                socket.create_connection((host, self.port), timeout=2).close()
+            except OSError:
+                continue
+            raise SystemExit(f"port {self.port} is already taken (another session's Vite?); pick a free one with --port")
         log = open(f"{L}.vite.log", "a", encoding="utf-8")
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         self.vite = subprocess.Popen(["node", str(REAL / "checks/dev-nowatch.mjs"), str(self.port)], cwd=str(MAPS),
@@ -1066,7 +1074,12 @@ class Run:
         for _ in range(120):
             try:
                 urllib.request.urlopen(base + "/", timeout=5)
+                time.sleep(1)
+                if self.vite.poll() is not None:  # something else answers: ours is gone
+                    raise SystemExit(f"Vite on {self.port} exited while the URL answers, so another server holds the port (see {L}.vite.log)")
                 return base
+            except SystemExit:
+                raise
             except Exception:
                 if self.vite.poll() is not None:
                     raise SystemExit(f"Vite on {self.port} did not start (see {L}.vite.log)")

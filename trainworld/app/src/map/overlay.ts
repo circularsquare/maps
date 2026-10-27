@@ -107,8 +107,9 @@ export class Overlay {
     this.canvas = document.createElement("canvas");
     this.canvas.className = "overlay";
     map.getContainer().appendChild(this.canvas);
-    // a stencil for the track drawn through the station boxes (T-236, renderer.ts)
-    const gl = this.canvas.getContext("webgl2", { antialias: true, premultipliedAlpha: true, alpha: true, stencil: true });
+    // a stencil for the track drawn through the station boxes (T-236, renderer.ts). MSAA only below dpr 3: the
+    // strokes' side edges rely on it, and at dpr 3 its 4x buffers cost about 80 MB on a phone (T-955)
+    const gl = this.canvas.getContext("webgl2", { antialias: map.getPixelRatio() < 3, premultipliedAlpha: true, alpha: true, stencil: true });
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     renderer.init(gl);
