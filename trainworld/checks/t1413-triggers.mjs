@@ -1,7 +1,7 @@
 // T-1413, T-1474: each building action plays its one sound at the click, and the Sound switch silences
-// them. Counts the audio nodes the page makes and the length of each recording started: "ke-cha" is 2
-// noise bursts and 2 oscillators, "bung" 1 buffer and 1 oscillator, the recordings 1 buffer each (the
-// fft 0.163 s for track, the snap 0.62 s for a station, the pop 0.42 s for a panel edit).
+// them. Counts the audio nodes the page makes and the length of each recording started: "bung" is
+// 1 buffer and 1 oscillator, the recordings 1 buffer each (the snap 0.62 s for track, a station and a
+// construct, the pop 0.42 s for a panel edit).
 //   node trainworld/checks/t1413-triggers.mjs [url]     (from the maps root; a running dev server)
 import { GL, NOISE, acrossLine, collectErrors, launchChrome } from './lib.mjs';
 
@@ -10,7 +10,7 @@ const { ctx, close } = await launchChrome({ prefix: 'tw-t1413-', size: [1400, 90
 const errors = [];
 let fails = 0;
 const check = (name, ok, detail = '') => { if (!ok) fails++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`); };
-const TRACK = 0.163, SNAP = 0.62, POP = 0.42;
+const SNAP = 0.62, POP = 0.42;
 try {
   const page = await ctx.newPage();
   collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
@@ -59,7 +59,7 @@ try {
   check('first click of a piece: silent', t0.buf === 0 && t0.osc === 0, JSON.stringify(t0));
   const t1 = await around(async () => { await click(await screen(...B)); });
   const placed = await page.evaluate(() => window.tw.world.value.edges.length);
-  check('track placed: one fft', placed === 1 && t1.buf === 1 && t1.osc === 0 && near(t1.dur, TRACK), JSON.stringify(t1));
+  check('track placed: one snap', placed === 1 && t1.buf === 1 && t1.osc === 0 && near(t1.dur, SNAP), JSON.stringify(t1));
   await setTool('station');
   const s1 = await around(async () => { await click(await screen((A[0] + B[0]) / 2, (A[1] + B[1]) / 2)); });
   const built = await page.evaluate(() => window.tw.world.value.save.stations.length);
@@ -68,7 +68,7 @@ try {
 
   // edits sent from panels and buttons play when sent
   const c = await sound({ op: 'constructAll' });
-  check('constructAll (many pieces): one ke-cha', c.ok && c.buf === 2 && c.osc === 2, JSON.stringify(c));
+  check('constructAll (many pieces): one snap', c.ok && c.buf === 1 && c.osc === 0 && near(c.dur, SNAP), JSON.stringify(c));
   const num = await page.evaluate(() => window.tw.world.value.save.stations.find((s) => s.built)?.num);
   const u = await sound({ op: 'stationUpgrade', nodes: [num], bit: 4, on: true });
   check('upgrade built: one bung', u.ok && u.buf === 1 && u.osc === 1 && !near(u.dur, POP), JSON.stringify(u));

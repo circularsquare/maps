@@ -11,7 +11,7 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -382,9 +382,10 @@ export class NetworkRenderer {
     if (!n || !this.stationStyle.boxes || i < 0 || i >= n.stationCount) return 0;
     const s = this.drawnShapeOf(i, project);
     for (const x of this.annexesOf(i, s)) if (insideStation(x.shape, px, py, 1)) return x.kind === ANNEX_ROOM ? UPGRADE.waitingRoom : UPGRADE.parkRide;
-    if ((Math.round(n.stations[i * 3 + 2]) & ST_TERMINAL) && insideStation(s, px, py, 2)) {
+    const flags = Math.round(n.stations[i * 3 + 2]);
+    if ((flags & ST_TERMINAL) && (flags & ST_BUFFER) && insideStation(s, px, py, 2)) {
       const [a] = stationCoords(s, px, py);
-      if (Math.abs(a) > s.halfLength - TERMINAL_CAP * this.stationStyle.ringPx - 2) return UPGRADE.terminal;
+      if (a < TERMINAL_CAP * this.stationStyle.ringPx + 2 - s.halfLength) return UPGRADE.terminal;
     }
     return 0;
   }

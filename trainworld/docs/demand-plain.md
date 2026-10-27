@@ -157,8 +157,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   "households without a car" figure.
 - Owning the car: $2.00 a trip plus $0.13 a km, at 3 minutes a dollar. A typical trip pays $2.90
   to $5.25, and a driver's day comes to about $13. The long trips between cities pay none.
-- Everyone can drive. "Walking" also stands for cycling and short bus rides (one reason its share
-  runs above the census's), and "car" for driving, taxis and longer bus rides. The trip explorer's
+- Everyone can drive. "Walking" also stands for cycling and short bus trips (one reason its share
+  runs above the census's), and "car" for driving, taxis and longer bus trips. The trip explorer's
   Walk and Drive rows say so in their hovers.
 
 **Between cities** (the car and the plane against the train)

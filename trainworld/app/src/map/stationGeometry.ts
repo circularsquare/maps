@@ -380,15 +380,16 @@ export function insideStation(s: StationShape, x: number, y: number, padding = 0
 }
 
 /** A station's upgrades as drawn, in its flags (network.ts, T-1416): a waiting room, its annexes
- * on the + side of the platform (annexSide.ts), a park and ride, a terminal. */
-export const ST_ROOM = 32, ST_FLIP = 64, ST_PARK = 128, ST_TERMINAL = 256;
+ * on the + side of the platform (annexSide.ts), a park and ride, a terminal. ST_BUFFER (T-1527):
+ * a terminal where the track ends, so its platform's -axis end has a buffer stop. */
+export const ST_ROOM = 32, ST_FLIP = 64, ST_PARK = 128, ST_TERMINAL = 256, ST_BUFFER = 512;
 /** The annexes joined to a box (T-1416): the waiting room and the park and ride's P tile. */
 export const ANNEX_ROOM = 1, ANNEX_PARK = 2;
 /** A P tile's half size as a share of the box's half width: big enough for a legible P where boxes
  * are narrowest (zoom 14-15). */
 export const PARK_HALF = 1.4;
-/** A terminal's box ends are dark bars this many rims thick (T-1416), a buffer stop at each end,
- * reaching this many rims past the box's sides so they show beside a train standing in it. */
+/** A terminal's box end where the track ends is a dark bar this many rims thick (T-1416, T-1527), a
+ * buffer stop, reaching this many rims past the box's sides so it shows beside a train standing in it. */
 export const TERMINAL_CAP = 2.5, TERMINAL_EAR = 1.5;
 /** An annex's inner edge lies this many rims inside the box's edge, so its white meets the box's
  * and the two read as one shape with one outline. */

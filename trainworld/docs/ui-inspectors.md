@@ -220,7 +220,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
   "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
   notes/T-1168.md, T-1391]: an icon after "Stops" (two lines crossing at a station; hover "Show
-  related lines" / "Hide related lines", one setting for every line, off at first and kept while
+  related lines" / "Hide related lines", one setting for every line, on at first and kept while
   the page is open, kept while stops are edited, the stations passed then between the rows) draws
   the stops with the lines related to the line (`TrackApi.line_related`,
   `game/relatedLayout.ts`, `RelatedStops.tsx`): the line straight down the middle of the drawing; each
@@ -469,7 +469,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   by the near bubble's legs times the far bubble's trips (`averageTrips` in game/trip.ts). By train
   is then the Effective time (the weighted mean over the pairs the train is offered for; hover
   names the pair count) and Busiest routes: the routes merged by their lines and last station,
-  each pair's weighted by its train chance, the five biggest with their share of the train riders
+  each pair's weighted by its train chance, the five biggest with their share of the train trips
   and the rest as Other routes; no single route's legs, fare or time. By car, By walking and Train
   by period are the weighted means. The map draws the busiest routes, each pair's walks from its
   own cells.
@@ -515,7 +515,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   where the two ends have everyday outings across a zone line [T-1229], **Everyday trips** with
   its legs a day and a Train / Walking / Car bar and rows (errands, visits, school and medical
   trips as the market chooses them, the walkers rail takes out; between two places both ways, from
-  a selection the outings of its homes, or arriving at its activities), their train riders in the
+  a selection the outings of its homes, or arriving at its activities), their train trips in the
   routes below with the inter-city ones, the block absent while no network reaches the market; from a
   selection or a 6 km area with one far place, **Between the two places**, the whole places'
   trips both ways as the solve split them (the corridor's, commutes left out), so a selection no
@@ -560,9 +560,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   Train / Plane / Car (over the day's trips, and each Train by period row over its period's) are
   rounded so; the rows' hovers add the model's own share ("Model: 30.4%"). The route shares under
   By train (main route's sentence, Other routes, Smaller routes, Busiest routes) are dealt the same
-  way among the train riders the headline counts (the market's: the period's train trips), the
+  way among the train trips the headline counts (the market's: the period's train trips), the
   routes too small to list taking a leftover rider only after every listed route, and routes no
-  one takes at that count left out; with no counted train riders they stay the model's. The
+  one takes at that count left out; with no counted train trips they stay the model's. The
   representative trip's own chances (Train by period, a trip the view counts none of) are not
   rounded. Past a couple of hundred trips the rounding changes no whole percent.
 - **The representative trip**: everything below the headline is one trip read by the model: under
