@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1603 [P2] The ground curve fades over the tail's 300-700 km window (T-1508 option 1). Done 2026-10-27: no new constant, normaliser unchanged; US 300 km+ 0.0100 a person a weekday against NHTS 0.0098, China 0.0065 (1.5x the rough published), real save rail 12,483,326 as before. notes/T-1603.md.
+- T-1508 [P3] The market's totals on very big far pairs. Closed 2026-10-27: analysis in notes/T-1508.md; the ground's double count fixed by T-1603, the tail refit left as T-1599.
 - T-1545 [P2] T-1169 stage 3: the market's pass by a window of destination zones. Done 2026-10-27: no station x station tables, one search a destination (8% again); all of Japan's peak 2,694 to 1,334 MB a worker, its load 1,627 to 1,107 s; figures move by rounding only. notes/T-1169.md stage 3.
 - T-1170 [P2] Draw anchor move rebuilt every stroke. Done 2026-10-27: rows kept, points from kept float64 mercator, stroke pieces shifted (cm-level lie, exact every 8th or 3,000 km+ move). China jump 274-442 to 74-378 ms, first click 385-397 to 170-239; Japan worker 1.2-4.9 s to about 0.25 s. notes/T-1170.md.
 - T-1171 [P2] Unbuilt lines re-quoted on every clock state. Done 2026-10-27: the blueprint quote and a planned line's price are clock queries asked by the Build tab and the line panel 250 ms after edits; a state's quoting 1.3 s (New York, 12 planned lines) to 0. notes/T-1171.md.
