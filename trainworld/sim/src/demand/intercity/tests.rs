@@ -2046,3 +2046,31 @@ fn sparse_od_builder_matches_of() {
     assert_eq!(got.src, want.src);
     assert_eq!(got.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>());
 }
+#[test]
+fn compact_columns_give_back_the_numbers_they_were_given() {
+    // T-1559: `Col` and `Ix` keep what the pack files say, to the bit, whichever form they pick
+    let cases: Vec<Vec<f64>> = vec![
+        vec![],
+        vec![0., 1., 255., 16_777_216., 3.5],
+        vec![17.422, 256.634, 21.548, 0., 3.749],
+        vec![-0.0, 1.],
+        vec![-1.5, 2.],
+        vec![0.1, 0.2, 0.30000000000000004],
+        vec![4_294_967.295, 4_294_967.296, 1e12],
+        vec![1.0005, 2.0004999999999997],
+    ];
+    for v in cases {
+        let c = Col::of(v.clone());
+        assert_eq!(c.len(), v.len());
+        for (i, &x) in v.iter().enumerate() {
+            assert_eq!(c.at(i).unwrap().to_bits(), x.to_bits(), "{x} in {v:?}");
+        }
+        assert!(c.at(v.len()).is_none());
+    }
+    assert!(matches!(Col::of(vec![17.422, 3.]), Col::Milli(_)));
+    assert!(matches!(Col::of(vec![3., 4.5]), Col::F32(_)));
+    assert!(matches!(Col::of(vec![0.1234567, 0.2]), Col::F64(_)));
+    let wide = Ix::of(vec![1, 70_000]);
+    assert!(matches!(wide, Ix::U32(_)) && wide.at(1) == 70_000 && wide.len() == 2);
+    assert!(matches!(Ix::of(vec![1, 65_535]), Ix::U16(_)));
+}

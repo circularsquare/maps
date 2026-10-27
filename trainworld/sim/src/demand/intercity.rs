@@ -204,9 +204,10 @@ fn default_zone_m() -> f64 {
 fn default_trip_rate() -> f64 {
     0.015
 }
-/// A place's part of the market (`data/packs/<id>.market.json`, pipeline/market_zones.py).
+/// A place's part of the market (`data/packs/<id>.market.json`, pipeline/market_zones.py) as the
+/// file has it; `ZoneIn` keeps it in less room.
 #[derive(Deserialize, Default)]
-struct ZoneIn {
+struct ZoneRaw {
     place: usize,
     #[serde(default)]
     zone: String,
@@ -265,6 +266,168 @@ struct ZoneIn {
 }
 fn one() -> f64 {
     1.
+}
+/// A column of numbers kept as 4 bytes each when every one is exact so (a float32, or whole
+/// thousandths, as the packs write people and jobs), else as they came (T-1559).
+enum Col {
+    F32(Vec<f32>),
+    Milli(Vec<u32>),
+    F64(Vec<f64>),
+}
+impl Col {
+    fn of(v: Vec<f64>) -> Col {
+        if v.iter().all(|&x| (x as f32) as f64 == x) {
+            return Col::F32(v.iter().map(|&x| x as f32).collect());
+        }
+        let milli = |x: f64| {
+            let k = (x * 1000.).round();
+            (x.is_sign_positive() && k <= u32::MAX as f64 && k / 1000. == x).then_some(k as u32)
+        };
+        if let Some(k) = v.iter().map(|&x| milli(x)).collect::<Option<Vec<u32>>>() {
+            return Col::Milli(k);
+        }
+        Col::F64(v)
+    }
+    fn len(&self) -> usize {
+        match self {
+            Col::F32(v) => v.len(),
+            Col::Milli(v) => v.len(),
+            Col::F64(v) => v.len(),
+        }
+    }
+    /// The number, as the file gave it; `None` past the end.
+    #[inline]
+    fn at(&self, i: usize) -> Option<f64> {
+        match self {
+            Col::F32(v) => v.get(i).map(|&x| x as f64),
+            Col::Milli(v) => v.get(i).map(|&k| k as f64 / 1000.),
+            Col::F64(v) => v.get(i).copied(),
+        }
+    }
+    fn iter(&self) -> impl Iterator<Item = f64> + '_ {
+        (0..self.len()).map(|i| self.at(i).unwrap())
+    }
+}
+/// A column of indices kept in 2 bytes each when they fit (T-1559).
+enum Ix {
+    U16(Vec<u16>),
+    U32(Vec<u32>),
+}
+impl Ix {
+    fn of(v: Vec<u32>) -> Ix {
+        if v.iter().all(|&x| x <= u16::MAX as u32) {
+            Ix::U16(v.iter().map(|&x| x as u16).collect())
+        } else {
+            Ix::U32(v)
+        }
+    }
+    fn len(&self) -> usize {
+        match self {
+            Ix::U16(v) => v.len(),
+            Ix::U32(v) => v.len(),
+        }
+    }
+    #[inline]
+    fn at(&self, i: usize) -> u32 {
+        match self {
+            Ix::U16(v) => v[i] as u32,
+            Ix::U32(v) => v[i],
+        }
+    }
+}
+/// A place's sites: `[x, y, people, jobs, zone]` of the file, x and y as the float32 the
+/// composition reads, the zone as its index (`u32::MAX` where the file's is not one).
+struct Sites {
+    x: Vec<f32>,
+    y: Vec<f32>,
+    pop: Col,
+    jobs: Col,
+    zone: Ix,
+}
+impl Sites {
+    fn len(&self) -> usize {
+        self.x.len()
+    }
+    /// Site `i`: x, y, people, jobs, zone.
+    #[inline]
+    fn at(&self, i: usize) -> (f32, f32, f64, f64, u32) {
+        (self.x[i], self.y[i], self.pop.at(i).unwrap(), self.jobs.at(i).unwrap(), self.zone.at(i))
+    }
+}
+/// A place's part of the market as the composition reads it: `ZoneRaw`, its long arrays in 2 or 4
+/// bytes an entry (T-1559). Everything read from them is the number the file gave, to the bit.
+#[derive(Deserialize)]
+#[serde(from = "ZoneRaw")]
+struct ZoneIn {
+    place: usize,
+    zone: String,
+    frame: Option<PackFrame>,
+    zone_m: f64,
+    country: String,
+    inc: f64,
+    road: i64,
+    zones: Vec<[i32; 2]>,
+    zone_ng: Vec<f64>,
+    zone_nt: Vec<f64>,
+    sites: Sites,
+    site_park: Vec<f32>,
+    cell_pop: Col,
+    commute_home: Ix,
+    commute_place: Ix,
+    commute_work: Ix,
+    commute_trips: Vec<f32>,
+    everyday_home: Ix,
+    everyday_place: Ix,
+    everyday_zone: Ix,
+    everyday_kind: Vec<u8>,
+    everyday_trips: Vec<f32>,
+    everyday_walk: Vec<f32>,
+    airports: Vec<[f64; 2]>,
+    air_direct: Vec<Vec<u32>>,
+}
+/// A vector with no spare room (parsing grows each by doubling).
+fn tight<T>(mut v: Vec<T>) -> Vec<T> {
+    v.shrink_to_fit();
+    v
+}
+impl From<ZoneRaw> for ZoneIn {
+    fn from(z: ZoneRaw) -> ZoneIn {
+        let site_zone = |v: f64| if v >= 0. && v.fract() == 0. && v < u32::MAX as f64 { v as u32 } else { u32::MAX };
+        let sites = Sites {
+            x: z.sites.iter().map(|s| s[0] as f32).collect(),
+            y: z.sites.iter().map(|s| s[1] as f32).collect(),
+            pop: Col::of(z.sites.iter().map(|s| s[2]).collect()),
+            jobs: Col::of(z.sites.iter().map(|s| s[3]).collect()),
+            zone: Ix::of(z.sites.iter().map(|s| site_zone(s[4])).collect()),
+        };
+        ZoneIn {
+            place: z.place,
+            zone: z.zone,
+            frame: z.frame,
+            zone_m: z.zone_m,
+            country: z.country,
+            inc: z.inc,
+            road: z.road,
+            zones: tight(z.zones),
+            zone_ng: z.zone_ng,
+            zone_nt: z.zone_nt,
+            sites,
+            site_park: tight(z.site_park),
+            cell_pop: Col::of(z.cell_pop),
+            commute_home: Ix::of(z.commute_home),
+            commute_place: Ix::of(z.commute_place),
+            commute_work: Ix::of(z.commute_work),
+            commute_trips: tight(z.commute_trips),
+            everyday_home: Ix::of(z.everyday_home),
+            everyday_place: Ix::of(z.everyday_place),
+            everyday_zone: Ix::of(z.everyday_zone),
+            everyday_kind: tight(z.everyday_kind),
+            everyday_trips: tight(z.everyday_trips),
+            everyday_walk: tight(z.everyday_walk),
+            airports: z.airports,
+            air_direct: z.air_direct,
+        }
+    }
 }
 /// A place's market row (app/src/game/market-rows.json, T-776), written by `bin/market_pack.rs`.
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -1413,7 +1576,7 @@ fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     if !pack.site_park.is_empty() && (pack.site_park.len() != pack.sites.len() || pack.site_park.iter().any(|p| !p.is_finite() || *p < 0.)) {
         return Err("invalid site parking".into());
     }
-    let mut zones: Vec<ZoneIn> = (0..markets).map(|m| ZoneIn { place: m, frame: pack.frame.clone(), zone_m: zm, inc: 1., ..Default::default() }).collect();
+    let mut zones: Vec<ZoneRaw> = (0..markets).map(|m| ZoneRaw { place: m, frame: pack.frame.clone(), zone_m: zm, inc: 1., ..Default::default() }).collect();
     let mut keys: Vec<HashMap<(i32, i32), usize>> = vec![HashMap::new(); markets];
     let mut at = Vec::with_capacity(pack.sites.len());
     for (si, s) in pack.sites.iter().enumerate() {
@@ -1448,7 +1611,7 @@ fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     }
     // the commutes name pack sites: keep each site's place and place-local index for them
     let site_at = at;
-    let zones = zones.into_iter().map(Rc::new).collect();
+    let zones = zones.into_iter().map(|z| Rc::new(ZoneIn::from(z))).collect();
     let mut built = Built { zones, rule: Rule::closed(pack.trip_rate), out: pack.frame.clone(), places: markets, rows: None, world: false, closed: true, legacy_commutes: vec![], drives: Rc::default() };
     built.legacy_commutes = legacy_commutes
         .into_iter()
@@ -1573,7 +1736,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         if !zin.site_park.is_empty() && zin.site_park.len() != zin.sites.len() {
             return Err("invalid site parking".into());
         }
-        if !zin.cell_pop.is_empty() && zin.cell_pop.len() != zin.sites.len() {
+        if zin.cell_pop.len() != 0 && zin.cell_pop.len() != zin.sites.len() {
             return Err("invalid cell people".into());
         }
         if counts[place] as usize != nz {
@@ -1592,18 +1755,19 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
             mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0. });
         }
         let s_inc = zin.inc.min(1.).powf(rule.eps);
-        let total_pop: f64 = zin.sites.iter().map(|s| s[2]).sum();
-        let total_attr: f64 = zin.sites.iter().map(|s| s[2] + 2. * s[3]).sum();
+        let total_pop: f64 = zin.sites.pop.iter().sum();
+        let total_attr: f64 = zin.sites.pop.iter().zip(zin.sites.jobs.iter()).map(|(p, j)| p + 2. * j).sum();
         // T-377: a pack's attraction rescaled so its total is its people (times income), as the
         // world field's cells count people
         let k_attr = if closed || total_attr <= 0. { 1. } else { total_pop / total_attr * s_inc };
         let mut park_w = vec![0f64; nz];
         let mut park = vec![0f64; nz];
-        for (si, s) in zin.sites.iter().enumerate() {
-            if s.iter().any(|x| !x.is_finite()) || s[2] < 0. || s[3] < 0. || s[4] < 0. || s[4].fract() != 0. || s[4] as usize >= nz {
+        for si in 0..zin.sites.len() {
+            let (x, y, pop, jobs, z) = zin.sites.at(si);
+            if !x.is_finite() || !y.is_finite() || pop < 0. || jobs < 0. || z as usize >= nz {
                 return Err("invalid intercity weights".into());
             }
-            let (x, y, pop, jobs, z) = (s[0] as f32, s[1] as f32, s[2], s[3], s[4] as usize);
+            let z = z as usize;
             let attr = pop + 2. * jobs;
             let zz = &mut mz[first + z];
             let w = pop + attr;
@@ -1613,7 +1777,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
             zz.w_attr += attr;
             zz.jobs += jobs;
             zz.a += attr * k_attr;
-            let u = (zin.cell_pop.get(si).copied().unwrap_or(0.).max(1.) / rule.u_ref_people).max(1e-12);
+            let u = (zin.cell_pop.at(si).unwrap_or(0.).max(1.) / rule.u_ref_people).max(1e-12);
             zz.ta += attr * k_attr * u.powf(rule.th);
             site_u.push(u);
             let (sg, st) = (s_inc, s_inc * u.powf(rule.tho) / rule.u_mean_us);
@@ -1657,16 +1821,17 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         // departures over the normalisers (a closed world's come after every zone is known)
         if !closed {
             let lo = pack_first_site[place];
-            for (si, s) in zin.sites.iter().enumerate() {
-                let z = first + s[4] as usize;
+            for si in 0..zin.sites.len() {
+                let (_, _, pop, _, zk) = zin.sites.at(si);
+                let z = first + zk as usize;
                 let (sg, st) = site_mult[lo + si];
-                let (ng, nt) = (zin.zone_ng[s[4] as usize], zin.zone_nt[s[4] as usize]);
+                let (ng, nt) = (zin.zone_ng[zk as usize], zin.zone_nt[zk as usize]);
                 let zz = &mut mz[z];
                 if ng > 0. {
-                    zz.g += s[2] * rule.r * sg / ng;
+                    zz.g += pop * rule.r * sg / ng;
                 }
                 if nt > 0. {
-                    zz.t += s[2] * rule.rt * st / nt;
+                    zz.t += pop * rule.rt * st / nt;
                 }
             }
         }
@@ -1904,7 +2069,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
             }
             let first = pack_first_zone[zin.place];
             for i in 0..nc {
-                let (h, wp, w, n) = (zin.commute_home[i] as usize, zin.commute_place[i] as usize, zin.commute_work[i], zin.commute_trips[i]);
+                let (h, wp, w, n) = (zin.commute_home.at(i) as usize, zin.commute_place.at(i) as usize, zin.commute_work.at(i), zin.commute_trips[i]);
                 if h >= zin.zones.len() || wp >= np || w >= m.places[wp].zones || !n.is_finite() || n < 0. {
                     return Err("invalid commute between zones".into());
                 }
@@ -1925,7 +2090,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         }
         let first = pack_first_zone[zin.place];
         for i in 0..ne {
-            let (h, ap, a, k, n, w) = (zin.everyday_home[i] as usize, zin.everyday_place[i] as usize, zin.everyday_zone[i], zin.everyday_kind[i], zin.everyday_trips[i], zin.everyday_walk[i]);
+            let (h, ap, a, k, n, w) = (zin.everyday_home.at(i) as usize, zin.everyday_place.at(i) as usize, zin.everyday_zone.at(i), zin.everyday_kind[i], zin.everyday_trips[i], zin.everyday_walk[i]);
             if h >= zin.zones.len() || ap >= np || a >= m.places[ap].zones || k as usize >= super::everyday::KIND_COUNT || !n.is_finite() || n < 0. || !(0.0..=1.0).contains(&w) {
                 return Err("invalid everyday pair between zones".into());
             }
