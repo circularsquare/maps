@@ -1,7 +1,7 @@
 // The recorded building sounds (T-1474; sounds/ in app/public): fetched at start, decoded the moment the
 // audio context opens (audioOut.ts), so a click can start one with nothing left to load or decode.
 
-const FILES = { track: "sounds/track.wav", snap: "sounds/snap.wav", pop: "sounds/pop.wav" } as const;
+const FILES = { snap: "sounds/snap.wav", pop: "sounds/pop.wav" } as const;
 export type SampleName = keyof typeof FILES;
 const NAMES = Object.keys(FILES) as SampleName[];
 

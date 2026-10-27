@@ -379,27 +379,25 @@ those who got on, less the load carried on.
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
-- **Building sounds** [T-1282, T-1413, T-1474; `map/buildSound.ts`, voices in `map/buildVoices.ts`,
+- **Building sounds** [T-1282, T-1413, T-1474, T-1532; `map/buildSound.ts`, voices in `map/buildVoices.ts`,
   recordings in `map/samples.ts`]: under the same Sound switch and volume, with no zoom gain. They
   play at the click itself, before the clock worker answers: `edit()` in `game/world.ts` tells
   `setBeforeEdit` as it sends, and the track and station tools play theirs in their click handlers.
   A click the ghost already shows refused is silent; any other that the worker then refuses has
   sounded. One sound per click however many pieces it places (a pasted schedule or a folded train
-  count is one sound per click, not per edit). Five sounds. Recordings (`app/public/sounds/`, with
+  count is one sound per click, not per edit). Three sounds. Recordings (`app/public/sounds/`, with
   their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
-  `buildSound.ts` `PEAK`): the fft, Anita's own, on placing track as blueprint (0.25); a finger snap
-  on placing a station (0.3); a cork pop, quiet (0.09), on a panel click that changes the world: train
+  `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint, placing a station, and any
+  construct (0.3); a cork pop, quiet (0.09), on a panel click that changes the world: train
   count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or
   removed in a line, a station's platform length, a station upgrade or a passage taken out, double
   up, a track's elevation, a junction's flying switch, a line copied or removed, a schedule pasted.
-  Synthesised: "ke-cha" on any construct (a 14 ms bright tick, then 75 ms later a lower clack of
-  band-passed noise and a falling triangle, gone by 120 ms; half a semitone either way at random);
-  "bung" on adding or building a station upgrade or a passage, and on a line's opening day (one
+  Synthesised: "bung" on adding or building a station upgrade or a passage, and on a line's opening day (one
   Karplus-Strong string at A3, 220 Hz, 5% sharp at the start and settling in 60 ms, low-passed at
   2.4 kHz, with a 110 Hz sine thump; under 0.4 s). Silent: opening a panel, hovering, tabs, names,
-  colours, fares, undo, the remove tools, drags. The same sound twice within 0.3 s (track 0.1, snap
+  colours, fares, undo, the remove tools, drags. The same sound twice within a short gap (bung 0.3 s, snap
   0.15, pop 0.05) plays once. The opening day's "bung" comes 250 ms after the start of the construct's
-  "ke-cha", less the time the worker took to answer. One audio context serves all (`map/audioOut.ts`):
+  snap, less the time the worker took to answer. One audio context serves all (`map/audioOut.ts`):
   opened with `latencyHint: "interactive"`, resumed at once, a silent buffer played through it once
   the files are decoded.
 

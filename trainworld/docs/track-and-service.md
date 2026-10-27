@@ -590,7 +590,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trips are a function of the service, its eras and the hour asked for, and every window agrees.
 - **Changing a train count** (T-229, notes/T-229.md). The stepper shows the new count at
   once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
-  into one edit sent when it lands. The worker sends a service-only state for it: no geometry
+  into one edit sent when it lands. The headway stepper (`pendingHeadway`) and the train length
+  stepper (`pendingCars`, T-1526) work the same way, each click counting from the length shown. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
   run profiles (`renderer.setService`). A count or headway edit takes effect a moment ahead of the
   clock (T-1071, notes/T-1071.md): the clock worker's lead is 0.25 s plus twice what its last such
