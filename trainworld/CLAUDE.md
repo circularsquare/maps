@@ -10,8 +10,8 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `SPEC.md` | What the game is and how it works, **as of now**, in summary | agents, rewritten in place |
 | `docs/` | The spec in detail, one file per area: `demand.md` (index of the `demand-*.md` files), `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
 | `TASKS.md` | Open agent work, by priority | agents |
-| `DECISIONS.md` | Dated choices someone might revisit, and why | agents, add only |
-| `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
+| `DECISIONS.md` | Dated choices someone might revisit, and why; from 2026-10-20 on. Older ones: `DECISIONS-to-2026-10-19.md` | agents, add only |
+| `ARCHIVE.md` | Finished and abandoned tasks, newest first; from 2026-10-20 on. Older ones: `ARCHIVE-to-2026-10-19.md` | agents, add only |
 | `notes/T-###.md` | Working notes for a task too big for one line; analysis scripts a note cites | the task's agent |
 | `notes/handoff.md` | The orchestrator's live state, kept current so a new one can take over any time (`/takeover`, `/handoff`; maps/CLAUDE.md) | orchestrator |
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
@@ -33,7 +33,9 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   choice, a unit, an invariant), with a task id if the reasoning lives elsewhere. Never what the code
   does, never history ("before T-275 this..."): that is DECISIONS.md. Trim a function's comments when
   you edit it; no sweeping rewrites.
-- **DECISIONS.md and ARCHIVE.md are searched, never read whole**: grep them for a task id or word.
+- **DECISIONS.md and ARCHIVE.md are searched, never read whole**: grep them for a task id or word,
+  and grep `DECISIONS-to-2026-10-19.md` and `ARCHIVE-to-2026-10-19.md` too when an id or word is not
+  in the live file (they hold everything dated before 2026-10-20; new entries still go in the live files).
 - **A DECISIONS line** only for a choice someone might reasonably revisit: date, one or two
   sentences, the task id. Not for what the spec already says.
 - **An ARCHIVE entry** is at most two lines (about 40 words): id, title, date, the outcome only,
@@ -79,7 +81,7 @@ Briefs carry only the task; these hold for every agent.
   everything from that folder as its maps root and does not commit; TASKS, ARCHIVE, DECISIONS and
   data or pipeline batches are edited in the main tree only. The orchestrator runs smoke in the
   tree, then `agent-tree.mjs land <name> "<one sentence>"` (one commit on master, fast-forwarded),
-  then `remove <name>`. About 1.2 GB a tree before its Rust build; two or three at most.
+  then `remove <name>`; a landing that changed sim/ rebuilds the main tree's WASM. About 1.2 GB a tree before its Rust build; two or three at most.
   **An agent that changes the WASM interface** (adds, renames or removes a function the app calls)
   gets its own tree while others run pages in the main tree; in the main tree it builds the Rust
   function before any app code calls it (such breaks stopped every agent's demand loading, 2026-10-22).
@@ -106,7 +108,9 @@ Briefs carry only the task; these hold for every agent.
   parts, task by task (Anita, 2026-10-22).
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
   scratchpad folder, not heredocs.
-- **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder.
+- **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder. The one
+  or two images Anita should look at now, the orchestrator copies to `../artifacts/trainworld/review/`
+  (short names, older copies deleted) and gives her that single full path (Anita, 2026-10-27).
 - **Player-facing text** follows the "User-facing text" section of Anita's global CLAUDE.md. It says "trips"
   for what people want to take (demand, trips between places) and "rides" or "riders" only for what
   happens on the player's system (Anita, 2026-10-26).
@@ -116,12 +120,15 @@ Briefs carry only the task; these hold for every agent.
   and waking after more than about 5 idle minutes re-caches all of it. Wait for a long job with one
   background wait on the process ending (not on a log line, which a script may never print), never
   progress polling, and never wait in the foreground for more than about 4 minutes; do other work
-  meanwhile. Start independent long jobs together and wait once. Write long logs to a file and read
+  meanwhile. Start independent long jobs together and wait once. A task's final checks (smoke and
+  the like, a few minutes) run in the foreground: an agent that ended its turn waiting on them
+  stalled for hours (2026-10-27). Write long logs to a file and read
   summaries; read doc sections, not whole files; grep TASKS.md.
 - **Long runs are checked, not trusted** (T-613, 2026-10-19). Before a long run, check the sim
   copy's `data`/`app` junctions and the paths it will write; after it ends, read `world_run.py
   status` and report the shipped and parked counts with causes, never just "waiting". The
-  orchestrator checks the process and the status table at least every couple of hours. A batch
+  orchestrator checks the process and the status table at least every couple of hours, and asks
+  after any agent quiet for more than about 45 minutes without a report (Anita, 2026-10-27). A batch
   agent may start subagents (one region or one fault each) when that is quicker than one queue.
   **Start every long run detached** (a `.cmd` or `start` that outlives the session, its log to a
   file; a run started from a session dies with it) and write its batch id, log path, liveness check
@@ -204,7 +211,9 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   task's design goes to Anita before it is built; small, quick, isolated work needs no review.
   Treat subagents well by substance: a brief they can act on (goal, decisions made, scope, done
   looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks on
-  briefs, but a short thanks when an agent's work is done (Anita, 2026-10-21). A long-lived agent
+  briefs, but a short thanks when an agent's work is done (Anita, 2026-10-21), said in the
+  orchestrator's own reply, not sent as a message: a message resumes the agent, which reports
+  again (Anita, 2026-10-27). A long-lived agent
   past about 500k tokens (the figure in its task notice) with substantial work left writes its state
   to its notes and is replaced by a fresh one (Anita, 2026-10-21).
 - **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city

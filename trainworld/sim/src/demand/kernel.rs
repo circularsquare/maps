@@ -1813,7 +1813,10 @@ impl Access {
 /// Bucket size of the cell grid the access search scatters stations over.
 const ACCESS_BUCKET_M: f32 = 1000.0;
 /// T-1464: a home this near a bus route (ground m) may walk to it and ride.
-pub const BUS_REACH_M: f32 = 400.0;
+pub const BUS_REACH_M: f32 = 300.0;
+/// T-1576: perceived minutes added to every boarding of a bus line, a change onto it included
+/// (`Graph::rn_bus`): a bus is less dependable and less comfortable than a train.
+pub const BUS_BOARD_MIN: f32 = 6.0;
 /// The walk along the route to the nearest street stop, on average (street stops every 400 m).
 pub const BUS_WALK_EXTRA_M: f32 = 100.0;
 /// The bus stops a cell keeps beside its K train stations.
@@ -2584,13 +2587,16 @@ pub struct Graph {
     /// Departures an hour for each route node in this period.
     pub rn_tph: Vec<f32>,
     /// Average extra real minutes a rider boarding at this route node waits because full trains
-    /// leave riders on the platform (T-188, `left_behind`), plus `rn_span`. Added to the
+    /// leave riders on the platform (T-188, `left_behind`), plus `rn_span` and `rn_bus`. Added to the
     /// boarding's cost.
     pub rn_left: Vec<f32>,
     /// Perceived minutes added to boarding where only a share `phi` of the period's riders have a
     /// train due within their tolerance (T-842, `Network::span`): -ln(phi) / `Params::beta`, the
     /// logit's own form for an option open to that share. 0 with service all period.
     pub rn_span: Vec<f32>,
+    /// Perceived minutes added to boarding on a bus line (T-1576): `BUS_BOARD_MIN` on every route
+    /// node of a line with a bus-only stop, 0 elsewhere. Part of `rn_left`, but not real minutes.
+    pub rn_bus: Vec<f32>,
     /// Each route node's platform less its station's position, metres (`Network::stop_x`): a change
     /// of trains walks from the platform it arrives at to the one it leaves from (T-717).
     pub rn_dx: Vec<f32>,
@@ -2785,9 +2791,12 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
+    let bus_line: Vec<bool> = (0..net.n_lines()).map(|l| net.line_stops[net.line_off[l] as usize..net.line_off[l + 1] as usize].iter().any(|&st| net.bus_only(st as usize))).collect();
+    let rn_bus: Vec<f32> = rn_line.iter().map(|&l| if bus_line[l as usize] { BUS_BOARD_MIN } else { 0.0 }).collect();
     Graph {
-        rn_left: rn_span.clone(),
+        rn_left: rn_span.iter().zip(&rn_bus).map(|(a, b)| a + b).collect(),
         rn_span,
+        rn_bus,
         rn_dx,
         rn_dy,
         st_spread,
@@ -5360,8 +5369,8 @@ pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Optio
     loads.seg.copy_from_slice(&total[..nr]);
     let (fac, _) = crowd_factors(g, net, &loads, p);
     let mut left = if total.len() == 3 * nr && p.left_behind { left_behind(g, net, p, &total[nr..2 * nr], &total[2 * nr..]).0 } else { vec![0.0; nr] };
-    for (l, s) in left.iter_mut().zip(&g.rn_span) {
-        *l += s;
+    for ((l, s), b) in left.iter_mut().zip(&g.rn_span).zip(&g.rn_bus) {
+        *l += s + b;
     }
     Some((fac, left))
 }

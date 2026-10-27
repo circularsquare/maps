@@ -11,7 +11,7 @@
                                                      the removed ids' packs, caches and res9 files moved to
                                                      data/work/pre-T1185/removed/, and every zone row's
                                                      tier 0 signal cache to data/work/pre-T1185/signals/
-Run with no runner or join live. The backup (notes/t1150/run/backup.py T1185 pre CN,HK,MO,TW) first.
+Run with no runner or join live. The backup (artifacts/trainworld/t1150/run/backup.py T1185 pre CN,HK,MO,TW) first.
 """
 import glob
 import json

@@ -36,7 +36,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 - **Pairs**: places whose centres are under **250 km** apart pair 6 km zone to 6 km zone at their
   own distance; farther places pair at the distance between the places' centres, so their 6 km
   pairs add up to the places' trips exactly, each end's share by its zones' departures over the
-  normalisers and its attraction (DECISIONS 2026-10-15, T-377). Opposite totals are averaged;
+  normalisers and its attraction (DECISIONS-to-2026-10-19 2026-10-15, T-377). Opposite totals are averaged;
   pairs under 0.01 trips a day each way are pruned. Distances are great circles [T-128]. Local
   outings taper over 40-80 km, so the two layers meet without a gap or double count.
 - **Market rows**: each place's row (`app/src/game/market-rows.json` by zone id, T-776: its zones' sums, centre, country, income,

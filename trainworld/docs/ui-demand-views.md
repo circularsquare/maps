@@ -95,7 +95,8 @@ change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep t
 
 [T-144, T-146, T-209, T-213, T-482, T-1448; `game/stationUse.ts`, `map/stationCircles.ts`] The
 station ridership row on the map ("The demand selector" above): None (default), Origins, Transfers or
-Total, remembered per browser. One circle per station complex, at the mean position of its
+Total, remembered per browser (a choice stored before settings version 11 is dropped once, so every
+browser starts on None [T-1585]). One circle per station complex, at the mean position of its
 constructed stations, grouped exactly as the complexes are, the player's links included [T-1449: no
 longer a setting]. Area proportional to riders per day with no cap (the radius is the zoom's circle
 radius, times the Settings size [T-1565], times the square root of riders over 140,000, and a circle

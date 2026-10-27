@@ -985,7 +985,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
-  rider (why: DECISIONS, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
+  rider (why: DECISIONS-to-2026-10-19, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
   account lets a crowd grow past it, up to `WAITING_CAP` (above).
 - **Cost and how full trains get**: measured on the real New York save in notes/T-164.md,
   notes/T-554.md and notes/T-207.md.
@@ -1033,7 +1033,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 - **Riders**: 80 at crush (demand: 0.5 of a 160-rider car, 22 seats); the boarding account keeps no
   platform crowd at its stops that are no station.
 - **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
-  shared between bus lines; running US$3 a bus-km and upkeep US$30 a road-km a day (real figures,
+  shared between bus lines; running US$9 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it

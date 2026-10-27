@@ -211,7 +211,7 @@ the class under the pointer: "Hills, track costs 1.6x".
 A bus line (T-1464) is drawn by its own pass under rail track: half a rail line's width in its
 colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
 Street stops are small rings from zoom 14, ends small rounded squares from zoom 12; where it meets
-a train station the station's own circle stands for the stop. Selecting the line draws its 400 m
+a train station the station's own circle stands for the stop. Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, with the Traffic track

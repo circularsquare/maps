@@ -20,8 +20,8 @@ export const LOGO_ZOOM = 15;
 const M = unitPerPxAt(LOGO_ZOOM);
 const ANCHOR = makeAnchor(0, 0, -1);
 
-/** platform length, m */
-const PLATFORM_M = 40;
+/** platform length, m: longer than a train (TRAIN_HALF_M) */
+const PLATFORM_M = 74;
 /** half a train as the logo draws it, m: one pill, renderer.ts's shortest at LOGO_ZOOM (9 px wide,
  * 2.2 / 0.75 times as long) */
 const TRAIN_HALF_M = (0.5 * 9 * 2.2) / 0.75 / pxPerUnitAt(LOGO_ZOOM);
@@ -29,13 +29,11 @@ const TRAIN_HALF_M = (0.5 * 9 * 2.2) / 0.75 / pxPerUnitAt(LOGO_ZOOM);
  * at a terminal s */
 const V = 14, ACC = 0.9, DWELL = 10, REVERSE = 6, TURN = 16;
 /** the forward slant (x per y) and the upward stretch applied to the upright letters */
-const SLANT = 0.22, STRETCH = 1.12;
+const SLANT = 0.22, STRETCH = 0.9;
 /** design px a number in the letters below spans */
 const K = 1.5;
 /** every curve's radius in the upright letters, their units */
 const CURVE_R = 12;
-/** stations no further apart than this along a stroke, design px */
-const STOP_GAP = 160;
 
 type P = [number, number];
 /** a corner point: its radius when not CURVE_R, or a switchback (the track ends there and the train
@@ -45,29 +43,32 @@ type C = [number, number] | [number, number, { r?: number; rev?: true }];
  * besides its ends (points near it), its palette colour. */
 interface Stroke { pts?: C[]; circle?: [number, number, number]; stops?: P[]; colour: number }
 
-/** The two rows, x-height 56, ascenders to 104. */
+/** The two rows, x-height 56, ascenders to 96; "world" set right so "trains" sits over its "wor".
+ * Stations are the ends and the stops listed. */
 const ROWS: { strokes: Stroke[]; dx: number }[] = [
   { dx: 0, strokes: [
-    // the lead-in along the baseline, turning up into the t's stem
-    { pts: [[-104, 0], [10, 0, { r: 30 }], [10, 104]], stops: [[10, 34], [10, 68]], colour: 1 },
+    // the lead-in turning up the t's stem to a switchback at its top, back down past the fork and
+    // on along the baseline into the r
+    { pts: [[-70, 0], [10, 0, { r: 30 }], [10, 96, { rev: true }], [10, 0], [40, 0], [40, 56], [64, 56]], stops: [[10, 68]], colour: 1 },
     // the t's bar, across the stem
-    { pts: [[-12, 68], [32, 68]], stops: [[10, 68]], colour: 0 },
-    // the r, from the t's stem
-    { pts: [[10, 34], [32, 0], [48, 0], [48, 56], [74, 56]], colour: 3 },
+    { pts: [[-12, 68], [34, 68]], colour: 0 },
     // the a: round its bowl, up its stem and back, on along the baseline, up the i and back
-    { pts: [[124, 56], [88, 56], [88, 0], [124, 0], [124, 62, { rev: true }], [124, 0], [154, 0], [154, 56, { rev: true }], [154, 0], [172, 0]], stops: [[88, 28], [154, 0]], colour: 2 },
+    { pts: [[114, 52], [78, 52, { r: 18 }], [78, 0, { r: 18 }], [114, 0, { r: 18 }], [114, 53, { rev: true }], [114, 0], [144, 0], [144, 56, { rev: true }], [144, 0], [162, 0]], stops: [[144, 30]], colour: 2 },
     // the i's dot
-    { circle: [156, 84, 10], colour: 11 },
-    // from the i's foot the n, then the s squiggling up
-    { pts: [[160, 0], [186, 0], [186, 56], [212, 56], [212, 0], [238, 0], [238, 28], [214, 28, { r: 14 }], [214, 56, { r: 14 }], [240, 56]], stops: [[199, 56], [222, 0]], colour: 4 },
+    { circle: [146, 80, 10], colour: 11 },
+    // from the i's foot the n (as wide as the o), then the s squiggling up
+    { pts: [[150, 0], [176, 0], [176, 56], [214, 56], [214, 0], [250, 0], [250, 28], [226, 28, { r: 14 }], [226, 56, { r: 14 }], [252, 56]], stops: [[195, 56]], colour: 4 },
   ] },
-  { dx: 34, strokes: [
+  { dx: 78, strokes: [
     // the w, its middle a switchback
     { pts: [[0, 56], [0, 0], [27, 0], [27, 44, { rev: true }], [27, 0], [54, 0], [54, 56]], colour: 7 },
-    // from the w's foot along the baseline, round the o's loop and on into a long r
-    { pts: [[50, 0], [134, 0, { r: 18 }], [134, 52, { r: 18 }], [94, 52, { r: 18 }], [94, 0, { r: 18 }], [154, 0], [154, 56], [226, 56]], stops: [[114, 0], [114, 52], [190, 56]], colour: 0 },
+    // from the w's foot along the baseline, round the o's loop and on into the r
+    { pts: [[50, 0], [120, 0, { r: 18 }], [120, 52, { r: 18 }], [80, 52, { r: 18 }], [80, 0, { r: 18 }], [140, 0], [140, 56], [164, 56]], stops: [[100, 52]], colour: 0 },
     // the l, along the baseline, round the d's bowl and up its stem
-    { pts: [[204, 104], [204, 0], [266, 0], [266, 52, { r: 18 }], [230, 52, { r: 18 }], [230, 0, { r: 18 }], [266, 0], [268, 104]], stops: [[204, 56], [266, 26], [230, 26]], colour: 5 },
+    { pts: [[180, 96], [180, 0], [242, 0], [242, 52, { r: 18 }], [206, 52, { r: 18 }], [206, 0, { r: 18 }], [242, 0], [244, 96]], stops: [[196, 0], [211, 42]], colour: 5 },
+    // the exclamation mark: its stem, and a dot like the i's
+    { pts: [[272, 96], [272, 30]], colour: 1 },
+    { circle: [272, 12, 9], colour: 11 },
   ] },
 ];
 
@@ -141,7 +142,7 @@ class Path {
 }
 
 /** upright units between the rows' baselines; design px round the drawing */
-const ROW_STEP = 124, MARGIN = 22;
+const ROW_STEP = 84, MARGIN = 22;
 
 export interface LogoNetwork extends NetworkBuffers {
   trips: Float32Array;
@@ -204,15 +205,11 @@ export function logoNetwork(): LogoNetwork {
     const len = path.length;
     const stops: Stop[] = [];
     const at = (d: number) => stops.push({ arrive: d, leave: d, rev: false });
-    if (closed) { at(0); at(len); } else { at(hD); at(len - hD); }
+    // a terminal's train stops at the middle of its platform, which runs back from the track's end
+    const endD = PLATFORM_M / 2 / M;
+    if (closed) { at(0); at(len); } else { at(endD); at(len - endD); }
     for (const p of s.stops ?? []) at(path.near(place(p, row.dx, ri)));
     for (const i of revs) stops.push({ arrive: path.cum[i] - hD, leave: path.cum[i] + hD, rev: true });
-    stops.sort((a, b) => a.arrive - b.arrive);
-    // more where stations would be far apart
-    for (let k = 0, n = stops.length; k + 1 < n; k++) {
-      const a = stops[k].leave, gap = stops[k + 1].arrive - a, m = Math.floor(gap / STOP_GAP);
-      for (let j = 1; j <= m; j++) at(a + (gap * j) / (m + 1));
-    }
     stops.sort((a, b) => a.arrive - b.arrive);
     return { path, stops, colour: s.colour };
   }));

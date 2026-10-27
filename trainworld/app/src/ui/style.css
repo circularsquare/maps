@@ -445,7 +445,7 @@ rect.now { fill-opacity: .45; }
   align-items: center; column-gap: 6px; white-space: nowrap; }
 .rows.fare-rows > li { display: contents; }
 .fare-rows .fr-what { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
-.fare-rows .fr-head { grid-column: 1 / -1; white-space: normal; }
+.fare-rows .fr-head { white-space: normal; line-height: 1.2; min-width: 0; }
 .fare-rows .stepper.wide .v { min-width: 56px; }
 .fare-rows .fr-what .v { height: 24px; min-width: 36px; padding: 0 4px; box-sizing: border-box; margin: 0;
   display: grid; place-items: center; font: inherit; font-variant-numeric: tabular-nums; color: var(--text);
@@ -677,11 +677,11 @@ rect.now { fill-opacity: .45; }
   background: color-mix(in srgb, var(--bg) 45%, transparent); }
 .start-box { background: var(--bg); border: 1px solid var(--rule); padding: 18px 20px 20px; min-width: min(240px, 100%);
   max-height: calc(100vh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; zoom: var(--ui, 1); }
-/* T-1567: `?logo=1`, the prototype logo over the box, sized by StartLogo.tsx */
+/* T-1567: the logo over the box, sized by StartLogo.tsx (`?logo=0`: none) */
 .start-menu.with-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-sizing: border-box; }
 .with-logo .start-tag { margin-top: 0; }
 .with-logo .start-box { min-height: 0; flex: 0 1 auto; box-sizing: border-box; max-width: 100%; }
-.start-logo { display: block; flex: none; pointer-events: none; background: var(--bg); border: 1px solid var(--rule); max-width: 100%; }
+.start-logo { display: block; flex: none; pointer-events: none; max-width: 100%; }
 .start-box:has(.start-saves) { width: min(540px, 100%); }
 .start-box h1 { margin: 0; }
 .start-tag { margin: -6px 0 0; }

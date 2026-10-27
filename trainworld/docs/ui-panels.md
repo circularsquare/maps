@@ -417,11 +417,13 @@ and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
 and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
-"Fares in Japan" (the country in view, on a line of its own, wrapping where long) above its scale in a
-stepper as a multiple of Japan's fares, "1.00x" (Japan's default; India 0.16x, the US 1.90x), stepping by
+one row "Fares in Japan" (the country in view; the full name always shows, wrapping to a second line
+or more in its cell where long, never cut) with its scale in a stepper as a multiple of Japan's fares,
+"1.00x" (Japan's default; India 0.16x, the US 1.90x), stepping by
 0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth of a baseline unit), its hover naming the
-country, the multiple of Japan's and the scale by income; once the player has set one, an undo icon beside
-it ("Back to 1.90x, the scale by income") returns to the income's [T-1277, T-1554]. Then one row
+country, the multiple of Japan's and the scale by income; once the player has set one, an undo icon
+after the stepper ("Back to 1.90x, the scale by income") returns to the income's. The stepper sits in
+the same column as the rows below it [T-1277, T-1554, T-1584]. Then one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
@@ -647,8 +649,8 @@ registry centre and zoom, or over New York with none [T-310].
 
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
-- Every page load opens on a card over the bare map, in the loading card's look: "Welcome to
-  trainsworld!" with "Build trains around the world!" under it [T-1242] (the account button at
+- Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
+  "Build trains around the world!" [T-1242] (the account button at
   its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
@@ -657,17 +659,16 @@ registry centre and zoom, or over New York with none [T-310].
   With no saved game (a first visit) it opens straight on the new game sheet [T-1441]. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
-  `worldCover`], with the zone outlines, outside shade and the basemap's city, town and village names hidden until the pick [T-974]. The menu takes every key outside itself, and nothing loads behind it but the map.
-- With `?logo=1` only (off by default: Anita is drawing her own logo, and when one goes in the
-  card's "Welcome to trainsworld!" heading goes), over the card (and the new game sheet) the
-  prototype logo [T-1567; `ui/StartLogo.tsx`,
-  `map/logoNetwork.ts`], after Anita's sketch: "trains" over "world" in joined-up script slanted
+  `worldCover`], with the zone outlines, outside shade and every basemap name hidden until the pick [T-974, T-1567]. The menu takes every key outside itself, and nothing loads behind it but the map.
+- Over the card (and the new game sheet) the logo [T-1567; `ui/StartLogo.tsx`,
+  `map/logoNetwork.ts`], after Anita's sketch: "trains" over "world!" in joined-up script slanted
   forward, its curves of one radius before the slant, switchbacks where a curve would be tighter,
   each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
   cross, as a complex's do), and one train a line, a white pill, running with stops, drawn by the game's own
-  network renderer at zoom 15 in a canvas of its own on a plain panel, scaled to the screen. With the
-  logo the card has no "Welcome to trainsworld!" heading. The trains are the only motion; with
-  reduced motion asked for, one still frame.
+  network renderer at zoom 15 in a canvas of its own straight over the map, scaled to the screen; the
+  menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
+  one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"
+  and only city, town and village names are hidden.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has

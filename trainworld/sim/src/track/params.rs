@@ -133,8 +133,9 @@ pub const ECONOMY: f64 = 100.0;
 pub const BUS_ROUTE_COST_PER_KM: f64 = 1.0;
 /// Price of one bus, US$M; buses are a fleet of their own, spares shared between bus lines.
 pub const BUS_PRICE: f64 = 0.6;
-/// Running cost per bus-km, real US$ (a 4-car train is 12 a train-km for eight times the room).
-pub const RUN_COST_BUS_KM: f64 = 3.0;
+/// Running cost per bus-km, real US$: 160 a bus-hour at 18 km/h, near the NTD's 166 to 238 a
+/// vehicle revenue hour (T-1576, notes/T-1466.md).
+pub const RUN_COST_BUS_KM: f64 = 9.0;
 /// Upkeep a day per road-km of constructed route, real US$ (US$3k a game day at `ECONOMY`).
 pub const UPKEEP_BUS_KM: f64 = 30.0;
 /// A bus's riders at crush.

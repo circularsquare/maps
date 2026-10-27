@@ -80,7 +80,7 @@ import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, startGameWait } from "./game/loading";
 import { startSaveSafety } from "./game/saveSafety";
-import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
+import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
 import { fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
@@ -359,7 +359,8 @@ const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => cli
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
 if (!SYNTH) startBuildSounds(); // T-1282: placing and constructing blueprint
 map.on("load", () => {
-  effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
+  // T-974: no city names behind the start menu; T-1567: no names at all behind its logo
+  effect(() => setBasemapLabels(map, display.value.basemapLabels && !(choosing.value && START_LOGO), choosing.value));
   const contrast = computed(() => display.value.basemapContrast);
   effect(() => setBasemapShade(map, shade.value, contrast.value));
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270

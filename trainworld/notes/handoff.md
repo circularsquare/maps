@@ -9,10 +9,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 - Commit round 2026-10-27: T-1547-1554 (two UI batches), T-1564 (airports 135), T-1565/1566
   (station circles), T-1568 (rename to trainsworld), T-1567 logo v5 behind `?logo=1`, T-1581
   (small reversal icons), T-1169 stage 1 notes. Smoke 20/20 on dev before commit (real save
-  12,483,326), t1554 check passes. 8800: see the commit after this file's.
+  12,483,326), t1554 check passes. Committed 2340733d; 8800 rebuilt from it, smoke 20/20 light
+  and dark (12,483,326).
 - Nothing published since 2026-10-25b (deploy only on Anita's word). shonei-server 6d9196d (error
   text says trainsworld) committed, not deployed: Anita says leave it.
-- Never commit: Anita's TODO.md, notes/t1150/run/ (196 MB).
+- Never commit: Anita's TODO.md. (The t1150 run kit moved to artifacts/trainworld/t1150/run/.)
+- Commit round 2: T-1576 bus tuning, T-1584/1585, T-1567 logo v8 on by default (`?logo=0` for
+  the old menu), agent-tree land rebuilds WASM, CLAUDE.md workflow rules. Then T-1586 stage 1.
 - Core cap 10. `python cores.py list` at maps root.
 - Stray Vites seen listening at 6160 (pid 27204, T-1169's, finished) and 6198 (pid 19308, logo
   agent's?) — harmless; stop by PID only if sure.
@@ -25,9 +28,23 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   look; my notes: t's crossbar busy (3 stations), the a reads a bit like a u. When it goes in,
   the welcome heading goes.
 
+- T-1576 bus tuning: Sonnet a318aedb939d75ba9, main tree, Vite 6130-6139, 4 cores, may file
+  T-1582-1583.
+
+- T-1567 v6 done (shots t1567_v6_*), waiting on Anita. Logo agent at ~356k tokens: cycle to a
+  fresh one (from notes/T-1567.md) if many more rounds.
+- T-1584/1585 DONE, uncommitted (MoneyTab, style.css, game/ui.ts VERSION 10->11 resets the stored
+  station-circle choice once). Also uncommitted: agent-tree.mjs land rebuilds main WASM on sim/
+  changes; CLAUDE.md thanks/45-min/foreground-checks rules. Commit all with T-1576 (it touches
+  SPEC/docs/TASKS too), then rebuild 8800. Ids handed out through T-1585.
+- T-1567 v7 (Anita's notes on v6: spacing, no panel, hide basemap labels, fewer stops, shorter,
+  undo long crossbar): same Opus agent.
+- T-1586 tidy (Anita go; all screenshots may go; reorganize folders >200 items): Sonnet
+  ae4d3975193b83d1f, 4 stages (artifacts, DECISIONS/ARCHIVE split, notes, checks), notes/T-1586.md.
+  Commit each stage separately. May file T-1587-1588. Ids through T-1588.
+
 ## Next
-1. After this commit: rebuild 8800, smoke light and dark, give Anita the test list.
-2. T-1576 bus tuning (Anita yes: 6 min boarding cost on every bus boarding incl. changes, 300 m,
+2. After T-1576 lands: T-1577. (T-1576 bus tuning (Anita yes: 6 min boarding cost on every bus boarding incl. changes, 300 m,
    $9/km), then T-1577 (speed by place). Sonnet; reruns t1466 checks.
 3. Memory: after T-1558, T-1559, then T-1545 (Opus, window over destination zones), T-1223.
    T-1560 waits (Anita).

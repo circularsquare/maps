@@ -81,7 +81,6 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   return (
     <li>
       <span class="fr-head" data-tip={`Fares in ${name}: ${shown.toFixed(2)} times those in ${japan}. By income they would be ${income.toFixed(2)}.`}>{`Fares in ${name}`}</span>
-      <span />
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
         type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}. Click to type one.` }} />
       {own

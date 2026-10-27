@@ -94,7 +94,7 @@ levels:
    searched once per position, every station once per worker on opening; an edit searches only
    its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
    that is no station is never walked to straight; each of them serves a stretch of its route (the
-   route's points nearer it than any other such stop of the line), and a cell within 400 m of a
+   route's points nearer it than any other such stop of the line), and a cell within 300 m of a
    stretch reaches that stop with a walk of its distance to the route plus 100 m (the mean walk
    along it to a street stop). A cell keeps its 6 stations and adds at most 2 such bus stops, the
    nearest, so a bus never hides a station.
@@ -129,6 +129,10 @@ levels:
    `phi` rounds to 0 has no departures in the search. A period whose `phi` changed is solved again
    like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
    inside service stays half the period's headway.
+   **Boarding a bus** (T-1576, Anita 2026-10-27) costs 6 perceived minutes more at every route node
+   of a line with a bus-only stop (`BUS_BOARD_MIN`, `Graph::rn_bus`, carried in `rn_left` like
+   `rn_span`), at its first boarding and at a change from a train or another bus onto it; not
+   real minutes, so the trip explorer's real wait leaves it out.
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it improves expected trip cost;
@@ -289,7 +293,7 @@ levels:
    the same trains, except that demand uses even headways, each period stands alone (no queue
    carried in from the period before) and nobody goes another way (the account's T-1067). Per period, not per hour; weekdays only, the weekend keeping
    the weekday's waits with its route and mode choices (4.2). Why, and the effect on the real New
-   York save: DECISIONS 2026-10-13 (T-188), notes/T-188.md.
+   York save: DECISIONS-to-2026-10-19 2026-10-13 (T-188), notes/T-188.md.
 
    **The trains' room, as a queue** (Anita, T-1070, T-1255; `kernel::capacity_fit`,
    `cap_with_external`). The averaging keeps a share of the free-flow pass (a quarter after three

@@ -6,7 +6,8 @@
 //   node trainworld/checks/agent-tree.mjs remove <name> [--force]
 // `land` takes everything changed under trainworld/ in the tree (committed on the branch or not), rebases it
 // onto master, squashes it into one commit and fast-forwards master to it. Master's own uncommitted edits
-// stay; git stops the fast-forward if one of them is in a file the commit touches.
+// stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
+// changed sim/ rebuilds the main tree's WASM before it returns.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -103,6 +104,16 @@ if (cmd === 'new') {
     fail(`master did not fast-forward to ${branch} (an uncommitted edit in master's tree touches the same file, or master moved): the commit waits on the branch`);
   }
   console.log(`master is now ${git(maps, 'log', '-1', '--format=%h %s')}`);
+  // Agents' pages in the main tree load its WASM bindings, which a landed Rust change leaves stale
+  // (three agents hit "set_part is not a function" after T-1543, 2026-10-27).
+  if (tw.some((f) => f.startsWith('trainworld/sim/'))) {
+    console.log('Rust changed: rebuilding the main tree\'s WASM (npm run wasm)');
+    const cargoBin = path.join(process.env.USERPROFILE ?? '', '.cargo', 'bin');
+    execFileSync('npm', ['run', 'wasm', '--prefix', path.join(maps, 'trainworld', 'app')], {
+      stdio: 'inherit', shell: true,
+      env: { ...process.env, CARGO_BUILD_JOBS: '3', PATH: `${cargoBin}${path.delimiter}${process.env.PATH}` },
+    });
+  }
 } else if (cmd === 'remove') {
   const { dir, branch } = treeOf(name);
   const force = rest.includes('--force');

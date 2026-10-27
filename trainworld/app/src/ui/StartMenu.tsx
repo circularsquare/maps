@@ -55,8 +55,11 @@ export function worldCover(el: HTMLElement): { center: [number, number]; zoom: n
   return { center: [10, 20], zoom: Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
 }
 
-/** T-1567: the prototype logo over the menu, until Anita's own logo replaces it. */
-const LOGO = new URLSearchParams(location.search).get("logo") === "1";
+/** T-1567: the logo over the menu, in place of the welcome heading; `?logo=0` leaves it out (the
+ * menu as before, heading and all). */
+const LOGO = new URLSearchParams(location.search).get("logo") !== "0";
+/** the logo is shown: main.ts hides the basemap's names behind it */
+export const START_LOGO = LOGO;
 
 /** T-988: the start menu waits this long at most for the account before opening a game anyway. */
 const SETTLE_WAIT_MS = 10_000;
@@ -88,7 +91,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   };
   const now = Date.now();
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
-  // T-1567: the prototype logo, `?logo=1` only, stays mounted over both, so its trains run on when the sheet opens
+  // T-1567: the logo stays mounted over both, so its trains run on when the sheet opens
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}

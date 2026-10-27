@@ -3,7 +3,7 @@ south-west, east, centre, north and west), so their extracts are disjoint: a reg
 extracts' locks for its life, and a run needing one another run holds waits for it (T-786). A row
 whose extracts fall in two groups (a zone touching another group's province) goes to a fifth run,
 E, started once A-D are done. Writes ids_<x>.txt and run_<x>.cmd beside this file, through the
-T-1184 kit's sim copy (notes/t1150/run/simroot).
+T-1184 kit's sim copy (artifacts/trainworld/t1150/run/simroot).
 
     python trainworld/notes/t1185/split.py [jobs=3] [first port=6181]
     (--plan=<plan.json> --out=<dir>: a dry test on a scratch plan, every Chinese zone row)
@@ -16,7 +16,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 TW = os.path.dirname(os.path.dirname(HERE))
 MAPS = os.path.dirname(TW)
-KIT = os.path.join(TW, "notes", "t1150", "run")
+KIT = os.path.join(os.path.dirname(TW), "artifacts", "trainworld", "t1150", "run")
 GROUPS = {
     "a": "guangdong guangxi hainan fujian yunnan guizhou sichuan chongqing tibet",
     "b": "jiangsu shanghai zhejiang anhui shandong jiangxi",

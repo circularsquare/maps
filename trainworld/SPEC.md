@@ -276,8 +276,9 @@ goals reached [T-1437, T-1438, T-1551].
 
 Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between
 clicks (straight where they do not serve), stops place themselves at the train
-stations it passes and about every 2 km, buses run a flat 18 km/h, and homes within 400 m of the
-route ride from it; US$1M a road-km and US$0.6M a bus. Trips by bus count as rail.
+stations it passes and about every 2 km, buses run a flat 18 km/h, and homes within 300 m of the
+route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
+bus and US$9 a bus-km to run. Trips by bus count as rail.
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7

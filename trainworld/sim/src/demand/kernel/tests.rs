@@ -33,6 +33,23 @@ fn common_test_params() -> Params {
     Params { xfer_walk_m: 0.0, ..Params::default() }
 }
 
+/// T-1576: every route node of a line with a bus-only stop carries the bus boarding cost, in the
+/// cost of boarding and in each crowding round's; a train line carries none.
+#[test]
+fn a_bus_line_costs_minutes_to_board() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 2], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
+    net.st_bus = vec![false, true, false, false];
+    let g = build_graph(&net, &p);
+    let nr = g.rn_line.len();
+    for r in 0..nr {
+        let want = if g.rn_line[r] == 1 { BUS_BOARD_MIN } else { 0.0 };
+        assert_eq!((g.rn_bus[r], g.rn_left[r]), (want, want));
+    }
+    let (_, left) = round_costs(&g, &net, &p, &vec![0.0; nr]).unwrap();
+    assert_eq!(left, g.rn_bus);
+}
+
 /// T-883, T-1143: a fare that steepens past 30 km raises only the longer pairs' costs, by the extra
 /// rate on the km past 30, with two lines pooled at the shared stations; a curve on the straight
 /// line changes nothing. The assignment puts each pair's extra where its riders first board, split

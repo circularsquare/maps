@@ -9,7 +9,7 @@ import { NetworkRenderer, type DrawOptions } from "../map/renderer";
 import { LOGO_ZOOM, logoNetwork } from "../map/logoNetwork";
 
 /** game seconds a second: the trains' pace in the menu */
-const TIME_SCALE = 5;
+const TIME_SCALE = 7;
 /** the logo's largest scale on a wide screen, of its design size */
 const MAX_SCALE = 1.05;
 const OPTIONS: DrawOptions = { showTrains: true, byLevel: false, selLine: -1, selEdge: -1, selStation: -1, flatMarks: false, hollowTrains: true };
@@ -24,7 +24,8 @@ export function StartLogo() {
   useEffect(() => {
     const s0 = performance.now();
     const canvas = ref.current;
-    const gl = canvas?.getContext("webgl2", { antialias: true, premultipliedAlpha: true, alpha: true, stencil: true });
+    // no stencil: the renderer then draws no track through the station boxes, so they are plain white
+    const gl = canvas?.getContext("webgl2", { antialias: true, premultipliedAlpha: true, alpha: true, stencil: false });
     if (!canvas || !gl) return;
     const r = new NetworkRenderer();
     try { r.init(gl); } catch { return; }

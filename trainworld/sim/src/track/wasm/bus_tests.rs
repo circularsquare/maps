@@ -78,7 +78,7 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     let buses = ls.trains[0];
     assert!(buses > 0 && a.fleet_bus() == buses && a.buses_needed() == buses);
     assert!((cash - a.cash() - (road / 1000.0 + buses as f64 * BUS_PRICE)).abs() < 1e-6, "{} {}", cash - a.cash(), buses);
-    // running cost: $3 a bus-km at the economy scale, on top of the rail line's
+    // running cost: `RUN_COST_BUS_KM` a bus-km at the economy scale, on top of the rail line's
     let rail_only = {
         let mut r = api();
         rail(&mut r, 10, 5000.0);

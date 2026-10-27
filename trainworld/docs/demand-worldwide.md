@@ -23,7 +23,7 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
   counted at home): their jobs are put back at workplaces by employment income band, and "no
   fixed workplace" workers added in proportion. Downtown Toronto is probably still under its
   pre-pandemic job count; for today's commuting with 24.7% at home it is plausible. Not
-  reweighted by OSM offices (DECISIONS 2026-10-13).
+  reweighted by OSM offices (DECISIONS-to-2026-10-19 2026-10-13).
 - **Work from home** is one share for the whole pack (Labour Force Survey, May 2024, Toronto CMA
   24.7%), applied as "the same fraction of 2021's at-home workers commutes again" at both ends,
   Hamilton and Oshawa included (28.3% and 27.3% at home in 2021; their own current share is
@@ -433,7 +433,7 @@ notes/T-420.md has the tables.
   as the level is seen.
 - **Rail propensity** (T-636, docs/demand-mode.md 4.3). None: `asc_rail` is 0 everywhere, so rail
   and the car are judged on time and money alone, by the ratio curve; Anita chose a sensible and
-  clear model over fitting the real cities (DECISIONS 2026-10-17). A rail constant for the
+  clear model over fitting the real cities (DECISIONS-to-2026-10-19 2026-10-17). A rail constant for the
   everyday layer exists as a parameter at 0 (`everyday_asc_rail`), and the country table
   (`api::COUNTRY_ASC_RAIL`) is empty. The real cities' station entries are the loose check
   (notes/T-636.md). Why it may not carry over: with no constant, habit, income, bus competition and what the car is
@@ -831,15 +831,17 @@ notes/T-420.md has the tables.
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 - **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
-  A home within 400 m of a bus route walks its distance to the route plus 100 m and rides a flat
-  18 km/h on the network's fare curve, bus kilometres included; a bus is just another line in
-  route and mode choice, with no liking or dislike of its own. Judgement figures, not fitted. Why
-  they may not carry over: bus speeds run from about 10 km/h in dense Asian and African centres to
-  25-30 in North American suburbs; where buses are informal or fares flat and separate (minibus
-  taxis, many Latin American cities), the one fare curve and the free change to rail overstate the
-  feeder; a 400 m corridor is short where blocks are huge or long where people walk further to a
-  bus (low car ownership). Check: a city's bus ridership per route-km against the model's on a
-  similar drawn network.
+  A home within 300 m of a bus route walks its distance to the route plus 100 m and rides a flat
+  18 km/h on the network's fare curve, bus kilometres included. Every boarding of a bus, a change
+  from a train or another bus onto it included, costs 6 perceived minutes on top of the wait
+  (T-1576; unreliability, crowding at the stop, a stop not worth the wait for a short hop). Judgement
+  figures, not fitted; the 6 minutes and 300 m were chosen so a drawn route's riders per route-km
+  land in the range of busy real routes (notes/T-1466.md). Why they may not carry over: bus speeds
+  run from about 10 km/h in dense Asian and African centres to 25-30 in North American suburbs;
+  where buses are informal or fares flat and separate (minibus taxis, many Latin American cities),
+  the one fare curve and the free change to rail overstate the feeder; a 300 m corridor is short
+  where blocks are huge or long where people walk further to a bus (low car ownership). Check: a
+  city's bus ridership per route-km against the model's on a similar drawn network.
 
 ## Intercity
 
