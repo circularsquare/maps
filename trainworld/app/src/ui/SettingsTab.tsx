@@ -1,7 +1,6 @@
 // Settings (SPEC 8): the display settings and the theme, remembered per browser. The saves are in
 // their own panel (ui/SavesPanel.tsx).
 
-import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import type { ComponentChildren } from "preact";
 import { awayNear, rushRun } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
@@ -140,12 +139,6 @@ export function SettingsTab() {
         <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
       </div>
       <UiScale />
-      <div class="h">Font</div>
-      <div class="track-modes"><Segmented<FontKey>
-        options={FONT_KEYS.map((k) => [k, FONTS[k].label] as [FontKey, string])}
-        value={d.font}
-        onChange={(v) => setDisplay("font", v)}
-      /></div>
       <div class="h">Units and performance</div>
       <div class="checks">
         <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>

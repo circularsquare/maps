@@ -323,8 +323,11 @@ Full design, numbers and sources: `notes/T-008.md`.
     zoom 14, the waiting room and the P tile join the box's side at its middle, the room first along
     the platform's way, with one outline and one white round box and annexes. Both go on the side
     with fewer other platforms and tracks where they would be, else outside the platform's bend.
-    Each has its own hover, naming the upgrade and the station (a terminal's on its ends). Station
-    flags 32, 64 (the other side), 128 and 256; one station draw per annex kind (`u_room`).
+    Each has its own hover, naming the upgrade and the station (a terminal's on its buffer stop).
+    A terminal draws a dark bar, a buffer stop, only at the end of its platform where the track
+    ends (a station with one track leaving it, flag 512, T-1527); a terminal with track on both
+    sides has none. Station flags 32, 64 (the other side), 128, 256 and 512; one station draw per
+    annex kind (`u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").
