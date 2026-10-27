@@ -1,11 +1,11 @@
 // Small shared pieces: line chip, stepper, segmented buttons, checkbox, icons (inline SVG).
 
 import type { ComponentChildren } from "preact";
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { levelLabel } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
-import { bulletEpoch, bulletRadius, bulletText, isBusLine } from "./bullet";
+import { bulletEpoch, bulletRadius, bulletTextSoon, isBusLine } from "./bullet";
 import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import type { Signal } from "@preact/signals";
@@ -110,7 +110,7 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
   };
   void bulletEpoch.value;
   const zoom = useCssZoom();
-  const b = bulletText(line.letter, size, zoom.value);
+  const b = bulletTextSoon(line.letter, size, zoom.value);
   const bus = isBusLine(line.id);
   return (
     <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (bus ? " bus" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
@@ -133,7 +133,9 @@ function useCssZoom() {
   const guess = uiScale.value;
   const [seen, setSeen] = useState<number | null>(null);
   const value = seen ?? guess;
-  useLayoutEffect(() => {
+  // T-1021: read after the paint, when the page's style is worked out already: in a layout effect the
+  // first chip's read worked out the whole new list's style in the same task (174 ms on Japan's Lines tab)
+  useEffect(() => {
     const z = (ref.current as (HTMLElement & { currentCSSZoom?: number }) | null)?.currentCSSZoom;
     if (typeof z === "number" && z > 0 && Math.abs(z - value) > 1e-6) setSeen(z);
   });

@@ -8,9 +8,9 @@ import { createLine, newBusLine } from "../game/lineActions";
 import { busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection } from "../game/ui";
-import { stationsById, world } from "../game/world";
+import { stationsById } from "../game/world";
 import { cityById } from "../game/cities";
-import { scopedLists, stationZone } from "../game/listScope";
+import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, runningToday, today, todayLoaded, useToday, waitText, type LineToday } from "../game/today";
 import { Chip, Icon, SortHead } from "./widgets";
@@ -80,7 +80,7 @@ export function LinesTab() {
   useToday(); // T-446: riders in the past 24 hours, kept fresh while the tab is open
   void accountVersion.value; // re-sorted each game hour; the counts themselves move on their own
   void todayLoaded.value;
-  const w = world.value;
+  const w = listWorld.value;
   if (!w) return null;
   const sel = selection.value;
   // T-309: each line's demand level now in its own local time

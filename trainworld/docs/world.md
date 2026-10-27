@@ -153,8 +153,11 @@ arrives) changes, and every answer names its anchor. Disc sizes use k at the dis
   centimetre-exact in Float32. The anchor snaps to a coarse grid so small pans never move it.
 - **What follows the anchor.** The clock worker gets the anchor in a message and builds its draw
   buffers relative to it (`packLocal` becomes a subtraction and one constant multiply, from 174 ns
-  of trigonometry per point today). An anchor change clears its draw caches like loading a game
-  does, and sends a full state. Every main-thread Float32 cache in view units (demand discs,
+  of trigonometry per point today). An anchor change keeps the state's rows (they hold no local
+  units) and re-expresses the points from the float64 mercator it keeps per edge and line; the
+  stroke pieces built from them are shifted by the anchor's move in float32 (within a few cm near the
+  view; laid exactly after a move over 2^22 local units and every 8th move), and the network is posted
+  whole (T-1170). Every main-thread Float32 cache in view units (demand discs,
   bubbles, the trip view, labels' positions, station shapes) rebuilds on the anchor's version,
   the way they already rebuild when the frame or the focused city changes (T-125). Workers never
   send anchored units; they send world positions or pack positions, and the main thread anchors

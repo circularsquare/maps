@@ -2,6 +2,11 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1170 [P2] Draw anchor move rebuilt every stroke. Done 2026-10-27: rows kept, points from kept float64 mercator, stroke pieces shifted (cm-level lie, exact every 8th or 3,000 km+ move). China jump 274-442 to 74-378 ms, first click 385-397 to 170-239; Japan worker 1.2-4.9 s to about 0.25 s. notes/T-1170.md.
+- T-1171 [P2] Unbuilt lines re-quoted on every clock state. Done 2026-10-27: the blueprint quote and a planned line's price are clock queries asked by the Build tab and the line panel 250 ms after edits; a state's quoting 1.3 s (New York, 12 planned lines) to 0. notes/T-1171.md.
+- T-1021 [P2] Big saves' load held the main thread. Done 2026-10-27: region shares in idle time, CJK chip symbols measured in idle and kept, lists and track zones a task later; Japan's longest load task 935 to 275-326 ms. notes/T-1001.md "T-1021".
+
+- T-1542 [P3] US car too strong on corridors. Closed 2026-10-27 without a change: rail ties the car on time, the gap is money from settled rules; "car" includes long-distance buses, so the real target is about 75% car plus bus; lowering the US fare would undo T-1521. notes/T-1542.md.
 - T-1580 [P3] `t1148-market-rule.mjs` day-share part failed. Done 2026-10-27: the check was stale (it read 5 kinds of day, the sim has 7 since T-1373's rush days); `marketRule.ts`'s `longerShare` was right, so players saw nothing wrong. The check passes in full.
 - T-1079 [P2] `world_run.start_vite` took any server on its port for its own. Done 2026-10-27: it now stops when the port is taken before starting, and when its own Vite exits while the URL answers; tested against a dummy server.
 - T-955 [P2] MSAA on the network canvas. Done 2026-10-27: dropping it leaves stroke side edges stair-stepped (STROKE_FS rounds only caps; stations, trains and crowds match), so MSAA stays below dpr 3 and goes at dpr 3+ where steps are a third of a CSS px. DECISIONS.

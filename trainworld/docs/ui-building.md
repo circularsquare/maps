@@ -54,7 +54,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
   model. The fleet quote previews the constructed service, so lines started together include their
-  resulting delays, without changing the game.
+  resulting delays, without changing the game. The quote, and a planned line's Construct price in
+  its panel, are asked of the clock worker only while a panel shows them, 250 ms after the last
+  edit (`game/quotes.ts`, T-1171); a state carries neither.
 - **Undo**: Ctrl+Z; redo Ctrl+Y or Ctrl+Shift+Z. What undo covers: [track-and-service.md](track-and-service.md)
   6.4.
 - **Esc** undoes one thing at a time: a question waiting is answered Keep, a drag goes back, a

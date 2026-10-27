@@ -5,6 +5,7 @@ import { busDraft } from "../map/busDraw";
 import { money } from "./format";
 import { viewedZone, type CityId } from "./cities";
 import { stationZone } from "./listScope";
+import { blueprintQuote } from "./quotes";
 import { colourDistanceFrom, LINE_PALETTE } from "./palette";
 import type { LineInput, StationInput, TrackEdge } from "./types";
 
@@ -137,8 +138,9 @@ export async function addAllPassedSelected() {
 
 /** Construct every blueprint piece (the Build tab's button and the C key); nothing to build does nothing. */
 export async function constructBlueprints() {
-  const items = world.value?.money.blueprintItems ?? [];
-  if (!items.some((r) => r.cost > 0)) return;
+  const w = world.peek();
+  const items = w ? await blueprintQuote(w.version, true) : null;
+  if (!items?.some((r) => r.cost > 0)) return;
   const a = await edit({ op: "constructAll" });
   if (a.ok) say(`Constructed for ${money(a.charge * 1e6)}.`);
 }

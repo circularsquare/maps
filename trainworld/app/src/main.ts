@@ -205,6 +205,7 @@ if (SYNTH) {
   const views = startDemandViews(overlay, map);
   demandClick = views.click;
   demandHover = views.hover;
+  let trackSoon = false;
   client.onState = (s) => {
     const put = () => {
       // a train count: the same buffers with the new run profiles (T-229)
@@ -214,7 +215,8 @@ if (SYNTH) {
         renderer.setNetwork(s.net); // built in the worker (T-063)
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
-        followTrack(renderer.net, world.peek()); // T-1047
+        // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks
+        if (!trackSoon) { trackSoon = true; setTimeout(() => { trackSoon = false; followTrack(renderer.net, world.peek()); }, 0); }
         // the placers that follow the network (the select tool's squares) run on map frames, which a paused game has none of (T-1537)
         map.triggerRepaint();
       }

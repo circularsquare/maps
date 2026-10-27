@@ -3,6 +3,7 @@
 // trains. No train kind, length, stop editor or related-lines diagram. LineInspector.tsx hands a bus
 // line over to it.
 
+import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
@@ -261,7 +262,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
         )}
         <li data-tip={`Fares ${money(d.fares)} minus running cost ${money(run)} for the buses and upkeep of its route ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}`}>
           <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
+          <span class="val">{money(d.fares)} âˆ’<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
         {load !== null && (
           <li data-tip={`Riders aboard on average, as a share of the ${BUS_CRUSH} a bus holds at crush, over every trip on a ${["weekday", "Saturday", "Sunday", "holiday"][kind] ?? "day"}`}>
@@ -384,9 +385,7 @@ export function BusInspector({ id }: { id: string }) {
       {st.status === "planned" && (
         <div class="callout">
           <p>Planned</p>
-          <button class="btn text" data-tip={`Route ${money(st.buildCost)}${st.trainCost > 0 ? `, buses ${money(st.trainCost)}` : ""}. Buses run once it is constructed.`} onClick={build}>
-            Construct for {money(st.buildCost + st.trainCost)}
-          </button>
+          <ConstructButton num={l.num} build={build} what="Route" vehicles="buses" runs="Buses run" />
         </div>
       )}
 

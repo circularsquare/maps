@@ -1,5 +1,6 @@
 // The line inspector (SPEC 6.3, 8).
 
+import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
@@ -833,9 +834,7 @@ function RailLineInspector({ id }: { id: string }) {
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
           <p>Planned</p>
-          <button class="btn text" data-tip={`Track and stations ${money(st.buildCost)}${st.trainCost > 0 ? `, trains ${money(st.trainCost)}` : ""}. Trains run once it is constructed.`} onClick={build}>
-            Construct for {money(st.buildCost + st.trainCost)}
-          </button>
+          <ConstructButton num={l.num} build={build} what="Track and stations" vehicles="trains" runs="Trains run" />
         </div>
       )}
       {st.status === "broken" && (

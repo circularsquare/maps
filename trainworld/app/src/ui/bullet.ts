@@ -56,9 +56,35 @@ function watchRatio() {
     watchRatio();
   }, { once: true });
 }
+/** T-1021: a face that loads drops only the symbols with a character in its range. A big game's CJK
+ * place names load dozens of font subsets, and each cleared every symbol and drew every chip again. */
+function faceLoaded(e: Event) {
+  const faces = (e as Event & { fontfaces?: readonly FontFace[] }).fontfaces;
+  if (!faces) return forget();
+  const ranges: [number, number][] = [];
+  for (const f of faces) {
+    for (const part of (f.unicodeRange || "U+0-10FFFF").split(",")) {
+      const m = /U\+([0-9A-F?]+)(?:-([0-9A-F]+))?/i.exec(part.trim());
+      if (!m) continue;
+      const lo = parseInt(m[1].replace(/\?/g, "0"), 16), hi = m[2] ? parseInt(m[2], 16) : parseInt(m[1].replace(/\?/g, "F"), 16);
+      ranges.push([lo, hi]);
+    }
+  }
+  const hits = (text: string) => { for (const ch of text) { const c = ch.codePointAt(0)!; if (ranges.some(([lo, hi]) => c >= lo && c <= hi)) return true; } return false; };
+  let dropped = false;
+  for (const key of cache.keys()) if (hits(key.split("|").slice(3).join("|"))) { cache.delete(key); dropped = true; }
+  if (dropped) bump();
+}
+/** one redraw for the symbols measured in a fallback whose faces came in together */
+let bumpSoon = false;
+function bump() {
+  if (bumpSoon) return;
+  bumpSoon = true;
+  setTimeout(() => { bumpSoon = false; bulletEpoch.value++; }, 50);
+}
 if (typeof document !== "undefined") {
   document.addEventListener("tw-fontchange", forget);
-  document.fonts?.addEventListener?.("loadingdone", forget);
+  document.fonts?.addEventListener?.("loadingdone", faceLoaded);
   if (typeof matchMedia !== "undefined") watchRatio();
 }
 
@@ -83,18 +109,49 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   const snapped = scale > 0 ? Math.round(y * scale) / scale : y;
   const v: BulletText = { w, h, x: w / 2 - ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) * k, y: snapped, top: snapped - y };
   const ok = [v.w, v.x, v.y, v.top].every(Number.isFinite) && m.width > 0;
-  // a face still loading would be measured in the fallback: use it now, measure again once loaded
+  // a face still loading would be measured in the fallback: kept until it loads, then measured again
+  // (T-1021: a CJK symbol measured once a draw while its face loaded, 0.5 ms each)
   if (document.fonts && !document.fonts.check(font, text)) {
     const p = `${font}|${text}`;
     if (!loading.has(p)) {
       loading.add(p);
-      void document.fonts.load(font, text).then(forget, () => undefined);
+      const again = () => { for (const k of cache.keys()) if (k.endsWith(`|${text}`)) cache.delete(k); bump(); };
+      void document.fonts.load(font, text).then(again, () => undefined);
     }
-    return ok ? v : null;
   }
   cache.set(key, ok ? v : null);
   return ok ? v : null;
 }
+
+/** `bulletText` when it is measured already; else null (the caller draws plain text for now) and it is
+ * measured in idle time, and `bulletEpoch` bumped once done. T-1021: a big save's Lines tab measured
+ * every new symbol in the load's longest task, about 0.5-1 ms a CJK symbol. */
+export function bulletTextSoon(text: string, size: BulletSize, zoom = 1): BulletText | null {
+  if (typeof document === "undefined" || !text) return null;
+  family ||= getComputedStyle(document.body).fontFamily;
+  const hit = cache.get(`${family}|${size}|${devicePixelRatio * zoom}|${text}`);
+  if (hit !== undefined) return hit;
+  queued.set(`${size}|${zoom}|${text}`, [text, size, zoom]);
+  if (!measuring) {
+    measuring = true;
+    const run = (d?: IdleDeadline) => {
+      const until = performance.now() + 8;
+      let done = 0;
+      for (const [k, [t, s, z]] of queued) {
+        if (done++ && (d && !d.didTimeout ? d.timeRemaining() < 1 : performance.now() > until)) break;
+        queued.delete(k);
+        bulletText(t, s, z);
+      }
+      if (queued.size) next(run);
+      else { measuring = false; bump(); }
+    };
+    next(run);
+  }
+  return null;
+}
+const queued = new Map<string, [string, BulletSize, number]>();
+let measuring = false;
+const next = (f: (d?: IdleDeadline) => void) => (typeof requestIdleCallback === "function" ? requestIdleCallback(f, { timeout: 500 }) : setTimeout(f, 16));
 
 /** T-1464, T-1475: a bus line's bullet is a rounded square, a rail line's a circle (or pill): the
  * corner radius of a bus bullet as a share of its side, which the map's end squares use too. */

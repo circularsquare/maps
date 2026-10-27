@@ -87,6 +87,11 @@ function groundM(lng1: number, lat1: number, lng2: number, lat2: number): number
 export function toLocal(lng: number, lat: number, a: Anchor = current): [number, number] {
   return [((lng + 180) / 360 - a.merc[0]) * EARTH_C, (mercY(lat) - a.merc[1]) * EARTH_C];
 }
+/** lng/lat -> mercator 0..1, as `toLocal` works it out: `(m - a.merc) * EARTH_C` is `toLocal` to the
+ * bit, so positions kept as these move to a new anchor without the lng/lat again (T-1170) */
+export function toMerc01(lng: number, lat: number): [number, number] {
+  return [(lng + 180) / 360, mercY(lat)];
+}
 
 /** local units -> mercator 0..1 (the input space of MapLibre's mainMatrix) */
 export function localToMerc(x: number, y: number, a: Anchor = current): [number, number] {

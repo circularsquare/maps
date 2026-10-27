@@ -32,11 +32,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 - T-1586 tidy DONE, committed ef30e01c (no app change, 8800 not rebuilt). Kept-if-unsure list in
   notes/T-1586.md (Canada/US join backups, t279, t1543, publish/).
 
-- Small fixes T-1580 (t1148 check), T-1079 (start_vite port), T-955 (drop MSAA; review/t955_*.png):
-  Sonnet ad7d0c87358402b6f, main tree, Vite 6150-6159, 2 cores, may file T-1598.
-- Calibration analysis T-1508 (big far pairs low) and T-1542 (US car strong): Opus
-  af7ed93def3f73878, no code, 2 cores, notes/T-1508.md + T-1542 section; may file T-1599.
-  Proposals go to Anita.
+- T-1580, T-1079, T-955 DONE, committed 6043e7f1; 8800 runs 6043e7f1, smoke 20/20 both shades.
+  T-955 asks Anita: MSAA off at dpr>=3 OK?
+- T-1508/T-1542 settled ("up to you" + reflect): T-1542 closed, no change; T-1603 (ground fade,
+  plain double count) after T-1545; T-1599 refit deferred to a player-scale look. DECISIONS:
+  stop single-pair tuning. Anita OK'd MSAA off at dpr>=3. Ids through T-1603.
+- Perf T-1021 (Japan load main thread), T-1170 (anchor rebuild), T-1171 (unbuilt line quotes):
+  Opus a5895f01c97e31d37, main tree, Vite 6160-6169, 4 cores, may file T-1600-1602.
+- Core cap raised to 14 (Anita done with her game, "use all cores").
 
 ## Next
 1. Land T-1558 and T-1577 as they finish; commit T-1586 stages 3-4; rebuild 8800.
@@ -47,6 +50,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 Ids handed out through T-1590.
 
 ## Anita's standing asks
+- Every demand task (and loosely perf) has a "done when" in TASKS.md and its brief; stop once met
+  (CLAUDE.md, 2026-10-27). Added to T-1169, T-1603, T-1599, T-1374, T-1520, T-1021, T-1170, T-1171.
 - 2026-10-27 ~15:45: keep at least 4 cores free for about an hour (to ~16:45): T-1545 told to stay
   within its 4 incl. browser workers; no 8800 rebuilds or smokes meanwhile.
 - Performance: approximations welcome when a player can't tell (CLAUDE.md, 2026-10-27). Brief

@@ -98,7 +98,10 @@ try {
     }
     const es = mine();
     const cost = es.reduce((s, e) => s + e.cost, 0) / 1e6, km = es.reduce((s, e) => s + e.lengthM, 0) / 1000;
-    return { perKm: cost / km, km, quote: tw.world.value.money.blueprintCost / 1e6, rows: tw.world.value.money.blueprintItems.filter((r) => r.kind === 6).map((r) => [r.level, Math.round(r.cost / 1e6)]) };
+    // the quote's rows, seven numbers each, asked as the Build tab asks (T-1171)
+    const quoted = await tw.client.query({ what: 'blueprintQuote' }), rows = [];
+    for (let i = 0; i + 6 < quoted.length; i += 7) if (quoted[i] === 6) rows.push([quoted[i + 1], Math.round(quoted[i + 6])]);
+    return { perKm: cost / km, km, quote: tw.world.value.money.blueprintCost / 1e6, rows };
   }, [a, b, level]);
 
   const plain = await segment(flatA, flatB, 0);

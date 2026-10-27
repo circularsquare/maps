@@ -9,7 +9,8 @@ import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities
 import { setGameOpened, setOpenedSink } from "../game/openedZones";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
-import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
+import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
+import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
@@ -183,8 +184,6 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       delayS: l.delay,
       cars: l.cars,
       carsSet: l.carsSet,
-      buildCost: l.buildCost * 1e6,
-      trainCost: l.trainCost * 1e6,
       fast: l.fast,
       upkeep: (l.upkeep ?? 0) * 1e6,
       stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
@@ -221,10 +220,6 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     city: { name: "New York", population: city.population, jobs: city.jobs, split: { train: 0, walk: 0, drive: 100 }, trainShareByPeriod: [] },
     money: {
       builtValue: s.builtCost * 1e6, blueprintCost: s.blueprintCost * 1e6,
-      blueprintItems: Array.from({ length: s.blueprintItems.length / 7 }, (_, i) => {
-        const r = s.blueprintItems.slice(i * 7, i * 7 + 7);
-        return { kind: r[0], level: r[1] as any, tracks: r[2], wet: !!r[3], ramp: !!r[4], quantity: r[5], cost: r[6] * 1e6 };
-      }),
     },
     canUndo: s.canUndo,
     canRedo: s.canRedo,
@@ -459,14 +454,26 @@ export class ClockClient {
       }
     });
     // T-531: each line's money by region, whenever lines, riders or zone boundaries change it
-    let lastShares = "";
-    effect(() => {
-      const lines = [...lineShares.value].map(([line, s]) => ({ line, ...s })), upkeep = upkeepShares.value;
+    // T-1021: worked out after the state's own frame, in idle time: placing every station and edge
+    // midpoint of a big network was 200 ms of a load's first state, and the ledger only needs them by
+    // the next hour
+    let lastShares = "", sharesSoon = false;
+    const postShares = () => {
+      sharesSoon = false;
+      const lines = [...lineShares.peek()].map(([line, s]) => ({ line, ...s })), upkeep = upkeepShares.peek();
       const key = JSON.stringify([lines, upkeep]);
       if (key !== lastShares) {
         lastShares = key;
         this.post({ kind: "regionShares", lines, upkeep });
       }
+    };
+    effect(() => {
+      // what the two shares read; they are worked out later
+      void moneyWorld.value, moneyTerms.value, zonesLoaded.value, demandByDay.value, world.value;
+      if (sharesSoon) return;
+      sharesSoon = true;
+      if (typeof requestIdleCallback === "function") requestIdleCallback(postShares, { timeout: 2000 });
+      else setTimeout(postShares, 100);
     });
     // T-684: each line's points by region, whenever riders, lines or zone boundaries change them
     let lastPoints = "";

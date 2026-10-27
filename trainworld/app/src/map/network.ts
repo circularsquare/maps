@@ -10,7 +10,7 @@ import { rgb } from "../game/palette";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
-import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
+import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
@@ -619,6 +619,54 @@ export interface NetCache {
 }
 
 export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), serial: 0, last: null });
+
+/**
+ * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
+ * laying every stroke again. `given` is each edge's points at the new anchor (the clock worker's,
+ * exact); the strokes' and ramps' positions are the old ones plus (dx, dy) local units, rounded to
+ * float32 again, which can put a point off its exact place by half a float32 step at its distance
+ * from the old anchor (about 3 cm at 1,000 km, 15 cm at 4,000 km). Stations keep their pieces: their
+ * shapes are measured from their node. An edge whose piece was not made from `was`'s points (the
+ * clock worker's at the old anchor) is left out and built anew.
+ */
+export function shiftNetCache(cache: NetCache, was: ReadonlyMap<number, Float32Array>, given: ReadonlyMap<number, Float32Array>, dx: number, dy: number) {
+  const moved = new Map<Strokes, Strokes>();
+  const strokes = (s: Strokes): Strokes => {
+    let t = moved.get(s);
+    if (!t) {
+      const seg = new Float32Array(s.seg.length);
+      for (let k = 0; k + 1 < seg.length; k += 2) { seg[k] = s.seg[k] + dx; seg[k + 1] = s.seg[k + 1] + dy; }
+      moved.set(s, (t = { ...s, seg }));
+    }
+    return t;
+  };
+  for (const [id, c] of cache.edges) {
+    const g = given.get(id);
+    if (!g || g.length !== c.pts.length || c.given !== was.get(id)) { cache.edges.delete(id); continue; }
+    const pts = g.slice();
+    let lpts = pts;
+    if (c.lpts !== c.pts) {
+      lpts = new Float32Array(c.lpts.length);
+      for (let k = 0; k + 2 < lpts.length; k += 3) { lpts[k] = c.lpts[k] + dx; lpts[k + 1] = c.lpts[k + 1] + dy; lpts[k + 2] = c.lpts[k + 2]; }
+    }
+    const ramps = c.ramps.slice();
+    for (let k = 0; k + 1 < ramps.length; k += MARK_STRIDE) { ramps[k] = Math.fround(ramps[k] + dx); ramps[k + 1] = Math.fround(ramps[k + 1] + dy); }
+    cache.edges.set(id, { ...c, given: g, pts, lpts, strokes: strokes(c.strokes), ramps });
+  }
+  const lines = new Map<LineEntry, LineEntry>();
+  for (const [id, c] of cache.lines) {
+    const n = { ...c, strokes: strokes(c.strokes) };
+    lines.set(c, n);
+    cache.lines.set(id, n);
+  }
+  for (const [id, sm] of cache.samples) {
+    const c = lines.get(sm.c);
+    if (c) cache.samples.set(id, { ...sm, c });
+    else cache.samples.delete(id);
+  }
+  for (const [id, sp] of cache.speeds) cache.speeds.set(id, { ...sp, strokes: sp.strokes.map((s) => (s ? moved.get(s) ?? s : s)) });
+  cache.last = null;
+}
 
 /**
  * A network posted as changes (`NetPatch`) made whole from the one before it, `prev`, in place: the

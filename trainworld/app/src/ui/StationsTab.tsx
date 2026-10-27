@@ -9,8 +9,7 @@ import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { display, selection, shownDayPhrase, stationSort, type StationUseMode } from "../game/ui";
-import { world } from "../game/world";
-import { scopedLists } from "../game/listScope";
+import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, todayLoaded, useToday } from "../game/today";
 import { Chip, SortHead } from "./widgets";
@@ -162,7 +161,7 @@ export function StationsTab() {
   const [limit, setLimit] = useState(ROWS_FIRST);
   void accountVersion.value; // re-sorted each game hour, as the lines
   void todayLoaded.value;
-  const w = world.value;
+  const w = listWorld.value;
   if (!w) return null;
   const sel = selection.value;
   const { key, dir } = stationSort.value;

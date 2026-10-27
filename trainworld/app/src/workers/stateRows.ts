@@ -229,10 +229,8 @@ export class StateRows {
     return out;
   }
 
-  /** `nodes` must have been read just before, for the bus stops that join it. Everything but the build
-   * and train costs is read first and the costs after: pricing a planned line runs a trial that
-   * settles headway lines a little differently each time (`line_build_cost`), so rows read between
-   * two trials would depend on which lines were read before. The costs are asked in line order. */
+  /** `nodes` must have been read just before, for the bus stops that join it. A planned line's build
+   * and train costs are no part of the row: a panel asks for them (`lineCost`, T-1171). */
   lines(a: TrackApi, env: RowEnv, nodes?: ClockNode[]): ClockLine[] {
     const changed = a.take_changed_lines();
     const all = changed.length > 0 && changed[0] === ALL;
@@ -262,11 +260,9 @@ export class StateRows {
     const out: ClockLine[] = [];
     for (const r of read) {
       const { i, id, ok, running, prev, fresh, heavy, auto, fast, loopKind, shift, upkeep } = r;
-      const buildCost = ok && !running ? a.line_build_cost(id) : 0;
-      const trainCost = ok && !running ? a.line_train_cost(id) : 0;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
-      const extra = [upkeep, buildCost, trainCost, fast ? 1 : 0, loopKind, shift, ...auto];
+      const extra = [upkeep, fast ? 1 : 0, loopKind, shift, ...auto];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
         continue;
@@ -281,8 +277,6 @@ export class StateRows {
         stopS: heavy.stopS,
         fast,
         stretchSpeeds: heavy.stretchSpeeds,
-        buildCost,
-        trainCost,
         shift,
         passed: heavy.passed,
         reversals: heavy.reversals,
@@ -301,10 +295,9 @@ export class StateRows {
   }
 
   /** Every line's phase tables laid end to end, as `TrackApi.phases` answers, read after `lines`
-   * and after whatever else the state prices (pricing a planned line, and the construct-all quote,
-   * run trials that recompute profiles: the lines they note as changed are read here, and again by
-   * the next `lines`). The same array as last time while no line's tables changed; never to be
-   * transferred or changed. */
+   * (the trials that price a planned line or the construct-all quote, asked between states, note the
+   * lines they recompute as changed: they are read here, and again by the next `lines`). The same
+   * array as last time while no line's tables changed; never to be transferred or changed. */
   phases(a: TrackApi): Float32Array {
     const ids = new Set(this.phasePending);
     this.phasePending.clear();

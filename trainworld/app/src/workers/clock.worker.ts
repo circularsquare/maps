@@ -8,7 +8,7 @@
 // holds the whole network. Fine for a city; per-tile updates are follow-up work (notes/T-025.md).
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
-import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
+import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
@@ -20,7 +20,7 @@ import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
-import { networkFromState, newNetCache, runsTrains, type NetworkBuffers } from "../map/network";
+import { networkFromState, newNetCache, runsTrains, shiftNetCache, type NetworkBuffers } from "../map/network";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
@@ -994,17 +994,34 @@ function hex(c: number) {
 const edgeDrawn = new Map<number, Float32Array>();
 const edgeSpeedDrawn = new Map<number, Float32Array>();
 const lineDrawn = new Map<number, Float32Array>();
+/** T-1170: the same points in mercator 0..1 (float64; z or nothing after x, y), which no anchor move
+ * changes, so a move re-expresses them without asking the track model */
+const edgeMerc = new Map<number, Float64Array>();
+const lineMerc = new Map<number, Float64Array>();
+/** mercator points (`stride` numbers each, x and y first) in the anchor's local units */
+function localOf(m: Float64Array, stride: number): Float32Array {
+  const a = anchor(), ax = a.merc[0], ay = a.merc[1], d = new Float32Array(m.length);
+  for (let k = 0; k < m.length; k += stride) {
+    d[k] = (m[k] - ax) * EARTH_C;
+    d[k + 1] = (m[k + 1] - ay) * EARTH_C;
+    for (let j = 2; j < stride; j++) d[k + j] = m[k + j];
+  }
+  return d;
+}
 function forget(all = false) {
   if (all) {
     edgeDrawn.clear();
     edgeSpeedDrawn.clear();
     lineDrawn.clear();
+    edgeMerc.clear();
+    lineMerc.clear();
+    shiftFrom = null;
     stateRows.reset();
     postWhole();
     return;
   }
-  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); }
-  for (const l of api!.dirty_lines()) lineDrawn.delete(l);
+  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); }
+  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); }
 }
 
 /** The track model's mark rows (`crossings_info`, `preview_marks`) with x, y moved to local units. */
@@ -1034,16 +1051,23 @@ function buildState(): ClockState {
   for (const { id } of edges) {
     let d = edgeDrawn.get(id);
     if (!d) {
-      const r = a.edge_render(id);
-      d = new Float32Array(r.length);
-      for (let k = 0; k < r.length; k += 3) {
-        const [x, y] = packLocal(r[k], r[k + 1]);
-        d[k] = x;
-        d[k + 1] = y;
-        d[k + 2] = r[k + 2];
+      // T-1170: at a new anchor the kept mercator points move over; otherwise the track model's
+      let m = edgeMerc.get(id);
+      if (!m) {
+        const r = a.edge_render(id);
+        m = new Float64Array(r.length);
+        for (let k = 0; k < r.length; k += 3) {
+          const [mx, my] = toMerc01(...packLngLat(r[k], r[k + 1]));
+          m[k] = mx;
+          m[k + 1] = my;
+          m[k + 2] = r[k + 2];
+        }
+        edgeMerc.set(id, m);
       }
+      d = localOf(m, 3);
       edgeDrawn.set(id, d);
-      edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
+      // the speeds are in no local unit: kept over an anchor move, so their pieces are too
+      if (!edgeSpeedDrawn.has(id)) edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
     }
     drawn.push(d);
   }
@@ -1074,9 +1098,14 @@ function buildState(): ClockState {
     if (!l.ok) continue;
     let d = lineDrawn.get(l.id);
     if (!d) {
-      const p = a.run_polyline(l.id, 0, SAMPLE_STEP);
-      d = new Float32Array(p.length);
-      for (let k = 0; k < p.length; k += 2) d.set(packLocal(p[k], p[k + 1]), k);
+      let m = lineMerc.get(l.id);
+      if (!m) {
+        const p = a.run_polyline(l.id, 0, SAMPLE_STEP);
+        m = new Float64Array(p.length);
+        for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
+        lineMerc.set(l.id, m);
+      }
+      d = localOf(m, 2);
       lineDrawn.set(l.id, d);
     }
     runs.push(d);
@@ -1100,9 +1129,7 @@ function buildState(): ClockState {
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;
   const [totalCost, builtCost] = a.costs();
   const blueprintCost = Math.max(totalCost - builtCost, 0);
-  const tq4b = performance.now(); timing.sSums = tq4b - tq4a;
-  const blueprintItems = Array.from(a.blueprint_cost_items());
-  const tq5 = performance.now(); timing.sCosts = tq5 - tq4; timing.sQuote = tq5 - tq4b;
+  const tq5 = performance.now(); timing.sSums = tq5 - tq4a; timing.sCosts = tq5 - tq4;
   const phases = stateRows.phases(a);
   timing.sPhases = performance.now() - tq5; timing.nPhaseLines = stateRows.phaseReads;
   if (patchMode === "check" && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
@@ -1114,7 +1141,6 @@ function buildState(): ClockState {
     cash: a.cash(),
     builtCost,
     blueprintCost,
-    blueprintItems,
     canUndo: a.can_undo(),
     canRedo: a.can_redo(),
     edges,
@@ -2004,6 +2030,16 @@ function restart(t: number, from: "autosave" | "file" | "new") {
 const netCache = newNetCache();
 /** the lines with trains at the last full build */
 let runningLines = "";
+/** T-1170: the anchor the drawn pieces were last laid at, while they are to move to the new one */
+let shiftFrom: Anchor | null = null;
+/** each edge's points the pieces were laid from, at `shiftFrom` */
+let shiftWas = new Map<number, Float32Array>();
+let anchorMoves = 0;
+/** every this many anchor moves the pieces are laid exactly again, so float32 rounding never adds up */
+const SHIFTS_EXACT = 8;
+/** local units: a move farther than this is laid exactly (float32's step is 0.25 there, so a moved
+ * point near the new anchor is off by at most 12.5 cm; about 3,000 km of ground in China) */
+const SHIFT_REACH = 2 ** 22;
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
@@ -2035,9 +2071,17 @@ function sendState(service = false, effectiveAt?: number) {
   runningLines = running;
   // T-1528: complexes only where a waiting room or car park is drawn once for one
   const complexOf = s.nodes.some((x) => ((x.upgrades ?? 0) & (UPGRADE.parkRide | UPGRADE.waitingRoom)) !== 0) ? complexOfNodes() : undefined;
+  const shifted = !!shiftFrom;
+  if (shiftFrom) {
+    shiftNetCache(netCache, shiftWas, edgeDrawn, ...anchorShift(shiftFrom, anchor()));
+    shiftFrom = null;
+    shiftWas = new Map();
+  }
   const n = networkFromState({ ...s, render: r, complexOf }, netCache, true);
   const t2 = performance.now();
-  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r, complexOf }) : undefined));
+  // a moved build is off the exact one by float32 rounding: `?patch=shiftcheck` measures by how much
+  if (patchMode === "shiftcheck" && shifted) checkShift(n, networkFromState({ ...s, render: r, complexOf }));
+  const out = (s.net = netForPost(n, patchMode === "check" && !shifted ? networkFromState({ ...s, render: r, complexOf }) : undefined));
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
@@ -2159,6 +2203,29 @@ function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers
   }
   posted.net = { serial: n.serial!, anchor: anchorNow, pts };
   return out;
+}
+
+/** T-1170's check (`?patch=shiftcheck`): a build from pieces moved to a new anchor against one from
+ * scratch: the same segments, positions near the anchor and distances along within a few
+ * centimetres (logged), anything else an error. */
+function checkShift(n: NetworkBuffers, full: NetworkBuffers) {
+  /** the most off anywhere, within 100 km or so of the anchor, and along strokes (`dist`) */
+  let most = 0, near = 0, along = 0;
+  const bad: string[] = [];
+  for (const kind of ["track", "lines"] as const) {
+    const a = strokesOfPieces(kind, n.strokePieces![kind]), b = full[kind];
+    if (a.count !== b.count) { bad.push(`${kind} count`); continue; }
+    for (let i = 0; i < a.seg.length; i++) {
+      const d = Math.abs(a.seg[i] - b.seg[i]);
+      most = Math.max(most, d);
+      if (Math.abs(b.seg[i - (i % 2)]) < 1e5 && Math.abs(b.seg[i - (i % 2) + 1]) < 1e5) near = Math.max(near, d);
+    }
+    for (let i = 0; i < a.dist.length; i++) along = Math.max(along, Math.abs(a.dist[i] - b.dist[i]));
+    for (const f of ["colour", "edge", "level", "flags"] as const) if (!sameBytes(a[f], b[f])) bad.push(`${kind}.${f}`);
+  }
+  if (!sameBytes(n.stations, full.stations)) bad.push("stations");
+  console.log(`T-1170 check: pieces moved to the new anchor are off by up to ${most.toFixed(4)} local units, ${near.toFixed(4)} near it, distances along by ${along.toFixed(4)}`);
+  if (bad.length || near > 0.2 || along > 0.5) console.error(`T-1170 check: moved pieces differ in ${bad.join(", ") || "position"} (near ${near.toFixed(3)}, along ${along.toFixed(3)})`);
 }
 
 /** T-1029's check (`?patch=check`): the network built from the cache against one built from scratch. */
@@ -3033,6 +3100,8 @@ async function handle(msg: ToClock) {
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
+      : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
+      : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
@@ -3102,8 +3171,20 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "anchor") {
     // the view travelled far (T-307): every drawn position again, relative to the new anchor
     if (msg.version !== anchor().version) {
-      setAnchor(makeAnchor(msg.lng, msg.lat, msg.version));
-      forget(true);
+      // T-1170: the drawn pieces move over, unless the move is too far for float32 to keep them
+      // within a few centimetres there; laid exactly again every SHIFTS_EXACT moves
+      const to = makeAnchor(msg.lng, msg.lat, msg.version), [dx, dy] = anchorShift(anchor(), to);
+      // (`?patch=check` keeps every build exact, as its T-1029 check compares them with fresh ones)
+      if (patchMode !== "check" && ++anchorMoves % SHIFTS_EXACT && Math.max(Math.abs(dx), Math.abs(dy)) < SHIFT_REACH) shiftFrom ??= anchor();
+      else shiftFrom = null;
+      setAnchor(to);
+      // T-1170: only positions are in local units; the rows hold none, so they stay as posted and
+      // the page keeps its world's rows (labels, complexes and the rest are not rebuilt)
+      shiftWas = shiftFrom ? new Map(edgeDrawn) : new Map();
+      edgeDrawn.clear();
+      lineDrawn.clear();
+      posted.net = null;
+      sender.forget();
       sendState();
     }
   }

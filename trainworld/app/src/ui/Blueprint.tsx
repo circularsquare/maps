@@ -9,6 +9,7 @@ import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
 import { world } from "../game/world";
+import { useBlueprintQuote } from "../game/quotes";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
@@ -32,7 +33,7 @@ function description(r: BlueprintItem) {
 /** Build's quote and undo controls. Every item is priced by the clock worker's track model. */
 export function BlueprintControls() {
   const w = world.value;
-  const items = w?.money.blueprintItems ?? [];
+  const items = useBlueprintQuote();
   const total = items.reduce((sum, r) => sum + r.cost, 0);
   const m = moneyState.value;
   // T-867: what the blueprint will cost a day once constructed, the pieces switched off left out
@@ -48,7 +49,7 @@ export function BlueprintControls() {
         <span class="b">Blueprint</span>
         <span class="bp-total">
           <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip="Total construction cost">{money(total)}</b>
-          <OffCost />
+          <OffCost items={items} />
         </span>
         <div class="group">
           <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
@@ -69,10 +70,10 @@ const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st
 
 /** T-1296: what the disabled blueprint would cost, beside the total: everything unbuilt
  * (`blueprintCost`, disabled pieces in it) less the quote's rows other than new cars. */
-function OffCost() {
+function OffCost({ items }: { items: BlueprintItem[] }) {
   const w = world.value, off = offTotals.value;
   if (!w || !(off.edges + off.stations)) return null;
-  const on = w.money.blueprintItems.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 ? 0 : r.cost), 0);
+  const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
   return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
@@ -133,7 +134,7 @@ export function BlueprintBar() {
 }
 
 export function BlueprintBreakdown() {
-  const items = world.value?.money.blueprintItems ?? [];
+  const items = useBlueprintQuote();
   return (
     <div class="blueprint-panel">
       {items.length > 0 ? (

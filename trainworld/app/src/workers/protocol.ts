@@ -206,11 +206,12 @@ export type ToClock =
    * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
    * what doubling up a track adds to the blueprint (`[US$M]`, or `[-1, ...]` and the refusal's
    * kinds as character codes, joined by newlines; T-708), or what removing pieces does to lines
-   * (`removal_lines`, T-859) */
+   * (`removal_lines`, T-859), the blueprint's quote rows (`blueprint_cost_items`, seven numbers a
+   * row, US$M) or a planned line's `[build, trains]` in US$M (T-1171: priced only when a panel asks) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -344,10 +345,6 @@ export interface ClockLine {
   /** run 0, per demand level: arrival at each stop from the start, s */
   fromStart: number[][];
   stopS: [number[], number[]];
-  /** US$M to construct what it still lacks */
-  buildCost: number;
-  /** US$M for the trains it will need once constructed, after spare cars (T-028) */
-  trainCost: number;
   /** high-speed trains (T-817) */
   fast: boolean;
   /** its share of the upkeep of the track and stations it uses, US$M a game day (T-867) */
@@ -444,8 +441,6 @@ export interface ClockState {
   cash: number;
   builtCost: number;
   blueprintCost: number;
-  /** Seven-number cost rows from TrackApi.blueprint_cost_items, amounts in US$M. */
-  blueprintItems: number[];
   canUndo: boolean;
   canRedo: boolean;
   edges: ClockEdge[];

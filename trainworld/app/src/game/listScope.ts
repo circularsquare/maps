@@ -3,7 +3,7 @@
 // a place when `placeAt` puts it there; a line when any of its stops is. Over dead space (no viewed
 // place) the lists show the whole world. The centre is kept on move end, not every frame.
 
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { viewedZone, type CityId } from "./cities";
 import { placeAt, zonesLoaded } from "./zones";
 import { busStopsById, stopsById, world } from "./world";
@@ -11,6 +11,17 @@ import type { LineInput, StationInput } from "./types";
 import { metresBetween } from "./walks";
 
 export type ListScope = "here" | "world";
+
+/** T-1021: the world as the Lines and Stations tabs list it, a task after `world`: a big save's
+ * first state and the tab's rows were one 700 ms task; apart, neither passes 300 ms. */
+export const listWorld = signal(world.peek());
+let listSoon = false;
+effect(() => {
+  void world.value;
+  if (listSoon) return;
+  listSoon = true;
+  setTimeout(() => { listSoon = false; listWorld.value = world.peek(); }, 0);
+});
 /** Which stations and lines the tabs list; kept while the page is open, like the sorts. */
 export const listScope = signal<ListScope>("here");
 /** The map's centre [lng, lat] as of the last move end (map/zoneFocus.ts). */

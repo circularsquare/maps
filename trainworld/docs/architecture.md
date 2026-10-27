@@ -93,7 +93,9 @@ Web first, so it can be shared as a link.
   was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382). The
   run profiles' phase tables are kept per line the same way and laid end to end only when a line's
   differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
-  once for a node while the node and the mask stay as they are (T-1540).
+  once for a node while the node and the mask stay as they are (T-1540). The construct-all quote and
+  a planned line's price each run a trial construction, so they are no part of a state: the Build
+  tab and the line panel ask for them (T-1171).
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and

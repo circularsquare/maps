@@ -151,10 +151,6 @@ export interface LineStats {
   /** cars per train it runs, and the length the player set (T-733: 0 for the most its shortest platform fits) */
   cars: number;
   carsSet: number;
-  /** what constructing the rest of its track and stations costs, US$ (0 when running) */
-  buildCost: number;
-  /** what the trains it needs will cost when it is constructed, after spare cars, US$ (T-028) */
-  trainCost: number;
   /** high-speed trains (T-817) */
   fast: boolean;
   /** its share of the upkeep of the track and stations it uses, US$ a game day (T-867) */
@@ -203,10 +199,10 @@ export interface MoneyStats {
   /** what is constructed cost, and what the blueprint would, US$ */
   builtValue: number;
   blueprintCost: number;
-  blueprintItems: BlueprintItem[];
 }
 
-/** Construction model's grouped quote, US$. Track quantities are metres; others are counts. */
+/** Construction model's grouped quote, US$ (game/quotes.ts asks for it). Track quantities are
+ * metres; others are counts. */
 export interface BlueprintItem {
   kind: number;
   level: Level;

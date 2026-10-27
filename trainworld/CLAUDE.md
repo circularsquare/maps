@@ -184,6 +184,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   ceiling tests are the targets (rail of rail + car: A at least 85%, B at least 50%; notes/T-636.md);
   real cities are loose checks. Think hard before adding any complicating factor to demand (a
   constant per country or purpose, a fitted curve): propose it to Anita first.
+- **Every demand task has a "done when"** (Anita, 2026-10-27, after a day of rounds that chased
+  single real pairs): its TASKS.md line and brief state numbers that end it, plus "would a player
+  building this see something obviously wrong?". Once met, stop: a further round needs a new plain
+  error, not a pair still off its published figure. Performance tasks get one too, more loosely.
 - **Built cities are not fixed** (Anita, 2026-10-20): when covering a whole country, a metro built
   earlier may be cut down or grown if that makes the country's zones fit together better.
 - **Countryside zones hold at least about 0.5M people** (Anita, 2026-10-20), merged with neighbours
