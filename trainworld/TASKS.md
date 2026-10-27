@@ -83,8 +83,6 @@ Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted
 - T-1471 [P3] Drives view: the commutes' table with no rail takes 1.1-1.9 s in the aux worker once per zone and day on New York (a loop over every zone pair, 41M); sum it by square pair from the gravity's rows and columns, or keep it with the pack. docs/demand-views.md "Car trips by pair of squares". Open.
 - T-1444 [P3] A game mode with a city's real network run as a rival to win riders from (Anita: a new game mode). After T-1305. Open.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1512 [P2] Bus routing on divided roads: where the basemap draws a road's two sides as separate lines, the path runs past the junction and doubles back (a hairpin at the click) instead of crossing the small gap. Join carriageways across short gaps (connectors between nearby nodes of parallel ways, or snap to the nearer side and allow a short straight hop). Taking, 2026-10-26 (tree t1512).
-- T-1513 [P2] The delete tool does nothing on a placed bus blueprint. Taking, 2026-10-26 (tree t1512).
 - T-1518 [P3] `checks/t486-click-on-top.mjs`'s first case ("click on a track end over a bubble") fails on "0 squares drawn" though the click selects the track: since T-1485 loose-end marks show only within 160 px of the pointer. Update the check. Open.
 - T-1517 [P3] Bus route editing on touch: points cannot be dragged or deleted yet (tap to add, the bar, and tapping an end work; T-1514). Open.
 - T-1501 [P3] Bus legs that stay straight look like road legs. A cue (dashed, say) if players are confused about where a bus does not follow the road; the sim already knows (point kind bits, notes/T-1465.md). Open.

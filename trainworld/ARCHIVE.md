@@ -1,5 +1,7 @@
 # Archive
 
+- T-1513 [P2] The delete tool on a bus line. Done 2026-10-26 (tree t1512): it picks a bus route where no rail is, tag "Remove Bus n"; a planned line goes at once (undoable), a constructed one asks first. `checks/t1513-bus-delete.mjs`.
+- T-1512 [P2] Bus routing on divided roads. Done 2026-10-26 (tree t1512): each end of a leg may first cross to a parallel road 4-40 m away, counted at its length; no hairpin on Dongguan, Berlin and Shenzhen divided roads. `checks/t1465-bus-roads.mjs`; notes/T-1465.md.
 - T-1516 [P2] A bus line's negative fares. Done 2026-10-26 (tree t1515): a tapering curve's extra went all to the line a trip first boards, so a feeder took a long rail trip's whole discount; now shared by km ridden (`kernel::board_extra`). `checks/t1516-fares-never-negative.mjs`.
 - T-1515 [P2] Clicks pick lines, stations and trains before bubbles. Done 2026-10-26 (tree t1515): click, bubble tag, cursor and track tag alike (`netFirst` in main.ts); a bubble keeps its wider reach elsewhere. `checks/t1515-click-priority.mjs`; t486's station case updated.
 
