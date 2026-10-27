@@ -91,7 +91,10 @@ function Notice() {
       {bus && (
         <p class="stop-edit-head">
           <span>{busLine ? `Route of ${busLine.name}` : "New bus line"}: {plural(bus.points, "point")}</span>
-          <button class="btn text" disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>Done</button>
+          <span class="bus-acts">
+            <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
+            <button class="btn text" data-tip="Enter" disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>{busLine ? "Save route" : "Make line"}</button>
+          </span>
         </p>
       )}
       {editing && (

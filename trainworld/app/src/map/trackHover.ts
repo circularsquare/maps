@@ -228,6 +228,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
       if (hoverAt(map, px, py)) return null; // a demand bubble above the network
       if (live.nodeDrag?.hit(px, py)?.movable) return null; // a blueprint node handle
     } else if (!isBuildTool(t)) return null;
+    if (t === "bus" && live.tools?.bus.onHandle) return null; // its own tag says what the point does (T-1514)
     const out: { hot?: Partial<Hot> } = {};
     const lines = trackTip(ov, px, py, map.getZoom(), out);
     setPointerNet(lines && t === "select" ? out.hot ?? null : null);

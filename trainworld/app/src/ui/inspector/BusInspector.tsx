@@ -391,7 +391,7 @@ export function BusInspector({ id }: { id: string }) {
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? "Finish drawing the route" : bus.built ? "Draw the route again. The old route is not refunded" : "Draw the route again"} onClick={() => editBusRoute(l)}><Icon.pencil />{drawing ? "Done editing route" : "Edit route"}</button>
+        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? "Save the route (Enter)" : bus.built ? "Change the route. The old route is not refunded" : "Change the route"} onClick={() => editBusRoute(l)}><Icon.pencil />{drawing ? "Save route" : "Edit route"}</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>
