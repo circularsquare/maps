@@ -278,9 +278,11 @@ riders counters keep their own smoothing (Live feel).
   selection; with a selection and started anywhere else, it takes the inter-city bubbles whose
   centres are in it (T-881), else the far-end bubbles, and opens the trip explorer between the two
   groups. Escape while drawing drops
-  the box. Visible bubbles take priority over stations and trains for clicks, hover and starting a
-  box, but not over dragging a blueprint point [T-474]. Escape or an empty click clears the
-  selection.
+  the box. A rail or bus line, station or train within its own pick reach comes before a bubble
+  for clicks, the hover tag and the cursor [T-1515]; elsewhere a bubble takes them, with its wider
+  reach past a small disc, and comes before bare track and junctions. Visible bubbles take priority
+  for starting a box, but not over dragging a blueprint point [T-474]. Escape or an empty click
+  clears the selection.
 - **On the map**: the other bubbles hide; the selected ones are outlined, and their far end
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a

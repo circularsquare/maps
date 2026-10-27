@@ -433,8 +433,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or square
   that can, and a grabbing one anywhere while dragging [T-474]. A draggable node takes the drag
   over a demand bubble. A click on a node's square (drawn over the bubbles) acts on the point, never
-  the bubble [T-486]; a blueprint station has no square, so a click on one under a bubble selects
-  the bubble.
+  the bubble [T-486]; a click on a blueprint station under a bubble selects the station, as for any
+  station [T-1515].
   With the select tool every blueprint track end, corner and junction without a station shows the
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen; a
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].

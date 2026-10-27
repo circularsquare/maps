@@ -79,11 +79,11 @@ export const lineShares = computed(() => {
       dm.boardings.forEach((v, k) => { add(board, z[k] ?? "", v); add(paid, z[k] ?? "", v * (sc[k] ?? 1)); });
       const byBoarding = norm(board), byPaid = norm(paid);
       if (byBoarding.length) ride = byBoarding;
-      // a bent curve's extra goes with the base, by where its trips board (T-1143)
+      // a bent curve's extra goes with the per-km part, as it is counted on the km ridden (T-1516)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
       const boarded = dm.boardings.reduce((a, b) => a + b, 0);
       const baseScale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : 1;
-      const base = Math.max(0, m.fares.base * dm.ridersPerDay * tripsPerBoarding * baseScale + fx), perKm = m.fares.perKm * pkmAll;
+      const base = m.fares.base * dm.ridersPerDay * tripsPerBoarding * baseScale, perKm = Math.max(0, m.fares.perKm * pkmAll + fx);
       if (base + perKm > 0) {
         const mix = new Map<string, number>();
         for (const [k, v] of byPaid) add(mix, k, v * base);
