@@ -1,0 +1,346 @@
+parent,name,id,sources,fua,rels,keep,drop,ref_pop,ref_year,ref_km2,note
+JPN,Tokyo,city:jpn-tokyo,metro>3M+capital+GaWC,fua:5129,1761742;1758897;1761717;1758858;1758878;1758888;1758891;3554015;3554304;1758936;1758947;1759474;1759477;1543056;1543055;1759506;1760038;1760040;1760078;1760119;1760124;1761718;1761743,,,14264798,2022,2194.05,"the 23 special wards, not Tokyo Metropolis"
+IND,Delhi,city:ind-delhi,metro>3M,fua:7466,1942586,,,,,1484.0,National Capital Territory of Delhi
+IDN,Jakarta,city:idn-jakarta,metro>3M+capital+GaWC,fua:4897,6362934,,,11135191,2024,662.0,
+CHN,Shanghai,city:chn-shanghai,metro>3M+GaWC,fua:10097,371650;1278188;398899;398353;398886;398351;398350;398348,,,24870895,2020,6341.0,"the seven central districts plus Pudong, not the whole municipality with Chongming and the outer districts"
+EGY,Cairo,city:egy-cairo,metro>3M+capital+GaWC,fua:3981,4103336,,,10248385,2023,528.0,"Cairo Governorate, which is the city's government; includes New Cairo"
+PHL,Manila,city:phl-manila,metro>3M+capital+GaWC,fua:2845,103703,,,1902590,2024,24.98,City of Manila (the FUA is GHSL's 'Quezon City [Manila]')
+BGD,Dhaka,city:bgd-dhaka,metro>3M+capital,fua:3705,13663697,,,16800000,2017,368.0,Dhaka Metropolitan area (OSM has no North/South City Corporation outlines)
+KOR,Seoul,city:kor-seoul,metro>3M+capital+GaWC,fua:94,2297418,,,9668465,2020,605.25,
+IND,Kolkata,city:ind-kolkata,metro>3M,fua:10452,9381363,,,4496694,2011,206.08,
+IND,Mumbai,city:ind-mumbai,metro>3M+GaWC,fua:7163,7964376;7964375,,,15414288,2018,603.0,Greater Mumbai = Mumbai City + Mumbai Suburban districts
+BRA,São Paulo,city:bra-sao-paulo,metro>3M+GaWC,fua:6567,298285,,,11904961,2025,1523.0,
+CHN,Beijing,city:chn-beijing,metro>3M+capital+GaWC,fua:7704,288600;568660;2988933;5505984;2988946;5505985,,,21893095,2020,16410.54,"the six core districts (Dongcheng, Xicheng, Chaoyang, Haidian, Fengtai, Shijingshan), not the 16,400 km2 municipality"
+PAK,Karachi,city:pak-karachi,metro>3M+GaWC,fua:2034,6080948,,,14910352,2017,3527.0,"Karachi Division, the area of the Karachi Metropolitan Corporation; includes rural Malir"
+THA,Bangkok,city:tha-bangkok,metro>3M+capital+GaWC,fua:1894,92277,,,5676648,2018,1568.737,
+USA,New York,city:usa-new-york,metro>3M+GaWC,fua:7244,175905,,,8804190,2020,1213.369839,
+MEX,Mexico City,city:mex-mexico-city,metro>3M+capital+GaWC,fua:5006,1376330,,,9209944,2020,1485.0,the whole of Mexico City (CDMX)
+RUS,Moscow,city:rus-moscow,metro>3M+capital,fua:2262,102269,,,13274285,2025,2562.0,
+CHN,Guangzhou,city:chn-guangzhou,metro>3M+GaWC,fua:9711,3987394;3287617;3287615;3987435;3987393;3987437;3287618,,,18676605,2020,7248.86,"the seven older districts; Huadu, Nansha, Conghua and Zengcheng are left out"
+PAK,Lahore,city:pak-lahore,metro>3M,fua:6458,16117666,,,11126285,2017,1772.0,"Lahore District, the area of the Metropolitan Corporation"
+USA,Los Angeles,city:usa-los-angeles,metro>3M+GaWC,fua:1642,207359,,,3898747,2020,1302.15171,
+JPN,Osaka,city:jpn-osaka,metro>3M,fua:3956,358674,,,2751862,2021,223.0,
+IND,Bengaluru,city:ind-bengaluru,metro>3M+GaWC,fua:9099,7902476,,,12327000,2020,741.0,
+VNM,Ho Chi Minh City,city:vnm-ho-chi-minh-city,metro>3M+GaWC,fua:5038,geob:geoBoundaries-VNM-ADM1:Ho Chi Minh,,,14002598,2024,6772.59,pre-2025 city limits from geoBoundaries; OSM now has the July 2025 merger with Binh Duong and Ba Ria-Vung Tau
+ARG,Buenos Aires,city:arg-buenos-aires,metro>3M+capital+GaWC,fua:4215,1224652,,,3121707,2022,203.3,
+TUR,Istanbul,city:tur-istanbul,metro>3M+GaWC,fua:1637,223474,,,15655924,2023,5343.0,Istanbul Metropolitan Municipality = the province; includes rural Catalca and Sile
+CHN,Suzhou,city:chn-suzhou,metro>3M+GaWC,fua:9963,4591876;7598901;4591879;4591880;4591881,,,12748262,2020,8657.32,all five districts (the industrial park sits inside them)
+CHN,Jieyang,city:chn-jieyang,metro>3M,fua:10153,3283326;3283323,,,5577814,2020,5265.38,both districts
+IRN,Tehran,city:irn-tehran,metro>3M+capital,fua:4686,6663864,,,8693706,2016,686.0,
+GBR,London,city:gbr-london,metro>3M+capital+GaWC,fua:5288,175342,,,8799728,2021,1572.0,Greater London
+NGA,Lagos,city:nga-lagos,metro>3M+GaWC,fua:865,3718183;3718184;3718185;3718186;3718187;3718190;3718192;3718193;3718195;5404351;5403871;3718196;3718197;3718198;3718199;3718200,,,15070000,2022,1171.28,"the 16 LGAs of Metropolitan Lagos (Lagos State minus Badagry, Epe, Ibeju-Lekki, Ikorodu)"
+COD,Kinshasa,city:cod-kinshasa,metro>3M+capital,fua:1385,5646651,,,14565700,2020,9965.0,"the city-province, which includes rural Maluku"
+AGO,Luanda,city:ago-luanda,metro>3M+capital,fua:506,1802546,,,2487444,2018,113000000.0,"Luanda Province (the post-2024 province, without Icolo e Bengo)"
+IND,Chennai,city:ind-chennai,metro>3M+GaWC,fua:9850,1766358,,,6599000,2024,426830040.0,
+FRA,Paris,city:fra-paris,metro>3M+capital+GaWC,fua:2702,7444,,,2103778,2023,105.4,the commune
+BRA,Rio de Janeiro,city:bra-rio-de-janeiro,metro>3M+GaWC,fua:6961,2697338,,,6730729,2025,1260.029215,
+PER,Lima,city:per-lima,metro>3M+capital+GaWC,fua:2327,1944670,,,9943800,2022,2672.28,Lima Province = Metropolitan Municipality of Lima (not the Cercado district)
+COL,Bogotá,city:col-bogota,metro>3M+capital+GaWC,fua:4048,7426387,,,,,,the urban part of the Capital District (leaves out rural Sumapaz)
+IDN,Surabaya,city:idn-surabaya,metro>3M,fua:6401,8225862,,,3009286,2023,351.0,
+TWN,Taipei,city:twn-taipei,metro>3M+capital+GaWC,fua:1141,1293250,,,2429429,2026,271.7997,
+ZAF,Johannesburg,city:zaf-johannesburg,metro>3M+GaWC,fua:3337,594508,,,4803262,2022,1644.0,City of Johannesburg Metropolitan Municipality
+IND,Hyderabad,city:ind-hyderabad,metro>3M,fua:9045,7868535,,,9191000,2025,650.0,
+CHN,Chongqing,city:chn-chongqing,metro>3M+GaWC,fua:7578,4738525;4738522;2693314;4738519;14481498;2693315;2693395;2693405;2693394,,,32054159,2020,82403.0,"the nine core districts (zhucheng jiu qu), not the 82,000 km2 municipality"
+IDN,Bandung,city:idn-bandung,metro>3M,fua:5107,13290062,,,2875673,2010,168.0,
+MYS,Kuala Lumpur,city:mys-kuala-lumpur,metro>3M+capital+GaWC,fua:1322,2939672,,,9000280,2025,243.65,
+JPN,Nagoya,city:jpn-nagoya,metro>3M,fua:4532,4576938,,,2326844,2021,326.43,
+CHN,Wuhan,city:chn-wuhan,metro>3M+GaWC,fua:8989,3077255;3077256;3077257;3076295;3076297;3079613;3080399,,,12447718,2020,8569.15,the seven central districts
+USA,Chicago,city:usa-chicago,metro>3M+GaWC,fua:6654,122604,,,2731585,2025,606.424,
+CHN,Tianjin,city:chn-tianjin,metro>3M+GaWC,fua:8055,3286891;3286890;3286892;3286897;3286889;3286893,,,13866009,2020,11920.0,the six central districts; Binhai New Area and the outer districts are left out
+CHN,Shenzhen,city:chn-shenzhen,metro>3M+GaWC,fua:9725,3464353,,,17681600,2022,1997.27,the whole city: all its districts are urban
+TZA,Dar es Salaam,city:tza-dar-es-salaam,metro>3M,fua:3280,7202037,,,4715000,2016,1393.0,
+CHN,Chengdu,city:chn-chengdu,metro>3M+GaWC,fua:5723,4734760;4734707;3579975;4734743;4734807,,,20937757,2020,14378.0,the five central districts
+SAU,Riyadh,city:sau-riyadh,metro>3M+capital+GaWC,fua:3327,12423679,,,7009100,2022,1798.0,Riyadh Governorate
+BGD,Comilla,city:bgd-comilla,metro>3M,fua:4316,14326871,,,296010,2011,153.0,"Cumilla Adarsha Sadar Upazila, the closest OSM unit to the City Corporation"
+CHN,Nanjing,city:chn-nanjing,metro>3M+GaWC,fua:9701,2138698;2140011;2139809;2139790;2140010;2139830,,,9314685,2020,6587.02,the six main-city districts south of the Yangtze
+CHN,Hangzhou,city:chn-hangzhou,metro>3M+GaWC,fua:10078,4591409;4591384;4591410;3221179,,,11936010,2020,16853.57,the four central districts
+IND,Ahmedabad,city:ind-ahmedabad,metro>3M,fua:5991,,,,7645000,2016,464.165,"no municipal corporation outline in OSM; the district is 8,000 km2"
+VNM,Hanoi,city:vnm-hanoi,metro>3M+capital+GaWC,fua:2207,1903516,,,8717600,2024,3359.84,"the whole city (it includes rural districts, but has no smaller legal city)"
+IRQ,Baghdad,city:irq-baghdad,metro>3M+capital,fua:2709,5638803,,,8126755,2018,673.0,
+USA,Dallas,city:usa-dallas,metro>3M+GaWC,fua:5543,6571629,,,1304379,2020,996.577625,
+USA,Houston,city:usa-houston,metro>3M+GaWC,fua:5511,2688911,,,2304580,2020,1724.544507,
+CAN,Toronto,city:can-toronto,metro>3M+GaWC,fua:2626,324211,,,2794356,2021,630.21,
+EGY,Alexandria,city:egy-alexandria,metro>3M,fua:233,3061846,,,5362517,2023,2523.0,"Alexandria Governorate, the city's government"
+CHL,Santiago,city:chl-santiago,metro>3M+capital+GaWC,fua:2072,1674530,,,6257516,2017,837.89,Santiago Province (32 communes); the Santiago commune itself is only the old centre
+ETH,Addis Ababa,city:eth-addis-ababa,metro>3M+capital,fua:5821,1707699,,,5704000,2024,526.99,
+IND,Pune,city:ind-pune,metro>3M,fua:7617,10351626,,,6200000,2021,710.0,"Pune City taluka, the closest OSM unit to the municipal corporation"
+PAK,Faisalabad,city:pak-faisalabad,metro>3M,fua:6153,16108315,,,3203846,2017,1269.094174,
+EGY,Mansoura,city:egy-mansoura,metro>3M,fua:4710,,,,,,,no city outline in OSM; GHSL's 'Mansoura' FUA is a Delta region anyway
+IDN,Yogyakarta,city:idn-yogyakarta,metro>3M,fua:5918,5615250,,,3759500,2024,3133.15,"Kota Yogyakarta, not the Special Region"
+IND,Surat,city:ind-surat,metro>3M,fua:6611,,,,5935000,2016,327.0,no municipal corporation outline in OSM
+SDN,Khartoum,city:sdn-khartoum,metro>3M+capital,fua:3226,3851428,,,5345000,2018,30000.0,
+ESP,Madrid,city:esp-madrid,metro>3M+capital+GaWC,fua:3147,5326784,,,3506730,2025,604.4551,
+CHN,Dongguan,city:chn-dongguan,metro>3M,fua:9718,3464319,,,10466625,2020,2460.08,the whole city (no districts)
+KEN,Nairobi,city:ken-nairobi,metro>3M+capital+GaWC,fua:2171,3492709,,,5545000,2016,696.0,Nairobi County
+JOR,Amman,city:jor-amman,metro>3M+capital,fua:567,2926344,,,4007526,2015,1680.0,Amman Governorate; Greater Amman Municipality has no OSM outline (most of the rest is desert)
+MMR,Yangon,city:mmr-yangon,metro>3M,fua:4435,6004094,,,6874000,2022,576.0,Yangon City (YCDC)
+CHN,Shenyang,city:chn-shenyang,metro>3M+GaWC,fua:8630,3292239;3292241;3292238;3292240;3292242;2769594;2769603,,,9070093,2020,12859.89,the core urban districts; the city's other districts are mostly countryside
+NGA,Onitsha,city:nga-onitsha,metro>3M,fua:6116,3715522;3715523,,,1483000,2021,36.19,Onitsha North + Onitsha South LGAs
+EGY,Luxor,city:egy-luxor,metro>3M,fua:6229,,,,284952,2023,416.0,no city outline in OSM; the governorate is mostly countryside
+CHN,Xi'an,city:chn-xi-an,metro>3M+GaWC,fua:7094,3226096;3226088;3226093;3226098;3226095;3226087,,,12952907,2020,10096.81,the six central districts
+PAK,Peshawar,city:pak-peshawar,metro>3M,fua:3270,16487008,,,1970042,2017,1257.0,
+CIV,Abidjan,city:civ-abidjan,metro>3M,fua:2629,3377982,,,5616633,2021,2119.0,Autonomous District of Abidjan
+CHN,Zhengzhou,city:chn-zhengzhou,metro>3M+GaWC,fua:8189,4566386;4566254;4566399;4566400;4566389;4566388,,,12600574,2020,7567.18,all six districts
+USA,Miami,city:usa-miami,metro>3M+GaWC,fua:6442,1216769,,,449514,2022,143148642.0,
+AFG,Kabul,city:afg-kabul,metro>3M+capital,fua:2352,6616233,,,5333284,2025,275.0,Kabul municipality (district)
+USA,Philadelphia,city:usa-philadelphia,metro>3M+GaWC,fua:7165,188022,,,1603797,2020,369.609252,
+BGD,Chattogram,city:bgd-chattogram,metro>3M,fua:4833,19696325,,,3230507,2020,160.99,Chittagong City
+CHN,Quanzhou,city:chn-quanzhou,metro>3M,fua:10331,4430443;4078786;4430446;4430447,,,8782285,2020,11286.59,all four districts
+USA,Atlanta,city:usa-atlanta,metro>3M+GaWC,fua:6451,119557,,,498715,2020,347.996293,
+GHA,Accra,city:gha-accra,metro>3M+capital,fua:2940,12803764,,,1782150,2021,173000000.0,
+CHN,Hefei,city:chn-hefei,metro>3M+GaWC,fua:9459,3288956;3288962;3288963;3288964,,,9369881,2020,11445.06,all four districts
+LKA,Colombo,city:lka-colombo,metro>3M,fua:434,16132,,,647557,2025,37321728.0,
+USA,Washington,city:usa-washington,metro>3M+capital+GaWC,fua:7068,162069,,,689545,2020,177.0,District of Columbia
+DEU,Dortmund,city:deu-dortmund,metro>3M,fua:536,1829065,,,600880,2025,280.71,
+HKG,Hong Kong,city:hkg-hong-kong,metro>3M+GaWC,fua:73,913110,,,,,,the whole SAR
+SGP,Singapore,city:sgp-singapore,metro>3M+capital+GaWC,fua:154,536780,,,5866139,2021,719.1,the whole country
+NGA,Kano,city:nga-kano,metro>3M,fua:6995,3710309;3710314;3710320;3710323;3710327;3710333;3710341;3710345,,,4348000,2022,499.0,the 8 metropolitan LGAs
+IND,Kochi,city:ind-kochi,metro>3M,fua:8900,11322588,,,677381,2020,94.88,Kochi Municipal Corporation
+IND,Lucknow,city:ind-lucknow,metro>3M,fua:8848,10020494,,,3382000,2017,631.0,
+RUS,Saint Petersburg,city:rus-saint-petersburg,metro>3M,fua:750,337422,,,5652922,2025,1439.0,
+AUS,Melbourne,city:aus-melbourne,metro>3M+GaWC,fua:1266,2404870,,,5350705,2024,9993.0,"City of Melbourne, the council that holds the name (Greater Melbourne has no government)"
+CMR,Yaoundé,city:cmr-yaounde,metro>3M+capital,fua:2295,2746229,,,2440462,2012,180.0,
+SAU,Jeddah,city:sau-jeddah,metro>3M,fua:1234,12429519,,,4697000,2021,1600.0,Jeddah Governorate
+ESP,Barcelona,city:esp-barcelona,metro>3M+GaWC,fua:4523,347950,,,1731649,2025,101.3,
+PAK,Rawalpindi,city:pak-rawalpindi,metro>3M,fua:5621,21187806,,,2098231,2017,5286.0,Rawalpindi City tehsil (Islamabad is its own unit)
+DZA,Algiers,city:dza-algiers,metro>3M+capital,fua:3145,157062,,,3415811,2011,363.0,"Algiers Province, the city's wilaya"
+IND,Kozhikode,city:ind-kozhikode,metro>3M,fua:8673,11312801,,,609224,2020,177.0,Kozhikode Municipal Corporation
+BRA,Belo Horizonte,city:bra-belo-horizonte,metro>3M,fua:6870,368782,,,2415872,2025,330.9,
+UGA,Kampala,city:uga-kampala,metro>3M+capital,fua:1899,5457274,,,1797722,2024,,
+USA,Phoenix,city:usa-phoenix,metro>3M,fua:4211,111257,,,1608139,2020,1343.939142,
+USA,San Jose,city:usa-san-jose,metro>3M,fua:1255,112143,,,1013240,2020,466.109267,
+GHA,Kumasi,city:gha-kumasi,metro>3M,fua:1296,13038215,,,3903480,2024,254.0,Kumasi Metropolitan District
+ITA,Milan,city:ita-milan,metro>3M+GaWC,fua:1600,44915,,,1354196,2023,181.67,
+ARE,Dubai,city:are-dubai,metro>3M+GaWC,fua:357,4479752,,,3944751,2025,35.0,Dubai city (the emirate's built-up part)
+DOM,Santo Domingo,city:dom-santo-domingo,metro>3M+capital,fua:1674,7407678,,,2201941,2025,1302.2,
+AUS,Sydney,city:aus-sydney,metro>3M+GaWC,fua:1830,1251066,,,5450496,2023,12144.6,City of Sydney council; same reason as Melbourne
+IND,Varanasi,city:ind-varanasi,metro>3M,fua:9562,,,,1198491,2011,82.1,no municipal corporation outline in OSM
+IDN,Medan,city:idn-medan,metro>3M,fua:1596,8484616,,,2109330,2010,265100000.0,
+CHN,Harbin,city:chn-harbin,metro>3M,fua:8332,5650561;5650562;5650563;5650913;5650912;5650564,,,10009854,2020,53076.48,the core urban districts; the city's other districts are mostly countryside
+MAR,Casablanca,city:mar-casablanca,metro>3M+GaWC,fua:1785,4072985,,,3215935,2024,384.0,
+CHN,Qingdao,city:chn-qingdao,metro>3M+GaWC,fua:9309,5655440;5655439;5655558;5655516;5655557,,,10071722,2020,11282.0,the five districts on the peninsula; Huangdao and Jimo are left out
+SYR,Damascus,city:syr-damascus,metro>3M+capital,fua:1018,7328462,,,2685360,2024,105.0,Damascus Governorate = the city
+ZAF,Cape Town,city:zaf-cape-town,metro>3M,fua:189,79604,,,3776313,2021,2454.72,City of Cape Town Metropolitan Municipality
+MEX,Guadalajara,city:mex-guadalajara,metro>3M,fua:2837,5605820,,,1385629,2020,151.0,
+CHN,Taiyuan,city:chn-taiyuan,metro>3M,fua:7359,3441529;3441530;3441532;3441533;3441534;3441536,,,5304061,2020,6909.01,all six districts
+CHN,Wenzhou,city:chn-wenzhou,metro>3M,fua:10339,3289416;3289415;3289417,,,9572903,2020,12064.77,the three mainland districts (not the Dongtou islands)
+CHN,Jiangmen,city:chn-jiangmen,metro>3M,fua:9715,3463956;3463957;3463959,,,4798090,2020,9505.42,all three districts
+IRN,Mashhad,city:irn-mashhad,metro>3M,fua:6030,5725142,,,3208000,2020,328.0,
+IND,Jaipur,city:ind-jaipur,metro>3M,fua:7320,7923743,,,3073350,2011,467.0,Jaipur Municipal Corporation (before its 2019 split)
+DEU,Berlin,city:deu-berlin,metro>3M+capital+GaWC,fua:4946,62422,,,3913644,2025,891.69,
+CHN,Jinan,city:chn-jinan,metro>3M+GaWC,fua:8476,5676877;5676878;5676875;5676879;5676876,,,9202432,2020,10244.45,the core urban districts; the city's other districts are mostly countryside
+MLI,Bamako,city:mli-bamako,metro>3M+capital,fua:586,3544925,,,4227569,2023,245.0,
+SOM,Mogadishu,city:som-mogadishu,metro>3M+capital,fua:1889,1720053,,,2120000,2015,91.0,Banaadir region = Mogadishu
+IND,Kanpur,city:ind-kanpur,metro>3M,fua:8722,10019384,,,4581268,2024,3029000000.0,"Kanpur tehsil, the closest OSM unit; includes some countryside"
+UZB,Tashkent,city:uzb-tashkent,metro>3M+capital,fua:2481,2216724,,,2956384,2023,334.8,
+CMR,Douala,city:cmr-douala,metro>3M,fua:809,3832073,,,2768436,2015,210.0,
+IDN,Jombang,city:idn-jombang,metro>3M,fua:6345,13851137,,,,,1115.09,Jombang Regency (no city of that name)
+IDN,Semarang,city:idn-semarang,metro>3M,fua:5906,8409116,,,1621384,2015,373.78,
+USA,Seattle,city:usa-seattle,metro>3M+GaWC,fua:4510,237385,,,737015,2020,369.243614,
+IND,Kollam,city:ind-kollam,metro>3M,fua:8997,11322518,,,397419,2011,73030000.0,Kollam Municipal Corporation
+CAN,Montreal,city:can-montreal,metro>3M+GaWC,fua:3485,1634158,,,1895211,2024,498.0,
+CHN,Nanchang,city:chn-nanchang,metro>3M,fua:9629,3170007;3170011;3170019;3170024;3474630,,,6255007,2020,7194.61,the core urban districts; the city's other districts are mostly countryside
+KOR,Busan,city:kor-busan,metro>3M,fua:3057,2396450,,,3453198,2018,769.83,the metropolitan city
+MEX,Monterrey,city:mex-monterrey,metro>3M,fua:5554,5606060,,,5341171,2016,,
+IND,Thiruvananthapuram,city:ind-thiruvananthapuram,metro>3M,fua:9157,11323735,,,743691,2011,214.86,Thiruvananthapuram Municipal Corporation
+NGA,Ibadan,city:nga-ibadan,metro>3M,fua:2526,3720562;3720560;3720561;3720563;3720564,,,2559853,2025,3080.0,the 5 urban LGAs of Ibadan
+CHN,Ürümqi,city:chn-urumqi,metro>3M,fua:2293,5663207;5663100;5663233;5663231;5663232,,,4054369,2020,13783.1,the core urban districts; the city's other districts are mostly countryside
+CHN,Ningbo,city:chn-ningbo,metro>3M,fua:10282,4571617;4571618;4571847;4571619;4571794,,,9404283,2020,9365.58,all districts except Fenghua
+CHN,Fuzhou,city:chn-fuzhou,metro>3M,fua:10328,3263967;3263975;3263964;3263968;3263971,,,8291268,2020,12250.72,all districts except Changle
+CHN,Nanning,city:chn-nanning,metro>3M,fua:8717,2775770;2775767;2775763;2775771,,,8741584,2020,22099.31,the four central districts
+CHN,Shijiazhuang,city:chn-shijiazhuang,metro>3M,fua:7744,2975376;2975378;2975379;2975380,,,11235086,2020,14060.14,the four central districts
+CHN,Xiamen,city:chn-xiamen,metro>3M+GaWC,fua:10286,3243082;3243083;3243084;3243085;3243086;3243087,,,5163970,2020,1699.39,all six districts
+KWT,Kuwait City,city:kwt-kuwait-city,metro>3M+capital,fua:429,4579478,,,2989000,2018,,Al Asimah (Capital) Governorate
+TUR,Ankara,city:tur-ankara,metro>3M+capital,fua:3650,1812317;1812321;1812354;1809464;1811393;1812319;1811454;1811046;1812356,,,5803482,2023,25632.0,"the 9 central districts; the metropolitan municipality covers the whole 25,600 km2 province"
+BRA,Recife,city:bra-recife,metro>3M,fua:7418,303585,,,1588376,2025,218.843,
+ITA,Naples,city:ita-naples,metro>3M,fua:4333,40767,,,913462,2023,119.02,
+USA,Detroit,city:usa-detroit,metro>3M,fua:6948,134591,,,639111,2020,370.028011,
+PAK,Gujranwala,city:pak-gujranwala,metro>3M,fua:6422,16108369,,,2027001,2017,3198.0,
+TWN,Taichung,city:twn-taichung,metro>3M,fua:770,2921154,,,2868452,2026,163.0,the special municipality (merged with Taichung County in 2010)
+CHN,Changchun,city:chn-changchun,metro>3M,fua:8510,5657436;5657437;5657245;5657383;5657459,,,9066906,2020,24734.13,the core urban districts; the city's other districts are mostly countryside
+MDG,Antananarivo,city:mdg-antananarivo,metro>3M+capital,fua:723,,,,1275207,2018,88000000.0,no outline for the Urban Commune of Antananarivo in OSM
+SEN,Dakar,city:sen-dakar,metro>3M+capital,fua:153,12982139,,,1278469,2023,79.83,
+IND,Indore,city:ind-indore,metro>3M,fua:7839,16636427,,,1994397,2011,530.0,Indore City
+NPL,Kathmandu,city:npl-kathmandu,metro>3M+capital,fua:1525,12394677,,,845767,2021,49450000.0,
+ZMB,Lusaka,city:zmb-lusaka,metro>3M+capital,fua:1986,10663254,,,2204059,2022,360.0,Lusaka District = the city
+YEM,Sanaa,city:yem-sanaa,metro>3M+capital,fua:1036,8894341,,,1747834,2004,,
+NGA,Owerri,city:nga-owerri,metro>3M,fua:6152,3717849;3717850;3717851,,,908109,2021,104.0,Owerri Municipal + North + West LGAs
+CHN,Dalian,city:chn-dalian,metro>3M+GaWC,fua:8973,9672077;9672024;9671680;2764566,,,7450785,2020,13630.44,the four central districts
+BGD,Gazipur,city:bgd-gazipur,metro>3M,fua:3703,19687163,,,2677715,2022,49.32,"Gazipur Sadar Upazila, the closest OSM unit to the City Corporation"
+IDN,Tangerang,city:idn-tangerang,metro>3M,fua:4894,7641583,,,2237006,2019,164.54,
+CHN,Changsha,city:chn-changsha,metro>3M+GaWC,fua:9100,3202704;3202707;3202709;3202705;3202710,,,10047914,2020,11815.96,all districts except Wangcheng
+BFA,Ouagadougou,city:bfa-ouagadougou,metro>3M+capital,fua:1834,5675756,,,2453496,2019,219300000.0,
+CHN,Zibo,city:chn-zibo,metro>3M,fua:8664,3468495;3468498;3468500;3468501;3468502,,,4704138,2020,5964.92,all five districts (Zibo is a cluster of towns)
+BRA,Fortaleza,city:bra-fortaleza,metro>3M,fua:7226,302588,,,2578483,2025,314.93,the municipality
+ITA,Rome,city:ita-rome,metro>3M+capital+GaWC,fua:3881,41485,,,35000,0550,1287.36,
+PAK,Multan,city:pak-multan,metro>3M,fua:5717,16117504,,,1871843,2017,3721.0,Multan City tehsil
+IND,Asansol,city:ind-asansol,metro>3M,fua:10313,,,,563917,2011,326.48,no municipal corporation outline in OSM
+PHL,Cebu City,city:phl-cebu-city,metro>3M,fua:4372,12455830,,,1412726,2024,4943.72,
+NLD,Rotterdam,city:nld-rotterdam,metro>3M,fua:296,324431,,,664311,2023,319.35,the municipality
+COD,Mbuji-Mayi,city:cod-mbuji-mayi,metro>3M,fua:3534,6178732,,,2892000,2023,135.12,Ville de Mbujimayi
+IND,Nagpur,city:ind-nagpur,metro>3M,fua:8952,12969115,,,2405665,2011,218.0,
+CHN,Kunming,city:chn-kunming,metro>3M+GaWC,fua:7076,2723925;2723924;2723923;2723926;2723827,,,8460088,2020,21013.0,the core urban districts; the city's other districts are mostly countryside
+CHN,Changzhou,city:chn-changzhou,metro>3M,fua:9917,5671326;5671328;3429663;5671327,,,5278121,2020,4372.15,all districts except Jintan
+ZAF,Durban,city:zaf-durban,metro>3M,fua:4513,610720,,,595061,2011,225.91,eThekwini Metropolitan Municipality
+CHN,Cixi,city:chn-cixi,metro>3M,fua:10220,4571866,,,1829488,2020,1321.42,the county-level city
+MOZ,Maputo,city:moz-maputo,metro>3M+capital,fua:118,3348644,,,1133200,2023,346.77,
+GTM,Guatemala City,city:gtm-guatemala-city,metro>3M+capital,fua:2162,67992,,,994938,2025,692.0,
+PAK,Sialkot,city:pak-sialkot,metro>3M,fua:6476,16108432,,,591668,2017,3016.0,Sialkot tehsil
+GRC,Athens,city:grc-athens,metro>3M+capital+GaWC,fua:959,1370736,,,643452,2021,39.0,Municipality of Athens
+IND,Patna,city:ind-patna,metro>3M,fua:10017,12038486,,,1684222,2011,99.45,Patna Municipal Corporation
+SYR,Aleppo,city:syr-aleppo,metro>3M,fua:1133,11039299,,,2003671,2021,190.0,"Mount Simeon subdistrict centre, which is the city"
+BRA,Salvador,city:bra-salvador,metro>3M,fua:7303,362362,,,2564204,2025,693.0,
+USA,Minneapolis,city:usa-minneapolis,metro>3M,fua:6433,136712,,,429954,2020,151.3,
+USA,San Diego,city:usa-san-diego,metro>3M,fua:2204,253832,,,1386932,2020,964.497168,
+IND,Guruvayur,city:ind-guruvayur,metro>3M,fua:8674,11335965,,,,,,Guruvayur municipality (small; GHSL names a Kerala coastal FUA after it)
+GBR,Manchester,city:gbr-manchester,metro>3M+GaWC,fua:3304,146656,,,568996,2022,115.6486,
+ECU,Guayaquil,city:ecu-guayaquil,metro>3M,fua:818,3652281,,,2650288,2022,354.48,Guayaquil canton
+IDN,Tegal,city:idn-tegal,metro>3M,fua:5567,9686828,,,275789,2015,39.68,
+ISR,Tel Aviv,city:isr-tel-aviv,metro>3M+GaWC,fua:419,1382494,,,467875,2021,52.0,
+CHN,Tangshan,city:chn-tangshan,metro>3M,fua:8159,5642218;5642220;5642215;5642214,,,7717983,2020,14341.47,the core urban districts; the city's other districts are mostly countryside
+CHN,Guiyang,city:chn-guiyang,metro>3M,fua:7952,2783466;2783467;2783468;2783470;2783472;2783475,,,5987018,2020,8043.37,all six districts
+COL,Medellín,city:col-medellin,metro>3M,fua:2757,1343264,,,2529403,2018,380.74,the municipality
+DEU,Cologne,city:deu-cologne,metro>3M,fua:1064,62578,,,1025523,2025,405.02,
+PRK,Pyongyang,city:prk-pyongyang,metro>3M+capital,fua:3324,356443,,,2863000,2015,3194.0,
+IDN,Tasikmalaya,city:idn-tasikmalaya,metro>3M,fua:5306,14925431,,,678027,2015,183.8,
+USA,Denver,city:usa-denver,metro>3M+GaWC,fua:5332,1411339,,,715522,2020,401.359761,
+MEX,Puebla,city:mex-puebla,metro>3M,fua:5327,3986722,,,6168883,2015,34306.0,the municipality
+CHN,Nantong,city:chn-nantong,metro>3M,fua:9987,5670633,,,7726635,2020,10549.25,"Chongchuan district, the city itself; Tongzhou and Haimen are left out"
+EGY,Asyut,city:egy-asyut,metro>3M,fua:5781,,,,562061,2023,,no city outline in OSM
+UKR,Kyiv,city:ukr-kyiv,metro>3M+capital+GaWC,fua:2203,421866,,,2952301,2022,848.0,
+COG,Brazzaville,city:cog-brazzaville,metro>3M+capital,fua:811,16370691,,,2145783,2023,588.0,
+DEU,Frankfurt am Main,city:deu-frankfurt-am-main,metro>3M+GaWC,fua:3093,62400,,,760656,2025,248.0,
+CHN,Taizhou,city:chn-taizhou,metro>3M,fua:10392,3478413;3478391;3478390,,,6622888,2020,10037.91,all three districts
+IDN,Purwakarta,city:idn-purwakarta,metro>3M,fua:4900,16999796,,,845689,,971.72,Purwakarta Regency
+POL,Warsaw,city:pol-warsaw,metro>3M+capital+GaWC,fua:3222,2907540,,,1862402,2024,517.0,
+GBR,Birmingham,city:gbr-birmingham,metro>3M,fua:3799,162378,,,1157603,2022,267.7913,
+VEN,Caracas,city:ven-caracas,metro>3M+capital+GaWC,fua:4040,11219583,,,2245744,2017,776.0,
+GIN,Conakry,city:gin-conakry,metro>3M+capital,fua:550,3731500,,,1667864,2014,450.0,
+PAK,Hyderabad,city:pak-hyderabad,metro>3M,fua:4692,16362308;16362310;16362309,,,,,,Hyderabad City + Latifabad + Qasimabad talukas
+TUN,Tunis,city:tun-tunis,metro>3M+capital,fua:1545,1435835,,,37100000,2026,163610.0,Tunis Governorate; no outline for the municipality alone
+GBR,Leeds,city:gbr-leeds,metro>3M,fua:4159,118362,,,822483,2021,551.7,
+ECU,Quito,city:ecu-quito,metro>3M+capital,fua:2569,113714,,,1763275,2022,372.39,"Metropolitan District of Quito, which includes rural parishes"
+JPN,Fukuoka,city:jpn-fukuoka,metro>3M,fua:708,4008611,,,5108038,2020,4971.01,the city
+USA,Tampa,city:usa-tampa,metro>3M,fua:6237,1216849,,,384959,2020,453.805005,
+SAU,Dammam,city:sau-dammam,metro>3M,fua:3691,12399708,,,903000,2012,800.0,Dammam Governorate
+IND,Agra,city:ind-agra,metro>3M,fua:7957,12177245,,,1585705,2011,188.4,Agra Nagar Nigam
+ALB,Tirana,city:alb-tirana,capital,,1250106,,,389323,2023,41.8,
+ARE,Abu Dhabi,city:are-abu-dhabi,capital+GaWC,,4479763,,,1570000,2023,972.0,
+ARM,Yerevan,city:arm-yerevan,capital,,364087,,,1106300,2024,227.0,
+AUS,Canberra,city:aus-canberra,capital,,2354197,,,473855,2024,471.78,"the Australian Capital Territory, nearly all of whose people live in Canberra"
+AUT,Vienna,city:aut-vienna,capital+GaWC,,109166,,,2028289,2025,414.78,
+AZE,Baku,city:aze-baku,capital,,2415335,,,2300500,2021,2140.0,OSM's Baku outline is the central city only (165 km2); the full city with its outer raions has no outline
+BDI,Gitega,city:bdi-gitega,capital,,,,,135467,2020,22.0,no commune outline in OSM; the province is mostly countryside
+BEL,Brussels,city:bel-brussels,capital+GaWC,,2404020,,,195546,2024,32.61,"Brussels-Capital Region (19 communes), not the City of Brussels commune"
+BEN,Porto-Novo,city:ben-porto-novo,capital,,2945791,,,234168,2025,52.0,
+BGR,Sofia,city:bgr-sofia,capital+GaWC,,4283101,,,1213134,2025,492.029,
+BHR,Manama,city:bhr-manama,capital+GaWC,,3028094,,,297502,2012,30.0,Capital Governorate
+BIH,Sarajevo,city:bih-sarajevo,capital,,2567380,,,275524,2013,141.5,City of Sarajevo (4 municipalities)
+BLR,Minsk,city:blr-minsk,capital,,59195,,,1995091,2026,409.5,
+BOL,Sucre,city:bol-sucre,capital,,4507878,,,360544,2021,1768.0,the municipality
+BOL,La Paz,city:bol-la-paz,capital,,4499870,,,755732,2024,472.0,"the municipality, which includes rural parishes"
+BRA,Brasília,city:bra-brasilia,capital,,421151,,,2996899,2025,5802.0,the Federal District
+BTN,Thimphu,city:btn-thimphu,capital,,9330372,,,114551,2017,27.0,
+BWA,Gaborone,city:bwa-gaborone,capital,,17349208,,,246325,2022,169.0,
+CAF,Bangui,city:caf-bangui,capital,,7322726,,,889231,2020,67339690.0,
+CAN,Ottawa,city:can-ottawa,capital,,4136816,,,1017449,2021,2778.64,the amalgamated city
+CHE,Bern,city:che-bern,capital,,1682378,,,138562,2025,51.62,
+CIV,Yamoussoukro,city:civ-yamoussoukro,capital,,3601243,,,340234,2021,3500.0,Autonomous District of Yamoussoukro
+CRI,San José,city:cri-san-jose,capital,,4069041,,,,,,San José canton
+CUB,Havana,city:cub-havana,capital,,1854615,,,2492618,2022,728.26,
+CYP,Nicosia,city:cyp-nicosia,capital+GaWC,,2628521,,,56848,2021,51.06,"Nicosia municipality, south of the Green Line"
+CZE,Prague,city:cze-prague,capital+GaWC,,435514,,,1397880,2025,496.21,
+DJI,Djibouti,city:dji-djibouti,capital,,3725245,,,1000000,2026,23200.0,the city region
+DNK,Copenhagen,city:dnk-copenhagen,capital+GaWC,,2192363,,,667099,2025,90.9,Copenhagen Municipality
+ERI,Asmara,city:eri-asmara,capital,,4610904,,,963000,2020,12158.1,Maekel (Central) region = Asmara
+EST,Tallinn,city:est-tallinn,capital,,2164745,,,457572,2024,159.37,
+FIN,Helsinki,city:fin-helsinki,capital+GaWC,,34914,,,694392,2025,214.42,
+GAB,Libreville,city:gab-libreville,capital,,20256699,,,899000,2025,189.0,
+GEO,Tbilisi,city:geo-tbilisi,capital,,1996871,,,1331485,2024,720.0,
+GMB,Banjul,city:gmb-banjul,capital,,3214211,,,31356,2013,12.2,
+GNB,Bissau,city:gnb-bissau,capital,,1761580,,,492004,2015,77.5,Autonomous Sector of Bissau
+GNQ,Malabo,city:gnq-malabo,capital,,19095686,,,297000,2018,21.0,Malabo district
+HND,Tegucigalpa,city:hnd-tegucigalpa,capital,,3850824,,,850848,2025,201.5,
+HRV,Zagreb,city:hrv-zagreb,capital+GaWC,,226224,,,767131,2021,641.2,
+HTI,Port-au-Prince,city:hti-port-au-prince,capital,,387318,,,987310,2015,36040000.0,Port-au-Prince arrondissement; OSM has no outline for the commune alone
+HUN,Budapest,city:hun-budapest,capital+GaWC,,1244004,,,1675777,2026,525.14,
+IND,New Delhi,city:ind-new-delhi,capital+GaWC,,21180662,,,249998,2011,42.7,New Delhi Municipal Council area
+IRL,Dublin,city:irl-dublin,capital+GaWC,,1109531,,,592713,2022,114990000.0,
+ISR,Jerusalem,city:isr-jerusalem,capital,,1381350,,,1050151,2024,125.42,Jerusalem municipality as Israel draws it
+JAM,Kingston,city:jam-kingston,capital,,6577227;6577862,,,937700,2025,22.0,Kingston + St Andrew parishes (the Kingston and St Andrew Corporation)
+KAZ,Astana,city:kaz-astana,capital,,3087155,,,1239744,2022,710200000.0,
+KGZ,Bishkek,city:kgz-bishkek,capital,,8493930,,,1191000,2025,127.0,
+KHM,Phnom Penh,city:khm-phnom-penh,capital,,2199033,,,2129371,2019,678.46,
+LAO,Vientiane,city:lao-vientiane,capital,,6979808,,,1003004,2023,3920.0,
+LBN,Beirut,city:lbn-beirut,capital+GaWC,,316552,,,2421354,2023,20.0,Beirut Governorate
+LBR,Monrovia,city:lbr-monrovia,capital,,4001311,,,1761032,2022,194.25,Greater Monrovia district
+LBY,Tripoli,city:lby-tripoli,capital,,2060186,,,1176000,2022,3127.0,Tripoli district
+LKA,Sri Jayawardenepura Kotte,city:lka-sri-jayawardenepura-kotte,capital,,,,,,,,no outline in OSM; Colombo is covered
+LSO,Maseru,city:lso-maseru,capital,,1252921,,,343541,2016,138.0,Maseru District; no outline for the city alone
+LTU,Vilnius,city:ltu-vilnius,capital,,1529146,,,619405,2026,401.0,
+LVA,Riga,city:lva-riga,capital,,13048688,,,588911,2026,303.7782,
+MAR,Rabat,city:mar-rabat,capital,,2799215,,,515619,2024,118.0,
+MDA,Chișinău,city:mda-chisinau,capital,,1748490,,,567038,2024,123.0,
+MKD,Skopje,city:mkd-skopje,capital,,2439740,,,422540,2021,571.46,City of Skopje (10 municipalities)
+MMR,Naypyidaw,city:mmr-naypyidaw,capital,,5996482,,,1160242,2014,7054.37,Naypyidaw Union Territory
+MNG,Ulaanbaatar,city:mng-ulaanbaatar,capital,,270090,,,1515593,2019,4704.4,
+MRT,Nouakchott,city:mrt-nouakchott,capital,,3395130;16510635;16510636,,,1446761,2023,1000.0,the three Nouakchott regions
+MUS,Port Louis,city:mus-port-louis,capital+GaWC,,3488099,,,149194,2012,46700000.0,Port Louis district
+MWI,Lilongwe,city:mwi-lilongwe,capital,,,,,989318,2018,727.79,no city outline in OSM; the district is mostly countryside
+NAM,Windhoek,city:nam-windhoek,capital,,8650326,,,486169,2023,5133000000.0,
+NER,Niamey,city:ner-niamey,capital,,3218804,,,1496260,2024,239300000.0,
+NGA,Abuja,city:nga-abuja,capital,,3717265,,,1693400,2022,713000000.0,Abuja Municipal Area Council
+NIC,Managua,city:nic-managua,capital,,5835475,,,973087,2025,267.2,
+NLD,Amsterdam,city:nld-amsterdam,capital+GaWC,,47811,,,921468,2023,219.0,the municipality
+NOR,Oslo,city:nor-oslo,capital+GaWC,,406091,,,717710,2024,480.76,
+NZL,Wellington,city:nzl-wellington,capital,,4266321,,,216200,2023,444.0,Wellington City council
+OMN,Muscat,city:omn-muscat,capital,,3781239,,,1421409,2019,3500.0,Muscat Governorate
+PAK,Islamabad,city:pak-islamabad,capital,,358002,,,1014825,2017,906.0,Islamabad Capital Territory
+PAN,Panama City,city:pan-panama-city,capital+GaWC,,8415626,,,1540000,2026,275.0,Panamá district
+PNG,Port Moresby,city:png-port-moresby,capital,,269423,,,317374,2012,240.0,National Capital District
+PRI,San Juan,city:pri-san-juan,capital,,4468264,,,,,,San Juan municipio
+PRT,Lisbon,city:prt-lisbon,capital+GaWC,,5400890,,,545796,2021,100.05,
+PRY,Asunción,city:pry-asuncion,capital,,12556624,,,462241,2022,117.0,Capital District
+PSE,Ramallah,city:pse-ramallah,capital,,2717915,,,,,,seat of the Palestinian government
+QAT,Doha,city:qat-doha,capital+GaWC,,27332,,,1186023,2020,132000000.0,
+ROU,Bucharest,city:rou-bucharest,capital+GaWC,,377733,,,1716961,2021,226.0,
+RWA,Kigali,city:rwa-kigali,capital,,1708283,,,1745555,2022,730.0,
+SLE,Freetown,city:sle-freetown,capital,,3242456,,,1055964,2015,357000000.0,Western Area Urban
+SLV,San Salvador,city:slv-san-salvador,capital,,6462027,,,330543,2024,72.25,
+SRB,Belgrade,city:srb-belgrade,capital+GaWC,,2728438,,,1197714,2022,359.96,
+SSD,Juba,city:ssd-juba,capital,,13508035,,,500088,2025,52.0,Juba county; no outline for the city alone
+SVK,Bratislava,city:svk-bratislava,capital+GaWC,,1702499,,,480902,2025,367.6,
+SVN,Ljubljana,city:svn-ljubljana,capital,,1675898,,,284293,2022,163.76,
+SWE,Stockholm,city:swe-stockholm,capital+GaWC,,398021,,,984748,2022,187.16,
+SWZ,Mbabane,city:swz-mbabane,capital,,1253019,,,76218,2025,150.0,Mbabane inkhundla
+TCD,N'Djamena,city:tcd-n-djamena,capital,,3718330,,,1092066,2012,100.0,
+TGO,Lomé,city:tgo-lome,capital,,6607308,,,2188376,2023,90000000.0,
+TJK,Dushanbe,city:tjk-dushanbe,capital,,7328360,,,1201800,2022,124.6,
+TKM,Ashgabat,city:tkm-ashgabat,capital,,18734896,,,1030063,2022,765.0,
+TLS,Dili,city:tls-dili,capital,,4631022,,,222323,2015,178.62,Dili municipality
+TTO,Port of Spain,city:tto-port-of-spain,capital,,7363637,,,49031,2025,12.0,
+TZA,Dodoma,city:tza-dodoma,capital,,1600774,,,213636,2020,2576.0,Dodoma City
+URY,Montevideo,city:ury-montevideo,capital+GaWC,,2929054,,,1302954,2023,730.0,
+XKX,Pristina,city:xkx-pristina,capital,,1332181,,,227466,2024,572.0,the municipality
+ZAF,Pretoria,city:zaf-pretoria,capital,,594484,,,741651,2011,688.0,City of Tshwane Metropolitan Municipality
+ZWE,Harare,city:zwe-harare,capital,,318467,,,2150000,2012,960600000.0,
+LUX,Luxembourg,city:lux-luxembourg,GaWC,,407489,,,690959,2026,2586.36,the city
+CHE,Zurich,city:che-zurich,GaWC,,1682248,,,452421,2025,87.88,
+USA,San Francisco,city:usa-san-francisco,GaWC,,111968,,,808988,2023,600.592202,
+DEU,Düsseldorf,city:deu-dusseldorf,GaWC,,62539,,,619444,2025,217.41,
+DEU,Munich,city:deu-munich,GaWC,,62428,,,1505036,2025,310.74,
+USA,Boston,city:usa-boston,GaWC,,2315704,,,675647,2020,232140634.0,
+DEU,Hamburg,city:deu-hamburg,GaWC,,62782,,,1869473,2025,755.09,
+NZL,Auckland,city:nzl-auckland,GaWC,,2094141,,,1470100,2020,559.0,"Auckland Council's region, which is the city since 2010"
+AUS,Brisbane,city:aus-brisbane,GaWC,,11677792,,,2706966,2023,15826.0,City of Brisbane council
+AUS,Perth,city:aus-perth,GaWC,,11343564,,,2043762,2021,6418.0,City of Perth council
+CHE,Geneva,city:che-geneva,GaWC,,1685488,,,211152,2025,15.92,
+CAN,Calgary,city:can-calgary,GaWC,,3227127,,,1306784,2021,825290000.0,
+CAN,Vancouver,city:can-vancouver,GaWC,,1852574,,,662248,2021,115.0,
+FRA,Lyon,city:fra-lyon,GaWC,,120965,,,519127,2023,47.87,
+DEU,Stuttgart,city:deu-stuttgart,GaWC,,62375,,,609365,2025,207.24,
+GBR,Edinburgh,city:gbr-edinburgh,added,,1920901,,,488050,2016,259.0,
+JPN,Kyoto,city:jpn-kyoto,added,,357794,,,1448964,2022,827.83,
+ITA,Venice,city:ita-venice,added,,44741,,,250369,2023,415.9,
+SAU,Mecca,city:sau-mecca,added,,12429517,,,2427924,2022,760.0,Makkah municipality (Amanah)
+USA,Honolulu,city:usa-honolulu,added,,3861844,,,350964,2020,177.2,"City and County of Honolulu, the legal city, which is all of Oahu"

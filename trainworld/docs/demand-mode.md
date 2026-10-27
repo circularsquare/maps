@@ -44,13 +44,14 @@ perceived minutes of the car's trip T the scale is 0.10 x sqrt(60 / T) (0.058 at
 by the ratio. The regional market damps the same way (docs/regional.md 5.1). **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. **A fare dollar weighs by
-national income** (T-1277, with T-1166): 5 x (GDP per head at PPP / $60,000)^-0.5 perceived
-minutes, by the trip's country (each zone population's pack country, `Params::fare_w`, set by the
+national income** (T-1277, with T-1166, T-1521): 4.4 x (GDP per head / $90,000)^-0.7 perceived
+minutes, GDP per head at market rates, by the trip's country (each zone population's pack country, `Params::fare_w`, set by the
 demand worker through `set_fare_weight`; `app/src/game/income.ts`, `countryIncome.json`): the US
-4.4, India 12.2. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour),
+4.4, China 16, India 51. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour),
 except on the regional market's longer trips, whose riders come in income groups that weigh every
 mode's money alike (T-1431, docs/regional.md 5.1). The
-fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares)
+fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares;
+a new game's matches real fares, T-1521)
 times the trip's country's fare scale, charged once per trip including transfers on actual track
 length. The regional market takes the curve unscaled at India's weight (the same perceived fare as
 every country at its default scale), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice

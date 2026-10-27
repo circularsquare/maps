@@ -533,11 +533,13 @@ notes/T-420.md has the tables.
   bonus also stands for how much a short drive costs beyond its road time, which differs with car
   ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
   England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
-- **Value of time and fare sensitivity** (T-1277, T-1166). A fare dollar costs 5 x (GDP per head /
-  $60,000)^-0.5 perceived minutes, by the country the trip starts in: the US 4.4, the UK 5.3, Japan
-  5.6, China 7.7, Brazil 8.7, India 12.2, Nigeria 13.6. GDP per head at PPP (World Bank
-  NY.GDP.PCAP.PP.KD, `app/src/game/countryIncome.json`). The exponent is the gentle end of the
-  value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
+- **Value of time and fare sensitivity** (T-1277, T-1166, T-1521). A fare dollar costs 4.4 x (GDP
+  per head / $90,000)^-0.7 perceived minutes, by the country the trip starts in: the US 4.4, the UK
+  6.0, Japan 8.4, China 16, India 51, Nigeria 89. GDP per head in current US dollars at market rates
+  (World Bank NY.GDP.PCAP.CD, `app/src/game/countryIncome.json` `usd`, Taiwan from the IMF; game
+  dollars are US dollars). At market rates 0.7 is the exponent that keeps each country's minutes per
+  unit of its own money as T-1277's rule at PPP to the 0.5 had them (price levels rise with income);
+  it sits mid value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
   charged in local terms, the player's curve times each country's scale (its income over India's to
   the same power, or the player's own), so at the default scales a fare weighs the same everywhere
   and a poorer country brings in less per rider; a scale the player sets moves inter-city riders
@@ -546,15 +548,20 @@ notes/T-420.md has the tables.
   into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
   country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
   their car's money should scale too. Check: a country's transit fares against its income, and its
-  fare elasticity where a survey publishes one.
+  fare elasticity where a survey publishes one. **Starting fares** (T-1521): at market rates, real
+  standard-class fares in ten countries follow the income scale to the 0.7 as closely as at PPP to
+  the 0.5. The starting curve matches them at 50-150 km and 300-1,200 km within about 1.5x in the
+  rich countries and China. Real fares sit well under it for India's subsidised long-distance
+  classes (sleeper 0.3x the game's) and over it for Europe's metros (2-2.6x) (notes/T-1521.md).
 - **Income groups on longer trips** (T-1431, docs/regional.md 5.1). A country's travellers are three
   equal groups by income from the World Bank's income shares by quintile (SI.DST.FRST.20 to
   SI.DST.05TH.20, 170 countries with a survey from 1992 to 2025; the rest take their subregion's
   median). A group weighs every mode's money (car running cost and crossings, plane fare, rail fare)
-  at the country's minutes a dollar times (its income over the mean)^-0.5, the same exponent as
-  between countries, and makes longer trips in proportion to (its income over the mean)^0.7, the
+  at the country's minutes a dollar times (its income over the mean)^-0.5 (T-1277's exponent between
+  countries at PPP; within a country prices are the same) times 0.4 (T-1521, about US DOT's value of
+  intercity over local time), and makes longer trips in proportion to (its income over the mean)^0.7, the
   market's trip rate by income between countries. No new fitted number; the plane's base was
-  refitted with it ($30). Not in the local layers: there it would cost about 2.4 times the solve
+  refitted with it ($30), then set to published airfares by T-1521 ($100). Not in the local layers: there it would cost about 2.4 times the solve
   time (notes/T-1431.md). Why it may not carry over: a quintile table is a national average (cities
   are richer than the countryside), survey years differ by decades, and the trip rate by income
   within a country is taken from the one between countries. Check: a country's long-distance
@@ -878,7 +885,7 @@ notes/T-420.md has the tables.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
   have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 25 minutes
   until the flight (its frequency unmodelled: rail's planned first wait at a flight every 2 hours,
-  T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $30 + 5 cents a km at each
+  T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km (T-1521, published average airfares at market rates, one world fare) at each
   income group's minutes a dollar (T-1431, above; a corridor's split between car and plane is
   the mean of its two ways). The fare is one simple rule on purpose (Anita: predictable for the player).
   Its base was fitted on ten corridors' published rail shares of rail and air (notes/T-1431.md), so
@@ -898,14 +905,19 @@ notes/T-420.md has the tables.
   running cost. Toll bridges (Øresund, the Great Belt, Honshu-Shikoku) stay free like every toll
   road (T-270). Why it may not carry over: each crossing is named by hand; a new fixed link that
   carries no cars (a rail tunnel) needs its own entry.
-- **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15
-  US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
-  both split over two occupants, the money at each income group's minutes a dollar (T-1431). With
-  the starting rail curve this leaves the car little on 300-650 km pairs (Tokyo - Osaka 3% against
-  about 25% published), since a seat costs about what each person's share of the car does while the
-  car is slower; real long rail fares are 2-4 times the curve (notes/T-1431.md). Fuel prices, tolls (T-270),
-  motorway speeds, occupancy and car ownership all vary by country; Europe's fuel costs about twice
-  the US's per km, so cars there would cost more. Within 1,500 km the drive is routed (T-279,
+- **The longer trip's car** (T-276, T-1521). Drive 15 min + 1.25 x the great circle at 85 km/h,
+  plus the car's running cost a road km and the local parking rule at the destination, both split
+  over two occupants, the money at each income group's minutes a dollar (T-1431). The running cost
+  is the two places' countries' mean (`countryIncome.json` `car`, notes/T-1521/money_table.py):
+  gasoline at the pump (GlobalPetrolPrices, octane 95, 2026-10-19; a country without one takes its
+  subregion's median) at 8.5 litres a 100 km (IEA's world average for new cars, 7.1, plus the 20%
+  real-world gap the European Commission measures), plus the motorway toll a km where tolls go by
+  distance on most of the network (Japan, China, Korea, Taiwan, France, Italy, Portugal, Greece,
+  Croatia, Serbia, North Macedonia, Turkey, India, Mexico, Brazil); vignettes and the few tolled
+  corridors elsewhere (the US, Spain, Poland) count nothing. The US $0.10 a km, Japan $0.23, China
+  $0.19, France $0.32, Germany $0.20. Upkeep is left out (AAA: about $0.07 a km): riders weigh what
+  they pay on the trip. Why it may not carry over: a pump price is one day's, tolls are national
+  rates on sample routes, and motorway speeds, occupancy and car ownership vary by country too. Within 1,500 km the drive is routed (T-279,
   docs/regional.md 5.1) on three world layers: GRIP4 road density (roads as of its 2018 release, so
   newer motorways are missing), GEDTM30 slope and the world water
   mask, fitted to 13,470 OSRM drives in 43 countries (6.8% off at the median, held out by region;

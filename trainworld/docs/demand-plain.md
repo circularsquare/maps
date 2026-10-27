@@ -124,11 +124,14 @@ There is no built-in liking for the train. Rail and the car are compared on time
   last add up to more than walking between the two ends (over water, each metre of it counts as
   3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
   all under 2 km, to walking and the car.
-- Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 5.3 in the UK,
-  12.2 in India (by GDP per head, to the power -0.5). The fare is the player's curve of trip length
-  times the country's fare scale (2.8 in the US, 1.0 in India, where the curve is set, or the
-  player's own), paid once a trip; choosing between routes sees only its first stretch. At the
-  default scales a fare weighs the same everywhere; poorer countries just pay less per ride.
+- Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 6.0 in the UK,
+  8.4 in Japan, 16 in China, 51 in India (by GDP per head in US dollars, to the power -0.7). The
+  fare is the player's curve of trip length times the country's fare scale (11.6 in the US, 3.1 in
+  China, 1.0 in India, where the curve is set, or the player's own), paid once a trip; choosing
+  between routes sees only its first stretch. At the default scales a fare weighs the same
+  everywhere; poorer countries just pay less per ride. A new game's curve is about what real trains
+  charge: in New York $1.50 plus $0.10 a km to 20 km, then $0.25 a km, so $3.50 at 20 km, $23.50
+  at 100 km and $98 at 400 km; Beijing to Shanghai about $75 (a real ticket is about $83).
 - Which stations: riders share the pairs of stations near each end by how much slower each option
   is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
   trip and 58% on one of an hour; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly everyone
@@ -164,20 +167,24 @@ There is no built-in liking for the train. Rail and the car are compared on time
 **Between cities** (the car and the plane against the train)
 - Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
   and water (motorways fast, mountain roads slow, inlets driven round); farther, 15 minutes plus the
-  drive at 85 km/h on a road 1.25 times the straight line. Plus $0.15 a km of road and parking,
-  shared by two people, the dollars counted as below. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
+  drive at 85 km/h on a road 1.25 times the straight line. Plus fuel and tolls for each km of road
+  (the two cities' countries' pump price at 8.5 litres a 100 km, and motorway tolls where they go by
+  distance: about $0.10 a km in the US, $0.23 in Japan, $0.32 in France) and parking, shared by two
+  people, the dollars counted as below. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
   minutes plus the crossing at 35 km/h, $50 plus 50 cents a km a car. Across the Channel it pays $150
   a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
-  Tunnel takes no cars). No tolls anywhere, borders included.
+  Tunnel takes no cars). No tolls at borders.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, 25 minutes until the flight (the train's planned wait below at a
   flight every 2 hours), the flight at 750 km/h plus 30 minutes (an hour more with no direct
-  flight), and a fare of $30 plus 5 cents a km, so $55 at 500 km and $80 at 1,000 km.
+  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, the
+  same everywhere.
 - Money on these trips: people are split into three equal groups by income, from each country's
   published income shares. Each group counts every dollar the same whichever way it goes, the
   car's fuel and ferries, the plane's fare and the train's fare: the starting country's minutes a
-  dollar (the fare line above), more for the poorest third, less for the richest (about 1.5 and 0.75
-  times in the US). Richer people take more long trips. Each group picks its own way, and the
+  dollar (the fare line above) times 0.4, since time on a long trip is worth more than on a local
+  one; more for the poorest third, less for the richest (about 1.5 and 0.75 times in the US).
+  Richer people take more long trips. Each group picks its own way, and the
   shares are added up.
 - Train: a trip between cities is planned, so its first train's wait is half the time between
   trains, but at most 5 minutes plus a sixth of it, and at most 30 minutes, and the "no train for

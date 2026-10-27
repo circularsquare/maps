@@ -7,8 +7,8 @@
 import { activeCity, cityById } from "../../game/cities";
 import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
 import {
-  AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
-  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
+  AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, carPartsOf, corridorOf,
+  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, pairCarUsd, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
 } from "../../game/marketRule";
 import { fareScale, fareWeight } from "../../game/income";
 import { moneyState } from "../../game/money";
@@ -61,7 +61,7 @@ function CarRows({ total, parts, where }: { total: number; parts: CarCost | null
             <span class="grow">Drive</span>
             <span class="val">{minText(c.driveMin)}</span>
           </li>
-          <li data-tip={`Fuel and wear at ${perKm(CAR_USD_PER_KM)} of road, split between the ${CAR_SHARED_BY} people in the car`}>
+          <li data-tip={`Fuel and tolls at ${perKm(c.cu)} of road, split between the ${CAR_SHARED_BY} people in the car`}>
             <span class="grow">Running costs</span>
             <span class="val">{usd(c.runUsd)}</span>
           </li>
@@ -377,7 +377,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const corridor = one >= 0 && marketRowsReady.value ? (m.end === "work" ? corridorOf(one, ends.near) : corridorOf(ends.near, one)) : null;
   // the crossings when every far place shares them; the car's parts then follow from the sim's minutes
   const cross = marketRowsReady.value ? crossingSet(ends) : null;
-  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive, fareWeight(marketRow(m.end === "work" && one >= 0 ? one : ends.near)?.country)) : null;
+  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive, fareWeight(marketRow(m.end === "work" && one >= 0 ? one : ends.near)?.country), pairCarUsd(marketRow(ends.near), one >= 0 ? marketRow(one) : null)) : null;
   // T-1148: from a selection or a 6 km area, the whole places' trips as the solve split them, beside it
   const pair = one >= 0 && !(m.near && m.near.gid < 0) ? pairFigures(ends.near, one) : null;
   const bare = m.unbuilt ?? [];

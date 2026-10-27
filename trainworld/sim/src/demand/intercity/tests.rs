@@ -871,12 +871,12 @@ fn air_packs(island: bool) -> Vec<String> {
     ]
 }
 /// A line between place 0's and place 2's centres taking `hours`, every 10 minutes, with fares
-/// over 900 km.
+/// over 900 km at a long-distance rate (T-1521).
 fn far_line(a: &mut IntercityApi, hours: f32) {
     let s = hours * 3600.;
     let times = [s, 0., s, 0., s, 0., 0., s, 0., s, 0., s];
     a.set_network_ll(&[0., 50., 11., 50.], &[2], &[0, 1], &times, &[6., 6., 6.], &[8.]).unwrap();
-    a.set_fares(2., 0.1, &[900., 0., 0., 900.]).unwrap();
+    a.set_fares(2., 0.15, &[900., 0., 0., 900.]).unwrap();
 }
 #[test]
 fn the_car_pays_the_channel_and_the_tsugaru_ferry() {
@@ -916,7 +916,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let nod = air_packs(false).into_iter().enumerate().map(|(i, p)| if i == 0 { with_air(&p, &[(0.1, 50.)], &[], None) } else { p }).collect::<Vec<_>>();
     let b = IntercityApi::new(&composition(&nod, Some(&rows_json(&nod)))).unwrap();
     assert!(b.m.pr(0, 2).air < r02.air);
-    // rail against air on a far pair (T-1431's plane, fitted to published shares): 3 hours on the
+    // rail against air on a far pair (T-1521's plane): 3 hours on the
     // train takes about half, 6 hours few
     let ratio = |a: &mut IntercityApi, hours: f32| {
         far_line(a, hours);
@@ -972,6 +972,23 @@ fn income_groups_choose_at_their_own_weight() {
     let want = 0.25 * rich + 0.75 * poor;
     assert!((mix - want).abs() < 1e-5 * want, "{mix} against {want}");
     assert!(IntercityApi::new(&composition(&packs, Some(&rows.replacen("\"park\"", "\"fg\":[1,0],\"park\"", 1)))).is_err());
+}
+/// T-1521: a place's row may give its country's car running cost; a pair's car costs the two
+/// places' mean, and a row without one the default.
+#[test]
+fn a_rows_car_cost_sets_the_pairs() {
+    let packs = air_packs(false);
+    let rows = rows_json(&packs);
+    let with = |cu: &[f64]| {
+        let mut v: Vec<serde_json::Value> = serde_json::from_str(&rows).unwrap();
+        for (r, &c) in v.iter_mut().zip(cu) {
+            r["cu"] = c.into();
+        }
+        IntercityApi::new(&composition(&packs, Some(&serde_json::to_string(&v).unwrap()))).unwrap()
+    };
+    let usd = |a: &IntercityApi| a.m.pr(0, 2).car_cost(100., 0.).usd;
+    let (none, same, mixed) = (usd(&with(&[])), usd(&with(&[0.15, 0.15, 0.15, 0.15])), usd(&with(&[0.3, 0.15, 0.1, 0.15])));
+    assert!((none - same).abs() < 1e-6 && (mixed / none - (0.3 + 0.1) / 2. / 0.15).abs() < 1e-5, "{none} {same} {mixed}");
 }
 #[test]
 fn trips_with_places_that_have_no_zone_add_up() {

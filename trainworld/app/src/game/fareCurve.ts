@@ -7,8 +7,8 @@
 // route search charges them on each ride (`set_fares`), the sim adds the rest of the curve on each
 // trip's expected length (`set_fare_curve`, `curveKnots`) and reports that extra on the lines the
 // trips ride, by km (T-1516); fare income is `faresFor` plus that extra (game/money.ts), so demand and income
-// charge the same trips the same fares. The default curve, and any older save's line, is the line
-// through nodes at 0, 20 and 100 km.
+// charge the same trips the same fares. A new game starts at `START_NODES`; an older save's straight
+// line becomes nodes on it at 0, 20 and 100 km.
 
 /** [trip km, US$] */
 export type FareNode = [number, number];
@@ -23,6 +23,9 @@ export interface Fares {
   /** T-1277: the country the curve is set for; absent in a save from before, whose curve was
    * New York's fares */
   baseline?: string;
+  /** T-1521: "usd" for a curve and scales under the market-rate income rule; absent in a save
+   * from before (game/income.ts `oldCurveFactor`) */
+  basis?: "usd";
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */
@@ -37,9 +40,12 @@ export function scaledKnots(f: { base: number; perKm: number; nodes?: FareNode[]
 }
 
 export const NODE_KM = [0, 20, 100];
-/** A new game's curve (T-028, T-883), for the baseline country (T-1277, game/income.ts): New York,
- * at its income's scale of 2.8, starts at $1.50 plus $0.10 a km. */
-export const START_FARE = { base: 0.5357, perKm: 0.03571 };
+/** A new game's curve's first stretch (T-028, T-883), for the baseline country (T-1277,
+ * game/income.ts): New York, at its income's scale of 11.6, starts at $1.50 plus $0.10 a km. */
+export const START_FARE = { base: 0.1293, perKm: 0.008621 };
+/** A new game's curve (T-1521): the first stretch to 20 km, then 25 cents a km in New York, so fares
+ * match real ones at market rates (notes/T-1521.md). */
+export const START_NODES: FareNode[] = [[0, 0.1293], [20, 0.3017], [100, 2.0259]];
 /** Nodes keep at least this far apart, km (so f32 keeps them in order in the sim). */
 export const NODE_GAP_KM = 0.1;
 export const MAX_KM = 5000;

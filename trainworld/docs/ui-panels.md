@@ -415,7 +415,7 @@ and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
 and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
-"Fares here" with the country's scale in a stepper, "2.8x", stepping by 0.1 from 0.1 to 9.9 (a
+"Fares here" with the country's scale in a stepper, "11.6x", stepping by 0.1 from 0.1 to 19.9 (a
 click types one), its hover naming the country, the multiple of India's and the scale by income;
 once the player has set one, an undo icon beside it ("Back to 2.8x, the scale by income")
 returns to the income's [T-1277]. Then one row

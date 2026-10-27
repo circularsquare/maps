@@ -84,10 +84,12 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 taking its subregion's median); a group's income over the mean is 0.35-0.49 in the poorest third
 and 1.6-1.9 in the richest. Each group's riders weigh every mode's money, the car's running cost and
 crossings, the plane's fare and rail's fare, at the same minutes a dollar: the departing country's
-(T-1277) times (the group's income over the mean)^-0.5. A group makes longer trips in proportion to
+(T-1277) times (the group's income over the mean)^-0.5, times 0.4 (T-1521: a longer trip's time is
+worth more than a local one's, about US DOT's guidance, $14.10 an hour locally against $20.40 by
+road and $47.20 by air or high-speed rail). A group makes longer trips in proportion to
 (its income over the mean)^0.7, the rule's `eps`. A zone pair's choice is worked out for each group
 and added up by their trips; the place pair's split between car and plane likewise. Rail's fare is
-the player's curve as set at India's (12.2, so it weighs as every country's fares do at their
+the player's curve as set at India's (51, so it weighs as every country's fares do at their
 default scales; a trip pays the curve times its starting country's scale) [T-1277], each trip's
 fare weighed again by its group's factor and by its origin's fare scale over that country's income
 scale where the player set one (on the expected fare km of each station pair's strategy as
@@ -106,11 +108,13 @@ damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
 that scale by raising them to the power of the scale over 0.10. Rail's resulting share against
 air by hours on the train: notes/T-712.md.
 
-- *Car*: the rule is 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents
-  a road km and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the
+- *Car*: the rule is 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus the
+  car's running cost a road km (T-1521: the two places' countries' mean of `countryIncome.json`
+  `car`, gasoline at the pump at 8.5 litres a 100 km plus motorway tolls where they go by distance;
+  the market row's `cu`, 15 cents where a row has none) and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the
   market pack's `site_park`), both split over two occupants, the running cost at each income group's
-  minutes a dollar (T-1431); no tolls, at borders or anywhere
-  (T-270), and North Korea's roads are open like any other's. Only within a landmass.
+  minutes a dollar (T-1431); no tolls at borders, distance tolls inside the running cost
+  (T-270, T-1521), and North Korea's roads are open like any other's. Only within a landmass.
   *Routed drives* (T-279, `market-drives.bin` from `pipeline/market_drives.py`): per pair of places
   on one landmass within 1,500 km, a least-cost path on the world's 1/60 degree lattice, each cell's
   speed from GRIP4 road density (110 km/h with at least 25 m of highway a km², else 85 with 25 m of
@@ -134,7 +138,7 @@ air by hours on the train: notes/T-712.md.
   people-weighted over the place's zones), 90 minutes at the airports, 25 minutes until the flight
   (its frequency is not modelled: rail's planned first wait at a flight every 2 hours, T-1430), the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
-  a fare of $30 plus 5 cents a km (T-1431, fitted on published rail and air shares) at each income group's minutes a dollar (the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
+  a fare of $100 plus 5 cents a km (T-1521, published average economy fares at market rates, one world fare) at each income group's minutes a dollar (the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
   the player, no capacity, not drawn.
 - *Rail*: the player's network. Fares, service, transfers and shared crowding affect it. An
   inter-city trip is planned, so its first boarding waits the least of half the headway, 5 minutes
