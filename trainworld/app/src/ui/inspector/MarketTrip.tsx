@@ -8,9 +8,9 @@ import { activeCity, cityById } from "../../game/cities";
 import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
-  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
+  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
 } from "../../game/marketRule";
-import { fareScale } from "../../game/income";
+import { fareScale, fareWeight } from "../../game/income";
 import { moneyState } from "../../game/money";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
@@ -37,14 +37,14 @@ const CROSSING: Record<Crossing["kind"], { label: string; tip: (c: Crossing) => 
 function carEquation(c: CarCost): string {
   const terms: Term[] = [
     { label: "drive", real: num1(c.driveMin), weight: 1, perceived: c.driveMin },
-    { label: "running", real: usd(c.runUsd), weight: MIN_PER_USD, perceived: c.runUsd * MIN_PER_USD },
+    { label: "running", real: usd(c.runUsd), weight: c.w, perceived: c.runUsd * c.w },
     ...(c.parkMin >= 0.05 ? [{ label: "parking", real: "", weight: 1, perceived: c.parkMin }] : []),
     ...c.crossings.flatMap((x) => [
-      { label: "crossing fare", real: usd(x.usd / CAR_SHARED_BY), weight: MIN_PER_USD, perceived: (x.usd / CAR_SHARED_BY) * MIN_PER_USD },
+      { label: "crossing fare", real: usd(x.usd / CAR_SHARED_BY), weight: c.w, perceived: (x.usd / CAR_SHARED_BY) * c.w },
       { label: "crossing time", real: num1(x.min), weight: 1, perceived: x.min },
     ]),
   ];
-  return `${equation(terms, c.total)}\nEach dollar counts as ${MIN_PER_USD} minutes.`;
+  return `${equation(terms, c.total)}\nEach dollar counts as ${num1(c.w)} minutes for a rider of average income.`;
 }
 
 /** By car: the drive, its running costs, parking, any crossing, and the effective time. `parts`
@@ -314,19 +314,19 @@ function OtherRoutes({ t, shown, riders }: { t: MarketPeriod; shown: number[]; r
   if (!others.length && rest < 0.005) return null;
   return (
     <>
-      <div class="h">Other routes<span class="right muted small">train riders</span></div>
+      <div class="h">Other routes<span class="right muted small">train trips</span></div>
       <ul class="rows">
         {others.map(([r, v]) => {
           const { names, from, to, label } = routeRow(r, st, ln);
           return (
-            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of these trips' train riders${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(stationTimes(r).total)} station to station`}>
+            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train trips between these places${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(stationTimes(r).total)} station to station`}>
               {label}
               <span class="val w-num">{pctShare(v)}</span>
             </li>
           );
         })}
         {rest >= 0.005 && (
-          <li class="muted" data-tip={`The train riders spread over ${t.pairs.length} pairs of stations near the two ends. Routes under 0.5% of them are not listed.`}>
+          <li class="muted" data-tip={`The train trips spread over ${t.pairs.length} pairs of stations near the two ends. Routes under 0.5% of them are not listed.`}>
             <span class="grow">Smaller routes</span>
             <span class="val w-num">{pctShare(rest)}</span>
           </li>
@@ -377,7 +377,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const corridor = one >= 0 && marketRowsReady.value ? (m.end === "work" ? corridorOf(one, ends.near) : corridorOf(ends.near, one)) : null;
   // the crossings when every far place shares them; the car's parts then follow from the sim's minutes
   const cross = marketRowsReady.value ? crossingSet(ends) : null;
-  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive) : null;
+  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive, fareWeight(marketRow(m.end === "work" && one >= 0 ? one : ends.near)?.country)) : null;
   // T-1148: from a selection or a 6 km area, the whole places' trips as the solve split them, beside it
   const pair = one >= 0 && !(m.near && m.near.gid < 0) ? pairFigures(ends.near, one) : null;
   const bare = m.unbuilt ?? [];
@@ -436,7 +436,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       {pair && <PairModes pair={pair} near={ends.near} far={one} day={day} />}
       {!closed && cLegs >= 0.5 && <CommuteModes legs={cLegs} rail={cRail} day={day} who={commuters} />}
       {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
-      <div class="h">By train<span class="right muted small" data-tip={others ? `Train riders in the ${period.toLowerCase()} on every kind of trip between the two ends${tripPeriod.value === null ? "; the period with most trips" : ""}` : repTip}>{others ? period : `Inter-city, ${period.toLowerCase()}`}</span></div>
+      <div class="h">By train<span class="right muted small" data-tip={others ? `Trips by train in the ${period.toLowerCase()}, of every kind, between the two ends${tripPeriod.value === null ? "; the period with most trips" : ""}` : repTip}>{others ? period : `Inter-city, ${period.toLowerCase()}`}</span></div>
       {t.why || !main || !tm ? <p class="muted">{noStation || NO_RAIL[t.why || "noRail"]}</p> : (
         <>
           <Legs t={t} r={main} />
@@ -456,7 +456,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               </li>
             )}
           </ul>
-          <p class="muted small" data-tip={`The train riders spread over ${t.pairs.length} pairs of stations near the two ends`}>
+          <p class="muted small" data-tip={`The train trips spread over ${t.pairs.length} pairs of stations near the two ends`}>
             {routeShares[0] >= 0.995 ? "Every train user on these trips takes this route." : `${pctShare(routeShares[0])} of the train users on these trips take this route.`}
           </p>
           <OtherRoutes t={t} shown={routeShares} riders={riders} />

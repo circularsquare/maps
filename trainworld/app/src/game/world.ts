@@ -149,6 +149,25 @@ const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
   sendTrainCounts(id, trains);
 };
 
+/** T-1526: a line's train length asked for but not yet in `world`, folded like the train counts: a
+ * click counts from it, not from the old length. `to` is the cars shown, `cap` what the line's
+ * shortest platform fits (the most that fits is stored as 0, so the line follows its platforms). */
+export const pendingCars = signal<ReadonlyMap<LineId, { to: number; cap: number }>>(new Map());
+const sendCars = folded(pendingCars, async (id, v) => {
+  const a = await edit({ op: "lineCars", line: num(id), cars: v.to >= v.cap ? 0 : v.to }, false, true);
+  return a.ok;
+});
+
+/** Step a line's train length by `by` cars from what it shows now, within 1 to `cap`; `shown` is the
+ * length the world gives it. */
+export function stepLineCars(id: LineId, shown: number, cap: number, by: number) {
+  const now = pendingCars.peek().get(id)?.to ?? shown;
+  const to = Math.max(1, Math.min(cap, now + by));
+  if (to === now) return;
+  clickSound({ op: "lineCars" });
+  sendCars(id, { to, cap });
+}
+
 /** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
  * folded like the train counts above; null is a switch back to counts set by hand (T-747). */
 export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number] | null>>(new Map());

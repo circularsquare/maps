@@ -48,6 +48,7 @@ export const Icon = {
   related: () => <svg viewBox="0 0 16 16"><path d="M8 .8v4.5M8 10.7v4.5M.8 8h4.5M10.7 8h4.5" /><circle cx="8" cy="8" r="2.7" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
+  bus: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>,
   bin: () => <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6.5 4.5V2.5h3v2M4 4.5l.8 9h6.4l.8-9M6.8 7v4M9.2 7v4" /></svg>,
   // the blueprint selection tool (a dashed box), and switching the selection off or on
   marquee: () => <svg viewBox="0 0 16 16"><path d="M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3M7 7l5 2-2 .8L9 12z" /></svg>,

@@ -157,23 +157,28 @@ There is no built-in liking for the train. Rail and the car are compared on time
   "households without a car" figure.
 - Owning the car: $2.00 a trip plus $0.13 a km, at 3 minutes a dollar. A typical trip pays $2.90
   to $5.25, and a driver's day comes to about $13. The long trips between cities pay none.
-- Everyone can drive. "Walking" also stands for cycling and short bus rides (one reason its share
-  runs above the census's), and "car" for driving, taxis and longer bus rides. The trip explorer's
+- Everyone can drive. "Walking" also stands for cycling and short bus trips (one reason its share
+  runs above the census's), and "car" for driving, taxis and longer bus trips. The trip explorer's
   Walk and Drive rows say so in their hovers.
 
 **Between cities** (the car and the plane against the train)
 - Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
   and water (motorways fast, mountain roads slow, inlets driven round); farther, 15 minutes plus the
   drive at 85 km/h on a road 1.25 times the straight line. Plus $0.15 a km of road and parking,
-  shared by two people. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
+  shared by two people, the dollars counted as below. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
   minutes plus the crossing at 35 km/h, $50 plus 50 cents a km a car. Across the Channel it pays $150
   a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
   Tunnel takes no cars). No tolls anywhere, borders included.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, 25 minutes until the flight (the train's planned wait below at a
   flight every 2 hours), the flight at 750 km/h plus 30 minutes (an hour more with no direct
-  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, its
-  dollars counted at the starting country's minutes a dollar (the fare line above).
+  flight), and a fare of $30 plus 5 cents a km, so $55 at 500 km and $80 at 1,000 km.
+- Money on these trips: people are split into three equal groups by income, from each country's
+  published income shares. Each group counts every dollar the same whichever way it goes, the
+  car's fuel and ferries, the plane's fare and the train's fare: the starting country's minutes a
+  dollar (the fare line above), more for the poorest third, less for the richest (about 1.5 and 0.75
+  times in the US). Richer people take more long trips. Each group picks its own way, and the
+  shares are added up.
 - Train: a trip between cities is planned, so its first train's wait is half the time between
   trains, but at most 5 minutes plus a sixth of it, and at most 30 minutes, and the "no train for
   hours" extra does not apply: 5 at a train every 10 minutes, 15 at an hourly train, 25 at one

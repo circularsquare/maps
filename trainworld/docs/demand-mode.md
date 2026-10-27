@@ -47,14 +47,16 @@ the station loses riders where that trip gets worse than driving. **A fare dolla
 national income** (T-1277, with T-1166): 5 x (GDP per head at PPP / $60,000)^-0.5 perceived
 minutes, by the trip's country (each zone population's pack country, `Params::fare_w`, set by the
 demand worker through `set_fare_weight`; `app/src/game/income.ts`, `countryIncome.json`): the US
-4.4, India 12.2. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour). The
+4.4, India 12.2. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour),
+except on the regional market's longer trips, whose riders come in income groups that weigh every
+mode's money alike (T-1431, docs/regional.md 5.1). The
 fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares)
 times the trip's country's fare scale, charged once per trip including transfers on actual track
 length. The regional market takes the curve unscaled at India's weight (the same perceived fare as
-every country at its default scale), and the plane's fare at the departing country's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
+every country at its default scale), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
 its strategy (the riders' split over lines by their departures), and the assignment counts that
-correction where the trips first board, for fare income. Crowding multiplies ride time
+correction on the lines the trips ride, by their km on each, for fare income (T-1516). Crowding multiplies ride time
 without multiplying fare (T-067).
 
 **Walking** (Anita, T-558) is a third mode: its share is that of a logit among rail, the car and

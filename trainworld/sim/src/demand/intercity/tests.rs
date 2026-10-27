@@ -406,7 +406,7 @@ fn compact_pack_accepts_metadata_and_rejects_malformed_sites() {
     let reordered = IntercityApi::new(r#"{"sites":[[0,0,100000,50000,0],[120000,0,100000,50000,1],[60000,0,40000,20000,2]],"description":"unused","origin":{"lon":-73.985,"lat":40.758},"zone_m":6000,"trip_rate":0.015}"#).unwrap();
     assert_eq!(base.info(), reordered.info());
     for (a, b) in base.all_pairs().iter().zip(&reordered.all_pairs()) {
-        assert_eq!((a.a, a.b, a.trips, a.drive, a.corridor), (b.a, b.b, b.trips, b.drive, b.corridor));
+        assert_eq!((a.a, a.b, a.trips, a.car, a.corridor), (b.a, b.b, b.trips, b.car, b.corridor));
     }
     for bad in [
         r#"{}"#,
@@ -468,7 +468,7 @@ fn zone_distances_are_on_the_ground_when_the_pack_names_its_frame() {
         let p = plane.m.zone_km(&plane.m.zones[i], &plane.m.zones[j]);
         assert!((p - d).abs() > 1e-4 * d, "{i}-{j}: the plane differs: {p} vs {d}");
     }
-    let drive = |a: &IntercityApi| a.all_pairs().iter().find(|p| p.a == 0 && p.b == 2).unwrap().drive;
+    let drive = |a: &IntercityApi| a.all_pairs().iter().find(|p| p.a == 0 && p.b == 2).unwrap().car.at(FARE_MIN_PER_USD);
     assert_eq!(drive(&ground), car_min(ground.m.zone_km(&ground.m.zones[0], &ground.m.zones[2]) as f32, 0.));
     assert!(drive(&ground) != drive(&plane));
     let lcc = Frame::lcc(lon0, lat0);
@@ -882,6 +882,7 @@ fn far_line(a: &mut IntercityApi, hours: f32) {
 fn the_car_pays_the_channel_and_the_tsugaru_ferry() {
     let (lon, par, man) = (("GB", 51.5), ("FR", 48.9), ("GB", 53.5));
     let (tyo, spk, hak) = (("JP", 35.7), ("JP", 43.1), ("JP", 41.8));
+    let crossing_min = |a, b| crossing_cost(a, b).at(FARE_MIN_PER_USD);
     assert_eq!((crossing_min(lon, man), crossing_min(tyo, ("JP", 40.8)), crossing_min(spk, hak)), (0., 0., 0.));
     assert_eq!(crossing_min(lon, par), crossing_min(par, man));
     assert!(crossing_min(lon, par) > 200. && crossing_min(tyo, spk) > crossing_min(lon, par));
@@ -897,7 +898,12 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     // far with airports at both ends: some fly, the rest drive; near or with no airport: none fly
     let r02 = m.pr(0, 2);
     assert!(r02.car && r02.air > 0.5 && r02.air < 1., "{}", r02.air);
-    assert!((r02.rest - 1. / (1. - r02.air)).abs() < 1e-3 * r02.rest);
+    let alt = |r: &PairRule, i: usize, j: usize| {
+        let split = r.split_car(&m.places[i], &m.places[j]);
+        r.alt(split, split, m.places[i].w(), &m.mp)
+    };
+    let rest = alt(&r02, 0, 2).rest;
+    assert!(((rest - 1.) / rest - r02.air).abs() < 1e-5, "{rest} {}", r02.air);
     assert_eq!((m.pr(0, 1).air, m.pr(1, 2).air, m.pr(0, 3).air), (0., 0., 0.));
     assert!(!m.pr(0, 3).has_alt(), "near and across the sea: no car, no plane");
     // the corridors' split is the pairs'
@@ -910,8 +916,8 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let nod = air_packs(false).into_iter().enumerate().map(|(i, p)| if i == 0 { with_air(&p, &[(0.1, 50.)], &[], None) } else { p }).collect::<Vec<_>>();
     let b = IntercityApi::new(&composition(&nod, Some(&rows_json(&nod)))).unwrap();
     assert!(b.m.pr(0, 2).air < r02.air);
-    // rail against air on a far pair (T-712's dearer plane): 3 hours on the train wins nearly
-    // all, 6 hours about half
+    // rail against air on a far pair (T-1431's plane, fitted to published shares): 3 hours on the
+    // train takes about half, 6 hours few
     let ratio = |a: &mut IntercityApi, hours: f32| {
         far_line(a, hours);
         assert!(a.solve(0));
@@ -923,17 +929,49 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
         rail / (rail + air)
     };
     let (fast, slow) = (ratio(&mut a, 3.), ratio(&mut a, 6.));
-    assert!(fast > 0.95 && fast < 1. && slow < 0.8 && slow > 0.3, "rail of rail and air: 3 h {fast}, 6 h {slow}");
+    assert!(fast > 0.3 && fast < 0.9 && slow < 0.2 && slow < fast, "rail of rail and air: 3 h {fast}, 6 h {slow}");
     // across the sea the far pair is all air, and still served by rail where track joins it
     let packs = air_packs(true);
     let rows = rows_json(&packs);
     let mut s = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
     let r = s.m.pr(0, 2);
-    assert!(!r.car && r.air == 1. && r.rest == 1. && r.has_alt());
+    let split = r.split_car(&s.m.places[0], &s.m.places[2]);
+    assert!(!r.car && r.air == 1. && r.alt(split, split, s.m.places[0].w(), &s.m.mp).rest == 1. && r.has_alt());
     // rail against air does not depend on the car (one logit: the plane's weight against the
     // car's cancels), up to the car's zone against place distance
     let island = ratio(&mut s, 3.);
-    assert!((island - fast).abs() < 0.03, "{island} {fast}");
+    assert!((island - fast).abs() < 0.05, "{island} {fast}");
+}
+/// T-1431: a place's riders in income groups each choose with every mode's money at their own
+/// minutes a dollar, and a pair's rail trips are the groups' by their shares of the trips.
+#[test]
+fn income_groups_choose_at_their_own_weight() {
+    let packs = air_packs(false);
+    let rows = rows_json(&packs);
+    let rail = |fg: Option<&str>| {
+        let mut v: Vec<serde_json::Value> = serde_json::from_str(&rows).unwrap();
+        for r in v.iter_mut() {
+            r["fw"] = 4.5.into();
+            if let Some(fg) = fg {
+                r["fg"] = serde_json::from_str(fg).unwrap();
+            }
+        }
+        let mut a = IntercityApi::new(&composition(&packs, Some(&serde_json::to_string(&v).unwrap()))).unwrap();
+        assert_eq!(a.m.grouped, fg.is_some_and(|f| f != "[1,1]"));
+        far_line(&mut a, 4.);
+        assert!(a.solve(0));
+        let (za, zb) = (a.m.places[0].off as usize, a.m.places[2].off as usize);
+        let (za, zb) = (a.m.comp_of_gid[za] as usize, a.m.comp_of_gid[zb] as usize);
+        let i = a.pair_at(za, zb) as usize;
+        a.per(0).unwrap().pair_rail[i] as f64 / (a.pairs[i].trips * SHARES[0] as f64)
+    };
+    let (none, one) = (rail(None), rail(Some("[1,1]")));
+    assert_eq!(none, one);
+    let (rich, poor, mix) = (rail(Some("[1,0.6]")), rail(Some("[1,1.6]")), rail(Some("[0.5,0.6,1.5,1.6]")));
+    assert!((rich - poor).abs() > 1e-3, "{rich} {poor}");
+    let want = 0.25 * rich + 0.75 * poor;
+    assert!((mix - want).abs() < 1e-5 * want, "{mix} against {want}");
+    assert!(IntercityApi::new(&composition(&packs, Some(&rows.replacen("\"park\"", "\"fg\":[1,0],\"park\"", 1)))).is_err());
 }
 #[test]
 fn trips_with_places_that_have_no_zone_add_up() {
@@ -1532,7 +1570,7 @@ fn t780_census() {
     let mut terms = vec![];
     let mut x = 0f64;
     for pair in &a.pairs {
-        let (c, _) = rail_logsum(&r, s, p.fare_min, &a.access[pair.a as usize], &a.access_work[pair.b as usize], p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
+        let (c, _) = rail_logsum(&r, s, p.fare_min, &a.access[pair.a as usize], &a.access_work[pair.b as usize], p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car.at(FARE_MIN_PER_USD)), &mut terms);
         x += c as f64;
     }
     eprintln!("logsums alone {:.0} ms ({x:.0})", now_ms() - t);

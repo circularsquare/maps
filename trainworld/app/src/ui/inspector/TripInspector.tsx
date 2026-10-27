@@ -102,8 +102,8 @@ const WALK_ROW_MIN = 30;
 
 /** T-1148: what the model's walking and driving stand for (demand-plain.md). */
 const STANDS_FOR: Record<string, string> = {
-  Walk: "Walking here also covers cycling and short bus rides.",
-  Drive: "Driving here also covers taxis and longer bus rides.",
+  Walk: "Walking here also covers cycling and short bus trips.",
+  Drive: "Driving here also covers taxis and longer bus trips.",
 };
 
 /** The headline: the trips between the two places by mode as the view counts them (T-586), or,
@@ -160,7 +160,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
         const span = l.waitPerceived - l.waitMin, full = l.fullWaitMin;
         const v = w.lineStats[l.line]?.bus ? "bus" : "train";
         return `Wait ${(l.waitMin - full).toFixed(1)} min (half the time between the useful ${v}s)${full >= 0.05 ? ` and ${full.toFixed(1)} min more for a ${v} with room` : ""}, then ${l.min.toFixed(1)} min on the ${v} over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
-          (span >= 0.05 ? `. Some riders arrive when no ${v} is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
+          (span >= 0.05 ? `. Some trips start when no ${v} is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
       })}
       {pair && last && (
         <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
@@ -298,7 +298,7 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
   const open = openRoute.value;
   return (
     <>
-      <div class="h">Other routes<span class="right muted small">train riders</span></div>
+      <div class="h">Other routes<span class="right muted small">train trips</span></div>
       <ul class="rows pick">
         {kept.map(([[k, r], v]) => {
           const { names, from, to, label } = routeRow(r, st, ln);
@@ -307,7 +307,7 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
           return (
             <Fragment key={k}>
               <li class={on ? "on" : ""} onClick={() => (openRoute.value = on ? null : k)}
-                data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of this trip's train riders${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(tot.total)} long\n${on ? "Click to close" : "Click to see its legs and effective time"}`}>
+                data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train trips between these places${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(tot.total)} long\n${on ? "Click to close" : "Click to see its legs and effective time"}`}>
                 {label}
                 <span class="val w-num">{pctShare(v)}</span>
               </li>
@@ -365,13 +365,13 @@ function BusiestRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) 
   const cut = shown[shown.length - 1];
   return (
     <>
-      <div class="h">Busiest routes<span class="right muted small">train riders</span></div>
+      <div class="h">Busiest routes<span class="right muted small">train trips</span></div>
       <ul class="rows">
         {t.routes.map((r, i) => {
           if (riders && shown[i] <= 0) return null;
           const { names, from, to, label } = routeRow(r, st, ln);
           return (
-            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train riders between the two groups${riders ? `, ${pctShare(shown[i])} of the ${count(riders)} counted here` : ""}`}>
+            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train trips between the two groups${riders ? `, ${pctShare(shown[i])} of the ${count(riders)} counted here` : ""}`}>
               {label}
               <span class="val w-num">{pctShare(shown[i])}</span>
             </li>

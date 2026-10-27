@@ -20,9 +20,6 @@ import { byNear, natural, Near, ScopeToggle } from "./listParts";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
-/** T-1464: the New line control's bus button */
-const BUS_ICON = <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>;
-
 /** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
   const d = today.value.get(line);
@@ -121,7 +118,7 @@ export function LinesTab() {
       <div class="line-list-actions">
         <span style={{ display: "flex", gap: "6px" }}>
           <button class="btn text" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
-          <button class="btn icon" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}>{BUS_ICON}</button>
+          <button class="btn icon" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
         </span>
         <ScopeToggle />
       </div>

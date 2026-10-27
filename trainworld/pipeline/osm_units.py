@@ -76,6 +76,16 @@ def admin_areas(extract):
     return pyogrio.read_dataframe(out)
 
 
+def gb_source(iso, sources):
+    """[(unit id, name, Mollweide geometry)] of a geoBoundaries country's plan units: the plan state's
+    where its zone rule says `plan_units` (the units it zoned on, T-1239), else the files read afresh."""
+    import world_plan as wp
+    if wp.ZONE_RULES.get(iso, {}).get("plan_units"):
+        return wp.state_units(iso)
+    meta = wp.europe_isos()[1]
+    return [u for adm in sources[iso]["urls"] for u in wp.gb_units(meta, iso, adm)]
+
+
 def plan_units(row, sources):
     """[(plan unit id, name, lon/lat geometry, source kind)] of the row's units, from the files the
     plan read."""
@@ -84,8 +94,7 @@ def plan_units(row, sources):
     for iso, ids in row["units"].items():
         src, want = sources[iso], set(ids)
         if src["kind"] == "geoBoundaries":
-            meta = wp.europe_isos()[1]
-            have = [u for adm in src["urls"] for u in wp.gb_units(meta, iso, adm)]
+            have = gb_source(iso, sources)
         elif src["kind"] == "NUTS3":
             have = wp.load_nuts({iso})[iso]
         elif src["kind"] == "ITL3":
@@ -353,13 +362,11 @@ def foreign(row, sources, units, admin, picks):
         if sources[iso]["kind"] != "geoBoundaries":
             continue
         others = {u for r in plan if r.get("id") != row["id"] for u in (r.get("units") or {}).get(iso, [])} - mine
-        meta = wp.europe_isos()[1]
-        for adm in sources[iso]["urls"]:
-            for uid, name, g in wp.gb_units(meta, iso, adm):
-                if uid in others and g.intersects(box):
-                    for i, rg in rel.items():
-                        if g.area > 0 and make_valid(g).intersection(rg).area >= 0.5 * g.area:
-                            held.setdefault(i, []).append(name)
+        for uid, name, g in gb_source(iso, sources):
+            if uid in others and g.intersects(box):
+                for i, rg in rel.items():
+                    if g.area > 0 and make_valid(g).intersection(rg).area >= 0.5 * g.area:
+                        held.setdefault(i, []).append(name)
     if not held:
         return picks
     out = []
@@ -391,11 +398,9 @@ def enclaves(row, sources, holes):
         if sources[iso]["kind"] != "geoBoundaries":
             continue
         others = {u for r in plan if r.get("id") != row["id"] for u in (r.get("units") or {}).get(iso, [])} - mine
-        meta = wp.europe_isos()[1]
-        for adm in sources[iso]["urls"]:
-            for uid, _, g in wp.gb_units(meta, iso, adm):
-                if uid in others and g.intersects(hm):
-                    out.append(wp.polygonal(wp.to_ll(make_valid(g).intersection(hm))))
+        for uid, _, g in gb_source(iso, sources):
+            if uid in others and g.intersects(hm):
+                out.append(wp.polygonal(wp.to_ll(make_valid(g).intersection(hm))))
     got = union_all(out) if out else shapely.Polygon()
     if not got.is_empty:
         print(f"  {row['id']}: {km2(got, (row['bbox'][1] + row['bbox'][3]) / 2):,.0f} km2 of other rows' units "

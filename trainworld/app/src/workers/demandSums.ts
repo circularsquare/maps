@@ -383,8 +383,8 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
     }
   });
   const loadOfCrush = r.loadOfCrush.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
-  // the fare curve's extra follows the riders boarding where it is counted (T-1143)
-  const fareX = r.fareX?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : 0));
+  // the fare curve's extra follows the riders on the stretch where it is counted (T-1516)
+  const fareX = r.fareX?.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
   // T-1255: the riders coming to a platform follow its boardings
   const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));
   const citySummary: Record<CityId, number[]> = {};

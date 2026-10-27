@@ -10,9 +10,13 @@ field, both stored per 6 km zone in the place's pack, so the departures to place
 (`info()[4]`, by place `elsewhere(q)`, a selection's in its last two numbers) need no outside
 world. The car's perceived minutes add 15 cents a road km and the destination zone's parking
 (`site_park`: the local parking rule's mean over drivers at each site's 2 km zone, job-weighted), both halved for two occupants
-(`car_min`). T-378: the plane (`air_min`, [regional.md](regional.md) 5.1) is priced per pair of
-places (`PairRule`: car or not, the plane's share of the trips not by rail, the weight of every
-mode but rail against the reference, the reference's minutes with no car). **What is kept per
+(`routed_car`, a `Cost` of minutes and dollars). T-378: the plane (`air_cost`, [regional.md](regional.md) 5.1) is priced per pair of
+places (`PairRule`: car or not, the flight's minutes and fare, the crossings, the routed drive, and
+the plane's share of the trips not by rail over the departing place's income groups). T-1431: a
+place's row carries its income groups (`fg`, from the app's `marketWorld`), and each zone pair's
+choice is worked out per group with every mode's dollars at that group's minutes a dollar
+(`PairRule::alt`), added up by the groups' trips; their rail fares need the stations' expected fare
+km (`pair_km`) whenever a place has groups. **What is kept per
 pair** (T-1204): a composition keeps the rules of the pairs with an open place at one end (each
 open place's row and column, about 250 KB a place); any other pair's is worked out when asked,
 which only `corridor_modes` does. The corridors' figures that depend on the places alone (each
@@ -25,7 +29,7 @@ Before, every composition built all 6.6 million pair rules and dense corridor ta
 and 3-13 s in each solving worker, and 50 MB more for each period held. The figures are the same
 to the bit (`t1204_signature` over four sets of places); a composition now takes 15-90 ms and
 holds 12-25 MB beside the 34 MB kept. A served pair's rail share is `sum / (rest + sum)` against its zones' car time (or the
-plane's, with no car), and the split of the rest by plane and car is the pair's
+plane's, with no car), per income group, and the split of the rest by plane and car is the pair's
 (`corridor_modes`), which the client applies to every figure it shows. Commutes between zones: in the home place's pack,
 `commute_home` (its 6 km zone), `commute_place` and `commute_work` (the work place and its zone)
 and `commute_trips`, from `bin/joint_gravity.rs --packs` by way of its group's

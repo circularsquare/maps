@@ -1,7 +1,6 @@
 // Settings (SPEC 8): the display settings and the theme, remembered per browser. The saves are in
 // their own panel (ui/SavesPanel.tsx).
 
-import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import type { ComponentChildren } from "preact";
 import { awayNear, rushRun } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
@@ -51,7 +50,7 @@ export function SettingsTab() {
       <Slider label="Detail" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step={1} value={d.bubbleDetail}
         tip={`Smallest bubbles group trips by areas of ${(RES_AREA_M2[0] / 1e6).toFixed(1)} km², from zoom ${finestFromZoom(d.bubbleDetail).toFixed(1)}`} set={(v) => setDisplay("bubbleDetail", v)} />
       {/* the bubbles' colours; bars and swatches by mode keep the mode colours */}
-      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where nobody rides a train to another where everyone does.">
+      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where no trips go by train to another where all do.">
         <span>Colours</span>
         <Segmented<BubbleScheme> options={SCHEME_OPTIONS} value={d.bubbleColours === "ramp" ? "ramp" : "mode"} onChange={(v) => setDisplay("bubbleColours", v)} />
       </div>
@@ -140,12 +139,6 @@ export function SettingsTab() {
         <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
       </div>
       <UiScale />
-      <div class="h">Font</div>
-      <div class="track-modes"><Segmented<FontKey>
-        options={FONT_KEYS.map((k) => [k, FONTS[k].label] as [FontKey, string])}
-        value={d.font}
-        onChange={(v) => setDisplay("font", v)}
-      /></div>
       <div class="h">Units and performance</div>
       <div class="checks">
         <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>

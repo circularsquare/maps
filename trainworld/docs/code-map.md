@@ -104,7 +104,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   pictures, the start menu's settling, downloads and deletions, the sign-in question) over
   `workers/cloud.ts`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209),
-  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py; T-1286: the market's fare factor per country), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
+  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -136,7 +136,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
   `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which click
-  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised voices, T-1413, and the sample player),
+  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised bung, T-1413, and the sample player),
   `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
   all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
@@ -150,7 +150,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
-  points, the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
+  points and their handles, drag, delete and the active end (T-1514), the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
   `busRoads.ts` (zoom 14 tiles fetched from the basemap's tile server, snapping and `leg`),
   `roadGraph.ts` (the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
@@ -381,7 +381,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
   port 6160 by default, about four minutes),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
-  selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
+  selects the track, beside it the bubble), `t1515-click-priority.mjs` (a click on a rail line, bus
+  line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
+  network the bubble; port 6115 by default, about two minutes), `t1516-fares-never-negative.mjs`
+  (a new game and the real save with a bus feeder under a tapering fare curve: no line's fares a
+  day below zero; port 6116 by default, about six minutes), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
   `t658-lanes.mjs` (the real save: the overlay at zoom 12 and 15 pixel for pixel the baseline
   build's, 8800 by default; either of double track's two tracks picks the line at 17.5; two
@@ -457,9 +461,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
-  `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map; about a minute, port 6152 by default; T-1485),
+  `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map or on a control over it while keys pan, near the pointer after a drag pan, none once the tool changes; about a minute, port 6152 by default; T-1485, T-1522),
   `t1500-change-trip.mjs [url]` (Shanghai - Wuhan and Wuhan - Beijing sharing a station, metro lines at both ends: the trip explorer between Shanghai and Beijing finds the change at Wuhan in every period, new game and after a save and load; about 4 minutes; T-1500),
-  `t1465-bus-roads.mjs [port]` (a bus drawn with the mouse in Manhattan, San Francisco and Lisbon: it follows drawn roads, plausible road length, cheap pointer moves, Edit route keeps the corners, far from roads stays straight; screenshots to artifacts/trainworld/t1465/; about 2 minutes, port 6365 by default; T-1465),
+  `t1513-bus-delete.mjs [port]` (the delete tool on a planned and a constructed bus line: the tag, removing at once, the question, undo; T-1513),
+  `t1465-bus-roads.mjs [port]` (a bus drawn with the mouse in Manhattan, San Francisco, Lisbon and Dongguan: it follows drawn roads, plausible road length, no hairpin turns, cheap pointer moves, Edit route keeps the corners, far from roads stays straight; then legs across divided roads found in Dongguan, Berlin and Shenzhen (T-1512); screenshots to artifacts/trainworld/t1465/; about 2 minutes, port 6365 by default; T-1465),
+  `t1514-bus-edit.mjs [port]` (the bus tool with the mouse in Manhattan: the Build tab's Bus button, finishing by a click on the last point, a double click, Make line and Enter, Escape, then Edit route from the far end, dragging, deleting by right click, Save route in the panel, Escape on an edit; handle screenshots in light and dark to artifacts/trainworld/t1514/; about a minute, port 7014 by default; T-1514),
   `t1464-bus.mjs [url]` (a feeder bus to a rail line in a new game and two on the real save: riders, the rail line's gain, Construct's price, demand's corridor, the save's route; about 6 minutes, port 6164 by default; T-1464),
   `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
   `t1491-hide-ui.mjs [url]` (F2 and Esc hide and bring back the interface, the map taking the room, the Controls panel's F2 row, light and dark; screenshots in `artifacts/trainworld/t1491/`; T-1491), `t1494-hsr-line.mjs <label> [url]` (a high-speed route with a line of high-speed then ordinary trains, and bare high-speed track, shot at 3x; T-1494), `t1495-tags.mjs <label> [url]` (a station tag and the track tool's tag on the real save, light and dark, `BEFORE=1` for the old style; T-1495),

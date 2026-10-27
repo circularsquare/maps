@@ -7,7 +7,9 @@ import { autoLevel, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, displ
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
-import { pickTool, TOOLS } from "./toolKeys";
+import { BUS_KEY, pickTool, TOOLS } from "./toolKeys";
+import { newBusLine } from "../game/lineActions";
+import { live } from "../map/live";
 import { costBackground } from "../map/trackTagRows";
 
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
@@ -33,6 +35,13 @@ export function BuildTab() {
               <span class="key muted">{key}</span>
             </button>
           ))}
+          {/* T-1514: the bus tool, also on the Lines tab; it starts a new line, so it is no TOOLS entry */}
+          <button class={"btn text tool-bus" + (t === "bus" ? " on" : "")} data-tip={`Draw a bus line (${BUS_KEY.toUpperCase()})`}
+            onClick={() => (t === "bus" ? live.tools?.exit() : newBusLine())}>
+            <Icon.bus />
+            <span class="tool-label">Bus</span>
+            <span class="key muted">{BUS_KEY.toUpperCase()}</span>
+          </button>
         </div>
         <div class="h">Elevation</div>
         <div class="build-track-row">

@@ -2,7 +2,9 @@
 //! 5.1): per pair of places on one landmass within 1,500 km, the routed drive's minutes and road km
 //! as ratios to the rule's, and the ferry it takes over open water. A pair with no entry keeps the
 //! rule; the market applies a pair's ratios to each of its zone pairs' own distances.
-use super::{FARE_MIN_PER_USD, LONG_OCCUPANCY};
+use super::{Cost, LONG_OCCUPANCY};
+#[cfg(test)]
+use super::FARE_MIN_PER_USD;
 use std::collections::HashMap;
 
 /// The ferry a car takes over open water the landmass has no road across (Anita 2026-10-26):
@@ -24,14 +26,13 @@ pub(super) struct Drive {
 }
 impl Drive {
     pub const RULE: Drive = Drive { rt: 1., rk: 1., ferry_km: 0., ferries: 0 };
-    /// The ferries' minutes and each person's share of their fares, perceived.
-    pub fn ferry_min(&self) -> f32 {
+    /// The ferries' minutes and each person's share of their fares.
+    pub fn ferry_cost(&self) -> Cost {
         if self.ferries == 0 {
-            return 0.;
+            return Cost::default();
         }
-        let per = FERRY_MIN + FERRY_USD * FARE_MIN_PER_USD / LONG_OCCUPANCY;
-        let per_km = 60. / FERRY_KMH + FERRY_USD_PER_KM * FARE_MIN_PER_USD / LONG_OCCUPANCY;
-        self.ferries as f32 * per + self.ferry_km * per_km
+        let n = self.ferries as f32;
+        Cost { min: n * FERRY_MIN + self.ferry_km * 60. / FERRY_KMH, usd: (n * FERRY_USD + self.ferry_km * FERRY_USD_PER_KM) / LONG_OCCUPANCY }
     }
 }
 
@@ -176,7 +177,7 @@ mod tests {
 
     #[test]
     fn a_ferry_is_a_base_and_per_km() {
-        let f = |km, n| Drive { ferry_km: km, ferries: n, ..Drive::RULE }.ferry_min();
+        let f = |km, n| Drive { ferry_km: km, ferries: n, ..Drive::RULE }.ferry_cost().at(FARE_MIN_PER_USD);
         assert_eq!(f(80., 0), 0.);
         let per = FERRY_MIN + FERRY_USD * FARE_MIN_PER_USD / LONG_OCCUPANCY;
         assert!((f(0., 1) - per).abs() < 1e-4);

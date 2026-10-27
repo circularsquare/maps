@@ -85,8 +85,8 @@ export function newLineKey() {
   return createLine(e && e.lines.length === 0 ? e : undefined);
 }
 
-/** T-1464: draw a new bus line (the B key, the Lines tab's bus button): click points, double click
- * or Enter to finish (map/busDraw.ts). */
+/** T-1464: draw a new bus line (the B key, the Lines tab's bus button, the Build tab's Bus tool):
+ * click points, then finish (map/busDraw.ts). */
 export function newBusLine() {
   const t = live.tools;
   if (!t || !world.peek()) return;
@@ -94,15 +94,14 @@ export function newBusLine() {
   t.bus.begin(null);
 }
 
-/** T-1464: the bus line's Edit route button: the tool opens with the line's route to redraw, and
- * finishing (Enter, double click) sends `busRoute`; pressed again, or Esc, it leaves the route as
- * it was. Nothing for a line that is no bus line. */
+/** T-1464: the bus line's Edit route button: the tool opens with the line's route to redraw;
+ * pressed again it saves the route, as the tool's other ways to finish do (T-1514). Nothing for a
+ * line that is no bus line. */
 export function editBusRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
   const t = live.tools, bus = world.peek()?.lineStats[l.id]?.bus, route = bus?.routeLL;
   if (!t || !route) return;
-  const open = tool.peek() === "bus" && busDraft.peek()?.line === l.num;
+  if (tool.peek() === "bus" && busDraft.peek()?.line === l.num) return void t.bus.finish();
   t.exit();
-  if (open) return;
   selection.value = { kind: "line", line: l.id };
   t.bus.begin(l.num, route, l.colour, bus.kinds);
 }

@@ -323,8 +323,11 @@ Full design, numbers and sources: `notes/T-008.md`.
     zoom 14, the waiting room and the P tile join the box's side at its middle, the room first along
     the platform's way, with one outline and one white round box and annexes. Both go on the side
     with fewer other platforms and tracks where they would be, else outside the platform's bend.
-    Each has its own hover, naming the upgrade and the station (a terminal's on its ends). Station
-    flags 32, 64 (the other side), 128 and 256; one station draw per annex kind (`u_room`).
+    Each has its own hover, naming the upgrade and the station (a terminal's on its buffer stop).
+    A terminal draws a dark bar, a buffer stop, only at the end of its platform where the track
+    ends (a station with one track leaving it, flag 512, T-1527); a terminal with track on both
+    sides has none. Station flags 32, 64 (the other side), 128, 256 and 512; one station draw per
+    annex kind (`u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").
@@ -587,7 +590,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trips are a function of the service, its eras and the hour asked for, and every window agrees.
 - **Changing a train count** (T-229, notes/T-229.md). The stepper shows the new count at
   once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
-  into one edit sent when it lands. The worker sends a service-only state for it: no geometry
+  into one edit sent when it lands. The headway stepper (`pendingHeadway`) and the train length
+  stepper (`pendingCars`, T-1526) work the same way, each click counting from the length shown. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
   run profiles (`renderer.setService`). A count or headway edit takes effect a moment ahead of the
   clock (T-1071, notes/T-1071.md): the clock worker's lead is 0.25 s plus twice what its last such
@@ -764,12 +768,13 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
   km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,
   `kernel::trip_km`). The assignment puts that extra, the trips times the curve's extra at their
-  pair's km, on the route nodes where they first board, split as they split (`Loads::rn_fare_x`,
-  each population's `fare_extra`); the trip explorer shows each route's extra on its rides by km.
-  Fare income is the first stretch's base on each of demand's trips and its rate on their
-  passenger-km per period, plus demand's extra on the line it is counted at (`LineDemand.fareX`,
-  `app/src/game/money.ts`; on a weekend the extra follows each route node's boardings), so demand
-  and income charge the same trips the same fares. Changing the fare
+  pair's km, on the stretches they ride, each by its km, split as they split (`Loads::rn_fare_x`,
+  each population's `fare_extra`, T-1516); the trip explorer shows each route's extra on its rides
+  by km. So a trip that changes lines pays each line the base share of its boarding and the curve's
+  fare a km on that line's km, and no line's fares go below zero. Fare income is the first stretch's base on
+  each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the
+  line it is counted at (`LineDemand.fareX`, `app/src/game/money.ts`; on a weekend the extra follows
+  each stretch's riders), so demand and income charge the same trips the same fares. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

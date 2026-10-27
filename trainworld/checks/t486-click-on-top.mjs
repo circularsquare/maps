@@ -2,8 +2,8 @@ import { launchChrome, demandFinal, ANGLE } from './lib.mjs';
 // T-486: clicks reach only what is drawn on top. In a ?new=1 game with the commuter bubbles on, a
 // blueprint track end is drawn on a bubble: a click on the end's square selects the track, and a
 // click on the same bubble away from the track still selects the bubble. A blueprint station under
-// a bubble: a click selects the bubble, and once the station is selected (cut out of the bubbles)
-// the station. Saves artifacts/trainworld/T-486-station-under-bubble.png.
+// a bubble: a click selects the station (stations come before bubbles, T-1515), and so does one
+// once it is selected. Saves artifacts/trainworld/T-486-station-under-bubble.png.
 //   node trainworld/checks/t486-click-on-top.mjs [url]     (from the maps root; default localhost:6135)
 // Prints PASS or FAIL lines and exits 1 on failure. About a minute.
 
@@ -55,9 +55,9 @@ try {
   report('click on the bubble beside it', off?.kind === P.kind, `(selected ${off?.kind ?? 'nothing'})`);
   const tip = await page.evaluate((P) => window.twViews.hover(P.x, P.y), P);
   report('no bubble tag over the square', tip === null, tip ? `(${tip.join(' / ')})` : '');
-  // a blueprint station under the bubble: the whole network canvas is under the bubbles' canvas
-  // (map/demandOverlay.ts), so the bubble is on top and takes the click; selected, the station is
-  // cut out of the bubbles, drawn on top, and takes it (the screenshot shows both)
+  // a blueprint station under the bubble: the network canvas is under the bubbles' canvas
+  // (map/demandOverlay.ts), but a station is picked before a bubble (T-1515); selected, the station
+  // is cut out of the bubbles and drawn on top (the screenshot shows both)
   // a second stretch through the bubble 15 px below the first, its station in the bubble
   const S = await page.evaluate(async (P) => {
     const { edit } = await import('/src/game/world.ts');
@@ -76,7 +76,7 @@ try {
   const bubbleThere = await page.evaluate((S) => window.twViews.click(S.x, S.y, false)?.kind, S);
   await page.screenshot({ path: 'artifacts/trainworld/T-486-station-under-bubble.png', clip: { x: box.left + S.x - 200, y: box.top + S.y - 150, width: 400, height: 300 } });
   const onSt = await clickAt(S.x, S.y);
-  report('click on a blueprint station under a bubble', S.ok && !!sid && bubbleThere === P.kind && onSt?.kind === P.kind, `(station placed ${S.ok}${S.ok ? '' : ' ' + JSON.stringify(S.issues)}, bubble there ${bubbleThere}, selected ${onSt?.kind ?? 'nothing'})`);
+  report('click on a blueprint station under a bubble', S.ok && !!sid && bubbleThere === P.kind && onSt?.kind === 'station', `(station placed ${S.ok}${S.ok ? '' : ' ' + JSON.stringify(S.issues)}, bubble there ${bubbleThere}, selected ${onSt?.kind ?? 'nothing'})`);
   P.x = S.x; P.y = S.y;
   if (!sid) throw new Error('no station');
   await page.evaluate((sid) => { window.tw.selection.value = { kind: 'station', station: sid }; }, sid);
