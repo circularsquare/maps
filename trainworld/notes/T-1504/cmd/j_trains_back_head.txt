@@ -1,0 +1,8 @@
+// T-1504 probe command: experiment 4 (links and the half fare kept): the high-speed lines back to
+// their own 6/3/2 trains, so the half fare is seen without the extra trains.
+const w = window.tw.world.value;
+const note = [];
+for (const l of w.save.lines.filter((l) => Number(l.id) >= 113)) {
+  const r = await window.tw.client.edit({ op: 'setTrainCount', line: Number(l.id), trains: [6, 3, 2] });
+  note.push([l.id, r?.ok]);
+}

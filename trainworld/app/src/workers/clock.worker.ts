@@ -21,6 +21,7 @@ import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains, type NetworkBuffers } from "../map/network";
+import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
@@ -1973,15 +1974,14 @@ function sendState(service = false, effectiveAt?: number) {
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   runningLines = running;
-  const n = networkFromState({ ...s, render: r }, netCache);
+  const n = networkFromState({ ...s, render: r }, netCache, true);
   const t2 = performance.now();
-  if (patchMode === "check") checkNet(n, networkFromState({ ...s, render: r }));
-  const out = (s.net = netForPost(n));
+  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r }) : undefined));
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
   const bufs = new Set<ArrayBufferLike>([r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.trainSpeed, st.lane, st.stretch]) if (v) bufs.add(v.buffer);
+  for (const st of [out.track, out.lines]) for (const v of Object.values(st)) if (ArrayBuffer.isView(v) && v.byteLength) bufs.add(v.buffer);
   for (const k of SAME_FIELDS) { const v = out[k]; if (v) bufs.add(v.buffer); }
   for (const v of out.edgePts.values()) bufs.add(v.buffer);
   if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
@@ -2007,8 +2007,10 @@ const posted = {
   edges: new Map<number, ClockEdge>(), nodes: new Map<number, ClockNode>(), lines: new Map<number, ClockLine>(),
   edgeIds: [] as number[], nodeIds: [] as number[], lineIds: [] as number[],
 };
+const sender = new StrokeSender();
 function postWhole() {
   posted.net = null;
+  sender.forget();
   posted.arrays.clear();
   posted.edges.clear(); posted.nodes.clear(); posted.lines.clear();
   posted.edgeIds = []; posted.nodeIds = []; posted.lineIds = [];
@@ -2032,11 +2034,28 @@ function keepPosted(k: string, v: ArrayBufferView) {
 
 /** The network as it is posted: whole (a copy of its edges' points in one buffer), or with
  * `patch` and the fields the client already has left out. */
-function netForPost(n: NetworkBuffers): NetworkBuffers {
+function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers {
   const anchorNow = anchor().version;
   const pts = n.edgePts;
   const whole = patchMode === "0" || !n.patch || !posted.net || posted.net.serial !== n.patch.base || posted.net.anchor !== anchorNow;
+  const pieces = n.strokePieces!;
   const out: NetworkBuffers = { ...n };
+  delete out.strokePieces;
+  const t0 = performance.now();
+  const modes = {} as Record<StrokeKind, StrokeMode>, ranges = {} as Record<StrokeKind, Int32Array>;
+  for (const kind of ["track", "lines"] as const) {
+    const r = sender.post(kind, pieces[kind], n[kind].count, whole ? null : n.patch![kind], whole ? 0 : kind === "track" ? n.patch!.oldTrack : n.patch!.oldLines);
+    out[kind] = r.strokes;
+    modes[kind] = r.mode;
+    ranges[kind] = r.ranges;
+  }
+  timing.strokes = performance.now() - t0;
+  timing.modes = (["whole", "same", "patch"] as const).indexOf(modes.track) * 10 + (["whole", "same", "patch"] as const).indexOf(modes.lines);
+  if (scratch) {
+    const full = { track: strokesOfPieces("track", pieces.track), lines: strokesOfPieces("lines", pieces.lines) };
+    checkNet({ ...n, ...full }, scratch);
+    out.checkStrokes = full;
+  }
   if (whole) {
     delete out.patch;
     let total = 0;
@@ -2051,7 +2070,7 @@ function netForPost(n: NetworkBuffers): NetworkBuffers {
     out.edgePts = mine;
     for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPosted(k, v); }
   } else {
-    const patch = { ...n.patch!, same: [] as string[] };
+    const patch = { ...n.patch!, same: [] as string[], modes, ranges };
     for (const k of SAME_FIELDS) {
       const v = n[k];
       if (!v) continue;

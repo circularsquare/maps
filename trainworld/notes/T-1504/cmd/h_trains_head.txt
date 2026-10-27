@@ -1,0 +1,10 @@
+// T-1504 probe command: experiment 2 (on top of 1). Six times the trains on every high-speed line
+// (6/3/2 to 36/18/12: a train about every 27 minutes at the peak on Beijing - Shanghai).
+const w = window.tw.world.value;
+const note = [];
+for (const l of w.save.lines.filter((l) => Number(l.id) >= 113)) {
+  const n = w.lineStats[l.id]?.trainsNeeded ?? w.lineStats.get?.(l.id)?.trainsNeeded;
+  const t = n.map((x) => x * 6);
+  const r = await window.tw.client.edit({ op: 'setTrainCount', line: Number(l.id), trains: t });
+  note.push([l.id, n, t, r?.ok]);
+}

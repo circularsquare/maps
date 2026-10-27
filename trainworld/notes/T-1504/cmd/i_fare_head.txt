@@ -1,0 +1,6 @@
+// T-1504 probe command: experiment 3 (on top of 1 and 2). China's fare scale at half its income's,
+// so the market weighs China's rail fares at half (the price is halved too; local trips move as well).
+const inc = await import('/src/game/income.ts');
+const s = inc.incomeScale('CN');
+const r = await window.tw.client.edit({ op: 'fareScale', country: 'CN', scale: inc.tidyScale(s / 2) });
+const note = { income: s, set: inc.tidyScale(s / 2), ok: r?.ok };

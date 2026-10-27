@@ -13,6 +13,7 @@ import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
 import { annexSides } from "./annexSide";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
+import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -121,6 +122,10 @@ export interface NetworkBuffers {
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
   patch?: NetPatch;
+  /** the clock worker only (`networkFromState`'s `deferStrokes`): what `track` and `lines` are made from */
+  strokePieces?: Record<StrokeKind, StrokePiece[]>;
+  /** `?patch=check` only: the strokes whole, which the merged ones are compared with (`mergeNet`) */
+  checkStrokes?: Record<StrokeKind, Strokes>;
 }
 
 /**
@@ -138,6 +143,10 @@ export interface NetPatch {
   oldLines: number;
   same: string[];
   edgeIds: Uint32Array;
+  /** how `track` and `lines` were posted (T-1381, map/strokePost.ts): whole, as the last network's
+   * (no arrays), or only the new segments, at `ranges` (start, count pairs; `mergeNet` makes them whole) */
+  modes: Record<StrokeKind, StrokeMode>;
+  ranges: Record<StrokeKind, Int32Array>;
 }
 
 /** Stroke segments into typed arrays that grow by doubling (number[] pushes cost ~25 ms for a
@@ -290,30 +299,6 @@ export function previewMarks(pts: ArrayLike<number>, sim?: ArrayLike<number>): F
   rampMarks(pts, 1, m);
   if (sim) for (let k = 0; k + 2 < sim.length; k += 3) m.push(sim[k], sim[k + 1], sim[k + 2] === 1 ? M_JUNCTION : M_CROSSING, 0, 1, 0);
   return m.length ? new Float32Array(m) : undefined;
-}
-
-/** Stroke sets laid end to end, into arrays of exactly their total size. */
-function concatStrokes(parts: Strokes[], withStretch: boolean): Strokes {
-  let n = 0;
-  for (const p of parts) n += p.count;
-  const out: Strokes = {
-    seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), lane: new Uint8Array(n * 2), ...(withStretch ? { stretch: new Float32Array(n) } : {}), count: n,
-  };
-  let at = 0;
-  for (const p of parts) {
-    if (p.lane) out.lane!.set(p.lane, at * 2);
-    else out.lane!.fill(255, at * 2, (at + p.count) * 2);
-    out.seg.set(p.seg, at * 4);
-    out.colour.set(p.colour, at);
-    out.edge.set(p.edge, at);
-    out.level.set(p.level, at);
-    out.flags.set(p.flags, at);
-    out.dist.set(p.dist, at);
-    if (withStretch) out.stretch!.set(p.stretch!, at);
-    at += p.count;
-  }
-  return out;
 }
 
 const sameArray = (a: ArrayLike<number>, b: ArrayLike<number>) => {
@@ -640,7 +625,10 @@ export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map()
  */
 export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service?: { phases: Float32Array; meta: Float32Array } | null): boolean {
   const p = n.patch;
-  if (!p) return true;
+  if (!p) {
+    if (n.checkStrokes) checkMergedStrokes(n, "whole");
+    return true;
+  }
   if (!prev || prev.serial !== p.base || prev.track.count !== p.oldTrack || prev.lines.count !== p.oldLines) return false;
   const from: Record<string, unknown> = { ...prev, ...(service ?? {}) };
   for (const k of p.same) if (from[k] === undefined) return false;
@@ -650,13 +638,41 @@ export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service
     if (!v) return false;
     pts.set(id, v);
   }
+  const track = planStrokes("track", prev.track, n.track, p.modes.track, p.ranges.track), lines = planStrokes("lines", prev.lines, n.lines, p.modes.lines, p.ranges.lines);
+  if (!track || !lines) return false;
+  // nothing is written into the last network's arrays unless the whole network can be merged
+  track.write();
+  lines.write();
   for (const k of p.same) (n as unknown as Record<string, unknown>)[k] = from[k];
   n.edgePts = pts;
+  n.track = track.strokes;
+  n.lines = lines.strokes;
+  if (n.checkStrokes) checkMergedStrokes(n, `${p.modes.track}/${p.modes.lines}`);
   return true;
 }
 
+/** `?patch=check`: the strokes as merged against those the worker made whole beside them (T-1381). */
+function checkMergedStrokes(n: NetworkBuffers, modes: string) {
+  const bad: string[] = [];
+  for (const kind of ["track", "lines"] as const) {
+    const a = n[kind], b = n.checkStrokes![kind];
+    for (const f of Object.keys(b) as (keyof Strokes)[]) {
+      const x = a[f], y = b[f];
+      if (!ArrayBuffer.isView(x) || !ArrayBuffer.isView(y)) { if (x !== y) bad.push(`${kind}.${f}`); continue; }
+      let same = x.byteLength === y.byteLength;
+      if (same) {
+        const u = new Uint8Array(x.buffer, x.byteOffset, x.byteLength), v = new Uint8Array(y.buffer, y.byteOffset, y.byteLength);
+        for (let i = 0; i < u.length && same; i++) same = u[i] === v[i];
+      }
+      if (!same) bad.push(`${kind}.${f}`);
+    }
+  }
+  delete n.checkStrokes;
+  if (bad.length) console.error(`T-1381 check: strokes posted as ${modes} differ from the whole ones in ${bad.join(", ")}`);
+}
+
 /** Runs (start, count, old start or -1) making `parts` (in order, `count` of each) from `old`. */
-function strokeRuns<P extends object>(parts: P[], count: (p: P) => number, old: P[] | undefined): Int32Array {
+export function strokeRuns<P extends object>(parts: P[], count: (p: P) => number, old: P[] | undefined): Int32Array {
   const at = new Map<P, number>();
   let o = 0;
   for (const p of old ?? []) at.set(p, o), (o += count(p));
@@ -676,8 +692,9 @@ function strokeRuns<P extends object>(parts: P[], count: (p: P) => number, old: 
 
 /** The renderer's buffers from a state. With `cache` (the clock worker's), pieces whose inputs are
  * as in the last build are reused, and `patch` says how the strokes differ from it; the buffers are
- * the same either way. */
-export function networkFromState(s: ClockState, cache: NetCache = newNetCache()): NetworkBuffers {
+ * the same either way. `deferStrokes` (the clock worker's): `track` and `lines` hold only their
+ * counts, and `strokePieces` the pieces to make them from (map/strokePost.ts). */
+export function networkFromState(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): NetworkBuffers {
   const r = s.render;
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
@@ -927,22 +944,18 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   });
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
-  const speed = new Float32Array(trackCount), trainSpeed = new Float32Array(trackCount);
-  for (let i = 0, at = 0; i < trackParts.length; at += trackParts[i++].strokes.count) {
-    speed.set(trackParts[i].speed, at);
-    trainSpeed.set(trackParts[i].train, at);
-  }
   const serial = ++cache.serial, last = cache.last;
   const patch: NetPatch | undefined = last ? {
     base: last.serial,
     track: strokeRuns(trackParts, (p) => p.strokes.count, last.track),
     lines: strokeRuns(lineParts, (p) => p.strokes.count, last.lines),
-    oldTrack: last.trackCount, oldLines: last.lineCount, same: [], edgeIds: Uint32Array.from(trackOrder),
+    oldTrack: last.trackCount, oldLines: last.lineCount, same: [], edgeIds: Uint32Array.from(trackOrder), modes: { track: "whole", lines: "whole" }, ranges: { track: new Int32Array(0), lines: new Int32Array(0) },
   } : undefined;
   cache.last = { serial, track: trackParts, lines: lineParts, trackCount, lineCount, pts: edgePts };
   return {
-    track: { ...concatStrokes(trackParts.map((p) => p.strokes), false), speed, trainSpeed },
-    lines: concatStrokes(lineParts.map((p) => p.strokes), true),
+    track: deferStrokes ? { count: trackCount } as Strokes : strokesOfPieces("track", trackParts),
+    lines: deferStrokes ? { count: lineCount } as Strokes : strokesOfPieces("lines", lineParts),
+    ...(deferStrokes ? { strokePieces: { track: trackParts, lines: lineParts } } : {}),
     lineIds,
     lineColours,
     stations,
