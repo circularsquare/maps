@@ -541,10 +541,24 @@ notes/T-420.md has the tables.
   charged in local terms, the player's curve times each country's scale (its income over India's to
   the same power, or the player's own), so at the default scales a fare weighs the same everywhere
   and a poorer country brings in less per rider; a scale the player sets moves inter-city riders
-  from that country too (T-1286). The car's money (ownership, parking, running) stays
-  at 3 minutes a dollar everywhere. Why it may not carry over: incomes differ within a country as
-  much as between (a Mumbai suburb against Bandra), and the car's money should scale too. Check: a
-  country's transit fares against its income, and its fare elasticity where a survey publishes one.
+  from that country too (T-1286). In the local layers the car's money (ownership, parking) stays
+  at 3 minutes a dollar everywhere. The regional market's longer trips split each country's people
+  into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
+  country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
+  their car's money should scale too. Check: a country's transit fares against its income, and its
+  fare elasticity where a survey publishes one.
+- **Income groups on longer trips** (T-1431, docs/regional.md 5.1). A country's travellers are three
+  equal groups by income from the World Bank's income shares by quintile (SI.DST.FRST.20 to
+  SI.DST.05TH.20, 170 countries with a survey from 1992 to 2025; the rest take their subregion's
+  median). A group weighs every mode's money (car running cost and crossings, plane fare, rail fare)
+  at the country's minutes a dollar times (its income over the mean)^-0.5, the same exponent as
+  between countries, and makes longer trips in proportion to (its income over the mean)^0.7, the
+  market's trip rate by income between countries. No new fitted number; the plane's base was
+  refitted with it ($30). Not in the local layers: there it would cost about 2.4 times the solve
+  time (notes/T-1431.md). Why it may not carry over: a quintile table is a national average (cities
+  are richer than the countryside), survey years differ by decades, and the trip rate by income
+  within a country is taken from the one between countries. Check: a country's long-distance
+  travel survey by income band.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
@@ -862,14 +876,13 @@ notes/T-420.md has the tables.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
   have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 25 minutes
   until the flight (its frequency unmodelled: rail's planned first wait at a flight every 2 hours,
-  T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at the departing
-  country's minutes a dollar (T-1277, Mode choice above; a corridor's split between car and plane is
-  the mean of its two ways). The fare is one simple rule on purpose (Anita: predictable for the player),
-  checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US and
-  Japan and Germany, all of which barely rise with distance, so the base is large and the per-km
-  small. On ideal access rail holds far more of rail and air at 3 to 5 hours on the train than
-  European studies find: a lean to rail Anita accepted ("if someone puts in the effort to build a
-  long distance rail it should feel rewarding"; figures in notes/T-712.md).
+  T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $30 + 5 cents a km at each
+  income group's minutes a dollar (T-1431, above; a corridor's split between car and plane is
+  the mean of its two ways). The fare is one simple rule on purpose (Anita: predictable for the player).
+  Its base was fitted on ten corridors' published rail shares of rail and air (notes/T-1431.md), so
+  it sits as far under real airfares (notes/T-712.md: about $108 in Japan at 766 km, $200 in the US)
+  as the starting rail curve sits under real long-distance rail fares; a player who raises long fares
+  to real levels meets the plane.
   Airports from OurAirports (global, public domain), their size and direct routes from FR24 (two
   days in May 2026, offline). Why it may not carry over: fares (the US pays about twice Japan and
   Europe; low-cost India, subsidised routes), airport times (US security is slower than a Japanese
@@ -885,7 +898,10 @@ notes/T-420.md has the tables.
   carries no cars (a rail tunnel) needs its own entry.
 - **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15
   US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
-  both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
+  both split over two occupants, the money at each income group's minutes a dollar (T-1431). With
+  the starting rail curve this leaves the car little on 300-650 km pairs (Tokyo - Osaka 3% against
+  about 25% published), since a seat costs about what each person's share of the car does while the
+  car is slower; real long rail fares are 2-4 times the curve (notes/T-1431.md). Fuel prices, tolls (T-270),
   motorway speeds, occupancy and car ownership all vary by country; Europe's fuel costs about twice
   the US's per km, so cars there would cost more. Within 1,500 km the drive is routed (T-279,
   docs/regional.md 5.1) on three world layers: GRIP4 road density (roads as of its 2018 release, so

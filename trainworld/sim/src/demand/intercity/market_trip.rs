@@ -139,10 +139,10 @@ impl IntercityApi {
         }
         let r = m.pr(a, b);
         h[8] = r.km;
-        h[17] = r.refm as f64;
+        h[17] = r.refm(&m.places[a], &m.places[b]) as f64;
         if r.car {
-            let to = if dir == 0 { b } else { a };
-            h[7] = r.car_min(r.km as f32, m.places[to].park as f32) as f64;
+            let (from, to) = if dir == 0 { (a, b) } else { (b, a) };
+            h[7] = r.car_cost(r.km as f32, m.places[to].park as f32).at(m.places[from].w()) as f64;
         }
     }
 
@@ -252,44 +252,57 @@ impl IntercityApi {
                 // T-1373: a rush day's trips lean by their places
                 let t = w[z] * trips * sh * (1. + (lean_sign(day as usize) * m.lean(za.place, zb.place)) as f64);
                 let r = m.pr(za.place, zb.place);
+                let (from, to) = (&m.places[za.place], &m.places[zb.place]);
+                let split = r.split_car(from, to);
                 let d = m.zone_km(za, zb) as f32;
-                let car_c = r.car_min(d, zb.park);
-                let drive = if r.car { car_c } else { r.refm };
+                let car_cost = r.car_cost(d, zb.park);
+                // the head's minutes for a rider of average income
+                let mid = r.alt(car_cost, split, from.w(), &m.mp);
                 all += t;
                 km += t * d as f64;
-                ref_c += t * drive as f64;
+                ref_c += t * mid.drive as f64;
                 n += 1.;
                 if r.car {
-                    cc += t * car_c as f64;
+                    cc += t * mid.car as f64;
                     cc_w += t;
                 }
-                let mut frac = 0f64;
-                if self.solvable(a, bb) {
-                    let band = self.base.band_of_d2(d * d * 1e6);
-                    let (ra, rb) = (&self.access[a], &self.access_work[bb]);
-                    let (rail_c, sum) = rail_logsum_x(&re, s, p.fare_min, ra, rb, p.beta, p.soften(p.band_unsoftened(band), car_c), self.fx_of(&fx, a), &mut terms);
-                    if sum > 0. {
-                        let bt = p.mode_beta(car_c);
-                        let v = ((-bt * (rail_c - drive)).clamp(-80., 80.) as f64).exp();
-                        frac = v / (r.rest as f64 + v);
-                        served += t;
-                        rc += t * rail_c as f64;
-                        rc_w += t;
-                        let rt = t * frac;
-                        let cost = |list: &[(usize, f32)], st: u32| list.iter().find(|e| e.0 == st as usize).map_or(0., |e| -(e.1.max(1e-30) as f64).ln() / beta);
-                        for &(sa, sb, v) in &terms {
-                            let x = rt * v / sum;
-                            let e = by.entry((sa, sb)).or_default();
-                            e.0 += x;
-                            e.1 += x * cost(ra, sa);
-                            e.2 += x * cost(rb, sb);
+                let solvable = self.solvable(a, bb);
+                let mut offered = false;
+                // T-1431: each income group of the place the trip starts from, as `demand`
+                for &(share, f) in from.groups() {
+                    let tg = t * share as f64;
+                    let alt = r.alt(car_cost, split, from.w() * f, &m.mp);
+                    let mut frac = 0f64;
+                    if solvable {
+                        let band = self.base.band_of_d2(d * d * 1e6);
+                        let (ra, rb) = (&self.access[a], &self.access_work[bb]);
+                        let (rail_c, sum) = rail_logsum_x(&re, s, p.fare_min, ra, rb, p.beta, p.soften(p.band_unsoftened(band), alt.car), self.fx_of(&fx, a, f), &mut terms);
+                        if sum > 0. {
+                            let bt = p.mode_beta(alt.car);
+                            let v = ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp();
+                            frac = v / (alt.rest as f64 + v);
+                            offered = true;
+                            rc += tg * rail_c as f64;
+                            rc_w += tg;
+                            let rt = tg * frac;
+                            let cost = |list: &[(usize, f32)], st: u32| list.iter().find(|e| e.0 == st as usize).map_or(0., |e| -(e.1.max(1e-30) as f64).ln() / beta);
+                            for &(sa, sb, v) in &terms {
+                                let x = rt * v / sum;
+                                let e = by.entry((sa, sb)).or_default();
+                                e.0 += x;
+                                e.1 += x * cost(ra, sa);
+                                e.2 += x * cost(rb, sb);
+                            }
                         }
                     }
+                    rail += tg * frac;
+                    let rest = tg * (1. - frac);
+                    air += rest * alt.air as f64;
+                    car += rest * if r.car { 1. - alt.air as f64 } else { 0. };
                 }
-                rail += t * frac;
-                let rest = t * (1. - frac);
-                air += rest * r.air as f64;
-                car += rest * if r.car { 1. - r.air as f64 } else { 0. };
+                if offered {
+                    served += t;
+                }
             }
         }
         // T-1229: each everyday pair's legs this period, its rail legs from the solve's share and the
@@ -315,7 +328,7 @@ impl IntercityApi {
             let ep = &self.epairs[ei as usize];
             let (hz, az) = self.epair_zones(ep);
             let home = if ep.ride { &self.access_c[hz] } else { &self.access_c_walk[hz] };
-            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), self.fx_of(&fx, hz), &mut terms);
+            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), self.fx_of(&fx, hz, 1.), &mut terms);
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;
@@ -347,7 +360,7 @@ impl IntercityApi {
             let cp = &self.cpairs[ci as usize];
             let (hz, wz) = (hz as usize, m.comp_of_gid[wg as usize] as usize);
             let home = if cp.ride { &self.access_c[hz] } else { &self.access_c_walk[hz] };
-            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), self.fx_of(&fx, hz), &mut terms);
+            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), self.fx_of(&fx, hz, 1.), &mut terms);
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;
