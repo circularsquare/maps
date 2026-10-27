@@ -16,6 +16,23 @@ impl TrackApi {
     pub fn dirty_lines(&self) -> Vec<u32> {
         self.last.as_ref().map_or(vec![], |r| r.dirty.service.recomputed.clone())
     }
+    /// T-1382: the lines whose rows the state must read again since the last call, ascending, or
+    /// `[u32::MAX]` for all of them: a line the service rebuilt, rescheduled or recomputed, or that
+    /// the net was changed under (every edit's, undo's, preview's, refused edit's and settle's,
+    /// however many calls ago), or all after a load, a reload or edge prices worked out again for
+    /// water or terrain. The caller keeps the other lines' rows.
+    pub fn take_changed_lines(&mut self) -> Vec<u32> {
+        let mut v = self.w.svc.take_changed();
+        if self.w.net.take_repriced() && v.first() != Some(&u32::MAX) {
+            v = vec![u32::MAX];
+        }
+        v
+    }
+    /// T-1382: the nodes whose station name was set or cleared since the last call, ascending, or
+    /// `[u32::MAX]` when the caller knows none of them (a new network).
+    pub fn take_name_changes(&mut self) -> Vec<u32> {
+        self.w.net.take_name_changes()
+    }
     /// Lines whose service changed for demand (stops, frequency, running, a time moving 5 s).
     pub fn dirty_demand_lines(&self) -> Vec<u32> {
         self.last.as_ref().map_or(vec![], |r| r.dirty.service.demand.clone())
