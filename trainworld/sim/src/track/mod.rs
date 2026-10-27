@@ -14,6 +14,7 @@
 //! - `capacity`: resources, utilisation, Kingman delay, holds per line.
 //! - `service`: per line and direction: runs, profiles per demand level, stop times, round trip,
 //!   trains needed, the trips to draw.
+//! - `streets`: the car's street speed by place, for a bus's speed (T-1577).
 //! - `span`: each stop's service span for demand (T-842): the share of a period's riders with a
 //!   train due within their tolerance.
 //! - `boarding`: the boarding account (T-164): demand's riders per period turned into each
@@ -46,6 +47,7 @@ pub mod related;
 pub mod save;
 pub mod service;
 pub mod span;
+pub mod streets;
 pub mod trace;
 pub mod upgrades;
 /// The clock worker's API; left out of the demand workers' module (feature `track-api`, T-051).

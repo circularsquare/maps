@@ -552,6 +552,10 @@ is known without its files (T-302, T-400):
   median of 13 KB, at most 1.9 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
   Construct: track priced before it lands is priced again when it does (track-and-service.md 6.4).
   A zone without a file (a 404) prices its track on flat ground.
+- **Street speeds** (clock worker, T-1577): for a bus's speed, a zone's own pack is asked for ranges of its `.bin`
+  (people and jobs per cell, the cell's zone, the zones' squares and land) whenever its mask is and where a bus route
+  is drawn or loaded; nothing waits for it, and bus lines are timed again when it lands. A pack without those arrays
+  leaves its buses at the top speed (track-and-service.md 6.7).
 - **Outlines**: one source and line layer hold the outlines of the zones whose boxes meet the view,
   fetched as the view comes near them at zoom 5 to 10.5 (they fade out at 10.5); a zone's footprint
   and outside shade are built when it is focused or near the view.

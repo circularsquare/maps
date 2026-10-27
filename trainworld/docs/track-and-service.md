@@ -1027,11 +1027,21 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
   route stops at constructed stations and crosses constructed routes; a planned one previews all.
   Any edit to a station or a line places every bus line's stops again.
-- **Run**: a flat 18 km/h door to door (street stops and traffic included), the line's dwell
-  standing only at train stations, the line's turnaround at the ends (120 s for a new bus line). No
+- **Run**: door to door (street stops and traffic included) at 70% of the car's speed on local streets
+  where the bus is, at most 18 km/h (`streets.rs`, T-1577): the car's speed is demand's, 44 km/h in
+  open country falling to 16.5 where homes and jobs are dense (half way at 5,000 a km² in the 2 km zone,
+  demand-mode.md), so a bus does 18 outside the dense places and 11.5 in the densest. Each 100 m of road
+  has its own speed and a hop between stops takes the time of the streets it crosses (`bus::Pace`). The
+  street speeds come from the packs (below); a route in a zone with none runs at 18. The line's dwell
+  stands only at train stations, the line's turnaround at the ends (120 s for a new bus line). No
   accelerating, no capacity, no holds.
 - **Riders**: 80 at crush (demand: 0.5 of a 160-rider car, 22 seats); the boarding account keeps no
   platform crowd at its stops that are no station.
+- **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
+  squares and land, which the clock worker fetches as ranges of the `.bin` with the zone's mask (and
+  for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into a grid of
+  the car's local street speed per zone; nothing waits for it, bus lines are timed again when one lands.
+  Not saved, carried over a load like the terrain.
 - **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
   shared between bus lines; running US$9 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds

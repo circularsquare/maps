@@ -212,3 +212,34 @@ fn a_long_road_route_is_thinned_for_demand_and_still_covers_its_ends() {
     }
     assert!((a.bus_road_m(b) - 8000.0).abs() < 5.0);
 }
+
+/// T-1577: a pack's street speeds slow a bus where its zones are dense, time its trip again and
+/// need more buses at the same headway; they outlive a load.
+#[test]
+fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
+    let mut a = api();
+    let b = a.new_line_id();
+    // 6 km of straight route east from the origin: 7.2 km of road, timed at 18 km/h
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    let road = 6000.0 * ROAD_FACTOR;
+    let flat = *a.stop_times(b, 0, 0).last().unwrap();
+    assert!((flat - road / BUS_V).abs() < 1e-6);
+    let buses = a.w.svc.lines[b as usize].trains[0];
+    // a pack at the same origin: one zone of 2 km squares from x = -1 km, three squares, the first
+    // two dense (about 100,000 homes and jobs a km2), the third open
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(!a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    let slow = *a.stop_times(b, 0, 0).last().unwrap();
+    // the first 3 km of ground (3.6 km of road) at about 11.7 km/h, the rest at 18
+    let want = 3600.0 / (11.7 / 3.6) + 3600.0 / BUS_V;
+    assert!(slow > flat && (slow - want).abs() < 0.04 * want, "{flat} {slow} {want}");
+    assert!(a.w.svc.lines[b as usize].trains[0] >= buses);
+    // the way back is as long
+    let back = *a.stop_times(b, 1, 0).last().unwrap();
+    assert!((back - slow).abs() < 1e-6, "{back} {slow}");
+    // kept across a load
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert!((*a.stop_times(b, 0, 0).last().unwrap() - slow).abs() < 1e-6);
+}

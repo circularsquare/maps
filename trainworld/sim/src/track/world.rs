@@ -129,6 +129,16 @@ impl TrackWorld {
         self.settle_train_counts();
     }
 
+    /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
+    pub fn rework_buses(&mut self) {
+        let buses = self.net.bus_lines();
+        if buses.is_empty() {
+            return;
+        }
+        self.svc.update(&self.net, &buses, &[], false);
+        self.settle_train_counts();
+    }
+
     /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.
     /// A positive derivative bound damps feedback from shared resources.
     /// Runs on edits only, with a bounded number of global capacity solves.

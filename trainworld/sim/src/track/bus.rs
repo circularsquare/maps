@@ -2,8 +2,9 @@
 //! draws. Between two clicked points (its corners) the route follows the roads where the app found
 //! a road path (`K_ROAD`: the road length is the drawn length) and runs straight elsewhere, where
 //! the road length is the drawn length times `ROAD_FACTOR`. The road length sets the run time, the
-//! price and the running cost. A bus runs a flat
-//! `BUS_V` door to door, standing the line's dwell only at the train stations it meets.
+//! price and the running cost. A bus runs door to door at its share of the car's street speed
+//! where it is (`Pace`, `streets.rs`), at most `BUS_V`, standing the line's dwell only at the train
+//! stations it meets.
 //!
 //! Demand sees a few stops of each route (`plan`): the train stations it passes within
 //! `STATION_REACH_M`, its ends, a stop where it crosses another bus route, and one every
@@ -14,8 +15,11 @@
 use super::net::Network;
 use super::profile::{Phase, Profile};
 
-/// A bus's speed, street stops and traffic included, m/s.
-pub const BUS_V: f64 = 18.0 / 3.6;
+/// A bus's top speed, street stops and traffic included, m/s: what it does outside dense places and
+/// wherever no street grid is installed (`streets::BUS_TOP_KMH`).
+pub const BUS_V: f64 = super::streets::BUS_TOP_KMH / 3.6;
+/// Road metres of a route that share one speed (`Pace`).
+const PACE_STEP_M: f64 = 100.0;
 /// Road metres per drawn metre on a straight stretch of route: a diagonal across a grid runs
 /// 1.27-1.41, a stretch drawn along the streets 1.0. A stretch the app laid along the roads
 /// (`K_ROAD`) counts at 1.0.
@@ -392,9 +396,61 @@ pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only: b
     Plan { stops, street, len, cum: poly.road.clone() }
 }
 
+/// A route's speed along it: `v[i]` m/s over road metres `i * step` to `(i + 1) * step`. Empty: `BUS_V`
+/// all the way.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Pace {
+    step: f64,
+    v: Vec<f64>,
+}
+
+impl Pace {
+    /// The route's speed from the street grids (`Network::bus_v_at`) at the middle of each
+    /// `PACE_STEP_M` of road; flat where there are none. `cum`: the road metres at each of `pts`.
+    pub fn along(net: &Network, pts: &[[f64; 2]], cum: &[f64], len: f64) -> Pace {
+        if net.streets.is_empty() || len <= 0.0 {
+            return Pace::default();
+        }
+        let n = (len / PACE_STEP_M).ceil().max(1.0) as usize;
+        let step = len / n as f64;
+        let v = (0..n)
+            .map(|i| {
+                let (x, y) = at_road(pts, cum, (i as f64 + 0.5) * step);
+                net.bus_v_at(x, y)
+            })
+            .collect();
+        Pace { step, v }
+    }
+    /// The same route run from its other end.
+    pub fn reversed(&self) -> Pace {
+        Pace { step: self.step, v: self.v.iter().rev().copied().collect() }
+    }
+    /// The fastest speed on the route, m/s.
+    pub fn top(&self) -> f64 {
+        if self.v.is_empty() { BUS_V } else { self.v.iter().copied().fold(0.0, f64::max) }
+    }
+    /// Seconds to run from road metre `a` to `b` (a before b).
+    pub fn time(&self, a: f64, b: f64) -> f64 {
+        let d = (b - a).max(0.0);
+        if self.v.is_empty() || d == 0.0 {
+            return d / BUS_V;
+        }
+        let last = self.v.len() - 1;
+        let (i0, i1) = (((a / self.step).floor().max(0.0) as usize).min(last), ((b / self.step).floor().max(0.0) as usize).min(last));
+        if i0 == i1 {
+            return d / self.v[i0];
+        }
+        let mut t = ((i0 + 1) as f64 * self.step - a) / self.v[i0] + (b - i1 as f64 * self.step) / self.v[i1];
+        for i in i0 + 1..i1 {
+            t += self.step / self.v[i];
+        }
+        t
+    }
+}
+
 /// A bus's trip over stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
-/// stop between the ends: constant speed between stops, no accelerating.
-pub fn profile(stop_s: &[f64], dwell: &[f64]) -> Profile {
+/// stop between the ends: constant speed between stops (the hop's mean over `pace`), no accelerating.
+pub fn profile(stop_s: &[f64], dwell: &[f64], pace: &Pace) -> Profile {
     let n = stop_s.len();
     let mut p = Profile::default();
     if n < 2 {
@@ -404,8 +460,10 @@ pub fn profile(stop_s: &[f64], dwell: &[f64]) -> Profile {
     p.arr.push(0.0);
     p.dep.push(0.0);
     for i in 0..n - 1 {
-        p.phases.push(Phase { t, s: stop_s[i], v: BUS_V, a: 0.0 });
-        t += (stop_s[i + 1] - stop_s[i]).max(0.0) / BUS_V;
+        let run = pace.time(stop_s[i], stop_s[i + 1]);
+        let d = (stop_s[i + 1] - stop_s[i]).max(0.0);
+        p.phases.push(Phase { t, s: stop_s[i], v: if run > 0.0 { d / run } else { BUS_V }, a: 0.0 });
+        t += run;
         p.arr.push(t);
         let stand = if i + 1 < n - 1 { dwell.get(i + 1).copied().unwrap_or(0.0).max(0.0) } else { 0.0 };
         if stand > 0.0 {

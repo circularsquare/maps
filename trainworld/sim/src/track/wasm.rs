@@ -19,6 +19,7 @@ use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeDa
 use super::params::*;
 use super::profile;
 use super::save;
+use super::streets::StreetGrid;
 use super::world::{auto_trains, ChargeError, EditResult, Op, TrackWorld};
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -340,6 +341,7 @@ impl TrackApi {
         std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
         net.time_zones = self.w.net.time_zones.clone();
         net.terrain = self.w.net.terrain.clone();
+        net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
         self.rebuild_water();
         true
@@ -431,6 +433,19 @@ impl TrackApi {
         true
     }
 
+    /// Add a pack's street speeds (T-1577, `streets::StreetGrid::from_zones`): a bus runs at its
+    /// share of the car's street speed where zones say so, and the bus lines are timed again. The
+    /// arrays are the pack's (`pop`, `jobs`, `zone` per cell; `zone_gx`, `zone_gy`, `zone_size`
+    /// (or none), `zone_cells9` per zone), its grid from `gravity` in the header, and its origin.
+    /// False if they do not fit each other.
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_pack_streets(&mut self, zone_m: f64, x0: f64, y0: f64, w: u32, h: u32, pop: &[f32], jobs: &[f32], zone: &[u32], gx: &[u16], gy: &[u16], size: &[u8], cells9: &[u32], pack_lon: f64, pack_lat: f64) -> bool {
+        let Some(g) = StreetGrid::from_zones(zone_m, x0, y0, w, h, pop, jobs, zone, gx, gy, size, cells9, pack_lon, pack_lat) else { return false };
+        self.w.net.streets.grids.push(Arc::new(g));
+        self.w.rework_buses();
+        true
+    }
+
     /// Metres of the last route or edge preview in each terrain class where it is charged (flat,
     /// rolling, hilly, mountain; T-1270), for the track tool's tag.
     pub fn preview_ground(&self) -> Vec<f64> {
@@ -466,6 +481,7 @@ impl TrackApi {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 net.time_zones = self.w.net.time_zones.clone();
                 net.terrain = self.w.net.terrain.clone();
+                net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();

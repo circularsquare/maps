@@ -566,6 +566,7 @@ async function rebuildModel(fromKept: boolean) {
   (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
   newModel();
   masksIn.clear();
+  streetsIn.clear();
   holidaysSent = "";
   await openNetwork(k.net);
   api!.set_fleet(k.fleet);
@@ -669,6 +670,7 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
   const all = [...new Set(ids)];
   // T-1270: each zone's terrain comes with its mask, but nothing waits for it
   void ensureTerrain(all);
+  void ensureStreets(all);
   const todo = all.filter((id) => !masksIn.has(id));
   if (!todo.length) return;
   const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
@@ -727,6 +729,76 @@ async function ensureTerrain(ids: Iterable<string>): Promise<void> {
     if (g.b && a.add_terrain(new Uint8Array(g.b))) send({ kind: "terrain", id, bytes: g.b.slice(0) }); // the tint (T-1270)
   });
   if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+}
+
+// ---------------------------------------------------------------- street speeds (T-1577)
+//
+// A bus runs at its share of the car's street speed where it is, so it is slower in a dense centre
+// (sim track/streets.rs). The speed comes from a zone's pack: its cells' people and jobs, the cell's
+// zone and the zones' squares and land, fetched as ranges of the pack's .bin with the mask. Like
+// terrain, nothing waits for it: a route in a zone whose speeds are not in yet runs at the top speed
+// and is timed again when they land. A pack without the arrays leaves its zone at the top speed.
+
+interface StreetData { zoneM: number; x0: number; y0: number; w: number; h: number; pop: Float32Array; jobs: Float32Array; zone: Uint32Array; gx: Uint16Array; gy: Uint16Array; size: Uint8Array; cells9: Uint32Array; lon: number; lat: number }
+const streetFetches = new Map<string, Promise<StreetData | null>>();
+/** zones whose street speeds are in the track model (or that have none) */
+const streetsIn = new Set<string>();
+const DTYPE_BYTES: Record<string, number> = { f32: 4, u32: 4, u16: 2, u8: 1 };
+
+function fetchStreets(id: string): Promise<StreetData | null> {
+  let p = streetFetches.get(id);
+  if (!p) {
+    const url = new URL(id, packBase).href;
+    p = (async () => {
+      const head = await (await fetch(url + ".json")).json();
+      const g = head.gravity;
+      const arr = (name: string) => head.arrays.find((a: any) => a.name === name);
+      const need = ["pop", "jobs", "zone", "zone_gx", "zone_gy", "zone_cells9"].map(arr);
+      if (!g?.grid_origin_m || !g.grid || !g.zone_m || need.some((a) => !a)) return null;
+      const get = async (a: any): Promise<ArrayBuffer> => {
+        const start = a.offset, end = start + a.count * DTYPE_BYTES[a.dtype];
+        const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
+        if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
+        const buf = await res.arrayBuffer();
+        return res.status === 206 ? buf : buf.slice(start, end);
+      };
+      const size = arr("zone_size");
+      const [pop, jobs, zone, gx, gy, cells9, sz] = await Promise.all([...need.map(get), size ? get(size) : Promise.resolve(new ArrayBuffer(0))]);
+      return {
+        zoneM: g.zone_m, x0: g.grid_origin_m[0], y0: g.grid_origin_m[1], w: g.grid[0], h: g.grid[1],
+        pop: new Float32Array(pop), jobs: new Float32Array(jobs), zone: new Uint32Array(zone), gx: new Uint16Array(gx), gy: new Uint16Array(gy),
+        size: new Uint8Array(sz), cells9: new Uint32Array(cells9), lon: head.origin.lon, lat: head.origin.lat,
+      };
+    })();
+    streetFetches.set(id, p);
+    // a failed fetch is tried again by the next view or edit that needs it
+    p.catch(() => {
+      if (streetFetches.get(id) === p) streetFetches.delete(id);
+    });
+  }
+  return p;
+}
+
+/** Install the street speeds of `ids` (fetching those not fetched); resolves once each is in or failed.
+ * Bus lines are timed again, so the state and the snapshot follow. */
+async function ensureStreets(ids: Iterable<string>): Promise<void> {
+  const todo = [...new Set(ids)].filter((id) => !streetsIn.has(id));
+  if (!todo.length || !api) return;
+  const got = await Promise.all(todo.map((id) => fetchStreets(id).then((d) => ({ d }), () => null)));
+  const a = api;
+  if (!a) return;
+  let added = false;
+  todo.forEach((id, k) => {
+    const g = got[k];
+    if (!g || streetsIn.has(id)) return;
+    streetsIn.add(id);
+    const d = g.d;
+    if (d && a.add_pack_streets(d.zoneM, d.x0, d.y0, d.w, d.h, d.pop, d.jobs, d.zone, d.gx, d.gy, d.size, d.cells9, d.lon, d.lat)) added = true;
+  });
+  if (added && a.bus_lines().length) {
+    sendState();
+    scheduleSnapshot();
+  }
 }
 
 // ---------------------------------------------------------------- the world's coarse water (T-1285)
@@ -897,6 +969,13 @@ async function masksForLoaded(net: Uint8Array) {
     const r = a.edge_render(ei[i]);
     for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
   }
+  // T-1577: the street speeds under the bus routes (their points are no track)
+  const bus: number[] = [];
+  for (const id of a.bus_lines()) {
+    const r = a.bus_route(id);
+    for (let k = 1; k + 2 < r.length; k += 3) bus.push(r[k], r[k + 1]);
+  }
+  if (bus.length) void ensureStreets(zonesOfPoints(bus));
   const missing = zonesOfPoints(xy).filter((id) => !masksIn.has(id));
   if (!missing.length) return;
   a.load(emptyTrack!);
@@ -2797,6 +2876,8 @@ async function masksFor(op: EditOp) {
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
   else if (op.op === "moveNodes") await withMasks(() => a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy), nodePoints);
+  // T-1577: a bus is timed from the street speeds of the zones it crosses
+  else if (op.op === "addBusLine" || op.op === "busRoute") await ensureStreets(zonesOfPoints(op.route, 3));
 }
 
 async function handle(msg: ToClock) {

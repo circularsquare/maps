@@ -379,6 +379,9 @@ pub struct Network {
     /// The terrain grids installed (T-1270): from the clock worker, not saved, and carried over to a
     /// loaded network like the water mask.
     pub terrain: Terrain,
+    /// The street speeds installed (T-1577, `streets.rs`): from the clock worker, not saved, and carried
+    /// over to a loaded network like the terrain.
+    pub streets: super::streets::Streets,
     /// Each region's local time (T-309, `localtime.rs`): from the clock worker, not saved, and
     /// carried over to a loaded network like the water mask.
     pub time_zones: super::localtime::TimeZones,
@@ -618,6 +621,7 @@ impl Network {
             edge_lines: vec![],
             water_mask: Box::new(NoWater),
             terrain: Terrain::default(),
+            streets: Default::default(),
             time_zones: Default::default(),
             touch: Touch::default(),
             names_changed: vec![],
@@ -868,6 +872,15 @@ impl Network {
                 bus: self.line_bus[i].clone(),
             }
         })
+    }
+    /// A bus's speed at a point of the plane, m/s (T-1577): its share of the car's street speed
+    /// there, at most `bus::BUS_V`; the top speed where no street grid covers it.
+    pub fn bus_v_at(&self, x: f64, y: f64) -> f64 {
+        if self.streets.is_empty() {
+            return super::bus::BUS_V;
+        }
+        let (lon, lat) = self.frame.to_lonlat(x, y);
+        self.streets.car_kmh_at(lon, lat).map_or(super::bus::BUS_V, |c| super::streets::bus_kmh(c) / 3.6)
     }
     /// A live bus line (T-1464).
     pub fn is_bus(&self, l: u32) -> bool {

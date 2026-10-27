@@ -6,6 +6,10 @@
 /// the one definition schedules and demand share.
 pub const PERIODS: usize = crate::track::params::PERIOD_HOURS.len();
 
+/// A bus line's cars in the network: 0.5 of a train car, its 80 riders at crush (the snapshot's
+/// `BUS_DEMAND_CARS`, app/src/workers/clock.worker.ts).
+pub const BUS_CARS: f32 = 0.5;
+
 #[derive(Clone)]
 pub struct Network {
     /// Station position, metres from the pack origin.
@@ -73,6 +77,14 @@ impl Network {
     #[inline]
     pub fn bus_only(&self, s: usize) -> bool {
         self.st_bus.get(s).copied().unwrap_or(false)
+    }
+    /// Whether line `l` is a bus line (T-1577): the snapshot gives a bus the cars of `BUS_CARS`, so its
+    /// crush load is a bus's, whatever its stops are (a short bus between two train stations has no
+    /// bus-only stop), or it has a bus-only stop.
+    #[inline]
+    pub fn bus_line(&self, l: usize) -> bool {
+        self.line_crush.get(l).is_some_and(|&c| c == BUS_CARS * super::api::CRUSH_PER_CAR)
+            || self.line_stops[self.line_off[l] as usize..self.line_off[l + 1] as usize].iter().any(|&st| self.bus_only(st as usize))
     }
 }
 

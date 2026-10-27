@@ -2228,12 +2228,12 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
     (off, out)
 }
 
-/// Whether each station has a train line: one with trains in some period and no bus-only stop.
+/// Whether each station has a train line: one with trains in some period that is no bus line.
 pub fn on_train(net: &Network) -> Vec<bool> {
     let mut out = vec![false; net.n_stations()];
     for l in 0..net.n_lines() {
         let stops = net.stops(l);
-        if stops.iter().any(|&s| net.bus_only(s as usize)) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
+        if net.bus_line(l) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
             continue;
         }
         for &s in stops {
@@ -2794,7 +2794,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
-    let bus_line: Vec<bool> = (0..net.n_lines()).map(|l| net.line_stops[net.line_off[l] as usize..net.line_off[l + 1] as usize].iter().any(|&st| net.bus_only(st as usize))).collect();
+    let bus_line: Vec<bool> = (0..net.n_lines()).map(|l| net.bus_line(l)).collect();
     let rn_bus: Vec<f32> = rn_line.iter().map(|&l| if bus_line[l as usize] { BUS_BOARD_MIN } else { 0.0 }).collect();
     Graph {
         rn_left: rn_span.iter().zip(&rn_bus).map(|(a, b)| a + b).collect(),

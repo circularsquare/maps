@@ -130,7 +130,7 @@ levels:
    like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
    inside service stays half the period's headway.
    **Boarding a bus** (T-1576, Anita 2026-10-27) costs 6 perceived minutes more at every route node
-   of a line with a bus-only stop (`BUS_BOARD_MIN`, `Graph::rn_bus`, carried in `rn_left` like
+   of a bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop; `BUS_BOARD_MIN`, `Graph::rn_bus`, carried in `rn_left` like
    `rn_span`), at its first boarding and at a change from a train or another bus onto it; not
    real minutes, so the trip explorer's real wait leaves it out.
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait

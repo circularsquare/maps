@@ -3,7 +3,7 @@ use crate::track::profile::state_at;
 
 #[test]
 fn profile_runs_flat_and_stands_between() {
-    let p = profile(&[0.0, 1000.0, 3000.0], &[0.0, 30.0, 0.0]);
+    let p = profile(&[0.0, 1000.0, 3000.0], &[0.0, 30.0, 0.0], &Pace::default());
     let hop = 1000.0 / BUS_V;
     assert_eq!(p.arr, vec![0.0, hop, hop + 30.0 + 2000.0 / BUS_V]);
     assert_eq!(p.dep[1] - p.arr[1], 30.0);
@@ -73,4 +73,47 @@ fn simplify_keeps_the_shape_within_the_tolerance() {
     assert_eq!(s.last(), line.last());
     assert_eq!(s.len(), 2);
     assert!(simplify(&line, 0.1).len() > 30);
+}
+
+#[test]
+fn a_hop_takes_the_time_of_the_streets_it_crosses() {
+    // 100 m steps: 10 m/s for the first 300 m, 5 m/s for the next 200, then 10 again
+    let pace = Pace { step: 100.0, v: vec![10.0, 10.0, 10.0, 5.0, 5.0, 10.0, 10.0, 10.0, 10.0, 10.0] };
+    assert!((pace.time(0.0, 1000.0) - (30.0 + 40.0 + 50.0)).abs() < 1e-9);
+    // inside one step, across two
+    assert!((pace.time(120.0, 180.0) - 6.0).abs() < 1e-9);
+    assert!((pace.time(250.0, 350.0) - (5.0 + 10.0)).abs() < 1e-9);
+    // past the end counts at the last step
+    assert!((pace.time(900.0, 1100.0) - 20.0).abs() < 1e-9);
+    // the same route from its other end
+    assert!((pace.reversed().time(0.0, 1000.0) - 120.0).abs() < 1e-9);
+    assert!((pace.reversed().time(0.0, 500.0) - 50.0).abs() < 1e-9);
+    assert_eq!(pace.top(), 10.0);
+    assert_eq!(Pace::default().time(0.0, 1800.0), 1800.0 / BUS_V);
+    // the profile runs each hop at its mean
+    let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &pace);
+    assert!((p.arr[1] - pace.time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.time(0.0, 1000.0)).abs() < 1e-9);
+    assert!((p.phases[0].v - 500.0 / pace.time(0.0, 500.0)).abs() < 1e-9);
+}
+
+#[test]
+fn a_route_through_dense_streets_runs_slower() {
+    use super::super::streets::{StreetGrid, BUS_TOP_KMH};
+    let mut net = Network::new(-73.985, 40.758, true);
+    let pts = [[0.0, 0.0], [6000.0, 0.0]];
+    let poly = Poly::new(&net, &pts, &[]);
+    let flat = Pace::along(&net, &pts, &poly.road, poly.road_len());
+    assert_eq!(flat, Pace::default());
+    // the pack's frame at the network's origin; the zone square on x 0..2 km is dense, the rest open
+    let (pop, jobs) = ([40_000.0f32, 10.0, 10.0], [40_000.0f32, 10.0, 10.0]);
+    let g = StreetGrid::from_zones(2000.0, -1000.0, -1000.0, 4, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758).unwrap();
+    net.streets.grids.push(std::sync::Arc::new(g));
+    let pace = Pace::along(&net, &pts, &poly.road, poly.road_len());
+    // the dense stretch at 70% of about 16.5 km/h, the open ones at the top speed
+    let (slow, fast) = (pace.v[2] * 3.6, pace.v[30] * 3.6);
+    assert!((slow - 11.55).abs() < 0.5, "{slow}");
+    assert_eq!(fast, BUS_TOP_KMH);
+    assert!(pace.time(0.0, poly.road_len()) > poly.road_len() / BUS_V);
+    // where no grid covers, the top speed
+    assert_eq!(net.bus_v_at(30_000.0, 0.0), BUS_V);
 }

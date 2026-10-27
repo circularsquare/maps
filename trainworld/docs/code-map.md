@@ -20,7 +20,8 @@ tests natively.
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
-- `src/track/bus.rs`: bus lines (T-1464, T-1465): the route (`BusRoute`: points with corner and road bits; `Poly` in road metres), its stops (`plan`: stations met, ends, crossings, about one every 2 km on the 400 m street grid, each with its stretch of route), the flat-speed trip (`profile`); `wasm/bus.rs` its exports, tests in `wasm/bus_tests.rs`; notes/T-1464.md.
+- `src/track/bus.rs`: bus lines (T-1464, T-1465): the route (`BusRoute`: points with corner and road bits; `Poly` in road metres), its stops (`plan`: stations met, ends, crossings, about one every 2 km on the 400 m street grid, each with its stretch of route), the trip at the speed of the streets it crosses (`Pace`, `profile`); `wasm/bus.rs` its exports, tests in `wasm/bus_tests.rs`; notes/T-1464.md.
+- `src/track/streets.rs`: the car's street speed by place (demand's `place_min_per_km`, kept equal by a test), a pack's grid of its zones' speeds (`StreetGrid`, `Streets` in the network, installed with `TrackApi::add_pack_streets`, T-1577), for a bus's speed.
 - `src/track/cost.rs`: prices (SPEC 6.4), the water mask types and the terrain classes
   (`ClassGrid`, `Terrain`, `terrain_spans`, T-1270), installed with `TrackApi::add_terrain`.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for

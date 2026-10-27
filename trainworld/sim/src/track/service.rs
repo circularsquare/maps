@@ -548,8 +548,9 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     ls
 }
 
-/// A bus line's service (T-1464): its stops from `bus::plan`, each run at a flat speed, standing the
-/// line's dwell at the train stations, with no capacity holds.
+/// A bus line's service (T-1464): its stops from `bus::plan`, each hop run at the speed of the
+/// streets it crosses (`bus::Pace`), standing the line's dwell at the train stations, with no
+/// capacity holds.
 fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let mut ls = LineSvc::default();
     let plan = super::bus::plan(net, l, &r.points, &r.kinds, r.built);
@@ -561,15 +562,17 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let fwd_s: Vec<f64> = plan.stops.iter().map(|s| s.s).collect();
     let fwd_dw: Vec<f64> = plan.stops.iter().map(|s| if s.station.is_some() { dwell } else { 0.0 }).collect();
     let len = plan.len;
+    let pace = super::bus::Pace::along(net, &r.points, &plan.cum, len);
     let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
-    let make = |s: Vec<f64>, dw: &[f64]| {
-        let p = super::bus::profile(&s, dw);
+    let top = pace.top();
+    let make = |s: Vec<f64>, dw: &[f64], pace: &super::bus::Pace| {
+        let p = super::bus::profile(&s, dw, pace);
         Run {
             len,
             turn: vec![false; n],
             jump: vec![0.0; n],
-            limits: vec![[0.0, super::bus::BUS_V]],
+            limits: vec![[0.0, top]],
             free: p.clone(),
             holds: Default::default(),
             stop_holds: std::array::from_fn(|_| vec![0.0; n]),
@@ -579,7 +582,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
         }
     };
     ls.stops = plan.stops.iter().map(|s| s.id).collect();
-    ls.runs = [make(fwd_s, &fwd_dw), make(rev_s, &rev_dw)];
+    ls.runs = [make(fwd_s, &fwd_dw, &pace), make(rev_s, &rev_dw, &pace.reversed())];
     ls.cars = 1;
     ls.train_len = super::bus::BUS_LEN_M;
     ls.ok = true;
