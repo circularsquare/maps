@@ -22,6 +22,29 @@ try {
   console.log('save loaded');
   await lib.demandFinal(page, { polling: 500, lines: 100, timeout: 900000 });
   console.log('demand final');
+  // mode: base, medHigh (Medium trains := High's), highMed (High trains := Medium's)
+  const mode = process.argv[4] ?? 'base';
+  if (mode !== 'base') {
+    const ver = await page.evaluate(() => window.twDemand.view().version);
+    const r = await page.evaluate(async (mode) => {
+      const w = window.tw.world.value, c = window.tw.client;
+      let ok = 0, bad = 0, same = 0;
+      for (const l of w.save.lines) {
+        const n = w.lineStats[l.id]?.trainsNeeded;
+        if (!n) continue;
+        const t = mode === 'medHigh' ? [n[0], n[0], n[2]] : [n[1], n[1], n[2]];
+        if (t[0] === n[0] && t[1] === n[1]) { same++; continue; }
+        const a = await c.edit({ op: 'setTrainCount', line: l.num, trains: t });
+        if (a?.ok) ok++; else bad++;
+      }
+      return { ok, bad, same };
+    }, mode);
+    console.log('edits', JSON.stringify(r));
+    await page.waitForTimeout(5000);
+    await lib.demandFinal(page, { polling: 500, after: ver, timeout: 900000 });
+    console.log('demand final after edits');
+    await page.waitForTimeout(60000);
+  }
   // wait for the account to have every line
   const res = await page.evaluate(async () => {
     const { queryClock } = await import('/src/workers/clockClient.ts');
@@ -60,7 +83,14 @@ try {
       }
       rows.push({ id: l.id, num: l.num, name: l.name, letter: l.letter, stops: l.stops.length, tph: l.tph, cars: st?.cars, rt: st?.roundTripByLevel, need: st?.trainsNeeded, auto: st?.autoS, km: st?.km, status: st?.status, shift: st?.shift, ridersPerDay: d?.ridersPerDay, purposes: Object.fromEntries([...(dv.purposes ?? [])].map(([k, p]) => [k, (p.lines.get(l.id) ?? p.lines.get(String(l.id)))?.ridersPerDay ?? 0])), per });
     }
-    return { missing, weekday, peak: dv.peakHourFactor, fares: window.tw.moneyState.peek()?.fares, rows };
+    const { trainKind } = await import('/src/game/format.ts');
+    const m = window.tw.moneyState.peek();
+    for (const row of rows) {
+      const st = w.lineStats[row.id];
+      const k = trainKind(m, st.fast);
+      row.perTrainKm = (st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm) * m.economy;
+    }
+    return { missing, weekday, rail: dv.railTripsPerDay, peak: dv.peakHourFactor, fares: window.tw.moneyState.peek()?.fares, rows };
   });
   res.errors = errors.slice(0, 20);
   await writeFile(out, JSON.stringify(res, null, 1));

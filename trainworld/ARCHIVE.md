@@ -1,5 +1,6 @@
 # Archive
 
+- T-1522 [P1] Loose-end rings stuck on screen. Done 2026-10-26 (tree t1522): the pointer they gather round came from MapLibre's mousemove, which stops over controls laid on the map and during a drag, so rings stayed round a stale spot as keys panned; now read from the window. `checks/t1485-end-marks.mjs`; artifacts/trainworld/t1522/.
 - T-1531 [P2] Station bubbles look. Done 2026-10-26 (tree t1524): one disc shaded blue to green by the transfers' share (OKLab, end colours kept), a 1 px faint edge; Total's hover total gets a dot in the disc's colour.
 - T-1529 [P2] Related lines on by default. Done 2026-10-26 (tree t1524): the toggle was never stored, so the signal now starts true.
 - T-1527 [P2] Terminal bar at one end only. Done 2026-10-26 (tree t1524): the buffer stop is drawn, and hovers, only where the track ends (flag 512); a terminal with track both sides has none.
