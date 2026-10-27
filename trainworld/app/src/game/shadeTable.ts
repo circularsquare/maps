@@ -56,6 +56,9 @@ export interface ShadeColours {
   /** riders changing trains walking between stations (T-1124, `map/transferBubbles.ts`); a lighter
    * grey in dark (T-1288) */
   walkers: string;
+  /** a car park's surface and its lines (T-1528, `map/parkingLots.ts`), a little off the land */
+  lot: string;
+  lotLine: string;
   /** the outline of a line at capacity in the traffic view (T-819), the capacity tags' red */
   fullTrack: string;
   /** the thin outline round the ghost of track being placed or dragged, and of a real-network route (T-1054) */
@@ -71,6 +74,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     markInk: NET_INK, markBlueprint: "#2f62b3",
     realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6", realOpacity: 0.15,
     walkers: "#77726d",
+    lot: "#e7e3dc", lotLine: "#c4beb4",
     fullTrack: "#c0392b",
     ghost: "#000000",
   },
@@ -82,6 +86,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
     realMain: "#97a2b8", realOther: "#7a8291", realMetro: "#a98ec2", realOpacity: 0.3,
     walkers: "#b8b3ac",
+    lot: "#39352f", lotLine: "#625b52",
     fullTrack: "#f0584f",
     ghost: "#e6e4e0",
   },

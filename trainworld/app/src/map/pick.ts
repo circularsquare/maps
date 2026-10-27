@@ -12,6 +12,7 @@ import type { Selection } from "../game/types";
 import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
+import { LOT_STRIDE } from "./facilityPlace";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -393,5 +394,9 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     const bus = ov.renderer.buses.lineAt(ov, px, py);
     if (bus >= 0) return { kind: "line", line: String(bus) };
   }
-  return lineHit ? { kind: "line", line: lineHit } : null;
+  if (lineHit) return { kind: "line", line: lineHit };
+  // a car park, under everything (T-1528): the station its hover names, so its complex
+  const lot = ov.renderer.lotAt(px, py, (x, y) => ov.toScreen(x, y));
+  if (lot >= 0) return { kind: "station", station: n.stationIds[ov.renderer.lots.lots[lot * LOT_STRIDE + 8]] };
+  return null;
 }

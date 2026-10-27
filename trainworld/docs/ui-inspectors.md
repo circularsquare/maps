@@ -383,7 +383,11 @@ the Build tab's quote has rows for bus routes and new buses.
   Remove station in a second, then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
-  passage (two platforms and a walkway); in complex view only the passage. Each is outlined when
+  passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
+  passage, the first two for every station of the complex at once [T-1528]: built at all of them or
+  none, a complex where only some have it shows as not built and a click builds it at the rest,
+  priced one station's price at each station that has none, and a click on a built one removes it
+  from all. Each is outlined when
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
   in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing

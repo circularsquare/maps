@@ -459,6 +459,9 @@ export interface ClockState {
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
+  /** the clock worker only: each node's station complex (0xffffffff none), for drawing one waiting
+   * room and car park per complex (T-1528) */
+  complexOf?: Uint32Array;
   render: ClockRender;
   /** where two tracks cross at one height (T-629), 5 numbers each: x, y (local units), kind (0
    * flat, 1 bad), level, built (1 when both tracks are) */
