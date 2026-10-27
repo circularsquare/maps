@@ -136,7 +136,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
   `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which click
-  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised voices, T-1413, and the sample player),
+  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised bung, T-1413, and the sample player),
   `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
   all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the

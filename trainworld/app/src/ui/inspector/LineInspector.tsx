@@ -22,7 +22,7 @@ import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
-import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepTrainCount, trainsShown, world, linesById, linesByNum } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
@@ -428,7 +428,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   if (!plats.length || !st.cars) return null;
   const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
-  const cars = Math.min(st.cars, cap);
+  const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
   const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
   const tip = (to: number) => {
     let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
@@ -440,10 +440,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     }
     return t + "\n" + capText;
   };
-  const step = (d: number) => {
-    const to = Math.max(1, Math.min(cap, cars + d));
-    if (to !== cars) void edit({ op: "lineCars", line: l.num, cars: to >= cap ? 0 : to });
-  };
+  const step = (d: number) => stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
   return (
     <ul class="rows">
       <li>

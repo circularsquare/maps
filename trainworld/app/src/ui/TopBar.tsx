@@ -206,9 +206,9 @@ function Speed() {
 }
 
 /** The world's bar hover: the train trips a day in the cities (T-1440), the share of the world's
- * fixed rides a day and how that is reached (T-1301), then the cities' own split. */
+ * fixed trips a day and how that is reached (T-1301), then the cities' own split. */
 function worldShareTip(t: ReturnType<typeof worldTotals>, where: string, note: string): string {
-  const world = `${WORLD_RIDES / 1e9} billion rides a day in the world (${WORLD_PEOPLE / 1e9} billion people, about ${RIDES_PER_PERSON} rides each)`;
+  const world = `${WORLD_RIDES / 1e9} billion trips a day in the world (${WORLD_PEOPLE / 1e9} billion people, about ${RIDES_PER_PERSON} trips each)`;
   if (!t.split || !t.rides) return `Train share of the ${world}${note}`;
   const cities = `${t.cities} ${t.cities === 1 ? "city" : "cities"}`;
   return [

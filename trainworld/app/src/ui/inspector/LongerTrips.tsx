@@ -191,7 +191,7 @@ export function StationLongerTrips({ id, scope = id }: { id: string; scope?: str
       <>
         <Head />
         <ul class="rows">
-          <Row label={`Riders ${shownDayPhrase.value}`}>0</Row>
+          <Row label={`Trips ${shownDayPhrase.value}`}>0</Row>
         </ul>
       </>
     );

@@ -51,7 +51,7 @@ export function SettingsTab() {
       <Slider label="Detail" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step={1} value={d.bubbleDetail}
         tip={`Smallest bubbles group trips by areas of ${(RES_AREA_M2[0] / 1e6).toFixed(1)} km², from zoom ${finestFromZoom(d.bubbleDetail).toFixed(1)}`} set={(v) => setDisplay("bubbleDetail", v)} />
       {/* the bubbles' colours; bars and swatches by mode keep the mode colours */}
-      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where nobody rides a train to another where everyone does.">
+      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where no trips go by train to another where all do.">
         <span>Colours</span>
         <Segmented<BubbleScheme> options={SCHEME_OPTIONS} value={d.bubbleColours === "ramp" ? "ramp" : "mode"} onChange={(v) => setDisplay("bubbleColours", v)} />
       </div>
