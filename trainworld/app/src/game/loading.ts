@@ -55,7 +55,15 @@ const gameReady = signal(false);
  * card's span, from the pick to the clock's release). Nothing is drawn over it then, so what comes at
  * the end (hidden realms shaded, circles, cities for the shown realms) arrives in one step. Not while
  * demand has nothing to load (demandIdle). */
-export const mapBlank = computed(() => choosing.value || (!gameReady.value && !demandIdle.value));
+export const mapBlank = computed(() => choosing.value || (!gameReady.value && !demandIdle.value && !viewFigures.value));
+/** T-1533: the zone in view's first figures of the game being loaded are in (a cached result, a rough
+ * solve's, an estimate): the map shows them behind the card while the clock waits for the final.
+ * `gameLoadSeq` counts the loads, so the demand client tells figures of this load from the last game's. */
+const viewFigures = signal(false);
+export const gameLoadSeq = signal(0);
+export function viewFiguresIn() {
+  viewFigures.value = true;
+}
 
 /** The clock waits for the next game's demand: set at startup and by every whole-game load. */
 let holdArmed = true;
@@ -69,12 +77,15 @@ export const gameWait = () => wait;
 export function startGameWait(key: string) {
   wait = { seq: wait.seq, since: performance.now(), key };
   gameReady.value = false;
+  viewFigures.value = false;
+  gameLoadSeq.value++;
 }
 
 /** A whole game was loaded or started (workers/clockClient.ts): hold the clock until its demand is done. */
 export function holdForGameLoad(key?: string) {
   if (loadFailure.peek()) return; // no demand to wait for
   gameReady.value = false;
+  if (!holdArmed) { viewFigures.value = false; gameLoadSeq.value++; }
   wait = holdArmed ? { ...wait, key: key ?? wait.key } : { seq: wait.seq + 1, since: performance.now(), key: key ?? "last" };
   holdArmed = true;
   clock?.setHeld(true);

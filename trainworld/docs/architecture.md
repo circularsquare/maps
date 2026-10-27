@@ -184,7 +184,9 @@ Web first, so it can be shared as a link.
   round has landed (`HOLD_ROUND`, `holdDone`; Anita, T-347). A viewed zone open bare is final from
   its opening: a new game (no station) opens its viewed zone bare, its solve covers the market
   alone, and the card goes when the bare figures arrive (T-351). The cached result
-  (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
+  (section 11) is drawn behind the loading card without releasing it, and so are the zone in view's
+  first figures from a rough solve or an estimate (T-1533, [demand-runtime.md](demand-runtime.md)
+  "The zone in view first"). A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   **Startup order** (main.ts) [T-677]: the page sets up the map, overlay and UI, then waits on the
   start menu ([ui-panels.md](ui-panels.md) "Start menu"); the pick starts the demand pool, then the

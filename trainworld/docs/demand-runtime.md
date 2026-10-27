@@ -26,7 +26,8 @@ from the packs they hold (`MarketPacks.market`) whenever packs open or close: si
 composition is 15-90 ms natively for one to seven packs (the first a worker composes 0.3 s more),
 and the page still sends the
 market packs downloaded together in one `open` once none is still downloading, and a worker opens
-the `open`s waiting for it together, one composition for them all (T-889). **Packs close when
+the market packs waiting for it together, one composition for them all (T-889), and city packs one
+at a time (T-1533, "The zone in view first" below). **Packs close when
 nobody needs them** (T-301): a zone that is
 neither viewed, beside the view, reached by a station nor part of the load in hand closes in every
 worker (bare or not) once it has been so for 60 s, or at once when more than two such zones are
@@ -241,3 +242,21 @@ and one about the first group's zone after its final is answered at once. Otherw
 step through the rounds together. The worker adds
 cities up in the registry's order, never the order their packs opened in, so a network's figures
 are the same to the bit however it was loaded. T-392, T-393, notes/T-326.md.
+
+**The zone in view first** (T-1533, notes/T-1533.md). Every queue the zone in view passes through
+takes it first. Its pack downloads at high fetch priority, ahead of the markets and the other zones
+(`ensure`, `stationsAhead`); each worker opens it ahead of the packs waiting (`open.first`, and a
+`first` message moves it up when the view reaches a zone whose pack is already queued); a worker
+opens city packs one at a time and market packs together after them, and the page sends a game's
+market packs only once its city packs are in, since composing China's 370 holds a worker for a
+minute; the aux worker opens one pack at a time, so the bubbles' questions are answered in
+between. While a whole solve waits for packs still downloading or opening, the zone in view, once
+open in every worker and with no figures yet, is solved alone with no market (`solve.only`, a
+**rough solve**, `?perfOff=rough` off): it starts ahead of the opens waiting, which wait for its
+free-flow round, and its rounds show as estimates (never final: the card, the held clock and the
+cache wait for the whole solve, whose figures replace them). A cached result shown beats it. After
+an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
+lines their first figures (T-324) without waiting for its last round. While a solve steps through
+its rounds, the bubbles' sums for a weekend or one purpose, which only the live state holds, are
+asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
+round still show while the zone has none.

@@ -76,7 +76,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" | "debugPanic" | "periods" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -454,14 +454,24 @@ let closeEpoch = 0;
 let oneByOne = false;
 
 function openQueued(epoch: number): Promise<void> {
-  // a macrotask, so the opens already posted are delivered and join this one
-  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => {
-    const first = openQueue[0];
+  // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
+  // rough solve of the zone in view runs
+  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => roughRun ?? undefined).then(() => {
+    let first = openQueue[0];
     // taken up by an earlier batch, or after a close that comes before it in the chain
     if (!first || first.epoch !== epoch) return;
+    // T-1533: city packs before market packs: a rough solve needs no market, and composing a big
+    // game's market (hundreds of packs) holds the worker up for a minute
+    if (!first.msg.packs.length && !aux) {
+      let j = openQueue.findIndex((q) => q.epoch === epoch && q.msg.packs.length > 0 && !!q.msg.first);
+      if (j < 0) j = openQueue.findIndex((q) => q.epoch === epoch && q.msg.packs.length > 0);
+      if (j > 0) { openQueue.unshift(...openQueue.splice(j, 1)); first = openQueue[0]; }
+    }
     const isBare = !!first.msg.bare && aux;
+    // T-1533: only market packs open together (one composition for them all); a city pack opens on
+    // its own, so the zone in view's, moved ahead (`first`), waits for one pack at most
     let n = 1;
-    while (!oneByOne && n < openQueue.length && openQueue[n].epoch === epoch && (!!openQueue[n].msg.bare && aux) === isBare) n++;
+    while (!oneByOne && !aux && !first.msg.packs.length && n < openQueue.length && openQueue[n].epoch === epoch && !openQueue[n].msg.packs.length) n++;
     const batch = openQueue.splice(0, n).map((q) => q.msg);
     if (!started || dead) return;
     try {
@@ -478,7 +488,21 @@ function openQueued(epoch: number): Promise<void> {
     } catch (err) {
       failed(err);
     }
+    startRough();
   });
+}
+
+/** T-1533: a rough solve of the zone in view running; the opens waiting wait for it */
+let roughRun: Promise<void> | null = null;
+let roughEnd: (() => void) | null = null;
+function setRough(on: boolean) {
+  if (on && !roughRun) roughRun = new Promise<void>((r) => (roughEnd = r));
+  else if (!on && roughRun) { roughEnd?.(); roughRun = roughEnd = null; }
+}
+const roughReady = (job: Extract<ToDemand, { kind: "solve" }>) => !!job.only?.every((id) => cities.has(id));
+/** A rough solve starts as soon as its zones are open here, ahead of the opens still waiting. */
+function startRough() {
+  if (pending?.only && started && !busy && !dead && roughReady(pending)) void run();
 }
 
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
@@ -520,7 +544,10 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // between populations (its job keeps the cities it started with); T-889: those waiting together
     // open together
     const epoch = closeEpoch;
-    openQueue.push({ msg, epoch });
+    // T-1533: the zone in view's pack goes ahead of the opens waiting since the last close
+    let at = openQueue.length;
+    if (msg.first) while (at > 0 && openQueue[at - 1].epoch === epoch && !openQueue[at - 1].msg.first) at--;
+    openQueue.splice(at, 0, { msg, epoch });
     opening = opening.then(() => openQueued(epoch));
   } else if (msg.kind === "close") {
     closeEpoch++;
@@ -533,11 +560,21 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
     pending = pending?.freshParts && !msg.freshParts ? { ...msg, freshParts: true } : msg;
     wake?.();
-    void opening.then(() => { if (started && !busy) run(); });
+    if (msg.only) startRough();
+    else void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "go") {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
+  } else if (msg.kind === "first") {
+    const i = openQueue.findIndex((q) => q.msg.packs.some((p) => p.id === msg.id));
+    if (i > 0) {
+      const [e] = openQueue.splice(i, 1);
+      e.msg.first = true;
+      let at = i;
+      while (at > 0 && openQueue[at - 1].epoch === e.epoch && !openQueue[at - 1].msg.first) at--;
+      openQueue.splice(at, 0, e);
+    }
   } else if (msg.kind === "corridorsAgain") {
     sentTables.clear();
   } else if (msg.kind === "periods") {
@@ -603,7 +640,9 @@ const CITY_ORDER = new Map(CITIES.map((c, i) => [c.id, i]));
 
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
 function query(msg: Query) {
-  if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && BY_ROUND.has(msg.kind) && !aux) {
+  // (T-1533: and the bubbles' sums read from the live state: a weekend's, one purpose's)
+  const byRound = BY_ROUND.has(msg.kind) || msg.kind === "purposeModes" || (msg.kind === "subSums" && ((msg as { day?: number }).day ?? 0) !== 0);
+  if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && byRound && !aux) {
     const { version, round } = msg;
     // T-402: a zone in a later group of the solve in hand waits for that group's round
     const g = version === current ? cityGroup(msg.city) ?? stageGroup : stageGroup;
@@ -1119,11 +1158,17 @@ async function run() {
   busy = true;
   try {
     while (pending && started && !dead) {
+      // T-1533: a rough solve waits until its zones are open here (`startRough`)
+      if (pending.only && !roughReady(pending)) break;
+      setRough(!!pending.only);
       closeDeferred();
       if (dealt) deal();
       wasm_heap_peak(true);
-      const job = pending;
+      let job = pending;
       pending = null;
+      // (a worker's fresh market parts are for the next whole solve, not a rough one)
+      if (job.only && job.freshParts) { freshCarry = true; job = { ...job, freshParts: false }; }
+      else if (!job.only && freshCarry) { freshCarry = false; job = { ...job, freshParts: true }; }
       const n = job.net;
       setWorldFrame(n.frame);
       let setupMs = 0;
@@ -1131,14 +1176,16 @@ async function run() {
       // in the registry's order, not the order the packs happened to open in: the figures are added
       // up in it, so the same network gives the same figures to the bit however the packs arrived
       const byRegistry = <T,>(list: [CityId, T][]) => list.sort((x, y) => CITY_ORDER.get(x[0])! - CITY_ORDER.get(y[0])!);
-      const jobLocal = byRegistry([...cities]);
-      const jobEveryday = byRegistry([...everyday].filter(([id]) => cities.has(id)));
+      // T-1533: a rough solve covers its zones alone
+      const only = job.only ? new Set(job.only) : null;
+      const jobLocal = byRegistry([...cities].filter(([id]) => !only || only.has(id)));
+      const jobEveryday = byRegistry([...everyday].filter(([id]) => cities.has(id) && (!only || only.has(id))));
       jobCities = new Set(jobLocal.map(([id]) => id));
       // T-1174: after a worker is replaced, every worker composes its market afresh from the packs
       // open now, as the replacement did, so all hold the same market and corridor table
       // (T-1205: not in a worker started since, whose one composition is already from every pack open:
       // a second, fresh corridors and all, left a replacement's memory about 30% above its need)
-      if (job.freshParts && marketPacks && solvedOnce) {
+      if (job.freshParts && marketPacks && solvedOnce && !only) {
         const old = [...new Set([...marketParts.values(), ...(intercity ? [intercity] : [])])];
         marketParts.clear();
         intercity = null;
@@ -1147,7 +1194,7 @@ async function run() {
         marketPacks.forget_corridors();
         recompose();
       }
-      const regional = intercity;
+      const regional = only ? null : intercity;
       // T-326: each cluster on its own network; one this worker has solved on the same network
       // keeps its populations' results, untouched
       for (const [id, a] of jobLocal) if (!boxes.has(id)) boxes.set(id, cellBox(a.cell_xy()));
@@ -1397,6 +1444,14 @@ async function run() {
             if (pending || !(await step(c, round, q))) { stale = true; break; }
             release_skims();
           }
+          // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
+          // the shown result (T-324), rather than at the cluster's last round
+          if (!stale && round === 0 && job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first)) {
+            for (const q of mine) {
+              const { msg, transfer } = figures(q, 0, 0, [c]);
+              sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
+            }
+          }
         }
         if (stale) break;
         solved(c);
@@ -1487,6 +1542,8 @@ async function run() {
               setupMs = 0;
             }
           }
+          // T-1533: a rough solve's estimate is out: the opens waiting go on between its populations
+          if (only && round === 0) setRough(false);
         }
         if (!stale) for (const c of late) solved(c);
       }
@@ -1499,5 +1556,7 @@ async function run() {
     failed(err);
   }
   busy = false;
+  setRough(false);
   if (!dead) closeDeferred();
 }
+let freshCarry = false;
