@@ -1,5 +1,6 @@
 # Archive
 
+- T-1239 [P2] Build Canada. Done 2026-10-26: 48 of 50 rows shipped (mon van cag edm and 44 zones), tor re-solved and passing; lel parked (T-1376), six parked on a stale app WASM (T-1377). Remnants keep to another city's FUA; DA population hook (T-564). notes/T-1239.md.
 - T-1506 [P2] An unlinked inter-city station in a metro city's access lists. Done 2026-10-26: past the 8 best, a list keeps the best station of each track component missing, up to 10; China's longer boardings 3,337 to 7,621, New York and Tokyo unchanged, market pass about 1x. notes/T-1506.md.
 - T-1381 [P2] The worker's whole stroke copy each edit. Done 2026-10-26: track and line strokes are posted whole, unchanged, or as only the new segments written over the page's arrays; Japan at 6x, laying them out 500 ms to 85 over the series, worker edit 338 to 300 ms, GC unchanged. `checks/t1381-strokes.mjs`; notes/T-1029.md.
 - T-1380 [P2] Station edits on a big network. Done 2026-10-26: complexes (page, distance groups, worker snapshot) and station names are patched from the stations that changed, equal to a whole build; Japan at 6x, a station edit's state 1337 to 589 ms. `checks/t1380-*.mjs`; notes/T-1029.md.

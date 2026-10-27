@@ -83,6 +83,7 @@ NEAR_KM = 20.0               # pieces of a city's outline this near its main one
 FLEET_WIDEN = 1.5             # a figure outside the fleet's [min / 1.5, max x 1.5] WARNs
 WATER_MIN_RADIUS_M = 40.0     # a water test point is the polylabel of a polygon at least 80 m across there
 WATER_MAX_POINTS = 40         # the largest water polygons in the outline, one point each
+WATER_CANDIDATES = 2000       # of an extract's water in the outline's box, the largest looked at (T-1239)
 STATION_KM = 15.0             # the test line takes stations this near the centre
 LINE_GAP_M = 600.0            # ... each the next station on, this far
 LINE_STEP_M = 4000.0          # ... to this far
@@ -186,9 +187,17 @@ def water_polygons(header, outline):
     geoms = []
     for e in have:
         df = pyogrio.read_dataframe(osm_water.water_path(e), bbox=tuple(outline.bounds), columns=[])
-        for g in df.geometry.to_numpy():
-            if g is None:
-                continue
+        gs = df.geometry.to_numpy()
+        gs = gs[~shapely.is_missing(gs)]
+        # T-1239: only the biggest can give one of the WATER_MAX_POINTS largest polygons, and each is cut
+        # to the outline's box before make_valid (Canada's tens of thousands of lakes and its Great Lakes
+        # polygons kept a region's gate in make_valid for over an hour)
+        gs = gs[np.argsort(-shapely.area(gs))[:WATER_CANDIDATES]]
+        for g in gs:
+            try:
+                g = shapely.clip_by_rect(g, *outline.bounds)
+            except shapely.errors.GEOSException:
+                pass
             g = shapely.make_valid(g)  # an invalid water polygon fails even `intersects` (T-897: Donghai)
             if not outline.intersects(g):
                 continue

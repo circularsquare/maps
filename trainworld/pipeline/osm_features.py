@@ -64,10 +64,13 @@ def areas_path(extract):
     return _stem(extract) + ".areas.fgb"
 
 
-def _gdal():
+def _gdal(pbf=None):
     import pyogrio
-    # the node index in memory rather than a temp file (GDAL's default is 100 MB)
-    pyogrio.set_gdal_config_options({"OSM_MAX_TMPFILE_SIZE": "6000"})
+    # the node index in memory rather than a temp file (GDAL's default is 100 MB), sized to the
+    # extract (T-1239: a 6 GB index for each of a small extract's parallel readers failed to open
+    # under the commit limit with other jobs running, T-1080); 20 MB a MB of .pbf is ample
+    mb = 6000 if pbf is None else int(min(6000, max(500, 20 * os.path.getsize(pbf) / 1e6)))
+    pyogrio.set_gdal_config_options({"OSM_MAX_TMPFILE_SIZE": str(mb)})
     return pyogrio
 
 
@@ -83,7 +86,7 @@ def _write(df, out, what, t0, **kw):
 def _batches(pbf, layer, cols, where=None):
     """The layer as pyarrow record batches (geometry as WKB)."""
     from pyogrio.raw import open_arrow
-    _gdal()
+    _gdal(pbf)
     with open_arrow(pbf, layer=layer, columns=cols, where=where, use_pyarrow=True) as (meta, reader):
         for batch in reader:
             yield meta["geometry_name"] or "wkb_geometry", batch

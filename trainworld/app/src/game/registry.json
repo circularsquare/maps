@@ -14642,6 +14642,294 @@
       {
         "name": "Hong Kong",
         "regionName": "Hong Kong region"
+      },
+      {
+        "name": "Montreal",
+        "regionName": "Montreal region"
+      },
+      {
+        "name": "Ottawa",
+        "regionName": "Ottawa region"
+      },
+      {
+        "name": "Winnipeg",
+        "regionName": "Winnipeg region"
+      },
+      {
+        "name": "Sherbrooke",
+        "regionName": "Sherbrooke region"
+      },
+      {
+        "name": "Québec",
+        "regionName": "Québec region"
+      },
+      {
+        "name": "Barrie",
+        "regionName": "Barrie region"
+      },
+      {
+        "name": "Kitchener",
+        "regionName": "Kitchener region"
+      },
+      {
+        "name": "Windsor",
+        "regionName": "Windsor region"
+      },
+      {
+        "name": "St. Catharines",
+        "regionName": "St. Catharines region"
+      },
+      {
+        "name": "Sorel-Tracy",
+        "regionName": "Sorel-Tracy region"
+      },
+      {
+        "name": "Gatineau",
+        "regionName": "Gatineau region"
+      },
+      {
+        "name": "Kingston",
+        "regionName": "Kingston region"
+      },
+      {
+        "name": "Greater Sudbury",
+        "regionName": "Greater Sudbury region"
+      },
+      {
+        "name": "North Bay",
+        "regionName": "North Bay region"
+      },
+      {
+        "name": "Rimouski",
+        "regionName": "Rimouski region"
+      },
+      {
+        "name": "Saint-Jean-sur-Richelieu",
+        "regionName": "Saint-Jean-sur-Richelieu region"
+      },
+      {
+        "name": "Brandon",
+        "regionName": "Brandon region"
+      },
+      {
+        "name": "Rouyn-Noranda",
+        "regionName": "Rouyn-Noranda region"
+      },
+      {
+        "name": "Rivière-du-Loup",
+        "regionName": "Rivière-du-Loup region"
+      },
+      {
+        "name": "Thunder Bay",
+        "regionName": "Thunder Bay region"
+      },
+      {
+        "name": "Montreal",
+        "regionName": "Montreal region"
+      },
+      {
+        "name": "Ottawa",
+        "regionName": "Ottawa region"
+      },
+      {
+        "name": "Winnipeg",
+        "regionName": "Winnipeg region"
+      },
+      {
+        "name": "Sherbrooke",
+        "regionName": "Sherbrooke region"
+      },
+      {
+        "name": "Québec",
+        "regionName": "Québec region"
+      },
+      {
+        "name": "Barrie",
+        "regionName": "Barrie region"
+      },
+      {
+        "name": "Kitchener",
+        "regionName": "Kitchener region"
+      },
+      {
+        "name": "London",
+        "regionName": "London region"
+      },
+      {
+        "name": "Windsor",
+        "regionName": "Windsor region"
+      },
+      {
+        "name": "St. Catharines",
+        "regionName": "St. Catharines region"
+      },
+      {
+        "name": "Sorel-Tracy",
+        "regionName": "Sorel-Tracy region"
+      },
+      {
+        "name": "Gatineau",
+        "regionName": "Gatineau region"
+      },
+      {
+        "name": "Kingston",
+        "regionName": "Kingston region"
+      },
+      {
+        "name": "Saguenay",
+        "regionName": "Saguenay region"
+      },
+      {
+        "name": "Guelph",
+        "regionName": "Guelph region"
+      },
+      {
+        "name": "Greater Sudbury",
+        "regionName": "Greater Sudbury region"
+      },
+      {
+        "name": "North Bay",
+        "regionName": "North Bay region"
+      },
+      {
+        "name": "Rimouski",
+        "regionName": "Rimouski region"
+      },
+      {
+        "name": "Saint-Jean-sur-Richelieu",
+        "regionName": "Saint-Jean-sur-Richelieu region"
+      },
+      {
+        "name": "Brandon",
+        "regionName": "Brandon region"
+      },
+      {
+        "name": "Rouyn-Noranda",
+        "regionName": "Rouyn-Noranda region"
+      },
+      {
+        "name": "Rivière-du-Loup",
+        "regionName": "Rivière-du-Loup region"
+      },
+      {
+        "name": "Thunder Bay",
+        "regionName": "Thunder Bay region"
+      },
+      {
+        "name": "Vancouver",
+        "regionName": "Vancouver region"
+      },
+      {
+        "name": "Prince George",
+        "regionName": "Prince George region"
+      },
+      {
+        "name": "Chilliwack",
+        "regionName": "Chilliwack region"
+      },
+      {
+        "name": "Abbotsford",
+        "regionName": "Abbotsford region"
+      },
+      {
+        "name": "Calgary",
+        "regionName": "Calgary region"
+      },
+      {
+        "name": "Edmonton",
+        "regionName": "Edmonton region"
+      },
+      {
+        "name": "Regina",
+        "regionName": "Regina region"
+      },
+      {
+        "name": "Saskatoon",
+        "regionName": "Saskatoon region"
+      },
+      {
+        "name": "Red Deer",
+        "regionName": "Red Deer region"
+      },
+      {
+        "name": "Lethbridge",
+        "regionName": "Lethbridge region"
+      },
+      {
+        "name": "Medicine Hat",
+        "regionName": "Medicine Hat region"
+      },
+      {
+        "name": "Lloydminster (Part)",
+        "regionName": "Lloydminster (Part) region"
+      },
+      {
+        "name": "Parkland County",
+        "regionName": "Parkland County region"
+      },
+      {
+        "name": "Grande Prairie",
+        "regionName": "Grande Prairie region"
+      },
+      {
+        "name": "North Battleford",
+        "regionName": "North Battleford region"
+      },
+      {
+        "name": "Wood Buffalo",
+        "regionName": "Wood Buffalo region"
+      },
+      {
+        "name": "Halifax",
+        "regionName": "Halifax region"
+      },
+      {
+        "name": "Cape Breton",
+        "regionName": "Cape Breton region"
+      },
+      {
+        "name": "Saint John",
+        "regionName": "Saint John region"
+      },
+      {
+        "name": "Moncton",
+        "regionName": "Moncton region"
+      },
+      {
+        "name": "Tracadie",
+        "regionName": "Tracadie region"
+      },
+      {
+        "name": "St. John's",
+        "regionName": "St. John's region"
+      },
+      {
+        "name": "Charlottetown",
+        "regionName": "Charlottetown region"
+      },
+      {
+        "name": "Chilliwack",
+        "regionName": "Chilliwack region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
+      },
+      {
+        "name": "Kelowna",
+        "regionName": "Kelowna region"
+      },
+      {
+        "name": "Cranbrook",
+        "regionName": "Cranbrook region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
+      },
+      {
+        "name": "Saanich",
+        "regionName": "Saanich region"
       }
     ],
     "rule": {
@@ -14887,7 +15175,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19570522.0,
+      "localTrips": 19438745.0,
       "box": [
         -80.274,
         43.032,
@@ -59939,6 +60227,1250 @@
       "country": "HK",
       "localTrips": 20388570.0,
       "realm": "cn-south"
+    },
+    {
+      "id": "mon",
+      "name": "Montreal",
+      "origin": {
+        "lon": -73.631,
+        "lat": 45.5287
+      },
+      "center": [
+        -73.631,
+        45.5287
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.423,
+        45.024,
+        -72.68,
+        46.047
+      ],
+      "place": 3676,
+      "country": "CA",
+      "localTrips": 13027740.0,
+      "realm": "canada"
+    },
+    {
+      "id": "ota",
+      "name": "Ottawa",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.6918,
+        "lat": 45.4177
+      },
+      "center": [
+        -75.6918,
+        45.4177
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.44,
+        44.391,
+        -74.183,
+        46.313
+      ],
+      "place": 3677,
+      "country": "CA",
+      "localTrips": 4102289.0,
+      "realm": "canada"
+    },
+    {
+      "id": "wip",
+      "name": "Winnipeg",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.1605,
+        "lat": 49.8953
+      },
+      "center": [
+        -97.1605,
+        49.8953
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.389,
+        48.496,
+        -93.278,
+        51.904
+      ],
+      "place": 3678,
+      "country": "CA",
+      "localTrips": 3269851.0,
+      "realm": "canada"
+    },
+    {
+      "id": "shb",
+      "name": "Sherbrooke",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.7539,
+        "lat": 45.3992
+      },
+      "center": [
+        -72.7539,
+        45.3992
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.984,
+        44.985,
+        -70.358,
+        47.515
+      ],
+      "place": 3679,
+      "country": "CA",
+      "localTrips": 3056325.0,
+      "realm": "canada"
+    },
+    {
+      "id": "que",
+      "name": "Québec",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.2303,
+        "lat": 46.8106
+      },
+      "center": [
+        -71.2303,
+        46.8106
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.779,
+        45.76,
+        -70.131,
+        47.97
+      ],
+      "place": 3680,
+      "country": "CA",
+      "localTrips": 3088749.0,
+      "realm": "canada"
+    },
+    {
+      "id": "brr",
+      "name": "Barrie",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.3283,
+        "lat": 44.3034
+      },
+      "center": [
+        -78.3283,
+        44.3034
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.82,
+        43.88,
+        -77.187,
+        45.968
+      ],
+      "place": 3681,
+      "country": "CA",
+      "localTrips": 2840565.0,
+      "realm": "canada"
+    },
+    {
+      "id": "kit",
+      "name": "Kitchener",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.4439,
+        "lat": 43.4248
+      },
+      "center": [
+        -80.4439,
+        43.4248
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.557,
+        42.759,
+        -79.41,
+        44.023
+      ],
+      "place": 3682,
+      "country": "CA",
+      "localTrips": 2487272.0,
+      "realm": "canada"
+    },
+    {
+      "id": "lnn",
+      "name": "London",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.2375,
+        "lat": 42.9328
+      },
+      "center": [
+        -81.2375,
+        42.9328
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.861,
+        42.513,
+        -80.008,
+        44.074
+      ],
+      "place": 3683,
+      "country": "CA",
+      "localTrips": 2435877.0,
+      "realm": "canada"
+    },
+    {
+      "id": "wid",
+      "name": "Windsor",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.0331,
+        "lat": 42.3152
+      },
+      "center": [
+        -83.0331,
+        42.3152
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.174,
+        41.658,
+        -81.473,
+        43.338
+      ],
+      "place": 3684,
+      "country": "CA",
+      "localTrips": 1911310.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sth",
+      "name": "St. Catharines",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.2319,
+        "lat": 43.1786
+      },
+      "center": [
+        -79.2319,
+        43.1786
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.779,
+        42.813,
+        -78.881,
+        43.285
+      ],
+      "place": 3685,
+      "country": "CA",
+      "localTrips": 1346605.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sre",
+      "name": "Sorel-Tracy",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.4541,
+        "lat": 46.0383
+      },
+      "center": [
+        -73.4541,
+        46.0383
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.186,
+        45.687,
+        -72.692,
+        47.535
+      ],
+      "place": 3686,
+      "country": "CA",
+      "localTrips": 1093436.0,
+      "realm": "canada"
+    },
+    {
+      "id": "gat",
+      "name": "Gatineau",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.6966,
+        "lat": 45.4824
+      },
+      "center": [
+        -75.6966,
+        45.4824
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.958,
+        45.354,
+        -74.282,
+        47.869
+      ],
+      "place": 3687,
+      "country": "CA",
+      "localTrips": 918408.0,
+      "realm": "canada"
+    },
+    {
+      "id": "kio",
+      "name": "Kingston",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.4941,
+        "lat": 44.2391
+      },
+      "center": [
+        -76.4941,
+        44.2391
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.205,
+        43.779,
+        -75.826,
+        45.254
+      ],
+      "place": 3688,
+      "country": "CA",
+      "localTrips": 1147720.0,
+      "realm": "canada"
+    },
+    {
+      "id": "say",
+      "name": "Saguenay",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.2367,
+        "lat": 48.4245
+      },
+      "center": [
+        -71.2367,
+        48.4245
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.472,
+        47.209,
+        -66.696,
+        51.161
+      ],
+      "place": 3689,
+      "country": "CA",
+      "localTrips": 1060050.0,
+      "realm": "canada"
+    },
+    {
+      "id": "gup",
+      "name": "Guelph",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.2749,
+        "lat": 43.5435
+      },
+      "center": [
+        -80.2749,
+        43.5435
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.791,
+        43.368,
+        -79.926,
+        44.648
+      ],
+      "place": 3690,
+      "country": "CA",
+      "localTrips": 955798.0,
+      "realm": "canada"
+    },
+    {
+      "id": "grt",
+      "name": "Greater Sudbury",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.9992,
+        "lat": 46.5031
+      },
+      "center": [
+        -80.9992,
+        46.5031
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.751,
+        45.32,
+        -80.244,
+        48.47
+      ],
+      "place": 3691,
+      "country": "CA",
+      "localTrips": 873061.0,
+      "realm": "canada"
+    },
+    {
+      "id": "nob",
+      "name": "North Bay",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.3315,
+        "lat": 48.4811
+      },
+      "center": [
+        -81.3315,
+        48.4811
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.885,
+        45.396,
+        -77.47,
+        48.817
+      ],
+      "place": 3692,
+      "country": "CA",
+      "localTrips": 548646.0,
+      "realm": "canada"
+    },
+    {
+      "id": "riu",
+      "name": "Rimouski",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.5339,
+        "lat": 48.4434
+      },
+      "center": [
+        -68.5339,
+        48.4434
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -69.001,
+        47.617,
+        -64.363,
+        49.275
+      ],
+      "place": 3693,
+      "country": "CA",
+      "localTrips": 513411.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sij",
+      "name": "Saint-Jean-sur-Richelieu",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.2732,
+        "lat": 45.3346
+      },
+      "center": [
+        -73.2732,
+        45.3346
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.663,
+        44.973,
+        -72.665,
+        45.458
+      ],
+      "place": 3694,
+      "country": "CA",
+      "localTrips": 435397.0,
+      "realm": "canada"
+    },
+    {
+      "id": "bnd",
+      "name": "Brandon",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.9748,
+        "lat": 49.8285
+      },
+      "center": [
+        -99.9748,
+        49.8285
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.599,
+        48.981,
+        -98.492,
+        51.64
+      ],
+      "place": 3695,
+      "country": "CA",
+      "localTrips": 435716.0,
+      "realm": "canada"
+    },
+    {
+      "id": "rou",
+      "name": "Rouyn-Noranda",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.0155,
+        "lat": 48.2359
+      },
+      "center": [
+        -79.0155,
+        48.2359
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.615,
+        46.189,
+        -76.906,
+        49.029
+      ],
+      "place": 3696,
+      "country": "CA",
+      "localTrips": 415861.0,
+      "realm": "canada"
+    },
+    {
+      "id": "rii",
+      "name": "Rivière-du-Loup",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.5604,
+        "lat": 46.9787
+      },
+      "center": [
+        -70.5604,
+        46.9787
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.978,
+        46.34,
+        -68.355,
+        48.291
+      ],
+      "place": 3697,
+      "country": "CA",
+      "localTrips": 370273.0,
+      "realm": "canada"
+    },
+    {
+      "id": "thu",
+      "name": "Thunder Bay",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.2835,
+        "lat": 48.3962
+      },
+      "center": [
+        -89.2835,
+        48.3962
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -89.799,
+        47.956,
+        -88.402,
+        48.885
+      ],
+      "place": 3698,
+      "country": "CA",
+      "localTrips": 358245.0,
+      "realm": "canada"
+    },
+    {
+      "id": "van",
+      "name": "Vancouver",
+      "origin": {
+        "lon": -123.1253,
+        "lat": 49.2765
+      },
+      "center": [
+        -123.1253,
+        49.2765
+      ],
+      "zoom": 11.2,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -123.684,
+        48.983,
+        -122.38,
+        50.434
+      ],
+      "place": 3699,
+      "country": "CA",
+      "localTrips": 7917081.0,
+      "realm": "canada"
+    },
+    {
+      "id": "prc",
+      "name": "Prince George",
+      "kind": "zone",
+      "origin": {
+        "lon": -122.782,
+        "lat": 53.9191
+      },
+      "center": [
+        -122.782,
+        53.9191
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -126.984,
+        52.13,
+        -118.162,
+        56.359
+      ],
+      "place": 3700,
+      "country": "CA",
+      "localTrips": 514617.0,
+      "realm": "canada"
+    },
+    {
+      "id": "abb",
+      "name": "Abbotsford",
+      "kind": "zone",
+      "origin": {
+        "lon": -122.368,
+        "lat": 49.0583
+      },
+      "center": [
+        -122.368,
+        49.0583
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -122.491,
+        48.979,
+        -121.241,
+        49.226
+      ],
+      "place": 3702,
+      "country": "CA",
+      "localTrips": 426585.0,
+      "realm": "canada"
+    },
+    {
+      "id": "cag",
+      "name": "Calgary",
+      "origin": {
+        "lon": -114.0744,
+        "lat": 51.0357
+      },
+      "center": [
+        -114.0744,
+        51.0357
+      ],
+      "zoom": 11.2,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -115.146,
+        50.676,
+        -112.208,
+        51.959
+      ],
+      "place": 3703,
+      "country": "CA",
+      "localTrips": 4643835.0,
+      "realm": "canada"
+    },
+    {
+      "id": "edm",
+      "name": "Edmonton",
+      "origin": {
+        "lon": -113.5255,
+        "lat": 53.545
+      },
+      "center": [
+        -113.5255,
+        53.545
+      ],
+      "zoom": 11.2,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -114.593,
+        52.912,
+        -111.376,
+        54.607
+      ],
+      "place": 3704,
+      "country": "CA",
+      "localTrips": 4130179.0,
+      "realm": "canada"
+    },
+    {
+      "id": "rex",
+      "name": "Regina",
+      "kind": "zone",
+      "origin": {
+        "lon": -104.6065,
+        "lat": 50.4403
+      },
+      "center": [
+        -104.6065,
+        50.4403
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -109.69,
+        48.98,
+        -101.333,
+        52.337
+      ],
+      "place": 3705,
+      "country": "CA",
+      "localTrips": 1421507.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sak",
+      "name": "Saskatoon",
+      "kind": "zone",
+      "origin": {
+        "lon": -106.6225,
+        "lat": 52.1672
+      },
+      "center": [
+        -106.6225,
+        52.1672
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -110.036,
+        51.077,
+        -102.696,
+        54.694
+      ],
+      "place": 3706,
+      "country": "CA",
+      "localTrips": 1418818.0,
+      "realm": "canada"
+    },
+    {
+      "id": "rer",
+      "name": "Red Deer",
+      "kind": "zone",
+      "origin": {
+        "lon": -113.7674,
+        "lat": 52.2644
+      },
+      "center": [
+        -113.7674,
+        52.2644
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -117.119,
+        51.601,
+        -109.975,
+        53.313
+      ],
+      "place": 3707,
+      "country": "CA",
+      "localTrips": 1017154.0,
+      "realm": "canada"
+    },
+    {
+      "id": "leb",
+      "name": "Lethbridge",
+      "kind": "zone",
+      "origin": {
+        "lon": -112.8952,
+        "lat": 49.6855
+      },
+      "center": [
+        -112.8952,
+        49.6855
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -117.346,
+        48.978,
+        -111.313,
+        52.29
+      ],
+      "place": 3708,
+      "country": "CA",
+      "localTrips": 683769.0,
+      "realm": "canada"
+    },
+    {
+      "id": "mdc",
+      "name": "Medicine Hat",
+      "kind": "zone",
+      "origin": {
+        "lon": -110.6392,
+        "lat": 50.0098
+      },
+      "center": [
+        -110.6392,
+        50.0098
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -113.766,
+        48.978,
+        -107.981,
+        52.001
+      ],
+      "place": 3709,
+      "country": "CA",
+      "localTrips": 547489.0,
+      "realm": "canada"
+    },
+    {
+      "id": "llo",
+      "name": "Lloydminster (Part)",
+      "kind": "zone",
+      "origin": {
+        "lon": -110.0187,
+        "lat": 53.2603
+      },
+      "center": [
+        -110.0187,
+        53.2603
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -117.007,
+        52.837,
+        -109.974,
+        56.091
+      ],
+      "place": 3710,
+      "country": "CA",
+      "localTrips": 409776.0,
+      "realm": "canada"
+    },
+    {
+      "id": "pak",
+      "name": "Parkland County",
+      "kind": "zone",
+      "origin": {
+        "lon": -114.96,
+        "lat": 53.2211
+      },
+      "center": [
+        -114.96,
+        53.2211
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -120.032,
+        52.632,
+        -113.614,
+        55.7
+      ],
+      "place": 3711,
+      "country": "CA",
+      "localTrips": 371761.0,
+      "realm": "canada"
+    },
+    {
+      "id": "grp",
+      "name": "Grande Prairie",
+      "kind": "zone",
+      "origin": {
+        "lon": -118.7713,
+        "lat": 55.1686
+      },
+      "center": [
+        -118.7713,
+        55.1686
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -120.033,
+        54.708,
+        -117.299,
+        56.337
+      ],
+      "place": 3712,
+      "country": "CA",
+      "localTrips": 325835.0,
+      "realm": "canada"
+    },
+    {
+      "id": "nrt",
+      "name": "North Battleford",
+      "kind": "zone",
+      "origin": {
+        "lon": -108.2912,
+        "lat": 52.7808
+      },
+      "center": [
+        -108.2912,
+        52.7808
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -110.036,
+        51.339,
+        -105.773,
+        54.083
+      ],
+      "place": 3713,
+      "country": "CA",
+      "localTrips": 220805.0,
+      "realm": "canada"
+    },
+    {
+      "id": "woo",
+      "name": "Wood Buffalo",
+      "kind": "zone",
+      "origin": {
+        "lon": -111.4313,
+        "lat": 56.7459
+      },
+      "center": [
+        -111.4313,
+        56.7459
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -114.034,
+        55.528,
+        -109.972,
+        60.019
+      ],
+      "place": 3714,
+      "country": "CA",
+      "localTrips": 260421.0,
+      "realm": "canada"
+    },
+    {
+      "id": "hli",
+      "name": "Halifax",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.5753,
+        "lat": 44.6341
+      },
+      "center": [
+        -63.5753,
+        44.6341
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.421,
+        43.516,
+        -61.62,
+        45.418
+      ],
+      "place": 3715,
+      "country": "CA",
+      "localTrips": 1811273.0,
+      "realm": "canada"
+    },
+    {
+      "id": "cpb",
+      "name": "Cape Breton",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.1784,
+        "lat": 46.1311
+      },
+      "center": [
+        -60.1784,
+        46.1311
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.971,
+        44.765,
+        -59.761,
+        47.061
+      ],
+      "place": 3716,
+      "country": "CA",
+      "localTrips": 866657.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sit",
+      "name": "Saint John",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.0558,
+        "lat": 45.2699
+      },
+      "center": [
+        -66.0558,
+        45.2699
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.08,
+        44.579,
+        -65.463,
+        48.019
+      ],
+      "place": 3717,
+      "country": "CA",
+      "localTrips": 978313.0,
+      "realm": "canada"
+    },
+    {
+      "id": "moc",
+      "name": "Moncton",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.7902,
+        "lat": 46.094
+      },
+      "center": [
+        -64.7902,
+        46.094
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.19,
+        45.175,
+        -63.745,
+        47.586
+      ],
+      "place": 3718,
+      "country": "CA",
+      "localTrips": 874093.0,
+      "realm": "canada"
+    },
+    {
+      "id": "tad",
+      "name": "Tracadie",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.6744,
+        "lat": 48.0005
+      },
+      "center": [
+        -66.6744,
+        48.0005
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.377,
+        47.071,
+        -64.44,
+        48.091
+      ],
+      "place": 3719,
+      "country": "CA",
+      "localTrips": 309073.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sjo",
+      "name": "St. John's",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.7206,
+        "lat": 47.5683
+      },
+      "center": [
+        -52.7206,
+        47.5683
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -58.19,
+        46.592,
+        -52.592,
+        49.724
+      ],
+      "place": 3720,
+      "country": "CA",
+      "localTrips": 1035413.0,
+      "realm": "canada"
+    },
+    {
+      "id": "crw",
+      "name": "Charlottetown",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.1302,
+        "lat": 46.2426
+      },
+      "center": [
+        -63.1302,
+        46.2426
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.44,
+        45.93,
+        -61.944,
+        47.078
+      ],
+      "place": 3721,
+      "country": "CA",
+      "localTrips": 421469.0,
+      "realm": "canada"
+    },
+    {
+      "id": "chw",
+      "name": "Chilliwack",
+      "kind": "zone",
+      "origin": {
+        "lon": -121.9468,
+        "lat": 49.1721
+      },
+      "center": [
+        -121.9468,
+        49.1721
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -124.038,
+        48.982,
+        -120.782,
+        50.86
+      ],
+      "place": 3722,
+      "country": "CA",
+      "localTrips": 483073.0,
+      "realm": "canada"
+    },
+    {
+      "id": "kel",
+      "name": "Kelowna",
+      "kind": "zone",
+      "origin": {
+        "lon": -119.4779,
+        "lat": 49.8857
+      },
+      "center": [
+        -119.4779,
+        49.8857
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -124.029,
+        48.981,
+        -118.107,
+        52.527
+      ],
+      "place": 3724,
+      "country": "CA",
+      "localTrips": 1817948.0,
+      "realm": "canada"
+    },
+    {
+      "id": "crb",
+      "name": "Cranbrook",
+      "kind": "zone",
+      "origin": {
+        "lon": -115.7665,
+        "lat": 49.5046
+      },
+      "center": [
+        -115.7665,
+        49.5046
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -118.744,
+        48.98,
+        -114.026,
+        51.353
+      ],
+      "place": 3725,
+      "country": "CA",
+      "localTrips": 449152.0,
+      "realm": "canada"
     }
   ]
 }

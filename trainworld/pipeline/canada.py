@@ -695,11 +695,42 @@ def plan_ct_sectors(city, lat, lon, jobs):
     return _ct_sectors(f"{SUB}ct_{city}", "1=1", lat, lon, jobs)
 
 
+@functools.lru_cache(maxsize=1)
+def da_population():
+    """{DAUID: 2021 census population}, every DA in Canada (98-10-0015-01)."""
+    pop = table("98100015", usecols=["DGUID", "Population and dwelling counts (5): Population, 2021 [1]"])
+    pop = pop[pop.DGUID.str.startswith("2021S0512")]
+    return dict(zip(pop.DGUID.str[9:], num(pop.iloc[:, 1])))
+
+
+def plan_population(city, boundary, sig):
+    """T-564: tier0's `population` hook for a planned Canadian row: each 2021 dissemination area whose
+    representative point is inside the outline, its census population spread over its cells by GHSL;
+    cells in no such DA keep GHSL's people (an edge DA counted outside would pile its total on its few
+    inside cells)."""
+    import england
+    feats = arcgis.features(f"{SUB}da_{city}", DA_LAYER, fields="DAUID,OBJECTID", bbox=boundary.bounds)
+    units = []
+    for f in feats:
+        g = make_valid(shape(f["geometry"]))
+        if boundary.contains(g.representative_point()):
+            units.append((f["properties"]["DAUID"], g))
+    tot = da_population()
+    ghsl = np.asarray(sig["pop_ghsl"], float)
+    idx, _ = england.cell_units(sig["lat"], sig["lon"], units)
+    out = england.spread_totals(sig["lat"], sig["lon"], units, tot, ghsl)
+    out[idx < 0] = ghsl[idx < 0]
+    print(f"  census population by DA: {len(units):,} of {len(feats):,} DAs in the box, {out.sum():,.0f} people "
+          f"(GHSL {ghsl.sum():,.0f}; {int((idx < 0).sum()):,} cells in no DA keep GHSL's)", flush=True)
+    return out, ("Statistics Canada 2021 census, 98-10-0015-01 population by dissemination area (Esri Canada's copy "
+                 "of the DA boundaries), spread inside each DA by GHSL GHS-POP E2020")
+
+
 def plan_hooks(row):
     """T-555: Toronto's country keys that fit tier 0, for any planned Canadian row: everyday
-    destinations by census tract of work. Toronto's population by DA and jobs by tract of work run
-    in canada.main, not as tier 0 hooks, and its schools and campuses are Ontario's files."""
-    return {"everyday": plan_ct_sectors}
+    destinations by census tract of work, and (T-564) population by DA. Toronto's jobs by tract of
+    work run in canada.main, not as tier 0 hooks, and its schools and campuses are Ontario's files."""
+    return {"everyday": plan_ct_sectors, "population": plan_population}
 
 
 def _ct_sectors(name, where, lat, lon, jobs):
