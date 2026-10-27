@@ -1,5 +1,6 @@
 # Archive
 
+- T-1530 [P2] Station bubbles' transfers and a new line's stations sooner. Done 2026-10-27 (tree t1530, not landed): results carry each station's transfers; the split shows with the figures (load 49 s to 10 s, real-save new line's Origins 54 s to 11 s), finals unchanged. notes/T-1530.md.
 - T-1539 [P2] A slot's cached result before the clock worker's network. Done 2026-10-27 (tree t1538, not landed): keyed by the save's network inputs, holding its network; camera and realms from the save's stations; China zoomed out 9.5 s to 5 s. notes/T-1538.md.
 - T-1538 [P2] A cheaper first answer for big networks. Done 2026-10-27 (tree t1538, not landed): a worker's other periods estimated from its first's free flow, finals unchanged to the bit; cold real save 12-14 s to 8-9 s, its new line 12-13 s to 9 s. notes/T-1538.md.
 - T-1377 [P2] T-1239's tail. Done 2026-10-27: six (Saanich) shipped after the WASM rebuild (its gate figures unchanged; the join needs 6+ cores, 2 timed out); smoke 18 of 19 on Canada's data, real save 12,187,818 rail trips; pre-T1239 backup deleted. notes/T-1239.md.
