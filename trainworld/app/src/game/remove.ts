@@ -1,7 +1,8 @@
-// Removing track, stations and flyovers (T-096): the delete tool and the inspectors' remove
-// buttons. Blueprint goes at once (undoable); something constructed asks first in the centered
+// Removing track, stations, flyovers and bus lines (T-096, T-1513): the delete tool and the inspectors'
+// remove buttons. Blueprint goes at once (undoable); something constructed asks first in the centered
 // modal (`ask`, ui/ToolNotes.tsx), because removing it is final and refunds nothing
-// (SPEC 6.4). Lines are removed from the Lines tab, not here. A removal that changes a line asks
+// (SPEC 6.4). Train lines are removed from the Lines tab, not here; a bus line has no track to remove,
+// so the delete tool takes its route and the line with it. A removal that changes a line asks
 // too, built or not, naming each line and what happens to it (T-859).
 
 import { queryClock } from "../workers/clockClient";
@@ -10,7 +11,8 @@ import { andList, distance } from "./format";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
-export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number };
+/** `bus`: a bus line by its number, route and line together. */
+export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number };
 
 /** T-1161: the track a piece's removal keeps at its a and b ends, m. Past a station the removal
  * would leave at a bare end, half its platform and 4 m stay, so the station keeps its place; the
@@ -38,6 +40,10 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
     if (e?.crossover) return { what: e.built ? "the built crossover" : "the crossover", built: e.built };
     const [ka, kb] = stationTrim(r.edge);
     return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "built " : ""}track`, built: e.built } : null;
+  }
+  if (r.kind === "bus") {
+    const l = linesByNum(w).get(r.line), built = l ? w.lineStats[l.id]?.bus?.built : undefined;
+    return l && built !== undefined ? { what: l.name, built } : null;
   }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);
@@ -78,6 +84,7 @@ export async function lineEffects(edges: number[], stations: number[]): Promise<
 function opOf(r: Removable): EditOp {
   if (r.kind === "track") return { op: "removeEdge", edge: r.edge };
   if (r.kind === "station") return { op: "removeStation", node: r.node };
+  if (r.kind === "bus") return { op: "removeLine", line: r.line };
   return { op: "flying", node: r.node, flying: false };
 }
 
@@ -86,6 +93,7 @@ function selected(r: Removable): boolean {
   const s = selection.peek();
   if (r.kind === "track") return s?.kind === "track" && s.edge === r.edge;
   if (r.kind === "station") return s?.kind === "station" && s.station === String(r.node);
+  if (r.kind === "bus") return (s?.kind === "line" || s?.kind === "train") && linesByNum(world.peek()!).get(r.line)?.id === s.line;
   return false;
 }
 
@@ -101,7 +109,7 @@ export async function removeThing(r: Removable) {
     if (wasSelected) selection.value = null;
     say(`Removed ${d.what}.`);
   };
-  const lines = r.kind === "flyover" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
+  const lines = r.kind === "flyover" || r.kind === "bus" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   if (!d.built && !lines.length) return go();
   ask.value = { text: `Remove ${d.what}?${d.built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep", run: () => void go(), lines };
 }

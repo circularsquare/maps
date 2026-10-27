@@ -183,7 +183,10 @@ point. A click within 100 m of a road lands on the nearest one. Between two poin
 shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
 minor and bus-only roads, any direction, length as it is, no turn rules; motorways, service ways,
 tracks and paths are left out). It stays straight where that path is over 3 times the straight line,
-where no road is within 100 m of a point, or while the roads are still loading. The roads come from
+where no road is within 100 m of a point, or while the roads are still loading. A point on one
+carriageway of a divided road (the basemap draws the two as separate lines) may cross to the roughly
+parallel road 4 to 40 m across before the path follows a road, the hop counted at its length, so the
+route turns there instead of running to the next junction and back (T-1512; `across` in `roadGraph.ts`). The roads come from
 the basemap's own tile server at zoom 14, whatever the map's zoom. While drawing,
 the route shows in the line's colour with the stops the sim would place (ends as small rounded
 squares, a ring round each train station it meets, small rings between and the street stops), and
@@ -353,8 +356,10 @@ removed at once (undoable); anything constructed only after a yes in the confirm
 inspectors' Remove buttons and the Select tool's Remove ask the same way. A removal that changes a
 line asks too, built or not [T-859]: a row per line under the question, its bullet then what
 happens ("subway 4 will lose its stop at Nevins St and stop running until you fix its route."),
-from the track model's trial of the removal (`TrackApi.removal_lines`). Lines are removed from the
-line panel. A removed station's two pieces of track become one where they simply join
+from the track model's trial of the removal (`TrackApi.removal_lines`). Train lines are removed from the
+line panel. A bus route under the pointer, where no track is, is removable too [T-1513]: the tag says
+"Remove Bus 3", a planned one goes at once with its line (undoable), a constructed one asks first
+("Remove Bus 3? Nothing is refunded."). A removed station's two pieces of track become one where they simply join
 ([track-and-service.md](track-and-service.md) "Lines", T-1299).
 
 ## The Select tool
