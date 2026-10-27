@@ -1,5 +1,7 @@
 # Archive
 
+- T-1510 [P2] Smoke's intermittent "TypeError: Failed to fetch". Done 2026-10-26 (tree t1510): not the bus road tiles. The real-network layer's pmtiles fetch is cut off when smoke navigates away, and MapLibre logged it as a console error; `realNetwork.ts` now warns for that.
+- T-1431 [P2] Plane and long rail fares. Done 2026-10-26 (tree t1431): the market's longer trips come in three income groups per country, every mode's money at the group's minutes a dollar, the plane $30 + 5c/km; rail of rail + air near published on ten corridors, the car collapses at the starting fares. notes/T-1431.md.
 - T-1513 [P2] The delete tool on a bus line. Done 2026-10-26 (tree t1512): it picks a bus route where no rail is, tag "Remove Bus n"; a planned line goes at once (undoable), a constructed one asks first. `checks/t1513-bus-delete.mjs`.
 - T-1512 [P2] Bus routing on divided roads. Done 2026-10-26 (tree t1512): each end of a leg may first cross to a parallel road 4-40 m away, counted at its length; no hairpin on Dongguan, Berlin and Shenzhen divided roads. `checks/t1465-bus-roads.mjs`; notes/T-1465.md.
 - T-1516 [P2] A bus line's negative fares. Done 2026-10-26 (tree t1515): a tapering curve's extra went all to the line a trip first boards, so a feeder took a long rail trip's whole discount; now shared by km ridden (`kernel::board_extra`). `checks/t1516-fares-never-negative.mjs`.
