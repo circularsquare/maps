@@ -629,5 +629,8 @@
 "mnn": {"name": "Maoming", "aliases": ["Wuchuan", "Maonan"]},
 "sde": {"name": "Hengshan", "aliases": ["Suide"]},
 "taw": {"name": "Taihe", "aliases": ["Taihe, Wan'an"]},
-"dgn": {"name": "Jingmen", "aliases": ["Zhijiang", "Dangyang"]}
+"dgn": {"name": "Jingmen", "aliases": ["Zhijiang", "Dangyang"]},
+"six": {"name": "Victoria", "aliases": ["Saanich", "Vancouver Island"]},
+"woo": {"name": "Fort McMurray", "aliases": ["Wood Buffalo"]},
+"grt": {"name": "Sudbury", "aliases": ["Greater Sudbury", "Grand Sudbury"]}
 }

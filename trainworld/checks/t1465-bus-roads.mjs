@@ -25,6 +25,9 @@ const PLACES = [
   { name: 'sf', clicks: [[-122.4187, 37.8021], [-122.4250, 37.8040], [-122.4220, 37.8080]], grid: false },
   // Lisbon, Alfama: narrow twisting streets
   { name: 'lisbon', clicks: [[-9.1300, 38.7110], [-9.1370, 38.7140], [-9.1400, 38.7180]], grid: false },
+  // Dongguan, Shatian: Jiaju Avenue, a divided road, from the roundabout at Hengliu South Road east
+  // across Gangkou Boulevard (T-1512: a hairpin at the junction and at the clicks)
+  { name: 'dongguan', clicks: [[113.6146, 22.9129], [113.6227, 22.9124], [113.6285, 22.9100]], grid: false, divided: true },
 ];
 
 const chrome = await launchChrome({ prefix: process.env.PROFILE_PREFIX ?? 'tw-t1465-', profile: process.env.PROFILE_DIR, size: [1400, 900], deviceScaleFactor: 2 });
@@ -103,6 +106,21 @@ try {
     console.log(`straight through the corners ${(straight / 1000).toFixed(2)} km, road ${(line.roadM / 1000).toFixed(2)} km, ratio ${ratio.toFixed(2)}`);
     check(ratio >= 0.99 && ratio < (place.grid ? 1.6 : 3), `${place.name}: road length is a plausible detour`, `x${ratio.toFixed(2)}`);
 
+    // a hairpin: the route turns back on itself between two stretches of at least 10 m (T-1512)
+    const turns = await page.evaluate((line) => {
+      const k = Math.cos((line.route[1] * Math.PI) / 180), P = (i) => [line.route[2 * i] * 111320 * k, line.route[2 * i + 1] * 110574];
+      const out = [];
+      for (let i = 1; i + 1 < line.kinds.length; i++) {
+        const a = P(i - 1), b = P(i), c = P(i + 1), u = [b[0] - a[0], b[1] - a[1]], v = [c[0] - b[0], c[1] - b[1]];
+        const lu = Math.hypot(...u), lv = Math.hypot(...v);
+        if (lu < 10 || lv < 10) continue;
+        const cos = (u[0] * v[0] + u[1] * v[1]) / (lu * lv);
+        if (cos < -0.94) out.push([i, Math.round(Math.acos(cos) * 180 / Math.PI)]);
+      }
+      return out;
+    }, line);
+    check(turns.length === 0, `${place.name}: no hairpin turns`, JSON.stringify(turns));
+
     // the independent check: sample every ~20 m along the road legs, look for a drawn road within 7 px
     await page.evaluate(() => { window.tw.selection.value = null; });
     const legsAt = []; { let from = 0; for (let i = 1; i < n; i++) if (line.kinds[i] & 1) { legsAt.push([from, i]); from = i; } }
@@ -160,6 +178,83 @@ try {
     check(same.pts === place.clicks.length && same.legs === place.clicks.length - 1, `${place.name}: Edit route opens with the corners and their legs`, JSON.stringify(same));
     check(same.same && same.kinds, `${place.name}: redrawing unchanged leaves the route as it was`);
     await page.evaluate(() => window.tw.tools.exit?.());
+  }
+
+  // divided roads (T-1512): where the basemap draws a road's two carriageways as separate lines, a leg from
+  // one carriageway to the other must cross the gap, not run to the next junction and back. Pairs of
+  // parallel roads 8-35 m apart are found in the loaded graph, a point put on each (a fifth in along one,
+  // four fifths along the other) and the leg between them asked for.
+  for (const [name, c] of [['dongguan', [113.6200, 22.9190]], ['berlin', [13.4380, 52.5171]], ['shenzhen', [114.0500, 22.5420]]]) {
+    console.log(`--- divided roads, ${name}`);
+    await page.evaluate(([c]) => window.tw.map.jumpTo({ center: c, zoom: 14 }), [c]);
+    await page.evaluate(async ([c]) => {
+      const roads = window.tw.tools.bus.roads;
+      for (let i = 0; i < 100 && !roads.look({ lng: c[0], lat: c[1] }); i++) await new Promise((r) => setTimeout(r, 200));
+      // a ring of points around, so the graph holds the neighbouring tiles too
+      for (const [dx, dy] of [[0.012, 0], [-0.012, 0], [0, 0.01], [0, -0.01]]) for (let i = 0; i < 100 && !roads.look({ lng: c[0] + dx, lat: c[1] + dy }); i++) await new Promise((r) => setTimeout(r, 200));
+    }, [c]);
+    const r = await page.evaluate(async ([c]) => {
+      const roads = window.tw.tools.bus.roads, g = roads.graph, W = 2 ** 26;
+      const lngOf = (x) => (x / W) * 360 - 180, latOf = (y) => (360 / Math.PI) * Math.atan(Math.exp(Math.PI * (1 - (2 * y) / W))) - 90;
+      const gy0 = (0.5 - Math.log((1 + Math.sin((c[1] * Math.PI) / 180)) / (1 - Math.sin((c[1] * Math.PI) / 180))) / (4 * Math.PI)) * W;
+      const mpu = (40075016.686 / W) * Math.cos((c[1] * Math.PI) / 180);
+      const gx0 = ((c[0] + 180) / 360) * W;
+      const near = [];
+      for (let e = 0; e < g.edges; e++) {
+        const a = g.ea[e], b = g.eb[e], mx = (g.gx[a] + g.gx[b]) / 2, my = (g.gy[a] + g.gy[b]) / 2;
+        if (Math.abs(mx - gx0) * mpu < 1500 && Math.abs(my - gy0) * mpu < 1500 && Math.hypot(g.gx[b] - g.gx[a], g.gy[b] - g.gy[a]) * mpu >= 150) near.push(e);
+      }
+      const pairs = [];
+      for (let i = 0; i < near.length && pairs.length < 40; i++) {
+        const e = near[i], a = g.ea[e], b = g.eb[e], dx = g.gx[b] - g.gx[a], dy = g.gy[b] - g.gy[a], dl = Math.hypot(dx, dy);
+        const ux = dx / dl, uy = dy / dl, mx = g.gx[a] + dx / 2, my = g.gy[a] + dy / 2;
+        for (let j = i + 1; j < near.length; j++) {
+          const f = near[j], p = g.ea[f], q = g.eb[f], ex = g.gx[q] - g.gx[p], ey = g.gy[q] - g.gy[p], el = Math.hypot(ex, ey);
+          if (Math.abs((ex * ux + ey * uy) / el) < 0.97) continue;
+          const cx = g.gx[p] + ex / 2 - mx, cy = g.gy[p] + ey / 2 - my;
+          const along = Math.abs(cx * ux + cy * uy) * mpu, side = Math.abs(-cx * uy + cy * ux) * mpu;
+          // the next road across from e's middle, not one beyond another
+          const here = { edge: e, t: 0.5, x: mx, y: my, d: 0 };
+          if (side >= 8 && side <= 35 && along < 40 && g.across(here).some((c) => c.edge === f)) { pairs.push([e, f]); break; }
+        }
+      }
+      const at = (e, t) => { const a = g.ea[e], b = g.eb[e]; return { lng: lngOf(g.gx[a] + t * (g.gx[b] - g.gx[a])), lat: latOf(g.gy[a] + t * (g.gy[b] - g.gy[a])) }; };
+      const turns = (pts) => {
+        const k = Math.cos((pts[1] * Math.PI) / 180), P = (i) => [pts[2 * i] * 111320 * k, pts[2 * i + 1] * 110574];
+        let n = 0;
+        for (let i = 1; i + 1 < pts.length / 2; i++) {
+          const a = P(i - 1), b = P(i), d = P(i + 1), u = [b[0] - a[0], b[1] - a[1]], v = [d[0] - b[0], d[1] - b[1]];
+          const lu = Math.hypot(...u), lv = Math.hypot(...v);
+          if (lu < 10 || lv < 10) continue;
+          if ((u[0] * v[0] + u[1] * v[1]) / (lu * lv) < -0.94) n++;
+        }
+        return n;
+      };
+      let ok = 0, road = 0, hair = 0, worst = 0, tried = 0;
+      for (const [e, f] of pairs) {
+        // A in the middle of one carriageway, B 60 m along the other from where A lies across
+        const a = g.ea[e], b = g.eb[e], p = g.ea[f], q = g.eb[f], ex = g.gx[q] - g.gx[p], ey = g.gy[q] - g.gy[p], el2 = ex * ex + ey * ey;
+        const ax = (g.gx[a] + g.gx[b]) / 2, ay = (g.gy[a] + g.gy[b]) / 2;
+        const tp = ((ax - g.gx[p]) * ex + (ay - g.gy[p]) * ey) / el2, step = 60 / mpu / Math.sqrt(el2);
+        const tb = tp + step <= 0.97 ? tp + step : tp - step;
+        if (tb < 0.03 || tb > 0.97) continue;
+        const A = at(e, 0.5), B = at(f, tb);
+        let leg = roads.leg(A, B);
+        for (let i = 0; i < 50 && !leg.ready; i++) { await new Promise((r) => setTimeout(r, 100)); leg = roads.leg(A, B); }
+        const k = Math.cos((A.lat * Math.PI) / 180), straight = Math.hypot((A.lng - B.lng) * 111320 * k, (A.lat - B.lat) * 110574);
+        tried++;
+        const ratio = leg.m / Math.max(straight, 1), h = turns(leg.pts);
+        if (leg.road) road++;
+        if (h) hair++;
+        worst = Math.max(worst, ratio);
+        if (leg.road && ratio < 1.6 && !h) ok++;
+      }
+      return { pairs: pairs.length, tried, ok, road, hair, worst };
+    }, [c]);
+    console.log(JSON.stringify(r));
+    check(r.pairs >= 5, `${name}: divided roads found`, `${r.pairs} pairs`);
+    check(r.hair === 0, `${name}: no hairpin between carriageways`, `${r.hair} of ${r.tried}`);
+    check(r.pairs > 0 && r.tried > 0 && r.ok / r.tried >= 0.9, `${name}: a leg across carriageways follows the road and crosses the gap`, `${r.ok}/${r.tried} road legs under 1.6 times the straight line, worst ${r.worst.toFixed(2)}`);
   }
 
   // a click far from any road stays straight, counted at 1.2: the sea off Manhattan's Battery

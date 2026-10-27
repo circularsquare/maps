@@ -68,7 +68,8 @@ background and wait once for the process.
   input of its own. A country's own rule (`world_plan.ZONE_RULES`, T-1191) may take its units by
   their parent (`group_level`: Korea's eup, myeon and dong by si, gun and gu) or leave land far
   from people dead space (`reach`: Canada, under 100,000 people within 150 km of a unit's centre,
-  with `join_km` 150 so cities across it stay apart); give a new country one when its plan units
+  with `join_km` 150 so cities across it stay apart; `plan_units` zones and builds its rows on the plan
+state's units, not geoBoundaries read afresh, T-1239); give a new country one when its plan units
   are not county-sized or its land is mostly empty. A
   pack built by hand in the country (Seoul, Toronto) stays as it is: the units with half their
   people in it are its, no zone may wrap it, and the join solves it with the new rows as one of the

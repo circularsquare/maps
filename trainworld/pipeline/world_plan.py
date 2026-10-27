@@ -594,6 +594,28 @@ def gb_units(meta, iso, adm):
     return out
 
 
+@__import__("functools").lru_cache(maxsize=4)
+def state_units(iso):
+    """[(unit id, name, Mollweide geometry)] of the plan state's units of a country (state.pkl, on the
+    de facto lines): the units a `plan_units` rule zones on (T-1191), so its rows build on them too
+    (T-1239: Canada's geoBoundaries read afresh puts the Great Lakes into shore units, and fill_gaps
+    on it took over 90 minutes a row)."""
+    import pickle
+
+    class Here(pickle.Unpickler):  # the cache was written by this file run as __main__
+        def find_class(self, mod, name):
+            return Unit if name == "Unit" else super().find_class(mod, name)
+    with open(WORK / "state.pkl", "rb") as f:
+        st = Here(f).load()
+    out = []
+    for u in st["units"]:
+        if u.iso == iso:
+            g = de_facto(iso, u.geom)
+            if g is not None and not g.is_empty:
+                out.append((u.id, u.name, g))
+    return out
+
+
 def fill_gaps(iso, units):
     """Units with the pieces of their country's land (Natural Earth) that no unit covers, from
     GAP_MIN_KM2, each added to the unit it shares the longest border with."""

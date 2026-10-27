@@ -284,11 +284,25 @@ const prevAbove = hoverAbove.at;
 // T-526: with a build tool on, the demand views are drawn beneath the network, so the network and
 // the tool's own tag come before a bubble's tag
 const buildAbove = (x: number, y: number) => isBuildTool(tool.peek()) && (tools.tagShown || !!pick(overlay, x, y, display.peek().trains));
-hoverAbove.at = (x, y) => onMark(x, y) || buildAbove(x, y) || !!prevAbove?.(x, y);
+// T-1515 (Anita): with the select tool a line, bus line, station or train within its own reach is
+// picked over a demand bubble drawn above it, for clicks and hovers alike; a bubble keeps its wider
+// reach (MIN_PICK_PX, bubblePad) only where none of those is near
+const NET_FIRST = new Set(["line", "station", "train"]);
+let netFirstAt = { x: NaN, y: NaN, t: 0, hit: false };
+const netFirst = (x: number, y: number) => {
+  if (tool.peek() !== "select" || linking.peek() !== null) return false;
+  // a pointer move asks this several times (the tag, the cursor, the track tag): one pick serves them
+  const t = performance.now();
+  if (netFirstAt.x === x && netFirstAt.y === y && t - netFirstAt.t < 8) return netFirstAt.hit;
+  const hit = NET_FIRST.has(pick(overlay, x, y, display.peek().trains && !onMark(x, y))?.kind ?? "");
+  netFirstAt = { x, y, t, hit };
+  return hit;
+};
+hoverAbove.at = (x, y) => onMark(x, y) || buildAbove(x, y) || netFirst(x, y) || !!prevAbove?.(x, y);
 effect(() => {
   document.documentElement.classList.toggle("building", isBuildTool(tool.value));
 });
-const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) ? undefined : demandClick?.(x, y, add));
+const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || netFirst(x, y) ? undefined : demandClick?.(x, y, add));
 
 // Bus lines are drawn from the world's routes (T-1464, map/busLayer.ts)
 effect(() => {
@@ -375,7 +389,7 @@ map.on("click", (e) => {
 function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
-  // commuter bubbles first while they are shown (T-097), then the network
+  // lines, stations and trains, then commuter bubbles while they are shown, then the rest (T-1515)
   else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true);
 }
 capacity.selectClick = selectAt;
