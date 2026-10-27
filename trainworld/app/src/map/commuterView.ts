@@ -289,7 +289,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     // a solve's first estimate, and its refined result once the crowding rounds are done
     if (shown && isCurrent(shown, dv, end, purpose, updating)) return;
     retry.value; // T-1493: asked again after an answer that did not come
-    const ask = ++wanted;
+    const ask = ++wanted, epoch = focusEpoch;
+    // T-1533: an answer overtaken by a newer ask still shows while the zone has no bubbles at all, so
+    // estimates landing faster than bubbles are built do not keep the zone bare until the last one
+    const overtaken = () => ask !== wanted && (!!shown || epoch !== focusEpoch || purposeFilter.peek() !== purpose);
     void (async () => {
       const same = built?.dv === dv && built.purpose === purpose;
       let modes = same ? built!.modes : null;
@@ -298,7 +301,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         modes = await cellModes(purpose);
         // null: the workers moved on (the next demandView asks again and the last bubbles stay), or
         // the zone is not in the result yet, or a worker was replaced meanwhile: asked again soon
-        if (!modes || ask !== wanted) return again(ask);
+        if (!modes) return again(ask);
+        if (overtaken()) return;
         built = { dv, purpose, modes, ends: new Map() };
       }
       let b = built?.modes === modes ? built.ends.get(end) : undefined;
@@ -312,7 +316,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         commuterStats.builds++;
         if (built?.modes === modes && b.anchor.version === anchor().version) built.ends.set(end, b);
       }
-      if (ask !== wanted) return;
+      if (overtaken() || display.peek().commuterEnd !== end) return;
       showBubbles({ dv, end, purpose, bubbles: b, modes });
       if (selection.peek()?.kind === "commuters") refreshPick();
     })();

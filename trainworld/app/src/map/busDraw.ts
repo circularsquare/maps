@@ -7,7 +7,8 @@
 //
 // The clicked points are handles (docs/ui-building.md "Drawing a bus line"): new points go on at the
 // active end (either end; a click on the other one switches), a drag moves a point and re-searches
-// the legs either side, a right click on one deletes it. A click on the active end, a double click,
+// the legs either side, a right click on one deletes it (a finger: drag, and hold to delete,
+// T-1517). A click on the active end, a double click,
 // Enter or the Save/Make button finishes; Escape drops a new route's points or an edit as a whole.
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
@@ -41,6 +42,11 @@ const SAME_PX = 4;
 const HANDLE_PX = 8;
 /** a press on a handle becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
 const DRAG_PX = 3;
+/** a finger's reach to a handle, and how far it may wander (px) before the press is a drag, not a hold */
+const TOUCH_HANDLE_PX = 18;
+const TOUCH_SLOP_PX = 8;
+/** a finger held still on a handle this long (ms) deletes the point (T-1517) */
+const LONG_PRESS_MS = 500;
 
 interface Pt { lng: number; lat: number }
 interface Stop { x: number; y: number; kind: number; lng: number; lat: number }
@@ -96,9 +102,12 @@ export class BusDraw {
   /** the handle under the pointer (an index into `pts`), -1 for none */
   private over = -1;
   /** a press on a handle, and the drag it became: the point's index and the route before it */
-  private press: { i: number; x: number; y: number } | null = null;
+  private press: { i: number; x: number; y: number; timer?: number } | null = null;
   private drag: { i: number; pts: Pt[]; legs: Leg[] } | null = null;
   private dragEnded = false;
+  /** the fingers down, and whether the tap that ends a drag or a long press is to be ignored */
+  private fingers = new Set<number>();
+  private noTap = false;
   /** the line whose route is redrawn, null for a new line */
   private line: number | null = null;
   /** an edit has changed something since it opened */
@@ -122,6 +131,8 @@ export class BusDraw {
     map.on("contextmenu", (e) => {
       if (tool.peek() !== "bus") return;
       e.originalEvent.preventDefault();
+      // a held finger makes one too: its own long press has dealt with it (T-1517)
+      if (touchInput.peek()) return;
       const i = this.handleAt(e.point.x, e.point.y);
       if (i >= 0) this.remove(i);
       else this.back();
@@ -130,6 +141,11 @@ export class BusDraw {
     map.getContainer().addEventListener("mousedown", (e) => this.onDown(e), true);
     addEventListener("mousemove", (e) => this.onDrag(e));
     addEventListener("mouseup", () => this.onUp());
+    // a finger does the same through pointer events: drag a point, or hold it to delete it (T-1517)
+    map.getContainer().addEventListener("pointerdown", (e) => this.onTouchDown(e), true);
+    addEventListener("pointermove", (e) => e.pointerType === "touch" && this.onDrag(e));
+    addEventListener("pointerup", (e) => this.onTouchEnd(e));
+    addEventListener("pointercancel", (e) => this.onTouchEnd(e));
     // B: a new bus line, from any tab. Registered before main.ts's key handler, which would take it
     // for nothing; stopImmediatePropagation keeps it from the others.
     window.addEventListener("keydown", (e) => {
@@ -323,13 +339,13 @@ export class BusDraw {
 
   /** The clicked point whose handle is under a screen point, -1 for none; the active end first, then
    * the nearest. */
-  private handleAt(px: number, py: number): number {
+  private handleAt(px: number, py: number, reach = HANDLE_PX): number {
     const cs = this.build(false).corners;
-    let best = HANDLE_PX * HANDLE_PX, hit = -1;
+    let best = reach * reach, hit = -1;
     cs.forEach((c, i) => {
       const s = this.map.project([c.lng, c.lat]);
       const d = (s.x - px) ** 2 + (s.y - py) ** 2;
-      if (d < best || (d < HANDLE_PX * HANDLE_PX && i === this.endIndex())) {
+      if (d < best || (d < reach * reach && i === this.endIndex())) {
         best = i === this.endIndex() ? -1 : d;
         hit = i;
       }
@@ -349,13 +365,61 @@ export class BusDraw {
     this.press = { i, x: px, y: py };
   }
 
+  /** A finger on a handle: it drags the point and does not pan the map; held still it deletes the
+   * point; a tap that moves nothing reaches the tap logic as before. A second finger is a pinch. */
+  private onTouchDown(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    this.fingers.add(e.pointerId);
+    this.noTap = false;
+    if (this.fingers.size > 1) return void this.cancelDrag();
+    if (tool.peek() !== "bus" || this.busy || e.target !== this.map.getCanvas() || this.press) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const i = this.handleAt(px, py, TOUCH_HANDLE_PX);
+    if (i < 0) return;
+    // before MapLibre's touchstart, which the pointerdown precedes
+    this.map.dragPan.disable();
+    const timer = window.setTimeout(() => this.longPress(), LONG_PRESS_MS);
+    this.press = { i, x: px, y: py, timer };
+    this.over = i;
+    this.place();
+  }
+
+  private longPress() {
+    const p = this.press;
+    if (!p || this.drag) return;
+    this.press = null;
+    this.map.dragPan.enable();
+    this.noTap = true;
+    navigator.vibrate?.(15);
+    this.remove(p.i);
+  }
+
+  private onTouchEnd(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    this.fingers.delete(e.pointerId);
+    if (e.type === "pointercancel") this.cancelDrag();
+    const edited = this.drag !== null || this.noTap;
+    this.onUp();
+    this.over = -1;
+    if (tool.peek() === "bus") this.place();
+    // the browser's tap after a drag or a long press must not add a point
+    if (edited) {
+      this.noTap = true;
+      setTimeout(() => (this.noTap = false), 400);
+    }
+  }
+
   private onDrag(e: MouseEvent) {
     const p = this.press;
     if (!p) return;
+    const touch = p.timer !== undefined;
     const r = this.map.getContainer().getBoundingClientRect();
     const px = e.clientX - r.left, py = e.clientY - r.top;
     if (!this.drag) {
-      if (Math.hypot(px - p.x, py - p.y) < DRAG_PX) return;
+      if (Math.hypot(px - p.x, py - p.y) < (touch ? TOUCH_SLOP_PX : DRAG_PX)) return;
+      clearTimeout(p.timer);
+      this.touchAt = null;
       this.drag = { i: p.i, pts: [...this.pts], legs: [...this.legs] };
       setGrabbing(true);
     }
@@ -376,6 +440,7 @@ export class BusDraw {
 
   private onUp() {
     const was = this.drag;
+    clearTimeout(this.press?.timer);
     this.press = null;
     this.drag = null;
     this.map.dragPan.enable();
@@ -404,6 +469,7 @@ export class BusDraw {
   private endDrag() {
     if (this.drag) setGrabbing(false);
     if (this.press || this.drag) this.map.dragPan.enable();
+    clearTimeout(this.press?.timer);
     this.press = null;
     this.drag = null;
   }
@@ -511,6 +577,7 @@ export class BusDraw {
   // ---------------------------------------------------------------- touch
 
   tap(e: MapMouseEvent) {
+    if (this.noTap || this.busy) return;
     const p = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (this.pts.length === 0) return this.add(p);
     const near = (q: Pt | null | undefined) => {

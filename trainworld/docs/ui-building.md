@@ -96,6 +96,7 @@ mouse moving again takes it back).
   is dropped; the tool stays on), and for track and open-ground stations the elevation (its number
   on its colour; a tap opens the seven elevations above the bar) and the track type (a tap steps
   Double, Quad, High speed).
+- **Bus points** drag with a finger and are deleted by holding one (Drawing a bus line, T-1517).
 - **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
   a fling is no tap (MapLibre's own rule).
 - **Select tool**: a one-finger drag pans; a tap adds the piece under it to the pick or takes it
@@ -202,6 +203,10 @@ the tag by the pointer gives the road length and the price.
   back. A right click on a point deletes it, its neighbours joined by a new leg; a right click
   elsewhere or Backspace takes back the active end. Over a point the tag says "Drag to move" and
   "Right click to delete", led by what a click there does, and the network's hover is left out.
+  With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
+  not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
+  deletes it (the phone buzzes) and the lift adds nothing. A press that does not move and is lifted
+  sooner is a tap, as in Building by touch.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
