@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1594 [P2] All-China's load slower after T-1545. Done 2026-10-27: the WASM memory grew 64 KB at a time, each grow costing about the whole memory; it now grows 32 MB ahead. All-China 253-293 to 97 s, Japan 954 s, New York 62 s, figures identical. notes/T-1169.md T-1594.
 - T-1603 [P2] The ground curve fades over the tail's 300-700 km window (T-1508 option 1). Done 2026-10-27: no new constant, normaliser unchanged; US 300 km+ 0.0100 a person a weekday against NHTS 0.0098, China 0.0065 (1.5x the rough published), real save rail 12,483,326 as before. notes/T-1603.md.
 - T-1508 [P3] The market's totals on very big far pairs. Closed 2026-10-27: analysis in notes/T-1508.md; the ground's double count fixed by T-1603, the tail refit left as T-1599.
 - T-1545 [P2] T-1169 stage 3: the market's pass by a window of destination zones. Done 2026-10-27: no station x station tables, one search a destination (8% again); all of Japan's peak 2,694 to 1,334 MB a worker, its load 1,627 to 1,107 s; figures move by rounding only. notes/T-1169.md stage 3.

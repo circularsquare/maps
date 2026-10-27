@@ -21,9 +21,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 
 ## In flight
 - T-1603 LANDED 893a5044 (US 300 km+ 0.0195 -> 0.0100 vs NHTS 0.0098; China 1.55x; NY save
-  unchanged). T-1508 closed, T-1599 deferred to a player-scale look.
-- T-1594 all-China load ~10% slower after T-1545: Opus ab3d59c8a6ee019c6, tree .tw-trees/t1594
-  (from a497ea41), Vite 6180-6189, 6 cores, may file T-1605-1606.
+  unchanged). T-1508 closed, T-1599 deferred to a player-scale look. master 47bb32ba; 8800 still
+  a497ea41: rebuild held until T-1594's back-to-back timing runs finish (they need a quiet box).
+- T-1594 LANDED d35cc4f9: WASM memory grown 32 MB ahead; all-China cold load ~290 -> 97 s, Japan
+  1,107 -> 954 s, figures identical. Filed T-1605 (all-China signature varies run to run).
 - Land each: smoke in tree, `agent-tree.mjs land <name> "<sentence>"` (rebuilds main WASM),
   remove, cargo test on master, rebuild 8800 (scratchpad snapbuild.cmd = the CLAUDE.md recipe),
   smoke both shades.
