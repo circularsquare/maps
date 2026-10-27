@@ -68,7 +68,10 @@ Web first, so it can be shared as a link.
   worker on each edit, made from per-edge, per-line and per-station pieces (with each line's train
   speeds and samples) the worker keeps and rebuilds only when their inputs change (`NetCache` in
   map/network.ts, T-496, T-1029). An edit's network is posted as changes to the last (`NetPatch`:
-  stroke runs found by identity of the reused pieces, arrays as last posted left out); the renderer
+  stroke runs found by identity of the reused pieces, arrays as last posted left out; each stroke set
+  is posted whole, as the last network's with no arrays, or as only its new segments, which the page
+  writes over the ones they replace in the arrays it has (a segment that moves, because one was
+  inserted or removed before it, makes the set whole again; `map/strokePost.ts`, T-1381); the renderer
   copies the unchanged runs on the GPU and keeps textures whose data is the same (T-1028), and the
   pick and snap grids are carried over through the same runs instead of built again (T-1030).
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
