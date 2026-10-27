@@ -513,7 +513,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   service (T-1161); edits and removal are undoable.
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
-  High is the two peaks, medium midday and evening, low night. New lines start at 0 / 0 / 0;
+  High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
+  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536). New lines start at 0 / 0 / 0;
   zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
@@ -550,15 +551,16 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   straight to headways runs). Saved in a
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
-- **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
+- **Departures** (`Service::run_deps`): per stretch of one level (consecutive periods at the same
+  level: high demand's 6-20 is one stretch, `level_stretches`, T-1536) of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
-  Paris line would run on London's), the first departure half a one-way run before the period's
+  Paris line would run on London's), the first departure half a one-way run before the stretch's
   start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean
   of the two runs at medium, at most 2 hours). So a train belongs to the period in force when it
   reaches the line's middle, which changes service on the hour; stops near the ends change up to
   half a run early or late. A loop's middle is half a lap from its first stop (the same figure), and
-  both its runs leave A together. A period followed by no service (the evening before a line's night
-  without trains, a peak before an empty midday) departs until its own end, so the line's last
+  both its runs leave A together. A stretch followed by no service (the evening before a line's night
+  without trains, high demand before an empty evening) departs until its own end, so the line's last
   trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
   A whole-line fleet's reverse departures are offset by the forward trip so
   each train turns straight back. When the pattern changes (a new period, or an edit) a new

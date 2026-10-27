@@ -5,6 +5,7 @@ use super::cost::{RunMask, WaterMask};
 use super::geom::{self, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, Issue, LineData, Network, NodeData, StationData};
 use super::params::*;
+use super::service::level_stretches;
 use super::world::{Op, TrackWorld};
 
 pub fn world() -> TrackWorld {
@@ -1060,9 +1061,10 @@ fn the_middle_of_a_long_line_changes_period_on_time() {
         // the busier pattern leaves each end half a run before 06:00
         let first = deps.iter().find(|t| t.dep >= day + 3.0 * 3600.0 && t.level as usize == HIGH).unwrap();
         assert!((first.dep - (day + 6.0 * 3600.0 - lat.lead)).abs() < 300.0 + 1e-6, "{first:?}");
-        // trains passing the middle stop: the period's headway from its start, at 06:00 and 16:00
+        // trains passing the middle stop: the level's headway from its start, at 06:00, with no
+        // longer gap at 10:00 or 16:00 where one period of high demand follows another (T-1536)
         let pass: Vec<(f64, usize)> = deps.iter().map(|t| (t.dep + ls.runs[r].prof[t.level as usize].dep[k], t.level as usize)).collect();
-        for (h0, h1) in [(6.0, 10.0), (16.0, 20.0)] {
+        for (h0, h1) in [(6.0, 20.0)] {
             let (s, e) = (day + h0 * 3600.0, day + h1 * 3600.0);
             let hw = 3600.0 / 12.0;
             let mut times: Vec<f64> = pass.iter().filter(|p| p.0 >= s - hw && p.0 < e).map(|p| p.0).collect();
@@ -1095,12 +1097,13 @@ fn sparse_and_reversing_lines_lead_too() {
         for r in 0..2 {
             let deps = deps_of(w, id, r, day - 86400.0, day + 2.0 * 86400.0);
             let today: Vec<_> = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).collect();
-            // a whole number of departures a period, from its first; a period followed by no service
-            // runs to its own end, so it gains the lead
-            let want: f64 = PERIOD_HOURS.iter().zip(PERIOD_LEVEL).map(|(&(a, b), lev)| {
+            // a whole number of departures a stretch of one level, from its first; a stretch followed
+            // by no service runs to its own end, so it gains the lead
+            let want: f64 = level_stretches().iter().map(|&(first, last)| {
+                let (a, b) = (PERIOD_HOURS[first].0, PERIOD_HOURS[last].1);
                 let q = PERIOD_HOURS.iter().position(|&(s, _)| s == b % 24.0).unwrap();
                 let len = (b - a) * 3600.0 + if tph[PERIOD_LEVEL[q]] <= 0.0 { lat.lead } else { 0.0 };
-                (len * tph[lev] as f64 / 3600.0 - 1e-9).ceil().max(0.0)
+                (len * tph[PERIOD_LEVEL[first]] as f64 / 3600.0 - 1e-9).ceil().max(0.0)
             }).sum();
             assert!((today.len() as f64 - want).abs() <= 1.0, "line {id} run {r}: {} departures, want {want}", today.len());
             // the day's first train leaves half a run before 06:00; the evening runs to midnight

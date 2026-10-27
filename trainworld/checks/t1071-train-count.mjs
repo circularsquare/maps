@@ -118,7 +118,7 @@ try {
   const pick = await page.evaluate(() => {
     const tw = window.tw, w = tw.world.value;
     const lines = w.save.lines.filter((l) => { const s = w.lineStats[l.id]; return s && s.status === 'running' && !s.autoS && !s.loop && l.stops.length > 2; });
-    lines.sort((a, b) => w.lineStats[b.id].trainsNeeded[1] - w.lineStats[a.id].trainsNeeded[1]);
+    lines.sort((a, b) => w.lineStats[b.id].trainsNeeded[0] - w.lineStats[a.id].trainsNeeded[0]);
     const l = lines[0], st = w.lineStats[l.id];
     tw.clock.setRunning(false);
     const day = Math.floor(tw.clock.now() / 86400);
@@ -193,7 +193,8 @@ try {
   await page.waitForTimeout(3000);
   await page.evaluate(() => { window.__on = true; });
   await page.waitForTimeout(500);
-  const steps = [[t[0], t[1] + 4, t[2]], [t[0], Math.max(1, t[1] - 3), t[2]], [t[0], t[1] + 8, t[2]], t];
+  // the level running at the hour set above: high, which runs 6-20 (T-1536)
+  const steps = [[t[0] + 4, t[1], t[2]], [Math.max(1, t[0] - 3), t[1], t[2]], [t[0] + 8, t[1], t[2]], t];
   out.edits = [];
   let k = 0;
   for (const s of steps) {

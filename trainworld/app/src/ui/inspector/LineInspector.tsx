@@ -38,7 +38,7 @@ import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, schedul
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
- * demand: 06:00 to 10:00, 16:00 to 20:00". */
+ * demand: 06:00 to 20:00". */
 export function levelTimes(d: Demand): string {
   const t = (h: number) => clockTime((h * 60) % 1440);
   return `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;

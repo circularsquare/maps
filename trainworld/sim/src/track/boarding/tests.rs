@@ -348,7 +348,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     assert!(q.iter().filter(|e| e.0 > 7.2 * 3600.0 && e.0 < 10.0 * 3600.0).all(|e| (e.1 as f64 - (WAITING_CAP - cap)).abs() < 1e-3), "{}", at(9.0));
     // every train in the peak leaves full
     assert!(q.iter().filter(|e| e.0 > 6.5 * 3600.0 && e.0 < 10.0 * 3600.0).all(|e| (e.2 as f64 - cap).abs() < 1e-3));
-    // midday trains (5 an hour, 8,000 of room against 2,000 arriving) clear it within the hour
+    // midday trains (10 an hour, 16,000 of room against 2,000 arriving) clear it within the hour
     assert!(at(10.25) > 0.0 && at(11.0) < 1.0, "{} {}", at(10.25), at(11.0));
     // nobody is lost: in = on + turned away (the day ends with nobody waiting): the peak's
     // 16,000 too many less the 3,400 still waiting at its end, who board at midday
@@ -357,7 +357,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     // riders left behind and long waits are reported for the peak's hours
     assert!(ra.left_h[8] > 1000.0);
     assert!(ra.wait_h[9] > 900.0, "{}", ra.wait_h[9]);
-    // once it has cleared, the longest wait is a headway (5 trains an hour at midday)
+    // once it has cleared, the longest wait is a headway (10 trains an hour at midday)
     assert!(ra.wait_h[15] < 730.0, "{}", ra.wait_h[15]);
     // the day's boardings in `today` leave out those turned away
     let v = b.today(&w.svc, 2.0 * DAY + 23.999 * 3600.0);
@@ -370,15 +370,14 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
 /// WAITING_CAP), so nobody waits past GIVE_UP_S.
 #[test]
 fn riders_left_behind_too_long_go_another_way() {
-    // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 10:00, then 1 an hour
-    // against 2,400 to 16:00
+    // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 16:00
     let (w, l) = setup(2.0);
     let mut b = Boarding::default();
-    b.set_riders(&riders(l, [4000.0, 2400.0, 500.0, 500.0, 50.0]));
+    b.set_riders(&riders(l, [4000.0, 4000.0, 500.0, 500.0, 50.0]));
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
-    // the queue grows 400 a train through the morning and fills the platform at 11:00
+    // the queue grows 400 a train through the morning and fills the platform before noon
     let most = (0..m).map(|j| ra.q_after[j * 3]).fold(0.0f32, f32::max) as f64;
     assert!(most <= WAITING_CAP - 1600.0 + 1e-3, "{most}");
     let gave_by_noon: f64 = (0..m).filter(|&j| ra.order_t[j] < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
@@ -424,7 +423,7 @@ fn riders_come_and_wait_only_for_a_train_with_room_soon() {
     // so nobody waits much beyond 30 minutes for a train with room (the head of the queue: a
     // headway more)
     let longest = ra.wait_h[6..11].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
-    assert!(longest > 1200.0 && longest <= WAIT_FOR_ROOM_S + 2.0 * 360.0 + 1.0, "{longest}");
+    assert!(longest > 900.0 && longest <= WAIT_FOR_ROOM_S + 2.0 * 360.0 + 1.0, "{longest}");
     assert!(ra.gave_up > 10000.0 && (ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived, "{}", ra.gave_up);
     // the riders turned away count the wait in the period's crowding, and are counted
     let v = b.line_periods(&w.svc, l as usize, 0);
@@ -443,11 +442,11 @@ fn the_line_summary_names_the_full_trains_and_when() {
     let s = b.line_summary(&w.svc, l as usize);
     assert!((s[0] - 1.0).abs() < 1e-6, "fullest {}", s[0]);
     assert!(s[1] >= 60.0, "{} full trains", s[1]); // 10 an hour each way through the peak
-    assert!(s[2] > 10000.0 && s[3] > 1800.0);
-    // one span: from the peak's start until midday trains have cleared the queue (by 13:30)
+    assert!(s[2] > 10000.0 && s[3] > 1200.0, "{s:?}");
+    // one span: from the peak's start until the next trains have cleared the queue (by 10:30)
     let spans: Vec<(f64, f64)> = (0..s[4] as usize).map(|k| (s[5 + 2 * k], s[6 + 2 * k])).collect();
     assert_eq!(spans.len(), 1, "{spans:?}");
-    assert!(spans[0].0 >= 6.0 * 3600.0 && spans[0].0 < 7.0 * 3600.0 && spans[0].1 > 10.0 * 3600.0 && spans[0].1 < 13.5 * 3600.0, "{spans:?}");
+    assert!(spans[0].0 >= 6.0 * 3600.0 && spans[0].0 < 7.0 * 3600.0 && spans[0].1 > 10.0 * 3600.0 && spans[0].1 < 10.5 * 3600.0, "{spans:?}");
     // a line with room: no full trains, nobody left
     let (w2, l2) = setup(10.0);
     let mut b2 = Boarding::default();
