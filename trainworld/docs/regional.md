@@ -89,7 +89,7 @@ searched, so routes stay as the curve gives them) [T-1286], damped by the trip's
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
 rail against air never depends on it). The scale covers the whole
 rail trip, access included. Rail's cost is chosen as in the local layers (T-718, demand-mode.md
-4.3, T-710): the pair's riders spread over its station pairs (up to 8 access stations at each end)
+4.3, T-710): the pair's riders spread over its station pairs (up to 10 access stations at each end, 5.2)
 by their whole cost, access and egress included, at the station choice's scale for the zones'
 distance (0.33 a perceived minute from 12 km, so nearly every pair), softened past 60 minutes by
 sqrt(60 / T) with T the car's perceived minutes (`rel_soft`: 0.19 at 3 hours by car, 0.12 at 8),
@@ -154,8 +154,11 @@ T-1396), induced travel, traffic on routed drives.
 ## 5.2 Where a long-distance trip starts and ends
 
 Origin access is population-weighted; destination access uses population and jobs. Each site offers
-nearby stations through the local layer's walk and, where it applies, rides (5.3). Up to eight
-weighted station options per zone end feed the common strategy graph. Local feeder lines, transfers and the
+nearby stations through the local layer's walk and, where it applies, rides (5.3). Each zone end
+keeps its 8 best-weighted stations, then up to 10 in all, the best station of each track component
+none of those is on (an inter-city line not linked to a city's metro), best first; a station only
+bus routes or lines with no trains stop at takes no such slot [T-1506]. The longer trips, commutes and outings between zones and the trip explorer use the same
+lists. They feed the common strategy graph. Local feeder lines, transfers and the
 intercity service receive actual loads and boardings. No express-only route or station-city
 affiliation bypasses the player's local network.
 

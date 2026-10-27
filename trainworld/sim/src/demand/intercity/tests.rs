@@ -1821,3 +1821,73 @@ fn t1204_signature() {
     println!("SIG all {all:016x}");
     eprintln!("signature over {} parts: {all:016x}", sig.len());
 }
+/// T-1506: past the best `ACCESS_TOP`, an access list keeps a slot for each track component none of
+/// those is on, best first, up to `ACCESS_MAX`; a station with no train line takes none.
+#[test]
+fn access_lists_reserve_slots_for_unlinked_track() {
+    // stations 0-10 metro on one track; 11 a bus stop on its own; 12, 13 and 14 three unlinked
+    // inter-city lines, 14 at two stations (14 and 15)
+    let comp: Vec<u32> = (0..16).map(|s| if s >= 11 { s.min(14) as u32 } else { 0 }).collect();
+    let mut on_train = vec![true; 16];
+    on_train[11] = false;
+    let w = |s: usize| match s {
+        11 => 5.,
+        12 => 0.3,
+        13 => 0.2,
+        14 => 0.1,
+        15 => 0.25,
+        _ => 10. - 0.5 * s as f32,
+    };
+    let all: BTreeMap<usize, f32> = (0..16).map(|s| (s, w(s))).collect();
+    let got: Vec<usize> = access_list(all, false, &comp, &on_train).into_iter().map(|e| e.0).collect();
+    assert_eq!(got, vec![0, 1, 2, 3, 4, 5, 6, 7, 12, 15]);
+    // track already listed takes no slot
+    let some: BTreeMap<usize, f32> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13].into_iter().map(|s| (s, w(s))).collect();
+    let got: Vec<usize> = access_list(some, false, &comp, &on_train).into_iter().map(|e| e.0).collect();
+    assert_eq!(got, vec![0, 1, 2, 3, 4, 5, 6, 7, 13]);
+    // up to `ACCESS_TOP` the list is the best stations, as before
+    let few: BTreeMap<usize, f32> = [(12, 0.1), (3, 2.), (11, 1.), (5, 0.)].into_iter().collect();
+    let got: Vec<usize> = access_list(few, true, &comp, &on_train).into_iter().map(|e| e.0).collect();
+    assert_eq!(got, vec![3, 11, 12]);
+}
+/// T-1506: a zone among nine metro lines reaches an inter-city station that no metro line links to,
+/// so the inter-city line carries its trips (with the best 8 stations alone it carried none).
+#[test]
+fn an_unlinked_inter_city_station_gets_a_slot() {
+    let mut sites: Vec<String> = (0..10).map(|k| format!("[{},200,20000,10000,0]", 500 * k)).collect();
+    sites.push("[2500,3000,200,100,0]".into());
+    sites.push("[100000,0,200000,100000,1]".into());
+    let mut a = IntercityApi::new(&format!(r#"{{"zone_m":6000,"trip_rate":0.015,"sites":[{}]}}"#, sites.join(","))).unwrap();
+    // metro stations 0-9 500 m apart, lines between neighbours; the inter-city line 10 -> 11
+    let mut xy: Vec<f32> = (0..10).flat_map(|k| [500. * k as f32, 0.]).collect();
+    xy.extend([2500., 3200., 100000., 0.]);
+    let (mut n, mut stops, mut times) = (vec![], vec![], vec![]);
+    for (s0, s1, sec) in (0..9).map(|k| (k, k + 1, 90f32)).chain([(10, 11, 1800.)]) {
+        n.push(2u32);
+        stops.extend([s0 as u32, s1 as u32]);
+        let mut t = [0f32; 12];
+        for lev in 0..3 {
+            t[lev * 2] = sec;
+            t[(3 + lev) * 2 + 1] = sec;
+        }
+        times.extend(t);
+    }
+    let tph = vec![12f32; 3 * n.len()];
+    let cars = vec![6f32; n.len()];
+    a.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let zone_at = |x: f32, y: f32| {
+        let g = &a.m.groups[0];
+        let c = (0..g.city.len()).min_by(|&i, &j| ((g.city.x[i] - x).powi(2) + (g.city.y[i] - y).powi(2)).total_cmp(&((g.city.x[j] - x).powi(2) + (g.city.y[j] - y).powi(2)))).unwrap();
+        a.m.cell_zone[g.lo + c]
+    };
+    let z = zone_at(0., 200.);
+    assert_eq!(z, zone_at(2500., 3000.), "the metro's homes and the inter-city station's share a zone");
+    let svc = a.svc.as_ref().unwrap();
+    let h = svc.st_map[10] as usize;
+    let list = &a.access[z];
+    assert!(list.len() > ACCESS_TOP && list.len() <= ACCESS_MAX);
+    assert!(list[..ACCESS_TOP].iter().all(|e| e.0 != h), "the metro fills the best 8: {list:?}");
+    assert!(list.iter().any(|e| e.0 == h), "the inter-city station has a slot: {list:?}");
+    a.solve(0);
+    assert!(a.summary(0)[2] > 0., "rail between the zones");
+}

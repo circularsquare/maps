@@ -632,7 +632,7 @@ fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize
     let k = (th / beta) as f64;
     let mut top = f64::NEG_INFINITY;
     // the egress weights' logs, once a pair rather than once a station pair (T-761)
-    let mut lb = [0f64; 8];
+    let mut lb = [0f64; ACCESS_MAX];
     for (l, &(_, wb)) in lb.iter_mut().zip(b) {
         *l = k * (wb as f64).ln();
     }
@@ -651,7 +651,7 @@ fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize
             if sa == sb || wb <= 0. || !cost.is_finite() {
                 continue;
             }
-            let lw = la + (if j < 8 { lb[j] } else { k * (wb as f64).ln() }) - (th * cost) as f64;
+            let lw = la + (if j < ACCESS_MAX { lb[j] } else { k * (wb as f64).ln() }) - (th * cost) as f64;
             top = top.max(lw);
             terms.push((sa as u32, sb as u32, lw));
         }
@@ -2110,6 +2110,45 @@ fn add_access(out: &mut BTreeMap<usize, f32>, walks: &[(usize, f32)], rides: &[R
         *out.entry(r.0 as usize).or_default() += share * (total * (-theta * (r.1 as f64 - c0)).exp()) as f32;
     }
 }
+/// An access list's stations: its `ACCESS_TOP` best, then (T-1506) up to `ACCESS_MAX` in all, the
+/// best station of each track component none of those is on (`on_train`: a station some train line
+/// stops at). Without it a city of many metro lines filled the list with metro stations and an
+/// inter-city station not linked to the metro was in no zone's list.
+pub(crate) const ACCESS_TOP: usize = 8;
+pub(crate) const ACCESS_MAX: usize = 10;
+fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &[u32], on_train: &[bool]) -> Vec<(usize, f32)> {
+    let mut v: Vec<_> = weights.into_iter().filter(|e| !positive || e.1 > 0.).collect();
+    v.sort_by(|a, b| b.1.total_cmp(&a.1));
+    if v.len() <= ACCESS_TOP {
+        return v;
+    }
+    let rest = v.split_off(ACCESS_TOP);
+    let mut comps: Vec<u32> = v.iter().map(|e| comp[e.0]).collect();
+    for e in rest {
+        if v.len() >= ACCESS_MAX {
+            break;
+        }
+        if on_train[e.0] && !comps.contains(&comp[e.0]) {
+            comps.push(comp[e.0]);
+            v.push(e);
+        }
+    }
+    v
+}
+/// Whether each station has a train line: one with trains in some period and no bus-only stop.
+fn on_train(net: &super::network::Network) -> Vec<bool> {
+    let mut out = vec![false; net.n_stations()];
+    for l in 0..net.n_lines() {
+        let stops = net.stops(l);
+        if stops.iter().any(|&s| net.bus_only(s as usize)) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
+            continue;
+        }
+        for &s in stops {
+            out[s as usize] = true;
+        }
+    }
+    out
+}
 /// Each station's component of the graph (edges taken both ways), named by its lowest station.
 fn station_components(g: &Graph) -> Vec<u32> {
     let mut parent: Vec<u32> = (0..g.n as u32).collect();
@@ -2946,22 +2985,15 @@ impl IntercityApi {
                 }
             }
         }
-        let top8 = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> {
-            maps.into_iter()
-                .map(|mm| {
-                    let mut v: Vec<_> = mm.into_iter().filter(|e| !positive || e.1 > 0.).collect();
-                    v.sort_by(|a, b| b.1.total_cmp(&a.1));
-                    v.truncate(8);
-                    v
-                })
-                .collect()
-        };
-        self.access = top8(weights, false);
-        self.access_work = top8(work, false);
-        self.access_c = if commuting { top8(cw_home, true) } else { vec![] };
-        self.access_cw = if commuting { top8(cw_work, true) } else { vec![] };
-        self.access_c_walk = if commuting { top8(cw_walk, true) } else { vec![] };
-        self.access_ew = if outings { top8(ew, true) } else { vec![] };
+        let comp = station_components(&build_graph(&net0, &self.base));
+        let on_train = on_train(&net0);
+        let lists = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> { maps.into_iter().map(|mm| access_list(mm, positive, &comp, &on_train)).collect() };
+        self.access = lists(weights, false);
+        self.access_work = lists(work, false);
+        self.access_c = if commuting { lists(cw_home, true) } else { vec![] };
+        self.access_cw = if commuting { lists(cw_work, true) } else { vec![] };
+        self.access_c_walk = if commuting { lists(cw_walk, true) } else { vec![] };
+        self.access_ew = if outings { lists(ew, true) } else { vec![] };
         self.want = vec![false; svc.st_x.len()];
         for list in self.access_work.iter().chain(&self.access_cw).chain(&self.access_c).chain(&self.access_c_walk).chain(&self.access_ew) {
             for &(st, _) in list {
@@ -2971,7 +3003,6 @@ impl IntercityApi {
         // T-174: only pairs between zones a station serves can carry a rail trip
         let served: Vec<usize> = (0..nzz).filter(|&z| !self.access[z].is_empty() || !self.access_work[z].is_empty()).collect();
         // T-409: and only pairs whose zones reach one track component
-        let comp = station_components(&build_graph(&net0, &self.base));
         let comp: Vec<Vec<u32>> = served
             .iter()
             .map(|&z| {
