@@ -157,13 +157,12 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its two peaks), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 3, yellow at 6, orange at 9, red at 15 and a deep red from 25 (`crowdColour` in
-  `game/palette.ts`, fed `avg.wait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
+  `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "Where trains come full,
   riders face a wait of 11 min on average for a train with room" (or "Riders get on the first train
-  with room"), then "12/96 trains are full" (all the level's periods),
-  then "3,100 riders found the platform too full and went another way" when any did,
-  a line naming the worst period and its wait when that period's grade is worse than the
-  level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
+  with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4 of
+  10 trains full, 2k riders went another way" (the riders part only when any did) [T-1523],
+  and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
   waited over the level's periods, from the tail of `line_periods`) when anyone waits [T-818]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with an Ordinary / High speed switch [T-817], each
   option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
