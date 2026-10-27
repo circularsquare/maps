@@ -38,19 +38,40 @@ fn grew(n: usize) {
     if live > PEAK.load(Ordering::Relaxed) { PEAK.store(live, Ordering::Relaxed); }
 }
 
+/// T-1594: the bytes the memory grows by ahead of need. The allocator grows the memory by what a
+/// request lacks (64 KB at a time for small ones), and each grow costs about as much as the whole
+/// memory, not the bytes added: a pass that allocated 30 MB in 9 KB pieces took 30 s longer in a
+/// worker of 1.3 GB.
+const AHEAD: usize = 32 << 20;
+
+/// After an allocation that grew the memory, the allocator is given `AHEAD` bytes more at once (a
+/// block allocated and freed at the top), so the allocations after it grow the memory once every
+/// `AHEAD` bytes rather than once every few.
+unsafe fn ahead(before: usize) {
+    if core::arch::wasm32::memory_size(0) != before {
+        let l = Layout::from_size_align_unchecked(AHEAD, 16);
+        let p = System.alloc(l);
+        if !p.is_null() { System.dealloc(p, l); }
+    }
+}
+
 unsafe impl GlobalAlloc for NotingAlloc {
     unsafe fn alloc(&self, l: Layout) -> *mut u8 {
+        let before = core::arch::wasm32::memory_size(0);
         let p = System.alloc(l);
-        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); }
+        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); ahead(before); }
         p
     }
     unsafe fn alloc_zeroed(&self, l: Layout) -> *mut u8 {
+        let before = core::arch::wasm32::memory_size(0);
         let p = System.alloc_zeroed(l);
-        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); }
+        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); ahead(before); }
         p
     }
     unsafe fn realloc(&self, ptr: *mut u8, l: Layout, new_size: usize) -> *mut u8 {
+        let before = core::arch::wasm32::memory_size(0);
         let p = System.realloc(ptr, l, new_size);
+        if !p.is_null() { ahead(before); }
         if p.is_null() {
             FAILED_ALLOC.store(new_size.max(1), Ordering::Relaxed);
         } else {

@@ -37,6 +37,8 @@ tests natively.
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
   its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
+  `wasm.rs` (WASM only): the memory and heap figures, the last panic, and the allocator that grows
+  the memory 32 MB ahead of need (T-1205, T-1174, T-1594).
   `lod.rs`: a zone's level of detail (T-1222), the everyday sampling and commute chunk a zone opens
   at (`DemandApi::at_level`); its checks in `everyday/lod_tests.rs` (`t1222_probe` measures memory, times and bias).
   Zones of two sizes (T-852: `kernel::coarsen`, `Zones::size`): every zone-pair table goes through

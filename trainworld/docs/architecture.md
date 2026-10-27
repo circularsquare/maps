@@ -249,6 +249,12 @@ Web first, so it can be shared as a link.
   replacement did, so all hold the same corridor table, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
   a solve through, or a fifth replacement in the page, stops the pool as before. `?debug=1` on the
   dev server has `twDemand.client.debugPanic(worker, "now" | "solve")`; check `t1174-panic-recover.mjs`.
+- **Growing a demand worker's memory** [T-1594] (`sim/src/demand/wasm.rs`, `AHEAD`): a WASM memory
+  grow costs about as much as the memory already held, not the bytes added, and the allocator grows
+  by what a request lacks (64 KB for a small one). So whenever an allocation grows the memory, the
+  allocator is handed 32 MB more at once (a block allocated and freed at the top), and the small
+  allocations after it are carved from that. A worker's memory ends at most 32 MB above what it
+  needed; the heap figures below do not count the block.
 - **Demand workers' memory** [T-1205] (`demandClient.ts` "T-1205: memory"): WASM memory never
   shrinks, so each worker reports its memory with its heap in use and its last solve's heap peak
   (`wasm_heap_bytes`, `wasm_heap_peak`; the peak is reset as each solve starts and forgotten when
