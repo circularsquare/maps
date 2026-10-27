@@ -78,13 +78,21 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
-**Mode choice.** Inter-city trips choose rail, car and plane in one logit [T-378]: the car's money
-at 3 perceived minutes a dollar, the plane's fare at the departing country's minutes a dollar, rail's
+**Mode choice.** Inter-city trips choose rail, car and plane in one logit [T-378]. **Income groups**
+[T-1431]: a place's longer trips come from its country's people in three equal groups by income
+(the World Bank's income shares by quintile, `countryIncome.json` `quint`, a country with no survey
+taking its subregion's median); a group's income over the mean is 0.35-0.49 in the poorest third
+and 1.6-1.9 in the richest. Each group's riders weigh every mode's money, the car's running cost and
+crossings, the plane's fare and rail's fare, at the same minutes a dollar: the departing country's
+(T-1277) times (the group's income over the mean)^-0.5. A group makes longer trips in proportion to
+(its income over the mean)^0.7, the rule's `eps`. A zone pair's choice is worked out for each group
+and added up by their trips; the place pair's split between car and plane likewise. Rail's fare is
 the player's curve as set at India's (12.2, so it weighs as every country's fares do at their
 default scales; a trip pays the curve times its starting country's scale) [T-1277], each trip's
-fare weighed again by its origin's fare scale over that country's income scale where the player set
-one (a commute or outing by its home's; on the expected fare km of each station pair's strategy as
-searched, so routes stay as the curve gives them) [T-1286], damped by the trip's length as the local walking share is
+fare weighed again by its group's factor and by its origin's fare scale over that country's income
+scale where the player set one (on the expected fare km of each station pair's strategy as
+searched, so routes stay as the curve gives them) [T-1286]. Commutes and outings between zones keep
+one group, the car's money at 3 minutes a dollar and the fare at their home's weight. All of it is damped by the trip's length as the local walking share is
 ([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
 rail against air never depends on it). The scale covers the whole
@@ -100,7 +108,8 @@ air by hours on the train: notes/T-712.md.
 
 - *Car*: the rule is 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents
   a road km and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the
-  market pack's `site_park`), both split over two occupants; no tolls, at borders or anywhere
+  market pack's `site_park`), both split over two occupants, the running cost at each income group's
+  minutes a dollar (T-1431); no tolls, at borders or anywhere
   (T-270), and North Korea's roads are open like any other's. Only within a landmass.
   *Routed drives* (T-279, `market-drives.bin` from `pipeline/market_drives.py`): per pair of places
   on one landmass within 1,500 km, a least-cost path on the world's 1/60 degree lattice, each cell's
@@ -115,7 +124,7 @@ air by hours on the train: notes/T-712.md.
   landmass has no road over (the Gulf of Finland, the Baltic to Sweden), it takes a *ferry*: 30
   minutes plus the crossing at 35 km/h, and a fare of $50 plus 50 cents a km per car, shared by the
   two (the path uses the ferry where that costs less than going round). Where the car is carried
-  over water by the market's own crossings (T-712, `crossing_min`) it pays the crossing's fare per
+  over water by the market's own crossings (T-712, `crossing_cost`) it pays the crossing's fare per
   car (shared by the two) and its minutes beyond the straight drive: the Channel, $150 and 60
   minutes, between a place in Great Britain and one elsewhere; the Tsugaru Strait's ferry, $170 and
   240 minutes, between Hokkaido (Japan north of 41.4°) and elsewhere. Commutes between zones pay
@@ -125,7 +134,7 @@ air by hours on the train: notes/T-712.md.
   people-weighted over the place's zones), 90 minutes at the airports, 25 minutes until the flight
   (its frequency is not modelled: rail's planned first wait at a flight every 2 hours, T-1430), the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
-  a fare of $100 plus 5 cents a km (T-712) at the departing place's country's minutes a dollar (T-1277; the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
+  a fare of $30 plus 5 cents a km (T-1431, fitted on published rail and air shares) at each income group's minutes a dollar (the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
   the player, no capacity, not drawn.
 - *Rail*: the player's network. Fares, service, transfers and shared crowding affect it. An
   inter-city trip is planned, so its first boarding waits the least of half the headway, 5 minutes

@@ -8,9 +8,9 @@ import { activeCity, cityById } from "../../game/cities";
 import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
-  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
+  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
 } from "../../game/marketRule";
-import { fareScale } from "../../game/income";
+import { fareScale, fareWeight } from "../../game/income";
 import { moneyState } from "../../game/money";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
@@ -37,14 +37,14 @@ const CROSSING: Record<Crossing["kind"], { label: string; tip: (c: Crossing) => 
 function carEquation(c: CarCost): string {
   const terms: Term[] = [
     { label: "drive", real: num1(c.driveMin), weight: 1, perceived: c.driveMin },
-    { label: "running", real: usd(c.runUsd), weight: MIN_PER_USD, perceived: c.runUsd * MIN_PER_USD },
+    { label: "running", real: usd(c.runUsd), weight: c.w, perceived: c.runUsd * c.w },
     ...(c.parkMin >= 0.05 ? [{ label: "parking", real: "", weight: 1, perceived: c.parkMin }] : []),
     ...c.crossings.flatMap((x) => [
-      { label: "crossing fare", real: usd(x.usd / CAR_SHARED_BY), weight: MIN_PER_USD, perceived: (x.usd / CAR_SHARED_BY) * MIN_PER_USD },
+      { label: "crossing fare", real: usd(x.usd / CAR_SHARED_BY), weight: c.w, perceived: (x.usd / CAR_SHARED_BY) * c.w },
       { label: "crossing time", real: num1(x.min), weight: 1, perceived: x.min },
     ]),
   ];
-  return `${equation(terms, c.total)}\nEach dollar counts as ${MIN_PER_USD} minutes.`;
+  return `${equation(terms, c.total)}\nEach dollar counts as ${num1(c.w)} minutes for a rider of average income.`;
 }
 
 /** By car: the drive, its running costs, parking, any crossing, and the effective time. `parts`
@@ -377,7 +377,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const corridor = one >= 0 && marketRowsReady.value ? (m.end === "work" ? corridorOf(one, ends.near) : corridorOf(ends.near, one)) : null;
   // the crossings when every far place shares them; the car's parts then follow from the sim's minutes
   const cross = marketRowsReady.value ? crossingSet(ends) : null;
-  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive) : null;
+  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive, fareWeight(marketRow(m.end === "work" && one >= 0 ? one : ends.near)?.country)) : null;
   // T-1148: from a selection or a 6 km area, the whole places' trips as the solve split them, beside it
   const pair = one >= 0 && !(m.near && m.near.gid < 0) ? pairFigures(ends.near, one) : null;
   const bare = m.unbuilt ?? [];

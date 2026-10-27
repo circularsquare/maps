@@ -154,7 +154,9 @@ institutions** (prisons, nursing homes and the like, T-234).
   rail constant (time and money alone), car ownership $2.00 a trip plus $0.13 a km and 7 minutes to
   park [T-636, T-637, T-938]. A fare dollar costs 5 x (GDP per head at PPP / $60,000)^-0.5
   perceived minutes in the trip's country (the US 4.4, India 12.2), the car's money 3 everywhere
-  [T-1277, T-1166]. The regional market keeps a damped logit with the plane [T-495, T-502].
+  [T-1277, T-1166]. The regional market keeps a damped logit with the plane [T-495, T-502]; its
+  longer trips come from three income groups per country, each weighing every mode's money (car,
+  plane, rail) at its own minutes a dollar, and the plane costs $30 plus 5 cents a km [T-1431].
 - **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
   rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
   destination's paid-space rule on the home zone's residents per km², so dense places drive less.

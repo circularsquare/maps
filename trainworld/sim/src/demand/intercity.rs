@@ -304,6 +304,11 @@ pub struct Row {
     /// written to market-rows.json
     #[serde(default, skip_serializing_if = "is_zero")]
     fw: f64,
+    /// T-1431: its people's income groups as the app gives them (game/income.ts, never written to
+    /// market-rows.json): per group its share of the longer trips and the factor on `fw` its riders
+    /// weigh every mode's money at, up to `GROUPS` pairs; absent: one group at `fw`
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    fg: Vec<f64>,
 }
 fn is_zero(v: &f64) -> bool {
     *v == 0.
@@ -350,11 +355,65 @@ struct Place {
     park: f64,
     /// its row's `fw` (0: `FARE_MIN_PER_USD`)
     fw: f64,
+    /// T-1431: its income groups (share of the longer trips, factor on `fw`), the first `ng`;
+    /// none: one group at `fw`
+    gr: [(f32, f32); GROUPS],
+    ng: u8,
+}
+/// T-1431: the most income groups a place's travellers come in.
+pub const GROUPS: usize = 3;
+const ONE_GROUP: [(f32, f32); 1] = [(1., 1.)];
+impl Place {
+    /// Perceived minutes a dollar costs a rider of average income leaving here.
+    fn w(&self) -> f32 {
+        if self.fw > 0. { self.fw as f32 } else { FARE_MIN_PER_USD }
+    }
+    /// Its income groups: each one's share of the longer trips and the factor on `w` its riders
+    /// weigh money at.
+    fn groups(&self) -> &[(f32, f32)] {
+        if self.ng == 0 { &ONE_GROUP } else { &self.gr[..self.ng as usize] }
+    }
+}
+/// T-1431: a row's `fg` as a place keeps it: the shares made to add up to 1; none for no groups.
+fn income_groups(fg: &[f64]) -> Result<([(f32, f32); GROUPS], u8), String> {
+    let mut gr = [(0f32, 1f32); GROUPS];
+    if fg.is_empty() {
+        return Ok((gr, 0));
+    }
+    let n = fg.len() / 2;
+    let sum: f64 = fg.iter().step_by(2).sum();
+    if fg.len() % 2 != 0 || n > GROUPS || fg.iter().any(|v| !v.is_finite() || *v < 0.) || fg.iter().skip(1).step_by(2).any(|&f| f <= 0.) || sum <= 0. {
+        return Err("invalid market row income groups".into());
+    }
+    for (k, g) in gr.iter_mut().enumerate().take(n) {
+        *g = ((fg[2 * k] / sum) as f32, fg[2 * k + 1] as f32);
+    }
+    Ok((gr, n as u8))
+}
+/// A mode's cost in minutes and in dollars, the dollars at the rider's minutes a dollar (T-1431:
+/// every mode at the same weight for a given rider).
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+struct Cost {
+    min: f32,
+    usd: f32,
+}
+impl Cost {
+    const NONE: Cost = Cost { min: f32::INFINITY, usd: 0. };
+    #[inline(always)]
+    fn at(self, w: f32) -> f32 {
+        self.min + self.usd * w
+    }
+    fn plus(self, o: Cost) -> Cost {
+        Cost { min: self.min + o.min, usd: self.usd + o.usd }
+    }
+    fn is_some(self) -> bool {
+        self.min.is_finite()
+    }
 }
 /// Per ordered pair of places: the border factor, the tail's income factor, near or not, and
 /// the distance between their centres; T-378: whether a car can make the trip, the share of the
-/// trips not by rail that fly, and the weight of every mode but rail against the reference
-/// (`refm`: the car's minutes, or with no car the plane's).
+/// trips not by rail that fly (over the first place's income groups, T-1431), and the flight by
+/// the best pair of airports (`Cost::NONE` with none).
 #[derive(Clone, Copy, Default)]
 struct PairRule {
     b: f64,
@@ -363,22 +422,56 @@ struct PairRule {
     km: f64,
     car: bool,
     air: f32,
-    rest: f32,
-    refm: f32,
-    /// the car's perceived minutes for water it is carried over (`crossing_min`, a ferry)
-    cross: f32,
+    fl: Cost,
+    /// the car's cost for water it is carried over (`crossing_cost`, a ferry)
+    cross: Cost,
     /// T-279: the routed drive's minutes and road km over the rule's (`Drive`)
     rt: f32,
     rk: f32,
 }
+/// T-1431: the modes but rail of one zone pair for one rider: the reference mode's perceived minutes
+/// (the car's, or with no car the plane's), the weight of every mode but rail against it, the
+/// share of those trips that fly, and the car's minutes, which set the choice's scale (T-495) even
+/// where no car goes.
+#[derive(Clone, Copy, Debug)]
+struct Alt {
+    drive: f32,
+    rest: f32,
+    air: f32,
+    car: f32,
+}
 impl PairRule {
     /// A pair the solve may build: a car or a plane to compete with.
     fn has_alt(&self) -> bool {
-        self.car || self.air > 0.
+        self.car || self.fl.is_some()
     }
     /// A longer trip's car over a zone pair of this place pair, `d` km apart, to parking `park`.
-    fn car_min(&self, d: f32, park: f32) -> f32 {
-        routed_car_min(d, park, self.rt, self.rk) + self.cross
+    fn car_cost(&self, d: f32, park: f32) -> Cost {
+        routed_car(d, park, self.rt, self.rk).plus(self.cross)
+    }
+    /// The car the place pair's split is decided on: centre to centre, the two places' mean parking.
+    fn split_car(&self, p: &Place, q: &Place) -> Cost {
+        self.car_cost(self.km as f32, (0.5 * (p.park + q.park)) as f32)
+    }
+    /// The modes but rail for a rider weighing a dollar at `w` minutes, over a zone pair whose car
+    /// costs `car` (`car_cost`), the split's car being `split` (`split_car`).
+    fn alt(&self, car: Cost, split: Cost, w: f32, mp: &Params) -> Alt {
+        let car_m = car.at(w);
+        match (self.car, self.fl.is_some()) {
+            (true, true) => {
+                let s = split.at(w);
+                let v = (-mp.mode_beta(s) * (self.fl.at(w) - s)).clamp(-80., 80.).exp();
+                Alt { drive: car_m, rest: 1. + v, air: v / (1. + v), car: car_m }
+            }
+            (false, true) => Alt { drive: self.fl.at(w), rest: 1., air: 1., car: car_m },
+            _ => Alt { drive: car_m, rest: 1., air: 0., car: car_m },
+        }
+    }
+    /// The reference mode's perceived minutes between the two places for a rider of average income
+    /// from the first (the car's centre to centre, or with no car the plane's).
+    fn refm(&self, p: &Place, q: &Place) -> f32 {
+        let (split, w) = (self.split_car(p, q), p.w());
+        if !self.car && self.fl.is_some() { self.fl.at(w) } else { split.at(w) }
     }
 }
 /// The ordered pair (i, j)'s border factor, the tail's income factor, near or not, and the
@@ -400,44 +493,38 @@ fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: b
 /// The ordered pair (i, j)'s rule (`PairRule`).
 fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, drives: &Drives, i: usize, j: usize) -> PairRule {
     let (b, rel, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
-    let (car, air, rest, refm, cross, d) = pair_mode_rule(places, countries, mp, drives, i, j, near, km);
-    PairRule { b, rel, near, km, car, air, rest, refm, cross, rt: d.rt, rk: d.rk }
+    pair_mode_rule(places, countries, mp, drives, i, j, near, km, PairRule { b, rel, near, km, ..PairRule::default() })
 }
-/// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart: whether a car can go,
-/// the share of the trips not by rail that fly, the weight of every mode but rail, the reference
-/// minutes, the crossings' minutes and the routed drive.
+/// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart, into `r`: whether a car
+/// can go, the flight, the crossings, the routed drive, and the share of the trips not by rail that
+/// fly, over i's income groups by their trips (T-1431).
 #[inline]
-fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &Drives, i: usize, j: usize, near: bool, km: f64) -> (bool, f32, f32, f32, f32, Drive) {
+#[allow(clippy::too_many_arguments)]
+fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &Drives, i: usize, j: usize, near: bool, km: f64, mut r: PairRule) -> PairRule {
     let (p, q) = (&places[i], &places[j]);
     // T-378: a car within a landmass; a plane between far places each with an airport;
     // both by place, the same whoever builds what (very far pairs coarse, T-362)
-    let car = p.road == q.road;
-    // the best pair of airports: the drives to them, and a direct flight or a change
-    let flight = if i == j || near {
-        None
-    } else {
-        let mut best: Option<f64> = None;
+    r.car = p.road == q.road;
+    // the best pair of airports: the drives to them, and a direct flight or a change (the fare is
+    // the same for every pair, so the least minutes)
+    r.fl = Cost::NONE;
+    if i != j && !near {
         for (x, xd) in &p.air {
             for (y, yd) in &q.air {
                 let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
-                let v = air_min(km, x + y, direct, p.fw);
-                best = Some(best.map_or(v, |b| b.min(v)));
+                let c = air_cost(km, x + y, direct);
+                if c.min < r.fl.min {
+                    r.fl = c;
+                }
             }
         }
-        best.map(|v| v as f32)
-    };
-    let d = if car { drives.get(i, j) } else { Drive::RULE };
-    let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) + d.ferry_min() } else { 0. };
-    let car_m = routed_car_min(km as f32, (0.5 * (p.park + q.park)) as f32, d.rt, d.rk) + cross;
-    let (air, rest, refm) = match (car, flight) {
-        (true, Some(f)) => {
-            let w = (-mp.mode_beta(car_m) * (f - car_m)).clamp(-80., 80.).exp();
-            (w / (1. + w), 1. + w, car_m)
-        }
-        (false, Some(f)) => (1., 1., f),
-        _ => (0., 1., car_m),
-    };
-    (car, air, rest, refm, cross, d)
+    }
+    let d = if r.car { drives.get(i, j) } else { Drive::RULE };
+    r.cross = if r.car && i != j { crossing_cost((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
+    (r.rt, r.rk) = (d.rt, d.rk);
+    let (split, w) = (r.split_car(p, q), p.w());
+    r.air = p.groups().iter().map(|&(t, f)| t * r.alt(split, split, w * f, mp).air).sum();
+    r
 }
 struct Zone {
     /// centre in the output frame, and on the unit sphere (zeros in a plane pack)
@@ -471,6 +558,8 @@ struct Group {
 }
 /// The market's own data, shared (`Rc`) by every market `beside` it (T-409).
 struct Market {
+    /// T-1431: some place's riders come in income groups (their fares then need `pair_km`)
+    grouped: bool,
     rule: Rule,
     /// zone distances on the sphere; false: a plane pack (straight in its plane)
     ground: bool,
@@ -541,17 +630,15 @@ struct Corridors {
     place_pairs: usize,
 }
 
-/// `drive` is the reference alternative's perceived minutes (the car's, or with no car the
-/// plane's) and `rest` the weight of every mode but rail against it (T-378).
+/// A longer trips' zone pair, both ways apart: the modes but rail come from its place pair's rule
+/// and `car` (`PairRule::alt`, T-378, T-1431).
 struct Pair {
     a: u32,
     b: u32,
     trips: f64,
-    drive: f32,
-    rest: f32,
     corridor: u32,
-    /// the car's perceived minutes even where no car can go, which set the scale (T-495)
-    car: f32,
+    /// the car's cost even where no car can go, which sets the scale (T-495)
+    car: Cost,
     /// the station choice's band by the zones' distance (`Params::band`, T-718)
     band: u8,
 }
@@ -848,14 +935,16 @@ const ROAD_DETOUR: f32 = 1.25;
 /// longer trip (NHTS: about two).
 const CAR_USD_PER_KM: f32 = 0.15;
 const LONG_OCCUPANCY: f32 = 2.;
-/// T-276: a longer trip's car as perceived minutes over `d` km to a zone where parking costs `park`.
+/// T-276: a longer trip's car over `d` km to a zone where parking costs `park` perceived minutes,
+/// at `FARE_MIN_PER_USD` (tests).
 #[cfg(test)]
 fn car_min(d: f32, park: f32) -> f32 {
-    routed_car_min(d, park, 1., 1.)
+    routed_car(d, park, 1., 1.).at(FARE_MIN_PER_USD)
 }
-/// `car_min` with the rule's minutes and road km times `rt` and `rk` (T-279, `Drive`).
-fn routed_car_min(d: f32, park: f32, rt: f32, rk: f32) -> f32 {
-    drive_min(d) * rt + (d * ROAD_DETOUR * rk * CAR_USD_PER_KM * FARE_MIN_PER_USD + park) / LONG_OCCUPANCY
+/// A longer trip's car over `d` km to parking `park`, with the rule's minutes and road km times
+/// `rt` and `rk` (T-279, `Drive`): parking and the running cost each person's, shared by two.
+fn routed_car(d: f32, park: f32, rt: f32, rk: f32) -> Cost {
+    Cost { min: drive_min(d) * rt + park / LONG_OCCUPANCY, usd: d * ROAD_DETOUR * rk * CAR_USD_PER_KM / LONG_OCCUPANCY }
 }
 /// A car carried over water by a shuttle or ferry where the landmass's fixed link takes no cars
 /// at its own price (T-712): the fare per car in dollars and the minutes beyond the straight drive.
@@ -867,14 +956,14 @@ struct Crossing {
 const CHANNEL: Crossing = Crossing { usd: 150., min: 60. };
 /// The Tsugaru Strait: the Seikan Tunnel carries no cars, the Aomori-Hakodate ferry (3 h 40) does.
 const TSUGARU: Crossing = Crossing { usd: 170., min: 240. };
-/// The car's perceived minutes for the crossings between two places (country, latitude) on one
-/// landmass; the fare is shared like the car's running cost.
-fn crossing_min(a: (&str, f64), b: (&str, f64)) -> f32 {
+/// The car's cost for the crossings between two places (country, latitude) on one landmass; the
+/// fare is shared like the car's running cost.
+fn crossing_cost(a: (&str, f64), b: (&str, f64)) -> Cost {
     let hokkaido = |p: (&str, f64)| p.0 == "JP" && p.1 > 41.4;
-    let mut m = 0.;
+    let mut m = Cost::default();
     for (on, c) in [((a.0 == "GB") != (b.0 == "GB"), &CHANNEL), (hokkaido(a) != hokkaido(b), &TSUGARU)] {
         if on {
-            m += c.min + c.usd * FARE_MIN_PER_USD / LONG_OCCUPANCY;
+            m = m.plus(Cost { min: c.min, usd: c.usd / LONG_OCCUPANCY });
         }
     }
     m
@@ -886,16 +975,17 @@ const AIR_TERMINAL_MIN: f64 = 90.;
 const AIR_KMH: f64 = 750.;
 const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;
-const AIR_FARE_USD: f64 = 100.;
+/// T-1431: the base refitted against published rail and air shares with riders by income group
+/// (notes/T-1431.md).
+const AIR_FARE_USD: f64 = 30.;
 const AIR_USD_PER_KM: f64 = 0.05;
 /// T-1430: the wait for a flight, whose frequency is not modelled: rail's planned first wait
 /// (`kernel::planned_board_cost`) at a flight every 2 hours.
 const AIR_WAIT_MIN: f64 = 25.;
-/// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends, its
-/// fare at `fw` perceived minutes a dollar, the departing place's (T-1277; 0: `FARE_MIN_PER_USD`).
-fn air_min(km: f64, access: f64, direct: bool, fw: f64) -> f64 {
-    let fw = if fw > 0. { fw } else { FARE_MIN_PER_USD as f64 };
-    access + AIR_TERMINAL_MIN + AIR_WAIT_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * fw
+/// A flight over `km` with `access` minutes of driving at the two ends: its minutes and its fare.
+fn air_cost(km: f64, access: f64, direct: bool) -> Cost {
+    let min = access + AIR_TERMINAL_MIN + AIR_WAIT_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN };
+    Cost { min: min as f32, usd: (AIR_FARE_USD + AIR_USD_PER_KM * km) as f32 }
 }
 
 /// T-1373: how far a superholiday's rush leans a pair's longer trips: going out, those from the
@@ -1543,6 +1633,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
                 pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).cloned().collect();
                 pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
                 pl.fw = if r.fw.is_finite() && r.fw > 0. { r.fw } else { 0. };
+                (pl.gr, pl.ng) = income_groups(&r.fg)?;
                 for &(j, t) in &r.near {
                     if (j as usize) < np && t.is_finite() && t >= 0. {
                         near.insert((r.place.min(j as usize) as u32, r.place.max(j as usize) as u32), t);
@@ -1618,7 +1709,9 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         rules.out.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, i, j)));
         rules.inn.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, j, i)));
     }
+    let grouped = places.iter().any(|p| p.groups().iter().any(|g| g.1 != 1.));
     let mut m = Market {
+        grouped,
         rule,
         ground,
         world,
@@ -1946,6 +2039,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
             air: pl.air.clone(),
             park: pl.park,
             fw: 0.,
+            fg: vec![],
         });
     }
     Ok(out)
@@ -2574,7 +2668,7 @@ impl IntercityApi {
         let mut search = DestSearch::new(g, p);
         let mut kept: Vec<Option<DestStrategy>> = (0..s).map(|_| None).collect();
         let mut held = 0;
-        let mut km = if self.zone_fx.is_empty() { vec![] } else { vec![0f32; s * s] };
+        let mut km = if self.need_km() { vec![0f32; s * s] } else { vec![] };
         let (mut col, mut dep) = (vec![], vec![]);
         let mut entry: Vec<(u32, u32, f32)> = vec![];
         for dst in (0..s).filter(|&d| self.want[d]) {
@@ -2606,9 +2700,9 @@ impl IntercityApi {
         }, s)
     }
     /// T-1286: each station pair's expected fare km (`FareX::km`) on the strategies towards the
-    /// stations `want`ed that `strategy` has; empty while every fare factor is 1.
+    /// stations `want`ed that `strategy` has; empty while no one needs them (`need_km`).
     fn pair_km<'s>(&self, g: &Graph, want: &[bool], strategy: impl Fn(usize) -> Option<Strategy<'s>>) -> Vec<f32> {
-        if self.zone_fx.is_empty() {
+        if !self.need_km() {
             return vec![];
         }
         let s = g.n_st;
@@ -2625,9 +2719,16 @@ impl IntercityApi {
     fn fare_x<'x>(&self, g: &'x Graph, p: &Params, km: &'x [f32]) -> Option<FareX<'x>> {
         (!km.is_empty()).then(|| FareX { km, base: p.fare_min, per_km: self.fare_per_km, curve: &g.fare_curve })
     }
-    /// What `rail_logsum_x` takes for trips from `zone`: none where its factor is 1.
-    fn fx_of<'x>(&self, fx: &'x Option<FareX<'x>>, zone: usize) -> Option<(&'x FareX<'x>, f32)> {
-        fx.as_ref().and_then(|x| self.zone_fx.get(zone).filter(|&&d| d != 0.).map(|&d| (x, d)))
+    /// What `rail_logsum_x` takes for trips from `zone` by riders weighing money at `f` times its
+    /// country's (T-1431, an income group's): none where the factor comes to 1.
+    fn fx_of<'x>(&self, fx: &'x Option<FareX<'x>>, zone: usize, f: f32) -> Option<(&'x FareX<'x>, f32)> {
+        let d = (1. + self.zone_fx.get(zone).copied().unwrap_or(0.)) * f - 1.;
+        fx.as_ref().filter(|_| d != 0.).map(|x| (x, d))
+    }
+    /// Whether the stations' expected fare km are needed (`pair_km`): a fare factor set somewhere,
+    /// or a place's riders in income groups (T-1431).
+    fn need_km(&self) -> bool {
+        !self.zone_fx.is_empty() || self.m.grouped
     }
     /// `pair_km`'s column towards `dst`.
     fn put_km(&self, g: &Graph, st: Strategy, dst: usize, col: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>, km: &mut [f32]) {
@@ -2645,7 +2746,7 @@ impl IntercityApi {
     fn demand(&self, g: &Graph, r: &[f32], re: &[f32], p: &Params, q: usize, km: &[f32]) -> Demand {
         let s = g.n_st;
         let fx = self.fare_x(g, p, km);
-        let fx_of = |zone: usize| self.fx_of(&fx, zone);
+        let fx_of = |zone: usize| self.fx_of(&fx, zone, 1.);
         // T-1300: the riders' fare sensitivity: each trip's rail share with its fare dearer by
         // `FARE_D_MIN` perceived minutes of the market's (times its fare factor), less its share
         let mut rail_d = FareSense::default();
@@ -2655,7 +2756,7 @@ impl IntercityApi {
             s.d_km += dd / FARE_D_MIN as f64 * km;
             s.km += rail * km;
         };
-        let step = |zone: usize| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.));
+        let step = |zone: usize, f: f32| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.)) * f;
         let mut od = vec![0.; s * s];
         let mut od_r = if s * s * 4 <= LEAN_OD_BYTES { vec![0f32; s * s] } else { vec![] };
         let mut rail = 0.;
@@ -2669,35 +2770,46 @@ impl IntercityApi {
         let mut cur = vec![0u32; 2 * s];
         let mut put = |st: &mut [f32], x: usize, c: usize, v: f32| st[pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize])] += v;
         let mut terms: Vec<(u32, u32, f64)> = vec![];
+        let m = &self.m;
         for (pi, pair) in self.pairs.iter().enumerate() {
-            let trips = pair.trips * SHARES[q] as f64;
-            let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
-            let (rail_c, sum) = rail_logsum_x(re, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), fx_of(pair.a as usize), &mut terms);
-            let bt = p.mode_beta(pair.car);
-            let v_rail = if sum > 0. { ((-bt * (rail_c - pair.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
-            let fraction = v_rail / (pair.rest as f64 + v_rail);
-            let r = trips * fraction;
-            rail += r;
-            if sum > 0. {
-                let v = ((-bt * (rail_c + step(pair.a as usize) - pair.drive)).clamp(-80., 80.) as f64).exp();
-                add(&mut rail_d, trips * (v / (pair.rest as f64 + v) - fraction), r, zkm(pair.a as usize, pair.b as usize));
-            }
-            cor[pair.corridor as usize] += r;
-            pair_rail[pi] = r as f32;
-            if sum > 0. {
-                let (ca, cb) = (nz + col[pair.a as usize] as usize, col[pair.b as usize] as usize);
-                let lean = if od_r.is_empty() { 0. } else { self.m.lean(self.m.zones[pair.a as usize].place, self.m.zones[pair.b as usize].place) };
-                for &(sa, sb, v) in &terms {
-                    let (sa, sb) = (sa as usize, sb as usize);
-                    let rr = (r * v / sum) as f32;
-                    od[sa * s + sb] += rr;
-                    if lean != 0. {
-                        od_r[sa * s + sb] += rr * lean;
+            let (za, zb) = (pair.a as usize, pair.b as usize);
+            let (pa, pb) = (m.zones[za].place, m.zones[zb].place);
+            let (from, to) = (&m.places[pa], &m.places[pb]);
+            let rule = m.pr(pa, pb);
+            let split = rule.split_car(from, to);
+            let (a, b) = (&self.access[za], &self.access_work[zb]);
+            let (ca, cb) = (nz + col[za] as usize, col[zb] as usize);
+            let lean = if od_r.is_empty() { 0. } else { m.lean(pa, pb) };
+            let mut r_all = 0f64;
+            // T-1431: each income group of the place the trip starts from, every mode's money at
+            // its riders' minutes a dollar
+            for &(share, f) in from.groups() {
+                let trips = pair.trips * SHARES[q] as f64 * share as f64;
+                let alt = rule.alt(pair.car, split, from.w() * f, &m.mp);
+                let (rail_c, sum) = rail_logsum_x(re, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), alt.car), self.fx_of(&fx, za, f), &mut terms);
+                let bt = p.mode_beta(alt.car);
+                let v_rail = if sum > 0. { ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
+                let fraction = v_rail / (alt.rest as f64 + v_rail);
+                let r = trips * fraction;
+                r_all += r;
+                if sum > 0. {
+                    let v = ((-bt * (rail_c + step(za, f) - alt.drive)).clamp(-80., 80.) as f64).exp();
+                    add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, zb));
+                    for &(sa, sb, v) in &terms {
+                        let (sa, sb) = (sa as usize, sb as usize);
+                        let rr = (r * v / sum) as f32;
+                        od[sa * s + sb] += rr;
+                        if lean != 0. {
+                            od_r[sa * s + sb] += rr * lean;
+                        }
+                        put(&mut st, sa, cb, rr);
+                        put(&mut st, sb, ca, rr);
                     }
-                    put(&mut st, sa, cb, rr);
-                    put(&mut st, sb, ca, rr);
                 }
             }
+            rail += r_all;
+            cor[pair.corridor as usize] += r_all;
+            pair_rail[pi] = r_all as f32;
         }
         // T-276: commutes between zones, chosen as the local layer chooses: once per commuter on
         // this period's service from home to work, the trip home on the same station pair reversed
@@ -2718,7 +2830,7 @@ impl IntercityApi {
             // T-918: rail against the car on the cost ratio, as the local commutes
             let frac = pc.ratio_share(rail_c, cp.car) as f64;
             c_frac[ci] = frac as f32;
-            add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, wz));
+            add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h, 1.), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, wz));
             let (ro, rr_) = (out * frac, ret * frac);
             c_rail += ro + rr_;
             c_cor[cp.corridor] += ro + rr_;
@@ -2755,7 +2867,7 @@ impl IntercityApi {
             let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
             let frac = (1. - w0) * pe.ratio_share(rail_c, ep.car) as f64;
             e.frac[ei] = frac as f32;
-            let rd = rail_c + step(h);
+            let rd = rail_c + step(h, 1.);
             let ud = (pe.mode_beta(ep.car) * (ep.car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
             add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, ep.car) as f64 - frac), (out + ret) * frac, zkm(h, az));
             let (ro, rr_) = (out * frac, ret * frac);
@@ -2843,16 +2955,14 @@ impl IntercityApi {
                 if any[(bit - 1) / 64] >> ((bit - 1) % 64) & 1 == 0 {
                     continue;
                 }
-                let r = m.pr(za.place, zb.place);
+                let (r, back) = (m.pr(za.place, zb.place), m.pr(zb.place, za.place));
                 let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.open_corridor(za.place, zb.place) as u32;
-                let car = |park: f32| r.car_min(d, park);
-                let drive = |park: f32| if r.car { car(park) } else { r.refm };
                 let (a, b) = (a as u32, b as u32);
                 let band = self.base.band_of_d2(d * d * 1e6) as u8;
-                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor, car: car(zb.park), band });
-                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car(za.park), band });
+                pairs.push(Pair { a, b, trips, corridor, car: r.car_cost(d, zb.park), band });
+                pairs.push(Pair { a: b, b: a, trips, corridor, car: back.car_cost(d, za.park), band });
             }
         }
         self.pairs = pairs;
@@ -2875,7 +2985,7 @@ impl IntercityApi {
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
             let r = m.pr(zh.place, zw.place);
-            let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross;
+            let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let corridor = m.open_corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let band = pc.band_of_d2(km * km * 1e6) as u8;
@@ -2897,7 +3007,7 @@ impl IntercityApi {
             let (zh, za) = (&m.zones[h], &m.zones[a]);
             let km = m.zone_km(zh, za) as f32;
             let r = m.pr(zh.place, za.place);
-            let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross;
+            let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let w = ep.walk.min(0.999);
             self.epair_of[e] = self.epairs.len() as u32;
             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
@@ -3572,8 +3682,9 @@ impl IntercityApi {
                 } else {
                     ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
                 };
-                let (car, air, ..) = pair_mode_rule(&m.places, &m.countries, &m.mp, &m.drives, a, b, km < m.rule.near_km, km);
-                (car, air)
+                let near = km < m.rule.near_km;
+                let r = pair_mode_rule(&m.places, &m.countries, &m.mp, &m.drives, a, b, near, km, PairRule { near, km, ..PairRule::default() });
+                (r.car, r.air)
             }
         };
         for (a, b) in m.each_corridor() {

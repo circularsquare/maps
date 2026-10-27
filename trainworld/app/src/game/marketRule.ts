@@ -9,7 +9,7 @@
 import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
 import { dataUrl } from "./dataBase";
-import { fareWeight } from "./income";
+import { FARE_BASELINE, fareWeight, incomeGroups } from "./income";
 import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
@@ -38,7 +38,7 @@ export interface MarketRow {
 }
 
 interface Rule {
-  R: number; A: number; onset_km: [number, number]; d0_km: number; G: number; D1_km: number; eps_t: number;
+  R: number; A: number; onset_km: [number, number]; d0_km: number; G: number; D1_km: number; eps: number; eps_t: number;
   tail_onset_km: [number, number]; border_eps: number; border: number; Rt: number; near_km: number;
 }
 const RULE = REGISTRY.market.rule as Rule;
@@ -51,7 +51,6 @@ export const DRIVE_FIXED_MIN = 15;
 export const CAR_USD_PER_KM = 0.15;
 /** people sharing the car on a longer trip */
 export const CAR_SHARED_BY = 2;
-export const MIN_PER_USD = 3;
 export const AIR_TERMINAL_MIN = 90;
 /** T-1430: the wait for a flight, whose frequency is not modelled (rail's planned first wait at a
  * flight every 2 hours) */
@@ -59,7 +58,8 @@ export const AIR_WAIT_MIN = 25;
 export const AIR_KMH = 750;
 export const AIR_FIXED_MIN = 30;
 export const AIR_NO_DIRECT_MIN = 60;
-export const AIR_FARE_USD = 100;
+/** T-1431: refitted against published rail and air shares with riders by income group */
+export const AIR_FARE_USD = 30;
 export const AIR_USD_PER_KM = 0.05;
 const BETA = 0.1, DAMP_MIN = 60;
 const OPEN_AREA = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "NO", "IS", "CH", "LI", "GB"]);
@@ -209,8 +209,9 @@ export function crossingsOf(a: MarketRow, b: MarketRow): Crossing[] {
 }
 
 /** The car of a longer trip over `km` (centre to centre) to a place where parking counts `park`
- * perceived minutes: each part's real amount and its perceived minutes. Money is each person's, the
- * car shared by `CAR_SHARED_BY`. */
+ * perceived minutes: each part's real amount and its perceived minutes, the money at `w` perceived
+ * minutes a dollar (T-1431: the rider's, as every mode's). Money is each person's, the car shared by
+ * `CAR_SHARED_BY`. */
 export interface CarCost {
   km: number;
   roadKm: number;
@@ -223,26 +224,28 @@ export interface CarCost {
   /** parking where the trip ends, each person's perceived minutes */
   parkMin: number;
   crossings: Crossing[];
+  /** perceived minutes a dollar */
+  w: number;
   /** perceived minutes in all */
   total: number;
 }
-export function carCost(km: number, park: number, crossings: Crossing[], drive: Drive = RULE_DRIVE): CarCost {
+export function carCost(km: number, park: number, crossings: Crossing[], drive: Drive, w: number): CarCost {
   const roadKm = km * ROAD_DETOUR * drive.rk;
   const driveMin = (DRIVE_FIXED_MIN + ((km * ROAD_DETOUR) / CAR_KMH) * 60) * drive.rt;
   const runUsd = (roadKm * CAR_USD_PER_KM) / CAR_SHARED_BY;
   const parkMin = park / CAR_SHARED_BY;
-  const total = driveMin + runUsd * MIN_PER_USD + parkMin + crossings.reduce((s, c) => s + crossingMin(c), 0);
-  return { km, roadKm, routed: drive !== RULE_DRIVE, driveMin, runUsd, parkMin, crossings, total };
+  const total = driveMin + runUsd * w + parkMin + crossings.reduce((s, c) => s + crossingMin(c, w), 0);
+  return { km, roadKm, routed: drive !== RULE_DRIVE, driveMin, runUsd, parkMin, crossings, w, total };
 }
 /** The parts of a car cost the sim gave as `total` perceived minutes over a mean distance of `km`
  * (its 6 km area pairs trip weighted): the drive, its running and the crossings by the rule and the
  * places' `drive`, which are linear in the distance, and parking (the far areas' mean) the rest. */
-export function carPartsOf(km: number, total: number, crossings: Crossing[], drive: Drive = RULE_DRIVE): CarCost {
-  const c = carCost(km, 0, crossings, drive);
+export function carPartsOf(km: number, total: number, crossings: Crossing[], drive: Drive, w: number): CarCost {
+  const c = carCost(km, 0, crossings, drive, w);
   return { ...c, parkMin: Math.max(0, total - c.total), total };
 }
-/** A crossing's perceived minutes: its minutes and each person's share of the fare. */
-export const crossingMin = (c: Crossing) => c.min + (c.usd / CAR_SHARED_BY) * MIN_PER_USD;
+/** A crossing's perceived minutes: its minutes and each person's share of the fare at `w` a dollar. */
+export const crossingMin = (c: Crossing, w: number) => c.min + (c.usd / CAR_SHARED_BY) * w;
 
 /** A flight between two places by their best pair of airports. */
 export interface FlightCost {
@@ -253,13 +256,17 @@ export interface FlightCost {
   /** minutes in the air, the flight's fixed minutes and any change included */
   flightMin: number;
   fareUsd: number;
-  /** perceived minutes a dollar of it, the departing country's (T-1277) */
+  /** perceived minutes a dollar of it for a rider of average income, the departing country's (T-1277) */
   fw: number;
+  /** every minute but the fare's */
+  min: number;
   total: number;
 }
 function flightOf(a: MarketRow, b: MarketRow, km: number): FlightCost | null {
   let best: FlightCost | null = null;
   const ok = (x: [number, number[]]) => Number.isFinite(x[0]) && x[0] >= 0;
+  const fw = fareWeight(a.country);
+  // the fare is the same for every pair of airports: the least minutes
   for (const x of a.air) {
     if (!ok(x)) continue;
     for (const y of b.air) {
@@ -267,10 +274,8 @@ function flightOf(a: MarketRow, b: MarketRow, km: number): FlightCost | null {
       const direct = x[1].includes(b.place) || y[1].includes(a.place);
       const flightMin = (km / AIR_KMH) * 60 + AIR_FIXED_MIN + (direct ? 0 : AIR_NO_DIRECT_MIN);
       const fareUsd = AIR_FARE_USD + AIR_USD_PER_KM * km;
-      // T-1277: at the departing country's minutes a dollar
-      const fw = fareWeight(a.country);
-      const total = x[0] + y[0] + AIR_TERMINAL_MIN + AIR_WAIT_MIN + flightMin + fareUsd * fw;
-      if (!best || total < best.total) best = { accessFrom: x[0], accessTo: y[0], direct, flightMin, fareUsd, fw, total };
+      const min = Math.fround(x[0] + y[0] + AIR_TERMINAL_MIN + AIR_WAIT_MIN + flightMin);
+      if (!best || min < best.min) best = { accessFrom: x[0], accessTo: y[0], direct, flightMin, fareUsd, fw, min, total: min + fareUsd * fw };
     }
   }
   return best;
@@ -303,13 +308,20 @@ export function corridorOf(a: number, b: number): Corridor | null {
   const near = km < RULE.near_km;
   const road = p.road === q.road;
   const flight = near ? null : flightOf(p, q, km);
-  const car = road ? carCost(km, 0.5 * (parkOf(p) + parkOf(q)), crossingsOf(p, q), driveOf(a, b)) : null;
+  const fw = fareWeight(p.country);
+  const park = 0.5 * (parkOf(p) + parkOf(q));
+  const car = road ? carCost(km, park, crossingsOf(p, q), driveOf(a, b), fw) : null;
+  // T-1431: the share that flies over a's income groups by their trips, every mode's money at each
+  // group's minutes a dollar
   let air = 0;
   if (car && flight) {
-    const w = Math.exp(Math.max(-80, Math.min(80, -modeBeta(car.total) * (flight.total - car.total))));
-    air = w / (1 + w);
+    for (const g of incomeGroups(p.country, RULE.eps)) {
+      const w = fw * g.factor, c = carCost(km, park, car.crossings, driveOf(a, b), w).total;
+      const v = Math.exp(Math.max(-80, Math.min(80, -modeBeta(c) * (flight.min + flight.fareUsd * w - c))));
+      air += g.share * (v / (1 + v));
+    }
   } else if (flight) air = 1;
-  const refMin = car ? car.total : flight ? flight.total : carCost(km, 0.5 * (parkOf(p) + parkOf(q)), []).total;
+  const refMin = car ? car.total : flight ? flight.total : carCost(km, park, [], RULE_DRIVE, fw).total;
   return { km, near, road, car, flight, air, carShare: car ? 1 - air : 0, refMin };
 }
 const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) : 0);
@@ -319,7 +331,7 @@ const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) 
 export function carBetween(from: number, to: number): CarCost | null {
   const p = marketRow(from), q = marketRow(to);
   if (!p || !q || from === to || p.road !== q.road) return null;
-  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to));
+  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), fareWeight(p.country));
 }
 
 const ground = (d: number) => {
@@ -379,7 +391,7 @@ export function rowsAnswer(from: MarketEnd, to: MarketEnd, day: number): (Market
     return {
       round: 0, trips: n, rail: 0, air: n * c.air, car: n * c.carShare,
       railPerceived: NaN, carPerceived: car ? car.total : NaN, refPerceived: c.refMin,
-      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: MIN_PER_USD, why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
+      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: fareWeight(FARE_BASELINE), why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
     };
   });
 }
