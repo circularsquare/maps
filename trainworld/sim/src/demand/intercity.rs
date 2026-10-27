@@ -886,7 +886,8 @@ fn rail_logsum(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, 
 }
 /// T-1286: the fares of trips from one country weighed at a factor of the market's (the player's
 /// fare scale there over its income's), on each station pair's strategy as searched: its expected
-/// fare km (`trip_km_on`, S x S as `Skims::r`) back to the fare's perceived minutes.
+/// fare km (`trip_km_on`, S x S as `Skims::r`, or a column at a time, T-1545) back to the fare's
+/// perceived minutes.
 struct FareX<'a> {
     km: &'a [f32],
     base: f32,
@@ -897,13 +898,41 @@ impl FareX<'_> {
     /// The perceived minutes of the fare from station `a` to `b` in the market's weight.
     #[inline]
     fn fare(&self, a: usize, b: usize, s: usize) -> f32 {
-        let k = self.km[a * s + b];
+        self.fare_of(self.km[a * s + b])
+    }
+    /// The same for a trip of `k` expected fare km.
+    #[inline]
+    fn fare_of(&self, k: f32) -> f32 {
         self.base + self.per_km * k + self.curve.extra(k)
     }
 }
 /// `rail_logsum` with the fares weighed at `1 + x.1` (`FareX`).
 #[allow(clippy::too_many_arguments)]
 fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, x: Option<(&FareX, f32)>, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
+    rail_logsum_by(a, b, beta, th, terms, |sa, j| {
+        let c = r[sa * s + b[j].0];
+        match x {
+            None => c + fare,
+            Some((fx, d)) => c + fare + d * fx.fare(sa, b[j].0, s),
+        }
+    })
+}
+/// `rail_logsum_x` on the route costs and fare km towards `b`'s stations as columns: `cols[j]` for
+/// `b[j]`, each by the station the trip starts from (T-1545).
+#[allow(clippy::too_many_arguments)]
+fn rail_logsum_cols(cols: &[(&[f32], &[f32])], fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, x: Option<(&FareX, f32)>, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
+    rail_logsum_by(a, b, beta, th, terms, |sa, j| {
+        let (r, km) = cols[j];
+        match x {
+            None => r[sa] + fare,
+            Some((fx, d)) => r[sa] + fare + d * fx.fare_of(km[sa]),
+        }
+    })
+}
+/// The logsum of `rail_logsum_x` with each station pair's rail cost, the base fare included, from
+/// `cost(sa, j)` for `b[j]`.
+#[inline(always)]
+fn rail_logsum_by(a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, terms: &mut Vec<(u32, u32, f64)>, cost: impl Fn(usize, usize) -> f32) -> (f32, f64) {
     terms.clear();
     let k = (th / beta) as f64;
     let mut top = f64::NEG_INFINITY;
@@ -917,13 +946,9 @@ fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize
             continue;
         }
         let la = k * (wa as f64).ln();
-        let row = &r[sa * s..(sa + 1) * s];
         for (j, &(sb, wb)) in b.iter().enumerate() {
             // a rail journey must actually board a train
-            let cost = match x {
-                None => row[sb] + fare,
-                Some((fx, d)) => row[sb] + fare + d * fx.fare(sa, sb, s),
-            };
+            let cost = cost(sa, j);
             if sa == sb || wb <= 0. || !cost.is_finite() {
                 continue;
             }
@@ -942,25 +967,84 @@ fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize
     }
     (-((top + sum.ln()) / th as f64) as f32, sum)
 }
-/// The terms `rail_logsum_x` would give for the same arguments, counted into `cnt` by the station
-/// each of its two entries in `SparseOdBuilder` goes to (T-1558).
-fn rail_term_counts(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], x: Option<(&FareX, f32)>, cnt: &mut [u32]) {
-    for &(sa, wa) in a {
-        if wa <= 0. {
-            continue;
-        }
-        let row = &r[sa * s..(sa + 1) * s];
-        for &(sb, wb) in b {
-            let cost = match x {
-                None => row[sb] + fare,
-                Some((fx, d)) => row[sb] + fare + d * fx.fare(sa, sb, s),
-            };
-            if !(sa == sb || wb <= 0. || !cost.is_finite()) {
-                cnt[sa] += 1;
-                cnt[sb] += 1;
+/// Items `0..n` by zone (`zone(i)`, of `nz` zones), each zone's in their own order: offsets and items.
+fn by_zone(nz: usize, n: usize, zone: impl Fn(usize) -> usize) -> (Vec<u32>, Vec<u32>) {
+    let mut off = vec![0u32; nz + 1];
+    for i in 0..n {
+        off[zone(i) + 1] += 1;
+    }
+    for z in 0..nz {
+        off[z + 1] += off[z];
+    }
+    let mut fill = off.clone();
+    let mut ix = vec![0u32; n];
+    for i in 0..n {
+        let z = zone(i);
+        ix[fill[z] as usize] = i as u32;
+        fill[z] += 1;
+    }
+    (off, ix)
+}
+/// Where `IntercityApi::pass_window` gets a destination's route costs and strategy (T-1545): a
+/// table of every destination's, or a search for it alone.
+enum Columns<'a> {
+    Skims(&'a Skims),
+    Search(DestSearch<'a>),
+}
+impl<'a> Columns<'a> {
+    /// Destination `dst`'s route costs from each station into `r`, the same with the planned first
+    /// wait into `re` where any differs (`has_re`, T-1430), and its strategy (none if not searched).
+    fn fill(&mut self, dst: usize, r: &mut [f32], re: &mut [f32], has_re: &mut bool) -> Option<Held<'a>> {
+        let put = |r: &[f32], re: &mut [f32], has_re: &mut bool, entry: &[(u32, f32)]| {
+            *has_re = !entry.is_empty();
+            if *has_re {
+                re.copy_from_slice(r);
+                for &(src, c) in entry {
+                    re[src as usize] = c;
+                }
+            }
+        };
+        match self {
+            Columns::Skims(sk) => {
+                let sk: &'a Skims = sk;
+                let s = sk.s;
+                for (src, v) in r.iter_mut().enumerate() {
+                    *v = sk.r[src * s + dst];
+                }
+                let slot = sk.slot[dst];
+                if slot == u32::MAX {
+                    *has_re = false;
+                    return None;
+                }
+                put(r, re, has_re, &sk.entry[slot as usize]);
+                Some(Held::Ref(sk.strategy(slot as usize)))
+            }
+            Columns::Search(q) => {
+                let mut d = q.run_col(dst, r);
+                put(r, re, has_re, &std::mem::take(&mut d.entry));
+                Some(Held::Own(d))
             }
         }
     }
+    /// Destination `dst`'s strategy alone.
+    fn strategy(&mut self, dst: usize) -> Option<Held<'a>> {
+        match self {
+            Columns::Skims(sk) => {
+                let sk: &'a Skims = sk;
+                let slot = sk.slot[dst];
+                (slot != u32::MAX).then(|| Held::Ref(sk.strategy(slot as usize)))
+            }
+            Columns::Search(q) => Some(Held::Own(q.run(dst, None))),
+        }
+    }
+}
+thread_local! {
+    /// The bytes of searched strategies `IntercityApi::pass_window` keeps from a station's search to
+    /// its assignment (T-1545); the rest are searched again for it. A cell so benches can vary it.
+    static WINDOW_STRATEGY_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(128 << 20) };
+    /// `pass_window`'s most read slots and trip slots at once, most bytes of strategies kept, and
+    /// searches and searches again, over the passes since it was reset (benches).
+    static WINDOW_STATS: std::cell::Cell<[usize; 5]> = const { std::cell::Cell::new([0; 5]) };
 }
 struct Period {
     net: super::network::Network,
@@ -1010,10 +1094,9 @@ const ST_W: usize = 18;
 const SITE_M: f32 = 600.;
 #[cfg(test)]
 const MARKETS: usize = 3;
-/// The bytes of strategies a market's pass holds at once (T-761): past this its destinations are
-/// searched one at a time (`IntercityApi::pass_streamed`), this much of them kept between sweeps.
-/// Not more (T-780): in WASM the heap grows a piece at a time for the strategies kept, which cost
-/// minutes on all of Japan's first pass, and growing it at once raised the peak by 600 MB.
+/// The bytes of every destination's strategy past which a market's pass searches each destination
+/// as its window needs it (`IntercityApi::pass_searched`, T-761, T-1545) instead of on the table
+/// it shares with the cities.
 const MARKET_STRATEGY_BYTES: usize = 256 << 20;
 /// T-780: the trips a day each way a sampled zone pair carries (`solved_pairs`).
 const MARKET_CHUNK: f64 = 1.;
@@ -1029,128 +1112,13 @@ impl Held<'_> {
             Held::Own(d) => d.view(),
         }
     }
-}
-/// The commutes' station to station trips by destination (T-761: about 1.6 million of Japan's
-/// 106 million station pairs carry any): destination d's origins `src[off[d]..off[d + 1]]`
-/// ascending, their riders in `v`.
-struct SparseOd {
-    off: Vec<u32>,
-    src: Vec<u32>,
-    v: Vec<f32>,
-}
-impl SparseOd {
-    /// From (destination, origin, riders) in the order a dense table would have added them up:
-    /// each pair's sum is the dense table's, added in the same order.
-    fn of(s: usize, mut adds: Vec<(u32, u32, f32)>) -> SparseOd {
-        // stable: a pair's riders stay in the order they were added
-        adds.sort_by_key(|e| (e.0, e.1));
-        // each pair's sum is written over the list's own front, so the list is the only large copy
-        let (mut i, mut n) = (0, 0);
-        while i < adds.len() {
-            let (d, o) = (adds[i].0, adds[i].1);
-            let mut sum = 0f32;
-            while i < adds.len() && adds[i].0 == d && adds[i].1 == o {
-                sum += adds[i].2;
-                i += 1;
-            }
-            adds[n] = (d, o, sum);
-            n += 1;
+    /// The bytes it holds of its own.
+    fn bytes(&self) -> usize {
+        match self {
+            Held::Ref(_) => 0,
+            Held::Own(d) => d.bytes(),
         }
-        let mut od = SparseOd { off: vec![0; s + 1], src: Vec::with_capacity(n), v: Vec::with_capacity(n) };
-        for &(d, o, sum) in &adds[..n] {
-            od.src.push(o);
-            od.v.push(sum);
-            od.off[d as usize + 1] += 1;
-        }
-        for d in 0..s {
-            od.off[d + 1] += od.off[d];
-        }
-        od
     }
-}
-/// `SparseOd::of` for a list whose entries are counted by destination first: each is placed in its
-/// destination's range as it comes, so no list of all of them in the order added is held, and a
-/// destination's entries are in the order they were added (T-1558).
-struct SparseOdBuilder {
-    /// destination `d`'s range starts at `off[d]` and has been filled up to `fill[d]`
-    off: Vec<u32>,
-    fill: Vec<u32>,
-    src: Vec<u32>,
-    v: Vec<f32>,
-}
-impl SparseOdBuilder {
-    fn new(cnt: &[u32]) -> Self {
-        let mut off = vec![0u32; cnt.len() + 1];
-        for (d, &c) in cnt.iter().enumerate() {
-            off[d + 1] = off[d] + c;
-        }
-        let n = off[cnt.len()] as usize;
-        SparseOdBuilder { fill: off[..cnt.len()].to_vec(), off, src: vec![0; n], v: vec![0.; n] }
-    }
-    #[inline]
-    fn push(&mut self, d: u32, o: u32, riders: f32) {
-        let k = self.fill[d as usize] as usize;
-        self.src[k] = o;
-        self.v[k] = riders;
-        self.fill[d as usize] += 1;
-    }
-    /// Each destination's origins ascending, a pair's riders added in the order they came.
-    fn finish(self) -> SparseOd {
-        let SparseOdBuilder { off, fill, mut src, mut v } = self;
-        let s = fill.len();
-        let mut od_off = vec![0u32; s + 1];
-        let mut seg: Vec<(u32, f32)> = vec![];
-        let mut n = 0;
-        for d in 0..s {
-            seg.clear();
-            seg.extend((off[d] as usize..fill[d] as usize).map(|k| (src[k], v[k])));
-            // stable: a pair's riders stay in the order they were added
-            seg.sort_by_key(|e| e.0);
-            let mut i = 0;
-            while i < seg.len() {
-                let o = seg[i].0;
-                let mut sum = 0f32;
-                while i < seg.len() && seg[i].0 == o {
-                    sum += seg[i].1;
-                    i += 1;
-                }
-                src[n] = o;
-                v[n] = sum;
-                n += 1;
-            }
-            od_off[d + 1] = n as u32;
-        }
-        src.truncate(n);
-        v.truncate(n);
-        src.shrink_to_fit();
-        v.shrink_to_fit();
-        SparseOd { off: od_off, src, v }
-    }
-}
-struct Demand {
-    od: Vec<f32>,
-    /// T-1373: `od` with each pair's trips times its lean; empty without the lean
-    od_r: Vec<f32>,
-    od_c: SparseOd,
-    st: Vec<f32>,
-    rail: f64,
-    cor: Vec<f64>,
-    pair_rail: Vec<f32>,
-    c_rail: f64,
-    c_frac: Vec<f32>,
-    c_cor: Vec<f64>,
-    e: EDemand,
-    /// T-1300: every part's rail trips per perceived minute of the market's fare dearer (negative)
-    rail_d: FareSense,
-}
-/// T-1175: the everyday pairs' part of a pass: station to station trips by purpose (empty for a
-/// purpose with none), rail trips, the walkers rail takes, and each served pair's rail share.
-#[derive(Default)]
-struct EDemand {
-    od: Vec<SparseOd>,
-    rail: f64,
-    walk_lost: f64,
-    frac: Vec<f32>,
 }
 struct Pass {
     loads: Loads,
@@ -2802,153 +2770,469 @@ impl IntercityApi {
             // the strategies are shared with the local populations on the same service (T-119)
             return with_skims(g, p, &self.want, |sk| self.pass_on(g, p, q, sk, ix));
         }
-        self.pass_streamed(g, p, q, ix, MARKET_STRATEGY_BYTES)
+        self.pass_searched(g, p, q, ix)
     }
     fn pass_on(&self, g: &Graph, p: &Params, q: usize, sk: &Skims, ix: &XferIndex) -> Pass {
-        let s = g.n_st;
-        let km = self.pair_km(g, &self.want, |dst| (sk.slot[dst] != u32::MAX).then(|| sk.strategy(sk.slot[dst] as usize)));
-        let d = self.demand(g, &sk.r, &sk.entry_r(), p, q, &km);
-        self.assigned(g, ix, d, |dst| {
-            let slot = sk.slot[dst];
-            debug_assert!(slot != u32::MAX, "flow towards station {dst}, which was not searched");
-            (slot != u32::MAX).then(|| Held::Ref(sk.strategy(slot as usize)))
-        }, s)
+        self.pass_window(g, p, q, ix, Columns::Skims(sk))
     }
-    /// The pass's loads from its trips: each destination's column of the longer trips and the
-    /// commutes together (`assign_with_transfers`'s), and of the commutes alone, assigned in station
-    /// order along the destination's strategy (`strategy`; `None`: nobody can ride there).
-    fn assigned<'a>(&self, g: &Graph, ix: &XferIndex, d: Demand, mut strategy: impl FnMut(usize) -> Option<Held<'a>>, s: usize) -> Pass {
-        let Demand { od, od_r, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d } = d;
-        let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
-        let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
-        com.fares = false;
-        // T-1373: the lean's column, walked on the same strategies (the walk is linear in it)
-        let mut lean = (!od_r.is_empty()).then(|| {
-            let mut a = DestAssign::new(g, 0, false);
-            a.fares = false;
-            a
-        });
-        // T-1175: the everyday pairs' loads, a purpose at a time
-        let mut ev: Vec<Option<DestAssign>> = e
-            .od
-            .iter()
-            .map(|o| {
-                (!o.src.is_empty()).then(|| {
-                    let mut a = DestAssign::new(g, 0, false);
-                    a.fares = false;
-                    a
-                })
-            })
-            .collect();
-        let mut took = vec![false; ev.len()];
-        let mut xfer = vec![0.0; ix.len];
-        // a destination's commutes as a column (the riders from each station), and its everyday
-        // pairs' (every purpose's together, then each purpose's)
-        let mut col = vec![0f32; s];
-        let (mut ecol, mut kcol) = (vec![0f32; s], vec![0f32; s]);
-        for dst in 0..s {
-            let ks = od_c.off[dst] as usize..od_c.off[dst + 1] as usize;
-            for k in ks.clone() {
-                col[od_c.src[k] as usize] = od_c.v[k];
-            }
-            for o in &e.od {
-                for k in o.off[dst] as usize..o.off[dst + 1] as usize {
-                    ecol[o.src[k] as usize] += o.v[k];
-                }
-            }
-            let c = com.take(dst, |src| col[src]);
-            let a = all.take(dst, |src| od[src * s + dst] + col[src] + ecol[src]);
-            let r = lean.as_mut().is_some_and(|l| l.take(dst, |src| od_r[src * s + dst]));
-            for k in ks {
-                col[od_c.src[k] as usize] = 0.;
-            }
-            for (i, o) in e.od.iter().enumerate() {
-                took[i] = false;
-                let Some(ea) = ev[i].as_mut() else { continue };
-                let r = o.off[dst] as usize..o.off[dst + 1] as usize;
-                if r.is_empty() {
-                    continue;
-                }
-                for k in r.clone() {
-                    kcol[o.src[k] as usize] = o.v[k];
-                }
-                took[i] = ea.take(dst, |src| kcol[src]);
-                for k in r {
-                    kcol[o.src[k] as usize] = 0.;
-                    ecol[o.src[k] as usize] = 0.;
-                }
-            }
-            if !(a || c || r || took.contains(&true)) {
-                continue;
-            }
-            let Some(h) = strategy(dst) else { continue };
-            let st = h.view();
-            if c {
-                com.walk(g, dst, st, None);
-            }
-            if let (true, Some(l)) = (r, lean.as_mut()) {
-                l.walk(g, dst, st, None);
-            }
-            for (i, ea) in ev.iter_mut().enumerate() {
-                if let (true, Some(ea)) = (took[i], ea.as_mut()) {
-                    ea.walk(g, dst, st, None);
-                }
-            }
-            if a {
-                all.walk(g, dst, st, counting.then_some((ix, &mut xfer[..])));
-            }
-        }
-        let e_loads = ev.into_iter().map(|a| a.map(|a| a.l)).collect();
-        Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail: e.rail, e_walk_lost: e.walk_lost, e_frac: e.frac, rail_d }
-    }
-    /// `pass_on` with the destinations searched one at a time (T-761), so no table of every
-    /// destination's strategy is held: a first sweep keeps each one's route costs (the logsums need
-    /// every station pair's) and the first `keep_bytes` of strategies; the second assigns each
-    /// destination's column of both ODs, searching it again unless kept. The same figures to the bit.
-    fn pass_streamed(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex, keep_bytes: usize) -> Pass {
+    /// `pass_on` with each destination searched when the window first needs it (T-761, T-1545), so
+    /// no table of every destination's strategy is held.
+    fn pass_searched(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> Pass {
         // the market's part solves last in its cluster, so the tables the cities searched for this
         // period and round have no further use, and a search for the market shares none of them
         clear_skim_cache();
+        self.pass_window(g, p, q, ix, Columns::Search(DestSearch::new(g, p)))
+    }
+    /// The market's rail trips in period `q` and their loads, a window of destination zones at a
+    /// time (T-1545). A zone's pairs (the longer trips' ending there, the commutes' working there,
+    /// the everyday outings' going there) read the route costs towards its own stations alone and
+    /// fill those stations' columns of trips, and the return legs the home stations'. The zones go
+    /// in the order of their centres' x; a station's columns are held from the first zone that
+    /// touches it to the last, then its trips are assigned along its strategy and it is dropped. So
+    /// no station x station table is held, and a destination is searched once, or twice when its
+    /// strategy was not kept (`WINDOW_STRATEGY_BYTES`). The longer trips
+    /// cost their first boarding at the planned wait (`Skims::entry_r`, T-1430); the commutes and
+    /// everyday outings as the local layer. Each destination's loads are the column's sums, added
+    /// in another order than station order: the same trips, to rounding.
+    fn pass_window<'a>(&self, g: &'a Graph, p: &Params, q: usize, ix: &XferIndex, mut src: Columns<'a>) -> Pass {
         let s = g.n_st;
-        let mut r = vec![f32::INFINITY; s * s];
-        let mut search = DestSearch::new(g, p);
-        let mut kept: Vec<Option<DestStrategy>> = (0..s).map(|_| None).collect();
-        let mut held = 0;
-        let mut km = if self.need_km() { vec![0f32; s * s] } else { vec![] };
-        let (mut col, mut dep) = (vec![], vec![]);
-        // `Skims::entry_r` built as the sweep goes: a search writes only its destination's column of
-        // `r`, so `re` is `r` from the first destination with an entry cost on, each later column
-        // copied and its entries put in. (T-1482: listing every entry first grew a list past a GB
-        // on all of Japan, by doubling, which ran a worker out of its 4 GB.)
-        let mut re: Vec<f32> = vec![];
-        for dst in (0..s).filter(|&d| self.want[d]) {
-            let d = search.run(dst, Some(&mut r));
-            if !km.is_empty() {
-                self.put_km(g, d.view(), dst, &mut col, &mut dep, &mut km);
+        let m = &self.m;
+        let nzz = m.zones.len();
+        // each zone's pairs ending there, in their own order
+        let (l_off, l_ix) = by_zone(nzz, self.pairs.len(), |i| self.pairs[i].b as usize);
+        let (c_off, c_ix) = by_zone(nzz, self.cpairs.len(), |i| m.comp_of_gid[m.commutes[self.cpairs[i].c as usize].1 as usize] as usize);
+        let (e_off, e_ix) = by_zone(nzz, self.epairs.len(), |i| self.epair_zones(&self.epairs[i]).1);
+        let ls = |z: usize| &l_ix[l_off[z] as usize..l_off[z + 1] as usize];
+        let cs = |z: usize| &c_ix[c_off[z] as usize..c_off[z + 1] as usize];
+        let es = |z: usize| &e_ix[e_off[z] as usize..e_off[z + 1] as usize];
+        let c_home = |ci: usize| {
+            let cp = &self.cpairs[ci];
+            let h = m.commutes[cp.c as usize].0 as usize;
+            (h, if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] })
+        };
+        let e_home = |ei: usize| {
+            let ep = &self.epairs[ei];
+            let h = self.epair_zones(ep).0;
+            (h, if ep.ride { &self.access_c[h] } else { &self.access_c_walk[h] })
+        };
+        // the stations whose route costs a zone's pairs read: its own access list for each kind of
+        // pair ending there
+        let reads = |z: usize, out: &mut Vec<usize>| {
+            out.clear();
+            if !ls(z).is_empty() {
+                out.extend(self.access_work[z].iter().map(|e| e.0));
             }
-            if re.is_empty() && !d.entry.is_empty() {
-                re = r.clone();
-            } else if !re.is_empty() {
-                for src in 0..s {
-                    re[src * s + dst] = r[src * s + dst];
-                }
+            if !cs(z).is_empty() {
+                out.extend(self.access_cw[z].iter().map(|e| e.0));
             }
-            for &(src, c) in d.entry.iter() {
-                re[src as usize * s + dst] = c;
+            if !es(z).is_empty() {
+                out.extend(self.access_ew[z].iter().map(|e| e.0));
             }
-            if held + d.bytes() <= keep_bytes {
-                held += d.bytes();
-                kept[dst] = Some(d);
+        };
+        // and whose trips they fill: those, and the home stations the trips home go to
+        let touched = |z: usize, out: &mut Vec<usize>| {
+            reads(z, out);
+            for &ci in cs(z) {
+                out.extend(c_home(ci as usize).1.iter().map(|e| e.0));
+            }
+            for &ei in es(z) {
+                out.extend(e_home(ei as usize).1.iter().map(|e| e.0));
+            }
+        };
+        let mut zones: Vec<usize> = (0..nzz).filter(|&z| !(ls(z).is_empty() && cs(z).is_empty() && es(z).is_empty())).collect();
+        zones.sort_by(|&a, &b| m.zones[a].x.total_cmp(&m.zones[b].x).then(a.cmp(&b)));
+        let (mut tl, mut rl) = (vec![], vec![]);
+        let (mut last, mut last_read) = (vec![u32::MAX; s], vec![u32::MAX; s]);
+        for (u, &z) in zones.iter().enumerate() {
+            touched(z, &mut tl);
+            for &st in &tl {
+                last[st] = u as u32;
+            }
+            reads(z, &mut rl);
+            for &st in &rl {
+                last_read[st] = u as u32;
             }
         }
-        let d = self.demand(g, &r, if re.is_empty() { &r } else { &re }, p, q, &km);
-        drop(re);
-        drop(r);
-        drop(km);
-        self.assigned(g, ix, d, |dst| {
-            debug_assert!(self.want[dst], "flow towards station {dst}, which was not searched");
-            self.want[dst].then(|| Held::Own(kept[dst].take().unwrap_or_else(|| search.run(dst, None))))
-        }, s)
+
+        // A station's route costs from every station (`r`), the same with the planned first wait
+        // where any differs (`re`) and its fare km (`km`, T-1286) are held from the first zone that
+        // reads them to the last (a read slot); its trips (the longer trips', with their lean,
+        // T-1373, none where the dense table was too large, `LEAN_OD_BYTES`; the commutes'; each
+        // everyday purpose's) from the first zone that touches it to the last (a trip slot). The
+        // trips home make the second span far the longer (on all of Japan at most about 200
+        // stations read at once, about 2,000 touched), so a strategy, searched at the first read,
+        // is kept to the station's assignment only within `WINDOW_STRATEGY_BYTES`, those wanted
+        // soonest first, and the others are searched again then.
+        let lean_on = s * s * 4 <= LEAN_OD_BYTES;
+        let need_km = self.need_km();
+        let has_c = !self.cpairs.is_empty();
+        let mut kinds = vec![false; if self.epairs.is_empty() { 0 } else { KIND_COUNT }];
+        for ep in &self.epairs {
+            kinds[m.everyday[ep.e as usize].kind as usize] = true;
+        }
+        let col = |on: bool| if on { vec![0f32; s].into_boxed_slice() } else { Box::default() };
+        let (mut rs, mut ws) = (vec![u32::MAX; s], vec![u32::MAX; s]);
+        let (mut rfree, mut wfree): (Vec<usize>, Vec<usize>) = (vec![], vec![]);
+        let (mut rc, mut rec, mut has_re, mut kmc): (Vec<Box<[f32]>>, Vec<Box<[f32]>>, Vec<bool>, Vec<Box<[f32]>>) = (vec![], vec![], vec![], vec![]);
+        let (mut odc, mut odrc, mut cc): (Vec<Box<[f32]>>, Vec<Box<[f32]>>, Vec<Box<[f32]>>) = (vec![], vec![], vec![]);
+        let mut ec: Vec<Vec<Box<[f32]>>> = kinds.iter().map(|_| vec![]).collect();
+        let mut held: Vec<Option<Held<'a>>> = vec![];
+        let cap = if matches!(src, Columns::Skims(_)) { usize::MAX } else { WINDOW_STRATEGY_BYTES.with(|c| c.get()) };
+        let mut kept: std::collections::BinaryHeap<(u32, u32)> = Default::default();
+        let mut held_bytes = 0usize;
+        let (mut kcol, mut dep) = (vec![], vec![]);
+        let (mut live_r, mut live_w) = (0usize, 0usize);
+        let mut stats = [0usize; 5];
+
+        let fx = need_km.then(|| FareX { km: &[], base: p.fare_min, per_km: self.fare_per_km, curve: &g.fare_curve });
+        let fx_of = |zone: usize| self.fx_of(&fx, zone, 1.);
+        // T-1300: the riders' fare sensitivity: each trip's rail share with its fare dearer by
+        // `FARE_D_MIN` perceived minutes of the market's (times its fare factor), less its share
+        let mut rail_d = FareSense::default();
+        let zkm = |a: usize, b: usize| m.zone_km(&m.zones[a], &m.zones[b]);
+        let add = |s: &mut FareSense, dd: f64, rail: f64, km: f64| {
+            s.d += dd / FARE_D_MIN as f64;
+            s.d_km += dd / FARE_D_MIN as f64 * km;
+            s.km += rail * km;
+        };
+        let step = |zone: usize, f: f32| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.)) * f;
+        let mut rail = 0.;
+        let mut cor = vec![0.; m.n_open_corridors()];
+        let mut pair_rail = vec![0f32; self.pairs.len()];
+        let nz = self.served.len();
+        let zcol = &self.served_at;
+        let pat = &self.st_pat;
+        let mut st = vec![0f32; pat.col.len()];
+        // per station, where its row was last looked up, for starts and for ends
+        let mut cur = vec![0u32; 2 * s];
+        let mut put = |st: &mut [f32], x: usize, c: usize, v: f32| st[pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize])] += v;
+        let mut terms: Vec<(u32, u32, f64)> = vec![];
+        let pc = commute_params();
+        let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
+        let mut c_cor = vec![0f64; m.n_open_corridors()];
+        let pe = commute_params().everyday();
+        let (mut e_rail, mut e_walk_lost, mut e_frac) = (0f64, 0f64, vec![0f32; self.epairs.len()]);
+        let mut e_used = vec![false; kinds.len()];
+
+        // the loads: each destination's column of every part together (crowding reads these), of
+        // the commutes alone, of the longer trips' lean, of each everyday purpose
+        let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
+        let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
+        com.fares = false;
+        let quiet = || {
+            let mut a = DestAssign::new(g, 0, false);
+            a.fares = false;
+            a
+        };
+        let mut lean = lean_on.then(quiet);
+        let mut ev: Vec<Option<DestAssign>> = kinds.iter().map(|&on| on.then(quiet)).collect();
+        let mut took = vec![false; ev.len()];
+        let mut xfer = vec![0.0; ix.len];
+        let zero = vec![0f32; s];
+        let mut ecol = vec![0f32; if kinds.is_empty() { 0 } else { s }];
+
+        for (u, &z) in zones.iter().enumerate() {
+            touched(z, &mut tl);
+            for &x in &tl {
+                if ws[x] != u32::MAX {
+                    continue;
+                }
+                let k = match wfree.pop() {
+                    Some(k) => {
+                        for c in [&mut odc[k], &mut odrc[k], &mut cc[k]] {
+                            c.fill(0.);
+                        }
+                        for e in ec.iter_mut() {
+                            e[k].fill(0.);
+                        }
+                        k
+                    }
+                    None => {
+                        odc.push(col(true));
+                        odrc.push(col(lean_on));
+                        cc.push(col(has_c));
+                        for (e, &on) in ec.iter_mut().zip(&kinds) {
+                            e.push(col(on));
+                        }
+                        held.push(None);
+                        odc.len() - 1
+                    }
+                };
+                ws[x] = k as u32;
+                live_w += 1;
+                stats[1] = stats[1].max(live_w);
+            }
+            reads(z, &mut rl);
+            for &x in &rl {
+                if rs[x] != u32::MAX {
+                    continue;
+                }
+                let k = rfree.pop().unwrap_or_else(|| {
+                    rc.push(col(true));
+                    rec.push(col(true));
+                    has_re.push(false);
+                    kmc.push(col(need_km));
+                    rc.len() - 1
+                });
+                rs[x] = k as u32;
+                live_r += 1;
+                stats[0] = stats[0].max(live_r);
+                let h = src.fill(x, &mut rc[k], &mut rec[k], &mut has_re[k]);
+                stats[3] += 1;
+                if need_km {
+                    match &h {
+                        Some(h) => {
+                            trip_km_on(g, h.view(), x, &self.fare_km, &mut kcol, &mut dep);
+                            kmc[k].copy_from_slice(&kcol[..s]);
+                        }
+                        None => kmc[k].fill(0.),
+                    }
+                }
+                // kept for the assignment while the strategies wanted sooner leave room
+                let Some(h) = h else { continue };
+                let b = h.bytes();
+                while held_bytes + b > cap {
+                    let Some(&(l, y)) = kept.peek() else { break };
+                    let y = y as usize;
+                    let w = ws[y];
+                    if w == u32::MAX || held[w as usize].is_none() {
+                        kept.pop();
+                    } else if l > last[x] {
+                        kept.pop();
+                        held_bytes -= held[w as usize].take().map_or(0, |h| h.bytes());
+                    } else {
+                        break;
+                    }
+                }
+                if held_bytes + b <= cap {
+                    held_bytes += b;
+                    stats[2] = stats[2].max(held_bytes);
+                    kept.push((last[x], x as u32));
+                    held[ws[x] as usize] = Some(h);
+                }
+            }
+            // each destination station's route costs and fare km, as the unit's access list has them
+            let cols = |list: &[(usize, f32)], planned: bool| -> Vec<(&[f32], &[f32])> {
+                list.iter()
+                    .map(|&(x, _)| {
+                        let k = rs[x] as usize;
+                        (if planned && has_re[k] { &rec[k][..] } else { &rc[k][..] }, &kmc[k][..])
+                    })
+                    .collect()
+            };
+
+            // the longer trips ending in z
+            if !ls(z).is_empty() {
+                let b = &self.access_work[z];
+                let bc = cols(b, true);
+                let cb = zcol[z] as usize;
+                for &pi in ls(z) {
+                    let pi = pi as usize;
+                    let pair = &self.pairs[pi];
+                    let za = pair.a as usize;
+                    let (pa, pb) = (m.zones[za].place, m.zones[z].place);
+                    let (from, to) = (&m.places[pa], &m.places[pb]);
+                    let rule = m.pr(pa, pb);
+                    let split = rule.split_car(from, to);
+                    let a = &self.access[za];
+                    let ca = nz + zcol[za] as usize;
+                    let ln = if lean_on { m.lean(pa, pb) } else { 0. };
+                    let mut r_all = 0f64;
+                    // T-1431: each income group of the place the trip starts from, every mode's
+                    // money at its riders' minutes a dollar
+                    for &(share, f) in from.groups() {
+                        let trips = pair.trips * SHARES[q] as f64 * share as f64;
+                        let alt = rule.alt(pair.car, split, from.w() * f, &m.mp);
+                        let (rail_c, sum) = rail_logsum_cols(&bc, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), alt.car), self.fx_of(&fx, za, f), &mut terms);
+                        let bt = p.mode_beta(alt.car);
+                        let v_rail = if sum > 0. { ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
+                        let fraction = v_rail / (alt.rest as f64 + v_rail);
+                        let r = trips * fraction;
+                        r_all += r;
+                        if sum > 0. {
+                            let v = ((-bt * (rail_c + step(za, f) - alt.drive)).clamp(-80., 80.) as f64).exp();
+                            add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, z));
+                            for &(sa, sb, v) in &terms {
+                                let (sa, sb) = (sa as usize, sb as usize);
+                                let rr = (r * v / sum) as f32;
+                                let k = ws[sb] as usize;
+                                odc[k][sa] += rr;
+                                if ln != 0. {
+                                    odrc[k][sa] += rr * ln;
+                                }
+                                put(&mut st, sa, cb, rr);
+                                put(&mut st, sb, ca, rr);
+                            }
+                        }
+                    }
+                    rail += r_all;
+                    cor[pair.corridor as usize] += r_all;
+                    pair_rail[pi] = r_all as f32;
+                }
+            }
+            // T-276: the commutes working in z, chosen as the local layer chooses: once per
+            // commuter on this period's service from home to work, the trip home on the same
+            // station pair reversed
+            if !cs(z).is_empty() {
+                let b = &self.access_cw[z];
+                let bc = cols(b, false);
+                let wc = zcol[z] as usize;
+                for &ci in cs(z) {
+                    let ci = ci as usize;
+                    let cp = &self.cpairs[ci];
+                    let n = m.commutes[cp.c as usize].2;
+                    let (h, home) = c_home(ci);
+                    let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
+                    let (rail_c, sum) = rail_logsum_cols(&bc, p.fare_min, home, b, pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), fx_of(h), &mut terms);
+                    if sum <= 0. {
+                        continue;
+                    }
+                    // T-918: rail against the car on the cost ratio, as the local commutes
+                    let frac = pc.ratio_share(rail_c, cp.car) as f64;
+                    c_frac[ci] = frac as f32;
+                    add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h, 1.), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, z));
+                    let (ro, rr_) = (out * frac, ret * frac);
+                    c_rail += ro + rr_;
+                    c_cor[cp.corridor] += ro + rr_;
+                    let hc = zcol[h] as usize;
+                    for &(sa, sb, v) in &terms {
+                        let (a, bk) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
+                        let (sa, sb) = (sa as usize, sb as usize);
+                        cc[ws[sb] as usize][sa] += a;
+                        cc[ws[sa] as usize][sb] += bk;
+                        put(&mut st, sa, wc, a);
+                        put(&mut st, sb, nz + hc, a);
+                        put(&mut st, sb, hc, bk);
+                        put(&mut st, sa, nz + wc, bk);
+                    }
+                }
+            }
+            // T-1175: the everyday outings to z across a zone line, chosen as the everyday layer
+            // chooses: the pair's walkers with no rail first (their weight against the car from
+            // that share), rail and the car splitting the rest on their cost ratio, rail taking
+            // its share of the walkers; out at the purpose's outward timing, home on the same
+            // station pairs reversed
+            if !es(z).is_empty() {
+                let b = &self.access_ew[z];
+                let bc = cols(b, false);
+                let ac = zcol[z] as usize;
+                for &ei in es(z) {
+                    let ei = ei as usize;
+                    let ep = &self.epairs[ei];
+                    let pair = m.everyday[ep.e as usize];
+                    let k = pair.kind as usize;
+                    let (h, home) = e_home(ei);
+                    let (out, ret) = (pair.trips as f64 * OUTWARD[k][q] as f64, pair.trips as f64 * RETURN[k][q] as f64);
+                    let (rail_c, sum) = rail_logsum_cols(&bc, p.fare_min, home, b, pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), fx_of(h), &mut terms);
+                    if sum <= 0. {
+                        continue;
+                    }
+                    let util = (pe.mode_beta(ep.car) * (ep.car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
+                    let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
+                    let frac = (1. - w0) * pe.ratio_share(rail_c, ep.car) as f64;
+                    e_frac[ei] = frac as f32;
+                    let rd = rail_c + step(h, 1.);
+                    let ud = (pe.mode_beta(ep.car) * (ep.car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
+                    add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, ep.car) as f64 - frac), (out + ret) * frac, zkm(h, z));
+                    let (ro, rr_) = (out * frac, ret * frac);
+                    e_rail += ro + rr_;
+                    e_walk_lost += (ro + rr_) * pair.walk as f64;
+                    let hc = zcol[h] as usize;
+                    e_used[k] |= !terms.is_empty();
+                    for &(sa, sb, v) in &terms {
+                        let (a, bk) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
+                        let (sa, sb) = (sa as usize, sb as usize);
+                        ec[k][ws[sb] as usize][sa] += a;
+                        ec[k][ws[sa] as usize][sb] += bk;
+                        put(&mut st, sa, ac, a);
+                        put(&mut st, sb, nz + hc, a);
+                        put(&mut st, sb, hc, bk);
+                        put(&mut st, sa, nz + ac, bk);
+                    }
+                }
+            }
+
+            // the stations whose last read z is: their read slots freed
+            for &x in &rl {
+                if last_read[x] as usize == u && rs[x] != u32::MAX {
+                    rfree.push(rs[x] as usize);
+                    rs[x] = u32::MAX;
+                    live_r -= 1;
+                }
+            }
+            // the stations z is the last zone of: their columns assigned, their slots freed
+            for &dst in &tl {
+                if last[dst] as usize != u || ws[dst] == u32::MAX {
+                    continue;
+                }
+                let k = ws[dst] as usize;
+                ws[dst] = u32::MAX;
+                wfree.push(k);
+                live_w -= 1;
+                let kept_h = held[k].take();
+                if let Some(h) = &kept_h {
+                    held_bytes -= h.bytes();
+                }
+                let ccol: &[f32] = if has_c { &cc[k] } else { &zero };
+                if !kinds.is_empty() {
+                    ecol.fill(0.);
+                    for (e, &on) in ec.iter().zip(&kinds) {
+                        if on {
+                            for (x, &v) in ecol.iter_mut().zip(e[k].iter()) {
+                                *x += v;
+                            }
+                        }
+                    }
+                }
+                let ecol: &[f32] = if kinds.is_empty() { &zero } else { &ecol };
+                let od = &odc[k];
+                let c = com.take(dst, |x| ccol[x]);
+                let a = all.take(dst, |x| od[x] + ccol[x] + ecol[x]);
+                let r = lean.as_mut().is_some_and(|l| l.take(dst, |x| odrc[k][x]));
+                for (i, ea) in ev.iter_mut().enumerate() {
+                    took[i] = ea.as_mut().is_some_and(|ea| ea.take(dst, |x| ec[i][k][x]));
+                }
+                if !(a || c || r || took.contains(&true)) {
+                    continue;
+                }
+                let h = match kept_h {
+                    Some(h) => h,
+                    None => {
+                        stats[4] += 1;
+                        match src.strategy(dst) {
+                            Some(h) => h,
+                            None => continue,
+                        }
+                    }
+                };
+                let sv = h.view();
+                if c {
+                    com.walk(g, dst, sv, None);
+                }
+                if let (true, Some(l)) = (r, lean.as_mut()) {
+                    l.walk(g, dst, sv, None);
+                }
+                for (i, ea) in ev.iter_mut().enumerate() {
+                    if let (true, Some(ea)) = (took[i], ea.as_mut()) {
+                        ea.walk(g, dst, sv, None);
+                    }
+                }
+                if a {
+                    all.walk(g, dst, sv, counting.then_some((ix, &mut xfer[..])));
+                }
+            }
+        }
+        WINDOW_STATS.with(|w| {
+            let mut v = w.get();
+            for i in 0..3 {
+                v[i] = v[i].max(stats[i]);
+            }
+            v[3] += stats[3];
+            v[4] += stats[4];
+            w.set(v);
+        });
+        let e_loads = ev.into_iter().zip(e_used).map(|(a, u)| a.filter(|_| u).map(|a| a.l)).collect();
+        Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d }
     }
     /// T-1286: each station pair's expected fare km (`FareX::km`) on the strategies towards the
     /// stations `want`ed that `strategy` has; empty while no one needs them (`need_km`).
@@ -2988,167 +3272,6 @@ impl IntercityApi {
         for src in 0..s {
             km[src * s + dst] = col[src];
         }
-    }
-    /// The market's rail trips in period `q` from the route costs `r` (S x S, `Skims::r`): the
-    /// station to station trips of the longer trips and of the commutes, and the pair, corridor and
-    /// station figures. The longer trips cost their first boarding at the planned wait, `re`
-    /// (`Skims::entry_r`, T-1430); the commutes and everyday outings as the local layer, `r`.
-    /// `km`: `pair_km` on `g`.
-    fn demand(&self, g: &Graph, r: &[f32], re: &[f32], p: &Params, q: usize, km: &[f32]) -> Demand {
-        let s = g.n_st;
-        let fx = self.fare_x(g, p, km);
-        let fx_of = |zone: usize| self.fx_of(&fx, zone, 1.);
-        // T-1300: the riders' fare sensitivity: each trip's rail share with its fare dearer by
-        // `FARE_D_MIN` perceived minutes of the market's (times its fare factor), less its share
-        let mut rail_d = FareSense::default();
-        let zkm = |a: usize, b: usize| self.m.zone_km(&self.m.zones[a], &self.m.zones[b]);
-        let add = |s: &mut FareSense, dd: f64, rail: f64, km: f64| {
-            s.d += dd / FARE_D_MIN as f64;
-            s.d_km += dd / FARE_D_MIN as f64 * km;
-            s.km += rail * km;
-        };
-        let step = |zone: usize, f: f32| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.)) * f;
-        let mut od = vec![0.; s * s];
-        let mut od_r = if s * s * 4 <= LEAN_OD_BYTES { vec![0f32; s * s] } else { vec![] };
-        let mut rail = 0.;
-        let mut cor = vec![0.; self.m.n_open_corridors()];
-        let mut pair_rail = vec![0f32; self.pairs.len()];
-        let nz = self.served.len();
-        let col = &self.served_at;
-        let pat = &self.st_pat;
-        let mut st = vec![0f32; pat.col.len()];
-        // per station, where its row was last looked up, for starts and for ends
-        let mut cur = vec![0u32; 2 * s];
-        let mut put = |st: &mut [f32], x: usize, c: usize, v: f32| st[pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize])] += v;
-        let mut terms: Vec<(u32, u32, f64)> = vec![];
-        let m = &self.m;
-        for (pi, pair) in self.pairs.iter().enumerate() {
-            let (za, zb) = (pair.a as usize, pair.b as usize);
-            let (pa, pb) = (m.zones[za].place, m.zones[zb].place);
-            let (from, to) = (&m.places[pa], &m.places[pb]);
-            let rule = m.pr(pa, pb);
-            let split = rule.split_car(from, to);
-            let (a, b) = (&self.access[za], &self.access_work[zb]);
-            let (ca, cb) = (nz + col[za] as usize, col[zb] as usize);
-            let lean = if od_r.is_empty() { 0. } else { m.lean(pa, pb) };
-            let mut r_all = 0f64;
-            // T-1431: each income group of the place the trip starts from, every mode's money at
-            // its riders' minutes a dollar
-            for &(share, f) in from.groups() {
-                let trips = pair.trips * SHARES[q] as f64 * share as f64;
-                let alt = rule.alt(pair.car, split, from.w() * f, &m.mp);
-                let (rail_c, sum) = rail_logsum_x(re, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), alt.car), self.fx_of(&fx, za, f), &mut terms);
-                let bt = p.mode_beta(alt.car);
-                let v_rail = if sum > 0. { ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
-                let fraction = v_rail / (alt.rest as f64 + v_rail);
-                let r = trips * fraction;
-                r_all += r;
-                if sum > 0. {
-                    let v = ((-bt * (rail_c + step(za, f) - alt.drive)).clamp(-80., 80.) as f64).exp();
-                    add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, zb));
-                    for &(sa, sb, v) in &terms {
-                        let (sa, sb) = (sa as usize, sb as usize);
-                        let rr = (r * v / sum) as f32;
-                        od[sa * s + sb] += rr;
-                        if lean != 0. {
-                            od_r[sa * s + sb] += rr * lean;
-                        }
-                        put(&mut st, sa, cb, rr);
-                        put(&mut st, sb, ca, rr);
-                    }
-                }
-            }
-            rail += r_all;
-            cor[pair.corridor as usize] += r_all;
-            pair_rail[pi] = r_all as f32;
-        }
-        // T-276: commutes between zones, chosen as the local layer chooses: once per commuter on
-        // this period's service from home to work, the trip home on the same station pair reversed
-        let pc = commute_params();
-        // (destination, origin, riders) as they come, two for each term, placed by destination in a
-        // list counted first (T-1558)
-        let mut od_c = {
-            let mut cnt = vec![0u32; s];
-            for cp in &self.cpairs {
-                let (h, wg, _) = self.m.commutes[cp.c as usize];
-                let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
-                let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-                rail_term_counts(r, s, p.fare_min, home, &self.access_cw[wz], fx_of(h), &mut cnt);
-            }
-            SparseOdBuilder::new(&cnt)
-        };
-        let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
-        let mut c_cor = vec![0f64; self.m.n_open_corridors()];
-        for (ci, cp) in self.cpairs.iter().enumerate() {
-            let (h, wg, n) = self.m.commutes[cp.c as usize];
-            let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
-            let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
-            let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), fx_of(h), &mut terms);
-            if sum <= 0. {
-                continue;
-            }
-            // T-918: rail against the car on the cost ratio, as the local commutes
-            let frac = pc.ratio_share(rail_c, cp.car) as f64;
-            c_frac[ci] = frac as f32;
-            add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h, 1.), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, wz));
-            let (ro, rr_) = (out * frac, ret * frac);
-            c_rail += ro + rr_;
-            c_cor[cp.corridor] += ro + rr_;
-            let (hc, wc) = (col[h] as usize, col[wz] as usize);
-            for &(sa, sb, v) in &terms {
-                let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
-                od_c.push(sb, sa, a);
-                od_c.push(sa, sb, b);
-                let (sa, sb) = (sa as usize, sb as usize);
-                put(&mut st, sa, wc, a);
-                put(&mut st, sb, nz + hc, a);
-                put(&mut st, sb, hc, b);
-                put(&mut st, sa, nz + wc, b);
-            }
-        }
-        // T-1175: everyday outings across a zone line, chosen as the everyday layer chooses: the
-        // pair's walkers with no rail first (their weight against the car from that share), rail
-        // and the car splitting the rest on their cost ratio, rail taking its share of the
-        // walkers; out at the purpose's outward timing, home on the same station pairs reversed
-        let pe = commute_params().everyday();
-        let mut e = EDemand { frac: vec![0f32; self.epairs.len()], ..EDemand::default() };
-        let mut od_e: Vec<Vec<(u32, u32, f32)>> = vec![vec![]; if self.epairs.is_empty() { 0 } else { KIND_COUNT }];
-        for (ei, ep) in self.epairs.iter().enumerate() {
-            let pair = self.m.everyday[ep.e as usize];
-            let k = pair.kind as usize;
-            let (h, az) = self.epair_zones(ep);
-            let (out, ret) = (pair.trips as f64 * OUTWARD[k][q] as f64, pair.trips as f64 * RETURN[k][q] as f64);
-            let home = if ep.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), fx_of(h), &mut terms);
-            if sum <= 0. {
-                continue;
-            }
-            let util = (pe.mode_beta(ep.car) * (ep.car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
-            let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
-            let frac = (1. - w0) * pe.ratio_share(rail_c, ep.car) as f64;
-            e.frac[ei] = frac as f32;
-            let rd = rail_c + step(h, 1.);
-            let ud = (pe.mode_beta(ep.car) * (ep.car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
-            add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, ep.car) as f64 - frac), (out + ret) * frac, zkm(h, az));
-            let (ro, rr_) = (out * frac, ret * frac);
-            e.rail += ro + rr_;
-            e.walk_lost += (ro + rr_) * pair.walk as f64;
-            let (hc, ac) = (col[h] as usize, col[az] as usize);
-            for &(sa, sb, v) in &terms {
-                let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
-                od_e[k].push((sb, sa, a));
-                od_e[k].push((sa, sb, b));
-                let (sa, sb) = (sa as usize, sb as usize);
-                put(&mut st, sa, ac, a);
-                put(&mut st, sb, nz + hc, a);
-                put(&mut st, sb, hc, b);
-                put(&mut st, sa, nz + ac, b);
-            }
-        }
-        e.od = od_e.into_iter().map(|v| SparseOd::of(s, v)).collect();
-        let od_c = od_c.finish();
-        Demand { od, od_r, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).

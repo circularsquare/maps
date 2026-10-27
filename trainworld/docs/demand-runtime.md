@@ -188,21 +188,28 @@ run's first stop. So a city's search, tables and passes grow with its own reach,
 Each population's crowding rounds stop when its own loads settle (T-434). `?perfOff=reach` sets
 every population on the whole cluster, as before T-756.
 
-**The market on a big cluster** (T-761, `IntercityApi::pass_streamed`). The market's pass needs
-every station pair's route cost (its logsums) and, for its assignment, each destination's strategy
-(about 130 KB a destination on Japan's whole network, 1.1 GB in all). When the strategies would pass
-256 MB (`MARKET_STRATEGY_BYTES`) and no population on the worker has searched the period's graph,
-its destinations are searched one at a time, twice: the first sweep keeps every destination's route
-costs (and the costs with the planned first wait, T-1430, a column at a time as each search ends,
-never a list of them: T-1482) and the first 256 MB of strategies, the second assigns each destination's column of trips,
-searching it again unless kept (no more: in WASM the heap grows a piece at a time for them, T-780).
-The longer trips' zone pairs are dealt in chunks ([regional.md](regional.md) 5.1, T-780), so their
-table, the far-zone table and the logsums shrink with the pairs. The cities' cached tables go first (the market solves last in its
-cluster). The figures are the one-table pass's to the bit. On any network the commutes' station to
-station trips are held by destination, only the pairs that carry any; the far-zone table a station
-click reads (`station_flows`) holds only the entries a station's zones can fill (`StPattern`, a
-tenth of all on Japan), and the zone pairs are counted before their table is made, so it is never
-grown by doubling.
+**The market's pass by a window of zones** (T-1545, `IntercityApi::pass_window`). A zone pair's
+logsum reads the route costs from its home stations to its destination zone's stations, and fills
+those stations' columns of trips (a commute's or outing's trip home fills its home stations'). So
+the pass goes through the destination zones in the order of their centres' x. A station's route
+costs, the same with the planned first wait (T-1430) and its fare km (T-1286) are held from the
+first zone that reads them to the last; its columns of trips (longer trips, their lean, commutes,
+each everyday purpose) from the first zone that touches it to the last, when they are assigned
+along its strategy and dropped. The strategy, searched at the first read, is kept to then within
+128 MB (`WINDOW_STRATEGY_BYTES`, the stations assigned soonest first), else searched again. No
+station x station table is held: on all of Japan (9,253 stations) at most 197 stations' route costs
+and 1,954 stations' trips at once, the trips home of commutes making the long spans. A station's
+loads are its column's, added in the window's order (rounding apart, the figures of one table of
+every pair). On a small
+cluster the strategies and route costs come from the table the cities share (`with_skims`,
+T-119). When every destination's strategy would pass 256 MB (`MARKET_STRATEGY_BYTES`) and no
+population on the worker has searched the period's graph (T-761), each destination is searched as
+the window first needs it (`pass_searched`), the cities' cached tables dropped first
+(the market solves last in its cluster). The longer trips' zone pairs are dealt in chunks
+([regional.md](regional.md) 5.1, T-780), so the logsums and the far-zone table shrink with the
+pairs; the far-zone table a station click reads (`station_flows`) holds only the entries a station's
+zones can fill (`StPattern`, a tenth of all on Japan), and the zone pairs are counted before their
+table is made, so it is never grown by doubling.
 
 Within a cluster that is solved, a period whose own inputs are unchanged keeps its result too
 (T-124). Periods share no rider and each reads only its own demand level's run times and trains an

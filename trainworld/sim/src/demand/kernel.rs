@@ -3303,12 +3303,25 @@ impl<'a> DestSearch<'a> {
     /// Search towards `dst`: its strategy, and its column of route costs written into `r` (S x S,
     /// `Skims::r`'s layout) when given.
     pub fn run(&mut self, dst: usize, r: Option<&mut [f32]>) -> DestStrategy {
+        match r {
+            None => self.run_by(dst, None::<fn(usize, f32)>),
+            Some(r) => {
+                let s = self.q.s;
+                self.run_by(dst, Some(|src: usize, v: f32| r[src * s + dst] = v))
+            }
+        }
+    }
+    /// `run` with the route costs written into `col`, by the station the trip starts from (T-1545).
+    pub fn run_col(&mut self, dst: usize, col: &mut [f32]) -> DestStrategy {
+        self.run_by(dst, Some(|src: usize, v: f32| col[src] = v))
+    }
+    fn run_by(&mut self, dst: usize, put: Option<impl FnMut(usize, f32)>) -> DestStrategy {
         let q = &mut self.q;
         let (s, n) = (q.s, q.n);
         q.run(dst);
         let ids = n + q.cn.len();
         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]) };
-        if let Some(r) = r {
+        if let Some(mut put) = put {
             let curve = &q.g.fare_curve;
             let bent = !curve.is_line();
             if bent {
@@ -3318,12 +3331,12 @@ impl<'a> DestSearch<'a> {
             let mut entry = vec![];
             for src in 0..s {
                 if src == dst {
-                    r[src * s + dst] = 0.0;
+                    put(src, 0.0);
                     continue;
                 }
                 // The first boarding is not a transfer; the trip's base fare is added later.
                 let x = if bent { curve.extra(self.km[src]) } else { 0.0 };
-                r[src * s + dst] = q.dist[src] - q.p.transfer_min + x;
+                put(src, q.dist[src] - q.p.transfer_min + x);
                 if q.entry[src] < q.dist[src] - 1e-4 {
                     entry.push((src as u32, q.entry[src] - q.p.transfer_min + x));
                 }

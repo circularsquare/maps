@@ -1190,9 +1190,9 @@ fn real_far_lines_share_rail_with_air() {
         }
     }
 }
-/// T-761: the pass with its destinations searched one at a time gives the pass's figures to the
-/// bit, whatever share of the strategies it keeps between its sweeps. Two lines across Tokyo
-/// changing at Tokyo station, so the commutes between zones and the transfers are in it.
+/// T-761, T-1545: the pass with its destinations searched as its window needs them gives the
+/// figures of the pass on a table of every strategy to the bit. Two lines across Tokyo changing at
+/// Tokyo station, so the commutes between zones and the transfers are in it.
 #[test]
 fn a_streamed_pass_is_the_pass_to_the_bit() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
@@ -1220,15 +1220,59 @@ fn a_streamed_pass_is_the_pass_to_the_bit() {
     let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
     let loads = |l: &Loads| [&l.seg, &l.board, &l.alight, &l.rn_board, &l.rn_alight, &l.entry, &l.exit].map(|v| bits(v));
     let one = strategy_bytes(g);
-    for keep in [0, 3 * one, usize::MAX] {
-        let s = api.pass_streamed(g, p, 0, ix, keep);
-        assert_eq!(loads(&s.loads), loads(&whole.loads), "keeping {keep} bytes");
+    let was = WINDOW_STRATEGY_BYTES.with(|c| c.get());
+    // every strategy kept to its assignment, none, and a few: the ones not kept are searched again
+    for cap in [usize::MAX, 0, 3 * one] {
+        WINDOW_STRATEGY_BYTES.with(|c| c.set(cap));
+        WINDOW_STATS.with(|w| w.set([0; 5]));
+        let s = api.pass_searched(g, p, 0, ix);
+        assert_eq!(loads(&s.loads), loads(&whole.loads), "keeping {cap} bytes");
         assert_eq!(loads(&s.c_loads), loads(&whole.c_loads));
         assert_eq!((s.loads.pax_min.to_bits(), s.c_loads.pax_min.to_bits()), (whole.loads.pax_min.to_bits(), whole.c_loads.pax_min.to_bits()));
         assert_eq!((s.rail.to_bits(), s.c_rail.to_bits()), (whole.rail.to_bits(), whole.c_rail.to_bits()));
         assert_eq!((bits(&s.c_frac), bits(&s.pair_rail), bits(&s.st), bits(&s.xfer)), (bits(&whole.c_frac), bits(&whole.pair_rail), bits(&whole.st), bits(&whole.xfer)));
         assert_eq!((s.cor, s.c_cor), (whole.cor.clone(), whole.c_cor.clone()));
+        // the window held some of the stations at a time, never more than were wanted
+        let [reads, trips, kept, searches, again] = WINDOW_STATS.with(|w| w.get());
+        let wanted = api.want.iter().filter(|&&w| w).count();
+        assert!(reads > 0 && trips >= reads && trips <= wanted && searches <= wanted, "{reads} {trips} {searches}");
+        assert!(kept <= cap && (cap > 0 || again > 0), "kept {kept}, searched again {again}");
     }
+    WINDOW_STRATEGY_BYTES.with(|c| c.set(was));
+}
+/// T-1545: the window's figures are the trips a dense table of every station pair gives, summed in
+/// another order: every part's rail trips, and each station's entries and exits, against the trips
+/// the pairs' own figures give and each other.
+#[test]
+fn the_window_keeps_every_trip() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut times = vec![];
+    for len in [4, 5] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = 600.;
+                t[(3 + lev) * len + k + 1] = 600.;
+            }
+        }
+        times.extend(t);
+    }
+    api.set_network_ll(&ll, &[4, 5], &[0, 1, 2, 3, 4, 0, 5, 6, 7], &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    assert!(api.solve(0));
+    let per = api.per(0).unwrap();
+    let s = api.pass_searched(&per.g, &per.p, 0, &per.xi);
+    // every rider enters at one station and leaves at another: the pairs' rail trips
+    let entries: f64 = s.loads.entry.iter().map(|&v| v as f64).sum();
+    let exits: f64 = s.loads.exit.iter().map(|&v| v as f64).sum();
+    let pairs: f64 = s.pair_rail.iter().map(|&v| v as f64).sum();
+    let c_legs: f64 = s.c_loads.entry.iter().map(|&v| v as f64).sum();
+    let want = s.rail + s.c_rail + s.e_rail;
+    assert!(want > 0. && (entries - want).abs() < 1e-4 * want && (exits - want).abs() < 1e-4 * want, "entries {entries}, exits {exits}, trips {want}");
+    assert!((pairs - s.rail).abs() < 1e-4 * s.rail, "pairs {pairs} against {}", s.rail);
+    assert!((c_legs - s.c_rail).abs() < 1e-4 * s.c_rail.max(1.), "commute legs {c_legs} against {}", s.c_rail);
 }
 /// T-1286: fare factors of 1, or for a country outside the market, leave the pass alone to the bit;
 /// a factor of 2 where the trips start costs rail riders, the same streamed or not.
@@ -1255,7 +1299,7 @@ fn fare_factors_weigh_trips_by_their_origin() {
         assert!(api.solve(0));
         let per = api.per(0).unwrap();
         let p = api.pass_on(&per.g, &per.p, 0, &skims_for(&per.g, &per.p, &api.want), &per.xi);
-        let s = api.pass_streamed(&per.g, &per.p, 0, &per.xi, 0);
+        let s = api.pass_searched(&per.g, &per.p, 0, &per.xi);
         assert_eq!((p.rail.to_bits(), p.c_rail.to_bits(), p.e_rail.to_bits()), (s.rail.to_bits(), s.c_rail.to_bits(), s.e_rail.to_bits()));
         (p.rail, p.c_rail)
     };
@@ -1370,9 +1414,6 @@ fn t761_market_bench() {
         n += 1;
     }
     eprintln!("a sweep: {n} searches {:.0} ms, {:.0} MB of strategies (estimate {:.0} MB)", now_ms() - t, bytes as f64 / 1048576., (n * strategy_bytes(g)) as f64 / 1048576.);
-    let t = now_ms();
-    let d = a.demand(g, &r, &r, p, 0, &[]);
-    eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
 }
 /// T-1175: the market's solve with and without the everyday pairs across zone lines, on scratch
 /// market packs (`TW_T1175_DIR`: `<id>.market.json` and `<id>.market.everyday.json` of `TW_T1175_IDS`)
@@ -1591,9 +1632,6 @@ fn t780_census() {
         x += c as f64;
     }
     eprintln!("logsums alone {:.0} ms ({x:.0})", now_ms() - t);
-    let t = now_ms();
-    let d = a.demand(g, &r, &r, p, 1, &[]);
-    eprintln!("demand {:.0} ms, rail {:.0}", now_ms() - t, d.rail);
 }
 /// T-780: the market's period 1 at free flow with its pairs sampled in chunks, against every pair.
 /// `TW_T780_NET=<plain net> TW_T780_CHUNKS=0,0.3,1 cargo test --release --features demand t780_compare -- --ignored --nocapture`
@@ -1633,22 +1671,6 @@ fn t780_compare() {
         } else {
             base = Some((board, seg, entries, cor, rail));
         }
-    }
-}
-/// T-780 (T-767): the streamed pass keeping more of its strategies between sweeps, with sampled pairs.
-/// `TW_T780_NET=<plain net> TW_T780_KEEP=256,768 cargo test --release --features demand t780_keep -- --ignored --nocapture`
-#[test]
-#[ignore]
-fn t780_keep() {
-    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
-    assert!(a.solve(1));
-    let per = a.per(1).unwrap();
-    let (g, p, ix) = (&per.g, &per.p, &per.xi);
-    eprintln!("a strategy {:.0} KB, {} destinations", strategy_bytes(g) as f64 / 1024., a.want.iter().filter(|&&w| w).count());
-    for mb in std::env::var("TW_T780_KEEP").unwrap_or("256,768".into()).split(',').map(|v| v.parse::<usize>().unwrap()) {
-        let t = now_ms();
-        let s = a.pass_streamed(g, p, 1, ix, mb << 20);
-        eprintln!("keeping {mb} MB: pass {:.0} ms, rail {:.1}", now_ms() - t, s.rail);
     }
 }
 /// T-780: each curve worked out once gives every zone pair's trips to the bit.
@@ -2027,26 +2049,6 @@ fn rides_reserve_track_components() {
     assert_eq!(st(&with[p.ride_lines..]), vec![first(8), first(10)], "the next unlinked lines, the one without trains passed over");
 }
 #[test]
-fn sparse_od_builder_matches_of() {
-    // T-1558: entries placed by destination give the sparse table `SparseOd::of` gives, to the bit
-    let s = 9;
-    let mut x = 12345u32;
-    let mut next = |m: u32| { x = x.wrapping_mul(1664525).wrapping_add(1013904223); (x >> 8) % m };
-    let adds: Vec<(u32, u32, f32)> = (0..400).map(|_| (next(s), next(s), (next(1000) as f32) * 0.37 + 1e-3 * next(7) as f32)).collect();
-    let mut cnt = vec![0u32; s as usize];
-    for a in &adds {
-        cnt[a.0 as usize] += 1;
-    }
-    let mut b = SparseOdBuilder::new(&cnt);
-    for a in &adds {
-        b.push(a.0, a.1, a.2);
-    }
-    let (got, want) = (b.finish(), SparseOd::of(s as usize, adds));
-    assert_eq!(got.off, want.off);
-    assert_eq!(got.src, want.src);
-    assert_eq!(got.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.v.iter().map(|v| v.to_bits()).collect::<Vec<_>>());
-}
-#[test]
 fn compact_columns_give_back_the_numbers_they_were_given() {
     // T-1559: `Col` and `Ix` keep what the pack files say, to the bit, whichever form they pick
     let cases: Vec<Vec<f64>> = vec![
@@ -2073,4 +2075,136 @@ fn compact_columns_give_back_the_numbers_they_were_given() {
     let wide = Ix::of(vec![1, 70_000]);
     assert!(matches!(wide, Ix::U32(_)) && wide.at(1) == 70_000 && wide.len() == 2);
     assert!(matches!(Ix::of(vec![1, 65_535]), Ix::U16(_)));
+}
+/// T-1545: a captured network's market solved for period `TW_T1545_Q` (1) at free flow, its figures
+/// written to `TW_T1545_OUT` as JSON, to compare the pass before and after a change.
+/// `TW_T780_NET=<plain net> TW_T1545_OUT=<out.json> cargo test --release --features demand t1545_dump -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1545_dump() {
+    let q: usize = std::env::var("TW_T1545_Q").map(|v| v.parse().unwrap()).unwrap_or(1);
+    let t = now_ms();
+    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
+    let t_net = now_ms() - t;
+    let t = now_ms();
+    WINDOW_STATS.with(|w| w.set([0; 5]));
+    if let Ok(mb) = std::env::var("TW_T1545_CAP") {
+        WINDOW_STRATEGY_BYTES.with(|c| c.set(mb.parse::<usize>().unwrap() << 20));
+    }
+    assert!(a.solve(q));
+    let t_solve = now_ms() - t;
+    let [reads, trips, kept, searches, again] = WINDOW_STATS.with(|w| w.get());
+    eprintln!("window: {reads} stations read at once, {trips} touched, {:.0} MB of strategies kept, {searches} searches and {again} again, of {} stations wanted", kept as f64 / 1048576., a.want.iter().filter(|&&w| w).count());
+    let per = a.per(q).unwrap();
+    if std::env::var("TW_T1545_SPLIT").is_ok() {
+        let t = now_ms();
+        let sk = skims_for(&per.g, &per.p, &a.want);
+        let t_sk = now_ms() - t;
+        let t = now_ms();
+        let _ = a.pass_on(&per.g, &per.p, q, &sk, &per.xi);
+        eprintln!("skims {t_sk:.0} ms, the window on them {:.0} ms", now_ms() - t);
+    }
+    let f = |v: &[f32]| v.iter().map(|&x| x as f64).collect::<Vec<f64>>();
+    let mut e_seg: Vec<f64> = vec![];
+    for l in per.e_avg.iter().flatten() {
+        e_seg.extend(f(&l.seg));
+    }
+    let j = serde_json::json!({
+        "set_up_ms": t_net, "solve_ms": t_solve, "stations": per.g.n_st, "pairs": a.pairs.len(), "cpairs": a.cpairs.len(), "epairs": a.epairs.len(),
+        "rail": per.rail, "c_rail": per.c_rail, "e_rail": per.e_rail, "pax_min": per.avg.pax_min,
+        "board": f(&a.board(q)), "seg": f(&a.seg(q)), "entries": f(&a.entries(q)), "exits": f(&a.exits(q)),
+        "c_seg": f(&per.c_avg.seg), "c_board": f(&per.c_avg.rn_board), "e_seg": e_seg,
+        "r_seg": per.r_avg.as_ref().map(|l| f(&l.seg)),
+        "corridors": a.corridor_summary(q), "pair_rail": f(&per.pair_rail), "c_frac": f(&per.c_frac), "st": f(&per.st), "xfer": f(&per.xfer),
+    });
+    std::fs::write(std::env::var("TW_T1545_OUT").unwrap(), j.to_string()).unwrap();
+    eprintln!("set up {t_net:.0} ms, solve {t_solve:.0} ms, rail {:.1}, commutes {:.1}", per.rail, per.c_rail);
+}
+/// T-1545: how many stations the window holds at once by the zones' order and what it holds them
+/// for. `TW_T780_NET=<plain net> cargo test --release --features demand t1545_window -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1545_window() {
+    let a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
+    let m = &a.m;
+    let nzz = m.zones.len();
+    let s = a.want.len();
+    let (l_off, _) = by_zone(nzz, a.pairs.len(), |i| a.pairs[i].b as usize);
+    let (c_off, c_ix) = by_zone(nzz, a.cpairs.len(), |i| m.comp_of_gid[m.commutes[a.cpairs[i].c as usize].1 as usize] as usize);
+    let home = |ci: usize| {
+        let cp = &a.cpairs[ci];
+        let h = m.commutes[cp.c as usize].0 as usize;
+        if cp.ride { &a.access_c[h] } else { &a.access_c_walk[h] }
+    };
+    let zones: Vec<usize> = (0..nzz).filter(|&z| l_off[z] < l_off[z + 1] || c_off[z] < c_off[z + 1]).collect();
+    let (x0, x1, y0, y1) = zones.iter().fold((f32::MAX, f32::MIN, f32::MAX, f32::MIN), |b, &z| (b.0.min(m.zones[z].x), b.1.max(m.zones[z].x), b.2.min(m.zones[z].y), b.3.max(m.zones[z].y)));
+    let hil = |z: usize| {
+        let n = 1u32 << 16;
+        let (mut x, mut y) = ((((m.zones[z].x - x0) / (x1 - x0).max(1.)) * (n - 1) as f32) as u32, (((m.zones[z].y - y0) / (y1 - y0).max(1.)) * (n - 1) as f32) as u32);
+        let mut d = 0u64;
+        let mut sq = n / 2;
+        while sq > 0 {
+            let rx = (x & sq > 0) as u32;
+            let ry = (y & sq > 0) as u32;
+            d += sq as u64 * sq as u64 * ((3 * rx) ^ ry) as u64;
+            if ry == 0 {
+                if rx == 1 {
+                    x = n - 1 - x;
+                    y = n - 1 - y;
+                }
+                std::mem::swap(&mut x, &mut y);
+            }
+            sq /= 2;
+        }
+        d
+    };
+    eprintln!("zones {}, stations {s}", zones.len());
+    for order in ["x", "y", "hilbert", "id"] {
+        let mut zs = zones.clone();
+        match order {
+            "x" => zs.sort_by(|&p, &q| m.zones[p].x.total_cmp(&m.zones[q].x)),
+            "y" => zs.sort_by(|&p, &q| m.zones[p].y.total_cmp(&m.zones[q].y)),
+            "hilbert" => zs.sort_by_key(|&z| hil(z)),
+            _ => {}
+        }
+        for what in ["all", "reads", "long", "commute writes"] {
+            let touched = |z: usize, out: &mut Vec<usize>| {
+                out.clear();
+                if (what == "all" || what == "reads" || what == "long") && l_off[z] < l_off[z + 1] {
+                    out.extend(a.access_work[z].iter().map(|e| e.0));
+                }
+                if (what == "all" || what == "reads") && c_off[z] < c_off[z + 1] {
+                    out.extend(a.access_cw[z].iter().map(|e| e.0));
+                }
+                if (what == "all" || what == "commute writes") && c_off[z] < c_off[z + 1] {
+                    for &ci in &c_ix[c_off[z] as usize..c_off[z + 1] as usize] {
+                        out.extend(home(ci as usize).iter().map(|e| e.0));
+                    }
+                }
+            };
+            let (mut first, mut last) = (vec![u32::MAX; s], vec![0u32; s]);
+            let mut tl = vec![];
+            for (u, &z) in zs.iter().enumerate() {
+                touched(z, &mut tl);
+                for &st in &tl {
+                    first[st] = first[st].min(u as u32);
+                    last[st] = u as u32;
+                }
+            }
+            let mut delta = vec![0i64; zs.len() + 1];
+            for st in 0..s {
+                if first[st] != u32::MAX {
+                    delta[first[st] as usize] += 1;
+                    delta[last[st] as usize + 1] -= 1;
+                }
+            }
+            let (mut live, mut most, mut sum) = (0i64, 0i64, 0i64);
+            for d in &delta[..zs.len()] {
+                live += d;
+                most = most.max(live);
+                sum += live;
+            }
+            eprintln!("{order:8} {what:15} most {most:5} mean {:.0}", sum as f64 / zs.len() as f64);
+        }
+    }
 }

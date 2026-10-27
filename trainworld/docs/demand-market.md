@@ -55,7 +55,8 @@ countryside zone or a small town counts smaller than its people alone (Anita: ho
 population, with a boost towards rural areas, small towns and smaller cities; no birthplace
 tables). A big city against a small town runs about 70/30 outward, two like places 50/50; a pair's
 trips in all are kept. Each pass fills the longer trips' station to station trips times their
-pair's lean beside their own (`od_r`, S x S floats, left out past 256 MB: `LEAN_OD_BYTES`) and
+pair's lean beside their own (a column per station in the pass's window, T-1545; left out on
+networks of more than 8,192 stations, `LEAN_OD_BYTES`, T-1503) and
 walks it on the same strategies as a fourth assignment (`r_avg`, averaged over rounds and cut by
 capacity like the commutes'); `lean_loads(q)` gives it. Selections, a station's far zones
 (the station's place: the zone that reaches it most) and the trip explorer weigh each pair by its
@@ -71,7 +72,9 @@ place's own frame for access and rides (each place on its own, so its figures ne
 other packs are open), the graph in the first place's. Each zone end's access list holds up to 10
 stations, its 8 best and then a slot each for track none of those is on (`access_list`,
 T-1506, [regional.md](regional.md) 5.2), so the market's station-pair loop is at most 10 x 10 a
-zone pair. Its rides reserve the same way one level down: past the 6 cheapest lines, up to 2 more
+zone pair. Each pass goes through the destination zones a window at a time, holding route costs,
+fare km and trips only for the stations the window's zones reach, never a station x station table
+(T-1545, [demand-runtime.md](demand-runtime.md) "The market's pass by a window of zones"). Its rides reserve the same way one level down: past the 6 cheapest lines, up to 2 more
 for track those miss (`access_options` with the stations' components, T-1511, regional.md 5.3). It builds pairs only between zones some
 station serves whose stations share a track component (T-409: the rail graph's, every line and
 walking transfer at any frequency; the commutes between zones follow the same rule) on one
