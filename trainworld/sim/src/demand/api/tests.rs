@@ -252,7 +252,7 @@ fn periods_an_edit_did_not_touch_are_kept_exactly() {
     api.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
     api.set_fares(2.0, 0.1, &hop).unwrap();
     let kept = api.solved_mask();
-    assert_eq!(kept, 0b11010, "the medium and low periods are kept");
+    assert_eq!(kept, 0b11000, "the medium and low periods are kept");
     solve(&mut api, 0b11111 & !kept);
     let (mut fresh, ..) = small();
     fresh.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();

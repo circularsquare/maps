@@ -29,11 +29,11 @@ fn a_count_change_with_a_lead_takes_effect_then_and_saves_with_its_eras() {
     a.set_now(now);
     let old = a.trips(epoch);
     a.set_edit_lead(300.0);
-    assert_eq!(a.set_train_counts(id, 2, 3, 2), 0, "{}", a.issues());
+    assert_eq!(a.set_train_counts(id, 3, 2, 2), 0, "{}", a.issues());
     assert_eq!(a.edit_time(), now + 300.0);
     // the lead is used once
     a.set_now(now + 1.0);
-    assert_eq!(a.set_train_counts(id, 2, 3, 2), 0);
+    assert_eq!(a.set_train_counts(id, 3, 2, 2), 0);
     assert_eq!(a.edit_time(), now + 1.0);
     let new = a.trips(epoch);
     // trips that left before the change are the same ones (draw, as the fourth number may

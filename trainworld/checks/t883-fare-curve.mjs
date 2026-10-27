@@ -1,6 +1,6 @@
 // T-883, T-1112, T-1143: the fare curve reaches demand and income, and the Money tab's three-node
-// control works. On the real save (a ?new=1 game, the weekday's final): the default fare (three
-// nodes on $1.50 + $0.10 a km); the same line through other nodes and an older save's two nodes
+// control works. On the real save (a ?new=1 game, the weekday's final): the default fare (the save's own
+// three nodes, in the baseline country's dollars, T-1535); the same line through other nodes and an older save's two nodes
 // (no change at all); twice the rate per km (fewer rail trips); a curve steeper past 20 km (fewer
 // rail trips, demand's extra fare counted in income: the weekday's income is the base on each trip,
 // the first stretch's rate on the passenger-km and demand's extra, and the extra is within what the
@@ -22,7 +22,6 @@ const OUT = join(ARTIFACTS, 't1143');
  * url (smoke-figures.json, the same weekday final of the same game), else not compared */
 const smokeRail = await readFile(SMOKE_FIGURES, 'utf8').then((s) => JSON.parse(s)[BASE]?.realRail, () => undefined);
 const DEFAULT_RAIL = process.env.T883_RAIL ? Number(process.env.T883_RAIL) : smokeRail ?? null;
-const DEFAULT = '[[0,1.5],[20,3.5],[100,11.5]]';
 
 let failed = false;
 const report = (name, ok, detail) => { if (!ok) failed = true; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -40,6 +39,18 @@ try {
   await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
 
+  // T-1535: the game keeps the curve in the baseline country's dollars (India's), `moneyState.fares`,
+  // and shows it times the fare scale of the country in view. The real save carries its own curve
+  // (the old New York one divided by its 2.8x scale, to a hundredth of a cent), which is the default
+  // here and is not a straight line to the last digit; the test curves are built on its first stretch
+  // (base b0, rate r1 a km). Fares come back rounded to a hundredth of a cent.
+  const D = await page.evaluate(() => window.tw.moneyState.value.fares.nodes);
+  const DEFAULT = JSON.stringify(D);
+  const b0 = D[0][1], r1 = (D[1][1] - D[0][1]) / (D[1][0] - D[0][0]);
+  const fine = (v) => Math.round(v * 1e4) / 1e4;
+  const onLine = (k, rate = r1) => [k, fine(b0 + rate * k)];
+  const nodesNear = (a, b, tol = 2e-4) => a.length === b.length && a.every(([k, f], i) => Math.abs(k - b[i][0]) < 1e-6 && Math.abs(f - b[i][1]) < tol);
+
   /** the next final after `after` (a demand log version), its rail trips a day */
   const final = async (after) => {
     await demandFinal(page, { after, lines: 100, timeout: 400000, polling: 250 });
@@ -47,61 +58,74 @@ try {
   };
   const setNodes = (nodes) => page.evaluate((nodes) => window.tw.client.edit({ op: 'fares', nodes }), nodes);
   const nodesNow = () => page.evaluate(() => JSON.stringify(window.tw.moneyState.value.fares.nodes));
-  const waitNodes = (want) => page.waitForFunction((want) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === want, want, { timeout: 30000 }).catch(() => {});
+  const waitNodes = (want) => page.waitForFunction((want) => {
+    const a = window.tw.moneyState.value.fares.nodes, b = JSON.parse(want);
+    return a.length === b.length && a.every(([k, f], i) => Math.abs(k - b[i][0]) < 1e-6 && Math.abs(f - b[i][1]) < 2e-4);
+  }, want, { timeout: 30000 }).catch(() => {});
   const fmt = (v) => Math.round(v).toLocaleString('en-US');
   /** the weekday's fare income a day against the base, rate and demand's extra on its riders, US$ */
-  const money = () => page.evaluate(() => {
-    const tw = window.tw, w = tw.world.value, m = tw.moneyState.value, dv = window.twDemand.view();
+  // a stretch pays its starting stop's fare scale and the base its boarding stops' (T-1277): the
+  // game's own `scalesOf` gives them
+  const money = () => page.evaluate(async () => {
+    const { lineGeo, scalesOf } = await import('/src/game/money.ts');
+    const { stopsById } = await import('/src/game/world.ts');
+    const tw = window.tw, w = tw.world.value, m = tw.moneyState.value, dv = window.twDemand.view(), byId = stopsById(w);
     const hours = [4, 6, 4, 4, 6];
     const income = tw.incomeByDay.value[0].perHour.reduce((a, v, p) => a + v * hours[p] * 1e6, 0);
     const boardings = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
     const perBoarding = boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
-    let trips = 0, pkm = 0, extra = 0;
+    let trips = 0, pkm = 0, pkmPaid = 0, extra = 0;
     for (const l of w.save.lines) {
       const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
       if (!st || st.status !== 'running' || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
-      const km = [];
-      for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push((s[k + 1] - s[k]) / 1000);
-      for (const seg of dm.loads) if (seg.length === km.length) pkm += seg.reduce((a, v, k) => a + v * km[k], 0);
-      trips += dm.ridersPerDay * perBoarding;
+      const g = lineGeo(w, l, byId), km = g.km, { sc, from } = scalesOf(g, l, byId, m.fares.scales);
+      let moved = 0;
+      for (const seg of dm.loads) if (seg.length === km.length) {
+        pkm += seg.reduce((a, v, k) => a + v * km[k], 0);
+        pkmPaid += seg.reduce((a, v, k) => a + v * km[k] * from[k], 0);
+        moved += seg.reduce((a, v, k) => a + v * km[k], 0);
+      }
+      let boarded = 0, scaled = 0;
+      for (let k = 0; k < dm.boardings.length; k++) { boarded += dm.boardings[k]; scaled += dm.boardings[k] * (sc[k] ?? 1); }
+      trips += dm.ridersPerDay * perBoarding * (moved > 0 ? (boarded > 0 ? scaled / boarded : (sc[0] ?? 1)) : 0);
       extra += (dm.fareX ?? []).reduce((a, b) => a + b, 0);
     }
     const f = m.fares;
-    return { income, expected: (f.base * trips + f.perKm * pkm + extra) * m.economy, extra: extra * m.economy, pkm, economy: m.economy };
+    return { income, expected: (f.base * trips + f.perKm * pkmPaid + extra) * m.economy, extra: extra * m.economy, pkm, pkmPaid, economy: m.economy };
   });
 
   const a = await final(-1);
   const an = await nodesNow();
   const am = await money();
-  report('default fare', a.rail > 0 && (DEFAULT_RAIL === null || Math.round(a.rail) === DEFAULT_RAIL) && an === DEFAULT && am.extra === 0,
+  report('default fare', a.rail > 0 && (DEFAULT_RAIL === null || Math.round(a.rail) === DEFAULT_RAIL) && an === DEFAULT && Math.abs(am.extra) < 1e-4 * am.income,
     `(${fmt(a.rail)} rail trips a day; ${DEFAULT_RAIL === null ? 'no smoke figure for this url to compare' : `smoke's ${fmt(DEFAULT_RAIL)}`}; nodes ${an}; extra ${am.extra})`);
 
   // the same fares give the demand nothing new to solve, so no new final may come
-  await setNodes([[0, 1.5], [50, 6.5], [200, 21.5]]);
+  await setNodes([[0, b0], onLine(50), onLine(200)]);
   await page.waitForTimeout(15000);
   const b = await final(-1);
-  report('the same line through other nodes', Math.round(b.rail) === Math.round(a.rail), `(${fmt(b.rail)})`);
+  report('the same line through other nodes', Math.abs(b.rail / a.rail - 1) < 1e-4, `(${fmt(b.rail)})`);
 
-  await setNodes([[1, 1.6], [100, 11.5]]);
+  await setNodes([onLine(1), onLine(100)]);
   await waitNodes(DEFAULT);
   await page.waitForTimeout(15000);
   const c = await final(-1);
   const cn = await nodesNow();
-  report('an older two-node curve becomes three on its line', cn === DEFAULT && Math.round(c.rail) === Math.round(a.rail), `(nodes ${cn}, ${fmt(c.rail)})`);
+  report('an older two-node curve becomes three on its line', nodesNear(JSON.parse(cn), D) && Math.abs(c.rail / a.rail - 1) < 1e-4, `(nodes ${cn}, ${fmt(c.rail)})`);
 
-  await setNodes([[0, 1.5], [20, 5.5], [100, 21.5]]);
+  await setNodes([[0, b0], onLine(20, 2 * r1), onLine(100, 2 * r1)]);
   const d = await final(c.version);
   const dd = (d.rail - a.rail) / a.rail;
   report('twice the rate per km', dd < 0, `(${fmt(d.rail)}, ${(100 * dd).toFixed(2)}%)`);
 
   // steeper past 20 km: fewer riders, and the extra fare demand charged is in the income
-  await setNodes([[0, 1.5], [20, 3.5], [100, 27.5]]);
+  await setNodes([[0, b0], D[1], [100, fine(D[1][1] + 3 * r1 * 80)]]);
   const e = await final(d.version);
   const de = (e.rail - a.rail) / a.rail;
   report('steeper past 20 km', e.rail < a.rail && e.rail > d.rail, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}%)`);
   const em = await money();
   const gap = Math.abs(em.income - em.expected) / em.expected;
-  report('income is the base, the rate and demand\'s extra', gap < 1e-6 && em.extra > 0 && em.extra <= 0.2 * em.pkm * em.economy * 1.0001,
+  report('income is the base, the rate and demand\'s extra', gap < 1e-6 && em.extra > 0 && em.extra <= 2 * r1 * em.pkmPaid * em.economy * 1.0001,
     `(income $${fmt(em.income)} a day, expected $${fmt(em.expected)}, extra $${fmt(em.extra)}, ${(100 * em.extra / em.income).toFixed(1)}% of it)`);
 
   await setNodes(JSON.parse(DEFAULT));
@@ -155,7 +179,7 @@ try {
   await page.mouse.up();
   await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, DEFAULT, { timeout: 30000 }).catch(() => {});
   const after = JSON.parse(await nodesNow());
-  report('a sideways drag moves the distance only, sent once on release', mid === DEFAULT && midHints === 2 && after[1][0] > 20 && after[1][1] === 3.5 && after[0][1] === 1.5 && after[2][0] === 100,
+  report('a sideways drag moves the distance only, sent once on release', mid === DEFAULT && midHints === 2 && after[1][0] > 20 && nodesNear([after[1]], [[after[1][0], D[1][1]]]) && nodesNear([after[0]], [D[0]]) && after[2][0] === 100,
     `(mid-drag ${mid}, ${midHints} arrows, after ${JSON.stringify(after)})`);
 
   // T-1130: Ctrl+Z takes the fare change back while it is the last edit, Ctrl+Y puts it back
@@ -187,9 +211,9 @@ try {
     return JSON.parse(await nodesNow());
   };
   const up = await drag(2, 6, -30);
-  report('an upward drag moves the fare only', up[2][0] === 100 && up[2][1] > 11.5 && up[1][0] === 20, `(${JSON.stringify(up)})`);
+  report('an upward drag moves the fare only', up[2][0] === 100 && up[2][1] > D[2][1] && up[1][0] === 20, `(${JSON.stringify(up)})`);
   const baseMoved = await drag(0, 30, -5);
-  report('the base fare stays at 0 km', baseMoved[0][0] === 0 && baseMoved[0][1] > 1.5 && baseMoved[0][1] <= baseMoved[1][1], `(${JSON.stringify(baseMoved)})`);
+  report('the base fare stays at 0 km', baseMoved[0][0] === 0 && baseMoved[0][1] > D[0][1] && baseMoved[0][1] <= baseMoved[1][1], `(${JSON.stringify(baseMoved)})`);
   await setNodes(JSON.parse(DEFAULT));
   await waitNodes(DEFAULT);
   await page.waitForTimeout(300);

@@ -188,9 +188,11 @@ pub const MEDIUM: usize = 1;
 pub const LOW: usize = 2;
 pub const LEVELS: usize = 3;
 /// The five periods of SPEC 4.2 in the demand kernel's order (morning peak, midday, evening
-/// peak, evening, night): start and end hour, and which demand level schedules them.
+/// peak, evening, night): start and end hour, and which demand level schedules them. High runs
+/// 6-20, medium 20-24, low 0-6 (Anita, 2026-10-27, T-1536). A level is a set of whole periods:
+/// demand solves each period on its own level's trains.
 pub const PERIOD_HOURS: [(f64, f64); 5] = [(6.0, 10.0), (10.0, 16.0), (16.0, 20.0), (20.0, 24.0), (0.0, 6.0)];
-pub const PERIOD_LEVEL: [usize; 5] = [HIGH, MEDIUM, HIGH, MEDIUM, LOW];
+pub const PERIOD_LEVEL: [usize; 5] = [HIGH, HIGH, HIGH, MEDIUM, LOW];
 /// Each period's busiest hour against its mean hour (T-087): how riders arrive over it (the
 /// boarding account's shape, demand's crowding).
 pub const PEAK_HOUR_FACTOR: [f32; 5] = [1.4, 1.15, 1.4, 1.3, 1.5];

@@ -108,9 +108,9 @@ notes/T-174.md and notes/demand-measurements.md.
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
 5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers
 by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
-that puts both periods of a demand level on one worker (2 workers: both peaks), when they are dealt
-out level by level (high, then medium, then low: 0, 1, 4 and 2, 3), so an edit to one level's trains
-has its two periods solved side by side (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
+that puts two periods of a demand level on one worker (2 workers: high demand's three periods), when they are dealt
+out level by level (high, then medium, then low: 0, 1, 2, 3 and 4 in that order, to workers 0, 1, 0, 1, 0), so an edit to one level's trains
+has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
 commuters by mode right after a round is published, when every worker is already part way into
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
@@ -213,7 +213,7 @@ run times and trains an hour are unchanged; `set_fares` with the same fare keeps
 worker keeps a period only when every population of the cluster kept it and each holds it from a whole
 solve of the cluster's period with the same inputs (`psig`, per period like `sig`), since the crowding
 is the cluster's; the other periods are solved from free flow. A train-count change at one level
-re-solves two periods (one at the low level), a new station or a fare change all five.
+re-solves that level's periods (three at high, one at medium or low), a new station or a fare change all five.
 `?perfOff=periods` re-solves every period of a cluster solved.
 
 After an edit (a solve without the round barrier) the clusters to solve go one after another, the
