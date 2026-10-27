@@ -24,6 +24,7 @@ import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, HOME_CITY, l
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
+import { DEMAND_DAYS } from "../game/days";
 import { scaledKnots } from "../game/fareCurve";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
@@ -90,6 +91,8 @@ let stageGroup = 0;
 const ready = new Set<JobCluster>();
 /** the group the city's cluster is solved in (undefined: kept, or in no cluster) */
 const cityGroup = (city: CityId) => { const c = jobClusters.find((c) => c.cities.includes(city)); return c ? groupOf.get(c) : undefined; };
+/** `day_factors()`, read once */
+let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
@@ -1403,13 +1406,40 @@ async function run() {
         for (let k = 0; k < free.length; k++) free[k] = Math.max(free[k], rounds[k]);
         return free;
       };
+      // T-1530: the transfers in at each route node of the whole network, every kind of day: a
+      // population's weekday figures times the factor its `transfers_day` scales its pairs by
+      const xferDays = (cs: JobCluster[], q: number): Float32Array => {
+        const N = jobNodes, D = DEMAND_DAYS.length, out = new Float32Array(D * N);
+        const table = dayTable ??= day_factors(), K = 2 + EVERYDAY_KEYS.length, P = PERIODS.length;
+        const f = (day: number, p: number) => (day === 0 ? 1 : table[(day * K + p) * P + q] ?? 1);
+        for (const c of cs)
+          for (const a of c.pops) {
+            const v = a.transfers_in(q);
+            if (!v.length) continue;
+            const map = viewOf(c, a).nodeGlobal;
+            const kinds = a instanceof EverydayApi ? a.kind_totals(q) : null;
+            for (let day = 0; day < D; day++) {
+              let k = 1;
+              if (a instanceof DemandApi) k = f(day, 0);
+              else if (a instanceof IntercityApi) k = f(day, K - 1);
+              else if (kinds && day !== 0) {
+                // the purposes' transfers are kept together: their rail riders' mean factor
+                let rail = 0, weighted = 0;
+                for (let i = 0; 3 * i + 1 < kinds.length; i++) { rail += kinds[3 * i + 1]; weighted += kinds[3 * i + 1] * f(day, 1 + i); }
+                k = rail > 0 ? weighted / rail : 0;
+              }
+              for (let j = 0, o = day * N; j < map.length; j++) out[o + map[j]] += v[j] * k;
+            }
+          }
+        return out;
+      };
       // period q's figures over the clusters `cs` (all of them for a result), as the state stands
-      const figures = (q: number, round: number, ms: number, cs: JobCluster[]) => {
+      const figures =(q: number, round: number, ms: number, cs: JobCluster[]) => {
         // in the job's order: the summary adds the cities up in it
         const ids = jobLocal.map(([id]) => id).filter((id) => cs.some((c) => c.cities.includes(id)));
         // the market's figures are all its parts' as they stand, whichever clusters are asked for
         const market = regional && cs.some((c) => c.market) ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
-        const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q)), fareX = sumAll(cs, a => a.fare_extra(q));
+        const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q)), fareX = sumAll(cs, a => a.fare_extra(q)), xferIn = xferDays(cs, q);
         // the account's riders coming: everyone who would ride where the queue turned riders away
         // (their trains carry no more), the riders who ride elsewhere, so the account's boardings
         // stay demand's
@@ -1443,10 +1473,10 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         const t = market?.corridorTable;
         const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
-        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
+        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       for (const c of early) {
         setUp(c);

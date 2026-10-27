@@ -288,6 +288,11 @@ export type FromDemand =
       /** per route node, US$ in the period: the fare curve's extra on the trips first boarding there
        * (T-1143, the sims' `fare_extra`; all 0 for a straight line) */
       fareX?: Float32Array;
+      /** riders boarding at each route node after changing lines in the period, every purpose
+       * (T-1530, the sims' `transfers_in`), one block of route nodes per kind of day
+       * (`DEMAND_DAYS` order), each population's scaled as its `transfers_day` scales its pairs:
+       * the stations' transfers without a query */
+      xferIn?: Float32Array;
       /**
        * The same `seg`, `board` and `alight` split by trip purpose (T-158, the map's purpose
        * filter): `keys` (game/purposes.ts `PurposeKey`) and, per key in that order, one block of
