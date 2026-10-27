@@ -794,6 +794,8 @@ button.save-add:hover { color: var(--text); }
 .tool-pick { display: grid; grid-template-columns: 1fr 1fr; }
 .group.tool-pick > .btn:nth-child(n+3) { margin-top: -1px; }
 .group.tool-pick > .btn:nth-child(odd) { margin-left: 0; }
+.group.tool-pick > .tool-bus { grid-column: 1 / -1; }
+#tool-notes .bus-acts { display: flex; gap: 4px; }
 .pane .price { margin-top: 4px; }
 .price-row { flex-wrap: nowrap; justify-content: space-between; margin-top: 4px; }
 .price-row .price { margin: 0; }

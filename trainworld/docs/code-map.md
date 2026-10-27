@@ -150,7 +150,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
-  points, the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
+  points and their handles, drag, delete and the active end (T-1514), the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
   `busRoads.ts` (zoom 14 tiles fetched from the basemap's tile server, snapping and `leg`),
   `roadGraph.ts` (the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
@@ -381,7 +381,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
   port 6160 by default, about four minutes),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
-  selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
+  selects the track, beside it the bubble), `t1515-click-priority.mjs` (a click on a rail line, bus
+  line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
+  network the bubble; port 6115 by default, about two minutes), `t1516-fares-never-negative.mjs`
+  (a new game and the real save with a bus feeder under a tapering fare curve: no line's fares a
+  day below zero; port 6116 by default, about six minutes), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
   `t658-lanes.mjs` (the real save: the overlay at zoom 12 and 15 pixel for pixel the baseline
   build's, 8800 by default; either of double track's two tracks picks the line at 17.5; two
@@ -461,6 +465,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t1500-change-trip.mjs [url]` (Shanghai - Wuhan and Wuhan - Beijing sharing a station, metro lines at both ends: the trip explorer between Shanghai and Beijing finds the change at Wuhan in every period, new game and after a save and load; about 4 minutes; T-1500),
   `t1513-bus-delete.mjs [port]` (the delete tool on a planned and a constructed bus line: the tag, removing at once, the question, undo; T-1513),
   `t1465-bus-roads.mjs [port]` (a bus drawn with the mouse in Manhattan, San Francisco, Lisbon and Dongguan: it follows drawn roads, plausible road length, no hairpin turns, cheap pointer moves, Edit route keeps the corners, far from roads stays straight; then legs across divided roads found in Dongguan, Berlin and Shenzhen (T-1512); screenshots to artifacts/trainworld/t1465/; about 2 minutes, port 6365 by default; T-1465),
+  `t1514-bus-edit.mjs [port]` (the bus tool with the mouse in Manhattan: the Build tab's Bus button, finishing by a click on the last point, a double click, Make line and Enter, Escape, then Edit route from the far end, dragging, deleting by right click, Save route in the panel, Escape on an edit; handle screenshots in light and dark to artifacts/trainworld/t1514/; about a minute, port 7014 by default; T-1514),
   `t1464-bus.mjs [url]` (a feeder bus to a rail line in a new game and two on the real save: riders, the rail line's gain, Construct's price, demand's corridor, the save's route; about 6 minutes, port 6164 by default; T-1464),
   `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
   `t1491-hide-ui.mjs [url]` (F2 and Esc hide and bring back the interface, the map taking the room, the Controls panel's F2 row, light and dark; screenshots in `artifacts/trainworld/t1491/`; T-1491), `t1494-hsr-line.mjs <label> [url]` (a high-speed route with a line of high-speed then ordinary trains, and bare high-speed track, shot at 3x; T-1494), `t1495-tags.mjs <label> [url]` (a station tag and the track tool's tag on the real save, light and dark, `BEFORE=1` for the old style; T-1495),

@@ -11,7 +11,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
 - **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), in a
-  2 by 2 grid [T-1128]; then the elevation (seven buttons
+  2 by 2 grid [T-1128], and under them the full-width Bus button (B, [below](#drawing-a-bus-line))
+  [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
   and beside them the **auto elevation** switch (an icon of track rising onto a level stretch with an
   arrow; hover "Draw at the elevation of the track you extend. On open ground, at the elevation
@@ -175,7 +176,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 
 ## Drawing a bus line
 
-The Lines tab's bus button beside New line, or B, starts the bus tool (T-1464). Each click adds a
+[T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, full
+width, key B), the Lines tab's bus button beside New line, or B from any tab starts the bus tool for a
+new line; the Build tab's button again, while it is on, leaves it. Each click adds a
 point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
 shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
 minor and bus-only roads, any direction, length as it is, no turn rules; motorways, service ways,
@@ -187,12 +190,30 @@ route turns there instead of running to the next junction and back (T-1512; `acr
 the basemap's own tile server at zoom 14, whatever the map's zoom. While drawing,
 the route shows in the line's colour with the stops the sim would place (ends as small rounded
 squares, a ring round each train station it meets, small rings between and the street stops), and
-the tag by the pointer gives the road length and the price. Double click or Enter makes the line,
-selects it and asks its name; Backspace or a right click takes back a point; Escape drops the
-points, a second Escape leaves the tool. By touch: a tap previews, a second tap or the check places
-it. The bus panel's Edit route reopens the tool on the line's route with its clicked points and the
-stretches between them as they were; finishing redraws it (final
-for a constructed route, which pays any longer road). A new bus line is planned until Construct.
+the tag by the pointer gives the road length and the price.
+
+- **Points**: each clicked point shows as a handle in the line's colour (only while the tool is
+  on): a dot with a ring of the map's land colour, larger under the pointer; the **active end**, where
+  new points join, is a ring instead. A click on the other end makes it the active end, so a route
+  grows from either end. A press on any point dragged more than 3 px moves it (the map does not
+  pan), and the legs either side are searched again on every move; Escape during the drag puts it
+  back. A right click on a point deletes it, its neighbours joined by a new leg; a right click
+  elsewhere or Backspace takes back the active end. Over a point the tag says "Drag to move" and
+  "Right click to delete", led by what a click there does, and the network's hover is left out.
+- **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
+  the active end, a double click (its first click places the last point), Enter, or the button in
+  the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
+  **Escape** drops a new route's points (a second Escape leaves the tool), and leaves an edit with
+  the route as it was. A click on the active end of a single point does nothing.
+- **Edit route** in the bus panel reopens the tool on the line's route with its clicked points and
+  the stretches between them as they were, the last point active; the same button, now **Save
+  route**, saves it. Finishing an edit that changed nothing closes it untouched; otherwise it redraws
+  the route (final for a constructed route, which pays any longer road). A new bus line is planned
+  until Construct.
+- **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
+  nothing waiting finishes, on the other end makes it active. Dragging and deleting points take a
+  mouse.
+
 ## Snapping to the real network
 
 [T-727d; `map/realSnap.ts`, `workers/realRoute.worker.ts`; design notes/T-727.md] With the snap
@@ -417,8 +438,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or square
   that can, and a grabbing one anywhere while dragging [T-474]. A draggable node takes the drag
   over a demand bubble. A click on a node's square (drawn over the bubbles) acts on the point, never
-  the bubble [T-486]; a blueprint station has no square, so a click on one under a bubble selects
-  the bubble.
+  the bubble [T-486]; a click on a blueprint station under a bubble selects the station, as for any
+  station [T-1515].
   With the select tool every blueprint track end, corner and junction without a station shows the
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen; a
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].

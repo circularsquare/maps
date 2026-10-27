@@ -2567,7 +2567,8 @@ pub struct Graph {
 /// is already charged (the base once and the rate on each ride edge), so a trip costs `extra(km)`
 /// more than that. Route choice sees only the straight line; the curve enters each station pair's
 /// cost on the expected km of its strategy (`DestSearch::run`), and the assignment puts each pair's
-/// extra on the route nodes its riders first board (`Loads::rn_fare_x`), so fare income can count it.
+/// extra on the route nodes its riders ride from, by km (`Loads::rn_fare_x`, T-1516), so fare
+/// income can count it.
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct FareCurve {
     pub km: Vec<f32>,
@@ -3091,26 +3092,78 @@ fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I
 }
 
 /// The fare curve's extra on the trips towards `dst` (`col(src)` riders from each station), each
-/// trip's at its station pair's expected km (`trip_km`, already in `km`), added into `out` per route
-/// node where the riders first board, split over the departures by frequency as `assign` splits
-/// them (T-1143): the curve's part of the fare that the base and rate leave out, perceived minutes.
-pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
-    let s = g.n_st;
+/// trip's at its station pair's expected km (`trip_km`, already in `km`): the curve's part of the
+/// fare that the base and rate leave out, perceived minutes. It is added into `out` per route node
+/// by the km ridden from it, so each line a trip rides takes its share by km and none goes below
+/// its base and rate (T-1516): each trip's extra a km goes along its strategy as `assign` splits
+/// the riders and as `trip_km` counts the km. `q`: scratch.
+pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, dep, q, out),
+        (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, dep, q, out),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
+    let (s, n) = (g.n_st, g.n);
+    let end = n + st.change.len();
+    q.clear();
+    q.resize(end, 0.0);
+    let mut any = false;
     for src in 0..s {
         let f = col(src);
-        if f == 0.0 || src == dst {
+        if f == 0.0 || src == dst || !(km[src] > 0.0) {
             continue;
         }
         let x = f * g.fare_curve.extra(km[src]);
-        if x == 0.0 {
+        if x != 0.0 {
+            q[src] = x / km[src];
+            any = true;
+        }
+    }
+    if !any {
+        return;
+    }
+    let on_train = |v: usize| (s..n).contains(&next[v].ix());
+    let hop = |r: usize| g.rn_km.get(r).copied().unwrap_or(0.0);
+    // the reverse of the settle order: every node is reached after all that feed it
+    for &id in order.iter().rev() {
+        let id = id.ix();
+        let v = q[id];
+        if v == 0.0 || id == dst {
             continue;
         }
-        departures(g, st.board, st.change, src, dep);
-        let sum: f32 = dep.iter().map(|d| d.1).sum();
-        if sum > 0.0 {
-            for &(e, a) in dep.iter() {
-                out[g.adj_to[e as usize] as usize - s] += x * a / sum;
+        if id < s || id >= n {
+            departures(g, st.board, st.change, id, dep);
+            let sum: f32 = dep.iter().map(|d| d.1).sum();
+            if !(sum > 0.0) {
+                continue;
             }
+            for &(e, a) in dep.iter() {
+                let r = g.adj_to[e as usize] as usize - s;
+                let w = v * a / sum;
+                if on_train(s + r) {
+                    q[s + r] += w;
+                } else {
+                    // a boarding rides a stop first (T-1055)
+                    out[r] += w * hop(r);
+                    let nx = g.rn_next[r] as usize;
+                    if nx < end {
+                        q[nx] += w;
+                    }
+                }
+            }
+        } else {
+            let nx = next[id].ix();
+            if nx >= end {
+                continue;
+            }
+            if on_train(id) {
+                out[id - s] += v * hop(id - s);
+            }
+            q[nx] += v;
         }
     }
 }
@@ -4698,7 +4751,7 @@ pub struct Loads {
     pub entry: Vec<f32>,
     pub exit: Vec<f32>,
     pub pax_min: f64,
-    /// The fare curve's extra on the trips first boarding at each route node, perceived minutes
+    /// The fare curve's extra on the km ridden from each route node, perceived minutes
     /// (`board_extra`; all 0 while the curve is a straight line).
     pub rn_fare_x: Vec<f32>,
 }
@@ -4813,6 +4866,7 @@ pub struct DestAssign {
     /// Whether the fare curve's extra is put on the loads (`Loads::rn_fare_x`); on by default.
     pub fares: bool,
     km: Vec<f32>,
+    fx: Vec<f32>,
 }
 
 impl DestAssign {
@@ -4830,6 +4884,7 @@ impl DestAssign {
             counting,
             fares: true,
             km: vec![],
+            fx: vec![],
         }
     }
     /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
@@ -4866,7 +4921,7 @@ impl DestAssign {
             // the column taken is still in the stations' flows: the walk below adds the changes
             trip_km(g, st, dst, &mut self.km, &mut self.dep);
             let flow = &self.flow;
-            board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.l.rn_fare_x);
+            board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.fx, &mut self.l.rn_fare_x);
         }
         let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
         match (st.next, st.order) {
@@ -5386,8 +5441,9 @@ pub fn cap_loads(g: &Graph, fit: &Fit, ix: &XferIndex, l: &mut Loads, xfer: &mut
         cut_change += ((1.0 - fit.board[r]) * changing) as f64;
         l.rn_board[r] = b - gone;
         l.board[st] = (l.board[st] - gone).max(0.0);
+        // the fare curve's extra is counted on the km ridden (T-1516)
         if let Some(x) = l.rn_fare_x.get_mut(r) {
-            *x *= fit.board[r];
+            *x *= fit.seg[r];
         }
         let left = (1.0 - fit.alight[r]) * a;
         l.rn_alight[r] = a - left;
@@ -5415,7 +5471,7 @@ pub fn cap_loads(g: &Graph, fit: &Fit, ix: &XferIndex, l: &mut Loads, xfer: &mut
         keep[st] *= spread as f32;
         l.entry[st] *= keep[st];
     }
-    // the fare curve's extra is paid at first boardings (T-1143)
+    // the fare curve's extra goes with the trips (T-1143)
     for x in l.rn_fare_x.iter_mut() {
         *x *= spread as f32;
     }

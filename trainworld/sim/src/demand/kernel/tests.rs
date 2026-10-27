@@ -76,10 +76,45 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
     let total: f32 = l.rn_fare_x.iter().sum();
     let want = 10.0 * more * 10.0 + 5.0 * more * 30.0;
     assert!((total - want).abs() < 1e-3, "{total} against {want}");
-    // 0 -> 2 rides either line from 0 by its trains an hour (6 and 12); 0 -> 3 only line 0
-    assert!((l.rn_fare_x[8] - 10.0 * more * 10.0 * 2.0 / 3.0).abs() < 1e-3, "{:?}", l.rn_fare_x);
-    assert!((l.rn_fare_x[0] - (10.0 * more * 10.0 / 3.0 + 5.0 * more * 30.0)).abs() < 1e-3, "{:?}", l.rn_fare_x);
+    // 0 -> 2 rides either line from 0 by its trains an hour (6 and 12); 0 -> 3 only line 0. Each
+    // trip's extra is spread over the stretches it rides by their km, all 20 km (T-1516)
+    let (x02, x03) = (10.0 * more * 10.0, 5.0 * more * 30.0);
+    for (r, want) in [(8, x02 * 2.0 / 3.0 / 2.0), (9, x02 * 2.0 / 3.0 / 2.0), (0, x02 / 3.0 / 2.0 + x03 / 3.0), (1, x02 / 3.0 / 2.0 + x03 / 3.0), (2, x03 / 3.0)] {
+        assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "route node {r}: {:?}", l.rn_fare_x);
+    }
     assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
+}
+
+/// T-1516: a 5 km feeder 0-1 into a line 1-2-3 of 20 km stretches, under a fare curve that is flat
+/// past 5 km. A trip 0 -> 3 (45 km) pays the curve's extra on each stretch by its km, so the feeder
+/// takes 5/45 of it and no stretch's rate plus extra is below zero (it took all of it, and went
+/// below, while the extra was put where trips first board).
+#[test]
+fn a_feeders_share_of_the_fare_curve_extra_goes_by_its_km() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1], &[1, 2, 3]], &[12.0, 12.0], &[2.0, 6.0]);
+    let (base, rate) = (4.5f32, 0.3f32);
+    let mut g = build_graph(&net, &p);
+    // route nodes: the feeder's 0, 1 and back 2, 3; the line's 4, 5, 6 and back 7, 8, 9
+    let km = [5.0, 0.0, 5.0, 0.0, 20.0, 20.0, 0.0, 20.0, 20.0, 0.0];
+    g.rn_fare = km.iter().map(|k| k * rate).collect();
+    let ones = vec![1.0; g.rn_ride.len()];
+    set_crowding(&mut g, &ones);
+    g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate };
+    g.rn_km = km.to_vec();
+    let sk = skims(&g, &p);
+    let mut od = vec![0.0f32; 16];
+    od[3] = 10.0; // 0 -> 3
+    let l = assign(&g, &sk, &od);
+    let extra = 10.0 * (base + 5.0 * rate - base - rate * 45.0);
+    let total: f32 = l.rn_fare_x.iter().sum();
+    assert!((total - extra).abs() < 1e-3, "{total} against {extra}: {:?}", l.rn_fare_x);
+    for (r, want) in [(0, extra * 5.0 / 45.0), (4, extra * 20.0 / 45.0), (5, extra * 20.0 / 45.0)] {
+        assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "route node {r}: {:?}", l.rn_fare_x);
+    }
+    for r in 0..km.len() {
+        assert!(l.seg[r] * km[r] * rate + l.rn_fare_x[r] >= -1e-3, "route node {r}: {:?}", l.rn_fare_x);
+    }
 }
 
 /// T-798: a circle 0-1-2-3-4-5-0, 12 tph, 2 minutes a stop and half a minute standing at 0.

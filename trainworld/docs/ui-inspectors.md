@@ -259,7 +259,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
 ## The bus line panel
 
 A bus line's panel (T-1464, ui/inspector/BusInspector.tsx) is the line panel cut down: Edit route
-in place of Edit stops, Copy line (a planned copy) and Delete line (a constructed route refunds
+in place of Edit stops (Save route while the route is open, which saves it; T-1514), Copy line (a planned copy) and Delete line (a constructed route refunds
 nothing); while planned, its Construct price with the route and the buses in the hover. Schedule:
 buses or a headway per demand level, as for trains, and the average speed. Stops: the ends and the
 train stations met, the street stops between folded into one row each, minutes from the start.

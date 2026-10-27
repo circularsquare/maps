@@ -1,5 +1,10 @@
 # Archive
 
+- T-1516 [P2] A bus line's negative fares. Done 2026-10-26 (tree t1515): a tapering curve's extra went all to the line a trip first boards, so a feeder took a long rail trip's whole discount; now shared by km ridden (`kernel::board_extra`). `checks/t1516-fares-never-negative.mjs`.
+- T-1515 [P2] Clicks pick lines, stations and trains before bubbles. Done 2026-10-26 (tree t1515): click, bubble tag, cursor and track tag alike (`netFirst` in main.ts); a bubble keeps its wider reach elsewhere. `checks/t1515-click-priority.mjs`; t486's station case updated.
+
+- T-1514 [P2] Bus drawing and editing. Done 2026-10-26: a Bus button in the Build tab; finish by a click on the active end, a double click, Enter or Make line/Save route (the panel's button now saves); either end can be active; points drag and right click deletes. `checks/t1514-bus-edit.mjs`; docs/ui-building.md.
+
 - T-1239 [P2] Build Canada. Done 2026-10-26: 48 of 50 rows shipped (mon van cag edm and 44 zones), tor re-solved and passing; lel parked (T-1376), six parked on a stale app WASM (T-1377). Remnants keep to another city's FUA; DA population hook (T-564). notes/T-1239.md.
 - T-1506 [P2] An unlinked inter-city station in a metro city's access lists. Done 2026-10-26: past the 8 best, a list keeps the best station of each track component missing, up to 10; China's longer boardings 3,337 to 7,621, New York and Tokyo unchanged, market pass about 1x. notes/T-1506.md.
 - T-1381 [P2] The worker's whole stroke copy each edit. Done 2026-10-26: track and line strokes are posted whole, unchanged, or as only the new segments written over the page's arrays; Japan at 6x, laying them out 500 ms to 85 over the series, worker edit 338 to 300 ms, GC unchanged. `checks/t1381-strokes.mjs`; notes/T-1029.md.

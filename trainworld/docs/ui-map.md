@@ -265,8 +265,8 @@ number) and shows n as its symbol.
 - **Selected** [T-163, T-189]: the station keeps its size and gets a 2 px dark outline and a soft
   dark glow 6 px beyond, round the union of the selected shapes and bridges, drawn under them;
   selected stations are drawn after the others and the demand bubbles are cut away over them. In
-  complex view every member, bridge and connector is drawn selected. A click on a selected station
-  picks it even over bubbles.
+  complex view every member, bridge and connector is drawn selected. A click on a station picks it
+  even over bubbles [T-1515].
 
 **Station complexes** [T-146, `game/complexes.ts`]: stations whose platforms come within 50 m (the
 straight segment of the platform's length along the track heading), or whose centres are within
@@ -467,8 +467,8 @@ those who got on, less the load carried on.
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
   "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
   zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and
-  handles above the network keep it hidden, except inside a station ridership circle, which comes
-  before the bubbles [T-1448]; with a build tool it sits above the pointer, clear of
+  handles above the network keep it hidden, except on a line, station or train, which come before
+  the bubbles [T-1515], and inside a station ridership circle [T-1448]; with a build tool it sits above the pointer, clear of
   the tool's own tag below, and leaves out the station ridership circles. A mark on the track names itself
   ("Flat crossing" or "Flat junction" with the elevation, "Ramp up to +1", "Tunnel portal down to −1",
   "Blueprint" on blueprint track), over the track's own tag; a junction without a mark says nothing. The

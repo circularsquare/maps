@@ -5,8 +5,8 @@
 //
 // `base` and `perKm` are the first stretch as a line (the fare at 0 km and its slope). Demand's
 // route search charges them on each ride (`set_fares`), the sim adds the rest of the curve on each
-// trip's expected length (`set_fare_curve`, `curveKnots`) and reports that extra where the trips
-// first board; fare income is `faresFor` plus that extra (game/money.ts), so demand and income
+// trip's expected length (`set_fare_curve`, `curveKnots`) and reports that extra on the lines the
+// trips ride, by km (T-1516); fare income is `faresFor` plus that extra (game/money.ts), so demand and income
 // charge the same trips the same fares. The default curve, and any older save's line, is the line
 // through nodes at 0, 20 and 100 km.
 
