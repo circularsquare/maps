@@ -79,9 +79,11 @@ let failed = false;
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  // ?patch=check: a difference found in the clock worker is a console error there
+  page.on('worker', (w) => { try { w.on('console', (m) => { if (m.type() === 'error') errors.push('worker: ' + m.text().slice(0, 300)); }); } catch { /* an older Playwright */ } });
   page.on('console', (msg) => {
     const t = msg.text();
-    if (/^T-1029/.test(t)) log('page:', t.slice(0, 400));
+    if (/^T-(1029|1381)/.test(t)) log('page:', t.slice(0, 400));
     if (msg.type() === 'error' && !/favicon|openfreemap|AJAXError|^\w{1,3}$/.test(t) && !/maplibre-gl/.test(msg.location()?.url ?? '')) errors.push(t.slice(0, 300));
   });
   await page.addInitScript(() => {
