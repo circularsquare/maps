@@ -3,6 +3,9 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-27
+- **The market's rides reserve a line per track component; the local layers' do not** (T-1511, my call): past the 6 cheapest lines a market zone's rides take up to 2 more, the cheapest line of each track component the 6 miss (`RIDE_TRACK_MAX`). Applied to the local layers too it moved New York's rail trips +3,820 and China's +29,000 with nothing the market reads changed, so it stays the market's. Market passes on China about 1.1-1.3x, New York and Tokyo unchanged (notes/T-1511.md).
+
 ## 2026-10-26
 - **The pointer is off the map over anything laid on it** (T-1522, my call 2026-10-26): the loose-end rings take the pointer from the window and count it on the map only over the map itself (MapLibre's canvas container), so over the view tabs or any control inside the map's box they go, as when it leaves the map.
 - **A terminal draws a buffer stop only where the track ends** (T-1527, my call 2026-10-26): the dark bar is at the platform end with no track beyond it, found as a station with one track leaving it (flag 512, the -axis end, where the track stops at the node); a terminal with track on both sides has no bar, since there is no buffer stop to show, and its sidings already mark both ends. The hover on the bar follows.

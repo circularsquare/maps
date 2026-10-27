@@ -1,5 +1,6 @@
 # Archive
 
+- T-1511 [P3] Rides reserve a line per track component. Done 2026-10-27 (tree t1511, not landed): the market's rides add up to 2 for track the 6 cheapest lines miss; China's Beijing - Shanghai 7.4% to 48.5% served, rail barely moves; local layers left out. notes/T-1511.md.
 - T-1522 [P1] Loose-end rings stuck on screen. Done 2026-10-26 (tree t1522): the pointer they gather round came from MapLibre's mousemove, which stops over controls laid on the map and during a drag, so rings stayed round a stale spot as keys panned; now read from the window. `checks/t1485-end-marks.mjs`; artifacts/trainworld/t1522/.
 - T-1531 [P2] Station bubbles look. Done 2026-10-26 (tree t1524): one disc shaded blue to green by the transfers' share (OKLab, end colours kept), a 1 px faint edge; Total's hover total gets a dot in the disc's colour.
 - T-1529 [P2] Related lines on by default. Done 2026-10-26 (tree t1524): the toggle was never stored, so the signal now starts true.
