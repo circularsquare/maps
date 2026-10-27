@@ -90,7 +90,10 @@ Web first, so it can be shared as a link.
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last
   rows, the track model lists the lines whose service or net was touched and the stations whose name
-  was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382).
+  was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382). The
+  run profiles' phase tables are kept per line the same way and laid end to end only when a line's
+  differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
+  once for a node while the node and the mask stay as they are (T-1540).
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and

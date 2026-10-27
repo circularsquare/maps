@@ -218,9 +218,20 @@ impl TrackApi {
     pub fn built_cost(&self) -> f64 {
         self.w.net.built_cost()
     }
+    /// Whether the water under a node is kept between pricings (on by default); the rows check
+    /// turns it off in one of two models to compare the costs of the two (T-1540).
+    pub fn set_wet_cache(&mut self, on: bool) {
+        self.w.net.wet_cache = on;
+    }
+    /// `[total_cost, built_cost]` in one pass (T-1540).
+    pub fn costs(&self) -> Vec<f64> {
+        let (t, b) = self.w.net.total_and_built_cost();
+        vec![t, b]
+    }
     /// What constructing the whole blueprint would cost now.
     pub fn blueprint_cost(&self) -> f64 {
-        (self.w.net.total_cost() - self.w.net.built_cost()).max(0.0)
+        let (t, b) = self.w.net.total_and_built_cost();
+        (t - b).max(0.0)
     }
 
     /// Cost rows for Construct all, including new cars after using the spare fleet.

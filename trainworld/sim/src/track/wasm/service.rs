@@ -38,15 +38,16 @@ impl TrackApi {
     /// All phase tables: 4 floats per phase (t, s, v, a). notes/T-040.md "Keyframes".
     pub fn phases(&self) -> Vec<f32> {
         let mut out = vec![];
-        for l in &self.w.svc.lines {
-            for r in 0..2 {
-                for k in 0..LEVELS {
-                    if l.ok {
-                        out.extend(l.runs[r].prof[k].phases.iter().flat_map(|p| [p.t as f32, p.s as f32, p.v as f32, p.a as f32]));
-                    }
-                }
-            }
+        for l in 0..self.w.svc.lines.len() {
+            self.push_phases(l, &mut out);
         }
+        out
+    }
+    /// One line's part of `phases`, for the clock worker to read only the lines an edit changed
+    /// (T-1540): its tables laid end to end in the same order, empty when it is not ok.
+    pub fn line_phases(&self, line: u32) -> Vec<f32> {
+        let mut out = vec![];
+        self.push_phases(line as usize, &mut out);
         out
     }
     /// Per profile `(line * 2 + run) * 3 + level`: first phase, phase count, trip seconds
@@ -355,5 +356,16 @@ impl TrackApi {
             out.extend(lines);
         }
         out
+    }
+}
+
+impl TrackApi {
+    fn push_phases(&self, line: usize, out: &mut Vec<f32>) {
+        let Some(l) = self.w.svc.lines.get(line).filter(|l| l.ok) else { return };
+        for r in 0..2 {
+            for k in 0..LEVELS {
+                out.extend(l.runs[r].prof[k].phases.iter().flat_map(|p| [p.t as f32, p.s as f32, p.v as f32, p.a as f32]));
+            }
+        }
     }
 }

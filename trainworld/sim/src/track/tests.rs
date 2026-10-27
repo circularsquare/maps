@@ -299,6 +299,8 @@ fn blueprint_quote_accounts_for_partial_junctions_and_flyovers() {
     assert!(rows.chunks_exact(7).any(|r| r[0] == 3.0));
     let quoted: f64 = rows.chunks_exact(7).map(|r| r[6]).sum();
     assert!((quoted - (w.net.total_cost() - w.net.built_cost())).abs() < 1e-8);
+    // T-1540: the one-pass sums are the two passes' to the bit
+    assert_eq!(w.net.total_and_built_cost(), (w.net.total_cost(), w.net.built_cost()));
 }
 
 #[test]
@@ -381,6 +383,25 @@ fn hudson_crossing_needs_a_bridge_or_tunnel() {
     let c = w.net.edge_cost[e as usize];
     assert!(c > len / 1000.0 * 90.0 * 0.9, "water should raise the price: {c}");
     println!("Hudson at -1: {len:.0} m, {wet_len:.0} m wet, US${c:.0}M");
+}
+
+#[test]
+fn kept_water_under_a_node_follows_the_node_and_the_mask() {
+    // T-1540: `node_is_wet` asks the mask once, then only when the node moved or the mask was replaced
+    let mut w = world();
+    let a = node(&mut w, 1200.0, 0.0, 0) as usize;
+    let b = node(&mut w, 100.0, 0.0, 0) as usize;
+    w.net.set_water_mask(Box::new(|x: f64, _y: f64| x > 1000.0 && x < 1500.0));
+    assert!(w.net.node_is_wet(a) && !w.net.node_is_wet(b));
+    assert!(w.net.node_is_wet(a) && !w.net.node_is_wet(b));
+    w.net.node_x[a] = 700.0;
+    w.net.node_x[b] = 1300.0;
+    assert!(!w.net.node_is_wet(a) && w.net.node_is_wet(b));
+    w.net.set_water_mask(Box::new(|x: f64, _y: f64| x < 800.0));
+    assert!(w.net.node_is_wet(a) && !w.net.node_is_wet(b));
+    w.net.wet_cache = false;
+    w.net.node_x[a] = 900.0;
+    assert!(!w.net.node_is_wet(a));
 }
 
 #[test]

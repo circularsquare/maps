@@ -208,7 +208,7 @@ and families, then the fit in steps on a track model of its own, dropped for a n
 the network: `TrackApi`, notes/T-025.md; money and autosave too; `slotSummary`, a save's picture
 with a panel per city, T-894), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
-`take_name_changes` say they changed; station names kept by node; T-1382), `saveFile.ts` (the save format
+`take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, forks; used by the clock worker and the main thread), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandClusters.ts` (the network split into clusters that share no rider,

@@ -28,6 +28,14 @@ impl TrackApi {
         }
         v
     }
+    /// `take_changed_lines` without taking: what has changed since, for the phase tables to be read
+    /// after the trials that pricing a planned line runs (T-1540).
+    pub fn peek_changed_lines(&self) -> Vec<u32> {
+        if self.w.net.repriced() {
+            return vec![u32::MAX];
+        }
+        self.w.svc.peek_changed()
+    }
     /// T-1382: the nodes whose station name was set or cleared since the last call, ascending, or
     /// `[u32::MAX]` when the caller knows none of them (a new network).
     pub fn take_name_changes(&mut self) -> Vec<u32> {
