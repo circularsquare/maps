@@ -314,20 +314,39 @@ Full design, numbers and sources: `notes/T-008.md`.
     beyond, from where the tracks part (zoom 14), and the box's two ends as thick dark bars
     reaching a little past its sides, like buffer stops (T-1416).
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
-    `kernel::ride_fixed`); a P after the station's name, and on the box a square tile with a P.
+    `kernel::ride_fixed`); a P after the station's name. Drawn as a car park beside the complex (below).
   - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
-    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn on the box as an annex
-    as deep as the box is wide, with the platform's waiting riders (its fuller side) filling it
-    from the middle out.
-  - **How the annexes sit** (T-1416, `stationAnnexes` in stationGeometry.ts, `annexSide.ts`): from
-    zoom 14, the waiting room and the P tile join the box's side at its middle, the room first along
-    the platform's way, with one outline and one white round box and annexes. Both go on the side
-    with fewer other platforms and tracks where they would be, else outside the platform's bend.
-    Each has its own hover, naming the upgrade and the station (a terminal's on its buffer stop).
-    A terminal draws a dark bar, a buffer stop, only at the end of its platform where the track
-    ends (a station with one track leaving it, flag 512, T-1527); a terminal with track on both
-    sides has none. Station flags 32, 64 (the other side), 128, 256 and 512; one station draw per
-    annex kind (`u_room`).
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn on one box of the
+    complex as an annex as deep as the box is wide, with that platform's waiting riders (its fuller
+    side) filling it from the middle out.
+  - **Shared by a complex** (T-1528, notes/T-1528.md): each stays a bit on each station, which is
+    all demand reads. The complex view builds park and ride or the waiting room at every station
+    of the complex in one edit, at one station's price each; a station joining the complex later
+    has none until the player builds it there, one leaving takes its own, and a complex split in
+    two leaves each part the stations it had. However many of a complex's stations have one, it
+    is drawn once.
+  - **How they are drawn** (`map/facilityPlace.ts`, placed in the clock worker): from zoom 14.
+    The waiting room joins one box's side at its middle, one outline and one white round box and
+    annex: of the stations with one and both sides of each, the spot with the fewest other
+    platforms, tracks, car parks and the name label's patch nearby, else outside the platform's
+    bend. The car park is a lot of its own outside the boxes (`map/parkingLots.ts`), drawn under
+    the track and stations, true to size: a 6 m aisle with a row of 2.5 by 5 m spaces either side
+    (a bay, 16 m), one bay for each station with park and ride up to three, as long as the
+    longest such platform within 80-300 m, rounded to whole spaces, along a platform of the
+    complex. Its spot is the first found, nearest first (near edge 20, 30, 42, 56 or 72 m from the
+    platform's centre line, past a box drawn at zoom 14; along that platform's middle, then a
+    quarter and a half of it either way; each platform of the complex, those with park and ride
+    first; the side away from the name label first) that comes within 18 m of no platform's centre
+    line, 6 m of no track and 4 m of no waiting room or other lot, and misses the label's patch
+    (below the complex for an east-west platform, to its right otherwise, as the names are
+    placed); failing that one bay, then 0.6 of the length (at least 60 m); failing all, the spot
+    with the least in the way. The surface and its lines are a little off the land's colour
+    (`lot`, `lotLine` in shadeTable.ts); the spaces' lines fade in once they are 2.5-4.5 px
+    apart (about zoom 16). Its hover names park and ride, the station and how many stations
+    share it, and a click selects that station's complex. A terminal's hover is on its buffer
+    stop: a dark bar only at the end of its platform where the track ends (a station with one
+    track leaving it, flag 512, T-1527); a terminal with track on both sides has none. Station
+    flags 32 (the room drawn on this box), 64 (its side), 128 (park and ride), 256 and 512.
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").

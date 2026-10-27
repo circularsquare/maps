@@ -10,12 +10,16 @@ export interface UpgradeText {
   name: string;
   /** what it does, one sentence for its hover */
   does: string;
+  /** the same, built for a whole complex (T-1528); absent: not offered there */
+  doesAll?: string;
 }
 
 export const UPGRADE_TEXT: UpgradeText[] = [
   { bit: UPGRADE.terminal, name: "Terminal", does: "Trains turn in two sidings past the platform, up to 30 an hour, and the platforms stay free for other trains." },
-  { bit: UPGRADE.parkRide, name: "Park and ride", does: "A car park, bus bays and bike racks. Riding to this station costs 10 perceived minutes less." },
-  { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waits here count at 0.8 of their minutes when people choose how to travel." },
+  { bit: UPGRADE.parkRide, name: "Park and ride", does: "A car park, bus bays and bike racks. Riding to this station costs 10 perceived minutes less.",
+    doesAll: "One car park, bus bays and bike racks for the complex. Riding to any of its stations costs 10 perceived minutes less." },
+  { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waits here count at 0.8 of their minutes when people choose how to travel.",
+    doesAll: "One waiting room for the complex. Waits at any of its stations count at 0.8 of their minutes when people choose how to travel." },
 ];
 
 /** A passage's price (sim `upgrades::passage_price`), US$M: a base plus a rate a km of the straight line. */

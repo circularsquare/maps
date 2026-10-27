@@ -253,7 +253,7 @@ export function StationInspector({ id }: { id: string }) {
       <StationTripLink id={id} members={asComplex ? members : [id]} />
       {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Nothing is refunded" : ""} />}
       <div class="h">Station upgrades</div>
-      <StationUpgrades s={s} passageOnly={asComplex} />
+      <StationUpgrades s={s} members={asComplex ? members : undefined} />
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (

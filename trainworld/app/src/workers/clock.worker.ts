@@ -25,7 +25,7 @@ import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from 
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
-import { UPGRADE_BITS } from "../game/upgrades";
+import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
@@ -1974,9 +1974,11 @@ function sendState(service = false, effectiveAt?: number) {
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   runningLines = running;
-  const n = networkFromState({ ...s, render: r }, netCache, true);
+  // T-1528: complexes only where a waiting room or car park is drawn once for one
+  const complexOf = s.nodes.some((x) => ((x.upgrades ?? 0) & (UPGRADE.parkRide | UPGRADE.waitingRoom)) !== 0) ? complexOfNodes() : undefined;
+  const n = networkFromState({ ...s, render: r, complexOf }, netCache, true);
   const t2 = performance.now();
-  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r }) : undefined));
+  const out = (s.net = netForPost(n, patchMode === "check" ? networkFromState({ ...s, render: r, complexOf }) : undefined));
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
@@ -1996,7 +1998,7 @@ function sendState(service = false, effectiveAt?: number) {
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "junctions", "marks"] as const;
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post

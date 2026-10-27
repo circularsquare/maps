@@ -11,7 +11,7 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
-import { annexSides } from "./annexSide";
+import { placeFacilities } from "./facilityPlace";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
@@ -70,8 +70,9 @@ export interface NetworkBuffers {
   /** per line id: r, g, b, 255 */
   lineColours: Uint8Array;
   /** per station: x, y, flags (1 transfer, 2 blueprint, 4 a line runs through, 8 switched off, 16
-   * on double track: a platform each side close in, T-658; ST_ROOM, ST_FLIP, ST_PARK and
-   * ST_TERMINAL its upgrades as drawn, T-1416; ST_BUFFER a terminal at a track end, T-1527) */
+   * on double track: a platform each side close in, T-658; ST_ROOM and ST_FLIP the complex's waiting
+   * room drawn on this box, T-1528; ST_PARK park and ride here; ST_TERMINAL, T-1416; ST_BUFFER a
+   * terminal at a track end, T-1527) */
   stations: Float32Array;
   /** Per station: half the platform along its track at the platform's middle, local units (T-144). */
   stationAxis?: Float32Array;
@@ -90,6 +91,8 @@ export interface NetworkBuffers {
   stationLinkIdx?: Int32Array;
   /** Per link: the bridge's two ends, local units (`bridgeEnds` in stationGeometry.ts). */
   stationLinks?: Float32Array;
+  /** The complexes' car parks (T-1528, map/facilityPlace.ts), LOT_STRIDE numbers each. */
+  lots?: Float32Array;
   /** junction nodes (3+ edge ends, no station): x, y per node, for picking */
   junctions: Float32Array;
   junctionIds: number[];
@@ -923,7 +926,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0)], i * 3);
   });
   cache.stations = stationsSeen;
-  annexSides(st, stations, stationLine, stationShape, edgePts, waysAt);
+  // T-1528: one waiting room and one car park per complex
+  const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf);
   // the player's links as bridges between the two platforms' nearest points (T-217)
   const stationIndex = new Map(st.map((n, i) => [n.id, i]));
   const shapeAt = (i: number) => platformShapeAt({ stationShape, stationAxis, stationLine }, i);
@@ -965,6 +969,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationLength: new Float32Array(st.map((n) => n.platform)),
     stationLinkIdx: new Int32Array(linkIdx),
     stationLinks: new Float32Array(linkEnds),
+    lots,
     junctions,
     junctionIds: jn.map((n) => n.id),
     marks: new Float32Array(marks),
