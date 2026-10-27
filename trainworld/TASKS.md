@@ -85,7 +85,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (night).
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 - T-1501 [P3] Bus legs that stay straight look like road legs. A cue (dashed, say) if players are confused about where a bus does not follow the road; the sim already knows (point kind bits, notes/T-1465.md). Open.
 - T-1502 [P3] Bus money by region on a road route: `regionMoney.ts` shares a route's road km by the chords between stops, rougher on a winding route; share by the route's own points (notes/T-1465.md). Open.
-- T-1466 [P3] Check bus ridership against real buses: a 3.6 km feeder on the real save carried 28,000 riders a day and a 6 km one 13,000 in a new game (t1464-bus.mjs); compare riders per route-km with real city buses before tuning anything (notes/T-1464.md). Open.
+- T-1466 [P3] Check bus ridership against real buses: a 3.6 km feeder on the real save carried 28,000 riders a day and a 6 km one 13,000 in a new game (t1464-bus.mjs); compare riders per route-km with real city buses before tuning anything (notes/T-1464.md). Taking, 2026-10-27 (tree t1466).
 - T-1467 [P3] Buses stage B3 if wanted after playing (notes/T-1445.md): speed by place, a bus lane upgrade, ferries on the same line kind. Open.
 - T-1463 [P3] Rename "train share" and the like now that bus-only trips count in it (Anita: later). Open.
 - T-1445 [P2] Buses, design first (Anita): draw a line (along roads if that is easy) and stops place themselves, where it meets a train station and otherwise every 400 m or so; maybe no concept of stops at all. A cheap slow feeder; a demand change, so the design goes to her. Design written 2026-10-26, waits on Anita; notes/T-1445.md
@@ -249,7 +249,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-359 [P3] A bare start's card waits 2 s for New York in one worker. notes/someday.md
 - T-344 [P3] A zone's loading bar can stick near 99%. notes/T-344.md
 - T-346 [P3] A cached reload hides the fresh solve's estimates. notes/someday.md
-- T-1543 [P3] The rough solve's one period split over the workers (each the same period, a share of the origins, the partial results summed on the page): the cold real save's first bubbles 8-9 s here, of which one period's free flow 4.6 s; about 3.5 s a worker split. notes/T-1538.md.
+- T-1543 [P3] The rough solve's one period split over the workers (each the same period, a share of the origins, the partial results summed on the page): the cold real save's first bubbles 8-9 s here, of which one period's free flow 4.6 s; about 3.5 s a worker split. notes/T-1538.md. Taking, 2026-10-27 (tree t1543).
 
 ### Interface
 - T-1305 [P3] Real networks share track: corridors, one node per corridor; a few days, design with Anita (later, Anita 2026-10-25). notes/someday.md
