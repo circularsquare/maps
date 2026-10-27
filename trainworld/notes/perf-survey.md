@@ -70,7 +70,7 @@ New York save (mnr Hudson) after: 2-4 ms to the panel, edits 40-100 ms. Not the 
 round costs more with more counted lines, but the seconds came from the cap.
 `artifacts/trainworld/t747-*.json` and the traces beside them.
 
-**Adding a stop (T-648, 2026-10-19, `checks/t648-stop-edit.mjs`, 1400x900, demand final, paused).**
+**Adding a stop (T-648, 2026-10-19, `checks/old/t648-stop-edit.mjs`, 1400x900, demand final, paused).**
 The real save's lines stop at every station they pass, so each click first builds (and constructs)
 a station on a long straight stretch of one line, then adds it with a click on its marker; 12
 lines. The flash was the line panel's stop list: the stations passed (T-646) came from a query
@@ -100,7 +100,7 @@ blank for the edited line once the worker drops its riders, until demand returns
 state, not drawing). `artifacts/trainworld/t648-*.json`, strips `t648-before-strip.png` and
 `t648-after-strip.png` (same click, panel and map).
 
-**The freeze after a stop edit (T-789, 2026-10-20, notes/T-789.md).** With Europe covered the market's
+**The freeze after a stop edit (T-789, 2026-10-20, notes/archive/t0500-0999/T-789.md).** With Europe covered the market's
 corridors were every place pair (300,700 at d8592be, 501,501 with 1,001 places), summed on the main
 thread per period, day and publish: tasks of 3.4-6 s, 7-10 s frozen after each edit in any city. Now
 only pairs with trips, the rest of a day's sums kept by key, the cache written in a worker: longest
@@ -310,7 +310,7 @@ country never solves (each worker out of WASM memory: station x station tables o
 10,320 stations, 426 MB each; Tokyo's pack alone natively 243 s and 3.28 GB peak); the seven cities
 take 680-735 s to their final with 2.5 GB a worker and 6 GB in the renderer.
 
-T-761 (2026-10-19, notes/T-761.md): the whole country now solves, in the browser on 2 workers its
+T-761 (2026-10-19, notes/archive/t0500-0999/T-761.md): the whole country now solves, in the browser on 2 workers its
 final at 1,158 s with 3.2-3.4 GB a worker; the market's pass is about 85 s a period in WASM and most
 of that time (4 passes x 3 periods a worker), the logsums over 12.4 million zone pairs its largest
 part (T-767).

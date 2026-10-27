@@ -15,7 +15,7 @@ Already covered elsewhere, not repeated in full: the threading and path cache de
 source, the 1.13 quadtree change, and the player reasons demand disappoints.
 
 Not found: no reddit (r/NIMBYRails) page came back from any search, so no reddit claims here.
-`docs/world.md` (T-304) and `notes/T-303.md` did not exist when this was written; "What this
+`docs/world.md` (T-304) and `notes/archive/t0001-0499/T-303.md` did not exist when this was written; "What this
 means" is tied to `research/world-sampler.md` (T-286/T-287) and the T-303/T-304 briefs as given.
 
 ## 1. One world
@@ -216,7 +216,7 @@ Detail is in `research/performance-factorio-nimby.md`. New or sharpened here:
 
 ## What this means for anitabuilder
 
-Tied to the three current pieces of work. `docs/world.md` and `notes/T-303.md` were not on disk
+Tied to the three current pieces of work. `docs/world.md` and `notes/archive/t0001-0499/T-303.md` were not on disk
 yet, so these bullets assume only what the briefs and `research/world-sampler.md` say.
 
 **docs/world.md (T-304, the one-world design)**

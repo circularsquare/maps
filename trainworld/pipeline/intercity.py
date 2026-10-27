@@ -41,7 +41,7 @@ CUT_KM = 150.0
 # the huge packs around it (Golmud, Lhasa, Shigatse, Zhangye, Alxa) is held at its own factors; its few commutes with them
 # come from their regions' solves
 SOLVE_ALONE = {"CN-xinjiang"}
-# a time guard on one solve (a country's packs since T-786): about 6x Japan's 68k zones (notes/T-539.md)
+# a time guard on one solve (a country's packs since T-786): about 6x Japan's 68k zones (notes/archive/t0500-0999/T-539.md)
 MAX_GROUP_ZONES = 400_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
 # park_paid_cap_min, park_free_d; `CELL_KM2`)
@@ -217,7 +217,7 @@ def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, new=(), hold_rep
     t0 = time.time()
     nz = sum(json.loads((root / f"data/packs/{i}.json").read_text(encoding="utf-8"))["zones"] for i in g)
     if nz > MAX_GROUP_ZONES:
-        sys.exit(f"group {name} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
+        sys.exit(f"group {name} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/archive/t0500-0999/T-539.md)")
     solve_group(g, name, root, work, dry, fixed, new, hold_report)
     # T-1175: the unit's everyday outings across zone lines, over the same packs
     import cross_everyday

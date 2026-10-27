@@ -31,7 +31,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - **A line's colour on the map follows a picker drag about every 0.2 s** (Anita, T-672): a middle path between every move (froze the game) and only on release.
 - **Destination bubbles catching up over a game day, still while paused, is fine as it is** (Anita, T-674).
 
-- **A headway line's train count is clamped at its track's limit** (Anita, T-679, proposal A of notes/T-679.md). Rounding the count up made a headway typed at the platform's limit (4 minutes) run a little under it, so a train was held out and an alert fired; now the line runs just over the typed headway (4:07, say) with no alert. A typed headway well under the limit still warns.
+- **A headway line's train count is clamped at its track's limit** (Anita, T-679, proposal A of notes/archive/t0500-0999/T-679.md). Rounding the count up made a headway typed at the platform's limit (4 minutes) run a little under it, so a train was held out and an alert fired; now the line runs just over the typed headway (4:07, say) with no alert. A typed headway well under the limit still warns.
 - **An edit short of cash is refused, with a shake and the train count in red; a headway shorter than the track allows is shown in red** (Anita, T-625, confirming the 2026-10-17 entry below and adding how it looks).
 - **No adoption ramp for new lines** (Anita, T-680): the panels' past-24-hours counts are enough. Her complaint was a different one: 25,000 people waiting at once on a new line's platform (notes/T-680.md).
 - **Points: a transfer is one trip** (Anita, T-684), or a player could farm points by splitting a ride; points unlock nothing yet. Stars in the Cities list come before drawn stamps (T-685).
@@ -50,10 +50,10 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 
 ## 2026-10-16
 
-- **Packs share a joint commute gravity when their outlines come within 50 km, chained, across borders too** (T-539, notes/T-539.md). Any gap from 25 to 200 km keeps today's Northeast and Japan; pairs of packs over 50 km apart carry 0.3-0.5% of the commuters crossing a pack line, while 150 km chains continents (London to Berlin, Japan with Korea). The Northeast keeps its own solve through `intercity.json`.
+- **Packs share a joint commute gravity when their outlines come within 50 km, chained, across borders too** (T-539, notes/archive/t0500-0999/T-539.md). Any gap from 25 to 200 km keeps today's Northeast and Japan; pairs of packs over 50 km apart carry 0.3-0.5% of the commuters crossing a pack line, while 150 km chains continents (London to Berlin, Japan with Korea). The Northeast keeps its own solve through `intercity.json`.
 - **Red on a platform box means the side is full, not that a train left riders behind** (T-559). Anita read red as full and found a platform red but not full: a side goes red when the last train left anyone, however few, while its fill is a share of the room to stand. Full is what the fill, the dot's pie and the hover's red count already measure, so red now follows the fill (100%) and the two cannot disagree. The station inspector's complex map follows. The left-behind count is still in the line inspector and the stations list, but no platform drawing shows it.
 - **Station boxes keep their zoom-15 width on screen out to zoom 14; the crowd pie is solid grey or red** (T-553). Boxes are fixed on the ground from zoom 15 (`BOX_WIDTH_ZOOM`), but at 14 that would be 3.7 px with no white left inside its rim, so below 15 a box stays 7.5 px wide on screen (white 3.5 px) and only its length shrinks (40-55 px). A dot's pie is the full crowd grey or over-full red (the box fills' colours), not the old 45% and 40% tints, since the angle carries the share. At 08:30 on the real save the median station is 3% full and only 11 of 1,756 are over half, so most pies are slivers; a square-root scale would show more but is not the measure the hover states.
-- **A city with no flows or distance table borrows the one fitted curve that loses least by country** (T-314, notes/T-314.md). `tier0.borrowed_curve` over `pipeline/fitted_curves.json`; today d^-1.8 exp(-d/80 km). Held out a country at a time (the pipeline's case) it beat nearest by population and vehicles, by income group, a world median and a length scaled to size (+2.9 points by country against +3.3 to +3.9; worst Baltimore +14.2). Held out a city at a time nearest by population and vehicles wins (+2.0), only because a Japanese city then borrows a Japanese one; with Japan out it sends Japan to a US curve (+24.8 worst). The top four candidates are within 0.1 point of each other.
+- **A city with no flows or distance table borrows the one fitted curve that loses least by country** (T-314, notes/archive/t0001-0499/T-314.md). `tier0.borrowed_curve` over `pipeline/fitted_curves.json`; today d^-1.8 exp(-d/80 km). Held out a country at a time (the pipeline's case) it beat nearest by population and vehicles, by income group, a world median and a length scaled to size (+2.9 points by country against +3.3 to +3.9; worst Baltimore +14.2). Held out a city at a time nearest by population and vehicles wins (+2.0), only because a Japanese city then borrows a Japanese one; with Japan out it sends Japan to a US curve (+24.8 worst). The top four candidates are within 0.1 point of each other.
 - **Reported (road) distance bands stay divided by 1.3, not by the pack's measured drive factor** (T-314). Mumbai's routed factor weighted by its commutes is 1.30-1.45 at the B-28 band edges, and refitting with it moves 1.6% of commuters; `routes.py`'s logged 1.62 is the unweighted median of near zone pairs, inflated by sparse outskirts, and would move 8.6% (mean trip 8.2 km against 9.9). Routes also run after the build, so the measured factor would mean a refit.
 - **Crowding colours come from riders' extra wait, not full trains** (T-491, replacing T-472's and T-477's full-train shares; Anita: they read red all the time). Score = the average rider's wait for a train with room (min; each rider left behind waits the gap to the next departure) / sqrt(their average ride on the line, min, at least 5). Grades: yellow 0.1, orange 0.3, red 0.6. So 2 min on a 10 min ride and 4 min on a 40 min ride are both red. On the real save at 08:30 this picks out 4 red and 3 orange lines, where the full-train rule gave 13 red. Red: HBLR (4.0 min on a 7.7 min ride), NJCL (4.9 on 17.7), Ronkonkoma (4.5 on 22.1), the Z (49 min). Orange: Port Washington (1.8 on 13.8). The Q has 8/16 trains full now but riders wait 0.5 min, which is only yellow. The square root and the grades were set by eye on that one save. The Lines tab reads the line's period now (the account's whole period, not the past hour). The dots are per period, so High shows the morning and evening peaks apart.
 
@@ -339,7 +339,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   other ideas became T-261 to T-265.
 - **Doc tidy after batches 17-19** (T-259). SPEC 8 is a short summary again (it had grown to 90
   lines by appending; docs/interface.md has the detail); SPEC 9 keeps only the latest calibration
-  figures (T-198), earlier checkpoints stay in notes/T-090.md and notes/T-162.md. TASKS.md is
+  figures (T-198), earlier checkpoints stay in notes/T-090.md and notes/archive/t0001-0499/T-162.md. TASKS.md is
   grouped by area instead of by batch, with performance tasks in one parked section. T-142 drops
   from P2 to P3: its nine-city work is done, and its other-country adapters wait for city
   additions, which are paused. Notes of finished tasks carry an "Archived" line.
@@ -1137,7 +1137,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   prefectures, city-states like Berlin), so each country sets its own from its own commuting
   data, and which borders get one is Anita's call. Replaces T-072's county-pair K-factors and
   road travel time: one parameter fixes the NJ overshoot, and road time closed only a tenth.
-  notes/T-162.md.
+  notes/archive/t0001-0499/T-162.md.
 
 - **One map label per name per station complex** (T-169). A complex's stations that share a name
   (the real NYC save has 14 platforms named Times Sq-42 St/42 St-Port Authority Bus Terminal, in
@@ -1393,7 +1393,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - **Edit blueprint corners from their inspector** (T-071). Add inserts midway between adjacent
   control points, then the player drags its square; each corner has level and removal controls.
   Reuse checked shape edits and undo rather than adding a map gesture that conflicts with
-  selection or drawing. Removing the last corner yields a straight stretch. notes/T-071.md.
+  selection or drawing. Removing the last corner yields a straight stretch. notes/archive/t0001-0499/T-071.md.
 
 - **M1 spec stays current and readable** (T-010). Correct stale schedule, save, demand and
   backlog claims; keep earlier calibration figures explicitly historical. Move oversized demand,
@@ -1765,7 +1765,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   flows in the gravity) goes first** (demand realism agent). The real-network comparison showed the
   crow-fly gravity sending New Jersey residents to Manhattan at 1.9-4.3x the ACS rate and keeping
   too few in their own county (39% against 52%; LODES, the decay's target, 43%). Access constants
-  fitted on top would absorb a gravity error. notes/T-034.md.
+  fitted on top would absorb a gravity error. notes/archive/t0001-0499/T-034.md.
 
 - **T-063 done without per-tile messages** (gameplay agent, batch 4): measured on a 2,000 km
   network, the edit cost was station labels rebuilt and measured every edit and stroke arrays
@@ -1810,7 +1810,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   per county (ACS B08301), per subway complex and link (MTA OD 2024, nycriders) and per operator**
   (T-007), rather than built by hand in the game: GTFS gives real run times and trains per hour
   for all 109 lines, and a change to any constant can be rerun in 10 s. A track-model save of the
-  same network exists for looking at in the game. notes/T-007.md.
+  same network exists for looking at in the game. notes/archive/t0001-0499/T-007.md.
 
 - **Side-by-side lines are offset in screen pixels in the stroke shader, ordered per edge by a
   network-wide "forward" direction, branch lines on their side** (T-062). Screen-space offsets keep
@@ -1994,7 +1994,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   and jobs at its centroid". New York goes from 74,920 to 202,337 cells and recompute costs 12%
   more native; Anita: fine, grain matters most in centres, adaptive grain only if ever needed
   (T-044). Polygons from the per-county TIGER2020PL block zips, not the state TABBLOCK20 zips
-  (73 MB instead of 510 MB). notes/T-013.md.
+  (73 MB instead of 510 MB). notes/archive/t0001-0499/T-013.md.
 - **LODES head-office lumps: three rules** (T-014; the home-care rule accepted by Anita).
   Northwell's 41,521 jobs at North Shore University Hospital: keep 10,000, spread the rest over
   the population of the six counties where it ran hospitals. JetBlue's 10,300 transport jobs at
@@ -2003,7 +2003,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   go over the county's population (300,188 jobs in 109 blocks). The earnings split between
   hospitals (60-100% high earners) and agencies (35% or less) is clean, which is what makes the
   last rule safe without naming each employer. County-government and school-district lumps are
-  left for T-043. notes/T-014.md.
+  left for T-043. notes/archive/t0001-0499/T-014.md.
 
 ## 2026-10-08
 
@@ -2044,7 +2044,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - **The city pack ships the solved zone gravity; pack format 1** (T-019). A zone id per cell, grid
   position and two balancing factors per zone, and a `gravity` header block. Opening New York in
   WASM went from 8 s (solve) to ~7 ms (parse and rebuild). Format 0 dropped; nothing else read it.
-  notes/T-019.md.
+  notes/archive/t0001-0499/T-019.md.
 - **The pipeline solves the gravity with the sim crate's own Rust code** (`pack_gravity` bin)
   rather than a numpy copy (T-019): the game rebuilds trips with the same decay table, so the two
   cannot drift, and T-006's refit will be made once. Cost: building a pack needs Rust installed.
@@ -2126,7 +2126,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
   a GPU question only. Custom layer vs overlay canvas is left open (T-015). notes/T-002.md.
 - **New York's boundary is the 2023 MSA plus Fairfield CT, Dutchess and Orange NY** (25 counties,
   21.7M people). The added three each end a commuter rail line a player would expect; Mercer NJ
-  and south stay out for Philadelphia. Details in notes/T-003.md.
+  and south stay out for Philadelphia. Details in notes/archive/t0001-0499/T-003.md.
 - **Pack cells take a block's whole population and jobs at its centroid** for now; spreading big
   blocks over their area is T-013.
 - **Accounts and shared saves on shonei-server**, as the plan for now (M4). (Anita)
@@ -2260,14 +2260,14 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - 2026-10-15 (T-418, Anita): NIMBY-style drawing: one tangent curve per segment through the click, too-tight clicks refused, Shift held to chain, the old mode kept as a setting until quad works in the new one.
 - 2026-10-15 (T-397): everyday destination samples per cell and purpose are one per 8 of the cell's trips a day for it, rounded up, 2 to 16 (airports and medical stay at 2). Against sqrt, 2 sqrt, 0.5 sqrt and trips / 4 or 16 on the real track, it kept station boardings and line riders within 5% everywhere with 31% of New York's slots; single zones' arriving trips move more (a quarter of busy zones past 5%), which a station sums away. Revisit if a view shows one zone's or cell's everyday trips. notes/T-397.md.
 
-- 2026-10-15 (T-402): in a solve with the round barrier (startup, a zone just opened) the zone in view's cluster is solved alone through every round before the other clusters, which go together: its final lands in about 5.7 s instead of 32 s on New York plus a Toronto line, at no cost to the whole final (31.0, 31.7 s against 32.3, 31.7 s). The price is that a zone in the second group gets its first figures only after the first group's final (about 30 s instead of 12 s for Toronto while viewing New York). Two groups, not one per cluster, so the rest keep T-327's rounds in step. A game load's card still waits for the whole final. notes/T-402.md.
+- 2026-10-15 (T-402): in a solve with the round barrier (startup, a zone just opened) the zone in view's cluster is solved alone through every round before the other clusters, which go together: its final lands in about 5.7 s instead of 32 s on New York plus a Toronto line, at no cost to the whole final (31.0, 31.7 s against 32.3, 31.7 s). The price is that a zone in the second group gets its first figures only after the first group's final (about 30 s instead of 12 s for Toronto while viewing New York). Two groups, not one per cluster, so the rest keep T-327's rounds in step. A game load's card still waits for the whole final. notes/archive/t0001-0499/T-402.md.
 
 - 2026-10-15 (T-418): drawing through points is the Build tab's default (a display setting, remembered per browser, so Anita meets it at once and switches to Corners with one click); a click more than 85 degrees off the heading is refused as "turn back on itself" rather than a new issue kind. Revisit with T-422.
 - 2026-10-15 (T-423): quad drawn through points ends each pair loose on open ground (no fork where they meet, as Corners makes), so the next segment can carry both on without changing placed track; a quad segment from other track keeps the swing-out and so the curve-then-straight shape, not one arc.
 
 - 2026-10-15 (T-290): Berlin's jobs come from the Länder's Pendlerrechnung (everyone employed, by Gemeinde of work) rather than the BA's insured employees named in the brief: the same atlas gives the flows for the curve, and it counts civil servants and the self-employed. Its flows publish only each Gemeinde's ten largest in and out, so the curve is scored on those pairs. Brandenburg's Geofabrik extract alone, since it includes Berlin. notes/T-290.md.
 
-- 2026-10-15 (T-375): the fixed links joining landmasses come from Wikidata (bridges, tunnels and causeways in use, near the sea, reaching half their length plus 3 km) over Natural Earth 10m land, since no precompiled global dataset of crossings exists; countries from Natural Earth admin 0 rather than geoBoundaries; GDP gaps (Taiwan and others) from Maddison 2023 scaled to the World Bank. notes/T-375.md.
+- 2026-10-15 (T-375): the fixed links joining landmasses come from Wikidata (bridges, tunnels and causeways in use, near the sea, reaching half their length plus 3 km) over Natural Earth 10m land, since no precompiled global dataset of crossings exists; countries from Natural Earth admin 0 rather than geoBoundaries; GDP gaps (Taiwan and others) from Maddison 2023 scaled to the World Bank. notes/archive/t0001-0499/T-375.md.
 
 - 2026-10-15 (T-409): the market splits by track network as one part per cluster beside one opened market (`IntercityApi::beside`, the pack's sites, zones and commutes shared by `Rc`), not one market instance per network (about 45 MB a worker each): a part costs only its own network's pairs and periods. The market joins clusters through one node per 6 km zone of its own (within 30 km of the zone's sites), not per registry zone, whose boxes overlap and are up to 110 km across: with registry zones the real save and a Boston line merged through Providence's box. Two networks one 6 km zone reaches still merge, which keeps the split exact (each zone's access lists stay in one part).
 
@@ -2334,7 +2334,7 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - 2026-10-16 (T-531): a line's money divides between regions by its stops: fares by boardings (the base) and passenger-km (the per-km part), running cost by route km, a stretch between two stops in different regions half to each, which approximates km in each region without the border's crossing point. Construction by the newly built track's cost at its midpoint's region; new trains by the edited line's route km. Regions keep their own ledgers in the clock worker from the moment they are kept, so a game saved before T-531 shows regions only from its load.
 - 2026-10-16 (T-510): a lone sparse cell (under 1,250 trip ends, merged by neither earlier rule, in a busy parent or alone in a sparse one) joins the touching merged cell of its zone with the fewest trip ends, since a light group's centre moves least for the demand it carries; one pass, never joining another joiner; lone cells touching only each other merge among themselves. No trip-end cap, but no grown or new group may reach past 700 m from its centre (about a T-044 merged parent's own spread): a group sheds its farthest joiner until it fits. The cap costs about a tenth of the cells the rule would otherwise save; uncapped, groups reached 1.3 km.
 - 2026-10-16 (Anita, T-535): the unattended city pipeline is approved with all eight of its recommendations: GHSL urban centres over 1M outside the US (functional urban areas over 1M in Europe), the UK first, then the rest of Europe, then by size; unresearched countries ship at the global baseline; extents are functional urban areas snapped to whole admin units; a pack holds at most 40M people; zones between cities keep T-300's rule until about 100 packs; hand-made packs are never rebuilt; an agent skims each batch's contact sheet and parked list. Batches may run overnight at up to 12 of 16 cores, and at 5 while she is using the machine.
-- 2026-10-16 (T-460): the land-use cap (1 km2 an area, spread on a 0.003 degree grid) is tier 0's default for every build, T-459's values kept: London's and Toronto's 2 km zone jobs came out 0.07 and 0.8 points better misplaced, Lagos byte-identical. A config turns it off with 0; a city's cached rows (osm_jobs_<id>.csv.gz) keep the settings they were made with. notes/T-460.md.
+- 2026-10-16 (T-460): the land-use cap (1 km2 an area, spread on a 0.003 degree grid) is tier 0's default for every build, T-459's values kept: London's and Toronto's 2 km zone jobs came out 0.07 and 0.8 points better misplaced, Lagos byte-identical. A config turns it off with 0; a city's cached rows (osm_jobs_<id>.csv.gz) keep the settings they were made with. notes/archive/t0001-0499/T-460.md.
 - 2026-10-16 (T-039): the dark theme's basemap is OpenFreeMap Positron repainted in Dark Matter's manner (paint properties only, same tiles and OSM/OpenMapTiles attribution), not OpenFreeMap's own dark style, so switching theme reloads nothing and the hidden railways, fonts and name rules stay one code path. Lines keep their colours and take a near-black casing (#141517) instead of white; station dots stay white with their dark rim, which reads on the dark map. Light or dark is a choice beside the three colours, not a fourth colour, and is remembered per browser.
 - 2026-10-16 (T-387): hospital beds where OSM has no tag pool over the US packs where beds are well tagged (Baltimore, Boston, Philadelphia, Springfield, Washington), New York held out for good as the check, since outside the US no pack tags more than a few; beds follow the square root of floor area (no exponent or estimator beat it on the held-out pack, 20.1% misplaced by 2 km zone), and the pack total is the World Bank's national beds per 1,000. One site keeps at most 5% of the pack's beds or 1,500 if more, never over 4,000: room above the 0.3-3.4% the largest site holds in packs over 10M, a small pack's one regional hospital kept, and the gate's 5,000 bound safe where Japan's and Korea's 12.6-12.8 a 1,000 meet few mapped sites. notes/T-387.md.
 - 2026-10-16 (T-536): the world plan's unit level is the finest geoBoundaries level (ADM2-4) where the median person's unit holds 20,000 people, weighted by people rather than by units (by units, Brazil's municipalities fail and Sao Paulo would be the state whole); a level need cover only half the country, and a first-level unit it misses a tenth of takes the finest level covering it (Russia's ADM2 has no Moscow).
@@ -2427,4 +2427,4 @@ The live file is [DECISIONS.md](DECISIONS.md); this one is searched, never read 
 - 2026-10-19 (T-756, my choices): a city's demand layers solve on the stations within `CITY_REACH_M` (30 km) of its cells' box, each line kept from one stop before its first such stop to one after its last (pads, whose crowding-input boardings are the riders aboard); the market's part stays on the whole cluster. A population's crowding rounds now stop when its own loads settle, not the cluster's. Seven cities of Japan: figures within 0.06% (a small city's within 10 trips), boardings 33,177,340 against 33,177,357; notes/T-756.md.
 - 2026-10-19 (T-757, my choices): a demand worker that fails after startup is not restarted: a red alert under the demand buttons says "Demand ran out of memory" or "Demand stopped", its hover that a reload starts it again, and the figures shown stay. Restarting the worker means downloading and opening its packs again; left until a network that fails is not just one too big for memory.
 - 2026-10-19 (T-760): a dead-end stop's platform middle never passes halfway to the next stop, so two stops closer than their platforms stand at the same point rather than past each other; the demand client's clamp of the fare distance is gone.
-- 2026-10-19 (T-761, orchestrator's call and my choices): the regional market on a big cluster keeps its figures exact (option 1 of notes/T-756.md, not a coarser station set): past 256 MB of strategies (`MARKET_STRATEGY_BYTES`) its destinations are searched one at a time, twice, keeping 256 MB of strategies between the sweeps (a bigger keep would shorten the second sweep but the whole country already peaks at 3.4 GB a worker). The commutes' OD and the far-zone table are held sparse on every network. notes/T-761.md.
+- 2026-10-19 (T-761, orchestrator's call and my choices): the regional market on a big cluster keeps its figures exact (option 1 of notes/T-756.md, not a coarser station set): past 256 MB of strategies (`MARKET_STRATEGY_BYTES`) its destinations are searched one at a time, twice, keeping 256 MB of strategies between the sweeps (a bigger keep would shorten the second sweep but the whole country already peaks at 3.4 GB a worker). The commutes' OD and the far-zone table are held sparse on every network. notes/archive/t0500-0999/T-761.md.

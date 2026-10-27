@@ -21,7 +21,7 @@ import read_pack
 import simbin
 from read_pack import load_pack
 
-UNDER = 1000.0  # Anita, 2026-10-21 (notes/T-852.md)
+UNDER = 1000.0  # Anita, 2026-10-21 (notes/archive/t0500-0999/T-852.md)
 
 
 def coarsen(city, under=UNDER, packs=None):

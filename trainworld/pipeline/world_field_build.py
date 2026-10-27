@@ -5,7 +5,7 @@ A pipeline input, never shipped; `world_field.py` reads it.
     python pipeline/world_field_build.py          (downloads cached in data/raw/world_field/)
 
 Writes data/work/world_field.npz (cells), world_field.countries.json, world_field.links.json.
-Sources and method: notes/T-375.md."""
+Sources and method: notes/archive/t0001-0499/T-375.md."""
 import gzip, json, os, shutil, sqlite3, sys, time, urllib.parse, urllib.request, zipfile
 os.environ.setdefault("OMP_NUM_THREADS", "3")
 from pathlib import Path

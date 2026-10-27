@@ -5,8 +5,8 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 Lower-priority tasks are under **Someday** at the end, one short line each. They are open tasks
 (Anita 2026-10-26): count them when asked what is open, and work on them when nothing above can go
 ahead; pull one back up when it becomes next. Anita's shortlist of candidates: `notes/for-anita.md`. Notes of archived
-tasks that nothing open or current cites live in `notes/archive/` (older ARCHIVE.md and DECISIONS.md
-links say `notes/T-###.md`: look there).
+tasks that nothing open or current cites live in `notes/archive/t0001-0499/`, `t0500-0999/` and
+`t1000-1499/` by task id (older ARCHIVE.md and DECISIONS.md links say `notes/T-###.md`: look there).
 
 **Orchestrator handoff: start with `notes/handoff.md`** (live; history in notes/handoff-2026-10-26.md).
 
@@ -113,7 +113,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-1114 [P3] A general code cleanup (Anita 2026-10-24), the rest: reviews in notes/T-1114/ (ui.md, app-core.md, sim.md, pipeline.md), most batches landed 2026-10-24. Left: app-core 2, 3, 4, 9 (perf switches, approved), 11; sim G's kernel.rs split and H; pipeline F items 19-20, G (the nocar layer, changes pack bytes, with T-878 and T-926), I. Pipeline G waits on a rebuild: the next data batch.
 - T-1183 [P3] After T-1146: take the fixed-rate line path out of the engine (`capacity.rs` `continuous` rounding, `LineData.trains` as an Option, the test-only `Op::Schedule`, `set_line` and `set_schedule` in `wasm.rs`), which about 30 sim tests pin exact trains per hour on, so they need rewriting onto train counts; and regenerate the shipped `data/packs/real/*.save` (they load, converted on load) with `realsave` + `gamesave` at the next data batch (T-1303's staged saves are that regeneration). Waits on a rebuild: the saves with the next data batch.
-- T-1586 [P2] Tidy: artifacts, DECISIONS/ARCHIVE split, notes, checks (Anita 2026-10-27: remove screenshots, reorganize big folders). Four stages, each its own commit; notes/T-1586.md. Taking, 2026-10-27.
 - T-1304 [P3] `complexNow`'s train list (T-1096) is still worked out but nothing draws it since T-1289 drew the complex with the map's renderer: trim it. Open.
 
 ## Waits on a rebuild

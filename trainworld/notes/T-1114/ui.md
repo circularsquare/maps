@@ -34,7 +34,7 @@ edit it; no sweeping rewrites". Each batch lists the history and stale comments 
 `*, *::before, *::after { animation: none !important }`, and `.shake` at `style.css:329` sets
 `animation: shake 300ms linear` without `!important`, so the important rule wins.
 `LineInspector.tsx:413-427` (SHAKE_MS, `wrap`, the `key` swap) runs, but nothing moves. Anita asked
-for the shake (DECISIONS T-625, notes/T-679.md). Fix: `animation: shake 300ms linear !important`,
+for the shake (DECISIONS T-625, notes/archive/t0500-0999/T-679.md). Fix: `animation: shake 300ms linear !important`,
 as `.spin` and the `bt-` rules already do. The reduced-motion rule at `:331` then needs
 `!important` too.
 Risk: none (it restores agreed behaviour). Effort: small. Mechanical: yes.

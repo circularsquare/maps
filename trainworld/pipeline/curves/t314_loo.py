@@ -1,5 +1,5 @@
 """T-314: which fitted city's commute curve a city with no flows should borrow, by a leave-one-out
-test over every pack with its own fitted curve (notes/T-314.md).
+test over every pack with its own fitted curve (notes/archive/t0001-0499/T-314.md).
 
     ..\\venv\\Scripts\\python.exe -u trainworld/pipeline/curves/t314_loo.py setup [ids]     per city: margins, units, flows -> CACHE
     ..\\venv\\Scripts\\python.exe -u trainworld/pipeline/curves/t314_loo.py score1 [ids]    each city on every fitted curve
@@ -560,7 +560,7 @@ def write_table():
             print(f"{c}: every curve scores the same, left out", flush=True)
             continue
         cities_out[c] = {"country": iso2(c), "pow": own[0], "km": own[1], "misplaced": m}
-    doc = {"task": "T-314", "notes": "notes/T-314.md; written by pipeline/curves/t314_loo.py table",
+    doc = {"task": "T-314", "notes": "notes/archive/t0001-0499/T-314.md; written by pipeline/curves/t314_loo.py table",
            "measure": "share of the city's observed commuters misplaced (unit pairs, or distance bands for mum and sao)",
            "candidates": [list(cv) for cv in cands], "cities": cities_out}
     with open(os.path.join(ROOT, "pipeline", "fitted_curves.json"), "w") as f:

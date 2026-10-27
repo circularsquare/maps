@@ -1,0 +1,87 @@
+// T-800: every zone has an outline from the start (packs/outlines.json, pipeline/zone_outlines.py).
+// A new game started on the map (no start city, so every realm is shown), then a jump to Europe: the
+// outline source should hold the Europe zones at once, before any of their own boundary files have
+// been fetched, and each zone's own outline replaces its coarse one when its pack arrives. NOFILE=1
+// blocks the coarse file; OUTLINES=<file> serves that one in its place.
+// Screenshots to artifacts/trainworld/t800-<TAG>-*.png.
+//   BASE=http://localhost:6146/ [NOFILE=1 TAG=before] node trainworld/checks/t800-outlines.mjs   (from the maps root)
+import { readFileSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, collectErrors } from '../lib.mjs';
+
+const BASE = process.env.BASE ?? 'http://localhost:6146/';
+const TAG = process.env.TAG ?? (process.env.NOFILE ? 'before' : 'after');
+const SHOTS = fileURLToPath(new URL('../../../artifacts/trainworld/', import.meta.url));
+await mkdir(SHOTS, { recursive: true });
+const results = [];
+const report = (name, ok, detail = '') => {
+  results.push(ok);
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
+};
+
+const { ctx, close } = await launchChrome({ prefix: 'tw-t800-' });
+const page = await ctx.newPage();
+const errors = [];
+collectErrors(page, errors);
+let boundaryFetches = 0;
+page.on('request', (r) => { if (r.url().includes('.boundary.geojson')) boundaryFetches++; });
+if (process.env.NOFILE) await page.route('**/packs/outlines.json*', (r) => r.abort());
+// OUTLINES=<file>: that file served as packs/outlines.json (a rebuild not yet in data/packs)
+else if (process.env.OUTLINES) {
+  const body = readFileSync(process.env.OUTLINES);
+  await page.route('**/packs/outlines.json*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body }));
+}
+// a slow connection: each zone's boundary file takes up to DELAY ms (the local server answers at once)
+const DELAY = Number(process.env.DELAY ?? 0);
+if (DELAY) await page.route('**/*.boundary.geojson*', async (r) => { await new Promise((ok) => setTimeout(ok, Math.random() * DELAY)); await r.continue(); });
+
+/** zone ids with an outline feature in the rendered view */
+const drawn = () => page.evaluate(() => {
+  const f = window.tw.map.querySourceFeatures('tw-city-boundaries');
+  return [...new Set(f.map((x) => x.properties.id))];
+});
+const settle = (ms) => page.waitForTimeout(ms);
+
+try {
+  await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+  await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
+  await page.click('.start-menu .new-game .start-new');
+  await page.waitForFunction(() => window.tw?.world?.value && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
+  await settle(4000);
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-74, 41], zoom: 6.5 }));
+  await settle(3000);
+  await page.screenshot({ path: join(SHOTS, `t800-${TAG}-1-newyork.png`) });
+  const ny = await drawn();
+  console.log(`New York view, zoom 6.5: ${ny.length} zones drawn`);
+
+  // the jump to Europe: no boundary file of a European zone has been asked for yet
+  const fetched0 = boundaryFetches;
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [8, 49], zoom: 5.2 }));
+  await settle(700);
+  await page.screenshot({ path: join(SHOTS, `t800-${TAG}-2-europe-at-once.png`) });
+  const first = await drawn();
+  console.log(`Europe, 0.7 s after the jump: ${first.length} zones drawn, ${boundaryFetches - fetched0} boundary files fetched since`);
+  await settle(8000);
+  await page.screenshot({ path: join(SHOTS, `t800-${TAG}-3-europe-settled.png`) });
+  const later = await drawn();
+  console.log(`Europe, settled: ${later.length} zones drawn, ${boundaryFetches - fetched0} boundary files fetched since`);
+
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [10, 50], zoom: 3.2 }));
+  await settle(1500);
+  await page.screenshot({ path: join(SHOTS, `t800-${TAG}-4-wide.png`) });
+  const wide = await drawn();
+  console.log(`Wide view, zoom 3.2: ${wide.length} zones drawn`);
+
+  if (!process.env.NOFILE) {
+    report('Europe has outlines at once', first.length >= 40, `${first.length}`);
+    report('the outline source holds the whole world', wide.length >= 100, `${wide.length}`);
+  }
+  const bad = errors.filter((e) => !(process.env.NOFILE && /ERR_FAILED/.test(e)));
+  report('no console errors', bad.length === 0, bad.slice(0, 3).join(' | '));
+} finally {
+  await close();
+}
+process.exit(results.every(Boolean) ? 0 : 1);

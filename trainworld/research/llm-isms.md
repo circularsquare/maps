@@ -4,7 +4,7 @@ T-1242, 2026-10-24. Research on what makes text read as machine-written, aimed a
 text (labels, tooltips, buttons, empty states, status lines, errors, short descriptions, link
 previews, map labels), and a proposed rewrite of the "User-facing text" section of Anita's global
 CLAUDE.md. Her file is not edited; the proposal is section 4. The scan of trainworld's own strings
-is in `notes/T-1242.md`.
+is in `notes/archive/t1000-1499/T-1242.md`.
 
 ## 1. Summary for Anita
 
@@ -35,7 +35,7 @@ is in `notes/T-1242.md`.
 - One real conflict: a column of labels written in one grammar is good interface writing, while a
   set of free-text lines that all share one shape reads as generated. The proposal separates the two.
 - trainworld's text is already plain. The scan has 41 rows: 26 proposed changes, most of them
-  small, and 15 borderline ones for you; see `notes/T-1242.md`.
+  small, and 15 borderline ones for you; see `notes/archive/t1000-1499/T-1242.md`.
 
 How the marks below read: **well attested** means three or more independent sources (studies,
 style guides, editors) name it; **single source** means one source or one person; **her rule**
@@ -310,7 +310,7 @@ own voice added, and "please" is fine (her call). This long form stays as the re
 
 Written to drop in for the current section of `C:\Users\anita\.claude\CLAUDE.md`. "(new)" marks
 what her current section doesn't have; "(changed)" marks a rule that is reworded or widened. The
-ids in brackets are what `notes/T-1242.md` refers to.
+ids in brackets are what `notes/archive/t1000-1499/T-1242.md` refers to.
 
 ```markdown
 ## User-facing text

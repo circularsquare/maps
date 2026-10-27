@@ -4,10 +4,10 @@ Moved out of ARCHIVE.md on 2026-10-27 (T-1586): the tasks finished before 2026-1
 The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whole.
 
 - T-682 [P3] Real-world rail layer and a trace tool. Done: the layer 2026-10-19, the trace tool as T-727a-f, real networks on real track as T-1303. notes/T-682.md.
-- T-613 [P2] The rest of Europe by the runner. Done 2026-10-19, then whole countries in T-788: every non-held row built; Russia, Belarus and Ukraine held; Nice's park is T-769. Archived in T-940's tidy. notes/T-613.md.
-- T-768 [P2] Pack JSON in the locale code page. Done 2026-10-19: read as UTF-8 in load_pack, merge_cells and tier0; the gate's header hash undoes the old re-encoding, so a joint solve's one-time text change passes. Mannheim shipped. notes/T-613.md.
-- T-725 [P1] merge_cells rule for `walk_part`. Done 2026-10-19: cells merge only within one walk part of a zone (a twin parent takes its busiest child's index); packs without parts merge as before. DECISIONS 2026-10-19; notes/T-613.md.
-- T-761 [P2] The regional market on Japan's whole-country cluster. Done 2026-10-19: destinations searched one at a time (exact), commutes' OD and far-zone table sparse; the whole country's final in 19 min, 3.2-3.4 GB a worker; New York and seven cities identical to the bit. notes/T-761.md.
+- T-613 [P2] The rest of Europe by the runner. Done 2026-10-19, then whole countries in T-788: every non-held row built; Russia, Belarus and Ukraine held; Nice's park is T-769. Archived in T-940's tidy. notes/archive/t0500-0999/T-613.md.
+- T-768 [P2] Pack JSON in the locale code page. Done 2026-10-19: read as UTF-8 in load_pack, merge_cells and tier0; the gate's header hash undoes the old re-encoding, so a joint solve's one-time text change passes. Mannheim shipped. notes/archive/t0500-0999/T-613.md.
+- T-725 [P1] merge_cells rule for `walk_part`. Done 2026-10-19: cells merge only within one walk part of a zone (a twin parent takes its busiest child's index); packs without parts merge as before. DECISIONS 2026-10-19; notes/archive/t0500-0999/T-613.md.
+- T-761 [P2] The regional market on Japan's whole-country cluster. Done 2026-10-19: destinations searched one at a time (exact), commutes' OD and far-zone table sparse; the whole country's final in 19 min, 3.2-3.4 GB a worker; New York and seven cities identical to the bit. notes/archive/t0500-0999/T-761.md.
 - T-726 [P3] Data register rows and OSM extract dates. Done 2026-10-19: rows for 24 countries plus new pack lists; download day found for every built pack, exact snapshot only for Toulouse. T-765 and T-766 filed; notes/T-726.md.
 - T-754 [P3] The snapped route's fit faster and cancellable. Done 2026-10-19: New York-Emeryville natively 779 to 136 ms, same corners; fitted in steps of at most 10 ms, the router worker dropping it for a newer request. notes/T-727.md.
 - T-727f [P3] Quad over thousands of clicked corners slow. Done 2026-10-19: one express curve left not fitting made the express pair one 5,400 km edge; now cleared until none is, New York-Emeryville quad edit 3.3 s to 0.15 s natively. notes/T-727.md.
@@ -16,11 +16,11 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-760 [P3] Negative stop-to-stop distance for stops closer than their platforms. Done 2026-10-19: fixed in `build_run`, demandClient's clamp gone. notes/T-756.md.
 - T-630 [P2] Lag with station ridership shown, zoomed far out. Done 2026-10-19: drawing was 60 fps throughout; the circle's hover tag cost 100-115 ms a pointer move off track (and each game minute) on the world save, now 0.1; far-out picks 2-6x faster, same answers. notes/perf-survey.md.
 
-- T-648 [P2] Adding a stop: slow and the map flashes. Done 2026-10-19: the flash was the stop list's stations passed arriving a query late (also old trips on new profiles, counts a row off), all gone; click to drawn 132-142 to 112-130 ms. checks/t648-stop-edit.mjs; notes/perf-survey.md.
+- T-648 [P2] Adding a stop: slow and the map flashes. Done 2026-10-19: the flash was the stop list's stations passed arriving a query late (also old trips on new profiles, counts a row off), all gone; click to drawn 132-142 to 112-130 ms. checks/old/t648-stop-edit.mjs; notes/perf-survey.md.
 
 - T-737 [P2] Stress test: all of Japan at 4x. Done 2026-10-19: playing and panning 55-60 fps at 240x and 960x; load 10.3 to 7.7 s (masks before the load); whole-country demand dies of worker memory (T-756), seven cities 12 min. checks/t737-japan.mjs; notes/T-737.md.
 
-- T-727d [P2] Snap to the real network: router worker and track tool. Done 2026-10-19: two clicks place Tokyo-Shin-Osaka (515 km, 461 corners, rest to preview 1.3 s) and Penn Station-Emeryville (5,400 km, 4.9 s) as one edit and one undo; long routes bridged river by river. checks/t727-snap.mjs; notes/T-727.md.
+- T-727d [P2] Snap to the real network: router worker and track tool. Done 2026-10-19: two clicks place Tokyo-Shin-Osaka (515 km, 461 corners, rest to preview 1.3 s) and Penn Station-Emeryville (5,400 km, 4.9 s) as one edit and one undo; long routes bridged river by river. checks/old/t727-snap.mjs; notes/T-727.md.
 
 - T-724, T-689 [P2] Hover and zoom-start stalls on the real save. Done 2026-10-19: idle-built grids for pick and snap, station names read from nearby tiles only; a pointer move p95 24-37 ms to 3-6 with either tool, same answers. checks/t724-hover.mjs; notes/perf-survey.md.
 
@@ -34,7 +34,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 
 - T-745 [P2] Line bullets still off centre after T-705. Done 2026-10-19: ink box measured at 240 px (canvas rounds to whole pixels), circle drawn in the bullet's SVG, baseline on a whole device pixel; worst 2.6 device px before, 0.55 after. `checks/t745-bullets.mjs`, notes/T-745.md.
 - T-731 [P2] Sandbox start from a city's real network. Done 2026-10-19: seven saves shipped as `packs/real/<id>.save` (`realnet.py ship`); the sheet's "Real network" box opens one as a new sandbox. notes/T-728.md stage 5.
-- T-728 [P2] New game sheet and sandbox mode. Done 2026-10-19: save header `mode`, `start`, `opened`; sandbox refuses nothing for money and hides the cash; one-way switch in Settings; the sheet (mode, five cities, search, map start) in the start menu and saves panel. `checks/t728-newgame.mjs`, notes/T-728.md.
+- T-728 [P2] New game sheet and sandbox mode. Done 2026-10-19: save header `mode`, `start`, `opened`; sandbox refuses nothing for money and hides the cash; one-way switch in Settings; the sheet (mode, five cities, search, map start) in the start menu and saves panel. `checks/old/t728-newgame.mjs`, notes/T-728.md.
 - T-727c [P2] Real line to corners. Done 2026-10-19: `track/trace.rs` and `TrackApi::trace_route` (25 m, 100 m floor, 108 quad); Tokyo-Shin-Osaka 460 corners in 31 ms, New York-Emeryville 5,688 in 0.8 s, both one edit. `stroke_pieces` eases centimetre overruns. notes/T-727.md.
 
 - T-667 [P3] Clicked corners not bridged. Done 2026-10-19 with T-727c: `route_op` bridges a ground-level route through corners too, the bridge cut into pieces with them.
@@ -56,7 +56,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 
 - T-749 [P2] Cities as its own dock tab. Done 2026-10-19: skyline icon, the list out of Money, tabs at least 34 px (were 46) so six fit the narrowest dock.
 
-- T-743 [P1] New game and Load a file replaced the open slot's game. Done 2026-10-19: they, and a backup's restore, each open a new slot after saving the game being played; no confirm. `checks/t743-slots.mjs`.
+- T-743 [P1] New game and Load a file replaced the open slot's game. Done 2026-10-19: they, and a backup's restore, each open a new slot after saving the game being played; no confirm. `checks/old/t743-slots.mjs`.
 
 - T-744 [P1] Two rotating backups per slot. Done 2026-10-19: `backup:<slot>:0/1`, written with an autosave 5+ wall minutes after the newest; listed under the Playing card with Restore as a copy; deleted with the slot.
 
@@ -78,7 +78,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 
 - T-718 [P2] The regional layer's route choice on T-710's rule. Done 2026-10-19: station pairs at the band scale, rail at their logsum; sim only, no market pack rebuild; regional rail falls a half to four fifths (T-721 checks the levels). notes/T-717.md.
 
-- T-715 [P1] Money on loading a save. Done 2026-10-19: a stale clock from the game open before charged the gap's running costs and froze the cash; clocks now carry the load count, loads refund ledger entries after the clock (bodega back to +893.6 US$M). notes/T-715.md, checks/t715-load-money.mjs.
+- T-715 [P1] Money on loading a save. Done 2026-10-19: a stale clock from the game open before charged the gap's running costs and froze the cash; clocks now carry the load count, loads refund ledger entries after the clock (bodega back to +893.6 US$M). notes/T-715.md, checks/old/t715-load-money.mjs.
 
 - T-716 [P3] Save file named after its slot. Done 2026-10-19: "Save to a file" downloads `anitabuilder-<slot name>-day-N.save` (lowercase, spaces to dashes, other characters dropped; the city id if nothing is left); in `workers/clockClient.ts`.
 
@@ -110,7 +110,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-698 [P3] A font switcher. Done 2026-10-19 as a trial, Anita picks: Settings > Font, panels only, Zen Maru Gothic, M PLUS Rounded 1c, Kosugi Maru or Nunito, loaded from Google Fonts when first chosen (`game/fonts.ts`); map glyph tiles stay Zen Maru Gothic.
 
 - T-692 [P2] Line panel layout. Done 2026-10-19: one-line schedule cells ("Trains") with no dotted lines between rows, rules only above Past 24 hours and Stops, the crowding dot coloured by average wait (yellow 3 min, orange 10, red 15, dark red 20), Express copy removed (button, `express_copy`), a light outline on the selected Elevation chip in dark.
-- T-694 [P2] Points as a measure. Done 2026-10-19 (`pointsPast24h` in game/points.ts): a city's points are what it earned in the past 24 whole game hours, from the hour ledgers, changing once a game hour; the running total is gone from the display and the save. checks/t684-points.mjs.
+- T-694 [P2] Points as a measure. Done 2026-10-19 (`pointsPast24h` in game/points.ts): a city's points are what it earned in the past 24 whole game hours, from the hour ledgers, changing once a game hour; the running total is gone from the display and the save. checks/old/t684-points.mjs.
 - T-693 [P2] Cities list fixes. Done 2026-10-19: the star hover reads "Monday, day 71, at 14:08" (game day count, minutes whole); a narrow list keeps about six characters of a name, dropping the star, then the money (container queries).
 
 - T-696 [P2] Station sounds and faces, round two. Done 2026-10-19: one note per arrival, fixed per line (C major pentatonic, from the line number); a minor third lower and softer at a crowded platform; the crowded face is sad (raised brows, tear). notes/playtest-2026-10-19.md.
@@ -118,19 +118,19 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-633 [P2] Explain perceived minutes in the game. Folded into T-699 (the trip explorer's "effective time" row with an equation hover), 2026-10-19.
 - T-681 [P2] Airport staff commute versus air trips. Done 2026-10-19: no demand fault (staff are work jobs one cell from the terminals); a purpose bar under the mode bar in the focused zone's bubble hover under All purposes, the plane's hover cut to 8 px and worded as the airport's (`map/commuterView.ts`, `modeBar.ts`, `airportMarks.ts`). notes/T-681.md.
 - T-686 [P2] Sound and faces at stations. Done 2026-10-19 (`map/stationLife.ts`, `stationSound.ts`, `faces.ts`; Settings, Stations up close): from zoom 14 a chime and pops per arrival and happy faces, red after a 10 minute wait; both on by default. Sampling 0.46 ms, 8 a second.
-- T-684 [P2] Points per city. Done 2026-10-19 (`game/points.ts`, clock worker): 20 a rail journey (from the solve, changes included, where it starts) plus 1 a passenger-km, landing as fares do, saved; Cities list and top bar hover. Also T-685's stars. checks/t684-points.mjs, notes/T-684.md.
+- T-684 [P2] Points per city. Done 2026-10-19 (`game/points.ts`, clock worker): 20 a rail journey (from the solve, changes included, where it starts) plus 1 a passenger-km, landing as fares do, saved; Cities list and top bar hover. Also T-685's stars. checks/old/t684-points.mjs, notes/T-684.md.
 
 - T-675 [P2] Zoom runs away after a lag. Done 2026-10-19 (`map/mapView.ts`, `wheelGapsByEventTime`): a stall as a scroll starts made MapLibre take the mouse wheel for a trackpad (3.6x per notch, no easing); its device guess now sees the events' own timestamps. checks/t675-wheel-lag.mjs, notes/T-675.md.
 - T-687 [P3] How NIMBY Rails draws track and platforms. Done 2026-10-19: research/nimby-track-drawing.md (single tracks only, double as parallel children; crossovers and terminal throats by hand; ideas for T-657 and T-658).
 - T-637 [P2] Everyday trips run long. Done 2026-10-19: W1, one worldwide set of decay scales (`everyday::DECAY`: errands 1.3 km, social and school 1.4, medical 2.0, university 3.5; packs' `decay_m` ignored) and `park_min` 7. Tests A 85.8 / 86.1%, B 79.0 / 79.7% (New York / London), as predicted. notes/T-637.md.
 - T-614 [P2] A pack with no university passes with a WARN. Done 2026-10-19 (`checks/pack_gate.py`, `university_rate`): a pack whose OSM outline maps no university opens with that purpose empty (T-582). aba and abo ship; notes/T-610.md.
 - T-615 [P2] Browser check on thin-OSM packs. Done 2026-10-19 (`purposes_in_reach`, `city-browser.mjs`): the test line must carry work, social and each of shopping, school, medical with sites within 1.5 km of a station; the rest are listed in the gate's detail. owe, aba and abo ship.
-- T-680 [P2] 25,000 waiting at once on a new line's platform. Done 2026-10-19 (`RunAccount::open` in boarding.rs): the account's day began six hours before the edit, so the first train met six hours of riders; platforms now start empty when trains start. checks/t680-new-line-crowd.mjs, notes/T-680.md.
+- T-680 [P2] 25,000 waiting at once on a new line's platform. Done 2026-10-19 (`RunAccount::open` in boarding.rs): the account's day began six hours before the edit, so the first train met six hours of riders; platforms now start empty when trains start. checks/old/t680-new-line-crowd.mjs, notes/T-680.md.
 - T-673 [P2] Map drawing touches. Done 2026-10-19: round line caps and joints (no GPU cost found on `?synth=1`), car window strips gone, the line panel's crowding dot a smooth green to deep red ramp, flat crossing marks coloured by level, a Settings switch for them. notes/T-671.md.
 - T-677 [P2] Start menu and loading bunny. Done 2026-10-19 (`ui/StartMenu.tsx`): New game and the saved games on every load, the workers started by the pick (New game, about 1.7 s to the clock, as `?new=1`); a drawn bunny train on the loading card and status tag. notes/T-677.md.
-- T-679 [P2] Headway at the track's limit. Done 2026-10-19 (`clamp_auto`, `Capacity::line_limits`): a headway at or within 0.5% of the limit takes the trains that fit, shown with the headway run and what limits it; under the limit red; a cash refusal shakes, count red. notes/T-679.md.
+- T-679 [P2] Headway at the track's limit. Done 2026-10-19 (`clamp_auto`, `Capacity::line_limits`): a headway at or within 0.5% of the limit takes the trains that fit, shown with the headway run and what limits it; under the limit red; a cash refusal shakes, count red. notes/archive/t0500-0999/T-679.md.
 
-- T-674 [P2] Airport bubble dropped, stale airport split fixed. Done 2026-10-19: only the plane and its hover remain; its split was read once and never again, now with each demand result. Destination bubbles were the T-156 day's catch-up. checks/t674-airport-modes.mjs, notes/T-674.md.
+- T-674 [P2] Airport bubble dropped, stale airport split fixed. Done 2026-10-19: only the plane and its hover remain; its split was read once and never again, now with each demand result. Destination bubbles were the T-156 day's catch-up. checks/old/t674-airport-modes.mjs, notes/T-674.md.
 - T-671 [P2] Station placement. Done 2026-10-19 (`map/stationSnap.ts`): among overlapping tracks the station goes where it would not meet a station, then blueprint, then the last station's track; a spot refused only for running off the track's end uses the end node, ghost and click. checks/t671-station-snap-check.mjs.
 - T-670 [P2] Line editing. Done 2026-10-19: one editor (name, symbol, colour) from the badge or pencil; Edit stops and the stops list at the top while editing; New line on a lineless track; keys N (new line), L (edit stops), C (construct blueprints); a City column on the whole world. notes/T-670.md.
 - T-672 [P2] Colour picker. Done 2026-10-19 (`ui/ColourPicker.tsx`): drag previews on the badge, the map line follows by an edit every 0.2 s at most (slower on a slow machine), final edit on release; on the real save at 4x slowdown 65 long tasks (6.1 s) became 42 (3.3 s); with no live edits 3 (0.26 s).
@@ -152,7 +152,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-620 [P2] Car ownership. Done 2026-10-17: $1.50 a car trip + $0.10/km, the drive to a station too, on by default with T-636. notes/T-621.md.
 - T-621 [P1] The deep calibration. Abandoned 2026-10-17: its fit (stage 2) was not applied; Anita chose a simpler model tuned to her ceiling tests instead (T-636). Its tooling and census walk targets stay. notes/T-621.md.
 - T-628 [P2] The trip explorer's walk row. Done 2026-10-17: walking is its own row beside train and drive when walking the whole way takes under 30 minutes. notes/T-586.md.
-- T-586 [P2] The bubble hover and the trip explorer agree. Done 2026-10-17: the explorer's headline is the view's own far-bubble sums (purpose filter, day); route detail is one representative trip (largest purpose, its busiest period; everyday trips through the new `EverydayApi.trip`, T-201's query); New York and Mumbai agree within 0.22 points (`checks/t586-trip-agrees.mjs`). notes/T-586.md.
+- T-586 [P2] The bubble hover and the trip explorer agree. Done 2026-10-17: the explorer's headline is the view's own far-bubble sums (purpose filter, day); route detail is one representative trip (largest purpose, its busiest period; everyday trips through the new `EverydayApi.trip`, T-201's query); New York and Mumbai agree within 0.22 points (`checks/old/t586-trip-agrees.mjs`). notes/T-586.md.
 - T-624 [P2] Built track joins under a platform. Done 2026-10-17: a station within half a platform of a joint joins two constructed pieces of the same track count; money, lines, trains, levels and undo carry over unchanged; unlike track still refuses. notes/T-624.md.
 - T-622 [P2] Platform alerts that flipped with a nudge (Anita, Hakusan). Done 2026-10-17: the crossing check was right, but a station moved the ramp of the stretch it split (joins too), so a nudge moved the ramp under other track; cuts and joins now keep ramps in place, back-to-back curves fit at a cut, a joint that cannot be merged says so, the crossing alert says what to do. Eight sim tests.
 - T-595 [P3] Tokyo's calibration areas file. Done 2026-10-17 in T-621 stage 1: remade, with New York's and Toronto's (stale by a few cells) and Sendai's and Toronto's targets. notes/T-621.md "Stage 1".
@@ -180,7 +180,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-580 [P3] A new pack beside the Northeast without a market id. Done 2026-10-16 by rule: the runner parks a pack within 50 km of a Northeast pack before its gate, with the reason; moving the Northeast onto the `--packs` solve waits for a row that needs it (US cities are paused). notes/T-540.md.
 - T-558 [P2] Walking that competes, stage 1. Done 2026-10-16: walking is a third mode in the logit (1.5 then 4 a minute, constants 2.86 and +0.35); New York and London walk within 0.3 points of before; real save 10,433,195 to 10,541,788 rail trips (+1.0%); commute solve +4%. Fitting per country waits for the deep calibration. notes/T-558.md.
 - T-579 [P2] A tier 0 pack with no OSM parks. Done 2026-10-16: `enrich_parks.py` writes a zero `park_draw` (the kernel then leaves parks out) and skips the coverage check when there is no draw to place; Aboh builds in a scratch root, `read_pack` OK. notes/T-540.md.
-- T-539 [P2] Pipeline stage 7, automatic joint gravity groups. Done 2026-10-16: `intercity.py --group auto`, packs within 50 km chained; Northeast and Japan same members, Japan to f32 noise on its res-9 packs; three adjacent Nigerian test packs exchange 285k commuters. notes/T-539.md.
+- T-539 [P2] Pipeline stage 7, automatic joint gravity groups. Done 2026-10-16: `intercity.py --group auto`, packs within 50 km chained; Northeast and Japan same members, Japan to f32 noise on its res-9 packs; three adjacent Nigerian test packs exchange 285k commuters. notes/archive/t0500-0999/T-539.md.
 - T-572 [P2] Pre-cap OSM land rows in Shanghai, Mumbai, Seoul. Done 2026-10-16: rows rebuilt with T-460's cap (and Berlin's); top cells 141k, 101k, 65k to 31k, 31k, 18k jobs; all five parked packs rebuilt and ship. notes/T-572.md.
 - T-573 [P2] Berlin's tall-building cell. Done 2026-10-16: tier 0's height weight stops at 40 m (`HEIGHT_CAP_M`); Treptowers cell 62k to 22k jobs; Toronto 18.05 to 17.79% misplaced, London unchanged. notes/T-572.md.
 - T-574 [P2] Pupils in one school cell. Done 2026-10-16: 3,000 pupils a site and 6,000 a cell (`SCHOOL_SITE_MAX`, `SCHOOL_CELL_MAX`), the rest at school near home; Lagos 155k to 7k, Mumbai 55k to 8k. notes/T-572.md.
@@ -210,10 +210,10 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-536 [P2] Pipeline stage 4, the world plan. Done 2026-10-16: `world_plan.py` writes `pipeline/world_plan.json`, 515 metros (UK 11, Europe 74, elsewhere 430); eight packs planned from scratch hold 85-100% of their people. notes/T-536.md.
 - T-316 [P3] Tier 0 boundaries from global admin units. Done 2026-10-16 inside T-536: NUTS-3, ITL3 and geoBoundaries ADM1-4 per country by rule; district totals stay with country modules. notes/T-536.md.
 
-- T-314 [P2] Tier 0's curve without flows (pipeline stage 3). Done 2026-10-16: `tier0.borrowed_curve`, the fitted curve losing least by country (d^-1.8 exp(-d/80 km); +2.9 points held out by country, worst +14.2); road factor stays 1.3; Lagos's re-solve is T-545. notes/T-314.md.
+- T-314 [P2] Tier 0's curve without flows (pipeline stage 3). Done 2026-10-16: `tier0.borrowed_curve`, the fitted curve losing least by country (d^-1.8 exp(-d/80 km); +2.9 points held out by country, worst +14.2); road factor stays 1.3; Lagos's re-solve is T-545. notes/archive/t0001-0499/T-314.md.
 - T-387 [P2] Tier 0 hospital sizes (pipeline stage 2). Done 2026-10-16: beds from the square root of floor area pooled over five US packs, scaled to World Bank beds per 1,000, one site capped; New York held out 20.1% misplaced by 2 km zone (target 20%); Mumbai, Shanghai, Lagos re-enriched. notes/T-387.md.
 - T-039 [P2] Themes, stage 1. Done 2026-10-16: Settings, Theme picks Light or Dark beside the three colours; dark panels from CSS tokens, Positron repainted Dark Matter-like, near-black line casing, map inks from `game/shades.ts`; switching redraws only. Legibility after Anita's look: T-543.
-- T-460 [P2] Tier 0's land-use cap as the default. Done 2026-10-16: 1 km2 cap, 0.003 degree spread in every build; London and Toronto 2 km zone jobs misplaced 26.06 to 25.99% and 18.83 to 18.01%; Lagos rebuilt byte-identical; builds print an `osm_signal:` line. notes/T-460.md.
+- T-460 [P2] Tier 0's land-use cap as the default. Done 2026-10-16: 1 km2 cap, 0.003 degree spread in every build; London and Toronto 2 km zone jobs misplaced 26.06 to 25.99% and 18.83 to 18.01%; Lagos rebuilt byte-identical; builds print an `osm_signal:` line. notes/archive/t0001-0499/T-460.md.
 - T-510 [P3] Merge lone sparse cells across parents. Done 2026-10-16: a lone cell under 1,250 joins the lightest touching merged cell of its zone (700 m reach cap). All 67 packs 1.09M to 0.92M cells (-15%); busy stations past 5% 0.1-1.3%; real save +0.002%. notes/T-510.md.
 - T-542 [P2] Stations and trains further out. Done 2026-10-16: dots drawn and picked from zoom 9 (`STATIONS_ZOOM`), trains from 10 (`TRAINS_ZOOM`); dots and train width shrink going out, unchanged from 11. Draw cost within noise of before (queued CPU +0.1 ms at zoom 9).
 
@@ -223,13 +223,13 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-534 [P2] Station names and renaming. Done 2026-10-16: a new station takes the cross street (never one within 30° of the track), else a small neighbourhood (peer spacing at most 3 km, population at most 200,000), else the old fallbacks; a cycle button steps through cross street, neighbourhood and city; stations and lines both rename by double click or pencil. `map/stationNames.ts`.
 - T-492 [P2] A pack that fails to open stops all demand. Done 2026-10-16: a worker reports a pack it cannot open (`rejected`); the zone is left out and flagged like a failed download, tried once more, then final until reload. docs/architecture.md; `every-pack-opens.mjs --broken`.
 - T-532 [P2] Small interface fixes. Done 2026-10-16: the four tab buttons share the bar's width equally; the Lines tab's trains column shows the bare number; the track hover lists lines as line bullets (`lineBullets` in map/trackTagRows.ts, the Chip's markup and CSS).
-- T-533 [P2] Interlined draw order. Done 2026-10-16: lines drawn (and clicked) in one global order, no-train lines under, then longest route to shortest on top, ties by higher id; `lineDrawOrder` in map/network.ts, rebuilt when a line gains its first or loses its last train. `checks/t533-draw-order.mjs`.
+- T-533 [P2] Interlined draw order. Done 2026-10-16: lines drawn (and clicked) in one global order, no-train lines under, then longest route to shortest on top, ties by higher id; `lineDrawOrder` in map/network.ts, rebuilt when a line gains its first or loses its last train. `checks/old/t533-draw-order.mjs`.
 - T-490 [P3] 8800 refusing connections. Done 2026-10-16: Windows refuses connections past a full listen backlog, and serve.py had the default 5 (241 of 600 answered in a 200-connection burst); `request_queue_size` 128 answered 600 of 600. Takes effect when 8800 restarts.
 
 - T-530 [P2] Three interface fixes. Done 2026-10-16: Stations tab rows are complexes (lead member's name, all lines, summed boardings) with a "+" hover for hidden bullets; inter-region bubbles scale with zoom only (radius x 2^(0.35(z-6.5))); curve labels show speed only.
 - T-509 [P2] Calibration. Done 2026-10-16: six cities' real networks fitted jointly (`asc_rail` 0.4, everyday 1.1 lower, everyday walk centre 1.9 km), Japan +0.5 by country, every pack checked on a test cross; long trips are T-528. notes/T-509.md.
-- T-303 [P2] Demand loading and responsiveness. Closed 2026-10-16 (doc tidy): the approved proposal was built as T-324 to T-328, all done by 2026-10-15. notes/T-303.md.
-- T-355 [P2] Startup CPU headroom. Closed 2026-10-16 (doc tidy): folded into T-361, whose worker rule (T-381, 3 workers on 16 threads) and memory cut (T-398) settled it. notes/T-348.md.
+- T-303 [P2] Demand loading and responsiveness. Closed 2026-10-16 (doc tidy): the approved proposal was built as T-324 to T-328, all done by 2026-10-15. notes/archive/t0001-0499/T-303.md.
+- T-355 [P2] Startup CPU headroom. Closed 2026-10-16 (doc tidy): folded into T-361, whose worker rule (T-381, 3 workers on 16 threads) and memory cut (T-398) settled it. notes/archive/t0001-0499/T-348.md.
 - T-362 [P2] A worldwide baseline for long trips. Done 2026-10-15 as T-375 to T-379 (world field, tail fit, world market, air, Northeast checks); follow-ups T-427 to T-429, T-437, T-438 stay open. notes/T-362.md.
 - T-418 [P2] Track drawing like NIMBY Rails. Done 2026-10-15/16: through points (stage 1), T-422 Corners retired, T-423 quad, T-442 half turns, T-471 past the cap; T-430 stays open. notes/T-418.md.
 - T-295 [P2] Park-and-ride. Done 2026-10-15 as T-370 (long drives), T-371 (ride access), T-372 (fit with T-380's parking) and T-440 (everyday and regional layers); T-390 stays open. notes/T-295.md.
@@ -259,16 +259,16 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-502 [P2] Cost damping from 60 car-minutes; "on average" dropped from hovers. Done 2026-10-16: real save rail trips 8,346,628 to 8,343,085 (-0.04%), regional boardings 68,301 to 151,704 (T-495's first step took them from 259,376), work -0.9%, big lines within 1.5%. notes/T-495.md.
 - T-501 [P2] A data register by country. Done 2026-10-16: docs/data-register.md, eleven countries by input with status marks, four archetypes (census flows, travel survey, district totals, global only) and how to pick one; filed T-503 to T-508.
 - T-498 [P2] Gravity weighted partly by real-world travel time. Abandoned 2026-10-16 after the design prototype: misplaced 16.5% to 15.9% in Tokyo, 14.0% to 13.9% in London, the centre's pull slightly worse; Anita chose industry matching (T-500) instead. notes/T-498.md.
-- T-496 [P2] Edits rebuild only what they touched. Done 2026-10-16: click to drawn 162 to 96 ms median paused, 91 at 960x (real save); per-piece buffer cache in the worker, labels and tags kept, name worked out ahead; buffers bit-identical. Rest is T-499. notes/T-496.md.
+- T-496 [P2] Edits rebuild only what they touched. Done 2026-10-16: click to drawn 162 to 96 ms median paused, 91 at 960x (real save); per-piece buffer cache in the worker, labels and tags kept, name worked out ahead; buffers bit-identical. Rest is T-499. notes/archive/t0001-0499/T-496.md.
 - T-463 [P2] Commutes between Japan's packs. Done 2026-10-16: the 45 packs are one joint gravity (`intercity.py --group jp`), border factor 0.4 fitted on census prefecture flows; 1.6% of commuters cross a pack line; 17 zone curves refit. notes/T-463.md.
 - T-465 [P1] Tokyo commutes to the centre look far too few. Done 2026-10-16: work at home by municipality of work (census table 4) times each pack's telework, every Japan pack; Tokyo's west to the five central wards 23% to 26% (census 29%). notes/T-465.md.
 - T-495 [P2] Mode choice scaled by trip length. Done 2026-10-16: logit 0.05 x sqrt(90 / car minutes) past 90, every layer (the flat 0.025 gone). Real save rail -0.6%, regional boardings -74%; far pairs move 1-4 points. notes/T-495.md.
 - T-493 [P2] Too many city labels zoomed out. Done 2026-10-16: at most 8 zone labels on screen, biggest first, recomputed as the view moves (Japan overview shows exactly 8). docs/ui-demand-views.md.
 - T-494 [P2] Plainer bubble hovers with a mode bar. Done 2026-10-16: one count line ("422 trips a day on average from here") and a thin train/walk/drive bar (`map/modeBar.ts`) on every bubble and airport hover; zone bubbles show local and inter-region lines, each with a bar, local in brackets when selected.
-- T-489 [P1] Placing a station lags. Closed 2026-10-16, not reproduced: click to drawn 165-202 ms at 1fe8ed4, 153-258 ms now (real save, headless, paused and running); hover and snap under 2 ms in both. Speeding up every edit filed as T-496. notes/T-489.md.
+- T-489 [P1] Placing a station lags. Closed 2026-10-16, not reproduced: click to drawn 165-202 ms at 1fe8ed4, 153-258 ms now (real save, headless, paused and running); hover and snap under 2 ms in both. Speeding up every edit filed as T-496. notes/archive/t0001-0499/T-489.md.
 - T-491 [P2] Crowding colours from riders' extra wait. Done 2026-10-16: Lines tab count and schedule dots (now one per period) graded by the average wait for a train with room over the square root of the ride; 4 red, 3 orange at 08:30 (was 13 red). DECISIONS 2026-10-16.
 - T-484 [P1] "Demand could not load" for Shiga. Done 2026-10-16: a failed pack fetch (8800 restarting, or a pack mid-rewrite) stopped the whole pool. Downloads now retry; a zone that still fails is left out, flagged on the status tag and retried. docs/architecture.md; checks/every-pack-opens.mjs.
-- T-488 [P1] Zero days in the money history. Done 2026-10-16: the worker's clock (Date.now) ran ahead of the main thread's; a pause pulled it back across midnight and an empty duplicate day was appended. Both now time on performance.now, ledgers stay one entry per day in order, loads merge duplicates. checks/t488-money-days.mjs.
+- T-488 [P1] Zero days in the money history. Done 2026-10-16: the worker's clock (Date.now) ran ahead of the main thread's; a pause pulled it back across midnight and an empty duplicate day was appended. Both now time on performance.now, ledgers stay one entry per day in order, loads merge duplicates. checks/old/t488-money-days.mjs.
 - T-486 [P2] Clicks reach only what is drawn on top. Done 2026-10-16: a click on a blueprint point's square over a bubble acts on the point (no bubble, bubble tag or train beneath); the other overlaps already followed draw order. docs/ui-map.md Picking; checks/t486-click-on-top.mjs.
 
 - T-485 [P2] Money balance. Done 2026-10-16: a new game starts with $3B (`START_CASH`, clock worker) and running cost is $2.25 a car-km (was 1.50, `RUN_COST_CAR_KM`); the panels and charts read the constants. docs/track-and-service.md.
@@ -307,7 +307,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-455 [P2] Are sparse outskirts cells merged? Done 2026-10-16: the Chichibu fringe bubbles are res-9 cells whose res-8 parent passes 1,000 trip ends through busy siblings; merge and bubbles work as designed, nothing fixed. 2,500 (T-453) merges 71% of them. notes/T-455.md.
 
 - T-452 [P2] Running costs apart from one-off costs in the money history. Done 2026-10-15: running costs a line beside fares, one-off costs (new trains, construction) pale bars cut at the chart's top with a cap; hover lists each. docs/ui-panels.md.
-- T-451 [P2] Are Tokyo's everyday trips too local? Done 2026-10-15: no; the outer wards send 35% of everyday outings to the central core against PT 2018's 16%, Tama 3% as PT. The look is per-cell spread. Size-aware attraction filed as T-453. notes/T-451.md.
+- T-451 [P2] Are Tokyo's everyday trips too local? Done 2026-10-15: no; the outer wards send 35% of everyday outings to the central core against PT 2018's 16%, Tama 3% as PT. The look is per-cell spread. Size-aware attraction filed as T-453. notes/archive/t0001-0499/T-451.md.
 
 - T-448 [P3] Airport icon on an airport's demand bubble. Done 2026-10-15: a plane badge on the busiest terminal cell of each airport (the cells receiving airport-purpose legs), game hover with trips and mode split (map/airportMarks.ts). Extends to other POI kinds with their own purpose, cluster size and glyph.
 - T-445 [P2] Keep placing track. Done 2026-10-15: a Build tab icon toggle (beside Single/Double/Quad) and Caps Lock, one switch; each segment starts where the last ended until a double click, Esc or Enter; Shift as before. docs/ui-building.md.
@@ -325,10 +325,10 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 
 - T-434 [P2] Crowding rounds stop per period once settled. Done 2026-10-15: a period skips further rounds once one moves its summed loads under 1%, at most 3; real save runs 3, 3, 3, 2, 1, solve 32.2 to 27.7 s native, rail +0.01%, no line over 2%. notes/T-434.md.
 - T-433 [P2] Everyday assignment in one pass for all purposes. Done 2026-10-15: one strategy walk with a lane per purpose, loads identical to the bit (transfers to float rounding); assignment about a third of before, New York's everyday pass 6.8-8.0 to 5.1-5.2 s native; pair loop lanes tried, slower, dropped. notes/T-433.md.
-- T-431 [P2] Japan stage 2a: Keihanshin (`osa`) and Chukyo (`ngo`). Done 2026-10-15: 18.2M and 11.3M people within 0.01% of the census, jobs exact, Tokyo's curve ties the best fit on both; merged, in the world market (Osaka homes: Nagoya 162k, Tokyo 80k long trips a day); browser checks pass. notes/T-431.md.
+- T-431 [P2] Japan stage 2a: Keihanshin (`osa`) and Chukyo (`ngo`). Done 2026-10-15: 18.2M and 11.3M people within 0.01% of the census, jobs exact, Tokyo's curve ties the best fit on both; merged, in the world market (Osaka homes: Nagoya 162k, Tokyo 80k long trips a day); browser checks pass. notes/archive/t0001-0499/T-431.md.
 - T-372 [P2] T-295 stage 3: park-and-ride fit with T-380's parking. Done 2026-10-15: `p_ride` 15; real New York commutes 17.3% to 20.6% rail (ACS 20.3), county error 4.4 to 2.8 points, Kings 35.7 to 42.7%; real save 7.60M to 7.94M rail trips. notes/T-372.md.
 - T-380 [P2] Parking cost by job density against real prices. Done 2026-10-15: built in T-372 (log of jobs per km² of land, a free-parking share, Manhattan and London congestion charges) for local commutes; everyday and regional layers in T-440. notes/T-380.md.
-- T-432 [P2] Japan stage 2b: Fukuoka, Sapporo (Ishikari and Otaru), Sendai, Hiroshima. Done 2026-10-15: population within 0.06% of the census, jobs exact; each its own fitted curve (Sapporo Tokyo's); merged, in the world market; all four browser checks pass. notes/T-432.md.
+- T-432 [P2] Japan stage 2b: Fukuoka, Sapporo (Ishikari and Otaru), Sendai, Hiroshima. Done 2026-10-15: population within 0.06% of the census, jobs exact; each its own fitted curve (Sapporo Tokyo's); merged, in the world market; all four browser checks pass. notes/archive/t0001-0499/T-432.md.
 - T-044 [P3] Merge sparse cells into their res-8 parent. Done 2026-10-15: `pipeline/merge_cells.py` at 1k trip ends, 22 packs merged (osa, ngo, sdj, hij left to their builds): cells -25% to -70%, packs 123 to 78 MB, a New York worker 102 to 82 MB; the real save's final +0.04%. notes/T-044.md.
 
 - T-421 [P3] A game load's card goes at the zone in view's final. Done 2026-10-15: a Toronto view of the New York plus Toronto save loses its card at about 6 s, not 33 s; zones still solving keep their bar and grey and drop their far bubble until their final; status tag follows the zone in view.
@@ -355,11 +355,11 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-301 [P3] Close packs nobody uses. Done 2026-10-15: unneeded packs and the market close after 60 s, or at once beyond two spare zones; long pan's aux peak 154 to 110 MB (new game), 133 to 97 (real save), packs open 14 to 5-8; figures unchanged. notes/T-301.md.
 - T-376 [P2] T-362 stage 2: fit the long-haul tail and border factor. Done 2026-10-15: the tail as its own segment from 300 km, Rt 0.0047, d^-0.70, border 0.26 falling with origin income; US trips over 5,000 km 6.8% to 1.4%, Japan abroad still 6x. notes/T-376.md.
 - T-409 [P2] The market's pairs split by track network. Done 2026-10-15: one market part per cluster (`IntercityApi::beside`, pack shared), clusters joined per 6 km market zone; two separate networks solve as two clusters, each to the bit as alone; real save plus a Boston line, Boston edit 21 s to 1.0 s; figures unchanged. notes/T-409.md.
-- T-375 [P2] T-362 stage 1: the world field. Done 2026-10-15: 393,791 Kontur r5 cells (4.2 MB) with country, GDP per head and landmass; fixed links derived from Wikidata, all required crossings joined; 96% of people in countries within 10% of the World Bank. notes/T-375.md.
+- T-375 [P2] T-362 stage 1: the world field. Done 2026-10-15: 393,791 Kontur r5 cells (4.2 MB) with country, GDP per head and landmass; fixed links derived from Wikidata, all required crossings joined; 96% of people in countries within 10% of the World Bank. notes/archive/t0001-0499/T-375.md.
 - T-399 [P3] One commute engine per city. Done 2026-10-15: the everyday layer shares its commutes' cells, zones, gravity and routes (`EverydayApi::beside`); New York worker peak 198 to 188 MB natively, nine cities 350 to 318; subzones stay per layer; outputs identical, set-up unchanged. notes/T-399.md.
 - T-290 [P2] Berlin. Done 2026-10-15: `ber`, 12 whole Kreise, 5.54M people, tier 0 with Zensus 2022 100 m population, Pendlerrechnung jobs by Gemeinde (2.94M) and a curve fitted on its flows (d^-1.4 exp(-d/28)); checks pass, other packs unchanged. notes/T-290.md.
 - T-397 [P3] Everyday samples per cell scaled to its trips. Done 2026-10-15: one per 8 trips a day, 2 to 16; New York worker peak 259 to 198 MB natively, opening 1.09 to 0.66 s; no station moves over 5%; smoke final 7,596,985. notes/T-397.md.
-- T-402 [P3] Per-cluster finals in the startup and zone-opening solves. Done 2026-10-15: the zone in view's cluster is solved alone through its rounds first; Toronto's final at a Toronto-viewed load 32 s to 5.7 s, the whole final unchanged, figures identical. notes/T-402.md.
+- T-402 [P3] Per-cluster finals in the startup and zone-opening solves. Done 2026-10-15: the zone in view's cluster is solved alone through its rounds first; Toronto's final at a Toronto-viewed load 32 s to 5.7 s, the whole final unchanged, figures identical. notes/archive/t0001-0499/T-402.md.
 
 - T-398 [P2] Lower a demand worker's memory peak (T-361 item 2). Done 2026-10-15: natively on the real save a worker's peak 353 to 256 MB, steady 281 to 222; nine cities 698 to 458; outputs identical to the byte, times unchanged. notes/T-398.md.
 
@@ -429,7 +429,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 
 - T-041 [P2] Water mask from OSM. Done 2026-10-14: `pipeline/osm_water.py` (coastline sea zip plus Geofabrik inland water) as tier 0's `water_source`; on New York's grid 0.56% of pixels differ from TIGER, all 18 test places right; London's preview mask in `data/work/osm_water/lon.*`. Intercity water is T-358. notes/T-041.md.
 
-- T-348 [P1] Main-thread lag while demand loads. Done 2026-10-14: lag only in the first 10-14 s after a load; the Lines tab's per-comparison collator and station placement fixed (startup long tasks about 35-40% less, longest 0.8-1.4 s to 0.23-0.32 s); the rest is CPU starvation, T-355. notes/T-348.md.
+- T-348 [P1] Main-thread lag while demand loads. Done 2026-10-14: lag only in the first 10-14 s after a load; the Lines tab's per-comparison collator and station placement fixed (startup long tasks about 35-40% less, longest 0.8-1.4 s to 0.23-0.32 s); the rest is CPU starvation, T-355. notes/archive/t0001-0499/T-348.md.
 
 - T-352 [P2] City outlines with maritime lines. Done 2026-10-14: the 13 US boundary files are TIGER/Line counties with their water, simplified together (no overlaps between packs; Boston reaches 24 km out, New York 13 km); packs, water masks and demand untouched. Toronto still hugs its shore. `build_city.py --boundary-only`.
 
@@ -596,7 +596,7 @@ The live file is [ARCHIVE.md](ARCHIVE.md); this one is searched, never read whol
 - T-167 [P3] Faster New York opening at startup. Done 2026-10-12 by T-172: 5.0 s -> 1.0-1.1 s natively, 1.3-2 s in Chrome, same samples to 7 significant figures. notes/T-172.md.
 - T-121 [P2] The regional market's free-flow estimate routes without the distance fare. Done 2026-10-12 by T-172: it now applies the fare like the local populations and shares their round-0 search (10 s -> 2.4 s per period on the NYC save in Chrome); market rail on the real NYC save -21%, local rail +0.004%. Decided under Anita's "intercity demand is rough on purpose"; DECISIONS 2026-10-12.
 
-- T-162 [P2] Region-aware work gravity. Done 2026-10-12: zones split by US state, decay x 0.23 between states and decay length 29 to 40 km (fitted on NYC and PHL LODES; own fits 0.235 and 0.219); all nine packs re-solved in place (old ones in data/work/pre-T162/). NY<->NJ commuting 18.3% to 7.2% (LODES 7.2%), PA<->NJ 17.1% to 7.1% (6.8%); real NYC network county error 3.4 to 2.1 points, inner NJ rail near ACS, NJ Transit 276k to 240k; PATH falls to 48k (T-171). Non-US packs get factor 1 until Anita decides. Native, node and WASM checks pass. notes/T-162.md.
+- T-162 [P2] Region-aware work gravity. Done 2026-10-12: zones split by US state, decay x 0.23 between states and decay length 29 to 40 km (fitted on NYC and PHL LODES; own fits 0.235 and 0.219); all nine packs re-solved in place (old ones in data/work/pre-T162/). NY<->NJ commuting 18.3% to 7.2% (LODES 7.2%), PA<->NJ 17.1% to 7.1% (6.8%); real NYC network county error 3.4 to 2.1 points, inner NJ rail near ACS, NJ Transit 276k to 240k; PATH falls to 48k (T-171). Non-US packs get factor 1 until Anita decides. Native, node and WASM checks pass. notes/archive/t0001-0499/T-162.md.
 - T-072 [P3] County-to-county flows in the zone gravity. Closed 2026-10-12 by T-162: the NJ overshoot was the state line, fixed by one border factor instead of county K-factors; road travel time (closes about a tenth, T-159) not pursued. notes/T-159.md, T-162.md.
 - T-169 [P2] UI polish from the 2026-10-12 QA. Done 2026-10-12: the "Local trips on the map" heading shows only with its Bubble size slider (bubbles on); the purpose select shows the browser's focus ring for keyboard focus only, round the whole control; a track-glyph `app/public/favicon.svg` (relative link in index.html) ends the favicon 404; a complex's same-named stations share one label at their mean position (real NYC save: 1,756 stations, 873 labels; Times Sq once per complex). Typecheck and a headless dev-server run pass; screenshots `../artifacts/trainworld/T-169-*.png`.
 
@@ -648,7 +648,7 @@ Never delete entries.
 - T-137 done 2026-10-11. Added Baltimore, Providence, New Haven, Hartford and Springfield local
   packs, exact boundaries and regional endpoints; nine playable cities and ten stable market IDs.
   Independent pack/disjointness checks, direct WASM load, 26 browser checks including local riders
-  and existing NYC saves, type check and production build pass. notes/T-137.md.
+  and existing NYC saves, type check and production build pass. notes/archive/t0001-0499/T-137.md.
 - T-136 done 2026-10-11. Longer-trip circle areas are proportional to total travellers without
   size floors/offsets; normal red-to-blue train-share colours retained. The selected city's
   grouped circle is omitted. Rendered-buffer area ratios, Boston exclusion and browser
@@ -744,7 +744,7 @@ Never delete entries.
 
 - T-071 done 2026-10-10. Blueprint inspector adds/removes corners and sets individual levels;
   new squares drag into curves, undo/redo restores exact shapes, constructed track stays guarded.
-  Narrow inspector and browser checks pass. notes/T-071.md.
+  Narrow inspector and browser checks pass. notes/archive/t0001-0499/T-071.md.
 
 - T-010 done 2026-10-10. M1 spec and backlog match current schedules, fares, common lines,
   saves and map/UI behavior; oversized sections moved intact to linked detailed docs. Historical
@@ -851,7 +851,7 @@ Never delete entries.
 - T-092 done 2026-10-09. Clicks are points of intersection again (T-079 reverted, `geom::through`
   gone): a click changes nothing before the previous click's curve, which can only tighten;
   corner dragging and the radius stepper back; T-079 track loads unchanged and reshapes from its
-  clicks. notes/T-092.md.
+  clicks. notes/archive/t0001-0499/T-092.md.
 - T-091 done 2026-10-09. Running cost US$6 -> US$1.50 a car-km (`RUN_COST_CAR_KM`, params.rs),
   so fares beat running costs at 100x: the real New York save goes from -$0.65B to about +$1.1B a
   game day. The Money tab reads the figure from the track model, so it needs no text change.
@@ -865,7 +865,7 @@ Never delete entries.
   tag reads "5.1 km, cost 1.10x, $507M"; trains win a click over stations. notes/T-085.md.
 - T-079 done 2026-10-09. Track through the clicked points: biarcs through the clicks, stored as
   PIs with set radii plus the clicks (save TWT3, TWT2 loads; the real New York save loads
-  unchanged); drawing and reshaping squares are the clicks; 4 new Rust tests. notes/T-079.md.
+  unchanged); drawing and reshaping squares are the clicks; 4 new Rust tests. notes/archive/t0001-0499/T-079.md.
 - T-080 done 2026-10-09. No flat/flying setting; new junctions flat; the junction inspector explains
   in plain words and offers "Build a flyover" with its price and the waiting it saves; junction
   capacity markers open it. notes/T-080.md.
@@ -878,7 +878,7 @@ Never delete entries.
 
 - T-034 superseded 2026-10-09. Fitting the drive/bus access leg and the rail constant to real
   shares: Anita dropped that leg (one fast-walk access mode) and made realism rough calibration
-  only; the game-feel tuning is T-078. Its measurements stay in notes/T-034.md.
+  only; the game-feel tuning is T-078. Its measurements stay in notes/archive/t0001-0499/T-034.md.
 - T-035 abandoned 2026-10-09. The other access leg at the work end: no other leg exists any more
   (Anita, one access mode).
 - T-073 done 2026-10-09. Idle frame loop on by default (`overlay.ts`, `?perfOff=idle` reverts):
@@ -924,7 +924,7 @@ Never delete entries.
   against ACS 20.3%; the boroughs within 2 points, every suburban county 2-10x over (no bus
   without parking, other leg free of parking); subway AM link loads top 20 493k against 505k
   (log r 0.92). Walking transfers (300 m) and 100 m station merging added to demand. Track-model
-  save `T-007-real-nyc.save`. notes/T-007.md.
+  save `T-007-real-nyc.save`. notes/archive/t0001-0499/T-007.md.
 
 - T-062 done 2026-10-09. Lines sharing track drawn side by side in the stroke shader, in an order
   that holds along shared stretches, branch lines on their side; trains ride their own stroke;
@@ -985,11 +985,11 @@ Never delete entries.
   Northwell at North Shore University Hospital 41,521 -> 10,000 (rest over six counties'
   population); JetBlue's LIC office 9,012 transport jobs to JFK; 109 home care agency blocks
   (300,188 jobs, 172k in Brooklyn) over their county's population. County-government and
-  school-district lumps listed, left for T-043. `pipeline/lumps.py`; notes/T-014.md.
+  school-district lumps listed, left for T-043. `pipeline/lumps.py`; notes/archive/t0001-0499/T-014.md.
 - T-013 done 2026-10-09. Blocks spread over their polygon by land area (50 m pixels, water
   excluded, per-county TIGER2020PL polygons). New York cells with people 72,460 -> 198,594, with
   jobs 55,910 -> 190,612, cells 74,920 -> 202,337; pack 2.2 -> 6.9 MB raw (3.8 MB gz with the
-  water mask); recompute 452 -> 508 ms native, rail share unchanged. `../artifacts/trainworld/T-004.png`; notes/T-013.md.
+  water mask); recompute 452 -> 508 ms native, rail share unchanged. `../artifacts/trainworld/T-004.png`; notes/archive/t0001-0499/T-013.md.
 - T-049 done 2026-10-09. Themes renamed pink, blue, green in the UI, CSS and SPEC 8; a
   remembered old name maps to the new one.
 - T-048 done 2026-10-09. Empty inspector is blank (no text); its top stays at 360 px.
@@ -1024,7 +1024,7 @@ Never delete entries.
   0.45 s native, 0.55-0.72 s WASM (was 0.7 / 0.78-1.04). notes/T-020.md.
 - T-019 done 2026-10-08. Pack format 1 ships the 2 km zone gravity (zone id per cell, two
   factors per zone), solved by the sim crate's own code via `pack_gravity` from build_city.py;
-  New York city open in WASM 8.0 s -> ~7 ms; pack 0.87 -> 0.97 MB gzipped. notes/T-019.md.
+  New York city open in WASM 8.0 s -> ~7 ms; pack 0.87 -> 0.97 MB gzipped. notes/archive/t0001-0499/T-019.md.
 - T-017 done 2026-10-08. 10 fps when the window is visible but unfocused (clock keeps running),
   nothing when hidden or paused; CPU focused 30-36% layer / 17-21% overlay, unfocused 3-9%,
   hidden and paused under 1%. notes/T-018.md.
@@ -1057,7 +1057,7 @@ Never delete entries.
   `pipeline/build_city.py`: 74,920 res-9 cells, 21,736,575 people, 10,176,424 LODES 2023 jobs,
   1.80 MB (0.87 MB gzipped), 15 s build; checked by `pipeline/read_pack.py`. notes/T-004.md.
 - T-003 done 2026-10-08. New York = 2023 NY-Newark-Jersey City MSA plus Fairfield CT, Dutchess
-  and Orange NY (25 counties); `data/packs/nyc.boundary.geojson`. notes/T-003.md.
+  and Orange NY (25 counties); `data/packs/nyc.boundary.geojson`. notes/archive/t0001-0499/T-003.md.
 - T-001 done 2026-10-08. Toolchain skeleton: `sim/` Rust crate → wasm-pack → loaded in a module
   Web Worker in the Vite `app/`, result sent back as a transferred buffer; registered as
   `trainworld` on serve.py. Headless check: 10,000 train offsets in 0.6 ms, WASM loaded in

@@ -1,4 +1,4 @@
-"""Build a city pack (format 1, notes/T-004.md) and its boundary (notes/T-003.md).
+"""Build a city pack (format 1, notes/T-004.md) and its boundary (notes/archive/t0001-0499/T-003.md).
 
     python pipeline/build_city.py nyc
 
@@ -70,7 +70,7 @@ STATES = {"01": "al", "02": "ak", "04": "az", "05": "ar", "06": "ca", "08": "co"
           "54": "wv", "55": "wi", "56": "wy", "72": "pr"}
 
 # T-162: the work gravity's decay between zones in different states is multiplied by this
-# (notes/T-162.md: fitted jointly with the decay on LODES OD for New York and Philadelphia). It is
+# (notes/archive/t0001-0499/T-162.md: fitted jointly with the decay on LODES OD for New York and Philadelphia). It is
 # a per-pack value, shipped in the pack's gravity block: a pack from another country's pipeline
 # sets its own from its own commuting data, and a pack that sets none gets 1 (no effect). A city
 # config's own "border_factor" overrides it: Washington's 0.45 (T-181, Anita 2026-10-12; refitted
@@ -128,21 +128,21 @@ CITIES = {
         "origin": (-76.6122, 39.2904),
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-137.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-137.md",
         "counties": {'24003': 'Anne Arundel', '24005': 'Baltimore County', '24013': 'Carroll', '24025': 'Harford', '24027': 'Howard', '24035': "Queen Anne's", '24510': 'Baltimore city'},
     },
     "pvd": {
         "origin": (-71.4128, 41.824),
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-137.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-137.md",
         "counties": {'44001': 'Bristol RI', '44003': 'Kent', '44005': 'Newport', '44007': 'Providence', '44009': 'Washington RI', '25005': 'Bristol MA'},
     },
     "nhv": {
         "origin": (-72.9279, 41.3083),
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-137.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-137.md",
         "counties": {'09009': 'New Haven'},
     },
     # hfd (Hartford) is a world plan row since T-1113, built with the usa module
@@ -150,14 +150,14 @@ CITIES = {
         "origin": (-72.5898, 42.1015),
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-137.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-137.md",
         "counties": {'25011': 'Franklin MA', '25013': 'Hampden', '25015': 'Hampshire'},
     },
     "bos": {
         "origin": (-71.0589, 42.3601),  # central Boston
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-134-packs.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-134-packs.md",
         # Broad Boston-Cambridge-Newton county metro extent, including southern NH.
         "counties": {
             "25009": "Essex MA", "25017": "Middlesex MA", "25021": "Norfolk",
@@ -169,7 +169,7 @@ CITIES = {
         "origin": (-77.0365, 38.8977),  # central Washington
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-134-packs.md",
+        "boundary_notes": "notes/archive/t0001-0499/T-134-packs.md",
         # Broad Washington-Arlington-Alexandria metro extent. Keep Calvert's
         # established DC commuter catchment rather than chasing recent MSA revisions.
         "border_factor": 0.45,  # its own LODES fit (0.454 at T-198's curve; 0.486 at T-162's), not the US 0.23
@@ -205,7 +205,7 @@ CITIES = {
         # T-030: 25 m pixels; water under 2 pixels (~50 m) wide is dropped (creeks, ditches,
         # ponds a railway crosses on a culvert or a short bridge at grade)
         "water": {"cell_m": 25.0, "min_width_px": 2},
-        # T-014, every case argued in notes/T-014.md
+        # T-014, every case argued in notes/archive/t0001-0499/T-014.md
         "job_adjustments": {
             "moves": [
                 # North Shore University Hospital campus, Manhasset: 41,521 jobs, about Northwell's
@@ -223,7 +223,7 @@ CITIES = {
             # office. Health care jobs of such blocks go over their county's population.
             "home_care": {"min_jobs": 1000, "min_health": 0.8, "min_low_pay": 0.0, "max_high_pay": 0.35},
         },
-        # notes/T-003.md: the 2023 New York-Newark-Jersey City MSA (22 counties) plus
+        # notes/archive/t0001-0499/T-003.md: the 2023 New York-Newark-Jersey City MSA (22 counties) plus
         # Fairfield CT, Dutchess NY and Orange NY.
         "counties": {
             # MSA, New York
@@ -459,12 +459,12 @@ CITIES = {
         decay=(2.2, 80.0),
         od_share={"RJAA": 0.8},  # Narita's transfer passengers, judgement
     ),
-    # T-431: Keihanshin, four prefectures whole (notes/T-431.md)
+    # T-431: Keihanshin, four prefectures whole (notes/archive/t0001-0499/T-431.md)
     "osa": _japan_metro(
         "osa", (135.4959, 34.7025),  # Osaka Station, Umeda
         ["26", "27", "28", "29"],  # Kyoto, Osaka, Hyogo, Nara
         ["18", "24", "25", "30", "31", "33", "36"],
-        ["asia/japan/kansai", "asia/japan/chubu"], "asia/japan/kansai", "notes/T-431.md", "Keihanshin",
+        ["asia/japan/kansai", "asia/japan/chubu"], "asia/japan/kansai", "notes/archive/t0001-0499/T-431.md", "Keihanshin",
         # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Kinki 24.4% of
         # employed, 2 days in 5 as Tokyo
         telework=0.098,
@@ -478,7 +478,7 @@ CITIES = {
         "ngo", (136.8815, 35.1709),  # Nagoya Station
         ["21", "23", "24"],  # Gifu, Aichi, Mie
         ["16", "17", "18", "20", "22", "25", "26", "29", "30"],
-        ["asia/japan/chubu", "asia/japan/kansai"], ["asia/japan/chubu", "asia/japan/kansai"], "notes/T-431.md", "Chukyo",
+        ["asia/japan/chubu", "asia/japan/kansai"], ["asia/japan/chubu", "asia/japan/kansai"], "notes/archive/t0001-0499/T-431.md", "Chukyo",
         # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Chukyo 19.6% of
         # employed, 2 days in 5 as Tokyo
         telework=0.078,
@@ -488,12 +488,12 @@ CITIES = {
     ),
     # T-432: Japan's regional metros, whole prefectures (Sapporo: Ishikari subprefecture), Tokyo's
     # inputs; telework is MLIT's 2024 share outside the three big metros (TELEWORK_JP); curves in
-    # notes/T-432.md
+    # notes/archive/t0001-0499/T-432.md
     "fuk": _japan_metro(
         "fuk", (130.4207, 33.5897),  # Hakata Station
         ["40"],  # Fukuoka
         ["35", "41", "43", "44"],  # Yamaguchi over the Kanmon strait, Saga, Kumamoto, Oita
-        ["asia/japan/kyushu", "asia/japan/chugoku"], "asia/japan/kyushu", "notes/T-432.md", "Fukuoka",
+        ["asia/japan/kyushu", "asia/japan/chugoku"], "asia/japan/kyushu", "notes/archive/t0001-0499/T-432.md", "Fukuoka",
         telework=TELEWORK_JP,  # census at home 8.6%
         decay=(2.0, 32.0),  # fitted, curves/t420_curve.py
     ),
@@ -503,7 +503,7 @@ CITIES = {
         # census table 4), so it joins
         ["01-ishikari", "01-01203"],
         ["01-shiribeshi", "01-sorachi", "01-iburi", "01-rumoi"],
-        ["asia/japan/hokkaido"], "asia/japan/hokkaido", "notes/T-432.md", "Sapporo",
+        ["asia/japan/hokkaido"], "asia/japan/hokkaido", "notes/archive/t0001-0499/T-432.md", "Sapporo",
         telework=TELEWORK_JP,  # census at home 6.8%
         decay=(2.2, 80.0),  # Tokyo's: ties the best fit (curves/t420_curve.py) and keeps the own-municipality share
     ),
@@ -511,7 +511,7 @@ CITIES = {
         "sdj", (140.8824, 38.2601),  # Sendai Station
         ["04"],  # Miyagi
         ["03", "05", "06", "07"],  # Iwate, Akita, Yamagata, Fukushima
-        ["asia/japan/tohoku"], "asia/japan/tohoku", "notes/T-432.md", "Sendai",
+        ["asia/japan/tohoku"], "asia/japan/tohoku", "notes/archive/t0001-0499/T-432.md", "Sendai",
         telework=TELEWORK_JP,  # census at home 9.5%
         decay=(1.8, 50.0),  # fitted, curves/t420_curve.py
     ),
@@ -519,7 +519,7 @@ CITIES = {
         "hij", (132.4757, 34.3975),  # Hiroshima Station
         ["34"],  # Hiroshima
         ["31", "32", "33", "35", "38"],  # Tottori, Shimane, Okayama, Yamaguchi, Ehime over the straits
-        ["asia/japan/chugoku", "asia/japan/shikoku"], "asia/japan/chugoku", "notes/T-432.md", "Hiroshima",
+        ["asia/japan/chugoku", "asia/japan/shikoku"], "asia/japan/chugoku", "notes/archive/t0001-0499/T-432.md", "Hiroshima",
         telework=TELEWORK_JP,  # census at home 8.2%
         decay=(1.9, 32.0),  # fitted, curves/t420_curve.py
     ),
@@ -814,7 +814,7 @@ def build_boundary(city, cfg):
 
 
 def adjust_jobs(df, cfg, rates=None):
-    """T-014: move LODES jobs reported at an office that are worked elsewhere (notes/T-014.md).
+    """T-014: move LODES jobs reported at an office that are worked elsewhere (notes/archive/t0001-0499/T-014.md).
     Works on the block table (jobs as float) before spreading; totals are unchanged. With
     `rates` (T-042: work-from-home share per CNS sector), the `work_c` column (commuting jobs)
     moves with them: n jobs of sector s carry n x (1 - rate_s) commuters."""
@@ -976,7 +976,7 @@ GRAVITY_ONCE = False
 def add_gravity(cells_json, city, extra=None):
     """Solve the 2 km zone gravity with the sim crate's own code (sim/src/bin/pack_gravity.rs)
     and write the finished pack to data/packs/. One implementation of the gravity: the game
-    rebuilds zone trips from these factors with the same decay table (notes/T-019.md). Zones
+    rebuilds zone trips from these factors with the same decay table (notes/archive/t0001-0499/T-019.md). Zones
     split by the cells' regions, the decay x the city's border factor across them (its config's
     "border_factor", else BORDER_FACTOR_US; T-162, T-181); `extra` passes other pack_gravity
     arguments (a later --border-factor wins)."""
@@ -1120,7 +1120,7 @@ def main(city):
          "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/"},
         {"what": "jobs", "name": f"LEHD LODES 8 WAC S000 JT00 {lodes_year}, C000 (all jobs)",
          "url": "https://lehd.ces.census.gov/data/lodes/LODES8/"},
-        {"what": "boundary", "name": BOUNDARY_NAME + cfg.get("boundary_notes", "notes/T-003.md"),
+        {"what": "boundary", "name": BOUNDARY_NAME + cfg.get("boundary_notes", "notes/archive/t0001-0499/T-003.md"),
          "url": BOUNDARY_URL},
     ]
     sources.append({"what": "water", "name": "TIGER/Line 2020 AREAWATER by county, and the sea outside "
@@ -1181,7 +1181,7 @@ def boundary_only(ids):
         path = os.path.join(PACKS, f"{city}.json")
         with open(path, "rb") as f:
             text = f.read().decode("utf-8")
-        notes = cfg.get("boundary_notes", "notes/T-003.md")
+        notes = cfg.get("boundary_notes", "notes/archive/t0001-0499/T-003.md")
         pattern = re.compile(r'("name": )"Census cb_2020_us_county_500k, counties in ' + re.escape(notes) + r'"(,\s*"url": )"'
                              + re.escape(COUNTIES) + '"')
         new, n = pattern.subn(lambda m: f'{m.group(1)}"{BOUNDARY_NAME}{notes}"{m.group(2)}"{BOUNDARY_URL}"', text)
