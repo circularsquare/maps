@@ -146488,7 +146488,7 @@
    "id": "six",
    "name": "Saanich",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CAN"
@@ -146770,18 +146770,16 @@
      "everyday": 1.0
     },
     "built": "2026-10-26T18:05:32",
-    "reason": "gate: browser None failed: page.waitForFunction: Timeout 180000ms exceeded.\n    at checkZone (C:\\Users\\anita\\projects\\maps\\trainworld\\checks\\city-browser.mjs:324:14)\n    at async file:///C:/Users/anita/projects/maps/trainworld/checks/city-browser.mjs:371:7",
+    "reason": "joint group tor (tor mon ota wip shb que brr kit lnn wid sth sre gat kio say gup grt nob riu sij bnd rou rii thu van prc abb cag edm rex sak rer leb mdc llo pak grp nrt woo hli cpb sit moc tad crw chw kel crb six): intercity failed:   wip+bnd+van+prc+abb+cag+edm+rex+sak+rer+leb+mdc+llo+pak+grp+nrt+woo+chw+kel+crb+six: step 190, max column change 2.41e-2 (in llo zone 5064), 6924 s |   wip+bnd+van+prc+abb+cag+edm+rex+sak+rer+leb+mdc+llo+pak+grp+nrt+woo+chw+kel+crb+six: step 200, max column change 5.08e-2 (in kel zone 408), 7068 s",
+    "parked": "2026-10-27T00:33:37",
     "gate": {
-     "fail": [
-      "browser None failed: page.waitForFunction: Timeout 180000ms exceeded.\n    at checkZone (C:\\Users\\anita\\projects\\maps\\trainworld\\checks\\city-browser.mjs:324:14)\n    at async file:///C:/Users/anita/projects/maps/trainworld/checks/city-browser.mjs:371:7"
-     ],
      "warn": [
       "area_km2 51324.74818799153",
       "drive_factor_median 2.0841789734955687",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-10-26T20:18:18"
+    "shipped": "2026-10-27T02:39:41"
    },
    "gate_relax": {
     "drive_factor_median": "2.08 against 2.0: the zone is Vancouver Island's east coast from Victoria to Campbell River, roads round inlets and over the Malahat (T-1239, 2026-10-26)"

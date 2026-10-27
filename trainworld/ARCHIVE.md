@@ -1,5 +1,6 @@
 # Archive
 
+- T-1377 [P2] T-1239's tail. Done 2026-10-27: six (Saanich) shipped after the WASM rebuild (its gate figures unchanged; the join needs 6+ cores, 2 timed out); smoke 18 of 19 on Canada's data, real save 12,187,818 rail trips; pre-T1239 backup deleted. notes/T-1239.md.
 - T-1382 [P3] The clock worker's state reads from the track model only what an edit changed. Done 2026-10-27 (tree t1382, not landed): rows kept, station names kept by node, lines read again for the lines the model lists as changed; Japan at 6x, building the state 86 to 49 ms, the worker's whole edit 355 to 255 ms, GC about halved. `checks/t1382-rows.mjs`, notes/T-1029.md.
 - T-1533 [P1] The city in view shows its demand within about 5 seconds. Done 2026-10-27 (tree t1533, not landed): the zone in view first in download, open and solve (a rough solve of it alone), the map shown at its first figures, bubbles kept through the rounds; real save cached 3 s, China jump 3-6 s, new line 1 s; cold real save 16-23 s. notes/T-1533.md, checks/t1533-view-first.mjs.
 - T-1517 [P3] Bus route editing on touch. Done 2026-10-27 (tree t1517, not landed): a finger drags a bus point without panning, and a press held 500 ms deletes it (the lift adds nothing). `checks/t1517-bus-touch.mjs`; docs/ui-building.md.
