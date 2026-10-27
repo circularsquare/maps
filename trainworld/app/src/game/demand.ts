@@ -52,6 +52,9 @@ export interface LineDemand {
 export interface StationDemand {
   boardings: number;
   alightings: number;
+  /** of the boardings, riders changing lines here (T-1530), from the solve's results; absent where
+   * the results carried none (a cached result written before, the purposes' stations) */
+  transfers?: number;
 }
 
 export interface DemandView {

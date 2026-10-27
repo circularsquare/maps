@@ -3724,6 +3724,10 @@ impl IntercityApi {
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x, self.base.fare_w))
     }
+    /// As `DemandApi::transfers_in`.
+    pub fn transfers_in(&self, q: usize) -> Vec<f32> {
+        self.per(q).map_or(vec![], |s| transfers_in(&s.g, &s.xi, &s.xfer))
+    }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
         let mut out = vec![];

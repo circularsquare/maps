@@ -36,7 +36,7 @@ export interface CacheKey {
   packs: Record<string, string>;
 }
 
-type Stations = [number, number, number][]; // place, boardings, alightings
+type Stations = ([number, number, number] | [number, number, number, number])[]; // place, boardings, alightings, transfers if known (T-1530)
 interface StoredView {
   split: ModeSplit;
   trainShareByPeriod: [string, number][];
@@ -120,7 +120,7 @@ export function sameKey(a: CacheKey, b: CacheKey): string | null {
  * they come from the aux worker again). */
 export function toStored(days: DayDemand[], cities: CityId[], ids: { stationIds: string[]; lineIds: string[] }): StoredDay[] {
   const st = new Map(ids.stationIds.map((id, i) => [id, i])), ln = new Map(ids.lineIds.map((id, i) => [id, i]));
-  const stations = (m: Map<string, StationDemand>): Stations => [...m].map(([id, s]) => [st.get(id)!, s.boardings, s.alightings]);
+  const stations = (m: Map<string, StationDemand>): Stations => [...m].map(([id, s]) => s.transfers === undefined ? [st.get(id)!, s.boardings, s.alightings] : [st.get(id)!, s.boardings, s.alightings, s.transfers]);
   return days.map((d) => {
     const v = d.view!;
     const view: StoredView = {
@@ -137,7 +137,7 @@ export function toStored(days: DayDemand[], cities: CityId[], ids: { stationIds:
 
 /** The stored days as the page shows them, under `CACHE_VERSION`, with today's ids. */
 export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; lineIds: string[] }): DayDemand[] {
-  const stations = (s: Stations) => new Map(s.map(([i, b, a]) => [ids.stationIds[i], { boardings: b, alightings: a }]));
+  const stations = (s: Stations) => new Map(s.map(([i, b, a, t]): [string, StationDemand] => [ids.stationIds[i], t === undefined ? { boardings: b, alightings: a } : { boardings: b, alightings: a, transfers: t }]));
   return stored.days.map((d, day) => {
     const v = d.view;
     const view: DemandView = {

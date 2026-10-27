@@ -1338,6 +1338,11 @@ impl DemandApi {
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
         self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x, self.base.fare_w))
     }
+    /// Riders in period `q` boarding at each route node after changing lines (T-1530); empty when
+    /// the period has no result.
+    pub fn transfers_in(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| transfers_in(&st.g, &st.xi, &st.xfer))
+    }
     /// `transfers` on a kind of day (T-260): each period's riders times the commute's load factor.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
         let mut out = vec![];

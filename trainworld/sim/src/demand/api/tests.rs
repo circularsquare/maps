@@ -997,6 +997,29 @@ fn walking_transfers_and_merged_stations() {
     assert_eq!(st_far, st_near + 1);
 }
 
+/// T-1530: `transfers_in` is `transfers_day`'s weekday pairs added up by the node riders board at.
+#[test]
+fn transfers_in_sums_the_pairs_by_boarding_node() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    api.solve(0);
+    assert!(api.crowd_with_external(0, &api.seg(0)));
+    let into = api.transfers_in(0);
+    let nr = api.board(0).len();
+    assert_eq!(into.len(), nr);
+    let pairs = api.transfers_day(&vec![1u8; nr], 0);
+    let mut want = vec![0.0f64; nr];
+    for t in pairs.chunks(3) {
+        want[t[1] as usize] += t[2] as f64;
+    }
+    let total: f64 = want.iter().sum();
+    assert!(total > 0.0, "the two lines share a station, so some riders change");
+    for (a, b) in into.iter().zip(&want) {
+        assert!((*a as f64 - b).abs() <= 1e-3 * b.max(1.0), "{a} against {b}");
+    }
+    assert!(api.transfers_in(3).is_empty(), "no result for an unsolved period");
+}
+
 /// T-176: transfers on the real New York network (nyc_real_track.json), commutes and the
 /// everyday purposes, periods 0 and 2, free flow and three crowding rounds, counted and not:
 /// the loads must be the same to the bit; prints the stage times both ways, the transfer

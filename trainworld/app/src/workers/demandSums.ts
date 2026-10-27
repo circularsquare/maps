@@ -8,7 +8,7 @@ import { makeFrame, type FrameSpec } from "../game/frame";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import type { CityId } from "../game/cities";
-import { BACK_DAY, OUT_DAY, type DemandDay } from "../game/days";
+import { BACK_DAY, DEMAND_DAYS, OUT_DAY, type DemandDay } from "../game/days";
 import type { Corridors, DemandView, FarEnd, Flows, IntercityDemand, IntercitySelection, IntercityStation, LineDemand, PlaceFlows, PlaceTrips, PurposeDemand, StationDemand, ZoneTrips } from "../game/demand";
 import type { DealtCells } from "../game/farChunks";
 import type { FromDemand } from "./demandProtocol";
@@ -265,12 +265,12 @@ export function flowsBody(p: Float32Array, purposeParts: PurposePart[]): Omit<Fl
 // ---------------------------------------------------------------- the views of each kind of day (T-1208)
 
 /** The parts of a period's result (`FromDemand` "result") the day views read. */
-export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
+export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
 /** A result's fields `DayResult` names, without the rest (the corridor table and modes are large and
  * read elsewhere). */
 export function dayResultOf(r: DayResult): DayResult {
-  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, fareSense } = r;
-  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, fareSense };
+  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense } = r;
+  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense };
 }
 
 /** What a solve's views are worked out from: its version, the round published and whether it is
@@ -386,8 +386,7 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   // the fare curve's extra follows the riders on the stretch where it is counted (T-1516)
   const fareX = r.fareX?.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
   // T-1255: the riders coming to a platform follow its boardings
-  const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));
-  const citySummary: Record<CityId, number[]> = {};
+  const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));  const citySummary: Record<CityId, number[]> = {};
   for (const [id, s0] of Object.entries(r.citySummary)) {
     const s = s0.slice(), cp = r.cityParts?.[id];
     if (cp) {
@@ -468,6 +467,8 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
     if (!v) stations.set(id, (v = { boardings: 0, alightings: 0 }));
     return v;
   };
+  // T-1530: the day's block of each period's transfers in (`xferIn`, every kind of day's)
+  const withXfer = res.length > 0 && res.every((r) => r.xferIn?.length === DEMAND_DAYS.length * r.board.length);
   for (const { id, o, n, stops } of input.layout) {
     const boardings = stops.map(() => 0);
     let fullest = 0;
@@ -484,6 +485,7 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
         const sd = st(stops[k]);
         sd.boardings += r.board[a] + r.board[b];
         sd.alightings += r.alight[a] + r.alight[b];
+        if (withXfer) { const x = day * r.board.length; sd.transfers = (sd.transfers ?? 0) + r.xferIn![x + a] + r.xferIn![x + b]; }
       }
       const seg = new Float32Array(2 * (n - 1));
       for (let k = 0; k < n - 1; k++) {
@@ -581,7 +583,7 @@ export function packDays(views: DayViews[], layout: DayInput["layout"], periods:
       let k = index.get(id);
       if (k === undefined) index.set(id, (k = stationIds.length)), stationIds.push(id);
       idx.push(k);
-      f64.push(v.boardings, v.alightings);
+      f64.push(v.boardings, v.alightings, v.transfers ?? -1);
     }
     return m.size;
   };
@@ -620,7 +622,11 @@ export function unpackDays(p: PackedDays, layout: DayInput["layout"], periods: n
   const take64 = (n: number) => { const out: number[] = new Array(n); for (let i = 0; i < n; i++) out[i] = f64[b++]; return out; };
   const stationsOf = (n: number) => {
     const m = new Map<string, StationDemand>();
-    for (let i = 0; i < n; i++) { m.set(stationIds[idx[c++]], { boardings: f64[b], alightings: f64[b + 1] }); b += 2; }
+    for (let i = 0; i < n; i++) {
+      const t = f64[b + 2];
+      m.set(stationIds[idx[c++]], t >= 0 ? { boardings: f64[b], alightings: f64[b + 1], transfers: t } : { boardings: f64[b], alightings: f64[b + 1] });
+      b += 3;
+    }
     return m;
   };
   return p.days.map((d) => {
