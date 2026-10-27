@@ -14,8 +14,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. History of this session: notes/han
   (T-1536), buses on roads with editing (T-1465, T-1512-1517), car parks (T-1528), view-first demand
   and estimates (T-1533, T-1538, T-1539, T-1530), edit speed (T-1380-1382, T-1540), Japan OOM fix
   (T-1482), many UI items. ARCHIVE.md has each.
-- Uncommitted: TASKS.md (T-1547 to T-1554 filed from TODO.md this morning; commit it), Anita's
-  TODO.md (never commit), notes/t1150/run/ (196 MB run output, never commit), notes/T-1546/ (agent's).
+- Uncommitted: Anita's TODO.md (never commit), notes/t1150/run/ (196 MB run output, never
+  commit), notes/T-1546/ (T-1546's agent, commit with its notes).
 - Core cap 10 (Anita is on the machine). `python cores.py list` at maps root.
 
 ## In flight (agents of this session; their reports come here)
@@ -30,7 +30,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History of this session: notes/han
   0.4x long trips, no car upkeep, 15 km ride reach.
 
 ## Next
-1. Commit TASKS.md. Land T-1543; relay T-1466 and T-1546 to Anita.
+1. Land T-1543; relay T-1466 and T-1546 to Anita.
 2. High priority (Anita): memory per zone and worker, T-1169 with T-1545 (market's 1.4 GB
    temporaries). Opus.
 3. TODO.md items T-1547 to T-1554 (UI batch 1547/1548/1549/1551/1552; 1550/1553/1554). Sonnet
