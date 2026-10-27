@@ -751,11 +751,17 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
   never cheaper, so no fare is below the base or falls with distance. **Fares by country**
   (T-1277, `app/src/game/income.ts`): the curve is set for India, the baseline, and each country
-  charges it times its fare scale: by default (its GDP per head at PPP over India's)^0.5 in tenths
-  (the US 2.8, the UK 2.3, China 1.6), or the player's own, 0.1 to 9.9 (`Fares.scales`, saved
-  with the fares; only the player's are kept). The curve starts as $0.5357 + $0.03571 a km (nodes at 0,
-  20 and 100 km), so New York starts at $1.50 + $0.10. A save from before carries no
-  `baseline` and its curve, New York's fares, is divided by the home country's scale as it loads.
+  charges it times its fare scale: by default (its GDP per head at market rates over India's)^0.7 in
+  tenths (the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521), or the player's own, 0.1 to 19.9
+  (`Fares.scales`, saved with the fares; only the player's are kept). A new game's curve (T-1521,
+  `START_NODES`) has nodes at 0, 20 and 100 km at $0.1293, $0.3017 and $2.0259: in New York $1.50
+  + $0.10 a km to 20 km, then $0.25 a km ($3.50 at 20 km, $23.50 at 100). It matches published
+  standard-class fares in ten countries at market rates at 50-150 km and 300-1,200 km; metro fares
+  under 20 km already matched (notes/T-1521.md). A save keeps its whole curve and is marked
+  `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each
+  scale the player set kept at its factor over the income's, so its home country's fares weigh
+  exactly as before and the rest within the scales' rounding (`game/income.ts`). A save from before T-1277 carries no
+  `baseline` and its curve, New York's fares, is divided by the home country's old scale as it loads.
   An older save's two nodes, or a base and rate, load as the three nodes on their line (one below
   $0 at 0 km starting at $0 instead), any other curve as the line through its first and last node.
   The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1

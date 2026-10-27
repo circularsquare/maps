@@ -9,7 +9,7 @@
 import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
 import { dataUrl } from "./dataBase";
-import { FARE_BASELINE, fareWeight, incomeGroups } from "./income";
+import { carUsdPerKm, FARE_BASELINE, fareWeight, incomeGroups } from "./income";
 import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
@@ -48,7 +48,6 @@ export const ROAD_DETOUR = 1.25;
 export const CAR_KMH = 85;
 /** the drive's fixed minutes, on top of the road at `CAR_KMH` */
 export const DRIVE_FIXED_MIN = 15;
-export const CAR_USD_PER_KM = 0.15;
 /** people sharing the car on a longer trip */
 export const CAR_SHARED_BY = 2;
 export const AIR_TERMINAL_MIN = 90;
@@ -58,8 +57,8 @@ export const AIR_WAIT_MIN = 25;
 export const AIR_KMH = 750;
 export const AIR_FIXED_MIN = 30;
 export const AIR_NO_DIRECT_MIN = 60;
-/** T-1431: refitted against published rail and air shares with riders by income group */
-export const AIR_FARE_USD = 30;
+/** T-1521: published average economy fares at market rates, one world fare (notes/T-1521.md) */
+export const AIR_FARE_USD = 100;
 export const AIR_USD_PER_KM = 0.05;
 const BETA = 0.1, DAMP_MIN = 60;
 const OPEN_AREA = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "NO", "IS", "CH", "LI", "GB"]);
@@ -219,6 +218,8 @@ export interface CarCost {
   routed: boolean;
   /** minutes on the road, the fixed minutes included */
   driveMin: number;
+  /** T-1521: what the car costs to run a km of road, US$ (the two places' countries' mean) */
+  cu: number;
   /** running the car, each person's dollars */
   runUsd: number;
   /** parking where the trip ends, each person's perceived minutes */
@@ -229,19 +230,22 @@ export interface CarCost {
   /** perceived minutes in all */
   total: number;
 }
-export function carCost(km: number, park: number, crossings: Crossing[], drive: Drive, w: number): CarCost {
+/** T-1521: a car's running cost a km between two places' rows: the mean of their countries'. */
+export const pairCarUsd = (p: { country?: string } | null | undefined, q: { country?: string } | null | undefined): number =>
+  0.5 * (carUsdPerKm(p?.country) + carUsdPerKm((q ?? p)?.country));
+export function carCost(km: number, park: number, crossings: Crossing[], drive: Drive, w: number, cu: number): CarCost {
   const roadKm = km * ROAD_DETOUR * drive.rk;
   const driveMin = (DRIVE_FIXED_MIN + ((km * ROAD_DETOUR) / CAR_KMH) * 60) * drive.rt;
-  const runUsd = (roadKm * CAR_USD_PER_KM) / CAR_SHARED_BY;
+  const runUsd = (roadKm * cu) / CAR_SHARED_BY;
   const parkMin = park / CAR_SHARED_BY;
   const total = driveMin + runUsd * w + parkMin + crossings.reduce((s, c) => s + crossingMin(c, w), 0);
-  return { km, roadKm, routed: drive !== RULE_DRIVE, driveMin, runUsd, parkMin, crossings, w, total };
+  return { km, roadKm, routed: drive !== RULE_DRIVE, driveMin, cu, runUsd, parkMin, crossings, w, total };
 }
 /** The parts of a car cost the sim gave as `total` perceived minutes over a mean distance of `km`
  * (its 6 km area pairs trip weighted): the drive, its running and the crossings by the rule and the
  * places' `drive`, which are linear in the distance, and parking (the far areas' mean) the rest. */
-export function carPartsOf(km: number, total: number, crossings: Crossing[], drive: Drive, w: number): CarCost {
-  const c = carCost(km, 0, crossings, drive, w);
+export function carPartsOf(km: number, total: number, crossings: Crossing[], drive: Drive, w: number, cu: number): CarCost {
+  const c = carCost(km, 0, crossings, drive, w, cu);
   return { ...c, parkMin: Math.max(0, total - c.total), total };
 }
 /** A crossing's perceived minutes: its minutes and each person's share of the fare at `w` a dollar. */
@@ -308,20 +312,20 @@ export function corridorOf(a: number, b: number): Corridor | null {
   const near = km < RULE.near_km;
   const road = p.road === q.road;
   const flight = near ? null : flightOf(p, q, km);
-  const fw = fareWeight(p.country);
+  const fw = fareWeight(p.country), cu = pairCarUsd(p, q);
   const park = 0.5 * (parkOf(p) + parkOf(q));
-  const car = road ? carCost(km, park, crossingsOf(p, q), driveOf(a, b), fw) : null;
+  const car = road ? carCost(km, park, crossingsOf(p, q), driveOf(a, b), fw, cu) : null;
   // T-1431: the share that flies over a's income groups by their trips, every mode's money at each
   // group's minutes a dollar
   let air = 0;
   if (car && flight) {
     for (const g of incomeGroups(p.country, RULE.eps)) {
-      const w = fw * g.factor, c = carCost(km, park, car.crossings, driveOf(a, b), w).total;
+      const w = fw * g.factor, c = carCost(km, park, car.crossings, driveOf(a, b), w, cu).total;
       const v = Math.exp(Math.max(-80, Math.min(80, -modeBeta(c) * (flight.min + flight.fareUsd * w - c))));
       air += g.share * (v / (1 + v));
     }
   } else if (flight) air = 1;
-  const refMin = car ? car.total : flight ? flight.total : carCost(km, park, [], RULE_DRIVE, fw).total;
+  const refMin = car ? car.total : flight ? flight.total : carCost(km, park, [], RULE_DRIVE, fw, cu).total;
   return { km, near, road, car, flight, air, carShare: car ? 1 - air : 0, refMin };
 }
 const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) : 0);
@@ -331,7 +335,7 @@ const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) 
 export function carBetween(from: number, to: number): CarCost | null {
   const p = marketRow(from), q = marketRow(to);
   if (!p || !q || from === to || p.road !== q.road) return null;
-  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), fareWeight(p.country));
+  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), fareWeight(p.country), pairCarUsd(p, q));
 }
 
 const ground = (d: number) => {
