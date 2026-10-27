@@ -441,6 +441,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   over 30 points from the share of the wait gone; about 5 minutes),
   `t1480-antipode.mjs` (a new Wuhan game on the globe zoomed 6 to 13: fails if a far realm's circle,
   Brazil at the antipode, shows over Wuhan, or the near realms' circles go zoomed out; about a minute),
+  `t1544-focus-race.mjs` (the draw anchor and the zone in view changing in one task, as a loaded
+  game's first state does, with the bubbles built: fails on a page error or bubbles that do not come
+  back; about a minute),
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),

@@ -309,8 +309,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (b && b.anchor.version !== anchor().version) b = undefined;
       if (!b) {
         if (!(await startWorker())) return again(ask);
+        // T-1544: the focus can move between the worker being ready and this, in the same task (a
+        // loaded game's first state moves the draw anchor, then fits the camera): its worker is gone
+        if (epoch !== focusEpoch || !worker) return;
         const t0 = performance.now();
-        b = await buildOn(worker!, end, endCells(modes, end));
+        b = await buildOn(worker, end, endCells(modes, end));
         commuterStats.workerMs = b.ms;
         commuterStats.roundTripMs = performance.now() - t0;
         commuterStats.builds++;

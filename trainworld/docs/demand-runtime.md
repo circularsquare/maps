@@ -193,7 +193,8 @@ every station pair's route cost (its logsums) and, for its assignment, each dest
 (about 130 KB a destination on Japan's whole network, 1.1 GB in all). When the strategies would pass
 256 MB (`MARKET_STRATEGY_BYTES`) and no population on the worker has searched the period's graph,
 its destinations are searched one at a time, twice: the first sweep keeps every destination's route
-costs and the first 256 MB of strategies, the second assigns each destination's column of trips,
+costs (and the costs with the planned first wait, T-1430, a column at a time as each search ends,
+never a list of them: T-1482) and the first 256 MB of strategies, the second assigns each destination's column of trips,
 searching it again unless kept (no more: in WASM the heap grows a piece at a time for them, T-780).
 The longer trips' zone pairs are dealt in chunks ([regional.md](regional.md) 5.1, T-780), so their
 table, the far-zone table and the logsums shrink with the pairs. The cities' cached tables go first (the market solves last in its
