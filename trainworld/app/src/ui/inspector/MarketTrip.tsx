@@ -314,19 +314,19 @@ function OtherRoutes({ t, shown, riders }: { t: MarketPeriod; shown: number[]; r
   if (!others.length && rest < 0.005) return null;
   return (
     <>
-      <div class="h">Other routes<span class="right muted small">train riders</span></div>
+      <div class="h">Other routes<span class="right muted small">train trips</span></div>
       <ul class="rows">
         {others.map(([r, v]) => {
           const { names, from, to, label } = routeRow(r, st, ln);
           return (
-            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of these trips' train riders${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(stationTimes(r).total)} station to station`}>
+            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train trips between these places${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(stationTimes(r).total)} station to station`}>
               {label}
               <span class="val w-num">{pctShare(v)}</span>
             </li>
           );
         })}
         {rest >= 0.005 && (
-          <li class="muted" data-tip={`The train riders spread over ${t.pairs.length} pairs of stations near the two ends. Routes under 0.5% of them are not listed.`}>
+          <li class="muted" data-tip={`The train trips spread over ${t.pairs.length} pairs of stations near the two ends. Routes under 0.5% of them are not listed.`}>
             <span class="grow">Smaller routes</span>
             <span class="val w-num">{pctShare(rest)}</span>
           </li>
@@ -436,7 +436,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       {pair && <PairModes pair={pair} near={ends.near} far={one} day={day} />}
       {!closed && cLegs >= 0.5 && <CommuteModes legs={cLegs} rail={cRail} day={day} who={commuters} />}
       {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
-      <div class="h">By train<span class="right muted small" data-tip={others ? `Train riders in the ${period.toLowerCase()} on every kind of trip between the two ends${tripPeriod.value === null ? "; the period with most trips" : ""}` : repTip}>{others ? period : `Inter-city, ${period.toLowerCase()}`}</span></div>
+      <div class="h">By train<span class="right muted small" data-tip={others ? `Trips by train in the ${period.toLowerCase()}, of every kind, between the two ends${tripPeriod.value === null ? "; the period with most trips" : ""}` : repTip}>{others ? period : `Inter-city, ${period.toLowerCase()}`}</span></div>
       {t.why || !main || !tm ? <p class="muted">{noStation || NO_RAIL[t.why || "noRail"]}</p> : (
         <>
           <Legs t={t} r={main} />
@@ -456,7 +456,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               </li>
             )}
           </ul>
-          <p class="muted small" data-tip={`The train riders spread over ${t.pairs.length} pairs of stations near the two ends`}>
+          <p class="muted small" data-tip={`The train trips spread over ${t.pairs.length} pairs of stations near the two ends`}>
             {routeShares[0] >= 0.995 ? "Every train user on these trips takes this route." : `${pctShare(routeShares[0])} of the train users on these trips take this route.`}
           </p>
           <OtherRoutes t={t} shown={routeShares} riders={riders} />

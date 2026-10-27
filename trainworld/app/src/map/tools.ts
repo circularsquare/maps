@@ -744,7 +744,7 @@ export class Tools {
       // preview landing late) would give another segment's length and cost
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
       // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
-      if (p?.ok !== false) playBuild("track");
+      if (p?.ok !== false) playBuild("snap");
       a = await edit({ op: "route", ...req }, false, true);
     } finally {
       this.placing = false;

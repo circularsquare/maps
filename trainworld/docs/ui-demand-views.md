@@ -108,16 +108,17 @@ stays while a new solve's is asked for.
 
 Drawn on a canvas of their own over the demand bubbles and under the station names, biggest first,
 redrawn with each map frame. Entries are blue and transfers green (light #2456e0 and #169a50, dark
-#8aa6ff and #52d68e): Origins draws blue discs, Transfers green ones, Total a blue disc with a green
-inner disc of the transfers' share of the area, sharing its centre. Each disc is translucent (blue
-14%, green 26%; dark 20% and 30%) with a 1.75 px edge in its colour over a 3.5 px casing of the land
-colour, so it holds against the bubbles (DECISIONS 2026-10-26). Under a build tool they go beneath
+#8aa6ff and #52d68e): a circle is one disc whose colour runs from the blue to the green, evened in
+OKLab, by the transfers' share of its riders [T-1531]. Origins draws blue discs, Transfers green
+ones, Total each at its own share. Each disc is translucent (20% light, 26% dark) with a 1 px edge
+in its colour at half strength over a 2.5 px casing of the land colour at 30%, so it holds against
+the bubbles without outlining them (DECISIONS 2026-10-26). Under a build tool they go beneath
 the network with the bubbles; while stops are edited they are not drawn. Below zoom 9, where
 stations hide, the circles and their hover hide too [T-1274].
 
 The hover (the circle's and the station's, the game's own tag) never gives the number of stations in
-a complex: under Total "1,133,500 riders per weekday", then a row per part, each after a dot in its
-colour: "186,100 entries", "947,400 transfers"; under Origins or Transfers one row with its dot,
+a complex: under Total "1,133,500 riders per weekday" after a dot in the circle's own colour, then a
+row per part, each after a dot in its end colour: "186,100 entries", "947,400 transfers"; under Origins or Transfers one row with its dot,
 "12,400 entries per day" or "464,000 transfers per day". The circles take the hover and clicks
 before the demand bubbles; the network under them (stations, trains, marks, lines) keeps its own
 hover and clicks. They do not enlarge the station's click target.

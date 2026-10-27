@@ -323,8 +323,11 @@ Full design, numbers and sources: `notes/T-008.md`.
     zoom 14, the waiting room and the P tile join the box's side at its middle, the room first along
     the platform's way, with one outline and one white round box and annexes. Both go on the side
     with fewer other platforms and tracks where they would be, else outside the platform's bend.
-    Each has its own hover, naming the upgrade and the station (a terminal's on its ends). Station
-    flags 32, 64 (the other side), 128 and 256; one station draw per annex kind (`u_room`).
+    Each has its own hover, naming the upgrade and the station (a terminal's on its buffer stop).
+    A terminal draws a dark bar, a buffer stop, only at the end of its platform where the track
+    ends (a station with one track leaving it, flag 512, T-1527); a terminal with track on both
+    sides has none. Station flags 32, 64 (the other side), 128, 256 and 512; one station draw per
+    annex kind (`u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").
@@ -587,7 +590,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trips are a function of the service, its eras and the hour asked for, and every window agrees.
 - **Changing a train count** (T-229, notes/T-229.md). The stepper shows the new count at
   once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
-  into one edit sent when it lands. The worker sends a service-only state for it: no geometry
+  into one edit sent when it lands. The headway stepper (`pendingHeadway`) and the train length
+  stepper (`pendingCars`, T-1526) work the same way, each click counting from the length shown. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
   run profiles (`renderer.setService`). A count or headway edit takes effect a moment ahead of the
   clock (T-1071, notes/T-1071.md): the clock worker's lead is 0.25 s plus twice what its last such

@@ -563,7 +563,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
   const segs = strokesByLine(net);
   const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
   const out: Drawn = { parts: [], stops: [] };
-  const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of this trip's train riders take this route`;
+  const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of the train trips between these places take this route`;
   // the main one on top, then the route opened in the inspector (T-870) over it
   const label = routeLabel(names);
   const open = openRoute.peek();
