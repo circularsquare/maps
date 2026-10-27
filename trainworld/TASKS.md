@@ -8,7 +8,7 @@ ahead; pull one back up when it becomes next. Anita's shortlist of candidates: `
 tasks that nothing open or current cites live in `notes/archive/` (older ARCHIVE.md and DECISIONS.md
 links say `notes/T-###.md`: look there).
 
-**Orchestrator handoff: start with `notes/handoff-2026-10-26.md`** (state as of 2026-10-26 evening).
+**Orchestrator handoff: start with `notes/handoff.md`** (live; history in notes/handoff-2026-10-26.md).
 
 **Where things stand (2026-10-26).** The whole world is the goal, demand simple on purpose
 (CLAUDE.md "Working here"; plain account in docs/demand-plain.md). Covered whole: Japan, Europe
@@ -76,6 +76,15 @@ Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted
 - T-1519 [P3] Income groups in the local layers (Anita's call): three groups as the market's (T-1431) would run the local mode choice three times, about 2.4x the local solve time on New York (72% of it is the mode choice). notes/T-1431.md "Round 3". Open.
 Anita's TODO.md "short term", filed 2026-10-26 (night).
 - T-1546 [P2] Rail against the plane at 4-5 hours (Anita 2026-10-27: follow-up after T-1521): London - Edinburgh 8% of rail + air against 45%, Paris - Marseille 33% against 73-82%, Tokyo - Fukuoka 34% against 11% on T-1521's every-zone corridor runs. Even between the stations' own zones rail and the plane come out level; the plane's airport drive is the place's average in plain minutes, rail's access per zone and weighted. Find what is off and propose. notes/T-1541.md, notes/T-1521.md round 3. Taking, 2026-10-27 (tree t1546).
+Anita's TODO.md short term, filed 2026-10-27 (morning). Her priorities: memory per zone and worker high; rest of the world after the finer demand calibration.
+- T-1547 [P2] Say "hills" for both "gentle slope" and the steeper terrain class; the number tells them apart. Open.
+- T-1548 [P2] With the UI hidden by F2, moving the mouse shows a small "Press F2 to show the UI" at the top centre, fading after a few seconds still. Open.
+- T-1549 [P2] The outline round an overcrowded line is too strong, most of all zoomed far out: lighter and thinner, scaled down with zoom. Open.
+- T-1550 [P2] Zoomed far out with the inter-city bubbles shown, hover and click pick those bubbles over local lines and stations (tiny there, covering city centres); T-1515's network-first order holds closer in. Open.
+- T-1551 [P2] The goal markers on the trips bar stick out 1 px less past the bar and show only in the city panel, not the top bar; the city panel's Locate button sits on the city name's line. Open.
+- T-1552 [P2] Panning to a new area, the terrain layer shows before the basemap's water and land, which looks odd: show them together. Open.
+- T-1553 [P2] Crowding dots on long inter-city lines read all red or all green, too sensitive: give the scale more steps in the long-wait range (measure where long lines' figures fall first). Open.
+- T-1554 [P2] The fare panel: "Fares in China" (or the fare region's name, "Fares in China East") instead of "Fares here"; and the fare scale's baseline a richer country, about 6x today's, so Japan reads about 1.0x and India about 0.17x (zoomed out over China it reads 11x now). Display and storage only; saves load with the same fares. Open.
 - T-1542 [P3] The US car is too strong on corridor runs (NY - Washington 94% car against 64%, Boston 99% against 87%) with real fuel at $0.104 a km; was 45% and 80% before T-1521. Look after T-1541. Open; notes/T-1521.md round 3.
 - T-1545 [P3] The market pass still holds about 1.4 GB of temporary s x s tables a worker on all of Japan (route costs, first-wait costs, fare km, trip table; s = 9,249 served stations), so a save bigger than Japan could hit the 4 GB WASM limit again (T-1482). Build them sparse or per column. notes/T-1482.md. Open.
 - T-1520 [P2] Cut the market's income-group cost: with T-1431's three groups the market's solve takes +71% (New York) and +87% (China), every population's +19-20%: three logsums a zone pair and the expected fare km table every pass. Try sharing the access part between groups and a cheaper fare-difference table. notes/T-1431.md. Open.
