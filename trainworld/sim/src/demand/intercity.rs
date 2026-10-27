@@ -105,20 +105,31 @@ impl Rule {
             && self.u_mean_us > 0.
             && self.u_ref_people > 0.
     }
-    /// The ground curve at `d` km: the onset times `max(d, d0)^-A`; 0 under the onset.
+    /// The tail's onset at `d` km: 0 under its first bound, 1 from its second.
+    #[inline(always)]
+    fn tail_on(&self, d: f64) -> f64 {
+        ((d - self.tail_onset_km[0]) / (self.tail_onset_km[1] - self.tail_onset_km[0])).clamp(0., 1.)
+    }
+    /// The ground curve at `d` km: the onset times `max(d, d0)^-A`, 0 under the onset. T-1603: where
+    /// a tail runs it takes over across its own onset window, so the ground fades over it and is 0
+    /// from its second bound.
     #[inline(always)]
     fn ground(&self, d: f64) -> f64 {
         let on = ((d - self.onset_km[0]) / (self.onset_km[1] - self.onset_km[0])).clamp(0., 1.);
         if on == 0. {
+            return 0.;
+        }
+        let keep = if self.rt == 0. { 1. } else { 1. - self.tail_on(d) };
+        if keep == 0. {
             0.
         } else {
-            on / d.max(self.d0_km).powf(self.a)
+            on * keep / d.max(self.d0_km).powf(self.a)
         }
     }
     /// The long-haul tail at `d` km: its onset times `max(d, D1)^-G`; 0 under the onset.
     #[inline(always)]
     fn tail(&self, d: f64) -> f64 {
-        let on = ((d - self.tail_onset_km[0]) / (self.tail_onset_km[1] - self.tail_onset_km[0])).clamp(0., 1.);
+        let on = self.tail_on(d);
         if on == 0. || self.rt == 0. {
             0.
         } else {

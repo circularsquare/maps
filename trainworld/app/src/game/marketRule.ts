@@ -338,12 +338,15 @@ export function carBetween(from: number, to: number): CarCost | null {
   return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), fareWeight(p.country), pairCarUsd(p, q));
 }
 
+const tailOn = (d: number) => Math.min(1, Math.max(0, (d - RULE.tail_onset_km[0]) / (RULE.tail_onset_km[1] - RULE.tail_onset_km[0])));
+/** T-1603: the ground fades over the tail's onset window and is 0 from its end. */
 const ground = (d: number) => {
   const on = Math.min(1, Math.max(0, (d - RULE.onset_km[0]) / (RULE.onset_km[1] - RULE.onset_km[0])));
-  return on === 0 ? 0 : on / Math.max(d, RULE.d0_km) ** RULE.A;
+  const keep = RULE.Rt === 0 ? 1 : 1 - tailOn(d);
+  return on === 0 || keep === 0 ? 0 : (on * keep) / Math.max(d, RULE.d0_km) ** RULE.A;
 };
 const tail = (d: number) => {
-  const on = Math.min(1, Math.max(0, (d - RULE.tail_onset_km[0]) / (RULE.tail_onset_km[1] - RULE.tail_onset_km[0])));
+  const on = tailOn(d);
   return on === 0 || RULE.Rt === 0 ? 0 : on / Math.max(d, RULE.D1_km) ** RULE.G;
 };
 const income = (r: MarketRow) => Math.min(r.inc, 1);

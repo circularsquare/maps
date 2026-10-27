@@ -6,7 +6,9 @@ How the regional layer's market is held and measured; its rules are in regional.
 
 **The world market** (T-377, [regional.md](regional.md) 5.1, docs/zones.md 4-5). Longer trips
 follow T-376's rule: ground and tail departures, each over its own normaliser against the world
-field, both stored per 6 km zone in the place's pack, so the departures to places with no zone
+field (T-1603: the ground curve fades out over the tail's own 300-700 km window, so past 700 km
+only the tail carries trips; its normaliser stays the plain curve, and `Rule::ground` and
+marketRule.ts's `ground` do the same), both stored per 6 km zone in the place's pack, so the departures to places with no zone
 (`info()[4]`, by place `elsewhere(q)`, a selection's in its last two numbers) need no outside
 world. The car's perceived minutes add 15 cents a road km and the destination zone's parking
 (`site_park`: the local parking rule's mean over drivers at each site's 2 km zone, job-weighted), both halved for two occupants

@@ -23,7 +23,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   own normaliser over the **world field** (T-375: Kontur H3 cells with country, GDP per head and
   landmass), never over the zone list, so adding a zone moves only the trips that went where it now
   is:
-  - *ground*: `0.107 x s` departures, weight `a_j x b x onset(25-50 km) x max(d, 25)^-2.37`;
+  - *ground*: `0.107 x s` departures, weight
+    `a_j x b x onset(25-50 km) x (1 - onset(300-700 km)) x max(d, 25)^-2.37` (T-1603: the tail's
+    window, so the ground is gone past 700 km; its normaliser is the plain curve, so the
+    dropped trips are not given back to nearer places);
   - *tail*: `0.00473 x s x u^0.503 / 1.2413` departures, weight
     `a_j x u_j^0.75 x min(y_j / y_i, 1) x b x onset(300-700 km) x max(d, 171)^-0.703`;
 

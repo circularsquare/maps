@@ -849,8 +849,8 @@ notes/T-420.md has the tables.
 
 - **The world market's long trips** (T-377, rule T-376, docs/regional.md 5.1). Every zone joins one
   market whose normalisers run over the world field: the NHTS ground curve (0.107 departures,
-  onset 25-50 km, max(d, 25)^-2.37) and a long-haul tail (0.00473, from 300-700 km, d^-0.70, toward
-  dense places), both scaled by GDP per head^0.7, a poorer destination damped by its income over
+  onset 25-50 km, max(d, 25)^-2.37, fading out over 300-700 km) and a long-haul tail (0.00473, from
+  300-700 km, d^-0.70, toward dense places), both scaled by GDP per head^0.7, a poorer destination damped by its income over
   the origin's, a border factor 0.26 x origin income^1.5, except 0.5 between two countries of the
   open-border area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK; T-809).
   Fitted on NHTS 2017, US, UK, Japanese and Indian residents' trips abroad and flights pairs
