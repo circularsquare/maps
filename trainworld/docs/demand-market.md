@@ -71,7 +71,8 @@ place's own frame for access and rides (each place on its own, so its figures ne
 other packs are open), the graph in the first place's. Each zone end's access list holds up to 10
 stations, its 8 best and then a slot each for track none of those is on (`access_list`,
 T-1506, [regional.md](regional.md) 5.2), so the market's station-pair loop is at most 10 x 10 a
-zone pair. It builds pairs only between zones some
+zone pair. Its rides reserve the same way one level down: past the 6 cheapest lines, up to 2 more
+for track those miss (`access_options` with the stations' components, T-1511, regional.md 5.3). It builds pairs only between zones some
 station serves whose stations share a track component (T-409: the rail graph's, every line and
 walking transfer at any frequency; the commutes between zones follow the same rule) on one
 landmass, in the composition's zone order, so every rail figure is the same sum; the longer trips'

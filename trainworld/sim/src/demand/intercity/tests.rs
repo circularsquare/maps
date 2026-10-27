@@ -1929,3 +1929,83 @@ fn an_unlinked_inter_city_station_gets_a_slot() {
     a.solve(0);
     assert!(a.summary(0)[2] > 0., "rail between the zones");
 }
+/// T-1511: a zone among nine metro lines whose only way to an unlinked inter-city station is a
+/// ride gets that ride, though the nine lines' rides are all cheaper, and so the station's slot.
+#[test]
+fn a_ride_reaches_unlinked_track_past_the_cheapest_lines() {
+    let mut sites: Vec<String> = (0..10).map(|k| format!("[{},200,20000,10000,0]", 500 * k)).collect();
+    sites.push("[100000,0,200000,100000,1]".into());
+    let mut a = IntercityApi::new(&format!(r#"{{"zone_m":6000,"trip_rate":0.015,"sites":[{}]}}"#, sites.join(","))).unwrap();
+    // metro stations 0-9 500 m apart, lines between neighbours; the inter-city line 10 -> 11, its
+    // station 10 beyond every walk from the metro's homes
+    let mut xy: Vec<f32> = (0..10).flat_map(|k| [500. * k as f32, 0.]).collect();
+    xy.extend([2500., 5000., 100000., 0.]);
+    let (mut n, mut stops, mut times) = (vec![], vec![], vec![]);
+    for (s0, s1, sec) in (0..9).map(|k| (k, k + 1, 90f32)).chain([(10, 11, 1800.)]) {
+        n.push(2u32);
+        stops.extend([s0 as u32, s1 as u32]);
+        let mut t = [0f32; 12];
+        for lev in 0..3 {
+            t[lev * 2] = sec;
+            t[(3 + lev) * 2 + 1] = sec;
+        }
+        times.extend(t);
+    }
+    let tph = vec![12f32; 3 * n.len()];
+    let cars = vec![6f32; n.len()];
+    a.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let svc = a.svc.as_ref().unwrap();
+    let h = svc.st_map[10] as usize;
+    let g = &a.m.groups[0];
+    let c = (0..g.city.len()).min_by(|&i, &j| (g.city.x[i].powi(2) + (g.city.y[i] - 200.).powi(2)).total_cmp(&(g.city.x[j].powi(2) + (g.city.y[j] - 200.).powi(2)))).unwrap();
+    let z = a.m.cell_zone[g.lo + c];
+    let list = &a.access[z];
+    assert!(list.iter().any(|e| e.0 == h), "the inter-city station has a slot: {list:?}");
+    a.solve(0);
+    assert!(a.summary(0)[2] > 0., "rail between the zones");
+}
+/// T-1511: past the `ride_lines` cheapest lines, a place's rides add the cheapest station of each
+/// track component those miss, at most `RIDE_TRACK_MAX`, never one without a train line; without
+/// `track` they are the cheapest lines' alone.
+#[test]
+fn rides_reserve_track_components() {
+    // one place at the origin; lines 0-11 start 1-12 km east of it and run 50 km north; lines 0-7
+    // are taken as one track, lines 8-11 each its own, line 9 as without trains
+    let mut a = IntercityApi::new(r#"{"zone_m":6000,"trip_rate":0.015,"sites":[[0,0,20000,10000,0],[100000,0,200000,100000,1]]}"#).unwrap();
+    let mut xy: Vec<f32> = vec![];
+    for k in 0..12 {
+        xy.extend([1000. * (k + 1) as f32, 0., 1000. * (k + 1) as f32, 50000.]);
+    }
+    let n = vec![2u32; 12];
+    let stops: Vec<u32> = (0..24).collect();
+    let mut times = vec![];
+    for _ in 0..12 {
+        let mut t = [0f32; 12];
+        for lev in 0..3 {
+            t[lev * 2] = 60.;
+            t[(3 + lev) * 2 + 1] = 60.;
+        }
+        times.extend(t);
+    }
+    let tph = vec![12f32; 36];
+    let cars = vec![6f32; 12];
+    a.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let svc = a.svc.as_ref().unwrap();
+    let net = DemandApi::period_net(svc, 0);
+    let first = |line: usize| svc.st_map[2 * line];
+    let mut comp = vec![0u32; net.n_stations()];
+    let mut on_train = vec![true; net.n_stations()];
+    for line in 8..12 {
+        comp[first(line) as usize] = line as u32;
+    }
+    on_train[first(9) as usize] = false;
+    let p = a.base.clone();
+    let g = &a.m.groups[0];
+    let place = [(g.kz.cell_zone[0] as usize, 0f32, 0f32)];
+    let st = |rides: &[Ride]| rides.iter().map(|r| r.0).collect::<Vec<_>>();
+    let (_, plain) = access_options(&g.kz, &net, &p, &place, End::Home, None);
+    assert_eq!(st(&plain), (0..p.ride_lines).map(first).collect::<Vec<_>>());
+    let (_, with) = access_options(&g.kz, &net, &p, &place, End::Home, Some((&comp, &on_train)));
+    assert_eq!(st(&with[..p.ride_lines]), st(&plain));
+    assert_eq!(st(&with[p.ride_lines..]), vec![first(8), first(10)], "the next unlinked lines, the one without trains passed over");
+}
