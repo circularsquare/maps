@@ -32,7 +32,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -111,6 +111,16 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
     throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status);
   }
   return j as T;
+}
+
+/** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
+ * the page). Throws an ApiError whose message says what to do. */
+export async function sendFeedback(f: { name: string; contact: string; message: string; version: string }) {
+  if (!BASE) throw new ApiError("This copy of the game has no server to send to.", 0);
+  // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
+  const cfg = accountConfig.peek();
+  if (cfg && !cfg.trainworldFeedback) throw new ApiError("Feedback can't be sent yet. Try again in a few days.", 404);
+  await api("POST", "trainworld/feedback", { kind: "feedback", message: f.message, name: f.name, contact: f.contact, context: { version: f.version } }, { auth: false });
 }
 
 export function storeSession(j: { token: string; account: AccountView }) {

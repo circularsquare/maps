@@ -795,12 +795,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   tenths (the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521), or the player's own, 0.1 to 19.9 to a
   hundredth (`Fares.scales`, saved with the fares; only the player's are kept). The Money tab shows a
   scale divided by Japan's default (6.1), so Japan reads 1.00x and India 0.16x (`shownScale`,
-  `storedScale`; T-1554): display only, the saved scales and curve stay in India's units. A new game's curve (T-1521,
-  `START_NODES`) has nodes at 0, 20 and 100 km at $0.1293, $0.3017 and $2.0259: in New York $1.50
-  + $0.10 a km to 20 km, then $0.25 a km ($3.50 at 20 km, $23.50 at 100); while a country's scale and
-  the curve are untouched its three fares are rounded (`game/fareDefault.ts`, T-1662). It matches published
-  standard-class fares in ten countries at market rates at 50-150 km and 300-1,200 km; metro fares
-  under 20 km already matched (notes/T-1521.md). A save keeps its whole curve and is marked
+  `storedScale`; T-1554): display only, the saved scales and curve stay in India's units. A new game's curve (T-1670,
+  `START_NODES`) has nodes at 0, 20 and 100 km at $0.0862, $0.2241 and $0.7757, one straight line: in New York $1
+  + $0.08 a km ($2.60 at 20 km, $9.00 at 100); while a country's scale and
+  the curve are untouched its three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each
   scale the player set kept at its factor over the income's, so its home country's fares weigh
   exactly as before and the rest within the scales' rounding (`game/income.ts`). A save from before T-1277 carries no

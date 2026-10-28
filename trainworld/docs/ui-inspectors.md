@@ -157,17 +157,15 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "How many trains run in this time interval. (Which time interval a scheduled train falls into is
   determined by when the train reaches the midpoint of its route.)" (the steppers have no such
   hover) [T-823, T-835, T-1242]; on a
-  running line one dot before each level's name grades the level on today's kind of day by the
+  running line one dot before each level's name grades the level on a weekday, whatever kind of day the clock is on [T-1671], by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 3, yellow at 6, orange at 9, red at 15, crimson at 20, plum at 25, purple at 35 and indigo from 50 (T-1553; `crowdColour` in
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
-  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "Where trains come full,
-  riders face a wait of 11 min on average for a train with room" (or "Riders get on the first train
-  with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4 of
-  10 trains full, 2k riders went another way" (the riders part only when any did) [T-1523],
-  and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
-  waited over the level's periods, from the tail of `line_periods`) when anyone waits [T-818]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
+  riders wait ~11 min for a train with room" (or "Riders get on the first train
+  with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4/10
+  trains full" [T-1523, T-1672]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with an Ordinary / High speed switch [T-817], each
   option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
   and 160 km/h on other track"), a car's price and the running costs, and on a running line what

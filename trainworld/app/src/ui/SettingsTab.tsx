@@ -15,6 +15,7 @@ import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
 import { AccountButton, AccountSection } from "./AccountPanel";
+import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
@@ -160,6 +161,8 @@ export function SettingsTab() {
       <GameMode />
       <AccountSection />
       <TripStart />
+      <FeedbackButton />
+      <FeedbackPanel />
       <Credits />
     </>
   );

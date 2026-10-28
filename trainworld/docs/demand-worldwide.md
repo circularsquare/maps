@@ -548,11 +548,11 @@ notes/T-420.md has the tables.
   into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
   country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
   their car's money should scale too. Check: a country's transit fares against its income, and its
-  fare elasticity where a survey publishes one. **Starting fares** (T-1521): at market rates, real
+  fare elasticity where a survey publishes one. **Starting fares** (T-1521, T-1670): at market rates, real
   standard-class fares in ten countries follow the income scale to the 0.7 as closely as at PPP to
-  the 0.5. The starting curve matches them at 50-150 km and 300-1,200 km within about 1.5x in the
-  rich countries and China. Real fares sit well under it for India's subsidised long-distance
-  classes (sleeper 0.3x the game's) and over it for Europe's metros (2-2.6x) (notes/T-1521.md).
+  the 0.5. The starting curve is one straight line, $1 plus 8 cents a km in New York ($2.60 at 20 km,
+  $9 at 100), times each country's scale: simple on purpose (Anita), so it sits under real fares on
+  long trips in the rich countries and over India's subsidised classes. Check: a country's published fare at 50-150 km against it (notes/T-1521.md).
   **High-speed fares** (T-1626): the fare above the base is times the player's high-speed multiplier
   (default 1.5) by the share of the trip's km on high-speed lines, in route choice, mode choice and
   the market alike. 1.5 is about JR's Nozomi ticket over its ordinary one (notes/T-1616.md); Europe's

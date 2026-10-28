@@ -6,7 +6,7 @@ Updated: 2026-10-28 (overnight)
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master 180dc5ec (T-1649 landed: "Keep" in the delete question used to lose the track; Anita
+- master 629f285f; earlier 180dc5ec (T-1649 landed: "Keep" in the delete question used to lose the track; Anita
   confirmed the seam gone 2026-10-28); 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
   45c0dffb (2026-10-28). Uncommitted: Anita's TODO.md (never commit), this file,
   checks/t1223-build.mjs (untracked, from T-1223's agent).
@@ -83,7 +83,16 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   docs ui-panels/track-and-service, DECISIONS). Loan 1%/game day (LOAN_RATE); asked Anita.
 - Map UI done (uncommitted: attractionMarks.ts, stationLabels.ts, rendererShaders.ts,
   renderer.ts, ui/tip.ts, style.css, three checks t1657/t1663/t1656, docs). T-1621 closed too.
-  Commit the whole batch once T-1667 reports (shared files). Panels done (uncommitted:
+  ALL COMMITTED 629f285f with T-1667 (station keeps its place on extend), on 8800 (smoke both).
+  Anita: straight-line fares confirmed; Corners section stays gone; loan 1%/day not objected.
+- T-1673 feedback done: shonei-server 6051eed (not pushed/deployed; route POST
+  /trainworld/feedback reusing feedback.go + Resend to SHONEI_FEEDBACK_TO; tools/feedback.py).
+  trainworld side uncommitted (FeedbackPanel.tsx, SettingsTab.tsx, account.css, account.ts,
+  docs ui-panels). shonei-server DEPLOYED 2026-10-28 ~14:50 with Anita's ok (config shows
+  trainworldFeedback:true); the game side goes live with the next trainworld deploy. Not seen
+  in the log whether feedback mail is configured: test once the game side is live.
+- T-1674 [P1] line route runs to the far end and turns round through a branch (Anita's
+  screenshot artifacts/trainworld/t1674-anita-route.png): Opus, main tree, Vite 6157, id T-1675. Panels done (uncommitted:
   CommutersInspector.tsx, TrackInspector.tsx, docs). T-1669 removed the whole Corners section
   (add corner, per-corner remove/elevation); asked Anita whether to restore all but the radius.
 - Filed T-1670 (default fares $1 + $0.08/km straight), T-1671 (crowding figures always a
@@ -123,7 +132,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1673.
+Ids handed out through T-1675.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

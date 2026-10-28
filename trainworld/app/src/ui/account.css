@@ -6,6 +6,9 @@
   background: var(--bg); color: var(--text); }
 .acct-panel select { width: 100%; padding: 3px 4px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
 .acct-form { display: flex; flex-direction: column; gap: 6px; }
+/* T-1673: the feedback form (FeedbackPanel.tsx) */
+.fb-panel textarea { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg);
+  color: var(--text); font: inherit; resize: vertical; }
 .acct-row { display: flex; gap: 6px; }
 .acct-row input { flex: 1; }
 .acct-btns { display: flex; flex-wrap: wrap; gap: 6px; }

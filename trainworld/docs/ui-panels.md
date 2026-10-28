@@ -335,7 +335,14 @@ and platforms ("How full each train is", "How full each platform is", both on by
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
-out, delete; [Account and leaderboards](#account-and-leaderboards)), and Explore a trip at the bottom [T-220]. Station ridership
+out, delete; [Account and leaderboards](#account-and-leaderboards)), Explore a trip [T-220], and Submit feedback at the bottom
+[T-1673, `ui/FeedbackPanel.tsx`]: a centred modal "Feedback" (the account panel's form styles) with Name (optional), Email
+("Email, if you want a reply") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
+(`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
+127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
+Sent shows "Sent. Thank you for writing!" with Write another and Close; a failure says why (no server for this copy,
+not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
+sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 90% by default (T-703), no reset button. It
