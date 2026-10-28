@@ -134,6 +134,8 @@ export interface DrawOptions {
   lineScale?: number;
   /** T-1567: every train one pill, white with a rim of its line's colour (the start menu's logo) */
   hollowTrains?: boolean;
+  /** T-1700: every box this many px narrower on each side (the start menu's logo) */
+  boxShrinkPx?: number;
 }
 
 interface StrokeVao {
@@ -1421,7 +1423,7 @@ export class NetworkRenderer {
       gl.activeTexture(gl.TEXTURE0);
       // local units per px at BOX_WIDTH_ZOOM (the box's width, T-204)
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
-      gl.uniform2f(su.u_fixed, boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) * dpr, unitAtBox);
+      gl.uniform2f(su.u_fixed, (boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) - (opt.boxShrinkPx ?? 0)) * dpr, unitAtBox);
       gl.bindVertexArray(this.stationVao);
       gl.uniform1f(su.u_pixel, dpr);
       gl.uniform1i(su.u_layer, 0);

@@ -15,7 +15,8 @@ What goes where. The build's `packs/` folder (city packs, market packs, outlines
 market, real saves, real-network graphs: about 1 GB in about 4,000 files) goes to
 `r2:anitamaps/trainworld/<version>/`, read by the page from https://data.anita.garden/trainworld/<version>/.
 Everything else in dist (index.html, assets/ with the JS, workers and WASM, fonts/, the favicon:
-about 15 MB) goes to the website repo's `trainworld/`, since module workers and WASM must be
+about 15 MB) goes to the website repo's `trainsworld/` (T-1707; its old `trainworld/` keeps only
+redirect pages there, written in the same publish), since module workers and WASM must be
 same-origin with the page. The page finds its data with game/dataBase.ts: the `tw-data` meta this
 script writes into the published index.html, else `packs/` beside the page (every local build).
 
@@ -55,9 +56,15 @@ import web_wrap  # noqa: E402  front matter and the site's analytics include
 DIST = os.path.join(MAPS, ".tw-snap", "trainworld", "app", "dist")
 WEBSITE = os.path.join(os.path.dirname(MAPS), "website")
 STAGE = os.path.join(MAPS, "artifacts", "trainworld", "publish")
+# the data keeps its trainworld/ prefix on R2: old versions stay where they are, and nobody sees it
 REMOTE = "r2:anitamaps/trainworld"
 PUBLIC = "https://data.anita.garden/trainworld"
-PAGE = "https://anita.garden/trainworld/"
+# T-1707: the game lives at /trainsworld/; the old /trainworld/ folder keeps only redirect pages
+SITE_DIR = "trainsworld"
+OLD_DIR = "trainworld"
+SITE = "https://anita.garden/"
+PAGE = SITE + SITE_DIR + "/"
+OLD_PAGE = SITE + OLD_DIR + "/"
 
 RCLONE = ["rclone", "--s3-no-check-bucket", "--checksum", "--transfers", "32", "--stats-one-line", "--stats", "30s",
           "--header-upload", "Cache-Control: public, max-age=31536000, immutable"]
@@ -178,7 +185,7 @@ def summary(info):
         print(f"   {k:20s} {n:5d} files {s / MB:8.1f} MB  {'raw' if raw else 'gzipped'}")
     tot = sum(s for _, s in info["data"])
     print(f"   {'total':20s} {len(info['data']):5d} files {tot / MB:8.1f} MB\n")
-    print(f"website {WEBSITE}{os.sep}trainworld{os.sep}")
+    print(f"website {WEBSITE}{os.sep}{SITE_DIR}{os.sep}  (and {OLD_DIR}{os.sep} becomes redirects)")
     groups = {}
     for r, s in info["site"]:
         k = r.split("/")[0]
@@ -239,7 +246,7 @@ def page_html(dist, base):
 
 
 def copy_site(dist, dest, base, dry):
-    """dist minus packs/ into dest (the website's trainworld/), index.html wrapped for Jekyll."""
+    """dist minus packs/ into dest (the website's trainsworld/), index.html wrapped for Jekyll."""
     print(f"   {dist} -> {dest}  (index.html with tw-data = {base})")
     if dry:
         return
@@ -257,6 +264,45 @@ def copy_site(dist, dest, base, dry):
     os.makedirs(STAGE, exist_ok=True)
     open(tmp, "w", encoding="utf-8", newline="").write(page_html(dist, base))
     web_wrap.wrap(tmp, os.path.join(dest, "index.html"), sitemap="false")
+
+
+REDIRECT = """{fm}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>trainsworld</title>
+    <link rel="canonical" href="{canon}" />
+    <script>location.replace("{rel}" + location.search + location.hash);</script>
+    <meta http-equiv="refresh" content="0; url={rel}" />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <p>trainsworld has moved to <a href="{rel}">anita.garden/{new}/{page}</a>.</p>
+  </body>
+</html>
+"""
+# the old folder's pages besides index.html that people may have linked to
+OLD_PAGES = ("privacy.html", "terms.html")
+
+
+def write_redirects(old, dry):
+    """T-1707: the website's trainworld/ becomes redirect pages into trainsworld/, keeping the query and
+    hash (JS; the meta refresh and the link for no-JS drop them). index.html keeps its front matter, as
+    web_wrap does; the old build's files (assets/, fonts/, the favicon, anything else) go."""
+    print(f"   {old}: index.html, {', '.join(OLD_PAGES)} redirect to ../{SITE_DIR}/; everything else there removed")
+    if dry:
+        return
+    os.makedirs(old, exist_ok=True)
+    fm = web_wrap.existing_front_matter(os.path.join(old, "index.html")) or "---\nsitemap: false\n---\n"
+    for name in os.listdir(old):
+        p = os.path.join(old, name)
+        if name in ("index.html",) + OLD_PAGES:
+            continue
+        shutil.rmtree(p) if os.path.isdir(p) else os.remove(p)
+    for name in ("index.html",) + OLD_PAGES:
+        page = "" if name == "index.html" else name
+        html = REDIRECT.format(fm=fm, canon=PAGE + page, rel=f"../{SITE_DIR}/{page}", new=SITE_DIR, page=page)
+        open(os.path.join(old, name), "w", encoding="utf-8", newline="\n").write(html)
 
 
 def fetch(url, headers):
@@ -298,6 +344,15 @@ def verify(version, page):
         except Exception as e:  # noqa: BLE001
             print(f"   FAIL entry script: {e}")
             ok = False
+        # T-1707: the old address is a redirect page into the new one
+        try:
+            _, _, body = fetch(OLD_PAGE, {})
+            good = f"../{SITE_DIR}/" in body.decode("utf-8", "ignore")
+            print(f"   {'PASS' if good else 'FAIL'} {OLD_PAGE} redirects to {PAGE}")
+            ok &= good
+        except Exception as e:  # noqa: BLE001
+            print(f"   FAIL old address: {e}")
+            ok = False
     return ok
 
 
@@ -334,7 +389,8 @@ def main():
     print("preflight ok\n")
 
     if a.stage:
-        copy_site(a.dist, os.path.join(a.stage, "trainworld"), a.data_base or f"{PUBLIC}/{v}/", False)
+        copy_site(a.dist, os.path.join(a.stage, SITE_DIR), a.data_base or f"{PUBLIC}/{v}/", False)
+        write_redirects(os.path.join(a.stage, OLD_DIR), False)
         return
 
     if not a.dry_run and not a.smoked:
@@ -374,13 +430,14 @@ def main():
             sys.exit(f"rclone exited {rc}")
 
     print("\nwebsite")
-    copy_site(a.dist, os.path.join(WEBSITE, "trainworld"), f"{PUBLIC}/{v}/", a.dry_run)
+    copy_site(a.dist, os.path.join(WEBSITE, SITE_DIR), f"{PUBLIC}/{v}/", a.dry_run)
+    write_redirects(os.path.join(WEBSITE, OLD_DIR), a.dry_run)
 
     if not a.dry_run and not a.skip_data:
         print("\nverifying the data")
         verify(v, False)
     print("\nNOT COMMITTED. In the website repo:")
-    print("   git -C ../website add trainworld/")
+    print(f"   git -C ../website add {SITE_DIR}/ {OLD_DIR}/")
     print('   git -C ../website commit -m "anitabuilder"')
     print("   git -C ../website push")
     print(f"Then, once Pages has built: python trainworld/tools/deploy.py --verify --page --version {v}")

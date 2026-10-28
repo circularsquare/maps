@@ -30,6 +30,7 @@ const SECTIONS: [string, [string, string][]][] = [
   ]],
   ["Keys", [
     [toolKeys, "Track, stations, delete and blueprint tools"],
+    ["Shift 1 to 7", "Draw at elevation +3 down to -3"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],
     [keyOf("newLine"), "Make a new line"],
     [BUS_KEY.toUpperCase(), "Draw a new bus line"],

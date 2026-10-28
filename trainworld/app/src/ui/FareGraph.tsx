@@ -8,7 +8,7 @@
 // the demand again.
 
 import { signal } from "@preact/signals";
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
 import { unitMetres, unitShort } from "../game/format";
@@ -201,6 +201,14 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   const drag = useRef<Drag | null>(null);
   const pinch = useRef<{ ids: Map<number, { x: number; y: number }>; d0: number; span0: number } | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
+  // T-1705: the viewBox is scaled to the panel, so a narrow screen sets the labels in units that draw at 12 px
+  useEffect(() => {
+    const el = svg.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => el.style.setProperty("--fg-fs", `${(12 * W / el.getBoundingClientRect().width).toFixed(2)}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [hoverNode, setHoverNode] = useState<number | null>(null);
   const shown = farePreview.value ?? nodes;
   const kpu = unitMetres() / 1000;

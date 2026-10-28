@@ -6,7 +6,7 @@
 
 import { useEffect, useRef } from "preact/hooks";
 import { NetworkRenderer, type DrawOptions } from "../map/renderer";
-import { LOGO_ZOOM, logoNetwork } from "../map/logoNetwork";
+import { LOGO_BOX_TRIM_PX, LOGO_ZOOM, logoNetwork } from "../map/logoNetwork";
 
 /** game seconds a second: the trains' pace in the menu */
 const TIME_SCALE = 10.5;
@@ -14,7 +14,7 @@ const TIME_SCALE = 10.5;
 const MAX_SCALE = 1.05;
 /** T-1593: the logo this share of the size it could take (Anita: "25% smaller") */
 const SIZE = 0.75;
-const OPTIONS: DrawOptions = { showTrains: true, byLevel: false, selLine: -1, selEdge: -1, selStation: -1, flatMarks: false, hollowTrains: true };
+const OPTIONS: DrawOptions = { showTrains: true, byLevel: false, selLine: -1, selEdge: -1, selStation: -1, flatMarks: false, hollowTrains: true, boxShrinkPx: LOGO_BOX_TRIM_PX };
 
 /** what the checks read (`window.twLogo`): frames drawn, their draws' ms on the CPU, and a stop for
  * measuring the menu without the logo */

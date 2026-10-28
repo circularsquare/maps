@@ -615,7 +615,7 @@ export class BusDraw {
   touchState(): TouchCtl | null {
     if (!touchInput.peek() || !this.pts.length) return null;
     const waiting = !!this.touchAt;
-    return { confirm: waiting || this.pts.length >= 2 ? !this.busy : null, confirmTip: waiting ? "Add this point" : this.line === null ? "Make the line" : "Save the route", back: true, stopTip: "Cancel", level: false, track: false };
+    return { confirm: waiting || this.pts.length >= 2 ? !this.busy : null, confirmTip: waiting ? "Add this point" : this.line === null ? "Make the line" : "Save the route", back: true, stopTip: "Cancel" };
   }
 
   /** the point the touch bar stands beside */

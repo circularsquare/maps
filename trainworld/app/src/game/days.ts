@@ -85,6 +85,17 @@ export const awaySoon = signal(false);
  * those days' views are the weekday's and Sunday's (`PLAIN_KIND`), and no line reads them. */
 export const rushRun = signal<string | null>(null);
 export const rushSoon = signal(false);
+/** T-1697: when each superholiday part is, as the player reads it, "Golden Week, May 3-5" (the run
+ * `awayNear` / `rushRun` names; null with it). Out and back are the days either side of the holiday. */
+export const whenAway = signal<string | null>(null);
+export const whenOut = signal<string | null>(null);
+export const whenBack = signal<string | null>(null);
+/** Game days `from` up to but not including `to`, "May 3", "May 3-5", "Apr 30-May 2". */
+export function dateRange(from: number, to: number): string {
+  const a = dateOf(from), b = dateOf(to - 1);
+  if (to - from <= 1) return shortDate(from);
+  return a.month === b.month ? `${MONTH_SHORT[a.month]} ${a.date}-${b.date}` : `${shortDate(from)}-${shortDate(to - 1)}`;
+}
 /** Whether kind `k`'s own figures are made now (T-264, T-1373): the ordinary kinds always, a
  * superholiday's only while one is near. */
 export const kindMade = (k: number, near = awayNear.value, rush = rushRun.value): boolean => (k === AWAY_DAY ? near !== null : k === OUT_DAY || k === BACK_DAY ? rush !== null : true);

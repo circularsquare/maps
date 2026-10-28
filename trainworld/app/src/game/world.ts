@@ -7,7 +7,7 @@
 import { signal, type Signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
-import { describeIssues } from "./issues";
+import { describeIssues, type Buys } from "./issues";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
 import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from "./types";
@@ -66,9 +66,16 @@ export async function edit(op: EditOp, quiet = false, silent = false): Promise<E
   if (!sink) return { ok: false, issues: [], charge: 0 };
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
-  if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues), true);
+  if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;
+}
+
+const TRAIN_OPS = new Set(["setStops", "insertStop", "setTrainCount", "setHeadway", "lineCars", "copyLine", "undo", "redo"]);
+const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "crossover", "doubleUp", "stationUpgrade"]);
+/** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
+function buysOf(op: EditOp): Buys | undefined {
+  return TRAIN_OPS.has(op.op) ? "trains" : BUILD_OPS.has(op.op) ? "construction" : undefined;
 }
 
 const num = (id: LineId) => Number(id);

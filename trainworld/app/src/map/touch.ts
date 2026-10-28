@@ -21,15 +21,12 @@ export function watchInput() {
 }
 
 /** What the control bar shows: `confirm` null for no confirm button, false greyed; `back` drops
- * the last point; `stop` ends the run (track) or drops the placement; `level` and `track` the
- * elevation and track type buttons. */
+ * the last point (a track segment being drawn, whole); `stop` ends the run (track) or drops the placement. */
 export interface TouchCtl {
   confirm: boolean | null;
   confirmTip: string;
   back: boolean;
   stopTip: string;
-  level: boolean;
-  track: boolean;
 }
 
 export const touchCtl = signal<TouchCtl | null>(null);

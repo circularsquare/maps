@@ -69,6 +69,17 @@ const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/do
 /** Positron's place layers that name a settlement, each with a black dot icon. */
 const CITY_LABELS = new Set(["label_city", "label_city_capital", "label_town", "label_village"]);
 
+/** T-1692: minor labels start later than Positron has them: suburbs and islands, villages, towns, small
+ * rivers, river and strait names, main road names. City names keep Positron's. */
+const LABEL_MINZOOM: Record<string, number> = {
+  label_other: 12, label_village: 12, label_town: 9, waterway_line_label: 12, water_name_line_label: 8,
+  "highway-name-major": 13.5, airport: 12,
+};
+/** T-1692: pixels kept clear around every basemap label. */
+const TEXT_PADDING = 10;
+/** T-1692: the same around city and town names, so only the larger of two close ones is placed. */
+const PLACE_PADDING = 28;
+
 /** Positron's layers repainted in one theme's colours. A layer or key the light theme leaves out
  * keeps Positron's own paint there. */
 function paintFor(c: ShadeColours, dark: boolean): Paint {
@@ -231,10 +242,15 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
       if (layout["text-field"] !== undefined) {
         layout["text-font"] = FONT;
         layout["text-field"] = guardEnglishName(layout["text-field"]);
-        paint["text-halo-width"] = 1.2;
-        L["text-color"] = SHADES.light.label, L["text-halo-color"] = SHADES.light.land;
-        D["text-color"] = SHADES.dark.label, D["text-halo-color"] = SHADES.dark.land;
+        // T-1692: plain one-colour text, no halo (a halo in the land colour shows as an outline over shade)
+        paint["text-halo-width"] = 0;
+        // a little stronger than the palette's label grey, which the halo used to lift off water and shade
+        L["text-color"] = mix(SHADES.light.label, "#000000", 0.35);
+        D["text-color"] = mix(SHADES.dark.label, "#ffffff", 0.3);
+        // T-1692: fewer labels at once, by a wider collision box
+        layout["text-padding"] = Math.max(Number(layout["text-padding"]) || 0, layer.id.startsWith("label_c") || layer.id === "label_town" ? PLACE_PADDING : TEXT_PADDING);
       }
+      if (layer.id in LABEL_MINZOOM) layer.minzoom = LABEL_MINZOOM[layer.id];
       for (const k of ["text-opacity", "icon-opacity"]) if (paint[k] === undefined) paint[k] = 1;
     }
     const s = shade.peek(), land = SHADES[s].land, contrast = display.peek().basemapContrast;

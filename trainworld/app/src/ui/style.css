@@ -13,8 +13,8 @@
 :root[data-shade="dark"][data-theme="pink"]  { --bg: #262120; --text: #ebe3de; --accent: #e08aa0; }
 :root[data-shade="dark"][data-theme="blue"]  { --bg: #1d232a; --text: #dfe7ef; --accent: #6fa3da; }
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
-:root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
-:root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; }
+:root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --good: #3f8a3a; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
+:root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; --good: #7cc576; }
 /* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
 :root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
 :root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }
@@ -32,6 +32,9 @@
   --net-ink: #2b2b2b; /* station rims, in both themes */
   --dock-w: clamp(304px, 24vw, 352px);
   --bar-h: 54px; /* T-349: one centre line; the status lies under the bar. T-861: room for the sky */
+  /* T-1695: one device pixel inside the zoomed panels (game/ui.ts sets --ui and --dpr): a hairline
+     measured in these is the same whole pixels at every UI scale */
+  --px: calc(1px / (var(--ui, 1) * var(--dpr, 1)));
 }
 
 * { box-sizing: border-box; }
@@ -55,6 +58,7 @@ body {
 .bt-rail, .bt-ties { stroke: var(--muted); }
 .bt-body { fill: color-mix(in srgb, var(--accent) 72%, #fff); }
 .bt-roof { fill: color-mix(in srgb, var(--accent) 30%, #f4efec); }
+.bt-curtain { fill: color-mix(in srgb, var(--accent) 52%, #fffdfb); }
 @keyframes bt-turn { to { transform: rotate(360deg); } }
 @keyframes bt-run { to { stroke-dashoffset: 12; } }
 @keyframes bt-chug { to { transform: translateY(-1.2px); } }
@@ -245,11 +249,11 @@ body.resizing, body.resizing * { user-select: none; }
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .slider span { min-width: 3.6em; }
-.slider input { flex: 1; min-width: 0; appearance: none; height: 14px; background: transparent; margin: 0; }
-.slider input::-webkit-slider-runnable-track { height: 3px; background: var(--rule); }
-.slider input::-moz-range-track { height: 3px; background: var(--rule); }
-.slider input::-webkit-slider-thumb { appearance: none; width: 3px; height: 14px; margin-top: -5.5px; background: var(--accent); }
-.slider input::-moz-range-thumb { width: 3px; height: 14px; border: 0; border-radius: 0; background: var(--accent); }
+.slider input { flex: 1; min-width: 0; appearance: none; height: calc(15 * var(--px)); background: transparent; margin: 0; }
+.slider input::-webkit-slider-runnable-track { height: calc(3 * var(--px)); background: var(--rule); }
+.slider input::-moz-range-track { height: calc(3 * var(--px)); background: var(--rule); }
+.slider input::-webkit-slider-thumb { appearance: none; width: calc(3 * var(--px)); height: calc(15 * var(--px)); margin-top: calc(-6 * var(--px)); background: var(--accent); }
+.slider input::-moz-range-thumb { width: calc(3 * var(--px)); height: calc(15 * var(--px)); border: 0; border-radius: 0; background: var(--accent); }
 /* T-804: the two colour pickers of the bubbles' train-share ramp */
 .pickers { display: flex; gap: 16px; margin-top: 8px; }
 .pickers label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -260,10 +264,10 @@ body.resizing, body.resizing * { user-select: none; }
 .checks { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
 .stack { display: grid; justify-items: start; gap: 6px; }
 .check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.check input { appearance: none; width: 14px; height: 14px; margin: 0; flex: none;
+.check input { appearance: none; width: calc(14 * var(--px)); height: calc(14 * var(--px)); margin: 0; flex: none;
                border: 1px solid var(--rule); background: var(--bg); display: grid; place-items: center; }
 .check input:checked { border-color: var(--accent); background: var(--tint); }
-.check input:checked::after { content: ""; width: 6px; height: 6px; background: var(--accent); }
+.check input:checked::after { content: ""; width: calc(6 * var(--px)); height: calc(6 * var(--px)); background: var(--accent); }
 
 .chip {
   display: inline-grid; place-items: center; flex: none;
@@ -401,6 +405,7 @@ svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none
 .fg-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
 .fg-axis { stroke: var(--rule); stroke-width: 1; }
 .fg-label { fill: var(--muted); font-size: 11px; }
+@media (max-width: 600px) and (min-height: 560px) { .fg-label { font-size: var(--fg-fs, 11px); } }
 .fg-curve { fill: none; stroke: var(--accent); stroke-width: 1.8; }
 .fg-hover { fill: transparent; cursor: crosshair; }
 .fg-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
@@ -852,12 +857,12 @@ button.save-add:hover { color: var(--text); }
 /* T-1260: the touch control bar by the point being placed, 44 px buttons; the handle that drags that point */
 .touch-bar-host { position: fixed; left: 0; top: 0; z-index: 30; width: max-content; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .touch-bar { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.touch-row, .touch-levels { display: flex; gap: 6px; padding: 4px; background: var(--bg); border: 1px solid var(--rule); box-shadow: 0 1px 6px rgb(0 0 0 / 22%); }
+.touch-row { display: flex; gap: 6px; padding: 4px; background: var(--bg); border: 1px solid var(--rule); box-shadow: 0 1px 6px rgb(0 0 0 / 22%); }
 .btn.icon.tb { width: 44px; height: 44px; min-width: 44px; }
 .btn.icon.tb svg { width: 22px; height: 22px; }
-.btn.icon.tb.lv { font-size: 15px; }
-.btn.icon.tb.ok:not(:disabled) { color: var(--accent); border-color: var(--accent); }
-.touch-levels .btn.lv { min-width: 34px; height: 44px; }
+.btn.icon.tb.ok:not(:disabled) { color: var(--good); border-color: var(--good); }
+.btn.icon.tb.back { color: var(--yellow); border-color: var(--yellow); }
+.btn.icon.tb.stop { color: var(--bad); border-color: var(--bad); }
 .touch-handle { position: absolute; left: 0; top: 0; z-index: 5; width: 44px; height: 44px; margin: -22px 0 0 -22px; touch-action: none; }
 .touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
   background: #fff; border: 2px solid var(--net-ink); }
@@ -1224,7 +1229,7 @@ button.save-add:hover { color: var(--text); }
   display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: calc(100% - 520px); pointer-events: none; }
 .choosing .rides-notes { visibility: hidden; }
 .rides-note { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; box-sizing: border-box; pointer-events: auto;
-  background: var(--bg); border: 1px solid var(--rule); font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  background: var(--bg); border: 1px solid var(--rule); font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rides-note.down { color: var(--muted); }
 .trouble-btn { grid-auto-flow: column; gap: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .trouble-btn svg { width: 14px; height: 14px; }
@@ -1250,15 +1255,17 @@ button.save-add:hover { color: var(--text); }
   /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
   .demand-stopped { margin-left: 36px; }
 }
-/* T-349: this narrow, the status tag drops to a second row under the demand buttons, a row kept
-   whether or not it shows; the search glass, the alert and the Select bar sit under it */
+/* T-349, T-1704: this narrow, the status tag floats under the demand buttons over the rows below, so no
+   row is kept for it; the search glass takes the top right corner, which the rows leave free
+   (the stack stops 46 px short of it), and the Select bar sits under the rows */
 @container map-column (max-width: 520px) {
-  .map-top-row { min-height: 58px; align-content: flex-start; }
-  .map-search { top: 108px; }
+  .map-top-left { max-width: calc(100% - 56px); }
+  .map-top-row { position: relative; }
+  .map-top-row .status-tag { position: absolute; left: 0; top: 100%; margin-top: 3px; z-index: 1; }
+  .map-top-row .status-tag ~ .busy-tag { top: calc(100% + 30px); }
+  .map-search { left: auto; right: 10px; top: 10px; }
+  .demand-stopped { margin-left: 0; }
   .blueprint-bar { top: 144px; }
-}
-@container map-column (max-width: 360px) {
-  .map-search { top: 142px; }
 }
 /* T-1263: on a phone the Select tool's bar sits on the map's bottom edge in one row that fits a 390 px
    screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is

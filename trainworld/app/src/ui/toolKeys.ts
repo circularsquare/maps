@@ -1,6 +1,7 @@
 // The build tools and the keys that pick things (main.ts, HelpPanel.tsx, the Build and Settings tabs).
 
 import type { JSX } from "preact";
+import { LEVELS, type Level } from "../game/types";
 import { tool, type Tool } from "../game/ui";
 import { live } from "../map/live";
 import { Icon } from "./widgets";
@@ -25,6 +26,12 @@ export const HIDE_UI_KEY = "F2";
 /** T-670: letter keys for new line, edit stops (the selected line's) and construct blueprints, from any tab;
  * A (T-1417) adds every station the selected line passes. */
 export const ACTION_KEYS: Record<string, "newLine" | "editStops" | "construct" | "addPassed"> = { n: "newLine", l: "editStops", c: "construct", a: "addPassed" };
+
+/** T-1701: Shift+1 to Shift+7 set the drawing elevation, in the order of the elevation row (+3 down
+ * to -3). Matched by key code, since Shift changes the character on some layouts. */
+export const levelOfKeyCode = (code: string): Level | null => /^Digit[1-7]$/.test(code) ? LEVELS[Number(code[5]) - 1] : null;
+/** the key shown in an elevation button's hover */
+export const levelKeyName = (l: Level) => `Shift+${LEVELS.indexOf(l) + 1}`;
 
 /** Pick a build tool; the one in use again, or Select, goes back to selecting. */
 export function pickTool(v: Tool) {

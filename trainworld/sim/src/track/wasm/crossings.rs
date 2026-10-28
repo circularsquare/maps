@@ -178,11 +178,6 @@ impl TrackApi {
             let m = self.w.net.alloc_node();
             nn.push(m);
             ops.push(Op::Node { id: m, data: Some(NodeData { x, y, level: self.w.net.node_level[ni], flying: false }) });
-            if let Some(mut st) = self.w.net.station_data(n) {
-                st.built = false;
-                st.off = false;
-                ops.push(Op::Station { node: m, data: Some(st) });
-            }
             beside.push(Some((m, x, y)));
         }
         for (i, verts) in shapes.iter().enumerate() {

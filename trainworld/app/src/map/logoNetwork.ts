@@ -22,6 +22,9 @@ const ANCHOR = makeAnchor(0, 0, -1);
 
 /** platform length, m: longer than a train (TRAIN_HALF_M) */
 const PLATFORM_M = 74;
+/** T-1700: the boxes are this many design px smaller on every side than the platform (their width
+ * too, StartLogo's `boxShrinkPx`), so a parked train draws over the whole box */
+export const LOGO_BOX_TRIM_PX = 1;
 /** half a train as the logo draws it, m: one pill, renderer.ts's shortest at LOGO_ZOOM (9 px wide,
  * 2.2 / 0.75 times as long) */
 const TRAIN_HALF_M = (0.5 * 9 * 2.2) / 0.75 / pxPerUnitAt(LOGO_ZOOM);
@@ -228,7 +231,7 @@ export function logoNetwork(): LogoNetwork {
   const STEP = 2;
   /** a station `d` m along a local polyline, its platform found from the track either side as the
    * game's are */
-  const addStation = (path: Path, d: number) => {
+  const addStation = (path: Path, d: number, only?: 1 | -1) => {
     const way = (sign: number) => {
       const out: number[] = [];
       for (let k = 0; k <= 30; k++) {
@@ -238,7 +241,7 @@ export function logoNetwork(): LogoNetwork {
       }
       return Float32Array.from(out);
     };
-    const sh = platformShape([way(1), way(-1)].filter((p) => p.length >= 6), 0, PLATFORM_M / 2);
+    const sh = platformShape((only ? [way(only)] : [way(1), way(-1)]).filter((p) => p.length >= 6), 0, PLATFORM_M / 2 - M * LOGO_BOX_TRIM_PX);
     const at = path.at(d);
     stations.push(at[0], at[1], 4);
     axis.push(sh.ax, sh.ay);
@@ -267,8 +270,9 @@ export function logoNetwork(): LogoNetwork {
     stops.forEach((x, k) => {
       if (s.bare || x.rev || (s.path.closed && k === stops.length - 1)) return;
       const end = !s.path.closed && (k === 0 || k === stops.length - 1);
-      // a terminal's node is the track's end, its platform running back along the track from there
-      addStation(path, end ? (k === 0 ? 0 : len) : x.arrive);
+      // a terminal's node is the track's end (less the trim), its platform running back along the track from there
+      if (end) addStation(path, k === 0 ? M * LOGO_BOX_TRIM_PX : len - M * LOGO_BOX_TRIM_PX, k === 0 ? 1 : -1);
+      else addStation(path, x.arrive);
     });
     // the timetable: one train, there and back, run 1 from the far end
     const r0 = runPhases(stops);

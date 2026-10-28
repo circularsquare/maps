@@ -3,11 +3,11 @@
 import { distUnit, length, levelName, perDistance, speed } from "../game/format";
 import type { Level } from "../game/types";
 import { batch } from "@preact/signals";
-import { autoLevel, autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
-import { BUS_KEY, pickTool, TOOLS } from "./toolKeys";
+import { BUS_KEY, levelKeyName, pickTool, TOOLS } from "./toolKeys";
 import { newBusLine } from "../game/lineActions";
 import { live } from "../map/live";
 import { costBackground } from "../map/trackTagRows";
@@ -45,10 +45,7 @@ export function BuildTab() {
         </div>
         <div class="h">Elevation</div>
         <div class="build-track-row">
-          <LevelButtons value={lv} tip={levelName} onPick={(l) => batch(() => { buildLevel.value = l; autoLevel.value = false; })} />
-          <button class={"btn icon" + (autoLevel.value ? " on" : "")} aria-label="Elevation of the track you extend" aria-pressed={autoLevel.value}
-            data-tip="Draw at the elevation of the track you extend. On open ground, at the elevation picked."
-            onClick={() => (autoLevel.value = !autoLevel.peek())}><Icon.autoLevel /></button>
+          <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})`} onPick={(l) => (buildLevel.value = l)} />
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
             data-tip="Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps don't fit, the crossing is flat."
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>

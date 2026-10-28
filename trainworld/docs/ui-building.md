@@ -14,12 +14,10 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   2 by 2 grid [T-1128], and under them the full-width Bus button (B, [below](#drawing-a-bus-line))
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  and beside them the **auto elevation** switch (an icon of track rising onto a level stretch with an
-  arrow; hover "Draw at the elevation of the track you extend. On open ground, at the elevation
-  picked."; off by default) [T-1161]: while it is on, a segment drawn from existing track (a node, a
-  loose end or a point on a piece, `Tools.freeLevel`) ends at that track's elevation, so a run carries on at
-  the elevation it started from; a run started on open ground takes the elevation picked. Picking
-  an elevation turns it off. After it the **ramp switch** (track humping over a line seen side on;
+  (hover "Elevation +3 (Shift+1)" and so on down to Shift+7; Shift+1 to Shift+7 pick the drawing
+  elevation from any tab, by key code, Shift+4 being 0 [T-1701]; the draw-at-the-elevation-of-the-track-you-extend
+  switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
+  `Tools.freeLevel`). After them the **ramp switch** (track humping over a line seen side on;
   hover "Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps
   don't fit, the crossing is flat."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
   6.1 "Ramping over track"]. At the end of the price row below, the **Terrain** switch (a mountain;
@@ -98,11 +96,11 @@ mouse moving again takes it back).
   cover it, kept 8 px inside the map: past a waiting end on the side away from the start (the
   ghost lies between), and at a run's new start behind it, where the last segment came from, since
   the next tap is usually ahead. The tag sits beyond the bar. Its buttons, 44 px square with hovers:
-  confirm (a tick, greyed while the ghost is refused), take back the last point (the waiting end,
-  else the last segment as Backspace does), stop (the run ends and its track stays, or the placement
-  is dropped; the tool stays on), and for track and open-ground stations the elevation (its number
-  on its colour; a tap opens the seven elevations above the bar) and the track type (a tap steps
-  Double, Quad, High speed).
+  confirm (a green tick, greyed while the ghost is refused), take back (yellow; with a segment being
+  drawn it drops the start and the waiting end both, so the next taps are a new start and end and
+  the tool stays on [T-1703]; with none in progress it takes back the last segment as Backspace
+  does) and stop (a red cross; the run ends and its track stays, or the placement is dropped; the
+  tool stays on). The elevation and track type are the Build tab's [T-1706].
 - **Bus points** drag with a finger and are deleted by holding one (Drawing a bus line, T-1517).
 - **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
   a fling is no tap (MapLibre's own rule).

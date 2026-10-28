@@ -48,6 +48,9 @@ fn live(a: &TrackApi) -> Vec<u32> {
 fn named(a: &TrackApi, name: &str) -> usize {
     (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).count()
 }
+fn station_count(a: &TrackApi) -> usize {
+    (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0).count()
+}
 fn route(a: &mut TrackApi, from: [f64; 5], x: f64, y: f64, tracks: u8) -> u32 {
     let ends: Vec<f64> = from.iter().copied().chain([0.0, 0.0, x, y, 0.0]).collect();
     assert_eq!(a.add_route(&ends, &[], tracks, false), 0, "{}", a.issues());
@@ -70,7 +73,7 @@ fn beside(a: &TrackApi, ex: &[u32], local: &[u32], taper: f64) {
 }
 
 /// T-708: doubling up. A double-track run of three pieces (a joint, then a station) gets an
-/// express pair beside it, one piece each, joints and a twin station beside, loose ends at
+/// express pair beside it, one piece each, a plain joint beside each, no station, loose ends at
 /// both ends; one undo takes it all back. Track with a pair beside already, single track and
 /// a crossover are refused. A branch from a junction swings in to meet at it. Constructed
 /// track gets a blueprint pair, priced as the preview said.
@@ -103,7 +106,8 @@ fn double_up_makes_quad() {
     let now_local: Vec<u32> = plain.iter().copied().filter(|&e| on_old(e)).collect();
     assert_eq!((ex.len(), now_local.len()), (3, 3), "one express piece per piece");
     beside(&a, &ex, &now_local, 0.0);
-    assert_eq!(named(&a, "Mid"), 2, "the station's twin");
+    assert_eq!(named(&a, "Mid"), 1, "no station on the express pair (T-1689)");
+    assert_eq!(station_count(&a), 1);
     let ends = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 1).count();
     assert_eq!(ends, 4, "loose ends beside both ends");
     assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize] && a.w.net.edge_tracks[e as usize] == 2));
@@ -374,4 +378,50 @@ fn double_up_eases_kinks_and_stops_short_of_tight_curves() {
     let ex: Vec<u32> = live(&a).into_iter().filter(|e| !local.contains(e)).collect();
     assert_eq!(ex.len(), 1, "the straight only");
     beside(&a, &ex, &local[..1], 0.0);
+}
+
+/// T-1699: removing all the track under a station keeps a straight piece under it along its old
+/// heading, so it never sits off track or turns to 0°: by one piece, by both pieces at once, and
+/// a dead-end station losing its one piece. Undo restores the old track.
+#[test]
+fn removed_track_keeps_a_piece_under_the_station() {
+    let th = 0.6f64;
+    let (c, s) = (th.cos(), th.sin());
+    let fresh = || {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        let ends = [0.0, 0.0, -110.0 * c, -110.0 * s, 0.0, 0.0, 0.0, 110.0 * c, 110.0 * s, 0.0];
+        assert_eq!(a.add_free_station(&ends, 2, 200, "Lone".into()), 0, "{}", a.issues());
+        let st = (0..a.w.net.node_count() as u32).find(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0).unwrap();
+        (a, st)
+    };
+    let on_track = |a: &TrackApi, st: u32, ports: u8| {
+        let i = st as usize;
+        assert!(a.w.net.node_ok(st) && a.w.net.node_platform[i] > 0);
+        assert_eq!(a.w.net.node_ports[i].n, ports, "{}", a.issues());
+        assert!((a.w.net.node_heading[i] - th).sin().abs() < 1e-3, "heading {}", a.w.net.node_heading[i]);
+        assert!(a.w.net.node_x[i].hypot(a.w.net.node_y[i]) < 0.01);
+        for e in live(a) {
+            assert!(a.w.net.edge_len[e as usize] >= a.w.net.platform_reach(st), "the platform on track");
+        }
+    };
+    // one piece, then the other
+    let (mut a, st) = fresh();
+    let two = live(&a);
+    assert_eq!(two.len(), 2);
+    assert_eq!(a.delete_edge(two[0]), 0, "{}", a.issues());
+    on_track(&a, st, 2);
+    let (mut b, st_b) = fresh();
+    assert_eq!(b.delete_pieces(&two, &[]), 0, "{}", b.issues());
+    on_track(&b, st_b, 2);
+    assert_eq!(station_count(&b), 1);
+    assert_eq!(b.undo(), 0);
+    assert_eq!(live(&b), two);
+    // the kept pieces removed again: kept again, never off track
+    let rest = live(&a);
+    assert_eq!(a.delete_pieces(&rest, &[]), 0, "{}", a.issues());
+    on_track(&a, st, 2);
+    // removing the station with its track takes all of it
+    let rest = live(&a);
+    assert_eq!(a.delete_pieces(&rest, &[st]), 0, "{}", a.issues());
+    assert!(live(&a).is_empty() && station_count(&a) == 0);
 }

@@ -109,7 +109,7 @@ export function modeMix(train: number, walk: number, drive: number): [number, nu
   return [Math.round(r * k + (grey - r * k) * g), Math.round(gg * k + (grey - gg * k) * g), Math.round(b * k + (grey - b * k) * g)];
 }
 const MIX_GREY = 190;
-const MIX_GREY_LIGHT = 170;
+const MIX_GREY_LIGHT = 160;
 let lightMap = false;
 let lastScheme: [BubbleScheme, string, string] = ["mode", "", ""];
 let MIX: [number, number, number][] | null = null;

@@ -3,6 +3,7 @@
 // T-677, T-1057: the bunny in her train, for the loading card and the map's demand status (its
 // keyframes are the `bt-` rules in style.css).
 
+import type { ComponentChildren } from "preact";
 import { computed } from "@preact/signals";
 import { demandView, viewFinal, viewUpdating } from "../game/demand";
 import { demandIdle, loadFailure } from "../game/loading";
@@ -39,10 +40,26 @@ const Door = ({ x }: { x: number }) => <g>
 </g>;
 
 const WINDOWS = [25, 36, 47, 58, 69];
+const BUNNY_WINDOW = 58;
+const GLASS = "#efe7e2";
 
-/** A passenger car running right, the bunny inside facing the way it goes, only its ear tips above
- * the roof (seen edge on, the far one a step behind); the track runs by under it. `small`: the
- * status tag's size. */
+/** A window at x: dim glass, a curtain drawn back to each side and tied. */
+const Window = ({ x, children }: { x: number; children?: ComponentChildren }) => {
+  const a = x + 0.7, b = x + 7.3;
+  return <g>
+    <rect x={x} y="28.5" width="8" height="8" rx="1.6" fill={GLASS} stroke={INK} stroke-width="1.4" />
+    {children}
+    <path class="bt-curtain" stroke={INK} stroke-width=".55" stroke-linejoin="round"
+      d={`M${a} 29.2H${a + 2}C${a + 2} 31 ${a + 1.2} 32 ${a + 1.2} 33.2C${a + 1.2} 34.2 ${a + 2} 35 ${a + 2.3} 35.8H${a}Z`} />
+    <path class="bt-curtain" stroke={INK} stroke-width=".55" stroke-linejoin="round"
+      d={`M${b} 29.2H${b - 2}C${b - 2} 31 ${b - 1.2} 32 ${b - 1.2} 33.2C${b - 1.2} 34.2 ${b - 2} 35 ${b - 2.3} 35.8H${b}Z`} />
+    <path d={`M${a} 33.2h1.2M${b} 33.2h-1.2`} stroke={INK} stroke-width=".8" stroke-linecap="round" />
+  </g>;
+};
+
+/** A passenger car running right. The bunny looks out of the fourth window from behind its sill,
+ * small and between the curtains, and only its ear tips show above the roof (seen edge on, the far
+ * one a step behind); the track runs by under it. `small`: the status tag's size. */
 export function BunnyTrain({ small, tip }: { small?: boolean; tip?: string }) {
   return <svg class={"bunny-train" + (small ? " small" : "")} viewBox="0 -5 100 69" data-tip={tip}
     role={small ? "progressbar" : undefined} aria-label={small ? "Loading" : undefined} aria-hidden={small ? undefined : "true"}>
@@ -50,13 +67,18 @@ export function BunnyTrain({ small, tip }: { small?: boolean; tip?: string }) {
     <line x1="-12" y1="60" x2="112" y2="60" class="bt-ties" stroke-width="3" stroke-dasharray="4 8" />
     <g class="bt-train">
       <g class="bt-ears" stroke={INK} stroke-width="1.6">
-        <ellipse cx="55" cy="21" rx="2.3" ry="8" transform="rotate(-12 55 25)" fill="#e9e1dd" />
-        <ellipse cx="59.5" cy="20" rx="2.5" ry="8.5" transform="rotate(-12 59.5 25)" fill={WHITE} />
+        <ellipse cx="61.5" cy="23.2" rx="2.3" ry="8" transform="rotate(-12 61.5 25)" fill="#e9e1dd" />
+        <ellipse cx="64.7" cy="22.8" rx="2.5" ry="8.5" transform="rotate(-12 64.7 25)" fill={WHITE} />
       </g>
       <rect x="9" y="18.5" width="82" height="6" rx="3" class="bt-roof" stroke={INK} stroke-width="1.8" />
       <rect x="5" y="22.5" width="90" height="26" rx="4.5" class="bt-body" stroke={INK} stroke-width="2" />
       <rect x="6" y="40" width="88" height="2.6" fill={WHITE} opacity=".55" />
-      {WINDOWS.map((x) => <rect key={x} x={x} y="28.5" width="8" height="8" rx="1.6" fill={WHITE} stroke={INK} stroke-width="1.4" />)}
+      {WINDOWS.map((x) => <Window key={x} x={x}>{x === BUNNY_WINDOW && <>
+        <circle cx="62" cy="34.4" r="2.4" fill={WHITE} stroke={INK} stroke-width=".9" />
+        <circle cx="62.9" cy="33.5" r=".55" fill={INK} />
+        <circle cx="64.2" cy="34.3" r=".5" fill="#e8909f" />
+        <rect x="58.7" y="35.4" width="6.6" height="1.3" fill={INK} />
+      </>}</Window>)}
       <Door x={12} />
       <Door x={79.5} />
       <circle cx="93" cy="43" r="1.9" fill="#ffe39a" stroke={INK} stroke-width="1.2" />

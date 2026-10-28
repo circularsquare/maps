@@ -8,7 +8,7 @@ import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, refiningZone, viewFinal, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
 import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
-import { AVERAGE_DAY, awayNear, dateName, dateOf, MONTH_LONG, rushRun, weekdayOf } from "../game/days";
+import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
@@ -60,9 +60,9 @@ function holidayLines(minute: number, list: HolidaySpan[], full: boolean): strin
   });
 }
 
-/** T-264: one line per superholiday day on the sky that no holiday line names: "Tomorrow: going out
- * for Golden Week, China", "Today: coming back from Golden Week, China", a day away that is no holiday
- * "Today: Golden Week, China". Several countries on one date share a line, as `holidayLines`. */
+/** T-264, T-1697: one line per superholiday day on the sky that no holiday line names, with the dates
+ * of its part: "Tomorrow: Golden Week, Apr 29-30, China", "Today: Golden Week, May 1-5, China".
+ * Several countries on one date share a line, as `holidayLines`. */
 function rushLines(minute: number, list: RushSpan[], hols: HolidaySpan[], full: boolean): string[] {
   const now = minute * 60, today = Math.floor(now / 86400);
   const by = new Map<string, { r: RushSpan; countries: string[] }>();
@@ -76,7 +76,7 @@ function rushLines(minute: number, list: RushSpan[], hols: HolidaySpan[], full: 
     const names = countries.map(countryName).sort();
     const where = full || names.length <= 3 ? names : [...names.slice(0, 2), `${names.length - 2} others`];
     const place = where.length > 1 ? `${where.slice(0, -1).join(", ")} and ${where[where.length - 1]}` : where[0];
-    const what = r.part === 1 ? `going out for ${r.name}` : r.part === 3 ? `coming back from ${r.name}` : r.name;
+    const what = `${r.name}, ${r.dates}`;
     if (r.t0 <= now) return `Today: ${what}, ${place}`;
     const when = Math.floor(r.t0 / 86400) === today ? "Today" : "Tomorrow";
     return r.t0 % 86400 === 0 ? `${when}: ${what}, ${place}` : `${when} from ${clockTime(r.t0 / 60)}: ${what}, ${place}`;
@@ -86,12 +86,6 @@ function rushLines(minute: number, list: RushSpan[], hols: HolidaySpan[], full: 
 const DAY_SHOWN_ON: Record<string, string> = { average: "the average day", weekday: "a weekday", saturday: "a Saturday", sunday: "a Sunday" };
 /** the Day choice before the calendar icon set it to a day away, to go back to */
 let dayBefore = "average";
-
-/** "Out Fri Feb 13 and Sat Feb 14", "Away Sun Feb 15 to Sat Feb 21" */
-function daysLine(label: string, from: number, to: number): string | null {
-  if (to <= from) return null;
-  return `${label} ${dateName(from)}${to - from === 2 ? ` and ${dateName(from + 1)}` : to - from > 2 ? ` to ${dateName(to - 1)}` : ""}`;
-}
 
 /** How many days ahead of a superholiday's going-out day the calendar icon appears (T-1476). */
 const CAL_AHEAD = 2;
@@ -111,16 +105,16 @@ function Calendar() {
   const first = runs.find((r) => runToday(r) < r.end);
   const t = first ? runToday(first) : 0;
   const target: { key: "out" | "back" | "away"; what: string } | null = !first ? null
-    : rush && first.out < first.away && t < first.away ? { key: "out", what: `a day going out for ${first.name}` }
-    : rush && first.back < first.end ? { key: "back", what: `a day coming back from ${first.name}` }
-    : away ? { key: "away", what: `a day of ${away}` } : null;
+    : rush && first.out < first.away && t < first.away ? { key: "out", what: `a day of ${first.name}, ${dateRange(first.out, first.away)}` }
+    : rush && first.back < first.end ? { key: "back", what: `a day of ${first.name}, ${dateRange(first.back, first.end)}` }
+    : away ? { key: "away", what: `a day of ${whenAway.value ?? away}` } : null;
   const showing = (d.dayShown === "out" || d.dayShown === "back") ? rush !== null : d.dayShown === "away" && away !== null;
   const lines: string[] = [];
   for (const r of runs) {
     const n = r.out - runToday(r);
     if (lines.length) lines.push("");
-    lines.push(`${r.name} in ${countryName(r.country)}, ${n > 1 ? `in ${n} days` : n === 1 ? "tomorrow" : "now"}`);
-    for (const l of [daysLine("Out", r.out, r.away), daysLine("Away", r.away, r.back), daysLine("Back", r.back, r.end)]) if (l) lines.push(l);
+    const dates = r.back > r.away ? dateRange(r.away, r.back) : dateRange(r.out, r.end);
+    lines.push(`${r.name}, ${dates}, ${countryName(r.country)}: ${n > 1 ? `in ${n} days` : n === 1 ? "tomorrow" : "now"}`);
   }
   if (target || showing) lines.push("", showing ? `Click to show demand on ${DAY_SHOWN_ON[dayBefore] ?? DAY_SHOWN_ON.average} again` : `Click to show demand on ${target!.what}`);
   const click = () => {

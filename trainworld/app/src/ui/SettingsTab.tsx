@@ -2,7 +2,7 @@
 // their own panel (ui/SavesPanel.tsx).
 
 import type { ComponentChildren } from "preact";
-import { awayNear, rushRun } from "../game/days";
+import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
@@ -33,9 +33,10 @@ export function SettingsTab() {
   const away = awayNear.value, rush = rushRun.value;
   // on a row of their own under the four, which leave no room beside them in the dock
   const days: [DayShown, ComponentChildren][] = [];
-  if (rush) days.push(["out", <span class="day-away" data-tip={`A day going out for ${rush}`} aria-label={`Going out for ${rush}`}><Icon.goOut /></span>]);
-  if (away) days.push(["away", <span class="day-away" data-tip={`A day of ${away}`} aria-label={away}><Icon.calendar /></span>]);
-  if (rush) days.push(["back", <span class="day-away" data-tip={`A day coming back from ${rush}`} aria-label={`Coming back from ${rush}`}><Icon.goBack /></span>]);
+  const wOut = whenOut.value, wAway = whenAway.value, wBack = whenBack.value;
+  if (rush && wOut) days.push(["out", <span class="day-away" data-tip={`A day of ${wOut}`} aria-label={wOut}><Icon.goOut /></span>]);
+  if (away && wAway) days.push(["away", <span class="day-away" data-tip={`A day of ${wAway}`} aria-label={wAway}><Icon.calendar /></span>]);
+  if (rush && wBack) days.push(["back", <span class="day-away" data-tip={`A day of ${wBack}`} aria-label={wBack}><Icon.goBack /></span>]);
   return (
     <>
       <div class="settings-top">

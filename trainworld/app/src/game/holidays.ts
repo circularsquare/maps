@@ -11,7 +11,7 @@
 import { batch, computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { cityById, cityWithin, outlinesIn } from "./cities";
-import { awayNear, awaySoon, rushRun, rushSoon } from "./days";
+import { awayNear, awaySoon, dateRange, rushRun, rushSoon, whenAway, whenBack, whenOut } from "./days";
 import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
@@ -162,20 +162,28 @@ const watchAway = () => effect(() => {
   const runs = supersNear.value;
   const now = clock.local.value * 60 - viewShift.value;
   let near: string | null = null, soon = false, rush: string | null = null, rushing = false;
+  let nearWhen: string | null = null, outWhen: string | null = null, backWhen: string | null = null;
   for (const r of runs) {
     const today = Math.floor((now + r.shift) / 86400);
     if (r.end <= today) continue;
     // the next of its rush days still to come or under way
     const next = r.out < r.away && today < r.away ? Math.max(today, r.out) : r.back < r.end ? Math.max(today, r.back) : null;
     if (next !== null) {
-      rush ??= r.name;
+      if (rush === null) {
+        rush = r.name;
+        outWhen = r.out < r.away ? `${r.name}, ${dateRange(r.out, r.away)}` : null;
+        backWhen = r.back < r.end ? `${r.name}, ${dateRange(r.back, r.end)}` : null;
+      }
       if (next <= today + 8) rushing = true;
     }
     if (r.back <= today || r.away >= r.back) continue;
-    near ??= r.name;
+    if (near === null) { near = r.name; nearWhen = `${r.name}, ${dateRange(r.away, r.back)}`; }
     if (r.away <= today + 8) soon = true;
   }
   batch(() => {
+    if (whenAway.peek() !== nearWhen) whenAway.value = nearWhen;
+    if (whenOut.peek() !== outWhen) whenOut.value = outWhen;
+    if (whenBack.peek() !== backWhen) whenBack.value = backWhen;
     if (awayNear.peek() !== near) awayNear.value = near;
     if (awaySoon.peek() !== soon) awaySoon.value = soon;
     if (rushRun.peek() !== rush) rushRun.value = rush;
@@ -188,6 +196,8 @@ export interface RushSpan {
   name: string;
   /** 1 going out, 2 away, 3 coming back */
   part: 1 | 2 | 3;
+  /** the dates of that part, "May 3-5" */
+  dates: string;
   /** the country's local game day */
   day: number;
   /** the day in the local time in view, seconds: [t0, t1) */
@@ -206,7 +216,8 @@ export const rushNear = computed<RushSpan[]>(() => {
     for (let d = Math.max(r.out, d0 - 1); d < Math.min(r.end, d0 + 3); d++) {
       const t0 = d * 86400 - r.shift + vs, t1 = t0 + 86400;
       if (t1 <= now - 6 * 3600 || t0 >= now + 30 * 3600) continue;
-      out.push({ country: r.country, name: r.name, part: d < r.away ? 1 : d < r.back ? 2 : 3, day: d, t0, t1 });
+      const part = d < r.away ? 1 : d < r.back ? 2 : 3;
+      out.push({ country: r.country, name: r.name, part, dates: part === 1 ? dateRange(r.out, r.away) : part === 2 ? dateRange(r.away, r.back) : dateRange(r.back, r.end), day: d, t0, t1 });
     }
   }
   out.sort((a, b) => a.t0 - b.t0 || a.country.localeCompare(b.country));
@@ -217,7 +228,7 @@ export const rushNear = computed<RushSpan[]>(() => {
 
 /** What the calendar held at game-clock second `t` where the player has built (in `only`'s country
  * alone when given), for the Money history's ticks (T-264): a line per holiday or superholiday day,
- * "Thanksgiving Day, United States", "Going out for Golden Week, China"; `off` when one was a
+ * "Thanksgiving Day, United States", "Golden Week, Apr 29-30, China"; `off` when one was a
  * holiday or a day away, else only going out or coming back. */
 export function calendarAt(t: number, only: string | null): { lines: string[]; off: boolean } {
   const lines: string[] = [];
@@ -232,9 +243,9 @@ export function calendarAt(t: number, only: string | null): { lines: string[]; o
     for (const n of names?.split("; ") ?? []) add(`${n}, ${countryName(country)}`);
     const [part, run] = superPart(data.value, country, day);
     if (names || part === 2) off = true;
-    if (part === 1) add(`Going out for ${run!.name}, ${countryName(country)}`);
-    else if (part === 3) add(`Coming back from ${run!.name}, ${countryName(country)}`);
-    else if (part === 2 && !names) add(`${run!.name}, ${countryName(country)}`);
+    if (part === 1) add(`${run!.name}, ${dateRange(run!.out, run!.away)}, ${countryName(country)}`);
+    else if (part === 3) add(`${run!.name}, ${dateRange(run!.back, run!.end)}, ${countryName(country)}`);
+    else if (part === 2 && !names) add(`${run!.name}, ${dateRange(run!.away, run!.back)}, ${countryName(country)}`);
   }
   return { lines, off };
 }

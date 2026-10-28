@@ -31,7 +31,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
-import { ask, autoLevel, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -206,7 +206,7 @@ export class Tools {
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; autoLevel.value; autoRamp.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoRamp.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
@@ -399,24 +399,9 @@ export class Tools {
     return { kind: "free", x: p.x, y: p.y, level: this.freeLevel() };
   }
 
-  /** The elevation of a segment's end on open ground: with Elevation on auto (T-1161), that of the
-   * track the run starts from, else the one picked. */
+  /** The elevation of a segment's end on open ground: the one picked. */
   private freeLevel(): Level {
-    const se = this.start?.end;
-    if (!autoLevel.peek() || !se) return buildLevel.peek();
-    if (se.kind === "free") return se.level;
-    const w = world.peek();
-    if (se.kind === "node") return w?.nodes.get(se.node)?.level ?? buildLevel.peek();
-    // on a piece: its height at the nearest drawn point, in 8 m levels
-    const pts = this.overlay.renderer.net?.edgePts.get(se.edge);
-    if (!pts || pts.length < 3) return buildLevel.peek();
-    const [lx, ly] = toLocal(this.start!.lng, this.start!.lat);
-    let best = Infinity, z = 0;
-    for (let i = 0; i + 2 < pts.length; i += 3) {
-      const d = (pts[i] - lx) ** 2 + (pts[i + 1] - ly) ** 2;
-      if (d < best) best = d, z = pts[i + 2];
-    }
-    return Math.max(-3, Math.min(3, Math.round(z / 8))) as Level;
+    return buildLevel.peek();
   }
 
   // ---------------------------------------------------------------- events
@@ -525,22 +510,14 @@ export class Tools {
     }
   }
 
-  /** The bar's back button: the end waiting is dropped, else the last segment is taken back
-   * (Backspace), else the start goes. */
+  /** The bar's back button: a segment being drawn (start and waiting end) is dropped whole, the
+   * tool staying on (T-1703); else the last segment is taken back (Backspace), else the start goes. */
   private touchBack() {
     if (tool.peek() === "bus") return this.bus.touchBack();
     if (tool.peek() !== "track") return this.touchStop();
     if (this.touchAt && this.start) {
-      this.touchAt = null;
       this.hover = null;
-      this.client.dropPreview();
-      this.lastPreview = null;
-      this.previewKey = this.wantKey = "";
-      this.real.reset();
-      this.real.begin(this.start.ring);
-      this.overlay.renderer.setPreview(null);
-      this.overlay.invalidate();
-      this.place();
+      this.reset();
     } else if (this.chain.length) void this.takeBackSegment();
     else this.reset();
   }
@@ -598,11 +575,11 @@ export class Tools {
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
       const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
-      return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: "Place this track", back: !!this.touchAt || this.chain.length > 0, stopTip: "Stop drawing", level: true, track: true };
+      return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: "Place this track", back: !!this.touchAt || this.chain.length > 0, stopTip: "Stop drawing" };
     }
-    if (t === "station" && this.freeAt) return { confirm: this.freeOk !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel", level: true, track: true };
-    if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel", level: false, track: false };
-    if (t === "delete" && this.touchAt && this.delHover) return { confirm: true, confirmTip: "Remove", back: false, stopTip: "Cancel", level: false, track: false };
+    if (t === "station" && this.freeAt) return { confirm: this.freeOk !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel" };
+    if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel" };
+    if (t === "delete" && this.touchAt && this.delHover) return { confirm: true, confirmTip: "Remove", back: false, stopTip: "Cancel" };
     return null;
   }
 
@@ -933,7 +910,7 @@ export class Tools {
     // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
     const v = this.verdict();
     // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal
-    if (!(v && !v.ok && !v.held)) playBuild("snap");
+    if (!(v && !v.ok && !v.held)) playBuild("station");
     const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
     const key = this.nameKey(e.point.x, e.point.y);
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
@@ -954,7 +931,7 @@ export class Tools {
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     const { phi, plat } = this.freeSpan(h);
     const p = this.freePiece(h, phi, plat);
-    if (!(this.freeAns?.key === p.key && this.freeAns.ok === false)) playBuild("snap");
+    if (!(this.freeAns?.key === p.key && this.freeAns.ok === false)) playBuild("station");
     this.freeAt = null;
     this.lastHeading = phi;
     this.clearFree();

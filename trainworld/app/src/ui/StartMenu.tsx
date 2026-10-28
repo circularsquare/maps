@@ -137,7 +137,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     </div> : <div class="start-box">
       <AccountButton kind="start" />
       {!LOGO && <h1 id="start-title" class="big">Welcome to trainsworld!</h1>}
-      <p class="start-tag">Build trains around the world!</p>
+      <p class="start-tag">~welcome to trains world~</p>
       <div class="save-files">
         <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
         {returning && <button class="btn start-file" onClick={load}>Load from file</button>}

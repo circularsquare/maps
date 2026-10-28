@@ -47,15 +47,21 @@ const TEXT: Record<string, string | (() => string)> = {
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
 };
 
-export function describeIssue(kind: string): string {
+/** What a refused edit would have bought (T-1696): the money refusal names it. */
+export type Buys = "trains" | "construction";
+
+export function describeIssue(kind: string, buys?: Buys): string {
   if (kind.startsWith("Money:")) {
     const [, need, have] = kind.split(":").map(Number);
-    return `Not enough money. This costs ${money(need * 1e6)} and there is ${money(have * 1e6)}.`;
+    const cost = `${money(need * 1e6)} and there is ${money(have * 1e6)}`;
+    if (buys === "trains") return `Not enough money to buy trains. They cost ${cost}.`;
+    if (buys === "construction") return `Not enough money to build this. It costs ${cost}.`;
+    return `Not enough money. This costs ${cost}.`;
   }
   const t = TEXT[kind];
   return typeof t === "function" ? t() : t ?? "That cannot be placed here.";
 }
 
-export function describeIssues(kinds: string[]): string {
-  return [...new Set(kinds.map(describeIssue))].join(" ");
+export function describeIssues(kinds: string[], buys?: Buys): string {
+  return [...new Set(kinds.map((k) => describeIssue(k, buys)))].join(" ");
 }

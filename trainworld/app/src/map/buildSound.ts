@@ -87,11 +87,13 @@ export function pickVariant(kind: SampleName, r = Math.random()): number {
  * (stationSound.ts `MASTER`). */
 const MASTER = 0.5;
 
-export type BuildSound = "chime" | SampleName;
+/** "station" (T-1698) is the snap three semitones lower, so a station placed sounds unlike track. */
+export type BuildSound = "chime" | "station" | SampleName;
+const STATION_RATE = 2 ** (-3 / 12);
 
 /** The same sound twice within this many seconds plays once: a drag that places track several times. */
-const GAP_S: Record<BuildSound, number> = { chime: 1, snap: 0.15, pop: 0.05, knock: 0.25, construct: 0.3 };
-const last: Record<BuildSound, number> = { chime: -1, snap: -1, pop: -1, knock: -1, construct: -1 };
+const GAP_S: Record<BuildSound, number> = { chime: 1, snap: 0.15, station: 0.15, pop: 0.05, knock: 0.25, construct: 0.3 };
+const last: Record<BuildSound, number> = { chime: -1, snap: -1, station: -1, pop: -1, knock: -1, construct: -1 };
 
 export function playBuild(kind: BuildSound) {
   const d = display.peek();
@@ -101,12 +103,13 @@ export function playBuild(kind: BuildSound) {
   const { ctx, out } = o, t = ctx.currentTime;
   if (t - last[kind] < GAP_S[kind]) return;
   if (kind !== "chime") {
+    const file = kind === "station" ? "snap" : kind;
     // a file still decoding stays silent, without using up the gap
-    const s = sample(kind);
+    const s = sample(file);
     if (!s) return;
     last[kind] = t;
-    const v = kind === "knock" ? { rate: 1, gain: 1 } : variantsOf(kind)[pickVariant(kind)];
-    sampleVoice(ctx, out, t, s, PEAK[kind] * v.gain * d.soundVolume, v.rate);
+    const v = kind === "knock" ? { rate: 1, gain: 1 } : variantsOf(file)[pickVariant(kind === "station" ? "snap" : kind)];
+    sampleVoice(ctx, out, t, s, PEAK[file] * v.gain * d.soundVolume, v.rate * (kind === "station" ? STATION_RATE : 1));
     return;
   }
   last[kind] = t;

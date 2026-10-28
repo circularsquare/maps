@@ -9,7 +9,12 @@ Positron, repainted (`map/basemap.ts`) so the network reads first: warm paper la
 water, sage parks and woods, place names faint grey. Roads have three weights (motorways, main
 roads, everything else), one colour and no casings; the smallest classes appear only from zoom 11
 (streets) and 14 (paths); minor road names, road shields and the basemap's railways are hidden.
-Positron has no shop or food icons, so the airport symbols are the only icons left: the black dot it draws beside a city, town or village name is removed (the name stays, centred on the place) because it reads as a gameplay dot [T-978]; the start menu's map hides those names too [T-974]. The dark theme
+Positron has no shop or food icons, so the airport symbols are the only icons left: the black dot it draws beside a city, town or village name is removed (the name stays, centred on the place) because it reads as a gameplay dot [T-978]; the start menu's map hides those names too [T-974].
+Basemap labels are plain one-colour text with no halo, the palette's label grey a little darker
+(light) or lighter (dark) so it holds over water and shade [T-1692]. Fewer show at once: suburbs,
+islands and villages start at zoom 12, towns at 9, small rivers at 12, river and strait names at 8,
+main road names at 13.5, airports at 12, and every label keeps 10 px clear (28 px round city and
+town names), so of two close cities the larger wins. The dark theme
 is the same three hues deep and muted (dark warm brown-grey land, deep teal, dark sage), by paint
 properties only, so switching theme reloads no style or tiles [T-039, T-676]. The light and dark
 map colours (land, water, park, road, labels, the casing, the map ink, a switched-off blueprint,
@@ -394,12 +399,14 @@ those who got on, less the load carried on.
   `setAfterEdit`, so a construct refused for cash is the knock alone [T-1683]. One sound per click however many pieces it places (a pasted schedule or a folded train
   count is one sound per click, not per edit). Recordings (`app/public/sounds/`, with
   their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
-  `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint and placing a station (0.21);
+  `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint (0.21) and, three semitones lower (rate times 0.84,
+  `STATION_RATE`, the same four variants around it), placing a station [T-1698];
   a gun magazine insert (`construct.wav`, 0.66 s, 0.15) once the worker has accepted Construct
   blueprints (the button and C), a line's or a piece's construct, and a station upgrade or passage
   built for money; one added only to the blueprint gets the pop; a wood knock (`knock.wav`, 0.16 s, 0.12) on every refusal, that is every
   `say(text, true)` in `game/world.ts` (a train count or headway the cash will not cover, a track
-  or move that cannot go there, a bus line that cannot be drawn); a cork pop, quiet (0.09), on a panel click that changes the world: train
+  or move that cannot go there, a bus line that cannot be drawn; a refusal for money says what it
+  would have bought, "Not enough money to buy trains" for a line edit, "to build this" for track, T-1696); a cork pop, quiet (0.09), on a panel click that changes the world: train
   count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or
   removed in a line, a station's platform length, a station upgrade or a passage taken out, double
   up, a track's elevation, a junction's flying switch, a line copied or removed, a schedule pasted.
@@ -437,8 +444,8 @@ those who got on, less the load carried on.
   shows no opening days, and one in progress ends with the page.
 - **Daily rides note** [T-1478, T-1499; `game/ridesNote.ts`, `ui/RidesNotes.tsx`]: after a line's
   stops change and demand has answered with final figures for the new stops, a small label at the
-  map's top centre, under the Select tool's bar, shows the line's chip and "+5,226 daily rides" (a
-  fall: "−1,920 daily rides", in the muted text colour) for 5 s, the number easing up from 0 over
+  map's top centre, under the Select tool's bar, shows the line's chip and "+5,226 daily rides" (in the
+  panel's text colour; a fall: "−1,920 daily rides", muted) [T-1693] for 5 s, the number easing up from 0 over
   0.9 s, fast at first and slowing to the end. Lines edited together stack. The hover gives the
   line's riders a day before and after. It is the change in the line's `ridersPerDay` (the day
   shown), nothing new summed; a change that rounds to 0, a line with no earlier figure and a switch

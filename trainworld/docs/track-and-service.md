@@ -206,8 +206,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   (`RadiusTooSmall`). The pair runs 8 m to the left of the selected piece's direction, or to the
   right where the left is refused (crossing other track, water) or would stop short where the right would not, every
   corner concentric, one piece beside each piece with a joint
-  beside each joint. Each station on the run gets its twin (same name and platform) on the joint
-  beside it, in the same edit, and no crossover (above); the preview's price includes the twins. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
+  beside each joint. The pair passes the run's stations with a plain joint beside each and gets no
+  stations of its own (T-1689): the player clicks stations onto it where wanted (T-1687), and no
+  crossover goes in (above). At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
   can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
   on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
@@ -322,8 +323,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   before). Removing the piece on one side of a through station keeps the track to its
   platform's end (half the platform and 4 m past the node; both stations' when the piece runs
   between two), so the station stays where it was rather than turning into a dead end half a
-  platform back (T-1161, `station_trim_ops`; where that split is refused, on a ramp say, the piece
-  goes whole). The map draws it there, at its true length and bent as the track is, from
+  platform back (T-1161, `station_trim_ops`). Wherever else removal (one piece or a pick of
+  several) takes track from a station that stays, the station keeps a straight piece for each end
+  it loses, along that end's old direction from the node, its platform reach plus 10 m long (less
+  where the removed piece was shorter, never short of the platform), of the removed piece's kind,
+  level and state, so a station is never off track and keeps its place and orientation (T-1699,
+  `keep_under_stations`). Removing the station too takes all of it. The map draws it there, at its true length and bent as the track is, from
   zoom 14 ([ui-map.md](ui-map.md) "Stations"). Platform length caps train length (20 m cars).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms

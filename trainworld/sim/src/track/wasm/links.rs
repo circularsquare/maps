@@ -81,7 +81,60 @@ impl TrackApi {
         if let Some(p) = partner {
             ops.push(Op::DeleteEdge { id: p });
         }
-        self.run(Op::Batch(ops))
+        let gone: Vec<u32> = [Some(id), partner].into_iter().flatten().collect();
+        let (keep, nn, ne) = self.keep_under_stations(&gone, &[]);
+        ops.extend(keep);
+        let r = self.run(Op::Batch(ops));
+        if r != 0 {
+            self.release(&nn, &ne);
+        }
+        r
+    }
+
+    /// T-1699: a station that removing `gone` takes an end from keeps a straight piece under it for
+    /// that end, along its old direction, the platform's reach plus 10 m long (as a station on open
+    /// ground has; less where the removed piece was shorter), with the removed piece's kind and
+    /// state. So the station stays on track in its old orientation, its platform where it was.
+    /// `removed`: stations going too (sorted).
+    fn keep_under_stations(&mut self, gone: &[u32], removed: &[u32]) -> (Vec<Op>, Vec<u32>, Vec<u32>) {
+        let (mut ops, mut nn, mut ne) = (vec![], vec![], vec![]);
+        let mut nodes: Vec<u32> = gone.iter().flat_map(|&e| [self.w.net.edge_a[e as usize], self.w.net.edge_b[e as usize]]).collect();
+        nodes.sort_unstable();
+        nodes.dedup();
+        for n in nodes {
+            let net = &self.w.net;
+            let i = n as usize;
+            let p = net.node_ports[i];
+            if net.node_platform[i] == 0 || removed.binary_search(&n).is_ok() {
+                continue;
+            }
+            let reach = net.platform_reach(n);
+            let (x, y, h, level) = (net.node_x[i], net.node_y[i], net.node_heading[i], net.node_level[i]);
+            let ends: Vec<(u32, f64)> = p.ends().iter().enumerate().filter(|&(_, &c)| gone.contains(&(c >> 1))).map(|(k, &c)| (c >> 1, if p.side[k] == 1 { h } else { h + std::f64::consts::PI })).collect();
+            for (e, th) in ends {
+                let net = &self.w.net;
+                let ei = e as usize;
+                let far = if net.edge_a[ei] == n { net.edge_b[ei] } else { net.edge_a[ei] };
+                // short of a far end that stays, so the kept piece never meets it
+                let fi = far as usize;
+                let room = if net.node_platform[fi] > 0 {
+                    net.edge_len[ei] / 2.0 - 2.0 // that station may keep a piece too
+                } else if net.node_ports[fi].n > 1 {
+                    net.edge_len[ei] - 5.0
+                } else {
+                    net.edge_len[ei]
+                };
+                let len = (reach + 10.0).min(room).max(reach + 1.0);
+                let d = EdgeData { a: n, b: 0, tracks: net.edge_tracks[ei], pis: vec![], built: net.edge_built[ei], off: net.edge_off[ei], thru: vec![], crossover: false, hsr: net.edge_hsr[ei] };
+                let k = len * kk(net.frame().scaled(), y);
+                let (m, id) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
+                nn.push(m);
+                ne.push(id);
+                ops.push(Op::Node { id: m, data: Some(NodeData { x: quant(x + k * th.cos()), y: quant(y + k * th.sin()), level, flying: false }) });
+                ops.push(Op::Edge { id, data: Some(EdgeData { b: m, ..d }) });
+            }
+        }
+        (ops, nn, ne)
     }
 
     /// Flat or flying junction. On a constructed junction the flyover is paid at once (final).
@@ -391,12 +444,14 @@ impl TrackApi {
     /// a removed station loses that stop and is routed again through the rest (T-859), else left
     /// broken, as removed track leaves it.
     pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
-        let Some((ops, _, st)) = self.pieces_ops(edges, stations) else {
+        let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations) else {
             return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
         };
         let r = self.run(Op::Batch(ops));
         if r == 0 {
             self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+        } else {
+            self.release(&nn, &ne);
         }
         r
     }
@@ -405,12 +460,14 @@ impl TrackApi {
     /// at a removed station or would be left broken (and was not), three numbers: the line, 1 if
     /// it loses a stop, 1 if it would be broken.
     pub fn removal_lines(&mut self, edges: &[u32], stations: &[u32]) -> Vec<f64> {
-        let Some((ops, _, st)) = self.pieces_ops(edges, stations) else { return vec![] };
+        let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations) else { return vec![] };
         let net = &self.w.net;
         let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l)).collect();
         let was: Vec<bool> = lines.iter().map(|&l| net.line_broken[l as usize]).collect();
         let stopping: Vec<bool> = lines.iter().map(|&l| net.line_stops(l).iter().any(|s| st.binary_search(s).is_ok())).collect();
-        let Ok((_, after)) = self.w.trial_with(Op::Batch(ops), |w| lines.iter().map(|&l| w.net.line_broken[l as usize]).collect::<Vec<_>>()) else { return vec![] };
+        let tried = self.w.trial_with(Op::Batch(ops), |w| lines.iter().map(|&l| w.net.line_broken[l as usize]).collect::<Vec<_>>());
+        self.release(&nn, &ne);
+        let Ok((_, after)) = tried else { return vec![] };
         let mut out = vec![];
         for (i, &l) in lines.iter().enumerate() {
             if stopping[i] || (after[i] && !was[i]) {
@@ -420,9 +477,9 @@ impl TrackApi {
         out
     }
 
-    /// The ops of `delete_pieces`, whether any of it is constructed, and the stations removed
-    /// (sorted); None when nothing named is there.
-    pub(super) fn pieces_ops(&mut self, edges: &[u32], stations: &[u32]) -> Option<(Vec<Op>, bool, Vec<u32>)> {
+    /// The ops of `delete_pieces`, the node and edge ids they claim (track kept under stations,
+    /// T-1699), and the stations removed (sorted); None when nothing named is there.
+    pub(super) fn pieces_ops(&mut self, edges: &[u32], stations: &[u32]) -> Option<(Vec<Op>, (Vec<u32>, Vec<u32>), Vec<u32>)> {
         let net = &self.w.net;
         let mut gone: Vec<u32> = edges.iter().copied().filter(|&e| net.edge_ok(e)).collect();
         for &e in edges {
@@ -438,7 +495,6 @@ impl TrackApi {
         if gone.is_empty() && st.is_empty() {
             return None;
         }
-        let built = gone.iter().any(|&e| net.edge_built[e as usize]) || st.iter().any(|&n| net.node_built[n as usize]);
         let mut ops: Vec<Op> = gone.iter().map(|&id| Op::DeleteEdge { id }).collect();
         let mut tail = vec![];
         let mut nodes: Vec<u32> = gone.iter().flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]]).chain(st.iter().copied()).collect();
@@ -474,9 +530,11 @@ impl TrackApi {
         }
         ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
         ops.extend(tail);
+        let (keep, nn, ne) = self.keep_under_stations(&gone, &st);
+        ops.extend(keep);
         let joins = self.station_joins(&ops, &st);
         ops.extend(joins);
-        Some((ops, built, st))
+        Some((ops, (nn, ne), st))
     }
 
     /// T-1299: the ops joining the two pieces left at each removed station's node into one where

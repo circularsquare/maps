@@ -14,11 +14,11 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
-import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
+import { ACTION_KEYS, levelOfKeyCode, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
@@ -474,8 +474,15 @@ window.addEventListener("keydown", (e) => {
     else void constructBlueprints();
     return;
   }
+  // Shift+1 to Shift+7: the drawing elevation (T-1701), from any tab
+  const lvKey = e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
+  if (lvKey !== null) {
+    e.preventDefault();
+    if (!e.repeat) buildLevel.value = lvKey;
+    return;
+  }
   const k = TOOL_KEYS[e.key];
-  if (k && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
+  if (k &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
     nodeDrag.cancel();
     edgeEditor.cancel();

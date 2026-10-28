@@ -138,9 +138,10 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
-  text is its hover. On a map column under 520 px the tag takes a second row under the buttons,
-  kept whether or not it shows, with the search glass, the demand stopped alert and the selection bar
-  under it. While a solve runs after an edit that changes the zone in view's figures, "Updating
+  text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
+  below, taking no row of its own [T-1704]; the rows stop 46 px short of the right edge, where the
+  search glass sits at the top right, and the demand stopped alert and the selection bar are under
+  the rows. While a solve runs after an edit that changes the zone in view's figures, "Updating
   demand 2/4…" and the split faded, the figures held [T-232]; a zone the edit does not touch, or
   whose cluster is already done, shows neither [T-392]; and the same while a reload shows the cached
   figures from the last time the game was open, with a hover saying so [T-328]; during startup's
@@ -198,12 +199,13 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   ("Labor Day, Belgium, China and 2 others"). A superholiday's going-out and coming-back days
   (T-264, docs/world.md "Calendar") are a paler pink ribbon with a small arrow at the start of
   each, right for out, left for back; its days away a pink ribbon. The sky's hover adds
-  "Tomorrow: going out for Golden Week, China", "Today: coming back from Golden Week, China",
-  and the run's name on a day away that is no holiday. **The calendar icon** left of the time
+  "Tomorrow: Golden Week, Apr 29-30, China", "Today: Golden Week, May 6-7, China" (the name and
+  the dates of that part of the run, `RushSpan.dates` [T-1697]), and the same on a day away that is
+  no holiday. **The calendar icon** left of the time
   [T-264, T-1476]: a bare calendar (no button box) with a pink dot in its body, there only while a
   superholiday where the player has built is under way or goes out within 2 game days, and not
-  there otherwise. Its hover gives each run within 21 days ("Golden Week in China, in 5 days",
-  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"). A click sets the Day choice (Settings) to the run's
+  there otherwise. Its hover gives each run within 21 days with the dates of its days
+  away ("Golden Week, Oct 1-6, China: in 5 days") [T-1697]. A click sets the Day choice (Settings) to the run's
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
@@ -402,7 +404,7 @@ region's with the place on and the network's with the globe, from the same ledge
 are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), up to the past 30;
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
-Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Going out for Golden Week, China") [T-264]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
+Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
@@ -683,7 +685,7 @@ registry centre and zoom, or over New York with none [T-310].
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
-  "Build trains around the world!" [T-1242] (the account button at
+  "~welcome to trains world~" [T-1242, T-1700] (the account button at
   its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
@@ -699,7 +701,8 @@ registry centre and zoom, or over New York with none [T-310].
   forward, its curves of one radius before the slant, switchbacks where a curve would be tighter,
   each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
   cross, as a complex's do), and one train a line, a white pill, running with stops (the two dots and
-  the t's bar are bare lines, no stations or train) [T-1593], drawn by the game's own
+  the t's bar are bare lines, no stations or train) [T-1593], the boxes 1 px smaller on every side
+  than the platform so a parked train covers them [T-1700], drawn by the game's own
   network renderer at zoom 15 in a canvas of its own straight over the map, scaled to the screen; the
   menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
   one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"

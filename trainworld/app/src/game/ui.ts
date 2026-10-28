@@ -3,7 +3,7 @@
 // may be unavailable (private window), so every read and write is guarded.
 
 import { batch, computed, effect, signal } from "@preact/signals";
-import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, type DemandDay } from "./days";
+import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, whenAway, whenBack, whenOut, type DemandDay } from "./days";
 import { loadNunito } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
@@ -157,7 +157,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585). */
 const VERSION = 11;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -242,9 +242,6 @@ export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
 export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 0);
-/** T-1161: track drawn from existing track takes that track's elevation; from open ground,
- * `buildLevel`. Picking an elevation turns it off. */
-export const autoLevel = signal(saved.build?.auto === true);
 /** T-1615: track drawn across other track at its own elevation ramps over it (under it from -1
  * down) where that fits; on unless turned off. */
 export const autoRamp = signal(saved.build?.ramp !== false);
@@ -301,10 +298,11 @@ export const shownDay = computed<DemandDay>(() => {
   return s === "weekday" ? 0 : s === "saturday" ? 1 : s === "sunday" ? 2 : AVERAGE_DAY;
 });
 /** A superholiday's day shown, as a hover ends a figure, with "per " or "on " before it: "a day of
- * Golden Week", "a day going out for Golden Week"; null for any other day. */
+ * Golden Week, May 3-5"; null for any other day. */
 const superDay = computed(() => {
   const d = shownDay.value;
-  return d === AWAY_DAY ? `a day of ${awayNear.value}` : d === OUT_DAY ? `a day going out for ${rushRun.value}` : d === BACK_DAY ? `a day coming back from ${rushRun.value}` : null;
+  const when = d === AWAY_DAY ? whenAway.value : d === OUT_DAY ? whenOut.value : d === BACK_DAY ? whenBack.value : null;
+  return when ? `a day of ${when}` : null;
 });
 /** The shown day as a hover ends a figure: "per weekday", "per Saturday", "per day of Golden Week", "per day". */
 export const shownDayPhrase = computed(() => (superDay.value ? `per ${superDay.value.slice(2)}` : DEMAND_DAY_PHRASE[shownDay.value]));
@@ -327,11 +325,17 @@ export const uiScale = computed(() => {
 effect(() => {
   document.documentElement.style.setProperty("--ui", String(uiScale.value));
 });
+// T-1695: the device pixel ratio, for style.css's `--px` (one device pixel in the zoomed panels)
+if (typeof window !== "undefined") {
+  const setDpr = () => document.documentElement.style.setProperty("--dpr", String(window.devicePixelRatio || 1));
+  setDpr();
+  window.addEventListener("resize", setDpr);
+}
 // Text measured before Nunito has loaded (station names, capacity tags) is measured again by the
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

@@ -2,6 +2,25 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1699 [P2] Stations never off track. Done 2026-10-28: removing track from a station that stays keeps a straight piece per lost end along its old direction (platform reach plus 10 m), so it keeps place and orientation; `keep_under_stations` in wasm/links.rs. Test `removed_track_keeps_a_piece_under_the_station`. DECISIONS.
+- T-1689 [P2] Doubling up adds no stations. Done 2026-10-28: the express pair passes the run's stations with plain joints; the player clicks stations onto it (T-1687). Saves keep theirs. Test `double_up_makes_quad`.
+- T-1693 [P2] Rides note not red. Done 2026-10-28: "+N daily rides" is in the panel's text colour (a fall stays muted).
+- T-1694 [P2] Light-mode bubble grey. Done 2026-10-28: the even-mix grey on the light map is 160 (was 170); it came out near #bbb on the map at the default opacity already, so Anita may want it checked (DECISIONS).
+- T-1695 [P2] Uniform sliders and check squares. Done 2026-10-28: heights are whole device pixels at every UI scale (`--px` in style.css, `--dpr` set in game/ui.ts); track 3, thumb 15, square 6, checked at 0.8 to 1.2 and 1.25 dpr; artifacts/trainworld/t1695-sliders.png.
+- T-1696 [P2] Money refusals name what they buy. Done 2026-10-28: "Not enough money to buy trains" for line edits and undo, "to build this" for track and station edits (`describeIssue`, `buysOf` in game/world.ts).
+- T-1697 [P2] Holidays by date. Done 2026-10-28: calendar hover, sky hover, Day choice hovers, figure hovers and the Money history say "Golden Week, May 3-5" in place of out/away/back names (`dateRange` in game/days.ts).
+- T-1698 [P2] Station sound lower. Done 2026-10-28: a station placed plays the snap three semitones down (rate 0.84) with its four variants (`playBuild("station")`).
+- T-1700 [P2] Logo boxes and tagline. Done 2026-10-28: boxes 1 px smaller on every side (`boxShrinkPx`, `LOGO_BOX_TRIM_PX`), tagline "~welcome to trains world~"; artifacts/trainworld/t1700-logo.png.
+
+- T-1692 [P2] Base map labels. Done 2026-10-28: no halo, text a little stronger, minor places, small rivers and main road names start later, wider label padding; labels on screen 170 to 74 over six views (zoom 5, 8, 11, Japan and New York); artifacts/trainworld/t1692-before-after.png.
+- T-1701 [P2] Elevation row. Done 2026-10-28: the draw-at-the-elevation-of-the-track-you-extend button and its setting are gone (old saves' `auto` is ignored); Shift+1 to Shift+7 (by key code) pick elevation +3 to -3, shown in the hovers and the help panel.
+- T-1702 [P2] Bunny loading animation. Done 2026-10-28: a curtain drawn back and tied in every window, the bunny looking out of the fourth from behind its sill, ear tips about half as tall above the roof; artifacts/trainworld/t1702-bunny.png.
+
+- T-1703 [P2] Mobile undo mid-segment. Done 2026-10-28: the touch bar's take-back with a start and a waiting end drops both and stays in the track tool; with none waiting it still takes back the last segment.
+- T-1704 [P2] Mobile map controls. Done 2026-10-28: under 520 px the status tag floats instead of keeping a row, the rows stop short of the top right where the search glass now sits; artifacts/trainworld/t1704-mobile-controls.png.
+- T-1705 [P2] Mobile fare graph labels. Done 2026-10-28: on a phone the axis labels draw at 12 px whatever the graph's scale (`--fg-fs`); t1705-mobile-fares.png.
+- T-1706 [P2] Mobile track popup. Done 2026-10-28: confirm (green), take back (yellow), stop (red) only; the elevation and track type stay in the Build tab (`--good` token added); t1706-mobile-popup.png.
+- T-1707 [P2] The site's URL becomes anita.garden/trainsworld/. Prepared 2026-10-28, ships with the next publish: deploy.py copies the page into website/trainsworld/ and turns website/trainworld/ into redirect pages (index, privacy, terms; query and hash kept; old assets removed); `--verify --page` checks both. R2 prefix stays trainworld/; no server change; saves carry over (per origin, no path in keys). Checked headless: /trainworld/?x=1#y lands on /trainsworld/?x=1#y. Commands in notes/T-924.md.
 - T-1685 [P2] Drawing beside track. Done 2026-10-28: Build tab switch (on by default); a start 10-40 px from track runs 8 m beside it on the pointer's side, curves concentric (`express_verts`), plain again when the pointer moves away. Test `route_beside_track_runs_parallel`. DECISIONS.
 - T-1688 [P2] No automatic crossovers. Done 2026-10-28: stations on quad and doubling up no longer add crossovers (drawing never did); players draw crossing track. A line across pairs with no way between is refused (`LinePath`); saves keep theirs. DECISIONS.
 - T-1687 [P2] Quad station on the side clicked. Done 2026-10-28: one station per click, on the pair clicked (free stations: the drawn pair); a station level with one beside takes its name. Test `quad_station_one_pair_per_click_and_no_crossovers`.
