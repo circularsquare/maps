@@ -29,10 +29,12 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - 8800 rebuilt at 15c27068, smoke 20/20 light and dark. LIVE: 2026-10-28f (= 15c27068),
   website da0cfe7 pushed (Anita's go), verify --page all pass; R2 holds only trainworld/2026-10-28f
   (rclone purge prints a harmless GetBucketVersioning 403).
-- T-1609 agent t1609 (Opus) in .tw-trees/t1609; ids T-1730-1731; 5 cores; Vite 6121.
+- T-1609 landed db77a72b (refine 4.7 s vs 53 s on all-China); 8800 rebuilt at f5961ca2, smoke 20/20 both shades. Not deployed.
+- T-1733 (T-1650 stage 1): the T-1609 agent resumed (id in this session's transcript; name t1609/t1733),
+  tree .tw-trees/t1733 from f5961ca2; Vite 6122; 5 cores; may file T-1736-1737. Then T-1734, T-1735 (Anita: yes to all).
 - T-1654 agent t1654 (Sonnet) in main tree, loadBar.ts; 4 cores; Vite 6131.
-- T-1650 design done (notes/T-1650.md), waits on Anita's two questions; stages T-1733-1735 reserved, T-1736-1737 unused.
-  T-1732 unassigned.
+- T-1374 agent t1374 (Opus) in .tw-trees/t1374 from f5961ca2; Vite 6151; 4 cores; may file T-1739-1740.
+- T-1650 design done (notes/T-1650.md); Anita approved, stages T-1733-1735 filed. T-1732 unassigned.
 
 ## Landed by maps-a2 (all committed and deployed as 2026-10-28e; detail in ARCHIVE.md)
 - T-1561 to T-1729 except those still open in TASKS.md. Key calls are in DECISIONS.md.
@@ -40,8 +42,9 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   follow-up on its own work (ids in this file's git history).
 
 ## Waiting on Anita
-- Feedback while signed in should now name her account (shonei-server b0ea1ec live): asked her
-  to send one.
+- Feedback confirmed arriving (Anita 2026-10-28). Email placeholder now "Email (optional)",
+  uncommitted in FeedbackPanel.tsx and docs/ui-panels.md (rides with the next commit).
+- T-1609 on 8800: "figures load quite fast! nice" (Anita 2026-10-28).
 - Opacity slider stuck at 100% after a new game: not reproduced; one zone-selection cause fixed
   (T-1726). Asked her to note what was selected if it recurs.
 - Her goal: a public, share-worthy state this week (friends first, not posted yet).
@@ -55,12 +58,13 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   day. Clock speed not saved. No automatic crossovers; stations placed by the player. Weekends
   run the medium timetable. Bus running cost US$6 a bus-km. Select on key 4; Shift+1-7 elevation.
 
-## Next
-1. T-1609 (refine only the zone in view against frozen loads; exact; base for T-1650), then
-   T-1650 design. T-1654 (real load-time estimate), T-1634, T-1647, T-1644, T-1520.
-2. T-1374 (superholidays stage 3), T-1625 (rebuild the Japan stress save).
-3. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1729.
+## Next (Anita 2026-10-28 evening: "this order is fine"; she is away)
+1. Land T-1733 and T-1654 (smoke, commit, 8800). Deploy: asked her, no answer yet; don't publish without it.
+2. T-1734 then T-1735 (same agent as T-1733). T-1374 beside them (agent t1374, own tree).
+3. T-1520 (income groups cheaper), T-1625 (Japan save rebuild, Sonnet). Small perf: T-1634, T-1647, T-1644, T-1641.
+4. Then, if nothing pressing: T-1738, Southeast Asia from Vietnam, as a compute-heavy run.
+Ids handed out through T-1738 (T-1732 unassigned; T-1736-1737 the t1733 agent's).
+Anita away: core cap 15 overnight.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.
