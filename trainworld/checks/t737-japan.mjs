@@ -1,4 +1,4 @@
-// T-737: Japan's whole real network (709 lines, 10,171 stations from N02; notes/T-737.md) loaded and
+// T-737: Japan's whole real network (807 lines, 9,529 station nodes from N02, services from MLIT's counts since T-1625; notes/T-737.md, notes/T-1625.md) loaded and
 // played at 240x and 960x: load time, demand's first solve (its times and worker memory), frame times
 // while panning and zooming across Japan, main-thread long tasks, the threads' busy time.
 //   node trainworld/checks/t737-japan.mjs [url]      (from the maps root)

@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1625 [P3] All-Japan save rebuilt with sensible services. Done 2026-10-28: lines cut where MLIT's count changes, Shinkansen on high-speed track, default fares; 807 lines, none under 10 riders a car-km, 532M passenger-km a weekday against MLIT's 1,100M (0.48). notes/T-1625.md.
 - T-1520 [P2] Cut the market's income-group cost. Done 2026-10-28 (tree tw/t1520): one logsum a zone pair at the groups' mean, each group moved to first order; fare km only at longer trips' stations. Native groups' cost +78% to +6-15% (New York), +49% to +13% (China); figures within 0.01%. notes/T-1520.md.
 - T-1654 [P2] Load card time estimate. Done 2026-10-28: "Taking a bit longer" gone, a figure always ("About 2 min left"), the solve's rounds estimated from the rounds so far and the periods landed in each; on all-Japan and New York within about 30% from halfway on. notes/T-1654.md.
 - T-1374 [P2] Superholidays stage 3, going-out trips to touristy places. Done 2026-10-28 (tree tw/t1374): the lean gains 0.5 times the zones' touristiness difference (attraction visits per resident, 3 to 30), 90/10 at most; Kyoto +39-57%, Nara +51% against same-size zones; weekdays unchanged; Hangzhou misses on data (T-1739). notes/T-264.md.

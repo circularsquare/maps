@@ -465,7 +465,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),
-  `t737-japan.mjs` (Japan's whole N02 network, 709 lines, from `../artifacts/trainworld/t737-japan.save`:
+  `t737-japan.mjs` (Japan's whole N02 network, from `../artifacts/trainworld/t737-japan-trains.save`:
   load time, demand's first solve, then frames, long tasks and threads' busy time panning and zooming
   across Japan at 240x and 960x; fails over 14 ms of main thread a frame or 5% of frames over 50 ms;
   about 4 minutes, `QUICK=1` 1.5; notes/T-737.md),
@@ -680,7 +680,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   runs the same on older saves), `gamesave` (the game file
   `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
   (T-731). `REALNET_OUT` stages geom, route and gamesave outside data/. `realnet_n02.py` is
-  its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves). `calib.py
+  its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves): each line is
+  cut where MLIT's passing count changes, each piece gets cars and whole trains from its count,
+  Shinkansen run on high-speed track, and `n02_trim.json` holds the cuts and omissions game runs
+  asked for (T-1625, notes/T-1625.md; `realsave` reads `trains` and `hsr` from the network JSON). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator

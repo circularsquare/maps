@@ -242,8 +242,12 @@ N02_DIR = os.path.join(MAPS, "riders", "tokyoriders", "data", "N02-24", "UTF-8")
 CITIES["jpn"] = {
     "pack": "tyo",
     "boundary": False,
-    "out": os.path.join(WORK, "jpn_real.json"),
-    "what": "Japan's whole rail network from N02, frequencies from passing counts (T-737, rough)",
+    "out": os.path.join(OUT, "jpn_real.json"),
+    "what": "Japan's whole rail network from N02, each line cut where its passing count changes and run at that count (T-737, T-1625, rough)",
+    # T-1625: the game file's header beyond the common one: a sandbox, today's default fares (a new
+    # game's curve, at the baseline country, with the high-speed multiple left at its default)
+    "save_header": {"mode": "sandbox", "fares": {"base": 0.0862, "perKm": 0.006895, "nodes": [[0, 0.0862], [20, 0.2241], [100, 0.7757]],
+                                                 "scales": {}, "baseline": "IN", "basis": "usd"}},
     "count_point": [139.7671, 35.6812],
     "merge_m": 0.0,
     "sources": [{"name": "n02", "adapter": "n02", "stations": os.path.join(N02_DIR, "N02-24_Station.geojson"),
@@ -734,6 +738,7 @@ def cmd_net(city=None):
     def inside(lon, lat):
         return bnd is None or bnd.contains(Point(lon, lat))
     stations, lines = {}, []
+    left_out = []  # T-1625: stretches the n02 adapter found too thin to run
     no_merge = set()
     for src in cfg["sources"]:
         src = {**src, "pack": cfg["pack"]}
@@ -750,11 +755,16 @@ def cmd_net(city=None):
         ls = build_lines(src, trips, xy, cxy)
         for l in ls:
             l["name"] = rn.get(l["route"], l["route"])
+            # T-1625: the n02 adapter's own services, in whole trains per level
+            p = src.get("plan", {}).get(l["route"])
+            if p:
+                l.update(tph=p["tph"], cars=p["cars"], trains=p["trains"], fast=p["fast"], hsr=p["hsr"], count=p["d"], key=p["key"], rt_h=round(p["rt_h"], 4))
             if l["route"] in src.get("shapes", {}):  # the n02 adapter's track, for `geom`
                 sx, sy = to_xy(*np.array(src["shapes"][l["route"]]).T, o)
                 l["shape"] = np.stack([sx, sy], 1).round(1).tolist()
         print(f"  {name}: {len(ls)} lines from {len(set(l['route'] for l in ls))} routes")
         lines += ls
+        left_out += src.get("dropped", [])
     # merge stations of different sources within merge_m (one interchange)
     keys = [k for k in stations if k not in no_merge] if merge_m > 0 else []
     alias = {}
@@ -808,6 +818,8 @@ def cmd_net(city=None):
            "feeds": {s["name"]: s.get("url") or s.get("file") for s in cfg["sources"]},
            "stations": st_list, "lines": lines,
            "demand": {"st_xy": st_xy, "line_n": line_n, "stops": stops, "times": times, "tph": tph, "cars": cars}}
+    if left_out:
+        out["too_thin"] = left_out
     p = cfg["out"]
     json.dump(out, open(p, "w"))
     by = Counter(l["feed"] for l in lines)
@@ -1293,6 +1305,15 @@ def cmd_gamesave():
     reg = json.load(open(os.path.join(ROOT, "app", "src", "game", "registry.json"), encoding="utf-8"))
     header = {"game": "anitabuilder", "format": 1, "city": reg["cities"][0]["id"], "clock": 86400 + 7 * 3600, "cash": 6000.0,
               "fleet": int(tj["fleet"]), "fares": {"base": 1.5, "perKm": 0.1}, "ledger": []}
+    cfg = CITIES.get(city, {})
+    header.update(cfg.get("save_header", {}))
+    # lines with their whole trains set (T-1625): the cars they need, ordinary and high-speed apart
+    net = json.load(open(cfg["out"], encoding="utf-8")) if cfg.get("out") and os.path.exists(cfg["out"]) else {"lines": []}
+    if any("trains" in l for l in net["lines"]):
+        need = {False: 0, True: 0}
+        for l in net["lines"]:
+            need[bool(l.get("fast"))] += max(l["trains"]) * l["cars"]
+        header["fleet"], header["fleetFast"] = need[False], need[True]
     hj = json.dumps(header).encode()
     raw = b"TWG1" + struct.pack("<I", len(hj)) + hj + track
     # T-1303: New York's too goes beside the others; T-007-real-nyc.save is the smoke test's own copy

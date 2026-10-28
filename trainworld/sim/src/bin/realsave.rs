@@ -13,7 +13,8 @@
 //! feed ("subway 6X" is "6X"), the stations their capitals and "STATION".
 //!
 //! Writes `nyc_real.twt2` (the network part of a save, uncompressed; the lines get whole trains
-//! from the real trains per hour when the network is derived, T-1146) and
+//! from the real trains per hour when the network is derived, T-1146, unless the network JSON gives
+//! a line `trains`, and `hsr` for high-speed track and trains, T-1625) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
 //! packed as `DemandApi::set_network` takes them (the clock worker's snapshot), for `calib`.
 
@@ -76,6 +77,11 @@ fn main() {
         let level = route.unwrap_or(g)["level"].as_i64().unwrap() as i8;
         let pts: Vec<(f64, f64)> = route.unwrap_or(g)["nodes"].as_array().unwrap().iter().map(xy).collect();
         let cars = l["cars"].as_u64().unwrap().clamp(1, 20) as u8;
+        // T-1625: a Shinkansen route has high-speed track (double, traced at the 320 km/h design
+        // radius) and runs high-speed trains; a line with whole trains set keeps them
+        let hsr = l["hsr"].as_bool().unwrap_or(false);
+        let design = if hsr { design_radius(320.0) } else { R_CAP };
+        let trains: Option<[u32; 3]> = l["trains"].as_array().map(|a| [0, 1, 2].map(|i| a[i].as_u64().unwrap() as u32));
         let platform = ((cars as u16 * CAR_LEN as u16).clamp(PLATFORM_MIN, PLATFORM_MAX) / PLATFORM_STEP) * PLATFORM_STEP;
         let n = stops.len();
         // headings: the track's through each stop, else along the line through it
@@ -134,8 +140,8 @@ fn main() {
                 }
                 line.push(lead_b);
                 let t = std::time::Instant::now();
-                // not high speed: the design radius at 160 km/h (T-1290)
-                let r = trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, R_CAP, level);
+                // the design radius at 160 km/h, or at 320 for high-speed track (T-1290)
+                let r = trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, design, level);
                 trace_s += t.elapsed().as_secs_f64();
                 r
             });
@@ -157,14 +163,14 @@ fn main() {
             }
             pis.push(Pi::new(lead_b.0, lead_b.1, 0.0, level).quantised());
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false })).unwrap();
+            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr })).unwrap();
             path.push(e << 1);
         }
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();
         let id = net.alloc_line();
         let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
         let name = names::tidy_line(&name, "").unwrap_or(name);
-        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None }));
+        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None }));
         if r.is_ok() {
             n_lines_ok += 1;
         }
