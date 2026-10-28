@@ -120,7 +120,15 @@ Web first, so it can be shared as a link.
 - **Frame loop** [T-073, T-084, T-097]: frames only while the clock runs; 10 fps while the window is
   visible but unfocused; nothing while hidden or paused; none while no trips run
   this hour (the clock wakes once a game minute instead). Otherwise the overlay draws on MapLibre's
-  frames and once after a change to what is drawn. The demand views have a canvas of their own over
+  frames and once after a change to what is drawn. [T-1640] While the camera is still, the clock's
+  frames come only as often as something visible moves half a pixel (`renderer.stillWaitMs`): trains
+  from TRAINS_ZOOM, at 100 m/s of game time at the view's latitude (full rate at every speed from
+  zoom 10); platform crowds from STATIONS_ZOOM, in steps of 5 game seconds; otherwise one draw a
+  second, which keeps the hour's trips and staged states current. The game minute turns on its
+  own timer meanwhile, and a MapLibre frame, `invalidate` or a display change plans the next frame
+  again (`Overlay.replan`), so zooming in to the trains, selection, hover and edits draw at once.
+  The camera moving, the complex map's snapshot and the 10 fps unfocused rate are unchanged.
+  `?perfOff=stillThrottle` (or `overlay.throttle = false`) draws every frame. The demand views have a canvas of their own over
   it, drawn only on MapLibre's frames and after their data changes, never by the clock; bubbles and
   a selection's far end are summed in their own worker (`workers/commuters.worker.ts`).
 - **The stroke cache** [T-1638; `map/strokeCache.ts`, notes/T-1618.md]: everything the renderer

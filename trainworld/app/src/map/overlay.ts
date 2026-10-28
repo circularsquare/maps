@@ -7,7 +7,8 @@
 // a second draw with the previous camera during panning (T-075). With the camera still, the
 // clock loop draws normally and MapLibre stays idle.
 //
-// Frames (SPEC 7): every frame while the clock runs and the window has focus; 10 fps while visible
+// Frames (SPEC 7): every frame while the clock runs and the window has focus, or (T-1640, camera still)
+// only as often as something visible moves, at least once a second; 10 fps while visible
 // but unfocused; none while hidden or paused, apart from MapLibre's own frames (camera moves,
 // tiles) and one-off redraws after a state change (`invalidate`).
 
@@ -33,6 +34,10 @@ const THROTTLE = !perfOff("moving");
 
 /** Frame interval while the window is visible but does not have focus. */
 const UNFOCUSED_MS = 100;
+/** ?perfOff=stillThrottle (T-1640, measurement only): redraw every frame while the clock runs. */
+const STILL_THROTTLE = !perfOff("stillThrottle");
+/** A redraw due sooner than this is a frame, not a timer. */
+const FULL_RATE_MS = 17;
 /** A view of the network drawn into another canvas (T-1289, ui/inspector/ComplexMap.tsx). */
 export interface Snapshot {
   canvas: HTMLCanvasElement;
@@ -98,6 +103,10 @@ export class Overlay {
   /** MapLibre frames drawn while the camera moves: their gaps, ms (the lighter map's auto switch). */
   onMovingFrame: ((gapMs: number) => void) | null = null;
   private lastMapFrame = 0;
+  private lastOpt: DrawOptions | null = null;
+  /** T-1640: while the camera is still, redraw only as often as something visible moves
+   * (`NetworkRenderer.stillWaitMs`); off, every frame as before */
+  throttle = STILL_THROTTLE;
 
   constructor(
     private map: MlMap,
@@ -140,6 +149,8 @@ export class Overlay {
           this.lastMapFrame = this.moving ? t : 0;
           this.draw();
           for (const f of this.afterMapFrame) f();
+          // the view may have changed what moves: zoomed in to the trains, say
+          if (this.slowTimer && !this.rafId) this.replan();
         },
       });
     };
@@ -197,7 +208,7 @@ export class Overlay {
     const a = performance.now();
     const gl = this.gl;
     clock.tick();
-    const opt = this.options();
+    const opt = this.lastOpt = this.options();
     // the snapshot first, so the main draw leaves the renderer's picking state as the map's
     if (this.snap && !NO_DRAW && !gl.isContextLost()) this.drawSnapshot(this.snap, opt);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -252,6 +263,21 @@ export class Overlay {
     // second draw of the same frame.
     if (NO_DOUBLE && this.mapFrameQueued()) return this.scheduleNext();
     this.draw();
+    this.replan();
+  }
+
+  /** ms the next draw can wait with the camera still, by the last draw's options and the view */
+  private stillWait(): number {
+    if (!this.lastOpt) return 0;
+    return this.renderer.stillWaitMs(this.map.getZoom(), this.map.getCenter().lat, SPEEDS[clock.speed.peek()], this.lastOpt);
+  }
+
+  /** Plan the next frame again from what is drawn now (a pending timer was set for the last plan). */
+  private replan() {
+    if (this.slowTimer) {
+      clearTimeout(this.slowTimer);
+      this.slowTimer = 0;
+    }
     this.scheduleNext();
   }
 
@@ -280,10 +306,25 @@ export class Overlay {
       }, Math.max(1, wait));
       return;
     }
-    if (this.focused) return this.frameNow();
+    // Nothing visible moves faster than this: the next draw waits (T-1640). The game minute still
+    // turns on time, and the camera moving or a snapshot drawing take every frame.
+    const still = this.throttle && !this.moving && !this.snap && this.renderer.net ? this.stillWait() : 0;
+    if (this.focused && still <= FULL_RATE_MS) return this.frameNow();
     if (this.slowTimer) return;
+    if (this.focused) {
+      const drawIn = Math.max(0, still - (performance.now() - this.lastFrame));
+      const t = clock.now();
+      const minuteIn = (((Math.floor(t / 60) + 1) * 60 - t) / SPEEDS[clock.speed.peek()]) * 1000 + 1;
+      this.slowTimer = window.setTimeout(() => {
+        this.slowTimer = 0;
+        clock.tick();
+        if (drawIn <= minuteIn) this.frameNow();
+        else this.scheduleNext();
+      }, Math.max(1, Math.min(drawIn, minuteIn)));
+      return;
+    }
     // The frame itself lands on the next animation frame after the timer, ~8 ms later on average.
-    const wait = Math.max(0, UNFOCUSED_MS - 8 - (performance.now() - this.lastTick));
+    const wait = Math.max(0, Math.max(UNFOCUSED_MS, still) - 8 - (performance.now() - this.lastTick));
     this.slowTimer = window.setTimeout(() => {
       this.slowTimer = 0;
       if (clock.ticking) this.frameNow();

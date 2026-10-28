@@ -47,7 +47,9 @@ await page.evaluate(() => {
   const hook = (t, arr) => { const ob = t.begin.bind(t); t.begin = () => { const q = t.query; ob(); if (q && t.query !== q && t.ms != null) arr.push(t.ms); }; };
   hook(tw.renderer.timer, m.ovGpu);
   hook(window.twViews.overlay.timer, m.dmGpu);
-  m.snap = () => ({ t: performance.now(), raf: m.raf, rafFrames: m.rafFrames, ov: tw.overlay.frames, map: tw.overlay.mapFrames, dm: window.twViews.overlay.draws, cache: tw.renderer.mainCache?.redraws ?? 0 });
+  m.minChanges = 0;
+  tw.clock.minute.subscribe(() => { m.minChanges++; });
+  m.snap = () => ({ t: performance.now(), minChanges: m.minChanges, raf: m.raf, rafFrames: m.rafFrames, ov: tw.overlay.frames, map: tw.overlay.mapFrames, dm: window.twViews.overlay.draws, cache: tw.renderer.mainCache?.redraws ?? 0 });
   // toggles: each returns its undo
   const disp = (k, v) => { const was = tw.display.value[k]; tw.display.value = { ...tw.display.value, [k]: v }; return () => { tw.display.value = { ...tw.display.value, [k]: was }; }; };
   const r = tw.renderer, dov = window.twViews.overlay;
@@ -74,6 +76,8 @@ await page.evaluate(() => {
     demandCanvas: () => { const d = dov.draw; dov.draw = () => {}; dov.canvas.style.display = 'none'; return () => { delete dov.draw; dov.canvas.style.display = ''; dov.invalidate(); }; },
     dpr2: () => { map.setPixelRatio(2); map.resize(); return () => { map.setPixelRatio(1); map.resize(); }; },
     flat: () => disp('projection', 'flat'),
+    // T-1640: redraw every frame while the clock runs, as before it
+    nothrottle: () => { tw.overlay.throttle = false; tw.overlay.invalidate(); return () => { tw.overlay.throttle = true; tw.overlay.invalidate(); }; },
   };
   m.undo = [];
 });
@@ -85,7 +89,7 @@ const info = await page.evaluate(() => {
 });
 console.log(JSON.stringify(info));
 
-const JAPAN = { center: [137.5, 37.0], zoom: 4.6 }, TOKYO = { center: [139.75, 35.68], zoom: 11 }, Z15 = { center: [139.767, 35.681], zoom: 15 };
+const JAPAN = { center: [137.5, 37.0], zoom: 4.6 }, TOKYO = { center: [139.75, 35.68], zoom: 11 }, Z15 = { center: [139.767, 35.681], zoom: 15 }, Z95 = { center: [139.75, 35.68], zoom: 9.5 }, Z13 = { center: [139.767, 35.681], zoom: 13 };
 // [label, view, clock (null paused, else speed index), toggles, pan px]
 const CASES = [
   ['idle', JAPAN, null, [], 0],
@@ -112,6 +116,8 @@ const CASES = [
   ['z15 1x', Z15, 0, [], 0],
   ['z15 pan, 1x', Z15, 0, [], 1500],
   ...[['pan, paused', JAPAN, null], ['pan, 1x', JAPAN, 0], ['Tokyo pan, paused', TOKYO, null], ['Tokyo pan, 1x', TOKYO, 0], ['z15 pan, 1x', Z15, 0]].flatMap(([l, v, sp]) => [[`${l}, old`, v, sp, ['old'], 1500], [`${l}, culled only`, v, sp, ['nolod'], 1500]]),
+  // T-1640: the redraw rate while the camera is still, with the throttle on and off
+  ...[['Japan z4.6 1x', JAPAN, 0], ['Japan z4.6 fastest', JAPAN, 2], ['Kanto z9.5 1x', Z95, 0], ['Tokyo z11 1x', TOKYO, 0], ['Tokyo z11 fastest', TOKYO, 2], ['Tokyo z13 1x', Z13, 0]].flatMap(([l, v, sp]) => [[`T1640 ${l}`, v, sp, [], 0], [`T1640 ${l}, no throttle`, v, sp, ['nothrottle'], 0]]),
 ];
 
 // Anita's conditions (T-1617): globe, Terrain on
@@ -144,7 +150,7 @@ for (const [label, view, speed, toggles, pan] of CASES) {
   const util = await typeperf();
   const b = await page.evaluate(() => { const m = window.__m, avg = (x) => (x.length ? x.reduce((s, v) => s + v, 0) / x.length : null); return { ...m.snap(), mapGpu: avg(m.mapGpu), ovGpu: avg(m.ovGpu), dmGpu: avg(m.dmGpu), nMap: m.mapGpu.length, nOv: m.ovGpu.length, trips: window.tw.renderer.tripCount, ticking: window.tw.clock.ticking, moving: window.tw.overlay.moving, inst: window.tw.renderer.strokeInstances, lodMs: window.tw.renderer.lodMs }; });
   const s = (b.t - a.t) / 1000, ps = (k) => (b[k] - a[k]) / s;
-  const row = { label, util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), cacheFps: ps('cache'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving, inst: b.inst, lodMs: b.lodMs };
+  const row = { label, minFps: ps('minChanges'), util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), cacheFps: ps('cache'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving, inst: b.inst, lodMs: b.lodMs };
   rows.push(row);
   console.log(JSON.stringify(row));
   await page.evaluate(() => { const tw = window.tw, m = window.__m; window.__pan = false; tw.map.stop(); while (m.undo.length) m.undo.pop()(); });
@@ -153,8 +159,8 @@ for (const [label, view, speed, toggles, pan] of CASES) {
 await page.evaluate(() => window.tw.clock.setRunning(false));
 
 const f = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? '-' : v.toFixed(d));
-const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | stroke redraws/s | stroke instances | demand draws/s | demand GPU ms |', '|---|---|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.cacheFps, 0)} | ${r.inst ?? '-'} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} |`)].join('\n');
+const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | stroke redraws/s | stroke instances | demand draws/s | demand GPU ms | minute changes/s |', '|---|---|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.cacheFps, 0)} | ${r.inst ?? '-'} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} | ${f(r.minFps, 1)} |`)].join('\n');
 await writeFile(OUT + (ONLY ? 'table-part.md' : 'table.md'), JSON.stringify(info, null, 1) + '\n\n' + md + '\n');
 console.log(md);
 process.exit(0);

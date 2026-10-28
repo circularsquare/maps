@@ -158,6 +158,9 @@ const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lan
  * merged where they stray from the full set by at most LOD_TOL_PX device px; from CULL_ZOOM only the
  * chunks near the view drawn, CULL_MARGIN_PX (CSS) round it covering the widest stroke */
 const LOD_TOP_ZOOM = 15, LOD_TOL_PX = 0.25, CULL_ZOOM = 7, CULL_MARGIN_PX = 48;
+/** T-1640: the longest a still picture goes undrawn, ms; the fastest train's speed, m/s; the game
+ * seconds a platform's crowd is drawn in steps of */
+const STILL_MAX_MS = 1000, TRAIN_MAX_MPS = 100, CROWD_STEP_S = 5;
 
 /** a network stroke set's chunk boxes, and its simplified copies by zoom band (T-1639) */
 interface StrokeLodState {
@@ -1129,6 +1132,21 @@ export class NetworkRenderer {
   /** The epoch the trip buffer is relative to. */
   get tripsEpoch() {
     return this.tripEpoch;
+  }
+
+  /** T-1640: how long the picture can go without a redraw while the camera is still, ms: 0 when
+   * something visible moves at least a half pixel per frame (the fastest train, about 100 m/s of
+   * game time, from TRAINS_ZOOM; platform crowds, 5 game seconds, from STATIONS_ZOOM), else a
+   * second, which keeps the hour's trips and staged states current. `speed`: game seconds per
+   * second; `lat`: the view's. */
+  stillWaitMs(zoom: number, lat: number, speed: number, opt: DrawOptions): number {
+    let wait = STILL_MAX_MS;
+    if (opt.showTrains && this.tripCount && zoom >= TRAINS_ZOOM) {
+      const pxPerM = pxPerUnitAt(zoom) / Math.cos(lat * Math.PI / 180);
+      wait = Math.min(wait, (1000 * 0.5) / (TRAIN_MAX_MPS * speed * pxPerM));
+    }
+    if (opt.crowds && this.board && zoom >= STATIONS_ZOOM) wait = Math.min(wait, (1000 * CROWD_STEP_S) / speed);
+    return wait;
   }
 
   /**

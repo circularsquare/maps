@@ -6,7 +6,7 @@ Updated: 2026-10-28 (overnight)
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master 30ebdeea; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
+- master 2a397b76; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
   45c0dffb (2026-10-28). Uncommitted: Anita's TODO.md (never commit), this file,
   checks/t1223-build.mjs (untracked, from T-1223's agent).
 - Landed this session: 7bc670bc (T-1612, T-1615, T-1614, T-1561), f56389a1 (T-1223 coarse far
@@ -40,8 +40,31 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   Japan while the clock runs (8% without); paused-and-still is already 2.6%. Fixes T-1638-1641.
 - T-1638 done, committed 30ebdeea, on 8800 (smoke both pass): strokes cached in a texture; Japan
   with trains running 77% -> 9-17% GPU; `?perfOff=strokeCache` turns it off.
-- T-1639 cull/simplify strokes for panning (maps-a2's Opus agent, main tree, Vite 6159, 4
-  cores, ids T-1644-1645).
+- T-1639 done, committed 2a397b76, on 8800 (smoke both pass): Japan panning 77% -> 34% GPU
+  (MapLibre alone 22%); `?perfOff=strokeLod` / `strokeCull`. T-1644 filed (zoom 15 pan 37%).
+- 2026-10-28 morning (Anita): deploy approved and running as 2026-10-28b (log
+  artifacts/trainworld/deploy-2026-10-28b.log; then website add/commit "trainsworld"/push,
+  verify --page, purge r2 2026-10-28). 2026-10-25b purged. T-1617 closed (transient). Cap 12.
+  LIVE: 2026-10-28b (master 2a397b76), verify --page passes; live smoke 19/20 (only T-941/T-1635
+  console errors). Website's Pages build needed Ruby 3.3 (ubuntu-latest is 26.04): fixed in
+  website bf68979 with Anita's ok. R2 purged: only trainworld/2026-10-28b remains.
+- T-1617 reopened: Anita's screenshot (artifacts/trainworld/t1617/anita-seam-tsushima.png) shows a
+  dark meridian seam west of Tsushima during "Updating demand"; same Opus agent resumed (Vite 6153,
+  2 cores) on the lead: translucent shade polygons split at a meridian, edge antialiased twice.
+- Anita 2026-10-28: 10-20% off on lines is fine for ~50% faster loads (ideally the city in view
+  re-solved exactly, T-1609); the -23% round skip alone isn't worth it. Order: T-1608, T-1607, T-1609.
+- T-1617 update: seam stays after "Updating demand" ends (Anita), so not the loading shade; agent told.
+- T-1649 guard bulk track deletes (Anita lost all Japan track by accident): Sonnet agent, main
+  tree, Vite 6151, 2 cores, id T-1651. T-1650 filed: cut big networks into parts for demand
+  (Anita's "cutting points" idea), design after T-1608/T-1607/T-1609.
+- T-1608 cheaper market searches, exact (Opus agent, tree .tw-trees/t1608, Vite 6170-6174, 4
+  cores, ids T-1647-1648).
+- T-1640 redraw only when something visible moves (Sonnet agent, main tree, Vite 6159, 3
+  cores, id T-1646); Anita sees ~5% GPU zoomed out with trains hidden.
+- Perf/memory overview for Anita (Opus agent, read-only): notes/perf-overview.md, answering
+  where time/memory go, how they scale with cities/stations/lines/trains, areas to improve.
+- Anita on T-1607: no speed bought with memory; prefers algorithmic savings like T-782. T-1608
+  (cheaper market searches, exact) fits that best.
 - Asked Anita: take T-782's round skip (a) for Japan -23% with 8 of 358 lines off up to 11%? I
   recommend no (T-1607 instead). T-1613's card text "Taking a bit longer" is the agent's wording.
 - Land a tree: smoke in tree, `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`
@@ -61,11 +84,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 - Overnight: all cores (cap 15). Set it back to 12 when she's up.
 
 ## Next
-1. Land T-1618. Next deploy when Anita says (everything after 45c0dffb).
+1. Next deploy when Anita says (everything after 45c0dffb). Set core cap back to 12 when she's up.
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1645.
+Ids handed out through T-1651.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.
