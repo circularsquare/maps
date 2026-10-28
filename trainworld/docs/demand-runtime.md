@@ -225,7 +225,7 @@ costs, the same with the planned first wait (T-1430) and its fare km (T-1286) ar
 first zone that reads them to the last; its columns of trips (longer trips, their lean, commutes,
 each everyday purpose) from the first zone that touches it to the last, when they are assigned
 along its strategy and dropped. The strategy, searched at the first read, is kept to then within
-128 MB (`WINDOW_STRATEGY_BYTES`, the stations assigned soonest first), else searched again. No
+192 MB (`WINDOW_STRATEGY_BYTES`, T-782, the stations assigned soonest first), else searched again. No
 station x station table is held: on all of Japan (9,253 stations) at most 197 stations' route costs
 and 1,954 stations' trips at once, the trips home of commutes making the long spans. A station's
 loads are its column's, added in the window's order (rounding apart, the figures of one table of

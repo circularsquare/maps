@@ -5237,7 +5237,11 @@ pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Ve
 
 /// Method of successive averages: `avg += (new - avg) / (round + 1)`.
 pub fn msa(avg: &mut [f32], new: &[f32], round: usize) {
-    let w = 1.0 / (round as f32 + 1.0);
+    msa_w(avg, new, 1.0 / (round as f32 + 1.0));
+}
+
+/// `msa` at weight `w` for the new pass.
+pub fn msa_w(avg: &mut [f32], new: &[f32], w: f32) {
     for (a, &n) in avg.iter_mut().zip(new) {
         *a += (n - *a) * w;
     }

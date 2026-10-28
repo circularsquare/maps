@@ -1052,7 +1052,7 @@ impl<'a> Columns<'a> {
 thread_local! {
     /// The bytes of searched strategies `IntercityApi::pass_window` keeps from a station's search to
     /// its assignment (T-1545); the rest are searched again for it. A cell so benches can vary it.
-    static WINDOW_STRATEGY_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(128 << 20) };
+    static WINDOW_STRATEGY_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(192 << 20) };
     /// `pass_window`'s most read slots and trip slots at once, most bytes of strategies kept, and
     /// searches and searches again, over the passes since it was reset (benches).
     static WINDOW_STATS: std::cell::Cell<[usize; 5]> = const { std::cell::Cell::new([0; 5]) };
@@ -3890,42 +3890,43 @@ impl IntercityApi {
         st.fac = fac;
         let Pass { loads: l, c_loads, r_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);
         st.round += 1;
-        let r = st.round;
+        let d = st.round as f64 + 1.;
+        let (df, w) = (d as f32, 1. / d);
+        let wf = 1. / df;
         if let (Some(a), Some(b)) = (st.r_avg.as_mut(), r_loads) {
-            msa(&mut a.seg, &b.seg, r);
-            msa(&mut a.rn_board, &b.rn_board, r);
-            msa(&mut a.rn_alight, &b.rn_alight, r);
+            msa_w(&mut a.seg, &b.seg, wf);
+            msa_w(&mut a.rn_board, &b.rn_board, wf);
+            msa_w(&mut a.rn_alight, &b.rn_alight, wf);
         }
-        msa(&mut st.xfer, &xfer, r);
-        msa(&mut st.pair_rail, &pair_rail, r);
-        msa(&mut st.c_frac, &c_frac, r);
-        msa(&mut st.c_avg.seg, &c_loads.seg, r);
-        msa(&mut st.c_avg.rn_board, &c_loads.rn_board, r);
-        msa(&mut st.c_avg.rn_alight, &c_loads.rn_alight, r);
-        st.c_rail += (c_rail - st.c_rail) / (r as f64 + 1.);
-        msa(&mut st.e_frac, &e_frac, r);
+        msa_w(&mut st.xfer, &xfer, wf);
+        msa_w(&mut st.pair_rail, &pair_rail, wf);
+        msa_w(&mut st.c_frac, &c_frac, wf);
+        msa_w(&mut st.c_avg.seg, &c_loads.seg, wf);
+        msa_w(&mut st.c_avg.rn_board, &c_loads.rn_board, wf);
+        msa_w(&mut st.c_avg.rn_alight, &c_loads.rn_alight, wf);
+        st.c_rail += (c_rail - st.c_rail) / d;
+        msa_w(&mut st.e_frac, &e_frac, wf);
         for (a, b) in st.e_avg.iter_mut().zip(e_loads) {
             if let (Some(a), Some(b)) = (a.as_mut(), b) {
-                msa(&mut a.seg, &b.seg, r);
-                msa(&mut a.rn_board, &b.rn_board, r);
-                msa(&mut a.rn_alight, &b.rn_alight, r);
+                msa_w(&mut a.seg, &b.seg, wf);
+                msa_w(&mut a.rn_board, &b.rn_board, wf);
+                msa_w(&mut a.rn_alight, &b.rn_alight, wf);
             }
         }
-        st.e_rail += (e_rail - st.e_rail) / (r as f64 + 1.);
+        st.e_rail += (e_rail - st.e_rail) / d;
         let e_walk = (st.e_walk_base - e_walk_lost).max(0.);
-        st.e_walk += (e_walk - st.e_walk) / (r as f64 + 1.);
+        st.e_walk += (e_walk - st.e_walk) / d;
         for (a, b) in st.st.iter_mut().zip(st_new) {
-            *a += (b - *a) / (r as f32 + 1.);
+            *a += (b - *a) / df;
         }
-        msa(&mut st.avg.seg, &l.seg, r);
-        msa(&mut st.avg.board, &l.board, r);
-        msa(&mut st.avg.alight, &l.alight, r);
-        msa(&mut st.avg.rn_board, &l.rn_board, r);
-        msa(&mut st.avg.rn_alight, &l.rn_alight, r);
-        msa(&mut st.avg.entry, &l.entry, r);
-        msa(&mut st.avg.exit, &l.exit, r);
-        msa(&mut st.avg.rn_fare_x, &l.rn_fare_x, r);
-        let w = 1. / (r as f64 + 1.);
+        msa_w(&mut st.avg.seg, &l.seg, wf);
+        msa_w(&mut st.avg.board, &l.board, wf);
+        msa_w(&mut st.avg.alight, &l.alight, wf);
+        msa_w(&mut st.avg.rn_board, &l.rn_board, wf);
+        msa_w(&mut st.avg.rn_alight, &l.rn_alight, wf);
+        msa_w(&mut st.avg.entry, &l.entry, wf);
+        msa_w(&mut st.avg.exit, &l.exit, wf);
+        msa_w(&mut st.avg.rn_fare_x, &l.rn_fare_x, wf);
         st.rail += (rail - st.rail) * w;
         st.rail_d.toward(rail_d, w);
         for (a, b) in st.corridors.iter_mut().zip(cor) {
