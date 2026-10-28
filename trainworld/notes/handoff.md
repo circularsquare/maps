@@ -6,7 +6,7 @@ Updated: 2026-10-28 00:40
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master e5fda94f (T-1613, T-1616 notes); 8800 runs 45c0dffb, smoke 20/20 light and dark, real save 12,483,326 rail trips a day.
+- master 035ea692 (T-1605 drives retry; e5fda94f T-1613, T-1616 notes); 8800 runs 45c0dffb, smoke 20/20 light and dark, real save 12,483,326 rail trips a day.
   Uncommitted: Anita's TODO.md (never commit), this file, T-1616's notes/scripts (notes/T-1616.md,
   notes/t1616_*.mjs; ARCHIVE/TASKS edits), checks/t1223-build.mjs (untracked, from T-1223's agent).
 - Landed this session: 7bc670bc (T-1612 start menu delete/load saves, T-1615 auto-ramp switch on by
@@ -34,7 +34,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   --s3-no-check-bucket`. Recipe: notes/T-924.md "Commands for the real upload and push".
 
 ## In flight
-- maps-82 done (its Previous line gone). T-782 reported: (a) round skip for parts over 256 MB
+- T-782 (b) landed f8bd7e67 (Japan 1,579 -> 1,311 s on 2 workers, exact), tree removed. Was:
+  maps-82 done (its Previous line gone). T-782 reported: (a) round skip for parts over 256 MB
   (Japan 1,579 -> 1,221 s on 2 workers, but 8 of 358 big lines past 2%, worst +11%) and (b)
   WINDOW_STRATEGY_BYTES 192 MB + msa_w (exact). My call: land (b) only. A Sonnet agent of
   maps-a2 is backing out (a) in .tw-trees/t782 (rebased onto master), timing Japan with (b) alone,
