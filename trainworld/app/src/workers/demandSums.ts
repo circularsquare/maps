@@ -11,7 +11,7 @@ import type { CityId } from "../game/cities";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, type DemandDay } from "../game/days";
 import type { Corridors, DemandView, FarEnd, Flows, IntercityDemand, IntercitySelection, IntercityStation, LineDemand, PlaceFlows, PlaceTrips, PurposeDemand, StationDemand, ZoneTrips } from "../game/demand";
 import type { DealtCells } from "../game/farChunks";
-import type { FromDemand } from "./demandProtocol";
+import { arriveOf, comeMax, type FromDemand } from "./demandProtocol";
 import { marketPartsOn } from "./marketParts";
 import { mergeEveryday } from "./selectionMerge";
 
@@ -307,7 +307,10 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     const reach = d < 0 && km > 0 && rail > 0 ? dKm / d / (km / rail) : 1;
     fareSense = [d, market.fareSense[1], reach, market.fareSense[3]];
   }
-  const { part: _p, fareRaw: _f, ...base } = first;
+  const { part: _p, fareRaw: _f, come: _c, ...base } = first;
+  const board = sum((r) => r.board)!;
+  // T-1607: `arrive` is not a sum: worked out again from the parts' boardings added up
+  const arrive = list.every((r) => r.come) ? arriveOf(comeMax(sum((r) => r.come![0])!, sum((r) => r.come![1])!), sum((r) => r.come![1])!, board) : sum((r) => r.arrive);
   return {
     ...base,
     summary,
@@ -323,9 +326,9 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     corridorModes: market.corridorModes,
     elsewhere: market.elsewhere,
     seg: sum((r) => r.seg)!,
-    board: sum((r) => r.board)!,
+    board,
     alight: sum((r) => r.alight)!,
-    arrive: sum((r) => r.arrive),
+    arrive,
     loadOfCrush: sum((r) => r.loadOfCrush)!,
     fareX: sum((r) => r.fareX),
     xferIn: sum((r) => r.xferIn),

@@ -3933,6 +3933,12 @@ impl IntercityApi {
         });
         true
     }
+    /// T-1607: drop period `q`'s result, which another worker holds (`DemandApi::forget_period`).
+    pub fn forget_period(&mut self, q: usize) {
+        if let Some(p) = self.per.get_mut(q) {
+            *p = None;
+        }
+    }
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(st) = self.per(q) else { return false };
         let Some((fac, left)) = round_costs(&st.g, &st.net, &st.p, total) else {

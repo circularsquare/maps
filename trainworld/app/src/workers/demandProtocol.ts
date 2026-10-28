@@ -70,6 +70,27 @@ export type MarketRows = string | Uint8Array;
 /** T-492: a pack a worker could not open: the zone, whether it was its market pack, and why */
 export interface OpenRejected { id: CityId; market: boolean; error: string }
 
+/**
+ * T-1607: one side of a period shared by two workers (its cities' populations in one, its market
+ * in the other): that side's segment loads, boardings and alightings after `round`, summed on the
+ * whole network's route nodes (3 x nodes), for cluster `cluster` (index in the job's clusters).
+ * The page passes it on to the other side's worker.
+ */
+/** T-1255: the riders coming to the platforms per route node: the free-flow pass's boardings, at
+ * least the rounds' (before the cap), into `free` */
+export function comeMax(free: Float32Array, rounds: Float32Array): Float32Array {
+  for (let k = 0; k < free.length; k++) free[k] = Math.max(free[k], rounds[k]);
+  return free;
+}
+/** The account's riders coming (`result.arrive`): everyone who would ride where the queue turned
+ * riders away (their trains carry no more), the riders who ride elsewhere, so the account's
+ * boardings stay demand's; worked out into `come` (`comeMax`) */
+export function arriveOf(come: Float32Array, rounds: Float32Array, board: Float32Array): Float32Array {
+  for (let k = 0; k < come.length; k++) come[k] = board[k] < 0.999 * rounds[k] ? Math.max(come[k], board[k]) : board[k];
+  return come;
+}
+export type Loads ={ kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array };
+
 export type ToDemand =
   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
    * zones' market packs may come here or in `open`s after it (T-149) */
@@ -80,7 +101,10 @@ export type ToDemand =
       oneByOne?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
-      groups?: number[][] }
+      groups?: number[][];
+      /** T-1607: the periods whose market this worker solves in a solve with the barrier (`share`
+       * true in every solving worker when any market sits apart from its period's cities) */
+      markets?: number[]; share?: boolean }
   /** open more city packs and/or zones' market packs (T-149, T-377); answered by `opened`. A
    * market pack is its text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the
    * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
@@ -138,7 +162,9 @@ export type ToDemand =
    * or in the running solve's next step */
   | { kind: "debugPanic"; when: "now" | "solve" }
   /** T-1205: the pool has shrunk: this worker's periods from now on (`init`'s `periods`, `groups`) */
-  | { kind: "periods"; periods: number[]; groups?: number[][] }
+  | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
+  /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */
+  | Loads
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
@@ -326,7 +352,11 @@ export type FromDemand =
        * dollar, the same times km, rail trips, their km), which add up where reaches do not */
       part?: [number, number];
       fareRaw?: [number, number, number, number];
+      /** T-1607: a part's boardings summed as `arrive` reads them (the free-flow pass's, the last
+       * round's before the cap), so the page works `arrive` out again from the added parts */
+      come?: [Float32Array, Float32Array];
     }
+  | Loads
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
    * keeps. `ahead` (T-402, a solve with the barrier): the cities of the cluster in view, stepped
    * through its rounds alone (group 0) before the other clusters together (group 1) */

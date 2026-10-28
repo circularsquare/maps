@@ -141,6 +141,40 @@ export function periodsOfWorker(i: number, n: number): number[] {
   return order.filter((_, k) => k % n === i).sort((a, b) => a - b);
 }
 
+/**
+ * T-1607: the periods whose market each of `n` solving workers solves in a solve with the barrier
+ * (a load, a zone opened), the cities staying with `periodsOfWorker`. Periods differ in work and
+ * five do not deal evenly, so a market may go to a worker with less to do; the two sides trade
+ * loads every round. Chosen to make the busiest worker's round shortest, by each period's time a
+ * round on all of Japan with its market 4/5 of it (notes/T-1607.md), then the fewest moved, and
+ * only where that round is at least 11% shorter (in effect 3 workers: 2 measured no gain).
+ * `?perfOff=share` keeps every market with its cities.
+ */
+const PERIOD_COST = [126, 125, 120, 120, 67], MARKET_SHARE = 0.8, SHARE_GAIN = 0.11;
+export function marketsOfWorkers(n: number): number[][] {
+  const cities = Array.from({ length: n }, (_, i) => periodsOfWorker(i, n));
+  const ownerOf = PERIODS.map((_, q) => cities.findIndex((qs) => qs.includes(q)));
+  let best = ownerOf.slice(), bestCost = Infinity, bestMoved = 0;
+  if (n > 1 && n < PERIODS.length && !perfOff("share")) {
+    const at = PERIODS.map(() => 0);
+    for (let k = 0; k < n ** PERIODS.length; k++) {
+      for (let q = 0, r = k; q < PERIODS.length; q++, r = Math.floor(r / n)) at[q] = r % n;
+      const load = new Array(n).fill(0);
+      let moved = 0;
+      PERIODS.forEach((_, q) => {
+        load[ownerOf[q]] += PERIOD_COST[q] * (1 - MARKET_SHARE);
+        load[at[q]] += PERIOD_COST[q] * MARKET_SHARE;
+        if (at[q] !== ownerOf[q]) moved++;
+      });
+      const cost = Math.max(...load);
+      if (cost < bestCost - 1e-9 || (cost < bestCost + 1e-9 && moved < bestMoved)) { best = at.slice(); bestCost = cost; bestMoved = moved; }
+    }
+    const whole = Math.max(...cities.map((qs) => qs.reduce((s, q) => s + PERIOD_COST[q], 0)));
+    if (bestCost > whole * (1 - SHARE_GAIN)) best = ownerOf.slice();
+  }
+  return cities.map((_, i) => PERIODS.map((_, q) => q).filter((q) => best[q] === i));
+}
+
 export function poolSize(): number {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
@@ -542,6 +576,9 @@ class DemandClient {
   private workers: Worker[] = [];
   private computeN = 0;
   private periodsOf: number[][] = [];
+  /** T-1607: the periods whose market each solving worker solves in a solve with the barrier */
+  private marketsOf: number[][] = [];
+  private marketsMsg(i: number) { const m = this.marketsOf[i] ?? []; return { markets: m, share: this.marketsOf.some((qs, j) => qs.join() !== this.periodsOf[j]?.join()) }; }
   /** every worker's sums for a round of the newest solve, sent unasked (T-119): `version:round:city` */
   private pushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
   private ready = 0;
@@ -665,6 +702,7 @@ class DemandClient {
     solveWaves = Math.ceil(PERIODS.length / n);
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     for (let i = 0; i <= n; i++) this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
+    this.marketsOf = marketsOfWorkers(n);
     for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1 && !perfOff("stagger")));
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
@@ -712,7 +750,7 @@ class DemandClient {
     w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message) ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message}`)); };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
     w.postMessage(msg);
     return w;
   }
@@ -2369,8 +2407,9 @@ class DemandClient {
     for (const by of this.ackedBy) for (const item of by ?? []) this.acks.set(item, (this.acks.get(item) ?? 0) + 1);
     this.computeN = n;
     this.periodsOf = [...Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), []];
+    this.marketsOf = marketsOfWorkers(n);
     solveWaves = Math.ceil(PERIODS.length / n);
-    this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand));
+    this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand));
     this.endQueries();
     this.freshParts = true;
   }
@@ -2417,6 +2456,12 @@ class DemandClient {
       return;
     }
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
+    if (msg.kind === "loads") {
+      // T-1607: on to the worker solving the period's other side
+      const to = msg.side === "cities" ? this.marketsOf.findIndex((qs) => qs.includes(msg.period)) : this.periodsOf.findIndex((qs, j) => j < this.computeN && qs.includes(msg.period));
+      if (to >= 0 && to !== i) this.workers[to].postMessage(msg, [msg.loads.buffer]);
+      return;
+    }
     if (msg.kind === "sums") {
       const list = this.pushed.get(`${msg.version}:${msg.round}:${msg.city}`);
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });

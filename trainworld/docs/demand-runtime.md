@@ -140,7 +140,25 @@ notes/T-174.md and notes/demand-measurements.md.
 by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
 that puts two periods of a demand level on one worker (2 workers: high demand's three periods), when they are dealt
 out level by level (high, then medium, then low: 0, 1, 2, 3 and 4 in that order, to workers 0, 1, 0, 1, 0), so an edit to one level's trains
-has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
+has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone).
+**A market set apart** (T-1607, `marketsOfWorkers`, `?perfOff=share` off). Five periods do not deal
+evenly over 2 to 4 workers, and on a big network a period's market is most of its work, so in a solve
+with the barrier (a load, a zone opened; never a rough solve) a period's market may be solved by
+another worker than its cities: the assignment that makes the busiest worker's round shortest, by
+each period's time a round on all of Japan with the market 4/5 of it, used only where that round is
+at least 11% shorter. In effect only with 3 workers: the evening's market goes to the worker holding
+the evening peak alone (all of Japan's load 11% faster; 2 workers gained nothing, notes/T-1607.md).
+The two sides solve their populations from the same
+summed loads: after each round each sends its loads (segments, boardings, alightings on the whole
+network's route nodes, `loads`) through the page to the other, which adds them in the order one
+worker would (the cities', then the market's, a single population, so the bits are the same); each
+sends its figures as a `result` part (`part`, `come`: the boardings `arrive` is worked out from) and
+the page adds the two (`addParts`). The figures are those of one worker solving the period whole. A
+worker drops any period of a population it does not solve (`forget_period`), so every answer counts
+a period once (the market's answers by `Version.markets`). Such a solve solves every cluster with a
+market and keeps none of its shared periods, and the next solve without the barrier solves those
+clusters again, the shared periods whole on their cities' worker (the others kept as usual).
+The bubbles ask for the
 commuters by mode right after a round is published, when every worker is already part way into
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
