@@ -390,24 +390,26 @@ those who got on, less the load carried on.
   play at the click itself, before the clock worker answers: `edit()` in `game/world.ts` tells
   `setBeforeEdit` as it sends, and the track and station tools play theirs in their click handlers.
   A click the ghost already shows refused is silent; any other that the worker then refuses has
-  sounded. One sound per click however many pieces it places (a pasted schedule or a folded train
+  sounded. The exception is the construct sound (below), which plays after the worker accepts, via
+  `setAfterEdit`, so a construct refused for cash is the knock alone [T-1683]. One sound per click however many pieces it places (a pasted schedule or a folded train
   count is one sound per click, not per edit). Recordings (`app/public/sounds/`, with
   their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
-  `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint, placing a station, and any
-  construct (0.21); a wood knock (`knock.wav`, 0.16 s, 0.12) on every refusal, that is every
+  `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint and placing a station (0.21);
+  a gun magazine insert (`construct.wav`, 0.66 s, 0.15) once the worker has accepted Construct
+  blueprints (the button and C), a line's or a piece's construct, and a station upgrade or passage
+  built for money; one added only to the blueprint gets the pop; a wood knock (`knock.wav`, 0.16 s, 0.12) on every refusal, that is every
   `say(text, true)` in `game/world.ts` (a train count or headway the cash will not cover, a track
   or move that cannot go there, a bus line that cannot be drawn); a cork pop, quiet (0.09), on a panel click that changes the world: train
   count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or
   removed in a line, a station's platform length, a station upgrade or a passage taken out, double
   up, a track's elevation, a junction's flying switch, a line copied or removed, a schedule pasted.
   The snap and the pop each play one of four variants (playback rate 0.94, 0.98, 1.02, 1.06 with
-  gains 0.95, 1, 0.85, 0.9; `VARIANTS`), picked at random, never the same one twice in a row
-  [T-1658]. Synthesised: "bung" on adding or building a station upgrade or a passage (one
-  Karplus-Strong string at A3, 220 Hz, 5% sharp at the start and settling in 60 ms, low-passed at
-  2.4 kHz, with a 110 Hz sine thump; under 0.4 s); a soft chime of two sine notes (E5, then A5
+  gains 0.95, 1, 0.85, 0.9; `VARIANTS`), the construct one of three (0.96, 1, 1.04 with gains
+  0.95, 1, 0.9; `CONSTRUCT_VARIANTS`), picked at random, never the same one twice in a row
+  [T-1658, T-1683]. Synthesised: a soft chime of two sine notes (E5, then A5
   0.16 s later, 0.7 s each) when a whole-game load that held the clock over 30 s ends
   (`loadComplete` in `game/loading.ts`, T-1655). A line's opening day makes no sound. Silent: opening a panel, hovering, tabs, names,
-  colours, fares, undo, the remove tools, drags. The same sound twice within a short gap (bung 0.3 s, snap
+  colours, fares, undo, the remove tools, drags. The same sound twice within a short gap (construct 0.3 s, snap
   0.15, pop 0.05, knock 0.25) plays once. One audio context serves all (`map/audioOut.ts`):
   opened with `latencyHint: "interactive"`, resumed at once, a silent buffer played through it once
   the files are decoded.

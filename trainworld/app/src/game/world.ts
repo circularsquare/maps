@@ -52,6 +52,13 @@ export function clickSound(i: Intent) {
   beforeEdit?.(i);
 }
 
+/** Told of every edit the worker accepted, with its answer (map/buildSound.ts, T-1683): the sounds of
+ * a construct or an upgrade play here, so a refusal for want of cash is heard as the knock alone. */
+let afterEdit: ((op: EditOp, a: EditAnswer) => void) | null = null;
+export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
+  afterEdit = f;
+}
+
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
 export async function edit(op: EditOp, quiet = false, silent = false): Promise<EditAnswer> {
@@ -60,6 +67,7 @@ export async function edit(op: EditOp, quiet = false, silent = false): Promise<E
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues), true);
+  else if (a.ok && !silent) afterEdit?.(op, a);
   return a;
 }
 

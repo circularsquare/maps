@@ -9,19 +9,19 @@
 
 import { display } from "../game/ui";
 import { setLoadChimeHook } from "../game/loading";
-import { setBeforeEdit, setRefuseHook, world, type Intent } from "../game/world";
+import { setAfterEdit, setBeforeEdit, setRefuseHook, world, type Intent } from "../game/world";
+import type { EditOp } from "../workers/protocol";
+import type { EditAnswer } from "../workers/clockClient";
 import { audioOut } from "./audioOut";
-import { bung, loadChime, sampleVoice } from "./buildVoices";
+import { loadChime, sampleVoice } from "./buildVoices";
 import { sample, type SampleName } from "./samples";
 
 /** The sound an edit makes at the click, or null for a silent one. Track and stations placed are
  * played by the tools themselves (map/tools.ts), which know whether the ghost refuses the click. */
 function soundOf(i: Intent): BuildSound | null {
   switch (i.op) {
-    case "construct": case "constructAll": case "constructLine":
-      return "snap";
     case "stationUpgrade": case "link":
-      return i.on ? "bung" : "pop";
+      return i.on ? null : "pop"; // building one sounds when the worker accepts it (afterEditSound)
     case "stationProps": {
       // a new platform length changes the stop; a new name does not
       const s = world.peek()?.save.stations.find((x) => x.num === i.node);
@@ -36,12 +36,26 @@ function soundOf(i: Intent): BuildSound | null {
   }
 }
 
+/** T-1683: a construct and a built station upgrade or passage sound once the worker has accepted
+ * them; one added only to the blueprint (no charge) gets the quiet pop. */
+function afterEditSound(op: EditOp, a: EditAnswer) {
+  switch (op.op) {
+    case "construct": case "constructAll": case "constructLine":
+      playBuild("construct");
+      break;
+    case "stationUpgrade": case "link":
+      if (op.on) playBuild(a.charge > 0 ? "construct" : "pop");
+      break;
+  }
+}
+
 /** Plays the building sounds as the player's edits are sent. */
 export function startBuildSounds() {
   setBeforeEdit((i) => {
     const k = soundOf(i);
     if (k) playBuild(k);
   });
+  setAfterEdit(afterEditSound);
   setRefuseHook(() => playBuild("knock")); // T-1659
   setLoadChimeHook(() => playBuild("chime")); // T-1655
 }
@@ -49,17 +63,22 @@ export function startBuildSounds() {
 /** The loudest sample of each recording at volume 1, as a fraction of full scale. The pop sits well
  * under the others; the snap is 3 dB under its first level (T-1658); the knock sits by ear between
  * the pop and the snap, its file being a dense 0.16 s (T-1659). */
-const PEAK: Record<SampleName, number> = { snap: 0.21, pop: 0.09, knock: 0.12 };
+const PEAK: Record<SampleName, number> = { snap: 0.21, pop: 0.09, knock: 0.12, construct: 0.15 };
 
 /** T-1658: the snap and the pop each play one of four variants, a little different in pitch (playback
- * rate) and level, never the same one twice in a row. */
+ * rate) and level, never the same one twice in a row. The construct (T-1683) has three. */
 export const VARIANTS: readonly { rate: number; gain: number }[] = [
   { rate: 0.94, gain: 0.95 }, { rate: 0.98, gain: 1 }, { rate: 1.02, gain: 0.85 }, { rate: 1.06, gain: 0.9 },
 ];
+export const CONSTRUCT_VARIANTS: readonly { rate: number; gain: number }[] = [
+  { rate: 0.96, gain: 0.95 }, { rate: 1, gain: 1 }, { rate: 1.04, gain: 0.9 },
+];
+const variantsOf = (kind: SampleName) => (kind === "construct" ? CONSTRUCT_VARIANTS : VARIANTS);
 const lastVariant: Partial<Record<SampleName, number>> = {};
 export function pickVariant(kind: SampleName, r = Math.random()): number {
+  const n = variantsOf(kind).length;
   const prev = lastVariant[kind] ?? -1;
-  let v = Math.floor(r * (prev < 0 ? VARIANTS.length : VARIANTS.length - 1));
+  let v = Math.floor(r * (prev < 0 ? n : n - 1));
   if (prev >= 0 && v >= prev) v++;
   return (lastVariant[kind] = v);
 }
@@ -68,11 +87,11 @@ export function pickVariant(kind: SampleName, r = Math.random()): number {
  * (stationSound.ts `MASTER`). */
 const MASTER = 0.5;
 
-export type BuildSound = "bung" | "chime" | SampleName;
+export type BuildSound = "chime" | SampleName;
 
 /** The same sound twice within this many seconds plays once: a drag that places track several times. */
-const GAP_S: Record<BuildSound, number> = { bung: 0.3, chime: 1, snap: 0.15, pop: 0.05, knock: 0.25 };
-const last: Record<BuildSound, number> = { bung: -1, chime: -1, snap: -1, pop: -1, knock: -1 };
+const GAP_S: Record<BuildSound, number> = { chime: 1, snap: 0.15, pop: 0.05, knock: 0.25, construct: 0.3 };
+const last: Record<BuildSound, number> = { chime: -1, snap: -1, pop: -1, knock: -1, construct: -1 };
 
 export function playBuild(kind: BuildSound) {
   const d = display.peek();
@@ -81,16 +100,15 @@ export function playBuild(kind: BuildSound) {
   if (!o) return;
   const { ctx, out } = o, t = ctx.currentTime;
   if (t - last[kind] < GAP_S[kind]) return;
-  if (kind === "snap" || kind === "pop" || kind === "knock") {
+  if (kind !== "chime") {
     // a file still decoding stays silent, without using up the gap
     const s = sample(kind);
     if (!s) return;
     last[kind] = t;
-    const v = kind === "knock" ? { rate: 1, gain: 1 } : VARIANTS[pickVariant(kind)];
+    const v = kind === "knock" ? { rate: 1, gain: 1 } : variantsOf(kind)[pickVariant(kind)];
     sampleVoice(ctx, out, t, s, PEAK[kind] * v.gain * d.soundVolume, v.rate);
     return;
   }
   last[kind] = t;
-  if (kind === "chime") loadChime(ctx, out, t, 0.35 * MASTER * d.soundVolume);
-  else bung(ctx, out, t, MASTER * d.soundVolume);
+  loadChime(ctx, out, t, 0.35 * MASTER * d.soundVolume);
 }
