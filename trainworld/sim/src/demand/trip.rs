@@ -354,7 +354,8 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
             let extra = g.fare_curve.extra(total);
             let rides = legs.iter().filter(|l| l.kind == 1).count() as f32;
             for l in legs.iter_mut().filter(|l| l.kind == 1) {
-                l.fare += extra * if total > 0.0 { l.km / total } else { 1.0 / rides };
+                // T-1626: a leg's share by km, times its line's fare multiplier
+                l.fare += extra * if total > 0.0 { l.km * g.fare_mul(l.rn_from as usize) / total } else { 1.0 / rides };
             }
         }
     }

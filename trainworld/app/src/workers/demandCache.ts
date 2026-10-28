@@ -72,7 +72,7 @@ interface Svc {
   frame: unknown;
   fare: unknown;
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
-  lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
+  lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
   passages?: [string, string][];
 }
 
@@ -88,7 +88,7 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
   });
   // a circle's stand (T-798) and a service span (T-842) only where there is one, so other
   // networks keep their keys
-  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm ?? null, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
+  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
   // passages (T-1281) only where there are any
   const passages = svc.passages?.length ? { passages: svc.passages.map(([a, b]) => [place.get(a) ?? -1, place.get(b) ?? -1]) } : {};
   return { text: JSON.stringify({ frame: svc.frame, fare: svc.fare, stations, lines, ...passages }), stationIds: svc.stations.map((s) => s.id), lineIds: svc.lines.map((l) => l.id) };

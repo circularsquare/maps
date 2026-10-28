@@ -128,7 +128,7 @@ function fromRows(base: number, stretches: [number, number][]): FareNode[] {
  * rate per unit (stepped by whole cents, or typed). A row's change keeps the other rows' values, so a
  * rate or base change moves every later node's fare by the same amount; a drag on the graph sets
  * fares instead. One grid across the rows, so the steppers line up. */
-export function FareNodeRows({ nodes, scale, first }: { nodes: FareNode[]; scale: number; first?: ComponentChildren }) {
+export function FareNodeRows({ nodes, scale, first, last }: { nodes: FareNode[]; scale: number; first?: ComponentChildren; last?: ComponentChildren }) {
   const setFares = (ns: FareNode[]) => sendFares(ns, scale);
   const kpu = unitMetres() / 1000;
   const unit = unitShort();
@@ -180,6 +180,7 @@ export function FareNodeRows({ nodes, scale, first }: { nodes: FareNode[]; scale
           </li>
         );
       })}
+      {last}
     </ul>
   );
 }

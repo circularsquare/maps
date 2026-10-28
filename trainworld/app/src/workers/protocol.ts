@@ -100,6 +100,8 @@ export type EditOp =
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
   | { op: "fareScale"; country: string; scale: number | null }
+  /** T-1626: the fare multiplier on high-speed lines */
+  | { op: "fareHsr"; mul: number }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
@@ -257,7 +259,7 @@ export interface MoneyState {
   busRouteKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd" };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; hsr?: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -636,6 +638,8 @@ export interface SnapshotLine {
   hopS: number[][][];
   /** Actual track km per segment, in each run's travel order. Legacy snapshots omit it. */
   hopKm?: number[][];
+  /** T-1626: high-speed trains, whose fares are times the high-speed multiplier */
+  fast?: boolean;
   /** dwell at each stop, s, per run and level, in the run's own stop order (0 at both ends) */
   dwellS: number[][][];
   /** layover at each end, s */

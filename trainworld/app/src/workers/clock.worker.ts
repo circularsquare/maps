@@ -13,7 +13,7 @@ import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zone
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { letterOf } from "../game/lineLetter";
-import { faresOf, START_FARE, START_NODES, type Fares } from "../game/fareCurve";
+import { faresOf, START_FARE, START_NODES, tidyHsr, type Fares } from "../game/fareCurve";
 import { FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
@@ -51,7 +51,9 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const g = k === 1 ? f : { base: f.base * k, perKm: f.perKm * k, nodes: f.nodes?.map(([km, v]) => [km, v * k] as [number, number]) };
   const scales: Record<string, number> = {};
   for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : tidyScale(v);
-  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd" };
+  // T-1626: a save from before has none and charges the default
+  const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -2437,6 +2439,7 @@ function buildSnapshot(): NetworkSnapshot {
     lines.push({
       id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
+      ...(!bus && a.line_fast(id) ? { fast: true } : {}),
       turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : li[i + 21],
       ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
@@ -2686,7 +2689,11 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd" };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}) };
+      return { r: 0 };
+    case "fareHsr":
+      if (!Number.isFinite(op.mul)) return { r: 1 };
+      fares = { ...fares, hsr: tidyHsr(op.mul) };
       return { r: 0 };
     case "fareScale": {
       const scales = { ...fares.scales };
@@ -2967,7 +2974,7 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr") {
       apply(msg.op);
       dirty = true;
       sendMoney();

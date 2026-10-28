@@ -26,6 +26,23 @@ export interface Fares {
   /** T-1521: "usd" for a curve and scales under the market-rate income rule; absent in a save
    * from before (game/income.ts `oldCurveFactor`) */
   basis?: "usd";
+  /** T-1626: the fare multiplier on high-speed lines; absent for `HSR_FARE` */
+  hsr?: number;
+}
+
+/** T-1626: a high-speed line's fares are the curve's times this unless the player sets another.
+ * The base is paid once a trip; the rest of a trip's fare is times the share of its km on such
+ * lines (docs: the Money section of SPEC.md). */
+export const HSR_FARE = 1.5;
+export const HSR_FARE_MAX = 5;
+/** The high-speed multiplier of `f`, or the default. */
+export function hsrFare(f: { hsr?: number } | undefined): number {
+  const v = f?.hsr;
+  return v !== undefined && Number.isFinite(v) && v >= 0 ? v : HSR_FARE;
+}
+/** A multiplier the player typed or stepped to: 0 to `HSR_FARE_MAX`, in hundredths. */
+export function tidyHsr(v: number): number {
+  return Math.min(HSR_FARE_MAX, Math.max(0, Math.round(v * 100) / 100));
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */
@@ -123,8 +140,8 @@ export function curveKnots(f: { base: number; perKm: number; nodes?: FareNode[] 
 }
 
 /** The fare taken from `rides` trips riding `km` in all, US$, on the first stretch's line: the base
- * on each trip and the rate on the km, as demand charges them on rides. The rest of a bent curve
- * comes from demand itself (`LineDemand.fareX`). */
-export function faresFor(f: Fares, rides: number, km: number): number {
-  return f.base * rides + f.perKm * km;
+ * on each trip and the rate on the km (times `mul` on a high-speed line, T-1626), as demand charges
+ * them on rides. The rest of a bent curve comes from demand itself (`LineDemand.fareX`). */
+export function faresFor(f: Fares, rides: number, km: number, mul = 1): number {
+  return f.base * rides + mul * f.perKm * km;
 }

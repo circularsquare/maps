@@ -2,7 +2,7 @@
 //! Coarse destination gravity is integrated by deterministic stratified cell samples. Endpoint
 //! distances, the 150 m exclusion, walking and regional overlap use the actual sampled cells.
 use super::{
-    api::{fare_x_usd, put_fare_curve, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
+    api::{fare_x_usd, put_fares, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
     clock::now_ms,
     days::{day_rate, everyday, load_factor, share_out, share_ret, SATURDAY, SUNDAY, WEEKDAY},
     kernel::*,
@@ -1618,6 +1618,14 @@ impl EverydayApi {
         }
         Ok(())
     }
+    /// T-1626: `DemandApi::set_fare_mul`.
+    pub fn set_fare_mul(&mut self, mul: &[f32]) -> Result<(), String> {
+        self.engine.set_fare_mul(mul)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     /// T-1277: `DemandApi::set_fare_weight`.
     pub fn set_fare_weight(&mut self, w: f32) -> Result<(), String> {
         self.engine.set_fare_weight(w)?;
@@ -1651,10 +1659,7 @@ impl EverydayApi {
         };
         let net = DemandApi::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
-            *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
-        }
-        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_km, &self.engine.fare_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
@@ -1709,10 +1714,7 @@ impl EverydayApi {
         if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
             return false;
         }
-        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
-            *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
-        }
-        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_km, &self.engine.fare_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);

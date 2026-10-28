@@ -434,7 +434,10 @@ per node [T-1201, T-1234], no rules between them and none wrapping at the dock's
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
 [+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
-the first's end; the last node's distance changes no fare, so it is only dragged). The base fare
+the first's end; the last node's distance changes no fare, so it is only dragged). Last, once any
+line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.50x",
+by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
+to 1.50x") [T-1626]. The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
 cent of fare where a stretch is too short for that to move it. A click on any value opens a box to
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in

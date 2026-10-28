@@ -814,7 +814,16 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   pair's km, on the stretches they ride, each by its km, split as they split (`Loads::rn_fare_x`,
   each population's `fare_extra`, T-1516); the trip explorer shows each route's extra on its rides
   by km. So a trip that changes lines pays each line the base share of its boarding and the curve's
-  fare a km on that line's km, and no line's fares go below zero. Fare income is the first stretch's base on
+  fare a km on that line's km, and no line's fares go below zero. **High-speed fares** [T-1626]: a
+  line with high-speed trains charges its rate and its share of the curve's extra times the
+  high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.5, 0 to 5, saved in the header; a save
+  without one charges 1.5); the base stays once a trip. So a trip pays base + (curve(km) - base) x
+  (1 + (m - 1) x its share of km on high-speed lines). Demand takes it as each route node's
+  multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
+  station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,
+  and the assignment spreads the extra over each km times its multiplier; the market's income
+  groups weigh the same fares (`IntercityApi::fare_col`). Fare income takes the rate times it on
+  that line's passenger-km. Fare income is the first stretch's base on
   each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the
   line it is counted at (`LineDemand.fareX`, `app/src/game/money.ts`; on a weekend the extra follows
   each stretch's riders), so demand and income charge the same trips the same fares. Changing the fare

@@ -553,6 +553,12 @@ notes/T-420.md has the tables.
   the 0.5. The starting curve matches them at 50-150 km and 300-1,200 km within about 1.5x in the
   rich countries and China. Real fares sit well under it for India's subsidised long-distance
   classes (sleeper 0.3x the game's) and over it for Europe's metros (2-2.6x) (notes/T-1521.md).
+  **High-speed fares** (T-1626): the fare above the base is times the player's high-speed multiplier
+  (default 1.5) by the share of the trip's km on high-speed lines, in route choice, mode choice and
+  the market alike. 1.5 is about JR's Nozomi ticket over its ordinary one (notes/T-1616.md); Europe's
+  and China's high-speed fares sit at a similar premium over conventional ones. Why it may not carry
+  over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
+  services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
 - **Income groups on longer trips** (T-1431, docs/regional.md 5.1). A country's travellers are three
   equal groups by income from the World Bank's income shares by quintile (SI.DST.FRST.20 to
   SI.DST.05TH.20, 170 countries with a survey from 1992 to 2025; the rest take their subregion's

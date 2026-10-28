@@ -488,6 +488,44 @@ fn a_bent_fare_curve_loses_long_riders_and_counts_its_extra() {
     assert!(api.fare_extra(0).iter().all(|&x| x == 0.0));
 }
 
+/// T-1626: a multiplier on one line's fares loses it riders and charges its rides' distance fare
+/// and curve extra times it; all 1 is the same solve as none.
+#[test]
+fn a_fare_multiplier_on_one_line_loses_its_riders_and_scales_its_fares() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let mut km = vec![];
+    for &count in &n { for _ in 0..2 { for k in 0..count { km.push(if k + 1 == count { 0.0 } else { 1.0 }); } } }
+    api.set_fares(1.5, 0.1, &km).unwrap();
+    api.set_fare_curve(&[0.0, 1.5, 3.0, 1.8, 100.0, 1.8 + 97.0]).unwrap();
+    api.solve(0);
+    let plain = api.summary(0)[2];
+    let first = 2 * n[0] as usize;
+    let line_x = |api: &DemandApi| api.fare_extra(0)[..first].iter().sum::<f32>();
+    let x0 = line_x(&api);
+    let mut mul = vec![1.0; km.len()];
+    api.set_fare_mul(&mul).unwrap();
+    api.solve(0);
+    assert_eq!(api.summary(0)[2].to_bits(), plain.to_bits());
+    mul[..first].fill(2.0);
+    api.set_fare_mul(&mul).unwrap();
+    assert_eq!(api.solved_mask(), 0);
+    api.solve(0);
+    let dear = api.summary(0)[2];
+    let st = api.per[0].as_ref().unwrap();
+    for r in 0..km.len() {
+        assert_eq!(st.g.rn_fare[r], km[r] * 0.1 * api.base.fare_w * mul[r]);
+    }
+    assert!(dear < plain, "rail {dear} against {plain}");
+    // fewer riders on the line, but each pays twice its extra
+    let x1 = line_x(&api);
+    assert!(x1 > x0, "the line's extra {x1} against {x0}");
+    assert!(api.set_fare_mul(&[2.0]).is_err());
+    api.set_fare_mul(&[]).unwrap();
+    api.solve(0);
+    assert_eq!(api.summary(0)[2].to_bits(), plain.to_bits());
+}
+
 #[test]
 fn fare_distances_follow_each_runs_track_and_base_is_once() {
     let (mut api, xy, n, stops, times, tph, cars) = small();

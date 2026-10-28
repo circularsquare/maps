@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{check_fare_curve, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fares, check_fare_mul, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{everyday as everyday_purpose, lean_sign, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     everyday::{KIND_COUNT, OUTWARD, RETURN},
@@ -897,24 +897,22 @@ fn rail_logsum(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, 
 }
 /// T-1286: the fares of trips from one country weighed at a factor of the market's (the player's
 /// fare scale there over its income's), on each station pair's strategy as searched: its expected
-/// fare km (`trip_km_on`, S x S as `Skims::r`, or a column at a time, T-1545) back to the fare's
-/// perceived minutes.
+/// fare less the base (`IntercityApi::fare_col`, S x S as `Skims::r`, or a column at a time,
+/// T-1545), perceived minutes.
 struct FareX<'a> {
-    km: &'a [f32],
+    dist: &'a [f32],
     base: f32,
-    per_km: f32,
-    curve: &'a FareCurve,
 }
 impl FareX<'_> {
     /// The perceived minutes of the fare from station `a` to `b` in the market's weight.
     #[inline]
     fn fare(&self, a: usize, b: usize, s: usize) -> f32 {
-        self.fare_of(self.km[a * s + b])
+        self.fare_of(self.dist[a * s + b])
     }
-    /// The same for a trip of `k` expected fare km.
+    /// The same for a trip whose fare less the base is `d`.
     #[inline]
-    fn fare_of(&self, k: f32) -> f32 {
-        self.base + self.per_km * k + self.curve.extra(k)
+    fn fare_of(&self, d: f32) -> f32 {
+        self.base + d
     }
 }
 /// `rail_logsum` with the fares weighed at `1 + x.1` (`FareX`).
@@ -2518,6 +2516,8 @@ pub struct IntercityApi {
     want: Vec<bool>,
     per: Vec<Option<Period>>,
     fare_km: Vec<f32>,
+    /// T-1626: `DemandApi::set_fare_mul`'s multipliers
+    fare_mul: Vec<f32>,
     fare_per_km: f32,
     /// `DemandApi::set_fare_curve`'s knots (T-883)
     fare_curve: Vec<f32>,
@@ -2762,6 +2762,7 @@ impl IntercityApi {
             want: vec![],
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
+            fare_mul: vec![],
             fare_per_km: 0.,
             fare_curve: vec![],
             zone_fx: vec![],
@@ -2891,11 +2892,11 @@ impl IntercityApi {
         let cap = if matches!(src, Columns::Skims(_)) { usize::MAX } else { WINDOW_STRATEGY_BYTES.with(|c| c.get()) };
         let mut kept: std::collections::BinaryHeap<(u32, u32)> = Default::default();
         let mut held_bytes = 0usize;
-        let (mut kcol, mut dep) = (vec![], vec![]);
+        let (mut kcol, mut kwcol, mut dep) = (vec![], vec![], vec![]);
         let (mut live_r, mut live_w) = (0usize, 0usize);
         let mut stats = [0usize; 5];
 
-        let fx = need_km.then(|| FareX { km: &[], base: p.fare_min, per_km: self.fare_per_km, curve: &g.fare_curve });
+        let fx = need_km.then(|| FareX { dist: &[], base: p.fare_min });
         let fx_of = |zone: usize| self.fx_of(&fx, zone, 1.);
         // T-1300: the riders' fare sensitivity: each trip's rail share with its fare dearer by
         // `FARE_D_MIN` perceived minutes of the market's (times its fare factor), less its share
@@ -2993,7 +2994,7 @@ impl IntercityApi {
                 if need_km {
                     match &h {
                         Some(h) => {
-                            trip_km_on(g, h.view(), x, &self.fare_km, &mut kcol, &mut dep);
+                            self.fare_col(g, h.view(), x, &mut kcol, &mut kwcol, &mut dep);
                             kmc[k].copy_from_slice(&kcol[..s]);
                         }
                         None => kmc[k].fill(0.),
@@ -3245,7 +3246,7 @@ impl IntercityApi {
         let e_loads = ev.into_iter().zip(e_used).map(|(a, u)| a.filter(|_| u).map(|a| a.l)).collect();
         Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d }
     }
-    /// T-1286: each station pair's expected fare km (`FareX::km`) on the strategies towards the
+    /// T-1286: each station pair's expected fare less the base (`FareX::dist`) on the strategies towards the
     /// stations `want`ed that `strategy` has; empty while no one needs them (`need_km`).
     fn pair_km<'s>(&self, g: &Graph, want: &[bool], strategy: impl Fn(usize) -> Option<Strategy<'s>>) -> Vec<f32> {
         if !self.need_km() {
@@ -3253,17 +3254,20 @@ impl IntercityApi {
         }
         let s = g.n_st;
         let mut km = vec![0f32; s * s];
-        let (mut col, mut dep) = (vec![], vec![]);
+        let (mut col, mut kw, mut dep) = (vec![], vec![], vec![]);
         for dst in (0..s).filter(|&d| want[d]) {
             if let Some(st) = strategy(dst) {
-                self.put_km(g, st, dst, &mut col, &mut dep, &mut km);
+                self.fare_col(g, st, dst, &mut col, &mut kw, &mut dep);
+                for src in 0..s {
+                    km[src * s + dst] = col[src];
+                }
             }
         }
         km
     }
     /// The fares' weighing (`FareX`) on `km` (`pair_km` on `g`), none while it is empty.
-    fn fare_x<'x>(&self, g: &'x Graph, p: &Params, km: &'x [f32]) -> Option<FareX<'x>> {
-        (!km.is_empty()).then(|| FareX { km, base: p.fare_min, per_km: self.fare_per_km, curve: &g.fare_curve })
+    fn fare_x<'x>(&self, p: &Params, km: &'x [f32]) -> Option<FareX<'x>> {
+        (!km.is_empty()).then(|| FareX { dist: km, base: p.fare_min })
     }
     /// What `rail_logsum_x` takes for trips from `zone` by riders weighing money at `f` times its
     /// country's (T-1431, an income group's): none where the factor comes to 1.
@@ -3276,12 +3280,18 @@ impl IntercityApi {
     fn need_km(&self) -> bool {
         !self.zone_fx.is_empty() || self.m.grouped
     }
-    /// `pair_km`'s column towards `dst`.
-    fn put_km(&self, g: &Graph, st: Strategy, dst: usize, col: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>, km: &mut [f32]) {
-        let s = g.n_st;
+    /// `pair_km`'s column towards `dst`, into `col` by node: each one's expected fare there less the
+    /// base, perceived minutes: its fare km at the rate plus the curve's extra, times the trip's
+    /// km-weighted multiplier (T-1626). `kw`: scratch.
+    fn fare_col(&self, g: &Graph, st: Strategy, dst: usize, col: &mut Vec<f32>, kw: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
         trip_km_on(g, st, dst, &self.fare_km, col, dep);
-        for src in 0..s {
-            km[src * s + dst] = col[src];
+        let weighed = !g.rn_kmw.is_empty();
+        if weighed {
+            trip_km_on(g, st, dst, &g.rn_kmw, kw, dep);
+        }
+        for (i, v) in col.iter_mut().enumerate() {
+            let k = *v;
+            *v = (self.fare_per_km * k + g.fare_curve.extra(k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
         }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
@@ -3769,6 +3779,16 @@ impl IntercityApi {
         }
         Ok(())
     }
+    /// T-1626: `DemandApi::set_fare_mul`.
+    pub fn set_fare_mul(&mut self, mul: &[f32]) -> Result<(), String> {
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
+        let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { mul };
+        if !same_bits(mul, &self.fare_mul) {
+            self.fare_mul = mul.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
     /// T-1277: perceived minutes a dollar of the fares the market is given (`DemandApi::
     /// set_fare_weight`); before `set_fares`. The plane's fare weighs each departing country's
     /// own (`WorldIn::fare_w`).
@@ -3826,10 +3846,7 @@ impl IntercityApi {
         };
         let net = DemandApi::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        for (r, f) in g.rn_fare.iter_mut().enumerate() {
-            *f = self.fare_km.get(r).copied().unwrap_or(0.) * self.fare_per_km;
-        }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);

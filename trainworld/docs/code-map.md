@@ -400,7 +400,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   the city bubbles on, a click where a station meets a bubble selects the bubble and shows its tag,
   just closer in the station; port 6170, about two minutes), `t1554-fare-display.mjs` (the real
   save's New York fares per km match its own, the shown scale reads Japan 1.00x and India 0.16x, the
-  Money tab's heading names the country; about a minute), `old/t1516-fares-never-negative.mjs`
+  Money tab's heading names the country; about a minute), `t1626-hsr-fare.mjs [url]` (a new game:
+  the High speed fare row only once a line runs high-speed trains; on that line multipliers 1.0, 1.5
+  and 2.0 lose riders and raise the fare a ride; a shot to artifacts/trainworld/t1626-money.png;
+  about three minutes), `old/t1516-fares-never-negative.mjs`
   (a new game and the real save with a bus feeder under a tapering fare curve: no line's fares a
   day below zero; port 6116 by default, about six minutes), `old/t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),

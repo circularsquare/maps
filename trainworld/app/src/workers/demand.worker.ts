@@ -1317,6 +1317,7 @@ async function run() {
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
           p.set_fares(m.fare.base * scale, m.fare.perKm * scale, m.hopKm);
+          p.set_fare_mul(m.fareW ?? new Float32Array(0));
           p.set_fare_curve(scaledKnots(m.fare, scale));
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the

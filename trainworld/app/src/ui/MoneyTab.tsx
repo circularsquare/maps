@@ -1,10 +1,10 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
 import { busesText, busRouteRule, busRunRule, busUpkeepRule, money, runCostRule, shortDistance, upkeepText } from "../game/format";
-import { setFareScale, stationsById, world } from "../game/world";
+import { setFareHsr, setFareScale, stationsById, world } from "../game/world";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { scaleNodes, type FareNode } from "../game/fareCurve";
+import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
@@ -90,6 +90,23 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   );
 }
 
+/** T-1626: the fare multiplier on high-speed lines: a stepper by 0.05, typed on a click, and a
+ * button back to the default once the player has set another. */
+function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
+  const set = (v: number) => void setFareHsr(tidyHsr(v));
+  const text = (v: number) => `${v.toFixed(2)}x`;
+  return (
+    <li>
+      <span class="fr-what" data-tip={`Rides on high-speed lines pay ${text(mul)} the fare above the base fare. A trip that changes lines pays it only on its high-speed km.`}>High speed</span>
+      <Stepper value={text(mul)} wide label="high-speed fare" onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip: "Fares on high-speed lines as a multiple of the others. Click to type one." }} />
+      {own
+        ? <button class="btn icon" aria-label="Back to the usual multiple" data-tip={`Back to ${text(HSR_FARE)}`} onClick={() => set(HSR_FARE)}><Icon.undo /></button>
+        : <span />}
+    </li>
+  );
+}
+
 /** T-1300: what the fare being dragged, or one demand has yet to solve, would do to rail trips and
  * fare income a day; nothing otherwise. */
 function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: number }) {
@@ -127,6 +144,8 @@ export function MoneyTab() {
   const scale = fareScale(country, m.fares.scales);
   const shown = scaleNodes(m.fares.nodes, scale);
   const f = farePreview.value ?? shown;
+  // T-1626: shown once a line runs high-speed trains
+  const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
   return (
     <>
       <ul class="rows">
@@ -175,7 +194,8 @@ export function MoneyTab() {
       <MoneyHistory zone={zone} />
       <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={shown} scale={scale} />
-      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />} />
+      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
+        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <div class="h">Trains</div>
       <ul class="rows">

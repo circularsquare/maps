@@ -21,7 +21,7 @@ import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
-import { faresFor, faresOf } from "./fareCurve";
+import { faresFor, faresOf, hsrFare } from "./fareCurve";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
@@ -96,7 +96,8 @@ function sameShape(a: WorldView, b: WorldView): boolean {
     if (x.id !== y.id || x.num !== y.num || !sameList(x.stops, y.stops)) return false;
     const p = a.lineStats[x.id], q = b.lineStats[y.id];
     if (!p || !q) { if (p !== q) return false; continue; }
-    if (p.status !== q.status || !sameList(p.stopS[0], q.stopS[0]) || !sameList(p.stopS[1], q.stopS[1])) return false;
+    // T-1626: high-speed trains change the line's fares
+    if (p.status !== q.status || p.fast !== q.fast || !sameList(p.stopS[0], q.stopS[0]) || !sameList(p.stopS[1], q.stopS[1])) return false;
     if (p.bus !== q.bus && !sameBus(p.bus, q.bus)) return false;
   }
   return true;
@@ -166,9 +167,11 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       let boarded = 0, scaled = 0;
       for (let k = 0; k < dm.boardings.length; k++) { boarded += dm.boardings[k]; scaled += dm.boardings[k] * (sc[k] ?? 1); }
       const baseScale = boarded > 0 ? scaled / boarded : (sc[0] ?? 1);
+      // T-1626: a high-speed line's rides pay its multiplier on the rate; demand's extra has it already
+      const mul = st.fast ? hsrFare(m.fares) : 1;
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
-        const r = (faresFor(fares, rides * share * baseScale, pkmPaid[p]) + (dm.fareX?.[p] ?? 0)) * x;
+        const r = (faresFor(fares, rides * share * baseScale, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;
         perPeriod[p] += r;
         linePer[p] += r;
         ridesPeriod[p] += rides * share;

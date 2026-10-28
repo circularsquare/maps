@@ -75,6 +75,32 @@ pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_
     g.rn_km = (0..g.rn_fare.len()).map(|r| hop_km.get(r).copied().unwrap_or(0.0)).collect();
 }
 
+/// Each ride edge's distance fare (`per_km` a fare km, perceived minutes) times its route node's
+/// multiplier in `mul` (T-1626; empty: all 1), and the fare curve (`put_fare_curve`).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], hop_km: &[f32], mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
+    let km = |r: usize| hop_km.get(r).copied().unwrap_or(0.0);
+    let m = |r: usize| mul.get(r).copied().unwrap_or(1.0);
+    for (r, fare) in g.rn_fare.iter_mut().enumerate() {
+        *fare = km(r) * per_km * m(r);
+    }
+    put_fare_curve(g, knots, hop_km, fare_min, per_km, fare_w);
+    if mul.iter().any(|&v| v != 1.0) {
+        let n = g.rn_fare.len();
+        g.rn_fare_mul = (0..n).map(m).collect();
+        g.rn_kmw = (0..n).map(|r| km(r) * m(r)).collect();
+    }
+}
+
+/// T-1626: checks a fare multiplier per route node (`count` of them, or none).
+pub(crate) fn check_fare_mul(mul: &[f32], count: usize) -> Result<(), String> {
+    if (mul.is_empty() || mul.len() == count) && mul.iter().all(|v| v.is_finite() && *v >= 0.0) {
+        Ok(())
+    } else {
+        Err("invalid fare multipliers".into())
+    }
+}
+
 /// `Loads::rn_fare_x` in US$, at `fare_w` perceived minutes a dollar.
 pub(crate) fn fare_x_usd(v: &[f32], fare_w: f32) -> Vec<f32> {
     v.iter().map(|x| x / fare_w).collect()
@@ -458,6 +484,8 @@ pub struct DemandApi {
     pub(crate) per: Vec<Option<Period>>,
     pub(crate) fare_per_km: f32,
     pub(crate) fare_km: Vec<f32>,
+    /// T-1626: each route node's fare multiplier (`set_fare_mul`); empty: all 1.
+    pub(crate) fare_mul: Vec<f32>,
     /// The fare curve's knots, km and US$ in pairs (T-883, `set_fare_curve`); empty for the straight line.
     pub(crate) fare_curve: Vec<f32>,
     open_ms: f64,
@@ -777,6 +805,7 @@ impl DemandApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_per_km: 0.0,
             fare_km: vec![],
+            fare_mul: vec![],
             fare_curve: vec![],
             open_ms: 0.0,
             complex_in: vec![],
@@ -886,7 +915,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1010,6 +1039,7 @@ impl DemandApi {
         }
         if !self.layout_same {
             self.fare_km.clear();
+            self.fare_mul.clear();
             self.sz = None;
             self.want.clear();
             self.od_st.clear();
@@ -1051,6 +1081,19 @@ impl DemandApi {
             self.base.fare_min = fare_min;
             self.fare_per_km = per_km;
             self.fare_km = hop_km.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
+    /// T-1626: each route node's fare multiplier, in `set_fares`' layout (a high-speed line's
+    /// nodes its multiplier, the rest 1); empty when every one is 1.
+    pub fn set_fare_mul(&mut self, mul: &[f32]) -> Result<(), String> {
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
+        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
+        if !same_bits(mul, &self.fare_mul) {
+            self.fare_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
             self.same = 0;
         }
@@ -1130,10 +1173,7 @@ impl DemandApi {
         let walk0 = self.walk_all * p.period_share as f64;
         let net = Self::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
-            *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
-        }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -1166,10 +1206,7 @@ impl DemandApi {
         if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
             return false;
         }
-        for (r, fare) in g.rn_fare.iter_mut().enumerate() {
-            *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
-        }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);

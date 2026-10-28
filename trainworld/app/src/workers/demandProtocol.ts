@@ -45,9 +45,11 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number };
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
+  /** T-1626 (`DemandApi.set_fare_mul`): each route node's fare multiplier, as `hopKm`; absent: all 1 */
+  fareW?: Float32Array;
   /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes
    * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
    * 1 everywhere */

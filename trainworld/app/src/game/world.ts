@@ -260,6 +260,10 @@ export function setFares(nodes: FareNode[]) {
 export function setFareScale(country: string, scale: number | null) {
   return edit({ op: "fareScale", country, scale });
 }
+/** T-1626: the fare multiplier on high-speed lines. */
+export function setFareHsr(mul: number) {
+  return edit({ op: "fareHsr", mul });
+}
 
 export function renameLine(id: LineId, name: string) {
   const n = name.trim();

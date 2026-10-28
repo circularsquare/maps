@@ -230,7 +230,7 @@ impl IntercityApi {
         let sk = skims_for(g, p, &want);
         let re = sk.entry_r();
         let km = self.pair_km(g, &want, |dst| (sk.slot[dst] != u32::MAX).then(|| sk.strategy(sk.slot[dst] as usize)));
-        let fx = self.fare_x(g, p, &km);
+        let fx = self.fare_x(p, &km);
         let sh = share_out(day as usize, LONGER, q) as f64;
         let (mut all, mut rail, mut air, mut car) = (0f64, 0f64, 0f64, 0f64);
         let (mut rc, mut rc_w, mut cc, mut cc_w, mut ref_c, mut km, mut served, mut n) = (0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64);
