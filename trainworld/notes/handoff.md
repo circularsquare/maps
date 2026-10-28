@@ -33,7 +33,10 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1733 (T-1650 stage 1): the T-1609 agent resumed (id in this session's transcript; name t1609/t1733),
   tree .tw-trees/t1733 from f5961ca2; Vite 6122; 5 cores; may file T-1736-1737. Then T-1734, T-1735 (Anita: yes to all).
 - T-1654 agent t1654 (Sonnet) in main tree, loadBar.ts; 4 cores; Vite 6131.
-- T-1374 agent t1374 (Opus) in .tw-trees/t1374 from f5961ca2; Vite 6151; 4 cores; may file T-1739-1740.
+- T-1374 landed c722abb3 (Kyoto, Nara +39-57% going out; Hangzhou misses on attraction data, T-1739 filed;
+  "up to twice" became 1.5x, in DECISIONS). master ff5fd7a0; 8800 rebuilt there, smoke 20/20 both shades. Not deployed.
+- T-1520 agent t1520 (Opus) in .tw-trees/t1520 from ff5fd7a0; Vite 6161; 5 cores; may file T-1740-1741.
+- T-1625 agent t1625 (Sonnet) in main tree, pipeline/realnet_n02.py and the Japan save; Vite 6171; 4 cores; may file T-1742.
 - T-1650 design done (notes/T-1650.md); Anita approved, stages T-1733-1735 filed. T-1732 unassigned.
 
 ## Landed by maps-a2 (all committed and deployed as 2026-10-28e; detail in ARCHIVE.md)

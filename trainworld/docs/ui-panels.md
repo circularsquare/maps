@@ -340,7 +340,7 @@ Google" or "Not logged in") and a button, Account settings or Sign in, that open
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
 out, delete; [Account and leaderboards](#account-and-leaderboards)), Explore a trip [T-220], and Submit feedback at the bottom
 [T-1673, `ui/FeedbackPanel.tsx`]: a centred modal "Feedback" (the account panel's form styles) with Name (optional), Email
-("Email, if you want a reply") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
+("Email (optional)") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
 Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's top centre, "sent! thank you for feedback" (the daily rides note's place and look, 5 s; `showPassingNote` in `ui/RidesNotes.tsx`) [T-1709]; a failure says why (no server for this copy,
@@ -797,16 +797,18 @@ registry centre and zoom, or over New York with none [T-310].
   rest is spread over the rest of it. It is never full before the card goes. The pick and the game it
   opens are one wait. A game loaded in place while the last one's bar is still up (a check's direct
   load; the player's loads reload the page) starts the bar over from empty [T-840].
-- **Under the bar, the share done and the time left** [T-1479]: "42%" at its left, "2 min left" at its
-  right. The time left is each stage's expected time less its time so far; a stage past its expected
-  time is guessed to go on a share of its time so far (a data stage 0.3 of it times the part not yet
-  landed, a solve round 0.2). It shows once the game's network is in (from the start when the slot's
-  last load is remembered). It counts down with the clock or faster, and rises only while the estimate
-  is over a fifth above it, at half a second a second; under 5 s it takes a higher estimate of 5 s or
-  more at once. Under 5 s "A few seconds left", under 55 s in tens of seconds, under 90 s "1 min left",
-  then whole minutes. It says "Taking a bit longer" instead of a number [T-1613] while every stage
-  still in hand is past its expected time (nothing expected is left, only the guess), or while the
-  estimate is over twice the shown count and 10 s more (a slow load the count cannot catch up with).
+- **Under the bar, the share done and the time left** [T-1479, T-1654]: "42%" at its left, "About 2 min
+  left" at its right, always a figure. The time left is each stage's expected time less its time so far;
+  a stage past its expected time is guessed to go on a share of its time so far (a data stage 0.3 of it
+  times the part not yet landed). The solve is the rounds still to come: the rounds so far give the
+  rest (the remembered load's before the first lands); within a round, the periods land in waves, and
+  the first one in gives the round's length (times the waves' ratio, which the round before measures);
+  a round past that is guessed to go on as long per wave as it has so far. It shows once the game's
+  network is in (from the start when the slot's last load is remembered). It counts down with the
+  clock and drops to a lower estimate at once; it never climbs by degrees: an estimate over 1.4 times
+  the count and 10 s more replaces it in one step, and under 5 s a higher estimate of 5 s or more does
+  too. Under 5 s "A few seconds left", under 55 s "About 40 s left" in tens of seconds, under 90 s
+  "About 1 min left", then whole minutes.
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].

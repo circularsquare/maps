@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1654 [P2] Load card time estimate. Done 2026-10-28: "Taking a bit longer" gone, a figure always ("About 2 min left"), the solve's rounds estimated from the rounds so far and the periods landed in each; on all-Japan and New York within about 30% from halfway on. notes/T-1654.md.
 - T-1374 [P2] Superholidays stage 3, going-out trips to touristy places. Done 2026-10-28 (tree tw/t1374): the lean gains 0.5 times the zones' touristiness difference (attraction visits per resident, 3 to 30), 90/10 at most; Kyoto +39-57%, Nara +51% against same-size zones; weekdays unchanged; Hangzhou misses on data (T-1739). notes/T-264.md.
 - T-1609 [P2] T-1206 stage 3, the local refine. Done 2026-10-28 (tree tw/t1609): a level change solves the zone alone against frozen loads; all of China shows it in 4.7 s (was 53 s), Guangzhou +0.18% against the whole solve. notes/T-1609.md.
 - T-1718 [P2] Bus money. Done 2026-10-28: buses lose money about as real ones do; Anita lowered running cost US$9 to US$6 a bus-km (params.rs). notes/T-1718.md.

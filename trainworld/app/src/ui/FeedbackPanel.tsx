@@ -54,7 +54,7 @@ export function FeedbackPanel() {
     <form class="acct-form" onSubmit={(e) => { e.preventDefault(); if (state !== "sending") void send(); }}>
       <input name="name" placeholder="Name (optional)" aria-label="Name" autocomplete="name" maxLength={100}
         value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-      <input name="email" type="email" placeholder="Email, if you want a reply" aria-label="Email" autocomplete="email" maxLength={200}
+      <input name="email" type="email" placeholder="Email (optional)" aria-label="Email" autocomplete="email" maxLength={200}
         value={contact} onInput={(e) => setContact((e.target as HTMLInputElement).value)} />
       <textarea name="message" placeholder="Message" aria-label="Message" rows={6} maxLength={4000}
         value={message} onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)} />
