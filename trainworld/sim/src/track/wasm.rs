@@ -59,9 +59,9 @@ pub struct TrackApi {
     route_hsr: bool,
     /// T-1615: routes ramp over or under track they would cross flat (`set_route_ramp`).
     route_ramp: bool,
-    /// T-1685: the next route runs beside track, the pieces under its start and end (`set_route_beside`).
-    route_beside: Option<(u32, u32)>,
-    /// The route being laid out is one beside track: its ends get no lead-ins.
+    /// T-1685: the next route runs beside the run through this piece (`set_route_beside`).
+    route_beside: Option<u32>,
+    /// The route being laid out starts on the line beside track: its ends get no lead-ins.
     beside_on: bool,
     /// The way `route_op_as` tries: `Ramp::Flat`, or the preferred way or the other.
     ramp_try: Ramp,
@@ -305,6 +305,8 @@ impl TrackApi {
     /// last list.
     pub fn set_line_holidays(&mut self, packed: Vec<f64>) {
         self.boarding.set_holidays(&packed);
+        // T-1720: the drawn trains run a quiet day's timetable by the same calendar
+        self.w.svc.cal = self.boarding.holidays.clone();
     }
     /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
     /// a kind of day (T-260); empty before riders.
@@ -361,6 +363,7 @@ impl TrackApi {
         net.terrain = self.w.net.terrain.clone();
         net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
+        self.w.svc.cal = self.boarding.holidays.clone();
         self.rebuild_water();
         true
     }
@@ -501,6 +504,8 @@ impl TrackApi {
                 net.terrain = self.w.net.terrain.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
+                // T-1720: the calendar the clock worker last sent (it sends again when it changes)
+                self.w.svc.cal = self.boarding.holidays.clone();
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();
                 // a save made while trains changed over loads with them where they were (T-1071)

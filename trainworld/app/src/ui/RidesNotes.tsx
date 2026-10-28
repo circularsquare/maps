@@ -2,10 +2,11 @@
 // seconds after a line's stops changed and demand answered, one small label per line with its chip, the
 // number easing up from 0 a frame at a time. A fall is the same words, quietly. game/ridesNote.ts says when.
 
+import { signal } from "@preact/signals";
 import { h, render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { count } from "../game/format";
-import { NOTE_COUNT_MS, ridesNotes, shownDelta, type RidesNote } from "../game/ridesNote";
+import { NOTE_COUNT_MS, NOTE_MS, ridesNotes, shownDelta, type RidesNote } from "../game/ridesNote";
 import { world } from "../game/world";
 import { Chip } from "./widgets";
 
@@ -30,10 +31,24 @@ function Note({ id, n }: { id: string; n: RidesNote }) {
   </div>;
 }
 
+const passing = signal<{ text: string; at: number } | null>(null);
+let passingTimer = 0;
+
+/** T-1709: a line of words in the same place and style, for NOTE_MS (the feedback panel's "sent"). */
+export function showPassingNote(text: string) {
+  const at = performance.now();
+  passing.value = { text, at };
+  clearTimeout(passingTimer);
+  passingTimer = setTimeout(() => { passing.value = null; }, NOTE_MS) as unknown as number;
+}
+
 function RidesNotes() {
-  const all = ridesNotes.value;
-  if (!all.size) return null;
-  return <div class="rides-notes">{[...all].map(([id, n]) => <Note key={id + n.at} id={id} n={n} />)}</div>;
+  const all = ridesNotes.value, say = passing.value;
+  if (!all.size && !say) return null;
+  return <div class="rides-notes">
+    {say && <div class="rides-note" key={say.at}>{say.text}</div>}
+    {[...all].map(([id, n]) => <Note key={id + n.at} id={id} n={n} />)}
+  </div>;
 }
 
 /** Mount the indicator in the map's container. */

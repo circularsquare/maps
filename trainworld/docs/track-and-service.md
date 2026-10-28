@@ -213,16 +213,20 @@ Full design, numbers and sources: `notes/T-008.md`.
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
   on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
   beside it (`Alongside`); a run stops at high-speed track as at single track.
-- **A route beside track** (T-1685, `TrackApi::set_route_beside(from_edge, to_edge)`, used by the
-  next `preview_route` or `add_route` only): a route with no PIs whose ends are open ground or a
-  node (the start), and whose two pieces lie on one run (walked through plain joints and stations
-  as doubling up walks, any track count, at most 400 pieces), is laid along that run: both ends
-  projected onto the run's PI polyline, the stretch between cut out (curve radii as fitted on the
-  whole run), and `express_verts` gives the line 8 m (`QUAD_SPACING`) to the side the end lies on,
-  every corner concentric, with T-1678's easing of inside corners; open-ground ends move onto that
-  line, a node start stays (on the other side it is no route beside and the plain route is laid).
-  The ends get no lead-ins. Otherwise it is an ordinary route: the same checks, its own loose ends,
-  no crossovers. The drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
+- **A route beside track** (T-1685, T-1721, `TrackApi::set_route_beside(_, to_edge)`, used by the
+  next `preview_route` or `add_route` only): a route with no PIs whose end is open ground beside the
+  run of track through `to_edge` (walked through plain joints and stations as doubling up walks, any
+  track count, at most 400 pieces) ends on the line 8 m (`QUAD_SPACING`) from that run on the end's
+  side and runs along it: `express_verts` on the run's PI polyline (curve radii as fitted on the
+  whole run), every corner concentric, with T-1678's easing of inside corners. A start on the line
+  (a node within half the spacing of it, open ground within three spacings of the track) runs along
+  it from the start, an open-ground start moving onto it and no lead-ins at the ends; a node start
+  on the line's other side gives the plain route. Any other start comes in: its route keeps its
+  lead-in and turns, at an auto-radius corner, onto the line where it has gone along the run as far
+  as the start is from the run (at most half the way to the end). Every PI is at the end's level
+  (the run's ramps are not copied, T-1722); the route ramps over what it crosses as any route does.
+  Otherwise it is an ordinary route: the same checks, its own loose ends, no crossovers. The
+  drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
 - **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
   beside it. The game never places them (T-1688, above) and the player has no tool for them
   (T-733): they come only from saves, which keep theirs, and from checks. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
@@ -305,7 +309,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   route's ends) goes a level over it, or under it from -1 down. It is the bridge above with the
   crossings as the stretches to clear (each a point, 14.5 m clear on either side), seen with the
   route's level as 0 and the way taken as up: the same 200 m ramps, vertex placement, 25 m shifts
-  and sharing of one rise between crossings less than 429 m apart. At level 0 going up the water
+  and sharing of one rise between crossings less than 429 m apart. A crossing with a station
+  within 400 m of it (any track's) is a stretch half that station's platform plus 10 m each way
+  instead, so the bridge keeps a level stretch for a station of the new track there; where its
+  ramps have no room that way, the point is tried (T-1708). At level 0 going up the water
   is bridged in the same pass. The route tries the preferred way, then the other, then a flat
   crossing as with the switch off: a way is skipped where the ramps have no room, where it would
   pass +3 or -3, where it would make a flat crossing at the new level, or where the edit's checks
@@ -568,7 +575,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
-  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536). New lines start at 0 / 0 / 0;
+  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on a weekday and a superholiday's days; a Saturday,
+  a Sunday and a holiday that runs as a Sunday (by the line's country, docs/world.md "Calendar") run
+  medium 6-24 and low 0-6 (`QUIET_LEVEL`, T-1720, [demand-timing.md](demand-timing.md) "Kinds of
+  day"), so a line with no medium trains runs none on a weekend day. New lines start at 0 / 0 / 0;
   zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
@@ -606,7 +616,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per stretch of one level (consecutive periods at the same
-  level: high demand's 6-20 is one stretch, `level_stretches`, T-1536) of the line's local time (T-309: its first
+  level that day: high demand's 6-20 is one stretch, a weekend day's medium 6-24 another,
+  `level_stretches`, T-1536, T-1720; a day's kind is the line's calendar, `Service::cal`, which the
+  clock worker sends with the boarding account's) of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
   Paris line would run on London's), the first departure half a one-way run before the stretch's
   start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean
@@ -754,7 +766,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   high-speed cars owned and spare, once there are any); the line
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
-- **Running cost** US$4 per train-km plus US$2 per car-km (trains an hour each way x line length,
+- **Running cost** US$4 per train-km plus US$2 per car-km (trains an hour each way x line length at
+  the level running that hour: a weekend day's 6-20 at medium, T-1720,
   times 4 + 2 x cars: a 4-car train US$12 a train-km, 9 cars US$22, 12 cars US$28; under real
   figures so fares can cover it, T-805, T-807, real figures in research/running-costs.md;
   `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
@@ -787,7 +800,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   30 days); edits' charges in them stay, on the clock's day. After a load the main thread sends the
   income, region shares and points again even when they match the last game's. **How much each
   game hour gets** (T-736, `app/src/game/moneyTiming.ts`): demand gives fares and rides per hour of
-  each period and kind of day, the timetable a running cost per hour of each level. An hour's rides
+  each period and kind of day, the timetable a running cost per hour of each level, by country so
+each runs its weekend timetable on its own days (T-1720, `costParts` in the clock worker). An hour's rides
   are the period's spread over its hours by the boarding account's arrival shape (6.6: tent, falling
   or valley, at the busiest-hour factor of that kind of day), counted when riders set out; its fares
   and points follow the same shape but land as the ride ends, spread over a trailing window as long

@@ -16,6 +16,8 @@ import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
 import { count, trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
+import { levelOn } from "./days";
+import { kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
 import { cameraMoving } from "./ui";
 
@@ -100,6 +102,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
   return { wait: avg, tip, phrase };
 }
 
+const LEVEL_INDEX = { high: 0, medium: 1, low: 2 } as const;
 /** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
  * hours at either end in part, as the worker drains the cash (T-284). T-1492: at the trains and cars
  * the fares beside it were worked out for (`todayService`), so a train count change moves both
@@ -110,12 +113,14 @@ export function runningToday(l: LineInput, st: LineStats): number {
   // T-309: in the line's own local time
   const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
   const held = todayService.value.get(l.id);
-  const tph = held ? { high: held.tph[0], medium: held.tph[1], low: held.tph[2] } : { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  const tph = held ? held.tph : [l.tph.high, l.tph.medium, l.tph.low];
   const cars = held?.cars ?? st.cars;
   const k = trainKind(m, st.fast);
+  const country = lineCountry(l.stops);
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
-    const lev = PERIODS[periodAt(h * 3600)].demand;
+    // T-1720: a weekend day by the line's calendar runs the medium level's trains in the high hours
+    const lev = levelOn(kindIn(country, Math.floor(h / 24)), LEVEL_INDEX[PERIODS[periodAt(h * 3600)].demand]);
     // T-1464: a bus line's buses cost a bus-km each
     const perKm = st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
     cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));

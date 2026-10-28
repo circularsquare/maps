@@ -43,7 +43,10 @@ export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Med
  * demand: 06:00 to 20:00". */
 export function levelTimes(d: Demand): string {
   const t = (h: number) => clockTime((h * 60) % 1440);
-  return `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
+  const hours = `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
+  // T-1720: a weekend day runs the medium trains through the high hours
+  const high = levelHours("high");
+  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length ? `${hours}, and from ${t(high[0][0])} on weekends` : hours;
 }
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());

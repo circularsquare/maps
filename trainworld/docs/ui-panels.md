@@ -342,7 +342,7 @@ out, delete; [Account and leaderboards](#account-and-leaderboards)), Explore a t
 ("Email, if you want a reply") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
-Sent shows "Sent. Thank you for writing!" with Write another and Close; a failure says why (no server for this copy,
+Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's top centre, "sent! thank you for feedback" (the daily rides note's place and look, 5 s; `showPassingNote` in `ui/RidesNotes.tsx`) [T-1709]; a failure says why (no server for this copy,
 not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
 sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].
@@ -685,8 +685,8 @@ registry centre and zoom, or over New York with none [T-310].
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
-  "~welcome to trains world~" [T-1242, T-1700] (the account button at
-  its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
+  no tagline [T-1710] (the account button at
+  its top right when accounts are on [T-972]), New game at the top, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
   that, 10 s at most), and the account's games not in this browser follow the browser's as cards
@@ -702,7 +702,7 @@ registry centre and zoom, or over New York with none [T-310].
   each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
   cross, as a complex's do), and one train a line, a white pill, running with stops (the two dots and
   the t's bar are bare lines, no stations or train) [T-1593], the boxes 1 px smaller on every side
-  than the platform so a parked train covers them [T-1700], drawn by the game's own
+  than the platform so a parked train covers them, and 1 px shorter again at each end [T-1700, T-1711], the dots drawn as round circles at their placed centres, drawn by the game's own
   network renderer at zoom 15 in a canvas of its own straight over the map, scaled to the screen; the
   menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
   one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"

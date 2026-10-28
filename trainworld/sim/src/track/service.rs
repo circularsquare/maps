@@ -231,11 +231,12 @@ fn day_order() -> [usize; 5] {
 /// The day's stretches of one level: runs of consecutive periods at the same level, as (first,
 /// last) period, in day order. Departures are laid out per stretch, so a level that spans several
 /// periods keeps one headway across their boundaries (T-1536).
-pub(crate) fn level_stretches() -> Vec<(usize, usize)> {
+/// `levels`: each period's level that day (`period_levels`; a quiet day's 6-24 is one stretch, T-1720).
+pub(crate) fn level_stretches(levels: &[usize; 5]) -> Vec<(usize, usize)> {
     let mut out: Vec<(usize, usize)> = vec![];
     for p in day_order() {
         match out.last_mut() {
-            Some((_, last)) if PERIOD_LEVEL[*last] == PERIOD_LEVEL[p] && PERIOD_HOURS[*last].1 == PERIOD_HOURS[p].0 => *last = p,
+            Some((_, last)) if levels[*last] == levels[p] && PERIOD_HOURS[*last].1 == PERIOD_HOURS[p].0 => *last = p,
             _ => out.push((p, p)),
         }
     }
@@ -244,8 +245,8 @@ pub(crate) fn level_stretches() -> Vec<(usize, usize)> {
 
 /// A stretch (`level_stretches`) of `day` for run `r` of a pattern: (first departure, headway,
 /// departures), or None without service.
-fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usize)) -> Option<(f64, f64, i64)> {
-    let lev = PERIOD_LEVEL[first];
+fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usize), levels: &[usize; 5]) -> Option<(f64, f64, i64)> {
+    let lev = levels[first];
     let tph = lat.tph[lev] as f64;
     if tph <= 0.0 {
         return None;
@@ -254,7 +255,8 @@ fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usiz
     let (h0, h1) = (PERIOD_HOURS[first].0, PERIOD_HOURS[last].1);
     // a period followed by no service runs to its own end, so a line's last trains of the evening
     // or of a peak are not pulled early (T-835)
-    let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.tph[PERIOD_LEVEL[q]]);
+    // (the day's own levels: a stretch ending at midnight is followed by low on any kind of day)
+    let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.tph[levels[q]]);
     let end_lead = if next > 0.0 { lat.lead } else { 0.0 };
     let (start, end) = (day as f64 * DAY_S + h0 * 3600.0 - lat.lead, day as f64 * DAY_S + h1 * 3600.0 - end_lead);
     let ps = start + if r == 1 { lat.off[lev] } else { 0.0 };
@@ -272,14 +274,14 @@ fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usiz
 /// One run's departures from a pattern in `[a, b)` of game time, with level and headway: the
 /// pattern's periods are laid out in the line's local time (T-309, `Lattice::shift`), and each
 /// departure is the same game time from any window.
-fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, quiet: &dyn Fn(i64) -> bool, out: &mut Vec<(f64, u8, f64)>) {
     let s = lat.shift;
     if s == 0.0 {
-        return lattice_deps_local(lat, r, a, b, out);
+        return lattice_deps_local(lat, r, a, b, quiet, out);
     }
     // a second either side, so rounding in `a + s` never loses a departure on the window's edge
     let start = out.len();
-    lattice_deps_local(lat, r, a + s - 1.0, b + s + 1.0, out);
+    lattice_deps_local(lat, r, a + s - 1.0, b + s + 1.0, quiet, out);
     let mut k = start;
     for i in start..out.len() {
         let (d, lev, hw) = out[i];
@@ -295,26 +297,28 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
 /// One run's departures from a pattern in `[a, b)` of the line's local time, with level and
 /// headway: per stretch of one level (`level_stretches`), `start - lead + off + k * headway`,
 /// leaving out any closer than half a headway after the stretch before's last (MIN_GAP_SHARE). A
-/// pure function of the pattern, so every window agrees.
-pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+/// pure function of the pattern and the line's calendar, so every window agrees. `quiet`: whether
+/// a local day runs the quiet timetable (T-1720, `QUIET_LEVEL`).
+pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, quiet: &dyn Fn(i64) -> bool, out: &mut Vec<(f64, u8, f64)>) {
     if !(b > a) {
         return;
     }
-    let stretches = level_stretches();
     let d0 = (a / DAY_S).floor() as i64;
     let d1 = (b / DAY_S).floor() as i64;
     // the last departure before day d0: the day before's last stretch with service
     let mut last: Option<f64> = None;
-    for &s in stretches.iter().rev() {
-        if let Some((ps, hw, n)) = stretch_points(lat, r, d0 - 1, s) {
+    let levels = period_levels(quiet(d0 - 1));
+    for &s in level_stretches(levels).iter().rev() {
+        if let Some((ps, hw, n)) = stretch_points(lat, r, d0 - 1, s, levels) {
             last = Some(ps + (n - 1) as f64 * hw);
             break;
         }
     }
     // the next day's first stretch starts `lead` before it
     for day in d0..=d1 + 1 {
-        for &s in &stretches {
-            let Some((ps, hw, n)) = stretch_points(lat, r, day, s) else { continue };
+        let levels = period_levels(quiet(day));
+        for s in level_stretches(levels) {
+            let Some((ps, hw, n)) = stretch_points(lat, r, day, s, levels) else { continue };
             let mut k0 = 0i64;
             if let Some(l) = last {
                 while k0 < n && ps + k0 as f64 * hw - l < MIN_GAP_SHARE * hw {
@@ -324,7 +328,7 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
             if k0 >= n {
                 continue;
             }
-            let lev = PERIOD_LEVEL[s.0] as u8;
+            let lev = levels[s.0] as u8;
             let mut k = k0.max(((a - ps) / hw).floor() as i64 - 1).max(k0);
             while k < n {
                 let d = ps + k as f64 * hw;
@@ -370,6 +374,10 @@ pub struct Service {
     /// them all (a world just made or reloaded).
     changed: Vec<u32>,
     pub changed_all: bool,
+    /// T-1720: per line id, its local days whose kind is not the day number's (holidays, its
+    /// country's own weekend; `Boarding::set_holidays`, the same list): a quiet one runs
+    /// `QUIET_LEVEL`. Never saved: the clock worker sends it.
+    pub cal: std::collections::HashMap<u32, Vec<(i64, usize)>>,
 }
 
 fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
@@ -1046,6 +1054,21 @@ impl Service {
     /// after the last, the line's own. The boarding account uses it too, so its departures are the
     /// drawn ones to the bit.
     pub fn run_deps(&self, net: &Network, l: usize, r: usize, a: f64, b: f64, out: &mut Vec<Trip>) {
+        self.run_deps_as(net, l, r, a, b, None, out)
+    }
+
+    /// Whether line `l`'s local day `day` runs the quiet timetable (T-1720): its kind by its
+    /// calendar (`cal`), else the day number's.
+    pub fn quiet_on(&self, l: usize, day: i64) -> bool {
+        let given = self.cal.get(&(l as u32)).and_then(|d| d.iter().find(|x| x.0 == day)).map(|x| x.1);
+        quiet_kind(given.unwrap_or_else(|| day_kind_at(day as f64 * DAY_S)))
+    }
+
+    /// `run_deps` with every day taken as quiet or not (`force`, the boarding account's day of one
+    /// kind, T-1720), or by the line's calendar (None).
+    #[allow(clippy::too_many_arguments)]
+    pub fn run_deps_as(&self, net: &Network, l: usize, r: usize, a: f64, b: f64, force: Option<bool>, out: &mut Vec<Trip>) {
+        let quiet = |day: i64| force.unwrap_or_else(|| self.quiet_on(l, day));
         let Some(cur) = self.lattice(net, l) else { return };
         let ls = &self.lines[l];
         let eras = self.eras_of(l);
@@ -1059,7 +1082,7 @@ impl Service {
             let lo = if i < eras.len() { seg_start.max(a.min(seg_end - ERA_LOOKBACK_S)) } else { seg_start.max(a) };
             let hi = if i < eras.len() { seg_end } else { b };
             buf.clear();
-            lattice_deps(lat, r, lo, hi, &mut buf);
+            lattice_deps(lat, r, lo, hi, &quiet, &mut buf);
             let prev = last;
             for &(d, lev, hw) in &buf {
                 if prev.is_some_and(|p| d - p < MIN_GAP_SHARE * hw) {

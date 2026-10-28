@@ -217,6 +217,7 @@ export class Tools {
       this.place();
     }, () => this.place(), () => this.freeLevel());
     effect(() => this.real.setOn(snapping.value));
+    effect(() => { snapBeside.value; this.place(); });
     // T-1260: the touch control bar and the handle that drags the point being previewed
     this.touchHost = document.createElement("div");
     this.touchHost.className = "touch-bar-host";
@@ -414,7 +415,8 @@ export class Tools {
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
-    this.hoverBeside = t === "track" && this.hover?.kind === "free" && this.start?.beside != null ? this.besideAt(e.point.x, e.point.y) : null;
+    // T-1721: from any start, and before the first click for the ring
+    this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.real.active ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
     if (t === "station") this.nameAhead(e.point.x, e.point.y);
@@ -752,7 +754,7 @@ export class Tools {
         say(tooFarText(), true);
         return;
       }
-      by = !rc && s.kind === "free" && from.beside != null ? this.besideAt(e.point.x, e.point.y) : null;
+      by = !rc && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
       const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s), by);
       // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
       // preview landing late) would give another segment's length and cost
@@ -804,8 +806,7 @@ export class Tools {
   }
 
   private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
-    const sb = this.start!.beside;
-    const beside: { beside?: [number, number] } = by && sb != null && to.kind === "free" ? { beside: [sb, by.edge] } : {};
+    const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
     return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek(), ...beside };
   }
 
@@ -1536,6 +1537,59 @@ export class Tools {
     }
     this.placeMarks();
     this.placeTouch();
+    this.drawBand();
+  }
+
+  /** T-1721: with the track tool and Snap beside on, a faint blue band BESIDE_PX either side of all
+   * track, where drawing snaps beside it; redrawn when the view or the network changes. */
+  private bandEl: HTMLCanvasElement | null = null;
+  private bandKey = "";
+  private drawBand() {
+    const n = this.overlay.renderer.net;
+    const on = tool.peek() === "track" && snapBeside.peek() && !!n;
+    if (!on) {
+      if (this.bandEl) this.bandEl.style.display = "none";
+      this.bandKey = "";
+      return;
+    }
+    const c = this.map.getCenter(), box = this.map.getContainer(), W = box.clientWidth, H = box.clientHeight, dpr = devicePixelRatio || 1;
+    const key = `${c.lng},${c.lat},${this.map.getZoom()},${this.map.getBearing()},${this.map.getPitch()},${W},${H},${world.peek()?.version},${document.documentElement.dataset.shade}`;
+    if (this.bandEl && key === this.bandKey) return;
+    this.bandKey = key;
+    if (!this.bandEl) {
+      this.bandEl = document.createElement("canvas");
+      this.bandEl.className = "beside-band";
+      this.box.prepend(this.bandEl);
+    }
+    const el = this.bandEl;
+    el.style.display = "";
+    if (el.width !== Math.round(W * dpr) || el.height !== Math.round(H * dpr)) {
+      el.width = Math.round(W * dpr);
+      el.height = Math.round(H * dpr);
+      el.style.width = `${W}px`;
+      el.style.height = `${H}px`;
+    }
+    const g = el.getContext("2d")!;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.beginPath();
+    for (const pts of n!.edgePts.values()) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      const xy: number[] = [];
+      for (let k = 0; k + 2 < pts.length; k += 3) {
+        const [x, y] = this.screen(pts[k], pts[k + 1]);
+        xy.push(x, y);
+        x0 = Math.min(x0, x), y0 = Math.min(y0, y), x1 = Math.max(x1, x), y1 = Math.max(y1, y);
+      }
+      if (x1 < -BESIDE_PX || y1 < -BESIDE_PX || x0 > W + BESIDE_PX || y0 > H + BESIDE_PX) continue;
+      g.moveTo(xy[0], xy[1]);
+      for (let k = 2; k < xy.length; k += 2) g.lineTo(xy[k], xy[k + 1]);
+    }
+    g.lineWidth = BESIDE_PX * 2;
+    g.lineCap = g.lineJoin = "round";
+    g.strokeStyle = getComputedStyle(el).getPropertyValue("--beside").trim() || "#3d82d6";
+    g.globalAlpha = 0.1;
+    g.stroke();
   }
 
   private placeMarks() {
@@ -1582,6 +1636,7 @@ export class Tools {
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
       if (d && d.kind !== "track" && d.kind !== "bus") {
+        this.ring.className = "snap-ring";
         this.ring.style.display = "";
         put(this.ring, d.lx, d.ly);
       } else this.ring.style.display = "none";
@@ -1628,12 +1683,18 @@ export class Tools {
       return;
     }
     if (t === "station") this.clearFree();
+    // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track
+    const hb = t === "track" && h?.kind === "free" ? this.hoverBeside : null;
+    this.ring.className = "snap-ring" + (t !== "track" ? "" : hb ? " beside" : h?.kind === "edge" ? " branch" : h?.kind === "node" ? " join" : "");
     if ((t === "track" || t === "station") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {
         this.stationRings(h);
         this.stationGhost(h);
       } else put(this.ring, h.lx, h.ly);
+    } else if (hb) {
+      this.ring.style.display = "";
+      put(this.ring, hb.lx, hb.ly);
     } else if (t === "track" && this.real.ringAt) {
       this.ring.style.display = "";
       put(this.ring, ...toLocal(...this.real.ringAt));

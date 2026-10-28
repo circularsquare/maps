@@ -6,6 +6,7 @@ import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { ApiError, sendFeedback } from "../game/account";
 import { Modal } from "./Modal";
+import { showPassingNote } from "./RidesNotes";
 import "./account.css";
 
 declare const __TW_BUILD__: string | undefined;
@@ -33,43 +34,34 @@ export function FeedbackPanel() {
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
-  const [state, setState] = useState<"" | "sending" | "sent">("");
+  const [state, setState] = useState<"" | "sending">("");
   const [msg, setMsg] = useState("");
-  const close = () => {
-    feedbackOpen.value = false;
-    if (state === "sent") { setMessage(""); setState(""); setMsg(""); }
-  };
+  const close = () => { feedbackOpen.value = false; };
   const send = async () => {
     if (!message.trim()) { setMsg("Write a message first."); return; }
     setState("sending"); setMsg("");
     try {
       await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), version: BUILD });
-      setState("sent");
+      setMessage(""); setState("");
+      close();
+      showPassingNote("sent! thank you for feedback");
     } catch (e) {
       setState("");
       setMsg(failText(e) + " Your message is still here.");
     }
   };
   return <Modal open={feedbackOpen.value} onClose={close} title="Feedback" cls="acct-panel fb-panel">
-    {state === "sent"
-      ? <>
-        <p>Sent. Thank you for writing!</p>
-        <div class="acct-btns">
-          <button class="btn text" onClick={() => { setMessage(""); setState(""); }}>Write another</button>
-          <button class="btn text acct-go" onClick={close}>Close</button>
-        </div>
-      </>
-      : <form class="acct-form" onSubmit={(e) => { e.preventDefault(); if (state !== "sending") void send(); }}>
-        <input name="name" placeholder="Name (optional)" aria-label="Name" autocomplete="name" maxLength={100}
-          value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-        <input name="email" type="email" placeholder="Email, if you want a reply" aria-label="Email" autocomplete="email" maxLength={200}
-          value={contact} onInput={(e) => setContact((e.target as HTMLInputElement).value)} />
-        <textarea name="message" placeholder="Message" aria-label="Message" rows={6} maxLength={4000}
-          value={message} onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)} />
-        <div class="acct-btns">
-          <button class="btn text acct-go" type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Send feedback"}</button>
-        </div>
-        {msg && <p class="acct-msg">{msg}</p>}
-      </form>}
+    <form class="acct-form" onSubmit={(e) => { e.preventDefault(); if (state !== "sending") void send(); }}>
+      <input name="name" placeholder="Name (optional)" aria-label="Name" autocomplete="name" maxLength={100}
+        value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
+      <input name="email" type="email" placeholder="Email, if you want a reply" aria-label="Email" autocomplete="email" maxLength={200}
+        value={contact} onInput={(e) => setContact((e.target as HTMLInputElement).value)} />
+      <textarea name="message" placeholder="Message" aria-label="Message" rows={6} maxLength={4000}
+        value={message} onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)} />
+      <div class="acct-btns">
+        <button class="btn text acct-go" type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Send feedback"}</button>
+      </div>
+      {msg && <p class="acct-msg">{msg}</p>}
+    </form>
   </Modal>;
 }

@@ -1,5 +1,5 @@
 // Opening day (T-1434): a line that starts running for the first time in this page's session has
-// its first game day marked. Its stations get a small bunting under their names (map/stationLabels.ts),
+// its first game day marked. A rail line's stations get a small bunting under their names (map/stationLabels.ts, none for a bus line, T-1715),
 // its row in the Lines tab counts the riders up from 0 once its first figure is shown. Held on the
 // main thread only and not saved: a loaded game shows no opening days.
 
@@ -50,7 +50,9 @@ export function ribbonColours(w: WorldView): ReadonlyMap<string, string> | null 
   const at = linesById(w);
   for (const id of open.keys()) {
     const l = at.get(id);
-    if (!l) continue;
+    // T-1715: a bus line's opening hangs no bunting: at the one station a feeder meets it read as a
+    // row of stray triangles under the name, and the bus's own stops have no names to hang it on
+    if (!l || w.lineStats[id]?.bus) continue;
     for (const s of l.stops) {
       const c = by.get(s);
       if (!c) by.set(s, [l.colour]);

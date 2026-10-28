@@ -191,6 +191,18 @@ pub const LEVELS: usize = 3;
 /// demand solves each period on its own level's trains.
 pub const PERIOD_HOURS: [(f64, f64); 5] = [(6.0, 10.0), (10.0, 16.0), (16.0, 20.0), (20.0, 24.0), (0.0, 6.0)];
 pub const PERIOD_LEVEL: [usize; 5] = [HIGH, HIGH, HIGH, MEDIUM, LOW];
+/// T-1720 (Anita, 2026-10-28): a weekend day and a quiet holiday (one that runs as a Sunday) run
+/// the medium level's trains through the hours high on a weekday; a superholiday's days keep the
+/// weekday's. Demand stays the weekday's solve, scaled (docs/demand-timing.md "Kinds of day").
+pub const QUIET_LEVEL: [usize; 5] = [MEDIUM, MEDIUM, MEDIUM, MEDIUM, LOW];
+/// Whether kind of day `k` runs the quiet timetable (`QUIET_LEVEL`): Saturday and Sunday.
+pub fn quiet_kind(k: usize) -> bool {
+    k == 1 || k == 2
+}
+/// The level each period runs at on a quiet day or not.
+pub fn period_levels(quiet: bool) -> &'static [usize; 5] {
+    if quiet { &QUIET_LEVEL } else { &PERIOD_LEVEL }
+}
 /// Each period's busiest hour against its mean hour (T-087): how riders arrive over it (the
 /// boarding account's shape, demand's crowding).
 pub const PEAK_HOUR_FACTOR: [f32; 5] = [1.4, 1.15, 1.4, 1.3, 1.5];

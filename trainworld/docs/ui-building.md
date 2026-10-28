@@ -10,7 +10,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), in a
+- **Tools**: draw track (key 1), station (2), delete (3), select (4, [below](#the-select-tool)), in a
   2 by 2 grid [T-1128], and under them the full-width Bus button (B, [below](#drawing-a-bus-line))
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
@@ -115,16 +115,22 @@ mouse moving again takes it back).
 
 Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
-- **Drawing beside track** [T-1685]: with the beside switch on, a start clicked on open ground within
-  40 px of track (and further than the 10 px that joins it) goes on the line 8 m (`QUAD_SPACING`)
-  from that track, on the click's side. While the pointer stays on open ground within 40 px of the
-  same run of track (pieces joined through plain joints and stations, blueprint or built), the
-  segment runs parallel to it from the start to the point beside the pointer, its curves concentric
-  with the track's, on the side the pointer is on (a first segment's start moves across with it; a
-  start already built on the other side gives a plain segment). Moving further away, onto track or a
-  node, or beside other track gives the plain segment. Chained segments carry on beside the track.
-  The segment is ordinary track: the same checks refuse it (a curve under 100 m on the inside of a
-  tight one, crossings), it joins nothing at its ends and adds no crossovers.
+- **Drawing beside track** [T-1685, T-1721]: with the beside switch on and the track tool in hand, a
+  faint blue band 40 px either side of all track, blueprint or built, marks where drawing snaps beside
+  it. A start clicked in the band on open ground (further than the 10 px that joins track) goes on
+  the line 8 m (`QUAD_SPACING`) from that track, on the click's side. From any start (that one, a
+  track end, the end of the last segment), while the pointer is on open ground in the band, the
+  segment ends on the line beside the pointer, on the pointer's side, and runs along it, curves
+  concentric with the track's: a start on the line runs along it all the way; any other start comes
+  in, turning onto the line (a curve under the usual rules) once it has gone along the track as far
+  as the start is from it, at most halfway to the end. A start on the line moves across with the
+  pointer if it is a first segment's; one already built on the other side gives a plain segment.
+  Leaving the band, or onto track or a node, gives the plain segment. The segment is ordinary
+  track: the same checks refuse it, it ramps over what it crosses by itself (the track's own ramps
+  are not copied), joins nothing at its end and adds no crossovers.
+- **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
+  yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
+  segment will end beside track. The beside switch's hover says so.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
@@ -391,7 +397,7 @@ line panel. A bus route under the pointer, where no track is, is removable too [
 ## The Select tool
 
 [T-333, T-815, T-829; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx`
-`BlueprintBar`] The Select tool (key 5, a dashed box icon) picks several pieces at once to disable,
+`BlueprintBar`] The Select tool (key 4, a dashed box icon) picks several pieces at once to disable,
 re-level or remove them. A pick is of one kind (Anita, T-829): one that holds any blueprint takes
 only blueprint, track and stations; one with no blueprint takes constructed track and constructed
 stations. Disabled blueprint is left out by Construct and the blueprint total, and drawn grey

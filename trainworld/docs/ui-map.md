@@ -449,7 +449,7 @@ those who got on, less the load carried on.
   0.9 s, fast at first and slowing to the end. Lines edited together stack. The hover gives the
   line's riders a day before and after. It is the change in the line's `ridersPerDay` (the day
   shown), nothing new summed; a change that rounds to 0, a line with no earlier figure and a switch
-  of the shown day make none. Hidden with the rest of the interface (F2). Not saved.
+  of the shown day make none. Hidden with the rest of the interface (F2). Not saved. The same place and look carry other one-line passing notes (the sent feedback's, T-1709).
 - **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
   [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
   tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags

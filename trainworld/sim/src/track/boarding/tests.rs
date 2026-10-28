@@ -492,7 +492,7 @@ fn a_queue_that_lasts_the_night_carries_round_the_day() {
     b.set_riders(&riders(l, [2000.0, 2000.0, 2000.0, 2000.0, 6000.0]));
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
-    let quick = simulate(&w.net, &w.svc, l as usize, 0, b.riders[0][l as usize].as_ref().unwrap(), &b.peak, false);
+    let quick = simulate(&w.net, &w.svc, l as usize, 0, b.riders[0][l as usize].as_ref().unwrap(), &b.peak, false, false);
     assert!(quick.leftover > 1000.0, "{}", quick.leftover);
     // the kept account is the warm one: the first train after 03:00 already finds a queue
     let i = ra.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();

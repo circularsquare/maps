@@ -452,7 +452,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  // 1, 2, 3, 5: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
+  // 1, 2, 3, 4: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
   // key of the tool already on does nothing (Esc is the way out), so a half-drawn route survives.
   // T: the trip explorer (T-195, T-444), from any tab; the tab stays (the inspector shows the trip)
   if (e.key.toLowerCase() === TRIP_KEY &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {

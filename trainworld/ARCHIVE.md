@@ -2,6 +2,22 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1720 [P2] Weekend timetable. Done 2026-10-28: Saturdays, Sundays and Sunday-like holidays (by each line's calendar) run the medium trains 6-24, superholiday days the weekday's (`QUIET_LEVEL`, `Service::cal`, `levelOn`); drawn trains, the boarding account's crowding and running cost follow; riders stay the weekday solve's, scaled (DECISIONS). Real save: Saturday running cost $961k against Friday's $1,266k (0.759, expected 0.760); line F midday 110 trains against 142, rider-hours aboard per train 671 against 411, 23 trains full against 0.
+
+- T-1721 [P2] Snap beside track from any start. Done 2026-10-28: a run from a track end or a last segment comes in and runs 8 m beside a line; red/yellow dot and blue ring at the pointer, faint blue band round track. Tests in beside_tests.rs. DECISIONS.
+- T-1722 [P2] Beside-track bridges on slight curves. Done 2026-10-28: the route beside no longer copies the track's ramp levels (too-short ramps); it ramps over crossings itself. Test `route_beside_bridges_on_a_slight_curve`. DECISIONS.
+- T-1708 [P2] Room for a station on a bridge by a station. Done 2026-10-28: a crossing within 400 m of a station widens the bridge's level stretch to that platform plus 20 m (230 m in the check). Test `bridge_beside_a_station_has_room_for_one`. DECISIONS.
+- T-1715 [P2] Triangles at a bus line's stop. Done 2026-10-28: they were the opening-day bunting (T-1434) under the name of the station the new bus line stops at; bus lines now hang none (`ribbonColours`, game/openingDay.ts; the Lines tab's count-up stays). DECISIONS. artifacts/trainworld/t1715-bus-stop.png (before: t1715/before-bergen.png).
+- T-1716 [P2] Bus profit text garbled. Done 2026-10-28: the minus in BusInspector.tsx's Profit row was saved as mojibake in the source (UTF-8 read as Windows-1252 once); now U+2212. No other source file had it (grep for the mis-encoded bytes over app/src).
+- T-1717 [P2] No "Copy line" for bus lines. Closed 2026-10-28, nothing to change: the bus panel has had Copy line beside Edit route and Delete line since T-1464 (on 8800 too), and clicking it on a built and a planned bus line makes "Bus n copy", planned, selected with its name open (artifacts/trainworld/t1715/copy-built.png). If Anita meant another place (the schedule copy icons, the Lines tab), it needs a new task.
+
+- T-1719 [P2] Feedback names the account. Done 2026-10-28: signed in, the game sends its session and shonei-server stores the account id and name with the report and in the mail (shonei-server b0ea1ec, test `TestTwFeedbackNamesSignedInAccount`); anonymous sending as before. Needs deploy.ps1 (Anita's word).
+- T-1714 [P2] Controls text without needless "it". Done 2026-10-28: "Rename", "Remove", "Delete", "Move", "Find on the map" in the controls panel.
+- T-1713 [P2] Select hotkey 4. Done 2026-10-28: `toolKeys.ts`; hovers and the controls panel follow it.
+- T-1712 [P2] New favicon. Done 2026-10-28: `app/public/favicon.svg`, a red and a blue line crossing at a white station dot a little off centre (SVG only, as before); artifacts/trainworld/t1712-favicon.png.
+- T-1711 [P2] Logo boxes and dots. Done 2026-10-28: boxes 1 px shorter at each end (`BOX_END_TRIM_PX` in map/logoNetwork.ts), the pink dots round circles at their old centres; artifacts/trainworld/t1711-logo-zoom.png.
+- T-1710 [P2] Start menu without tagline. Done 2026-10-28: the tagline and its CSS are gone; New game is the first button; artifacts/trainworld/t1710-menu.png.
+- T-1709 [P2] Feedback sent as a passing note. Done 2026-10-28: the panel closes and "sent! thank you for feedback" shows where the daily rides note does (`showPassingNote`, ui/RidesNotes.tsx); failures stay in the panel.
 - T-1699 [P2] Stations never off track. Done 2026-10-28: removing track from a station that stays keeps a straight piece per lost end along its old direction (platform reach plus 10 m), so it keeps place and orientation; `keep_under_stations` in wasm/links.rs. Test `removed_track_keeps_a_piece_under_the_station`. DECISIONS.
 - T-1689 [P2] Doubling up adds no stations. Done 2026-10-28: the express pair passes the run's stations with plain joints; the player clicks stations onto it (T-1687). Saves keep theirs. Test `double_up_makes_quad`.
 - T-1693 [P2] Rides note not red. Done 2026-10-28: "+N daily rides" is in the panel's text colour (a fall stays muted).

@@ -262,7 +262,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
         )}
         <li data-tip={`Fares ${money(d.fares)} minus running cost ${money(run)} for the buses and upkeep of its route ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}`}>
           <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} âˆ’<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
+          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
         {load !== null && (
           <li data-tip={`Riders aboard on average, as a share of the ${BUS_CRUSH} a bus holds at crush, over every trip on a ${["weekday", "Saturday", "Sunday", "holiday"][kind] ?? "day"}`}>

@@ -56,6 +56,9 @@ town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's 
   Sunday is a weekend day. A public holiday, with the substitute days its country gives, runs as a
   Sunday, so Thanksgiving runs a New York line on Sunday demand and fares that day only; a few US
   holidays most people work through (Columbus Day, Veterans Day and the like) run as weekdays.
+  On those weekend days and Sunday-like holidays every line runs its medium trains from 06:00 to
+  midnight (its low ones at night), and its crowding and running cost follow those trains; the
+  riders are still the weekday's scaled down, so they do not take the thinner service into account.
 - **Long holidays.** Spring Festival, Golden Week, Obon, Chuseok, Thanksgiving, Christmas, Eid and
   a few more make a run of days off around them a superholiday (3 days or more). While people are
   away, local outings are 0.7 of a Sunday's (many have gone home) and attractions 1.5 times a

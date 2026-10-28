@@ -114,9 +114,11 @@ fn a_line_runs_with_times_and_fleet() {
     let rt = ls.round_trip[HIGH];
     assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
     assert_eq!(ls.trains[HIGH], (rt * 12.0 / 3600.0).ceil() as u32);
-    // Trips in the 8:00 hour: 12 per direction start, plus those still running from before.
-    let trips = w.svc.trips(&w.net, 8.0 * 3600.0, 9.0 * 3600.0);
-    let starting = trips.iter().filter(|t| t.dep >= 8.0 * 3600.0).count();
+    // Trips in the 8:00 hour of a weekday (day 0 is a Sunday, T-1720): 12 per direction start,
+    // plus those still running from before.
+    let mon = 86400.0;
+    let trips = w.svc.trips(&w.net, mon + 8.0 * 3600.0, mon + 9.0 * 3600.0);
+    let starting = trips.iter().filter(|t| t.dep >= mon + 8.0 * 3600.0).count();
     assert_eq!(starting, 24);
     assert!(trips.len() > 24);
     // The train's position follows the track.
@@ -538,7 +540,7 @@ fn whole_line_counts_include_congestion_and_odd_fleets() {
         assert_eq!(ls.trains, [3, 1, 0]);
         let implied = w.net.line_tph[id as usize][0] as f64 * ls.round_trip[0] / 3600.0;
         assert!((implied - 3.0).abs() < 0.001, "{implied}");
-        let t = 8.0 * 3600.0 + 37.0;
+        let t = 86400.0 + 8.0 * 3600.0 + 37.0; // a Monday (T-1720)
         let trips = w.svc.trips(&w.net, t, t + 0.001);
         assert_eq!(trips.iter().filter(|tr| tr.line == id).count(), 3, "odd whole-line fleet at steady demand");
     }
@@ -900,8 +902,9 @@ fn a_line_reversing_at_a_mid_stop_runs() {
     assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
     assert!(ls.runs[0].prof[HIGH].duration > ls.runs[0].free.arr[1] + 180.0);
     // Trains are drawn through the hour.
-    let trips = w.svc.trips(&w.net, 8.0 * 3600.0, 9.0 * 3600.0);
-    assert_eq!(trips.iter().filter(|x| x.line == l && x.dep >= 8.0 * 3600.0).count(), 12);
+    let mon = 86400.0; // a weekday (T-1720)
+    let trips = w.svc.trips(&w.net, mon + 8.0 * 3600.0, mon + 9.0 * 3600.0);
+    assert_eq!(trips.iter().filter(|x| x.line == l && x.dep >= mon + 8.0 * 3600.0).count(), 12);
     // A path that turns back at a station it does not stop at is refused.
     let mut d = w.net.line_data(l).unwrap();
     d.stops = vec![br, m];
@@ -1103,6 +1106,34 @@ fn the_middle_of_a_long_line_changes_period_on_time() {
     }
 }
 
+/// T-1720: a Saturday and a Sunday run the medium level's trains 6-24; a superholiday's day away
+/// on a Saturday keeps the weekday's.
+#[test]
+fn weekends_run_the_medium_timetable() {
+    let (mut w, ns) = corridor(31);
+    let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
+    let count = |w: &TrackWorld, day: f64| {
+        let deps = deps_of(w, id, 0, day - 86400.0, day + 2.0 * 86400.0);
+        let today: Vec<_> = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).cloned().collect();
+        today
+    };
+    let (tue, sat, sun) = (2.0 * 86400.0, 6.0 * 86400.0, 7.0 * 86400.0);
+    let wk = count(&w, tue).len() as f64;
+    assert!((wk - day_count([12.0, 6.0, 3.0])).abs() <= 1.0, "{wk}");
+    for day in [sat, sun] {
+        let d = count(&w, day);
+        assert!(d.iter().all(|t| t.level as usize != HIGH), "a high-level train on a weekend");
+        let want = 6.0 * 18.0 + 3.0 * 6.0;
+        assert!((d.len() as f64 - want).abs() <= 1.0, "{} weekend departures, want {want}", d.len());
+    }
+    // a superholiday's day away on that Saturday runs the weekday's trains
+    w.svc.cal.insert(id, vec![(6, AWAY)]);
+    assert!((count(&w, sat).len() as f64 - wk).abs() <= 1.0);
+    // a holiday that runs as a Sunday on the Tuesday runs the weekend's
+    w.svc.cal.insert(id, vec![(2, 2)]);
+    assert!(count(&w, tue).iter().all(|t| t.level as usize != HIGH));
+}
+
 #[test]
 fn sparse_and_reversing_lines_lead_too() {
     // two trains a period on a long line with no night service, and a line reversing at a mid stop
@@ -1120,7 +1151,7 @@ fn sparse_and_reversing_lines_lead_too() {
             let today: Vec<_> = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).collect();
             // a whole number of departures a stretch of one level, from its first; a stretch followed
             // by no service runs to its own end, so it gains the lead
-            let want: f64 = level_stretches().iter().map(|&(first, last)| {
+            let want: f64 = level_stretches(&PERIOD_LEVEL).iter().map(|&(first, last)| {
                 let (a, b) = (PERIOD_HOURS[first].0, PERIOD_HOURS[last].1);
                 let q = PERIOD_HOURS.iter().position(|&(s, _)| s == b % 24.0).unwrap();
                 let len = (b - a) * 3600.0 + if tph[PERIOD_LEVEL[q]] <= 0.0 { lat.lead } else { 0.0 };

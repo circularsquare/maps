@@ -25,6 +25,8 @@ const PLATFORM_M = 74;
 /** T-1700: the boxes are this many design px smaller on every side than the platform (their width
  * too, StartLogo's `boxShrinkPx`), so a parked train draws over the whole box */
 export const LOGO_BOX_TRIM_PX = 1;
+/** T-1711: and this many shorter at each end along the track */
+const BOX_END_TRIM_PX = 2;
 /** half a train as the logo draws it, m: one pill, renderer.ts's shortest at LOGO_ZOOM (9 px wide,
  * 2.2 / 0.75 times as long) */
 const TRAIN_HALF_M = (0.5 * 9 * 2.2) / 0.75 / pxPerUnitAt(LOGO_ZOOM);
@@ -200,11 +202,17 @@ export function logoNetwork(): LogoNetwork {
   const strokes = ROWS.flatMap((row, ri) => row.strokes.map((s) => {
     let pl: P[], revs: number[] = [], closed = false;
     if (s.circle) {
+      // the centre is placed with the letters, the circle itself is round (T-1711)
       const [cx, cy, r] = s.circle;
-      pl = Array.from({ length: 73 }, (_, k): P => [cx + r * Math.sin((k * Math.PI) / 36), cy - r * Math.cos((k * Math.PI) / 36)]);
+      const [px, py] = place([cx, cy], row.dx, ri);
+      pl = Array.from({ length: 73 }, (_, k): P => [px + K * r * Math.sin((k * Math.PI) / 36), py - K * r * Math.cos((k * Math.PI) / 36)]);
       closed = true;
-    } else ({ p: pl, revs } = rounded(s.pts!));
-    const path = new Path(pl.map((p) => place(p, row.dx, ri)), closed);
+    } else {
+      const r = rounded(s.pts!);
+      pl = r.p.map((p) => place(p, row.dx, ri));
+      revs = r.revs;
+    }
+    const path = new Path(pl, closed);
     const len = path.length;
     const stops: Stop[] = [];
     const at = (d: number) => stops.push({ arrive: d, leave: d, rev: false });
@@ -241,7 +249,7 @@ export function logoNetwork(): LogoNetwork {
       }
       return Float32Array.from(out);
     };
-    const sh = platformShape((only ? [way(only)] : [way(1), way(-1)]).filter((p) => p.length >= 6), 0, PLATFORM_M / 2 - M * LOGO_BOX_TRIM_PX);
+    const sh = platformShape((only ? [way(only)] : [way(1), way(-1)]).filter((p) => p.length >= 6), 0, PLATFORM_M / 2 - M * BOX_END_TRIM_PX);
     const at = path.at(d);
     stations.push(at[0], at[1], 4);
     axis.push(sh.ax, sh.ay);
@@ -271,7 +279,7 @@ export function logoNetwork(): LogoNetwork {
       if (s.bare || x.rev || (s.path.closed && k === stops.length - 1)) return;
       const end = !s.path.closed && (k === 0 || k === stops.length - 1);
       // a terminal's node is the track's end (less the trim), its platform running back along the track from there
-      if (end) addStation(path, k === 0 ? M * LOGO_BOX_TRIM_PX : len - M * LOGO_BOX_TRIM_PX, k === 0 ? 1 : -1);
+      if (end) addStation(path, k === 0 ? M * BOX_END_TRIM_PX : len - M * BOX_END_TRIM_PX, k === 0 ? 1 : -1);
       else addStation(path, x.arrive);
     });
     // the timetable: one train, there and back, run 1 from the far end

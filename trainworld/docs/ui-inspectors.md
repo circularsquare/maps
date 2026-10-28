@@ -155,7 +155,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00 to 20:00"; weekends use the same hours) [T-406, T-1536], then
+  "High demand: 06:00 to 20:00 on weekdays", "Medium demand: 20:00 to 00:00, and from 06:00 on
+  weekends": a weekend day runs the medium trains 6-24, T-1720) [T-406, T-1536], then
   "How many trains run in this time interval. (Which time interval a scheduled train falls into is
   determined by when the train reaches the midpoint of its route.)" (the steppers have no such
   hover) [T-823, T-835, T-1242]; on a

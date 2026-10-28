@@ -13,9 +13,10 @@ impl TrackApi {
     /// T-1615: with `route_ramp`, a route crossing track at its own level ramps over or under it,
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
-        if let Some((ea, eb)) = self.route_beside.take() {
-            if let Some((ends, pis)) = pis.is_empty().then(|| self.beside_ends(ends, ea, eb)).flatten() {
-                self.beside_on = true;
+        if let Some(eb) = self.route_beside.take() {
+            if let Some((ends, pis, on_line)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
+                // a start on the line leaves along it; one coming in keeps its lead-in
+                self.beside_on = on_line;
                 let r = self.route_op_ramped(&ends, &pis, tracks, flying);
                 self.beside_on = false;
                 return r;
@@ -368,16 +369,30 @@ impl TrackApi {
         let up = (base >= 0) == (self.ramp_try == Ramp::First);
         let wet = up && base == 0;
         let water = bridge::water(net.water_mask.as_ref());
-        // seen from `ramp_over`, the route runs at level 0
-        let spans = |f: &geom::Fit, fine: bool| {
-            let mut s = flat_spans(net, f, base, 0.0);
-            if wet {
-                s.extend(water(f, fine));
-                s.sort_by(|a, b| a[0].total_cmp(&b[0]));
+        // seen from `ramp_over`, the route runs at level 0. T-1708: first with room for a station
+        // beside each crossed track's station, then without.
+        let mut r = Err(bridge::NoRoom);
+        for room in [true, false] {
+            let spans = |f: &geom::Fit, fine: bool| {
+                let mut s = flat_spans(net, f, base, 0.0);
+                if room {
+                    for w in &mut s {
+                        let (x, y, _) = geom::pos_at(&f.pieces, w[0]);
+                        let h = station_room(net, x, y);
+                        (w[0], w[1]) = ((w[0] - h).max(0.0), (w[1] + h).min(f.len));
+                    }
+                }
+                if wet {
+                    s.extend(water(f, fine));
+                    s.sort_by(|a, b| a[0].total_cmp(&b[0]));
+                }
+                s
+            };
+            r = bridge::ramp_over(shape, scaled, &spans, base, up, if wet { lift } else { [false; 2] }, n > LONG_ROUTE_VERTS);
+            if r.is_ok() {
+                break;
             }
-            s
-        };
-        let r = bridge::ramp_over(shape, scaled, &spans, base, up, if wet { lift } else { [false; 2] }, n > LONG_ROUTE_VERTS);
+        }
         // a ramp onto a flat crossing at the next level does not fit either
         let to = base + if up { 1 } else { -1 };
         match r {
@@ -466,10 +481,11 @@ impl TrackApi {
         self.route_ramp = on;
     }
 
-    /// T-1685: the next route (preview or add) runs beside track: `from_edge` the piece its start
-    /// is beside, `to_edge` the one its end is beside (u32::MAX for neither). Used once.
-    pub fn set_route_beside(&mut self, from_edge: u32, to_edge: u32) {
-        self.route_beside = (from_edge != u32::MAX && to_edge != u32::MAX).then_some((from_edge, to_edge));
+    /// T-1685: the next route (preview or add) runs beside track: `to_edge` the piece its end is
+    /// beside (u32::MAX for none; `beside_ends`). `from_edge` is unused since T-1721, where a start
+    /// anywhere may come in to the line. Used once.
+    pub fn set_route_beside(&mut self, _from_edge: u32, to_edge: u32) {
+        self.route_beside = (to_edge != u32::MAX).then_some(to_edge);
     }
 
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
@@ -808,6 +824,28 @@ fn flat_spans(net: &Network, f: &geom::Fit, base: i8, own: f64) -> Vec<[f64; 2]>
     out.sort_by(|a, b| a[0].total_cmp(&b[0]));
     out
 }
+
+/// How far each way a crossing at (x, y) is padded (T-1708): with a station within
+/// `STATION_ROOM_REACH`, half its platform and 10 m, so the bridge over the crossed track keeps a
+/// level stretch for a station of the new track beside it; else 0.
+fn station_room(net: &Network, x: f64, y: f64) -> f64 {
+    let k = net.k_at(y);
+    let reach = STATION_ROOM_REACH * k;
+    let mut h: f64 = 0.0;
+    for m in 0..net.node_count() {
+        let p = net.node_platform[m];
+        if p == 0 || !net.node_ok(m as u32) || (net.node_x[m] - x).abs() > reach || (net.node_y[m] - y).abs() > reach {
+            continue;
+        }
+        if (net.node_x[m] - x).hypot(net.node_y[m] - y) <= reach {
+            h = h.max((p as f64 / 2.0 + 10.0) * k);
+        }
+    }
+    h
+}
+
+/// A station this near a crossing makes the bridge over it room for one (T-1708), ground m.
+const STATION_ROOM_REACH: f64 = 400.0;
 
 /// T-1269: a new node the bridge leaves up, at the level its track reaches.
 fn lift_end(ops: &mut [Op], r: &mut Resolved, level: i8) {

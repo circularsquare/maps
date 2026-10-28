@@ -21,8 +21,8 @@ const SECTIONS: [string, [string, string][]][] = [
     ["Shift click", "Place track and keep drawing"],
     ["Double click, Enter", "Stop drawing track, or finish a bus line"],
     ["Backspace, right click", "Take back the last piece of track or bus point"],
-    ["Right click or hold a bus point", "Delete it"],
-    ["Drag a bus point", "Move it"],
+    ["Right click or hold a bus point", "Delete"],
+    ["Drag a bus point", "Move"],
     ["Click a bus route's end", "Draw from that end, or finish at the one in use"],
     ["Caps Lock", "Turn keep placing on or off"],
     ["Right drag", "Move the map in the blueprint tool"],
@@ -45,9 +45,9 @@ const SECTIONS: [string, [string, string][]][] = [
     ["Esc", "Back out one step, then clear the selection"],
   ]],
   ["Panels", [
-    ["Double click a fare node", "Remove it"],
-    ["Double click a name", "Rename it"],
-    ["Double click a list row", "Find it on the map"],
+    ["Double click a fare node", "Remove"],
+    ["Double click a name", "Rename"],
+    ["Double click a list row", "Find on the map"],
     ["Shift or Ctrl click −, +", "Step trains by 5 or 20"],
   ]],
 ];
