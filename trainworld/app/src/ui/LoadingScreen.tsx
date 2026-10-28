@@ -61,7 +61,7 @@ function LoadingCard() {
       <BunnyTrain />
       <p class="big">{step}</p>
       <LoadBar fraction={fraction} step={step} />
-      <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>
+      <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left, load?.late)}</span>}</p>
     </div>
   </div>;
 }

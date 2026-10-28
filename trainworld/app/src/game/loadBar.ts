@@ -79,10 +79,13 @@ export function rememberPace(p: Pace) {
   try { localStorage.setItem(LOAD_PACE, JSON.stringify({ data: clamp(p.data), game: clamp(p.game), solve: clamp(p.solve), later: Math.min(1.5, Math.max(0.1, p.later)) })); } catch { /* storage unavailable */ }
 }
 
-/** T-1479: the time left as the card says it, rough on purpose */
-export function leftText(ms: number): string {
+/** T-1479: the time left as the card says it, rough on purpose; T-1613: once the estimate has run out
+ * (`late`), no number */
+export const FEW_MS = 5000;
+export function leftText(ms: number, late = false): string {
+  if (late) return "Taking a bit longer";
   const s = ms / 1000;
-  if (s < 10) return "A few seconds left";
+  if (ms < FEW_MS) return "A few seconds left";
   if (s < 55) return `${Math.round(s / 10) * 10} s left`;
   if (s < 90) return "1 min left";
   return `${Math.round(s / 60)} min left`;
@@ -90,14 +93,19 @@ export function leftText(ms: number): string {
 
 /** T-1479: the time left shown, from `prev` (shown `dt` ms ago) toward the estimate `target`: down with
  * the clock or faster, up only at RISE_RATE a ms and only while the estimate is over a fifth above it,
- * so a late stage slows the count instead of throwing it back */
+ * so a late stage slows the count instead of throwing it back; T-1613: but a count down to "a few
+ * seconds" takes a higher estimate at once */
 export const RISE_RATE = 0.5;
 export function nextLeft(prev: number | null, target: number, dt: number): number {
   if (prev === null) return target;
   const counted = Math.max(0, prev - dt);
   if (target <= counted) return target;
+  if (counted < FEW_MS && target >= FEW_MS) return target;
   return target > counted * 1.2 ? counted + Math.min(target - counted, (1 + RISE_RATE) * dt) : counted;
 }
+/** T-1613: the shown count has fallen so far behind a raised estimate (over twice it, and 10 s more)
+ * that its number would mislead */
+export const countBehind = (shown: number, target: number) => target > 2 * shown && target - shown > 10_000;
 
 /** a remembered wait still describes the game: its network has not changed by over a fifth */
 export const sameSize = (rec: WaitRecord, stops: number | null) => stops === null || Math.abs(stops - rec.stops) <= 0.2 * Math.max(stops, rec.stops) + 50;

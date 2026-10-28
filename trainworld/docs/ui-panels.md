@@ -773,8 +773,11 @@ registry centre and zoom, or over New York with none [T-310].
   time is guessed to go on a share of its time so far (a data stage 0.3 of it times the part not yet
   landed, a solve round 0.2). It shows once the game's network is in (from the start when the slot's
   last load is remembered). It counts down with the clock or faster, and rises only while the estimate
-  is over a fifth above it, at half a second a second. Under 10 s "A few seconds left", under 55 s in
-  tens of seconds, under 90 s "1 min left", then whole minutes.
+  is over a fifth above it, at half a second a second; under 5 s it takes a higher estimate of 5 s or
+  more at once. Under 5 s "A few seconds left", under 55 s in tens of seconds, under 90 s "1 min left",
+  then whole minutes. It says "Taking a bit longer" instead of a number [T-1613] while every stage
+  still in hand is past its expected time (nothing expected is left, only the guess), or while the
+  estimate is over twice the shown count and 10 s more (a slow load the count cannot catch up with).
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].

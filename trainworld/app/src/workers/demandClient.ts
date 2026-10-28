@@ -58,7 +58,7 @@ import {
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
-import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
+import { countBehind, GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -389,15 +389,16 @@ const FINAL_FACTOR = 1 + ROUNDS * LATER_GUESS;
  * what has landed of it or the time against its expectation (`timeShare`: creeping, never done until
  * published); once its first period is in, it is expected at that time times the waves of periods a
  * worker takes. `ms` is the stage's expected length, `left` the time still expected, `first` and
- * `rest` the first round's and each later one's ms as measured or expected.
+ * `rest` the first round's and each later one's ms as measured or expected; `expLeft` the part of
+ * `left` that is expected rather than guessed from a round running late (T-1613).
  */
-function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLandAt: number | undefined, doneRound: number, prior: number, later: number, now: number): { ms: number; share: number; left: number; first: number; rest: number } {
+function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLandAt: number | undefined, doneRound: number, prior: number, later: number, now: number): { ms: number; share: number; left: number; expLeft: number; first: number; rest: number } {
   const d = Math.min(published + 1, doneRound + 1);
   const at = (r: number) => roundAt?.[r] ?? sentAt;
   let first = d > 0 && at(0) > sentAt ? at(0) - sentAt : prior / (1 + doneRound * later);
   let rest = d > 1 && at(d - 1) > at(0) ? (at(d - 1) - at(0)) / (d - 1) : later * first;
   const boundary = d > 0 ? at(d - 1) : sentAt;
-  if (d > doneRound) return { ms: boundary - sentAt, share: 1, left: 0, first, rest };
+  if (d > doneRound) return { ms: boundary - sentAt, share: 1, left: 0, expLeft: 0, first, rest };
   let exp = d === 0 ? first : rest;
   // the first period in is one wave of the round: the round takes as many waves as a worker has periods
   const waved = firstLandAt !== undefined && landed > 0 && landed < PERIODS.length;
@@ -411,7 +412,7 @@ function solveStage(sentAt: number, roundAt: readonly number[] | undefined, publ
   const ms = boundary - sentAt + curMs + after * rest;
   const cur = Math.max(part, timeShare(boundary, exp, now));
   const doneMs = boundary - sentAt;
-  return { ms, share: (doneMs + exp * cur) / Math.max(1, doneMs + exp + after * rest), left: curLeft + after * rest, first, rest };
+  return { ms, share: (doneMs + exp * cur) / Math.max(1, doneMs + exp + after * rest), left: curLeft + after * rest, expLeft: Math.max(0, exp - el) + after * rest, first, rest };
 }
 /** `finalMs`: to the card going (T-421: the zone in view's final); `allMs`: to the solve's final */
 interface SolveRecord { ms: number; stops: number; finalMs?: number; allMs?: number }
@@ -1835,7 +1836,7 @@ class DemandClient {
     const gameLoad = !!this.hold || gameLoadArmed();
     if (netIn && stops !== null && sn) job.modelSolve ??= solveModelMs(stops, sn.size);
     const prior = !needsSolve ? 0 : was ? was.demand : sn?.size === 0 ? SOLVE_MS.base : gameLoad && job.modelSolve !== undefined ? job.modelSolve * job.pace.solve : solveEstimate(stops, gameLoad);
-    let solveMs = prior, solve = 0, solveLeft = prior;
+    let solveMs = prior, solve = 0, solveLeft = prior, solveExp = prior;
     if (needsSolve && s && job.version !== undefined && s.version === job.version) {
       // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
       const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
@@ -1844,6 +1845,7 @@ class DemandClient {
       solveMs = st.ms;
       solve = st.share;
       solveLeft = st.left;
+      solveExp = st.expLeft;
       job.solveRounds = { first: st.first, rest: st.rest, measured: published >= 1 };
     }
     // T-1195: each stage's share of the bar is its expected time: the slot's last load's, else, before
@@ -1873,7 +1875,9 @@ class DemandClient {
     job.best = Math.max(job.best, Math.min(0.99, shown));
     // T-1479: the time left, each stage's expected time less its time so far; a stage running late is
     // guessed to go on a share of its time so far. Unknown on a first load until its network is in.
-    let target: number | null = null;
+    // T-1613: once no stage has expected time left, or the count has fallen far behind a raised estimate,
+    // the card says so rather than show a number (`late`).
+    let target: number | null = null, late = false;
     if (netIn || was) {
       const sinceGame = now - job.since, gameExp = was?.game ?? GAME_MS * job.pace.game;
       const gameLeft = netIn ? 0 : Math.max(gameExp - sinceGame, 0.2 * sinceGame);
@@ -1881,12 +1885,17 @@ class DemandClient {
       const sinceData = job.netAt !== undefined ? now - job.netAt : 0;
       const dataLeft = job.dataAt !== undefined ? 0 : !netIn ? dataExp : Math.max(dataExp - sinceData, 0.3 * sinceData * (1 - dataPart));
       target = gameLeft + dataLeft + (needsSolve ? solveLeft : 0);
+      const expected = (netIn ? 0 : Math.max(0, gameExp - sinceGame)) + (job.dataAt !== undefined ? 0 : !netIn ? dataExp : Math.max(0, dataExp - sinceData)) + (needsSolve ? solveExp : 0);
+      late = expected <= 0;
     }
-    if (target !== null) job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
+    if (target !== null) {
+      job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
+      late ||= countBehind(job.left.ms, target);
+    }
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
-    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(job.shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
+    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(job.shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft, solveExp, late: late ? 1 : 0 }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
-    loadProgress.value = { cities, fraction: job.best, step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
+    loadProgress.value = { cities, fraction: job.best, step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null, late };
   }
 
   // --- T-328: the demand cache (workers/demandCache.ts) -----------------------------------------

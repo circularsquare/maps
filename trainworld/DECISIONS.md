@@ -6,6 +6,7 @@ reasoning and what it replaced.
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
 ## 2026-10-28
+- **The load's time left says "Taking a bit longer" once its estimate has run out, rather than count a guess** (T-1613, my call): when no stage in hand has expected time left, or the shown count is over 2x behind a raised estimate and 10 s off, any number would be a guess (a late round was guessed to go on a fifth of its time so far, which held "A few seconds left" up while a slow round went on). Raising the count at once was the other way; it throws the count back up, which T-1479 chose against. "A few seconds left" now means under 5 s (was 10).
 - **The ramp switch is on by default, and a ramp that would land on a flat crossing at the next level counts as not fitting** (T-1615, my call): it changes only newly drawn track (saved track and edit API routes without `ramp` cross flat as before), and a flat crossing is rarely what a player wants since it costs every train on both lines waiting time; one click turns it off. Swapping one flat crossing for another a level up gains nothing, so that way is skipped like one without room. A route at 0 that also crosses water and finds no room going up does not try a bridge plus a dip under the line: going down leaves the water unbridged, fails the check, and the route gets the plain bridge and a flat crossing.
 
 ## 2026-10-27

@@ -25,6 +25,9 @@ export interface LoadProgress {
   startup: boolean;
   /** T-1479: the time still expected, ms, counting down; null while there is no estimate */
   leftMs?: number | null;
+  /** T-1613: `leftMs` would mislead: every stage in hand is past its expected time, or the count is far
+   * behind a raised estimate (game/loadBar.ts `countBehind`) */
+  late?: boolean;
 }
 
 /** What the demand pool is loading now; null when nothing is. */
