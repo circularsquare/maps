@@ -13,7 +13,7 @@ tests natively.
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
   platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
-  exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs`, `crossings.rs`, `links.rs`,
+  exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`), `crossings.rs`, `links.rs`,
   `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
   `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283).

@@ -936,7 +936,7 @@ export class ClockClient {
   }
 
   /** Ask what a route would cost. One request in flight; newer ones replace a waiting one. */
-  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean }, cb: (a: PreviewAnswer) => void) {
+  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "preview", seq, ...req }), cb);
   }
 

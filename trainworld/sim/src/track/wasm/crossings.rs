@@ -8,47 +8,30 @@ impl TrackApi {
 
     /// Double up: an express pair beside double track, as blueprint, making it quad. One undoable
     /// edit. The rules are in docs/track-and-service.md 6.1 ("Doubling up").
-    /// A crossover goes in past each station on the run where it fits (T-733); without them when
-    /// the cash covers only the doubling.
+    /// No crossovers go in (T-1688): the player places crossing track where it is wanted.
     pub fn double_up(&mut self, edge: u32) -> u32 {
-        let (op, nn, ne, stations) = match self.double_up_op(edge) {
+        let (op, nn, ne) = match self.double_up_op(edge) {
             Ok(v) => v,
             Err(i) => return self.refuse(i),
         };
-        let mut r = 1;
-        let (full, n2, e2) = self.with_crossovers(op.clone(), &stations);
-        if !e2.is_empty() {
-            r = self.run(full);
-            if r != 0 {
-                self.release(&n2, &e2);
-            }
-        }
-        if r != 0 {
-            r = self.run(op);
-        }
+        let r = self.run(op);
         if r != 0 {
             self.release(&nn, &ne);
         }
         r
     }
 
-    /// What `double_up` would add to the blueprint, crossovers included, US$M, or -1 when it would
-    /// be refused (`issue_kinds()` says why).
+    /// What `double_up` would add to the blueprint, US$M, or -1 when it would be refused
+    /// (`issue_kinds()` says why).
     pub fn preview_double_up(&mut self, edge: u32) -> f64 {
-        let (op, nn, ne, stations) = match self.double_up_op(edge) {
+        let (op, nn, ne) = match self.double_up_op(edge) {
             Ok(v) => v,
             Err(i) => {
                 self.refuse(i);
                 return -1.0;
             }
         };
-        let (full, n2, e2) = self.with_crossovers(op.clone(), &stations);
-        let with = if e2.is_empty() { None } else { self.w.trial(full).ok() };
-        self.release(&n2, &e2);
-        let r = match with {
-            Some(r) => Ok(r),
-            None => self.w.trial(op),
-        };
+        let r = self.w.trial(op);
         self.release(&nn, &ne);
         let cost = r.as_ref().map_or(-1.0, |r| r.cost_after - r.cost_before);
         self.done(r.map(|mut r| {
@@ -60,12 +43,11 @@ impl TrackApi {
     }
 
     /// The double-up edit on the left of the piece's own direction, else on its right where the
-    /// left is refused; the left's problems when both are. Also the run's stations.
-    #[allow(clippy::type_complexity)]
+    /// left is refused; the left's problems when both are.
     ///
     /// T-1678: the run stops short of a piece with a curve too tight for the pair beside it on
     /// that side, a side that needs no such stop first; the selected piece having one refuses.
-    pub(super) fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>, Vec<u32>), Issue> {
+    pub(super) fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
         let (full_run, full_nodes) = self.double_run(edge)?;
         let at = full_run.iter().position(|r| r.0 == edge).unwrap_or(0);
         let mut first_err = None;
@@ -89,12 +71,8 @@ impl TrackApi {
                     (run, nodes) = (&full_run[lo..hi], &full_nodes[lo..=hi]);
                     (op, nn, ne) = self.double_side(run, nodes, side, &mut vec![])?;
                 }
-                let mut stations: Vec<u32> = nodes.iter().copied().filter(|&n| self.w.net.is_station(n)).collect();
-                if stations.len() > 1 && stations.first() == stations.last() {
-                    stations.pop(); // a ring ends where it starts
-                }
                 match self.w.trial(op.clone()) {
-                    Ok(_) => return Ok((op, nn, ne, stations)),
+                    Ok(_) => return Ok((op, nn, ne)),
                     Err(e) => {
                         self.release(&nn, &ne);
                         first_err.get_or_insert(e);

@@ -2487,10 +2487,10 @@ fn a_free_station_lays_its_own_track() {
     assert_ne!(a.add_free_station(&short, 2, 200, "Short".into()), 0);
     assert!(a.issue_kinds().contains("PlatformTooLong"), "{}", a.issues());
     assert!(live_edges(&a).is_empty());
-    // quad: the twin on the express pair
+    // quad: on the drawn pair only (T-1687)
     assert_eq!(a.add_free_station(&ends, 4, 200, "Quad".into()), 0, "{}", a.issues());
     let named = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Quad").count();
-    assert_eq!(named, 2, "the station and its twin");
+    assert_eq!(named, 1, "the station alone");
     // across other track on the same level: refused, though a flat crossing is allowed elsewhere
     let mut b = api();
     let across: Vec<f64> = free(230.0, -300.0).iter().chain(free(230.0, 300.0).iter()).copied().collect();
@@ -2597,20 +2597,19 @@ fn quad_track_and_twin_stations() {
     assert!((added / b.total_cost() - 2.0).abs() < 0.1, "{added} against {}", b.total_cost());
     let j = a.nodes_info().chunks(10).find(|c| c[0] == start).unwrap()[4];
     assert_eq!(j, 3.0, "the old track end is a junction now");
-    // stations: each gets its twin on the other pair, same name
+    // stations: on the pair clicked only (T-1687)
     let mut stops = vec![];
     for (piece, at, name) in [(local[1], 60.0, "First"), (local[2], 400.0, "Last")] {
         let p = piece; let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(p), at);
         assert_eq!(a.add_station(2, p, x, y, 200, name.into()), 0, "{} on {p} at {:?}: {:?} {:?}", a.issues(), a.w.net.project(p, x, y), a.w.net.edge_data(p), a.edge_pis(p));
         let named: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).collect();
-        assert_eq!(named.len(), 2, "{name} and its twin");
-        let local_one = *named.iter().min_by(|&&p, &&q| { let d = |k: u32| b.w.net.project(e, a.w.net.node_x[k as usize], a.w.net.node_y[k as usize]).1; d(p).total_cmp(&d(q)) }).unwrap();
-        stops.push(local_one);
+        assert_eq!(named.len(), 1, "{name} alone");
+        stops.push(named[0]);
     }
-    // a station on a joint node of the drawn pair gets its twin too
+    // and on a joint node of the drawn pair
     let joint = (0..a.w.net.node_count() as u32).find(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 2 && a.w.net.node_platform[k as usize] == 0 && b.w.net.project(e, a.w.net.node_x[k as usize], a.w.net.node_y[k as usize]).1 < 0.5 && (1000.0..11000.0).contains(&a.w.net.node_x[k as usize])).unwrap();
     assert_eq!(a.add_station(1, joint, 0.0, 0.0, 200, "Joint".into()), 0, "{}", a.issues());
-    assert_eq!((0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Joint").count(), 2);
+    assert_eq!((0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Joint").count(), 1);
     assert_eq!(a.undo(), 0);
     let id = a.new_line_id();
     assert_eq!(a.set_line(id, &stops, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Local".into()), 0, "{}", a.issues());
@@ -2678,12 +2677,16 @@ fn quad_drawn_through_points_carries_both_pairs_on() {
     let (sx, sy, _) = geom::pos_at(a.w.net.edge_pieces(local[0]), a.w.net.edge_len[local[0] as usize] - 40.0);
     assert_eq!(a.add_station(2, local[0], sx, sy, 200, "Joint".into()), 0, "{}", a.issues());
     let named = |a: &TrackApi, name: &str| net_nodes(a).into_iter().filter(|&k| a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).count();
-    assert_eq!(named(&a, "Joint"), 2, "the station and its twin across the joint");
+    assert_eq!(named(&a, "Joint"), 1, "the pair clicked only (T-1687)");
     assert_eq!(a.add_station(1, end, 0.0, 0.0, 120, "End".into()), 0, "{}", a.issues());
+    assert_eq!(named(&a, "End"), 1);
+    // the express pair's loose end, clicked next: its own station, named as the one beside
+    assert_eq!(a.add_station(1, ex_end, 0.0, 0.0, 120, "Other".into()), 0, "{}", a.issues());
     assert_eq!(named(&a, "End"), 2, "the loose ends both");
     assert!(a.w.net.node_platform[ex_end as usize] > 0);
-    assert_eq!(a.undo(), 0);
-    assert_eq!(a.undo(), 0);
+    for _ in 0..3 {
+        assert_eq!(a.undo(), 0);
+    }
     // a crossover on the new quad track, mid-segment
     let mid = local[2];
     let (cx, cy, _) = geom::pos_at(a.w.net.edge_pieces(mid), a.w.net.edge_len[mid as usize] / 2.0);
@@ -2732,12 +2735,8 @@ fn crossover_joins_the_pairs() {
     let station_at = |t: &TrackApi, x: f64, y: f64| -> u32 {
         t.nodes_info().chunks(10).filter(|c| c[7] > 0.0).min_by(|p, q| (p[1] - x).hypot(p[2] - y).total_cmp(&(q[1] - x).hypot(q[2] - y))).unwrap()[0] as u32
     };
-    for x in [500.0, 3500.0] {
-        assert_eq!(a.add_station(2, edge_at(&a, x, 0.0), x, 0.0, 120, format!("S{x}")), 0, "{}", a.issues());
-    }
-    // the crossovers placed past them (T-733) out of the way, to place one by hand
-    while let Some(&x) = a.crossover_edges().first() {
-        assert_eq!(a.delete_edge(x), 0, "{}", a.issues());
+    for (x, y) in [(500.0, 0.0), (3500.0, QUAD_SPACING)] {
+        assert_eq!(a.add_station(2, edge_at(&a, x, y), x, y, 120, format!("S{x}")), 0, "{}", a.issues());
     }
     let (w_local, e_express) = (station_at(&a, 500.0, 0.0), station_at(&a, 3500.0, QUAD_SPACING));
     assert!((a.w.net.node_y[e_express as usize] - QUAD_SPACING).abs() < 0.1);

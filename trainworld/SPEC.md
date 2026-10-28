@@ -236,9 +236,9 @@ straight piece of their own track, one click for one end of the platform and one
 T-834]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to
-disable, re-level or remove together [T-333, T-815, T-829]. Each station on quad track gets a crossover just past it, placed by the
-game in the same edit where it fits: an X between the two pairs, 120 m long, 50 km/h, priced as two
-junctions, so lines can change pairs between neighbouring quad stations [T-338, T-733]. Single
+disable, re-level or remove together [T-333, T-815, T-829]. A station clicked on quad track goes on the pair clicked only; the game
+adds no crossovers, so the player draws crossing track where lines should change pairs (saves keep
+their crossovers) [T-338, T-733, T-1687, T-1688]. Single
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
 [T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars

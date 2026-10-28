@@ -59,6 +59,10 @@ pub struct TrackApi {
     route_hsr: bool,
     /// T-1615: routes ramp over or under track they would cross flat (`set_route_ramp`).
     route_ramp: bool,
+    /// T-1685: the next route runs beside track, the pieces under its start and end (`set_route_beside`).
+    route_beside: Option<(u32, u32)>,
+    /// The route being laid out is one beside track: its ends get no lead-ins.
+    beside_on: bool,
     /// The way `route_op_as` tries: `Ramp::Flat`, or the preferred way or the other.
     ramp_try: Ramp,
     /// The route asked about crosses track at its own level (so a ramp was tried).
@@ -253,6 +257,8 @@ impl TrackApi {
             route_cap: R_CAP,
             route_hsr: false,
             route_ramp: false,
+            route_beside: None,
+            beside_on: false,
             ramp_try: Ramp::Flat,
             ramp_found: false,
             ramp_failed: false,
@@ -570,6 +576,7 @@ mod money;
 mod edits;
 mod draw;
 use draw::Ramp;
+mod beside;
 mod crossings;
 mod links;
 mod lines;
@@ -1415,6 +1422,8 @@ mod quad_edit_tests;
 /// T-1615: routes ramp over or under track they would cross flat.
 #[cfg(test)]
 mod ramp_tests;
+#[cfg(test)]
+mod beside_tests;
 
 #[cfg(test)]
 mod t1071_tests;

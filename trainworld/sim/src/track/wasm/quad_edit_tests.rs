@@ -92,8 +92,7 @@ fn double_up_makes_quad() {
     assert!(old.load(&a.save()));
     assert_eq!(a.double_up(local[2]), 0, "{}", a.issues());
     assert!((a.total_cost() - before - price).abs() < 1e-6);
-    // T-733: a crossover past the station, splitting each pair twice
-    assert_eq!(a.crossover_edges().len(), 2, "a crossover past the station");
+    assert!(a.crossover_edges().is_empty(), "no crossover goes in (T-1688)");
     let on_old = |e: u32| {
         let r = a.edge_render(e);
         let k = r.len() / 6 * 3;
@@ -102,7 +101,7 @@ fn double_up_makes_quad() {
     let plain: Vec<u32> = live(&a).into_iter().filter(|&e| !a.w.net.edge_crossover[e as usize]).collect();
     let ex: Vec<u32> = plain.iter().copied().filter(|&e| !on_old(e)).collect();
     let now_local: Vec<u32> = plain.iter().copied().filter(|&e| on_old(e)).collect();
-    assert_eq!((ex.len(), now_local.len()), (5, 5), "one express piece per piece, and the crossover's two splits on each pair");
+    assert_eq!((ex.len(), now_local.len()), (3, 3), "one express piece per piece");
     beside(&a, &ex, &now_local, 0.0);
     assert_eq!(named(&a, "Mid"), 2, "the station's twin");
     let ends = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 1).count();
@@ -139,11 +138,10 @@ fn double_up_makes_quad() {
     let price = a.preview_double_up(local[1]);
     let cash = a.cash;
     assert_eq!(a.double_up(local[1]), 0, "{}", a.issues());
-    // the crossover splits constructed track: re-summed shapes, rounding only (T-624)
     assert!((a.cash - cash).abs() < 1e-5, "blueprint costs nothing until constructed: {}", a.cash - cash);
     let ex: Vec<u32> = live(&a).into_iter().filter(|e| !built.contains(e)).collect();
-    assert_eq!(ex.len(), 9, "five express pieces, two splits of the local pair and two diagonals");
-    assert_eq!(ex.iter().filter(|&&e| !a.w.net.edge_built[e as usize]).count(), 7, "the express pieces and the crossover are blueprint");
+    assert_eq!(ex.len(), 3, "three express pieces");
+    assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize]), "blueprint");
     assert!(price > 0.0);
 }
 
@@ -194,69 +192,42 @@ fn stations(a: &TrackApi, name: &str) -> Vec<u32> {
     (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).collect()
 }
 
-/// T-733: a station on quad track gets a crossover just past it, clear of the platform, at
-/// the full price of two junctions, in the same undo step; a line changes pairs over it.
+/// T-1687, T-1688: a station clicked on quad track goes on the pair clicked only; a click on the
+/// other pair level with it adds its own, taking its name. No crossover goes in, so a line from
+/// one pair to the other is refused until the player draws track between them, and then runs.
 #[test]
-fn quad_station_gets_a_crossover_past_it() {
+fn quad_station_one_pair_per_click_and_no_crossovers() {
     let mut a = TrackApi::new(-73.985, 40.758, true);
     a.set_route_tangent(true);
     route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 3000.0, 0.0, 4);
-    let edges0 = live(&a).len();
-    assert_eq!(a.preview_station(2, track_at(&a, 800.0, 0.0), 800.0, 0.0, 200), 0, "{}", a.issues());
-    assert_eq!(live(&a).len(), edges0, "a preview changes nothing");
-    let cost0 = a.total_cost();
+    assert!(a.crossover_edges().is_empty(), "drawing quad adds none");
     assert_eq!(a.add_station(2, track_at(&a, 800.0, 0.0), 800.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
-    assert_eq!(stations(&a, "West").len(), 2);
-    let xs = a.crossover_edges();
-    assert_eq!(xs.len(), 2, "one crossover");
-    // its ends clear of the platform (100 m each way) by QUAD_CROSSOVER_CLEAR, and no farther than the crossover's length beyond
-    for &x in &xs {
-        for n in [a.w.net.edge_a[x as usize], a.w.net.edge_b[x as usize]] {
-            let off = (a.w.net.node_x[n as usize] - 800.0).abs();
-            assert!(off > 100.0 + QUAD_CROSSOVER_CLEAR - 1.0 && off < 100.0 + QUAD_CROSSOVER_CLEAR + CROSSOVER_LEN + 1.0, "end {off} m from the station");
-        }
-    }
-    // full price: deleting it takes off two junctions
-    let with = a.total_cost();
-    assert_eq!(a.delete_edge(xs[0]), 0, "{}", a.issues());
-    let two_junctions = 2.0 * crate::track::cost::junction_cost(0, false, false);
-    assert!((with - a.total_cost() - two_junctions).abs() < 1e-6, "{} not {two_junctions}", with - a.total_cost());
+    let west = stations(&a, "West");
+    assert_eq!(west.len(), 1, "the pair clicked only");
+    assert!(a.w.net.node_y[west[0] as usize].abs() < 1.0);
+    assert_eq!(a.add_station(2, track_at(&a, 790.0, QUAD_SPACING), 790.0, QUAD_SPACING, 200, "Other".into()), 0, "{}", a.issues());
+    assert_eq!(stations(&a, "West").len(), 2, "the second click's station takes the name level with it");
+    assert!(stations(&a, "Other").is_empty());
     assert_eq!(a.undo(), 0);
-    // one undo takes the stations and the crossover together
-    assert_eq!(a.undo(), 0);
-    assert!(stations(&a, "West").is_empty() && a.crossover_edges().is_empty());
-    assert_eq!(live(&a).len(), edges0);
-    assert!((a.total_cost() - cost0).abs() < 1e-6);
-    assert_eq!(a.redo(), 0);
-    assert_eq!(a.crossover_edges().len(), 2);
-    // a second station: a line from the local pair at one to the express pair at the other
-    assert_eq!(a.add_station(2, track_at(&a, 2200.0, 0.0), 2200.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
-    assert_eq!(a.crossover_edges().len(), 4);
-    let pick = |a: &TrackApi, name: &str, y: f64| *stations(a, name).iter().min_by(|&&p, &&q| (a.w.net.node_y[p as usize] - y).abs().total_cmp(&(a.w.net.node_y[q as usize] - y).abs())).unwrap();
-    let (local, express) = (pick(&a, "West", 0.0), pick(&a, "East", QUAD_SPACING));
-    assert!(a.w.net.node_y[express as usize].abs() > 1.0, "the express pair's station");
+    assert_eq!(stations(&a, "West").len(), 1);
+    assert_eq!(a.add_station(2, track_at(&a, 2200.0, QUAD_SPACING), 2200.0, QUAD_SPACING, 200, "East".into()), 0, "{}", a.issues());
+    let east = stations(&a, "East");
+    assert!(east.len() == 1 && a.w.net.node_y[east[0] as usize] > 1.0, "the express pair's");
+    assert!(a.crossover_edges().is_empty(), "stations add none");
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[local, express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
-    let xs = a.crossover_edges();
-    assert!(a.line_path(id).iter().any(|p| xs.contains(&(p >> 1))), "across a crossover");
-}
-
-/// T-733: where there is no room past a quad station (its track ends within reach both ways),
-/// the stations go in without a crossover.
-#[test]
-fn quad_station_without_room_has_no_crossover() {
-    let mut a = TrackApi::new(-73.985, 40.758, true);
-    a.set_route_tangent(true);
-    route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 500.0, 0.0, 4);
-    assert_eq!(a.add_station(2, track_at(&a, 250.0, 0.0), 250.0, 0.0, 200, "Short".into()), 0, "{}", a.issues());
-    assert_eq!(stations(&a, "Short").len(), 2, "both stations");
-    assert!(a.crossover_edges().is_empty());
-    assert_eq!(a.undo(), 0);
-    assert!(stations(&a, "Short").is_empty());
-    // plain double track gets none either
+    assert_ne!(a.set_line(id, &[west[0], east[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0);
+    assert!(a.issue_kinds().contains("LinePath"), "{}", a.issue_kinds());
+    // track the player draws from one pair to the other
+    let (from, to) = (track_at(&a, 1300.0, 0.0), track_at(&a, 1700.0, QUAD_SPACING));
+    let ends = [2.0, from as f64, 1300.0, 0.0, 0.0, 2.0, to as f64, 1700.0, QUAD_SPACING, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    assert!(a.crossover_edges().is_empty(), "drawing adds none");
+    assert_eq!(a.set_line(id, &[west[0], east[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
+    // a free station on quad: the drawn pair's only
     let mut b = TrackApi::new(-73.985, 40.758, true);
-    route(&mut b, [0.0, 0.0, 0.0, 0.0, 0.0], 3000.0, 0.0, 2);
-    assert_eq!(b.add_station(2, track_at(&b, 800.0, 0.0), 800.0, 0.0, 200, "Plain".into()), 0, "{}", b.issues());
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 220.0, 0.0, 0.0];
+    assert_eq!(b.add_free_station(&ends, 4, 200, "Free".into()), 0, "{}", b.issues());
+    assert_eq!(stations(&b, "Free").len(), 1);
     assert!(b.crossover_edges().is_empty());
 }
 
@@ -348,17 +319,13 @@ fn old_saves_with_crossovers_and_single_track_still_run() {
     let single = a.new_line_id();
     let ss = [stations(&a, "S1")[0], stations(&a, "S2")[0]];
     assert_eq!(a.set_line(single, &ss, 4.0, 2.0, 1.0, 30.0, 180.0, 0, 0, "Single".into()), 0, "{}", a.issues());
-    // quad with stations, their automatic crossovers removed, and one placed by hand between
+    // quad with a station on each pair and a crossover placed by hand between
     route(&mut a, [0.0, 0.0, 2000.0, 0.0, 0.0], 6000.0, 0.0, 4);
-    for (x, name) in [(2500.0, "Q1"), (5500.0, "Q2")] {
-        assert_eq!(a.add_station(2, track_at(&a, x, 0.0), x, 0.0, 120, name.into()), 0, "{}", a.issues());
-    }
-    while let Some(&x) = a.crossover_edges().first() {
-        assert_eq!(a.delete_edge(x), 0, "{}", a.issues());
+    for (x, y, name) in [(2500.0, 0.0, "Q1"), (5500.0, QUAD_SPACING, "Q2")] {
+        assert_eq!(a.add_station(2, track_at(&a, x, y), x, y, 120, name.into()), 0, "{}", a.issues());
     }
     assert_eq!(a.add_crossover(track_at(&a, 4000.0, 0.0), 4000.0, 0.0), 0, "{}", a.issues());
-    let q1 = *stations(&a, "Q1").iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
-    let q2 = *stations(&a, "Q2").iter().max_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
+    let (q1, q2) = (stations(&a, "Q1")[0], stations(&a, "Q2")[0]);
     let cross = a.new_line_id();
     assert_eq!(a.set_line(cross, &[q1, q2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Cross".into()), 0, "{}", a.issues());
     let bytes = a.save();

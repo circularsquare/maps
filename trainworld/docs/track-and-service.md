@@ -114,7 +114,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Placing stations**: click on track (it is split there) or on a node. On open ground the station
   brings its own track [T-794, `TrackApi::add_free_station`]: a straight blueprint piece at the
   selected level, double or quad as the Build tab is set, the platform plus 10 m past each end
-  long, with the station at its middle (on quad its twin on the express pair), one undoable edit
+  long, with the station at its middle (on quad on the drawn pair only, T-1687), one undoable edit
   priced as the track and station together. Its ends are ordinary loose ends, so later track joins
   them by the drawing rules. The edit's own checks refuse it as any track or station (water, a
   crossing between levels, track on top of track), and so does any flat crossing on the piece
@@ -173,22 +173,20 @@ Full design, numbers and sources: `notes/T-008.md`.
   tight for quad, T-1678; a corner whose concentric radius would overrun its legs, as the capped curve of a
   nearly straight segment can once the millimetre grid tilts its metre-long legs, takes the auto radius
   instead, within millimetres of concentric, T-708). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
-  a junction (a fork with nothing behind it if the end is new track), and at crossovers (below). Both pairs are
+  a junction (a fork with nothing behind it if the end is new track), and wherever the player has
+  joined the pairs (crossing track drawn between them, or a crossover a save holds). Both pairs are
   ordinary double-track edges, cut into pieces per corner (T-244), priced, deleted and drawn like
   any track: quad costs two double tracks, plus junctions at ends on existing track. Drawn through
-  points, the pairs end apart instead (above). A station
-  placed on either pair (on track or on a node) gets a twin of the same name level with it on the
-  other pair, in the same edit (on the other pair's loose end or joint when one is level with it,
-  T-423): the local and express platforms, one complex and one label. If
-  the twin cannot be built there, the station goes in alone.
-- **Crossovers past quad stations** (T-733, `TrackApi::with_crossovers`): a station and its twin
-  get one crossover (below) in the same edit and undo step, centred half the platform plus
-  `QUAD_CROSSOVER_CLEAR` (50 m) plus 60 m from the station, so its nearest end is 50 m clear of
-  the platform end (the platform can grow 100 m before meeting it). It goes off the station's first
-  track end, else its second; where neither has room (the crossover's rules below, or a check the
-  edit fails) the stations go in without one, and so they do when the cash covers them but not it.
-  Full price, two junctions. So between any two neighbouring quad stations a line can change pairs
-  once, either way. Removing the station leaves its crossover as track.
+  points, the pairs end apart instead (above). A station placed on quad track (on track or on a
+  node) goes on the pair clicked only (T-1687); a second click on the other pair adds its station
+  there. A station placed level with one on the pair beside (`twin_at`; its node within half that
+  platform of the spot beside) takes that station's name, so the two are one complex with one label.
+- **No automatic crossovers** (T-1688): nothing the player does adds a crossover by itself, not
+  drawing (quad included), placing stations or doubling up. The player draws crossing track between
+  the pairs where lines should change over. A line whose stops lie on two pairs with no way between
+  them is refused like any stops no track joins in order (`LinePath`: "No track joins these
+  stations in this order."), unless a longer way round exists, which it then takes. Crossovers in
+  saves stay and work.
 - **High-speed track** (T-817, design notes/T-817.md): the third setting, always double track
   (4 m apart; there is no high-speed quad, so four tracks are HSR and double drawn side by side).
   An edge flag (`EdgeData::hsr`, `TrackApi::set_route_hsr`), so a station placed on open ground
@@ -209,15 +207,24 @@ Full design, numbers and sources: `notes/T-008.md`.
   right where the left is refused (crossing other track, water) or would stop short where the right would not, every
   corner concentric, one piece beside each piece with a joint
   beside each joint. Each station on the run gets its twin (same name and platform) on the joint
-  beside it, and a crossover past it as a quad station does (above), in the same edit; the
-  preview's price includes them. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
+  beside it, in the same edit, and no crossover (above); the preview's price includes the twins. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
   can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
   on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
   beside it (`Alongside`); a run stops at high-speed track as at single track.
+- **A route beside track** (T-1685, `TrackApi::set_route_beside(from_edge, to_edge)`, used by the
+  next `preview_route` or `add_route` only): a route with no PIs whose ends are open ground or a
+  node (the start), and whose two pieces lie on one run (walked through plain joints and stations
+  as doubling up walks, any track count, at most 400 pieces), is laid along that run: both ends
+  projected onto the run's PI polyline, the stretch between cut out (curve radii as fitted on the
+  whole run), and `express_verts` gives the line 8 m (`QUAD_SPACING`) to the side the end lies on,
+  every corner concentric, with T-1678's easing of inside corners; open-ground ends move onto that
+  line, a node start stays (on the other side it is no route beside and the plain route is laid).
+  The ends get no lead-ins. Otherwise it is an ordinary route: the same checks, its own loose ends,
+  no crossovers. The drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
 - **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
-  beside it. The game places them past quad stations (above); the player has no tool for them
-  (T-733), and saves keep theirs. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
+  beside it. The game never places them (T-1688, above) and the player has no tool for them
+  (T-733): they come only from saves, which keep theirs, and from checks. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
   both 60 m either side of the click (or uses a plain joint within 8 m of that point), and joins
   the four new nodes with two diagonals in an X, one each way, so a train can change track in
@@ -250,8 +257,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   Refused where a junction, another station's platform or a crossover is in the way
   (`BranchNoRoom`: "Track cannot branch off just past this platform, because a junction or another
   station is too close."), and on a ramp as any split is. The junction takes the track's level
-  there and the branch ramps to the level selected. On quad track only the pair clicked branches,
-  inside its crossover 50 m out; high-speed track stays high speed on both halves. It is part of
+  there and the branch ramps to the level selected. On quad track only the pair clicked branches;
+  high-speed track stays high speed on both halves. It is part of
   the route edit, so the ghost, the click, the real-network snap and the edit API agree, in one
   undo step.
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);

@@ -157,7 +157,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585). */
 const VERSION = 11;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -257,6 +257,8 @@ export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== fa
 /** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);
+/** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
+export const snapBeside = signal(saved.build?.beside !== false);
 /** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
@@ -329,7 +331,7 @@ effect(() => {
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

@@ -44,14 +44,14 @@ import { toLngLat, toLocal } from "./geo";
 import type { Level } from "../game/types";
 import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
-import { pairBeside, PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
+import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import { chip, costTint, elevationFact, factRow, speedFact, terrainFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
-import { snapping } from "../game/ui";
+import { snapBeside, snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { playBuild } from "./buildSound";
@@ -62,6 +62,8 @@ type LngLatish = { lng: number; lat: number };
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
+/** open ground this near track (and further than SNAP_EDGE_PX) draws beside it (T-1685) */
+const BESIDE_PX = 40;
 /** tracks this much further from the pointer than the nearest still count as overlapping it (T-469) */
 const OVERLAP_PX = 4;
 
@@ -100,6 +102,8 @@ interface Placed {
   lat: number;
   /** the real network's point the snap starts from here (T-727d), or null */
   ring: [number, number] | null;
+  /** the piece of track the start is beside (T-1685), or null */
+  beside?: number | null;
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:
@@ -146,6 +150,8 @@ export class Tools {
   /** a double click's second click came while the segment was still being placed (T-445) */
   private endRun = false;
   private hover: Snap | null = null;
+  /** the track the pointer is beside, while drawing from beside track (T-1685) */
+  private hoverBeside: { edge: number; lx: number; ly: number } | null = null;
   /** the delete tool: what a click would remove, and the pointer (map px) */
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
   private delAt: [number, number] = [0, 0];
@@ -323,6 +329,31 @@ export class Tools {
     return this.alts[0];
   }
 
+  /** T-1685: with Snap beside on, open ground within BESIDE_PX of track: the nearest piece, and the
+   * spot QUAD_SPACING_M from it on the pointer's side (local units) */
+  private besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
+    const n = this.overlay.renderer.net;
+    const at = pointerLocal(this.overlay, px, py);
+    if (!snapBeside.peek() || !n || !at) return null;
+    let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
+    for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
+      for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
+        const [x0, y0] = this.screen(pts[k], pts[k + 1]);
+        const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
+        const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
+        const t = l2 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
+        const d = (x0 + t * dx - px) ** 2 + (y0 + t * dy - py) ** 2;
+        if (d >= best) continue;
+        best = d;
+        const ux = pts[k + 3] - pts[k], uy = pts[k + 4] - pts[k + 1], ul = Math.hypot(ux, uy) || 1;
+        const fx = pts[k] + ux * t, fy = pts[k + 1] + uy * t;
+        const side = Math.sign(ux * (at[1] - fy) - uy * (at[0] - fx)) || 1;
+        hit = { edge, lx: fx - (uy / ul) * QUAD_SPACING_M * side, ly: fy + (ux / ul) * QUAD_SPACING_M * side };
+      }
+    }
+    return hit;
+  }
+
   /** what the station tool would try at the pointer, in order (T-671) */
   private alts: Spot[] = [];
 
@@ -398,6 +429,7 @@ export class Tools {
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
+    this.hoverBeside = t === "track" && this.hover?.kind === "free" && this.start?.beside != null ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
     if (t === "station") this.nameAhead(e.point.x, e.point.y);
@@ -701,7 +733,11 @@ export class Tools {
         const [lx, ly] = toLocal(ring[0], ring[1]);
         s = { kind: "free", lx, ly };
       }
+      // T-1685: open ground beside track starts on the line beside it
+      const by = !ring && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
+      if (by) s = { kind: "free", lx: by.lx, ly: by.ly };
       this.start = placedAt(this.endOf(s), s.lx, s.ly, ring);
+      this.start.beside = by?.edge ?? null;
       this.real.begin(ring);
       this.requestPreview();
       this.place();
@@ -726,7 +762,7 @@ export class Tools {
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
-    let rc: RealClick, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>;
+    let rc: RealClick, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null;
     // T-1001: whatever happens to this click, later clicks are not ignored
     try {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
@@ -739,7 +775,8 @@ export class Tools {
         say(tooFarText(), true);
         return;
       }
-      const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
+      by = !rc && s.kind === "free" && from.beside != null ? this.besideAt(e.point.x, e.point.y) : null;
+      const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s), by);
       // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
       // preview landing late) would give another segment's length and cost
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
@@ -759,6 +796,7 @@ export class Tools {
     this.chain.push(from);
     const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : [s.lx, s.ly];
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
+    this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
     this.real.begin(this.start.ring);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
@@ -788,8 +826,10 @@ export class Tools {
     this.place();
   }
 
-  private routeReq(to: RouteEnd) {
-    return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek() };
+  private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
+    const sb = this.start!.beside;
+    const beside: { beside?: [number, number] } = by && sb != null && to.kind === "free" ? { beside: [sb, by.edge] } : {};
+    return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek(), ...beside };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first
@@ -1182,11 +1222,8 @@ export class Tools {
     const ways:ArrayLike<number>[]=h.kind==="edge"
       ? pts ? waysFrom(pts,h.lx,h.ly) : []
       : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
-    // on quad track the pair beside gets its platform too, as the track model places it (T-708)
-    const dir=ways.find((p)=>p.length>=6);
-    const beside=dir?pairBeside(this.tracksNear(h.lx,h.ly,12*perM,candidates),h.lx,h.ly,dir,perM):null;
-    const twin=beside?{x:beside.x,y:beside.y,ways:waysFrom(n.edgePts.get(beside.edge)!,beside.x,beside.y)}:null;
-    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,twin);
+    // on quad track the pair clicked only (T-1687)
+    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null);
   }
 
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
@@ -1250,13 +1287,13 @@ export class Tools {
     const [ax, ay] = loc(a), [bx, by] = loc(b), [mx, my] = loc(at(sm * ce, sm * sn));
     const track = [new Float32Array([ax, ay, z, bx, by, z])];
     const ways = [new Float32Array([mx, my, z, bx, by, z]), new Float32Array([mx, my, z, ax, ay, z])];
-    let twin: { x: number; y: number; ways: ArrayLike<number>[] } | null = null;
+    // the station is on the drawn pair only (T-1687)
+    const twin: { x: number; y: number; ways: ArrayLike<number>[] } | null = null;
     if (quad) {
       // the express pair QUAD_SPACING_M to the left, as the track model lays it (T-255)
       const [ox, on] = [-sn * QUAD_SPACING_M, ce * QUAD_SPACING_M];
-      const [qax, qay] = loc(at(s0 * ce + ox, s0 * sn + on)), [qbx, qby] = loc(at(s1 * ce + ox, s1 * sn + on)), [tx, ty] = loc(at(sm * ce + ox, sm * sn + on));
+      const [qax, qay] = loc(at(s0 * ce + ox, s0 * sn + on)), [qbx, qby] = loc(at(s1 * ce + ox, s1 * sn + on));
       track.push(new Float32Array([qax, qay, z, qbx, qby, z]));
-      twin = { x: tx, y: ty, ways: [new Float32Array([tx, ty, z, qbx, qby, z]), new Float32Array([tx, ty, z, qax, qay, z])] };
     }
     const pa = lngLatToPack(...a), pb = lngLatToPack(...b);
     const stationAt: StationAt = { kind: "free", x0: pa.x, y0: pa.y, x1: pb.x, y1: pb.y, level, quad, hsr: highSpeed.peek() };

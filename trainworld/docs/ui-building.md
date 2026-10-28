@@ -34,13 +34,15 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High
   speed sets it to 320 (it can still be stepped down) and picking Double or Quad again puts back
   the speed from before [T-817], and the platform
-  length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool: the game places
-  crossovers past quad stations [T-733, [track-and-service.md](track-and-service.md) 6.1].
+  length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool, and the game
+  adds none: the player draws crossing track [T-733, T-1688, [track-and-service.md](track-and-service.md) 6.1].
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
+  Then the **beside switch** (two curving tracks, "Snap beside track"), on by default [T-1685]: what it
+  does is under [Drawing track](#drawing-track).
+  The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
   by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
@@ -114,6 +116,17 @@ mouse moving again takes it back).
 [T-023, T-085, T-092, T-244, T-311, T-322, T-418, T-422, T-442]
 
 Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
+
+- **Drawing beside track** [T-1685]: with the beside switch on, a start clicked on open ground within
+  40 px of track (and further than the 10 px that joins it) goes on the line 8 m (`QUAD_SPACING`)
+  from that track, on the click's side. While the pointer stays on open ground within 40 px of the
+  same run of track (pieces joined through plain joints and stations, blueprint or built), the
+  segment runs parallel to it from the start to the point beside the pointer, its curves concentric
+  with the track's, on the side the pointer is on (a first segment's start moves across with it; a
+  start already built on the other side gives a plain segment). Moving further away, onto track or a
+  node, or beside other track gives the plain segment. Chained segments carry on beside the track.
+  The segment is ordinary track: the same checks refuse it (a curve under 100 m on the inside of a
+  tight one, crossings), it joins nothing at its ends and adds no crossovers.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
@@ -287,9 +300,7 @@ switch on, the track tool follows the real network the layer draws.
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
-  quad track the twin's platform shows too [T-708; `pairBeside`, `map/stationGeometry.ts`]: on
-  the nearest track 4-12 m beside the spot running the same way, level with it, as the track
-  model places the twin.
+  quad track it is on the pair under the pointer only, as the station will be [T-1687].
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
   and shows that: a node with a station or a junction is refused; a spot is refused when the
@@ -349,12 +360,10 @@ switch on, the track tool follows the real network the layer draws.
 
 ## Crossovers
 
-[T-338, T-733; rules in [track-and-service.md](track-and-service.md) 6.1] The player does not place
-crossovers. A station placed on quad track, or doubling up through stations, adds one past each
-station in the same edit; the station ghost does not draw it, and it shows on the map as blueprint
-once placed, its price in the blueprint total and in the double-up button's price. A crossover is
-selected, constructed and removed whole like other track (below). The clock worker's
-`previewCrossover` and `crossover` edit are for checks only.
+[T-338, T-733, T-1688; rules in [track-and-service.md](track-and-service.md) 6.1] The game adds no
+crossovers and there is no crossover tool: the player draws crossing track between two pairs where
+lines should change over. A crossover a save holds is selected, constructed and removed whole like
+other track (below). The clock worker's `previewCrossover` and `crossover` edit are for checks only.
 
 ## Deleting
 

@@ -33,6 +33,8 @@ export const Icon = {
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
   // a magnet over a curving line
   snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
+  // two curving tracks side by side, the new one dashed
+  snapBeside: () => <svg viewBox="0 0 16 16"><path d="M1.5 11.5c4.5 0 8-3 10-9.5" /><path d="M4.5 14.5c4.5 0 8-3 10-9.5" stroke-dasharray="2 1.6" /></svg>,
   // two peaks, the track tag's terrain mark (T-1394)
   terrain: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z" /></svg>,
   // track carried on at its own height: a raised piece, then an arrow along the same level (T-1161)

@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1685 [P2] Drawing beside track. Done 2026-10-28: Build tab switch (on by default); a start 10-40 px from track runs 8 m beside it on the pointer's side, curves concentric (`express_verts`), plain again when the pointer moves away. Test `route_beside_track_runs_parallel`. DECISIONS.
+- T-1688 [P2] No automatic crossovers. Done 2026-10-28: stations on quad and doubling up no longer add crossovers (drawing never did); players draw crossing track. A line across pairs with no way between is refused (`LinePath`); saves keep theirs. DECISIONS.
+- T-1687 [P2] Quad station on the side clicked. Done 2026-10-28: one station per click, on the pair clicked (free stations: the drawn pair); a station level with one beside takes its name. Test `quad_station_one_pair_per_click_and_no_crossovers`.
 - T-1690 [P2] Fare country row. Done 2026-10-28: it reads "Set fare multiplier for Japan" (the income figure stays in the hover); with nothing selected the country is that of the built station nearest the view's centre, so zoomed out over the Pacific in a New York game it says United States.
 - T-1691 [P2] Money panel order. Done 2026-10-28: cash, yesterday and today, the fare controls, History, trains, loan.
 

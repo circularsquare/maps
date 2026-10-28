@@ -13,6 +13,18 @@ impl TrackApi {
     /// T-1615: with `route_ramp`, a route crossing track at its own level ramps over or under it,
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+        if let Some((ea, eb)) = self.route_beside.take() {
+            if let Some((ends, pis)) = pis.is_empty().then(|| self.beside_ends(ends, ea, eb)).flatten() {
+                self.beside_on = true;
+                let r = self.route_op_ramped(&ends, &pis, tracks, flying);
+                self.beside_on = false;
+                return r;
+            }
+        }
+        self.route_op_ramped(ends, pis, tracks, flying)
+    }
+
+    fn route_op_ramped(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         if self.route_ramp {
             for t in [Ramp::First, Ramp::Second] {
                 self.ramp_try = t;
@@ -104,7 +116,7 @@ impl TrackApi {
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
-        let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some());
+        let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some()) && !self.beside_on;
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
             let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, self.route_cap);
             if let Some(c) = circle {
@@ -117,12 +129,12 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
                 }
             }
-        } else if let Some(p) = lead_in(&ra, next_a, scaled, self.route_cap) {
+        } else if let Some(p) = lead_in(&ra, next_a, scaled, self.route_cap).filter(|_| !self.beside_on) {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        let lead_b = lead_in(&rb, prev_b, scaled, self.route_cap);
+        let lead_b = lead_in(&rb, prev_b, scaled, self.route_cap).filter(|_| !self.beside_on);
         if let Some(p) = lead_b {
             verts.push(p);
         }
@@ -454,6 +466,12 @@ impl TrackApi {
         self.route_ramp = on;
     }
 
+    /// T-1685: the next route (preview or add) runs beside track: `from_edge` the piece its start
+    /// is beside, `to_edge` the one its end is beside (u32::MAX for neither). Used once.
+    pub fn set_route_beside(&mut self, from_edge: u32, to_edge: u32) {
+        self.route_beside = (from_edge != u32::MAX && to_edge != u32::MAX).then_some((from_edge, to_edge));
+    }
+
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
     /// even when the route was refused; empty when it had none.
     pub fn route_arc(&self) -> Vec<f64> {
@@ -561,7 +579,9 @@ impl TrackApi {
 
     #[allow(clippy::too_many_arguments)]
     pub(super) fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
-        let st = StationData { platform, name, built: false, off: false, upgrades: 0 };
+        let mut st = StationData { platform, name, built: false, off: false, upgrades: 0 };
+        // On quad track only the pair clicked gets the station (T-1687); one level with it on the
+        // pair beside lends its name, so the two read as one station.
         if kind == 1 {
             if !self.w.net.node_ok(id) {
                 return self.refuse(Issue::NoSuchNode { node: id });
@@ -569,16 +589,11 @@ impl TrackApi {
             if self.w.net.node_platform[id as usize] > 0 {
                 return self.refuse(Issue::StationPorts { node: id });
             }
-            // a joint or plain node on quad track: its twin beside it too (T-255)
-            let ends = self.w.net.node_ports[id as usize].ends().to_vec();
-            if let Some(&c) = ends.first() {
+            if let Some(&c) = self.w.net.node_ports[id as usize].ends().first() {
                 let (e, which) = (c >> 1, c & 1);
                 let s = if which == 0 { 0.0 } else { self.w.net.edge_len[e as usize] };
-                if let Some((twin, ts)) = self.twin_at(e, s) {
-                    let r = self.station_ops(None, &[(u32::MAX, id as f64), (twin, ts)], &st, dry);
-                    if r == 0 {
-                        return 0;
-                    }
+                if let Some(n) = self.station_beside(e, s) {
+                    st.name = self.w.net.node_name[n as usize].clone();
                 }
             }
             return self.station_ops(None, &[(u32::MAX, id as f64)], &st, dry);
@@ -587,16 +602,27 @@ impl TrackApi {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
         let s = self.w.net.project(id, x, y).0;
-        // On quad track (T-255) the pair beside gets a station of the same name level with it:
-        // the local and express platforms of one station, a complex. If that cannot be built,
-        // the one station alone.
-        if let Some((twin, ts)) = self.twin_at(id, s) {
-            let r = self.station_ops(None, &[(id, s), (twin, ts)], &st, dry);
-            if r == 0 {
-                return 0;
-            }
+        if let Some(n) = self.station_beside(id, s) {
+            st.name = self.w.net.node_name[n as usize].clone();
         }
         self.station_ops(None, &[(id, s)], &st, dry)
+    }
+
+    /// The station on the pair beside edge `e` (quad track) whose platform is level with chainage `s`.
+    fn station_beside(&self, e: u32, s: f64) -> Option<u32> {
+        let (f, fs) = self.twin_at(e, s)?;
+        let net = &self.w.net;
+        if f == u32::MAX {
+            return net.is_station(fs as u32).then_some(fs as u32);
+        }
+        let (x, y, _) = geom::pos_at(net.edge_pieces(f), fs);
+        [net.edge_a[f as usize], net.edge_b[f as usize]]
+            .into_iter()
+            .filter(|&n| net.is_station(n))
+            .map(|n| (n, (net.node_x[n as usize] - x).hypot(net.node_y[n as usize] - y)))
+            .filter(|&(n, d)| d <= net.node_platform[n as usize] as f64 / 2.0)
+            .min_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(n, _)| n)
     }
 
     /// A station on open ground (T-794): a straight piece of new track between two free `ends` (as
@@ -641,7 +667,6 @@ impl TrackApi {
         };
         let (mx, my) = ((ends[2] + ends[7]) / 2.0, (ends[3] + ends[8]) / 2.0);
         let mid = ne.iter().filter(|&&e| self.w.net.edge_ok(e)).map(|&e| (e, self.w.net.project(e, mx, my))).min_by(|a, b| a.1 .1.total_cmp(&b.1 .1)).map(|(e, (s, _))| (e, s));
-        let twin = mid.and_then(|(e, s)| self.twin_at(e, s));
         // a piece this short crossing other track flat would put the crossing at the platform's end
         let flat = self.w.net.crossings.iter().any(|c| matches!(c.kind, CrossKind::Flat(_)) && (ne.contains(&c.e1) || ne.contains(&c.e2)));
         self.w.unsketch(inv);
@@ -654,13 +679,8 @@ impl TrackApi {
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         };
         let st = StationData { platform, name, built: false, off: false, upgrades: 0 };
-        let mut r = 1;
-        if let Some((tw, ts)) = twin {
-            r = self.station_ops(Some(&route), &[(e, s), (tw, ts)], &st, dry);
-        }
-        if r != 0 {
-            r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
-        }
+        // on quad, the drawn pair's only (T-1687)
+        let r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
         if r != 0 || dry {
             self.release(&nn, &ne);
         }
@@ -670,7 +690,6 @@ impl TrackApi {
     /// Stations splitting edges at chainages, one undoable edit (`add_station`). The joints of a
     /// drawn route (T-244, T-418) within a platform's reach go first: the pieces become one edge
     /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
-    /// Two stations are a quad complex: a crossover goes in past the first where it fits (T-733).
     /// `route`: new track laid first in the same edit (`add_free_station`, T-794), sketched while
     /// the stations are planned on it.
     pub(super) fn station_ops(&mut self, route: Option<&Op>, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
@@ -686,7 +705,6 @@ impl TrackApi {
             None => None,
         };
         let (mut nodes, mut edges) = (vec![], vec![]);
-        let mut first = None;
         for &(e, s) in at {
             if e == u32::MAX {
                 // an existing node, `s` its id; at a loose end the platform runs its whole length
@@ -701,7 +719,6 @@ impl TrackApi {
                     }
                 }
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
-                first.get_or_insert(n);
                 continue;
             }
             let (more, s) =self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
@@ -709,81 +726,16 @@ impl TrackApi {
             let (node, new_edge) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
             nodes.push(node);
             edges.push(new_edge);
-            first.get_or_insert(node);
             ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
         }
         if let Some(inv) = sketched {
             self.w.unsketch(inv);
         }
-        let base = Op::Batch(ops);
-        let mut r = 1;
-        if at.len() == 2 {
-            let (op, nn, ne) = self.with_crossovers(base.clone(), &[first.unwrap()]);
-            if !ne.is_empty() {
-                r = self.attempt(op, dry);
-                if r != 0 || dry {
-                    self.release(&nn, &ne);
-                }
-            }
-        }
-        if r != 0 {
-            // without the crossover: one that will not fit, or the cash short for it, is skipped
-            r = self.attempt(base, dry);
-        }
+        let r = self.attempt(Op::Batch(ops), dry);
         if r != 0 || dry {
             self.release(&nodes, &edges);
         }
         r
-    }
-
-    /// `base` and one crossover just past each of `stations` (nodes `base` leaves on quad track)
-    /// where it fits, as one edit (T-733); also the ids the crossovers claim (none: `base` alone).
-    pub(super) fn with_crossovers(&mut self, base: Op, stations: &[u32]) -> (Op, Vec<u32>, Vec<u32>) {
-        if stations.is_empty() {
-            return (base, vec![], vec![]);
-        }
-        let Ok(inv) = self.w.sketch(base.clone(), false) else { return (base, vec![], vec![]) };
-        let (mut ops, mut invs, mut nn, mut ne) = (vec![base], vec![], vec![], vec![]);
-        for &n in stations {
-            if let Some((op, back, n2, e2)) = self.crossover_past(n) {
-                ops.push(op);
-                invs.push(back);
-                nn.extend(n2);
-                ne.extend(e2);
-            }
-        }
-        for back in invs.into_iter().rev() {
-            self.w.unsketch(back);
-        }
-        self.w.unsketch(inv);
-        (Op::Batch(ops), nn, ne)
-    }
-
-    /// A crossover past station `n` on the sketched track, left sketched (with its inverse): off
-    /// the station's first end, else its second; None where neither has room.
-    #[allow(clippy::type_complexity)]
-    pub(super) fn crossover_past(&mut self, n: u32) -> Option<(Op, Op, Vec<u32>, Vec<u32>)> {
-        let d = self.w.net.platform_reach(n) + QUAD_CROSSOVER_CLEAR + CROSSOVER_LEN / 2.0;
-        let ends = self.w.net.node_ports[n as usize].ends().to_vec();
-        for c in ends {
-            let net = &self.w.net;
-            let (e, which) = (c >> 1, c & 1);
-            let s = if which == 0 { d } else { net.edge_len[e as usize] - d };
-            let (edge, x, y) = match locate(net, e, s) {
-                Some(Loc::Split(e, s)) => {
-                    let (x, y, _) = geom::pos_at(net.edge_pieces(e), s);
-                    (e, x, y)
-                }
-                Some(Loc::Node(m)) => (net.node_ports[m as usize].ends()[0] >> 1, net.node_x[m as usize], net.node_y[m as usize]),
-                None => continue,
-            };
-            let Ok((op, nn, ne, _)) = self.crossover_op(edge, x, y) else { continue };
-            match self.w.sketch(op.clone(), true) {
-                Ok(back) => return Some((op, back, nn, ne)),
-                Err(_) => self.release(&nn, &ne),
-            }
-        }
-        None
     }
 
     /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running

@@ -3,7 +3,7 @@
 import { distUnit, length, levelName, perDistance, speed } from "../game/format";
 import type { Level } from "../game/types";
 import { batch } from "@preact/signals";
-import { autoLevel, autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapReal, tool, trackType, type TrackType } from "../game/ui";
+import { autoLevel, autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
@@ -71,6 +71,9 @@ export function BuildTab() {
           <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label="Snap to the real network" aria-pressed={snapReal.value}
             data-tip="Snap track to the real network"
             onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
+          <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label="Snap beside track" aria-pressed={snapBeside.value}
+            data-tip="Snap beside track. Start next to a track and the new one runs alongside it."
+            onClick={() => (snapBeside.value = !snapBeside.peek())}><Icon.snapBeside /></button>
         </div>
         <ul class="rows build-rows">
           <li>
