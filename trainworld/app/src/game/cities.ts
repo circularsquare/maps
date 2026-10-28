@@ -10,6 +10,7 @@ import registryJson from "./registry.json";
 import { M_PER_DEG, makeFrame, type Frame, type FrameSpec } from "./frame";
 import { zoneAliases, zoneName } from "./zoneNames";
 import { carUsdPerKm, fareWeight, incomeGroups } from "./income";
+import { attractionsLoaded } from "./attractions";
 
 export type CityId = string;
 /** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone").
@@ -55,7 +56,9 @@ export function marketWorld(rowsText: string): string {
   // income groups weigh every mode's money at that times their factor
   const eps = (REGISTRY.market.rule as { eps: number }).eps;
   const withFw = (r: { country?: string }) => ({ ...r, fw: fareWeight(r.country), cu: carUsdPerKm(r.country), fg: incomeGroups(r.country, eps).flatMap((g) => [g.share, g.factor]) });
-  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => { const r = rows[c.id]; return r ? [withFw(r)] : []; }) });
+  // T-1374: the attractions, for how touristy each zone is (a superholiday's lean)
+  const attractions = attractionsLoaded().map((a) => [a.lng, a.lat, a.visitors]);
+  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => { const r = rows[c.id]; return r ? [withFw(r)] : []; }), attractions });
 }
 
 export const activeCity = signal<CityId>(HOME_CITY);

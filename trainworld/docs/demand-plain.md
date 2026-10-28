@@ -67,7 +67,9 @@ town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's 
   back: longer trips between cities are twice a weekday's, and lean towards the smaller place going
   out and back to the bigger one coming back, up to 70/30 for a big city against a small town. A
   place counts smaller for being sparse, so countryside and small towns draw more of the trips home
-  than their population alone would. Everything else is a weekday's going out and a Sunday's coming
+  than their population alone would. Touristy places (many attraction visits for their people:
+  Kyoto, Nara, the zone round a theme park) draw up to half as many again going out, and send as
+  many more home coming back, up to 90/10 in all. Everything else is a weekday's going out and a Sunday's coming
   back. So a line from a big city out to the country fills one way on the going-out day and the
   other on the way back.
 

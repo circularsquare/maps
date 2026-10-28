@@ -500,6 +500,10 @@ struct WorldIn {
     places: usize,
     #[serde(default)]
     rows: Option<Vec<Row>>,
+    /// T-1374: the world's attractions as the app gives them (attractions.json): longitude,
+    /// latitude, visitors a year
+    #[serde(default)]
+    attractions: Vec<[f64; 3]>,
 }
 #[derive(Deserialize)]
 struct ComposeIn {
@@ -540,6 +544,8 @@ struct Place {
     /// none: one group at `fw`
     gr: [(f32, f32); GROUPS],
     ng: u8,
+    /// T-1374: how touristy it is (`touristy`), 0 with no pack open
+    tour: f32,
 }
 /// T-1431: the most income groups a place's travellers come in.
 pub const GROUPS: usize = 3;
@@ -734,6 +740,8 @@ struct Zone {
     gid: u32,
     /// departures a day, to anywhere (T-378: those to places with no zone are what is left)
     dep: f64,
+    /// T-1374: how touristy it is (`touristy`)
+    tour: f32,
 }
 /// One place's sites, in its pack's frame: the access search and the rides work in its plane.
 struct Group {
@@ -1290,6 +1298,25 @@ pub const LEAN: f32 = 0.4;
 /// T-1373: the most memory the lean's station to station table may take (S x S floats beside the
 /// longer trips' own); a larger network's rush days take the longer trips unleaned.
 const LEAN_OD_BYTES: usize = 256 << 20;
+/// T-1374: the rush's further lean towards touristy places: trips into a fully touristy zone from
+/// an ordinary one up to `1 + TOUR_LEAN` times going out (and the way back as much less), on top of
+/// the places' lean, the two together at most `LEAN_MAX` either way (90/10).
+pub const TOUR_LEAN: f32 = 0.5;
+pub const LEAN_MAX: f32 = 0.8;
+/// T-1374: attraction visits a year per resident at which a zone starts to count as touristy, and
+/// at which it is fully so (`touristy`); between them by the logarithm.
+const TOUR_FROM: f64 = 3.;
+const TOUR_TO: f64 = 30.;
+/// T-1374: how far from an attraction its zone's site may be, in 600 m squares either way.
+const TOUR_REACH: i32 = 2;
+
+/// T-1374: how touristy a zone or place is, 0 to 1, from its attraction visits a year and people.
+fn touristy(visits: f64, pop: f64) -> f32 {
+    if visits <= 0. {
+        return 0.;
+    }
+    ((visits / pop.max(1.) / TOUR_FROM).ln() / (TOUR_TO / TOUR_FROM).ln()).clamp(0., 1.) as f32
+}
 
 impl Place {
     /// T-1373: a place's size as the rush's lean weighs it: its people times the square root of
@@ -1309,6 +1336,77 @@ impl Market {
     fn lean(&self, i: usize, j: usize) -> f32 {
         let (a, b) = (self.places[i].lean_size(), self.places[j].lean_size());
         if a + b > 0. { LEAN * ((a - b) / (a + b)) as f32 } else { 0. }
+    }
+    /// T-1374: the rush's whole lean of trips from place `i`, touristy `ti`, to place `j`, touristy
+    /// `tj`: the places' (`lean`) and towards the more touristy end; still the opposite of the way
+    /// back's, so a pair's trips in all are kept.
+    #[inline]
+    fn rush_lean(&self, i: usize, ti: f32, j: usize, tj: f32) -> f32 {
+        (self.lean(i, j) + TOUR_LEAN * (tj - ti)).clamp(-LEAN_MAX, LEAN_MAX)
+    }
+    /// `rush_lean` from zone `a` to zone `b`.
+    #[inline]
+    fn zone_lean(&self, a: &Zone, b: &Zone) -> f32 {
+        self.rush_lean(a.place, a.tour, b.place, b.tour)
+    }
+    /// `rush_lean` from zone `a` to place `p` (a place with no pack open counts as not touristy).
+    #[inline]
+    fn zone_place_lean(&self, a: &Zone, p: usize) -> f32 {
+        self.rush_lean(a.place, a.tour, p, self.places[p].tour)
+    }
+    /// T-1374: each open zone's and place's touristiness from the attractions (longitude, latitude,
+    /// visitors a year): an attraction's visitors go to the zone of the nearest site within
+    /// `TOUR_REACH` squares of it, of any open place; one with none is in no open place.
+    fn set_tourism(&mut self, attractions: &[[f64; 3]]) {
+        if attractions.is_empty() || !self.ground {
+            return;
+        }
+        let pad = (TOUR_REACH as f64 + 1.) * SITE_M as f64;
+        // the nearest site so far of each attraction: squared metres, global site
+        let mut best = vec![(f32::INFINITY, u32::MAX); attractions.len()];
+        for g in &self.groups {
+            let (Some(f), Some(&s0)) = (&g.frame, self.cell_zone.get(g.lo)) else { continue };
+            if g.city.x.is_empty() {
+                continue;
+            }
+            let place = self.zones[s0].place;
+            let lo = |v: &[f32]| v.iter().fold(f32::INFINITY, |a, &b| a.min(b)) as f64 - pad;
+            let hi = |v: &[f32]| v.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b)) as f64 + pad;
+            let (x0, x1, y0, y1) = (lo(&g.city.x), hi(&g.city.x), lo(&g.city.y), hi(&g.city.y));
+            for (k, a) in attractions.iter().enumerate() {
+                let (x, y) = f.from_lonlat(a[0], a[1]);
+                if !(x >= x0 && x <= x1 && y >= y0 && y <= y1) {
+                    continue;
+                }
+                let (cx, cy) = ((x / SITE_M as f64).floor() as i32, (y / SITE_M as f64).floor() as i32);
+                for dx in -TOUR_REACH..=TOUR_REACH {
+                    for dy in -TOUR_REACH..=TOUR_REACH {
+                        let Some(s) = self.site_at((cx + dx, cy + dy, place)) else { continue };
+                        let (sg, i) = self.site(s);
+                        let d = ((sg.city.x[i] as f64 - x).powi(2) + (sg.city.y[i] as f64 - y).powi(2)) as f32;
+                        if d < best[k].0 {
+                            best[k] = (d, s as u32);
+                        }
+                    }
+                }
+            }
+        }
+        let mut visits = vec![0f64; self.zones.len()];
+        for (k, &(_, s)) in best.iter().enumerate() {
+            if s != u32::MAX && attractions[k][2].is_finite() && attractions[k][2] > 0. {
+                visits[self.cell_zone[s as usize]] += attractions[k][2];
+            }
+        }
+        let mut by_place: HashMap<usize, (f64, f64)> = HashMap::new();
+        for (z, zz) in self.zones.iter_mut().enumerate() {
+            zz.tour = touristy(visits[z], zz.pop);
+            let e = by_place.entry(zz.place).or_default();
+            e.0 += visits[z];
+            e.1 += zz.pop;
+        }
+        for (p, (v, pop)) in by_place {
+            self.places[p].tour = touristy(v, pop);
+        }
     }
     #[inline(always)]
     fn zone_km(&self, a: &Zone, b: &Zone) -> f64 {
@@ -1585,6 +1683,7 @@ struct Built {
     /// legacy: each pack site's place and index in its place's input (commutes name pack sites)
     legacy_commutes: Vec<(u32, u32, f32)>,
     drives: Rc<Drives>,
+    attractions: Vec<[f64; 3]>,
 }
 fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     let zm = pack.zone_m;
@@ -1634,7 +1733,7 @@ fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     // the commutes name pack sites: keep each site's place and place-local index for them
     let site_at = at;
     let zones = zones.into_iter().map(|z| Rc::new(ZoneIn::from(z))).collect();
-    let mut built = Built { zones, rule: Rule::closed(pack.trip_rate), out: pack.frame.clone(), places: markets, rows: None, world: false, closed: true, legacy_commutes: vec![], drives: Rc::default() };
+    let mut built = Built { zones, rule: Rule::closed(pack.trip_rate), out: pack.frame.clone(), places: markets, rows: None, world: false, closed: true, legacy_commutes: vec![], drives: Rc::default(), attractions: vec![] };
     built.legacy_commutes = legacy_commutes
         .into_iter()
         .map(|(h, w, n)| {
@@ -1651,7 +1750,7 @@ fn compose(c: ComposeIn) -> Result<Built, String> {
         return Err("invalid market rule".into());
     }
     make_frame(&c.world.frame)?;
-    Ok(Built { zones: c.zones.into_iter().map(Rc::new).collect(), rule: c.world.rule, out: Some(c.world.frame), places: c.world.places, rows: c.world.rows, world: true, closed: false, legacy_commutes: vec![], drives: Rc::default() })
+    Ok(Built { zones: c.zones.into_iter().map(Rc::new).collect(), rule: c.world.rule, out: Some(c.world.frame), places: c.world.places, rows: c.world.rows, world: true, closed: false, legacy_commutes: vec![], drives: Rc::default(), attractions: c.world.attractions })
 }
 
 fn build(b: Built) -> Result<Market, String> {
@@ -1661,7 +1760,7 @@ fn build(b: Built) -> Result<Market, String> {
 /// (indexed by place), and only those places' commutes (T-929: the rows of those places alone).
 /// `reuse`: the corridors' figures of an earlier composition of the same world with rows.
 fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) -> Result<Market, String> {
-    let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes, drives } = b;
+    let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes, drives, attractions } = b;
     let out_frame = match &out {
         Some(f) => Some(make_frame(f)?),
         None => None,
@@ -1774,7 +1873,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         pack_first_site[place] = cell_zone.len();
         let f = frames[zi_];
         for k in 0..nz {
-            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0. });
+            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0., tour: 0. });
         }
         let s_inc = zin.inc.min(1.).powf(rule.eps);
         let total_pop: f64 = zin.sites.pop.iter().sum();
@@ -2187,6 +2286,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
     // ---- each 600 m square's site
     let site_key = SiteKeys::of((0..m.n_sites()).map(|s| m.site_key_of(s)));
     m.site_key = site_key;
+    m.set_tourism(&attractions);
     Ok(m)
 }
 /// T-377: the packs of the places a worker has open, parsed once, and the world they belong to;
@@ -2248,7 +2348,7 @@ impl MarketPacks {
     pub fn market(&self) -> Result<IntercityApi, String> {
         let w = self.world.clone();
         let rows = w.rows.is_some();
-        let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![], drives: self.drives.clone() };
+        let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![], drives: self.drives.clone(), attractions: w.attractions };
         let m = build_for(b, None, self.corridors.borrow().clone())?;
         if rows {
             *self.corridors.borrow_mut() = Some(m.cw.clone());
@@ -3088,7 +3188,7 @@ impl IntercityApi {
                     let split = rule.split_car(from, to);
                     let a = &self.access[za];
                     let ca = nz + zcol[za] as usize;
-                    let ln = if lean_on { m.lean(pa, pb) } else { 0. };
+                    let ln = if lean_on { m.zone_lean(&m.zones[za], &m.zones[z]) } else { 0. };
                     let mut r_all = 0f64;
                     // T-1431: each income group of the place the trip starts from, every mode's
                     // money at its riders' minutes a dollar
@@ -3352,13 +3452,13 @@ impl IntercityApi {
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
     }
-    /// T-1373: the place of the zone whose people reach (merged) station `s` with the most weight.
-    fn station_place(&self, s: usize) -> Option<usize> {
+    /// T-1373: the zone whose people reach (merged) station `s` with the most weight.
+    fn station_zone(&self, s: usize) -> Option<usize> {
         let mut best: Option<(f32, usize)> = None;
         for (z, list) in self.access.iter().enumerate() {
             for &(st, w) in list {
                 if st == s && best.map_or(true, |b| w > b.0) {
-                    best = Some((w, self.m.zones[z].place));
+                    best = Some((w, z));
                 }
             }
         }
@@ -4321,14 +4421,18 @@ impl IntercityApi {
         // T-780: with sampled pairs a zone's rail with a place is its sampled pairs', spread over the
         // place's zones it could ride to by their trips, so no far zone shows more rail than trips
         let mut spread = vec![(0f64, 0f64); if self.chunk > 0. { np } else { 0 }];
-        // T-1373: a rush day's trips lean by their places, from here (dir 0) or to here (dir 1)
+        // T-1373, T-1374: a rush day's trips lean by their places and zones, from here (dir 0) or to
+        // here (dir 1); the far end a zone (`Some`) or a place with no pack open
         let sign = lean_sign(day);
-        let lean = |dir: usize, here: usize, there: usize| -> f64 {
+        let lean = |dir: usize, here: &Zone, there: Option<&Zone>, p: usize| -> f64 {
             if sign == 0. {
-                1.
-            } else {
-                1. + (sign * if dir == 0 { m.lean(here, there) } else { m.lean(there, here) }) as f64
+                return 1.;
             }
+            let l = match there {
+                Some(b) => m.zone_lean(here, b),
+                None => m.zone_place_lean(here, p),
+            };
+            1. + (sign * if dir == 0 { l } else { -l }) as f64
         };
         for q in 0..PERIODS {
             let Some(per) = per_of(q) else { continue };
@@ -4337,7 +4441,6 @@ impl IntercityApi {
             for (dir, weights) in [(0usize, &pop_w), (1usize, &attr_w)] {
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     let (row, far) = &rows[&z];
-                    let zp = m.zones[z].place;
                     out[away + dir] += w * away_z[&z] * sh;
                     if !spread.is_empty() {
                         spread.fill((0., 0.));
@@ -4349,7 +4452,7 @@ impl IntercityApi {
                     }
                     for &(b, out_i, in_i, trips) in row {
                         let zb = &m.zones[b as usize];
-                        let k = lean(dir, zp, zb.place);
+                        let k = lean(dir, &m.zones[z], Some(zb), zb.place);
                         let all = w * trips * sh * k;
                         let pair_r = match spread.get(zb.place) {
                             Some(&(r, t)) if t > 0. && self.solvable(z, b as usize) => (r * trips / t) as f32,
@@ -4366,7 +4469,7 @@ impl IntercityApi {
                         out[head + 4 * zb.gid as usize + 2 * dir + 1] += r;
                     }
                     for &(p, trips) in far {
-                        let all = w * trips * sh * lean(dir, zp, p);
+                        let all = w * trips * sh * lean(dir, &m.zones[z], None, p);
                         let o = 1 + 8 * p + 4 * dir;
                         out[o] += all;
                         out[o + 2] += all * m.places[p].x as f64;
@@ -4487,9 +4590,10 @@ impl IntercityApi {
         let head = 6 * np;
         let mut out = vec![0.; head + 5 * ng];
         let ns = self.served.len();
-        // T-1373: a rush day's riders lean by their places, the station's its zones' that reach it most
+        // T-1373, T-1374: a rush day's riders lean by their places and zones, the station's the
+        // zone's that reaches it most
         let sign = lean_sign(day as usize);
-        let here = if sign == 0. { None } else { self.station_place(s as usize) };
+        let here = if sign == 0. { None } else { self.station_zone(s as usize).map(|z| &m.zones[z]) };
         for q in 0..PERIODS {
             let Some(per) = self.per(q) else { continue };
             let f = load_factor(day as usize, LONGER, q) as f64;
@@ -4499,7 +4603,7 @@ impl IntercityApi {
                     let k = pat.col.get(i);
                     let (end, k) = if k < ns { (0, k) } else { (ng, k - ns) };
                     let zone = &m.zones[self.served[k]];
-                    let lean = here.map_or(0., |h| sign * if end == 0 { m.lean(h, zone.place) } else { m.lean(zone.place, h) });
+                    let lean = here.map_or(0., |h| sign * if end == 0 { m.zone_lean(h, zone) } else { m.zone_lean(zone, h) });
                     out[head + end + zone.gid as usize] += per.st[i] as f64 * f * (1. + lean as f64);
                 }
             }

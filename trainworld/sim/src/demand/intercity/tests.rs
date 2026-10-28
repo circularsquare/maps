@@ -304,6 +304,29 @@ fn rush_days_lean_towards_smaller_places() {
     let sun = at(2) / crate::demand::days::day_rate(2, LONGER) as f64;
     assert!((back - sun * RUSH_LONGER as f64 * (1. - l)).abs() < 1e-6 * wd, "{back} vs {}", sun * 2. * (1. - l));
 }
+/// T-1374: a rush day's trips lean further towards a touristy zone, its residents' trips out as
+/// much less; a weekday's are untouched.
+#[test]
+fn rush_days_lean_towards_touristy_zones() {
+    use crate::demand::days::OUT;
+    assert_eq!((touristy(0., 1000.), touristy(3000., 1000.), touristy(30000., 1000.), touristy(1e6, 0.)), (0., 0., 1., 1.));
+    assert!((touristy(3000. * 10f64.sqrt(), 1000.) - 0.5).abs() < 1e-6);
+    let mut a = api();
+    let flows = |a: &IntercityApi, day: u32| a.selection_all_day(2, &[60000., 0.], &[1.], day, 31);
+    let (wd0, out0) = (flows(&a, 0), flows(&a, OUT as u32));
+    let m = Rc::get_mut(&mut a.m).unwrap();
+    let z = m.zones.iter().position(|z| z.place == 2).unwrap();
+    m.zones[z].tour = 1.;
+    let (wd1, out1) = (flows(&a, 0), flows(&a, OUT as u32));
+    assert_eq!(wd0, wd1);
+    let l = a.m.lean(0, 2) as f64;
+    // from place 0 to place 2 (ending in the selection), and from place 2 to place 0
+    let (to_here, from_here) = (1 + 4, 1);
+    let into = (1. + (l + TOUR_LEAN as f64).min(LEAN_MAX as f64)) / (1. + l);
+    let away = (1. - (l + TOUR_LEAN as f64).min(LEAN_MAX as f64)) / (1. - l);
+    assert!(out0[to_here] > 0. && (out1[to_here] / out0[to_here] - into).abs() < 1e-5, "{} against {into}", out1[to_here] / out0[to_here]);
+    assert!((out1[from_here] / out0[from_here] - away).abs() < 1e-5, "{} against {away}", out1[from_here] / out0[from_here]);
+}
 #[test]
 fn intercity_station_places_equal_entries_and_exits() {
     let mut a = api();

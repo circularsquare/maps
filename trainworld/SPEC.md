@@ -179,8 +179,8 @@ institutions** (prisons, nursing homes and the like, T-234).
   notes/T-264.md]: a run of days off around Spring Festival, Golden Week, Obon, Chuseok,
   Thanksgiving, Christmas, Eid and the like; its days away are a fourth kind, a Sunday with local
   outings at 0.7 and attractions at 1.5; its going-out day is a weekday and its coming-back day a
-  Sunday, each with longer trips twice a weekday's leaning out of big places and back [T-1373,
-  docs/demand-market.md]. A calendar icon by the clock lists the runs coming within 21 days; its
+  Sunday, each with longer trips twice a weekday's leaning out of big places and into touristy
+  zones, and back [T-1373, T-1374, docs/demand-market.md]. A calendar icon by the clock lists the runs coming within 21 days; its
   click shows the going-out day, and the Day choice offers the three kinds while one is near.
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).

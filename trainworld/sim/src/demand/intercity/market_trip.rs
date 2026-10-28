@@ -249,8 +249,8 @@ impl IntercityApi {
                 if trips < m.rule.min_trips {
                     continue;
                 }
-                // T-1373: a rush day's trips lean by their places
-                let t = w[z] * trips * sh * (1. + (lean_sign(day as usize) * m.lean(za.place, zb.place)) as f64);
+                // T-1373, T-1374: a rush day's trips lean by their places and zones
+                let t = w[z] * trips * sh * (1. + (lean_sign(day as usize) * m.zone_lean(za, zb)) as f64);
                 let r = m.pr(za.place, zb.place);
                 let (from, to) = (&m.places[za.place], &m.places[zb.place]);
                 let split = r.split_car(from, to);

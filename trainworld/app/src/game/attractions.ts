@@ -19,14 +19,19 @@ export interface Attraction {
 type Row = [number, string, number, number, number, number];
 
 let data: Promise<Attraction[]> | null = null;
+let loaded: Attraction[] = [];
 
 /** Every attraction in the world, largest first; empty if the file does not load. */
 export function loadAttractions(): Promise<Attraction[]> {
   return (data ??= import("./attractions.json").then(
-    (m) => ((m.default as unknown as { rows: Row[] }).rows).map(([id, name, lng, lat, visitors]) => ({ id, name, lng, lat, visitors })),
+    (m) => (loaded = ((m.default as unknown as { rows: Row[] }).rows).map(([id, name, lng, lat, visitors]) => ({ id, name, lng, lat, visitors }))),
     () => { data = null; return []; },
   ));
 }
+
+/** The attractions once `loadAttractions` has them, else none (T-1374: the demand workers load
+ * them before they compose the market). */
+export const attractionsLoaded = (): readonly Attraction[] => loaded;
 
 /** Social outings' Saturday and Sunday per weekday (sim/src/demand/days.rs `DAY_RATE`), which
  * attractions take. */

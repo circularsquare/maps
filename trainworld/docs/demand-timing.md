@@ -73,11 +73,12 @@ worked out the same way: a Sunday's load factor times `AWAY_RATE` (local outings
 weekday and a Sunday with the longer trips `RUSH_LONGER` (2) times a weekday's, at a weekday's and
 a Sunday's timing, and leaning by direction: going out, each place pair's longer trips from the
 larger place to the smaller are times `1 + lean`, the other way `1 - lean`, coming back the
-opposite, so a pair's trips in all are kept ([demand-market.md](demand-market.md) has the lean).
+opposite, so a pair's trips in all are kept; trips into touristy zones lean further (T-1374)
+([demand-market.md](demand-market.md) has the lean).
 The market's loading pass fills one more column for that, the longer trips' loads times their
 pair's lean, on the same routes and modes (`IntercityApi::lean_loads`); a going-out day's longer
 trips are theirs plus it, a coming-back day's theirs less it, before the day's factor. Queries
-(selections, a station's far zones, the trip explorer) weigh each pair by its places' lean. Neither
+(selections, a station's far zones, the trip explorer) weigh each pair by its lean. Neither
 day is in the average. Demand days are weekday 0, Saturday 1, Sunday 2, away 3, going out 4, coming
 back 5 and the average 6.
 

@@ -783,6 +783,16 @@ notes/T-420.md has the tables.
   their own countryside has its home trips short), and one strength everywhere overstates a
   Thanksgiving next to a Spring Festival. Check: a census table of birthplace against residence
   by province or state, where a country's flows look wrong in play.
+- **Superholiday trips to touristy places** (T-1374, docs/demand-market.md "A superholiday's
+  lean"): going out, a zone pair's longer trips lean further towards the zone with more attraction
+  visits a year per resident (none below 3, fully from 30; up to 1.5 times on top of the places'
+  lean, 90/10 at most), coming back the other way. From attractions.json (Wikidata, every
+  country), no tourism table. Why it may not carry over: attractions.json counts visitors by
+  Wikidata's figure or by its language editions, so a country whose sites have few figures and
+  few editions reads as untouristy: Hangzhou has 0.5M visits a year in it against tens of
+  millions at West Lake, which is left out as a lake; beaches, ski resorts and lakes are not
+  attractions there at all. Check: a country's top destinations by its tourism statistics against
+  the zones that come out touristy.
 
 ## Network and stations
 

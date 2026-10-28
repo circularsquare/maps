@@ -418,6 +418,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `old/t674-airport-modes.mjs` (a new Tokyo game and a line to Haneda: the plane's hover follows the
   worker's airport legs after the solve, and a game day later the destination bubble beside it
   reads the same selected or not; port 6144 by default, about four minutes),
+  `t1374-touristy.mjs` (Node, no browser: the market of Kansai, Hangzhou and New York's packs; longer trips arriving on a going-out day per weekday in named touristy zones (Kyoto, Nara, Universal Studios, West Lake, the Met) against ordinary zones of about their people, and a weekday the same with the attractions as without; under a minute; T-1374),
   `t263-attractions.mjs` (the real save's final with attractions, the marks and the Met's hover in Manhattan, the Attractions filter, a line at Ueno and the Tokyo National Museum's hover; screenshots to artifacts/trainworld/t263/, SHADE=dark for the dark theme; port 6123 by default, about four minutes),
   `old/t680-new-line-crowd.mjs` (a new game's Mumbai test line: its platforms are empty when its
   trains start and fill no faster than riders arrive; also runs on a production build; port 6145

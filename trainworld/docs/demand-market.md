@@ -55,14 +55,23 @@ j to i's times `1 - lean(i, j)`; a coming-back day takes the opposite sign. A pl
 its people times the square root of its people per 6 km zone (`Place::lean_size`), so a sparse
 countryside zone or a small town counts smaller than its people alone (Anita: home trips by
 population, with a boost towards rural areas, small towns and smaller cities; no birthplace
-tables). A big city against a small town runs about 70/30 outward, two like places 50/50; a pair's
-trips in all are kept. Each pass fills the longer trips' station to station trips times their
+tables). A big city against a small town runs about 70/30 outward, two like places 50/50.
+**Touristy zones** (T-1374) lean further: a zone pair's lean is its places' plus
+`0.5 (t_b - t_a)` (`TOUR_LEAN`, `Market::rush_lean`), at most 0.8 either way (`LEAN_MAX`, 90/10),
+where a zone's touristiness `t` is 0 below 3 attraction visits a year per resident and 1 from 30,
+by the logarithm between (`touristy`, `TOUR_FROM`, `TOUR_TO`). Its visits are those of the
+attractions (attractions.json, which the app hands `MarketPacks` with the world) whose nearest site
+within two 600 m squares is in it, of any open place (`Market::set_tourism`); a place with no pack
+open counts as not touristy. So going out, trips into Kyoto's or Nara's zones from an ordinary one
+are up to 1.5 times what they would be (on top of the places' lean), and their residents' trips
+out as much fewer; coming back the opposite. A pair's trips in all are kept. Each pass fills the longer trips' station to station trips times their
 pair's lean beside their own (a column per station in the pass's window, T-1545; left out on
 networks of more than 8,192 stations, `LEAN_OD_BYTES`, T-1503) and
 walks it on the same strategies as a fourth assignment (`r_avg`, averaged over rounds and cut by
 capacity like the commutes'); `lean_loads(q)` gives it. Selections, a station's far zones
-(the station's place: the zone that reaches it most) and the trip explorer weigh each pair by its
-places' lean on those days.
+(the station's end: the zone that reaches it most) and the trip explorer weigh each pair by its
+zones' lean on those days; the explorer's answer between two places with no station
+(game/marketRule.ts `placeLean`) has the places' lean alone.
 
 **A composition opens without its zone pairs** (T-174, T-377). A market is the world (the
 registry's frame, rule and every place's row) plus the packs of the places a worker holds
