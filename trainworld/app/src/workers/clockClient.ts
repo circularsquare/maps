@@ -6,7 +6,7 @@
 import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
-import { setGameOpened, setOpenedSink } from "../game/openedZones";
+import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
@@ -14,7 +14,7 @@ import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
-import { demandByDay, demandView, platformTransfers } from "../game/demand";
+import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
@@ -100,9 +100,9 @@ export function onNetworkSnapshot(f: (s: NetworkSnapshot) => void) {
   if (networkSnapshot.peek()) f(networkSnapshot.peek()!);
 }
 
-let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array) => void) | null = null;
+let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array, fine: string[] | null) => void) | null = null;
 /** T-889: call `f` with a loading save's built stations, before its first snapshot. */
-export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array) => void) {
+export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array, fine: string[] | null) => void) {
   stationsAheadSink = f;
 }
 let netAheadSink: ((key: string) => void) | null = null;
@@ -438,6 +438,7 @@ export class ClockClient {
     this.cityId = cityId;
     setEditSink((op) => this.edit(op));
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
+    setDemandFineSink((zones) => this.post({ kind: "demandFine", zones }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
@@ -507,7 +508,8 @@ export class ClockClient {
       const m = moneyState.value;
       if (!m) return;
       for (const [id, v] of demandByDay.value[AVERAGE_DAY]?.cities ?? []) {
-        if (!v.final) continue;
+        // (T-1223: never from rough figures, whose noise could cross a mark)
+        if (!v.final || roughZones.value.has(id)) continue;
         if (v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });
         // T-1437: the higher goals the same way
         for (const g of GOAL_SHARES) if (g !== STAR_SHARE && v.split.train >= g && m.goals?.[id]?.[g] === undefined) this.post({ kind: "star", zone: id, share: g });
@@ -785,7 +787,7 @@ export class ClockClient {
         setGameOpened(msg.zones, viewedZone.peek() ? activeCity.peek() : null);
         break;
       case "stationsAhead":
-        stationsAheadSink?.(msg.frame, msg.xy);
+        stationsAheadSink?.(msg.frame, msg.xy, msg.fine);
         break;
       case "netAhead":
         netAheadSink?.(msg.key);

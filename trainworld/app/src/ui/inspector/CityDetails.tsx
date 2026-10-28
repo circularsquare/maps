@@ -3,10 +3,10 @@
 // purpose and its busiest lines and stations, each a click away from its own view. Lines and
 // stations count boardings at the city's stations in the past 24 hours, as the Stations tab does.
 
-import type { City, CityId } from "../../game/cities";
+import { activeCity, viewedZone, type City, type CityId } from "../../game/cities";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
-import { cityDemandViews, demandView } from "../../game/demand";
+import { cityDemandViews, demandView, roughZones } from "../../game/demand";
 import { count, money } from "../../game/format";
 import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
@@ -44,7 +44,11 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
   const f = built && m ? figures(city.id, m) : null;
   const at = goalsReached(city.id);
   const reached = GOAL_SHARES.map((g, k) => ({ g, t: at[k] })).filter((x) => x.t !== undefined);
+  // T-1223: a zone left alone holds rough figures until the player goes there
+  const rough = roughZones.value.has(city.id) && !(viewedZone.value && activeCity.value === city.id);
   return (
+    <>
+    {rough && <p class="muted small">Rough figures. Go there to work them out in detail.</p>}
     <ul class="rows">
       <li>
         <span class="grow">Train share</span>
@@ -71,6 +75,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
         </>
       )}
     </ul>
+    </>
   );
 }
 

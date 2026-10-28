@@ -2,7 +2,7 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandStep, demandView, viewFinal, viewUpdating } from "../game/demand";
+import { demandStep, demandView, refiningZone, viewFinal, viewUpdating } from "../game/demand";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
@@ -29,6 +29,8 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? "Loading data…"
+    // T-1223: the zone in view shows rough figures while it is worked out in detail
+    : refiningZone.value ? `Working out ${cityById(refiningZone.value).name} in detail`
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
     // T-421: and the zone in view counts as final once its own cluster is, whatever else still solves
     : !viewFinal.value ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
@@ -37,6 +39,7 @@ export function StatusTag() {
   const tip = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
+    : refiningZone.value ? `These figures are rough until ${cityById(refiningZone.value).name} is worked out in detail.`
     : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
     // T-328: the figures kept from the last time this game was open, while it is worked out again
     : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."

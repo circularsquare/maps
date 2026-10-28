@@ -53,6 +53,8 @@ import {
   type CorridorTable,
   NO_CORRIDORS,
   demandSolving,
+  roughZones,
+  refiningZone,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
@@ -64,7 +66,9 @@ import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
 import { packToLngLat } from "../game/coords";
-import { addOpened } from "../game/openedZones";
+import { addOpened, reportDemandFine } from "../game/openedZones";
+import { firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
+import { world } from "../game/world";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
 import type { BareFigures, DemandNetwork, FromDemand, Heap, OpenRejected, ToDemand } from "./demandProtocol";
@@ -270,6 +274,8 @@ interface Solve {
   /** T-396, T-377: the zones whose market packs were open in every worker when it was sent: the
    * solve covers them */
   markets: CityId[];
+  /** T-1223: of `cities`, those open coarse when it was sent */
+  coarse?: CityId[];
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
@@ -652,7 +658,15 @@ class DemandClient {
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-801: a selected zone's market opens for its partner bubbles
-    effect(() => { selection.value; this.ensure(); });
+    effect(() => { selection.value; this.ensure(); this.lodSoon(); });
+    // T-1223: the zone in view goes fine once it has been in view VIEW_SETTLE_MS
+    effect(() => {
+      const id = viewedZone.value && zonesLoadForView.value ? activeCity.value : null;
+      if (id === this.viewAt.id) return;
+      this.viewAt = { id, at: Date.now() };
+      this.lodShown();
+      this.lodSoon(VIEW_SETTLE_MS + 50);
+    });
     // T-1047: zones built track crosses open bare for their figures
     effect(() => { trackZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
@@ -715,7 +729,9 @@ class DemandClient {
    * `ensure` opens them once the network arrives. They count as prefetched, so no solve covers one
    * the network turns out not to reach; a market it does not want is closed (`settleAhead`).
    */
-  stationsAhead(frame: FrameSpec, xy: Float64Array) {
+  stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null) {
+    // T-1223: a game loading: its fine set is made afresh, from the save's list if it has one
+    this.lodReset(fine);
     if (this.status.startsWith("failed") || perfOff("openAhead") || xy.length < 2) return;
     const stations: Service["stations"] = [];
     for (let k = 0; k + 1 < xy.length; k += 2) stations.push({ id: "", x: xy[k], y: xy[k + 1] });
@@ -726,6 +742,7 @@ class DemandClient {
       if (a?.svc !== svc || this.status.startsWith("failed")) return;
       const reached = this.reachedSet(svc);
       if (!reached?.size) return;
+      if (this.lod === "auto" && !this.lodZones) this.initFine([...this.withoutBroken(new Set(reached))]);
       // T-1533: the zone in view's pack first, then the markets, then the other zones
       const viewed = activeCity.peek();
       const zones = [...this.withoutBroken(new Set(reached))].sort((x, y) => Number(y === viewed) - Number(x === viewed));
@@ -919,6 +936,12 @@ class DemandClient {
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
+    // T-1223: a game's first fine set before any of its packs is sent (not a loading save's before its
+    // network arrives: the reach known now is the last game's)
+    if (this.lod === "auto" && !this.lodZones && reached && (!this.ahead || this.ahead.arrived)) this.initFine([...this.withoutBroken(new Set(reached))]);
+    // (the loaded network's reach can pass what its stations ahead gave: those zones are the load's
+    // too, coarse unless the first fine set has them)
+    else if (this.lod === "auto" && this.lodZones && reached && this.hold && (!this.ahead || this.ahead.arrived)) for (const id of reached) this.lodZones.add(id);
     // T-1533: the zone in view's pack first, ahead of the markets and the other zones
     const viewed = activeCity.peek();
     if (need.has(viewed)) this.want(viewed, reached === null ? null : reached.has(viewed));
@@ -933,6 +956,178 @@ class DemandClient {
     this.flush();
     this.progress();
     this.sweep();
+  }
+
+  // --- Level of detail (T-1223, notes/T-1206.md) -------------------------------------------------
+
+  private lod = lodMode();
+  /** the zones wanted fine; `lodZones` the zones the last check decided for (a zone reached since
+   * opens fine: a station was just built there) */
+  private fine = new Set<CityId>();
+  private lodZones: Set<CityId> | null = null;
+  /** the save's `demandFine` (null: it has none), until the first fine set is made */
+  private savedFine: string[] | null = null;
+  /** the level each zone's pack was last sent to the solving workers at */
+  private levelPosted = new Map<CityId, number>();
+  /** zones being opened again at another level: open as far as loading goes */
+  private releveling = new Set<CityId>();
+  /** wall ms each zone was last in priorities 1-3, was made fine, was edited */
+  private touched = new Map<CityId, number>();
+  private madeFine = new Map<CityId, number>();
+  private edited = new Map<CityId, number>();
+  private viewAt: { id: CityId | null; at: number } = { id: null, at: 0 };
+  private lodTimer = 0;
+  private lodTick = 0;
+
+  /** The level zone `id` is to be opened at now. */
+  private levelFor(id: CityId): number {
+    if (this.lod !== "auto") return this.lod === "fine" ? LOD_FINE : LOD_COARSE;
+    return !this.lodZones?.has(id) || this.fine.has(id) ? LOD_FINE : LOD_COARSE;
+  }
+  private coarseOf(cities: CityId[]): CityId[] {
+    return cities.filter((id) => this.levelPosted.get(id) === LOD_COARSE);
+  }
+
+  /** Priorities 1-3 (notes/T-1206.md section 3), highest first: the zone in view once settled, the
+   * selected zones, zones edited within EDIT_KEEP_MS. */
+  private heldZones(now: number): CityId[] {
+    const out: CityId[] = [];
+    const add = (id: CityId | null | undefined) => { if (id && !out.includes(id)) out.push(id); };
+    const v = this.viewedSet().has(activeCity.peek()) ? activeCity.peek() : null;
+    if (v && this.viewAt.id === v && now - this.viewAt.at >= VIEW_SETTLE_MS) add(v);
+    const sel = selection.peek();
+    const at = (x: number, y: number) => zoneAt(...packToLngLat(x, y));
+    if (sel?.kind === "city") add(sel.city as CityId);
+    else if (sel?.kind === "commuters") add(activeCity.peek());
+    else if (sel?.kind === "trip") { add(at(...sel.from)); if (sel.to) add(at(...sel.to)); }
+    else if (sel?.kind === "station") {
+      const s = world.peek()?.save.stations.find((x) => x.id === sel.station);
+      if (s) add(zoneAt(s.lng, s.lat));
+    }
+    for (const [id, t] of [...this.edited].sort((a, b) => b[1] - a[1])) if (now - t < EDIT_KEEP_MS) add(id);
+    return out;
+  }
+
+  /** Check soon (a view settling, a click, an edit). */
+  private lodSoon(ms = 0) {
+    if (this.lod !== "auto") return;
+    clearTimeout(this.lodTimer);
+    this.lodTimer = setTimeout(() => this.lodCheck(), ms) as unknown as number;
+    if (!this.lodTick) this.lodTick = setInterval(() => this.lodCheck(), 30_000) as unknown as number;
+  }
+
+  /** The zones a solve covers, once their reach is known. */
+  private lodReach(): CityId[] | null {
+    const r = this.knownReach();
+    return r ? [...this.withoutBroken(new Set(r))] : null;
+  }
+
+  /** A game is loading: its fine set is made afresh once its reach is known (`saved`: its save's list). */
+  private lodReset(saved: string[] | null) {
+    this.lodZones = null;
+    this.savedFine = saved;
+    this.fine = new Set();
+    this.touched.clear();
+    this.madeFine.clear();
+    this.edited.clear();
+  }
+
+  /** A game's first fine set (`firstFine`), from the save's list or the budget. */
+  private initFine(zones: CityId[]) {
+    const c = viewCentre.peek() ?? cityById(activeCity.peek())?.center ?? [0, 0], k = Math.cos((c[1] * Math.PI) / 180);
+    const d = (id: CityId) => { const z = cityById(id); return z ? ((z.center[0] - c[0]) * k) ** 2 + (z.center[1] - c[1]) ** 2 : Infinity; };
+    const order = [activeCity.peek(), ...nearbyZones.peek(), ...zones.slice().sort((a, b) => d(a) - d(b))];
+    this.fine = firstFine(zones, order, this.savedFine, lodBudgetGB());
+    this.lodZones = new Set(zones);
+    const now = Date.now();
+    for (const id of this.fine) { this.touched.set(id, now); this.madeFine.set(id, now); }
+    this.savedFine = null;
+    if (DEBUG_LOD) console.info(`T1223 first fine set: ${this.fine.size} of ${zones.length} zones fine (${[...this.fine].slice(0, 8).join(",")})`);
+  }
+
+  /** Work the fine set out again and open the zones whose level changed at their new one. */
+  private lodCheck() {
+    clearTimeout(this.lodTimer);
+    this.lodTimer = 0;
+    // (a game loading makes its first fine set from its own reach, in `ensure` or `stationsAhead`)
+    if (this.lod !== "auto" || this.status.startsWith("failed") || this.hold || gameLoadArmed() || !this.lodZones || (this.ahead && !this.ahead.arrived)) return;
+    const zones = this.lodReach();
+    if (!zones) return;
+    const now = Date.now();
+    const held = this.heldZones(now);
+    for (const id of held) this.touched.set(id, now);
+    // a zone reached since the last check counts as just made fine (it opened fine)
+    const fresh = zones.filter((id) => !this.lodZones!.has(id));
+    for (const id of fresh) { this.fine.add(id); this.touched.set(id, now); this.madeFine.set(id, now); }
+    const next = planFine({ zones, held, near: nearbyZones.peek(), fine: this.fine, touched: this.touched, madeFine: this.madeFine, now, budget: lodBudgetGB() });
+    for (const id of next) if (!this.fine.has(id)) this.madeFine.set(id, now);
+    for (const id of [...this.edited.keys()]) if (now - this.edited.get(id)! >= EDIT_KEEP_MS) this.edited.delete(id);
+    for (const id of [...this.touched.keys()]) if (!next.has(id) && now - this.touched.get(id)! >= LEFT_ALONE_MS) this.touched.delete(id);
+    this.fine = next;
+    this.lodZones = new Set(zones);
+    reportDemandFine(zones.filter((id) => next.has(id)));
+    this.lodApply();
+  }
+
+  /** Open again, in every worker, each zone open at a level it should no longer have: zones that
+   * change together in one check do so together, so one solve covers them (`flush`). */
+  private lodApply() {
+    const change = [...this.levelPosted].filter(([id, level]) => this.opened.has(id) && !this.releveling.has(id) && this.fetching.has(id) && level !== this.levelFor(id)).map(([id]) => id);
+    if (DEBUG_LOD && change.length) console.info(`T1223 levels change: ${change.map((id) => `${id}:${this.levelFor(id)}`).join(",")}`);
+    for (const id of change) {
+      this.releveling.add(id);
+      this.opened.delete(id);
+      this.unack(id);
+      this.packAcks.delete(id);
+      this.dropCells(id);
+      this.fetchCity(id, "full");
+    }
+    this.lodShown();
+  }
+
+  /** The zones whose shown figures are coarse (`roughZones`) and the zone in view being worked out
+   * in detail (`refiningZone`). `cities` and `coarse`: a solve's zones just shown and which of them
+   * were coarse. */
+  private lodShown(cities?: CityId[], coarse?: CityId[]) {
+    if (cities) {
+      const c = new Set(coarse ?? []), next = new Set(roughZones.peek());
+      let changed = false;
+      for (const id of cities) if (c.has(id) !== next.has(id)) { changed = true; if (c.has(id)) next.add(id); else next.delete(id); }
+      if (changed) roughZones.value = next;
+    }
+    const v = activeCity.peek();
+    const refining = roughZones.peek().has(v) && this.levelPosted.has(v) && this.levelFor(v) === LOD_FINE ? v : null;
+    if (refiningZone.peek() !== refining) refiningZone.value = refining;
+  }
+
+  /** T-1223, `?debug=1`: the fine set and levels, for checks. */
+  lodState() {
+    const zones = this.lodReach() ?? [];
+    const open = [...this.levelPosted].filter(([id]) => this.opened.has(id));
+    return { mode: this.lod, fine: [...this.fine], fineOpen: open.filter(([, l]) => l === LOD_FINE).map(([id]) => id), coarseOpen: open.filter(([, l]) => l === LOD_COARSE).map(([id]) => id), releveling: [...this.releveling], refining: refiningZone.peek(), rough: [...roughZones.peek()], zonesGB: zonesGB(zones, this.fine), budgetGB: lodBudgetGB() };
+  }
+
+  /** The zones a new network changed (stations added, removed or moved; lines whose stops, trains or
+   * cars changed: the zones of the stops that changed, else of the stops in the zone in view). */
+  private noteEdits(prev: Service, next: Service) {
+    const f = makeFrame(next.frame), zone = (s: { x: number; y: number }) => zoneAt(...f.toLonLat(s.x, s.y));
+    const was = new Map(prev.stations.map((s) => [s.id, s])), now = new Map(next.stations.map((s) => [s.id, s]));
+    const zones = new Set<CityId | null>();
+    for (const s of next.stations) { const o = was.get(s.id); if (!o || o.x !== s.x || o.y !== s.y) zones.add(zone(s)); }
+    for (const s of prev.stations) if (!now.has(s.id)) zones.add(zone(s));
+    const lines = new Map(prev.lines.map((l) => [l.id, l]));
+    const view = activeCity.peek();
+    for (const l of next.lines) {
+      const o = lines.get(l.id);
+      if (o && o.stops.join() === l.stops.join() && o.tph.join() === l.tph.join() && o.cars === l.cars) continue;
+      const had = new Set(o?.stops ?? []), has = new Set(l.stops);
+      const moved = [...l.stops.filter((s) => !had.has(s)), ...(o?.stops ?? []).filter((s) => !has.has(s))];
+      const at = (id: string) => { const s = now.get(id) ?? was.get(id); return s ? zone(s) : null; };
+      if (moved.length) for (const id of moved) zones.add(at(id));
+      else if (l.stops.some((id) => at(id) === view)) zones.add(view);
+    }
+    const t = Date.now();
+    for (const id of zones) if (id) this.edited.set(id, t);
   }
 
   // --- Closing what is no longer needed (T-301) ---------------------------------------------------
@@ -1011,6 +1206,8 @@ class DemandClient {
       this.fetching.delete(id);
       this.prefetched.delete(id as CityId);
       this.cityVersion.delete(id as CityId);
+      this.levelPosted.delete(id as CityId);
+      this.releveling.delete(id as CityId);
       this.dropCells(id);
       const log = lastLoad(this.start.loads, (l) => l.item === id && !l.bare);
       if (log) log.closedAt = performance.now();
@@ -1122,7 +1319,7 @@ class DemandClient {
 
   /** Post an `open` to every worker (the last takes the original buffer, the others copies).
    * T-173: until the first worker is ready, the other solving workers' city packs wait (`held`). */
-  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer }; intercity?: { id: CityId; bytes: Uint8Array }[]; rows?: Uint8Array }) {
+  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer; level?: number }; intercity?: { id: CityId; bytes: Uint8Array }[]; rows?: Uint8Array }) {
     // T-776: the market's rows go with the first market pack, the same way as its bytes
     const rows = open.intercity && !this.rowsSent ? open.rows : undefined;
     if (rows) this.rowsSent = true;
@@ -1181,7 +1378,13 @@ class DemandClient {
       const pack = { id, header: new TextDecoder().decode(header), bin: own };
       // T-328: hashed before the bytes go to the workers (WebCrypto copies them at the call)
       if (!bare) this.hashPack(id, [header, bin]);
-      if (!bare) { this.post({ pack }); return this.postMarkets(); }
+      if (!bare) {
+        // T-1223: at the level the fine set gives it now
+        const level = this.levelFor(id);
+        this.levelPosted.set(id, level);
+        this.post({ pack: { ...pack, level } });
+        return this.postMarkets();
+      }
       const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(id === activeCity.peek() ? { first: true } : {}) };
       this.workers[this.computeN].postMessage(msg, [own]);
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
@@ -1255,6 +1458,7 @@ class DemandClient {
     this.fetchingBare.delete(item as CityId);
     this.fetchingUndecided.delete(item as CityId);
     this.prefetched.delete(item as CityId);
+    this.releveling.delete(item as CityId);
     this.onOpen = this.onOpen.filter((w) => (w.item === item ? (w.f(false), false) : true));
     const tries = (this.broken.get(item)?.tries ?? 0) + 1;
     const wait = BROKEN_RETRY_MS[Math.min(tries, BROKEN_RETRY_MS.length) - 1];
@@ -1323,6 +1527,7 @@ class DemandClient {
     this.acks.set(item, n);
     if (n < this.workers.length) return;
     this.opened.add(item);
+    if (this.releveling.delete(item as CityId)) this.lodShown();
     if (this.openFails.delete(item)) this.recovered(item);
     const log = lastLoad(this.start.loads, (l) => l.item === item && !l.bare);
     if (log && log.openedAt === undefined) log.openedAt = performance.now();
@@ -1370,7 +1575,9 @@ class DemandClient {
     if (!s || !need || !this.allOpen(need)) return;
     // a city opened since the newest solve (also one that finished loading after the view moved
     // away again: it is open, so solve it rather than leave its load unfinished)
-    if ([...need].some((id) => !s.cities.includes(id)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
+    // (T-1223: or opened again at another level since)
+    const coarse = new Set(s.coarse ?? []);
+    if ([...need].some((id) => !s.cities.includes(id) || coarse.has(id) !== (this.levelPosted.get(id) === LOD_COARSE)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
   }
 
   /**
@@ -1392,7 +1599,7 @@ class DemandClient {
     const version = ++this.version;
     this.pushed.clear();
     const now = performance.now();
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], showEstimates: !shown, rough: true };
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], coarse: this.coarseOf([id]), showEstimates: !shown, rough: true };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
@@ -1516,7 +1723,7 @@ class DemandClient {
     // T-325: a city the solves must cover is loaded when open in every worker; another, when open bare
     const sn = this.solveNeed(this.latest());
     // (T-484: a pack waiting to be tried again counts as done: the load does not wait for it)
-    const loaded = (item: string) => this.broken.has(item) || (isMarket(item) || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
+    const loaded = (item: string) => this.broken.has(item) || this.releveling.has(item as CityId) || (isMarket(item) || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
     const marketsMissing = this.marketWanted.map(marketItem).filter((item) => !this.opened.has(item));
     // T-328: a zone the shown cached result covers has its figures; it loads unseen (T-347: not
     // while a game load's card is up, which counts everything to the fresh final)
@@ -1702,11 +1909,12 @@ class DemandClient {
   }
 
   /** The cache key of a solve covering `cities` (and those zones' market packs), once their packs
-   * have downloaded. */
-  private async keyFor(cities: CityId[], markets: CityId[]): Promise<CacheKey> {
+   * have downloaded. T-1223: a zone solved coarse (`coarse`) keys its pack's hash with ":coarse". */
+  private async keyFor(cities: CityId[], markets: CityId[], coarse: CityId[]): Promise<CacheKey> {
     const ids = [...markets.map(marketItem), ...cities];
     const hashes = await Promise.all(ids.map((id) => this.packHashOf(id).p));
-    return { format: CACHE_FORMAT, build: BUILD, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "", packs: Object.fromEntries(ids.map((id, i) => [id, hashes[i]])) };
+    const c = new Set<string>(coarse);
+    return { format: CACHE_FORMAT, build: BUILD, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "", packs: Object.fromEntries(ids.map((id, i) => [id, c.has(id) ? `${hashes[i]}:coarse` : hashes[i]])) };
   }
 
   /** A whole game's network arrived: show its cached final result if there is one for exactly this
@@ -1729,7 +1937,10 @@ class DemandClient {
       const markets = this.wantsMarket(svc);
       const had = Object.keys(stored.packs ?? {}).filter(isMarket).map(marketZone);
       if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
-      const why = sameKey(stored, await this.keyFor(cities, markets));
+      // (T-1223: the levels the solve will have; before the fine set is made, the save's list's)
+      const saved = !this.lodZones && this.lod === "auto" ? this.savedFine : null;
+      const coarse = cities.filter((id) => (saved ? !saved.includes(id) : this.levelFor(id) === LOD_COARSE));
+      const why = sameKey(stored, await this.keyFor(cities, markets, coarse));
       if (why) return void (log.miss = why);
       // (T-1533: a rough solve's estimate gives way to it)
       if (late() || this.status.startsWith("failed")) return void (log.miss = "late");
@@ -1763,6 +1974,7 @@ class DemandClient {
       for (const w of this.workers) w.postMessage({ kind: "solve", version, net: packService(this.cur.svc).net, rounds: ROUNDS, only: [] } satisfies ToDemand);
     }
     demandByDay.value = days;
+    this.lodShown(cities, cities.filter((id) => this.levelFor(id) === LOD_COARSE));
     this.addBareViews();
     demandUpdating.value = true; // "Updating demand" until the fresh final
     // T-347: a game load's card and held clock stay until the fresh final lands (T-328 released
@@ -1784,7 +1996,7 @@ class DemandClient {
     const t0 = performance.now();
     const canon = canonical(s.svc);
     const stored = toStored(days, s.cities, canon);
-    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.markets)]);
+    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.markets, s.coarse ?? [])]);
     // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
     const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
@@ -1887,6 +2099,7 @@ class DemandClient {
       // the nearby zones' packs may load now (T-276), and those track crosses (T-1047)
       if (nearbyZones.peek().length || trackZones.peek().built.size) this.ensure();
       this.prefetchViewed(); // a building tool picked while the card was up (T-351)
+      this.lodSoon(); // T-1223: levels wait for a load's card
     }
   }
 
@@ -1972,7 +2185,7 @@ class DemandClient {
     const bare = aux ? [...this.fetchingBare] : [];
     const city = async (id: CityId) => {
       const [header, bin] = await this.downloadPack(id);
-      return { id, header: new TextDecoder().decode(header), bin: bin.slice().buffer as ArrayBuffer };
+      return { id, header: new TextDecoder().decode(header), bin: bin.slice().buffer as ArrayBuffer, level: this.levelPosted.get(id) ?? LOD_FINE };
     };
     try {
       const markets = items.filter(isMarket).map(marketZone);
@@ -2364,6 +2577,11 @@ class DemandClient {
     this.lastKey = key;
     this.lastStir = performance.now();
     demandUpdating.value = true;
+    // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones
+    const prev = this.latest();
+    if (gameLoad && !this.ahead) this.lodReset(null);
+    else if (!gameLoad && prev) this.noteEdits(prev, svc);
+    this.lodSoon();
     // T-840: the game's own load replaces what loaded before its network was known; a game loaded while
     // the last one's bar is up starts the bar over (T-884: not the pick's own wait, which goes on)
     if (gameLoad && this.job) {
@@ -2447,7 +2665,7 @@ class DemandClient {
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), showEstimates };
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
@@ -3274,6 +3492,7 @@ class DemandClient {
       // a cache of the same network shown meanwhile (T-328) holds its estimates back
       if (!final && !s.showEstimates) return;
       demandByDay.value = days;
+      this.lodShown(s.cities, s.coarse);
       if (final) {
         s.refinedAt = performance.now();
         // an older solve's figures are never read again (its svc and layout are); a few MB each
@@ -3395,6 +3614,7 @@ class DemandClient {
           return { view, cities, intercity: c.market ? est.intercity : d.intercity };
         });
       }
+      this.lodShown(c.cities, s.coarse);
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
         const left = new Set(demandSolving.peek() ?? []);
@@ -3465,6 +3685,7 @@ function madeDays(): DemandDay[] {
 let client: DemandClient | null = null;
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
+const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";
 /** T-351: the page starts a new game (`?new=1`, or the start menu's New game, T-677): no stations,
  * so the viewed zone opens bare from the start. */
 let NEW_GAME = false;
@@ -3484,8 +3705,8 @@ export function startDemand(city = HOME_CITY, newGame = false) {
 }
 
 /** T-889: a loading save's built stations (clockClient's onStationsAhead). */
-export function stationsAhead(frame: FrameSpec, xy: Float64Array) {
-  if (!TEST) client?.stationsAhead(frame, xy);
+export function stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null) {
+  if (!TEST) client?.stationsAhead(frame, xy, fine);
 }
 
 /** T-1539: a loading save's network key (clockClient's onNetAhead). */

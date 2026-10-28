@@ -237,6 +237,8 @@ let switching = false;
 let mode: GameMode = "normal";
 let startZone: string | undefined;
 let opened: string[] | undefined = [];
+/** T-1223: the zones demand holds fine, from the page */
+let demandFine: string[] | undefined;
 function setMode(m: GameMode) {
   mode = m;
   api!.set_unlimited(m === "sandbox");
@@ -1605,7 +1607,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1919,7 +1921,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   }
   // T-889: the demand pool opens the zones the built stations reach while the network is worked out
   const st = TrackApi.save_stations(net);
-  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3) });
+  demandFine = h.demandFine;
+  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null });
   // T-1539: the demand result kept for this save's network can show while the network is worked out
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
@@ -1953,8 +1956,8 @@ function startClock(spec?: NewGameSpec): number {
 }
 
 /** A new game's mode, start and opened zones (T-728). */
-function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened"> {
-  return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [] };
+function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened" | "demandFine"> {
+  return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [], demandFine: undefined };
 }
 function sendOpened() {
   send({ kind: "opened", zones: opened ? [...opened] : null, start: startZone });
@@ -1964,6 +1967,7 @@ function setNewGame(spec?: NewGameSpec) {
   setMode(g.mode!);
   startZone = g.start;
   opened = g.opened;
+  demandFine = undefined;
 }
 
 /** After a slot's save was converted on load: keep the old-format copy under a key the saves list
@@ -2952,6 +2956,9 @@ async function handle(msg: ToClock) {
   api.set_now(gameNow());
   if (msg.kind === "opened") {
     opened = [...msg.zones];
+    dirty = true;
+  } else if (msg.kind === "demandFine") {
+    demandFine = [...msg.zones];
     dirty = true;
   } else if (msg.kind === "sandbox") {
     if (mode === "sandbox") return;

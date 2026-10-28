@@ -216,7 +216,7 @@ function yieldNow(): Promise<void> {
  * carrying the everyday arrays gets the layer (every registered city since T-142); a pack
  * without them stays commute-only.
  */
-function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: MarketPack[] | undefined, isBare = false, rejected: OpenRejected[] = []) {
+function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer; level?: number }[], market: MarketPack[] | undefined, isBare = false, rejected: OpenRejected[] = []) {
   // T-492: a pack that does not open is left out and reported; the pool carries on
   const reject = (id: CityId, isMarket: boolean, err: unknown) => rejected.push({ id, market: isMarket, error: String(err) });
   for (const pack of packs) {
@@ -225,21 +225,15 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
         if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
         continue;
       }
-      // (T-301: reopened before its close took effect: it stays)
-      if (cities.has(pack.id)) { closeLater.ids.delete(pack.id); continue; }
-      const bin = new Uint8Array(pack.bin);
-      const a = new DemandApi(pack.header, bin);
-      // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
-      let e: EverydayApi | null = null;
-      try {
-        if (!aux && hasEveryday(pack.header)) e = EverydayApi.beside_with(a, pack.header, bin, attractionsIn(pack.id));
-      } catch (err) {
-        a.free();
-        throw err;
+      const level = aux ? 0 : pack.level ?? 0;
+      if (cities.has(pack.id)) {
+        // (T-301: reopened before its close took effect: it stays)
+        if (cities.get(pack.id)!.level() === level) { closeLater.ids.delete(pack.id); reopenLater.delete(pack.id); continue; }
+        // T-1223: at another level; the solve in hand keeps the one it set up
+        if (busy && jobCities.has(pack.id)) { reopenLater.set(pack.id, pack); continue; }
+        dropCity(pack.id);
       }
-      cities.set(pack.id, a);
-      if (e) everyday.set(pack.id, e);
-      sendMessage({ kind: "packOpened", id: pack.id }); // T-1195
+      openCity(pack, level);
     } catch (err) {
       if (isPanic(err)) throw err;
       reject(pack.id, false, err);
@@ -290,9 +284,30 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
   return opened(packs, isBare, rejected);
 }
 
+/** A city's commutes and, on a solving worker, its everyday layer, at `level` (T-1222). */
+function openCity(pack: { id: CityId; header: string; bin: ArrayBuffer }, level: number) {
+  const bin = new Uint8Array(pack.bin);
+  const a = DemandApi.at_level(pack.header, bin, level);
+  // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
+  let e: EverydayApi | null = null;
+  try {
+    if (!aux && hasEveryday(pack.header)) e = EverydayApi.beside_with(a, pack.header, bin, attractionsIn(pack.id));
+  } catch (err) {
+    a.free();
+    throw err;
+  }
+  cities.set(pack.id, a);
+  if (e) everyday.set(pack.id, e);
+  sendMessage({ kind: "packOpened", id: pack.id }); // T-1195
+}
+
+/** T-1223: zones to open again at another level once the solve in hand, which covers them, ends */
+const reopenLater = new Map<CityId, { id: CityId; header: string; bin: ArrayBuffer; level?: number }>();
+
 /** Each city pack that opened, with its figures (`info`). */
 function opened(packs: { id: CityId }[], isBare: boolean, rejected: OpenRejected[]) {
   const failed = new Set(rejected.filter((r) => !r.market).map((r) => r.id));
+  if (!isBare) for (const id of reopenLater.keys()) failed.add(id);
   return Object.fromEntries(packs.filter(({ id }) => !failed.has(id)).map(({ id }) => {
     const b = isBare ? bare.get(id) : undefined;
     const info = Array.from((b?.a ?? cities.get(id)!).info());
@@ -435,7 +450,7 @@ function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
       if (!cities.has(id)) squares.delete(id);
     }
   } else {
-    for (const id of msg.ids) if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id);
+    for (const id of msg.ids) { reopenLater.delete(id); if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id); }
     if (msg.markets?.length) { if (busy) for (const id of msg.markets) closeLater.markets.add(id); else dropMarkets(msg.markets); }
   }
   sendMessage({ kind: "closed", memBytes: wasm_memory_bytes(), heap: heap() });
@@ -446,6 +461,15 @@ function closeDeferred() {
   closeLater.ids.clear();
   if (closeLater.markets.size) dropMarkets([...closeLater.markets]);
   closeLater.markets.clear();
+  if (!reopenLater.size) return;
+  const packs = [...reopenLater.values()];
+  reopenLater.clear();
+  const t0 = performance.now(), rejected: OpenRejected[] = [];
+  for (const pack of packs) {
+    dropCity(pack.id);
+    try { openCity(pack, pack.level ?? 0); } catch (err) { if (isPanic(err)) throw err; rejected.push({ id: pack.id, market: false, error: String(err) }); }
+  }
+  sendMessage({ kind: "opened", cityInfo: opened(packs, false, rejected), markets: [], openMs: performance.now() - t0, warmMs: 0, memBytes: wasm_memory_bytes(), heap: heap(), ...(rejected.length ? { rejected } : {}) });
 }
 
 /** T-889: `open`s not yet taken up, each with the count of `close`s that came before it. Opens

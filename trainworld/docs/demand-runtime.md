@@ -49,7 +49,7 @@ destination samples and their pair indices (T-395; about half of all cells x pur
 and a cell holds one sample per 8 of its trips (T-397). A zone opened coarse (`DemandApi::at_level`,
 T-1222, notes/T-1206.md) holds one per 64, 1 to 8 (airports, medical and attractions 1), and deals
 its commute pairs under 1 trip a period in chunks; the same model at a lower sample density, its
-rail on average its fine figure's. The game opens every zone fine until T-1223. A sample's
+rail on average its fine figure's. Which zones are fine is "Levels of detail" below. A sample's
 pair index is held only once a network gives its layer a pair, written in place on the next
 network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
 (T-398). A city's everyday layer is opened beside its commutes (`EverydayApi::beside`, T-399) and
@@ -98,6 +98,35 @@ solved with no station in it.
   that no station reaches opens bare too, outside a load's card and only while no other bare
   opening is under way, one at a time, nearest the view's centre first. Nothing keeps it open: it
   closes as any spare zone does, its figures still shown (`bareKept`). `?perfOff=track` turns it off.
+
+**Levels of detail** (T-1223, `workers/demandLod.ts`, design notes/T-1206.md). Each zone the solves
+cover is open fine or coarse in the solving workers (the aux worker opens every zone fine; its
+commute copies only map sums to cells). The page keeps a fine set, checked when the view settles,
+on a click, on an edit, when a load's card goes and every 30 s:
+1. the zone in view, once in view 2 s (a pan refines nothing);
+2. the selected zones: a zone, a bubble selection (the zone in view), a station's zone, a trip's two ends;
+3. zones edited in the last 15 minutes of wall time (stations added, removed or moved; a line's
+   stops added or dropped, or its trains or cars changed: the zone in view if the line stops there);
+4. other zones with bubbles on screen (`nearbyZones`);
+5. every other zone reached.
+
+Zones in 1-3 are always fine. A fine zone in none of 1-3 for 10 minutes goes coarse, whatever the
+memory; past the budget the lowest fine zone goes at once (5 before 4, the least recently in 1-3
+first); never one made fine within 5 minutes. A coarse zone goes fine only by entering 1-3. A zone
+reached since the last check opens fine (a station was just built there). The budget is the zones'
+memory a solving worker may hold, by T-1197's rate (`memoryCheck.ts`) with a coarse zone at 0.7 of
+a fine one: 1.5 GB on a device reporting 8 GB, less in proportion below. A game's first fine set is
+the save's (`demandFine` in its header, kept current by the page), else every zone that fits the
+budget, the zone in view first, then the zones on screen, then the nearest. A level change is a
+close and reopen: the pack downloads again (the browser's cache) and each solving worker opens it at
+its new level, one whose solve in hand covers the zone once that solve ends; the shown figures stay
+until a solve covers it at its new level (`flush` sends one as for a zone newly opened), the zone
+counting as open for the loading bar meanwhile. Zones changed in one check reopen together, so one
+solve covers them. Every solve records which of its zones were coarse (`Solve.coarse`); the zones
+shown from a coarse solve are `roughZones` (no star or goal comes from them), and the zone in view
+shown rough while fine is on its way is `refiningZone` (the status tag,
+[ui-demand-views.md](ui-demand-views.md)). The demand cache's key marks each coarse zone's pack. `?lod=fine` opens
+every zone fine and `?lod=coarse` every zone coarse, and neither changes them after.
 
 **Everyday warm-up** (T-173). Several workers opening a big everyday layer at once from the
 browser's baseline code each take several times as long as one alone. So worker 0 opens a small

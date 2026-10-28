@@ -94,6 +94,9 @@ export interface SaveHeader {
   start?: string;
   /** T-728, T-729: the zones opened in this game, in the order they were opened; absent in older saves */
   opened?: string[];
+  /** T-1223: the zones demand held fine (the rest coarse, notes/T-1206.md), so a reload solves the
+   * same levels and shows the same figures; absent: every zone fine that fits */
+  demandFine?: string[];
   /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
   newCars?: number;
 }
@@ -137,6 +140,7 @@ export function currentZones(h: SaveHeader, now: (id: string) => string | null =
   const out: SaveHeader = { ...h };
   if (h.cities) out.cities = list(h.cities);
   if (h.opened) out.opened = list(h.opened);
+  if (h.demandFine) out.demandFine = list(h.demandFine);
   if (h.start !== undefined) out.start = now(h.start) ?? undefined;
   if (h.regions) {
     const regions: NonNullable<SaveHeader["regions"]> = {};

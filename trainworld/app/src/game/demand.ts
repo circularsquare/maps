@@ -201,6 +201,11 @@ export const demandStep = signal({ done: 0, of: 4 });
 /** T-392: the zones the running solve has still to finish (each cluster's land as it is solved);
  * null until the workers say, then read as every zone */
 export const demandSolving = signal<Set<CityId> | null>(null);
+/** T-1223: the zones whose shown figures are from a coarse solve (notes/T-1206.md): rough, and
+ * never a star's */
+export const roughZones = signal<ReadonlySet<CityId>>(new Set());
+/** T-1223: the zone in view, shown rough, being worked out in detail (its fine solve not shown yet) */
+export const refiningZone = signal<CityId | null>(null);
 /** A solve is running that will still change the figures of the zone in view. */
 export const viewUpdating = computed(() => demandUpdating.value && (demandSolving.value?.has(activeCity.value) ?? true));
 /** T-421: the figures shown for the zone in view are final: the shown result is, or (T-402) the

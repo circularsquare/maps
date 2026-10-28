@@ -528,8 +528,8 @@ render(h(ToolNotes, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
-onStationsAhead((frame, xy) => {
-  stationsAhead(frame, xy);
+onStationsAhead((frame, xy, fine) => {
+  stationsAhead(frame, xy, fine);
   // T-1539: the camera on the loading save's network now, so its cached figures can show before it is worked out
   if (perfOff("cacheAhead")) return;
   if (client.fitPending) fitAhead(frame, xy);

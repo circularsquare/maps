@@ -25,10 +25,25 @@ export function addOpened(ids: Iterable<CityId>) {
   sink?.([...next]);
 }
 
+let fineSink: ((zones: CityId[]) => void) | null = null;
+let lastFine = "";
+/** T-1223: where demand's fine set goes (the clock worker, for the save's `demandFine`). */
+export function setDemandFineSink(f: (zones: CityId[]) => void) {
+  fineSink = f;
+}
+/** T-1223: demand's fine set, sent when it changed. */
+export function reportDemandFine(zones: CityId[]) {
+  const key = zones.join(",");
+  if (key === lastFine) return;
+  lastFine = key;
+  fineSink?.(zones);
+}
+
 /** The list of the game just loaded or started; null for a save from before T-729, which starts with
  * the zone in view (`viewed`) and the zones its stations reach. */
 export function setGameOpened(zones: CityId[] | null, viewed: CityId | null) {
   openedZones.value = new Set(zones ?? []);
+  lastFine = "";
   if (zones) return;
   if (viewed) addOpened([viewed]);
   else sink?.([]);
