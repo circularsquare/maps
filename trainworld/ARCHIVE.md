@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1609 [P2] T-1206 stage 3, the local refine. Done 2026-10-28 (tree tw/t1609): a level change solves the zone alone against frozen loads; all of China shows it in 4.7 s (was 53 s), Guangzhou +0.18% against the whole solve. notes/T-1609.md.
 - T-1718 [P2] Bus money. Done 2026-10-28: buses lose money about as real ones do; Anita lowered running cost US$9 to US$6 a bus-km (params.rs). notes/T-1718.md.
 - T-1724 [P2] Mode mix is the default colouring; walking is the mode green under Train share too. Done 2026-10-28 (`bubbleColours` "mode", `SHARE_MODE_COLOURS.walk`); a stored choice stays.
 - T-1725 [P2] One volume slider. Done 2026-10-28: every sound already runs through `soundVolume` (station sounds, building sounds, the fare-graph pop, the load chime), so Settings keeps its one Volume slider, its hover now "All sounds at N% volume".
