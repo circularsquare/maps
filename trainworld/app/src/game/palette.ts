@@ -77,10 +77,9 @@ export const MODE_COLOURS = {
 } as const;
 
 /** T-833: the colours bars and swatches show modes in under Train share bubbles. Car red and train
- * blue are the default ramp's ends, lighter than the mode colours (Anita, T-1138); walking is yellow (the ramp has no green, and walkers pull a bubble
- * towards red) and "other" (planes: the one mode that is not car, walk or train) orange, a step from
+ * blue are the default ramp's ends, lighter than the mode colours (Anita, T-1138); walking is the mode green in both schemes (T-1724) and "other" (planes: the one mode that is not car, walk or train) orange, a step from
  * both the yellow and the red. Under Mode mix, planes stay the muted grey. */
-const SHARE_MODE_COLOURS = { train: "#4d4dff", walk: "#f0c814", drive: "#ff4d4d", other: "#f07a14" } as const;
+const SHARE_MODE_COLOURS = { train: "#4d4dff", walk: MODE_COLOURS.walk, drive: "#ff4d4d", other: "#f07a14" } as const;
 const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)" } as const;
 /** The scheme in force; a signal, so panels that read `modeColours()` follow a change. */
 export const modeScheme = signal<BubbleScheme>("mode");

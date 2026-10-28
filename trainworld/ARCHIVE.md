@@ -2,6 +2,12 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1724 [P2] Mode mix is the default colouring; walking is the mode green under Train share too. Done 2026-10-28 (`bubbleColours` "mode", `SHARE_MODE_COLOURS.walk`); a stored choice stays.
+- T-1725 [P2] One volume slider. Done 2026-10-28: every sound already runs through `soundVolume` (station sounds, building sounds, the fare-graph pop, the load chime), so Settings keeps its one Volume slider, its hover now "All sounds at N% volume".
+- T-1726 [P2] Opacity slider after a new game; default 70% (was 90% in code). Done 2026-10-28: a selected zone no longer forces full opacity (selected bubbles still do, T-936); a new game's slider checked scripted on the menu and in-game paths, where the stuck 100% did not reproduce without a selection. DECISIONS.
+- T-1727 [P2] Fare multiplier row. Done 2026-10-28: "<Country> fares", hover "Set fare multiplier for <Country>", last in the fare rows (after "High speed" when shown); `FareNodeRows` has no `first` slot now.
+- T-1728 [P2] Login text in Settings. Done 2026-10-28: light "Logged in as <name>" or "Not logged in" beside the account icon (`loginText`, also the Account row's wording).
+- T-1729 [P2] Station names off by default. Done 2026-10-28; a stored choice stays.
 - T-1720 [P2] Weekend timetable. Done 2026-10-28: Saturdays, Sundays and Sunday-like holidays (by each line's calendar) run the medium trains 6-24, superholiday days the weekday's (`QUIET_LEVEL`, `Service::cal`, `levelOn`); drawn trains, the boarding account's crowding and running cost follow; riders stay the weekday solve's, scaled (DECISIONS). Real save: Saturday running cost $961k against Friday's $1,266k (0.759, expected 0.760); line F midday 110 trains against 142, rider-hours aboard per train 671 against 411, 23 trains full against 0.
 
 - T-1721 [P2] Snap beside track from any start. Done 2026-10-28: a run from a track end or a last segment comes in and runs 8 m beside a line; red/yellow dot and blue ring at the pointer, faint blue band round track. Tests in beside_tests.rs. DECISIONS.

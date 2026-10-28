@@ -60,7 +60,7 @@ export interface DisplaySettings {
   commuterEnd: "home" | "work";
   /** commuter bubbles' size, as a multiple of their width (T-099; 1 = BUBBLE_DENSITY's sizes) */
   bubbleSize: number;
-  /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 10% under it */
+  /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 30% under it */
   bubbleOpacity: number;
   /** T-1565: the station ridership circles' size, as a multiple of their own (0.5-2; map/stationCircles.ts) */
   stationCircleSize: number;
@@ -106,7 +106,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-1101: plain lines to start with; Traffic is one click away
   trackColour: "line",
   trains: true,
-  stationNames: true,
+  stationNames: false,
   capacity: true,
   fullMarks: true,
   flatMarks: true,
@@ -124,10 +124,10 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
-  bubbleOpacity: 0.9,
+  bubbleOpacity: 0.7,
   stationCircleSize: 1,
   bubbleDetail: 1,
-  bubbleColours: "ramp",
+  bubbleColours: "mode",
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
   uiScale: 0.9,

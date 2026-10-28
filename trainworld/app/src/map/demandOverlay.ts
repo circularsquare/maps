@@ -424,12 +424,15 @@ export class DemandOverlay {
     this.invalidate();
   }
 
-  /** T-936: a bubble is selected: every bubble at full opacity (the slider ignored) and SELECTED_PAD_PX
-   * larger in radius, so a small one reads over the network. */
+  /** T-936: a bubble is selected: SELECTED_PAD_PX larger in radius, so a small one reads over the
+   * network, and with `opaque` (bubbles picked, not a whole zone, T-1726) every bubble at full opacity,
+   * the slider ignored. */
   private selecting = false;
-  setSelecting(on: boolean) {
-    if (on === this.selecting) return;
+  private opaque = false;
+  setSelecting(on: boolean, opaque = on) {
+    if (on === this.selecting && opaque === this.opaque) return;
     this.selecting = on;
+    this.opaque = opaque && on;
     bubblePad.px = on ? SELECTED_PAD_PX : 0;
     this.invalidate();
   }
@@ -572,7 +575,7 @@ export class DemandOverlay {
     gl.uniform3fv(this.u.u_split_train, SPLIT_TRAIN);
     gl.uniform3fv(this.u.u_split_rest, SPLIT_REST);
     gl.uniform1f(this.u.u_rscale, this.bubbleSize);
-    gl.uniform1f(this.u.u_opacity, this.selecting ? 1 : this.bubbleOpacity);
+    gl.uniform1f(this.u.u_opacity, this.opaque ? 1 : this.bubbleOpacity);
     gl.uniform1f(this.u.u_pad, bubblePad.px * dpr);
     this.discsDrawn = 0;
     let uploaded = -1;

@@ -99,7 +99,7 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
-      <span class="fr-head" data-tip={`${name}'s fares are ${shown.toFixed(2)} times ${japan}'s. By income they would be ${income.toFixed(2)}.`}>{`Set fare multiplier for ${name}`}</span>
+      <span class="fr-what" data-tip={`Set fare multiplier for ${name}`}>{`${name} fares`}</span>
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
         type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}. Click to type one.` }} />
       {own
@@ -219,8 +219,11 @@ export function MoneyTab() {
       </table>
       <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={shown} scale={scale} />
-      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
-        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
+      <FareNodeRows nodes={f} scale={scale}
+        last={<>
+          {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
+          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />
+        </>} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />
       <div class="h">Trains</div>

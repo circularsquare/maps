@@ -76,6 +76,9 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   bus-km, or $6, or $4). Commit everything once T-1720 reports (shared files).
 - T-1721/1722/1708 done (uncommitted: beside.rs, beside_tests.rs, wasm.rs, draw.rs, tools.ts,
   BuildTab.tsx, style.css, docs, 3 DECISIONS). cargo 293 pass at the time.
+- Committed 2ad1df20 (T-1708-1722, T-1720 weekends), on 8800, smoke both pass.
+- T-1724-1729 settings batch (Sonnet, 6152). DEPLOY APPROVED (Anita) after it lands: version
+  2026-10-28e, then shonei-server deploy for T-1719 (asked; she said redeploy; confirm server).
 - T-1720 decided (Anita): weekends and quiet holidays run the medium timetable 6-20, charged for
   it, crowding against those trains from scaled riders (no new solve); busy holidays full.
   Opus agent, Vite 6158, may file T-1723.
@@ -98,7 +101,7 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
    T-1650 design. T-1654 (real load-time estimate), T-1634, T-1647, T-1644, T-1520.
 3. T-1374 (superholidays stage 3), T-1625 (rebuild the Japan stress save).
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1722.
+Ids handed out through T-1729.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

@@ -14,7 +14,8 @@ import { pickTool, TRIP_KEY } from "./toolKeys";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
-import { AccountButton, AccountSection } from "./AccountPanel";
+import { accountState } from "../game/account";
+import { AccountButton, AccountSection, loginText } from "./AccountPanel";
 import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
@@ -44,6 +45,7 @@ export function SettingsTab() {
           <Icon.help />
         </button>
         <AccountButton kind="settings" />
+        {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>
       <div class="h">Demand bubbles</div>
       <Slider label="Size" min={0.5} max={2} step={0.05} value={d.bubbleSize} tip={`Bubbles at ${Math.round(d.bubbleSize * 100)}% of their usual size`} set={(v) => setDisplay("bubbleSize", v)} />
@@ -129,7 +131,7 @@ export function SettingsTab() {
           <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Small sounds as you place and construct blueprint. Starts after your first click.">Sound</span>
         </Check>
       </div>
-      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`Sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
+      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`All sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
       <div class="h">Map</div>
       <div class="stack" data-tip="Zoomed in to a city, the globe becomes the flat map">
         <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />

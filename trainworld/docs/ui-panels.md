@@ -325,17 +325,18 @@ dismissed, and the map and tools are blocked meanwhile.
 
 `ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
-panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099]; Demand bubbles, three sliders: Size
-(0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
-commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
+panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
+"Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, three sliders: Size
+(0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
+commuter and longer-trip bubbles, not station discs; ignored while bubbles are selected, T-936, but not while a whole zone is, T-1726) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
-choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
-100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
-"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
+choice (Mode mix by default [T-1724], or Train share [T-833], which shows two colour pickers labelled 0% train and
+100% train; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
+"Demand shown for", below) [T-703], Show (trains, station names [off by default, T-1729], capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
-when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
-Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
+when accounts are on, Account [T-1139]: who is logged in ("Logged in as alice", "Logged in with
+Google" or "Not logged in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
 out, delete; [Account and leaderboards](#account-and-leaderboards)), Explore a trip [T-220], and Submit feedback at the bottom
 [T-1673, `ui/FeedbackPanel.tsx`]: a centred modal "Feedback" (the account panel's form styles) with Name (optional), Email
@@ -441,22 +442,20 @@ the sim's edit history holds track, lines and schedules, so fare steps are kept 
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
-and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
-one row "Set fare multiplier for Japan" (the country above; the full name always shows, wrapping to a second line
-or more in its cell where long, never cut) with its scale in a stepper as a multiple of Japan's fares,
-"1.00x" (Japan's default; India 0.16x, the US 1.90x), stepping by
-0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth of a baseline unit), its hover giving the
-multiple of Japan's and the scale by income; once the player has set one, an undo icon
-after the stepper ("Back to 1.90x, the scale by income") returns to the income's. The stepper sits in
-the same column as the rows below it [T-1277, T-1554, T-1584]. Then one row
+and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
 [+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
-the first's end; the last node's distance changes no fare, so it is only dragged). Last, once any
+the first's end; the last node's distance changes no fare, so it is only dragged). Then, once any
 line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.50x",
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
-to 1.50x") [T-1626]. The base fare
+to 1.50x") [T-1626]. Last, one row "Japan fares" (the country above; its hover "Set fare multiplier
+for Japan") with its scale in a stepper as a multiple of Japan's fares, "1.00x" (Japan's default;
+India 0.16x, the US 1.90x), stepping by 0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth
+of a baseline unit); once the player has set one, an undo icon after the stepper ("Back to 1.90x, the
+scale by income") returns to the income's. Its stepper sits in the same column as the rows above
+[T-1277, T-1554, T-1584, T-1727]. The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
 cent of fare where a stretch is too short for that to move it. A click on any value opens a box to
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in

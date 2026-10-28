@@ -31,9 +31,9 @@ blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190,
 mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
 even three-way mix is not white [T-653, T-1450]. Bars and swatches by mode follow the bubble colours chosen
 (the Colours setting, "Local trip bubbles"; `modeColours()` in `game/palette.ts`, the CSS
-variables `--mode-*`): under Mode mix they are the colours above with planes muted grey, under Train share (the
-default) car is #ff4d4d and train #4d4dff (the default ramp's ends, lighter than the mode colours,
-T-1138), walking yellow #f0c814 and planes orange #f07a14 [T-833]. Planes are the longer-trip tables' plane column icon.
+variables `--mode-*`): under Mode mix (the default, T-1724) they are the colours above with planes muted grey, under Train share
+car is #ff4d4d and train #4d4dff (the default ramp's ends, lighter than the mode colours,
+T-1138), walking the same green #1eaa3c as under Mode mix and planes orange #f07a14 [T-833, T-1724]. Planes are the longer-trip tables' plane column icon.
 The local layers' modes are train, walk and car; "car" stands for every way of getting about but
 those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
