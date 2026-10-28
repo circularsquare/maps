@@ -166,13 +166,26 @@ export function setMarketRows(byZone: Record<string, MarketRow>) {
   }
   marketRowsReady.value = true;
 }
-/** T-279: the routed drives' bytes, fetched once; null where the file is missing (every drive the
- * rule's). The demand pool sends its workers the same. */
+/** T-279: the routed drives' bytes, fetched once; null where the file is missing (a 404: every drive
+ * the rule's). The demand pool sends its workers the same. A failed download is tried again and
+ * then rejects, never read as missing: a big load's hundreds of requests at once can fail one
+ * (ERR_INSUFFICIENT_RESOURCES), and the rule's drives are another market (T-1605). */
 let drivesLoading: Promise<Uint8Array | null> | null = null;
+const DRIVES_RETRY_MS = [500, 1500, 4000, 10000];
 export function fetchMarketDrives(): Promise<Uint8Array | null> {
-  return (drivesLoading ??= fetch(dataUrl("market-drives.bin"))
-    .then((r) => (r.ok ? r.arrayBuffer().then((b) => new Uint8Array(b)) : null))
-    .catch(() => null));
+  const once = async (attempt: number): Promise<Uint8Array | null> => {
+    try {
+      const r = await fetch(dataUrl("market-drives.bin"));
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(`market drives: ${r.status}`);
+      return new Uint8Array(await r.arrayBuffer());
+    } catch (err) {
+      if (attempt >= DRIVES_RETRY_MS.length) throw err;
+      await new Promise((res) => setTimeout(res, DRIVES_RETRY_MS[attempt]));
+      return once(attempt + 1);
+    }
+  };
+  return (drivesLoading ??= once(0).catch((err) => { drivesLoading = null; throw err; }));
 }
 /** Fetch the rows once (the same file the demand pool sends its workers), with the drives. */
 export function loadMarketRows(): Promise<boolean> {

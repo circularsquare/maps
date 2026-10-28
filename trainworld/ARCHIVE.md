@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1605 [P3] A cold load's figure signature differing between runs. Done 2026-10-28: a failed download of market-drives.bin was read as "missing" (rule drives, market rail -11% on all-China, visible); now retried (`marketRule.ts`). An invisible 0.0016-rider kind left as T-1633. notes/T-1605.md.
 - T-1613 [P2] "A few seconds left" while loading goes on. Done 2026-10-28: "a few seconds" is under 5 s (was 10), a count near it takes a raised estimate at once, and past the estimate the card says "Taking a bit longer"; on NYC and Tokyo it now shows 0-2.7 s before the end (was up to 9.3 s). artifacts/trainworld/t1613-timeline.json.
 - T-1616 [P2] All-Japan save loses money in every city. Analysis written 2026-10-28: mostly the save (commuter trains run end to end on long lines, an old fare curve half today's), not upkeep, crossings or curves; fixes T-1625, T-1626. notes/T-1616.md.
 - T-1614 [P2] Capacity tags lag the map while zooming or panning. Done 2026-10-28: between full placements each shown tag follows its resource every frame at its last spot (was frozen through zooms, and through pans when the flat-pan check missed); NYC probe 216 of 437 moving frames off (worst 75 px) to 0, frame time unchanged. artifacts/trainworld/t1614-offset.png.
