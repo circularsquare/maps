@@ -151,8 +151,8 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   detail."), and the split's hover ends "(rough while Wuhan is worked out in detail)"; the figures
   change in one step when the detailed solve lands [T-1223, docs/demand-runtime.md "Levels of
   detail"]. No grey and no bar: those stay for a zone with no figures. A rough zone's city view,
-  opened from elsewhere, has the muted line "Rough figures. Go there to work them out in detail."
-  above its rows; the Cities list marks nothing (Anita, T-1206).
+  opened from elsewhere, and the Cities list mark nothing: rough figures are close enough (Anita,
+  T-1206, 2026-10-28).
 - **Busy** [T-1200, `ui/BusyTag.tsx`, `game/busy.ts`]: when the page is about to freeze for a
   while working something out, a tag in the status tag's style after it on the same row says what,
   in a word or a few, with no hover: "Drawing the network" (the network redrawn whole, at a new draw
