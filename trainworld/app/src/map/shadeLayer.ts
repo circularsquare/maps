@@ -141,9 +141,25 @@ export class ShadeLayer implements CustomLayerInterface {
       // the world copies in view; the globe has one
       const b = this.map.getBounds();
       const w0 = cam.globe ? 0 : Math.floor((b.getWest() + 180) / 360), w1 = cam.globe ? 0 : Math.floor((b.getEast() + 180) / 360);
+      // T-1617: each pixel shaded once. Earcut's long slivers (a fan from one far corner) can meet
+      // a pixel or two apart on the GPU, which drew a dark line along a meridian; the stencil keeps
+      // any overlap from darkening twice. MapLibre's own stencil is cleared before and after, which
+      // also makes it draw its tile masks again.
+      const frame = (this.map as unknown as { painter?: { frameRenderContext?: { clearStencil(): void } } }).painter?.frameRenderContext;
+      if (frame) {
+        frame.clearStencil();
+        gl.enable(gl.STENCIL_TEST);
+        gl.stencilMask(0xff);
+        gl.stencilFunc(gl.EQUAL, 0, 0xff);
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+      }
       for (let w = w0; w <= w1; w++) {
         gl.uniform1f(this.loc.u_wrap, w);
         gl.drawArrays(gl.TRIANGLES, 0, count);
+      }
+      if (frame) {
+        gl.disable(gl.STENCIL_TEST);
+        frame.clearStencil();
       }
     }
     gl.bindVertexArray(null);

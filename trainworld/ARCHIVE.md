@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1608 [P3] Stop market searches once their origins settle. Abandoned 2026-10-28: built exact (Japan's figures identical), but a destination's longer trips start near the far end of the network, so each search still settles 94% of its nodes (Japan pass 51 to about 47 s, noise-level); not landed, patch kept. notes/T-1608.md.
+
+- T-1617 [P2] Dark meridian seam near Tsushima. Done 2026-10-28: the realm shade's long earcut slivers met a pixel apart on her GPU; `map/shadeLayer.ts` now shades each pixel once through the stencil (triangles sent twice draw as once, flat and globe). notes/T-1617.md.
 - T-1640 [P3] Redraw only when something visible moves (`map/overlay.ts`, `renderer.stillWaitMs`). Done 2026-10-28: Japan save, clock running, map still, trains hidden: 60 to 1 draws/s, 7.9% to 3.9% GPU (paused 3.0%); trains and Tokyo z11 or closer unchanged at full rate. notes/T-1618.md.
 - T-1639 [P2] Fewer stroke instances: strokes simplified per zoom band below zoom 15 and culled by chunk from zoom 7 (`map/strokeLod.ts`). Done 2026-10-28: Japan save panning 78% to 34% GPU at Japan zoom and Tokyo z11, 94% to 37% at z15 (MapLibre alone pans at 22%); pictures the same by eye. notes/T-1618.md.
 - T-1638 [P2] Strokes kept in a texture between changes (`map/strokeCache.ts`). Done 2026-10-28: Japan save, clock running, map still: 77% to 9-10% GPU at Japan zoom, 75% to 15-17% at Tokyo zoom 11; picture the same; panning unchanged (T-1639). notes/T-1618.md.
