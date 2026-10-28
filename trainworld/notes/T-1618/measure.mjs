@@ -6,13 +6,15 @@ import { execFile } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { playwright } from 'file:///C:/Users/anita/projects/maps/trainworld/checks/lib.mjs';
 
-const OUT = 'C:/Users/anita/AppData/Local/Temp/claude/c--Users-anita-projects-maps/f28006bc-4241-4116-9970-a65fc772bb95/scratchpad/t1618/';
+// PORT, CDP and OUT as hold.mjs's
+const PORT = process.env.PORT ?? '6158', CDP = process.env.CDP ?? '9338';
+const OUT = process.env.OUT ?? 'C:/Users/anita/AppData/Local/Temp/claude/c--Users-anita-projects-maps/f28006bc-4241-4116-9970-a65fc772bb95/scratchpad/t1618/';
 const GPU_PID = process.argv[2];
 const ONLY = process.argv[3] ? new RegExp(process.argv[3]) : null;
 const SAMPLES = 6;
 const { chromium } = await playwright();
-const browser = await chromium.connectOverCDP('http://127.0.0.1:9338');
-const page = browser.contexts()[0].pages().find((p) => p.url().includes('6158'));
+const browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP}`);
+const page = browser.contexts()[0].pages().find((p) => p.url().includes(PORT));
 
 const typeperf = () => new Promise((res) => execFile('typeperf', [`\\GPU Engine(pid_${GPU_PID}*engtype_3D)\\Utilization Percentage`, '-si', '1', '-sc', String(SAMPLES)], (err, out) => {
   const rows = out.split(/\r?\n/).filter((l) => /^"\d/.test(l)).map((l) => l.split('","').slice(1).reduce((s, v) => s + (parseFloat(v.replace(/"/g, '')) || 0), 0));
@@ -45,13 +47,15 @@ await page.evaluate(() => {
   const hook = (t, arr) => { const ob = t.begin.bind(t); t.begin = () => { const q = t.query; ob(); if (q && t.query !== q && t.ms != null) arr.push(t.ms); }; };
   hook(tw.renderer.timer, m.ovGpu);
   hook(window.twViews.overlay.timer, m.dmGpu);
-  m.snap = () => ({ t: performance.now(), raf: m.raf, rafFrames: m.rafFrames, ov: tw.overlay.frames, map: tw.overlay.mapFrames, dm: window.twViews.overlay.draws });
+  m.snap = () => ({ t: performance.now(), raf: m.raf, rafFrames: m.rafFrames, ov: tw.overlay.frames, map: tw.overlay.mapFrames, dm: window.twViews.overlay.draws, cache: tw.renderer.mainCache?.redraws ?? 0 });
   // toggles: each returns its undo
   const disp = (k, v) => { const was = tw.display.value[k]; tw.display.value = { ...tw.display.value, [k]: v }; return () => { tw.display.value = { ...tw.display.value, [k]: was }; }; };
   const r = tw.renderer, dov = window.twViews.overlay;
   m.toggles = {
     trains: () => disp('trains', false),
-    strokes: () => { const a = r.track, b = r.lines; r.track = r.lines = null; tw.overlay.invalidate(); return () => { r.track = a; r.lines = b; tw.overlay.invalidate(); }; },
+    strokes: () => { const a = r.track, b = r.lines, c = r.strokeCache; r.track = r.lines = null; r.strokeCache = false; tw.overlay.invalidate(); return () => { r.track = a; r.lines = b; r.strokeCache = c; tw.overlay.invalidate(); }; },
+    // T-1638: the strokes drawn every frame, as before the cache
+    nocache: () => { r.strokeCache = false; return () => { r.strokeCache = true; tw.overlay.invalidate(); }; },
     overlayDraw: () => { r.draw = () => {}; return () => { delete r.draw; tw.overlay.invalidate(); }; },
     names: () => disp('stationNames', false),
     capacity: () => disp('capacity', false),
@@ -97,6 +101,9 @@ const CASES = [
   ['Tokyo fastest', TOKYO, 2, [], 0],
   ['Tokyo 1x, no trains', TOKYO, 0, ['trains'], 0],
   ['Tokyo pan, 1x', TOKYO, 0, [], 1500],
+  // T-1638's before: each of these with the stroke cache off
+  ...['run 1x', 'run fastest', 'pan, paused', 'pan, 1x'].map((l) => [`${l}, no cache`, JAPAN, l.includes('fastest') ? 2 : l.includes('paused') ? null : 0, ['nocache'], l.startsWith('pan') ? 1500 : 0]),
+  ...['1x', 'fastest', 'pan, 1x'].map((l) => [`Tokyo ${l}, no cache`, TOKYO, l === 'fastest' ? 2 : 0, ['nocache'], l.startsWith('pan') ? 1500 : 0]),
 ];
 
 // Anita's conditions (T-1617): globe, Terrain on
@@ -118,7 +125,7 @@ for (const [label, view, speed, toggles, pan] of CASES) {
   const util = await typeperf();
   const b = await page.evaluate(() => { const m = window.__m, avg = (x) => (x.length ? x.reduce((s, v) => s + v, 0) / x.length : null); return { ...m.snap(), mapGpu: avg(m.mapGpu), ovGpu: avg(m.ovGpu), dmGpu: avg(m.dmGpu), nMap: m.mapGpu.length, nOv: m.ovGpu.length, trips: window.tw.renderer.tripCount, ticking: window.tw.clock.ticking, moving: window.tw.overlay.moving }; });
   const s = (b.t - a.t) / 1000, ps = (k) => (b[k] - a[k]) / s;
-  const row = { label, util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving };
+  const row = { label, util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), cacheFps: ps('cache'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving };
   rows.push(row);
   console.log(JSON.stringify(row));
   await page.evaluate(() => { const tw = window.tw, m = window.__m; tw.map.stop(); while (m.undo.length) m.undo.pop()(); });
@@ -127,8 +134,8 @@ for (const [label, view, speed, toggles, pan] of CASES) {
 await page.evaluate(() => window.tw.clock.setRunning(false));
 
 const f = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? '-' : v.toFixed(d));
-const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | demand draws/s | demand GPU ms |', '|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} |`)].join('\n');
+const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | stroke redraws/s | demand draws/s | demand GPU ms |', '|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.cacheFps, 0)} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} |`)].join('\n');
 await writeFile(OUT + (ONLY ? 'table-part.md' : 'table.md'), JSON.stringify(info, null, 1) + '\n\n' + md + '\n');
 console.log(md);
 process.exit(0);

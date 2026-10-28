@@ -36,8 +36,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   --s3-no-check-bucket`. Recipe: notes/T-924.md "Commands for the real upload and push".
 
 ## In flight
-- T-1618 GPU use (maps-a2's Opus agent, main tree, Vite 6158, 4 cores, ids T-1638-1641):
-  measure on the Japan save, rank, file fixes; fix only a small safe big gain.
+- T-1618 done, committed 131a06a3 (notes/T-1618.md): strokes redrawn every frame = 77% GPU on
+  Japan while the clock runs (8% without); paused-and-still is already 2.6%. Fixes T-1638-1641.
+- T-1638 stroke texture cache (maps-a2's Opus agent, main tree, Vite 6159, 4 cores, ids
+  T-1642-1643). Next after it: T-1639 (simplify/cull strokes, the panning fix).
 - Asked Anita: take T-782's round skip (a) for Japan -23% with 8 of 358 lines off up to 11%? I
   recommend no (T-1607 instead). T-1613's card text "Taking a bit longer" is the agent's wording.
 - Land a tree: smoke in tree, `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`
@@ -61,7 +63,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1641.
+Ids handed out through T-1643.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

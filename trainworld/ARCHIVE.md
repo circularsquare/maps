@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1638 [P2] Strokes kept in a texture between changes (`map/strokeCache.ts`). Done 2026-10-28: Japan save, clock running, map still: 77% to 9-10% GPU at Japan zoom, 75% to 15-17% at Tokyo zoom 11; picture the same; panning unchanged (T-1639). notes/T-1618.md.
+
 - T-1618 [P2] GPU use on the all-Japan save. Done 2026-10-28: nothing is drawn when paused and still (2.6%); while the clock runs the overlay redraws 1.7M stroke segments every frame (11 ms, 77% GPU; 8% without strokes); the rest is 1-2 points each. Filed T-1638 to T-1641. notes/T-1618.md.
 
 - T-1611 [P2] All 723 Chinese zones under 3.2 GB a solving worker. Done 2026-10-28: five exact fixes (market parts' per-commute index tables, slack in the near-zone walks, sparse corridor figures, two duplicates); 3.41 to 2.77 GB after the final, 3.67 to 2.99 at a refine's peak; figures to the bit, Japan too. Stage 5 of T-1206 split as T-1629. notes/T-1611.md.

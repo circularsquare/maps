@@ -238,6 +238,8 @@ export class BusLayer {
   private stopVao: WebGLVertexArrayObject | null = null;
   private bufs: WebGLBuffer[] = [];
   private lines: BusSource[] = [];
+  /** counts `set`s that changed the lines (the renderer's stroke cache, T-1638) */
+  version = 0;
   private byId = new Map<number, BusSource>();
   private built: Built | null = null;
   /** the build the GPU holds */
@@ -276,6 +278,7 @@ export class BusLayer {
     this.lines = next;
     this.byId = new Map(next.map((l) => [l.id, l]));
     this.built = null;
+    this.version++;
     return true;
   }
 

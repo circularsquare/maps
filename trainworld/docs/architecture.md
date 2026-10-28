@@ -123,6 +123,18 @@ Web first, so it can be shared as a link.
   frames and once after a change to what is drawn. The demand views have a canvas of their own over
   it, drawn only on MapLibre's frames and after their data changes, never by the clock; bubbles and
   a selection's far end are summed in their own worker (`workers/commuters.worker.ts`).
+- **The stroke cache** [T-1638; `map/strokeCache.ts`, notes/T-1618.md]: everything the renderer
+  draws before the stations (car parks, bus lines, the track and line strokes, highlight, ghost and
+  crossing marks) is drawn into an offscreen target with the canvas's own MSAA and stencil, resolved
+  into a texture, and copied onto the canvas each frame with the strokes' premultiplied blend; the
+  stations, crowds, bubbles and trains draw over it every frame as before. The track through the
+  station boxes is a second texture, copied through the stencil where it was drawn. Both are drawn
+  again only when the key changes: the camera (matrices, zoom, pixel ratio, canvas size), the
+  selected line and edge, the hovered line and edge, the colour view (height, speed), line width,
+  dimming, crossing marks, the shade, the bus lines, and any GL upload or deletion made outside the
+  per-frame passes (counted on the context: a network, preview, highlight, demand view or traffic
+  view change). The complex map's snapshot has a cache of its own. `?perfOff=strokeCache` (or
+  `renderer.strokeCache = false`) draws the strokes every frame.
 - **While the camera moves** [T-1207; `map/moving.ts`]: work done for each MapLibre frame that need
   not be runs at most every 100 ms (`MOVING_PLACE_MS`) and in full on the frame after the move ends:
   the DOM placers (station names, capacity tags, attraction marks, zone loading bars), whose marks

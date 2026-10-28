@@ -2,13 +2,15 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { launchChrome, importSave, demandFinal, GL } from 'file:///C:/Users/anita/projects/maps/trainworld/checks/lib.mjs';
 
-const OUT = 'C:/Users/anita/AppData/Local/Temp/claude/c--Users-anita-projects-maps/f28006bc-4241-4116-9970-a65fc772bb95/scratchpad/t1618/';
+// PORT (the dev server, 6158), CDP (9338) and OUT (where browser.pid and ready go) from the environment
+const PORT = process.env.PORT ?? '6158', CDP = process.env.CDP ?? '9338';
+const OUT = process.env.OUT ?? 'C:/Users/anita/AppData/Local/Temp/claude/c--Users-anita-projects-maps/f28006bc-4241-4116-9970-a65fc772bb95/scratchpad/t1618/';
 const log = (s) => console.log(`${new Date().toISOString().slice(11, 19)} ${s}`);
-const { ctx } = await launchChrome({ prefix: 'tw-t1618-', size: [1920, 1080], args: [...GL, '--remote-debugging-port=9338'] });
+const { ctx } = await launchChrome({ prefix: 'tw-t1618-', size: [1920, 1080], args: [...GL, `--remote-debugging-port=${CDP}`] });
 await writeFile(OUT + 'browser.pid', String(ctx.browser()?.process?.()?.pid ?? ''));
 const page = ctx.pages()[0] ?? await ctx.newPage();
 page.on('pageerror', (e) => log('pageerror ' + e.message));
-await page.goto('http://localhost:6158/?debug=1&new=1&paused=1&demandWorkers=2');
+await page.goto(`http://localhost:${PORT}/?debug=1&new=1&paused=1&demandWorkers=2`);
 await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
 log('new game up');
 await importSave(page, await readFile('C:/Users/anita/projects/maps/artifacts/trainworld/t737-japan-trains.save'));

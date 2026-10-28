@@ -22,6 +22,8 @@ import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
+import { StrokeCache } from "./strokeCache";
+import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
@@ -464,8 +466,30 @@ export class NetworkRenderer {
   /** called with each new epoch the clock enters (the worker sends its trips) */
   onEpoch: (epoch: number) => void = () => {};
 
+  /** T-1638: the strokes kept in a texture between changes (`?perfOff=strokeCache` starts it off) */
+  strokeCache = !perfOff("strokeCache");
+  /** the map's cache and the complex map snapshot's (overlay.ts) */
+  mainCache: StrokeCache | null = null;
+  private snapCache: StrokeCache | null = null;
+  /** GL uploads and deletions made outside the per-frame passes (`quiet`): what the network,
+   * preview, highlight, demand views and the like put on the GPU, so the caches know to redraw */
+  private uploads = 0;
+  private quiet = false;
+
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
+    this.mainCache = this.snapCache = null;
+    const g = gl as unknown as Record<string, unknown> & { twCounted?: boolean };
+    if (!g.twCounted) {
+      g.twCounted = true;
+      for (const name of ["bufferData", "bufferSubData", "copyBufferSubData", "texImage2D", "texSubImage2D", "deleteBuffer", "deleteTexture", "deleteVertexArray"]) {
+        const f = g[name] as (...args: unknown[]) => unknown;
+        g[name] = (...args: unknown[]) => {
+          if (!this.quiet) this.uploads++;
+          return f.apply(gl, args);
+        };
+      }
+    }
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
@@ -991,6 +1015,7 @@ export class NetworkRenderer {
    */
   draw(cam: Camera, time: number, zoom: number, dpr: number, opt: DrawOptions, view?: readonly [number, number]) {
     const gl = this.gl;
+    this.quiet = false;
     this.releaseStaged(time);
     const n = this.net;
     if (!n) return;
@@ -1016,10 +1041,33 @@ export class NetworkRenderer {
     const wTrack = interp(zoom, [[9, 0.4], [12, 1.8], [15, 3]]) * dpr * k;
     const wSel = interp(zoom, [[9, 0.5], [12, 2.1], [15, 3]]) * dpr * k;
     const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr * k;
+    // the stations' sizes this frame, which the track through their boxes needs (T-236)
+    const boxes = zoom >= STATION_BOX_ZOOM;
+    const hidden = zoom < STATIONS_ZOOM;
+    // a dot's rim is thinner than a box's (T-322)
+    const ring = boxes ? stationRing(zoom) : dotRing(zoom);
+    const boxLinePx = interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx = stationRing(BOX_WIDTH_ZOOM);
+    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden };
+    const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
+    // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
+    // track and line strokes drawn again, no wider than TRACK_IN_BOX of the box's white and
+    // without casing, where the stencil marks a station's white (1 the unselected, 2 the selected).
+    const through = n.stationCount > 0 && boxes && this.hasStencil;
+    // every box has one width on the ground (T-239); any station's gives it on screen here
+    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project).halfWidth : 0) - ring);
+    const trackCap = Math.max(1, TRACK_IN_BOX * boxWhite) * dpr;
+    // T-1638: everything up to the stations changes only with the camera, the network and how it is
+    // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
+    // again only when one of those changes; GL uploads outside the per-frame passes count as a change
+    const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
+    const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed;
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads], shadeColours());
+    this.quiet = true;
+    if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
-    if (zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
+    if (redraw && zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
-    if (!view && this.buses.any && !opt.byLevel && !opt.bySpeed) {
+    if (redraw && buses) {
       const sh = shadeColours();
       this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing) });
     }
@@ -1110,6 +1158,7 @@ export class NetworkRenderer {
       }
       gl.uniform1i(u.u_bp_part, 0);
     };
+    if (redraw) {
     if (this.highlight) {
       // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a
       // casing pass are the selection ink)
@@ -1148,17 +1197,25 @@ export class NetworkRenderer {
     }
     gl.uniform1i(u.u_ghost, 0);
     this.marks.draw(lc, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
+    }
+    if (cache) {
+      if (redraw) {
+        cache.end(0, vp);
+        if (through) {
+          cache.begin(1);
+          gl.useProgram(this.strokeProg);
+          trackStrokes(trackCap);
+          gl.uniform1f(u.u_cap, 0);
+          cache.end(1, vp);
+        }
+      }
+      cache.draw(0);
+    }
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
       // further out (T-189), one for a whole complex (T-217), and below STATIONS_ZOOM only the
       // selected ones (T-205).
-      const boxes = zoom >= STATION_BOX_ZOOM;
-      const hidden = zoom < STATIONS_ZOOM;
-      // a dot's rim is thinner than a box's (T-322)
-      const ring = boxes ? stationRing(zoom) : dotRing(zoom);
-      const boxLinePx = interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx = stationRing(BOX_WIDTH_ZOOM);
-      this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden };
       this.syncGroups(n, opt.groups ?? null);
       const also = (opt.selStations ?? []).filter((i) => i >= 0 && i < n.stationCount);
       const alsoKey = also.join(",");
@@ -1170,7 +1227,6 @@ export class NetworkRenderer {
       }
       this.syncSelection(n);
       if (changed) this.onSelectionDrawn();
-      const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
       const [r, rx] = this.stationStyle.radius.map((v) => v * dpr);
       const su = this.stationU;
       gl.useProgram(this.stationProg);
@@ -1242,13 +1298,6 @@ export class NetworkRenderer {
       gl.useProgram(this.stationProg);
       gl.uniform1f(su.u_tint, any && !boxes ? 1 : 0);
       gl.uniform1f(su.u_mask, 0);
-      // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
-      // track and line strokes drawn again, no wider than TRACK_IN_BOX of the box's white and
-      // without casing, where the stencil marks a station's white (1 the unselected, 2 the selected).
-      const through = boxes && this.hasStencil;
-      // every box has one width on the ground (T-239); any station's gives it on screen here
-      const boxWhite = 2 * ((boxes ? this.stationShapeOf(0, project).halfWidth : 0) - ring);
-      const trackCap = Math.max(1, TRACK_IN_BOX * boxWhite) * dpr;
       if (through) {
         gl.clearStencil(0);
         gl.clear(gl.STENCIL_BUFFER_BIT);
@@ -1321,9 +1370,12 @@ export class NetworkRenderer {
           gl.enable(gl.STENCIL_TEST);
           gl.stencilFunc(gl.EQUAL, pass + 1, 0xff);
           gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-          gl.useProgram(this.strokeProg);
-          trackStrokes(trackCap);
-          gl.uniform1f(u.u_cap, 0);
+          if (cache) cache.draw(1);
+          else {
+            gl.useProgram(this.strokeProg);
+            trackStrokes(trackCap);
+            gl.uniform1f(u.u_cap, 0);
+          }
           gl.disable(gl.STENCIL_TEST);
         }
       }
@@ -1398,6 +1450,7 @@ export class NetworkRenderer {
     gl.bindVertexArray(null);
     gl.activeTexture(gl.TEXTURE0);
     this.timer.end();
+    this.quiet = false;
   }
 
   /** Select the bridge program and set its uniforms for this frame: `ring` and `half` (a bridge's
