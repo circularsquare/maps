@@ -17,8 +17,12 @@ places (`PairRule`: car or not, the flight's minutes and fare, the crossings, th
 the plane's share of the trips not by rail over the departing place's income groups). T-1431: a
 place's row carries its income groups (`fg`, from the app's `marketWorld`), and each zone pair's
 choice is worked out per group with every mode's dollars at that group's minutes a dollar
-(`PairRule::alt`), added up by the groups' trips; their rail fares need the stations' expected fare
-km (`pair_km`) whenever a place has groups. **What is kept per
+(`PairRule::alt`), added up by the groups' trips. Rail for every group comes from one logsum of the
+station pairs at the groups' trip-weighted mean fare factor and scale (`RailMix`, T-1520): a
+group's rail cost is that logsum moved to first order by its own factor (times the station pairs'
+expected fare) and scale, and its rail trips go over the station pairs in the mean's shares. The
+fares need the stations' expected fare km (`pair_km`) whenever a place has groups, in the pass only
+at the longer trips' work-end stations unless a fare factor is set. **What is kept per
 pair** (T-1204, T-1558): a composition keeps the rules of the pairs between two open places (a
 table of the open places by the open places); any other pair's is worked out when asked, as
 `corridor_modes`, the trip explorer and the rows' near lists do. The corridors' figures that depend on the places alone (each

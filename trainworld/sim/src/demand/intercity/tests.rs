@@ -2143,6 +2143,53 @@ fn t1545_dump() {
     std::fs::write(std::env::var("TW_T1545_OUT").unwrap(), j.to_string()).unwrap();
     eprintln!("set up {t_net:.0} ms, solve {t_solve:.0} ms, rail {:.1}, commutes {:.1}", per.rail, per.c_rail);
 }
+/// T-1520: one logsum at the groups' mean moved by a group's fare factor and scale lands near that
+/// group's own logsum, and on it at the mean.
+#[test]
+fn a_rail_mix_follows_each_groups_own_logsum() {
+    let s = 4;
+    // stations 0, 1 at home, 2, 3 at work; route costs with the fare at weight 1, and fares
+    let r = vec![0., 9., 62., 75., 9., 0., 70., 66., 62., 70., 0., 8., 75., 66., 8., 0.];
+    let km = vec![0., 2., 40., 55., 2., 0., 52., 47., 40., 52., 0., 3., 55., 47., 3., 0.];
+    let fx = FareX { dist: &km, base: 1.5 };
+    let (a, b) = ([(0usize, 0.6f32), (1, 0.3)], [(2usize, 0.5f32), (3, 0.4)]);
+    let (beta, th) = (0.1f32, 0.3f32);
+    let (mut terms, mut fares) = (vec![], vec![]);
+    let mix = rail_mix_x(&r, s, 0., &a, &b, beta, th, Some(&fx), -0.6, &mut terms, &mut fares);
+    let (c0, _) = rail_logsum_x(&r, s, 0., &a, &b, beta, th, Some((&fx, -0.6)), &mut vec![]);
+    assert!((mix.at(-0.6, th) - c0).abs() < 1e-3);
+    for (d, t) in [(-0.4, 0.27f32), (-0.75, 0.33), (-0.5, 0.3)] {
+        let (c, _) = rail_logsum_x(&r, s, 0., &a, &b, beta, t, Some((&fx, d)), &mut vec![]);
+        assert!((mix.at(d, t) - c).abs() < 0.01 * c, "d {d} th {t}: {} against {c}", mix.at(d, t));
+    }
+}
+/// T-1520: a captured network's market solved for every period at free flow `TW_T1520_REPS` (3)
+/// times, the least time of each and the figures into `TW_T1545_OUT`.
+/// `TW_T780_NET=<plain net> TW_ROWS=<rows> TW_T1545_OUT=<out.json> cargo test --release --features demand t1520_bench -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1520_bench() {
+    let reps: usize = std::env::var("TW_T1520_REPS").map(|v| v.parse().unwrap()).unwrap_or(3);
+    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
+    let mut best = vec![f64::MAX; PERIODS];
+    for _ in 0..reps {
+        for (q, b) in best.iter_mut().enumerate() {
+            let t = now_ms();
+            assert!(a.solve(q));
+            *b = b.min(now_ms() - t);
+        }
+    }
+    let f = |v: &[f32]| v.iter().map(|&x| x as f64).collect::<Vec<f64>>();
+    let per: Vec<serde_json::Value> = (0..PERIODS)
+        .map(|q| {
+            let s = a.per(q).unwrap();
+            serde_json::json!({"rail": s.rail, "c_rail": s.c_rail, "e_rail": s.e_rail, "board": f(&a.board(q)), "pair_rail": f(&s.pair_rail), "seg": f(&a.seg(q))})
+        })
+        .collect();
+    let total: f64 = best.iter().sum();
+    std::fs::write(std::env::var("TW_T1545_OUT").unwrap(), serde_json::json!({"ms": best, "total_ms": total, "pairs": a.pairs.len(), "per": per}).to_string()).unwrap();
+    eprintln!("T1520 solve {total:.0} ms over {PERIODS} periods ({best:?}), pairs {}", a.pairs.len());
+}
 /// T-1545: how many stations the window holds at once by the zones' order and what it holds them
 /// for. `TW_T780_NET=<plain net> cargo test --release --features demand t1545_window -- --ignored --nocapture`
 #[test]

@@ -237,6 +237,7 @@ impl IntercityApi {
         // (access, egress) -> rail trips, rail trips x access minutes, x egress minutes
         let mut by: HashMap<(u32, u32), (f64, f64, f64)> = HashMap::new();
         let mut terms: Vec<(u32, u32, f64)> = vec![];
+        let mut fares: Vec<f32> = vec![];
         let beta = p.beta as f64;
         for &z in &near {
             for &b in &fars {
@@ -268,15 +269,19 @@ impl IntercityApi {
                 }
                 let solvable = self.solvable(a, bb);
                 let mut offered = false;
-                // T-1431: each income group of the place the trip starts from, as `demand`
-                for &(share, f) in from.groups() {
+                // T-1431: each income group of the place the trip starts from, as the pass
+                // (T-1520: one logsum at the groups' mean)
+                let gs = from.groups();
+                let th0 = p.band_unsoftened(self.base.band_of_d2(d * d * 1e6));
+                let (ra, rb) = (&self.access[a], &self.access_work[bb]);
+                let fm: f32 = gs.iter().map(|g| g.0 * g.1).sum();
+                let mix = solvable.then(|| rail_mix_x(&re, s, p.fare_min, ra, rb, p.beta, p.soften(th0, r.alt(car_cost, split, from.w() * fm, &m.mp).car), fx.as_ref(), self.fare_d(a, fm), &mut terms, &mut fares));
+                for &(share, f) in gs {
                     let tg = t * share as f64;
                     let alt = r.alt(car_cost, split, from.w() * f, &m.mp);
                     let mut frac = 0f64;
-                    if solvable {
-                        let band = self.base.band_of_d2(d * d * 1e6);
-                        let (ra, rb) = (&self.access[a], &self.access_work[bb]);
-                        let (rail_c, sum) = rail_logsum_x(&re, s, p.fare_min, ra, rb, p.beta, p.soften(p.band_unsoftened(band), alt.car), self.fx_of(&fx, a, f), &mut terms);
+                    if let Some(mix) = mix {
+                        let (rail_c, sum) = (mix.at(self.fare_d(a, f), p.soften(th0, alt.car)), mix.sum);
                         if sum > 0. {
                             let bt = p.mode_beta(alt.car);
                             let v = ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp();
