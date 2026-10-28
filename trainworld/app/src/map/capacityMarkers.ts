@@ -21,7 +21,7 @@ import { perfOff, perfTry } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding, tipBeside } from "./labelLayout";
 import type { StationLabels } from "./stationLabels";
-import { overlayCamera, PanPlane } from "./moving";
+import { PlaceThrottle } from "./moving";
 
 /** ?perfOff=markers (T-045, measurement only). */
 const NO_MARKERS = perfOff("markers");
@@ -37,14 +37,14 @@ export class CapacityMarkers {
    * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
-  /** the tags' parent, moved as one between full placements while the camera pans (T-1207) */
   private plane: HTMLDivElement;
-  private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number; shown?: boolean; transform?: string }[] = [];
+  /** `ox`, `oy`: the tag's top left from its resource's rounded screen point at its last full placement */
+  private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number; ox: number; oy: number; shown?: boolean; transform?: string }[] = [];
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
   private placedLabels = -1;
-  private pan: PanPlane;
+  private throttle: PlaceThrottle;
   private key = "";
 
   private tip: HTMLDivElement;
@@ -58,7 +58,7 @@ export class CapacityMarkers {
     this.plane = document.createElement("div");
     this.plane.className = "cap-plane";
     this.box.appendChild(this.plane);
-    this.pan = new PanPlane(overlayCamera(overlay), this.plane);
+    this.throttle = new PlaceThrottle(() => overlay.moving);
     this.tip = document.createElement("div");
     this.tip.className = "tool-tag demand-tag";
     this.tip.style.display = "none";
@@ -146,7 +146,7 @@ export class CapacityMarkers {
       el.onmousemove = hover;
       el.onmouseleave = () => hoverHeld() || (this.tip.style.display = "none");
       this.plane.appendChild(el);
-      return { el, x: m.x, y: m.y, w: 0, h: 0 };
+      return { el, x: m.x, y: m.y, w: 0, h: 0, ox: 0, oy: 0 };
     });
     this.place();
   }
@@ -172,8 +172,10 @@ export class CapacityMarkers {
     const size = `${W},${H},${zoom < 14}`;
     const labelsAt = this.labels?.version ?? 0;
     if (size === this.placedSize && labelsAt === this.placedLabels && this.placedMatrix?.every((v, i) => v === m[i])) return;
-    if (!this.pan.due()) return;
-    this.pan.placed();
+    // T-1614: between full placements every shown tag follows its resource each frame, at the spot
+    // it last took (pan, zoom and globe alike); collisions are worked out again only when due
+    if (!this.throttle.due()) return this.follow();
+    this.throttle.done();
     this.placedMatrix = Array.from(m);
     this.placedSize = size;
     this.placedLabels = labelsAt;
@@ -211,8 +213,20 @@ export class CapacityMarkers {
       // only what changed is written (T-689)
       if (it.shown !== !!at) it.el.style.visibility = at ? "" : "hidden";
       it.shown = !!at;
-      const transform = at ? `translate(${at[0]}px, ${at[1]}px)` : it.transform;
-      if (transform !== it.transform) it.el.style.transform = it.transform = transform!;
+      if (!at) continue;
+      it.ox = at[0] - sx;
+      it.oy = at[1] - sy;
+      const transform = `translate(${at[0]}px, ${at[1]}px)`;
+      if (transform !== it.transform) it.el.style.transform = it.transform = transform;
+    }
+  }
+
+  private follow() {
+    for (const it of this.items) {
+      if (!it.shown) continue;
+      const [x, y] = this.overlay.toScreen(it.x, it.y);
+      const transform = `translate(${Math.round(x) + it.ox}px, ${Math.round(y) + it.oy}px)`;
+      if (transform !== it.transform) it.el.style.transform = it.transform = transform;
     }
   }
 }

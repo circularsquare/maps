@@ -19,7 +19,10 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   picked."; off by default) [T-1161]: while it is on, a segment drawn from existing track (a node, a
   loose end or a point on a piece, `Tools.freeLevel`) ends at that track's elevation, so a run carries on at
   the elevation it started from; a run started on open ground takes the elevation picked. Picking
-  an elevation turns it off. At the end of the price row below, the **Terrain** switch (a mountain;
+  an elevation turns it off. After it the **ramp switch** (track humping over a line seen side on;
+  hover "Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps
+  don't fit, the crossing is flat."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
+  6.1 "Ramping over track"]. At the end of the price row below, the **Terrain** switch (a mountain;
   hover "Show terrain. Track costs more on slopes, hills and mountains."), the same switch as
   Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394]. Then the picked elevation's price per km and multiplier, "$99M per
   km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
@@ -37,7 +40,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the auto elevation switch, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
+  The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
   by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does

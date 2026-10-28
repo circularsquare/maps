@@ -242,6 +242,15 @@ function HeadMark() {
   return null;
 }
 
+/** The browser's file picker for a .save file; also the start menu's (T-1612). */
+export function pickSaveFile(onFile: (file: File) => void) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".save";
+  input.onchange = () => { if (input.files?.[0]) onFile(input.files[0]); };
+  input.click();
+}
+
 /** "New York copy" for the game being played; "" when it has no slot (a test page). */
 const copyName = (name: string | undefined) => (name ? `${name} copy`.slice(0, 80) : "");
 
@@ -265,13 +274,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
   const at = lastSaved.value ?? 0;
   const ctx = useGamesOn();
   void accountList.value;
-  const pick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".save";
-    input.onchange = () => { if (input.files?.[0]) { void importGame(input.files[0]); savesOpen.value = false; } };
-    input.click();
-  };
+  const pick = () => pickSaveFile((file) => { void importGame(file); savesOpen.value = false; });
   const copy = () => {
     setCopyFrom(saves.active);
     manageSaveSlot("create", undefined, copyName(saves.slots.find((s) => s.key === saves.active)?.name));
@@ -295,7 +298,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
               onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onCopy={copy} onDelete={() => setRemoving(slot.key)} />
             {playing && versionsOpen.value && <Versions slot={slot} backups={saves.backups} account={accountBackups(slot)} now={t} />}
             {removing === slot.key && <div class="callout bad">
-              <p>{onAccount(slot) ? `Delete "${slot.name}" from this browser and your account?` : `Delete "${slot.name}" from this browser?`}</p>
+              <p>{deleteQuestion(slot)}</p>
               <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
             </div>}
           </li>;
@@ -346,6 +349,11 @@ function AccountCard({ slot, now, onDelete }: { slot: SaveSlot; now: number; onD
 function onAccount(slot: SaveSlot): boolean {
   const ctx = cloudContext();
   return !!ctx?.on && tiedTo(slot.cloud, ctx);
+}
+
+/** The confirmation before a slot is deleted; also the start menu's (T-1612). */
+export function deleteQuestion(slot: SaveSlot): string {
+  return onAccount(slot) ? `Delete "${slot.name}" from this browser and your account?` : `Delete "${slot.name}" from this browser?`;
 }
 
 /** The modal. */

@@ -162,6 +162,12 @@ export async function forgetSlot(key: string) {
   const list = await readCloudDeletes();
   if (!list.some((d) => d.id === rec.id)) await writeCloudDeletes([...list, { id: rec.id, acct: rec.acct }]);
 }
+/** A slot deleted from this browser (T-1612: the clock worker's and the start menu's delete), its
+ * account game with it. The caller holds the slot's lock. */
+export async function removeSlot(key: string) {
+  await forgetSlot(key);
+  await deleteSlot(key);
+}
 /** Send the deletions this browser owes the account. */
 export async function sendDeletes(ctx: CloudContext) {
   if (!ctx.on) return;

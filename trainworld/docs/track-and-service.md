@@ -286,6 +286,20 @@ Full design, numbers and sources: `notes/T-008.md`.
   With no room on land otherwise (water within 200 m of the segment's start or end, so of a
   station or junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
   `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
+- **Ramping over track** (T-1615, `draw.rs` `shaped`, `bridge::ramp_over`): with the Build tab's
+  ramp switch on (the default; `set_route_ramp`), a route that would cross other track flat (both
+  at the route's level, the other not on a ramp, more than `SHARED_NODE_CLEAR` 25 m from the
+  route's ends) goes a level over it, or under it from -1 down. It is the bridge above with the
+  crossings as the stretches to clear (each a point, 14.5 m clear on either side), seen with the
+  route's level as 0 and the way taken as up: the same 200 m ramps, vertex placement, 25 m shifts
+  and sharing of one rise between crossings less than 429 m apart. At level 0 going up the water
+  is bridged in the same pass. The route tries the preferred way, then the other, then a flat
+  crossing as with the switch off: a way is skipped where the ramps have no room, where it would
+  pass +3 or -3, where it would make a flat crossing at the new level, or where the edit's checks
+  fail (a ramp across other track, ground over water). Quad's express pair ramps on its own the
+  same way. The drawing tool sends the switch with each route (`ramp`); an edit API route
+  without it crosses flat, a station placed on open ground never ramps, and saved track is never
+  reshaped. The preview and the edit share the code.
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle

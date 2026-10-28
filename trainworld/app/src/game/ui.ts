@@ -157,7 +157,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585). */
 const VERSION = 11;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -245,6 +245,9 @@ export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Le
 /** T-1161: track drawn from existing track takes that track's elevation; from open ground,
  * `buildLevel`. Picking an elevation turns it off. */
 export const autoLevel = signal(saved.build?.auto === true);
+/** T-1615: track drawn across other track at its own elevation ramps over it (under it from -1
+ * down) where that fits; on unless turned off. */
+export const autoRamp = signal(saved.build?.ramp !== false);
 /** Track the drawing tool lays: double or quad (two doubles side by side, T-255). Single track is
  * not offered (T-733), so a remembered 1 reads as double. */
 export const trackCount = signal<2 | 4>(saved.build?.tracks === 4 ? 4 : 2);
@@ -326,7 +329,7 @@ effect(() => {
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, auto: autoLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

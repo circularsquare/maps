@@ -124,7 +124,8 @@ export const demandFinal = (page, { timeout = 300000, polling = 500, strict = tr
  * A line of stations through `pts` ([lng, lat] each), built with the edit API: track between them,
  * a station at each, the track constructed, the line added. `wait` overrides the pauses in ms
  * (`route`, `station`, `settle`); `trains` sets the line's trains an hour by level when given.
- * Returns the addLine result: `.line` its number, `.ok` whether it was made.
+ * Returns the addLine result: `.line` its number, `.ok` whether it was made and its track built
+ * (a new game's cash covers about 60 km; `.issues` says `Money:<cost>:<cash>` when it falls short).
  */
 export const buildLine = (page, pts, { name = 'Check', colour = '#0a7d3b', trains = null, wait = {} } = {}) => page.evaluate(async ([PTS, name, colour, trains, wait]) => {
   const tw = window.tw, c = tw.client;
@@ -138,11 +139,12 @@ export const buildLine = (page, pts, { name = 'Check', colour = '#0a7d3b', train
   }
   await pause(wait.settle ?? 500);
   for (const p of xy) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await pause(wait.station ?? 200); }
-  await c.edit({ op: 'constructAll' });
+  const built = await c.edit({ op: 'constructAll' });
   await pause(wait.settle ?? 500);
   const r = await c.edit({ op: 'addLine', stops: xy.map(near), name, colour });
   if (trains && r?.line !== undefined) await c.edit({ op: 'setTrainCount', line: r.line, trains });
-  return r;
+  // T-1561: a line past the cash stays planned, so nothing is built and demand has nothing to solve
+  return built?.ok === false && r ? { ...r, ok: false, issues: [...(r.issues ?? []), ...built.issues] } : r;
 }, [pts, name, colour, trains, wait]);
 
 /** a built line of three stations `km` apart, east to west across [lng, lat], three trains set; its number or null */

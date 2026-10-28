@@ -436,7 +436,9 @@ those who got on, less the load carried on.
 - **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
   [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
   tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags
-  (above right, above left, below right, below left, right, left, 5-6 px out), else hides. While a
+  (above right, above left, below right, below left, right, left, 5-6 px out), else hides. While the
+  camera moves, each shown tag follows its resource every frame at the spot it last took, and the
+  spots are chosen again at most every 100 ms [T-1614]. While a
   tool other than select is on they take no pointer events, so a press reaches what is under them.
   With select, a tag that opens nothing of its own (not a junction) selects what is under it, its
   station first.

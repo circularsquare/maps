@@ -656,7 +656,8 @@ registry centre and zoom, or over New York with none [T-310].
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
   that, 10 s at most), and the account's games not in this browser follow the browser's as cards
   with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
-  With no saved game (a first visit) it opens straight on the new game sheet [T-1441]. The dock and top bar are taken out of the page and the
+  With no saved game and no game played here before (a first visit) it opens straight on the new
+  game sheet [T-1441, T-1612]. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it is centred around 10° E, 20° N one zoom closer
   than the zoom at which the world from 60° S to 75° N covers the page [T-927, T-1593;
   `worldCover`], with the zone outlines, outside shade and every basemap name hidden until the pick [T-974, T-1567]. The menu takes every key outside itself, and nothing loads behind it but the map.
@@ -674,6 +675,18 @@ registry centre and zoom, or over New York with none [T-310].
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
+- **Delete and Load from file** [T-1612; the same code as the saves panel's: `removeSlot`,
+  `deleteQuestion`, `pickSaveFile`]. Every card has the panel's bin at its bottom right (hover
+  "Delete"); it asks under the card, `Delete "Tokyo" from this browser?` (from this browser and your
+  account when the slot is tied to it; `Delete "Tokyo" from your account?` for an account-only card), with
+  Delete save and Keep it, and the card goes at once, the account's copy with it (now, or at the next
+  chance). A slot open in another tab says so and stays. Load from file (beside New game) is shown
+  to a returning visitor only: one with a saved game here or on the account, or whose browser has played
+  a game before (the remembered last slot, even once every save is deleted); a first visit sees only New
+  game, and a returning visitor with no saves opens on the menu, not the sheet. A .save file goes to a
+  new slot named after the file and opens with its stations in view, as Open a file does in the saves
+  panel; one that is not a save, or too big for the device (T-1197), says why over the cards and nothing
+  opens.
 - A saved game opens with its built stations all in view (every station if none is built), as soon
   as the clock worker has read them from the save (`stationsAhead`, T-1539), and again at its first
   state (the same view), before its demand: padding 70 px, no closer than zoom 12 so one

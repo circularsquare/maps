@@ -57,6 +57,14 @@ pub struct TrackApi {
     route_cap: f64,
     /// T-817: double track the drawing tool lays is high-speed track (`set_route_hsr`).
     route_hsr: bool,
+    /// T-1615: routes ramp over or under track they would cross flat (`set_route_ramp`).
+    route_ramp: bool,
+    /// The way `route_op_as` tries: `Ramp::Flat`, or the preferred way or the other.
+    ramp_try: Ramp,
+    /// The route asked about crosses track at its own level (so a ramp was tried).
+    ramp_found: bool,
+    /// The ramp tried had no room.
+    ramp_failed: bool,
     /// The last tangent route's circle: centre x, y and ground radius, else empty.
     route_arc: Vec<f64>,
     /// The end node of the last route asked about (new or existing).
@@ -244,6 +252,10 @@ impl TrackApi {
             route_tangent: false,
             route_cap: R_CAP,
             route_hsr: false,
+            route_ramp: false,
+            ramp_try: Ramp::Flat,
+            ramp_found: false,
+            ramp_failed: false,
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
@@ -557,6 +569,7 @@ impl TrackApi {
 mod money;
 mod edits;
 mod draw;
+use draw::Ramp;
 mod crossings;
 mod links;
 mod lines;
@@ -1359,6 +1372,10 @@ mod regional_water_tests;
 
 #[cfg(test)]
 mod quad_edit_tests;
+
+/// T-1615: routes ramp over or under track they would cross flat.
+#[cfg(test)]
+mod ramp_tests;
 
 #[cfg(test)]
 mod t1071_tests;

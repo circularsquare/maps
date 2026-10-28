@@ -37,6 +37,8 @@ export const Icon = {
   terrain: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z" /></svg>,
   // track carried on at its own height: a raised piece, then an arrow along the same level (T-1161)
   autoLevel: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5h3M4.5 13.5l3-6h7M12 5l2.5 2.5L12 10" /><path d="M7.5 10.5v3M11 10.5v3" /></svg>,
+  // track ramping up over another line, seen side on (T-1615)
+  autoRamp: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5h2.5l3-6h2l3 6h2.5" /><circle class="solid" cx="8" cy="12.5" r="1.6" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,
   redo: () => <svg viewBox="0 0 16 16"><path d="M10.5 4l3 3-3 3M13 7H6.5a3.5 3.5 0 000 7H9" /></svg>,
   cross: () => <svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>,

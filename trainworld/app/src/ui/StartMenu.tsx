@@ -8,15 +8,18 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
-import { listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
-import { CHOICE_PARAMS, type GameChoice } from "../workers/clockClient";
+import { leaseSlot, listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
+import { CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { StartLogo } from "./StartLogo";
 import { AccountButton, startAccountUi } from "./AccountPanel";
-import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
-import { accountList, accountOnly, cardOf, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
+import { deleteQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
+import { Icon } from "./widgets";
+import { cloudContext } from "../game/account";
+import { accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
+import { removeSlot, sendDeletes } from "../workers/cloud";
 
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
@@ -65,10 +68,18 @@ export const START_LOGO = LOGO;
 /** T-988: the start menu waits this long at most for the account before opening a game anyway. */
 const SETTLE_WAIT_MS = 10_000;
 
+/** Whether a game was played in this browser before (the remembered slot, clockClient.ts). */
+function playedBefore(): boolean {
+  try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
+}
+
 function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: GameChoice) => void; settling: Promise<void> }) {
   const first = useRef<HTMLButtonElement>(null);
+  // T-1612: Load from file is for someone who has played here: a saved game, or a game played before
+  // (the slot opened last is remembered even once its save is deleted)
+  const [returning] = useState(() => first0.length + accountOnly(first0).length > 0 || playedBefore());
   // T-1441: a first visit, with no saved game to pick, opens on the new game sheet
-  const [sheet, setSheet] = useState(first0.length + accountOnly(first0).length === 0);
+  const [sheet, setSheet] = useState(!returning);
   useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
   // T-988: the slots again once the account has settled them (downloads, deletions, forks)
   const [slots, setSlots] = useState(first0);
@@ -90,6 +101,30 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     setRefused(why);
     if (!why) pick({ slot: key });
   };
+  // T-1612: the card whose delete is being asked about
+  const [removing, setRemoving] = useState<string | null>(null);
+  const remove = async (s: SaveSlot) => {
+    setRemoving(null);
+    await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
+    if (s.key.startsWith("account:")) {
+      if (!await deleteAccountGame(s.key.slice("account:".length))) setRefused("This game could not be deleted.");
+      return;
+    }
+    const lease = await leaseSlot(s.key);
+    if (!lease) { setRefused("That game is open in another tab. Close it before deleting it."); return; }
+    try { await removeSlot(s.key); } catch { setRefused("This game could not be deleted."); } finally { lease.release(); }
+    const ctx = cloudContext();
+    if (ctx?.on) void sendDeletes(ctx).catch(() => {});
+    setRefused(null);
+    setSlots(await listSlots().catch(() => []));
+  };
+  // T-1612: a save file picked here opens as it does from the saves panel (its game waits in storage)
+  const load = () => pickSaveFile(async (file) => {
+    await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
+    const c = await fileChoice(file);
+    if (typeof c === "string") setRefused(c);
+    else pick(c);
+  });
   const now = Date.now();
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
   // T-1567: the logo stays mounted over both, so its trains run on when the sheet opens
@@ -103,16 +138,26 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
       <AccountButton kind="start" />
       {!LOGO && <h1 id="start-title" class="big">Welcome to trainsworld!</h1>}
       <p class="start-tag">Build trains around the world!</p>
-      <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
+      <div class="save-files">
+        <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
+        {returning && <button class="btn start-file" onClick={load}>Load from file</button>}
+      </div>
+      {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
       {slots.length + account.length > 0 && <>
         <h2 class="start-head">Saved games</h2>
-        {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
         <ul class="start-saves">
           {[...slots, ...account].map((s) => <li key={s.key}>
-            <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
-              <SlotThumb slot={s} />
-              <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
-            </button>
+            <div class="start-slot">
+              <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
+                <SlotThumb slot={s} />
+                <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
+              </button>
+              <button class="btn icon start-delete" data-tip="Delete" aria-label={`Delete ${s.name}`} onClick={() => setRemoving(s.key)}><Icon.bin /></button>
+            </div>
+            {removing === s.key && <div class="callout bad">
+              <p>{s.key.startsWith("account:") ? `Delete "${s.name}" from your account?` : deleteQuestion(s)}</p>
+              <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void remove(s)}>Delete save</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+            </div>}
           </li>)}
         </ul>
       </>}

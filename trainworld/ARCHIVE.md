@@ -2,6 +2,14 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1614 [P2] Capacity tags lag the map while zooming or panning. Done 2026-10-28: between full placements each shown tag follows its resource every frame at its last spot (was frozen through zooms, and through pans when the flat-pan check missed); NYC probe 216 of 437 moving frames off (worst 75 px) to 0, frame time unchanged. artifacts/trainworld/t1614-offset.png.
+- T-1223 [P2] T-1206 stages 2 and 4: levels of detail in the game. Done 2026-10-28: zones not looked at held coarse (fine set, save's `demandFine`, cache key, stars from fine only, `?lod=`, the status tag and rough line); all 723 Chinese zones now load (3.4 GB a worker, T-1611); stage 3 is T-1609. notes/T-1223.md.
+- T-1615 [P2] Ramp switch: routes go over (under from -1 down) track they would cross flat. Done 2026-10-28: the bridge code's ramps reused (`bridge::ramp_over`), preferred way, other way, then flat; on by default; saves unchanged. docs/track-and-service.md 6.1 "Ramping over track".
+
+- T-1612 [P2] Start menu: delete a save and load a file. Done 2026-10-27: a bin on each card asks first (Delete save / Keep it); Load from file beside New game for returning visitors only; both reuse the saves panel's code (`removeSlot`, `deleteQuestion`, `pickSaveFile`). docs/ui-panels.md "Start menu".
+
+- T-1561 [P3] No demand solve for a new game's line to Trenton or far Long Island. Closed 2026-10-27, no game bug: the line cost more than the start cash (8,856 and 7,153 against 6,000 US$M), so its track stayed planned; in sandbox both solve (Trenton opens phl). checks' `buildLine` now reports the failed construct.
+
 - T-1594 [P2] All-China's load slower after T-1545. Done 2026-10-27: the WASM memory grew 64 KB at a time, each grow costing about the whole memory; it now grows 32 MB ahead. All-China 253-293 to 97 s, Japan 954 s, New York 62 s, figures identical. notes/T-1169.md T-1594.
 - T-1603 [P2] The ground curve fades over the tail's 300-700 km window (T-1508 option 1). Done 2026-10-27: no new constant, normaliser unchanged; US 300 km+ 0.0100 a person a weekday against NHTS 0.0098, China 0.0065 (1.5x the rough published), real save rail 12,483,326 as before. notes/T-1603.md.
 - T-1508 [P3] The market's totals on very big far pairs. Closed 2026-10-27: analysis in notes/T-1508.md; the ground's double count fixed by T-1603, the tail refit left as T-1599.

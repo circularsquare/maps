@@ -692,6 +692,10 @@ rect.now { fill-opacity: .45; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
   background: var(--bg); border: 1px solid var(--rule); cursor: pointer; }
 .start-save:hover, .start-save:focus-visible { border-color: var(--accent); background: var(--tint); }
+/* T-1612: the bin sits on the card's bottom right, where the saves panel's buttons are */
+.start-slot { position: relative; }
+.start-delete { position: absolute; right: 8px; bottom: 8px; }
+.start-saves .pane-foot { justify-content: flex-start; margin-top: 6px; }
 .start-save .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 /* T-728: the new game sheet, in the start menu's box or the saves panel */
 .new-game-box { width: min(440px, 100%); }

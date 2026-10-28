@@ -47,7 +47,7 @@ export type EditOp =
   /** a route turning at the clicked points `pis`; a junction it makes is flat (T-080) */
   /** `through` (T-418): a route with no PIs from a heading to open ground is one tangent arc */
   /** `design` (T-817): the design speed its curves are laid out for, km/h; 160 when absent */
-  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean }
+  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean }
   | { op: "removeEdge"; edge: EdgeId }
   /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends */
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
@@ -127,7 +127,7 @@ export type ToClock =
   | { kind: "shade"; shade: "light" | "dark" }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
-  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean }
+  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */

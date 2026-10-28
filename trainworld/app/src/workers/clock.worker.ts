@@ -27,10 +27,10 @@ import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
-import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
+import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -1882,10 +1882,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       if (key === activeSlot ? !activeLease : !temporary) throw new Error("That slot is open in another tab. Close it before changing this save.");
       try {
         if (msg.action === "rename") await renameSlot(key, msg.name ?? "");
-        else {
-          await forgetSlot(key); // T-988: from the account too
-          await deleteSlot(key);
-        }
+        else await removeSlot(key); // T-988: from the account too
       } finally { temporary?.release(); }
       // T-988: a rename goes up at once; a deletion now, or at the next chance
       const ctx = cloudCtx;
@@ -2583,6 +2580,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       a.set_route_tangent(!!op.through);
       a.set_design_speed(op.design ?? 160);
       a.set_route_hsr(!!op.hsr);
+      a.set_route_ramp(!!op.ramp);
       const r = a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false);
       return { r, node: r === 0 ? a.route_end() : undefined };
     }
@@ -2887,8 +2885,8 @@ async function processMessage(msg: ToClock) {
  * preview found every mask its geometry needs in, at that version: its edit needs no second look */
 let trackVersion = 0;
 let maskedRoute = "";
-type RouteAsk = { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean };
-const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, r.design ?? 160, !!r.hsr])}`;
+type RouteAsk = { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean };
+const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, r.design ?? 160, !!r.hsr, !!r.ramp])}`;
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
 function failAnswer(msg: ToClock) {
@@ -2939,7 +2937,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 async function masksFor(op: EditOp) {
   const a = api!;
   if (op.op === "route" && maskedRoute === routeKey(op)) return;
-  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.set_route_hsr(!!op.hsr), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
+  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.set_route_hsr(!!op.hsr), a.set_route_ramp(!!op.ramp), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
   else if (op.op === "moveNodes") await withMasks(() => a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy), nodePoints);
@@ -3131,7 +3129,7 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
+      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.set_route_ramp(!!msg.ramp), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
       : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints, msg.seq);
     if (!out) return sendStale(msg.seq);
     if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";

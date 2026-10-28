@@ -10,7 +10,36 @@ impl TrackApi {
     /// (level used for a free end). `pis`: the player's PIs between, x, y, radius (0 = auto),
     /// level: the track cuts the corner at each with a circular curve (SPEC 6.1). A start or end on
     /// existing track gets a lead-in PI on that track's heading, so it leaves like a turnout.
+    /// T-1615: with `route_ramp`, a route crossing track at its own level ramps over or under it,
+    /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+        if self.route_ramp {
+            for t in [Ramp::First, Ramp::Second] {
+                self.ramp_try = t;
+                (self.ramp_found, self.ramp_failed) = (false, false);
+                let r = self.route_op_as(ends, pis, tracks, flying);
+                if !self.ramp_found {
+                    self.ramp_try = Ramp::Flat;
+                    return r;
+                }
+                if let Ok((op, _, nn, ne)) = &r {
+                    if !self.ramp_failed {
+                        if let Ok(inv) = self.w.sketch(op.clone(), true) {
+                            self.w.unsketch(inv);
+                            self.ramp_try = Ramp::Flat;
+                            return r;
+                        }
+                    }
+                    let (nn, ne) = (nn.clone(), ne.clone());
+                    self.release(&nn, &ne);
+                }
+            }
+        }
+        self.ramp_try = Ramp::Flat;
+        self.route_op_as(ends, pis, tracks, flying)
+    }
+
+    fn route_op_as(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         let pis = pis_from(pis);
         let scaled = self.w.net.frame().scaled();
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
@@ -94,7 +123,7 @@ impl TrackApi {
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
         // Clicked corners at ground level too (T-667, the real-network snap's routes, T-727): the
         // corners the bridge adds are cut into pieces like the clicked ones.
-        let bridged = self.bridged(&verts, lift);
+        let bridged = self.shaped(&verts, lift);
         if let Some(b) = &bridged {
             lift_end(&mut ops, &mut ra, b[0].level);
             lift_end(&mut ops, &mut rb, b[b.len() - 1].level);
@@ -135,7 +164,7 @@ impl TrackApi {
             // the express pair crosses the water on its own bridge, in one piece; an end it shares
             // with the drawn pair stays up only where that one does
             let ex_lift = [lift[0] && beside_a.is_none(), lift[1] && beside_b.is_none()];
-            let ex_bridged = self.bridged(&ex, ex_lift);
+            let ex_bridged = self.shaped(&ex, ex_lift);
             let got = ex_bridged.as_deref().unwrap_or(&ex);
             let ex_ends = [got[0].level, got[got.len() - 1].level];
             for (k, own, r) in [(0, own_a, &ra), (1, own_b, &rb)] {
@@ -243,6 +272,47 @@ impl TrackApi {
         }
     }
 
+    /// `shape` as `bridged` makes it; with a ramp to try (T-1615) and track crossed at the shape's
+    /// own level, ramped over or under that track instead: up first from level 0 or above, down
+    /// first from -1 or below. Going up from level 0 clears the water in the same pass. Sets
+    /// `ramp_found` where there is such track, and `ramp_failed` where the ramps have no room.
+    pub(super) fn shaped(&mut self, shape: &[Pi], lift: [bool; 2]) -> Option<Vec<Pi>> {
+        let n = shape.len();
+        if self.ramp_try == Ramp::Flat || n < 2 {
+            return self.bridged(shape, lift);
+        }
+        let base = if n > 2 { shape[n / 2].level } else if shape[0].level == shape[1].level { shape[0].level } else { return self.bridged(shape, lift) };
+        let net = &self.w.net;
+        let scaled = net.frame().scaled();
+        let f = geom::fit_in(shape, scaled);
+        if !f.issues.is_empty() || flat_spans(net, &f, base, base as f64 * LEVEL_H).is_empty() {
+            return self.bridged(shape, lift);
+        }
+        self.ramp_found = true;
+        let up = (base >= 0) == (self.ramp_try == Ramp::First);
+        let wet = up && base == 0;
+        let water = bridge::water(net.water_mask.as_ref());
+        // seen from `ramp_over`, the route runs at level 0
+        let spans = |f: &geom::Fit, fine: bool| {
+            let mut s = flat_spans(net, f, base, 0.0);
+            if wet {
+                s.extend(water(f, fine));
+                s.sort_by(|a, b| a[0].total_cmp(&b[0]));
+            }
+            s
+        };
+        let r = bridge::ramp_over(shape, scaled, &spans, base, up, if wet { lift } else { [false; 2] }, n > LONG_ROUTE_VERTS);
+        // a ramp onto a flat crossing at the next level does not fit either
+        let to = base + if up { 1 } else { -1 };
+        match r {
+            Ok(Some(v)) if flat_spans(net, &geom::fit_in(&v, scaled), to, to as f64 * LEVEL_H).is_empty() => Some(v),
+            _ => {
+                self.ramp_failed = true;
+                None
+            }
+        }
+    }
+
     pub(super) fn release(&mut self, nodes: &[u32], edges: &[u32]) {
         for &n in nodes {
             self.w.net.release_node(n);
@@ -313,6 +383,11 @@ impl TrackApi {
     /// high-speed track. Single and quad track are never.
     pub fn set_route_hsr(&mut self, on: bool) {
         self.route_hsr = on;
+    }
+
+    /// T-1615: whether routes after this ramp over or under track they would cross flat.
+    pub fn set_route_ramp(&mut self, on: bool) {
+        self.route_ramp = on;
     }
 
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
@@ -484,10 +559,11 @@ impl TrackApi {
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         }
         // through: a quad piece's express pair gets its own ends beside the drawn pair's
-        let keep = self.route_tangent;
-        self.route_tangent = true;
+        // a platform is level, so the piece never ramps over track it crosses
+        let keep = (self.route_tangent, self.route_ramp);
+        (self.route_tangent, self.route_ramp) = (true, false);
         let r = self.route_op(ends, &[], tracks, false);
-        self.route_tangent = keep;
+        (self.route_tangent, self.route_ramp) = keep;
         let (route, _, nn, ne) = match r {
             Ok(v) => v,
             Err(i) => return self.refuse(i),
@@ -681,6 +757,40 @@ impl TrackApi {
         Some((f, sf))
     }
 
+}
+
+/// Which way `route_op` tries a route that crosses track at its own level (T-1615).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) enum Ramp {
+    Flat,
+    /// up from level 0 or above, down from -1 or below
+    First,
+    Second,
+}
+
+/// Where alignment `f`, at height `own` there, crosses other track flat at level `base`, as spans
+/// of no length; none within `SHARED_NODE_CLEAR` of its ends, where it meets the track it leaves.
+fn flat_spans(net: &Network, f: &geom::Fit, base: i8, own: f64) -> Vec<[f64; 2]> {
+    let z = base as f64 * LEVEL_H;
+    let (mut out, mut hits) = (vec![], vec![]);
+    for e in net.grid.near(&f.pieces) {
+        if !net.edge_ok(e) {
+            continue;
+        }
+        hits.clear();
+        crate::track::cross::intersect_alignments(&f.pieces, net.edge_pieces(e), false, &mut hits);
+        let v = net.edge_vert(e);
+        for &(s, t, overlap) in &hits {
+            if overlap || s < SHARED_NODE_CLEAR || s > f.len - SHARED_NODE_CLEAR {
+                continue;
+            }
+            if (geom::height_at(&f.vert, s) - own).abs() < 1e-6 && (geom::height_at(v, t) - z).abs() < 1e-6 && !geom::on_ramp(v, t - 1.0, t + 1.0) {
+                out.push([s, s]);
+            }
+        }
+    }
+    out.sort_by(|a, b| a[0].total_cmp(&b[0]));
+    out
 }
 
 /// T-1269: a new node the bridge leaves up, at the level its track reaches.

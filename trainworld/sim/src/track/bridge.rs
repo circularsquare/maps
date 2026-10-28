@@ -71,19 +71,51 @@ fn ends_up(verts: &[Pi]) -> Option<[bool; 2]> {
     (a + b < verts.len() && verts[a..verts.len() - b].iter().all(|p| p.level == 0)).then_some([a > 0, b > 0])
 }
 
+/// The chainage spans of an alignment a bridge must clear; `fine` as for `fine_spans`.
+pub type Spans<'a> = &'a dyn Fn(&Fit, bool) -> Vec<[f64; 2]>;
+
+/// The water along an alignment, as spans.
+pub fn water(mask: &dyn WaterMask) -> impl Fn(&Fit, bool) -> Vec<[f64; 2]> + '_ {
+    move |f: &Fit, fine: bool| {
+        if fine {
+            return fine_spans(f, mask);
+        }
+        let mut wet = vec![];
+        water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, mask, &mut wet);
+        wet
+    }
+}
+
 /// `verts` (at level 0, an end perhaps up at the bridge's level) with a bridge over each stretch of
 /// water, as the same alignment. Ok(None) where nothing needs doing: no water, any other level, or
 /// an alignment that is invalid anyway. An end up already stays up to the water, or comes down
 /// at once where there is room to go up again before it. `lift`: an end over water may stay at the
 /// bridge's level (a new node, not track already there), with no ramp on its side (T-1269).
 pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
-    bridge_in(verts, scaled, mask, false, lift)
+    if mask.is_empty() {
+        return Ok(None);
+    }
+    bridge_in(verts, scaled, &water(mask), false, lift)
 }
 
-/// `bridge`, reading the water as `fine_spans` does where `fine`: a window of a long route is cut
-/// into pieces later, each checked at its own phase, so it must clear the slivers they can find.
-fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
-    if mask.is_empty() || verts.len() < 2 {
+/// `verts`, running at level `base`, taken a level up (`up`) or down over each stretch `spans`
+/// finds, by the bridge's ramps and rules (T-1615: over or under other track): the alignment seen
+/// with `base` as level 0 and the way taken as up. `long` as for `bridge_long`.
+pub fn ramp_over(verts: &[Pi], scaled: bool, spans: Spans, base: i8, up: bool, lift: [bool; 2], long: bool) -> Result<Option<Vec<Pi>>, NoRoom> {
+    let dir: i8 = if up { 1 } else { -1 };
+    if !(MIN_LEVEL..=MAX_LEVEL).contains(&(base + dir)) {
+        return Err(NoRoom);
+    }
+    let rel: Vec<Pi> = verts.iter().map(|p| Pi { level: (p.level - base) * dir, ..*p }).collect();
+    let out = if long { bridge_long_in(&rel, scaled, spans, lift) } else { bridge_in(&rel, scaled, spans, false, lift) }?;
+    Ok(out.map(|v| v.into_iter().map(|p| Pi { level: base + p.level * dir, ..p }).collect()))
+}
+
+/// `bridge` over what `spans` finds, read as `fine_spans` does where `fine`: a window of a long
+/// route is cut into pieces later, each checked at its own phase, so it must clear the slivers
+/// they can find.
+fn bridge_in(verts: &[Pi], scaled: bool, spans: Spans, fine: bool, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
+    if verts.len() < 2 {
         return Ok(None);
     }
     let Some(fixed) = ends_up(verts) else { return Ok(None) };
@@ -91,13 +123,7 @@ fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool, lift:
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
     }
-    let wet = if fine {
-        fine_spans(&f, mask)
-    } else {
-        let mut wet = vec![];
-        water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, mask, &mut wet);
-        wet
-    };
+    let wet = spans(&f, fine);
     if wet.is_empty() {
         return Ok(None);
     }
@@ -107,7 +133,7 @@ fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool, lift:
     for w in &wet {
         let z = [w[0] - SHORE, w[1] + SHORE];
         match zones.last_mut() {
-            Some(last) if z[0] - last[1] < 2.0 * RAMP + 2.0 * SHORE => last[1] = z[1],
+            Some(last) if z[0] - last[1] < 2.0 * RAMP + 2.0 * SHORE => last[1] = last[1].max(z[1]),
             _ => zones.push(z),
         }
     }
@@ -153,14 +179,21 @@ const LONG_REACH: f64 = 4000.0;
 /// moves every ramp on the route. Such a stretch is raised whole; NoRoom only where even that has
 /// no leg for a ramp, as with water just past an end of the route. `lift` as for `bridge`.
 pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
-    if mask.is_empty() || verts.len() < 2 || ends_up(verts).is_none() {
+    if mask.is_empty() {
+        return Ok(None);
+    }
+    bridge_long_in(verts, scaled, &water(mask), lift)
+}
+
+fn bridge_long_in(verts: &[Pi], scaled: bool, spans: Spans, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
+    if verts.len() < 2 || ends_up(verts).is_none() {
         return Ok(None);
     }
     let f = geom::fit_in(verts, scaled);
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
     }
-    let wet = fine_spans(&f, mask);
+    let wet = spans(&f, true);
     if wet.is_empty() {
         return Ok(None);
     }
@@ -172,7 +205,7 @@ pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool
         let a = (0..n).rev().find(|&i| f.vert_s[i] <= w[0] - LONG_REACH).unwrap_or(0);
         let b = (0..n).find(|&i| f.vert_s[i] >= w[1] + LONG_REACH).unwrap_or(n - 1);
         match wins.last_mut() {
-            Some(last) if a <= last.1 => (last.1, last.3) = (last.1.max(b), w[1]),
+            Some(last) if a <= last.1 => (last.1, last.3) = (last.1.max(b), last.3.max(w[1])),
             _ => wins.push((a, b, w[0], w[1])),
         }
     }
@@ -203,8 +236,8 @@ pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool
         }
         // only the route's own ends may stay up
         let lift = [lift[0] && a == 0, lift[1] && b == n - 1];
-        let mut nv = match bridge_in(&pis, scaled, mask, true, lift) {
-            Ok(Some(v)) if held(&v, scaled, mask) => v,
+        let mut nv = match bridge_in(&pis, scaled, spans, true, lift) {
+            Ok(Some(v)) if held(&v, scaled, spans) => v,
             // no room for ramps beside the water (Lake Hamana's islands), or the window alone does
             // not fit: the stretch goes up whole, rather than one lake refusing 500 km (T-727d)
             _ => {
@@ -255,9 +288,9 @@ fn fine_spans(f: &Fit, mask: &dyn WaterMask) -> Vec<[f64; 2]> {
 }
 
 /// Every fine sample over water on `v` is at least half a level up, as the edit's check wants.
-fn held(v: &[Pi], scaled: bool, mask: &dyn WaterMask) -> bool {
+fn held(v: &[Pi], scaled: bool, spans: Spans) -> bool {
     let g = geom::fit_in(v, scaled);
-    g.issues.is_empty() && fine_spans(&g, mask).iter().all(|w| {
+    g.issues.is_empty() && spans(&g, true).iter().all(|w| {
         let mut s = w[0];
         while s <= w[1] {
             if geom::height_at(&g.vert, s) < LEVEL_H / 2.0 {

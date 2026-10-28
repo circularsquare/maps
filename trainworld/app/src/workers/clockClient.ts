@@ -23,7 +23,7 @@ import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd,
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
-import { readStored, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
+import { decodeSave, readStored, writePending, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
@@ -254,6 +254,17 @@ export async function exportSlot(slot: SaveSlot): Promise<boolean> {
 export async function importGame(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (await ifItFits({ bytes })) switchGame({ load: "file" }, { kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: saveSlotsState.peek().active });
+}
+/** T-1612: a save file picked on the start menu, where no game is in hand to reload from: its game is
+ * left in storage as after `switchGame`, and the menu's pick is `{ pending: true }`. A reason (to show)
+ * when the file cannot open. */
+export async function fileChoice(file: File): Promise<GameChoice | string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  try { await decodeSave(bytes); } catch { return "This file is not a saved game."; }
+  const why = await saveRefusal({ bytes });
+  if (why) return why;
+  if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "" })) return "Browser storage is unavailable.";
+  return { pending: true };
 }
 /** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
 export function newGame(game?: NewGameSpec, name = "") {
@@ -923,7 +934,7 @@ export class ClockClient {
   }
 
   /** Ask what a route would cost. One request in flight; newer ones replace a waiting one. */
-  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean }, cb: (a: PreviewAnswer) => void) {
+  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean }, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "preview", seq, ...req }), cb);
   }
 
