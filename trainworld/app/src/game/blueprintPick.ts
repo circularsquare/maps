@@ -4,8 +4,8 @@
 // pieces in the track model (`off`, saved with the game) and Construct and the quote skip what is off.
 
 import { computed, effect, signal } from "@preact/signals";
-import { distance, levelLabel } from "./format";
-import { lineEffects } from "./remove";
+import { bigDistance, distance, levelLabel } from "./format";
+import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level } from "./types";
 import { ask, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
@@ -106,15 +106,16 @@ export async function levelPicked(level: Level) {
 export async function removePicked() {
   const p = bpPicked.peek(), s = pickedState.peek();
   if (!p.edges.length && !p.stations.length) return;
-  const what = [s.edges ? `${distance(s.lengthM)} of ${p.built ? "built " : ""}track` : "", s.stations ? count(s.stations, p.built ? "built station" : "station", p.built ? "built stations" : "stations") : ""].filter(Boolean).join(" and ");
+  const big = isBigDelete(s.lengthM);
+  const what = [s.edges ? `${(big ? bigDistance : distance)(s.lengthM)} of ${p.built ? "built " : ""}track` : "", s.stations ? count(s.stations, p.built ? "built station" : "station", p.built ? "built stations" : "stations") : ""].filter(Boolean).join(" and ");
   const go = async () => {
     ask.value = null;
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });
     if (a.ok) say(`Removed ${what}.`);
   };
   const lines = await lineEffects(p.edges, p.stations);
-  if (!p.built && !lines.length) return void go();
-  ask.value = { text: `Remove ${what}?${p.built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep", run: () => void go(), lines };
+  if (!p.built && !lines.length && !big) return void go();
+  ask.value = { ...removeQuestion(what, !!p.built, big), run: () => void go(), lines };
 }
 
 // Pieces removed, or no longer of the pick's kind (blueprint constructed), drop out of the pick;

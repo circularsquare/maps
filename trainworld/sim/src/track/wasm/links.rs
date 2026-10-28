@@ -53,7 +53,7 @@ impl TrackApi {
     }
 
     /// Remove an edge, and nodes left with no track and no station. Lines using it reroute or
-    /// break. Constructed: final, no refund (SPEC 6.4).
+    /// break. Constructed: no refund, and undoable, the undo free (T-1649).
     pub fn delete_edge(&mut self, id: u32) -> u32 {
         if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
@@ -61,7 +61,7 @@ impl TrackApi {
         // a station the removal would leave at a bare end keeps its place (T-1161); where the
         // trimmed removal is refused, the whole edge goes as before
         if let Some((ops, nodes, edges)) = self.station_trim_ops(id) {
-            let r = if self.w.net.edge_built[id as usize] { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
+            let r = self.run(Op::Batch(ops));
             if r == 0 {
                 return 0;
             }
@@ -81,11 +81,7 @@ impl TrackApi {
         if let Some(p) = partner {
             ops.push(Op::DeleteEdge { id: p });
         }
-        if net.edge_built[id as usize] || partner.is_some_and(|p| net.edge_built[p as usize]) {
-            self.run_charged(Op::Batch(ops))
-        } else {
-            self.run(Op::Batch(ops))
-        }
+        self.run(Op::Batch(ops))
     }
 
     /// Flat or flying junction. On a constructed junction the flyover is paid at once (final).
@@ -395,10 +391,10 @@ impl TrackApi {
     /// a removed station loses that stop and is routed again through the rest (T-859), else left
     /// broken, as removed track leaves it.
     pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
-        let Some((ops, built, st)) = self.pieces_ops(edges, stations) else {
+        let Some((ops, _, st)) = self.pieces_ops(edges, stations) else {
             return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
         };
-        let r = if built { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
+        let r = self.run(Op::Batch(ops));
         if r == 0 {
             self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
         }

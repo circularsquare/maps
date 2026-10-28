@@ -6,7 +6,7 @@ Updated: 2026-10-28 (overnight)
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master 2a397b76; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
+- master 7d9b00ce; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
   45c0dffb (2026-10-28). Uncommitted: Anita's TODO.md (never commit), this file,
   checks/t1223-build.mjs (untracked, from T-1223's agent).
 - Landed this session: 7bc670bc (T-1612, T-1615, T-1614, T-1561), f56389a1 (T-1223 coarse far
@@ -55,10 +55,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   re-solved exactly, T-1609); the -23% round skip alone isn't worth it. Order: T-1608, T-1607, T-1609.
 - T-1617 update: seam stays after "Updating demand" ends (Anita), so not the loading shade; agent told.
 - T-1649 guard bulk track deletes (Anita lost all Japan track by accident): Sonnet agent, main
-  tree, Vite 6151, 2 cores, id T-1651. T-1650 filed: cut big networks into parts for demand
+  tree, Vite 6151, 2 cores, id T-1651. Anita's details: the existing confirmation appeared and
+  she's fairly sure she pressed keep; she was viewing California yet Japan's track went; the
+  dialog listed every broken line (cap it). Agent told: bug first (keep deleting? selection
+  reaching off-view?), then cap, then size guard in the same dialog. T-1650 filed: cut big networks into parts for demand
   (Anita's "cutting points" idea), design after T-1608/T-1607/T-1609.
-- T-1608 cheaper market searches, exact (Opus agent, tree .tw-trees/t1608, Vite 6170-6174, 4
-  cores, ids T-1647-1648).
+- Committed 7d9b00ce, on 8800 (smoke both): T-1640 (overlay draws 1/s when nothing visible
+  moves; zoomed-out Japan 8% -> 4% GPU), T-1617 fixed (realm shade through the stencil; the seam
+  was its own thin slivers at 128.43 E), T-1608 abandoned (exact early stop only 7-9%; T-1647
+  filed), notes/perf-overview.md. Not yet published (live is 2026-10-28b = 2a397b76).
+- T-1607 spread the slow worker's crowding rounds, exact, no extra memory (Opus agent, tree
+  .tw-trees/t1607, Vite 6170-6174, 5 cores, ids T-1652-1653).
 - T-1640 redraw only when something visible moves (Sonnet agent, main tree, Vite 6159, 3
   cores, id T-1646); Anita sees ~5% GPU zoomed out with trains hidden.
 - Perf/memory overview for Anita (Opus agent, read-only): notes/perf-overview.md, answering
@@ -88,7 +95,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1651.
+Ids handed out through T-1653.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

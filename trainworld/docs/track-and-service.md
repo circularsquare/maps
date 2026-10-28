@@ -715,10 +715,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   blueprint (lines plan over it, it can be reshaped). Constructing a piece by hand, or the
   track a line needs, builds it and clears the state; splitting keeps it on both halves and
   joining only merges pieces in the same state.
-- **Removing constructed track refunds nothing**, and the game asks before doing it (T-096). Undo applies to blueprint edits, lines and
-  schedules. Constructing, removing anything constructed, making a constructed junction flying and
-  lengthening a constructed platform are final (the last two are paid at once): they clear the
-  undo history, so undo never builds or unbuilds anything for free.
+- **Removing constructed track refunds nothing**, and the game asks before doing it (T-096). Undo applies to blueprint edits, lines,
+  schedules and removing constructed track or stations (T-1649: the undo puts back what was
+  removed, free, charging only trains it needs). Constructing, making a constructed junction flying,
+  lengthening a constructed platform and removing a constructed bus route are final (paid at once, or
+  with no track to put back): they clear the undo history, so undo never builds anything for free.
 - **Trains** (T-028): a 20 m car costs US$2.5M, a high-speed car US$3.75M (T-817). The network owns cars of
   each kind apart, and spares of one kind never serve the other: a line switched to high-speed
   trains buys its cars beyond the spare high-speed ones, and its ordinary cars stay as spares (and

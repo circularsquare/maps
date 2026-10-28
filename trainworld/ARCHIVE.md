@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1649 [P2] Track wiped by accident. Done 2026-10-28: the delete dialog's line-effects trial could not roll back (it refused to restore track the save already had problems on), so opening it deleted the track in the model whatever she answered; fixed (`TrackWorld::restore`). Deletes over 50 km or 10% ask in the same dialog (lines capped at five), and removing built track is now undoable. `checks/t1649-big-delete.mjs`.
+
 - T-1608 [P3] Stop market searches once their origins settle. Abandoned 2026-10-28: built exact (Japan's figures identical), but a destination's longer trips start near the far end of the network, so each search still settles 94% of its nodes (Japan pass 51 to about 47 s, noise-level); not landed, patch kept. notes/T-1608.md.
 
 - T-1617 [P2] Dark meridian seam near Tsushima. Done 2026-10-28: the realm shade's long earcut slivers met a pixel apart on her GPU; `map/shadeLayer.ts` now shades each pixel once through the stencil (triangles sent twice draw as once, flat and globe). notes/T-1617.md.

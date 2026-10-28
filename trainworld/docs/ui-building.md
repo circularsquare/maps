@@ -365,7 +365,14 @@ length, only past the platform's end, which is all that goes ([track-and-service
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of built track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
-inspectors' Remove buttons and the Select tool's Remove ask the same way. A removal that changes a
+inspectors' Remove buttons and the Select tool's Remove ask the same way. **A big delete asks
+too** [T-1649; `isBigDelete`, `removeQuestion` in `game/remove.ts`]: more than 50 km of track, or a
+tenth of the network's, whichever is less (never under 5 km), blueprint or built, in the same
+dialog, worded "Delete 4,499 km of built track? Nothing is refunded." with "Delete track" and "Keep
+it"; the lines it breaks are listed under it, the first five then "and 104 more lines". Removing
+built track and stations is undoable (one undo brings track, stations and lines back, free);
+the question for lines' effects runs a trial removal that is rolled back whole, whatever problems
+the saved track already had (`TrackWorld::restore`). A removal that changes a
 line asks too, built or not [T-859]: a row per line under the question, its bullet then what
 happens ("subway 4 will lose its stop at Nevins St and stop running until you fix its route."),
 from the track model's trial of the removal (`TrackApi.removal_lines`). Train lines are removed from the
@@ -432,9 +439,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   ends kept. The message says how many changed ("9 of 12 pieces set to elevation +1. 3 could not
   change."), or that none could.
 - **Remove** [T-829; `TrackApi.delete_pieces`]: everything picked goes in one edit, with the nodes
-  left bare and a crossover whole. Blueprint goes at once (one undo); constructed asks first, as
-  for one piece ("Remove 3.1 km of built track and 2 built stations? Nothing is
-  refunded."), and is final.
+  left bare and a crossover whole. Blueprint goes at once (one undo) unless it is big (above);
+  constructed asks first, as for one piece ("Remove 3.1 km of built track and 2 built stations?
+  Nothing is refunded."), and one undo brings it back.
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
   6.4). A selected disabled blueprint track says "Disabled" under "Blueprint" in its inspector
   (hover: "Will not be constructed unless enabled") [T-821, T-1242]. The Build tab's "N disabled" hovers which pieces will not be constructed. The piece's own Construct button (track and station inspectors) and a line's Construct build

@@ -7,7 +7,7 @@
 
 import { queryClock } from "../workers/clockClient";
 import type { EditOp } from "../workers/protocol";
-import { andList, distance } from "./format";
+import { andList, bigDistance, distance } from "./format";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
@@ -27,6 +27,23 @@ export function stationTrim(edge: number): [number, number] {
   };
   const [ka, kb] = [keep(e.a), keep(e.b)];
   return ka + kb + 7 > e.lengthM ? [0, 0] : [ka, kb];
+}
+
+/** T-1649: a delete of more than this much track, or more than a tenth of the network's, whichever
+ * is less, asks first, blueprint or built. The floor keeps a young network's small deletes quiet. */
+const BIG_DELETE_M = 50_000, BIG_DELETE_SHARE = 0.1, BIG_DELETE_FLOOR_M = 5_000;
+
+export function isBigDelete(lengthM: number): boolean {
+  const w = world.peek();
+  if (!w || lengthM <= 0) return false;
+  const total = w.edges.reduce((s, e) => s + e.lengthM, 0);
+  return lengthM > Math.max(BIG_DELETE_FLOOR_M, Math.min(BIG_DELETE_M, total * BIG_DELETE_SHARE));
+}
+
+/** The question for a delete: a big one says how much goes. */
+export function removeQuestion(what: string, built: boolean, big: boolean): { text: string; yes: string; no: string } {
+  if (!big) return { text: `Remove ${what}?${built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep" };
+  return { text: `Delete ${what}?${built ? " Nothing is refunded." : ""}`, yes: "Delete track", no: "Keep it" };
 }
 
 /** What would go, in words ("1.2 km of track", "W 42nd St station", "the flyover"), and whether
@@ -110,6 +127,9 @@ export async function removeThing(r: Removable) {
     say(`Removed ${d.what}.`);
   };
   const lines = r.kind === "flyover" || r.kind === "bus" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
-  if (!d.built && !lines.length) return go();
-  ask.value = { text: `Remove ${d.what}?${d.built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep", run: () => void go(), lines };
+  const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
+  const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
+  const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);
+  if (!d.built && !lines.length && !big) return go();
+  ask.value = { ...removeQuestion(big ? `${bigDistance(e!.lengthM - ka - kb)} of ${d.built ? "built " : ""}track` : d.what, d.built, big), run: () => void go(), lines };
 }

@@ -88,6 +88,12 @@ export function distance(m: number): string {
   return (m >= 1000 ? (m / 1000).toFixed(1) : (m / 1000).toFixed(2)) + " km";
 }
 
+/** A long length with thousands separators, whole above 100: "4,499 km", "62.4 km". */
+export function bigDistance(m: number): string {
+  const v = m / (us() ? M_PER_MILE : 1000);
+  return `${v.toLocaleString("en-US", { maximumFractionDigits: v >= 100 ? 0 : 1 })} ${us() ? "mi" : "km"}`;
+}
+
 /** A position along something and its whole length: "1.2 of 5.4 km". */
 export function distanceOf(part: number, whole: number): string {
   const u = us() ? M_PER_MILE : 1000;

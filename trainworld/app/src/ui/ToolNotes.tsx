@@ -22,6 +22,9 @@ const HINT: Record<Tool, string> = {
   bus: "",
 };
 
+/** T-1649: a removal that breaks dozens of lines lists the first few and counts the rest. */
+const MAX_LINE_ROWS = 5;
+
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */
 function Ask() {
   const q = ask.value;
@@ -43,10 +46,11 @@ function Ask() {
       <p id="confirmation-text">{q.text}</p>
       {q.lines?.length ? (
         <ul class="confirmation-lines">
-          {q.lines.map((r) => {
+          {q.lines.slice(0, MAX_LINE_ROWS).map((r) => {
             const l = world.value && linesByNum(world.value).get(r.line);
             return <li key={r.line}>{l && <Chip line={l} size="sm" plain />}<span>{r.text}</span></li>;
           })}
+          {q.lines.length > MAX_LINE_ROWS && <li key="more"><span>{`and ${q.lines.length - MAX_LINE_ROWS} more lines`}</span></li>}
         </ul>
       ) : null}
       <div class="confirmation-actions">

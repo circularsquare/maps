@@ -352,7 +352,7 @@ impl TrackWorld {
         let x = extra(self);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
-            let _ = self.commit(inv);
+            let _ = self.restore(inv);
             return Err(ChargeError::Money { need, have: cash });
         }
         if final_ {
@@ -369,12 +369,13 @@ impl TrackWorld {
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
         let op = if redo { self.redo.pop()? } else { self.undo.pop()? };
         let back = |w: &mut TrackWorld, op: Op| if redo { w.redo.push(op) } else { w.undo.push(op) };
-        Some(match self.commit(op.clone()) {
-            Ok((r, inv)) => {
-                let x = extra(self);
-                let need = r.charge + x;
+        Some(match self.restore(op.clone()) {
+            Ok((mut r, inv)) => {
+                // what an undo or redo restores was paid for or removed before: only the trains
+                // it needs are charged, never the track (a removed built stretch comes back free)
+                let need = extra(self);
                 if need > 1e-9 && need > cash + 1e-6 {
-                    let _ = self.commit(inv);
+                    let _ = self.restore(inv);
                     back(self, op);
                     Err(ChargeError::Money { need, have: cash })
                 } else {
@@ -383,7 +384,8 @@ impl TrackWorld {
                     } else {
                         self.redo.push(inv);
                     }
-                    Ok((r, x))
+                    r.charge = 0.0;
+                    Ok((r, need))
                 }
             }
             Err(e) => {
@@ -403,7 +405,7 @@ impl TrackWorld {
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
         let (r, inv) = self.commit(op)?;
         let value = inspect(self);
-        let _ = self.commit(inv);
+        let _ = self.restore(inv);
         Ok((r, value))
     }
 
@@ -425,7 +427,7 @@ impl TrackWorld {
 
     pub fn undo(&mut self) -> Option<Result<EditResult, Vec<Issue>>> {
         let op = self.undo.pop()?;
-        Some(match self.commit(op.clone()) {
+        Some(match self.restore(op.clone()) {
             Ok((r, inv)) => {
                 self.redo.push(inv);
                 Ok(r)
@@ -439,7 +441,7 @@ impl TrackWorld {
 
     pub fn redo(&mut self) -> Option<Result<EditResult, Vec<Issue>>> {
         let op = self.redo.pop()?;
-        Some(match self.commit(op.clone()) {
+        Some(match self.restore(op.clone()) {
             Ok((r, inv)) => {
                 self.undo.push(inv);
                 Ok(r)
@@ -452,6 +454,17 @@ impl TrackWorld {
     }
 
     fn commit(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
+        self.commit_with(op, true)
+    }
+
+    /// T-1649: an undo, a redo or a trial's rollback puts back what an edit took, so it is not
+    /// checked afresh: track the saved game already had problems on (an old save under a newer
+    /// water mask) would otherwise make the restore refuse, leaving a trial's deletions in place.
+    fn restore(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
+        self.commit_with(op, false)
+    }
+
+    fn commit_with(&mut self, op: Op, checked: bool) -> Result<(EditResult, Op), Vec<Issue>> {
         let (cost_before, built_before) = self.net.total_and_built_cost();
         let again = op.clone();
         let switch = match &op {
@@ -459,7 +472,7 @@ impl TrackWorld {
             _ => None,
         };
         let (mut inv, mut t, mut der) = self.apply_and_derive(op)?;
-        let issues = self.check(&t, &der);
+        let issues = if checked { self.check(&t, &der) } else { vec![] };
         if !issues.is_empty() {
             // Refuse only what the edit adds: problems already there (an old save under a newer
             // water mask, say) must not block fixing things nearby.

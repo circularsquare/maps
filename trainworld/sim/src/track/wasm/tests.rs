@@ -866,13 +866,16 @@ fn several_pieces_removed_at_once() {
     assert_eq!(a.delete_pieces(&ids, &[]), 0, "{}", a.issues());
     assert_eq!(a.nodes_info().len() / 10, 1);
     assert_eq!(a.undo(), 0);
-    // constructed: final, nothing refunded
+    // constructed (T-1649): nothing refunded, and one undo brings it back, free
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let cash = a.cash();
     assert_eq!(a.delete_pieces(&ids, &[]), 0, "{}", a.issues());
     assert_eq!(a.cash(), cash);
     assert!(a.edges_info().is_empty());
-    assert!(!a.can_undo());
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert_eq!(a.edges_info().len() / 10, 2);
+    assert!(a.w.net.edge_built[ids[0] as usize]);
+    assert_eq!(a.cash(), cash);
 }
 
 #[test]
