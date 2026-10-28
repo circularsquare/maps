@@ -15,6 +15,10 @@ import type { Demand } from "./types";
 
 /** Game seconds per wall second for the three speed buttons. Provisional. */
 export const SPEEDS = [60, 240, 960] as const;
+/** T-1664: the slider's stops, in times normal speed (log-spaced to the eye) */
+export const SLIDER_STOPS = [0.5, 1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 30, 40, 50, 64, 80, 100] as const;
+/** T-1665: the fastest the clock runs while demand is still being worked out, times normal speed */
+export const DEMAND_CAP = 4;
 
 /** A line's local time of day, seconds: the game hour moved by the line's time shift (T-309). */
 export const lineSeconds = (st: { shift?: number } | undefined): number => clock.hour.value * 3600 + (st?.shift ?? 0);
@@ -35,8 +39,16 @@ class GameClock {
   /** Frozen while a loaded game's demand is still being calculated (T-149, game/loading.ts):
    * separate from `running`, so the player's pause and speed survive it. */
   readonly held = signal(false);
-  /** speed button index into SPEEDS */
+  /** speed button index into SPEEDS; a slider speed (below) keeps the index of the nearest button below it */
   readonly speed = signal(0);
+  /** T-1664: a speed from the slider, in times normal speed, until a speed button is pressed; null otherwise */
+  readonly custom = signal<number | null>(null);
+  /** T-1665: demand is still being worked out, so the clock runs no faster than DEMAND_CAP */
+  readonly capped = signal(false);
+  /** the speed the player chose, game seconds per wall second */
+  readonly chosenRate = computed(() => (this.custom.value ?? SPEEDS[this.speed.value] / SPEEDS[0]) * SPEEDS[0]);
+  /** the speed the clock runs at: the chosen one, or the cap while it applies */
+  readonly rateNow = computed(() => (this.capped.value ? Math.min(this.chosenRate.value, DEMAND_CAP * SPEEDS[0]) : this.chosenRate.value));
   readonly running = signal(true);
   /** absolute game minute of world time (game/localTime.ts) */
   readonly minute: Signal<number>;
@@ -65,7 +77,12 @@ class GameClock {
   /** game seconds now */
   now(): number {
     if (!this.ticking) return this.anchorSim;
-    return this.anchorSim + ((performance.now() - this.anchorWall) / 1000) * SPEEDS[this.speed.peek()];
+    return this.anchorSim + ((performance.now() - this.anchorWall) / 1000) * this.rateNow.peek();
+  }
+
+  /** game seconds per wall second now */
+  rate(): number {
+    return this.rateNow.peek();
   }
 
   /** Is time moving (so frames are needed)? */
@@ -106,8 +123,28 @@ class GameClock {
 
   setSpeed(i: number) {
     this.reanchor();
+    this.custom.value = null;
     this.speed.value = i;
     this.running.value = true;
+    this.changed();
+  }
+
+  /** T-1664: run at `x` times normal speed (the slider's); a button's own speed picks that button */
+  setMultiple(x: number) {
+    const i = SPEEDS.findIndex((s) => s === x * SPEEDS[0]);
+    if (i >= 0) return this.setSpeed(i);
+    this.reanchor();
+    this.custom.value = x;
+    this.speed.value = x < SPEEDS[1] / SPEEDS[0] ? 0 : x < SPEEDS[2] / SPEEDS[0] ? 1 : 2;
+    this.running.value = true;
+    this.changed();
+  }
+
+  /** T-1665: apply or lift the demand cap */
+  setCapped(on: boolean) {
+    if (on === this.capped.peek()) return;
+    this.reanchor();
+    this.capped.value = on;
     this.changed();
   }
 

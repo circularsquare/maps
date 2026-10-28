@@ -99,6 +99,13 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn.text svg { width: 14px; height: 14px; }
 .group { display: inline-flex; }
 .group > .btn + .btn { margin-left: -1px; }
+/* T-1664: the speed slider opens under the fastest button; a slider speed shows on that button as text.
+   T-1665: the chosen speed is dimmed while the clock is held at the demand cap. */
+.group.speed { position: relative; }
+.btn.icon.rate { width: auto; min-width: 28px; padding: 0 5px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.btn.on.held { opacity: 0.55; }
+.slider.speed-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; margin: 0; width: 200px; padding: 8px 10px;
+  background: var(--bg); border: 1px solid var(--rule); }
 svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;
       stroke-linejoin: round; stroke-linecap: round; display: block; }
 svg .solid { fill: currentColor; }
@@ -829,7 +836,7 @@ button.save-add:hover { color: var(--text); }
    (its colour is the --chip-bg that `chip` in map/trackTagRows.ts sets) */
 .tag-chip { background: linear-gradient(var(--chip-bg), var(--chip-bg)) no-repeat 0 0 / 100% calc(100% - 2px); }
 /* T-210: the same tag for the panels and controls (ui/tip.ts), over everything, never in the way */
-.ui-tag { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; width: max-content; }
+.ui-tag { position: fixed; left: 0; top: 0; right: auto; bottom: auto; margin: 0; height: auto; overflow: visible; z-index: 1000; pointer-events: none; width: max-content; }
 .pi-mark.drag { width: 11px; height: 11px; margin: -6px 0 0 -6px; pointer-events: auto; cursor: grab; }
 /* T-474: while a point is dragged, wherever the pointer goes */
 .grabbing, .grabbing * { cursor: grabbing !important; }

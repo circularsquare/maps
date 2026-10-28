@@ -303,7 +303,11 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
-  (`service.rs`). Removing the piece on one side of a through station keeps the track to its
+  (`service.rs`). Track drawn on from a dead-end station leaves the platform where it is: the
+  station's node moves back to the platform's middle, keeping its id, and the new track starts
+  from a plain node 2 m past the old end, so the platform clears it (T-1667,
+  `end_station_shift`; where that split is refused the station centres on the old end as
+  before). Removing the piece on one side of a through station keeps the track to its
   platform's end (half the platform and 4 m past the node; both stations' when the piece runs
   between two), so the station stays where it was rather than turning into a dead end half a
   platform back (T-1161, `station_trim_ops`; where that split is refused, on a ramp say, the piece
@@ -793,7 +797,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   scale divided by Japan's default (6.1), so Japan reads 1.00x and India 0.16x (`shownScale`,
   `storedScale`; T-1554): display only, the saved scales and curve stay in India's units. A new game's curve (T-1521,
   `START_NODES`) has nodes at 0, 20 and 100 km at $0.1293, $0.3017 and $2.0259: in New York $1.50
-  + $0.10 a km to 20 km, then $0.25 a km ($3.50 at 20 km, $23.50 at 100). It matches published
+  + $0.10 a km to 20 km, then $0.25 a km ($3.50 at 20 km, $23.50 at 100); while a country's scale and
+  the curve are untouched its three fares are rounded (`game/fareDefault.ts`, T-1662). It matches published
   standard-class fares in ten countries at market rates at 50-150 km and 300-1,200 km; metro fares
   under 20 km already matched (notes/T-1521.md). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each

@@ -224,7 +224,8 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   legs, read again with each demand result.
 - **Attractions** [T-263, `map/attractionMarks.ts`]: a small classical front (12 px, map ink with
   a land-coloured halo) on each attraction of the world file, with or without bubbles. From zoom
-  12, or 10 with the purpose filter on Attractions; the biggest first as the map zooms in (from 11
+  12, or 10 with the purpose filter on Attractions (each mark follows its attraction every frame
+  while the camera moves, T-1657); the biggest first as the map zooms in (from 11
   those of 1M visitors a year, from 12 500,000, from 13 200,000, from 14 all). Hidden in the city
   overview. No clicks (a click reaches what is under). The hover, within 8 px: the name, "About
   17,700 visits per weekday" (the year's visitors on the day shown, the weekend's at social's
@@ -320,8 +321,7 @@ riders counters keep their own smoothing (Live feel).
   zone bubble's colour, running from that bubble toward the selected one). Under every bubble, no hover (`setLines` in
   `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
-  split; the top eight far-end places, each named by the nearest station within 3 km, else by
-  distance and direction; for a single area the closest stations from its trip-weighted centre
+  split; no list of far-end places and no inter-city trips (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School,
   Errands, Leisure, Airports, Medical and Attractions [T-142, T-192, T-263, T-1253], with a
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
@@ -332,7 +332,6 @@ riders counters keep their own smoothing (Live feel).
   0-6), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that
   direction's day. Weekdays only.
-- Then the selection's **inter-city trips** (below).
 
 ## A selected station
 
@@ -344,8 +343,8 @@ commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui
 
 [T-118, T-120, T-135, T-136, T-139, T-222; the market in [regional.md](regional.md)]
 
-- A bubble selection's and a station's inspector have an "Inter-city trips" section. A selection
-  lists trips leaving its areas and trips arriving there, each by place with all modes, then by
+- A station's inspector has an "Inter-city trips" section; a local bubble's has none [T-1668]
+  (`SelectionLongerTrips` is unused). A selection's would list trips leaving its areas and trips arriving there, each by place with all modes, then by
   train, car and plane [T-378] (column heads are the modes' icons, `Icon.train`, `Icon.ride`,
   `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
   an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the

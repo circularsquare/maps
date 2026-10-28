@@ -70,13 +70,9 @@ impl TrackApi {
             self.release(&new_nodes, &new_edges);
             return Err(Issue::EdgeLoop { edge: u32::MAX });
         }
-        self.route_end = rb.node;
         self.route_arc.clear();
         self.route_bridged.clear();
         self.bridge_refused = false;
-        let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
-        let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
-        let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
         // T-418: ending on open ground, the segment is one arc through the end; ending on track it
         // must join that like a turnout, so it keeps the usual shape
         let quad = tracks == 4;
@@ -86,7 +82,28 @@ impl TrackApi {
         // Corners, which needs a straight, so that segment is not one arc
         let beside_a = if quad && through { quad_beside(&self.w.net, ra.node) } else { None };
         let side = beside_a.map_or(1.0, |b| b.1);
-        let beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
+        let mut beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
+        let mut beside_a = beside_a;
+        // a dead-end station keeps its platform where it is (T-1667); on quad, its twin too. `own`
+        // reads a moved twin end's position from `was`, its node not being in the network yet.
+        let mut was = vec![];
+        for (r, beside) in [(&mut ra, &mut beside_a), (&mut rb, &mut beside_b)] {
+            if let Some((ops, m, x, y)) = self.end_station_shift(r.node, &mut new_nodes, &mut new_edges) {
+                r.ops.extend(ops);
+                (r.node, r.x, r.y) = (m, x, y);
+            }
+            if let Some(b) = beside.as_mut() {
+                if let Some((ops, m, x, y)) = self.end_station_shift(b.0, &mut new_nodes, &mut new_edges) {
+                    r.ops.extend(ops);
+                    was.push((m, x, y));
+                    b.0 = m;
+                }
+            }
+        }
+        self.route_end = rb.node;
+        let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
+        let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
+        let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
         let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some());
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
             let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, self.route_cap);
@@ -141,7 +158,8 @@ impl TrackApi {
             let mut own = |at: usize, beside: Option<(u32, f64)>, r: &Resolved, ops: &mut Vec<Op>, nodes: &mut Vec<u32>| -> Option<(u32, (f64, f64))> {
                 if let Some((m, _)) = beside {
                     let net = &self.w.net;
-                    return Some((m, (net.node_x[m as usize], net.node_y[m as usize])));
+                    let at = was.iter().find(|w| w.0 == m).map_or_else(|| (net.node_x[m as usize], net.node_y[m as usize]), |w| (w.1, w.2));
+                    return Some((m, at));
                 }
                 if !(through && r.dirs.is_empty()) {
                     return None;
@@ -252,6 +270,52 @@ impl TrackApi {
                 Ok(Resolved { node, x: nd.x, y: nd.y, level: nd.level, dirs: vec![heading, heading + PI], new_junction: true, ops: vec![Op::Split { edge: target, s, node, new_edge }] })
             }
         }
+    }
+
+    /// Track drawn on from a station at a dead end (T-1667): that platform runs back from the node,
+    /// a through one is centred on it, so the station would move half a platform. Instead the
+    /// station's node moves back to the platform's middle, keeping its id (stops, names), and a new
+    /// plain node just past the old end takes the route. The ops, that node and where it is; None
+    /// for any other node, or where the edge cannot be split there.
+    pub(super) fn end_station_shift(&mut self, n: u32, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) -> Option<(Vec<Op>, u32, f64, f64)> {
+        let net = &self.w.net;
+        let i = n as usize;
+        if !net.node_ok(n) || net.node_platform[i] == 0 || net.node_ports[i].n != 1 {
+            return None;
+        }
+        let c = net.node_ports[i].ends()[0];
+        let (e, at_b) = (c >> 1, c & 1 == 1);
+        if net.edge_a[e as usize] == net.edge_b[e as usize] {
+            return None;
+        }
+        let (half, len) = (net.node_platform[i] as f64 / 2.0, net.edge_len[e as usize]);
+        let (mut nd, mut first, mut second) = net.split_plan(e, if at_b { len - half } else { half }).ok()?;
+        let mut old = net.node_data(n)?;
+        nd.level = old.level;
+        // the stub runs on straight past the old end until the platform clears its far node by
+        // the 1 m `check_station` wants (a split snapped toward the end leaves it shorter)
+        let stub_len = if at_b { len - net.project(e, nd.x, nd.y).0 } else { net.project(e, nd.x, nd.y).0 };
+        let on = (half + 1.5 - stub_len).max(0.0) + 0.5;
+        let inner = if at_b { second.pis.last() } else { first.pis.first() }.map_or((nd.x, nd.y), |p| (p.x, p.y));
+        let (dx, dy) = (old.x - inner.0, old.y - inner.1);
+        let d = dx.hypot(dy);
+        if d < 1e-6 {
+            return None;
+        }
+        (old.x, old.y) = (old.x + dx / d * on, old.y + dy / d * on);
+        let (m, e2) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
+        nodes.push(m);
+        edges.push(e2);
+        // `e` keeps the part the station's lines run on, ending at `n`; `e2` is the stub past it
+        let (keep, stub) = if at_b {
+            (first.b, second.a, second.b) = (n, n, m);
+            (first, second)
+        } else {
+            (first.a, first.b, second.a) = (m, n, n);
+            (second, first)
+        };
+        let ops = vec![Op::Node { id: m, data: Some(old.clone()) }, Op::Node { id: n, data: Some(nd) }, Op::Edge { id: e, data: Some(keep) }, Op::Edge { id: e2, data: Some(stub) }];
+        Some((ops, m, old.x, old.y))
     }
 
     /// T-656: `shape` as a bridge over any water it crosses at ground level, or None where it needs

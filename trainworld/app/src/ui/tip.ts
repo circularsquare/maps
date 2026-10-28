@@ -15,6 +15,7 @@ export function startTips() {
   const tag = document.createElement("div");
   tag.className = "tool-tag ui-tag";
   tag.setAttribute("role", "tooltip");
+  tag.setAttribute("popover", "manual");
   tag.style.display = "none";
   document.body.appendChild(tag);
   let el: Element | null = null;
@@ -53,8 +54,16 @@ export function startTips() {
         return d;
       }));
     }
+    if (tag.style.display === "none") raise();
     tag.style.display = "";
     place();
+  };
+  // T-1656: a modal dialog (the saves panel) is in the top layer, over any z-index; a popover shown
+  // after it is above it, so the tag is put on top each time it appears
+  const raise = () => {
+    if (typeof tag.showPopover !== "function") return;
+    if (tag.matches(":popover-open")) tag.hidePopover();
+    tag.showPopover();
   };
   // the text can change under a still pointer (the clock's day, a count updating)
   const watch = new MutationObserver(fill);

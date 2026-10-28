@@ -2,6 +2,23 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1667 [P2] A dead-end station no longer jumps half a platform when its track is drawn on. Done 2026-10-28: the station's node moves back to the platform's middle (same id, lines intact), the new track starts 2 m past the old end (`end_station_shift` in `wasm/draw.rs`); blueprint and built, straight and bent.
+- T-1668 [P2] Local bubble panel: long intercity lists dropped. Done 2026-10-28: its panel ends at the trip purposes; no "Where they go / Where their homes are" and no Inter-city trips (`CommutersInspector.tsx`); the station and zone panels are unchanged.
+- T-1669 [P2] Blueprint track panel trimmed. Done 2026-10-28: no corner list or radius stepper (so no Add corner either; corners are dragged on the map); it has Construct, "Remove blueprint", the elevation buttons and lines here; built track unchanged (`TrackInspector.tsx`).
+- T-1656 [P2] Save menu tooltips behind the panel. Done 2026-10-28: the game's hover tag (`ui/tip.ts`) is a manual popover shown again each time it appears, so it sits over any modal dialog; `checks/t1656-tip-over-dialog.mjs`.
+- T-1657 [P2] Landmarks (attraction marks) lag while panning. Done 2026-10-28: each mark follows its attraction every frame (`attractionMarks.ts`); New York z14 pan, 35 of 140 frames off (worst 17 px) to 0 (worst 0.7); zoom, 214 of 314 frames (worst 87 px) to 0. `checks/t1657-follow.mjs`.
+- T-1621 [P3] Station names freeze through zooms. Done 2026-10-28: names follow their stations every frame for any camera change but a flat pan (`stationLabels.ts follow()`); zoom 12-16, 243 of 314 frames off (worst 99 px) to 6 (worst 2.4 px); frame time unchanged (9.8 vs 9.7 ms).
+- T-1663 [P2] Crowding red outline too faint. Done 2026-10-28: band 1.75 px a side plus 15% of the line's width, mixed fully to red, strength 50% at the smallest wait and full from 8 min (was 15%, 15 min); artifacts/trainworld/t1663-crowding-light.png and -dark.png.
+- T-1660 [P3] Fares above the history. Done 2026-10-28: the Money tab runs cash, fares, yesterday and today, History, trains, loan.
+- T-1661 [P2] Loans. Done 2026-10-28: borrow $1B, $5B or $10B at the bottom of the Money tab, one at a time; interest 1% of it a game day, drained evenly and in the history as "Interest"; Repay in full once cash covers it; saved with the game, none in a sandbox.
+- T-1662 [P2] Round default fares. Done 2026-10-28: while the curve and a country's scale are untouched, its three fares are rounded (Japan $0.80, $1.85, $12.50), charged so in demand and income (`game/fareDefault.ts`). The shape past 20 km is T-1521's, kept (DECISIONS).
+
+- T-1664 [P2] Clock speed slider. Done 2026-10-28: double-click the 16x button for a slider of 0.5x to 100x (18 round stops); the speed shows on the button until another speed button is pressed; not saved.
+- T-1665 [P2] Clock cap while demand updates. Done 2026-10-28: the clock runs at most 4x while a solve or load is going (chosen speed dimmed, hover says why), and an edited running line reads "constructing..." for its riders until the solve ends (`game/lineFigures.ts`).
+- T-1658 [P2] Sound variants. Done 2026-10-28: the snap and the pop each play one of four variants (rate 0.94-1.06, gain 0.85-1), never the same twice in a row; the snap is 3 dB quieter (also on constructs); the line-opening "bung" is gone.
+- T-1659 [P2] Refusal sound. Done 2026-10-28: `sounds/knock.wav` (Pixabay, rohhsadotcom; trimmed to 0.16 s, credited in Settings) plays on every `say(text, true)`, so every refusal with a message.
+- T-1655 [P3] Load chime. Done 2026-10-28: a soft two-note sine chime (E5, A5) when a whole-game load that held the clock over 30 s ends (`loadComplete`).
+
 - T-1649 [P2] Track wiped by accident. Done 2026-10-28: the delete dialog's line-effects trial could not roll back (it refused to restore track the save already had problems on), so opening it deleted the track in the model whatever she answered; fixed (`TrackWorld::restore`). Deletes over 50 km or 10% ask in the same dialog (lines capped at five), and removing built track is now undoable. `checks/t1649-big-delete.mjs`.
 
 - T-1608 [P3] Stop market searches once their origins settle. Abandoned 2026-10-28: built exact (Japan's figures identical), but a destination's longer trips start near the far end of the network, so each search still settles 94% of its nodes (Japan pass 51 to about 47 s, noise-level); not landed, patch kept. notes/T-1608.md.

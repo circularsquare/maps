@@ -10,7 +10,7 @@
 import "./ui/style.css";
 import { computed, effect } from "@preact/signals";
 import { h, render } from "preact";
-import { clock, SPEEDS, startClock } from "./game/clock";
+import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
@@ -63,6 +63,7 @@ import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
+import { startLineFigures } from "./game/lineFigures";
 import { startRidesNote } from "./game/ridesNote";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
@@ -331,6 +332,7 @@ effect(() => {
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 startOpeningDay(); // T-1434
+startLineFigures(); // T-1665
 startRidesNote(); // T-1478
 effect(() => {
   openings.value;
@@ -576,7 +578,7 @@ if (DEBUG) {
       `Map    ${mapN ? (mapMs / mapN).toFixed(2) + " ms, " + mapPerS.toFixed(0) + " frames/s" : "idle"}`,
       `GPU    ${renderer.gpuMs === null ? "no timer" : renderer.gpuMs.toFixed(2) + " ms"}`,
       `Frame  ${gap ? gap.toFixed(1) + " ms, worst " + overlay.frameGap.max().toFixed(0) + " ms" : "idle"}`,
-      `Clock  ${clock.ticking ? SPEEDS[clock.speed.peek()] + "x" : "stopped"}, epoch ${renderer.epoch}, ${renderer.rebases} re-bases`,
+      `Clock  ${clock.ticking ? clock.rate() + "x" : "stopped"}, epoch ${renderer.epoch}, ${renderer.rebases} re-bases`,
       `Worker ${clockWorkerStatus.value}`,
     ].join("\n");
     mapMs = mapN = 0;

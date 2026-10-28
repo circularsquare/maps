@@ -51,7 +51,7 @@ const near = (x, y, rel) => Math.abs(x - y) <= rel * Math.abs(y);
 check(incomeScale('IN') === 1, `India's scale ${incomeScale('IN')}, the baseline's, not 1`);
 check(incomeScale('US') === 11.6, `the US scale ${incomeScale('US')}, not 11.6`);
 check(near(fareWeight('US'), 4.4, 0.01) && near(fareWeight('IN'), 51.2, 0.01), `minutes a dollar: US ${fareWeight('US')}, India ${fareWeight('IN')}`);
-check(near(START_FARE.base * incomeScale('US'), 1.5, 1e-3), `New York's starting base fare $${START_FARE.base * incomeScale('US')}, not $1.50`);
+check(near(START_FARE.base * incomeScale('US'), 1.0, 1e-3), `New York's starting base fare $${START_FARE.base * incomeScale('US')}, not $1.00`);
 const ny = ride('US'), mum = ride('IN'), own = ride('US', { US: 1.6 });
 check(near(ny.usd, START_FARE.base * 11.6, 1e-4), `New York's base fare $${ny.usd}, not ${START_FARE.base} x 11.6`);
 check(near(mum.usd, START_FARE.base, 1e-4), `Mumbai's base fare $${mum.usd}, not ${START_FARE.base}`);

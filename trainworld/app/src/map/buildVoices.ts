@@ -20,12 +20,28 @@ function thunk(ctx: BaseAudioContext, dest: AudioNode, t: number, o: {
 }
 
 /** A recorded sound (samples.ts) from `t`, scaled so its loudest sample is `peak`. */
-export function sampleVoice(ctx: BaseAudioContext, dest: AudioNode, t: number, s: { buf: AudioBuffer; peak: number }, peak: number) {
+export function sampleVoice(ctx: BaseAudioContext, dest: AudioNode, t: number, s: { buf: AudioBuffer; peak: number }, peak: number, rate = 1) {
   const src = ctx.createBufferSource(), g = ctx.createGain();
   src.buffer = s.buf;
+  src.playbackRate.value = rate;
   g.gain.value = peak / s.peak;
   src.connect(g).connect(dest);
   src.start(t);
+}
+
+/** T-1655: two soft sine notes, E5 then A5, 0.16 s apart, each fading in about 0.7 s. */
+export function loadChime(ctx: BaseAudioContext, dest: AudioNode, t: number, level: number) {
+  [659.25, 880].forEach((f, i) => {
+    const at = t + i * 0.16, osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(f, at);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(0.5 * level, at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.7);
+    osc.connect(g).connect(dest);
+    osc.start(at);
+    osc.stop(at + 0.75);
+  });
 }
 
 /** The bung's string: Karplus-Strong at `f0`, a noise burst in a loop of one period that each pass

@@ -1231,12 +1231,13 @@ export class NetworkRenderer {
     const shades = shadeColours();
     gl.uniform3fv(u.u_sel, rgbf(shades.mapInk));
     gl.uniform3fv(u.u_casing_rgb, rgbf(shades.casing));
-    // T-819, T-1284, T-1549: up to 1.5 px of red dashes either side, outside the casing, of a line on full
-    // track, 0.5 px of casing colour round them; both scaled down with zoom, so far out they stay a hairline
+    // T-819, T-1284, T-1549, T-1663: red dashes either side, outside the casing, of a line on full
+    // track (this base, plus a share of the line's width in the shader), 0.5 px of casing colour round
+    // them; the base scaled down with zoom, so far out they stay a hairline
     const fullPass = this.anyFull;
     const fullScale = interp(zoom, [[9, 0.3], [12, 0.6], [15, 1]]) * dpr * k;
     gl.uniform1i(u.u_full_pass, 0);
-    gl.uniform1f(u.u_full_px, 3 * fullScale);
+    gl.uniform1f(u.u_full_px, 3.5 * fullScale);
     gl.uniform1f(u.u_full_out, 1 * fullScale);
     gl.uniform1f(u.u_full_dash, 8 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));

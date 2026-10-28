@@ -18,6 +18,7 @@ import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, typ
 import { ask, display, lineDraft, purposeFilter, relatedLines, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
+import { linesPending } from "../../game/lineFigures";
 import { FULL_FLOOR, FULL_WAIT_FROM, FULL_WAIT_STRONG } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
@@ -199,7 +200,16 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
  * component: it re-renders as the counts move. */
 function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
   const d = today.value.get(l.id);
-  if (!d) return null;
+  const pending = linesPending.value.has(l.id);
+  if (!d) {
+    if (!pending) return null;
+    return (
+      <>
+        <div class="h divided"><span>Past 24 hours</span></div>
+        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Riders are being worked out for the change">constructing...</span></Row></ul>
+      </>
+    );
+  }
   const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
   const m = moneyState.value;
@@ -211,8 +221,8 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
         <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 hours</span>
       </div>
       <ul class="rows">
-        <Row label="Riders">{count(d.riders)}</Row>
-        <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
+        <Row label="Riders">{pending ? <span class="muted" data-tip="Riders are being worked out for the change">constructing...</span> : count(d.riders)}</Row>
+        {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
         <li data-tip={`Profit in the past 24 hours: ${money(d.fares - run - st.upkeep)}, fares minus running trains and upkeep\nFares ${money(d.fares)}\nRunning trains ${money(-run)}\nUpkeep ${money(-st.upkeep)}${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
           <span class="grow">Profit</span>
           <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
@@ -253,30 +263,25 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
 /** T-477, T-515, T-1255: one dot per demand level, graded by `crowding` of the riders at the
  * platforms where trains come full (`BUSY_PLATFORM_S` in boarding.rs: their wait for a train with
  * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
- * averaged by those riders. The hover gives each of the level's periods its trains full and riders
- * turned away (T-1523: the pooled figure can rank a few bad platforms above a worse period spread
- * over many), and names the stop with the most rider-minutes waited (`line_periods`' tail). */
-export function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
+ * averaged by those riders. The hover gives each of the level's periods its trains full (T-1523:
+ * the pooled figure can rank a few bad platforms above a worse period spread over many). */
+export function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
   let trains = 0, weight = 0, wait = 0;
   const lines: string[] = [];
-  const n = stops.length, tail = PERIODS.length * PERIOD_STRIDE, at = new Array<number>(n).fill(0);
   for (let i = 0; i < PERIODS.length; i++) {
     const p = PERIODS[i];
     if (p.demand !== d) continue;
     const o = i * PERIOD_STRIDE;
     if (!(v[o] > 0)) continue;
     const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
-    const gone = v[o + 8] ?? 0;
     trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
-    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])} of ${count(v[o])} trains full` + (gone >= 1 ? `, ${count(gone)} riders went another way` : ""));
-    if (v.length >= tail + PERIODS.length * n) for (let k = 0; k < n; k++) at[k] += v[tail + i * n + k];
+    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
   }
   if (!(trains > 0)) return null;
   const avgWait = weight > 0 ? wait / weight : 0;
-  const most = at.reduce((b, x, k) => (x > at[b] ? k : b), 0);
-  const tip = (avgWait >= 0.05 ? `Where trains come full, riders face a wait of ${waitText(avgWait)} on average for a train with room` : "Riders get on the first train with room")
-    + lines.map((s) => `\n${s}`).join("")
-    + (avgWait >= 0.05 && at[most] > 0 && stops[most] ? `\nMost of the waiting is at ${stops[most]}` : "");
+  const mins = avgWait >= 1 ? `~${Math.round(avgWait)} min` : waitText(avgWait);
+  const tip = (avgWait >= 0.05 ? `When trains come full, riders wait ${mins} for a train with room` : "Riders get on the first train with room")
+    + lines.map((s) => `\n${s}`).join("");
   return <i class="crowd-dot" style={{ background: crowdColour(avgWait) }} data-tip={tip} />;
 }
 
@@ -657,6 +662,9 @@ function RailLineInspector({ id }: { id: string }) {
   const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
   const acct = accountVersion.value;
   const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
+  // T-1671: the crowding dots always show a weekday's, so a weekend does not hide peak crowding
+  const weekdayPeriods = useClockQuery(l && kind !== 0 ? { what: "linePeriods", line: l.num, day: 0 } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
+  const crowdPeriods = kind === 0 ? periods : weekdayPeriods;
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
   // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
@@ -872,7 +880,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (crowdPeriods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={crowdPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

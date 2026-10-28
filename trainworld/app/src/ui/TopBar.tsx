@@ -3,7 +3,7 @@
 // its own component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
-import { clock, SPEEDS } from "../game/clock";
+import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, refiningZone, viewFinal, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
@@ -12,7 +12,7 @@ import { AVERAGE_DAY, awayNear, dateName, dateOf, MONTH_LONG, rushRun, weekdayOf
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
-import { useEffect } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTip } from "../game/splitTip";
 
@@ -184,22 +184,52 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 
+const times = (x: number) => `${x}x`;
+
+/** T-1664: double-click the fastest button for a slider of speeds, 0.5x to 100x (the speed then shows on
+ * the button); T-1665: while demand updates the clock is held at DEMAND_CAP, the chosen speed dimmed. */
 function Speed() {
   const running = clock.running.value;
   const speed = clock.speed.value;
-  const btn = (i: number, icon: ComponentChildren, title: string) => (
-    <button class={"btn icon" + (running && speed === i ? " on" : "")} data-tip={title} aria-label={title} onClick={() => clock.setSpeed(i)}>
-      {icon}
-    </button>
-  );
+  const custom = clock.custom.value;
+  const capped = clock.capped.value;
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: Event) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("pointerdown", away); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  const chosen = clock.chosenRate.value / SPEEDS[0];
+  const held = capped && chosen > DEMAND_CAP;
+  const heldTip = (title: string) => (held ? `${title}\nHeld at ${times(DEMAND_CAP)} while demand updates, then ${times(chosen)}` : title);
+  const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
+    const on = running && (custom !== null ? 2 : speed) === i;
+    return (
+      <button class={"btn icon" + (on ? " on" : "") + (on && held ? " held" : "") + (i === 2 && custom !== null ? " rate" : "")} data-tip={on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
+        {i === 2 && custom !== null ? times(custom) : icon}
+      </button>
+    );
+  };
+  const stop = Math.max(0, SLIDER_STOPS.findIndex((s) => s >= chosen));
   return (
-    <div class="group speed">
+    <div class="group speed" ref={box}>
       <button class={"btn icon" + (!running ? " on" : "")} data-tip="Pause (Space)" aria-label="Pause" onClick={() => clock.setRunning(!running)}>
         <Icon.pause />
       </button>
       {btn(0, <Icon.play1 />, "Normal speed")}
       {btn(1, <Icon.play2 />, `${SPEEDS[1] / SPEEDS[0]} times as fast`)}
-      {btn(2, <Icon.play3 />, `${SPEEDS[2] / SPEEDS[0]} times as fast`)}
+      {btn(2, <Icon.play3 />, `${custom ?? SPEEDS[2] / SPEEDS[0]} times as fast\nDouble-click to pick a speed`, { onDblClick: () => setOpen((o) => !o) })}
+      {open && (
+        <div class="slider speed-pop">
+          <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label="Clock speed" data-tip={`Clock speed, ${times(SLIDER_STOPS[0])} to ${times(SLIDER_STOPS[SLIDER_STOPS.length - 1])}`}
+            onInput={(e) => clock.setMultiple(SLIDER_STOPS[Number((e.target as HTMLInputElement).value)])} />
+          <span class="num">{times(chosen)}</span>
+        </div>
+      )}
     </div>
   );
 }

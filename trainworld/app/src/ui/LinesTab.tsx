@@ -17,6 +17,7 @@ import { Chip, Icon, SortHead } from "./widgets";
 import { Money } from "./MoneyText";
 import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
+import { linesPending } from "../game/lineFigures";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
@@ -36,6 +37,7 @@ function RidersToday({ line }: { line: string }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
+  if (linesPending.value.has(line)) return <span class="val w-riders muted" data-tip="Riders are being worked out for the change">constructing...</span>;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{text}</span>;

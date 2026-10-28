@@ -4,7 +4,7 @@
 // with `onNetworkSnapshot` (the demand pool, T-026).
 
 import { effect, signal } from "@preact/signals";
-import { clock, SPEEDS } from "../game/clock";
+import { clock } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
 import { hiddenZones, setGameStart } from "../game/realms";
@@ -442,7 +442,7 @@ export class ClockClient {
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
-    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? SPEEDS[clock.speed.peek()] : 0, at: performance.timeOrigin + performance.now(), game: this.game });
+    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: this.game });
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.

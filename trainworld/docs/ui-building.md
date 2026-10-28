@@ -468,12 +468,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   more than 3 px drags it under the select tool's rules, and a press that does not move is the click
   that places or branches track as always. Constructed nodes are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
-- **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
-  m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected
-  interval; "Elevation of the stretch" puts the piece on one elevation: all its corners, or for a
-  straight piece with none its ends, as the selection bar does for one piece (`edgesLevel`; a
-  notice says when it cannot change) [T-841]. It has Construct
-  and the elevation buttons for its piece [T-244], and Remove. On double track (blueprint or
+- **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
+  says "Remove track"), the elevation buttons and the lines here [T-1669]. It has no corner list and
+  no curve radius: corners are dragged on the map. The elevation buttons put the piece on one
+  elevation: all its corners, or for a straight piece with none its ends, as the selection bar does
+  for one piece (`edgesLevel`; a notice says when it cannot change) [T-841, T-244]. On double track (blueprint or
   built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/TrackInspector.tsx`], an
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint
   ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
@@ -482,7 +481,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   Slowest curve gives the track's cap, 160 km/h or 320 on high-speed track, its hover saying which
   trains run up to what [T-817]; the slowest curve on high-speed track counts up to 320.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
-  corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
+  elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
   says in plain words that it is flat, and offers "Construct a flyover" (built junction) or "Add a flyover" (blueprint), a button under its header, with its price and the waiting

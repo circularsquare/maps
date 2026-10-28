@@ -70,7 +70,7 @@ export const lineShares = computed(() => {
         for (let k = 0; k + 1 < n; k++) ends.push([zz[k], zz[k + 1], Math.abs(s[k + 1] - s[k]) / 1000]);
       }
       // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
-      const { sc, from } = scalesOf(g, l, byId, m.fares.scales);
+      const { sc, from } = scalesOf(g, l, byId, m.fares);
       const pkm = new Map<string, number>(), board = new Map<string, number>(), paid = new Map<string, number>();
       let pkmAll = 0;
       for (const per of dm.loads) {

@@ -102,6 +102,9 @@ export type EditOp =
   | { op: "fareScale"; country: string; scale: number | null }
   /** T-1626: the fare multiplier on high-speed lines */
   | { op: "fareHsr"; mul: number }
+  /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or repay it in full; refused otherwise */
+  | { op: "borrow"; amount: number }
+  | { op: "repay" }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
@@ -259,6 +262,8 @@ export interface MoneyState {
   busRouteKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
+  /** T-1661: the loan out, US$M; 0 for none */
+  loan: number;
   fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; hsr?: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];

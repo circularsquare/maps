@@ -17,15 +17,15 @@ import { Money } from "./MoneyText";
 /** Days or hours, kept while the game is open. */
 const span = signal<"day" | "hour">("day");
 
-interface Entry { at: number; fares: number; running: number; upkeep?: number; trains: number; build: number; rides?: number }
+interface Entry { at: number; fares: number; running: number; upkeep?: number; interest?: number; trains: number; build: number; rides?: number }
 
 const W = 300, H = 96, PAD = 3;
 /** A young game's few entries sit at the right of this many slots, not stretched over the width. */
 const MIN_SLOTS = { day: 7, hour: 12 };
 
 const oneOff = (e: Entry) => e.trains + e.build;
-/** T-867: the cost line, running trains plus upkeep */
-const run = (e: Entry) => e.running + (e.upkeep ?? 0);
+/** T-867: the cost line, running trains plus upkeep, and T-1661 loan interest */
+const run = (e: Entry) => e.running + (e.upkeep ?? 0) + (e.interest ?? 0);
 const costs = (e: Entry) => run(e) + oneOff(e);
 const net = (e: Entry) => e.fares - costs(e);
 const usd = (v: number) => money(v * 1e6);
@@ -77,9 +77,10 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
     `Fares ${usd(e.fares)}`,
-    `Running costs ${usd(-run(e))}`,
+    `Running costs ${usd(-(e.running + (e.upkeep ?? 0)))}`,
     `Running trains ${usd(-e.running)}`,
     `Upkeep ${usd(-(e.upkeep ?? 0))}`,
+    ...((e.interest ?? 0) > 0 ? [`Interest ${usd(-(e.interest ?? 0))}`] : []),
     ...(oneOff(e) > 0 ? [`One-off costs ${usd(-oneOff(e))}`] : []),
     ...(e.trains > 0 ? [`New trains ${usd(-e.trains)}`] : []),
     ...(e.build > 0 ? [`Construction ${usd(-e.build)}`] : []),

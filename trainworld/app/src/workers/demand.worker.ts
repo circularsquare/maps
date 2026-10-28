@@ -25,7 +25,8 @@ import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
-import { scaledKnots } from "../game/fareCurve";
+import { curveKnots, scaledKnots } from "../game/fareCurve";
+import { roundedDefault } from "../game/fareDefault";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
 import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
@@ -1284,7 +1285,7 @@ async function run() {
           // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
           // the market takes the curve as set, at the baseline country's weight, and (T-1286) each
           // trip's at its origin's scale over its income's
-          let scale = 1;
+          let scale = 1, rounded: ReturnType<typeof roundedDefault> = null;
           if (p instanceof IntercityApi) {
             p.set_fare_weight(fareWeight(FARE_BASELINE));
             p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
@@ -1303,6 +1304,7 @@ async function run() {
             const country = cityById(city).country;
             p.set_fare_weight(fareWeight(country));
             scale = fareScale(country, m.fare.scales);
+            rounded = roundedDefault(m.fare, country); // T-1662
             const xy = m.stXY.slice();
             for (let k = 0; k < xy.length; k += 2) {
               const w = worldToCity(xy[k], xy[k + 1], city);
@@ -1316,9 +1318,9 @@ async function run() {
             p.set_bus(m.catchN ?? new Uint32Array(0), cxy);
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
-          p.set_fares(m.fare.base * scale, m.fare.perKm * scale, m.hopKm);
+          p.set_fares(rounded ? rounded.base : m.fare.base * scale, rounded ? rounded.perKm : m.fare.perKm * scale, m.hopKm);
           p.set_fare_mul(m.fareW ?? new Float32Array(0));
-          p.set_fare_curve(scaledKnots(m.fare, scale));
+          p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the

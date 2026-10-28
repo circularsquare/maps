@@ -103,6 +103,12 @@ export function takeGameLoadHold(): boolean {
   return armed;
 }
 
+const LONG_LOAD_MS = 30000;
+let onLoadChime: (() => void) | null = null;
+export function setLoadChimeHook(f: () => void) {
+  onLoadChime = f;
+}
+
 /** The held game's demand has its final result: the clock runs, unless a later game load waits for
  * its own. */
 export function loadComplete() {
@@ -110,6 +116,8 @@ export function loadComplete() {
   // the next one's hold, ran the clock on the last game's demand (no fares) until the next final
   if (holdArmed) return;
   clock?.setHeld(false);
+  // T-1655: a chime for a wait over 30 s, once per game
+  if (!gameReady.peek() && performance.now() - wait.since > LONG_LOAD_MS) onLoadChime?.();
   gameReady.value = true;
   if (startup.peek() === "loading") startup.value = "ready";
 }

@@ -1,0 +1,51 @@
+// T-1665: what holds back while demand is worked out. The clock runs no faster than DEMAND_CAP while a
+// solve or a load is going, and a line the player just rescheduled or built is "constructing..." where
+// its riders show (Lines tab, line panel) until the solve that counts it has finished.
+
+import { effect, signal } from "@preact/signals";
+import { clock } from "./clock";
+import { demandUpdating, refiningZone } from "./demand";
+import { loadProgress } from "./loading";
+import { world } from "./world";
+
+/** Lines whose riders are being worked out again after an edit. */
+export const linesPending = signal<ReadonlySet<string>>(new Set());
+
+/** Wall ms to wait for a solve to start before deciding the edit needs none (a line with no riders, or
+ * demand idle), so the label never sticks. */
+const NO_SOLVE_MS = 8000;
+
+export function startLineFigures() {
+  effect(() => {
+    clock.setCapped(demandUpdating.value || !!loadProgress.value || !!refiningZone.value);
+  });
+
+  /** each line's last signature, null before the first world */
+  let prev: Map<string, string> | null = null;
+  world.subscribe((w) => {
+    if (!w) { prev = null; return; }
+    const next = new Map<string, string>();
+    const changed: string[] = [];
+    for (const l of w.save.lines) {
+      const st = w.lineStats[l.id];
+      const sig = JSON.stringify([l.stops, l.tph, st?.status, st?.cars, st?.fast]);
+      next.set(l.id, sig);
+      if (prev && prev.get(l.id) !== sig && st?.status === "running") changed.push(l.id);
+    }
+    const loading = clock.held.peek();
+    prev = next;
+    if (loading || !changed.length) return;
+    const set = new Set(linesPending.peek());
+    for (const id of changed) set.add(id);
+    linesPending.value = set;
+    setTimeout(() => {
+      if (!demandUpdating.peek() && linesPending.peek().size) linesPending.value = new Set();
+    }, NO_SOLVE_MS);
+  });
+
+  let wasUpdating = demandUpdating.peek();
+  demandUpdating.subscribe((on) => {
+    if (wasUpdating && !on && linesPending.peek().size) linesPending.value = new Set();
+    wasUpdating = on;
+  });
+}

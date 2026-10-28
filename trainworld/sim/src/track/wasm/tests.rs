@@ -2902,3 +2902,41 @@ fn removing_past_a_station_stops_at_its_platform_end() {
         }
     }
 }
+
+/// T-1667: track drawn on from a station at a dead end, at either end of its edge, leaves the
+/// platform where it was: the station's node moves back to the platform's middle, keeping its id
+/// and its line, and the new track starts from the old end.
+#[test]
+fn drawing_on_from_a_dead_end_station_keeps_its_platform() {
+    for (built, from_a) in [(false, false), (true, false), (false, true), (true, true)] {
+        let mut a = api();
+        a.set_cash(1e6);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let node_at = |t: &TrackApi, x: f64| (0..t.w.net.node_count() as u32).find(|&n| t.w.net.node_ok(n) && (t.w.net.node_x[n as usize] - x).abs() < 1e-6).unwrap();
+        let (s0, s1) = (node_at(&a, 0.0), node_at(&a, 1000.0));
+        assert_eq!(a.add_station(1, s0, 0.0, 0.0, 120, "West".into()), 0, "{}", a.issues());
+        assert_eq!(a.add_station(1, s1, 0.0, 0.0, 120, "East".into()), 0, "{}", a.issues());
+        let l = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(l, &[s0, s1], 2, 0, 0, 30.0, 180.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
+        if built {
+            assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        }
+        let (st, x0, far) = if from_a { (s0, 0.0, -1500.0) } else { (s1, 1000.0, 2500.0) };
+        let e: Vec<f64> = [1.0, st as f64, 0.0, 0.0, 0.0].iter().chain(free(far, 400.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issues());
+        let back = if from_a { 60.0 } else { -60.0 };
+        assert!((a.w.net.node_x[st as usize] - (x0 + back)).abs() < 2.01, "station at {}", a.w.net.node_x[st as usize]);
+        assert_eq!(a.w.net.node_ports[st as usize].n, 2);
+        assert_eq!(a.w.net.station_data(st).unwrap().built, built);
+        let old_end = node_at(&a, x0 - back / 30.0);
+        assert_eq!((a.w.net.node_ports[old_end as usize].n, a.w.net.node_platform[old_end as usize]), (2, 0), "the route starts 2 m past the old end");
+        assert_eq!(a.line_stops(l), [s0, s1]);
+        assert!(!a.w.net.line_broken[l as usize]);
+        let nodes: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&n| a.w.net.node_ok(n)).collect();
+        let bad = a.w.net.validate(&live_edges(&a), &nodes, &[]);
+        assert!(bad.is_empty(), "{bad:?}");
+        assert_eq!(a.undo(), 0);
+        assert_eq!((a.w.net.node_x[st as usize], a.w.net.node_ports[st as usize].n), (x0, 1), "one undo step");
+    }
+}

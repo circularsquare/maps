@@ -35,6 +35,8 @@ export interface DayLedger {
   build: number;
   /** track and station upkeep (T-867); absent in days saved before it, read as 0 */
   upkeep?: number;
+  /** loan interest (T-1661); absent when none was paid */
+  interest?: number;
   /** train rides taken (T-565); absent in days saved before it, read as 0 */
   rides?: number;
   /** points earned (T-684); absent before it, read as 0 */
@@ -50,6 +52,8 @@ export interface HourLedger {
   build: number;
   /** upkeep (T-867), as in `DayLedger` */
   upkeep?: number;
+  /** loan interest (T-1661), as in `DayLedger` */
+  interest?: number;
   /** train rides taken (T-565), as in `DayLedger` */
   rides?: number;
   /** points earned (T-684), as in `DayLedger` */
@@ -67,6 +71,8 @@ export interface SaveHeader {
   clock: number;
   /** US$M */
   cash: number;
+  /** T-1661: the loan out, US$M; absent for none */
+  loan?: number;
   /** cars owned */
   fleet: number;
   /** high-speed cars owned (T-817; absent in older saves) */

@@ -13,7 +13,7 @@
 // tiles) and one-off redraws after a state change (`invalidate`).
 
 import type { Map as MlMap } from "maplibre-gl";
-import { clock, SPEEDS } from "../game/clock";
+import { clock } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { anchor, EARTH_C, toLocal } from "./geo";
 import { cameraFrom, clipToCss, mercToCss, sizeCanvasLike, type Camera } from "./gl";
@@ -269,7 +269,7 @@ export class Overlay {
   /** ms the next draw can wait with the camera still, by the last draw's options and the view */
   private stillWait(): number {
     if (!this.lastOpt) return 0;
-    return this.renderer.stillWaitMs(this.map.getZoom(), this.map.getCenter().lat, SPEEDS[clock.speed.peek()], this.lastOpt);
+    return this.renderer.stillWaitMs(this.map.getZoom(), this.map.getCenter().lat, clock.rate(), this.lastOpt);
   }
 
   /** Plan the next frame again from what is drawn now (a pending timer was set for the last plan). */
@@ -299,7 +299,7 @@ export class Overlay {
       // Nothing moves: one frame when the game minute turns, for the clock.
       if (this.slowTimer) return;
       const t = clock.now();
-      const wait = (((Math.floor(t / 60) + 1) * 60 - t) / SPEEDS[clock.speed.peek()]) * 1000;
+      const wait = (((Math.floor(t / 60) + 1) * 60 - t) / clock.rate()) * 1000;
       this.slowTimer = window.setTimeout(() => {
         this.slowTimer = 0;
         if (clock.ticking) this.frameNow();
@@ -314,7 +314,7 @@ export class Overlay {
     if (this.focused) {
       const drawIn = Math.max(0, still - (performance.now() - this.lastFrame));
       const t = clock.now();
-      const minuteIn = (((Math.floor(t / 60) + 1) * 60 - t) / SPEEDS[clock.speed.peek()]) * 1000 + 1;
+      const minuteIn = (((Math.floor(t / 60) + 1) * 60 - t) / clock.rate()) * 1000 + 1;
       this.slowTimer = window.setTimeout(() => {
         this.slowTimer = 0;
         clock.tick();

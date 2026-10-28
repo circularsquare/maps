@@ -1,7 +1,7 @@
 // The station inspector (SPEC 8): a station on its own, or its complex.
 
 import { useEffect, useState } from "preact/hooks";
-import { clock, SPEEDS } from "../../game/clock";
+import { clock } from "../../game/clock";
 import { lineDemand } from "../../game/demand";
 import { count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist } from "../../game/coords";
@@ -116,7 +116,7 @@ function useComplexNow(members: string[]): ComplexNow | null {
       if (Math.abs(at - t) < 10 && r?.board === board) return;
       t = at;
       board = r?.board ?? null;
-      const c = complexNow(members, 2 * Math.max(10, 0.15 * SPEEDS[clock.speed.peek()]) + 10);
+      const c = complexNow(members, 2 * Math.max(10, 0.15 * clock.rate()) + 10);
       const k = c?.key ?? "";
       if (k !== key || !shown || !c) {
         key = k;
@@ -380,14 +380,14 @@ function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
   void clock.minute.value; // re-render each game minute: the crowds change
   // and the moment a train leaves one of its platforms with whoever fitted (T-238)
   const [, bump] = useState(0);
-  const speed = clock.speed.value, running = clock.running.value, held = clock.held.value;
+  const speed = clock.rateNow.value, running = clock.running.value, held = clock.held.value;
   const w = world.value;
   const r = live.overlay?.renderer;
   const epoch = r?.tripsEpoch ?? NaN;
   const next = r?.board ? nextLeavingAt(r.board, node, clock.now() - epoch) : Infinity;
   useEffect(() => {
     if (!Number.isFinite(next) || !clock.ticking) return;
-    const ms = ((next - (clock.now() - epoch)) / SPEEDS[speed]) * 1000 + 5;
+    const ms = ((next - (clock.now() - epoch)) / speed) * 1000 + 5;
     const id = setTimeout(() => bump((x) => x + 1), Math.max(0, ms));
     return () => clearTimeout(id);
   }, [next, epoch, speed, running, held]);

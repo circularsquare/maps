@@ -23,7 +23,14 @@ export function setEditSink(f: (op: EditOp) => Promise<EditAnswer>) {
   sink = f;
 }
 
+/** T-1659: told of every refusal (map/buildSound.ts plays the knock). */
+let onRefuse: (() => void) | null = null;
+export function setRefuseHook(f: () => void) {
+  onRefuse = f;
+}
+
 export function say(text: string, bad = false) {
+  if (bad) onRefuse?.();
   notice.value = { text, bad, at: performance.now() };
 }
 
@@ -263,6 +270,14 @@ export function setFareScale(country: string, scale: number | null) {
 /** T-1626: the fare multiplier on high-speed lines. */
 export function setFareHsr(mul: number) {
   return edit({ op: "fareHsr", mul });
+}
+
+/** T-1661: take a loan of `amount` US$M, or repay the one out; the answer says whether it was done. */
+export function borrow(amount: number) {
+  return edit({ op: "borrow", amount }, true, true);
+}
+export function repay() {
+  return edit({ op: "repay" }, true, true);
 }
 
 export function renameLine(id: LineId, name: string) {

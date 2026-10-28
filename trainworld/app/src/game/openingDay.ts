@@ -1,8 +1,7 @@
 // Opening day (T-1434): a line that starts running for the first time in this page's session has
 // its first game day marked. Its stations get a small bunting under their names (map/stationLabels.ts),
-// its row in the Lines tab counts the riders up from 0 once its first figure is shown, and the
-// "bung" plays (map/buildSound.ts). Held on the main thread only and not saved: a loaded game shows
-// no opening days.
+// its row in the Lines tab counts the riders up from 0 once its first figure is shown. Held on the
+// main thread only and not saved: a loaded game shows no opening days.
 
 import { signal } from "@preact/signals";
 import { clock } from "./clock";

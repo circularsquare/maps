@@ -5,6 +5,7 @@
 // 600 m), so two attractions in one cell share it.
 
 import { effect } from "@preact/signals";
+import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, widenBox, worldFrameEpoch, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, visitsOn, type Attraction } from "../game/attractions";
@@ -18,7 +19,7 @@ import { modeBar } from "./modeBar";
 import { cityOverview } from "./intercityView";
 import { hiddenOnGlobe } from "./live";
 import type { Overlay } from "./overlay";
-import { overlayCamera, PanPlane } from "./moving";
+import { PlaceThrottle } from "./moving";
 
 /** A classical front: a pediment on three columns. */
 const MARK_PATH = "M8 1 15 5H1ZM2.5 6h2.2v6H2.5ZM6.9 6h2.2v6H6.9ZM11.3 6h2.2v6h-2.2ZM1 13h14v2H1Z";
@@ -41,7 +42,7 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   const plane = document.createElement("div");
   plane.className = "mark-plane";
   box.appendChild(plane);
-  const pan = new PanPlane(overlayCamera(overlay), plane);
+  const throttle = new PlaceThrottle(() => overlay.moving);
   let all: Attraction[] = [];
   void loadAttractions().then((a) => { all = a; place(); });
   /** each zone's attractions with the cell the demand layer gave them, -1 none (not in the zone) */
@@ -49,7 +50,7 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   /** each zone's attractions' legs by mode on a day, and the result they were read from */
   const modesOf = new Map<string, { at: DemandView; modes: Map<Attraction, Modes> }>();
   const asked = new Set<string>();
-  let marks: HTMLDivElement[] = [];
+  const marks: { el: HTMLDivElement; mx: number; my: number; t: string; gone: boolean; lng: number; lat: number }[] = [];
   let shown: Attraction[] = [];
 
   /** The nearest cell within reach of each attraction in the zone's box, by a grid of cells. */
@@ -107,10 +108,22 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   };
 
   let drawn = 0;
-  const placed: string[] = [];
+  const out: [number, number] = [0, 0];
+  /** T-1657: between full placements each mark follows its attraction every frame (pan, zoom and globe) */
+  const follow = () => {
+    for (let i = 0; i < drawn; i++) {
+      const m = marks[i];
+      overlay.mercToScreen(m.mx, m.my, out);
+      const gone = Number.isNaN(out[0]);
+      if (gone !== m.gone) m.el.style.visibility = (m.gone = gone) ? "hidden" : "";
+      if (gone) continue;
+      const t = `translate(${Math.round(out[0])}px, ${Math.round(out[1])}px)`;
+      if (t !== m.t) m.el.style.transform = m.t = t;
+    }
+  };
   const place = () => {
-    if (!pan.due()) return; // T-1207
-    pan.placed();
+    if (!throttle.due()) return follow(); // T-1207
+    throttle.done();
     shown = [];
     const z = map.getZoom();
     if (all.length && z >= minZoom() && !cityOverview.peek()) {
@@ -128,19 +141,28 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
       if (x < -SIZE || y < -SIZE || x > w + SIZE || y > h + SIZE || hiddenOnGlobe(a.lng, a.lat)) continue;
       let m = marks[k];
       if (!m) {
-        m = marks[k] = document.createElement("div");
-        m.className = "attraction-mark";
-        m.innerHTML = `<svg viewBox="0 0 16 16"><path d="${MARK_PATH}" /></svg>`;
-        plane.appendChild(m);
+        const el = document.createElement("div");
+        el.className = "attraction-mark";
+        el.innerHTML = `<svg viewBox="0 0 16 16"><path d="${MARK_PATH}" /></svg>`;
+        plane.appendChild(el);
+        m = marks[k] = { el, mx: 0, my: 0, t: "", gone: false, lng: 0, lat: 0 };
       }
-      if (k >= drawn) m.style.display = "";
+      const c = maplibregl.MercatorCoordinate.fromLngLat([a.lng, a.lat]);
+      m.mx = c.x;
+      m.my = c.y;
+      m.lng = a.lng;
+      m.lat = a.lat;
+      if (m.gone) m.el.style.visibility = "";
+      m.gone = false;
+      if (k >= drawn) m.el.style.display = "";
       const t = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-      if (placed[k] !== t) m.style.transform = placed[k] = t;
+      if (m.t !== t) m.el.style.transform = m.t = t;
       k++;
     }
-    for (let i = k; i < drawn; i++) marks[i].style.display = "none";
+    for (let i = k; i < drawn; i++) marks[i].el.style.display = "none";
     drawn = k;
   };
+  if (location.search.includes("debug=1")) (window as any).twAttractionMarks = () => marks.slice(0, drawn).map((m) => ({ el: m.el, lng: m.lng, lat: m.lat }));
   overlay.afterMapFrame.push(place);
   map.on("moveend", ensure);
 

@@ -64,6 +64,10 @@ purpose filter the purpose drawn is ringed in the bar.
   [T-1434, [ui-map.md](ui-map.md) "Opening day"] its Riders cell reads 0 until its figure first
   shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
   gives the real figure.
+  **A running line the player just rescheduled, re-stopped or built reads "constructing..."** in
+  place of its riders, here and in the line inspector's Past 24 hours (its Riders row, the purpose
+  split hidden), until the demand solve that counts the change has finished [T-1665,
+  `game/lineFigures.ts`]; a game load shows none.
   The "+N daily rides" after a stop edit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Opening day").
 - **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
@@ -392,7 +396,7 @@ the Build tab's quote has rows for bus routes and new buses.
   in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing
   refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
-  only) and Remove track; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
+  only) and Remove track (Remove blueprint on a blueprint) [T-1669]; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
   or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has an icon button (the crosshair, hover "Go to Philadelphia") [T-1439]; a trip
   opened from a selection has Back.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in

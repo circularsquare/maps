@@ -1,11 +1,13 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
 import { busesText, busRouteRule, busRunRule, busUpkeepRule, money, runCostRule, shortDistance, upkeepText } from "../game/format";
-import { setFareHsr, setFareScale, stationsById, world } from "../game/world";
+import { borrow, repay, setFareHsr, setFareScale, stationsById, world } from "../game/world";
+import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
 import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
+import { roundedDefault } from "../game/fareDefault";
 import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
 import { scopeZone } from "../game/listScope";
@@ -18,7 +20,7 @@ import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { MoneyHistory } from "./MoneyHistory";
 import { ScopeToggle } from "./listParts";
 
-const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - d.trains - d.build;
+const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.interest ?? 0) - d.trains - d.build;
 
 /** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
 function upkeepTip(m: MoneyState): string {
@@ -142,7 +144,7 @@ export function MoneyTab() {
   // T-1277: the curve as charged in the country of the selected station or city, else the one in view
   const country = fareCountry();
   const scale = fareScale(country, m.fares.scales);
-  const shown = scaleNodes(m.fares.nodes, scale);
+  const shown = roundedDefault(m.fares, country)?.nodes ?? scaleNodes(m.fares.nodes, scale);
   const f = farePreview.value ?? shown;
   // T-1626: shown once a line runs high-speed trains
   const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
@@ -154,6 +156,11 @@ export function MoneyTab() {
           ? <Row label={<span data-tip="Fares minus running costs, upkeep, trains and construction">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
           : <Row label="Cash" bold><LiveCash /></Row>}
       </ul>
+      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
+      <FareGraph nodes={shown} scale={scale} />
+      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
+        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
+      <FareEffect preview={farePreview.value} scale={scale} />
       <table class="ledger">
         <tr>
           <th style={{ textAlign: "left" }}><ScopeToggle tip={REGION_SPLIT} /></th>
@@ -175,6 +182,13 @@ export function MoneyTab() {
           {cell(prev, (d) => -(d.upkeep ?? 0))}
           <TodayCell zone={zone} v={(d) => -(d.upkeep ?? 0)} />
         </tr>
+        {zone === null && (m.loan > 0 || (prev?.interest ?? 0) > 0) && (
+          <tr>
+            <td data-tip={`Interest on the loan: ${LOAN_RATE * 100}% of it a game day`}>Interest</td>
+            {cell(prev, (d) => -(d.interest ?? 0))}
+            <TodayCell zone={zone} v={(d) => -(d.interest ?? 0)} />
+          </tr>
+        )}
         <tr>
           <td data-tip={m.fleetBus > 0 || m.busesNeeded > 0 ? "Cars and buses bought" : undefined}>New trains</td>
           {cell(prev, (d) => -d.trains)}
@@ -192,11 +206,6 @@ export function MoneyTab() {
         </tr>
       </table>
       <MoneyHistory zone={zone} />
-      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
-      <FareGraph nodes={shown} scale={scale} />
-      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
-        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
-      <FareEffect preview={farePreview.value} scale={scale} />
       <div class="h">Trains</div>
       <ul class="rows">
         <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>
@@ -234,6 +243,40 @@ export function MoneyTab() {
       </ul>
       <ul class="rows">
         <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>
+      </ul>
+      {m.mode !== "sandbox" && <LoanRows loan={m.loan} />}
+    </>
+  );
+}
+
+/** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out; the loan,
+ * its interest a day and Repay while one is. */
+function LoanRows({ loan }: { loan: number }) {
+  const rule = `Interest is ${LOAN_RATE * 100}% of the loan a game day. One loan at a time.`;
+  if (loan <= 0) {
+    return (
+      <>
+        <div class="h">Loan</div>
+        <ul class="rows">
+          <Row label="Borrow">
+            <span class="group">
+              {LOAN_AMOUNTS.map((a) => (
+                <button class="btn text" data-tip={`Borrow ${money(a * 1e6)}. ${rule}`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>
+              ))}
+            </span>
+          </Row>
+        </ul>
+      </>
+    );
+  }
+  const canPay = liveMoney.value.cash >= loan;
+  return (
+    <>
+      <div class="h">Loan</div>
+      <ul class="rows">
+        <Row label="Borrowed"><Money dollars={loan * 1e6} /></Row>
+        <Row label="Interest a day"><span data-tip={rule}><Money dollars={loan * LOAN_RATE * 1e6} /></span></Row>
+        <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? `Pay back ${money(loan * 1e6)} from the cash` : `Needs ${money(loan * 1e6)} in cash`} onClick={() => void repay()}>Repay</button>} />
       </ul>
     </>
   );

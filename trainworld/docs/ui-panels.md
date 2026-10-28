@@ -49,7 +49,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   window loses focus (Win+Shift+S for a screenshot) every hover, the map's too, stays up until the
   pointer next moves over the page, leaving ignored till then [T-483, `ui/blurHold.ts`]. Text lives in `data-tip` (SVG shapes
   too); no `title` attribute is written anywhere, and one met under the pointer (MapLibre's
-  controls) is turned into the tag first.
+  controls) is turned into the tag first. The tag is a manual popover, shown again each time it
+  appears, so it sits over a modal dialog such as the saved games panel [T-1656].
 - **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles,
   inter-city and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
@@ -206,7 +207,13 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
-  speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  speeds (1x, 4x, 16x). **Double-click the 16x button** for a slider of 0.5x to 100x [T-1664]
+  (18 round stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye); the speed picked shows
+  as text on that button and stays until another speed button is pressed (not saved with the game).
+  **While demand is being worked out** (a solve running, a load going, the zone in view shown rough)
+  the clock runs no faster than 4x [T-1665, `game/lineFigures.ts`]: the chosen speed's button is dimmed,
+  its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
+  the cap lifts by itself when demand is final. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
@@ -365,7 +372,8 @@ not the browser's.
 ## Money tab
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
-T-728); yesterday and today (fares, running trains, upkeep, new trains,
+T-728); then the fare controls (below) [T-1660]; then yesterday and today (fares, running trains, upkeep, interest
+while a loan is out or was paid yesterday (the network's only, never a region's), new trains,
 construction, net; Upkeep's hover gives the rule and the network's track, stations and upkeep a day, T-867), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
@@ -389,8 +397,9 @@ day or hour now is drawn as it fills (a dashed last segment, a paler bar) and mo
 Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Going out for Golden Week, China") [T-264]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
-charts are saved with the game and are there after a reload [T-567]. Then, whatever the toggle,
-the fares of one country [T-1277]: the selected station's or city's, else the zone in view's, else
+charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
+"Interest" line when it had loan interest, which the expenses line includes. The fares at the top, whatever the toggle,
+are one country's [T-1277]: the selected station's or city's, else the zone in view's, else
 the home city's. The graph and rows show the network's curve times that country's fare scale, and
 an edit there sets the curve (divided back by the scale), so every country's fares move with it.
 The fare curve (rule: [track-and-service.md](track-and-service.md), fares) is drawn as a graph of
@@ -450,8 +459,15 @@ demand has solved it, two more rows follow: "Riders a day" with the estimated ch
 ("-6%") and "Fares a day" with the estimated change in fare income ("+$1.2M"), each hover giving
 the estimate and today's figure; otherwise neither shows [T-1300, `game/fareEstimate.ts`: each
 layer's rail trips times exp(its fare sensitivity over its rail trips x the curve's change at its
-riders' mean trip length, line by line), fare income as the riders kept pay the new fares]. Then cars
-owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
+riders' mean trip length, line by line), fare income as the riders kept pay the new fares]. Under
+History, cars
+owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Last, "Loan"
+(not in a sandbox) [T-1661]: with none out, "Borrow" and three buttons, $1B, $5B and $10B, each hover
+giving the rule (1% of the loan a game day, one at a time); with one out, "Borrowed" and its amount,
+"Interest a day" (hover: the rule) and a "Repay" button, disabled while the cash is under the loan
+(hover: what it needs). Default fares show rounded: a country's fares are the curve times its scale,
+rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar, until the player
+changes the curve or that country's scale [T-1662, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
 ## Cities tab

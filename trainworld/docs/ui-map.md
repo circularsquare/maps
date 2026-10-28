@@ -129,20 +129,20 @@ the class under the pointer: "Hills, track costs 1.6x".
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
-    1.5 px each side at most outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in
+    outside its casing, each side 1.75 px at most plus 15% of the line's own width (a thin local line
+    and a wide traffic line alike show it, T-1663; #c0392b, #f0584f in the dark theme; `fullTrack` in
     `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
     its casing between and a neighbouring line's casing covers the band where they touch, with
     0.5 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
-    reads as a stripe on a red or orange line; band and outline scale with zoom (30% at zoom 9, 60%
-    at 12, full from 15; `fullScale` in `map/renderer.ts`, T-1549), and the band's red is mixed 25%
-    towards the casing's colour, and its
-    body darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
+    reads as a stripe on a red or orange line; the fixed part of band and outline scales with zoom
+    (30% at zoom 9, 60% at 12, full from 15; `fullScale` in `map/renderer.ts`, T-1549), and the
+    line's body is darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
     with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
     from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
-    mark as strong as that wait: 15% of full strength at 0.2 min plus the rest in proportion, all
-    of it from 15 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
+    mark as strong as that wait: 50% of full strength at 0.2 min plus the rest in proportion, all
+    of it from 8 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
     mixed from the casing's colour towards the red and the darkening scaled alike, so the real
-    save's typical stretch (1.5 min at 08:00) is faint. The hover adds "Track at capacity at high
+    save's typical stretch (1.5 min at 08:00) shows at about 60%. The hover adds "Track at capacity at high
     demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
     crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
     and their hover lines.
@@ -389,19 +389,24 @@ those who got on, less the load carried on.
   `setBeforeEdit` as it sends, and the track and station tools play theirs in their click handlers.
   A click the ghost already shows refused is silent; any other that the worker then refuses has
   sounded. One sound per click however many pieces it places (a pasted schedule or a folded train
-  count is one sound per click, not per edit). Three sounds. Recordings (`app/public/sounds/`, with
+  count is one sound per click, not per edit). Recordings (`app/public/sounds/`, with
   their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
   `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint, placing a station, and any
-  construct (0.3); a cork pop, quiet (0.09), on a panel click that changes the world: train
+  construct (0.21); a wood knock (`knock.wav`, 0.16 s, 0.12) on every refusal, that is every
+  `say(text, true)` in `game/world.ts` (a train count or headway the cash will not cover, a track
+  or move that cannot go there, a bus line that cannot be drawn); a cork pop, quiet (0.09), on a panel click that changes the world: train
   count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or
   removed in a line, a station's platform length, a station upgrade or a passage taken out, double
   up, a track's elevation, a junction's flying switch, a line copied or removed, a schedule pasted.
-  Synthesised: "bung" on adding or building a station upgrade or a passage, and on a line's opening day (one
+  The snap and the pop each play one of four variants (playback rate 0.94, 0.98, 1.02, 1.06 with
+  gains 0.95, 1, 0.85, 0.9; `VARIANTS`), picked at random, never the same one twice in a row
+  [T-1658]. Synthesised: "bung" on adding or building a station upgrade or a passage (one
   Karplus-Strong string at A3, 220 Hz, 5% sharp at the start and settling in 60 ms, low-passed at
-  2.4 kHz, with a 110 Hz sine thump; under 0.4 s). Silent: opening a panel, hovering, tabs, names,
+  2.4 kHz, with a 110 Hz sine thump; under 0.4 s); a soft chime of two sine notes (E5, then A5
+  0.16 s later, 0.7 s each) when a whole-game load that held the clock over 30 s ends
+  (`loadComplete` in `game/loading.ts`, T-1655). A line's opening day makes no sound. Silent: opening a panel, hovering, tabs, names,
   colours, fares, undo, the remove tools, drags. The same sound twice within a short gap (bung 0.3 s, snap
-  0.15, pop 0.05) plays once. The opening day's "bung" comes 250 ms after the start of the construct's
-  snap, less the time the worker took to answer. One audio context serves all (`map/audioOut.ts`):
+  0.15, pop 0.05, knock 0.25) plays once. One audio context serves all (`map/audioOut.ts`):
   opened with `latencyHint: "interactive"`, resumed at once, a silent buffer played through it once
   the files are decoded.
 
@@ -413,7 +418,8 @@ those who got on, less the load carried on.
   complex's stations sharing a name have one label at their mean position, oriented like the
   member with the most lines. They beat basemap place names through an invisible symbol layer of
   the same names that MapLibre's collision honours. A flat pan moves their shared compositor
-  layer; placement and the greedy overlap pass run on other camera changes, edits, font loading,
+  layer; a zoom, rotation or tilt moves each shown name with its station every frame at the spot
+  it last took (T-1621); placement and the greedy overlap pass run at most every 100 ms while the camera moves, and on edits, font loading,
   showing labels again and after movement ends. A 256 px margin prepares names entering the
   screen, and a pan re-places them after 128 px of travel (notes/T-074.md).
 - **Opening day** [T-1434; `game/openingDay.ts`]: a line opens when it first runs with trains in
@@ -421,7 +427,7 @@ those who got on, less the load carried on.
   For one game day (86,400 s of the clock, from the moment it opens) its stations' names carry a
   string of tiny pennants under them, 7 px each up to 63 px, in the line's colour (the lines' colours
   in turn where two or three opening lines share a station; `.stn-label.opening`). It also
-  plays "bung" 250 ms after the construct's own sound, and the line's Riders cell in the Lines tab
+  and the line's Riders cell in the Lines tab
   counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
   with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
   shows no opening days, and one in progress ends with the page.

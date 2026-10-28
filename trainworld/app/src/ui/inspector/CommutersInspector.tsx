@@ -6,13 +6,9 @@ import { shownDayPhrase } from "../../game/ui";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
-import { Spinner } from "../Spinner";
 import { Row } from "../widgets";
 import { ClosestStations } from "./ClosestStations";
-import { SelectionLongerTrips } from "./LongerTrips";
 import { PurposeBreakdown } from "./PurposeBreakdown";
-
-const PLACES = 8;
 
 const swatch = (t: number, w: number, d: number) => {
   const c = modeMix(t, w, d);
@@ -54,27 +50,13 @@ export function CommutersInspector() {
         {swatch(...p.totals)}
         <span class="name">{home ? "Trips from homes here" : "Trips to destinations here"}</span>
       </div>
-      <div class="sub muted" data-tip="Outward and return legs included. Inter-city trips are counted separately below.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
+      <div class="sub muted" data-tip="Outward and return legs included.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />
       {p.at && p.sel.areas === 1 && <ClosestStations lng={p.at[0]} lat={p.at[1]} />}
       {p.purpose && p.purpose !== "all" && <p class="muted small">
         {`${capitalise(purposeWords(p.purpose))} trips only.`}
       </p>}
       <PurposeBreakdown purposes={p.purposes} />
-      <div class="h">
-        {home ? "Where they go" : "Where their homes are"}
-        <span class="right muted small">{p.far ? `trip legs ${shownDayPhrase.value}` : ""}</span>
-      </div>
-      {p.far ? (
-        <ul class="rows">
-          {p.far.places.slice(0, PLACES).map((pl) => (
-            <Row label={pl.name}>{count(pl.riders)}</Row>
-          ))}
-        </ul>
-      ) : (
-        <p class="muted"><Spinner tip="Working out where they go" /></p>
-      )}
-      <SelectionLongerTrips />
     </>
   );
 }

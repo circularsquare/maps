@@ -21,7 +21,8 @@ import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
-import { faresFor, faresOf, hsrFare } from "./fareCurve";
+import { faresFor, faresOf, hsrFare, type Fares } from "./fareCurve";
+import { roundedDefault } from "./fareDefault";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
@@ -153,7 +154,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
       const g = lineGeo(w, l, byId), km = g.km;
       // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
-      const { sc, from } = scalesOf(g, l, byId, m.fares.scales);
+      const { sc, from } = scalesOf(g, l, byId, m.fares);
       const pkm: number[] = [], pkmPaid: number[] = [];
       for (const seg of dm.loads) {
         let a = 0, b = 0;
@@ -190,7 +191,7 @@ export interface LineGeo {
   km: number[];
   kmAbs: number[];
   zones: string[];
-  scales?: { of: Record<string, number> | undefined; sc: number[]; from: number[] };
+  scales?: { of: unknown; sc: number[]; from: number[] };
 }
 let geoOf: { w: WorldView; zl: number; lines: Map<string, LineGeo> } | null = null;
 export function lineGeo(w: WorldView, l: LineInput, byId: Map<string, StationInput>): LineGeo {
@@ -204,11 +205,19 @@ export function lineGeo(w: WorldView, l: LineInput, byId: Map<string, StationInp
   geoOf.lines.set(l.id, (g = { km, kmAbs, zones }));
   return g;
 }
-/** A line's stops' fare scales (`stopScales`) and each stretch's, its starting stop's (T-1277). */
-export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInput>, of: Record<string, number> | undefined) {
-  if (g.scales?.of !== of || !g.scales) {
-    const sc = stopScales(l.stops, byId, of), n = l.stops.length;
-    g.scales = { of, sc, from: [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)] };
+/** A line's stops' base fare multipliers (`sc`) and each stretch's rate multiplier, its starting
+ * stop's (`from`), on the curve's first stretch (T-1277; T-1662: a country's rounded default
+ * fares are not the curve times its scale). `fares` is the cache key: the same object, the same multipliers. */
+export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInput>, fares: Pick<Fares, "base" | "perKm" | "nodes" | "scales">) {
+  if (g.scales?.of !== fares || !g.scales) {
+    const n = l.stops.length, sc: number[] = [], rate: number[] = [];
+    for (const id of l.stops) {
+      const s = byId.get(id), c = (s && stationCountry(s)) ?? undefined;
+      const scale = fareScale(c, fares.scales), r = roundedDefault(fares, c);
+      sc.push(r && fares.base > 0 ? r.base / fares.base : scale);
+      rate.push(r && fares.perKm > 0 ? r.perKm / fares.perKm : scale);
+    }
+    g.scales = { of: fares, sc, from: [...rate.slice(0, n - 1), ...[...rate].reverse().slice(0, n - 1)] };
   }
   return g.scales;
 }

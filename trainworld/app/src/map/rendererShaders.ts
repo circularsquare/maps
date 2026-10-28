@@ -44,9 +44,11 @@ const SPEED_BLEND = (() => {
 })();
 /** T-1152, T-1160: a full stretch's red edge and darkening (the traffic view) as a share of track at
  * capacity's, by its riders' average wait for a train with room: FULL_FLOOR at FULL_WAIT_FROM (min,
- * the account's `FULL_WAIT_MIN_S`), all of it from FULL_WAIT_STRONG, so a stretch with the real
- * save's typical 1.5 min wait is faint (Anita). */
-export const FULL_FLOOR = 0.15, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 15;
+ * the account's `FULL_WAIT_MIN_S`), all of it from FULL_WAIT_STRONG; the real save's typical 1.5 min
+ * wait reads clearly (T-1663). */
+export const FULL_FLOOR = 0.5, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 8;
+/** T-1663: the red band is this share of the line's own width on top of the zoom-scaled base, so it reads on thin and thick lines alike. */
+const FULL_WIDTH_SHARE = "0.3";
 const HOT_RIM_MIX = "0.6";
 export const HOT_STATIONS = 16;
 
@@ -143,7 +145,7 @@ void main() {
   bool fullOut = u_full_pass == 2;
   if (full && !(u_kind == 1 && a_full != 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
-  float cas = full ? u_casing + u_full_px + (fullOut ? u_full_out : 0.0) : u_casing;
+  float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * a_wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (ghost ? core
@@ -211,7 +213,7 @@ void main() {
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
   // T-1152: a weaker edge towards the casing's colour, not see-through, which would bead at the joints
-  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : fullOut ? u_casing_rgb : full ? mix(u_casing_rgb, u_full_rgb, 0.75 * fs) : u_casing_rgb;
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : fullOut ? u_casing_rgb : full ? mix(u_casing_rgb, u_full_rgb, fs) : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {

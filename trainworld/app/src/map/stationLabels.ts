@@ -43,6 +43,9 @@ interface Label {
   /** what was last written to its style, so a placement writes only what changed (T-689) */
   hidden?: boolean;
   transform?: string;
+  /** its top left from its station's screen point at the last full placement (T-1621) */
+  ox?: number;
+  oy?: number;
   /** the opening-day bunting's background (T-1434), "" for none */
   rib: string;
 }
@@ -76,6 +79,9 @@ export class StationLabels {
   /** Shown labels' boxes in screen px at the last full placement, before the pan offset. */
   private placed: [number, number, number, number][] = [];
   private offset: [number, number] = [0, 0];
+  /** The labels behind `placed`, same order, for `follow`. */
+  private shownLabels: Label[] = [];
+  private projected: [number, number] = [0, 0];
   /** Bumped whenever the shown names change place, so capacity tags know to place again (T-184). */
   version = 0;
   /** Called after the names change place outside a pan (capacity tags follow, T-184). */
@@ -317,7 +323,7 @@ export class StationLabels {
         return;
       }
     }
-    if (!due) return;
+    if (!due) return this.follow();
     this.throttle.done();
     this.needsPlacement = false;
     this.placedMatrix = Array.from(m);
@@ -326,6 +332,7 @@ export class StationLabels {
     this.plane.style.transform = "";
     this.offset = [0, 0];
     this.placed = [];
+    this.shownLabels = [];
     const margin = PAN ? PAN_MARGIN : 0;
     // Reserve breathing room around each name, especially at neighbourhood scale.
     const [padX, padY] = labelPadding(zoom);
@@ -362,9 +369,30 @@ export class StationLabels {
       const transform = `translate(${rx}px, ${ry}px)`;
       if (l.transform !== transform) l.el.style.transform = l.transform = transform;
       this.placed.push([rx, ry, rx + l.w, ry + l.h]);
+      this.shownLabels.push(l);
+      l.ox = rx - sx;
+      l.oy = ry - sy;
     }
     this.version++;
     this.onPlace?.();
+  }
+
+  /** T-1621: between full placements, for a camera change other than a flat pan (zoom, rotation,
+   * pitch, globe), every shown name keeps its place beside its station each frame. */
+  private follow() {
+    if (this.plane.style.transform) this.plane.style.transform = "";
+    this.offset = [0, 0];
+    const p = this.projected;
+    for (let i = 0; i < this.shownLabels.length; i++) {
+      const l = this.shownLabels[i];
+      this.overlay.toScreenInto(l.x, l.y, p);
+      if (Number.isNaN(p[0])) continue;
+      const rx = Math.round(p[0] + l.ox!), ry = Math.round(p[1] + l.oy!);
+      const transform = `translate(${rx}px, ${ry}px)`;
+      if (l.transform !== transform) l.el.style.transform = l.transform = transform;
+      const r = this.placed[i];
+      r[0] = rx; r[1] = ry; r[2] = rx + l.w; r[3] = ry + l.h;
+    }
   }
 }
 

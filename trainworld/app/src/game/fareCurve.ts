@@ -58,11 +58,11 @@ export function scaledKnots(f: { base: number; perKm: number; nodes?: FareNode[]
 
 export const NODE_KM = [0, 20, 100];
 /** A new game's curve's first stretch (T-028, T-883), for the baseline country (T-1277,
- * game/income.ts): New York, at its income's scale of 11.6, starts at $1.50 plus $0.10 a km. */
-export const START_FARE = { base: 0.1293, perKm: 0.008621 };
-/** A new game's curve (T-1521): the first stretch to 20 km, then 25 cents a km in New York, so fares
- * match real ones at market rates (notes/T-1521.md). */
-export const START_NODES: FareNode[] = [[0, 0.1293], [20, 0.3017], [100, 2.0259]];
+ * game/income.ts): New York, at its income's scale of 11.6, starts at $1.00 plus $0.08 a km. */
+export const START_FARE = { base: 0.0862, perKm: 0.006895 };
+/** A new game's curve (T-1670): one straight line, in New York $1.00 plus 8 cents a km ($2.60 at
+ * 20 km, $9.00 at 100). */
+export const START_NODES: FareNode[] = [[0, 0.0862], [20, 0.2241], [100, 0.7757]];
 /** Nodes keep at least this far apart, km (so f32 keeps them in order in the sim). */
 export const NODE_GAP_KM = 0.1;
 export const MAX_KM = 5000;
