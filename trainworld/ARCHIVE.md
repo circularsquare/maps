@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1674 [P1] Line route through a branch. Done 2026-10-28: an inserted stop on a stretch run out and back goes on the pass nearest the rest of the line, not the later slot (`best_insert`, `stop_spread`); stored paths unchanged. Test `branch_stops_go_in_route_order`.
 - T-1670 [P2] Default fare curve. Done 2026-10-28 (Anita): one straight line, in New York $1.00, $2.60, $9.00 at 0, 20, 100 km (Japan $0.55, $1.35, $4.75), `START_NODES` in India's units, T-1662's rounding kept; saves with the old default keep it. DECISIONS.
 - T-1671 [P2] Line crowding for a weekday. Done 2026-10-28: the line panel's crowding dots always read the weekday's boarding account, whatever day the clock is on (`LineInspector.tsx`); a Saturday clock shows the same hover figures.
 - T-1672 [P2] Crowding hover wording. Done 2026-10-28: "When trains come full, riders wait ~9 min for a train with room", rows "6-10: 22/88 trains full"; no "went another way", no "Most of the waiting is at".

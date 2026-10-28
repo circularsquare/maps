@@ -493,7 +493,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 [T-109 to T-112, T-233, T-237, T-239; `map/stopMarkers.ts`] A line is made from the Lines tab
 (New line, name it, click stations; [ui-inspectors.md](ui-inspectors.md)) and its stops edited from
 the line panel (Edit stops). Map clicks test every insertion position and take the shortest valid
-route, keeping the existing stop order; removing a stop leaves the others in order.
+route, keeping the existing stop order; removing a stop leaves the others in order. Where several
+positions give the same path (a station on a stretch the line runs out and back over, past a
+reversal), the stop goes where the stops lie closest together along the path (least sum of
+distances between every two stops), so it is served on the pass that leads on to the rest of the
+line, whatever order the stations were clicked in (T-1674); a full tie goes to the later position.
 
 **Stop editing mode** (Edit stops, New line, Copy line):
 

@@ -23,6 +23,70 @@ fn long_balloon() -> (TrackWorld, [u32; 4]) {
     (w, [a, m, j, k])
 }
 
+/// T-1674: S0 - S1 - T - J - M along x, and a branch J - B1 - B2 - B3 leaving J towards M (from T
+/// a train may take either; from M to the branch it has to turn back).
+fn y_fixture() -> (TrackWorld, [u32; 8]) {
+    let mut w = world();
+    let s0 = node(&mut w, -6000.0, 0.0, 0);
+    let s1 = node(&mut w, -3000.0, 0.0, 0);
+    let t = node(&mut w, 0.0, 0.0, 0);
+    let j = node(&mut w, 3000.0, 0.0, 0);
+    let m = node(&mut w, 6000.0, 0.0, 0);
+    let b1 = node(&mut w, 5000.0, 1500.0, 0);
+    let b2 = node(&mut w, 6600.0, 3000.0, 0);
+    let b3 = node(&mut w, 8200.0, 4500.0, 0);
+    edge(&mut w, s0, s1, &[], 0).unwrap();
+    edge(&mut w, s1, t, &[], 0).unwrap();
+    edge(&mut w, t, j, &[], 0).unwrap();
+    edge(&mut w, j, m, &[], 0).unwrap();
+    edge(&mut w, j, b1, &[(3400.0, 0.0)], 0).unwrap();
+    edge(&mut w, b1, b2, &[], 0).unwrap();
+    edge(&mut w, b2, b3, &[], 0).unwrap();
+    for n in [s0, s1, t, m, b1, b2, b3] {
+        station(&mut w, n, 200);
+    }
+    (w, [s0, s1, t, j, m, b1, b2, b3])
+}
+
+/// The stations a line's path runs through in order, stops or not, and where it turns back.
+fn path_stations(a: &TrackApi, l: u32) -> (Vec<u32>, Vec<u32>) {
+    let net = &a.w.net;
+    let path = net.line_path(l);
+    let nodes = std::iter::once(net.path_nodes(path[0]).0).chain(path.iter().map(|&p| net.path_nodes(p).1));
+    (nodes.filter(|&n| net.is_station(n)).collect(), turn_nodes(net, path))
+}
+
+/// T-1674: stops added along a branch go in route order. Out along the trunk and up the branch
+/// the line runs straight through; on a copy that also keeps a stop on the Y's other arm (Anita's
+/// "Line 1 copy"), the branch stops are served on the pass that leads on to the rest of the line,
+/// and the train turns back only at the far one, which the stops require.
+#[test]
+fn branch_stops_go_in_route_order() {
+    let (w, [s0, s1, t, _, m, b1, b2, b3]) = y_fixture();
+    let mut a = api();
+    a.w = w;
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &[s0, t], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    for s in [b3, b1, b2, s1] {
+        let stops: Vec<u32> = a.insert_stop(id, s).iter().map(|&x| x as u32).collect();
+        assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+    }
+    assert_eq!(a.w.net.line_stops(id), &[s0, s1, t, b1, b2, b3]);
+    assert_eq!(path_stations(&a, id), (vec![s0, s1, t, b1, b2, b3], vec![]));
+    // a copy with M (on the other arm) at one end and the trunk's end taken off, then the trunk
+    // stops added back from the branch point outwards
+    let copy = a.new_line_id();
+    assert_eq!(a.copy_line(id, copy, "L copy".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_stops(copy, &[m, t, b1, b2, b3]), 0, "{}", a.issues());
+    for s in [s1, s0] {
+        let stops: Vec<u32> = a.insert_stop(copy, s).iter().map(|&x| x as u32).collect();
+        assert_eq!(a.set_stops(copy, &stops), 0, "{}", a.issues());
+    }
+    assert_eq!(a.w.net.line_stops(copy), &[m, s0, s1, t, b1, b2, b3]);
+    assert_eq!(path_stations(&a, copy), (vec![m, t, s1, s0, s1, t, b1, b2, b3], vec![s0]));
+    assert_eq!(a.line_reversals(copy), [1.0]);
+}
+
 /// No reversing limiter (capacity kind 9) on any of the line's nodes.
 fn no_limiter(a: &TrackApi, l: u32) -> bool {
     let cap = &a.w.svc.cap;

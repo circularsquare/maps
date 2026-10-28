@@ -668,8 +668,10 @@ fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> 
 }
 
 /// The line's stops with `station` inserted where its path is shortest, and that path
-/// (`TrackApi::insert_stop`): every slot tried with the route search `set_stops` uses, the end
-/// winning ties. None if no slot has a route, or it is a stop already.
+/// (`TrackApi::insert_stop`): every slot tried with the route search `set_stops` uses. Between
+/// slots with the same path (a stretch the line runs out and back over), the one whose stops lie
+/// closest together along it wins (T-1674), then the end. None if no slot has a route, or it is a
+/// stop already.
 fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
     if !net.line_ok(line) {
         return None;
@@ -678,8 +680,9 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
     if old.contains(&station) {
         return None;
     }
-    let mut best = None;
+    let mut best: Option<(Vec<u32>, Vec<u32>)> = None;
     let mut best_len = f64::INFINITY;
+    let mut best_spread = None;
     // a loop takes new stops between its first stop and its closing one (T-798)
     let slots = if closed(old) { 1..=old.len() - 1 } else { 0..=old.len() };
     for slot in slots.rev() {
@@ -688,13 +691,40 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
         if let Some(path) = route_memo(net, &stops, memo) {
             let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum::<f64>()
                 + REVERSAL_INSERT_M * net.path_reversals(&path).len() as f64;
-            if len < best_len - 0.001 {
-                best_len = len;
+            let wins = if len < best_len - 0.001 {
+                best_spread = None;
+                true
+            } else if len <= best_len + 0.001 && best.as_ref().is_some_and(|b| b.1 == path) {
+                let b = best.as_ref().unwrap();
+                let held = *best_spread.get_or_insert_with(|| stop_spread(net, &b.0, &b.1));
+                let s = stop_spread(net, &stops, &path);
+                if s < held - 0.001 { best_spread = Some(s); true } else { false }
+            } else {
+                false
+            };
+            if wins {
+                best_len = best_len.min(len);
                 best = Some((stops, path));
             }
         }
     }
     best
+}
+
+/// The sum of the distances along `path` between every two of `stops`, as the line's trains run
+/// it: smaller when a stop on a stretch run out and back is served on the pass nearer the rest
+/// of the line (T-1674). Infinite if the stops do not match the path.
+fn stop_spread(net: &Network, stops: &[u32], path: &[u32]) -> f64 {
+    let Some(&first) = path.first() else { return 0.0 };
+    let nodes: Vec<u32> = std::iter::once(net.path_nodes(first).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();
+    let Some(at) = super::net::match_stops(&nodes, stops, &net.stop_reversals(path)) else { return f64::INFINITY };
+    let mut off = Vec::with_capacity(path.len() + 1);
+    off.push(0.0);
+    for &p in path {
+        off.push(off[off.len() - 1] + net.edge_len[(p >> 1) as usize]);
+    }
+    let n = at.len() as f64;
+    at.iter().enumerate().map(|(i, &k)| off[k] * (2.0 * i as f64 - n + 1.0)).sum()
 }
 
 /// The nodes where a path turns back, in order (T-797).
