@@ -379,9 +379,10 @@ not the browser's.
 ## Money tab
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
-T-728); then the fare controls (below) [T-1660]; then yesterday and today (fares, running trains, upkeep, interest
+T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
+[T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, interest
 while a loan is out or was paid yesterday (the network's only, never a region's), new trains,
-construction, net; Upkeep's hover gives the rule and the network's track, stations and upkeep a day, T-867), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
+construction, net (Upkeep's hover gives the rule and the network's track, stations and upkeep a day, T-867), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
 nothing in it shows $0. Money figures
@@ -405,9 +406,9 @@ Under the charts a tick under each day or hour that was a holiday or a superholi
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
-"Interest" line when it had loan interest, which the expenses line includes. The fares at the top, whatever the toggle,
-are one country's [T-1277]: the selected station's or city's, else the zone in view's, else
-the home city's. The graph and rows show the network's curve times that country's fare scale, and
+"Interest" line when it had loan interest, which the expenses line includes. The fares, whatever the toggle,
+are one country's [T-1277, T-1690]: the selected station's or city's, else that of the built station
+nearest the view's centre, else (nothing built) the zone in view's, else the home city's. The graph and rows show the network's curve times that country's fare scale, and
 an edit there sets the curve (divided back by the scale), so every country's fares move with it.
 The fare curve (rule: [track-and-service.md](track-and-service.md), fares) is drawn as a graph of
 the fare against trip length, both axes linear
@@ -439,11 +440,11 @@ and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
 and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
-one row "Fares in Japan" (the country in view; the full name always shows, wrapping to a second line
+one row "Set fare multiplier for Japan" (the country above; the full name always shows, wrapping to a second line
 or more in its cell where long, never cut) with its scale in a stepper as a multiple of Japan's fares,
 "1.00x" (Japan's default; India 0.16x, the US 1.90x), stepping by
-0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth of a baseline unit), its hover naming the
-country, the multiple of Japan's and the scale by income; once the player has set one, an undo icon
+0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth of a baseline unit), its hover giving the
+multiple of Japan's and the scale by income; once the player has set one, an undo icon
 after the stepper ("Back to 1.90x, the scale by income") returns to the income's. The stepper sits in
 the same column as the rows below it [T-1277, T-1554, T-1584]. Then one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,

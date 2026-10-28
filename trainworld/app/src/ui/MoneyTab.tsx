@@ -10,7 +10,7 @@ import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
 import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
-import { scopeZone } from "../game/listScope";
+import { scopeZone, viewCentre } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import { Icon, Row, Stepper } from "./widgets";
@@ -45,8 +45,24 @@ function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | nu
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
 const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction and upkeep count where the track and stations are.";
 
+/** T-1690: the country of the built station nearest the view's centre, null with none built. */
+function nearestBuilt(w: NonNullable<typeof world.value>): string | null {
+  const at = viewCentre.value;
+  if (!at) return null;
+  const [lng, lat] = at, k = Math.cos((lat * Math.PI) / 180);
+  let best = Infinity, country: string | null = null;
+  for (const st of w.save.stations) {
+    if (!st.built) continue;
+    const d = ((st.lng - lng + 540) % 360 - 180) ** 2 * k * k + (st.lat - lat) ** 2;
+    if (d >= best) continue;
+    const c = stationCountry(st);
+    if (c) { best = d; country = c; }
+  }
+  return country;
+}
+
 /** T-1277: the country whose fares the panel shows: the selected station's or city's, else the
- * zone in view's, else the home city's. */
+ * nearest country the player has built in (T-1690), else the zone in view's, else the home city's. */
 function fareCountry(): string {
   const s = selection.value, w = world.value;
   let c: string | null | undefined = null;
@@ -54,6 +70,7 @@ function fareCountry(): string {
     const st = stationsById(w).get(s.station);
     c = st && stationCountry(st);
   } else if (s?.kind === "city" && isCity(s.city)) c = cityById(s.city).country;
+  if (!c && w) c = nearestBuilt(w);
   if (!c) {
     const z = viewedZone.value;
     c = z && isCity(z) ? cityById(z).country : null;
@@ -82,7 +99,7 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
-      <span class="fr-head" data-tip={`Fares in ${name}: ${shown.toFixed(2)} times those in ${japan}. By income they would be ${income.toFixed(2)}.`}>{`Fares in ${name}`}</span>
+      <span class="fr-head" data-tip={`${name}'s fares are ${shown.toFixed(2)} times ${japan}'s. By income they would be ${income.toFixed(2)}.`}>{`Set fare multiplier for ${name}`}</span>
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
         type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}. Click to type one.` }} />
       {own
@@ -156,11 +173,6 @@ export function MoneyTab() {
           ? <Row label={<span data-tip="Fares minus running costs, upkeep, trains and construction">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
           : <Row label="Cash" bold><LiveCash /></Row>}
       </ul>
-      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
-      <FareGraph nodes={shown} scale={scale} />
-      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
-        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
-      <FareEffect preview={farePreview.value} scale={scale} />
       <table class="ledger">
         <tr>
           <th style={{ textAlign: "left" }}><ScopeToggle tip={REGION_SPLIT} /></th>
@@ -205,6 +217,11 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
+      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
+      <FareGraph nodes={shown} scale={scale} />
+      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />}
+        last={hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />} />
+      <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />
       <div class="h">Trains</div>
       <ul class="rows">
