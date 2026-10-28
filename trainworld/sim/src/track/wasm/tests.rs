@@ -703,7 +703,7 @@ fn blueprint_construct_run() {
     let cars = a.lines_info()[21];
     let train_km = 30.0 * 2.0 * len_km;
     assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
-    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 300.0, 500.0, 0.6, 1.5, 0.6, 9.0, 30.0, 1.0]);
+    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 300.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0]);
     assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
     // Upkeep (T-867): $30k a km of double track and $50k a station a game day, all on the one
     // line; built track no line uses goes to the rest.

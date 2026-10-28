@@ -1101,7 +1101,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   the car's local street speed per zone; nothing waits for it, bus lines are timed again when one lands.
   Not saved, carried over a load like the terrain.
 - **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
-  shared between bus lines; running US$9 a bus-km and upkeep US$30 a road-km a day (real figures,
+  shared between bus lines; running US$6 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
