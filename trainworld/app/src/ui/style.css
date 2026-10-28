@@ -354,7 +354,7 @@ table.sched .hw-real { color: var(--muted); margin-right: 6px; }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
 .crowd-warn { color: var(--warn); }
 .crowd-bad { color: var(--bad); }
-.crowd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.crowd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 3px; vertical-align: 1px; outline: 1px solid transparent; outline-offset: 1px; }
 .rows.sub-rows > li { padding-left: 12px; color: var(--muted); min-height: 24px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
 .complex-map { margin: 8px 0 4px; }

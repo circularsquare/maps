@@ -263,9 +263,12 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
  * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
  * averaged by those riders. The hover gives each of the level's periods its trains full (T-1523:
  * the pooled figure can rank a few bad platforms above a worse period spread over many). */
-export function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
-  const c = crowdLevel(v, d);
-  return c && <i class="crowd-dot" style={{ background: crowdColour(c.wait) }} data-tip={c.tip} />;
+export function CrowdDots({ v, wk, d }: { v: Float64Array; wk: Float64Array | null; d: Demand }) {
+  const c = crowdLevel(v, d), r = wk && crowdLevel(wk, d);
+  if (!c) return null;
+  // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
+  const tip = r ? `${c.tip}\nRing, on a weekday: ${r.phrase}` : c.tip;
+  return <i class="crowd-dot" style={{ background: crowdColour(c.wait), outlineColor: r ? crowdColour(r.wait) : "transparent" }} data-tip={tip} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -645,9 +648,9 @@ function RailLineInspector({ id }: { id: string }) {
   const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
   const acct = accountVersion.value;
   const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
-  // T-1671: the crowding dots always show a weekday's, so a weekend does not hide peak crowding
+  // T-1671, T-1684: the crowding dots' rings are a weekday's, so a weekend does not hide peak crowding
   const weekdayPeriods = useClockQuery(l && kind !== 0 ? { what: "linePeriods", line: l.num, day: 0 } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
-  const crowdPeriods = kind === 0 ? periods : weekdayPeriods;
+  const ringPeriods = kind === 0 ? periods : weekdayPeriods;
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
   // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
@@ -863,7 +866,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (crowdPeriods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={crowdPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

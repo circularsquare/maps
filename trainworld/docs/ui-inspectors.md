@@ -71,7 +71,7 @@ purpose filter the purpose drawn is ringed in the bar.
   The "+N daily rides" after a stop edit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Opening day").
 - **Trains to add** [T-472, T-491, T-818, T-1255, T-1677]: a row's train count (the trains its level needs now, the bare
-  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's level now on a weekday, otherwise muted. The score is the
+  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
   [T-1255]: rider-minutes spent on the platform after a full train left them, each waiting the
   gap to the next departure, and 30 minutes for each rider a full platform turned away, over the
@@ -83,7 +83,7 @@ purpose filter the purpose drawn is ringed in the bar.
   count (`crowdClass`). The hover is the line panel's dot hover for the same level [T-1672, T-1677]:
   "When trains come full, riders wait ~9 min for a train with room" (or "Riders get on the first
   train with room"), then "6-10: 22/88 trains full" for each of the level's periods; one function
-  (`crowdLevel` in `game/today.ts`) builds both, from the weekday's `line_periods` numbers, which
+  (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's `line_periods` numbers, which
   the tab asks for every running train line in one clock query (`linesPeriods`, one block of
   numbers per line). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
@@ -159,7 +159,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "How many trains run in this time interval. (Which time interval a scheduled train falls into is
   determined by when the train reaches the midpoint of its route.)" (the steppers have no such
   hover) [T-823, T-835, T-1242]; on a
-  running line one dot before each level's name grades the level on a weekday, whatever kind of day the clock is on [T-1671], by the
+  running line one dot before each level's name grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 3, yellow at 6, orange at 9, red at 15, crimson at 20, plum at 25, purple at 35 and indigo from 50 (T-1553; `crowdColour` in
@@ -167,7 +167,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
   riders wait ~11 min for a train with room" (or "Riders get on the first train
   with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4/10
-  trains full" [T-1523, T-1672]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  trains full" [T-1523, T-1672], then "Ring, on a weekday: riders wait ~15 min for a train with room"
+  [T-1684]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with an Ordinary / High speed switch [T-817], each
   option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
   and 160 km/h on other track"), a car's price and the running costs, and on a running line what

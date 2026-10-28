@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1684 [P2] Crowding dots show both. Done 2026-10-28 (Anita): the line panel's dot is the clock's kind of day, with a 1 px ring (1 px gap) for the weekday and a hover line for it; the Lines cell is coloured by the period now again, its hover the weekday's (a number has no ring); artifacts/trainworld/t1684-rings.png.
 - T-1683 [P2] Construct sound. Done 2026-10-28: `sounds/construct.wav` (Anita's gun-mag insert, cut 599 ms at the start and from 1260 ms on, 0.66 s, credited in Settings) plays once the worker accepts a construct or a built station upgrade, in 3 variants; the "bung" is gone; a construct refused for cash is the knock alone. DECISIONS.
 - T-1678 [P2] Doubling up refused near-straight track. Done 2026-10-28: a run stopped nowhere for a curve the pair could not follow, so one tight curve (the real save's 44-94 m, or a 100-108 m inside) refused the whole run; the run now stops short of it, and slight 100-108 m kinks ease to 100 m. Test `double_up_eases_kinks_and_stops_short_of_tight_curves`. DECISIONS.
 - T-1680 [P2] Selecting a run of track. Done 2026-10-28: Select tool double click picks the run junction to junction (or to a track end), Shift+click adds the shortest way along track, the selection bar has Double up for each run picked. DECISIONS.

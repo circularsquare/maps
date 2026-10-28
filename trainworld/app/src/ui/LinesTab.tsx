@@ -58,13 +58,14 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-472, T-491, T-1677: a line's trains now, coloured by its riders' wait for a train with room at
- * the level now on a weekday, hovered as the line panel's dot for that level is (`crowdLevel`). */
+/** T-472, T-491, T-1677, T-1684: a line's trains now, coloured by its riders' wait for a train with
+ * room in the period now, hovered with the weekday's figures for the level now as the line panel's
+ * ring is (`crowdLevel`). */
 function TrainsNow({ line, n, period, bus, v, lev }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand }) {
   const c = !bus && v ? crowdLevel(v, lev) : null;
   const d = today.value.get(line);
-  const old = !c && d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
-  const cls = c ? crowdClass(c.wait) : old ? crowdClass(old.score) : "";
+  const now = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
+  const cls = now ? crowdClass(now.score) : "";
   const tip = bus ? `${period}: ${busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }

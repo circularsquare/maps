@@ -79,7 +79,7 @@ export const PERIOD_STRIDE = 11;
  * numbers `v`, as the line panel's dot and the Lines list's trains cell show it: the average wait
  * for a train with room (min) of the riders at the platforms where trains come full, the level's
  * periods averaged by those riders, and the hover. Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip: string } | null {
+export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip: string; phrase: string } | null {
   let trains = 0, weight = 0, wait = 0;
   const lines: string[] = [];
   for (let i = 0; i < PERIODS.length; i++) {
@@ -94,9 +94,10 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
   if (!(trains > 0)) return null;
   const avg = weight > 0 ? wait / weight : 0;
   const mins = avg >= 1 ? `~${Math.round(avg)} min` : waitText(avg);
-  const tip = (avg >= 0.05 ? `When trains come full, riders wait ${mins} for a train with room` : "Riders get on the first train with room")
+  const phrase = avg >= 0.05 ? `riders wait ${mins} for a train with room` : "riders get on the first train with room";
+  const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Riders get on the first train with room")
     + lines.map((s) => `\n${s}`).join("");
-  return { wait: avg, tip };
+  return { wait: avg, tip, phrase };
 }
 
 /** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the

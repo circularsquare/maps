@@ -110,7 +110,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   double-track work (shared renderer.ts / clock.worker.ts). T-1679/1680 done too (uncommitted:
   blueprintPick.ts, blueprintBox.ts, renderer.ts, Blueprint.tsx, toolKeys.ts, BuildTab.tsx,
   docs, DECISIONS): double-click = run to junctions, shift-click = path, Double up in the bar
-  (whole runs only). Waiting on T-1678 and T-1683 to commit the batch.
+  (whole runs only). All committed: d901c915 (T-1676-1680), 507d078a (T-1683 construct sound);
+  8800 at 507d078a, smoke passes.
+- Running: T-1684 crowding dot (current) + 1 px weekday ring (resumed Sonnet agent, 6152);
+  T-1685 snap drawing alongside existing track, cursor side, blueprints too (Opus, 6157, id
+  T-1686); T-1687 station on quad = clicked side only + T-1688 no automatic crossovers (Opus,
+  6159, id T-1689); T-1690 fare row text + nearest built country, T-1691 money order
+  (breakdown, fares, history, trains/loan) (resumed money Sonnet agent, 6153). Construct sound
+  credit confirmed by Anita. Not published: everything after 62540fe3 (live 2026-10-28c).
 - T-1683 construct sound from her gun-mag mp3 (Downloads), clipped to start on the click, for
   construct + station upgrades; a refused construct plays only the knock (Sonnet, Vite 6153).
 - Committed 4d1a7a48 (T-1670 straight fares: NY $1/$2.60/$9, Japan $0.55/$1.35/$4.75; T-1671/1672
@@ -156,7 +163,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1682.
+Ids handed out through T-1691.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.
