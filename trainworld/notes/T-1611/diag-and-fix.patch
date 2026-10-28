@@ -1,0 +1,850 @@
+diff --git a/trainworld/app/src/workers/demand.worker.ts b/trainworld/app/src/workers/demand.worker.ts
+index e305da31..50b508a5 100644
+--- a/trainworld/app/src/workers/demand.worker.ts
++++ b/trainworld/app/src/workers/demand.worker.ts
+@@ -19,7 +19,7 @@
+ // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
+ // covers goes when that solve ends.
+ 
+-import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
++import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, diag_tag, diag_set, diag_report, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+ import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+ import { loadAttractions, type Attraction } from "../game/attractions";
+ import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
+@@ -36,6 +36,53 @@ let started = false;
+ /** init and open in arrival order, each after the one before (T-149: packs arrive one by one) */
+ let opening: Promise<void> = Promise.resolve();
+ let aux = false;
++
++// ---- T-1169 diagnostic (scratch only) ----
++const zoneOf = new WeakMap<object, string>();
++const diagChan = new BroadcastChannel("t1169");
++const diagWid = Math.random().toString(36).slice(2, 7);
++let diagWrapped = false;
++function diagWrap() {
++  if (diagWrapped) return;
++  diagWrapped = true;
++  for (const [name, cls] of [["DemandApi", DemandApi], ["EverydayApi", EverydayApi], ["IntercityApi", IntercityApi], ["MarketPacks", MarketPacks]] as [string, any][]) {
++    for (const m of Object.getOwnPropertyNames(cls.prototype)) {
++      if (m === "constructor" || m === "free" || m === "__destroy_into_raw") continue;
++      const d = Object.getOwnPropertyDescriptor(cls.prototype, m);
++      if (!d || typeof d.value !== "function") continue;
++      const orig = d.value;
++      cls.prototype[m] = function (this: object, ...a: unknown[]) {
++        const z = zoneOf.get(this);
++        const prev = diag_tag(`${name}.${m}${z ? "@" + z : ""}`);
++        try { return orig.apply(this, a); } finally { diag_set(prev); if (name === "IntercityApi" && m === "solve") diagSend("counts"); }
++      };
++    }
++    for (const m of Object.getOwnPropertyNames(cls)) {
++      if (["length", "name", "prototype", "__wrap", "at_level"].includes(m)) continue;
++      const d = Object.getOwnPropertyDescriptor(cls, m);
++      if (!d || typeof d.value !== "function" || !d.writable) continue;
++      const orig = d.value;
++      cls[m] = function (...a: unknown[]) {
++        const z = a[0] && typeof a[0] === "object" ? zoneOf.get(a[0] as object) : undefined;
++        const prev = diag_tag(`${name}.${m}${z ? "@" + z : ""}`);
++        try {
++          const r = orig.apply(cls, a);
++          if (z && r && typeof r === "object") zoneOf.set(r, z);
++          return r;
++        } finally { diag_set(prev); }
++      };
++    }
++  }
++}
++function diagNew<T>(tag: string, f: () => T): T {
++  const prev = diag_tag(tag);
++  try { return f(); } finally { diag_set(prev); }
++}
++function diagSend(kind: string, reset = false, extra: Record<string, unknown> = {}) {
++  try {
++    diagChan.postMessage({ w: diagWid, aux, mine: Array.from(mine ?? []), kind, t: performance.now(), cities: [...cities.keys()], bare: [...bare.keys()], report: diag_report(reset), ...extra });
++  } catch (err) { console.warn("diag", err); }
++}
+ let warmed = false;
+ const cities = new Map<CityId, DemandApi>();
+ /** the cities the network in hand was set on (`current`'s job): only these answer queries */
+@@ -245,7 +292,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer; level?
+         for (const m of market) reject(m.id, true, "the market's rows have not arrived");
+         return opened(packs, isBare, rejected);
+       }
+-      marketPacks = new MarketPacks(marketWorld(typeof marketRows === "string" ? marketRows : new TextDecoder().decode(marketRows)));
++      marketPacks = diagNew("MarketPacks.new", () => new MarketPacks(marketWorld(typeof marketRows === "string" ? marketRows : new TextDecoder().decode(marketRows))));
+       try {
+         if (marketDrives) marketPacks.set_drives(marketDrives);
+       } catch (err) {
+@@ -287,7 +334,8 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer; level?
+ /** A city's commutes and, on a solving worker, its everyday layer, at `level` (T-1222). */
+ function openCity(pack: { id: CityId; header: string; bin: ArrayBuffer }, level: number) {
+   const bin = new Uint8Array(pack.bin);
+-  const a = DemandApi.at_level(pack.header, bin, level);
++  const a = diagNew(`DemandApi.new@${pack.id}`, () => DemandApi.at_level(pack.header, bin, level));
++  zoneOf.set(a, pack.id);
+   // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
+   let e: EverydayApi | null = null;
+   try {
+@@ -349,7 +397,8 @@ const hasEveryday = (header: string) => JSON.parse(header).arrays.some((a: {name
+  */
+ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
+   const bin = new Uint8Array(pack.bin);
+-  const a = new DemandApi(pack.header, bin);
++  const a = diagNew(`DemandApi.new@${pack.id}`, () => new DemandApi(pack.header, bin));
++  zoneOf.set(a, pack.id);
+   let e: EverydayApi | null = null;
+   try {
+     e = hasEveryday(pack.header) ? EverydayApi.beside_with(a, pack.header, bin, attractionsIn(pack.id)) : null;
+@@ -453,6 +502,7 @@ function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
+     for (const id of msg.ids) { reopenLater.delete(id); if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id); }
+     if (msg.markets?.length) { if (busy) for (const id of msg.markets) closeLater.markets.add(id); else dropMarkets(msg.markets); }
+   }
++  diagSend("closed");
+   sendMessage({ kind: "closed", memBytes: wasm_memory_bytes(), heap: heap() });
+ }
+ 
+@@ -511,6 +561,7 @@ function openQueued(epoch: number): Promise<void> {
+       const warmMs = warmUp();
+       const figures = isBare ? Object.fromEntries(packs.filter(({ id }) => bare.has(id)).map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
+       const markets = market.map((m) => m.id).filter((id) => !rejected.some((r) => r.market && r.id === id));
++      diagSend("opened");
+       sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), heap: heap(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
+     } catch (err) {
+       failed(err);
+@@ -547,6 +598,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
+       try {
+         const t0 = performance.now();
+         [, attractions] = await Promise.all([init(), loadAttractions()]);
++        diagWrap();
+         const t1 = performance.now();
+         aux = !!msg.aux;
+         oneByOne = !!msg.oneByOne;
+@@ -561,6 +613,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
+         const t2 = performance.now();
+         const warmMs = warmUp() + everydayWarmMs;
+         started = true;
++        diagSend("ready");
+         sendMessage({ kind: "ready", cityInfo, wasmMs: t1 - t0, openMs: t2 - t1, warmMs, info: cityInfo[HOME_CITY], periods: Array.from(demand_periods()), days: Array.from(day_factors()), memBytes: wasm_memory_bytes(), heap: heap() });
+       } catch (err) {
+         failed(err);
+@@ -1191,6 +1244,7 @@ async function run() {
+       closeDeferred();
+       if (dealt) deal();
+       wasm_heap_peak(true);
++      diagSend("start", true);
+       let job = pending;
+       pending = null;
+       // (a worker's fresh market parts are for the next whole solve, not a rough one)
+@@ -1719,6 +1773,7 @@ async function run() {
+       }
+       if (!stale) {
+         solvedOnce = true;
++        diagSend("done", false, { version: job.version });
+         sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), heap: heap(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
+       }
+     }
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index d11324d0..96afb091 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -845,7 +845,9 @@ impl DemandApi {
+     #[wasm_bindgen(constructor)]
+     pub fn new(header: &str, bin: &[u8]) -> Result<DemandApi, String> {
+         let t0 = now_ms();
+-        let city = pack::parse(header, bin)?;
++        let mut _dg = Some(crate::demand::diag_scope("new.parse"));
++        let mut city = pack::parse(header, bin)?;
++        drop(_dg.take()); _dg = Some(crate::demand::diag_scope("new.gravity"));
+         let mut base = Params { asc_rail: ASC_RAIL, ..Params::default() };
+         // T-277: a pack fitted on its own country's commuting (Toronto) ships its own distance
+         // curve; the default is the US one, so take the pack's rather than re-solve with that
+@@ -862,6 +864,7 @@ impl DemandApi {
+             base.cordon = cordon_by_zone(&city, &z, (lon, lat)).map(Arc::new);
+         }
+         // T-275: the pack's routed walks and drives, if it has them for these zones
++        drop(_dg.take()); _dg = Some(crate::demand::diag_scope("new.routes"));
+         if let Some(r) = super::routes::Routes::from_pack(header, bin, &z)? {
+             base.routes = Some(Arc::new(r));
+             gr.set_walk(&z, &base);
+@@ -881,11 +884,17 @@ impl DemandApi {
+         // the pack's country: the header's own, else the one its everyday block was written for
+         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
+         base.set_extra("country_asc_rail", country_asc_rail(country))?;
++        drop(_dg.take()); _dg = Some(crate::demand::diag_scope("new.norail"));
+         let nr = Arc::new(NoRail::new(&z, &base));
++        drop(_dg.take()); _dg = Some(crate::demand::diag_scope("new.walk_fine"));
+         gr.set_walk_fine(&city, &z, &base, &nr);
++        drop(_dg.take()); _dg = Some(crate::demand::diag_scope("new.rest"));
+         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
+         let walk_all = walk_home_zone.iter().sum();
+         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
++        drop(_dg);
++        // read only above; z and gr hold what the solves need of it (T-1611)
++        city.gravity = None;
+         Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
+     }
+ 
+diff --git a/trainworld/sim/src/demand/everyday.rs b/trainworld/sim/src/demand/everyday.rs
+index f9287b45..9f041116 100644
+--- a/trainworld/sim/src/demand/everyday.rs
++++ b/trainworld/sim/src/demand/everyday.rs
+@@ -1407,7 +1407,9 @@ impl EverydayApi {
+         let mut first: Vec<Vec<u32>> = vec![];
+         for kind in 0..kinds {
+             let budget = budget_of(kind);
+-            live.push((0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect());
++            let mut l: Vec<u32> = (0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect();
++            l.shrink_to_fit();
++            live.push(l);
+             let mut f = Vec::with_capacity(live[kind].len() + 1);
+             let mut at = start[kind];
+             f.push(at as u32);
+diff --git a/trainworld/sim/src/demand/intercity.rs b/trainworld/sim/src/demand/intercity.rs
+index e7673190..2ce3fee2 100644
+--- a/trainworld/sim/src/demand/intercity.rs
++++ b/trainworld/sim/src/demand/intercity.rs
+@@ -1071,8 +1071,8 @@ struct Period {
+     c_rail: f64,
+     c_trips: f64,
+     c_frac: Vec<f32>,
+-    corridors: Vec<f64>,
+-    c_corridors: Vec<f64>,
++    corridors: Sparse,
++    c_corridors: Sparse,
+     /// T-1373: the longer trips' loads each times its pair's lean (`Market::lean`), averaged like
+     /// the commutes'; none where the lean's table would be too large (`LEAN_OD_BYTES`)
+     r_avg: Option<Loads>,
+@@ -1099,6 +1099,52 @@ struct Period {
+     e_walk_base: f64,
+     e_frac: Vec<f32>,
+ }
++/// A period's figures by open corridor, its nonzero entries only (T-1611): a cluster's pairs touch
++/// few of the world's corridors, and a dense table a period and part was most of a market part's
++/// memory on all of China (250,000 corridors, 4 MB a period and part). Read as the dense table it
++/// stands for, to the bit.
++#[derive(Default)]
++struct Sparse {
++    k: Vec<u32>,
++    v: Vec<f64>,
++}
++impl Sparse {
++    fn of(dense: &[f64]) -> Sparse {
++        let (mut k, mut v) = (vec![], vec![]);
++        for (i, &x) in dense.iter().enumerate() {
++            if x != 0. {
++                k.push(i as u32);
++                v.push(x);
++            }
++        }
++        k.shrink_to_fit();
++        v.shrink_to_fit();
++        Sparse { k, v }
++    }
++    fn get(&self, i: usize) -> f64 {
++        self.k.binary_search(&(i as u32)).map_or(0., |j| self.v[j])
++    }
++    /// Each entry `a += (b - a) * w` towards `dense`, as on the dense table.
++    fn toward(&mut self, dense: &[f64], w: f64) {
++        let (mut k, mut v) = (Vec::with_capacity(self.k.len()), Vec::with_capacity(self.k.len()));
++        let mut j = 0;
++        for (i, &b) in dense.iter().enumerate() {
++            let held = j < self.k.len() && self.k[j] as usize == i;
++            if held || b != 0. {
++                let a = if held { self.v[j] } else { 0. };
++                k.push(i as u32);
++                v.push(a + (b - a) * w);
++            }
++            j += held as usize;
++        }
++        k.shrink_to_fit();
++        v.shrink_to_fit();
++        *self = Sparse { k, v };
++    }
++    fn scale(&mut self, f: f64) {
++        self.v.iter_mut().for_each(|x| *x *= f);
++    }
++}
+ #[cfg(test)]
+ const ST_W: usize = 18;
+ /// Side of the endpoint sites in metres.
+@@ -1633,6 +1679,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+             return Err("market row out of range".into());
+         }
+     }
++    let mut _dg = Some(crate::demand::diag_scope("comp.places"));
+     let mut countries: Vec<String> = vec![];
+     let mut country_id = |s: &str| -> u32 {
+         match countries.iter().position(|c| c == s) {
+@@ -1675,6 +1722,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         }
+     }
+     // ---- sites and zones, grouped by frame
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.sites_zones_groups"));
+     let mut mz: Vec<Zone> = vec![];
+     let mut cell_zone: Vec<usize> = vec![];
+     let mut groups: Vec<Group> = vec![];
+@@ -1850,6 +1898,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+     }
+     groups.sort_by_key(|g| g.lo);
+     // ---- a closed world: each zone's normaliser over the others (the old pack's market)
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.closed"));
+     let ground_km = |a: &Zone, b: &Zone| if ground { chord_km(&a.u, &b.u) } else { ((a.x - b.x).hypot(a.y - b.y) / 1000.) as f64 };
+     if closed {
+         let mut n = vec![0f64; mz.len()];
+@@ -1867,6 +1916,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         }
+     }
+     // ---- the places' rows: the world's, or added up here
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.rows_near"));
+     let mut near: HashMap<(u32, u32), f64> = HashMap::new();
+     let mut commute_rows: Vec<Vec<(u32, f64)>> = vec![vec![]; np];
+     let from_rows = rows.is_some();
+@@ -1960,6 +2010,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         }
+     }
+     // ---- per pair of places with an open one (T-1204: every pair was 300 MB a worker)
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.rules"));
+     let mp = market_params();
+     let mut rules = Rules { slot: vec![u32::MAX; np], ..Rules::default() };
+     for (p, pl) in places.iter().enumerate() {
+@@ -2006,6 +2057,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         m.comp_of_gid[z.gid as usize] = c as u32;
+     }
+     // ---- near totals added up from the zones (no rows: the pipeline, a closed world)
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.near_totals"));
+     if !from_rows {
+         // near places' zone pairs only (T-929): each pair of places sums its zone pairs (a, b > a)
+         // in the order a scan of every zone pair would, so the totals are the same to the bit
+@@ -2031,6 +2083,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         }
+     }
+     // ---- commutes
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.commutes_everyday"));
+     let mut by_pair: BTreeMap<(u32, u32), f64> = BTreeMap::new();
+     if closed {
+         for &(h, w, n) in &legacy_commutes {
+@@ -2137,11 +2190,13 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>)
+         b.1 += (e.trips * e.walk) as f64;
+     }
+     // ---- the corridors' figures: with rows the same for every composition, so kept (T-1204)
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.corridors"));
+     m.cw = match reuse {
+         Some(c) if from_rows => c,
+         _ => Rc::new(m.corridors_of(from_rows.then_some(&commute_rows[..]))),
+     };
+     // ---- each 600 m square's site
++    drop(_dg.take()); _dg = Some(crate::demand::diag_scope("comp.site_key"));
+     let site_key = SiteKeys::of((0..m.n_sites()).map(|s| m.site_key_of(s)));
+     m.site_key = site_key;
+     Ok(m)
+@@ -2373,7 +2428,7 @@ impl IntercityApi {
+                 out[2 * c as usize] = n * legs;
+             }
+             for (k, c) in m.open_corridors() {
+-                out[2 * c + 1] = s.c_corridors[k];
++                out[2 * c + 1] = s.c_corridors.get(k);
+             }
+             out
+         })
+@@ -2508,13 +2563,10 @@ pub struct IntercityApi {
+     access_cw: Vec<Vec<(usize, f32)>>,
+     access_c_walk: Vec<Vec<(usize, f32)>>,
+     cpairs: Vec<CPair>,
+-    cpair_of: Vec<u32>,
+     /// T-1175: the activity end's walks of the everyday pairs (attraction-weighted), and the
+     /// everyday pairs some station serves
+     access_ew: Vec<Vec<(usize, f32)>>,
+     epairs: Vec<EPairOn>,
+-    /// the index in `epairs` of each of the market's everyday pairs, `u32::MAX` if none
+-    epair_of: Vec<u32>,
+     want: Vec<bool>,
+     per: Vec<Option<Period>>,
+     fare_km: Vec<f32>,
+@@ -2755,10 +2807,8 @@ impl IntercityApi {
+             access_cw: vec![],
+             access_c_walk: vec![],
+             cpairs: vec![],
+-            cpair_of: vec![],
+             access_ew: vec![],
+             epairs: vec![],
+-            epair_of: vec![],
+             want: vec![],
+             per: (0..PERIODS).map(|_| None).collect(),
+             fare_km: vec![],
+@@ -3368,7 +3418,6 @@ impl IntercityApi {
+         }
+         let pc = commute_params();
+         self.cpairs.clear();
+-        self.cpair_of = vec![u32::MAX; m.commutes.len()];
+         for (c, &(h, wg, _)) in m.commutes.iter().enumerate() {
+             let w = m.comp_of_gid[wg as usize];
+             if w == u32::MAX {
+@@ -3383,14 +3432,12 @@ impl IntercityApi {
+             let r = m.pr(zh.place, zw.place);
+             let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
+             let corridor = m.open_corridor(zh.place, zw.place);
+-            self.cpair_of[c] = self.cpairs.len() as u32;
+             let band = pc.band_of_d2(km * km * 1e6) as u8;
+             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
+         }
+         self.cpairs.shrink_to_fit();
+         // T-1175: the everyday pairs, as the commutes
+         self.epairs.clear();
+-        self.epair_of = vec![u32::MAX; m.everyday.len()];
+         for (e, ep) in m.everyday.iter().enumerate() {
+             let a = m.comp_of_gid[ep.a as usize];
+             if a == u32::MAX {
+@@ -3405,14 +3452,30 @@ impl IntercityApi {
+             let r = m.pr(zh.place, za.place);
+             let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
+             let w = ep.walk.min(0.999);
+-            self.epair_of[e] = self.epairs.len() as u32;
+             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
+         }
+         self.epairs.shrink_to_fit();
++        crate::demand::diag_count("srv.pairs", self.pairs.len() as f64);
++        crate::demand::diag_count("srv.pair_bytes", std::mem::size_of::<Pair>() as f64);
++        crate::demand::diag_count("srv.cpairs", self.cpairs.len() as f64);
++        crate::demand::diag_count("srv.epairs", self.epairs.len() as f64);
++        crate::demand::diag_count("srv.served", served.len() as f64);
++        crate::demand::diag_count("srv.commutes", m.commutes.len() as f64);
++        crate::demand::diag_count("srv.everyday", m.everyday.len() as f64);
++        crate::demand::diag_count("srv.zones", m.zones.len() as f64);
+         self.served_at = at;
+         self.served = served;
+         self.served_comp = comp;
+     }
++    /// The index in `cpairs` of the market's commute `c`, `u32::MAX` if none (`cpairs` are in
++    /// commute order: a search, not a table the size of every commute a cluster's part would hold).
++    pub(crate) fn cpair_of(&self, c: usize) -> u32 {
++        self.cpairs.binary_search_by_key(&(c as u32), |p| p.c).map_or(u32::MAX, |i| i as u32)
++    }
++    /// The same for the market's everyday pairs in `epairs`.
++    pub(crate) fn epair_of(&self, e: usize) -> u32 {
++        self.epairs.binary_search_by_key(&(e as u32), |p| p.e).map_or(u32::MAX, |i| i as u32)
++    }
+     /// Every pair of the market, as the served pairs would be with every zone served.
+     #[cfg(test)]
+     fn all_pairs(&self) -> Vec<Pair> {
+@@ -3425,6 +3488,7 @@ impl IntercityApi {
+     /// Station access by zone and the zone pairs a station serves, for `svc`'s layout. Each group
+     /// of sites sees the stations in its own frame.
+     fn set_access(&mut self, svc: &Service) {
++        let _g0 = crate::demand::diag_scope("mktnet.access");
+         let m = self.m.clone();
+         let net0 = DemandApi::period_net(svc, 0);
+         let nzz = m.zones.len();
+@@ -3520,9 +3584,12 @@ impl IntercityApi {
+                 v
+             })
+             .collect();
++        let _g = crate::demand::diag_scope("mktnet.served");
+         if served != self.served || comp != self.served_comp {
+             self.set_served(served, comp);
+         }
++        drop(_g);
++        let _g = crate::demand::diag_scope("mktnet.pattern");
+         self.set_st_pattern(svc.st_x.len());
+     }
+     /// The far-zone table's pattern (`StPattern`) for the access lists and pairs as they stand:
+@@ -3824,6 +3891,7 @@ impl IntercityApi {
+             peak_hour_factor: PEAK_HOUR_FACTOR[q],
+             ..self.base.clone()
+         };
++        let _dg = crate::demand::diag_scope("mkt.graph");
+         let net = DemandApi::period_net(svc, q);
+         let mut g = build_graph(&net, &p);
+         for (r, f) in g.rn_fare.iter_mut().enumerate() {
+@@ -3833,7 +3901,20 @@ impl IntercityApi {
+         let no_crowding = vec![1.0; g.rn_ride.len()];
+         set_crowding(&mut g, &no_crowding);
+         let xi = xfer_index(&g);
++        drop(_dg);
+         let pass = self.pass(&g, &p, q, &xi);
++        {
++            use crate::demand::diag_add as a;
++            a("msolve.n", 1.);
++            a("msolve.pair_rail", 4. * pass.pair_rail.capacity() as f64);
++            a("msolve.c_frac", 4. * pass.c_frac.capacity() as f64);
++            a("msolve.e_frac", 4. * pass.e_frac.capacity() as f64);
++            a("msolve.st", 4. * pass.st.capacity() as f64);
++            a("msolve.xfer", 4. * pass.xfer.capacity() as f64);
++            a("msolve.cor", 8. * (pass.cor.capacity() + pass.c_cor.capacity()) as f64);
++            a("msolve.nodes", g.n as f64);
++            a("msolve.e_loads", pass.e_loads.iter().filter(|l| l.is_some()).count() as f64);
++        }
+         let (e_trips, e_walk_base) = self.m.everyday.iter().fold((0f64, 0f64), |(t, w), e| {
+             let legs = e.trips as f64 * (OUTWARD[e.kind as usize][q] + RETURN[e.kind as usize][q]) as f64;
+             (t + legs, w + legs * e.walk as f64)
+@@ -3857,8 +3938,8 @@ impl IntercityApi {
+             c_rail: pass.c_rail,
+             c_trips: self.m.cw.commuters * (TO_WORK[q] + TO_HOME[q]) as f64,
+             c_frac: pass.c_frac,
+-            corridors: pass.cor,
+-            c_corridors: pass.c_cor,
++            corridors: Sparse::of(&pass.cor),
++            c_corridors: Sparse::of(&pass.c_cor),
+             pair_rail: pass.pair_rail,
+             st: pass.st,
+             round: 0,
+@@ -3928,12 +4009,8 @@ impl IntercityApi {
+         let w = 1. / (r as f64 + 1.);
+         st.rail += (rail - st.rail) * w;
+         st.rail_d.toward(rail_d, w);
+-        for (a, b) in st.corridors.iter_mut().zip(cor) {
+-            *a += (b - *a) * w;
+-        }
+-        for (a, b) in st.c_corridors.iter_mut().zip(c_cor) {
+-            *a += (b - *a) * w;
+-        }
++        st.corridors.toward(&cor, w);
++        st.c_corridors.toward(&c_cor, w);
+         st.ms = now_ms() - t;
+         self.per[q] = Some(st);
+         true
+@@ -3963,9 +4040,8 @@ impl IntercityApi {
+         for v in st.pair_rail.iter_mut().chain(st.c_frac.iter_mut()).chain(st.e_frac.iter_mut()).chain(st.st.iter_mut()) {
+             *v *= f;
+         }
+-        for v in st.corridors.iter_mut().chain(st.c_corridors.iter_mut()) {
+-            *v *= all;
+-        }
++        st.corridors.scale(all);
++        st.c_corridors.scale(all);
+         true
+     }
+     pub fn summary(&self, q: usize) -> Vec<f64> {
+@@ -4054,7 +4130,7 @@ impl IntercityApi {
+             let m = &self.m;
+             let mut out: Vec<f64> = m.each_corridor().enumerate().flat_map(|(i, (a, b))| [a as f64, b as f64, m.cw.trips[i] * SHARES[q] as f64, 0.]).collect();
+             for (k, c) in m.open_corridors() {
+-                out[4 * c + 3] = s.corridors[k];
++                out[4 * c + 3] = s.corridors.get(k);
+             }
+             out
+         })
+@@ -4133,8 +4209,8 @@ impl IntercityApi {
+         let mut out = vec![];
+         // (the open places' corridors come in corridor order)
+         for (k, i) in self.m.open_corridors() {
+-            let r = s.corridors[k];
+-            let c = if commutes { s.c_corridors.get(k).copied().unwrap_or(0.) } else { 0. };
++            let r = s.corridors.get(k);
++            let c = if commutes { s.c_corridors.get(k) } else { 0. };
+             if r != 0. || c != 0. {
+                 out.extend([i as f64, r, c]);
+             }
+@@ -4327,8 +4403,8 @@ impl IntercityApi {
+             let Some(per) = per_of(q) else { continue };
+             let legs = (share_out(day, WORK, q) + share_ret(day, WORK, q)) as f64;
+             let rail_legs = (TO_WORK[q] + TO_HOME[q]) as f64 * load_factor(day, WORK, q) as f64;
+-            let frac = |c: u32| match (per, self.cpair_of.get(c as usize)) {
+-                (Some(per), Some(&i)) if i != u32::MAX => per.c_frac.get(i as usize).copied().unwrap_or(0.) as f64,
++            let frac = |c: u32| match (per, self.cpair_of(c as usize)) {
++                (Some(per), i) if i != u32::MAX => per.c_frac.get(i as usize).copied().unwrap_or(0.) as f64,
+                 _ => 0.,
+             };
+             for (end, weights) in [(0usize, &pop_w), (1usize, &job_w)] {
+@@ -4364,7 +4440,7 @@ impl IntercityApi {
+                         match per {
+                             None => out[o + 2] += legs * pair.walk as f64,
+                             Some(per) => {
+-                                let ei = self.epair_of.get(i as usize).copied().unwrap_or(u32::MAX);
++                                let ei = self.epair_of(i as usize);
+                                 let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
+                                 let rail = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day, everyday_purpose(k), q) as f64 * frac;
+                                 out[o + 1] += rail;
+diff --git a/trainworld/sim/src/demand/intercity/market_trip.rs b/trainworld/sim/src/demand/intercity/market_trip.rs
+index 9a0dafe8..2512aa89 100644
+--- a/trainworld/sim/src/demand/intercity/market_trip.rs
++++ b/trainworld/sim/src/demand/intercity/market_trip.rs
+@@ -208,7 +208,7 @@ impl IntercityApi {
+         let s = g.n_st;
+         let mut want = vec![false; s];
+         for &(c, _) in &c_hits {
+-            if self.cpair_of.get(c).is_some_and(|&i| i != u32::MAX) {
++            if self.cpair_of(c) != u32::MAX {
+                 for &(st, _) in &self.access_cw[m.comp_of_gid[m.commutes[c].1 as usize] as usize] {
+                     want[st] = true;
+                 }
+@@ -220,7 +220,7 @@ impl IntercityApi {
+             }
+         }
+         for &(i, _) in &e_hits {
+-            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
++            let ei = self.epair_of(i);
+             if ei != u32::MAX && per.e_frac.get(ei as usize).is_some_and(|&f| f > 0.) {
+                 for &(st, _) in &self.access_ew[self.epair_zones(&self.epairs[ei as usize]).1] {
+                     want[st] = true;
+@@ -316,7 +316,7 @@ impl IntercityApi {
+             let purpose = everyday_purpose(k);
+             let n = wz * pair.trips as f64;
+             let legs = n * (share_out(day as usize, purpose, q) + share_ret(day as usize, purpose, q)) as f64;
+-            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
++            let ei = self.epair_of(i);
+             let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
+             let rail_legs = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day as usize, purpose, q) as f64 * frac;
+             e_all += legs;
+@@ -350,7 +350,7 @@ impl IntercityApi {
+             let (hz, wg, n) = m.commutes[c];
+             let n = wz * n as f64;
+             c_all += n * legs_sh;
+-            let ci = self.cpair_of.get(c).copied().unwrap_or(u32::MAX);
++            let ci = self.cpair_of(c);
+             let frac = if ci == u32::MAX { 0. } else { per.c_frac.get(ci as usize).copied().unwrap_or(0.) as f64 };
+             let rail_legs = n * rail_sh * frac;
+             c_rail += rail_legs;
+diff --git a/trainworld/sim/src/demand/intercity/tests.rs b/trainworld/sim/src/demand/intercity/tests.rs
+index befc8bf1..6ea91c14 100644
+--- a/trainworld/sim/src/demand/intercity/tests.rs
++++ b/trainworld/sim/src/demand/intercity/tests.rs
+@@ -2208,3 +2208,24 @@ fn t1545_window() {
+         }
+     }
+ }
++
++/// T-1611: a period's corridor figures held sparse read, average and scale as the dense table.
++#[test]
++fn sparse_corridors_are_the_dense_table() {
++    let rounds = [vec![0., 2.5, 0., 1e-9, 0.], vec![3., 0., 0., 4., 0.], vec![0., 0., 0., 0., 7.]];
++    let mut dense = rounds[0].clone();
++    let mut sparse = Sparse::of(&rounds[0]);
++    for (r, b) in rounds.iter().enumerate().skip(1) {
++        let w = 1. / (r as f64 + 1.);
++        for (a, &b) in dense.iter_mut().zip(b) {
++            *a += (b - *a) * w;
++        }
++        sparse.toward(b, w);
++    }
++    dense.iter_mut().for_each(|x| *x *= 0.75);
++    sparse.scale(0.75);
++    for (i, &x) in dense.iter().enumerate() {
++        assert_eq!(sparse.get(i).to_bits(), x.to_bits(), "corridor {i}");
++    }
++    assert_eq!(sparse.get(2), 0.);
++}
+diff --git a/trainworld/sim/src/demand/kernel.rs b/trainworld/sim/src/demand/kernel.rs
+index 58e2d723..cbe049b5 100644
+--- a/trainworld/sim/src/demand/kernel.rs
++++ b/trainworld/sim/src/demand/kernel.rs
+@@ -1166,6 +1166,16 @@ impl Gravity {
+             self.wf_s.extend(row.iter().map(|x| x.2));
+         }
+         self.wf_off.push(self.wf_j.len() as u32);
++        // grown a zone's row at a time, so up to twice their length until shrunk (T-1611)
++        self.wf_off.shrink_to_fit();
++        self.wf_j.shrink_to_fit();
++        self.wf_c.shrink_to_fit();
++        self.wf_s.shrink_to_fit();
++        crate::demand::diag_add("wf.len", self.wf_j.len() as f64);
++        crate::demand::diag_add("wf.cap_j", self.wf_j.capacity() as f64);
++        crate::demand::diag_add("wf.cap_c", self.wf_c.capacity() as f64);
++        crate::demand::diag_add("wf.off_cap", self.wf_off.capacity() as f64);
++        crate::demand::diag_add("wf.zones", z.n as f64);
+     }
+ 
+     /// The entry of `wf_*` for zones i and j at table index `k`, if they are a near pair.
+@@ -3986,15 +3996,21 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
+                     let (i, kept) = c.iter().enumerate().map(|(i, e)| (i, e.1.next.len())).min_by_key(|e| e.1).unwrap();
+                     if todo < kept {
+                         drop(c);
+-                        return f(&skims_for(g, p, want));
++                        let _dg = crate::demand::diag_scope("skims.oneoff");
++                        let sk = skims_for(g, p, want);
++                        drop(_dg);
++                        return f(&sk);
+                     }
+                     c.remove(i);
+                 }
++                let _g = crate::demand::diag_scope("skims.cache");
+                 c.push((SkimKey::of(g, p), Skims::empty(g)));
+             }
+         }
+         let sk = &mut c.last_mut().unwrap().1;
++        let _g = crate::demand::diag_scope("skims.cache");
+         skims_extend(sk, g, p, want);
++        drop(_g);
+         f(sk)
+     })
+ }
+diff --git a/trainworld/sim/src/demand/mod.rs b/trainworld/sim/src/demand/mod.rs
+index e79e84aa..4b6708b2 100644
+--- a/trainworld/sim/src/demand/mod.rs
++++ b/trainworld/sim/src/demand/mod.rs
+@@ -47,3 +47,11 @@ pub mod warm;
+ 
+ #[cfg(target_arch = "wasm32")]
+ pub mod wasm;
++#[cfg(target_arch = "wasm32")]
++pub use wasm::{diag_add, diag_count, diag_scope};
++#[cfg(not(target_arch = "wasm32"))]
++pub fn diag_add(_: &str, _: f64) {}
++#[cfg(not(target_arch = "wasm32"))]
++pub fn diag_scope(_: &str) {}
++#[cfg(not(target_arch = "wasm32"))]
++pub fn diag_count(_: &str, _: f64) {}
+diff --git a/trainworld/sim/src/demand/wasm.rs b/trainworld/sim/src/demand/wasm.rs
+index 84b02075..6a058964 100644
+--- a/trainworld/sim/src/demand/wasm.rs
++++ b/trainworld/sim/src/demand/wasm.rs
+@@ -55,35 +55,148 @@ unsafe fn ahead(before: usize) {
+     }
+ }
+ 
++// ---- T-1169 diagnostic (T-1611 port): every block carries a tag in a header before it.
++const NT: usize = 65536;
++static mut TAG: u32 = 0;
++static mut TLIVE: [usize; NT] = [0; NT];
++static mut TMAX: [usize; NT] = [0; NT];
++static mut ATPEAK: [usize; NT] = [0; NT];
++static mut SNAP_AT: usize = 0;
++static mut NBLOCKS: usize = 0;
++
++fn hdr(l: &Layout) -> usize { l.align().max(16) }
++unsafe fn tag_add(t: u32, n: usize) {
++    let t = t as usize;
++    TLIVE[t] += n;
++    if TLIVE[t] > TMAX[t] { TMAX[t] = TLIVE[t]; }
++}
++unsafe fn after_grow() {
++    let live = LIVE.load(Ordering::Relaxed);
++    if live >= SNAP_AT {
++        let p = &raw mut ATPEAK;
++        let s = &raw const TLIVE;
++        (*p).copy_from_slice(&*s);
++        SNAP_AT = live + (2 << 20);
++    }
++}
++
+ unsafe impl GlobalAlloc for NotingAlloc {
+     unsafe fn alloc(&self, l: Layout) -> *mut u8 {
+         let before = core::arch::wasm32::memory_size(0);
+-        let p = System.alloc(l);
+-        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); ahead(before); }
+-        p
++        let h = hdr(&l);
++        let lh = Layout::from_size_align_unchecked(l.size() + h, h);
++        let p = System.alloc(lh);
++        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); return p; }
++        *(p.add(h - 4) as *mut u32) = TAG;
++        tag_add(TAG, l.size());
++        NBLOCKS += 1;
++        grew(l.size());
++        after_grow();
++        ahead(before);
++        p.add(h)
+     }
+     unsafe fn alloc_zeroed(&self, l: Layout) -> *mut u8 {
+-        let before = core::arch::wasm32::memory_size(0);
+-        let p = System.alloc_zeroed(l);
+-        if p.is_null() { FAILED_ALLOC.store(l.size().max(1), Ordering::Relaxed); } else { grew(l.size()); ahead(before); }
++        let p = self.alloc(l);
++        if !p.is_null() { core::ptr::write_bytes(p, 0, l.size()); }
+         p
+     }
+     unsafe fn realloc(&self, ptr: *mut u8, l: Layout, new_size: usize) -> *mut u8 {
+         let before = core::arch::wasm32::memory_size(0);
+-        let p = System.realloc(ptr, l, new_size);
+-        if !p.is_null() { ahead(before); }
++        let h = hdr(&l);
++        let base = ptr.sub(h);
++        let t = *(base.add(h - 4) as *const u32);
++        let lh = Layout::from_size_align_unchecked(l.size() + h, h);
++        let p = System.realloc(base, lh, new_size + h);
+         if p.is_null() {
+             FAILED_ALLOC.store(new_size.max(1), Ordering::Relaxed);
+-        } else {
+-            LIVE.fetch_sub(l.size(), Ordering::Relaxed);
+-            grew(new_size);
++            return p;
+         }
+-        p
++        LIVE.fetch_sub(l.size(), Ordering::Relaxed);
++        TLIVE[t as usize] -= l.size();
++        tag_add(t, new_size);
++        grew(new_size);
++        after_grow();
++        ahead(before);
++        p.add(h)
+     }
+     unsafe fn dealloc(&self, ptr: *mut u8, l: Layout) {
++        let h = hdr(&l);
++        let base = ptr.sub(h);
++        let t = *(base.add(h - 4) as *const u32);
++        TLIVE[t as usize] -= l.size();
++        NBLOCKS -= 1;
+         LIVE.fetch_sub(l.size(), Ordering::Relaxed);
+-        System.dealloc(ptr, l)
++        System.dealloc(base, Layout::from_size_align_unchecked(l.size() + h, h))
++    }
++}
++
++thread_local! {
++    static NAMES: RefCell<Vec<String>> = RefCell::new(vec!["(untagged)".to_string(), "(overflow)".to_string()]);
++    static IDS: RefCell<std::collections::HashMap<String, u32>> = RefCell::new(std::collections::HashMap::new());
++}
++fn tag_id(name: &str) -> u32 {
++    if let Some(i) = IDS.with(|m| m.borrow().get(name).copied()) { return i; }
++    NAMES.with(|n| {
++        let mut n = n.borrow_mut();
++        if n.len() >= NT { return 1; }
++        n.push(name.to_string());
++        let i = (n.len() - 1) as u32;
++        IDS.with(|m| m.borrow_mut().insert(name.to_string(), i));
++        i
++    })
++}
++#[wasm_bindgen]
++pub fn diag_tag(name: &str) -> u32 {
++    let id = tag_id(name);
++    unsafe { let prev = TAG; TAG = id; prev }
++}
++#[wasm_bindgen]
++pub fn diag_set(id: u32) { unsafe { TAG = id; } }
++pub struct DiagScope(u32);
++impl Drop for DiagScope { fn drop(&mut self) { unsafe { TAG = self.0; } } }
++pub fn diag_scope(name: &str) -> DiagScope { DiagScope(diag_tag(name)) }
++thread_local! { static COUNTS: RefCell<Vec<(String, f64)>> = RefCell::new(vec![]); }
++pub fn diag_count(name: &str, v: f64) {
++    COUNTS.with(|c| { let mut c = c.borrow_mut(); if let Some(e) = c.iter_mut().find(|e| e.0 == name) { e.1 = v; } else { c.push((name.to_string(), v)); } });
++}
++pub fn diag_add(name: &str, v: f64) {
++    COUNTS.with(|c| { let mut c = c.borrow_mut(); if let Some(e) = c.iter_mut().find(|e| e.0 == name) { e.1 += v; } else { c.push((name.to_string(), v)); } });
++}
++#[wasm_bindgen]
++pub fn diag_report(reset: bool) -> String {
++    let prev = unsafe { let p = TAG; TAG = 0; p };
++    let mut out = String::from("{\"tags\":[");
++    NAMES.with(|n| {
++        let n = n.borrow();
++        let mut first = true;
++        for (i, name) in n.iter().enumerate() {
++            let (lv, mx, ap) = unsafe { (TLIVE[i], TMAX[i], ATPEAK[i]) };
++            if lv == 0 && mx == 0 && ap == 0 { continue; }
++            if !first { out.push(','); }
++            first = false;
++            out.push_str(&format!("[{:?},{},{},{}]", name, lv, mx, ap));
++        }
++    });
++    out.push_str("],\"counts\":[");
++    COUNTS.with(|c| {
++        let c = c.borrow();
++        let parts: Vec<String> = c.iter().map(|(k, v)| format!("[{:?},{}]", k, v)).collect();
++        out.push_str(&parts.join(","));
++    });
++    let (live, peak, nb) = (LIVE.load(Ordering::Relaxed), PEAK.load(Ordering::Relaxed), unsafe { NBLOCKS });
++    out.push_str(&format!("],\"live\":{live},\"peak\":{peak},\"blocks\":{nb},\"mem\":{}}}", wasm_memory_bytes()));
++    if reset {
++        unsafe {
++            PEAK.store(live, Ordering::Relaxed);
++            let p = &raw mut ATPEAK;
++            let s = &raw const TLIVE;
++            (*p).copy_from_slice(&*s);
++            SNAP_AT = live + (2 << 20);
++            for i in 0..NT { TMAX[i] = TLIVE[i]; }
++        }
+     }
++    unsafe { TAG = prev; }
++    out
+ }
+ 
+ #[global_allocator]

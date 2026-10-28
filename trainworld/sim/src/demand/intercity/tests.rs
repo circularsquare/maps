@@ -2208,3 +2208,24 @@ fn t1545_window() {
         }
     }
 }
+
+/// T-1611: a period's corridor figures held sparse read, average and scale as the dense table.
+#[test]
+fn sparse_corridors_are_the_dense_table() {
+    let rounds = [vec![0., 2.5, 0., 1e-9, 0.], vec![3., 0., 0., 4., 0.], vec![0., 0., 0., 0., 7.]];
+    let mut dense = rounds[0].clone();
+    let mut sparse = Sparse::of(&rounds[0]);
+    for (r, b) in rounds.iter().enumerate().skip(1) {
+        let w = 1. / (r as f64 + 1.);
+        for (a, &b) in dense.iter_mut().zip(b) {
+            *a += (b - *a) * w;
+        }
+        sparse.toward(b, w);
+    }
+    dense.iter_mut().for_each(|x| *x *= 0.75);
+    sparse.scale(0.75);
+    for (i, &x) in dense.iter().enumerate() {
+        assert_eq!(sparse.get(i).to_bits(), x.to_bits(), "corridor {i}");
+    }
+    assert_eq!(sparse.get(2), 0.);
+}

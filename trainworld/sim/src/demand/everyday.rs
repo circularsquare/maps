@@ -1407,7 +1407,9 @@ impl EverydayApi {
         let mut first: Vec<Vec<u32>> = vec![];
         for kind in 0..kinds {
             let budget = budget_of(kind);
-            live.push((0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect());
+            let mut l: Vec<u32> = (0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect();
+            l.shrink_to_fit();
+            live.push(l);
             let mut f = Vec::with_capacity(live[kind].len() + 1);
             let mut at = start[kind];
             f.push(at as u32);

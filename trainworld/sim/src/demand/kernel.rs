@@ -1166,6 +1166,11 @@ impl Gravity {
             self.wf_s.extend(row.iter().map(|x| x.2));
         }
         self.wf_off.push(self.wf_j.len() as u32);
+        // grown a zone's row at a time, so up to twice their length until shrunk (T-1611)
+        self.wf_off.shrink_to_fit();
+        self.wf_j.shrink_to_fit();
+        self.wf_c.shrink_to_fit();
+        self.wf_s.shrink_to_fit();
     }
 
     /// The entry of `wf_*` for zones i and j at table index `k`, if they are a near pair.

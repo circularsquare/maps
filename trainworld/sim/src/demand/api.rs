@@ -874,7 +874,7 @@ impl DemandApi {
     #[wasm_bindgen(constructor)]
     pub fn new(header: &str, bin: &[u8]) -> Result<DemandApi, String> {
         let t0 = now_ms();
-        let city = pack::parse(header, bin)?;
+        let mut city = pack::parse(header, bin)?;
         let mut base = Params { asc_rail: ASC_RAIL, ..Params::default() };
         // T-277: a pack fitted on its own country's commuting (Toronto) ships its own distance
         // curve; the default is the US one, so take the pack's rather than re-solve with that
@@ -915,6 +915,8 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
+        // read only above; z and gr hold what the solves need of it (T-1611)
+        city.gravity = None;
         Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
     }
 

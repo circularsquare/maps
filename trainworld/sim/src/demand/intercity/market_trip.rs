@@ -208,7 +208,7 @@ impl IntercityApi {
         let s = g.n_st;
         let mut want = vec![false; s];
         for &(c, _) in &c_hits {
-            if self.cpair_of.get(c).is_some_and(|&i| i != u32::MAX) {
+            if self.cpair_of(c) != u32::MAX {
                 for &(st, _) in &self.access_cw[m.comp_of_gid[m.commutes[c].1 as usize] as usize] {
                     want[st] = true;
                 }
@@ -220,7 +220,7 @@ impl IntercityApi {
             }
         }
         for &(i, _) in &e_hits {
-            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
+            let ei = self.epair_of(i);
             if ei != u32::MAX && per.e_frac.get(ei as usize).is_some_and(|&f| f > 0.) {
                 for &(st, _) in &self.access_ew[self.epair_zones(&self.epairs[ei as usize]).1] {
                     want[st] = true;
@@ -316,7 +316,7 @@ impl IntercityApi {
             let purpose = everyday_purpose(k);
             let n = wz * pair.trips as f64;
             let legs = n * (share_out(day as usize, purpose, q) + share_ret(day as usize, purpose, q)) as f64;
-            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
+            let ei = self.epair_of(i);
             let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
             let rail_legs = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day as usize, purpose, q) as f64 * frac;
             e_all += legs;
@@ -350,7 +350,7 @@ impl IntercityApi {
             let (hz, wg, n) = m.commutes[c];
             let n = wz * n as f64;
             c_all += n * legs_sh;
-            let ci = self.cpair_of.get(c).copied().unwrap_or(u32::MAX);
+            let ci = self.cpair_of(c);
             let frac = if ci == u32::MAX { 0. } else { per.c_frac.get(ci as usize).copied().unwrap_or(0.) as f64 };
             let rail_legs = n * rail_sh * frac;
             c_rail += rail_legs;

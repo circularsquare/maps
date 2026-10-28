@@ -1069,8 +1069,8 @@ struct Period {
     c_rail: f64,
     c_trips: f64,
     c_frac: Vec<f32>,
-    corridors: Vec<f64>,
-    c_corridors: Vec<f64>,
+    corridors: Sparse,
+    c_corridors: Sparse,
     /// T-1373: the longer trips' loads each times its pair's lean (`Market::lean`), averaged like
     /// the commutes'; none where the lean's table would be too large (`LEAN_OD_BYTES`)
     r_avg: Option<Loads>,
@@ -1096,6 +1096,51 @@ struct Period {
     e_walk: f64,
     e_walk_base: f64,
     e_frac: Vec<f32>,
+}
+/// A period's figures by open corridor, its nonzero entries only (T-1611): a cluster's pairs touch
+/// few of the world's corridors, and a dense table a period and part was most of a market part's
+/// memory on all of China (250,000 corridors, 4 MB a period and part). Read as the dense table it
+/// stands for, to the bit.
+struct Sparse {
+    k: Vec<u32>,
+    v: Vec<f64>,
+}
+impl Sparse {
+    fn of(dense: &[f64]) -> Sparse {
+        let (mut k, mut v) = (vec![], vec![]);
+        for (i, &x) in dense.iter().enumerate() {
+            if x != 0. {
+                k.push(i as u32);
+                v.push(x);
+            }
+        }
+        k.shrink_to_fit();
+        v.shrink_to_fit();
+        Sparse { k, v }
+    }
+    fn get(&self, i: usize) -> f64 {
+        self.k.binary_search(&(i as u32)).map_or(0., |j| self.v[j])
+    }
+    /// Each entry `a += (b - a) * w` towards `dense`, as on the dense table.
+    fn toward(&mut self, dense: &[f64], w: f64) {
+        let (mut k, mut v) = (Vec::with_capacity(self.k.len()), Vec::with_capacity(self.k.len()));
+        let mut j = 0;
+        for (i, &b) in dense.iter().enumerate() {
+            let held = j < self.k.len() && self.k[j] as usize == i;
+            if held || b != 0. {
+                let a = if held { self.v[j] } else { 0. };
+                k.push(i as u32);
+                v.push(a + (b - a) * w);
+            }
+            j += held as usize;
+        }
+        k.shrink_to_fit();
+        v.shrink_to_fit();
+        *self = Sparse { k, v };
+    }
+    fn scale(&mut self, f: f64) {
+        self.v.iter_mut().for_each(|x| *x *= f);
+    }
 }
 #[cfg(test)]
 const ST_W: usize = 18;
@@ -2371,7 +2416,7 @@ impl IntercityApi {
                 out[2 * c as usize] = n * legs;
             }
             for (k, c) in m.open_corridors() {
-                out[2 * c + 1] = s.c_corridors[k];
+                out[2 * c + 1] = s.c_corridors.get(k);
             }
             out
         })
@@ -2506,13 +2551,10 @@ pub struct IntercityApi {
     access_cw: Vec<Vec<(usize, f32)>>,
     access_c_walk: Vec<Vec<(usize, f32)>>,
     cpairs: Vec<CPair>,
-    cpair_of: Vec<u32>,
     /// T-1175: the activity end's walks of the everyday pairs (attraction-weighted), and the
     /// everyday pairs some station serves
     access_ew: Vec<Vec<(usize, f32)>>,
     epairs: Vec<EPairOn>,
-    /// the index in `epairs` of each of the market's everyday pairs, `u32::MAX` if none
-    epair_of: Vec<u32>,
     want: Vec<bool>,
     per: Vec<Option<Period>>,
     fare_km: Vec<f32>,
@@ -2755,10 +2797,8 @@ impl IntercityApi {
             access_cw: vec![],
             access_c_walk: vec![],
             cpairs: vec![],
-            cpair_of: vec![],
             access_ew: vec![],
             epairs: vec![],
-            epair_of: vec![],
             want: vec![],
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
@@ -3378,7 +3418,6 @@ impl IntercityApi {
         }
         let pc = commute_params();
         self.cpairs.clear();
-        self.cpair_of = vec![u32::MAX; m.commutes.len()];
         for (c, &(h, wg, _)) in m.commutes.iter().enumerate() {
             let w = m.comp_of_gid[wg as usize];
             if w == u32::MAX {
@@ -3393,14 +3432,12 @@ impl IntercityApi {
             let r = m.pr(zh.place, zw.place);
             let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let corridor = m.open_corridor(zh.place, zw.place);
-            self.cpair_of[c] = self.cpairs.len() as u32;
             let band = pc.band_of_d2(km * km * 1e6) as u8;
             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
         }
         self.cpairs.shrink_to_fit();
         // T-1175: the everyday pairs, as the commutes
         self.epairs.clear();
-        self.epair_of = vec![u32::MAX; m.everyday.len()];
         for (e, ep) in m.everyday.iter().enumerate() {
             let a = m.comp_of_gid[ep.a as usize];
             if a == u32::MAX {
@@ -3415,13 +3452,21 @@ impl IntercityApi {
             let r = m.pr(zh.place, za.place);
             let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let w = ep.walk.min(0.999);
-            self.epair_of[e] = self.epairs.len() as u32;
             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
         }
         self.epairs.shrink_to_fit();
         self.served_at = at;
         self.served = served;
         self.served_comp = comp;
+    }
+    /// The index in `cpairs` of the market's commute `c`, `u32::MAX` if none (`cpairs` are in
+    /// commute order: a search, not a table the size of every commute a cluster's part would hold).
+    pub(crate) fn cpair_of(&self, c: usize) -> u32 {
+        self.cpairs.binary_search_by_key(&(c as u32), |p| p.c).map_or(u32::MAX, |i| i as u32)
+    }
+    /// The same for the market's everyday pairs in `epairs`.
+    pub(crate) fn epair_of(&self, e: usize) -> u32 {
+        self.epairs.binary_search_by_key(&(e as u32), |p| p.e).map_or(u32::MAX, |i| i as u32)
     }
     /// Every pair of the market, as the served pairs would be with every zone served.
     #[cfg(test)]
@@ -3874,8 +3919,8 @@ impl IntercityApi {
             c_rail: pass.c_rail,
             c_trips: self.m.cw.commuters * (TO_WORK[q] + TO_HOME[q]) as f64,
             c_frac: pass.c_frac,
-            corridors: pass.cor,
-            c_corridors: pass.c_cor,
+            corridors: Sparse::of(&pass.cor),
+            c_corridors: Sparse::of(&pass.c_cor),
             pair_rail: pass.pair_rail,
             st: pass.st,
             round: 0,
@@ -3946,12 +3991,8 @@ impl IntercityApi {
         msa_w(&mut st.avg.rn_fare_x, &l.rn_fare_x, wf);
         st.rail += (rail - st.rail) * w;
         st.rail_d.toward(rail_d, w);
-        for (a, b) in st.corridors.iter_mut().zip(cor) {
-            *a += (b - *a) * w;
-        }
-        for (a, b) in st.c_corridors.iter_mut().zip(c_cor) {
-            *a += (b - *a) * w;
-        }
+        st.corridors.toward(&cor, w);
+        st.c_corridors.toward(&c_cor, w);
         st.ms = now_ms() - t;
         self.per[q] = Some(st);
         true
@@ -3981,9 +4022,8 @@ impl IntercityApi {
         for v in st.pair_rail.iter_mut().chain(st.c_frac.iter_mut()).chain(st.e_frac.iter_mut()).chain(st.st.iter_mut()) {
             *v *= f;
         }
-        for v in st.corridors.iter_mut().chain(st.c_corridors.iter_mut()) {
-            *v *= all;
-        }
+        st.corridors.scale(all);
+        st.c_corridors.scale(all);
         true
     }
     pub fn summary(&self, q: usize) -> Vec<f64> {
@@ -4072,7 +4112,7 @@ impl IntercityApi {
             let m = &self.m;
             let mut out: Vec<f64> = m.each_corridor().enumerate().flat_map(|(i, (a, b))| [a as f64, b as f64, m.cw.trips[i] * SHARES[q] as f64, 0.]).collect();
             for (k, c) in m.open_corridors() {
-                out[4 * c + 3] = s.corridors[k];
+                out[4 * c + 3] = s.corridors.get(k);
             }
             out
         })
@@ -4151,8 +4191,8 @@ impl IntercityApi {
         let mut out = vec![];
         // (the open places' corridors come in corridor order)
         for (k, i) in self.m.open_corridors() {
-            let r = s.corridors[k];
-            let c = if commutes { s.c_corridors.get(k).copied().unwrap_or(0.) } else { 0. };
+            let r = s.corridors.get(k);
+            let c = if commutes { s.c_corridors.get(k) } else { 0. };
             if r != 0. || c != 0. {
                 out.extend([i as f64, r, c]);
             }
@@ -4345,8 +4385,8 @@ impl IntercityApi {
             let Some(per) = per_of(q) else { continue };
             let legs = (share_out(day, WORK, q) + share_ret(day, WORK, q)) as f64;
             let rail_legs = (TO_WORK[q] + TO_HOME[q]) as f64 * load_factor(day, WORK, q) as f64;
-            let frac = |c: u32| match (per, self.cpair_of.get(c as usize)) {
-                (Some(per), Some(&i)) if i != u32::MAX => per.c_frac.get(i as usize).copied().unwrap_or(0.) as f64,
+            let frac = |c: u32| match (per, self.cpair_of(c as usize)) {
+                (Some(per), i) if i != u32::MAX => per.c_frac.get(i as usize).copied().unwrap_or(0.) as f64,
                 _ => 0.,
             };
             for (end, weights) in [(0usize, &pop_w), (1usize, &job_w)] {
@@ -4382,7 +4422,7 @@ impl IntercityApi {
                         match per {
                             None => out[o + 2] += legs * pair.walk as f64,
                             Some(per) => {
-                                let ei = self.epair_of.get(i as usize).copied().unwrap_or(u32::MAX);
+                                let ei = self.epair_of(i as usize);
                                 let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
                                 let rail = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day, everyday_purpose(k), q) as f64 * frac;
                                 out[o + 1] += rail;
