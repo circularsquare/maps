@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1618 [P2] GPU use on the all-Japan save. Done 2026-10-28: nothing is drawn when paused and still (2.6%); while the clock runs the overlay redraws 1.7M stroke segments every frame (11 ms, 77% GPU; 8% without strokes); the rest is 1-2 points each. Filed T-1638 to T-1641. notes/T-1618.md.
+
 - T-1611 [P2] All 723 Chinese zones under 3.2 GB a solving worker. Done 2026-10-28: five exact fixes (market parts' per-commute index tables, slack in the near-zone walks, sparse corridor figures, two duplicates); 3.41 to 2.77 GB after the final, 3.67 to 2.99 at a refine's peak; figures to the bit, Japan too. Stage 5 of T-1206 split as T-1629. notes/T-1611.md.
 - T-1626 [P2] A fare multiplier for high-speed trains. Done 2026-10-28 (tree t1626, not landed): default 1.5x on the fare above the base, by share of km on high-speed lines, in demand and income; Money tab row once a line is high-speed; saved. Test line x1.0/1.5/2.0: 342k/326k/310k riders, $4.08/$5.29/$6.45 a ride. checks/t1626-hsr-fare.mjs.
 - T-1605 [P3] A cold load's figure signature differing between runs. Done 2026-10-28: a failed download of market-drives.bin was read as "missing" (rule drives, market rail -11% on all-China, visible); now retried (`marketRule.ts`). An invisible 0.0016-rider kind left as T-1633. notes/T-1605.md.
