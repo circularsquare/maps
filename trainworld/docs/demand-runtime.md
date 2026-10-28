@@ -122,7 +122,16 @@ close and reopen: the pack downloads again (the browser's cache) and each solvin
 its new level, one whose solve in hand covers the zone once that solve ends; the shown figures stay
 until a solve covers it at its new level (`flush` sends one as for a zone newly opened), the zone
 counting as open for the loading bar meanwhile. Zones changed in one check reopen together, so one
-solve covers them. Every solve records which of its zones were coarse (`Solve.coarse`); the zones
+solve covers them. That solve is a **local refine** (T-1609, notes/T-1609.md, `?perfOff=refine`
+off): in a solve without the barrier, a cluster whose network its other populations hold solved and
+whose only new populations are zones opened at another level (at most half its populations, never
+a market part) solves those alone, each period through its rounds and the capacity fit, crowding on
+the other populations' loads as the last solve left them (before its capacity fit: each cluster
+keeps, per period, where the fit changed its loads and by how much) plus their own; the others keep
+their figures, so lines carry the new zone's riders beside the others' as they were, and `plan`
+names only the refined zones; when every cluster solved is one, the other zones' bubbles' sums are
+the last solve's, sent again. Its periods are never kept as a whole solve's (T-124): the next edit
+that touches the cluster solves it whole. Every solve records which of its zones were coarse (`Solve.coarse`); the zones
 shown from a coarse solve are `roughZones` (no star or goal comes from them), and the zone in view
 shown rough while fine is on its way is `refiningZone` (the status tag,
 [ui-demand-views.md](ui-demand-views.md)). The demand cache's key marks each coarse zone's pack. `?lod=fine` opens

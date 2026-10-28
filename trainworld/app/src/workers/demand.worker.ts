@@ -150,6 +150,22 @@ const held = new Map<Population, string>();
 /** T-124: per population and period, the cluster's `psig` it holds that period solved for, to the
  * last round, in a solve where every population of the cluster solved it too */
 const heldQ = new Map<Population, string[]>();
+/** T-1609: a period solved alone against its cluster's frozen loads (`heldQ` psig plus this), which
+ * a later solve may refine against again but never keeps as a whole solve's */
+const LOCAL = "~local";
+/** T-1609: per cluster `sig` and period, the last whole solve's loads before the capacity fit over
+ * those after it, where they differ (route nodes of the whole network, the three blocks as `step`'s
+ * totals): the frozen loads a local refine crowds on are the populations' capped loads times this */
+const capRatio = new Map<string, ({ idx: Uint32Array; v: Float32Array } | null)[]>();
+function keepCapRatio(sig: string, q: number, before: Float32Array, after: Float32Array) {
+  const idx: number[] = [], v: number[] = [];
+  for (let k = 0; k < before.length; k++) if (after[k] > 0 && before[k] !== after[k]) { idx.push(k); v.push(before[k] / after[k]); }
+  const list = capRatio.get(sig) ?? [];
+  capRatio.delete(sig);
+  list[q] = idx.length ? { idx: Uint32Array.from(idx), v: Float32Array.from(v) } : null;
+  capRatio.set(sig, list);
+  while (capRatio.size > 32) capRatio.delete(capRatio.keys().next().value!);
+}
 const boxes = new Map<CityId, Box>();
 /** T-392: the clusters of the last few networks, so a question about a shown result whose cluster
  * this worker still holds is answered at once, whatever else is being solved. `railed`: the network
@@ -1313,6 +1329,20 @@ async function run() {
       // solve's results. With the barrier (the shown estimates step through the rounds) they all go
       // round by round together, in groups (T-402): the city in view's cluster alone first, sent as
       // cluster results round by round, then the rest, whose results are the solve's.
+      // T-1609: a cluster whose network is the one its populations hold solved, and whose only new
+      // populations are zones opened again at another level (`fresh`), solves those alone against
+      // the others' loads frozen from the last solve (`localSolve`)
+      const localOf = new Map<JobCluster, Population[]>();
+      if (!job.barrier && !job.fresh && !job.noLocal && !only && mine.length) {
+        const all = maskOf(mine);
+        for (const c of dirty) {
+          if (c.part && sharedParts.has(c.part)) continue;
+          const fresh = c.pops.filter((p) => held.get(p) !== c.sig);
+          if (!fresh.length || 2 * fresh.length > c.pops.length || fresh.some((p) => p instanceof IntercityApi)) continue;
+          const frozen = c.pops.every((p) => fresh.includes(p) || ((p.solved_mask() & all) === all && mine.every((q) => { const h = heldQ.get(p)?.[q]; return h === c.psig[q] || h === c.psig[q] + LOCAL; })));
+          if (frozen) localOf.set(c, fresh);
+        }
+      }
       const early = job.barrier ? [] : dirty;
       const ahead = job.barrier && !job.whole && dirty.length > 1 && !!job.first && dirty[0].cities.includes(job.first);
       const groups = !job.barrier ? [] : ahead ? [[dirty[0]], dirty.slice(1)] : [dirty];
@@ -1322,8 +1352,8 @@ async function run() {
       groups.forEach((cs, g) => { for (const c of cs) groupOf.set(c, g); });
       stageGroup = 0;
       let periodsKept = 0, periodsSolved = 0;
-      const setUp =(c: JobCluster) => {
-        for (const p of c.solveOrder) {
+      const setUpPops = (c: JobCluster, pops: Population[]) => {
+        for (const p of pops) {
           const m = viewOf(c, p).net;
           held.delete(p);
           p.set_complexes(m.complex);
@@ -1370,6 +1400,9 @@ async function run() {
           p.set_fare_mul(m.fareW ?? new Float32Array(0));
           p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
         }
+      };
+      const setUp = (c: JobCluster) => {
+        setUpPops(c, c.solveOrder);
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the
         // crowding is the whole cluster's
@@ -1407,9 +1440,17 @@ async function run() {
       jobNodes = 2 * n.stops.length;
       versions.set(job.version, { clusters: jobClusters, stations: n.stXY.length / 2, railed: n.stXY.length > 0 && n.lineN.length > 0, nodes: jobNodes, rounds: job.rounds, markets: marketQs });
       for (const v of versions.keys()) if (versions.size > KEEP_VERSIONS && v !== job.version) versions.delete(v);
-      sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => c.cities), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities), ...(ahead ? { ahead: dirty[0].cities } : {}) });
+      const freshCities = (c: JobCluster) => { const f = localOf.get(c)!; return c.cities.filter((id) => f.includes(cities.get(id)!) || (everyday.has(id) && f.includes(everyday.get(id)!))); };
+      sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => (localOf.has(c) ? freshCities(c) : c.cities)), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities), ...(ahead ? { ahead: dirty[0].cities } : {}) });
       current = job.version;
       roundsHeld.fill(-1);
+      // T-1609: in a solve where every cluster solved is a local refine, a zone it does not solve
+      // keeps the last solve's bubbles' sums (working out all of China's took 5-6 s)
+      const keptSums = new Map<CityId, { mask: number; sums: Float32Array; everyday: Float32Array | null }>();
+      if (localOf.size && localOf.size === dirty.length) {
+        const fresh = new Set([...localOf.keys()].flatMap(freshCities));
+        for (const [id] of jobLocal) { const k = sumsByRound.get(`${id}:${job.rounds}`); if (k && !fresh.has(id)) keptSums.set(id, k); }
+      }
       sumsByRound.clear();
       stageRound = -1;
       answerWaiting(); // an older version's get nulls; this one's wait on
@@ -1428,6 +1469,14 @@ async function run() {
         const [t, m] = side === "cities" ? [own, other] : [other.slice(), own];
         for (let k = 0; k < t.length; k++) t[k] += m[k];
         return t;
+      };
+      // the cluster's loads on a population's own route nodes; at a pad, the riders aboard as
+      // its boardings (`PopView.pads`)
+      const ownOfIn = (c: JobCluster, a: Population, total: Float32Array) => {
+        const N = jobNodes, { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, own = new Float32Array(3 * nr);
+        for (let k = 0; k < nr; k++) { const g = map[k]; own[k] = total[g]; own[nr + k] = total[N + g]; own[2 * nr + k] = total[2 * N + g]; }
+        for (const k of pads) { own[nr + k] = own[k]; own[2 * nr + k] = 0; }
+        return own;
       };
       // One round of period q for the cluster. Periods are independent. Every population of a
       // cluster advances from one frozen load vector of the whole cluster, never from whichever
@@ -1449,14 +1498,7 @@ async function run() {
           const other = await partner(c, q, r);
           return other && bothSides(side, ownLoads(), other);
         };
-        // the cluster's loads on a population's own route nodes; at a pad, the riders aboard as
-        // its boardings (`PopView.pads`)
-        const ownOf = (a: Population, total: Float32Array) => {
-          const { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, own = new Float32Array(3 * nr);
-          for (let k = 0; k < nr; k++) { const g = map[k]; own[k] = total[g]; own[nr + k] = total[N + g]; own[2 * nr + k] = total[2 * N + g]; }
-          for (const k of pads) { own[nr + k] = own[k]; own[2 * nr + k] = 0; }
-          return own;
-        };
+        const ownOf = (a: Population, total: Float32Array) => ownOfIn(c, a, total);
         const total = round > 0 ? await loads(round - 1) : null;
         if (round > 0 && !total) return false;
         for (const a of c.solveOrder) {
@@ -1496,6 +1538,7 @@ async function run() {
             for (const k of pads) four[3 * nr + k] = own[nr + k];
             if (!a.cap_with_external(q, four)) throw new Error("shared capacity layout disagrees");
           }
+          if (side === "all") keepCapRatio(c.sig, q, final, ownLoads());
         }
         return true;
       };
@@ -1657,7 +1700,77 @@ async function run() {
         drop();
         return true;
       };
+      // T-1609: the populations `fresh` of cluster c solved alone, each of this worker's periods
+      // through every round, crowding on the other populations' loads as they stand (the last
+      // solve's, before its capacity fit: `capRatio`) plus their own, then held to the trains' room
+      // as `step` holds them. The others keep their figures: the result is theirs with the fresh
+      // populations' in place of the ones they replace. False if a newer network came.
+      const localSolve = async (c: JobCluster, fresh: Population[]): Promise<boolean> => {
+        const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
+        setUpPops(c, order);
+        for (const p of fresh) {
+          const m = p.solved_mask();
+          for (let q = 0; q < PERIODS.length; q++) if (m & (1 << q)) p.forget_period(q);
+          heldQ.set(p, []);
+        }
+        c.reuse = 0;
+        ready.add(c);
+        for (const q of mine) {
+          const frozen = new Float32Array(3 * N), notFresh = (a: Population) => !isFresh(a);
+          sumAll([c], (a) => a.seg(q), frozen, 0, notFresh); sumAll([c], (a) => a.board(q), frozen, N, notFresh); sumAll([c], (a) => a.alight(q), frozen, 2 * N, notFresh);
+          const r = capRatio.get(c.sig)?.[q];
+          if (r) for (let i = 0; i < r.idx.length; i++) frozen[r.idx[i]] *= r.v[i];
+          const total = () => {
+            const t = frozen.slice();
+            sumAll([c], (a) => a.seg(q), t, 0, isFresh); sumAll([c], (a) => a.board(q), t, N, isFresh); sumAll([c], (a) => a.alight(q), t, 2 * N, isFresh);
+            return t;
+          };
+          for (let round = 0; round <= job.rounds; round++) {
+            const t = round > 0 ? total() : null;
+            for (const a of order) {
+              if (t === null) a.solve(q);
+              else if (!a.crowd_with_external(q, ownOfIn(c, a, t))) throw new Error("local crowding layout disagrees");
+              await yieldNow();
+              if (pending) return false;
+            }
+            if (t === null) for (const a of fresh) { const b = boardsOf(a); b.free[q] = a.board(q); b.rounds[q] = undefined; }
+          }
+          if (job.rounds > 0) {
+            const final = total();
+            for (const a of fresh) boardsOf(a).rounds[q] = a.board(q);
+            const come = comeOf([c], q);
+            for (const a of order) {
+              const own = ownOfIn(c, a, final), { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, four = new Float32Array(4 * nr);
+              four.set(own);
+              for (let k = 0; k < nr; k++) four[3 * nr + k] = Math.max(come[map[k]], own[nr + k]);
+              for (const k of pads) four[3 * nr + k] = own[nr + k];
+              if (!a.cap_with_external(q, four)) throw new Error("local capacity layout disagrees");
+            }
+          }
+          release_skims();
+          periodsSolved++;
+        }
+        return true;
+      };
       for (const c of early) {
+        const fresh = localOf.get(c);
+        if (fresh) {
+          const t0 = performance.now();
+          if (!(await localSolve(c, fresh))) { stale = true; break; }
+          for (const p of c.pops) {
+            held.set(p, c.sig);
+            if (!fresh.includes(p)) continue;
+            const h = heldQ.get(p)!;
+            for (const q of mine) h[q] = c.psig[q] + LOCAL;
+          }
+          if (import.meta.env.DEV) console.info(`T1609 local refine of ${freshCities(c).join(",")} in a cluster of ${c.cities.length} zones: ${Math.round(performance.now() - t0)} ms`);
+          if (c === early[early.length - 1]) break;
+          for (const q of mine) {
+            const { msg, transfer } = figures(q, job.rounds, 0, [c]);
+            sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
+          }
+          continue;
+        }
         setUp(c);
         // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
         // the shown result (T-324), rather than at the cluster's last round
@@ -1709,7 +1822,7 @@ async function run() {
         for (const q of mine) roundsHeld[q] = job.rounds;
         if (mine.length) {
           for (const [id, a] of jobLocal) {
-            const kept = { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
+            const kept = keptSums.get(id) ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
             for (let r = 0; r <= job.rounds; r++) sumsByRound.set(`${id}:${r}`, kept);
             const copy = kept.sums.slice();
             const extra = kept.everyday?.slice() ?? null;
@@ -1720,8 +1833,7 @@ async function run() {
         for (const q of mine) {
           const t0 = performance.now();
           const { msg } = figures(q, job.rounds, 0, jobClusters);
-          msg.ms = msg.summary[4] = performance.now() - t0;
-          for (let r = 0; r <= job.rounds; r++) {
+          msg.ms = msg.summary[4] = performance.now() - t0;          for (let r = 0; r <= job.rounds; r++) {
             const lean = msg.parts.lean?.slice();
             const m = { ...msg, summary: [r, ...msg.summary.slice(1)], seg: msg.seg.slice(), board: msg.board.slice(), alight: msg.alight.slice(), arrive: msg.arrive.slice(), loadOfCrush: msg.loadOfCrush.slice(), parts: { keys: msg.parts.keys, seg: msg.parts.seg.slice(), board: msg.parts.board.slice(), alight: msg.parts.alight.slice(), ...(lean ? { lean } : {}) }, setupMs: r === 0 ? setupMs : 0 };
             sendMessage({ kind: "result", ...m }, [m.seg.buffer, m.board.buffer, m.alight.buffer, m.arrive.buffer, m.loadOfCrush.buffer, m.parts.seg.buffer, m.parts.board.buffer, m.parts.alight.buffer, ...(lean ? [lean.buffer] : [])]);
@@ -1807,7 +1919,7 @@ async function run() {
       }
       if (!stale) {
         solvedOnce = true;
-        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), heap: heap(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
+        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), heap: heap(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved], ...(localOf.size ? { local: [...localOf.keys()].flatMap(freshCities) } : {}) });
       }
     }
   } catch (err) {

@@ -147,7 +147,10 @@ export type ToDemand =
       part?: [number, number];
       /** T-1174: every market part made afresh from the newest composition, as a worker started
        * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
-      freshParts?: boolean }
+      freshParts?: boolean;
+      /** T-1609 `?perfOff=refine`: a cluster whose only new populations are zones opened again at
+       * another level is solved whole, not those zones alone against the others' frozen loads */
+      noLocal?: boolean }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -363,7 +366,7 @@ export type FromDemand =
   | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[] }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
-  | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number] }
+  | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }

@@ -320,6 +320,8 @@ interface Solve {
   clusters?: [number, number];
   /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
   periods?: [number, number][];
+  /** T-1609: the zones the last worker solved alone against their clusters' frozen loads */
+  local?: CityId[];
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -2544,6 +2546,7 @@ class DemandClient {
       s.memBytes[i] = msg.memBytes;
       if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
       if (msg.periods) (s.periods ??= [])[i] = msg.periods;
+      if (msg.local) s.local = msg.local;
       return;
     }
     if (msg.kind === "plan") {
@@ -2739,7 +2742,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
