@@ -14,9 +14,9 @@ import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
-import { trainKind } from "./format";
+import { count, trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
-import type { LineInput, LineStats } from "./types";
+import type { Demand, LineInput, LineStats } from "./types";
 import { cameraMoving } from "./ui";
 
 export interface LineToday {
@@ -71,6 +71,33 @@ export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
 }
 /** "2.3 min", or "under 0.1 min" */
 export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min < 10 ? min.toFixed(1) : Math.round(min)} min`);
+
+/** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
+export const PERIOD_STRIDE = 11;
+
+/** T-477, T-515, T-1255, T-1672, T-1677: one demand level's crowding from a line's `line_periods`
+ * numbers `v`, as the line panel's dot and the Lines list's trains cell show it: the average wait
+ * for a train with room (min) of the riders at the platforms where trains come full, the level's
+ * periods averaged by those riders, and the hover. Null when the level runs no trains. */
+export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip: string } | null {
+  let trains = 0, weight = 0, wait = 0;
+  const lines: string[] = [];
+  for (let i = 0; i < PERIODS.length; i++) {
+    const p = PERIODS[i];
+    if (p.demand !== d) continue;
+    const o = i * PERIOD_STRIDE;
+    if (!(v[o] > 0)) continue;
+    const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
+    trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
+    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
+  }
+  if (!(trains > 0)) return null;
+  const avg = weight > 0 ? wait / weight : 0;
+  const mins = avg >= 1 ? `~${Math.round(avg)} min` : waitText(avg);
+  const tip = (avg >= 0.05 ? `When trains come full, riders wait ${mins} for a train with room` : "Riders get on the first train with room")
+    + lines.map((s) => `\n${s}`).join("");
+  return { wait: avg, tip };
+}
 
 /** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
  * hours at either end in part, as the worker drains the cash (T-284). T-1492: at the trains and cars

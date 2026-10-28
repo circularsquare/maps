@@ -401,8 +401,15 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   own), blueprint if the box holds any, else constructed; the pick follows the box live.
   **Shift+drag adds** to the pick, and the sum keeps one kind by the same rule (constructed pieces
   drop out once any blueprint is in). A click picks the piece under the pointer (a station first,
-  blueprint over constructed), Shift+click adds it or takes it out again, a click on nothing clears
-  the pick. A piece that is constructed or removed leaves a blueprint pick.
+  blueprint over constructed), a click on nothing clears the pick. A piece that is constructed or
+  removed leaves a blueprint pick.
+- **Runs** [T-1680; `runOf`, `pathTo` in `game/blueprintPick.ts`]: a double click on track picks
+  its run, every piece out each way to the next junction or track end (through stations and
+  joints where only two pieces meet), stopping where built track meets blueprint; with Shift held
+  it adds the run. Shift+click on unpicked track adds it and the shortest way there along track
+  of the pick's kind (by length, from any picked piece's end); with no such way it adds the piece
+  alone. Shift+click on a picked piece or station takes it out; Shift+click on a station adds it.
+  The tool's hover says so. A finger's tap adds or takes out one piece as before.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
 - **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
@@ -412,8 +419,12 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   constructed and lists track and stations), the picked track's total length, and the actions.
   For blueprint: the seven elevation buttons tinted as in the Build tab (the one all the picked
   track is on solid), then Disable and Enable as buttons with icon and word (keys D and E in their
-  hovers), each greyed when it would change nothing. For either kind: Remove (key Delete) and
-  Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
+  hovers), each greyed when it would change nothing. For either kind: **Double up** while the pick
+  holds double track (the track inspector's icon) [T-1680; `doubleUpPieces`, `doubleUpPicked`]: one
+  `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
+  one undoable edit a run, so it covers each run whole, junction to junction, even where only part
+  is picked; its hover gives the summed price and the runs' count, or the first refusal, greyed
+  when none can; then Remove (key Delete) and Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
   disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable
   them all", which switches every disabled piece on in one undoable edit) [T-1296, T-1420]: the clock's

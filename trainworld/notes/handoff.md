@@ -92,7 +92,31 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
   trainworldFeedback:true); the game side goes live with the next trainworld deploy. Not seen
   in the log whether feedback mail is configured: test once the game side is live.
 - T-1674 [P1] line route runs to the far end and turns round through a branch (Anita's
-  screenshot artifacts/trainworld/t1674-anita-route.png): Opus, main tree, Vite 6157, id T-1675. Panels done (uncommitted:
+  screenshot artifacts/trainworld/t1674-anita-route.png): Opus, main tree, Vite 6157, id T-1675.
+  Done, committed 62540fe3, on 8800 (smoke both): ties in best_insert now go to the tightest
+  stop spread (stop_spread), so branch stops land in route order. Saved lines unchanged.
+- DEPLOYING 2026-10-28c from .tw-snap at 62540fe3 (log artifacts/trainworld/deploy-2026-10-28c.log;
+  Anita ok). Don't rebuild .tw-snap until the upload ends. Then website push, verify, purge 28b.
+- T-1607 landed e588aaf2 (-11% Japan load at 3 workers, exact; ARCHIVE/DECISIONS lines in main
+  tree uncommitted). Not on 8800 yet (after the deploy upload).
+- Running: T-1676/1677 crowding dashes half thick twice long + Lines list hover (Sonnet, 6152);
+  T-1678 double-up "curve too tight" on straight track (Opus, 6157, id T-1681); T-1679/1680
+  selected track highlight + junction-to-junction run select (Opus, 6158, id T-1682).
+  Anita: keep Japan's lower long fares.
+- 2026-10-28c LIVE (verify --page passes); website 8ee048d. Purging 28b and rebuilding 8800 at
+  e588aaf2: done, R2 holds only 2026-10-28c, 8800 at e588aaf2 (smoke both pass, 3 workers).
+- T-1676/1677 done (uncommitted: renderer.ts, rendererShaders.ts, game/today.ts, LinesTab.tsx,
+  LineInspector.tsx, protocol.ts, clock.worker.ts, docs). Commit with the selection and
+  double-track work (shared renderer.ts / clock.worker.ts). T-1679/1680 done too (uncommitted:
+  blueprintPick.ts, blueprintBox.ts, renderer.ts, Blueprint.tsx, toolKeys.ts, BuildTab.tsx,
+  docs, DECISIONS): double-click = run to junctions, shift-click = path, Double up in the bar
+  (whole runs only). Waiting on T-1678 and T-1683 to commit the batch.
+- T-1683 construct sound from her gun-mag mp3 (Downloads), clipped to start on the click, for
+  construct + station upgrades; a refused construct plays only the knock (Sonnet, Vite 6153).
+- Committed 4d1a7a48 (T-1670 straight fares: NY $1/$2.60/$9, Japan $0.55/$1.35/$4.75; T-1671/1672
+  crowding weekday + hover; T-1673 feedback game side), on 8800, smoke both. Commit message's
+  "$1 ... $0.08" got eaten by PowerShell quoting (cosmetic; never amend). Not published:
+  everything after 2a397b76. Panels done (uncommitted:
   CommutersInspector.tsx, TrackInspector.tsx, docs). T-1669 removed the whole Corners section
   (add corner, per-corner remove/elevation); asked Anita whether to restore all but the radius.
 - Filed T-1670 (default fares $1 + $0.08/km straight), T-1671 (crowding figures always a
@@ -132,7 +156,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1675.
+Ids handed out through T-1682.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

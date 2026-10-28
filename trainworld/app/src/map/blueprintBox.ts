@@ -1,6 +1,8 @@
 // The blueprint tool (T-333): a drag draws a box on the map, and the blueprint track it touches and
 // the blueprint stations inside it are picked (game/blueprintPick.ts). Shift adds to what is picked.
-// A click picks the piece under the pointer (shift adds or removes it), a click on nothing clears.
+// A click picks the piece under the pointer, a click on nothing clears. Shift+click adds the track on
+// the shortest way there from the pick, or takes a picked piece out; a double click picks the run
+// junction to junction (T-1680).
 //
 // Why a tool: a plain drag on the map is the map's pan and shift+drag is MapLibre's zoom box, so a
 // box needs a mode of its own. While the tool is on the left button draws the box; the right or
@@ -9,10 +11,10 @@
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
 import type { Map as MlMap } from "maplibre-gl";
-import { bpPicked, onlyOneKind, removePicked, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
+import { bpPicked, onlyOneKind, pathTo, removePicked, runOf, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { tool } from "../game/ui";
+import { selection, tool } from "../game/ui";
 import { touchInput } from "./touch";
 import { edit, say, world } from "../game/world";
 import type { ClockClient } from "../workers/clockClient";
@@ -67,6 +69,7 @@ export class BlueprintBox {
     map.getContainer().appendChild(this.box);
     const host = map.getCanvasContainer();
     host.addEventListener("pointerdown", (e) => this.onDown(e as PointerEvent));
+    host.addEventListener("dblclick", (e) => this.onDblClick(e));
     host.addEventListener("contextmenu", (e) => { if (tool.peek() === "blueprint") e.preventDefault(); });
     addEventListener("pointermove", (e) => this.onMove(e));
     // a finger's box or pick drag over, the map pans again (T-1260)
@@ -84,6 +87,7 @@ export class BlueprintBox {
     // the highlight follows the pick and the world (a new network has new buffers)
     effect(() => {
       bpPicked.value;
+      selection.value;
       world.value;
       this.refreshHighlight();
     });
@@ -148,12 +152,14 @@ export class BlueprintBox {
    * network buffers were replaced. */
   refreshHighlight() {
     const n = this.overlay.renderer.net;
-    const p = bpPicked.peek();
-    if (!n || !p.edges.length) {
+    // T-1679: the track inspector's piece too
+    const sel = selection.peek();
+    const edges = bpPicked.peek().edges.length ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : [];
+    if (!n || !edges.length) {
       this.overlay.renderer.setHighlight(null);
     } else {
       const pts: Float32Array[] = [];
-      for (const e of p.edges) {
+      for (const e of edges) {
         const a = n.edgePts.get(e);
         if (a) pts.push(a);
       }
@@ -330,7 +336,25 @@ export class BlueprintBox {
       bpPicked.value = hit;
       return;
     }
+    // T-1680: Shift+click on track adds the shortest way there from the pick
+    const cur = bpPicked.peek();
+    if (hit.edges.length && !cur.edges.includes(hit.edges[0])) {
+      bpPicked.value = unionPicked(cur, { edges: pathTo(cur, hit.edges[0]), stations: [] });
+      return;
+    }
     this.toggle(hit);
+  }
+
+  /** T-1680: a double click on track picks its run, junction to junction (Shift adds it). */
+  private onDblClick(e: MouseEvent) {
+    if (tool.peek() !== "blueprint" || e.button !== 0) return;
+    const n = this.overlay.renderer.net;
+    if (!n) return;
+    // the track under the pointer, even where a station is drawn over it
+    const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, ...this.point(e as PointerEvent), 7 * 7 + 1);
+    if (ti < 0) return;
+    const run: BpPicked = { edges: runOf(n.track.edge[ti]), stations: [] };
+    bpPicked.value = e.shiftKey ? unionPicked(bpPicked.peek(), run) : onlyOneKind(run);
   }
 
   /** The piece hit added to the pick, or taken out if it is in it. */

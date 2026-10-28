@@ -5,8 +5,9 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { bigDistance, distance, levelLabel } from "./format";
+import { describeIssues } from "./issues";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
-import type { Level } from "./types";
+import type { Level, TrackEdge } from "./types";
 import { ask, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
 
@@ -40,6 +41,122 @@ export function onlyOneKind(p: BpPicked): BpPicked {
 /** Merge two picks (shift adds), one kind kept. */
 export function unionPicked(a: BpPicked, b: BpPicked): BpPicked {
   return onlyOneKind({ edges: [...new Set([...a.edges, ...b.edges])], stations: [...new Set([...a.stations, ...b.stations])] });
+}
+
+type Adj = Map<number, TrackEdge[]>;
+function adjacency(edges: TrackEdge[]): Adj {
+  const adj: Adj = new Map();
+  for (const e of edges) for (const n of [e.a, e.b]) {
+    const l = adj.get(n);
+    l ? l.push(e) : adj.set(n, [e]);
+  }
+  return adj;
+}
+
+/** T-1680: the run a piece is on, out each way to the next junction, track end, or track of the
+ * other kind (built or blueprint): every piece through nodes where exactly two pieces meet. */
+export function runOf(edge: number): number[] {
+  const w = world.peek();
+  const start = w?.edges.find((e) => e.id === edge);
+  if (!w || !start) return [];
+  const adj = adjacency(w.edges);
+  const out = new Set([edge]);
+  for (let node of [start.a, start.b]) {
+    let cur = start;
+    for (;;) {
+      const at = adj.get(node) ?? [];
+      const next = at.length === 2 ? at.find((e) => e !== cur) : undefined;
+      if (!next || next.built !== start.built || out.has(next.id)) break;
+      out.add(next.id);
+      cur = next;
+      node = next.a === node ? next.b : next.a;
+    }
+  }
+  return [...out];
+}
+
+/** T-1680: the pieces on the shortest track path from the pick to `edge` (that piece included),
+ * through track of the pick's kind; just the piece when no such path joins them. */
+export function pathTo(p: BpPicked, edge: number): number[] {
+  const w = world.peek();
+  const target = w?.edges.find((e) => e.id === edge);
+  if (!w || !target || !p.edges.length) return [edge];
+  const built = p.built ?? target.built;
+  const usable = w.edges.filter((e) => e.built === built);
+  const adj = adjacency(usable);
+  const goal = new Set<number>();
+  const picked = new Set(p.edges);
+  for (const e of usable) if (picked.has(e.id)) goal.add(e.a), goal.add(e.b);
+  // Dijkstra from the clicked piece's ends; `via` is the piece each node was reached through
+  const dist = new Map<number, number>([[target.a, 0], [target.b, 0]]);
+  const via = new Map<number, TrackEdge>();
+  const heap: [number, number][] = [[0, target.a], [0, target.b]];
+  const pop = () => {
+    let k = 0;
+    for (let i = 1; i < heap.length; i++) if (heap[i][0] < heap[k][0]) k = i;
+    const v = heap[k];
+    heap[k] = heap[heap.length - 1];
+    heap.pop();
+    return v;
+  };
+  let found = -1;
+  while (heap.length) {
+    const [d, n] = pop();
+    if (d > (dist.get(n) ?? Infinity)) continue;
+    if (goal.has(n)) { found = n; break; }
+    for (const e of adj.get(n) ?? []) {
+      if (e.id === edge) continue;
+      const m = e.a === n ? e.b : e.a, dm = d + e.lengthM;
+      if (dm < (dist.get(m) ?? Infinity)) dist.set(m, dm), via.set(m, e), heap.push([dm, m]);
+    }
+  }
+  const out = [edge];
+  for (let n = found; n >= 0 && via.has(n);) {
+    const e = via.get(n)!;
+    if (!picked.has(e.id)) out.push(e.id);
+    n = e.a === n ? e.b : e.a;
+  }
+  return out;
+}
+
+/** T-1680: one picked piece of double track for each run Double up would cover (`TrackApi::double_up`
+ * stops at junctions, track ends, single, high-speed track and crossovers). */
+export function doubleUpPieces(p: BpPicked): number[] {
+  const w = world.peek();
+  if (!w) return [];
+  const picked = new Set(p.edges);
+  const ok = (e: TrackEdge) => e.tracks === 2 && !e.hsr && !e.crossover;
+  const adj = adjacency(w.edges);
+  const seen = new Set<number>(), out: number[] = [];
+  for (const e0 of w.edges) {
+    if (!picked.has(e0.id) || !ok(e0) || seen.has(e0.id)) continue;
+    out.push(e0.id);
+    const stack = [e0];
+    seen.add(e0.id);
+    while (stack.length) {
+      const e = stack.pop()!;
+      for (const n of [e.a, e.b]) {
+        const at = adj.get(n) ?? [];
+        const o = at.length === 2 ? at.find((x) => x !== e) : undefined;
+        if (o && picked.has(o.id) && ok(o) && !seen.has(o.id)) seen.add(o.id), stack.push(o);
+      }
+    }
+  }
+  return out;
+}
+
+/** T-1680: Double up on every run of the pick's double track, one undoable edit a run; a run whose
+ * piece went in an earlier run's edit (split by a station's crossover) is skipped. */
+export async function doubleUpPicked(pieces: number[]) {
+  let done = 0, why = "";
+  for (const edge of pieces) {
+    if (!world.peek()?.edges.some((e) => e.id === edge)) continue;
+    const a = await edit({ op: "doubleUp", edge }, true);
+    if (a.ok) done++;
+    else why ||= describeIssues(a.issues);
+  }
+  if (!done) say(why || "This track cannot be doubled up.", true);
+  else if (done < pieces.length) say(`${done} of ${pieces.length} runs doubled up. ${why}`.trim());
 }
 
 /** What the picked pieces are now: how many are switched off, their track's length, and the one

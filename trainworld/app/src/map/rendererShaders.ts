@@ -48,7 +48,7 @@ const SPEED_BLEND = (() => {
  * wait reads clearly (T-1663). */
 export const FULL_FLOOR = 0.5, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 8;
 /** T-1663: the red band is this share of the line's own width on top of the zoom-scaled base, so it reads on thin and thick lines alike. */
-const FULL_WIDTH_SHARE = "0.3";
+const FULL_WIDTH_SHARE = "0.15";
 const HOT_RIM_MIX = "0.6";
 export const HOT_STATIONS = 16;
 

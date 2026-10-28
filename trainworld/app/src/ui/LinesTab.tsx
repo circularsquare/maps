@@ -6,13 +6,15 @@ import { useEffect, useState } from "preact/hooks";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
 import { createLine, newBusLine } from "../game/lineActions";
 import { busesText, count, money } from "../game/format";
-import { DEMAND_INDEX, type LineInput, type LineStats } from "../game/types";
+import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection } from "../game/ui";
 import { stationsById } from "../game/world";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowding, runningToday, today, todayLoaded, useToday, waitText, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, crowding, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { demandView, lineFiguresIn } from "../game/demand";
+import { useClockQuery } from "./useClockQuery";
 import { Chip, Icon, SortHead } from "./widgets";
 import { Money } from "./MoneyText";
 import { locateLine } from "./locate";
@@ -56,16 +58,14 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-472, T-491: a line's trains now, coloured by its riders' wait for a train with room in the period now. */
-function TrainsNow({ line, n, period, bus }: { line: string; n: number; period: string; bus?: boolean }) {
+/** T-472, T-491, T-1677: a line's trains now, coloured by its riders' wait for a train with room at
+ * the level now on a weekday, hovered as the line panel's dot for that level is (`crowdLevel`). */
+function TrainsNow({ line, n, period, bus, v, lev }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand }) {
+  const c = !bus && v ? crowdLevel(v, lev) : null;
   const d = today.value.get(line);
-  const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
-  const cls = c ? crowdClass(c.score) : "";
-  // T-1255: the wait at the platforms where trains come full
-  const tip = bus ? `${period}: ${busesText(n)} on the line` : d && c
-    ? (d.crowdRiders > 0 ? `${period}: where trains come full, riders face a wait of ${waitText(c.wait)} on average for a train with room` : `${period}: riders get on the first train with room`)
-      + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")
-    : undefined;
+  const old = !c && d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
+  const cls = c ? crowdClass(c.wait) : old ? crowdClass(old.score) : "";
+  const tip = bus ? `${period}: ${busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
 
@@ -83,7 +83,16 @@ export function LinesTab() {
   void accountVersion.value; // re-sorted each game hour; the counts themselves move on their own
   void todayLoaded.value;
   const w = listWorld.value;
+  // T-1677: every running train line's weekday crowding by period, for the trains cells' hovers,
+  // asked again when the network or the boarding account changes
+  const crowdNums = (w?.save.lines ?? []).filter((l) => w!.lineStats[l.id]?.status === "running" && !w!.lineStats[l.id].bus).map((l) => l.num);
+  const acct = accountVersion.value;
+  const crowd = useClockQuery(crowdNums.length ? { what: "linesPeriods", lines: crowdNums, day: 0 } : null, [w?.version, acct, crowdNums.join(",")], (d) => d);
   if (!w) return null;
+  const crowdOf = (l: LineInput) => {
+    const k = crowdNums.indexOf(l.num), block = PERIODS.length * PERIOD_STRIDE;
+    return crowd && k >= 0 && crowd.length === crowdNums.length * block && lineFiguresIn(demandView.value, l.id, l.stops.length) ? crowd.subarray(k * block, (k + 1) * block) : undefined;
+  };
   const sel = selection.value;
   // T-309: each line's demand level now in its own local time
   const levOf = (id: string) => DEMAND_INDEX[demandAt(lineSeconds(w.lineStats[id]))];
@@ -149,7 +158,7 @@ export function LinesTab() {
                 <>
                   <RidersToday line={l.id} />
                   <MoneyToday l={l} st={st} />
-                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(lineSeconds(st))]?.name ?? ""} bus={!!st.bus} />
+                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(lineSeconds(st))]?.name ?? ""} bus={!!st.bus} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} />
                 </>
               )}
               {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

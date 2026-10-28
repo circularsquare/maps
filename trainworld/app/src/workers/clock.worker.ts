@@ -1538,6 +1538,15 @@ function settle(): boolean {
   return ended;
 }
 
+/** T-1677: the per-period crowding numbers (the first `PERIODS * PERIOD_STRIDE` of `line_periods`) of
+ * each line in `lines`, one block after another, zeros for a line with no account. */
+function linesPeriods(a: TrackApi, lines: number[], day: number): Float64Array {
+  const block = PERIODS.length * 11;
+  const out = new Float64Array(lines.length * block);
+  lines.forEach((n, k) => out.set(a.line_periods(n, day).subarray(0, block), k * block));
+  return out;
+}
+
 /** T-446: every line's past 24 hours (`TrackApi.past_day`, `today`'s layout), then each listed
  * line's fares taken in them, US$M, in the same order: the hour now by the share already paid, as
  * `settle` pays the network's, and the hour a day ago by the rest. */
@@ -3147,6 +3156,7 @@ async function handle(msg: ToClock) {
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
+      : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)
       : q.what === "today" ? today()
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)

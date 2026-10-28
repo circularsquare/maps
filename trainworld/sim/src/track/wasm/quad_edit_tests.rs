@@ -376,3 +376,35 @@ fn old_saves_with_crossovers_and_single_track_still_run() {
         assert_eq!(b.stop_departures(id, 0, 0).len(), 2);
     }
 }
+
+/// T-1678: a curve of 100-108 m has the express pair's concentric curve under the minimum on its
+/// inside. A slight kink (an S of 20-degree turns at 104 m) widens it to 100 m and the whole run
+/// doubles up; an S of sharp turns at 104 m is too tight on either side, so doubling up the
+/// straight before it stops short of it, and selecting the S itself is refused.
+#[test]
+fn double_up_eases_kinks_and_stops_short_of_tight_curves() {
+    let draw = |pis: &[f64], end: (f64, f64)| {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        let j = route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 1000.0, 0.0, 2);
+        let ends = [1.0, j as f64, 0.0, 0.0, 0.0, 0.0, 0.0, end.0, end.1, 0.0];
+        assert_eq!(a.add_route(&ends, pis, 2, false), 0, "{}", a.issues());
+        a
+    };
+    let rise = 1000.0 * 20f64.to_radians().tan();
+    let mut a = draw(&[1500.0, 0.0, 104.0, 0.0, 2500.0, rise, 104.0, 0.0], (3500.0, rise));
+    let local = live(&a);
+    assert_eq!(local.len(), 3);
+    assert_eq!(a.double_up(local[0]), 0, "{}", a.issues());
+    assert_eq!(live(&a).len(), 6, "the whole run doubled up");
+    let (s, e) = (30f64.to_radians().cos() * 800.0, 30f64.to_radians().sin() * 800.0);
+    let mut a = draw(&[1500.0, 0.0, 104.0, 0.0, 1500.0, 290.0, 104.0, 0.0], (1500.0 + s, 290.0 - e));
+    let local = live(&a);
+    assert_eq!(local.len(), 2, "the S is one piece");
+    assert_ne!(a.double_up(local[1]), 0);
+    assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
+    assert_eq!(a.double_up(local[0]), 0, "{}", a.issues());
+    let ex: Vec<u32> = live(&a).into_iter().filter(|e| !local.contains(e)).collect();
+    assert_eq!(ex.len(), 1, "the straight only");
+    beside(&a, &ex, &local[..1], 0.0);
+}

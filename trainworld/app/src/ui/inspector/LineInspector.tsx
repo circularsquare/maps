@@ -9,7 +9,7 @@ import { Money } from "../MoneyText";
 import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
-import { crowding, runningToday, today, useToday, waitText } from "../../game/today";
+import { crowdLevel, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
 import { accountVersion, CAR_M, CRUSH_PER_CAR } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -243,8 +243,6 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
   );
 }
 
-/** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
-const PERIOD_STRIDE = 11;
 
 /** T-820: the day's rider-seconds aboard over what the trips could hold at crush, each trip taken
  * as its level's time from the first stop to the last; null with no trips. */
@@ -266,23 +264,8 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
  * averaged by those riders. The hover gives each of the level's periods its trains full (T-1523:
  * the pooled figure can rank a few bad platforms above a worse period spread over many). */
 export function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
-  let trains = 0, weight = 0, wait = 0;
-  const lines: string[] = [];
-  for (let i = 0; i < PERIODS.length; i++) {
-    const p = PERIODS[i];
-    if (p.demand !== d) continue;
-    const o = i * PERIOD_STRIDE;
-    if (!(v[o] > 0)) continue;
-    const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
-    trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
-    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
-  }
-  if (!(trains > 0)) return null;
-  const avgWait = weight > 0 ? wait / weight : 0;
-  const mins = avgWait >= 1 ? `~${Math.round(avgWait)} min` : waitText(avgWait);
-  const tip = (avgWait >= 0.05 ? `When trains come full, riders wait ${mins} for a train with room` : "Riders get on the first train with room")
-    + lines.map((s) => `\n${s}`).join("");
-  return <i class="crowd-dot" style={{ background: crowdColour(avgWait) }} data-tip={tip} />;
+  const c = crowdLevel(v, d);
+  return c && <i class="crowd-dot" style={{ background: crowdColour(c.wait) }} data-tip={c.tip} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */

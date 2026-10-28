@@ -2,6 +2,13 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1678 [P2] Doubling up refused near-straight track. Done 2026-10-28: a run stopped nowhere for a curve the pair could not follow, so one tight curve (the real save's 44-94 m, or a 100-108 m inside) refused the whole run; the run now stops short of it, and slight 100-108 m kinks ease to 100 m. Test `double_up_eases_kinks_and_stops_short_of_tight_curves`. DECISIONS.
+- T-1680 [P2] Selecting a run of track. Done 2026-10-28: Select tool double click picks the run junction to junction (or to a track end), Shift+click adds the shortest way along track, the selection bar has Double up for each run picked. DECISIONS.
+- T-1679 [P2] Selected track highlighted. Done 2026-10-28: Select tool picks and the track inspector's piece get an ink outline with a casing-coloured gap (a selected station's look), apart from a selected line's wider stroke; artifacts/trainworld/t1680-select-light.png and -dark.png.
+
+- T-1677 [P2] Lines-list crowding hover. Done 2026-10-28: the "trains" cell reads as the line panel's dot (`crowdLevel` in `game/today.ts`, shared): "When trains come full, riders wait ~N min...", rows "6-10: 22/88 trains full", the weekday's figures for the level now; its colour follows the same wait.
+- T-1676 [P2] Crowding dashes too prominent. Done 2026-10-28: band half as thick (0.875 px a side plus 7.5% of the line's width) and dashes twice as long (16 px period); colour and thresholds unchanged; artifacts/trainworld/t1676-dashes-light.png and -dark.png.
+- T-1607 [P2] Share the slow demand worker's load. Done 2026-10-28 (short of the quarter): with 3 workers a load sets the evening's market on the one-period worker, the sides trading loads each round; all of Japan 1,139 to 1,012 s (-11%), figures identical; 2 workers gained nothing, off. notes/T-1607.md.
 - T-1674 [P1] Line route through a branch. Done 2026-10-28: an inserted stop on a stretch run out and back goes on the pass nearest the rest of the line, not the later slot (`best_insert`, `stop_spread`); stored paths unchanged. Test `branch_stops_go_in_route_order`.
 - T-1670 [P2] Default fare curve. Done 2026-10-28 (Anita): one straight line, in New York $1.00, $2.60, $9.00 at 0, 20, 100 km (Japan $0.55, $1.35, $4.75), `START_NODES` in India's units, T-1662's rounding kept; saves with the old default keep it. DECISIONS.
 - T-1671 [P2] Line crowding for a weekday. Done 2026-10-28: the line panel's crowding dots always read the weekday's boarding account, whatever day the clock is on (`LineInspector.tsx`); a Saturday clock shows the same hover figures.

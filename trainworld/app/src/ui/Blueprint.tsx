@@ -1,9 +1,12 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
+import { describeIssues } from "../game/issues";
+import { useLatestAnswer } from "./useClockQuery";
+import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { busesText, distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
-import { clearBpPicked, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
+import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -92,6 +95,32 @@ export function BlueprintPick() {
   );
 }
 
+/** T-1680: Double up for every run of double track in the pick; the hover gives the summed price,
+ * or why not. */
+function PickDoubleUp() {
+  const p = bpPicked.value, w = world.value;
+  const pieces = useMemo(() => doubleUpPieces(p), [p, w]);
+  const key = pieces.join(",");
+  const answer = useLatestAnswer(pieces.length ? async () => {
+    let price = 0, why = "";
+    for (const edge of pieces) {
+      const d = await queryClock({ what: "doubleUp", edge });
+      if (!d) return null;
+      if (d[0] >= 0) price += d[0];
+      else why ||= describeIssues(String.fromCharCode(...d.subarray(1)).split("\n").filter(Boolean));
+    }
+    return { price, why };
+  } : null, [key, w?.version]);
+  if (!pieces.length || !answer) return null;
+  const runs = pieces.length === 1 ? "" : ` on ${pieces.length} runs`;
+  const tip = answer.price > 0 ? `Double up to quad track${runs} for ${money(answer.price * 1e6)} (blueprint)\nEach run goes to the next junction or track end${answer.why ? `\nSome cannot: ${answer.why}` : ""}` : answer.why;
+  return (
+    <button class="btn icon" disabled={!(answer.price > 0)} data-tip={tip} aria-label="Double up" onClick={() => void doubleUpPicked(pieces)}>
+      <Icon.doubleUp />
+    </button>
+  );
+}
+
 /** T-353, T-815, T-829: while the Select tool has a selection, a bar at the map's top centre, the
  * selection's inspector: how many pieces and how much track, then for blueprint the elevation
  * buttons, Disable and Enable; Remove and Clear for either kind. Appears and goes in one step. */
@@ -121,6 +150,7 @@ export function BlueprintBar() {
           <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
         </div>
       )}
+      <PickDoubleUp />
       <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
       <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">Clear</span></button>
       </div>

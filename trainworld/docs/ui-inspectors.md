@@ -70,8 +70,8 @@ purpose filter the purpose drawn is ringed in the bar.
   `game/lineFigures.ts`]; a game load shows none.
   The "+N daily rides" after a stop edit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Opening day").
-- **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
-  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
+- **Trains to add** [T-472, T-491, T-818, T-1255, T-1677]: a row's train count (the trains its level needs now, the bare
+  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's level now on a weekday, otherwise muted. The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
   [T-1255]: rider-minutes spent on the platform after a full train left them, each waiting the
   gap to the next departure, and 30 minutes for each rider a full platform turned away, over the
@@ -80,10 +80,12 @@ purpose filter the purpose drawn is ringed in the bar.
   `sim/src/track/boarding.rs`); every rider counts alike (T-818's fare weighting was dropped with
   T-1255): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`, the
   colour scale's steps): yellow from 6 min, orange from 9, red from 15; orange and red colour the
-  count (`crowdClass`). Hover "Morning peak: where trains come full, riders face a wait of 9.4 min
-  on average for a train with room" (or "riders get on the first train with room"), then "4/12 trains running now are full on their
-  trip" (trains from leaving the first stop until they could leave again from the far end,
-  `Boarding::under_way`). The figures end each `past_day` block (`Boarding::crowding`).
+  count (`crowdClass`). The hover is the line panel's dot hover for the same level [T-1672, T-1677]:
+  "When trains come full, riders wait ~9 min for a train with room" (or "Riders get on the first
+  train with room"), then "6-10: 22/88 trains full" for each of the level's periods; one function
+  (`crowdLevel` in `game/today.ts`) builds both, from the weekday's `line_periods` numbers, which
+  the tab asks for every running train line in one clock query (`linesPeriods`, one block of
+  numbers per line). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the

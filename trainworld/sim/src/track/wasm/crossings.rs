@@ -62,21 +62,43 @@ impl TrackApi {
     /// The double-up edit on the left of the piece's own direction, else on its right where the
     /// left is refused; the left's problems when both are. Also the run's stations.
     #[allow(clippy::type_complexity)]
+    ///
+    /// T-1678: the run stops short of a piece with a curve too tight for the pair beside it on
+    /// that side, a side that needs no such stop first; the selected piece having one refuses.
     pub(super) fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>, Vec<u32>), Issue> {
-        let (run, nodes) = self.double_run(edge)?;
-        let mut stations: Vec<u32> = nodes.iter().copied().filter(|&n| self.w.net.is_station(n)).collect();
-        if stations.len() > 1 && stations.first() == stations.last() {
-            stations.pop(); // a ring ends where it starts
-        }
+        let (full_run, full_nodes) = self.double_run(edge)?;
+        let at = full_run.iter().position(|r| r.0 == edge).unwrap_or(0);
         let mut first_err = None;
-        for side in [1.0, -1.0] {
-            let (op, nn, ne) = self.double_side(&run, &nodes, side)?;
-            let r = self.w.trial(op.clone());
-            match r {
-                Ok(_) => return Ok((op, nn, ne, stations)),
-                Err(e) => {
+        for trim in [false, true] {
+            for side in [1.0, -1.0] {
+                let mut tight = vec![];
+                let (mut run, mut nodes) = (&full_run[..], &full_nodes[..]);
+                let (mut op, mut nn, mut ne) = self.double_side(run, nodes, side, &mut tight)?;
+                if tight.is_empty() == trim {
+                    self.release(&nn, &ne); // the first round tries whole runs, the second the rest
+                    continue;
+                }
+                if trim {
                     self.release(&nn, &ne);
-                    first_err.get_or_insert(e);
+                    if let Some(&(_, j)) = tight.iter().find(|t| t.0 == at) {
+                        first_err.get_or_insert(vec![Issue::Geom { edge, issue: GeomIssue::RadiusTooSmall(j) }]);
+                        continue;
+                    }
+                    let lo = tight.iter().map(|t| t.0).filter(|&t| t < at).max().map_or(0, |t| t + 1);
+                    let hi = tight.iter().map(|t| t.0).filter(|&t| t > at).min().unwrap_or(full_run.len());
+                    (run, nodes) = (&full_run[lo..hi], &full_nodes[lo..=hi]);
+                    (op, nn, ne) = self.double_side(run, nodes, side, &mut vec![])?;
+                }
+                let mut stations: Vec<u32> = nodes.iter().copied().filter(|&n| self.w.net.is_station(n)).collect();
+                if stations.len() > 1 && stations.first() == stations.last() {
+                    stations.pop(); // a ring ends where it starts
+                }
+                match self.w.trial(op.clone()) {
+                    Ok(_) => return Ok((op, nn, ne, stations)),
+                    Err(e) => {
+                        self.release(&nn, &ne);
+                        first_err.get_or_insert(e);
+                    }
                 }
             }
         }
@@ -136,8 +158,9 @@ impl TrackApi {
         Ok((run, nodes))
     }
 
-    /// `double_up_op` on one side: 1 left of the run's direction, -1 right.
-    pub(super) fn double_side(&mut self, run: &[(u32, bool)], nodes: &[u32], side: f64) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
+    /// `double_up_op` on one side: 1 left of the run's direction, -1 right. `tight` gets each
+    /// piece whose pair has a curve under the minimum radius, with that corner's index.
+    pub(super) fn double_side(&mut self, run: &[(u32, bool)], nodes: &[u32], side: f64, tight: &mut Vec<(usize, usize)>) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
         let scaled = self.w.net.frame().scaled();
         let shapes: Vec<Vec<Pi>> = run
             .iter()
@@ -190,6 +213,9 @@ impl TrackApi {
                 self.release(&nn, &ne);
                 return Err(Issue::Geom { edge: run[i].0, issue: GeomIssue::ZeroLeg(0) });
             };
+            if let Some(j) = geom::fit_in(&ex, scaled).issues.iter().find_map(|g| if let GeomIssue::RadiusTooSmall(j) = g { Some(*j) } else { None }) {
+                tight.push((i, j));
+            }
             let id = self.w.net.alloc_edge();
             ne.push(id);
             let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));

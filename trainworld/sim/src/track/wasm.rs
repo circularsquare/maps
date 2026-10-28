@@ -831,6 +831,9 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec
 /// Centre line to centre line between the two double tracks of quad track, m (T-255): 4 m between
 /// every pair of neighbouring tracks, as on the double track itself.
 pub const QUAD_SPACING: f64 = 8.0;
+/// How much nearer the drawn track an express curve may come where its concentric radius would
+/// be under `MIN_RADIUS` and it is widened to it instead, m (T-1678).
+const QUAD_EASE_TOL: f64 = 0.5;
 /// How long the express pair takes to swing out to its place beside the drawn pair, m.
 const QUAD_TAPER: f64 = 150.0;
 /// A route through more vertices than this is bridged river by river (`bridge::bridge_long`).
@@ -882,7 +885,13 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: 
         }
         let k = d / (1.0 + dot);
         let inside = (ax * by - ay * bx > 0.0) == (side > 0.0);
-        let r = if inside { f.radius[i] - dg } else { f.radius[i] + dg };
+        let mut r = if inside { f.radius[i] - dg } else { f.radius[i] + dg };
+        // T-1678: an inside corner under the minimum widens to it where that brings the arc's
+        // middle at most QUAD_EASE_TOL nearer the drawn track (its PI stays, so it moves
+        // (MIN_RADIUS - r)(sec(turn / 2) - 1) outwards)
+        if inside && r < MIN_RADIUS && f.radius[i] >= MIN_RADIUS - 1e-6 && (MIN_RADIUS - r) * ((2.0 / (1.0 + dot)).sqrt() - 1.0) <= QUAD_EASE_TOL {
+            r = MIN_RADIUS;
+        }
         corners.push(Pi::new(quant(verts[i].x + k * (n1.0 + n2.0)), quant(verts[i].y + k * (n1.1 + n2.1)), quant(r.max(1.0)), verts[i].level));
     }
     let (a, b) = (verts[0], verts[n - 1]);

@@ -129,8 +129,8 @@ the class under the pointer: "Hills, track costs 1.6x".
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
-    outside its casing, each side 1.75 px at most plus 15% of the line's own width (a thin local line
-    and a wide traffic line alike show it, T-1663; #c0392b, #f0584f in the dark theme; `fullTrack` in
+    outside its casing, each side 0.875 px at most plus 7.5% of the line's own width (a thin local line
+    and a wide traffic line alike show it, T-1663, T-1676), in dashes a 16 px period, 60% of it drawn (`u_full_dash`); #c0392b, #f0584f in the dark theme; `fullTrack` in
     `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
     its casing between and a neighbouring line's casing covers the band where they touch, with
     0.5 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
@@ -173,9 +173,11 @@ the class under the pointer: "Hills, track costs 1.6x".
   T-543]: grey rails (#9aa3ae) round a nearly white middle (#f2f4f7) in the light theme, a dim
   middle (#383e46) between lighter grey rails (#6c747e) in the dark one, and a station at 30%
   instead of 60%; a planned line's colour and the Elevation and Speed colours are mixed 80%
-  towards white (towards #383e46 in the dark theme) in place of 45%. **Picked** with the blueprint
-  tool: an ink band 3 px beyond the rails, drawn under the track, and the stations' selection
-  outline. All rails are drawn before any middle, as the casing is, so curves and joints join
+  towards white (towards #383e46 in the dark theme) in place of 45%. **Picked** with the Select
+  tool, blueprint or built, and the track inspector's piece: a selected station's look along the
+  track, a 2 px map-ink outline 3 px out from the track (or its lines, whichever is wider) with the
+  casing's colour between, drawn under the track; it reads apart from a selected line's wider
+  stroke [T-1679]. Picked stations get the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves and joints join
   cleanly. Blueprint track and the lines planned on it are drawn after built track and its lines
   [T-695], so where they overlap the blueprint is on top and wins the click, as the station tool
   prefers it; the order of lines sharing track (above) holds within each.

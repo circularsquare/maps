@@ -167,8 +167,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   4 m between every pair of neighbouring tracks), from the same start node to the same end node:
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
   short leg), and between them runs parallel, each corner concentric with the drawn one (radius
-  8 m smaller on the inside of the turn, 8 m larger outside; a drawn curve under 108 m is too
-  tight for quad; a corner whose concentric radius would overrun its legs, as the capped curve of a
+  8 m smaller on the inside of the turn, 8 m larger outside; where that inside radius would be
+  under 100 m on a drawn curve of 100-108 m it is 100 m instead if that brings the curve's middle
+  at most `QUAD_EASE_TOL` (0.5 m) nearer the drawn track, a slight turn, and is otherwise too
+  tight for quad, T-1678; a corner whose concentric radius would overrun its legs, as the capped curve of a
   nearly straight segment can once the millimetre grid tilts its metre-long legs, takes the auto radius
   instead, within millimetres of concentric, T-708). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
   a junction (a fork with nothing behind it if the end is new track), and at crossovers (below). Both pairs are
@@ -200,9 +202,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
   on: through plain joints and stations into more double track, stopping each way at a junction,
-  a track end, single track, a crossover or track that has a pair beside it already. The pair runs
-  8 m to the left of the selected piece's direction, or to the right where the left is refused
-  (crossing other track, water), every corner concentric, one piece beside each piece with a joint
+  a track end, single track, a crossover or track that has a pair beside it already, and short of
+  a piece with a curve the pair cannot follow (under 100 m beside it, quad's rule above; T-1678),
+  where the pair has its own loose end; the selected piece having one is refused
+  (`RadiusTooSmall`). The pair runs 8 m to the left of the selected piece's direction, or to the
+  right where the left is refused (crossing other track, water) or would stop short where the right would not, every
+  corner concentric, one piece beside each piece with a joint
   beside each joint. Each station on the run gets its twin (same name and platform) on the joint
   beside it, and a crossover past it as a quad station does (above), in the same edit; the
   preview's price includes them. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines

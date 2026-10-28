@@ -1237,9 +1237,9 @@ export class NetworkRenderer {
     const fullPass = this.anyFull;
     const fullScale = interp(zoom, [[9, 0.3], [12, 0.6], [15, 1]]) * dpr * k;
     gl.uniform1i(u.u_full_pass, 0);
-    gl.uniform1f(u.u_full_px, 3.5 * fullScale);
+    gl.uniform1f(u.u_full_px, 1.75 * fullScale);
     gl.uniform1f(u.u_full_out, 1 * fullScale);
-    gl.uniform1f(u.u_full_dash, 8 * dpr);
+    gl.uniform1f(u.u_full_dash, 16 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));
     gl.uniform1i(u.u_ghost, 0);
     gl.uniform3fv(u.u_ghost_rgb, rgbf(shades.ghost));
@@ -1324,17 +1324,22 @@ export class NetworkRenderer {
     };
     if (redraw) {
     if (this.highlight) {
-      // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a
-      // casing pass are the selection ink)
+      // T-1679: picked track gets a selected station's look, an ink outline (2 px) apart from the
+      // track by a casing-coloured band (3 px), so it reads apart from a selected line's wider
+      // stroke (kind 2 placement strokes in a casing pass take u_sel)
       gl.uniform1i(u.u_kind, 2);
-      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, lanes.share * G + 6 * dpr);
       gl.uniform1f(u.u_cap, 0);
       gl.uniform1i(u.u_only_sel, 0);
       gl.uniform1f(u.u_casing, 0.01 * dpr);
       // round both tracks once they part
       gl.uniform1i(u.u_lane_mode, lanes.t > 0 ? 1 : 0);
       gl.bindVertexArray(this.highlight.vao);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.highlight.count);
+      for (const [px, rgb] of [[10, shades.mapInk], [6, shades.casing]] as const) {
+        gl.uniform3fv(u.u_sel, rgbf(rgb));
+        gl.uniform3f(u.u_width, Math.max(bpMid + 2 * bpRail, wLine) + px * dpr, 0, lanes.share * G + px * dpr);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.highlight.count);
+      }
+      gl.uniform3fv(u.u_sel, rgbf(shades.mapInk));
       gl.uniform1i(u.u_lane_mode, 0);
     }
     trackStrokes();
