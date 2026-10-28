@@ -2,9 +2,10 @@
 // hours back and 12 ahead, sliding left as game time passes: flat sky colours by the sun's height,
 // stars at night, a few clouds, a track along the bottom, and at now in the middle a small train on
 // the track with the sun or moon peeking in from the top above it, and the demand level of each
-// hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
-// Preact, and only when it has moved a fraction of a pixel, so it costs next to nothing between
-// game minutes. A holiday in a country with the player's stations (T-862, game/holidays.ts) is a
+// hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()`, never through
+// Preact: on animation frames while the clock runs (and only when it has moved a fraction of a
+// pixel, so it costs next to nothing between game minutes), and paused, only when the clock, the
+// view, the holidays or the theme change (T-1641). A holiday in a country with the player's stations (T-862, game/holidays.ts) is a
 // ribbon along the sky's top over its day, with a tick where it starts; a long holiday's going-out
 // and coming-back days a paler one with a small arrow (T-264).
 
@@ -216,10 +217,13 @@ function startSky(cv: HTMLCanvasElement): () => void {
     for (let i = 0; i < 4; i++) ctx.fillRect(tx + (1.6 + i * 3.6) * scale, top + 1.1 * scale, 2.4 * scale, 1.6 * scale);
     ctx.restore();
   }
-  const frame = () => { raf = requestAnimationFrame(frame); draw(); };
-  // ?perfOff=clock (T-045, measurement only): drawn once, never moving
-  if (!perfOff("clock")) raf = requestAnimationFrame(frame);
-  return () => { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); };
+  // T-1641: frames only while the clock moves; paused, a change of the clock, the view or the
+  // holidays draws once
+  const live = !perfOff("clock"); // ?perfOff=clock (T-045, measurement only): drawn once, never moving
+  const frame = () => { raf = 0; draw(); if (live && clock.ticking) raf = requestAnimationFrame(frame); };
+  const wake = () => { draw(); if (live && !raf && clock.ticking) raf = requestAnimationFrame(frame); };
+  const offs = [clock.onChange(wake), viewShift.subscribe(wake), viewCentre.subscribe(wake), holidaysNear.subscribe(wake), rushNear.subscribe(wake)];
+  return () => { cancelAnimationFrame(raf); for (const f of offs) f(); ro.disconnect(); mo.disconnect(); };
 }
 
 export function SkyBanner({ skyTip, bandTip }: { skyTip?: string; bandTip: string }) {

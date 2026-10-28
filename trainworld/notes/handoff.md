@@ -30,8 +30,10 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   website da0cfe7 pushed (Anita's go), verify --page all pass; R2 holds only trainworld/2026-10-28f
   (rclone purge prints a harmless GetBucketVersioning 403).
 - T-1609 landed db77a72b (refine 4.7 s vs 53 s on all-China); 8800 rebuilt at f5961ca2, smoke 20/20 both shades. Not deployed.
-- T-1733 (T-1650 stage 1): the T-1609 agent resumed (id in this session's transcript; name t1609/t1733),
-  tree .tw-trees/t1733 from f5961ca2; Vite 6122; 5 cores; may file T-1736-1737. Then T-1734, T-1735 (Anita: yes to all).
+- T-1733 (T-1650 stage 1): first agent handed back near its token limit (state in the tree's notes/T-1733.md):
+  China met (8.8 s, worst line 0.9%), Japan not (156-182 s, six big lines 5-16% off in the local result).
+  A fresh Opus agent continues in .tw-trees/t1733 (merged to 5f6293ab, WASM to rebuild): find the line error,
+  then Japan's time. Old run PID 40548 / Vite PID 31284 / claim t1733 handed to it. Then T-1734, T-1735.
 - T-1654 agent t1654 (Sonnet) in main tree, loadBar.ts; 4 cores; Vite 6131.
 - T-1374 landed c722abb3 (Kyoto, Nara +39-57% going out; Hangzhou misses on attraction data, T-1739 filed;
   "up to twice" became 1.5x, in DECISIONS). master ff5fd7a0; 8800 rebuilt there, smoke 20/20 both shades. Not deployed.
@@ -39,7 +41,14 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   It edited demandClient.ts (solveStage moved to loadBar.ts, job.firstLand added): t1733's tree also edits
   demandClient.ts, so its landing needs a merge onto f09936a8.
 - T-1520 landed 88cc568c (groups +6-15% instead of +49-78%; rail within 0.01%; market pass interface unchanged). Tree removed.
-- T-1625 agent t1625 (Sonnet) in main tree, pipeline/realnet_n02.py and the Japan save; Vite 6171; 4 cores; may file T-1742.
+- T-1738 Vietnam: agent t1738 (Opus), main tree, world_plan/world_run; up to 8 cores; Vite 6181, runner 6380;
+  ids T-1743-1749; asks me before its join (t1625 may write data/packs/real). notes/T-1738.md.
+- 8800 at 88cc568c (T-1520), smoke 20/20 both shades. Not deployed: asked Anita.
+- Anita 2026-10-28 late: deploy waits for T-1733; superholiday 1.5x fine; 0.48 of MLIT "pretty low", asked how
+  other countries fit: T-1742 (agent t1742, Sonnet, written answer only, 3 cores, Vite 6195).
+- T-1641 agent t1641 (Sonnet), SkyBanner.tsx; Vite 6191; 2 cores.
+- T-1625 committed (807 lines, 0.48 of MLIT pkm; save at artifacts/trainworld/t737-japan-trains.save, untracked).
+  Its calls (89 thin lines left out, Shinkansen not cut) I accepted: a stress save. Old notes still say 709 lines.
 - T-1650 design done (notes/T-1650.md); Anita approved, stages T-1733-1735 filed. T-1732 unassigned.
 
 ## Landed by maps-a2 (all committed and deployed as 2026-10-28e; detail in ARCHIVE.md)

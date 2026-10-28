@@ -111,8 +111,10 @@ class GameClock {
     if (m !== this.minute.peek()) this.minute.value = m;
   }
 
+  /** returns the unsubscribe */
   onChange(f: () => void) {
     this.listeners.push(f);
+    return () => { this.listeners = this.listeners.filter((g) => g !== f); };
   }
 
   setRunning(on: boolean) {
