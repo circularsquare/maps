@@ -35,7 +35,10 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1654 agent t1654 (Sonnet) in main tree, loadBar.ts; 4 cores; Vite 6131.
 - T-1374 landed c722abb3 (Kyoto, Nara +39-57% going out; Hangzhou misses on attraction data, T-1739 filed;
   "up to twice" became 1.5x, in DECISIONS). master ff5fd7a0; 8800 rebuilt there, smoke 20/20 both shades. Not deployed.
-- T-1520 agent t1520 (Opus) in .tw-trees/t1520 from ff5fd7a0; Vite 6161; 5 cores; may file T-1740-1741.
+- T-1654 committed f09936a8 with the Email (optional) placeholder; 8800 rebuilt there, smoke 20/20 both shades.
+  It edited demandClient.ts (solveStage moved to loadBar.ts, job.firstLand added): t1733's tree also edits
+  demandClient.ts, so its landing needs a merge onto f09936a8.
+- T-1520 landed 88cc568c (groups +6-15% instead of +49-78%; rail within 0.01%; market pass interface unchanged). Tree removed.
 - T-1625 agent t1625 (Sonnet) in main tree, pipeline/realnet_n02.py and the Japan save; Vite 6171; 4 cores; may file T-1742.
 - T-1650 design done (notes/T-1650.md); Anita approved, stages T-1733-1735 filed. T-1732 unassigned.
 
