@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1639 [P2] Fewer stroke instances: strokes simplified per zoom band below zoom 15 and culled by chunk from zoom 7 (`map/strokeLod.ts`). Done 2026-10-28: Japan save panning 78% to 34% GPU at Japan zoom and Tokyo z11, 94% to 37% at z15 (MapLibre alone pans at 22%); pictures the same by eye. notes/T-1618.md.
 - T-1638 [P2] Strokes kept in a texture between changes (`map/strokeCache.ts`). Done 2026-10-28: Japan save, clock running, map still: 77% to 9-10% GPU at Japan zoom, 75% to 15-17% at Tokyo zoom 11; picture the same; panning unchanged (T-1639). notes/T-1618.md.
 
 - T-1618 [P2] GPU use on the all-Japan save. Done 2026-10-28: nothing is drawn when paused and still (2.6%); while the clock runs the overlay redraws 1.7M stroke segments every frame (11 ms, 77% GPU; 8% without strokes); the rest is 1-2 points each. Filed T-1638 to T-1641. notes/T-1618.md.

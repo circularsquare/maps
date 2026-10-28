@@ -135,6 +135,16 @@ Web first, so it can be shared as a link.
   per-frame passes (counted on the context: a network, preview, highlight, demand view or traffic
   view change). The complex map's snapshot has a cache of its own. `?perfOff=strokeCache` (or
   `renderer.strokeCache = false`) draws the strokes every frame.
+- **Fewer stroke instances** [T-1639; `map/strokeLod.ts`, notes/T-1618.md]: below zoom 15 (plus log2
+  of the pixel ratio) the network's track and line strokes are drawn from a simplified copy per
+  whole zoom band: each run of joined segments of one line or track, edge, level, flags, stretch
+  and speed (within 10 km/h) is cut to the Douglas-Peucker points at 0.25 device px of the band's
+  top zoom, each merged segment carrying its first segment's values (the demand widths and traffic
+  marks gathered by that index). A copy is made on the first draw that needs it and dropped with
+  the network. From zoom 7 only the 256-instance chunks whose box may show (all four corners not
+  off one side of the view, 48 CSS px out) are drawn, in order, so which line is drawn over which
+  is as before. `?perfOff=strokeLod` and `?perfOff=strokeCull` (or `renderer.strokeLod` and
+  `renderer.strokeCull`) switch them off.
 - **While the camera moves** [T-1207; `map/moving.ts`]: work done for each MapLibre frame that need
   not be runs at most every 100 ms (`MOVING_PLACE_MS`) and in full on the frame after the move ends:
   the DOM placers (station names, capacity tags, attraction marks, zone loading bars), whose marks

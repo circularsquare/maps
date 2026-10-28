@@ -51,6 +51,8 @@
 //            period solved in parts of its origins over the workers (before T-1543)
 //   strokeCache the track and line strokes drawn every frame, not kept in a texture between
 //            camera and network changes (before T-1638; `renderer.strokeCache` switches it live)
+//   strokeCull every stroke chunk drawn, also those off the view (before T-1639; `renderer.strokeCull`)
+//   strokeLod the full stroke sets drawn at every zoom, not simplified copies (before T-1639; `renderer.strokeLod`)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -63,5 +65,5 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

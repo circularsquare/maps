@@ -6,7 +6,7 @@ Updated: 2026-10-28 (overnight)
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md.
 
 ## State
-- master 85732f70; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
+- master 30ebdeea; 8800 runs it (smoke 20/20 light and dark, real save 12,483,326). Published is
   45c0dffb (2026-10-28). Uncommitted: Anita's TODO.md (never commit), this file,
   checks/t1223-build.mjs (untracked, from T-1223's agent).
 - Landed this session: 7bc670bc (T-1612, T-1615, T-1614, T-1561), f56389a1 (T-1223 coarse far
@@ -38,8 +38,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 ## In flight
 - T-1618 done, committed 131a06a3 (notes/T-1618.md): strokes redrawn every frame = 77% GPU on
   Japan while the clock runs (8% without); paused-and-still is already 2.6%. Fixes T-1638-1641.
-- T-1638 stroke texture cache (maps-a2's Opus agent, main tree, Vite 6159, 4 cores, ids
-  T-1642-1643). Next after it: T-1639 (simplify/cull strokes, the panning fix).
+- T-1638 done, committed 30ebdeea, on 8800 (smoke both pass): strokes cached in a texture; Japan
+  with trains running 77% -> 9-17% GPU; `?perfOff=strokeCache` turns it off.
+- T-1639 cull/simplify strokes for panning (maps-a2's Opus agent, main tree, Vite 6159, 4
+  cores, ids T-1644-1645).
 - Asked Anita: take T-782's round skip (a) for Japan -23% with 8 of 358 lines off up to 11%? I
   recommend no (T-1607 instead). T-1613's card text "Taking a bit longer" is the agent's wording.
 - Land a tree: smoke in tree, `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`
@@ -63,7 +65,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes
 2. T-1520 (income groups' cost), T-1607 (crowding rounds split across workers), T-1634.
 3. T-1374 (superholidays stage 3), T-1605, T-1621 (names follow per frame), T-1609/T-1610.
 4. Rest of the world after calibration (Anita 2026-10-27).
-Ids handed out through T-1643.
+Ids handed out through T-1645.
 
 ## Anita's standing asks
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.

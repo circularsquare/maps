@@ -56,6 +56,9 @@ await page.evaluate(() => {
     strokes: () => { const a = r.track, b = r.lines, c = r.strokeCache; r.track = r.lines = null; r.strokeCache = false; tw.overlay.invalidate(); return () => { r.track = a; r.lines = b; r.strokeCache = c; tw.overlay.invalidate(); }; },
     // T-1638: the strokes drawn every frame, as before the cache
     nocache: () => { r.strokeCache = false; return () => { r.strokeCache = true; tw.overlay.invalidate(); }; },
+    // T-1639: every stroke drawn, unsimplified and unculled, as before it
+    old: () => { r.strokeCull = r.strokeLod = false; tw.overlay.invalidate(); return () => { r.strokeCull = r.strokeLod = true; tw.overlay.invalidate(); }; },
+    nolod: () => { r.strokeLod = false; tw.overlay.invalidate(); return () => { r.strokeLod = true; tw.overlay.invalidate(); }; },
     overlayDraw: () => { r.draw = () => {}; return () => { delete r.draw; tw.overlay.invalidate(); }; },
     names: () => disp('stationNames', false),
     capacity: () => disp('capacity', false),
@@ -82,7 +85,7 @@ const info = await page.evaluate(() => {
 });
 console.log(JSON.stringify(info));
 
-const JAPAN = { center: [137.5, 37.0], zoom: 4.6 }, TOKYO = { center: [139.75, 35.68], zoom: 11 };
+const JAPAN = { center: [137.5, 37.0], zoom: 4.6 }, TOKYO = { center: [139.75, 35.68], zoom: 11 }, Z15 = { center: [139.767, 35.681], zoom: 15 };
 // [label, view, clock (null paused, else speed index), toggles, pan px]
 const CASES = [
   ['idle', JAPAN, null, [], 0],
@@ -104,6 +107,11 @@ const CASES = [
   // T-1638's before: each of these with the stroke cache off
   ...['run 1x', 'run fastest', 'pan, paused', 'pan, 1x'].map((l) => [`${l}, no cache`, JAPAN, l.includes('fastest') ? 2 : l.includes('paused') ? null : 0, ['nocache'], l.startsWith('pan') ? 1500 : 0]),
   ...['1x', 'fastest', 'pan, 1x'].map((l) => [`Tokyo ${l}, no cache`, TOKYO, l === 'fastest' ? 2 : 0, ['nocache'], l.startsWith('pan') ? 1500 : 0]),
+  // T-1639: panning with the strokes simplified and culled, and without (old), at three zooms
+  ['Tokyo pan, paused', TOKYO, null, [], 1500],
+  ['z15 1x', Z15, 0, [], 0],
+  ['z15 pan, 1x', Z15, 0, [], 1500],
+  ...[['pan, paused', JAPAN, null], ['pan, 1x', JAPAN, 0], ['Tokyo pan, paused', TOKYO, null], ['Tokyo pan, 1x', TOKYO, 0], ['z15 pan, 1x', Z15, 0]].flatMap(([l, v, sp]) => [[`${l}, old`, v, sp, ['old'], 1500], [`${l}, culled only`, v, sp, ['nolod'], 1500]]),
 ];
 
 // Anita's conditions (T-1617): globe, Terrain on
@@ -119,23 +127,34 @@ for (const [label, view, speed, toggles, pan] of CASES) {
     for (const k of toggles) m.undo.push(m.toggles[k]());
   }, [view, speed, toggles]);
   await page.waitForTimeout(4000); // tiles and placers settle
-  if (pan) await page.evaluate((px) => window.tw.map.panBy([px, 0], { duration: 12000, easing: (t) => t }), pan);
+  // T-1639: panned by a jump each frame (T-1638's panBy rows did not move), `px` CSS px east over 12 s
+  if (pan) await page.evaluate((px) => {
+    const map = window.tw.map, c = map.getCenter(), z = map.getZoom(), t0 = performance.now();
+    window.__pan = true;
+    const step = () => {
+      if (!window.__pan) return;
+      const t = Math.min(1, (performance.now() - t0) / 12000);
+      map.jumpTo({ center: [c.lng + (px * t * 360) / (512 * 2 ** z), c.lat] });
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, pan);
   await page.waitForTimeout(800);
   const a = await page.evaluate(() => { const m = window.__m; m.mapGpu.length = m.ovGpu.length = m.dmGpu.length = 0; return m.snap(); });
   const util = await typeperf();
-  const b = await page.evaluate(() => { const m = window.__m, avg = (x) => (x.length ? x.reduce((s, v) => s + v, 0) / x.length : null); return { ...m.snap(), mapGpu: avg(m.mapGpu), ovGpu: avg(m.ovGpu), dmGpu: avg(m.dmGpu), nMap: m.mapGpu.length, nOv: m.ovGpu.length, trips: window.tw.renderer.tripCount, ticking: window.tw.clock.ticking, moving: window.tw.overlay.moving }; });
+  const b = await page.evaluate(() => { const m = window.__m, avg = (x) => (x.length ? x.reduce((s, v) => s + v, 0) / x.length : null); return { ...m.snap(), mapGpu: avg(m.mapGpu), ovGpu: avg(m.ovGpu), dmGpu: avg(m.dmGpu), nMap: m.mapGpu.length, nOv: m.ovGpu.length, trips: window.tw.renderer.tripCount, ticking: window.tw.clock.ticking, moving: window.tw.overlay.moving, inst: window.tw.renderer.strokeInstances, lodMs: window.tw.renderer.lodMs }; });
   const s = (b.t - a.t) / 1000, ps = (k) => (b[k] - a[k]) / s;
-  const row = { label, util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), cacheFps: ps('cache'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving };
+  const row = { label, util, rafFps: ps('rafFrames'), mapFps: ps('map'), ovFps: ps('ov'), dmFps: ps('dm'), cacheFps: ps('cache'), mapGpu: b.mapGpu, ovGpu: b.ovGpu, dmGpu: b.dmGpu, trips: b.trips, ticking: b.ticking, moving: b.moving, inst: b.inst, lodMs: b.lodMs };
   rows.push(row);
   console.log(JSON.stringify(row));
-  await page.evaluate(() => { const tw = window.tw, m = window.__m; tw.map.stop(); while (m.undo.length) m.undo.pop()(); });
+  await page.evaluate(() => { const tw = window.tw, m = window.__m; window.__pan = false; tw.map.stop(); while (m.undo.length) m.undo.pop()(); });
   await page.waitForTimeout(500);
 }
 await page.evaluate(() => window.tw.clock.setRunning(false));
 
 const f = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? '-' : v.toFixed(d));
-const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | stroke redraws/s | demand draws/s | demand GPU ms |', '|---|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.cacheFps, 0)} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} |`)].join('\n');
+const md = ['| state | GPU % | frames/s (rAF) | MapLibre renders/s | MapLibre GPU ms | overlay draws/s | overlay GPU ms | stroke redraws/s | stroke instances | demand draws/s | demand GPU ms |', '|---|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.label} | ${f(r.util)} | ${f(r.rafFps, 0)} | ${f(r.mapFps, 0)} | ${f(r.mapGpu, 2)} | ${f(r.ovFps, 0)} | ${f(r.ovGpu, 2)} | ${f(r.cacheFps, 0)} | ${r.inst ?? '-'} | ${f(r.dmFps, 0)} | ${f(r.dmGpu, 2)} |`)].join('\n');
 await writeFile(OUT + (ONLY ? 'table-part.md' : 'table.md'), JSON.stringify(info, null, 1) + '\n\n' + md + '\n');
 console.log(md);
 process.exit(0);

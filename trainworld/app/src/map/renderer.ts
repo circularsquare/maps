@@ -23,6 +23,7 @@ import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt,
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
+import { chunkBoxes, significance, simplified, visibleRanges } from "./strokeLod";
 import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -152,6 +153,22 @@ type TexName = "phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "c
 
 /** The stroke attributes a network's strokes keep on the GPU between edits (T-1028), in order. */
 const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lane"] as const;
+
+/** T-1639: the network's strokes drawn simplified below this zoom (plus log2 of the pixel ratio),
+ * merged where they stray from the full set by at most LOD_TOL_PX device px; from CULL_ZOOM only the
+ * chunks near the view drawn, CULL_MARGIN_PX (CSS) round it covering the widest stroke */
+const LOD_TOP_ZOOM = 15, LOD_TOL_PX = 0.25, CULL_ZOOM = 7, CULL_MARGIN_PX = 48;
+
+/** a network stroke set's chunk boxes, and its simplified copies by zoom band (T-1639) */
+interface StrokeLodState {
+  boxes: { boxes: Float32Array; chunks: number } | null;
+  speed: Float32Array | null | undefined;
+  sig: Float32Array | null;
+  /** how far `sig` is worked out, and whether that work is under way */
+  sigAt: number;
+  working: boolean;
+  bands: Map<number, { vao: StrokeVao; first: Uint32Array; boxes: { boxes: Float32Array; chunks: number }; v: number; res: { del: () => void }[] }>;
+}
 
 /**
  * The demand views drawn by the network renderer (T-084, map/demandLayers.ts), one value per
@@ -475,6 +492,19 @@ export class NetworkRenderer {
    * preview, highlight, demand views and the like put on the GPU, so the caches know to redraw */
   private uploads = 0;
   private quiet = false;
+  /** T-1639: off with `?perfOff=strokeCull` and `?perfOff=strokeLod` */
+  strokeCull = !perfOff("strokeCull");
+  strokeLod = !perfOff("strokeLod");
+  private lodOf = new Map<StrokeVao, StrokeLodState>();
+  /** the line strokes' demand widths and traffic marks as last written (null: the defaults), and a
+   * count of their writes, which the simplified copies follow */
+  private linesWmul: Float32Array | null = null;
+  private linesFull: Float32Array | null = null;
+  private perSegV = 0;
+  /** stroke instances the last stroke redraw drew, and ms spent simplifying (checks read them) */
+  strokeInstances = 0;
+  lodMs = 0;
+  private strokeLoc: Record<string, number> = {};
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -491,6 +521,7 @@ export class NetworkRenderer {
       }
     }
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
+    for (const a of ["a_seg", "a_colour", "a_edge", "a_level", "a_flags", "a_speed", "a_lane", "a_wmul", "a_full"]) this.strokeLoc[a] = gl.getAttribLocation(this.strokeProg, a);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
     this.lots.init(gl);
@@ -653,6 +684,90 @@ export class NetworkRenderer {
     return out;
   }
 
+  /** T-1639: what to draw of network stroke set `s` (made from `src`) this frame: its simplified copy
+   * for the zoom band when that has fewer segments, and the instance ranges near the view (null: all). */
+  private pickStrokes(s: StrokeVao | null, src: Strokes, lines: boolean, zoom: number, dpr: number, grow: number, project: Project, w: number, h: number): { vao: StrokeVao; ranges: number[] | null } | null {
+    if (!s || !s.count) return null;
+    let st = this.lodOf.get(s);
+    if (!st) this.lodOf.set(s, (st = { boxes: null, speed: undefined, sig: null, sigAt: 0, working: false, bands: new Map() }));
+    let vao = s, boxes = st.boxes;
+    const bz = Math.ceil(zoom + Math.log2(dpr) - 1e-6);
+    if (this.strokeLod && grow === 0 && bz < LOD_TOP_ZOOM && (st.sig && st.sigAt >= src.count || this.workLod(s, st, src))) {
+      let band = st.bands.get(bz);
+      if (!band) {
+        const t0 = performance.now();
+        const { strokes, first } = simplified(src, st.sig!, LOD_TOL_PX / pxPerUnitAt(bz), st.speed ?? null);
+        const res: { del: () => void }[] = [];
+        band = { vao: this.strokes(strokes, res), first, boxes: chunkBoxes(strokes.seg, strokes.count), v: -1, res };
+        st.bands.set(bz, band);
+        this.lodMs += performance.now() - t0;
+      }
+      if (band.vao.count < s.count) {
+        if (lines && band.v !== this.perSegV) {
+          band.v = this.perSegV;
+          const f = band.first, wm = this.linesWmul, fu = this.linesFull;
+          this.rewrite(band.vao.wmulBuf, wm ? Float32Array.from(f, (i) => wm[i]) : new Float32Array(f.length).fill(1));
+          this.rewrite(band.vao.fullBuf, fu ? Float32Array.from(f, (i) => fu[i]) : new Float32Array(f.length));
+        }
+        vao = band.vao;
+        boxes = band.boxes;
+      }
+    }
+    if (!this.strokeCull || zoom < CULL_ZOOM) return { vao, ranges: null };
+    if (vao === s) boxes = st.boxes ??= chunkBoxes(src.seg, src.count);
+    return { vao, ranges: visibleRanges(boxes!, vao.count, project, w, h, CULL_MARGIN_PX) };
+  }
+
+  /** T-1639: the runs' significance worked out in 8 ms slices between frames, so an edit's first
+   * draw (the full set, as before) is not held up by it (~80 ms a set on the all-Japan save); false
+   * until it is done. */
+  private workLod(s: StrokeVao, st: StrokeLodState, src: Strokes): false {
+    if (st.working) return false;
+    st.working = true;
+    const step = () => {
+      if (this.lodOf.get(s) !== st) return;
+      const t0 = performance.now();
+      if (st.speed === undefined) st.speed = src.speed ? shownSpeed(src.speed, src.trainSpeed) : null;
+      st.sig ??= new Float32Array(src.count);
+      st.sigAt = significance(src, st.speed, st.sig, st.sigAt, t0 + 8);
+      this.lodMs += performance.now() - t0;
+      // the picture drawn meanwhile is the same, so nothing is redrawn when done: the next
+      // stroke redraw takes the copy
+      if (st.sigAt < src.count) setTimeout(step, 0);
+      else st.working = false;
+    };
+    setTimeout(step, 0);
+    return false;
+  }
+
+  /** Point stroke set `v`'s attributes (its VAO bound) at instance `start`: WebGL2 draws have no
+   * first instance. */
+  private bindAt(v: StrokeVao, start: number) {
+    const gl = this.gl, a = v.attribs!;
+    const set = (name: string, buf: WebGLBuffer, size: number, type: number, bytes: number, int = false, norm = false) => {
+      const loc = this.strokeLoc[name];
+      if (loc < 0) return;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      if (int) gl.vertexAttribIPointer(loc, size, type, 0, start * bytes);
+      else gl.vertexAttribPointer(loc, size, type, norm, 0, start * bytes);
+    };
+    set("a_seg", a[0].buf, 4, gl.FLOAT, 16);
+    set("a_colour", a[1].buf, 1, gl.UNSIGNED_INT, 4, true);
+    set("a_edge", a[2].buf, 1, gl.UNSIGNED_INT, 4, true);
+    set("a_level", a[3].buf, 1, gl.FLOAT, 4);
+    set("a_flags", a[4].buf, 1, gl.FLOAT, 4);
+    set("a_speed", a[5].buf, 1, gl.FLOAT, 4);
+    set("a_lane", a[6].buf, 2, gl.UNSIGNED_BYTE, 2, false, true);
+    set("a_wmul", v.wmulBuf, 1, gl.FLOAT, 4);
+    set("a_full", v.fullBuf, 1, gl.FLOAT, 4);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
+  private dropLod() {
+    for (const st of this.lodOf.values()) for (const b of st.bands.values()) for (const r of b.res) r.del();
+    this.lodOf.clear();
+  }
+
   /** Rewrite a dynamic buffer in place (sizes never change between `setNetwork`s). */
   private rewrite(buf: WebGLBuffer, data: Float32Array) {
     const gl = this.gl;
@@ -670,6 +785,8 @@ export class NetworkRenderer {
     const lines = this.lines;
     if (lines.count) this.rewrite(lines.wmulBuf, l ? l.lineWidth : new Float32Array(lines.count).fill(1));
     this.lineWidths = l && l.lineWidth.length === lines.count ? l.lineWidth : null;
+    this.linesWmul = l ? l.lineWidth : null;
+    this.perSegV++;
     const samples = Math.max(1, n.samples.length / 2);
     const upload = (tex: WebGLTexture | null, data: Float32Array, kind: "r32f" | "rg32f") => {
       const gl = this.gl;
@@ -729,6 +846,8 @@ export class NetworkRenderer {
     }
     this.anyFull = out.some((v) => v !== 0);
     this.rewrite(l.fullBuf, out);
+    this.linesFull = out;
+    this.perSegV++;
   }
   private anyFull = false;
 
@@ -750,6 +869,9 @@ export class NetworkRenderer {
     this.track = this.strokes(n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
     this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null);
     for (const r of [...(oldTrack?.res ?? []), ...(oldLines?.res ?? [])]) r.del();
+    this.dropLod();
+    this.linesWmul = this.linesFull = null;
+    this.perSegV++;
     if (patch && this.checkPatch) {
       this.checkStrokes("track", this.track, n.track);
       this.checkStrokes("lines", this.lines, n.lines);
@@ -891,6 +1013,7 @@ export class NetworkRenderer {
     this.texRes = {};
     for (const k of Object.keys(this.tex) as TexName[]) this.tex[k] = null;
     this.track = this.lines = null;
+    this.lodOf.clear();
     this.previewRes = [];
     this.highlightRes = [];
     this.connRes = [];
@@ -1061,7 +1184,7 @@ export class NetworkRenderer {
     // again only when one of those changes; GL uploads outside the per-frame passes count as a change
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1122,14 +1245,35 @@ export class NetworkRenderer {
     const G = lanes.gap * dpr;
     gl.uniform4f(u.u_lanes, G, lanes.t, lanes.grow, lanes.share * G);
     const modes = lanes.t > 0 ? [1, 2, 3] : [0];
+    const picked = new Map<StrokeVao, { vao: StrokeVao; ranges: number[] | null }>();
+    if (redraw) {
+      this.strokeInstances = 0;
+      for (const [s, src, isLines] of [[this.track, n.track, false], [this.lines, n.lines, true]] as const) {
+        const p = this.pickStrokes(s, src, isLines, zoom, dpr, lanes.grow, project, vp[0] / dpr, vp[1] / dpr);
+        if (s && p) picked.set(s, p);
+      }
+    }
     // `cap` > 0: the track drawn through station boxes (T-236), no wider than that and no casing
-    const stroke = (s: StrokeVao | null, kind: number, width: number, sel: boolean, cap = 0) => {
-      if (!s || !s.count) return;
+    const stroke = (s0: StrokeVao | null, kind: number, width: number, sel: boolean, cap = 0) => {
+      if (!s0 || !s0.count) return;
+      const { vao: s, ranges } = picked.get(s0) ?? { vao: s0, ranges: null };
       gl.uniform1i(u.u_kind, kind);
       // each track's width once apart: a line's share of the gap, bare track as much thinner
       gl.uniform3f(u.u_width, width, wSel, lanes.share * G * width / wLine);
       gl.uniform1f(u.u_cap, cap);
       gl.bindVertexArray(s.vao);
+      const drawAll = () => {
+        if (!ranges) {
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
+          this.strokeInstances += s.count;
+          return;
+        }
+        for (let r = 0; r < ranges.length; r += 2) {
+          this.bindAt(s, ranges[r]);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, ranges[r + 1]);
+          this.strokeInstances += ranges[r + 1];
+        }
+      };
       // [casing px, selected only, T-819's red band under the lines on full track (1), and under it (2) its outline in the casing's colour, T-1284]
       const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
       if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]);
@@ -1142,9 +1286,10 @@ export class NetworkRenderer {
           if (cap > 0 && mode === 1) continue;
           if (full && mode > 1) continue;
           gl.uniform1i(u.u_lane_mode, mode);
-          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
+          drawAll();
         }
       }
+      if (ranges) this.bindAt(s, 0);
       gl.uniform1i(u.u_full_pass, 0);
       gl.uniform1i(u.u_lane_mode, 0);
     };
