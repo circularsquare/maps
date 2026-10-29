@@ -7,6 +7,7 @@
     python pipeline/realnet.py geom <city>      # track geometry from GTFS shapes, for the `realsave` bin
     python pipeline/realnet.py route <city>     # each hop routed over the real-network graph (T-1303)
     python pipeline/realnet.py colours <city>   # each line's real colour into the network JSON (T-1770; `net` does it too)
+    python pipeline/realnet.py corridors <city> # shared-track pieces and pairs (T-1305, pipeline/realcorridors.py)
     (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR]
     python pipeline/realnet.py gamesave <city>  # the `realsave` output as a game file, <city>_real.save
     python pipeline/realnet.py ship       # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731)
@@ -1410,5 +1411,9 @@ out body;"""
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "net"
+    if cmd == "corridors":
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import realcorridors
+        sys.exit(realcorridors.build(sys.argv[2], OUT))
     {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "geom": cmd_geom, "route": cmd_route, "colours": cmd_colours,
      "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()

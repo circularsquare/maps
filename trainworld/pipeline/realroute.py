@@ -108,7 +108,8 @@ class Graph:
         return self.fam[c[0][1]] if c else None
 
     def route(self, a, b, r, fam0):
-        """The cheapest route from a to b: (polyline (n, 2), start snap, end snap), or None."""
+        """The cheapest route from a to b: (polyline (n, 2), start snap, end snap, legs), or None;
+        legs are the chains it runs on in order, (chain, from along, to along) (T-1305)."""
         starts, ends = self.candidates(a, r), self.candidates(b, r)
         if not starts or not ends:
             return None
@@ -176,7 +177,7 @@ class Graph:
             legs.append((c, self.len[c] if back else 0.0, 0.0 if back else self.len[c]))
             s = p
         legs.reverse()
-        return self.line_of(legs), start[3], best[4][3]
+        return self.line_of(legs), start[3], best[4][3], legs
 
     def arrive(self, s):
         return self.ja[s >> 1] if s & 1 else self.jb[s >> 1]

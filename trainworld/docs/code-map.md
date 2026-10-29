@@ -681,7 +681,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   runs the same on older saves), `gamesave` (the game file
   `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
   (T-731; new files, since data/frozen/ links to the old ones). Tokyo's trips file is `calib_tyo.py trips` (peak trains an hour
-  by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. Each line has its real colour (T-1770,
+  by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. `realcorridors.py <city>` (or
+  `realnet.py corridors <city>`, T-1305) routes the hops again keeping their chains and writes
+  `<city>_real_corridors.json`: parallel chains grouped into corridors, cut at stations and where the
+  lines change, one or two double-track pairs a piece and the lines on each, with a picture. Each line has its real colour (T-1770,
   `realcolour.py`, called by `net`; `realnet.py colours <city>` adds it to an older network JSON, staged
   under `REALNET_OUT`, which `realsave` reads first): the GTFS `route_color` (New York, Toronto, Paris,
   London's National Rail), else the OSM relation's `colour` tag (Sendai), else noritetsu's line colour

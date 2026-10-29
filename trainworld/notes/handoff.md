@@ -121,7 +121,8 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   output artifacts/trainworld/t1305-shared/. 2 cores. Stage 2 (realsave from the file) after.
 - T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once
   t1770 is done with realnet.py; then stage 2 (NYC save). One colour per trunk until she looks.
-- T-1771 analytics: Anita yes (own-server heartbeat), but WAIT until she says her City Circles tracking is done.
+- T-1771 analytics: agent t1771 (Sonnet) building, reusing shonei-server d758c53 / website ce16e92 (notrack).
+  /trainworld/ping + /trainworld/stats; commits shonei-server itself; no deploy.ps1 or push without Anita. Vite 6163.
 - Thai zone names: Anita has no thoughts; dropped from asks.
 - Anita 2026-10-29: no deploy yet.
 - (was) T-1735 DONE in .tw-trees/t1735, not landed: measured express 85% of market riders for 18% of a pass; in play a
