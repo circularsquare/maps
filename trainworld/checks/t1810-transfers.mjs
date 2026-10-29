@@ -6,7 +6,9 @@
 // frame from the edit to SETTLE ms after the solve's transfers went to the clock worker. Per round:
 // the preview asks' ask-to-answer ms (mean, max, the max from 1 s before the transfers on, the
 // three worst with ms from the transfers) and a hash of each drawn hour's last boarding slice, to
-// compare runs bit for bit. (Tokyo's demand sends no transfers; a round there waits 300 s.)
+// compare runs bit for bit. A save of another city needs CITY=<its zone id> (CITY=tyo for tyo.save): the
+// page opens that zone, since its demand asks for the zone in view (T-1814; in a New York page a
+// Tokyo save gets no transfers).
 import { readFile } from 'node:fs/promises';
 import { launchChrome, importSave, ANGLE, REAL_SAVE } from './lib.mjs';
 
@@ -18,7 +20,7 @@ const { ctx, close } = await launchChrome({ prefix: 'tw-t1810-', size: [1200, 80
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&city=${process.env.CITY ?? 'nyc'}&paused=1&demandWorkers=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.tools && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => {
     const c = window.tw.client, recv = c.receive.bind(c);
