@@ -122,8 +122,8 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   Queens Blvd per 90% rule, W 4 St split by hand, fresh geom. Vite 6174, 3 cores. Not shipped until Anita looks.
 - T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once
   t1770 is done with realnet.py; then stage 2 (NYC save). One colour per trunk until she looks.
-- T-1771 analytics: agent t1771 (Sonnet) building, reusing shonei-server d758c53 / website ce16e92 (notrack).
-  /trainworld/ping + /trainworld/stats; commits shonei-server itself; no deploy.ps1 or push without Anita. Vite 6163.
+- T-1771 done: shonei-server f74bfad (not pushed, deploy.ps1 not run), app efb32d52. Needs Anita's word for
+  deploy.ps1; the page stays quiet against an old server, so order doesn't matter. Stats: market.anita.garden/trainworld/stats.
 - Thai zone names: Anita has no thoughts; dropped from asks.
 - Anita 2026-10-29: no deploy yet.
 - (was) T-1735 DONE in .tw-trees/t1735, not landed: measured express 85% of market riders for 18% of a pass; in play a

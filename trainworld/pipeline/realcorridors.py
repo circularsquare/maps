@@ -43,6 +43,7 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import realnet  # noqa: E402
 from realroute import Graph, length, far_from  # noqa: E402
+from realshared import track_model  # noqa: E402
 
 STEP = 10.0
 NEAR = 15.0
@@ -320,7 +321,8 @@ def build(city, out_dir):
     t0 = time.time()
     cfg = realnet.CITIES[city]
     o = realnet.origin(cfg["pack"])
-    net = json.load(open(cfg["out"], encoding="utf-8"))
+    staged = os.path.join(realnet.OUT, os.path.basename(cfg["out"]))
+    net = json.load(open(staged if os.path.exists(staged) else cfg["out"], encoding="utf-8"))
     geo = json.load(open(realnet.out_or_work(f"{city}_real_geom.json")))["lines"]
     assert len(geo) == len(net["lines"]) and all(len(g["nodes"]) == len(l["stops"]) for g, l in zip(geo, net["lines"])), \
         f"{city}_real_geom.json does not match {city}_real.json"
@@ -657,6 +659,9 @@ def build(city, out_dir):
         P["pair_lines"] = [sorted(li for li in P["lines"] if pair[(pid, li)] == k) for k in range(P["pairs"])]
         P["load"] = [round(load(pid, ls), 3) for ls in P["pair_lines"]]
 
+    split_by_hand(city, o, pieces, paths, pair, s_of, span, lines, load)
+    trim = trim_lines(pieces, paths, pair, s_of, lines)
+
     # nodes
     node_ids = {}
     for P in pieces:
@@ -713,7 +718,9 @@ def build(city, out_dir):
                            "ends": [node_ids[n] for n in P["ends"]], "load": P["load"], "off_graph": P["off"]})
     out_lines = []
     for li, (path, ns, stops) in enumerate(paths):
+        f = trim.get(li, [1.0, 1.0, 1.0])
         out_lines.append({"index": li, "name": lines[li]["name"], "feed": lines[li]["feed"],
+                          "tph": [round(t * k, 3) for t, k in zip(lines[li]["tph"], f)], "trimmed": li in trim,
                           "path": [[pid, dirn, pair[(pid, li)]] for pid, dirn in path],
                           "stops": [node_ids[stop_node[li][k]] for k in range(len(lines[li]["stops"]))]})
 
@@ -744,15 +751,79 @@ def build(city, out_dir):
     }
     trunks = trunk_table(city, pieces, lines)
     stats["trunks"] = trunks
+    doc = {"city": city, "stats": stats, "pieces": out_pieces, "nodes": out_nodes, "lines": out_lines}
+    doc["model"] = track_model(doc, [P["poly"] for P in pieces], net)
+    stats["model"] = doc["model"]["stats"]
     os.makedirs(out_dir, exist_ok=True)
     p = os.path.join(out_dir, f"{city}_real_corridors.json")
     with open(p, "w") as f:
-        json.dump({"city": city, "stats": stats, "pieces": out_pieces, "nodes": out_nodes, "lines": out_lines}, f)
+        json.dump(doc, f)
     print(json.dumps({k: v for k, v in stats.items() if k != "trunks"}, indent=1))
     for t in trunks:
         print(t)
     print(f"-> {p}")
     picture(city, o, pieces, lines, os.path.join(out_dir, f"{city}_corridors.png"))
+
+
+# Pieces the graph cannot tell apart, split by hand (T-1305 stage 2): stacked lines both in tunnel
+# and joined by track. W 4 St: the IND's 8th Av (upper) and 6th Av (lower) levels.
+SPLITS = {"nyc": [{"at": (-74.0003, 40.7322), "r": 250.0, "groups": [{"A", "C", "E"}, {"B", "D", "F", "FX", "M"}]}]}
+
+
+def split_by_hand(city, o, pieces, paths, pair, s_of, span, lines, load):
+    for sp in SPLITS.get(city, []):
+        cx, cy = realnet.to_xy(*sp["at"], o)
+        for pid in range(len(pieces)):
+            P = pieces[pid]
+            if P["off"] or np.hypot(*(P["poly"].mean(0) - (float(cx), float(cy)))) > sp["r"]:
+                continue
+            groups = [[li for li in P["lines"] if lines[li]["name"] in g] for g in sp["groups"]]
+            groups = [g for g in groups if g]
+            if len(groups) < 2 or sum(map(len, groups)) != len(P["lines"]):
+                continue
+            for gi, ls in enumerate(groups):
+                q = pid if gi == 0 else len(pieces)
+                Q = dict(P) if gi else P
+                if gi:
+                    pieces.append(Q)
+                # each line's pair from the piece next to this one on its path
+                got = {}
+                for li in ls:
+                    path = paths[li][0]
+                    i = next(i for i, e in enumerate(path) if e[0] == pid)
+                    nb = [path[j][0] for j in (i - 1, i + 1) if 0 <= j < len(path)]
+                    ks = [pair[(r, li)] for r in nb if (r, li) in pair and pieces[r]["pairs"] == 2]
+                    got[li] = Counter(ks).most_common(1)[0][0] if ks else 0
+                    if q != pid:
+                        path[i] = (q, path[i][1])
+                        s_of[(q, li)], span[(q, li)] = s_of[(pid, li)], span[(pid, li)]
+                two = len(set(got.values())) == 2 and P["tracks"] >= 3
+                for li in ls:
+                    pair[(q, li)] = got[li] if two else 0
+                Q["lines"] = ls
+                Q["pairs"] = 2 if two else 1
+                Q["role"] = ["express", "local"] if two else [""]
+                Q["pair_lines"] = [sorted(li for li in ls if pair[(q, li)] == k) for k in range(Q["pairs"])]
+                Q["load"] = [round(load(q, g), 3) for g in Q["pair_lines"]]
+            print(f"split by hand: piece {pid} into {len(groups)} ({', '.join('/'.join(sorted({lines[li]['name'] for li in g})) for g in groups)})")
+
+
+def trim_lines(pieces, paths, pair, s_of, lines):
+    """The note's trim: a pair loaded past MAX_LOAD at a demand level has its lines' trains cut in
+    proportion; a line keeps the smallest factor of any pair it runs on. Returns {line: [f, f, f]}."""
+    out = {}
+    for pid, P in enumerate(pieces):
+        for ls in P["pair_lines"]:
+            for lev in range(3):
+                rho = sum(lines[li]["tph"][lev] * s_of[(pid, li)] for li in ls) / 3600
+                if rho > MAX_LOAD:
+                    f = MAX_LOAD / rho
+                    for li in ls:
+                        out.setdefault(li, [1.0, 1.0, 1.0])
+                        out[li][lev] = min(out[li][lev], f)
+    for li, f in sorted(out.items()):
+        print(f"trim {lines[li]['feed']} {lines[li]['name']} (line {li}): trains an hour {lines[li]['tph']} x {[round(x, 3) for x in f]}")
+    return out
 
 
 def realnet_st_xy(net, st):

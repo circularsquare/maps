@@ -1,6 +1,11 @@
 //! T-007: New York's real network as a track-model save, and the snapshot demand would get from it.
 //!
-//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc] [--out DIR]
+//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc] [--out DIR] [--shared]
+//!
+//! `--shared` (T-1305) builds instead the network `pipeline/realcorridors.py` laid out in
+//! `<city>_real_corridors.json` ("model": lines sharing track, one or two pairs a piece, junctions
+//! and station nodes per pair, each line's stops and path, trains an hour after the trim), tracing
+//! each edge's real line between its two leads.
 //!
 //! Reads `nyc_real.json` (stations, lines, trains per hour, cars: `pipeline/realnet.py net`) and
 //! `nyc_real_geom.json` (per line a node per stop and the GTFS shape between stops, simplified, and
@@ -50,7 +55,7 @@ fn main() {
     let net_j: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real.json"))).unwrap()).unwrap();
     let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real_geom.json"))).unwrap()).unwrap();
     let route_j: Option<Value> = std::fs::read_to_string(first(format!("{city}_real_route.json"))).ok().map(|s| serde_json::from_str(&s).unwrap());
-    if route_j.is_none() {
+    if route_j.is_none() && !args.iter().any(|a| a == "--shared") {
         eprintln!("no {city}_real_route.json: every hop from its shape or straight (realnet.py route lays them on real track)");
     }
     let (mut n_traced, mut n_untraced, mut worst_fit, mut trace_s) = (0usize, 0usize, 0f64, 0f64);
@@ -66,9 +71,107 @@ fn main() {
     // per line: its node ids; per node: the station key it stands for
     let mut node_key: Vec<String> = vec![];
     let mut node_names: Vec<String> = vec![];
-    let mut line_ids = vec![];
+    // (network line index, track line id)
+    let mut line_ids: Vec<(usize, u32)> = vec![];
     let mut n_lines_ok = 0;
+    // T-1305: `--shared` builds the network `realcorridors.py` laid out (lines sharing track, one
+    // or two pairs a piece) from `<city>_real_corridors.json` instead of a track per line
+    let shared = args.iter().any(|a| a == "--shared");
+    if shared {
+        let corr: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real_corridors.json"))).unwrap()).unwrap();
+        let m = &corr["model"];
+        let xy = |p: &Value| (p[0].as_f64().unwrap(), p[1].as_f64().unwrap());
+        for nd in m["nodes"].as_array().unwrap() {
+            let (x, y) = xy(&nd["xy"]);
+            let level = nd["level"].as_i64().unwrap() as i8;
+            let id = net.alloc_node();
+            let st = &nd["station"];
+            net.set_node(id, Some(NodeData { x: quant(x), y: quant(y), level, flying: st.is_null() })).unwrap();
+            if st.is_null() {
+                node_key.push(String::new());
+                node_names.push(String::new());
+                continue;
+            }
+            let raw = st["name"].as_str().unwrap();
+            let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
+            let platform = st["platform"].as_u64().unwrap() as u16;
+            net.set_station(id, Some(StationData { platform, name: name.clone(), built: true, off: false, upgrades: 0 })).unwrap();
+            node_key.push(st["key"].as_str().unwrap().to_string());
+            node_names.push(name);
+        }
+        let mut edge_ids = vec![];
+        let mut refused = 0;
+        for ed in m["edges"].as_array().unwrap() {
+            let (a, b) = (ed["a"].as_u64().unwrap() as u32, ed["b"].as_u64().unwrap() as u32);
+            let mut pis = vec![];
+            if !ed["lead_a"].is_null() {
+                let (la, lb) = (xy(&ed["lead_a"]), xy(&ed["lead_b"]));
+                let inner: Vec<(f64, f64)> = ed["line"].as_array().unwrap().iter().map(xy).collect();
+                pis.push(Pi::new(la.0, la.1, 0.0, -1).quantised());
+                let mut line = vec![la];
+                line.extend(inner.iter().copied());
+                line.push(lb);
+                let t = std::time::Instant::now();
+                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, R_CAP, -1) };
+                trace_s += t.elapsed().as_secs_f64();
+                match r {
+                    Some(t) => {
+                        n_traced += 1;
+                        worst_fit = worst_fit.max(t.worst);
+                        pis.extend(t.pis);
+                    }
+                    None => {
+                        if !inner.is_empty() {
+                            n_untraced += 1;
+                        }
+                        let mut last = la;
+                        for &p in &inner {
+                            if (p.0 - last.0).hypot(p.1 - last.1) > 30.0 && (p.0 - lb.0).hypot(p.1 - lb.1) > 30.0 {
+                                pis.push(Pi::new(p.0, p.1, 0.0, -1).quantised());
+                                last = p;
+                            }
+                        }
+                    }
+                }
+                pis.push(Pi::new(lb.0, lb.1, 0.0, -1).quantised());
+            }
+            let e = net.alloc_edge();
+            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: true })).is_err() {
+                refused += 1;
+            }
+            edge_ids.push(e);
+        }
+        if refused > 0 {
+            eprintln!("{refused} edges refused");
+        }
+        for (li, l) in lines.iter().enumerate() {
+            let ml = &m["lines"][li];
+            if ml.is_null() {
+                continue;
+            }
+            let stops: Vec<u32> = ml["stops"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
+            let path: Vec<u32> = ml["path"].as_array().unwrap().iter().map(|v| {
+                let c = v.as_u64().unwrap() as u32;
+                edge_ids[(c >> 1) as usize] << 1 | (c & 1)
+            }).collect();
+            let tph: Vec<f32> = ml["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();
+            let cars = l["cars"].as_u64().unwrap().clamp(1, 20) as u8;
+            let trains: Option<[u32; 3]> = l["trains"].as_array().map(|a| [0, 1, 2].map(|i| a[i].as_u64().unwrap() as u32));
+            let id = net.alloc_line();
+            let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
+            let name = names::tidy_line(&name, "").unwrap_or(name);
+            let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
+            let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None }));
+            if r.is_ok() {
+                n_lines_ok += 1;
+            }
+            line_ids.push((li, id));
+        }
+    }
     for (li, (l, g)) in lines.iter().zip(geoms).enumerate() {
+        if shared {
+            break;
+        }
         let stops: Vec<usize> = l["stops"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as usize).collect();
         let xy = |p: &Value| (p[0].as_f64().unwrap(), p[1].as_f64().unwrap());
         // T-1303: the line routed over the real track (`realnet.py route`): its stations where the
@@ -177,7 +280,7 @@ fn main() {
         if r.is_ok() {
             n_lines_ok += 1;
         }
-        line_ids.push(id);
+        line_ids.push((li, id));
     }
     let t0 = std::time::Instant::now();
     let mut w = TrackWorld::new(net);
@@ -200,6 +303,8 @@ fn main() {
     eprintln!("validation (not checked on load): {kinds:?}");
     let flat = w.net.crossings.iter().filter(|c| matches!(c.kind, trainworld_sim::track::net::CrossKind::Flat(_))).count();
     eprintln!("crossings {} ({} flat), total cost US${:.0}M", w.net.crossings.len(), flat, w.net.total_cost());
+    let live: Vec<usize> = (0..w.net.edge_count()).filter(|&e| w.net.edge_alive[e]).collect();
+    eprintln!("{} edges, {:.0} km of double track", live.len(), live.iter().map(|&e| w.net.edge_len[e]).sum::<f64>() / 1000.0);
 
     // the snapshot (as clock.worker.ts buildSnapshot + demandClient.ts packService do)
     let mut st_xy = vec![];
@@ -216,7 +321,7 @@ fn main() {
     let (mut gtfs_s, mut track_s) = (0.0, 0.0);
     let mut not_running = 0;
     let mut fleet = 0u64;
-    for (li, &id) in line_ids.iter().enumerate() {
+    for &(li, id) in &line_ids {
         let svc = &w.svc.lines[id as usize];
         if !svc.running {
             not_running += 1;
