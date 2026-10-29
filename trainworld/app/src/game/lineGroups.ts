@@ -29,6 +29,9 @@ export function afterCopy(lines: readonly LineInput[], copy: number): Selection 
 /** The line whose column the pointer is on in the group view: the map draws it full, the rest faint. */
 export const groupHover = signal<number | null>(null);
 
+/** T-1809: the group view names every stop, not only the key ones; kept while the page is open. */
+export const groupAllStops = signal(false);
+
 /** The groups opened in the Lines tab, kept while the page is open. */
 export const openGroups = signal<ReadonlySet<number>>(new Set());
 

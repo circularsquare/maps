@@ -575,6 +575,7 @@ function panicNow() {
 function newModel(): TrackApi {
   const a = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
   api = a;
+  xferSet = null;
   worldWaterIn = false;
   // T-309: each region's local time, kept across loads
   a.set_time_zones(timeZoneTable());
@@ -2078,6 +2079,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   lineRides = new Map();
   linePoints = new Map();
   api!.clear_riders(); // and its riders (T-164)
+  xferSet = null;
   forget(true);
   syncFrame();
   keep();
@@ -2379,6 +2381,9 @@ function postState(s: ClockState, transfer: Transferable[]) {
 /** Lines of the boarding account worked out per step: a few ms on New York's real network, so an
  * edit or the money tick never waits long behind new riders (T-164, notes/T-164.md). */
 const BOARDING_STEP_LINES = 3;
+/** the transfers the boarding account holds (T-1810), null after its riders are cleared */
+let xferSet: Float32Array | null = null;
+const sameFloats = (a: Float32Array, b: Float32Array | null) => b !== null && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 let boardingTimer = 0;
 /** time spent stepping since the last hour sent, and its longest step (`?debug=1`) */
 let prep = { ms: 0, max: 0 };
@@ -2390,16 +2395,27 @@ function stepBoarding() {
   const ms = performance.now() - t0;
   prep = { ms: prep.ms + ms, max: Math.max(prep.max, ms) };
   if (more) boardingTimer = setTimeout(stepBoarding, 0) as unknown as number;
-  else sendTrips();
+  else sendTrips(true);
 }
 
-function sendTrips() {
+let nextHourTimer = 0;
+/** The drawn trips and boarding slices of this hour and the next. `split` (T-1810): the next hour
+ * a task later, so a preview asked meanwhile waits for one hour's slice only (~20 ms on shared New
+ * York); dropped if the trips are sent again or riders come before it. */
+function sendTrips(split = false, hours?: number[]) {
+  clearTimeout(nextHourTimer);
   if (!api || !Number.isFinite(epoch)) return;
   api.set_now(gameNow());
   syncHolidays();
   timing.trips = 0;
   timing.board = 0;
-  for (const e of [epoch, epoch + 3600]) {
+  if (split && !hours) {
+    const e = epoch;
+    nextHourTimer = setTimeout(() => {
+      if (api && e === epoch && !api.boarding_step(0)) sendTrips(false, [e + 3600]);
+    }, 0) as unknown as number;
+  }
+  for (const e of hours ?? (split ? [epoch] : [epoch, epoch + 3600])) {
     // per trip: profile, departure, end and the departure its train takes next, relative to the
     // epoch; the end (T-206) and the next (T-245) go apart
     const tT = performance.now();
@@ -2751,10 +2767,15 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       return { r: a.set_train_counts(op.line, ...op.trains) };
     case "setHeadway":
       return { r: op.seconds ? a.set_auto_headway(op.line, ...op.seconds) : a.clear_auto_headway(op.line) };
-    case "lineLook":
-      return { r: op.letter === undefined
-        ? a.set_line_look(op.line, op.name, colourInt(op.colour))
-        : a.set_line_badge(op.line, op.name, colourInt(op.colour), op.letter.trim()) };
+    case "lineLook": {
+      let colour = 0;
+      if (op.colour === undefined) {
+        const info = a.lines_info();
+        for (let i = 0; i < info.length; i += 22) if (info[i] === op.line) colour = info[i + 1];
+      }
+      const name = op.name ?? a.line_name(op.line), col = op.colour === undefined ? colour : colourInt(op.colour);
+      return { r: op.letter === undefined ? a.set_line_look(op.line, name, col) : a.set_line_badge(op.line, name, col, op.letter.trim()) };
+    }
     case "removeLine":
       return { r: a.remove_line(op.line) };
     case "lineCars": {
@@ -3192,9 +3213,15 @@ async function handle(msg: ToClock) {
     if (msg.arrive) api.set_arrivals(msg.arrive, msg.day ?? 0);
     stepBoarding();
   } else if (msg.kind === "transfers") {
-    // T-554: when riders changing lines reach their next platform; the account is unchanged
+    // T-554: when riders changing lines reach their next platform; the account is unchanged.
+    // T-1810: the same transfers again change nothing drawn, and while new riders are still being
+    // worked through, the step that finishes them sends the hour (a whole hour now would work out
+    // every line left at once, ~0.5 s on shared New York)
+    if (sameFloats(msg.packed, xferSet)) return;
+    xferSet = msg.packed;
     api.set_transfers(msg.packed);
-    sendTrips();
+    if (api.boarding_step(0)) stepBoarding();
+    else sendTrips(true);
   } else if (msg.kind === "flush") {
     void autosave().then(cloudFlush);
   } else if (import.meta.env.DEV && msg.kind === "debugPanic") {

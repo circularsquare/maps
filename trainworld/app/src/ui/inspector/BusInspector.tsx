@@ -29,7 +29,7 @@ import { useClockQuery } from "../useClockQuery";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { DEMAND_LABEL, levelTimes, StopTransfers, useLiveColour } from "./LineInspector";
+import { DEMAND_LABEL, levelTimes, StopTransfers, useLiveColour, useSymbolBox } from "./LineInspector";
 import { LineGroup } from "./LineGroup";
 import { afterCopy } from "../../game/lineGroups";
 
@@ -291,8 +291,7 @@ export function BusInspector({ id }: { id: string }) {
   const [copying, setCopying] = useState(false);
   const l = w ? linesById(w).get(id) : undefined;
   const { dragColour, commitColour } = useLiveColour(l, setPreview);
-  const [symbol, setSymbol] = useState("");
-  useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
+  const symbolBox = useSymbolBox(l);
   useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
   useEffect(() => {
     if (!editing) return;
@@ -376,7 +375,7 @@ export function BusInspector({ id }: { id: string }) {
       </div>
       {editing && (
         <div class="line-identity" data-line-edit>
-          <label>Symbol <input aria-label="Line symbol" value={symbol} onInput={(e) => setSymbol(e.currentTarget.value)} onChange={(e) => void edit({ op: "lineLook", line: l.num, name: l.name, colour: l.colour, letter: e.currentTarget.value.trim() })} /></label>
+          <label>Symbol <input aria-label="Line symbol" {...symbolBox} /></label>
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
         </div>
       )}

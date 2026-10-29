@@ -10,10 +10,8 @@ import type { LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
 import { complexNow, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
-import { cancelLink, linking, linksAmong, unlink } from "../../game/links";
-import { selection, tool } from "../../game/ui";
-import { stationPoint } from "../../game/trip";
-import { pickTool } from "../toolKeys";
+import { linking, linksAmong, unlink } from "../../game/links";
+import { selection } from "../../game/ui";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
@@ -21,12 +19,10 @@ import { nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
 import { stationUpkeep } from "../../game/regionMoney";
-import { Actions, Built, Chip, ConstructRemove, Icon, Row, Stepper } from "../widgets";
+import { Built, Chip, ConstructRemove, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
 import { locateStation } from "../locate";
-import { StationRiders } from "./StationRiders";
-import { StationLongerTrips } from "./LongerTrips";
 import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
 import { PurposeSplit } from "./PurposeSplit";
@@ -199,7 +195,6 @@ export function StationInspector({ id }: { id: string }) {
   // a station complex (T-146): the switch shows only when there is more than this station
   const members = complexOf(id);
   const asComplex = members.length > 1 && inComplexView(id);
-  const scope = asComplex ? members.join(",") : id;
   const lines = linesAt(id);
   const props = (platform: number, name = s.name) => void edit({ op: "stationProps", node: s.num, platform, name });
   // T-534: the next of the station's suggested names, worked out now from where it stands
@@ -239,18 +234,20 @@ export function StationInspector({ id }: { id: string }) {
       </div>
       {/* a click on a station always shows its complex; a station opened on its own from the
           complex's list goes back to it from here */}
-      <div class="sub muted">
-        {asComplex ? `Complex of ${members.length} stations` : `Elevation ${levelLabel(s.level)}`}
-        {!asComplex && members.length > 1 && (
-          <>
-            {" · "}
-            <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip="Show the whole complex">
-              Complex of {members.length} stations
-            </button>
-          </>
-        )}
-      </div>
-      <StationTripLink id={id} members={asComplex ? members : [id]} />
+      {!asComplex && (
+        <div class="sub muted">
+          {`Elevation ${levelLabel(s.level)}`}
+          {members.length > 1 && (
+            <>
+              {" · "}
+              <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip="Show the whole complex">
+                Complex of {members.length} stations
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {linking.value === id && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
       {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Nothing is refunded" : ""} />}
       <div class="h">Station upgrades</div>
       <StationUpgrades s={s} members={asComplex ? members : undefined} />
@@ -261,35 +258,6 @@ export function StationInspector({ id }: { id: string }) {
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
-      <StationRiders id={id} scope={scope} />
-      <StationLongerTrips id={id} scope={scope} />
-    </>
-  );
-}
-
-/** Start a trip at a station (T-221): the trip tool on, the station as where the trip starts; the
- * next click (a station or a place) is where it ends. */
-function tripFrom(id: string) {
-  const at = stationPoint(id);
-  if (!at) return;
-  if (linking.peek() !== null) cancelLink();
-  if (tool.peek() !== "trip") pickTool("trip");
-  selection.value = { kind: "trip", from: at, to: null, fromStation: id };
-}
-
-/** A trip from the station (T-221), and while a passage is being placed (T-197, T-1281), what to
- * click. */
-function StationTripLink({ id }: { id: string; members: string[] }) {
-  const picking = linking.value === id;
-  return (
-    <>
-      <Actions>
-        {/* T-221: a trip from this station to the next station or place clicked */}
-        <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
-          Trip from here
-        </button>
-      </Actions>
-      {picking && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
     </>
   );
 }

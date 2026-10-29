@@ -85,7 +85,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   held outside); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
   the dark theme [T-039]; line colours are the same in both), drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
-  still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter. Line and
+  still, and a selected line or group [T-1812] draws every other line's stroke and train at 55%
+  (30% while stops are edited or the pointer is on a column of the group view), all of a selected
+  group's lines drawn selected together (`selLines`, at most 16; bus lines take the one line only). A stroke thinner than a device pixel is drawn a pixel wide and that much fainter. Line and
   track ends, and the joints between a stroke's segments, are round, casing included [T-673].
 - **Double track as its two tracks, close in** [T-658, `laneState` in `map/renderer.ts`, design
   notes/T-658.md]: drawing only; the track stays one piece. Where 4 m on the ground is 4 px on

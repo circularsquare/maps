@@ -15,7 +15,7 @@ import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
-import { groupHover } from "./game/lineGroups";
+import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
@@ -98,6 +98,8 @@ effect(() => { for (const [k, v] of Object.entries(modeColours())) document.docu
 
 /** Other lines' strength while a line's stops are edited (T-233). */
 const STOP_EDIT_DIM = 0.3;
+/** Other lines' strength while a line or a group is selected (T-1812). */
+const SELECT_DIM = 0.55;
 
 const params = new URLSearchParams(location.search);
 const num = (k: string, d: number) => {
@@ -159,14 +161,19 @@ const overlay = new Overlay(map, renderer, () => {
   if (followed !== sel) selection.value = sel = followed;
   const d = display.peek();
   const n = renderer.net;
+  const hovered = groupHover.peek();
+  // T-1812: a selected group draws all its lines selected, until the pointer is on one of its columns
+  const groupLines = sel?.kind === "group" && hovered === null ? (lineGroups(world.peek()?.save.lines ?? []).get(sel.group) ?? []).map((l) => l.num) : undefined;
   return {
     showTrains: d.trains,
     byLevel: d.trackColour === "height",
     bySpeed: d.trackColour === "speed",
-    selLine: groupHover.peek() ?? (sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1),
+    selLine: hovered ?? (sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1),
+    selLines: groupLines,
     selTrain: sel?.kind === "train" ? sel : null, // T-242: drawn over the others with a halo
-    // T-233: the other lines recede while stops are edited, and past the group view's hovered line (T-1791)
-    dimOthers: stopEditing.peek() || groupHover.peek() !== null ? STOP_EDIT_DIM : 1,
+    // T-233: the other lines recede while stops are edited, and past the group view's hovered line (T-1791);
+    // T-1812: a little for a selected line or group
+    dimOthers: stopEditing.peek() || hovered !== null ? STOP_EDIT_DIM : sel?.kind === "line" || groupLines?.length ? SELECT_DIM : 1,
     selEdge: sel?.kind === "track" ? sel.edge : -1,
     selStation: sel?.kind === "station" && n ? stationIndexOf(n, sel.station) : -1,
     // complex view: every member's box drawn selected (T-163)

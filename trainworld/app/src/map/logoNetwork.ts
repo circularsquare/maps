@@ -52,11 +52,12 @@ interface Stroke { pts?: C[]; circle?: [number, number, number]; stops?: P[]; co
  * Stations are the ends and the stops listed. */
 const ROWS: { strokes: Stroke[]; dx: number }[] = [
   { dx: 0, strokes: [
-    // the lead-in turning up the t's stem to a switchback at its top, back down past the fork and
-    // on along the baseline into the r
-    { pts: [[-70, 0], [10, 0, { r: 30 }], [10, 96, { rev: true }], [10, 0], [40, 0], [40, 56], [64, 56]], stops: [[10, 68]], colour: 1 },
+    // the t turned over about its middle (T-1812, a capital T): the lead-in along the top turning down
+    // the stem to a switchback at its foot, and back up; the r goes on from the foot
+    { pts: [[-70, 96], [10, 96, { r: 30 }], [10, 0, { rev: true }], [10, 96]], stops: [[10, 28]], colour: 1 },
+    { pts: [[10, 0], [40, 0], [40, 56], [64, 56]], colour: 1 },
     // the t's bar, across the stem, bare
-    { pts: [[-12, 68], [34, 68]], colour: 1, bare: true },
+    { pts: [[-12, 28], [34, 28]], colour: 1, bare: true },
     // the a: round its bowl, up its stem and back, on along the baseline, up the i and back
     { pts: [[114, 52], [78, 52, { r: 18 }], [78, 0, { r: 18 }], [114, 0, { r: 18 }], [114, 53, { rev: true }], [114, 0], [144, 0], [144, 56, { rev: true }], [144, 0], [162, 0]], stops: [[144, 30]], colour: 2 },
     // the i's dot, bare

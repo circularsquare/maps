@@ -1,15 +1,15 @@
-// Longer trips (T-118, SPEC 8): the market's non-commute trips of a bubble selection or of a
-// selected station, by place, all modes and by train, car and plane (T-378). The same numbers are
-// drawn on the map as bubbles (map/intercityView.ts), one per far zone.
+// Longer trips (T-118, SPEC 8): the market's non-commute trips of a bubble selection, by place, all
+// modes and by train, car and plane (T-378). The same numbers are drawn on the map as bubbles
+// (map/intercityView.ts), one per far zone.
 
 import type { ComponentChildren } from "preact";
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
 import { count, exact } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { modeColours } from "../../game/palette";
-import { intercityPick, intercityStationView } from "../../map/intercityView";
+import { intercityPick } from "../../map/intercityView";
 import { Spinner } from "../Spinner";
-import { Icon, Row } from "../widgets";
+import { Icon } from "../widgets";
 import { pctOf } from "./tripText";
 
 /** Read while rendering: the colours follow the bubble scheme (T-833). */
@@ -88,34 +88,7 @@ function topPlaces<P extends Split>(places: P[]): { top: P[]; rest: (Split & { n
   return { top: places.slice(0, PLACE_ROWS), rest };
 }
 
-function Direction({ title, verb, flows, own, railOnly, walk = false }: { title: string; verb: string; flows: PlaceFlows; own: number; railOnly: boolean; walk?: boolean }) {
-  if (railOnly) {
-    const { top, rest } = topPlaces([...flows.places].sort((a, b) => b.rail - a.rail));
-    return (
-      <>
-        <ul class="rows">
-          <li class="b">
-            <span class="grow">{title}</span>
-            <span class="val w-num">{count(flows.rail)}</span>
-          </li>
-        </ul>
-        <ul class="rows sub-rows">
-          {top.map((p) => (
-            <li>
-              <span class="grow">{verb} {intercityPlaceName(p.place, own)}</span>
-              <span class="val w-num">{count(p.rail)}</span>
-            </li>
-          ))}
-          {rest && rest.rail >= 0.5 && (
-            <li>
-              <span class="grow" data-tip={`${exact(rest.n)} more places`}>{verb} other places</span>
-              <span class="val w-num">{count(rest.rail)}</span>
-            </li>
-          )}
-        </ul>
-      </>
-    );
-  }
+function Direction({ title, verb, flows, own, walk = false }: { title: string; verb: string; flows: PlaceFlows; own: number; walk?: boolean }) {
   const total = { ...flows, all: flows.all + flows.elsewhere };
   const { top, rest } = topPlaces(flows.places);
   const rows: [number, ComponentChildren][] = top.map((p) => [p.all, (
@@ -169,8 +142,8 @@ export function SelectionLongerTrips() {
   }
   const home = p.sel?.kind === "commuters" && p.sel.end === "home";
   const walk = (p.data.starts.walk ?? 0) + (p.data.ends.walk ?? 0) > 0;
-  const out = <Direction title="Leave from here" verb="To" flows={p.data.starts} own={p.own} railOnly={false} walk={walk} />;
-  const back = <Direction title="Arrive here" verb="From" flows={p.data.ends} own={p.own} railOnly={false} walk={walk} />;
+  const out = <Direction title="Leave from here" verb="To" flows={p.data.starts} own={p.own} walk={walk} />;
+  const back = <Direction title="Arrive here" verb="From" flows={p.data.ends} own={p.own} walk={walk} />;
   return (
     <>
       <Head tip={`Visits, shopping and business, for the areas the selection lies in, with the errands, visits, school and medical trips that cross a zone line nearby. Commutes are left out. The map's bubbles are their ${home ? "destinations" : "origins"} outside this metropolitan area, on a separate scale from local trips.`} />
@@ -178,29 +151,6 @@ export function SelectionLongerTrips() {
         <ModeHead what="Trips" walk={walk} />
       </ul>
       {home ? <>{out}{back}</> : <>{back}{out}</>}
-    </>
-  );
-}
-
-/** For the station inspector: the longer-trip riders using this station. */
-export function StationLongerTrips({ id, scope = id }: { id: string; scope?: string }) {
-  const v = intercityStationView.value;
-  if (!demandView.value || !v || v.stationId !== id || v.scope !== scope) return null;
-  if (v.starts.rail <= 0 && v.ends.rail <= 0) {
-    return (
-      <>
-        <Head />
-        <ul class="rows">
-          <Row label={`Trips ${shownDayPhrase.value}`}>0</Row>
-        </ul>
-      </>
-    );
-  }
-  return (
-    <>
-      <Head />
-      <Direction title="Start here" verb="To" flows={v.starts} own={-1} railOnly />
-      <Direction title="End here" verb="From" flows={v.ends} own={-1} railOnly />
     </>
   );
 }

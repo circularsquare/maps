@@ -337,27 +337,25 @@ riders counters keep their own smoothing (Live feel).
 
 [T-519] Selecting a station leaves the demand views as they were: the bubbles, the zoomed-out
 overview and the airport badges stay, and the bubbles are cut away round the station (T-189). Its
-commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui-inspectors.md)).
+inspector lists no commuters or inter-city riders [T-1812].
 
 ## Inter-city trips
 
 [T-118, T-120, T-135, T-136, T-139, T-222; the market in [regional.md](regional.md)]
 
-- A station's inspector has an "Inter-city trips" section; a local bubble's has none [T-1668]
-  (`SelectionLongerTrips` is unused). A selection's would list trips leaving its areas and trips arriving there, each by place with all modes, then by
+- Neither a station's inspector [T-1812] nor a local bubble's [T-1668] has an "Inter-city trips"
+  section (`SelectionLongerTrips` is unused). A selection's would list trips leaving its areas and trips arriving there, each by place with all modes, then by
   train, car and plane [T-378] (column heads are the modes' icons, `Icon.train`, `Icon.ride`,
   `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
   an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the
-  direction's total); its own zone's row reads "Other New York places". A station lists rail
-  riders starting and ending there by place. Each direction lists its 15 biggest places, the rest
+  direction's total); its own zone's row reads "Other New York places". Each direction lists its 15 biggest places, the rest
   summed in one "To other places" (or "From other places") row whose hover counts them [T-1165].
   A selection's lists also hold its errands, visits, school and medical trips across a zone line
-  [T-1229], which add a walking column (the walking icon, hover "on foot") where some walk; a
-  station's count their rail riders, as its commutes between zones are.
+  [T-1229], which add a walking column (the walking icon, hover "on foot") where some walk.
 - On the map a bubble selection's are always drawn (no setting), except under a local purpose
   filter, which draws only that purpose's outings across a zone line [T-1229] (none under Work,
   Airport and Attractions): the far end of its own end (Homes: where the trips go; Destinations:
-  where they come from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;
+  where they come from). Only zones other than the focused one are drawn;
   same-zone counts stay in the inspector [T-139].
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position. At 9.5 and below they
   become one labelled bubble per other zone at its registry centre, names and

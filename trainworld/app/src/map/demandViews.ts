@@ -8,25 +8,20 @@
 // - Where people drive, arcs between the bubbles and the circles: map/driveArcs.ts.
 // - Commuter bubbles and a bubble selection: map/commuterView.ts.
 // - Longer trips of a selection, and one bubble per city zoomed far out: map/intercityView.ts.
-// - A selected station's riders: `stationRiders(id)`, listed in the station inspector from
-//   `stationView`. A station selection leaves the map as it was (T-519).
 // - Hovering any of these discs shows how many people they stand for (map/demandHover.ts).
 
-import { computed, effect, signal } from "@preact/signals";
+import { computed, effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { activeCity } from "../game/cities";
 import { clock } from "../game/clock";
-import { selectedScope, stopKey } from "../game/complexView";
-import { cityCells, demandByDay, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
-import { wholeDistance } from "../game/format";
-import { compass } from "../game/places";
+import { stopKey } from "../game/complexView";
+import { demandByDay, demandView } from "../game/demand";
 import { periodAt } from "../game/periods";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { startAirportMarks } from "./airportMarks";
 import { startAttractionMarks } from "./attractionMarks";
-import { commuterStats, startCommuterView, type Place } from "./commuterView";
+import { commuterStats, startCommuterView } from "./commuterView";
 import { buildLayers } from "./demandLayers";
 import { hoverAbove, hoverAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
@@ -35,18 +30,11 @@ import type { Overlay } from "./overlay";
 import { StationCircles, stationCircles } from "./stationCircles";
 import { DriveArcs } from "./driveArcs";
 
-/** Which end of a selected station's riders the inspector lists. */
-export const stationSide = signal<"home" | "work">("home");
-/** The selected station's riders, as the inspector lists them; null while unknown. `scope`: the
- * stations counted, `StationRiders.scope` (its complex's in complex view, T-146). */
-export interface StationView { stationId: string; scope: string; home: number; work: number; walked: number; rode: number; places: Place[] }
-export const stationView = signal<StationView | null>(null);
-
 /** The period in force on the clock; changes five times a game day. */
 const period = computed(() => periodAt(clock.local.value * 60)); // T-309: the local time in view
 
 /** Timings for ?debug=1 (`window.twViews`) and the notes. */
-export const viewStats = { layersMs: 0, layerBuilds: 0, stationMs: 0, commuters: commuterStats };
+export const viewStats = { layersMs: 0, layerBuilds: 0, commuters: commuterStats };
 
 export interface DemandViews {
   /** call after `renderer.setNetwork` */
@@ -130,52 +118,6 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   // ---- longer trips of a selection (T-118) ----
   const intercity = startIntercityView(view, map);
 
-  // ---- a selected station's riders, for the inspector ----
-  let focusSeen = activeCity.peek();
-  let cellsP: Promise<CityCells | null> | null = null;
-  let stationAsk = 0;
-  let last: { r: StationRiders; dv: DemandView | null } | null = null;
-  const show = (r: StationRiders, cells: CityCells | null) => {
-    stationView.value = describe(r, stationSide.peek(), cells);
-  };
-  effect(() => {
-    const focus = activeCity.value;
-    if (focus !== focusSeen) { focusSeen = focus; cellsP = null; stationAsk++; last = null; stationView.value = null; }
-    const sel = selection.value;
-    const dv = demandView.value;
-    stationSide.value;
-    // with nothing shown yet the riders are still asked for (T-327): the answer is in hand when the
-    // first estimate shows
-    if (sel?.kind !== "station") {
-      stationAsk++;
-      last = null;
-      stationView.value = null;
-      return;
-    }
-    const id = sel.station;
-    // the station, or its complex in complex view (T-146)
-    const scope = selectedScope.value || id, members = scope.split(",");
-    if (last && last.r.stationId === id && last.r.scope === scope && last.dv === dv) {
-      // only the side changed
-      const r = last.r;
-      void (cellsP ??= cityCells()).then((cells) => { if (last?.r === r) show(r, cells); });
-      return;
-    }
-    if (!last || last.r.stationId !== id || last.r.scope !== scope) stationView.value = null;
-    const ask = ++stationAsk;
-    void (async () => {
-      const t0 = performance.now();
-      const [r, cells] = await Promise.all([stationRiders(id, 20, members), (cellsP ??= cityCells())]);
-      // null: the workers moved on (the next demandView asks again), or not a station demand knows
-      if (ask !== stationAsk || !r) return;
-      viewStats.stationMs = performance.now() - t0;
-      const fresh = !last || last.r.stationId !== id;
-      last = { r, dv };
-      if (fresh) stationSide.value = r.home.total >= r.work.total ? "home" : "work";
-      show(r, cells);
-    })();
-  });
-
   return {
     networkChanged() {
       if (renderer.net !== netSeen) schedule();
@@ -193,33 +135,4 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     hover: (px, py) => hoverAt(map, px, py),
     overlay: view,
   };
-}
-
-/**
- * The far end of a station's riders as places a player knows: each zone named by the station
- * nearest its centre within 3 km (zones sharing one merged), else by distance and direction from
- * the selected station.
- */
-function describe(r: StationRiders, side: "home" | "work", cells: CityCells | null) {
-  const far = side === "home" ? r.homeRidersWorkIn : r.workRidersLiveIn;
-  const w = world.peek();
-  const here = w?.save.stations.find((s) => s.id === r.stationId);
-  const byName = new Map<string, number>();
-  for (let k = 0; k < far.zones.length; k++) {
-    const z = far.zones[k];
-    let name = `Zone ${z}`;
-    if (cells) {
-      const x = cells.zoneXY[z * 2], y = cells.zoneXY[z * 2 + 1];
-      let best: { name: string; d: number } | null = null;
-      for (const s of w?.save.stations ?? []) {
-        const d = Math.hypot(s.x - x, s.y - y);
-        if (!best || d < best.d) best = { name: s.name, d };
-      }
-      if (best && best.d <= 3000) name = best.name;
-      else if (here) name = `${wholeDistance(Math.hypot(x - here.x, y - here.y))} ${compass(x - here.x, y - here.y)}`;
-    }
-    byName.set(name, (byName.get(name) ?? 0) + far.riders[k]);
-  }
-  const places = [...byName].map(([name, riders]) => ({ name, riders })).sort((a, b) => b.riders - a.riders);
-  return { stationId: r.stationId, scope: r.scope, home: r.home.total, work: r.work.total, walked: r.walked, rode: r.rode, places };
 }

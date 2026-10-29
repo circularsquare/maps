@@ -52,6 +52,17 @@ export const FULL_FLOOR = 0.5, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 8;
 const FULL_WIDTH_SHARE = "0.15";
 const HOT_RIM_MIX = "0.6";
 export const HOT_STATIONS = 16;
+/** T-1812: lines a selected group can draw selected */
+export const SEL_SET_MAX = 16;
+/** whether a line is the selected one or in the selected group (`u_sel_line`, `u_sel_set`) */
+const SEL_GLSL = `bool selectedLine(int c) {
+  if (c == u_sel_line) return true;
+  for (int i = 0; i < ${SEL_SET_MAX}; i++) {
+    if (i >= u_sel_n) break;
+    if (u_sel_set[i] == c) return true;
+  }
+  return false;
+}`;
 
 export const STROKE_VS = `#version 300 es
 precision highp float;
@@ -64,6 +75,8 @@ uniform vec3 u_casing_rgb;   // white, or dark in the dark theme (game/shades.ts
 uniform float u_cap;         // > 0: no wider than this (px), the track drawn through stations (T-236)
 uniform int u_kind;          // 0 track, 1 lines, 2 preview
 uniform int u_sel_line;
+uniform int u_sel_n;         // T-1812: more lines drawn selected, a selected group's: how many, and which
+uniform int u_sel_set[${SEL_SET_MAX}];
 uniform int u_sel_edge;
 uniform ivec2 u_hot;         // the hovered line and bare track edge, -1 none (T-730)
 uniform int u_only_sel;
@@ -113,13 +126,14 @@ out vec4 v_cap;             // px: along from the segment's start, along to its 
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
+${SEL_GLSL}
 void main() {
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
   v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
-  bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
+  bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
   // the ghost is drawn as blueprint track in three layers, outline then rails then middle (T-1054)
@@ -693,6 +707,8 @@ uniform highp sampler2D u_fill;  // RG32F per sample: how full run 0's and run 1
 uniform highp sampler2D u_loads;   // R32F: riders aboard each trip of the hour per stretch (T-164)
 uniform highp sampler2D u_stretch; // R32F per sample: its stop-to-stop stretch, run 0's numbering; -1 none
 uniform int u_sel_line;            // stop editing (T-233): the edited line's trains stay as they are,
+uniform int u_sel_n;               // T-1812: and a selected group's lines
+uniform int u_sel_set[${SEL_SET_MAX}];
 uniform float u_dim;               // the others' share of full strength
 uniform vec2 u_sel_trip;           // the selected train (T-242): profile, departure - epoch; x < 0 none
 uniform highp int u_pass;          // 0 every train but the selected, 1 the selected's halo, 2 the selected
@@ -704,6 +720,7 @@ out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
                               // trip's first load in u_loads or -1, else its riders leaving or -1
+${SEL_GLSL}
 ${POS_GLSL}
 out vec2 v_uv;
 flat out float v_k;
@@ -801,7 +818,7 @@ void main() {
   v_px = px;
   vec3 lc = texelFetch(u_line_colours, ivec2(line % ${LINES_W}, line / ${LINES_W}), 0).rgb;
   v_color = lc * 0.48;
-  v_alpha = line == u_sel_line ? 1.0 : u_dim;
+  v_alpha = selectedLine(line) ? 1.0 : u_dim;
   // How full it is (T-084): the stretch it runs, from the sample ahead of it on its way.
   int run = (int(a_trip.x + 0.5) / 3) % 2;
   float i = floor(clamp(d, 0.0, L.z) / L.w) + (run == 0 ? 1.0 : 0.0);

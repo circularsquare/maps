@@ -95,7 +95,9 @@ export type EditOp =
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
-  | { op: "lineLook"; line: number; name: string; colour: string; letter?: string }
+  /** a field left out keeps the line's own as the worker has it now, so an edit never carries a stale
+   * name, colour or symbol over one still on its way (T-1812); `letter` is the symbol set by hand, "" for none */
+  | { op: "lineLook"; line: number; name?: string; colour?: string; letter?: string }
   | { op: "removeLine"; line: number }
   /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
   | { op: "lineCars"; line: number; cars: number }

@@ -718,7 +718,7 @@ registry centre and zoom, or over New York with none [T-310].
   `worldCover`], with the zone outlines, outside shade and every basemap name hidden until the pick [T-974, T-1567]. The menu takes every key outside itself, and nothing loads behind it but the map.
 - Over the card (and the new game sheet) the logo [T-1567; `ui/StartLogo.tsx`,
   `map/logoNetwork.ts`], after Anita's sketch: "trains" over "world!" in joined-up script slanted
-  forward, its curves of one radius before the slant, switchbacks where a curve would be tighter,
+  forward, the t turned over about its own middle so its lead-in is a bar across the top, a capital T (the r goes on from the stem's foot) [T-1812], its curves of one radius before the slant, switchbacks where a curve would be tighter,
   each stroke a line with stations at its ends and joins (boxes overlapping where lines join or
   cross, as a complex's do), and one train a line, a white pill, running with stops (the two dots and
   the t's bar are bare lines, no stations or train) [T-1593], the boxes 1 px smaller on every side

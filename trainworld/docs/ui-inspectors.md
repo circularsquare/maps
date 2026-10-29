@@ -6,6 +6,8 @@
 The inspector, under the dock's tabs, shows whatever is selected: a line, a station complex (or
 one station), a stretch of track, a junction, a train, bubbles, a city or zone, or a trip. Nothing
 selected leaves it blank, with no text. An empty click on the map or Escape clears the selection.
+The title row (the bullet or glyph, the name and its buttons) is pinned to the top of the panel's
+scroll area, on the panel's background, so it stays in view when the panel is scrolled [T-1812].
 One component per kind in `ui/inspector/` (`StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx` hold station, train, track and junction). The track and junction inspectors are in [ui-building.md](ui-building.md) and
 [track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
 inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md), the city
@@ -140,7 +142,13 @@ purpose filter the purpose drawn is ringed in the bar.
   replaces the pencil, a click anywhere outside the title and editor, or Esc closes it (Esc in the name box
   drops the typed name). A symbol with several characters widens the rounded badge; a blank symbol
   restores the default: a name that is a short code (up to five capitals or digits, "6X", "HBLR") whole,
-  "Line 7" as 7, else the name's first letter [T-330]. Dragging in the picker changes the badge and the stop dots in the
+  "Line 7" as 7, else the name's first letter [T-330]. **A symbol typed by hand sticks** [T-1812]: the
+  Symbol box keeps what is typed until it is left (or Enter) and then sends only the symbol, so a
+  rename landing meanwhile cannot reset the box, and a symbol equal to the name's own letter still
+  counts as set. A rename, a colour and a symbol each send only their own field (`lineLook` with the
+  rest left out, filled from the worker's current line), so one edit never carries a stale value over
+  another still on its way. A line with a symbol set (the save's `symbol`, "" for none) keeps it
+  through renames; one without follows its name. Dragging in the picker changes the badge and the stop dots in the
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
@@ -292,43 +300,62 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
 
 ## The group view
 
-[T-1791 stages 2 and 3; `ui/inspector/GroupInspector.tsx`, layout `game/groupLayout.ts`, check
-`checks/t1791-layout.mjs`] A line group's panel, opened from its Lines-tab row, the group name in
-a line panel, and Copy line. Stops are edited in its diagram (below); the line panel's own remove
-button works as before.
+[T-1791 stages 2 and 3, T-1809; `ui/inspector/GroupInspector.tsx`, layout `game/groupLayout.ts`,
+check `checks/t1791-layout.mjs`; notes/T-1809.md] A line group's panel, opened from its Lines-tab
+row, the group name in a line panel, and Copy line. Stops are edited in its diagram (below); the
+line panel's own remove button works as before.
 
 - **Title**: the group's bullets, its name (renamed as a line's is: double click or the pencil;
-  the oldest line's name typed back clears it) and Show on the map (all its lines' stops).
-- **A row per line**, oldest first: bullet, name, its trains at its level now (hover "High
-  demand: 21 trains", muted at 0) and a Copy line button (hover "Copy line"); a click opens the
-  line's panel. No times, no past 24 hours, no schedule.
-- **The diagram**: a column per line (22 px, its bullet on top), a row per place (18 px). Rows
-  start from the line with most stops in its path order; each other line is matched to them by
-  station complex (`stopKey`), turned round if it runs the other way, and its own stations go in
-  new rows where it leaves the rows it shares; a branch past the shared rows goes below all the
-  rows, its column broken where it leaves. A line sharing no place takes the rows from the top,
-  beside the others. On its rows a column shows a white pill where the line stops, and its bar
-  between. Where lines stop side by side at one place (one station complex) the pill is one
-  elongated pill over their columns, as the related lines view draws an interchange; a line stopping
-  alone has a round one. A station a line passes has the same pill with its outline at 40% (as the
-  related lines view fades a passed station), so it reads as a stop not made. To the right of the columns, a name per row (the row's stations joined with " / " where
-  they differ, cut with an ellipsis, muted where no line stops; a click selects the station); the
-  row's hover also names each line's station where they differ. A line with no trains at its
-  level now is drawn at 40%, its bullet too (hover adds "No trains at high demand"). While the
-  pointer is on a column the map draws that line full and every other line at 30%, as stop
-  editing does.
+  the oldest line's name typed back clears it) and Show on the map (all its lines' stops). No row
+  per line: a line's bullet in the diagram opens its panel.
+- **Stops header**: the all-stops switch (hover "Show all stops" / "Show fewer stops", kept while
+  the page is open) and Copy line, which opens a row of the group's bullets; a click on one copies
+  that line (hover "Copy 4") into the group.
+- **Rows**: one place (station complex, `stopKey`) each. They start from the line with most stops in
+  its path order; each other line is matched to them by place, turned round if it runs the other
+  way, and its own places go in as one block: between the rows it leaves and rejoins, or above its
+  first shared row or below its last, whichever leaves the shorter bar running beside them. So a
+  branch hangs off the row where it leaves and its stops stay together. A line sharing no place goes
+  below the rest.
+- **Named rows and ticks**: by default only key stops get a row of 18 px with the name: each line's
+  termini; where two lines meet and where they part; the stops on either side of a stretch one of
+  two lines skips (an express's stops beside a local); stops where lines outside the group stop.
+  Other stops are a white tick across the bar in a 7 px row with no name; a row every line passes
+  is a bare 7 px row, where a ghost can add the stop. The switch names every row (a row every line
+  passes muted).
+- **Together and apart**: two lines run together from a stop both make to the next unless each
+  makes stops the other does not between them (skip-stop: drawn apart). Lines together at a row
+  are drawn 2 px apart (5 px bars), the rest 24 px apart; each line's x holds as long as it can,
+  so a bundle bends in where lines meet and out where they part, an S-curve between rows with
+  room to run at about 50 degrees. The left-to-right order is chosen row by row: lines together
+  side by side; inside a bundle, the lines alike (same stops, still together) for longer are
+  nearer each other, so the one that differs or leaves soonest is outside; apart, lines that will
+  run alike soon are nearer; each crossing against the row before costs as much as 8 rows of
+  likeness, so the order changes where that pays.
+- **Marks**: in a named row a white pill where a line stops, one elongated pill over lines
+  stopping side by side, a passed station's pill with its outline at 40%. Lines outside the group
+  stopping there are drawn as the related lines view's crossing bars, up to 6 (past 2 the row and
+  pill grow to fit), and their bullets after the name (busiest two, or up to 6 in two rows where
+  the row grows, then "+" with a hover naming the rest; a bar's click opens its line). Each line's
+  bullet sits above its first stop and below its last (side by side where several end at one
+  place, moved out to the side where another line runs through); while a line's top bullet is
+  scrolled away, it floats at the top of the visible panel over the line. A line with no trains at
+  its level now is drawn at 40%, its bullets too (hover adds "No trains at high demand"). While the
+  pointer is on a line the map draws that line full and every other line at 30%, as stop editing
+  does. Names are cut with an ellipsis; a click on one selects the station.
 - **Editing stops**, every edit keeping the line's path and a normal service edit (demand
   re-solves, one undo each; sim `drop_stop`, `end_line_at`, `stop_passed`, track-and-service.md).
-  Each line has its own click target at a stop, 22 px wide over its column, also inside an
-  elongated pill: the hovered line's part of the pill shows a dot in that line's colour, and the
-  hover names the line ("Click to remove the 4's stop at 14 St-Union Sq"); the click takes that
-  line's stop out and no other's. A stop between the ends leaves the track as it is, an end stop's
-  removal shortens the path to the new end. Shift-click on a stop between the ends ends the line
-  there, the stops past it toward the nearer end going (hover's second line "Shift-click to end
-  the 4 here"). Hovering a passed station's mark darkens its outline to a stop's and the click adds
-  the stop (hover "Click to add the 4's stop at 23 St"). A stop that cannot go has no click and the
-  plain hover: a bus line's, a line's last two, a loop's ends, and where trains turn back (hover
-  "4 turns back at X"). One edit at a time; a refusal says "The line has to keep this stop."
+  Each line has its own click target at each of its places, half way to its neighbours (at most
+  11 px a side) and the row's height, ticks included: over a stop the hovered line's part of the
+  mark shows its colour (a dot in a pill, the tick filled), and the hover names the line ("Click to
+  remove the 4's stop at 14 St-Union Sq"); the click takes that line's stop out and no other's. A
+  stop between the ends leaves the track as it is, an end stop's removal shortens the path to the
+  new end. Shift-click on a stop between the ends ends the line there, the stops past it toward the
+  nearer end going (hover's second line "Shift-click to end the 4 here"). Over a passed station
+  the mark darkens (a named row's faded pill) or a ghost tick shows, and the click adds the stop
+  (hover "Click to add the 4's stop at 23 St"). A stop that cannot go has no click and the plain
+  hover: a bus line's, a line's last two, a loop's ends, and where trains turn back (hover "4 turns
+  back at X"). One edit at a time; a refusal says "The line has to keep this stop."
 
 ## The bus line panel
 
@@ -415,14 +442,15 @@ the Build tab's quote has rows for bus routes and new buses.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".
-- **Complex view**, under the name and "Complex of 16 stations":
+- **Complex view** [T-1812: only these sections; no subtitle, no Trip from here, no commuters and no
+  inter-city trips]:
   - **Its lines** [T-246, T-250]: one row per line name, branches and patterns summed, with chip,
     name, riders waiting now (red when one of its platforms is full or its last train left riders
     behind) and boardings in the past 24 hours, busiest by the forecast first so the order holds through the day.
     The row's hover gives line, station and where its trains go; each number has its own hover. A
     click opens that line's busiest station there alone in station view (`openAlone`,
     `singleStation` in `game/complexView.ts`): its own inspector and outline, its
-    subtitle ending with "Complex of 16 stations" as a link back. Any new selection, the same
+    subtitle ending with "Complex of 16 stations" as a link back (complex view itself has no subtitle). Any new selection, the same
     station included, shows the complex again.
   - **The complex map** (below), then the complex's "Boardings in past 24 h" with their purpose split [T-1095].
   - **Closest stations** [T-312, T-323; `ui/inspector/ClosestStations.tsx`, `game/walks.ts`]: the
@@ -432,35 +460,21 @@ the Build tab's quote has rows for bus routes and new buses.
     and stations of its own name are left out, and each name is listed once. The walk is the
     demand model's routed walk ([demand-mode.md](demand-mode.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
-  - **Passages**: each passage touching the complex, its length (price on hover) and Remove. The
-    button **Trip from here** [T-221] (the trip tool with the station as the start) is in the row
-    under the subtitle, above everything else [T-1134], and under it the upgrade row (below).
-  - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
-    reach and ride from it); the larger is picked first, a click picks the other; then the top
-    eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
-    [ui-demand-views.md](ui-demand-views.md)]. Commuters and inter-city trips cover the whole complex, each of the demand
-    model's stations counted once.
-  - **How they arrive** [T-374; `AccessSplit` in `ui/inspector/StationRiders.tsx`]: under the two
-    rows, a bar and key in the purpose split's style for the commuters who live nearby, walked
-    (walk icon, the walk colour) against drove (car icon, the drive colour), shares in the key
-    and counts in the hovers ("Drove, took a bus or cycled"). They are the model's commutes
-    at the home end (`walked` and `rode` of `StationRiders`, from `DemandApi.station_riders_day`);
-    everyday trips and the regional layer are not split. Not part of the past 24 hours' purpose split, which
-    counts boardings.
-  - **Inter-city trips**: rail riders starting and ending there, by place [T-118, T-120].
+  - **Passages**: each passage touching the complex, its length (price on hover) and Remove.
+    The panel has no Trip from here button (the T key starts a trip from any tab) and no
+    commuters, "where they live or work" or inter-city trips sections [T-1812].
 - **Station view** (one station opened alone) has its elevation under the name ("Elevation +1"), then in place of the
   complex's lines and map the station's own lines, platform settings, and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the
   longest wait, or else the riders arriving this hour and the longest wait. The counts drop the
   moment a train leaves with whoever fitted (a timer set for the station's next departure) and grow
-  with arrivals each game minute. The rest (closest stations, links, commuters, inter-city
-  trips) is as in complex view, for the station alone.
+  with arrivals each game minute. The rest (closest stations, links) is as in complex view, for the
+  station alone.
 - **Buttons come first** [T-1134, Anita: never put stuff at the bottom after an arbitrarily long
   list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
-  header, above all rows and lists. A station has Trip from here in one row (what placing a passage
-  asks, when picking, is under it) and, in station view, Construct station (a blueprint only) and
-  Remove station in a second, then the **upgrade row** under a "Station upgrades" heading
+  header, above all rows and lists. A station has, in station view, Construct station (a blueprint
+  only) and Remove station in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
   passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
@@ -518,7 +532,7 @@ crosshair, a hand over a station); a click on anything else, Esc, the icon again
 selection or a tool stops it. Refused with a notice, still picking: the same station, one already
 in this complex, or one more than 1 km away centre to centre. Between two constructed stations it
 is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
-"Passages", above the commuters, lists each passage touching the complex with its two stations,
+"Passages", after the closest stations, lists each passage touching the complex with its two stations,
 their chips, its length and Remove (nothing refunded once built). Only the player's passages can be
 removed: stations the distance rule groups cannot be split. Passages are not in the Ctrl+Z history
 (a setting, like fares); removing a station drops its passages. Demand counts a passage once both
@@ -539,7 +553,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
 - **Stations as ends** [T-221]: a click on a station (a hand cursor over one) takes the station's
   own cell as that end (the title's hover then says a station end stands for the homes or places
   right around it). Its own cell, because the model's subzones group cells by nearest station, so
-  the trip mostly boards there. A station's **Trip from here** starts it from that station.
+  the trip mostly boards there.
 - **From a selection** [T-208]: with a bubble selection, a click on a far-end bubble opens the
   trip for that pair (hovers end "Click to explore this trip"), homes to destinations. The
   selection's end is its busiest cell under the purpose filter, the far end the clicked bubble's

@@ -584,7 +584,7 @@ export function useLiveColour(l: LineInput | undefined, setPreview: (hex: string
     s.hex = null;
     s.busy = true;
     s.last = performance.now();
-    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }, true).then(() => {
+    void edit({ op: "lineLook", line: l.num, colour: hex }, true).then(() => {
       s.busy = false;
       s.gap = Math.max(200, 6 * (performance.now() - s.last)); // a slow machine follows less often, so edits take a fraction of its time
     });
@@ -601,9 +601,31 @@ export function useLiveColour(l: LineInput | undefined, setPreview: (hex: string
     live.current.timer = 0;
     live.current.hex = null;
     setPreview(hex);
-    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
+    void edit({ op: "lineLook", line: l.num, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
   };
   return { dragColour, commitColour };
+}
+
+/** T-1812: the symbol box's props. What is typed is kept until the box is left (or Enter) and then
+ * sent alone as the symbol set by hand, so a rename landing meanwhile cannot reset the box and a
+ * symbol equal to the name's own letter still sticks. A box the player did not type in sends
+ * nothing; blank sends "", which gives the badge back to the name's letter. */
+export function useSymbolBox(l: LineInput | undefined) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const typed = useRef(0), sent = useRef(-1);
+  const commit = () => {
+    if (draft === null || !l || sent.current === typed.current) return;
+    sent.current = typed.current;
+    const v = draft.trim(), at = typed.current;
+    if (v === (l.symbol ?? "")) { setDraft(null); return; }
+    void edit({ op: "lineLook", line: l.num, letter: v }).then(() => { if (typed.current === at) setDraft(null); });
+  };
+  return {
+    value: draft ?? l?.letter ?? "",
+    onInput: (e: { currentTarget: HTMLInputElement }) => { typed.current++; setDraft(e.currentTarget.value); },
+    onBlur: commit,
+    onKeyDown: (e: { key: string }) => { if (e.key === "Enter") commit(); },
+  };
 }
 
 function RailLineInspector({ id }: { id: string }) {
@@ -618,8 +640,7 @@ function RailLineInspector({ id }: { id: string }) {
   const [copying, setCopying] = useState(false);
   const l = w ? linesById(w).get(id) : undefined;
   const { dragColour, commitColour } = useLiveColour(l, setPreview);
-  const [symbol, setSymbol] = useState("");
-  useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
+  const symbolBox = useSymbolBox(l);
   useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
   // a click away, or Esc outside the name box (it handles its own), closes the editor
   useEffect(() => {
@@ -820,7 +841,7 @@ function RailLineInspector({ id }: { id: string }) {
       </div>
       {editing && (
         <div class="line-identity" data-line-edit>
-          <label>Symbol <input aria-label="Line symbol" value={symbol} onInput={e => setSymbol(e.currentTarget.value)} onChange={e => void edit({op:"lineLook",line:l.num,name:l.name,colour:l.colour,letter:e.currentTarget.value.trim()})} /></label>
+          <label>Symbol <input aria-label="Line symbol" {...symbolBox} /></label>
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
         </div>
       )}

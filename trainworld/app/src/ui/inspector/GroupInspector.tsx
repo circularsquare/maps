@@ -1,15 +1,18 @@
-// T-1791 stages 2 and 3: a line group's view, with stop editing in the diagram. The title (the group's bullets and name), a row
-// per line (its trains now, Copy line), then one combined diagram: a column per line in its colour,
-// a row per place (`game/groupLayout.ts`), a white pill where the line stops, a thin notch where it
-// passes a station, its bar between. No station names: a hover names them. A click on a pill takes
-// the stop out (Shift-click ends the line there); a click where it passes adds one, a ghost pill
-// showing on hover. All keep the line's path (sim `drop_stop`, `end_line_at`, `stop_passed`).
+// T-1791, T-1809: a line group's view, with stop editing in the diagram. The title (the group's
+// bullets and name, Show on the map, the all-stops switch, Copy line), then one combined diagram laid
+// out as a schematic (`game/groupLayout.ts`): bars that bend, 2 px apart where lines run together;
+// key stops named in full rows, the rest as ticks; crossing lines as bars and bullets as the related
+// lines view draws them; each line's bullet at its ends, floating at the top while its top is
+// scrolled away. A click on a stop takes it out (Shift-click ends the line there); a click where it
+// passes adds one. All keep the line's path (sim `drop_stop`, `end_line_at`, `stop_passed`).
 
-import { useEffect } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { stopKey } from "../../game/complexView";
-import { groupLayout, pathPlaces } from "../../game/groupLayout";
-import { groupHover, groupName, lineGroups } from "../../game/lineGroups";
+import { BAR, CHIP, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
+import { groupAllStops, groupHover, groupName, lineGroups } from "../../game/lineGroups";
+import { LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight } from "../../game/relatedLayout";
+import { today } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
 import { edit, stationNames, world } from "../../game/world";
@@ -19,12 +22,10 @@ import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { DEMAND_LABEL } from "./LineInspector";
 
-/** a column's width and a row's height, px */
-const COL = 22, ROW = 18;
-/** a line's bar, its stop pill's size, and the notch where it passes a station, px */
-const BAR = 6, PILL = 9, NOTCH = BAR + 4;
-/** room above the first row and below the last, px */
-const PAD = 8;
+/** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
+const PILL = 9, TICK = 3;
+/** Bullets shown after a named row's name, as the line panel's. */
+const STOP_CHIPS = 2;
 
 /** The line's trains at its level now, and that level; 0 for a line not running. */
 function trainsNow(w: WorldView, l: LineInput) {
@@ -41,41 +42,109 @@ async function change(op: EditOp) {
   try { await edit(op); } finally { editing = false; }
 }
 
+/** The last layout, kept while its inputs are the same (ordering tries every arrangement per row). */
+let kept: { sig: string; lay: GroupLayout } | null = null;
+
+/** The nearest ancestor that scrolls. */
+function scrollerOf(el: HTMLElement | null): HTMLElement | null {
+  for (let e = el?.parentElement ?? null; e; e = e.parentElement) if (e.scrollHeight > e.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(e).overflowY)) return e;
+  return null;
+}
+
 export function GroupInspector({ group }: { group: number }) {
   const w = world.value;
   const ls = w ? lineGroups(w.save.lines).get(group) : undefined;
+  const all = groupAllStops.value;
+  const [copying, setCopying] = useState(false);
+  // how far the panel is scrolled past the diagram's top, px (0 while its top shows)
+  const [past, setPast] = useState(0);
+  const body = useRef<HTMLDivElement>(null);
   useEffect(() => () => { groupHover.value = null; }, []);
+  useLayoutEffect(() => {
+    const on = () => {
+      const el = body.current, sc = scrollerOf(el);
+      if (!el || !sc) return;
+      // the panels are drawn at the UI scale's CSS zoom; the bullets are placed in unzoomed px
+      const b = el.getBoundingClientRect(), zoom = el.offsetHeight ? b.height / el.offsetHeight : 1;
+      // below the panel's title, which sticks at its top
+      const title = sc.querySelector<HTMLElement>(":scope > .title, #inspector > .title");
+      const top = Math.max(sc.getBoundingClientRect().top, title ? title.getBoundingClientRect().bottom : -Infinity);
+      setPast(Math.max(0, Math.round((top - b.top) / zoom)));
+    };
+    on();
+    document.addEventListener("scroll", on, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", on, { capture: true });
+  }, []);
   if (!w || !ls) return <p class="muted">No such group.</p>;
   const names = stationNames(w);
+  const nm = (s: string) => names.get(s) ?? "";
   const name = groupName(ls);
   const rename = (n: string) => void edit({ op: "groupName", group, name: n === ls[0].name ? "" : n });
-  const copy = async (l: LineInput) => { await edit({ op: "copyLine", line: l.num }); };
-  const lay = groupLayout(ls.map((l) => ({ num: l.num, places: pathPlaces(l.stops, w.lineStats[l.id]?.passed ?? [], stopKey) })));
-  const x = (k: number) => k * COL + COL / 2, y = (r: number) => PAD + r * ROW + ROW / 2;
-  const width = ls.length * COL, height = PAD * 2 + lay.rows.length * ROW;
+  const copy = async (l: LineInput) => { setCopying(false); await edit({ op: "copyLine", line: l.num }); };
+
+  // lines outside the group stopping at each place, busiest there first (as the line panel's bullets)
+  const inGroup = new Set(ls.map((l) => l.id));
+  const d = today.value;
+  const outside = new Map<string, { l: LineInput; n: number }[]>();
+  for (const o of w.save.lines) {
+    if (inGroup.has(o.id)) continue;
+    const at = new Map<string, number>();
+    o.stops.forEach((s, k) => { const key = stopKey(s); at.set(key, (at.get(key) ?? 0) + (d.get(o.id)?.stops[k] ?? 0)); });
+    for (const [key, n] of at) (outside.get(key) ?? outside.set(key, []).get(key)!).push({ l: o, n });
+  }
+  const across = (key: string) => (outside.get(key) ?? []).sort((a, b) => b.n - a.n).map((x) => x.l);
+
+  const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(l.stops, w.lineStats[l.id]?.passed ?? [], stopKey) }));
+  const keys = [...new Set(ins.flatMap((x) => x.places.map((p) => p.key)))];
+  const crossN = new Map(keys.map((k) => [k, (outside.get(k) ?? []).length]));
+  const sig = JSON.stringify([all, ins, [...crossN]]);
+  if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0 }) };
+  const lay = kept.lay;
   const now = ls.map((l) => trainsNow(w, l));
-  const nm = (s: string) => names.get(s) ?? "";
-  // a row's hover: its station, or each line's where they differ (unrelated lines side by side)
+  const W = lay.width;
+
+  // a row's hover: its station, and the lines stopping and passing there
   const rowTip = (r: number) => {
-    const cells = lay.rows[r].map((c, k) => (c ? { k, c } : null)).filter((v) => v !== null);
-    const places = new Set(cells.map((v) => stopKey(v.c.station)));
-    if (places.size <= 1) return [...new Set(cells.map((v) => nm(v.c.station)))].join(" / ");
-    return cells.map((v) => `${ls[v.k].name}: ${nm(v.c.station)}`).join("\n");
+    const cells = lay.rows[r].cells.map((c, k) => (c ? { k, c } : null)).filter((v) => v !== null);
+    const st = [...new Set(cells.map((v) => nm(v.c.station)))].join(" / ");
+    const stop = cells.filter((v) => v.c.stop).map((v) => ls[v.k].name), pass = cells.filter((v) => !v.c.stop).map((v) => ls[v.k].name);
+    return [st, stop.length ? `Stops: ${stop.join(", ")}` : "", pass.length ? `Passes: ${pass.join(", ")}` : ""].filter(Boolean).join("\n");
   };
-  // where lines stop at one place side by side in a row, one elongated pill over their columns, as the
-  // related lines view draws an interchange
-  const runs = lay.rows.map((row) => {
-    const out: [number, number][] = [];
-    for (let k = 0; k < row.length;) {
-      const c = row[k];
-      if (!c?.stop) { k++; continue; }
-      let e = k;
-      while (e + 1 < row.length && row[e + 1]?.stop && stopKey(row[e + 1]!.station) === stopKey(c.station)) e++;
-      out.push([k, e]);
-      k = e + 1;
+  // stops side by side at one place in a row: one mark over their bars
+  const runs = (r: number) => {
+    const row = lay.rows[r], out: [number, number][] = [];
+    const ord = row.order.filter((k) => row.cells[k]?.stop);
+    for (let i = 0; i < ord.length;) {
+      let j = i;
+      while (j + 1 < ord.length && Math.abs(lay.xs[ord[j + 1]][r] - lay.xs[ord[j]][r]) <= PITCH + 0.5) j++;
+      out.push([lay.xs[ord[i]][r], lay.xs[ord[j]][r]]);
+      i = j + 1;
     }
     return out;
-  });
+  };
+  // a line's click target at a row: half way to its neighbours, at most 11 px a side
+  const hitOf = (k: number, r: number) => {
+    const ord = lay.rows[r].order, i = ord.indexOf(k), x = lay.xs[k][r];
+    const l = i > 0 ? Math.max(x - 11, (lay.xs[ord[i - 1]][r] + x) / 2) : x - 11;
+    const rr = i + 1 < ord.length ? Math.min(x + 11, (lay.xs[ord[i + 1]][r] + x) / 2) : x + 11;
+    return [l, rr];
+  };
+
+  // bullets that float at the panel's top while the line's top bullet is scrolled away
+  const floating: { k: number; x: number }[] = [];
+  if (past > 0) {
+    const y = past + CHIP / 2 + 2;
+    lay.bullets.forEach((b) => {
+      if (b.end !== 0 || b.y >= y) return;
+      const x = lay.xAt(b.col, y);
+      const last = lay.rows[lay.spans[b.col][1]];
+      if (Number.isFinite(x) && last.y > y + CHIP) floating.push({ k: b.col, x });
+    });
+    floating.sort((a, b) => a.x - b.x);
+    for (let i = 1; i < floating.length; i++) floating[i].x = Math.max(floating[i].x, floating[i - 1].x + CHIP);
+  }
+
+  const shown = lay.rows.map((row, r) => ({ row, r }));
   return (
     <>
       <div class="title">
@@ -86,50 +155,64 @@ export function GroupInspector({ group }: { group: number }) {
           </button>
         </NameEdit>
       </div>
-      <ul class="rows pick group-lines">
-        {ls.map((l, k) => (
-          <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
-            <Chip line={l} />
-            <span class="grow">{l.name}</span>
-            <span class={"val" + (now[k].n ? "" : " muted")} data-tip={`${DEMAND_LABEL[now[k].lev]} demand: ${now[k].n} trains`}>{now[k].n}</span>
-            <button class="btn icon mini" data-tip="Copy line" aria-label={`Copy ${l.name}`} onClick={(e) => { e.stopPropagation(); void copy(l); }}><Icon.copy /></button>
-          </li>
-        ))}
-      </ul>
-      <div class="group-diagram">
-        <div class="group-heads" style={{ width: width + "px" }}>
-          {ls.map((l, k) => <span class={"group-head" + (now[k].n ? "" : " idle")} style={{ width: COL + "px" }}><Chip line={l} size="sm" tip={now[k].n ? l.name : `${l.name}\nNo trains at ${DEMAND_LABEL[now[k].lev].toLowerCase()} demand`} /></span>)}
+      <div class="h divided">
+        Stops
+        <button class={"btn icon mini related-toggle" + (all ? " on" : "")} data-tip={all ? "Show fewer stops" : "Show all stops"} aria-label={all ? "Show fewer stops" : "Show all stops"} aria-pressed={all} onClick={() => (groupAllStops.value = !all)}>
+          <Icon.allStops />
+        </button>
+        <button class={"btn icon mini related-toggle" + (copying ? " on" : "")} data-tip="Copy line" aria-label="Copy line" aria-pressed={copying} onClick={() => setCopying(!copying)}>
+          <Icon.copy />
+        </button>
+      </div>
+      {copying && (
+        <div class="group-copy">
+          {ls.map((l) => <Chip line={l} pick={(x) => void copy(x)} tip={`Copy ${l.name}`} />)}
         </div>
-        <div class="group-body">
-          <svg width={width} height={height} style={{ width: width + "px", height: height + "px" }} onPointerLeave={() => (groupHover.value = null)}>
-            {lay.rows.map((_, r) => <rect class="group-row" x={0} y={y(r) - ROW / 2} width={width} height={ROW} data-tip={rowTip(r)} onPointerEnter={() => (groupHover.value = null)} />)}
-            {ls.map((l, k) => {
-              const own = lay.rows.map((c, r) => (c[k] ? r : -1)).filter((r) => r >= 0);
-              const segs = own.slice(1).map((r, i) => [own[i], r]).filter(([, b]) => !lay.breaks[k].includes(b));
-              return (
-                <g class={"group-col" + (now[k].n ? "" : " idle")} onPointerEnter={() => (groupHover.value = l.num)}>
-                  {segs.map(([a, b]) => <line x1={x(k)} x2={x(k)} y1={y(a)} y2={y(b)} stroke={l.colour} stroke-width={BAR} data-tip={l.name} />)}
-                </g>
-              );
+      )}
+      <div class="group-diagram">
+        <div class="group-body" ref={body} style={{ height: lay.height + "px", "--gw": W + "px" }}>
+          <svg width={W} height={lay.height} style={{ width: W + "px", height: lay.height + "px" }} onPointerLeave={() => (groupHover.value = null)}>
+            {shown.map(({ row, r }) => <rect class="group-row" x={0} y={row.y - row.h / 2} width={W} height={row.h} data-tip={rowTip(r)} onPointerEnter={() => (groupHover.value = null)} />)}
+            {shown.filter(({ row }) => row.named).flatMap(({ row, r }) => {
+              const key = row.cells.find((c) => c)!.key;
+              const xs = across(key).slice(0, TALL_MAX);
+              const bars = xs.length > ROUND_MAX ? xs : xs.slice(0, ROUND_MAX);
+              return bars.map((o, i) => (
+                <line class="group-cross" x1={1} x2={W - 1} y1={row.y + barOffset(i, bars.length)} y2={row.y + barOffset(i, bars.length)} stroke={o.colour} stroke-width={LINE}
+                  data-tip={`${o.name} stops at ${rowTip(r).split("\n")[0]}`} onClick={() => (selection.value = { kind: "line", line: o.id })} />
+              ));
             })}
-            {lay.rows.flatMap((_, r) => runs[r].map(([a, b]) => (
-              <rect class={"pill" + (now.slice(a, b + 1).every((s) => !s.n) ? " idle" : "")} x={x(a) - PILL / 2} y={y(r) - PILL / 2} width={x(b) - x(a) + PILL} height={PILL} rx={PILL / 2} />
-            )))}
             {ls.map((l, k) => (
               <g class={"group-col" + (now[k].n ? "" : " idle")} onPointerEnter={() => (groupHover.value = l.num)}>
-                {lay.rows.map((row, r) => {
-                  const c = row[k];
+                <path d={lay.paths[k]} fill="none" stroke="var(--bg)" stroke-width={BAR + 3} />
+                <path d={lay.paths[k]} fill="none" stroke={l.colour} stroke-width={BAR} data-tip={l.name} />
+              </g>
+            ))}
+            {shown.flatMap(({ row, r }) => {
+              if (!row.named) return runs(r).map(([a, b]) => <rect class="tick" x={a - BAR / 2 - 1} y={row.y - TICK / 2} width={b - a + BAR + 2} height={TICK} />);
+              const n = Math.min(TALL_MAX, across(row.cells.find((c) => c)!.key).length);
+              const h = n > ROUND_MAX ? pillHeight(n, true) - 1 : PILL;
+              const idle = (a: number, b: number) => row.order.filter((k) => row.cells[k]?.stop && lay.xs[k][r] >= a - 0.5 && lay.xs[k][r] <= b + 0.5).every((k) => !now[k].n);
+              return runs(r).map(([a, b]) => <rect class={"pill" + (idle(a, b) ? " idle" : "")} x={a - PILL / 2} y={row.y - h / 2} width={b - a + PILL} height={h} rx={PILL / 2} />);
+            })}
+            {ls.map((l, k) => (
+              <g class={"group-col" + (now[k].n ? "" : " idle")} onPointerEnter={() => (groupHover.value = l.num)}>
+                {shown.map(({ row, r }) => {
+                  const c = row.cells[k];
                   if (!c) return null;
                   const st = w.lineStats[l.id];
                   const n = l.stops.length;
                   const rail = !!st && !st.bus;
-                  const hit = <rect class="hit" x={x(k) - COL / 2} y={y(r) - ROW / 2} width={COL} height={ROW} />;
+                  const [x0, x1] = hitOf(k, r), x = lay.xs[k][r];
+                  const hit = <rect class="hit" x={x0} y={row.y - row.h / 2} width={x1 - x0} height={row.h} />;
                   if (!c.stop) {
                     const tip = rail ? `Click to add the ${l.name}'s stop at ${nm(c.station)}` : `${l.name} passes ${nm(c.station)}`;
                     return (
                       <g class={"group-cell" + (rail ? " edit" : "")} data-tip={tip} onClick={rail ? () => void change({ op: "stopPassed", line: l.num, station: Number(c.station) }) : undefined}>
                         {hit}
-                        <rect class="pill pass" x={x(k) - PILL / 2} y={y(r) - PILL / 2} width={PILL} height={PILL} rx={PILL / 2} />
+                        {row.named
+                          ? <rect class="pill pass" x={x - PILL / 2} y={row.y - PILL / 2} width={PILL} height={PILL} rx={PILL / 2} />
+                          : <rect class="ghost" x={x - BAR / 2 - 1} y={row.y - TICK / 2} width={BAR + 2} height={TICK} />}
                       </g>
                     );
                   }
@@ -150,20 +233,41 @@ export function GroupInspector({ group }: { group: number }) {
                   return (
                     <g class={"group-cell" + (keep ? "" : " edit")} data-tip={tip} onClick={keep ? undefined : click}>
                       {hit}
-                      <circle class="dot" cx={x(k)} cy={y(r)} r={PILL / 2 - 1.5} fill={l.colour} />
+                      {row.named
+                        ? <circle class="dot" cx={x} cy={row.y} r={PILL / 2 - 1.5} fill={l.colour} />
+                        : <rect class="dot" x={x - BAR / 2 - 1} y={row.y - TICK / 2 - 1} width={BAR + 2} height={TICK + 2} fill={l.colour} />}
                     </g>
                   );
                 })}
               </g>
             ))}
           </svg>
-          <div class="group-names" style={{ paddingTop: PAD + "px" }}>
-            {lay.rows.map((row, r) => {
-              const cells = row.filter((c) => c !== null);
-              const first = cells[0].station;
+          {lay.bullets.map((b) => {
+            const l = ls[b.col];
+            return (
+              <span class={"group-bullet" + (now[b.col].n ? "" : " idle")} style={{ left: b.x - 8 + "px", top: b.y - 8 + "px" }} onPointerEnter={() => (groupHover.value = l.num)}>
+                <Chip line={l} size="sm" tip={now[b.col].n ? l.name : `${l.name}\nNo trains at ${DEMAND_LABEL[now[b.col].lev].toLowerCase()} demand`} />
+              </span>
+            );
+          })}
+          {floating.map((f) => (
+            <span class={"group-bullet float" + (now[f.k].n ? "" : " idle")} style={{ left: f.x - 8 + "px", top: past + 2 + "px" }} onPointerEnter={() => (groupHover.value = ls[f.k].num)}>
+              <Chip line={ls[f.k]} size="sm" />
+            </span>
+          ))}
+          <div class="group-names" style={{ left: W + 6 + "px" }}>
+            {shown.filter(({ row }) => row.named).map(({ row, r }) => {
+              const cells = row.cells.filter((c) => c !== null);
+              const xs = across(cells[0].key);
+              const tall = Math.min(TALL_MAX, xs.length) > ROUND_MAX;
+              const chips = xs.slice(0, tall ? TALL_MAX : STOP_CHIPS), rest = xs.slice(chips.length);
               return (
-                <div class={"group-name" + (cells.some((c) => c.stop) ? "" : " muted")} style={{ height: ROW + "px" }} data-tip={rowTip(r)} onClick={() => (selection.value = { kind: "station", station: first })}>
-                  {[...new Set(cells.map((c) => nm(c.station)))].join(" / ")}
+                <div class={"group-name" + (cells.some((c) => c.stop) ? "" : " muted")} style={{ top: row.y - row.h / 2 + "px", height: row.h + "px" }} data-tip={rowTip(r)}>
+                  <span class="grow" onClick={() => (selection.value = { kind: "station", station: cells[0].station })}>{[...new Set(cells.map((c) => nm(c.station)))].join(" / ")}</span>
+                  {tall
+                    ? <span class="stop-chips2" style={{ gridTemplateColumns: `repeat(${Math.ceil(chips.length / 2)}, auto)` }}>{chips.map((o) => <Chip line={o} size="sm" />)}</span>
+                    : chips.map((o) => <Chip line={o} size="sm" />)}
+                  {rest.length > 0 && <span class="stop-more" data-tip={[...new Set(rest.map((o) => o.name))].join("\n")}>+</span>}
                 </div>
               );
             })}
@@ -173,4 +277,3 @@ export function GroupInspector({ group }: { group: number }) {
     </>
   );
 }
-

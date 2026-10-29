@@ -354,7 +354,7 @@ export function repay() {
 export function renameLine(id: LineId, name: string) {
   const n = name.trim();
   const l = lineById(id);
-  if (n && l) void edit({ op: "lineLook", line: num(id), name: n, colour: l.colour });
+  if (n && l) void edit({ op: "lineLook", line: num(id), name: n });
 }
 
 export const undo = () => edit({ op: "undo" }, true);

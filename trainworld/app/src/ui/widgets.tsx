@@ -50,6 +50,7 @@ export const Icon = {
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
   // the line panel's related lines (T-1168), as its diagram looks (T-1802): two lines side by side, a station oval across them, the right one curving away at the bottom
+  allStops: () => <svg viewBox="0 0 16 16"><path d="M8 1.5v13M5 3.5h6M5 6.5h6M5 9.5h6M5 12.5h6" /></svg>,
   related: () => <svg viewBox="0 0 16 16"><path d="M2 1.5v13M11 1.5v5.5c0 3.5 3.5 3.5 3.5 8" /><ellipse class="solid" stroke="none" cx="6.5" cy="6" rx="2.6" ry="1.9" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,

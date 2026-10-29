@@ -7,8 +7,6 @@
 //   trips start in those cells and how many end there, by far zone and by place, all modes and by
 //   train. The map shows the far end of the selection's own end (homes: where the trips go; jobs:
 //   where they come from).
-// - A selected station asks `intercityStation(id)`: the longer-trip rail riders starting and ending
-//   there, for the station inspector only (T-519).
 // - Zoomed far out (OVERVIEW_ZOOM and below) with Homes or Destinations on and no bubble
 //   selection, every city is one bubble of its longer trips, the focused city too, in place
 //   of the focused city's own bubbles (T-186). A click on one selects the city (a `city`
@@ -32,8 +30,7 @@ import { activeCity, cityById, CITIES } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
-import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type CorridorTable, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
-import { selectedScope } from "../game/complexView";
+import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, type Corridors, type CorridorTable, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
@@ -50,8 +47,6 @@ import { hiddenOnGlobe } from "./live";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
-/** A selected station's, for the station inspector. */
-export const intercityStationView = signal<IntercityStation | null>(null);
 
 const marketOf = (id: string) => cityById(id).place;
 /** the zones still loading (game/loading.ts `zoneLoads`), changing only when the set does */
@@ -475,7 +470,6 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   // ---- what is selected ----
   let seen: Selection = null;
-  let seenScope = "";
   let ask = 0;
   const show = (flows: PlaceFlows, verb: string, own: number, by?: IntercitySelection["byPurpose"], end?: "home" | "work") => {
     current = { flows, verb, own, by, end };
@@ -484,42 +478,32 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   const clear = () => {
     current = null;
     intercityPick.value = null;
-    intercityStationView.value = null;
     render();
   };
   effect(() => {
     const sel = selection.value;
     const dv = demandView.value;
     const focus = activeCity.value;
-    // a station's, or its complex's in complex view (T-146)
-    const scope = selectedScope.value;
-    if ((sel?.kind !== "commuters" && sel?.kind !== "station") || !dv) {
+    if (sel?.kind !== "commuters" || !dv) {
       ask++;
       seen = null;
       clear();
       return;
     }
-    if (seen !== sel || seenScope !== scope) {
+    if (seen !== sel) {
       // a different selection: nothing of the last one's answer stays
       seen = sel;
-      seenScope = scope;
       clear();
     }
     const mine = ++ask;
     void (async () => {
-      if (sel.kind === "commuters") {
-        const own = marketOf(focus);
-        const r = await intercitySelection(sel.end, Uint32Array.from(sel.cells));
-        // null: the workers moved on, and the next demandView asks again
-        if (mine !== ask || !r || selection.peek() !== sel) return;
-        intercityPick.value = { sel, data: r, own };
-        // homes: where their trips go; jobs: where the trips to them come from
-        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", own, r.byPurpose, sel.end);
-      } else {
-        const r = await intercityStation(sel.station, (scope || sel.station).split(","));
-        if (mine !== ask || !r || selection.peek() !== sel) return;
-        intercityStationView.value = r;
-      }
+      const own = marketOf(focus);
+      const r = await intercitySelection(sel.end, Uint32Array.from(sel.cells));
+      // null: the workers moved on, and the next demandView asks again
+      if (mine !== ask || !r || selection.peek() !== sel) return;
+      intercityPick.value = { sel, data: r, own };
+      // homes: where their trips go; jobs: where the trips to them come from
+      show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", own, r.byPurpose, sel.end);
     })();
   });
 
