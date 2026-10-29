@@ -14,9 +14,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   artifacts/trainworld/t1305-shared/, lon from its london/ folder). They carry no LRT1 block, so they load with a
   full settle (fine, ~2 s on nyc/par).
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel, none new), 329 planned; registry 1,960.
-- 8800: a build at b50802f3 was started (scratchpad snapbuild.cmd, background id b9jagdwzf, log
-  scratchpad\snap_b508.log). NEXT: when it ends, rebuild at d2e83c6b (or later master) and smoke both shades,
-  then tell Anita 8800 is ready with today's work.
+- 8800 at 9288b07a (all of today incl. T-1799 stage 1, T-1802), smoke 20/20 light and dark, real save 11,388,675.
 - 8800 rebuild recipe: `cmd /c <scratchpad>\snapbuild.cmd <explicit master hash>` (scratchpad:
   C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f9a7f88d-0531-4963-9df6-6771326e513f\scratchpad),
   then `node trainworld/checks/smoke.mjs http://localhost:8800/trainworld/` and again with SMOKE_SHADE=dark.
@@ -30,8 +28,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## In flight
 - T-1801 transfer fare, default $0, above the national fare scale: agent t1801 (Opus) in tree .tw-trees/t1801
   (from a8d08f74), Vite 6169. Land with agent-tree land (rebase), rebuild main WASM.
-- T-1802 text rows 4 px tighter, tool icons ~15-20% bigger, new related-lines icon, ramp button left of terrain:
-  agent t1802 (Sonnet), main tree (style.css, BuildTab.tsx, LinesTab.tsx, widgets.tsx, ui docs), Vite 6159.
+- T-1802 committed 9288b07a. T-1805 placement-lag timing agent t1805 (Opus), main tree, Vite 6175, 2 cores.
 - T-1803 no 4x cap for small edits + T-1804 loading bars fixed while zooming: agent t1803 (Sonnet), main tree,
   Vite 6163.
 - No trees left besides t1801 (and the old .tw-trees/t1734, kept for later thought per Anita).

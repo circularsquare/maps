@@ -162,10 +162,10 @@ Web first, so it can be shared as a link.
   `strokeCull` and `strokeGather`) switch them off.
 - **While the camera moves** [T-1207; `map/moving.ts`]: work done for each MapLibre frame that need
   not be runs at most every 100 ms (`MOVING_PLACE_MS`) and in full on the frame after the move ends:
-  the DOM placers (station names, capacity tags, attraction marks, zone loading bars), whose marks
+  the DOM placers (station names, capacity tags, attraction marks), whose marks
   move as one with a flat pan in between (capacity tags and attraction marks instead follow their
   resources one by one every frame, station names too for any camera change but a flat pan,
-  T-1614, T-1657, T-1621); the platform crowds; the station sounds and faces sample
+  T-1614, T-1657, T-1621; zone loading bars are placed on every move, so they hold their spot through a zoom, T-1804); the platform crowds; the station sounds and faces sample
   half as often; the Lines tab's live counts wait. The lighter map (`map/lite.ts`): the basemap
   without buildings, the residential tint, minor roads, airfields, small rivers and minor names, no
   hillshade, and a pixel ratio of at most 1; Settings has it Auto (the default), On or Off. Auto turns

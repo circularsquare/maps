@@ -10,6 +10,7 @@ import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues, type Buys } from "./issues";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
+import { noteEdit } from "./editCap";
 import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX } from "./types";
 
@@ -64,6 +65,7 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 export async function edit(op: EditOp, quiet = false, silent = false): Promise<EditAnswer> {
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
+  noteEdit(op, world.peek());
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op)), true);

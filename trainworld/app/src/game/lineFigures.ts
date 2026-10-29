@@ -5,6 +5,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { clock } from "./clock";
+import { editStamp, quietEdits, resetEdits } from "./editCap";
 import { demandUpdating, refiningZone } from "./demand";
 import { demandStopped, loadProgress } from "./loading";
 import { world } from "./world";
@@ -23,11 +24,22 @@ export function linesSettled(ids: Iterable<string>) {
 /** Wall ms to wait for a solve to start before deciding the edit needs none (a line with no riders, or
  * demand idle), so the label never sticks. */
 const NO_SOLVE_MS = 8000;
+/** Wall ms after an edit with no demand update under way, when the edits noted are forgotten */
+const FORGET_EDITS_MS = 30000;
 
 export function startLineFigures() {
   effect(() => {
     // T-1790: demand that stopped will finish nothing, so it holds nothing back
-    clock.setCapped(!demandStopped.value && (demandUpdating.value || !!loadProgress.value || !!refiningZone.value));
+    // T-1803: an update that only quiet edits started (game/editCap.ts) caps nothing
+    clock.setCapped(!demandStopped.value && ((demandUpdating.value && !quietEdits.value) || !!loadProgress.value || !!refiningZone.value));
+  });
+  // edits that came to nothing (refused, or no solve followed) are forgotten after a while
+  effect(() => {
+    const stamp = editStamp.value;
+    const t = setTimeout(() => {
+      if (editStamp.peek() === stamp && !demandUpdating.peek()) resetEdits();
+    }, FORGET_EDITS_MS);
+    return () => clearTimeout(t);
   });
 
   /** each line's last signature, null before the first world */
@@ -55,6 +67,7 @@ export function startLineFigures() {
 
   let wasUpdating = demandUpdating.peek();
   demandUpdating.subscribe((on) => {
+    if (wasUpdating && !on) resetEdits();
     if (wasUpdating && !on && linesPending.peek().size) linesPending.value = new Set();
     wasUpdating = on;
   });

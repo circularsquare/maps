@@ -144,8 +144,8 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
   below, taking no row of its own [T-1704]; the rows stop 46 px short of the right edge, where the
   search glass sits at the top right, and the demand stopped alert and the selection bar are under
-  the rows. **Whenever the clock is capped (below) a status shows**, and its hover ends "The clock
-  runs at 4x at most until it's done." [T-1790]. While a solve runs after an edit, "Updating demand
+  the rows. **Whenever the clock is capped (below) a status shows**, as does any solve while it runs; while the clock is capped its
+  hover ends "The clock runs at 4x at most until it's done." [T-1790, T-1803]. While a solve runs after an edit, "Updating demand
   1/2…" while the trips the edit touches are solved (the local solve), "Updating demand 2/2…" from
   when those are shown until the whole solve's final (the 8 s wait for a further edit included,
   docs/demand-runtime.md); with no local solve (none possible, or it is off) "Updating demand…"
@@ -226,7 +226,13 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   the clock runs no faster than 4x [T-1665, `game/lineFigures.ts`]: the chosen speed's button is dimmed,
   its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
   the cap lifts by itself when demand is final; the status tag shows all the while it holds [T-1790].
-  Demand that stopped (its red alert) caps nothing. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  Demand that stopped (its red alert) caps nothing. **A quiet edit does not cap** [T-1803,
+  `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
+  less than half of what it was (counted from before the edits since demand last settled, in trains
+  for a count and trains an hour for a headway; from or to 0 is never small), or a stop edit on a line
+  with no trains at any level. The status still shows "Updating demand…" meanwhile, its hover without
+  the clock sentence. One edit that would cap holds the clock until demand settles; every other edit
+  (track, stations, new lines, train length or type, fares, undo) caps as before. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].

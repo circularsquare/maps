@@ -23,8 +23,8 @@ import { cityGeometry } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
 import { screenBounds } from "./labelLayout";
 import { followShade, shadePaint } from "./cityBoundaries";
-import { hiddenOnGlobe, live } from "./live";
-import { mapCamera, PanPlane } from "./moving";
+import { hiddenOnGlobe } from "./live";
+import { placeAt } from "./screenPlace";
 
 const SHADE = "tw-zone-loading";
 /** how far a bar keeps from the map's edges, px */
@@ -48,8 +48,6 @@ export function startZoneLoading(map: MlMap): () => void {
   const layer = document.createElement("div");
   layer.className = "mark-plane";
   box.appendChild(layer);
-  // T-1207: placed in full at most every MOVING_PLACE_MS while the camera moves
-  const pan = new PanPlane(mapCamera(map, () => live.overlay?.moving ?? false), layer);
   const bars = new Map<CityId, HTMLDivElement>();
 
   const shape = (id: CityId) => {
@@ -71,9 +69,7 @@ export function startZoneLoading(map: MlMap): () => void {
   };
 
   /** Each bar at its zone's centre, held inside the part of the zone's extent that is on screen. */
-  const place = (force?: unknown) => {
-    if (force !== true && !pan.due()) return;
-    pan.placed();
+  const place = () => {
     const c = map.getContainer(), w = c.clientWidth, ht = c.clientHeight;
     for (const [id, el] of bars) {
       const s = shapes.get(id);
@@ -84,7 +80,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const p = map.project(cityById(id).center);
       const x = Math.min(right, Math.max(left, p.x)), y = Math.min(bottom, Math.max(top, p.y + BELOW));
       el.style.display = "";
-      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      placeAt(el, x, y);
     }
   };
 
@@ -124,7 +120,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const tip = `Loading ${cityById(id).name}, ${Math.floor(f * 100)}%`;
       render(h(LoadBar, { fraction: f, step: tip, thin: true, tip }), el);
     }
-    place(true);
+    place();
   };
 
   const add = () => {
@@ -141,9 +137,10 @@ export function startZoneLoading(map: MlMap): () => void {
   };
   map.on("style.load", add);
   if (map.isStyleLoaded()) add();
+  // placed on every move, so a bar stays on its spot through a zoom
   map.on("move", place);
   map.on("resize", place);
-  const repick = () => { if (loads.size > MAX_BARS) draw(); else place(true); };
+  const repick = () => { if (loads.size > MAX_BARS) draw(); else place(); };
   map.on("moveend", repick);
 
   const dispose = effect(() => {
