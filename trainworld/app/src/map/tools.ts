@@ -753,7 +753,9 @@ export class Tools {
       this.reset();
       return;
     }
-    const chain = e.originalEvent.shiftKey || keepPlacing.peek();
+    // T-1811: a segment that joins track (a node, or mid-piece of track or blueprint) ends the run
+    // under keep placing; Shift held still carries on from the join
+    const chain = e.originalEvent.shiftKey || (keepPlacing.peek() && s.kind === "free");
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;

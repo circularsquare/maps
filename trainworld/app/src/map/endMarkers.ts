@@ -2,6 +2,8 @@
 // (a node with one piece of track and no station), built or an active blueprint, near the pointer: where a
 // line is continued or a station goes at the end of one. With the select tool, a square marker at
 // every blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions.
+// The track tool has both (T-1811): the squares, a blueprint loose end's in the accent, and the
+// rings near the pointer at built loose ends.
 // They take no presses; the tools and the node drag work on the nodes underneath as before.
 
 import type { Map as MlMap } from "maplibre-gl";
@@ -15,7 +17,8 @@ import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import type { Overlay } from "./overlay";
 import { onScreen, placeAt } from "./screenPlace";
 
-type Kind = "loose" | "drag";
+type Kind = "loose" | "drag" | "track";
+type Cls = "end-mark" | "pi-mark" | "pi-mark loose";
 
 /** below this zoom the markers would only crowd the map */
 const MIN_ZOOM = 9;
@@ -36,7 +39,7 @@ export class EndMarkers {
   private box: HTMLDivElement;
   private marks: HTMLDivElement[] = [];
   /** `stub`: a loose end's track, local units; the ring is left off while it is under `MIN_STUB_PX` long */
-  private pts: { lx: number; ly: number; stub?: Float32Array }[] = [];
+  private pts: { lx: number; ly: number; cls: Cls; stub?: Float32Array }[] = [];
   private scratch = [0, 0, 0, 0];
   private kind: Kind | null = null;
   private version = -1;
@@ -61,7 +64,8 @@ export class EndMarkers {
         this.pointer = [e.clientX - this.rect.left, e.clientY - this.rect.top];
       } else if (this.pointer) this.pointer = null;
       else return;
-      if (this.wanted() === "loose") this.place();
+      const k = this.wanted();
+      if (k === "loose" || k === "track") this.place();
     }, { passive: true });
     map.on("resize", () => (this.rect = null));
     addEventListener("resize", () => (this.rect = null));
@@ -78,7 +82,7 @@ export class EndMarkers {
 
   private wanted(): Kind | null {
     const t = tool.peek();
-    return t === "track" || t === "station" ? "loose" : t === "select" ? "drag" : null;
+    return t === "track" ? "track" : t === "station" ? "loose" : t === "select" ? "drag" : null;
   }
 
   /** The points to mark, found again only when the tool or the world changes. */
@@ -102,16 +106,15 @@ export class EndMarkers {
     }
     for (const n of w.nodes.values()) {
       if (n.platform > 0 || n.bus || !drawnAt.has(n.id)) continue;
-      if (kind === "loose" ? n.ports !== 1 : n.builtPorts !== 0) continue;
-      let stub: Float32Array | undefined;
-      if (kind === "loose") {
-        // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
-        const e = edgeAt.get(n.id);
-        if (!e || (!e.built && e.off)) continue;
-        stub = net?.edgePts.get(e.id);
-      }
+      const square = kind !== "loose" && n.builtPorts === 0;
+      let loose = kind !== "drag" && n.ports === 1;
+      // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
+      const e = loose ? edgeAt.get(n.id) : undefined;
+      if (loose && (!e || (!e.built && e.off))) loose = false;
+      if (!square && !loose) continue;
       const [lx, ly] = toLocal(n.lng, n.lat);
-      this.pts.push({ lx, ly, stub });
+      if (square) this.pts.push({ lx, ly, cls: loose ? "pi-mark loose" : "pi-mark" });
+      else this.pts.push({ lx, ly, cls: "end-mark", stub: net?.edgePts.get(e!.id) });
     }
   }
 
@@ -170,13 +173,14 @@ export class EndMarkers {
     if (kind && this.shown()) {
       this.refresh(kind);
       const w = this.overlay.cssW, h = this.overlay.cssH;
-      const near = kind === "loose" && !NO_HOVER ? this.pointer : undefined;
+      const near = kind !== "drag" && !NO_HOVER ? this.pointer : undefined;
       for (const p of this.pts) {
-        if (near === null) break;
+        const ring = p.cls === "end-mark";
+        if (ring && near === null) continue;
         const [x, y] = this.overlay.toScreen(p.lx, p.ly);
         if (!onScreen(x, y, w, h, 8)) continue;
-        if (near && (x - near[0]) ** 2 + (y - near[1]) ** 2 > NEAR_PX * NEAR_PX) continue;
-        if (kind === "drag" && this.badged(p.lx, p.ly)) continue;
+        if (ring && near && (x - near[0]) ** 2 + (y - near[1]) ** 2 > NEAR_PX * NEAR_PX) continue;
+        if (!ring && this.badged(p.lx, p.ly)) continue;
         if (p.stub && !this.visible(p.stub)) continue;
         if (k >= MAX_MARKS) break;
         let m = this.marks[k];
@@ -184,8 +188,7 @@ export class EndMarkers {
           m = this.marks[k] = document.createElement("div");
           this.box.appendChild(m);
         }
-        const cls = kind === "loose" ? "end-mark" : "pi-mark";
-        if (m.className !== cls) m.className = cls;
+        if (m.className !== p.cls) m.className = p.cls;
         m.style.display = "";
         placeAt(m, x, y);
         k++;

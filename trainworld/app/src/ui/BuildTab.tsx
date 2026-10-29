@@ -69,7 +69,7 @@ export function BuildTab() {
             data-tip="Snap track to the real network"
             onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
           <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label="Snap beside track" aria-pressed={snapBeside.value}
-            data-tip="Snap beside track. Inside the blue band, new track runs alongside, curves and all. The dot by the pointer: red branches off, yellow joins, a blue ring runs beside."
+            data-tip={"Snap beside track\nHover over the blue region to draw track parallel to another track"}
             onClick={() => (snapBeside.value = !snapBeside.peek())}><Icon.snapBeside /></button>
         </div>
         <ul class="rows build-rows">

@@ -400,6 +400,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t1792-idle-bullets.mjs [url]` (the real save with one line at 0 trains at the level now: its
   bullet dimmed with a "Not running" hover in the Lines tab, station panel, related lines view and
   map tags, light and dark, into artifacts/trainworld/t1792/; about a minute),
+  `t1812-symbol.mjs [url]` (real clicks and typing in the line editor on the real save: a symbol then
+  Done, rename then symbol, symbol then rename, a rename of a hand symbol, a blank symbol, an export
+  and reload; about a minute), `t1812-shots.mjs <before|after> [url]` (the logo, a selected line and
+  group, a scrolled line panel and the station panel, light and dark, into artifacts/trainworld/t1812/),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `old/t1515-click-priority.mjs` (a click on a rail line, bus
   line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
@@ -457,6 +461,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t1777-stuck-marks.mjs` (screen-space marks left in place while the map moves: a blueprint piece in
   Manhattan with the select, track and station tools, a wheel zoom out, a jump to Singapore and a pan,
   on the globe and the flat map; about 1.5 minutes, T-1777),
+  `t1811-track-tool.mjs [url] [fresh]` (the track tool with real mouse events by Central Park, real
+  save or a fresh game: keep placing carries on over open ground and stops on joining a loose end or
+  mid-piece; a 40 px press-drag moves a blueprint end and undoes, a short click branches; the squares
+  show; about a minute, port 6183 by default, T-1811),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),

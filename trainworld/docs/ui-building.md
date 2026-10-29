@@ -39,7 +39,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  Then the **beside switch** (two curving tracks, "Snap beside track"), off by default [T-1685, T-1756]: what it
+  Then the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
+  region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
   does is under [Drawing track](#drawing-track).
   The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
@@ -132,14 +133,17 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   are not copied), joins nothing at its end and adds no crossovers.
 - **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
   yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
-  segment will end beside track. The beside switch's hover says so.
+  segment will end beside track.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
   places the segment and starts the next one at its end; without Shift the tool is ready for a new
   start. The **keep placing** button (an icon beside the Double and Quad choice) does the
   same for every click until it is switched off; it is on by default, and each press of Caps Lock
-  flips it, whatever the lock's own light shows (the button shows the switch) [T-445, T-942]. A double click, Escape or Enter ends the run (the first click of
+  flips it, whatever the lock's own light shows (the button shows the switch) [T-445, T-942]. A
+  segment that joins track (a loose end or other node, or the middle of a piece of track or
+  blueprint) ends the run whatever keep placing says; Shift held on that click still carries on from
+  the join [T-1811]. A double click, Escape or Enter ends the run (the first click of
   the double places the last segment); the button stays on. A click on the start (within 6 px, or
   on its node) does the same at any later time: it ends the run, or drops a start that has no
   segment yet [T-707]; a segment never ends where it starts, so no loop is lost. To carry on later, click the loose end
@@ -173,7 +177,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   the map, which includes over the view tabs or any other control laid on it. A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end, its platform running
   back along the track through the joints of a drawn route as a platform on a piece does [T-860].
-  The markers take no presses, and show from zoom 9.
+  The markers take no presses, and show from zoom 9. The track tool also shows the select tool's
+  squares at every draggable blueprint point ([below](#reshaping-blueprint)); a blueprint loose end
+  has its square in the accent colour in place of the ring, which stays for built loose ends [T-1811].
 - **The tag by the cursor** [T-411, T-526] has two lines: the segment's length, average cost
   multiplier and price ("1.5 km, cost 1.33x, $12.8M"), then the elevations the segment passes
   and its lowest speed limit with the track tag's icons and colours ("↕ 0 +2  » 67 km/h": where
@@ -492,9 +498,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
-- **With the track tool** [T-734] the same node drag works: a press on a blueprint node that moves
-  more than 3 px drags it under the select tool's rules, and a press that does not move is the click
-  that places or branches track as always. Constructed nodes are not grabbed. A route being drawn
+- **With the track tool** [T-734, T-1811] the same node drag works, its squares shown: a press on a
+  blueprint node that moves 3 px or more drags it under the select tool's rules, and a press that
+  moves less is the click that places or branches track as always (no hold time). Constructed nodes
+  are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
 - **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
   says "Remove track"), the elevation buttons and the lines here [T-1669]. It has no corner list and

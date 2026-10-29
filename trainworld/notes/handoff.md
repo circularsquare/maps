@@ -26,9 +26,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Uncommitted: Anita's TODO.md (never commit). Agents' in-progress files listed below.
 
 ## In flight
-- T-1801 transfer fare BUILT in tree .tw-trees/t1801 ($0 identical; $1: rail -4.3%, transfers -34%). Land after
-  t1805 finishes (both edit clock.worker.ts; main tree has t1805's uncommitted edit), then rebuild main WASM, 8800.
-- T-1803/1804 committed 641ccef0.
+- T-1805 committed 5751e10f. T-1801 landed bcee8c05. 8800 at bcee8c05, smoke 20/20 both shades.
+- Anita away 2026-10-29 evening ("feel free to use more cores"): cap 15. T-1799 stage 2 + T-1807 agent t1799s2 (Opus,
+  tree .tw-trees/t1799b from bcee8c05, Vite 6189, 3 cores). T-1810 agent t1810 (Opus, main tree, Vite 6191, 2 cores).
+  T-1810 filed (transfers handling 450-520 ms after a solve on shared NYC).
+- T-1803/1804 committed 641ccef0. From Anita's TODO: T-1811 track tool (run ends on joining track, blueprint node drag
+  in track tool, snap hover) agent t1811 (Opus, Vite 6183); T-1812 logo flip, stronger highlight, hand symbol bug, pinned
+  panel titles, minimal station panel, agent t1812 (Sonnet, Vite 6187). T-1813 Lines-tab drag rules + group pill bullets
+  queued after T-1809.
 - T-1809 group view layout v2 (Anita's playtest: bent schematic, key stops only + toggle, crossings/transfers like
   related view, bullets at line ends + floating, order swaps, branch bugs): agent t1809 (Opus), main tree, Vite 6181.
 - T-1802 committed 9288b07a. T-1805 placement-lag timing agent t1805 (Opus), main tree, Vite 6175, 2 cores.
