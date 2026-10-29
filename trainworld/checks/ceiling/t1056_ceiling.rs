@@ -64,7 +64,8 @@ fn shares(p: &Params, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32,
     let bt = p.mode_beta(road);
     let util = bt * (road - rail) + p.asc_rail;
     let uw = bt * (road - cw) + p.asc_walk();
-    let r = p.car_choice(util, uw, bt, paid, free, rail, road) as f64;
+    // T-1782: and the rule against a train no quicker than walking, its riders to the car
+    let r = (p.car_choice(util, uw, bt, paid, free, rail, road) * p.walk_fade_of(rail, cw)) as f64;
     let e = fast_exp(uw - util);
     let w0 = e / (1.0 + fast_exp(-util) + e);
     let w1 = e / (1.0 + fast_exp(-(util + bt * paid)) + e);

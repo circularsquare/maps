@@ -95,11 +95,11 @@ export interface TripPair {
 }
 
 /** Why the train is not a choice for a trip. */
-export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute" | "walkFurther";
+export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute" | "walkFurther" | "slowerThanWalk";
 /** Perceived minutes a dollar of the car's money (ownership, parking, a ride to a station): the
  * sim's `api::FARE_MIN_PER_USD`, whatever the country (T-1277). */
 export const CAR_MIN_PER_USD = 3;
-const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute", "walkFurther"];
+const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute", "walkFurther", "slowerThanWalk"];
 
 /** The trip in one period. Minutes are perceived where named so, else real. */
 export interface TripPeriod {
@@ -128,8 +128,11 @@ export interface TripPeriod {
   roadPerceived: number;
   railOffered: boolean;
   why: NoRail;
-  /** the train's cost (the logsum over station pairs, perceived minutes); NaN if not offered */
+  /** the train's cost (the logsum over station pairs, perceived minutes); NaN if not offered,
+   * except where walking is as quick (`slowerThanWalk`) */
   railPerceived: number;
+  /** T-1782: the factor on the train's share for being barely quicker than walking (1 none) */
+  walkFade: number;
   /** the train's share of the trips that do not walk, and its utility against the road */
   railOfMotor: number;
   utility: number;
@@ -210,10 +213,11 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   }
   const routes = readRoutes(v, HEAD + np * PAIR_LEN, nr, at);
   const offered = v[13] === 1;
+  const why = WHY[v[26]] ?? "";
   return {
     round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
-    railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
+    railOffered: offered, why, railPerceived: offered || why === "slowerThanWalk" ? v[14] : NaN, walkFade: v[44], railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
     groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
     rideToStation: RIDE[v[41]] ?? "none", rideMinKm: v[42], pairWalkMax: v[43],

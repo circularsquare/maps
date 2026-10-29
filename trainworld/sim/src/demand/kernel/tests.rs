@@ -35,6 +35,22 @@ fn common_test_params() -> Params {
 
 /// T-1576: every route node of a line with a bus-only stop carries the bus boarding cost, in the
 /// cost of boarding and in each crowding round's; a train line carries none.
+/// T-1782: no train at or above walking's cost, a third of its share at 10% quicker, all from 30%.
+#[test]
+fn a_train_no_quicker_than_walking_loses_its_riders() {
+    let p = Params::default();
+    let near = |a: f32, b: f32| (a - b).abs() < 1e-5;
+    // Anita's Hodogaya errand: the train 101 effective minutes, walking 91
+    assert_eq!(p.walk_fade_of(101.0, 91.0), 0.0);
+    assert_eq!(p.walk_fade_of(91.0, 91.0), 0.0);
+    assert!(near(p.walk_fade_of(81.9, 91.0), 1.0 / 3.0));
+    assert!(near(p.walk_fade_of(0.85 * 91.0, 91.0), 0.5));
+    assert!(near(p.walk_fade_of(0.7 * 91.0, 91.0), 1.0));
+    assert_eq!(p.walk_fade_of(0.5 * 91.0, 91.0), 1.0);
+    assert_eq!(p.walk_fade_of(40.0, NO_WALK), 1.0);
+    assert_eq!(Params { walk_fade: 0.0, ..p.clone() }.walk_fade_of(101.0, 91.0), 1.0);
+}
+
 #[test]
 fn a_bus_line_costs_minutes_to_board() {
     let p = common_test_params();

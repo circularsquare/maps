@@ -1,11 +1,11 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-10-24 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
+Last updated 2026-10-29 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-1059's that it never walks further than walking
-there, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
+there, T-1782's that it is never slower than walking, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
 town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's attractions). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
@@ -131,6 +131,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
   last add up to more than walking between the two ends (over water, each metre of it counts as
   3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
   all under 2 km, to walking and the car.
+- No train slower than walking: when the train's effective time (walks, wait, ride, changes and
+  fare) is the same as walking's or more, nobody takes it. Just under, few do: the train keeps
+  none of its riders at equal times, a third at 10% quicker than walking, and all of them from
+  30% quicker. The rest walk or drive. An errand from Hodogaya with 54 minutes of walking, the
+  train 101 effective minutes against walking's 91, went from train 7% to none.
 - Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 6.0 in the UK,
   8.4 in Japan, 16 in China, 51 in India (by GDP per head in US dollars, to the power -0.7). The
   fare is the player's curve of trip length times the country's fare scale (11.6 in the US, 3.1 in

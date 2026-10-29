@@ -32,7 +32,12 @@ useless detour line cannot be farmed. Drivers parking free and those paying for 
 curve apart, each on their own car cost (below). One rule for commutes, everyday trips, the trip
 explorer and the regional layer's commutes between zones; the regional market (rail, car and air
 between regions) keeps its damped logit (docs/regional.md 5.1). The ceiling tests pass with room
-(T-918, notes/T-918.md). **No rail propensity**:
+(T-918, notes/T-918.md). **No train no quicker than walking** (Anita, 2026-10-29, T-1782;
+`Params::walk_fade_of`): the curve alone never compares the train with walking, so a trip
+mostly on foot could take more trains than walks while the train was slower than walking. Rail's
+share is scaled by (walking's cost - rail's) / (0.3 x walking's), held to 0..1: no train at or
+above walking's effective time, a third of its share at 10% quicker, all of it from 30% quicker.
+The ceiling tests keep their room (A 86-93%, B 70-84%; notes/T-1782.md). **No rail propensity**:
 `asc_rail` is 0 in every country and does not enter the ratio, so rail and the car are judged on
 time and money alone (`everyday_asc_rail` and `api::COUNTRY_ASC_RAIL` remain, at 0 and empty,
 moving only the walking share). The game aims at sensible, with a clear effect from building a

@@ -188,7 +188,8 @@ fn pair_choice_reproduces_mode_choice() {
                     assert_eq!(st.sub.rail_home[u], mo.rail_by_sub[u]);
                 }
             }
-            assert!(checked > 100 && tot > 0.0 && walk_tot > 0.01 * tot, "walking must be in play: {checked} origins, rail {tot:.0}, walking {walk_tot:.0}");
+            // the crowded round leaves fewer: its trains are slower than walking on many short trips (T-1782)
+            assert!(checked > 50 && tot > 0.0 && walk_tot > 0.01 * tot, "walking must be in play: {checked} origins, rail {tot:.0}, walking {walk_tot:.0}");
             assert!(worst < 1e-4, "period {q} round {round}: worst origin off by {worst:.2e}");
             let (mut d, mut m) = (0f64, 0f64);
             for k in 0..s * s {

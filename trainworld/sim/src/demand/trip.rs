@@ -35,7 +35,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 44;
+pub const HEAD: usize = 45;
 pub const PAIR_LEN: usize = 20;
 pub const LEG_LEN: usize = 13;
 
@@ -47,6 +47,8 @@ pub const WALKS_TOO_LONG: u32 = 3;
 pub const NO_ROUTE: u32 = 4;
 /// Every station pair walks further than walking there (T-1059).
 pub const WALK_FURTHER: u32 = 5;
+/// The train costs as much as walking the whole way or more (T-1782).
+pub const SLOWER_THAN_WALK: u32 = 6;
 
 /// Whether the home end could drive to a station (`HEAD` slot 41, T-910): the trip is shorter than
 /// `Params::ride_min_km`, the drives were among its ways to a station, or it has no station
@@ -84,6 +86,8 @@ pub(crate) struct PairChoice {
     /// (`Params::car_choice`).
     pub util: f32,
     pub r: f32,
+    /// The factor on rail's share for being barely cheaper than walking (`Params::walk_fade_of`).
+    pub fade: f32,
     /// The walkers rail takes, a share of all trips (T-558, `ModeOut::rail_walk`).
     #[cfg_attr(not(test), allow(dead_code))]
     pub walk_lost: f32,
@@ -188,6 +192,10 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };
+    // T-1782: no train at or above walking's cost, and less of one just under it
+    let fade = if why == RAIL_OFFERED { p.walk_fade_of(rail, cw) } else { 1.0 };
+    let why = if fade == 0.0 { SLOWER_THAN_WALK } else { why };
+    let r_car = r_car * fade;
     // the zone pair's walking with no rail, of which rail takes its share (`mode_choice`)
     let w_none = if cw < NO_WALK { api.nr.split(&api.gr, p, i, j, (api.gr.base(z, i) + api.gr.key(z, j)) as usize) } else { 0.0 };
     let r = r_car;
@@ -195,7 +203,7 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let walk_lost = r * w_none;
     let pw = w_none - walk_lost;
     let ride = ride_state(by_ride, !sz.ride(u).is_empty());
-    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, walk_lost, pairs }
+    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, fade, walk_lost, pairs }
 }
 
 /// The everyday layer's choice (T-586, T-201) for purpose inputs `ev`, home subzone `u` and
@@ -268,12 +276,21 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     };
     let (mut rail, mut util, mut r) = (f32::INFINITY, f32::NEG_INFINITY, 0.0f32);
     let w_none = ev.no_rail;
+    let mut fade = 1.0;
+    let mut why = why;
     if why == RAIL_OFFERED {
         rail = m_u + m_v + p.fare_min - fast_ln(sum) / th + off;
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
         let uw = bt * (road_free - cw) + p.asc_walk();
-        r = p.car_choice(util, uw, bt, paid, free, rail, road_free);
+        // T-1782: as the pass has it
+        fade = p.walk_fade_of(rail, cw);
+        r = p.car_choice(util, uw, bt, paid, free, rail, road_free) * fade;
+        if fade == 0.0 {
+            why = SLOWER_THAN_WALK;
+        }
+    }
+    if why == RAIL_OFFERED {
         // each station pair's share of the trip's rail riders
         for e in pairs.iter_mut() {
             e.2 *= 1.0 / sum;
@@ -285,7 +302,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     }
     let walk_lost = r * w_none;
     let ride = ride_state(by_ride, !sz.ride(u).is_empty());
-    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, walk_lost, pairs }
+    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, fade, walk_lost, pairs }
 }
 
 /// One leg of a route: a ride (kind 1) from boarding to alighting route node, or a walk between
@@ -559,6 +576,7 @@ impl DemandApi {
         let city = &self.city;
         let mut h = vec![0f64; HEAD];
         h[0] = 1.0;
+        h[44] = 1.0;
         h[1] = round as f64;
         h[2] = o as f64;
         h[3] = d as f64;
@@ -663,6 +681,7 @@ impl DemandApi {
         h[41] = pc.ride as f64;
         h[42] = p.ride_min_km as f64;
         h[43] = p.pair_walk_max as f64;
+        h[44] = pc.fade as f64;
         if pc.why != RAIL_OFFERED {
             h[31] = 1.0;
             return h;
@@ -747,7 +766,8 @@ impl DemandApi {
     /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699);
     /// the subzones' chance of walking, rail and driving, and their cheapest walk at the home end,
     /// real minutes (-1 none); whether the home end could drive to a station (`RIDE_TOO_SHORT`..
-    /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`.
+    /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`; the factor on
+    /// rail's share for being barely cheaper than walking (`Params::walk_fade_of`, T-1782).
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and

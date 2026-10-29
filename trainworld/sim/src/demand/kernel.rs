@@ -182,6 +182,9 @@ pub struct Params {
     /// to, between and from its stations (straight metres, `Skims::walk`) are longer than walking
     /// the trip's ends' distance, around water where the pack routes walks. 0 turns it off.
     pub walk_rule: f32,
+    /// Anita's rule (T-1782): no train at or above walking's cost, and rail's share scaled from 0
+    /// there up to its whole at this fraction cheaper than walking (`Params::walk_fade_of`). 0 off.
+    pub walk_fade: f32,
     /// The transfer walk is on foot: speed and perceived weight (Subway Builder's 1.39).
     pub xfer_mps: f32,
     pub w_xfer: f32,
@@ -338,6 +341,8 @@ impl Default for Params {
             walk_samples: 6,
             xfer_walk_m: 300.0,
             walk_rule: 1.0,
+            // T-1782: 10% quicker than walking keeps a third (Anita)
+            walk_fade: 0.3,
             xfer_mps: 1.2,
             w_xfer: 1.39,
             station_merge_m: 100.0,
@@ -386,6 +391,7 @@ impl Params {
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,
             "walk_rule" => self.walk_rule = v,
+            "walk_fade" => self.walk_fade = v,
             "station_merge_m" => self.station_merge_m = v,
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
@@ -670,6 +676,16 @@ impl Params {
         let w1 = e / (1.0 + fast_exp(-(util + beta * paid)) + e);
         let s1 = (1.0 - w1) * self.ratio_share(rail, road + paid);
         s0 + (1.0 - free) * (s1 - s0)
+    }
+    /// T-1782: the factor on rail's share for rail costing `rail` perceived minutes against walking
+    /// the whole way `cw`: 0 at or above it, 1 from `walk_fade` cheaper, linear between. The same
+    /// expressions as `mode_choice`'s lanes.
+    #[inline]
+    pub fn walk_fade_of(&self, rail: f32, cw: f32) -> f32 {
+        if self.walk_fade <= 0.0 {
+            return 1.0;
+        }
+        ((cw - rail) / (cw * self.walk_fade)).max(0.0).min(1.0)
     }
     /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
     /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
@@ -4725,9 +4741,18 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         s0 + (one - free8) * (s1 - s0)
                     }
                 };
-                let x = tu8 * dv8 * share(rail);
+                // T-1782: no train at or above walking's cost (`Params::walk_fade_of`)
+                let fade = |rail: F8| {
+                    if p.walk_fade <= 0.0 {
+                        one
+                    } else {
+                        ((cw8 - rail) / (cw8 * F8::splat(p.walk_fade))).max(zero).min(one)
+                    }
+                };
+                let x = tu8 * dv8 * (share(rail) * fade(rail));
                 // T-1300: and at a fare `FARE_D_MIN` dearer, for the riders' fare sensitivity
-                let xd = (tu8 * dv8 * share(rail + F8::splat(FARE_D_MIN)) - x).to_array();
+                let rd8 = rail + F8::splat(FARE_D_MIN);
+                let xd = (tu8 * dv8 * (share(rd8) * fade(rd8)) - x).to_array();
                 let dk = (d * F8::splat(0.001)).to_array();
                 let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry

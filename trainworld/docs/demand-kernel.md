@@ -256,6 +256,15 @@ levels:
    alone (f32 would lose too much in the taking off). The everyday pass, the pair choice
    (`walk_kept`) and the trip explorer skip the refused pairs in their own loops. Long trips between cities do not apply it (their
    walks are never close to the trip's length).
+   **No train no quicker than walking** (Anita, T-1782, `Params::walk_fade` 0.3): rail's share of a
+   trip (after `car_choice`) is scaled by `walk_fade_of(rail, cw)` = (cw - rail) / (0.3 cw) held to
+   0..1, rail the trip's rail cost (the logsum, fare included) and cw walking the whole way's:
+   nothing at or above walking's cost, a third at 10% under, all from 30% under. Its riders go
+   back to walking and the car as any rail share does (walking keeps its share of what rail does
+   not take). The commute lanes, the everyday pass, the everyday outings across a zone line (their
+   walk's cost read back from its weight against the car) and the trip explorer apply it; the
+   explorer says walking is quicker (`SLOWER_THAN_WALK`) or names the cut (head slot 44). Walks
+   past 10 km (`NO_WALK`) are never cut.
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,

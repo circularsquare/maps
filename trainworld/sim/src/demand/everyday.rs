@@ -1187,14 +1187,14 @@ impl EverydayApi {
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th + off;
                     let bt = p.mode_beta(road);
                     let (util, uw) = (bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk());
-                    let pr = p.car_choice(util, uw, bt, paid, free, rail, road);
+                    let pr = p.car_choice(util, uw, bt, paid, free, rail, road) * p.walk_fade_of(rail, cw);
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind() as usize][q]
                     } else {
                         RETURN[pair.kind() as usize][q]
                     };
-                    let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road);
+                    let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road) * p.walk_fade_of(rail + FARE_D_MIN, cw);
                     let (dd, km) = ((pair.trips * share * (prd - pr)) as f64 / FARE_D_MIN as f64, pair.distance as f64 / 1000.0);
                     rail_d.d += dd;
                     rail_d.d_km += dd * km;

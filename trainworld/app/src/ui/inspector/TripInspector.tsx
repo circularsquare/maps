@@ -32,6 +32,10 @@ const NO_RAIL: Record<string, string> = {
  * holds it back: people drive to a station from home on trips of `rideMinKm` or more, and walk
  * from one at the far end. */
 function NoRail({ t }: { t: TripPeriod }) {
+  if (t.why === "slowerThanWalk") {
+    const tip = `Effective time by train ${minText(t.railPerceived)}, walking ${minText(t.walkMin * t.walkWeight)}. Nobody takes a train that is no quicker than walking.`;
+    return <p class="muted" data-tip={tip}>Walking there is quicker than the train.</p>;
+  }
   if (t.why !== "walksTooLong") return <p class="muted">{NO_RAIL[t.why] ?? "No train."}</p>;
   const a = t.walkStartPerceived, b = t.walkEndPerceived;
   const near = Number.isFinite(a) ? "The nearest stations are too far to walk to" : "No station is within a walk of the start";
@@ -43,6 +47,17 @@ function NoRail({ t }: { t: TripPeriod }) {
   const tip = `${to}, getting from one ${minText(b)} on foot. The train is offered when the two come to ${Math.round(t.pairWalkMax)} min or less.` +
     (t.rideToStation === "short" ? `\nPeople drive to a station only when the areas of the two ends are ${num1(t.rideMinKm)} km or more apart.` : "");
   return <p class="muted" data-tip={tip}>{text}</p>;
+}
+
+/** T-1782: the train is only a little quicker than walking, so it keeps part of its riders. The
+ * full share comes back at the sim's `Params::walk_fade` quicker, read back from the factor. */
+function BarelyQuicker({ t }: { t: TripPeriod }) {
+  const walk = t.walkMin * t.walkWeight;
+  const quicker = walk > 0 ? Math.max(0, 1 - t.railPerceived / walk) : 0;
+  const full = t.walkFade > 0 ? quicker / t.walkFade : NaN;
+  const tip = `Effective time by train ${minText(t.railPerceived)}, walking ${minText(walk)}.` +
+    (Number.isFinite(full) ? ` A train under ${Math.round(full * 100)}% quicker than walking loses riders to walking and the car; this one keeps ${Math.round(t.walkFade * 100)}% of them.` : "");
+  return <p class="muted small" data-tip={tip}>Only a little quicker than walking, so fewer take the train.</p>;
 }
 
 /** "trip" or "trips" after a count. */
@@ -467,6 +482,7 @@ export function TripInspector() {
               <span class="val">{minText(t.railPerceived)}</span>
             </li>
           </ul>
+          {t.walkFade < 1 && <BarelyQuicker t={t} />}
           <p class="muted small" data-tip={spreadTip(t)}>{mainNote(t, riders)}</p>
           <OtherRoutes t={t} riders={riders} />
         </>

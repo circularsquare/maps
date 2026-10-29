@@ -842,6 +842,15 @@ notes/T-420.md has the tables.
   straight on one side only (a station across a motorway or rail yard, a gated campus, hill
   towns with long stairs) the rule can keep or refuse a pair a real rider would not. Check: in a
   city's trip explorer, a few short trips beside a station that the rule refuses, against a map.
+- **No train no quicker than walking** (Anita, T-1782; docs/demand-kernel.md step 5). A trip has no
+  train when the train's effective time is at or above walking's, and below that the train's share
+  is scaled by how much quicker it is, from none at equal times to all of it at 30% quicker
+  (`Params::walk_fade`; 10% quicker keeps a third). Both sides are the model's own perceived
+  minutes, so it holds anywhere the walk and the train are priced: nobody takes a train that is
+  slower than walking. The 30% is Anita's judgement, not fitted. What can differ by place: where
+  walking stands for cycling or a short bus (cities with many bikes, Amsterdam or Tokyo's
+  suburbs), the real alternative is quicker than the walk and the rule is, if anything, too kind
+  to the train. Check: a city's trip explorer on trips of 1-3 km beside a line.
 - **The service span** (T-842, docs/demand-kernel.md step 4). Riders' tolerance for the wait until
   the next train is log-uniform from 30 minutes to 6 hours (Anita's range, 2026-10-21; the shape
   and the median of 1.7 h are judgement, not fitted), and a stop where only a share `phi` of a
