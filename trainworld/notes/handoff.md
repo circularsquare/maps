@@ -1,7 +1,7 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session f9a7f88d-0531-4963-9df6-6771326e513f, name maps-45, since 2026-10-28 evening
-Updated: 2026-10-28 evening
+Updated: 2026-10-29 night
 
 Read trainworld/CLAUDE.md and TASKS.md first. History before this session: notes/handoff-2026-10-26.md;
 this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
@@ -105,7 +105,17 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 ## Overnight 2026-10-29 (Anita, off to bed): keep going with T-1735, think about the other perf tasks, and do
 ## or drop the small fixes ("up to you"). Core cap 15. Deploy only on her word.
 - T-1759 committed e894d357 (bunting gone); 8800 rebuilt there, smoke 20/20 both shades.
-- T-1735 agent t1735 (Opus), tree .tw-trees/t1735 from e894d357; Vite 6123; 5 cores; ids T-1760-1761.
+- T-1762/T-1744 committed a6e9fc29 (VN 93/93; origins in towns). T-1735 landed afb89cbc (perfFlags conflict
+  resolved by hand); main WASM rebuilt; 8800 at afb89cbc, smoke 20/20 both shades, real save 12,644,085.
+- T-1765 Canada's five far origins: t1762 agent resumed (then maybe Kerkyra, Poland's two); only data/packs writer.
+- T-1764 rule 1 agent t1764 (Sonnet), demand.worker.ts span tolerance 0.06; Vite 6127; 4 cores.
+- T-1766 agent t1766 (Opus): attraction visits from a city budget shared by Wikipedia page views (Anita 2026-10-29:
+  "order of magnitude correctness" is enough; country term stays off). attractions_json.py + attractions.json; Vite 6141;
+  3 cores. Review its numbers before committing.
+- (was) T-1735 DONE in .tw-trees/t1735, not landed: measured express 85% of market riders for 18% of a pass; in play a
+  new Japan express shows ~26% until the whole solve (T-1760 filed). WASM interface changed (IntercityApi window fns).
+  Land after T-1762's VN run ends (its gate uses the main tree's app/WASM), then rebuild main WASM, 8800, smoke.
+  Then T-1764 rule 1.
 - T-1644 committed (z15 pan GPU 36% to 23%, overlay -70%, pixel-checked); T-1763 (cull stations/trains) filed P3.
 - T-1739 agent t1739 (Sonnet), main tree attractions.json; Vite 6125; 2 cores.
 - TH,SG join done 2026-10-29 (68/68 shipped, registry 1,960). Chiang Mai's origin is a border village (densest GHSL
@@ -120,7 +130,8 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   T-1644), smoke 20/20 both shades, real save 12,644,085. Not deployed.
 - T-1762 + T-1744 agent t1762 (Sonnet), main tree: origin rule, Vietnam's 10 far origins rebuilt, muo/cxx, VN rejoin;
   writes data/packs (only writer); 6 cores; Vite 6183, runner 6383; may file T-1765.
-- T-1737 agent t1737 (Sonnet), read-only + checks/t263-attractions.mjs; Vite 6126; 2 cores; may file T-1764.
+- T-1737 answered and archived (span steps of 0.05 touch far zones); t263 check fixed (its view, not a bug).
+  T-1764 rule 1 (span tolerance 0.06) to do after T-1735 lands (both edit demand.worker.ts); rule 2 only measured first.
 - Was "still to decide": T-1744 (after TH/SG join; pack writes), T-1737 (investigate), T-1736 (P3, keep), T-1634/T-1647
   (collide with T-1735's demand/market files: after it).
 

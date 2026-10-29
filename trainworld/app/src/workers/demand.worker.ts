@@ -187,6 +187,9 @@ const VIEW_TOLERANCE = 0.01;
  * line, which made Osaka a third of the local solve); within this a zone keeps its figures until
  * the whole solve */
 const TRAINS_TOLERANCE = 0.05;
+/** T-1764: `span` is a share (0 to 1) in steps of 0.05, one train more or less in a period's day; a
+ * single step, 0.05000001 in float32, is the same view, so a far line's step does not touch its zones */
+const SPAN_TOLERANCE = 0.06;
 /** T-1733: the page's `whole` for this version: the edit's local results are shown (and a moment
  * has passed for the next edit), so the whole solve may start */
 let wholeGo = -1;
@@ -266,7 +269,7 @@ function viewDiff(x: PopView, y: PopView): string | null {
       if (p.length !== w.length) return `${k} length ${p.length} ${w.length}`;
       // run times, trains an hour and the like move by float noise and by small knock-on changes
       // when a line is added beside them (0.1% seen): within VIEW_TOLERANCE they count as the same
-      const tol = !(u instanceof Float32Array) || k === "stXY" || k === "catchXY" ? 0 : k === "tph" || k === "span" ? TRAINS_TOLERANCE : VIEW_TOLERANCE;
+      const tol = !(u instanceof Float32Array) || k === "stXY" || k === "catchXY" ? 0 : k === "tph" ? TRAINS_TOLERANCE : k === "span" ? SPAN_TOLERANCE : VIEW_TOLERANCE;
       for (let i = 0; i < p.length; i++) if (p[i] !== w[i] && Math.abs(p[i] - w[i]) > tol * Math.max(1, Math.abs(p[i]))) return `${k}[${i}] ${p[i]} ${w[i]}`;
     } else if (JSON.stringify(u) !== JSON.stringify(v)) return `${k} ${JSON.stringify(u)?.slice(0, 80)} ${JSON.stringify(v)?.slice(0, 80)}`;
   }

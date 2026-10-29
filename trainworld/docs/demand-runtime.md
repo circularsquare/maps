@@ -297,8 +297,9 @@ last change" speak only for a zone still being solved (`plan`, `demandSolving`).
 **The local solve after an edit** (T-1733, notes/T-1733.md, `?perfOff=refine` off): before those
 whole solves, each cluster the edit touched is solved locally first when its market part and its
 untouched cities still hold what they last solved: only the city populations whose view changed (a
-station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%
-and trains an hour within 5% count as unchanged), through their rounds and the capacity fit. Each
+station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%,
+trains an hour within 5% and a stop's service span (the share of riders with a train due) within 0.06,
+one train a day more or less, count as unchanged), through their rounds and the capacity fit. Each
 round crowds on the others' loads as that round of their last solve was priced on (kept per
 population, period and round, `trail`; a shared period's market loads per round as the other worker
 sent them), plus their own, so with nothing changed it repeats the whole solve; the market's are
