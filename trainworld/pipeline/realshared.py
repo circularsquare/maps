@@ -1,14 +1,15 @@
 """T-1305 stage 2: the track model's network from a city's corridors (`realcorridors.py`), which the
 sim's `realsave --shared` builds as it is: nodes, edges and each line's stops and path.
 
-Each piece is one double-track edge per pair, the pairs 8 m apart. At each corridor node the piece
+Each piece is one double-track edge per pair, the pairs 8 m apart side by side. At each corridor node the piece
 ends a line runs between are one group (an express pair the locals never join is its own group,
 so an express station has a platform on each pair). A group with stops is one station node (a
 station takes two edge ends, one each way); where more than one end leaves on a side, a junction
-node stands past the platform's end, as the drawing tool puts one. A group with no stops is one
+node stands past the platform's end, as the drawing tool puts one (nearer, where the next node
+that side is closer). A group with no stops is one
 plain or junction node. Every node gets a heading from its ends, and every edge leaves it along
 that heading through a lead point, as `realsave` does for a station. A line changing pair at a
-node is a junction there (the crossover). One level for all (-1; levels per piece are stage 3),
+node is a junction there (the crossover). One level for all (-1; levels per piece are T-1773),
 every edge grade separated (`sep`) as before."""
 import math
 from collections import Counter, defaultdict
@@ -17,6 +18,8 @@ import numpy as np
 
 PAIR_GAP = 8.0
 BRANCH_CLEAR = 20.0
+JUNCTION_MIN = 15.0
+LEAD_TURN_COS = math.cos(math.radians(45))
 NUDGE = 6.0
 LEVEL = -1
 LEAD_MAX = 80.0
@@ -59,8 +62,9 @@ def track_model(doc, polys, net):
             continue
         d = poly[-1] - poly[0]
         sgn = 1 if (d[0] > 0 or (d[0] == 0 and d[1] > 0)) else -1
-        for k in (0, 1):
-            c = LineString(poly).offset_curve(PAIR_GAP / 2 * sgn * (1 if k == 0 else -1))
+        n = P["pairs"]
+        for k in range(n):
+            c = LineString(poly).offset_curve(PAIR_GAP * sgn * ((n - 1) / 2 - k))
             ok = c.geom_type == "LineString" and len(c.coords) >= 2
             pair_poly[(P["id"], k)] = np.array(c.coords) if ok else poly
 
@@ -174,7 +178,15 @@ def track_model(doc, polys, net):
             chain = []
             for sd in (0, 1):
                 if per_side[sd] > 1:
-                    q = base + (1 if sd == 1 else -1) * (plat / 2 + BRANCH_CLEAR + 10) * hv
+                    # past the platform, but short of the next node that side: a junction beyond
+                    # it would take its edges back in a hairpin
+                    sgn = 1 if sd == 1 else -1
+                    far = [float((pair_poly[e[:2]][-1 if e[2] == 0 else 0] - base) @ (sgn * hv)) for e in ends if side[e] == sd]
+                    room = min([f for f in far if f > 1.0], default=math.inf)
+                    off = min(plat / 2 + BRANCH_CLEAR + 10, max(0.5 * room, JUNCTION_MIN))
+                    if off < plat / 2 + BRANCH_CLEAR:
+                        st["junctions inside a platform's clearance (no room)"] += 1
+                    q = base + sgn * off * hv
                     chain.append((sd, len(nodes)))
                     nodes.append({"xy": q.round(3).tolist(), "level": LEVEL, "station": None})
             order = [n for sd, n in chain if sd == 0] + [sid] + [n for sd, n in chain if sd == 1]
@@ -206,7 +218,18 @@ def track_model(doc, polys, net):
         cum = np.concatenate([[0.0], np.cumsum(seg)])
         lo = np.hypot(*(A - poly[0])) + lead + 10
         hi = cum[-1] - (np.hypot(*(B - poly[-1])) + lead + 10)
-        inner = poly[(cum > lo) & (cum < hi)]
+        inner = [p for p in poly[(cum > lo) & (cum < hi)]]
+        # points that would turn the track sharply off a lead (a node away from the piece's end,
+        # a short piece) go: the trace would fit them with the tightest curve and trains crawl
+        def sharp(p0, p1, p2):
+            u, w = p1 - p0, p2 - p1
+            nu, nw = np.hypot(*u), np.hypot(*w)
+            return nu < 1e-6 or nw < 1e-6 or float(u @ w) < LEAD_TURN_COS * nu * nw
+        while inner and sharp(A, la, inner[0]) or (len(inner) > 1 and np.hypot(*(inner[1] - inner[0])) < 1.0):
+            inner.pop(0)
+        while inner and sharp(inner[-1], lb, B):
+            inner.pop()
+        inner = np.array(inner).reshape(-1, 2)
         edges.append({"a": a, "b": b, "lead_a": la.round(3).tolist(), "lead_b": lb.round(3).tolist(), "line": inner.round(2).tolist()})
         return len(edges) - 1
 

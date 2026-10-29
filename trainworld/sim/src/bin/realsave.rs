@@ -310,6 +310,84 @@ fn main() {
             eprintln!("line {li} ({}) turns back partway at path nodes {r:?}", lines[li]["name"].as_str().unwrap_or(""));
         }
     }
+    // where trains slow most: per edge, seconds a train loses to curves and caps below the top
+    // speed over its pieces, times the lines on it (T-1305 stage 3)
+    if args.iter().any(|a| a == "--slow") {
+        let mut on = vec![0u32; w.net.edge_count()];
+        for &(_, id) in &line_ids {
+            for &p in w.net.line_path(id) {
+                on[(p >> 1) as usize] += 1;
+            }
+        }
+        let mut lost: Vec<(f64, usize, f64, f64)> = vec![];
+        for e in 0..w.net.edge_count() {
+            if !w.net.edge_alive[e] || on[e] == 0 {
+                continue;
+            }
+            let cap = w.net.v_cap(e as u32);
+            let (mut s, mut vmin) = (0.0, f64::INFINITY);
+            for pc in w.net.edge_pieces(e as u32) {
+                let v = pc.v_curve().min(cap).min(V_TOP);
+                vmin = vmin.min(v);
+                s += pc.len * (1.0 / v - 1.0 / V_TOP);
+            }
+            lost.push((s * on[e] as f64, e, vmin * 3.6, w.net.edge_len[e]));
+        }
+        lost.sort_by(|a, b| b.0.total_cmp(&a.0));
+        // the capacity pass's holds, per demand level, against the free run
+        let (mut free, mut held) = (0.0, [0.0f64; 3]);
+        let mut worst: Vec<(f64, usize)> = vec![];
+        let mut at_node: std::collections::HashMap<u32, f64> = Default::default();
+        for &(li, id) in &line_ids {
+            let svc = &w.svc.lines[id as usize];
+            if !svc.running {
+                continue;
+            }
+            let r = &svc.runs[0];
+            let end = |p: &trainworld_sim::track::profile::Profile| p.arr.last().copied().unwrap_or(0.0) - p.dep.first().copied().unwrap_or(0.0);
+            free += end(&r.free);
+            for lev in 0..3 {
+                held[lev] += end(&r.prof[lev]);
+            }
+            worst.push((end(&r.prof[0]) - end(&r.free), li));
+            for h in &r.holds[1] {
+                let k = r.node_s.partition_point(|&s| s <= h.s).saturating_sub(1);
+                *at_node.entry(r.nodes[k]).or_insert(0.0) += h.delay;
+            }
+        }
+        let cap = &w.svc.cap;
+        for lev in 0..3 {
+            let mut kinds = std::collections::BTreeMap::new();
+            for (r, x) in cap.res.iter().enumerate() {
+                if cap.rho[r][lev] > 0.9 {
+                    *kinds.entry(format!("{:?}", x.kind)).or_insert(0) += 1;
+                }
+            }
+            eprintln!("  level {lev}: resources over 90%: {kinds:?}");
+        }
+        let mut over: Vec<(f64, usize)> = (0..cap.res.len()).map(|r| (cap.rho[r][1], r)).filter(|x| x.0 > 0.9).collect();
+        over.sort_by(|a, b| b.0.total_cmp(&a.0));
+        for (rho, r) in over.iter().take(12) {
+            let x = &cap.res[*r];
+            let names: std::collections::BTreeSet<String> = cap.users_of(*r).iter().filter_map(|u| line_ids.iter().find(|l| l.1 == u.line).map(|l| lines[l.0]["name"].as_str().unwrap_or("").to_string())).collect();
+            eprintln!("  {:?} at {:.0},{:.0} medium {:.2}: {:?}", x.kind, x.x, x.y, rho, names);
+        }
+        let mut hot: Vec<(u32, f64)> = at_node.into_iter().collect();
+        hot.sort_by(|a, b| b.1.total_cmp(&a.1));
+        for (n, d) in hot.iter().take(15) {
+            eprintln!("  holds after node {n} ({}) at {:.0},{:.0}: {:.1} line-min (medium demand)", node_names[*n as usize], w.net.node_x[*n as usize], w.net.node_y[*n as usize], d / 60.0);
+        }
+        eprintln!("slow: one-way minutes over lines, free run {:.0}, with the capacity pass's holds {:.0} / {:.0} / {:.0} (high, medium, low demand)", free / 60.0, held[0] / 60.0, held[1] / 60.0, held[2] / 60.0);
+        worst.sort_by(|a, b| b.0.total_cmp(&a.0));
+        for (d, li) in worst.iter().take(10) {
+            eprintln!("  held {:.1} min: line {li} {}", d / 60.0, lines[*li]["name"].as_str().unwrap_or(""));
+        }
+        eprintln!("slow: {:.0} line-minutes lost to curves in all", lost.iter().map(|l| l.0).sum::<f64>() / 60.0);
+        for l in lost.iter().take(25) {
+            let (a, b) = (w.net.edge_a[l.1], w.net.edge_b[l.1]);
+            eprintln!("  edge {} ({}-{}) {:.0} line-s, slowest {:.0} km/h, {:.0} m, crossover {}, at {:.0},{:.0}", l.1, a, b, l.0, l.2, l.3, w.net.edge_crossover[l.1], w.net.node_x[a as usize], w.net.node_y[a as usize]);
+        }
+    }
     let live: Vec<usize> = (0..w.net.edge_count()).filter(|&e| w.net.edge_alive[e]).collect();
     eprintln!("{} edges, {:.0} km of double track", live.len(), live.iter().map(|&e| w.net.edge_len[e]).sum::<f64>() / 1000.0);
 
@@ -332,6 +410,9 @@ fn main() {
         let svc = &w.svc.lines[id as usize];
         if !svc.running {
             not_running += 1;
+            let bad: Vec<u32> = w.net.line_path(id).iter().map(|&p| p >> 1).filter(|&e| !w.net.edge_ok(e) || !w.net.edge_built[e as usize]).collect();
+            let bad_stops: Vec<u32> = w.net.line_stops(id).iter().copied().filter(|&s| !w.net.node_ok(s) || !w.net.node_built[s as usize]).collect();
+            eprintln!("line {li} ({}) not running: edges {bad:?}, stops {bad_stops:?}, path {} edges, {} stops", lines[li]["name"].as_str().unwrap_or(""), w.net.line_path(id).len(), w.net.line_stops(id).len());
             continue;
         }
         let ls = w.net.line_stops(id).to_vec();

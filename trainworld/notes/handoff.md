@@ -130,6 +130,9 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   deploy carries efb32d52). T-1777 agent t1777 (Opus): screen-stuck ghosts, one preview owner; Vite 6196, 2 cores.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
+- T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
+- T-1782 agent t1782 (Opus): why a Yokohama trip with 54 min of walking rides train 7% vs walk 3%; analysis +
+  proposal only, waits on Anita before building. 2 cores, Vite 6157.
 - T-1779 [P1] branching freezes / ghost stuck near a line; T-1780 blueprint click 150 ms; T-1781 snap curves too
   tight: agent t1779 (Opus) in tree .tw-trees/t1779 (branched e10f72b5), Vite 6199, 3 cores. Land: smoke in tree,
   agent-tree land, rebuild main WASM if sim changed. May conflict with t1777's tools.ts edits.

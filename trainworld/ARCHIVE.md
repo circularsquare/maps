@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1305 [P2] Real networks share track. Done 2026-10-29: New York, Paris, Tokyo, Seoul, Toronto and Sendai built on shared pairs, staged in artifacts/trainworld/t1305-shared/, ships after the join; London staged apart, not sound (T-1774); levels are T-1773. notes/T-1305.md.
 - T-1777 [P2] Track ghosts stuck on the screen. Done 2026-10-29: the select tool's end squares on the globe's far side projected to NaN, which the browser ignores, so they kept their last spot; all projected marks now go through `placeAt` (map/screenPlace.ts), hidden there. notes/T-1777.md, checks/t1777-stuck-marks.mjs.
 - T-1772 [P2] Capacity markers restyled. Done 2026-10-29: clock-face dots (yellow to red, hand = wait, full turn 10 min) fixed at their resource under names, three-line hovers, reversal icons in the flat junction badge's style hidden below zoom 9, both badges sized by the square-root rule; reversal icons no longer stray after a draw-anchor move.
 
