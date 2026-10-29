@@ -15730,6 +15730,38 @@
       {
         "name": "Ky Anh",
         "regionName": "Ky Anh region"
+      },
+      {
+        "name": "Sherbrooke",
+        "regionName": "Sherbrooke region"
+      },
+      {
+        "name": "Rivière-du-Loup",
+        "regionName": "Rivière-du-Loup region"
+      },
+      {
+        "name": "Kerkyra",
+        "regionName": "Kerkyra region"
+      },
+      {
+        "name": "Starogardzki",
+        "regionName": "Starogardzki region"
+      },
+      {
+        "name": "Barrie",
+        "regionName": "Barrie region"
+      },
+      {
+        "name": "North Bay",
+        "regionName": "North Bay region"
+      },
+      {
+        "name": "Siedlecki",
+        "regionName": "Siedlecki region"
+      },
+      {
+        "name": "Tracadie",
+        "regionName": "Tracadie region"
       }
     ],
     "rule": {
@@ -15975,7 +16007,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19438750.0,
+      "localTrips": 19438738.0,
       "box": [
         -80.274,
         43.032,
@@ -18071,7 +18103,7 @@
         38.36
       ],
       "place": 104,
-      "localTrips": 10242647.0,
+      "localTrips": 10234848.0,
       "country": "GR",
       "realm": "gr-cy"
     },
@@ -18096,7 +18128,7 @@
         41.025
       ],
       "place": 105,
-      "localTrips": 2958959.0,
+      "localTrips": 2947631.0,
       "country": "GR",
       "realm": "gr-cy"
     },
@@ -18121,7 +18153,7 @@
         52.665
       ],
       "place": 106,
-      "localTrips": 8821626.0,
+      "localTrips": 8766110.0,
       "country": "PL",
       "realm": "poland"
     },
@@ -18246,7 +18278,7 @@
         50.873
       ],
       "place": 118,
-      "localTrips": 7508205.0,
+      "localTrips": 7371053.0,
       "country": "PL",
       "realm": "poland"
     },
@@ -18821,7 +18853,7 @@
         52.907
       ],
       "place": 201,
-      "localTrips": 3355437.0,
+      "localTrips": 3318436.0,
       "country": "PL",
       "realm": "poland"
     },
@@ -18896,7 +18928,7 @@
         50.539
       ],
       "place": 207,
-      "localTrips": 4129802.0,
+      "localTrips": 4049555.0,
       "country": "PL",
       "realm": "poland"
     },
@@ -18946,7 +18978,7 @@
         52.056
       ],
       "place": 209,
-      "localTrips": 2989095.0,
+      "localTrips": 2965069.0,
       "country": "PL",
       "realm": "poland"
     },
@@ -25051,7 +25083,7 @@
       ],
       "place": 732,
       "country": "GR",
-      "localTrips": 1259865.0,
+      "localTrips": 1258494.0,
       "realm": "gr-cy"
     },
     {
@@ -25077,7 +25109,7 @@
       ],
       "place": 735,
       "country": "GR",
-      "localTrips": 678516.0,
+      "localTrips": 673031.0,
       "realm": "gr-cy"
     },
     {
@@ -25103,7 +25135,7 @@
       ],
       "place": 736,
       "country": "GR",
-      "localTrips": 625943.0,
+      "localTrips": 602182.0,
       "realm": "gr-cy"
     },
     {
@@ -25129,7 +25161,7 @@
       ],
       "place": 737,
       "country": "GR",
-      "localTrips": 612032.0,
+      "localTrips": 604370.0,
       "realm": "gr-cy"
     },
     {
@@ -25155,7 +25187,7 @@
       ],
       "place": 738,
       "country": "GR",
-      "localTrips": 598567.0,
+      "localTrips": 596081.0,
       "realm": "gr-cy"
     },
     {
@@ -25181,7 +25213,7 @@
       ],
       "place": 740,
       "country": "GR",
-      "localTrips": 582327.0,
+      "localTrips": 577049.0,
       "realm": "gr-cy"
     },
     {
@@ -25207,7 +25239,7 @@
       ],
       "place": 741,
       "country": "GR",
-      "localTrips": 513009.0,
+      "localTrips": 510204.0,
       "realm": "gr-cy"
     },
     {
@@ -25233,7 +25265,7 @@
       ],
       "place": 742,
       "country": "GR",
-      "localTrips": 496665.0,
+      "localTrips": 478782.0,
       "realm": "gr-cy"
     },
     {
@@ -25259,7 +25291,7 @@
       ],
       "place": 743,
       "country": "GR",
-      "localTrips": 488164.0,
+      "localTrips": 467249.0,
       "realm": "gr-cy"
     },
     {
@@ -25285,7 +25317,7 @@
       ],
       "place": 744,
       "country": "GR",
-      "localTrips": 500825.0,
+      "localTrips": 500706.0,
       "realm": "gr-cy"
     },
     {
@@ -25311,7 +25343,7 @@
       ],
       "place": 745,
       "country": "GR",
-      "localTrips": 469038.0,
+      "localTrips": 468972.0,
       "realm": "gr-cy"
     },
     {
@@ -25337,33 +25369,7 @@
       ],
       "place": 746,
       "country": "GR",
-      "localTrips": 433694.0,
-      "realm": "gr-cy"
-    },
-    {
-      "id": "ker",
-      "name": "Kerkyra",
-      "kind": "zone",
-      "origin": {
-        "lon": 20.8936,
-        "lat": 37.7775
-      },
-      "center": [
-        20.8936,
-        37.7775
-      ],
-      "zoom": 10.5,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        19.35,
-        37.221,
-        21.045,
-        39.917
-      ],
-      "place": 747,
-      "country": "GR",
-      "localTrips": 460788.0,
+      "localTrips": 423652.0,
       "realm": "gr-cy"
     },
     {
@@ -25389,7 +25395,7 @@
       ],
       "place": 749,
       "country": "GR",
-      "localTrips": 379752.0,
+      "localTrips": 372940.0,
       "realm": "gr-cy"
     },
     {
@@ -25415,7 +25421,7 @@
       ],
       "place": 751,
       "country": "GR",
-      "localTrips": 349234.0,
+      "localTrips": 335835.0,
       "realm": "gr-cy"
     },
     {
@@ -25441,7 +25447,7 @@
       ],
       "place": 752,
       "country": "GR",
-      "localTrips": 332829.0,
+      "localTrips": 321415.0,
       "realm": "gr-cy"
     },
     {
@@ -25467,7 +25473,7 @@
       ],
       "place": 753,
       "country": "GR",
-      "localTrips": 368038.0,
+      "localTrips": 366742.0,
       "realm": "gr-cy"
     },
     {
@@ -25493,7 +25499,7 @@
       ],
       "place": 754,
       "country": "GR",
-      "localTrips": 345177.0,
+      "localTrips": 340623.0,
       "realm": "gr-cy"
     },
     {
@@ -25519,7 +25525,7 @@
       ],
       "place": 756,
       "country": "GR",
-      "localTrips": 307396.0,
+      "localTrips": 296770.0,
       "realm": "gr-cy"
     },
     {
@@ -25545,7 +25551,7 @@
       ],
       "place": 757,
       "country": "GR",
-      "localTrips": 267615.0,
+      "localTrips": 249068.0,
       "realm": "gr-cy"
     },
     {
@@ -25571,7 +25577,7 @@
       ],
       "place": 758,
       "country": "GR",
-      "localTrips": 300643.0,
+      "localTrips": 299706.0,
       "realm": "gr-cy"
     },
     {
@@ -25597,7 +25603,7 @@
       ],
       "place": 761,
       "country": "GR",
-      "localTrips": 235329.0,
+      "localTrips": 221156.0,
       "realm": "gr-cy"
     },
     {
@@ -25675,7 +25681,7 @@
       ],
       "place": 766,
       "country": "GR",
-      "localTrips": 719048.0,
+      "localTrips": 712222.0,
       "realm": "gr-cy"
     },
     {
@@ -25701,7 +25707,7 @@
       ],
       "place": 767,
       "country": "GR",
-      "localTrips": 753863.0,
+      "localTrips": 748872.0,
       "realm": "gr-cy"
     },
     {
@@ -25727,7 +25733,7 @@
       ],
       "place": 768,
       "country": "GR",
-      "localTrips": 568058.0,
+      "localTrips": 562812.0,
       "realm": "gr-cy"
     },
     {
@@ -25753,7 +25759,7 @@
       ],
       "place": 769,
       "country": "GR",
-      "localTrips": 427275.0,
+      "localTrips": 425262.0,
       "realm": "gr-cy"
     },
     {
@@ -25779,7 +25785,7 @@
       ],
       "place": 770,
       "country": "GR",
-      "localTrips": 379801.0,
+      "localTrips": 373153.0,
       "realm": "gr-cy"
     },
     {
@@ -25805,7 +25811,7 @@
       ],
       "place": 771,
       "country": "GR",
-      "localTrips": 318794.0,
+      "localTrips": 313328.0,
       "realm": "gr-cy"
     },
     {
@@ -25831,7 +25837,7 @@
       ],
       "place": 772,
       "country": "GR",
-      "localTrips": 280823.0,
+      "localTrips": 276524.0,
       "realm": "gr-cy"
     },
     {
@@ -25857,7 +25863,7 @@
       ],
       "place": 773,
       "country": "GR",
-      "localTrips": 282068.0,
+      "localTrips": 278416.0,
       "realm": "gr-cy"
     },
     {
@@ -25883,7 +25889,7 @@
       ],
       "place": 774,
       "country": "GR",
-      "localTrips": 48641.0,
+      "localTrips": 46582.0,
       "realm": "gr-cy"
     },
     {
@@ -31005,7 +31011,7 @@
       ],
       "place": 1021,
       "country": "PL",
-      "localTrips": 2057482.0,
+      "localTrips": 1977858.0,
       "realm": "poland"
     },
     {
@@ -31031,7 +31037,7 @@
       ],
       "place": 1022,
       "country": "PL",
-      "localTrips": 1474501.0,
+      "localTrips": 1369244.0,
       "realm": "poland"
     },
     {
@@ -31057,7 +31063,7 @@
       ],
       "place": 1023,
       "country": "PL",
-      "localTrips": 2052953.0,
+      "localTrips": 1992102.0,
       "realm": "poland"
     },
     {
@@ -31083,33 +31089,7 @@
       ],
       "place": 1024,
       "country": "PL",
-      "localTrips": 1601744.0,
-      "realm": "poland"
-    },
-    {
-      "id": "sro",
-      "name": "Starogardzki",
-      "kind": "zone",
-      "origin": {
-        "lon": 17.0306,
-        "lat": 54.4628
-      },
-      "center": [
-        17.0306,
-        54.4628
-      ],
-      "zoom": 10.5,
-      "utcOffset": 1,
-      "market": -1,
-      "box": [
-        16.667,
-        53.472,
-        19.614,
-        54.802
-      ],
-      "place": 1025,
-      "country": "PL",
-      "localTrips": 2724490.0,
+      "localTrips": 1439407.0,
       "realm": "poland"
     },
     {
@@ -31291,7 +31271,7 @@
       ],
       "place": 1034,
       "country": "PL",
-      "localTrips": 1971691.0,
+      "localTrips": 1943312.0,
       "realm": "poland"
     },
     {
@@ -31317,7 +31297,7 @@
       ],
       "place": 1035,
       "country": "PL",
-      "localTrips": 1729848.0,
+      "localTrips": 1708073.0,
       "realm": "poland"
     },
     {
@@ -31343,7 +31323,7 @@
       ],
       "place": 1036,
       "country": "PL",
-      "localTrips": 2119782.0,
+      "localTrips": 2048897.0,
       "realm": "poland"
     },
     {
@@ -31369,7 +31349,7 @@
       ],
       "place": 1037,
       "country": "PL",
-      "localTrips": 1822422.0,
+      "localTrips": 1759330.0,
       "realm": "poland"
     },
     {
@@ -31395,7 +31375,7 @@
       ],
       "place": 1038,
       "country": "PL",
-      "localTrips": 1733214.0,
+      "localTrips": 1674241.0,
       "realm": "poland"
     },
     {
@@ -31421,7 +31401,7 @@
       ],
       "place": 1039,
       "country": "PL",
-      "localTrips": 1396456.0,
+      "localTrips": 1358732.0,
       "realm": "poland"
     },
     {
@@ -31447,7 +31427,7 @@
       ],
       "place": 1040,
       "country": "PL",
-      "localTrips": 1831455.0,
+      "localTrips": 1794772.0,
       "realm": "poland"
     },
     {
@@ -31473,7 +31453,7 @@
       ],
       "place": 1041,
       "country": "PL",
-      "localTrips": 1804729.0,
+      "localTrips": 1763917.0,
       "realm": "poland"
     },
     {
@@ -31499,7 +31479,7 @@
       ],
       "place": 1042,
       "country": "PL",
-      "localTrips": 2596087.0,
+      "localTrips": 2515608.0,
       "realm": "poland"
     },
     {
@@ -31681,7 +31661,7 @@
       ],
       "place": 1051,
       "country": "PL",
-      "localTrips": 1808908.0,
+      "localTrips": 1782830.0,
       "realm": "poland"
     },
     {
@@ -31707,7 +31687,7 @@
       ],
       "place": 1052,
       "country": "PL",
-      "localTrips": 1773244.0,
+      "localTrips": 1728089.0,
       "realm": "poland"
     },
     {
@@ -31733,7 +31713,7 @@
       ],
       "place": 1054,
       "country": "PL",
-      "localTrips": 2768058.0,
+      "localTrips": 2725327.0,
       "realm": "poland"
     },
     {
@@ -31863,7 +31843,7 @@
       ],
       "place": 1062,
       "country": "PL",
-      "localTrips": 2187496.0,
+      "localTrips": 2159390.0,
       "realm": "poland"
     },
     {
@@ -31941,7 +31921,7 @@
       ],
       "place": 1073,
       "country": "PL",
-      "localTrips": 1734499.0,
+      "localTrips": 1678701.0,
       "realm": "poland"
     },
     {
@@ -31967,7 +31947,7 @@
       ],
       "place": 1074,
       "country": "PL",
-      "localTrips": 1657712.0,
+      "localTrips": 1582811.0,
       "realm": "poland"
     },
     {
@@ -31993,7 +31973,7 @@
       ],
       "place": 1075,
       "country": "PL",
-      "localTrips": 2409197.0,
+      "localTrips": 2360021.0,
       "realm": "poland"
     },
     {
@@ -32019,7 +31999,7 @@
       ],
       "place": 1076,
       "country": "PL",
-      "localTrips": 1543284.0,
+      "localTrips": 1344360.0,
       "realm": "poland"
     },
     {
@@ -32201,33 +32181,7 @@
       ],
       "place": 1083,
       "country": "PL",
-      "localTrips": 1667779.0,
-      "realm": "poland"
-    },
-    {
-      "id": "sik",
-      "name": "Siedlecki",
-      "kind": "zone",
-      "origin": {
-        "lon": 19.6951,
-        "lat": 52.5467
-      },
-      "center": [
-        19.6951,
-        52.5467
-      ],
-      "zoom": 10.5,
-      "utcOffset": 1,
-      "market": -1,
-      "box": [
-        19.229,
-        51.538,
-        23.159,
-        53.009
-      ],
-      "place": 1084,
-      "country": "PL",
-      "localTrips": 2701780.0,
+      "localTrips": 1617304.0,
       "realm": "poland"
     },
     {
@@ -32253,7 +32207,7 @@
       ],
       "place": 1085,
       "country": "PL",
-      "localTrips": 2003206.0,
+      "localTrips": 1943930.0,
       "realm": "poland"
     },
     {
@@ -32279,7 +32233,7 @@
       ],
       "place": 1086,
       "country": "PL",
-      "localTrips": 1597712.0,
+      "localTrips": 1549746.0,
       "realm": "poland"
     },
     {
@@ -32305,7 +32259,7 @@
       ],
       "place": 1087,
       "country": "PL",
-      "localTrips": 2149821.0,
+      "localTrips": 2041533.0,
       "realm": "poland"
     },
     {
@@ -32539,7 +32493,7 @@
       ],
       "place": 1096,
       "country": "PL",
-      "localTrips": 1450835.0,
+      "localTrips": 1416508.0,
       "realm": "poland"
     },
     {
@@ -32565,7 +32519,7 @@
       ],
       "place": 1097,
       "country": "PL",
-      "localTrips": 2524225.0,
+      "localTrips": 2499373.0,
       "realm": "poland"
     },
     {
@@ -32591,7 +32545,7 @@
       ],
       "place": 1098,
       "country": "PL",
-      "localTrips": 1418724.0,
+      "localTrips": 1405902.0,
       "realm": "poland"
     },
     {
@@ -32617,7 +32571,7 @@
       ],
       "place": 1099,
       "country": "PL",
-      "localTrips": 1843821.0,
+      "localTrips": 1795697.0,
       "realm": "poland"
     },
     {
@@ -32669,7 +32623,7 @@
       ],
       "place": 1101,
       "country": "PL",
-      "localTrips": 3436205.0,
+      "localTrips": 3353699.0,
       "realm": "poland"
     },
     {
@@ -32721,7 +32675,7 @@
       ],
       "place": 1103,
       "country": "PL",
-      "localTrips": 2846507.0,
+      "localTrips": 2809687.0,
       "realm": "poland"
     },
     {
@@ -32773,7 +32727,7 @@
       ],
       "place": 1105,
       "country": "PL",
-      "localTrips": 2767869.0,
+      "localTrips": 2707048.0,
       "realm": "poland"
     },
     {
@@ -32799,7 +32753,7 @@
       ],
       "place": 1106,
       "country": "PL",
-      "localTrips": 2387807.0,
+      "localTrips": 2226862.0,
       "realm": "poland"
     },
     {
@@ -32825,7 +32779,7 @@
       ],
       "place": 1107,
       "country": "PL",
-      "localTrips": 2600870.0,
+      "localTrips": 2541677.0,
       "realm": "poland"
     },
     {
@@ -32955,7 +32909,7 @@
       ],
       "place": 1112,
       "country": "PL",
-      "localTrips": 2532903.0,
+      "localTrips": 2513746.0,
       "realm": "poland"
     },
     {
@@ -32981,7 +32935,7 @@
       ],
       "place": 1113,
       "country": "PL",
-      "localTrips": 2086892.0,
+      "localTrips": 2043026.0,
       "realm": "poland"
     },
     {
@@ -61050,7 +61004,7 @@
       ],
       "place": 3676,
       "country": "CA",
-      "localTrips": 13027741.0,
+      "localTrips": 13027704.0,
       "realm": "canada"
     },
     {
@@ -61076,7 +61030,7 @@
       ],
       "place": 3677,
       "country": "CA",
-      "localTrips": 4102293.0,
+      "localTrips": 4102264.0,
       "realm": "canada"
     },
     {
@@ -61102,33 +61056,7 @@
       ],
       "place": 3678,
       "country": "CA",
-      "localTrips": 3269854.0,
-      "realm": "canada"
-    },
-    {
-      "id": "shb",
-      "name": "Sherbrooke",
-      "kind": "zone",
-      "origin": {
-        "lon": -72.7539,
-        "lat": 45.3992
-      },
-      "center": [
-        -72.7539,
-        45.3992
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": -1,
-      "box": [
-        -73.984,
-        44.985,
-        -70.358,
-        47.515
-      ],
-      "place": 3679,
-      "country": "CA",
-      "localTrips": 3056325.0,
+      "localTrips": 3270083.0,
       "realm": "canada"
     },
     {
@@ -61154,33 +61082,7 @@
       ],
       "place": 3680,
       "country": "CA",
-      "localTrips": 3088749.0,
-      "realm": "canada"
-    },
-    {
-      "id": "brr",
-      "name": "Barrie",
-      "kind": "zone",
-      "origin": {
-        "lon": -78.3283,
-        "lat": 44.3034
-      },
-      "center": [
-        -78.3283,
-        44.3034
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": -1,
-      "box": [
-        -81.82,
-        43.88,
-        -77.187,
-        45.968
-      ],
-      "place": 3681,
-      "country": "CA",
-      "localTrips": 2840567.0,
+      "localTrips": 3088799.0,
       "realm": "canada"
     },
     {
@@ -61206,7 +61108,7 @@
       ],
       "place": 3682,
       "country": "CA",
-      "localTrips": 2487276.0,
+      "localTrips": 2487273.0,
       "realm": "canada"
     },
     {
@@ -61232,7 +61134,7 @@
       ],
       "place": 3683,
       "country": "CA",
-      "localTrips": 2435879.0,
+      "localTrips": 2435877.0,
       "realm": "canada"
     },
     {
@@ -61258,7 +61160,7 @@
       ],
       "place": 3684,
       "country": "CA",
-      "localTrips": 1911313.0,
+      "localTrips": 1911311.0,
       "realm": "canada"
     },
     {
@@ -61284,7 +61186,7 @@
       ],
       "place": 3685,
       "country": "CA",
-      "localTrips": 1346607.0,
+      "localTrips": 1346604.0,
       "realm": "canada"
     },
     {
@@ -61310,7 +61212,7 @@
       ],
       "place": 3686,
       "country": "CA",
-      "localTrips": 1093437.0,
+      "localTrips": 1093447.0,
       "realm": "canada"
     },
     {
@@ -61336,7 +61238,7 @@
       ],
       "place": 3687,
       "country": "CA",
-      "localTrips": 918410.0,
+      "localTrips": 918408.0,
       "realm": "canada"
     },
     {
@@ -61362,7 +61264,7 @@
       ],
       "place": 3688,
       "country": "CA",
-      "localTrips": 1147721.0,
+      "localTrips": 1147690.0,
       "realm": "canada"
     },
     {
@@ -61388,7 +61290,7 @@
       ],
       "place": 3689,
       "country": "CA",
-      "localTrips": 1060050.0,
+      "localTrips": 1060082.0,
       "realm": "canada"
     },
     {
@@ -61414,7 +61316,7 @@
       ],
       "place": 3690,
       "country": "CA",
-      "localTrips": 955801.0,
+      "localTrips": 955804.0,
       "realm": "canada"
     },
     {
@@ -61440,33 +61342,7 @@
       ],
       "place": 3691,
       "country": "CA",
-      "localTrips": 873061.0,
-      "realm": "canada"
-    },
-    {
-      "id": "nob",
-      "name": "North Bay",
-      "kind": "zone",
-      "origin": {
-        "lon": -81.3315,
-        "lat": 48.4811
-      },
-      "center": [
-        -81.3315,
-        48.4811
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": -1,
-      "box": [
-        -81.885,
-        45.396,
-        -77.47,
-        48.817
-      ],
-      "place": 3692,
-      "country": "CA",
-      "localTrips": 548646.0,
+      "localTrips": 873080.0,
       "realm": "canada"
     },
     {
@@ -61492,7 +61368,7 @@
       ],
       "place": 3693,
       "country": "CA",
-      "localTrips": 513411.0,
+      "localTrips": 513364.0,
       "realm": "canada"
     },
     {
@@ -61518,7 +61394,7 @@
       ],
       "place": 3694,
       "country": "CA",
-      "localTrips": 435399.0,
+      "localTrips": 435373.0,
       "realm": "canada"
     },
     {
@@ -61544,7 +61420,7 @@
       ],
       "place": 3695,
       "country": "CA",
-      "localTrips": 435672.0,
+      "localTrips": 435598.0,
       "realm": "canada"
     },
     {
@@ -61570,33 +61446,7 @@
       ],
       "place": 3696,
       "country": "CA",
-      "localTrips": 415861.0,
-      "realm": "canada"
-    },
-    {
-      "id": "rii",
-      "name": "Rivière-du-Loup",
-      "kind": "zone",
-      "origin": {
-        "lon": -70.5604,
-        "lat": 46.9787
-      },
-      "center": [
-        -70.5604,
-        46.9787
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": -1,
-      "box": [
-        -70.978,
-        46.34,
-        -68.355,
-        48.291
-      ],
-      "place": 3697,
-      "country": "CA",
-      "localTrips": 370273.0,
+      "localTrips": 415862.0,
       "realm": "canada"
     },
     {
@@ -61647,7 +61497,7 @@
       ],
       "place": 3699,
       "country": "CA",
-      "localTrips": 7901443.0,
+      "localTrips": 7900649.0,
       "realm": "canada"
     },
     {
@@ -61673,7 +61523,7 @@
       ],
       "place": 3700,
       "country": "CA",
-      "localTrips": 514534.0,
+      "localTrips": 514533.0,
       "realm": "canada"
     },
     {
@@ -61699,7 +61549,7 @@
       ],
       "place": 3702,
       "country": "CA",
-      "localTrips": 426509.0,
+      "localTrips": 426493.0,
       "realm": "canada"
     },
     {
@@ -61724,7 +61574,7 @@
       ],
       "place": 3703,
       "country": "CA",
-      "localTrips": 4644353.0,
+      "localTrips": 4644135.0,
       "realm": "canada"
     },
     {
@@ -61749,7 +61599,7 @@
       ],
       "place": 3704,
       "country": "CA",
-      "localTrips": 4130823.0,
+      "localTrips": 4131242.0,
       "realm": "canada"
     },
     {
@@ -61775,7 +61625,7 @@
       ],
       "place": 3705,
       "country": "CA",
-      "localTrips": 1420465.0,
+      "localTrips": 1420480.0,
       "realm": "canada"
     },
     {
@@ -61801,7 +61651,7 @@
       ],
       "place": 3706,
       "country": "CA",
-      "localTrips": 1418756.0,
+      "localTrips": 1418606.0,
       "realm": "canada"
     },
     {
@@ -61827,7 +61677,7 @@
       ],
       "place": 3707,
       "country": "CA",
-      "localTrips": 1017274.0,
+      "localTrips": 1017432.0,
       "realm": "canada"
     },
     {
@@ -61853,7 +61703,7 @@
       ],
       "place": 3708,
       "country": "CA",
-      "localTrips": 683869.0,
+      "localTrips": 683860.0,
       "realm": "canada"
     },
     {
@@ -61879,7 +61729,7 @@
       ],
       "place": 3709,
       "country": "CA",
-      "localTrips": 547456.0,
+      "localTrips": 547416.0,
       "realm": "canada"
     },
     {
@@ -61905,7 +61755,7 @@
       ],
       "place": 3710,
       "country": "CA",
-      "localTrips": 409842.0,
+      "localTrips": 409819.0,
       "realm": "canada"
     },
     {
@@ -61931,7 +61781,7 @@
       ],
       "place": 3711,
       "country": "CA",
-      "localTrips": 371874.0,
+      "localTrips": 371954.0,
       "realm": "canada"
     },
     {
@@ -61957,7 +61807,7 @@
       ],
       "place": 3712,
       "country": "CA",
-      "localTrips": 325832.0,
+      "localTrips": 325881.0,
       "realm": "canada"
     },
     {
@@ -61983,7 +61833,7 @@
       ],
       "place": 3713,
       "country": "CA",
-      "localTrips": 220818.0,
+      "localTrips": 220836.0,
       "realm": "canada"
     },
     {
@@ -62087,7 +61937,7 @@
       ],
       "place": 3717,
       "country": "CA",
-      "localTrips": 978313.0,
+      "localTrips": 978352.0,
       "realm": "canada"
     },
     {
@@ -62113,33 +61963,7 @@
       ],
       "place": 3718,
       "country": "CA",
-      "localTrips": 874093.0,
-      "realm": "canada"
-    },
-    {
-      "id": "tad",
-      "name": "Tracadie",
-      "kind": "zone",
-      "origin": {
-        "lon": -66.6744,
-        "lat": 48.0005
-      },
-      "center": [
-        -66.6744,
-        48.0005
-      ],
-      "zoom": 10.5,
-      "utcOffset": -4,
-      "market": -1,
-      "box": [
-        -67.377,
-        47.071,
-        -64.44,
-        48.091
-      ],
-      "place": 3719,
-      "country": "CA",
-      "localTrips": 309072.0,
+      "localTrips": 874072.0,
       "realm": "canada"
     },
     {
@@ -62217,7 +62041,7 @@
       ],
       "place": 3722,
       "country": "CA",
-      "localTrips": 483078.0,
+      "localTrips": 483012.0,
       "realm": "canada"
     },
     {
@@ -62243,7 +62067,7 @@
       ],
       "place": 3724,
       "country": "CA",
-      "localTrips": 1817998.0,
+      "localTrips": 1817959.0,
       "realm": "canada"
     },
     {
@@ -62269,7 +62093,7 @@
       ],
       "place": 3725,
       "country": "CA",
-      "localTrips": 448954.0,
+      "localTrips": 448979.0,
       "realm": "canada"
     },
     {
@@ -62295,7 +62119,7 @@
       ],
       "place": 3730,
       "country": "CA",
-      "localTrips": 2518335.0,
+      "localTrips": 2517869.0,
       "realm": "canada"
     },
     {
@@ -66477,6 +66301,214 @@
       "country": "VN",
       "localTrips": 1879159.0,
       "realm": "vietnam"
+    },
+    {
+      "id": "shb",
+      "name": "Sherbrooke",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.8935,
+        "lat": 45.3808
+      },
+      "center": [
+        -71.8935,
+        45.3808
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.984,
+        44.985,
+        -70.358,
+        47.515
+      ],
+      "place": 3928,
+      "country": "CA",
+      "localTrips": 3055853.0,
+      "realm": "canada"
+    },
+    {
+      "id": "rii",
+      "name": "Rivière-du-Loup",
+      "kind": "zone",
+      "origin": {
+        "lon": -69.5177,
+        "lat": 47.8312
+      },
+      "center": [
+        -69.5177,
+        47.8312
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.978,
+        46.34,
+        -68.355,
+        48.291
+      ],
+      "place": 3929,
+      "country": "CA",
+      "localTrips": 372631.0,
+      "realm": "canada"
+    },
+    {
+      "id": "ker",
+      "name": "Kerkyra",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.918,
+        "lat": 39.6166
+      },
+      "center": [
+        19.918,
+        39.6166
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.349,
+        37.221,
+        21.046,
+        39.917
+      ],
+      "place": 3930,
+      "country": "GR",
+      "localTrips": 459562.0,
+      "realm": "gr-cy"
+    },
+    {
+      "id": "sro",
+      "name": "Starogardzki",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.7991,
+        "lat": 54.0869
+      },
+      "center": [
+        18.7991,
+        54.0869
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.668,
+        53.472,
+        19.614,
+        54.802
+      ],
+      "place": 3931,
+      "country": "PL",
+      "localTrips": 2670895.0,
+      "realm": "poland"
+    },
+    {
+      "id": "brr",
+      "name": "Barrie",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.6453,
+        "lat": 44.3493
+      },
+      "center": [
+        -79.6453,
+        44.3493
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.82,
+        43.88,
+        -77.187,
+        45.968
+      ],
+      "place": 3932,
+      "country": "CA",
+      "localTrips": 2840353.0,
+      "realm": "canada"
+    },
+    {
+      "id": "nob",
+      "name": "North Bay",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.456,
+        "lat": 46.317
+      },
+      "center": [
+        -79.456,
+        46.317
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.884,
+        45.396,
+        -77.471,
+        48.817
+      ],
+      "place": 3933,
+      "country": "CA",
+      "localTrips": 549603.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sik",
+      "name": "Siedlecki",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.2697,
+        "lat": 52.1672
+      },
+      "center": [
+        22.2697,
+        52.1672
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.229,
+        51.538,
+        23.158,
+        53.009
+      ],
+      "place": 3934,
+      "country": "PL",
+      "localTrips": 2556820.0,
+      "realm": "poland"
+    },
+    {
+      "id": "tad",
+      "name": "Tracadie",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.918,
+        "lat": 47.5121
+      },
+      "center": [
+        -64.918,
+        47.5121
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.376,
+        47.071,
+        -64.441,
+        48.091
+      ],
+      "place": 3935,
+      "country": "CA",
+      "localTrips": 309488.0,
+      "realm": "canada"
     }
   ]
 }

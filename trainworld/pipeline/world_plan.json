@@ -49010,8 +49010,8 @@
    "iso2": "GR",
    "people": 154886,
    "origin": [
-    20.8936,
-    37.7775
+    19.918,
+    39.6166
    ],
    "tz": "Europe/Athens",
    "utc_offset": 2,
@@ -49039,27 +49039,31 @@
      "Kerkyra",
      "Zakynthos",
      "Ithaki, Kefallinia"
+    ],
+    "origin_was": [
+     20.8936,
+     37.7775
     ]
    },
    "run": {
-    "run_batch": "20261020-162938-26912",
+    "run_batch": "20261029-053623",
+    "built": "2026-10-29T05:45:21",
+    "gated": "2026-10-29T06:28:15",
+    "shipped": "2026-10-29T08:28:48",
     "steps": {
-     "build": 148.3,
+     "build": 43.4,
      "stations": 0.9,
-     "places": 1.5,
-     "routes": 7.0,
+     "places": 1.9,
+     "routes": 10.4,
      "merge": 0.7,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-20T16:44:48",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.11098479375075206"
+      "top_zone_jobs_share 0.11189106271429781"
      ]
-    },
-    "gated": "2026-10-20T17:16:13",
-    "shipped": "2026-10-20T17:34:00"
+    }
    }
   },
   {
@@ -64549,8 +64553,8 @@
    "iso2": "PL",
    "people": 1038940,
    "origin": [
-    17.0306,
-    54.4628
+    18.7991,
+    54.0869
    ],
    "tz": "Europe/Warsaw",
    "utc_offset": 1,
@@ -64578,25 +64582,29 @@
      "Starogardzki",
      "Słupski",
      "Chojnicki"
+    ],
+    "origin_was": [
+     17.0306,
+     54.4628
     ]
    },
    "run": {
-    "run_batch": "20261021-085713",
+    "run_batch": "20261029-053623",
+    "built": "2026-10-29T06:04:23",
+    "gated": "2026-10-29T06:28:15",
+    "shipped": "2026-10-29T08:28:48",
     "steps": {
-     "build": 122.4,
+     "build": 90.3,
      "stations": 0.8,
-     "places": 3.7,
-     "routes": 33.2,
-     "merge": 1.5,
-     "nocar": 1.3,
-     "everyday": 0.8
+     "places": 3.8,
+     "routes": 52.0,
+     "merge": 1.7,
+     "nocar": 1.6,
+     "everyday": 1.0
     },
-    "built": "2026-10-21T09:23:07",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-10-21T10:52:07",
-    "shipped": "2026-10-21T13:56:38"
+    }
    }
   },
   {
@@ -64612,8 +64620,8 @@
    "iso2": "PL",
    "people": 1033362,
    "origin": [
-    19.6951,
-    52.5467
+    22.2697,
+    52.1672
    ],
    "tz": "Europe/Warsaw",
    "utc_offset": 1,
@@ -64641,25 +64649,29 @@
      "Siedlecki",
      "Płocki",
      "Żyrardowski"
+    ],
+    "origin_was": [
+     19.6951,
+     52.5467
     ]
    },
    "run": {
-    "run_batch": "20261021-114047",
+    "run_batch": "20261029-053623",
+    "built": "2026-10-29T06:23:04",
+    "gated": "2026-10-29T06:28:15",
+    "shipped": "2026-10-29T08:28:48",
     "steps": {
-     "build": 202.1,
-     "stations": 1.4,
-     "places": 7.7,
-     "routes": 54.9,
-     "merge": 1.8,
-     "nocar": 1.7,
-     "everyday": 0.9
+     "build": 128.6,
+     "stations": 0.8,
+     "places": 6.6,
+     "routes": 61.9,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.8
     },
-    "built": "2026-10-21T11:59:12",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-10-21T13:14:48",
-    "shipped": "2026-10-21T13:56:39"
+    }
    }
   },
   {
@@ -145319,8 +145331,8 @@
    "iso2": "CA",
    "people": 1122884,
    "origin": [
-    -72.7539,
-    45.3992
+    -71.8935,
+    45.3808
    ],
    "tz": "America/Toronto",
    "utc_offset": -5,
@@ -145884,24 +145896,29 @@
      "Lac-Normand",
      "Lac-Masketsi",
      "Linton"
+    ],
+    "origin_was": [
+     -72.7539,
+     45.3992
     ]
    },
    "run": {
-    "run_batch": "20261026-080128",
+    "run_batch": "20261029-051122",
+    "built": "2026-10-29T05:43:07",
+    "shipped": "2026-10-29T08:28:49",
     "steps": {
-     "build": 650.2,
-     "stations": 2.6,
-     "places": 10.2,
-     "routes": 219.7,
-     "merge": 6.5,
-     "nocar": 3.5,
-     "everyday": 2.0
+     "build": 368.5,
+     "stations": 1.0,
+     "places": 5.3,
+     "routes": 126.7,
+     "merge": 3.7,
+     "nocar": 1.7,
+     "everyday": 0.8
     },
-    "built": "2026-10-26T08:19:37",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-26T15:31:00"
+    "gated": "2026-10-29T06:40:02"
    }
   },
   {
@@ -146215,8 +146232,8 @@
    "iso2": "CA",
    "people": 1040607,
    "origin": [
-    -78.3283,
-    44.3034
+    -79.6453,
+    44.3493
    ],
    "tz": "America/Toronto",
    "utc_offset": -5,
@@ -146420,27 +146437,32 @@
      "Moose Point 79",
      "Wahta Mohawk Territory",
      "Chief's Point No. 28"
+    ],
+    "origin_was": [
+     -78.3283,
+     44.3034
     ]
    },
    "run": {
-    "run_batch": "20261026-080128",
+    "run_batch": "20261029-051122",
+    "built": "2026-10-29T06:17:10",
+    "shipped": "2026-10-29T08:28:49",
     "steps": {
-     "build": 1126.5,
-     "stations": 1.9,
-     "places": 3.9,
-     "routes": 228.5,
-     "merge": 9.9,
-     "nocar": 3.7,
-     "everyday": 1.6
+     "build": 662.1,
+     "stations": 1.1,
+     "places": 2.6,
+     "routes": 147.1,
+     "merge": 7.0,
+     "nocar": 2.5,
+     "everyday": 1.1
     },
-    "built": "2026-10-26T08:27:39",
     "gate": {
      "warn": [
-      "area_km2 46923.47245807975",
+      "area_km2 46923.17879523742",
       "fleet_range 1"
      ]
     },
-    "shipped": "2026-10-26T15:31:00"
+    "gated": "2026-10-29T06:40:03"
    }
   },
   {
@@ -151805,8 +151827,8 @@
    "iso2": "CA",
    "people": 206904,
    "origin": [
-    -81.3315,
-    48.4811
+    -79.456,
+    46.317
    ],
    "tz": "America/Toronto",
    "utc_offset": -5,
@@ -151936,27 +151958,32 @@
      "Matachewan 72",
      "Henvey Inlet 2",
      "Cochrane, Unorganized, South *"
+    ],
+    "origin_was": [
+     -81.3315,
+     48.4811
     ]
    },
    "run": {
-    "run_batch": "20261026-080128",
+    "run_batch": "20261029-051122",
+    "built": "2026-10-29T06:17:27",
+    "shipped": "2026-10-29T08:28:49",
     "steps": {
-     "build": 1233.6,
-     "stations": 1.1,
-     "places": 1.7,
-     "routes": 45.1,
-     "merge": 3.6,
-     "nocar": 2.4,
-     "everyday": 1.6
+     "build": 790.1,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 43.4,
+     "merge": 2.1,
+     "nocar": 1.7,
+     "everyday": 1.1
     },
-    "built": "2026-10-26T08:34:40",
     "gate": {
      "warn": [
-      "area_km2 47365.73849610072",
+      "area_km2 47365.69462345471",
       "fleet_range 1"
      ]
     },
-    "shipped": "2026-10-26T15:31:04"
+    "gated": "2026-10-29T06:40:03"
    }
   },
   {
@@ -153864,8 +153891,8 @@
    "iso2": "CA",
    "people": 145768,
    "origin": [
-    -70.5604,
-    46.9787
+    -69.5177,
+    47.8312
    ],
    "tz": "America/Toronto",
    "utc_offset": -5,
@@ -154073,24 +154100,29 @@
      "Notre-Dame-des-Sept-Douleurs",
      "Picard",
      "Lac-Boisbouscache"
+    ],
+    "origin_was": [
+     -70.5604,
+     46.9787
     ]
    },
    "run": {
-    "run_batch": "20261026-080128",
+    "run_batch": "20261029-051122",
+    "built": "2026-10-29T05:38:07",
+    "shipped": "2026-10-29T08:28:50",
     "steps": {
-     "build": 302.7,
-     "stations": 2.2,
-     "places": 3.7,
-     "routes": 39.7,
-     "merge": 2.0,
-     "nocar": 3.0,
-     "everyday": 1.9
+     "build": 169.4,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 31.2,
+     "merge": 1.4,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-10-26T08:25:34",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-26T15:31:05"
+    "gated": "2026-10-29T06:40:03"
    }
   },
   {
@@ -154269,8 +154301,8 @@
    "iso2": "CA",
    "people": 112393,
    "origin": [
-    -66.6744,
-    48.0005
+    -64.918,
+    47.5121
    ],
    "tz": "America/Moncton",
    "utc_offset": -4,
@@ -154386,24 +154418,29 @@
      "Pabineau 11",
      "Indian Ranch",
      "Tabusintac 9"
+    ],
+    "origin_was": [
+     -66.6744,
+     48.0005
     ]
    },
    "run": {
-    "run_batch": "20261026-100615",
+    "run_batch": "20261029-051122",
+    "built": "2026-10-29T06:35:22",
+    "shipped": "2026-10-29T08:28:50",
     "steps": {
-     "build": 109.2,
-     "stations": 1.3,
-     "places": 2.1,
-     "routes": 18.1,
-     "merge": 1.4,
-     "nocar": 2.1,
-     "everyday": 1.4
+     "build": 62.8,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 11.4,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-26T13:11:54",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-26T15:31:12"
+    "gated": "2026-10-29T06:40:03"
    }
   },
   {
