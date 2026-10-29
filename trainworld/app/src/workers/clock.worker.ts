@@ -2589,8 +2589,12 @@ function busSnapshot(a: TrackApi, id: number, stations: NetworkSnapshot["station
  * demand, yet demand's reach and nearby markets read them. */
 let snapStations = "";
 function stationsKey(ni = api!.nodes_info()): string {
-  const out: number[] = [];
-  for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0 && ni[i + 8] === 1) out.push(ni[i], ni[i + 1], ni[i + 2], ni[i + 3], ni[i + 7], ni[i + 9]);
+  const out: (number | string)[] = [];
+  // T-1805: a station's heading is its axis here; a branch splitting the track beside it can turn
+  // the heading round, and a few microradians off (it follows the node's first edge end), which
+  // moves nothing demand reads: the axis as its doubled angle, to a milliradian
+  const axis = (h: number) => `${Math.round(Math.cos(2 * h) * 1e3)};${Math.round(Math.sin(2 * h) * 1e3)}`;
+  for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0 && ni[i + 8] === 1) out.push(ni[i], ni[i + 1], ni[i + 2], ni[i + 3], ni[i + 7], axis(ni[i + 9]));
   return `${out.join(",")}|${api!.station_upgrades().join(",")}`;
 }
 
@@ -3113,8 +3117,9 @@ async function handle(msg: ToClock) {
       forget();
       const demand = api.dirty_demand_lines();
       // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
-      // (about 60 ms on New York's real save, more on shared track)
-      const trips = !(msg.op.op === "route" && charge === 0 && !demand.length);
+      // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
+      // junction it pays for when it branches off constructed track
+      const trips = !(msg.op.op === "route" && !demand.length);
       sendState(service, service ? api.edit_time() : undefined, trips);
       if (service) serviceEditMs = performance.now() - tA;
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();

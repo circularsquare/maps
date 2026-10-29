@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1805 [P2] Placement lag joining constructed rail and branching off blueprint. Done 2026-10-29 (agent t1805): no placement sends demand a network now; click to next ghost on shared NYC 378/273/215 -> 122/74/74 ms (first, off blueprint, later); four causes, notes/T-1805.md.
 - T-1804 [P2] City loading bars lag behind the zoom. Done 2026-10-29 (agent t1803): `map/zoneLoading.ts` places the bars on every map move through `placeAt`, not the throttled pan plane; drift in a zoom 205 px at worst before, 0.6 px after (`checks/t1804-bars.mjs`).
 - T-1803 [P2] No 4x cap for small edits. Done 2026-10-29 (agent t1803): `game/editCap.ts` decides per edit (DECISIONS 2026-10-29); the status still shows, its hover drops the clock sentence; `checks/t1803-cap.mjs`, 25 checks pass.
 - T-1802 [P2] Tighter rows, bigger tool icons, new related-lines icon, ramp left of terrain. Done 2026-10-29 (agent t1802): plain-text rows 24 px (was 28; the ledger 4 px less), rows with a stepper, button or box stay 28; construct, ramp, terrain, snap, keep-placing and bus glyphs 17-19 px (were 14-16), schedule copy/paste 14 (was 12); related icon is two lines, an oval between, the right one curving away; ramp then terrain, left aligned after the price. Shots artifacts/trainworld/t1802/.

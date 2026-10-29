@@ -5,7 +5,8 @@
 //! Loads the network as `edit_bench` does, then from the middle of `edges` sampled edges (default
 //! 200) previews a route to open ground at several angles and distances, as the track tool asks (through, design 160, auto ramp). Prints the slowest previews
 //! and the time per preview. `TW_ADD=1` also places each accepted one and undoes it, timing both;
-//! `TW_NORAMP=1` previews without the auto ramp. A save's track bytes are those after its gzip,
+//! `TW_NORAMP=1` previews without the auto ramp; `TW_WHY=1` with `TW_ADD` prints each placement's
+//! demand-dirty lines (T-1805: none, unless it changes a train's run). A save's track bytes are those after its gzip,
 //! magic and JSON header (`saveFile.ts`).
 
 use std::time::Instant;
@@ -67,6 +68,10 @@ fn main() {
                         a.set_route_beside(u32::MAX, u32::MAX);
                         let r = a.add_route(&ends, &[], 2, false);
                         let add = t1.elapsed().as_secs_f64() * 1e3;
+                        if std::env::var("TW_WHY").is_ok() && r == 0 {
+                            // T-1805: what a blueprint branch marks for demand and for drawing
+                            eprintln!("add {add:.1} ms: demand lines {:?}, recomputed {}, charge {:.3}", a.dirty_demand_lines(), a.dirty_lines().len(), a.last_charge());
+                        }
                         let t2 = Instant::now();
                         a.undo();
                         adds.push((add, t2.elapsed().as_secs_f64() * 1e3, r));

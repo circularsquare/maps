@@ -179,6 +179,9 @@ pub const HOLD_MARGIN_M: f64 = 20.0;
 
 /// A station-to-station time moving this much or more wakes the city's demand.
 pub const DEMAND_TIME_EPS_S: f64 = 5.0;
+/// A rate an edit's settle moves on another line by this much or more (trains an hour) wakes demand
+/// for that line (T-1805: a train every 100 hours changes no wait anyone could see).
+pub const DEMAND_TPH_EPS: f32 = 0.01;
 /// Demand levels: index into a line's `tph`.
 pub const HIGH: usize = 0;
 pub const MEDIUM: usize = 1;

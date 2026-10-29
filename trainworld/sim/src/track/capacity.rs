@@ -329,6 +329,14 @@ fn hold_back(lines: &[LineSvc], l: usize) -> f64 {
 /// running line on those keys). Sections join across two-ended nodes where the set of line
 /// directions does not change; a key outside `in_k` is never joined to (the incremental pass
 /// passes whole sections).
+/// T-1805: a node's edge ends that a running train line uses. A branch no train runs on yet
+/// (blueprint, or constructed with no line) leaves the track through the node one section.
+fn live_ports(net: &Network, lines: &[LineSvc], node: u32) -> usize {
+    net.node_ports[node as usize].ends().iter().filter(|&&c| {
+        net.lines_on_edge(c >> 1).iter().any(|&l| lines.get(l as usize).is_some_and(|ls| ls.running && !ls.is_bus()))
+    }).count()
+}
+
 fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(u32) -> bool, cap: &mut Capacity) {
     // (key, line, run, seg index)
     let mut occ: Vec<(u32, u32, u8, u32)> = vec![];
@@ -382,7 +390,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
             let ns = run.segs.len();
             for i in 0..if wrap { ns } else { ns.saturating_sub(1) } {
                 let node = run.nodes[i + 1] as usize;
-                if net.node_ports[node].n != 2 {
+                if net.node_ports[node].n != 2 && live_ports(net, lines, node as u32) != 2 {
                     continue;
                 }
                 let (p, q) = (run.segs[i], run.segs[(i + 1) % ns]);
@@ -698,6 +706,11 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
             continue;
         }
         for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
+            // T-1805: a crossing no train runs over the other way holds nothing (blueprint, or
+            // constructed track no line uses); the lines on its own track already share their section
+            if on(other).is_empty() {
+                continue;
+            }
             let len = net.edge_len[own as usize];
             for dir in 0..2 {
                 users.clear();

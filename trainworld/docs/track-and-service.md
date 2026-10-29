@@ -417,7 +417,10 @@ station it stops at or at a bare track end, one with no station (T-797, 6.3). In
 level (track positions in opposite order on the two sides); merges and diverges do not, as track
 capacity counts them. A plain double-track Y has one crossing pair. A **flyover** (a flying
 junction) removes it, for its price (6.1, 6.4). A **flat crossing** makes every move on one
-route conflict with every move on the other.
+route conflict with every move on the other; one with no train on its other route (blueprint, or
+constructed track no line runs on) holds nothing. A node where only two edge ends carry running
+lines is plain track for capacity: a branch no train uses yet does not cut the section through it
+(T-1805).
 
 **Resources and utilisation.** Everything shared has an occupancy `s` per train, and per period
 `rho = sum(trains per hour x s) / 3600` from the scheduled frequencies:

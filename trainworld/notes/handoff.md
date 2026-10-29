@@ -26,8 +26,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Uncommitted: Anita's TODO.md (never commit). Agents' in-progress files listed below.
 
 ## In flight
-- T-1801 transfer fare, default $0, above the national fare scale: agent t1801 (Opus) in tree .tw-trees/t1801
-  (from a8d08f74), Vite 6169. Land with agent-tree land (rebase), rebuild main WASM.
+- T-1801 transfer fare BUILT in tree .tw-trees/t1801 ($0 identical; $1: rail -4.3%, transfers -34%). Land after
+  t1805 finishes (both edit clock.worker.ts; main tree has t1805's uncommitted edit), then rebuild main WASM, 8800.
+- T-1803/1804 committed 641ccef0.
+- T-1809 group view layout v2 (Anita's playtest: bent schematic, key stops only + toggle, crossings/transfers like
+  related view, bullets at line ends + floating, order swaps, branch bugs): agent t1809 (Opus), main tree, Vite 6181.
 - T-1802 committed 9288b07a. T-1805 placement-lag timing agent t1805 (Opus), main tree, Vite 6175, 2 cores.
 - T-1803 no 4x cap for small edits + T-1804 loading bars fixed while zooming: agent t1803 (Sonnet), main tree,
   Vite 6163.

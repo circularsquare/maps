@@ -353,6 +353,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `old/t734-track-drag.mjs` (the real save with the track tool: a press and drag on a blueprint node
   moves it, a click still places track; port 6112 by default),
   `t1779-branch-ghost.mjs [url] [save]` (branches off a line on a real save, the shared-track New York by default: each preview's ms, how far the ghost is behind when the pointer stops, click to placed and to the next ghost, the clock worker's ms per step; about 3 minutes, port 6199 by default; T-1779, T-1780),
+  `t1805-placement.mjs [url] [save | fresh]` (runs of three blueprint segments off constructed track mid-edge, then off that blueprint: each click to the next ghost, the clock worker's ms, whether demand was sent a network; `TIMELINE=1`, `PROFILE=1`; T-1805),
   `old/t1155-branch.mjs` (track drawn from a station, through the track tool's clicks, on the real save
   and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
   platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),

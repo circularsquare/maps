@@ -1245,7 +1245,7 @@ impl Service {
 }
 
 impl LineSvc {
-    fn stop_to_stop_safe(&self, r: usize, lev: usize) -> Vec<f64> {
+    pub(crate) fn stop_to_stop_safe(&self, r: usize, lev: usize) -> Vec<f64> {
         if !self.ok {
             return vec![];
         }

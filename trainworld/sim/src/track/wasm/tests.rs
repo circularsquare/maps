@@ -2942,6 +2942,43 @@ fn drawing_on_from_a_dead_end_station_keeps_its_platform() {
     }
 }
 
+/// T-1805: blueprint off two lines' shared constructed track, branching mid-edge or crossing it
+/// at grade, changes no train's run, so nothing goes to demand.
+#[test]
+fn blueprint_beside_shared_track_wakes_no_demand() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let nodes = a.nodes_info();
+    let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+    assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
+    assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
+    let l4 = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l4, &[n0, n1], 8, 6, 4, 30.0, 180.0, 0, 0x00933c, "4".into()), 0);
+    let l5 = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l5, &[n0, n1], 8, 6, 4, 30.0, 180.0, 0, 0x00933c, "5".into()), 0);
+    assert_eq!(a.construct_line(l4), 0, "{}", a.issues());
+    let times = |a: &TrackApi| [a.stop_times(l4, 0, 0), a.stop_times(l5, 0, 0), a.stop_times(l4, 1, 1)];
+    let before = times(&a);
+    let edge = a.edges_info().chunks(10).find(|c| c[5] > 5000.0).unwrap()[0];
+    // a branch from the middle of the shared edge, splitting it
+    let branch = [2.0, edge, 3000.0, 0.0, 0.0, 0.0, 0.0, 4500.0, 900.0, 0.0];
+    assert_eq!(a.add_route(&branch, &[], 2, false), 0, "{}", a.issues());
+    assert!(a.dirty_demand_lines().is_empty(), "{:?}", a.dirty_demand_lines());
+    assert_eq!(times(&a), before);
+    // a blueprint across the track at grade
+    let across: Vec<f64> = free(1500.0, -800.0).iter().chain(free(1500.0, 800.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&across, &[], 2, false), 0, "{}", a.issues());
+    assert!(!a.w.net.crossings.is_empty());
+    assert!(a.dirty_demand_lines().is_empty(), "{:?}", a.dirty_demand_lines());
+    assert_eq!(times(&a), before);
+    // and the same track constructed, with no line on it
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert!(a.dirty_demand_lines().is_empty(), "{:?}", a.dirty_demand_lines());
+    assert_eq!(times(&a), before);
+}
+
 #[test]
 fn line_groups_join_copy_leave_and_save() {
     let mut a = api();

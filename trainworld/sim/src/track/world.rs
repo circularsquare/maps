@@ -7,6 +7,9 @@ use super::net::{path_edge, EdgeData, Issue, LineData, Network, NodeData, Statio
 use super::params::*;
 use super::service::{Service, ServiceDirty};
 
+/// A line's trains, rates and stop-to-stop times (by run, then level), as demand reads them.
+type DemandView = (Option<[u32; 3]>, [f32; 3], [Vec<Vec<f64>>; 2]);
+
 /// One edit. The primitive setters replace an object whole (`None` removes it); `Split` and
 /// `DeleteEdge` expand into primitives when applied. Every applied op yields its inverse, which
 /// is again an `Op`.
@@ -522,14 +525,20 @@ impl TrackWorld {
         // The capacity pass rebuilds only around what was touched (T-050).
         let mut cap_nodes = der.nodes.clone();
         cap_nodes.extend_from_slice(&t.stations);
+        let settles = cap_dirty || !lines.is_empty() || !t.schedules.is_empty();
+        let before = settles.then(|| self.demand_view());
         let mut svc = self.svc.update_scoped(&self.net, &lines, &t.schedules, cap_dirty, Some((&der.edges, &cap_nodes)));
-        if cap_dirty || !lines.is_empty() || !t.schedules.is_empty() {
+        if let Some(before) = before {
             // T-752: a switch between counts and headways never buys or sells a train
             self.switching = switch;
             let counts = self.settle_train_counts(false);
             self.switching = None;
             for id in counts {
-                svc.demand.push(id);
+                // T-1805: what the settle moved on other lines counts for demand once it shows
+                // there: a train more or less, a rate or a stop-to-stop time past demand's tolerance
+                if self.demand_moved(id, &before) {
+                    svc.demand.push(id);
+                }
                 svc.recomputed.push(id);
             }
             svc.demand.sort_unstable(); svc.demand.dedup();
@@ -585,6 +594,32 @@ impl TrackWorld {
     /// T-1382: what the net was changed under these lines, whether or not their service is rebuilt
     /// (an edit refused after its check, a sketch, a batch rolled back leave the net touched and
     /// derived but the service as it was): the clock worker reads their rows again.
+    /// Per line, what demand reads of its service: trains, rates, stop-to-stop times by run and level.
+    fn demand_view(&self) -> Vec<DemandView> {
+        (0..self.net.line_count())
+            .map(|l| {
+                let ls = self.svc.lines.get(l);
+                let times = std::array::from_fn(|r| (0..LEVELS).map(|lev| ls.map_or(vec![], |s| s.stop_to_stop_safe(r, lev))).collect());
+                (self.net.line_trains[l], self.net.line_tph[l], times)
+            })
+            .collect()
+    }
+
+    /// Whether line `l` moved for demand since `before` (`demand_view`): its trains, a rate by
+    /// `DEMAND_TPH_EPS` or a stop-to-stop time by `DEMAND_TIME_EPS_S`.
+    fn demand_moved(&self, l: u32, before: &[DemandView]) -> bool {
+        let Some((trains, tph, times)) = before.get(l as usize) else { return true };
+        let i = l as usize;
+        if self.net.line_trains[i] != *trains || self.net.line_tph[i].iter().zip(tph).any(|(a, b)| (a - b).abs() >= DEMAND_TPH_EPS) {
+            return true;
+        }
+        let Some(ls) = self.svc.lines.get(i) else { return true };
+        (0..2).any(|r| (0..LEVELS).any(|lev| {
+            let (now, was) = (ls.stop_to_stop_safe(r, lev), &times[r][lev]);
+            now.len() != was.len() || now.iter().zip(was).any(|(a, b)| (a - b).abs() >= DEMAND_TIME_EPS_S)
+        }))
+    }
+
     fn note_lines(&mut self, t: &super::net::Touch, der: &super::net::Derived) {
         let lines = self.lines_touched(t, der);
         self.svc.note_changed(&lines);
