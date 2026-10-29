@@ -876,11 +876,6 @@ button.save-add:hover { color: var(--text); }
 /* T-1281: a park and ride's P after the name */
 .stn-label.park::after { content: "P"; display: inline-block; margin-left: 4px; padding: 0 3px; border-radius: 2px;
   background: var(--map-ink); color: var(--bg); font-weight: 700; font-size: 0.85em; line-height: 1.25; vertical-align: 1px; }
-/* T-1434: a line's opening day, a string of small pennants under each of its stations' names, in its colour */
-.stn-label.opening::before { content: ""; position: absolute; left: 0; top: 100%; width: min(100%, 63px); height: 6px; margin-top: -1px; opacity: 0.85;
-  background: var(--rib);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath d='M0 0h7v1H0zM.8 1h5.4L3.5 5.6z'/%3E%3C/svg%3E") 0 0 / 7px 6px repeat-x;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath d='M0 0h7v1H0zM.8 1h5.4L3.5 5.6z'/%3E%3C/svg%3E") 0 0 / 7px 6px repeat-x; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }

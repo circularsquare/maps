@@ -33,7 +33,11 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - Vietnam committed 2b955e0c (93/95 shipped; next SE Asia: Thailand easiest). T-1733 landed ff76b15e;
   8800 rebuilt there, smoke 20/20 both shades. Deploy 2026-10-28g refused by the permission
   check: asked Anita to approve it explicitly. Then website add/commit/push, gh run watch, verify --page, purge 28f.
-- T-1734: second T-1733 agent resumed, tree .tw-trees/t1734 from ff76b15e; Vite 6122; 4 cores; may file T-1736-1737.
+- T-1734: built in .tw-trees/t1734, NOT landed: whole solves land every 11-14 min while building on Japan, last
+  one bit-equal except Okayama 2e-9 (T-1736); but an edit during a whole solve waits up to 14 min (T-1733 alone: 2 min).
+  In-between local solves: can't meet both targets at a line a minute (~4.5 min typical, big change). Tree kept;
+  Anita 2026-10-29: keep T-1733's behaviour, return to it later for more thought. Tree kept. Agent idle (~357k).
+- T-1759 agent t1759 (Sonnet): drop the opening-day bunting (Anita); Vite 6199; 2 cores.
 - T-1751 committed 1550be70 (EdgeData.sep: imported crossings separated; Tokyo peak 27; real saves regenerated);
   8800 rebuilt there, smoke 20/20 both shades.
 - LIVE: 2026-10-28g (= 1550be70, before T-1755), website e74fa0e pushed (Anita allowed pushes), verify --page
@@ -45,7 +49,12 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1756 committed e833b0cf; 8800 rebuilt there, smoke 20/20 both shades. Triangles = opening-day bunting
   (T-1434), kept; asked Anita.
 - T-1758 (found by t1757): reused ids left 1.27M commute trips a day in market packs going 700+ km (VN, CA);
-  pair rule fixed; repair of ~250 market packs given the go 2026-10-28 late. Live 28g has the bad pairs.
+  repaired (140 packs, 145 pairs, 1.26M trips gone); code committed with T-1743. The repaired market
+  packs and registry market rows are data/uncommitted json: commit them with Thailand's after its join.
+  Live 28g has the bad pairs until the next deploy.
+- Thailand run started 23:33 (batch 20261028-233344, 67 rows, python 22764, log artifacts/trainworld/t1757-run-th.log);
+  Singapore built too: 68 gated (ban, 66 zones, sin; knt mge relaxed). TH,SG join given the go 2026-10-29
+  (~1 h, 6 jobs): nothing else may write data/packs until it reports.
 - T-1752 (car side of mode choice) asked Anita. T-1738 open for the next SE Asian country (Thailand easiest).
 - (was) T-1733 DONE in .tw-trees/t1733, not landed: Japan 118 s after the line is built, big lines within 0.47%;
   China 9.3 s. Fix: local rounds crowd on the rest's per-round loads (trail). Smoke 20/20 in the tree.
@@ -92,6 +101,9 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   Straight-line default fares (US $1 + $0.08/km); Japan's lower long fares fine. Loans 1%/game
   day. Clock speed not saved. No automatic crossovers; stations placed by the player. Weekends
   run the medium timetable. Bus running cost US$6 a bus-km. Select on key 4; Shift+1-7 elevation.
+
+## PAUSE (Anita 2026-10-29: "after thailand and singapore, we can just pause. we're at a good state")
+Land TH/SG and T-1759 (commit, 8800, smoke), then start nothing new. Deploy only on her word.
 
 ## Next (Anita 2026-10-28 evening: "this order is fine"; she is away)
 1. Land T-1733 and T-1654 (smoke, commit, 8800). Deploy: asked her, no answer yet; don't publish without it.

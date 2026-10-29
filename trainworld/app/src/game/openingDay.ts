@@ -1,13 +1,11 @@
 // Opening day (T-1434): a line that starts running for the first time in this page's session has
-// its first game day marked. A rail line's stations get a small bunting under their names (map/stationLabels.ts, none for a bus line, T-1715),
-// its row in the Lines tab counts the riders up from 0 once its first figure is shown. Held on the
-// main thread only and not saved: a loaded game shows no opening days.
+// its first game day marked: its row in the Lines tab counts the riders up from 0 once its first
+// figure is shown. Held on the main thread only and not saved: a loaded game shows no opening days.
 
 import { signal } from "@preact/signals";
 import { clock } from "./clock";
-import { linesById, world } from "./world";
+import { world } from "./world";
 import { today } from "./today";
-import type { WorldView } from "./types";
 
 /** One game day, s. */
 const DAY_S = 86400;
@@ -38,32 +36,6 @@ export function countingRiders(o: Opening | undefined, riders: number, now = per
   const t = (now - o.landed) / COUNT_MS;
   if (t >= 1) return null;
   return Math.round(riders * (1 - (1 - t) ** 3));
-}
-
-const BUNTING = 7;
-/** For each station of a line on its opening day, the CSS background its bunting is painted with: the
- * lines' colours, one per pennant in turn. */
-export function ribbonColours(w: WorldView): ReadonlyMap<string, string> | null {
-  const open = openings.peek();
-  if (!open.size) return null;
-  const by = new Map<string, string[]>();
-  const at = linesById(w);
-  for (const id of open.keys()) {
-    const l = at.get(id);
-    // T-1715: a bus line's opening hangs no bunting: at the one station a feeder meets it read as a
-    // row of stray triangles under the name, and the bus's own stops have no names to hang it on
-    if (!l || w.lineStats[id]?.bus) continue;
-    for (const s of l.stops) {
-      const c = by.get(s);
-      if (!c) by.set(s, [l.colour]);
-      else if (!c.includes(l.colour) && c.length < 3) c.push(l.colour);
-    }
-  }
-  const out = new Map<string, string>();
-  for (const [s, c] of by) {
-    out.set(s, c.length === 1 ? `linear-gradient(${c[0]},${c[0]})` : `repeating-linear-gradient(90deg,${c.map((x, i) => `${x} ${i * BUNTING}px ${(i + 1) * BUNTING}px`).join(",")})`);
-  }
-  return out;
 }
 
 /** Start watching for lines that open. Call once, after the clock exists. */

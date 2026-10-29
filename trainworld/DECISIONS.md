@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+## 2026-10-29
+
+- Opening-day bunting dropped (Anita, T-1759): pennants under names don't fit a map game.
+
 ## 2026-10-28
 
 - **Touch skips the new line's name focus only; the pencil and a tap on the box still focus** (T-1756, my call): "touch" is the last press being a finger (`touchInput`), and only the editor opened by `renameLinePrompt` is left unfocused. The opening-day bunting under station names (T-1434) is kept as it is, with no hover (labels take no pointer events).
@@ -617,3 +621,4 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 - 2026-10-28 (agent's call, T-1625): the least service the game has, a train and a car through the 14 high-level hours, shuttles a thin line every few minutes, so a line that a game run found under 15 riders a car-km is cut to the cars and trains that carry its riders at 25, and one that would stay under 12 is left out of the save (89 of 896 lines, under 0.2% of rail trips; `pipeline/n02_trim.json`). The lie: those lines' service follows the game's riders, not the counts; the rest, and so the 0.48 against MLIT's passenger-km, is sized by the counts alone.
 - 2026-10-28 (agent's call, T-1733): a local solve after an edit crowds the touched populations round by round on the others' loads as that round of their last solve was priced on, which every population keeps per period and round (about 10 MB a worker on all of Japan), not on their final loads: with three crowding rounds far from settled, the final loads sent all of Japan's lines 6-16% astray; now within 0.5% of the whole solve. notes/T-1733.md.
 - 2026-10-28 (agent's call, T-1733): for the local solve a zone's trains an hour count as unchanged within 5% (run times still 1%). The lie: a zone whose line lost a few percent of its trains to a knock-on change elsewhere keeps its figures until the whole solve (0.47% on that Osaka line); it cut Osaka and Shiga out of a Tokyo edit's local solve, a third of its time.
+- 2026-10-29 (agent's call, T-1734; built in tw/t1734, not landed, waits on Anita): an edit's solve is never cancelled: the page holds every newer network (edits, zones opened or at another level, the zone in view's rough solve) until its final is shown, except in the 8 s after its local result (a line built just after its stations). A network held since before those 8 s waits for the final too, since on all of Japan edits a minute apart against a 2-minute local solve would otherwise restart the local solve for ever. The cost: an edit made during a whole solve shows its figures only once that solve has landed and the local solve on top is done (up to about 14 minutes on all of Japan). A worker replaced meanwhile still re-solves at once. notes/T-1734.md.

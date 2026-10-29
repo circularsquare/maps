@@ -1,7 +1,7 @@
 // T-1380: the station names kept up to date from changed stations (map/labelNames.ts `NameIndex`)
 // against the whole list worked out from nothing (`labelGroups`), after random series of edits:
 // stations added (end and middle of the list), removed, moved, renamed, built, upgraded, lines made,
-// their stops changed, lines removed, the opening-day bunting, links, and lists given again with
+// their stops changed, lines removed, links, and lists given again with
 // the same objects (as the client does) or with new equal ones. Every step: same names in the same
 // order with the same fields, and the removes and inserts it reports turn the last list into this one.
 //   node trainworld/checks/t1380-labels.mjs [seeds]      (from the maps root)
@@ -19,7 +19,7 @@ function rng(seed) {
   return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 }
 
-const FIELDS = ['name', 'lng', 'lat', 'heading', 'built', 'park', 'rib', 'lines'];
+const FIELDS = ['name', 'lng', 'lat', 'heading', 'built', 'park', 'lines'];
 function diff(list, want) {
   if (list.length !== want.length) return `lengths ${list.length}/${want.length}`;
   for (let i = 0; i < want.length; i++) for (const f of FIELDS) if (list[i][f] !== want[i][f]) return `name ${i} ${f}: ${list[i][f]} vs ${want[i][f]}`;
@@ -44,7 +44,6 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     return { id: String(nextLine++), num: nextLine, letter: 'A', name: 'L', colour: '#000000', stops, tph: { high: 1, medium: 1, low: 1 } };
   };
   for (let i = 0; i < 12; i++) lines.push(mkLine());
-  let rib = null;
   const cxb = new ComplexBuilder(), idx = new NameIndex();
   let mirror = [];
   for (let step = 0; step < 150; step++) {
@@ -72,17 +71,15 @@ for (let seed = 1; seed <= SEEDS; seed++) {
       else if (q < 0.85) { lines = lines.map((l) => ({ ...l, stops: [...l.stops] })); } // equal objects
       else { const i = Math.floor(rnd() * lines.length); lines = lines.map((l, j) => j === i ? { ...l, stops: l.stops.map((s) => (rnd() < 0.3 ? pick(st).id : s)) } : l); }
     }
-    if (rnd() < 0.1) rib = rib ? null : new Map(st.filter(() => rnd() < 0.05).map((s) => [s.id, 'linear-gradient(red,red)']));
-    else if (rib && rnd() < 0.1) rib = new Map(rib);
     // stations or lines named by a stop may be gone: stops are ids, not checked against the stations, as in the app
     const useSt = st, useLines = lines;
     const cx = cxb.update(useSt, [], kAt, 'flat');
-    const plan = idx.plan(useSt, useLines, cx, rib, 1);
+    const plan = idx.plan(useSt, useLines, cx, 1);
     let patch = { full: false, ops: [] };
-    if (plan) patch = idx.apply(plan, cx, rib);
+    if (plan) patch = idx.apply(plan, cx);
     steps++;
     if (plan) { if (patch.full) fulls++; else { patched++; opsTotal += patch.ops.length; } }
-    const want = labelGroups(useSt, linesAt(useLines), buildComplexes(useSt, [], kAt), rib);
+    const want = labelGroups(useSt, linesAt(useLines), buildComplexes(useSt, [], kAt));
     let d = diff(idx.list, want);
     if (!d) {
       if (patch.full) mirror = idx.list.map((g) => g.uid);

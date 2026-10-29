@@ -435,11 +435,8 @@ those who got on, less the load carried on.
   screen, and a pan re-places them after 128 px of travel (notes/T-074.md).
 - **Opening day** [T-1434; `game/openingDay.ts`]: a line opens when it first runs with trains in
   this page's session (running, and some level's trains above 0), having been in the world before.
-  For one game day (86,400 s of the clock, from the moment it opens) its stations' names carry a
-  string of tiny pennants under them, 7 px each up to 63 px, in the line's colour (the lines' colours
-  in turn where two or three opening lines share a station; `.stn-label.opening`). It also
-  and the line's Riders cell in the Lines tab
-  counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
+  For one game day (86,400 s of the clock, from the moment it opens) the line's Riders cell in the
+  Lines tab counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
   with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
   shows no opening days, and one in progress ends with the page.
 - **Daily rides note** [T-1478, T-1499; `game/ridesNote.ts`, `ui/RidesNotes.tsx`]: after a line's

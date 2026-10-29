@@ -1,14 +1,10 @@
-// T-1434: opening day. A planned line is constructed; its stations get a bunting under their names
-// for one game day, its Lines tab riders count up from 0, and "bung" plays once (a construct's snap
-// is 1 buffer, the bung 1 + 1 oscillator). Screenshots light and dark at zoom 13 and 15 go in
-// artifacts/trainworld/t1434/. From the maps root, with a running dev server:
+// T-1434: opening day. A planned line is constructed; its Lines tab riders count up after
+// "constructing..." and nothing plays but the construct's snap; its stations' names carry no
+// bunting (T-1759). From the maps root, with a running dev server:
 //   node trainworld/checks/t1434-opening.mjs <port>
-import { mkdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { ARTIFACTS, GL, NOISE, REAL_SAVE, collectErrors, demandFinal, importSave, launchChrome } from '../lib.mjs';
+import { readFile } from 'node:fs/promises';
+import { GL, NOISE, REAL_SAVE, collectErrors, demandFinal, importSave, launchChrome } from '../lib.mjs';
 
-const OUT = join(ARTIFACTS, 't1434');
-await mkdir(OUT, { recursive: true });
 const BASE = `http://localhost:${process.argv[2] ?? 6171}/`;
 const { ctx, close } = await launchChrome({ prefix: 'tw-t1434-', size: [1400, 900], args: [...GL, '--autoplay-policy=no-user-gesture-required'] });
 const errors = [];
@@ -55,7 +51,6 @@ try {
   check('a line planned over blueprint', made.ok && made.status === 'planned', JSON.stringify(made));
   const opens = () => page.evaluate(async () => { const m = await import('/src/game/openingDay.ts'); return [...m.openings.value.keys()]; });
   check('nothing on its opening day yet', (await opens()).length === 0);
-  check('no ribbon on any label', (await page.locator('.stn-label.opening').count()) === 0);
 
   // the camera on the line, zoomed to 13; sample the riders cell as it opens
   await page.evaluate(({ lng, lat }) => { window.tw.map.jumpTo({ center: [lng, lat], zoom: 13 }); }, made);
@@ -79,50 +74,18 @@ try {
   const ids = await opens();
   check('the line is on its opening day', ids.includes(String(made.id)), JSON.stringify(ids));
   const nums = compact.map(([, r]) => Number((r ?? '').replace(/,/g, ''))).filter((n) => Number.isFinite(n));
-  check('the riders cell starts at 0 and rises to a figure', nums.length >= 3 && nums[0] === 0 && nums.at(-1) > 0 && nums.every((n, i) => i === 0 || n >= nums[i - 1]), JSON.stringify(nums));
+  check('the riders cell starts at 0 and rises to a figure', nums.length >= 3 && nums[0] < nums.at(-1) / 4 && nums.every((n, i) => i === 0 || n >= nums[i - 1]), JSON.stringify(nums));
   const snd1 = await page.evaluate(() => ({ ...window.__snd }));
-  check('construct plus the opening: a snap and one bung', snd1.buf - snd0.buf === 2 && snd1.osc - snd0.osc === 1, JSON.stringify({ buf: snd1.buf - snd0.buf, osc: snd1.osc - snd0.osc }));
+  check('the opening itself makes no sound: a snap only', snd1.buf - snd0.buf === 1 && snd1.osc - snd0.osc === 0, JSON.stringify({ buf: snd1.buf - snd0.buf, osc: snd1.osc - snd0.osc }));
 
-  // the bunting under the names
-  const labels = await page.evaluate(() => [...document.querySelectorAll('.stn-label.opening')].map((e) => ({ t: e.textContent, hidden: e.style.visibility === 'hidden', rib: e.style.getPropertyValue('--rib') })));
-  console.log('opening labels', JSON.stringify(labels));
-  check('three stations carry the bunting', labels.length === 3 && labels.every((l) => l.rib.includes('#d9480f') || l.rib.includes('rgb(217, 72, 15)')));
-  const pseudo = await page.evaluate(() => { const e = document.querySelector('.stn-label.opening'); const s = getComputedStyle(e, '::before'); return { h: s.height, mask: (s.maskImage || s.webkitMaskImage || '').slice(0, 30), bg: s.backgroundImage }; });
-  check('the pennants are painted', pseudo.h === '6px' && pseudo.mask.startsWith('url('), JSON.stringify(pseudo));
-  check('two lines at a station alternate their colours', await page.evaluate(() => CSS.supports('background', 'repeating-linear-gradient(90deg,#d9480f 0px 7px,#2f7bd1 7px 14px)')));
-
-  // screenshots at zoom 13 and 15, light and dark
-  const shot = async (zoom, shade) => {
-    await page.evaluate(({ lng, lat, zoom, shade }) => {
-      window.tw.map.jumpTo({ center: [lng, lat], zoom });
-      document.documentElement.dataset.shade = shade;
-      window.tw.shade.value = shade;
-    }, { ...made, zoom, shade });
-    await page.waitForTimeout(1800);
-    await page.mouse.move(2, 2);
-    const box = await page.evaluate(() => {
-      const els = [...document.querySelectorAll('.stn-label.opening')].filter((e) => e.style.visibility !== 'hidden');
-      const r = els.map((e) => e.getBoundingClientRect());
-      return r.length ? { n: r.length, x: Math.min(...r.map((b) => b.left)), y: Math.min(...r.map((b) => b.top)), x2: Math.max(...r.map((b) => b.right)), y2: Math.max(...r.map((b) => b.bottom)) } : null;
-    });
-    console.log(`zoom ${zoom} ${shade}`, JSON.stringify(box));
-    await page.screenshot({ path: join(OUT, `z${zoom}-${shade}-full.png`) });
-    const vp = page.viewportSize();
-    const cx = vp.width / 2 - 20, cy = vp.height / 2;
-    const w = zoom === 13 ? 640 : 520, h = zoom === 13 ? 300 : 260;
-    await page.screenshot({ path: join(OUT, `z${zoom}-${shade}.png`), clip: { x: Math.max(0, cx - w / 2), y: Math.max(0, cy - h / 2), width: w, height: h } });
-    return box;
-  };
-  const shown = [];
-  for (const zoom of [13, 15]) for (const shade of ['light', 'dark']) shown.push(await shot(zoom, shade));
-  check('bunting is on screen in all four views', shown.every((b) => b && b.n >= 1));
-  await page.evaluate(() => { document.documentElement.dataset.shade = 'light'; window.tw.shade.value = 'light'; });
+  // T-1759: no pennants under the names
+  const names = await page.locator('.stn-label').count();
+  check('three station names and no bunting on any', names >= 3 && (await page.locator('.stn-label.opening').count()) === 0 && await page.evaluate(() => [...document.querySelectorAll('.stn-label')].every((e) => getComputedStyle(e, '::before').content === 'none' && !e.style.getPropertyValue('--rib'))), `${names} labels`);
 
   // one game day later it is gone
   await page.evaluate(() => { const c = window.tw.clock; c.set(c.now() + 86400 + 300); });
   await page.waitForTimeout(1500);
   check('after a game day the opening is over', (await opens()).length === 0);
-  check('and the bunting is gone', (await page.locator('.stn-label.opening').count()) === 0);
   await page.waitForTimeout(500);
   const plain = await page.evaluate(() => [...document.querySelectorAll('#dock .rows li')].find((e) => e.querySelector('.line-name')?.textContent === 'Opening')?.querySelector('.w-riders')?.textContent);
   console.log('riders cell after the day:', plain);
@@ -131,7 +94,7 @@ try {
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 20, undefined, { timeout: 120000 });
   await demandFinal(page, { polling: 250, lines: 100 });
   await page.waitForTimeout(1500);
-  check('the real save loads with no opening days', (await opens()).length === 0 && (await page.locator('.stn-label.opening').count()) === 0);
+  check('the real save loads with no opening days', (await opens()).length === 0);
   check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await close();

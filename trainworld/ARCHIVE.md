@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+
+- T-1759 [P2] Drop the opening-day bunting. Done 2026-10-29: the pennants under station names (T-1434) are gone from CSS, `ribbonColours`, the label index and its checks; the Lines tab riders count stays. DECISIONS.
 - T-1758 [P1] Market packs commuting thousands of km (old joint_commutes pairs of reused ids). Done 2026-10-28: a file solving a pack replaces all its older pairs (market_zones.Groups); 140 packs rewritten, 145 far pairs (1.26M trips a day) gone, no other pair moved; smoke 20/20. notes/T-1738.md "T-1743 and T-1758".
 - T-1743 [P2] world_run clears a planned row's id caches and rewrites market packs naming gone places. Done 2026-10-28: `clear_row_caches` in build_row, `heal_market` after every unregister (400 km); closes T-891 and T-1231. notes/T-1738.md "T-1743 and T-1758".
 - T-1231 [P2] Rebuilt rows break neighbours' market packs. Done 2026-10-28 with T-1743 (`heal_market` after unregister).

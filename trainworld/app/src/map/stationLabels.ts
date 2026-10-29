@@ -25,7 +25,6 @@ import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { afterPaint } from "../game/busy";
-import { ribbonColours } from "../game/openingDay";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -46,8 +45,6 @@ interface Label {
   /** its top left from its station's screen point at the last full placement (T-1621) */
   ox?: number;
   oy?: number;
-  /** the opening-day bunting's background (T-1434), "" for none */
-  rib: string;
 }
 
 const GAP = 10; // px from the station centre
@@ -152,10 +149,9 @@ export class StationLabels {
     // join are worked out again, and only their labels and shadow features change (T-063, T-1380).
     // The names are per complex, so the world's complexes (game/complexView.ts, built once for every
     // user of this world) and the player's links count (T-209); so do the draw anchor, since the
-    // names' positions are in its local units (T-307), and the opening-day bunting.
-    const rib = ribbonColours(w);
+    // names' positions are in its local units (T-307).
     const cx = complexes.peek();
-    const plan = this.names.plan(stations, w.save.lines, cx, rib, anchor().version);
+    const plan = this.names.plan(stations, w.save.lines, cx, anchor().version);
     if (!plan) return;
     if (PATCH_MODE === "0") plan.full = true;
     // T-1357: many names not drawn before (a game's first network) are built once the network has
@@ -170,12 +166,12 @@ export class StationLabels {
       afterPaint(() => { const d = this.deferred!; this.deferred = null; this.set(d, true); });
       return;
     }
-    const patch = this.names.apply(plan, cx, rib);
+    const patch = this.names.apply(plan, cx);
     if (patch.full) this.rebuild();
     else if (patch.ops.length) this.patch(patch.ops);
     else return;
     this.needsPlacement = true;
-    if (PATCH_MODE === "check") this.check(w, rib);
+    if (PATCH_MODE === "check") this.check(w);
     this.place();
   }
 
@@ -184,22 +180,21 @@ export class StationLabels {
    * then costs one new element, not a rebuild and a layout of every name. Shown labels never
    * overlap, so their order in the DOM draws nothing differently. */
   private labelFor(g: NameGroup, spare: Map<string, Label[]>): Label {
-    const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "") + (g.rib ? " opening" : "");
+    const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "");
     const [x, y] = toLocal(g.lng, g.lat);
     const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
-    const old = spare.get(cls + "\u0000" + g.name + "\u0000" + g.rib)?.pop();
+    const old = spare.get(cls + "\u0000" + g.name)?.pop();
     if (old) return { ...old, x, y, below };
     const el = document.createElement("div");
     el.className = cls;
     if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
-    if (g.rib) el.style.setProperty("--rib", g.rib);
     el.textContent = g.name;
     this.plane.appendChild(el);
-    return { el, x, y, below, w: 0, h: 0, rib: g.rib };
+    return { el, x, y, below, w: 0, h: 0 };
   }
 
   private keepSpare(spare: Map<string, Label[]>, l: Label) {
-    const k = l.el.className + "\u0000" + l.el.textContent + "\u0000" + l.rib;
+    const k = l.el.className + "\u0000" + l.el.textContent;
     const v = spare.get(k);
     if (v) v.push(l);
     else spare.set(k, [l]);
@@ -263,14 +258,14 @@ export class StationLabels {
   }
 
   /** `?patch=check`: the labels and shadow features against the names worked out from nothing. */
-  private check(w: WorldView, rib: ReadonlyMap<string, string> | null) {
-    const want = labelGroups(w.save.stations, linesAt(w.save.lines), complexes.peek(), rib);
+  private check(w: WorldView) {
+    const want = labelGroups(w.save.stations, linesAt(w.save.lines), complexes.peek());
     const feats = this.shadow.features;
     let bad = this.labels.length !== want.length || feats.length !== want.length || this.shadowKeys.length !== want.length ? "lengths" : "";
     for (let i = 0; !bad && i < want.length; i++) {
       const g = want[i], l = this.labels[i], below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
       const f = feats[i] as unknown as { properties: { name: string }; geometry: { coordinates: number[] } };
-      if (l.el.textContent !== g.name || l.rib !== g.rib || l.below !== below || l.el.className.includes("plan") === g.built || l.el.className.includes("park") !== g.park) bad = `label ${i} (${g.name})`;
+      if (l.el.textContent !== g.name || l.below !== below || l.el.className.includes("plan") === g.built || l.el.className.includes("park") !== g.park) bad = `label ${i} (${g.name})`;
       else if (f.properties.name !== g.name || f.geometry.coordinates[0] !== g.lng || f.geometry.coordinates[1] !== g.lat || this.shadowKeys[i] !== shadowText(g, below)) bad = `shadow feature ${i} (${g.name})`;
     }
     if (bad) console.error(`T-1380 check: the station names patched from changes differ from a whole build: ${bad}`);

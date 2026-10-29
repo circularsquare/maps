@@ -24,14 +24,12 @@ export interface NameGroup {
   built: boolean;
   /** a member has a park and ride (T-1281): a P beside the name */
   park: boolean;
-  /** the opening-day bunting's background (T-1434), "" for none */
-  rib: string;
   /** distinct lines stopping at any of its stations */
   lines: number;
 }
 
 /** The whole list from nothing, the reference `NameIndex` must match. */
-export function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes, rib: ReadonlyMap<string, string> | null): Omit<NameGroup, "uid">[] {
+export function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes): Omit<NameGroup, "uid">[] {
   const groups = new Map<string, StationInput[]>();
   for (const s of stations) {
     const k = `${cx.of.get(s.id)}\u0000${s.name}`;
@@ -49,7 +47,7 @@ export function labelGroups(stations: readonly StationInput[], lines: ReadonlyMa
       for (const l of lines.get(s.id) ?? []) ids.add(l);
       if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
     }
-    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), rib: rib ? members.map((s) => rib.get(s.id)).find(Boolean) ?? "" : "", lines: ids.size });
+    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), lines: ids.size });
   }
   return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
 }
@@ -70,7 +68,6 @@ interface Mem {
   id: StationId;
   /** the first station of its complex in save order: names the complex whatever number it has */
   root: StationId;
-  rib: string;
   /** its place in the list of stations last given */
   idx: number;
   group: Group | null;
@@ -93,7 +90,6 @@ interface Dirty {
   m: Mem | null;
   s: StationInput;
   root: StationId;
-  rib: string;
 }
 
 export interface NamePlan {
@@ -129,17 +125,16 @@ export class NameIndex {
   private lastStations: readonly StationInput[] | null = null;
   private lastLines: readonly LineInput[] | null = null;
   private lastRoots: Complexes | null = null;
-  private lastRib: ReadonlyMap<string, string> | null = null;
 
   /** What differs from what the index holds, or null for nothing. Leaves the index as it is. */
-  plan(stations: readonly StationInput[], lines: readonly LineInput[], cx: Complexes, rib: ReadonlyMap<string, string> | null, av: number): NamePlan | null {
+  plan(stations: readonly StationInput[], lines: readonly LineInput[], cx: Complexes, av: number): NamePlan | null {
     const p: NamePlan = { full: false, stations, lines, av, dirty: [], removed: [], lineChanges: [] };
     if (!this.ready || av !== this.av) {
       p.full = true;
       return p;
     }
-    // the same lists as last time, the same complexes and bunting: nothing to look at
-    if (stations === this.lastStations && lines === this.lastLines && cx === this.lastRoots && rib === this.lastRib) return null;
+    // the same lists as last time, the same complexes: nothing to look at
+    if (stations === this.lastStations && lines === this.lastLines && cx === this.lastRoots) return null;
 
     const lineDirty = new Set<StationId>();
     if (lines !== this.lastLines) {
@@ -161,11 +156,11 @@ export class NameIndex {
       }
     }
 
-    // the same stations, complexes and bunting: only the lines can have changed something
-    if (stations === this.lastStations && cx === this.lastRoots && rib === this.lastRib) {
+    // the same stations and complexes: only the lines can have changed something
+    if (stations === this.lastStations && cx === this.lastRoots) {
       for (const id of lineDirty) {
         const m = this.mems.get(id);
-        if (m) p.dirty.push({ m, s: m.s, root: m.root, rib: m.rib });
+        if (m) p.dirty.push({ m, s: m.s, root: m.root });
       }
       if (p.dirty.length * REBUILD_SHARE > stations.length + REBUILD_SHARE) {
         p.full = true;
@@ -182,10 +177,10 @@ export class NameIndex {
     let survivors = 0, prev = -1, reordered = false;
     for (let i = 0; i < stations.length; i++) {
       const s = stations[i];
-      const root = rootOf(cx, s.id), ribc = rib?.get(s.id) ?? "";
+      const root = rootOf(cx, s.id);
       const m = this.mems.get(s.id);
       if (!m) {
-        p.dirty.push({ m: null, s, root, rib: ribc });
+        p.dirty.push({ m: null, s, root });
         continue;
       }
       if (m.seen === stamp) {
@@ -197,8 +192,8 @@ export class NameIndex {
       if (m.idx <= prev) reordered = true;
       prev = m.idx;
       const o = m.s;
-      if ((o !== s && (o.name !== s.name || o.built !== s.built || o.lng !== s.lng || o.lat !== s.lat || o.heading !== s.heading || (o.upgrades ?? 0) !== (s.upgrades ?? 0))) || m.root !== root || m.rib !== ribc || lineDirty.has(s.id)) {
-        p.dirty.push({ m, s, root, rib: ribc });
+      if ((o !== s && (o.name !== s.name || o.built !== s.built || o.lng !== s.lng || o.lat !== s.lat || o.heading !== s.heading || (o.upgrades ?? 0) !== (s.upgrades ?? 0))) || m.root !== root || lineDirty.has(s.id)) {
+        p.dirty.push({ m, s, root });
       }
     }
     if (this.mems.size > survivors) for (const m of this.mems.values()) if (m.seen !== stamp) p.removed.push(m);
@@ -211,7 +206,6 @@ export class NameIndex {
       this.lastStations = stations;
       this.lastLines = lines;
       this.lastRoots = cx;
-      this.lastRib = rib;
       for (let i = 0; i < stations.length; i++) this.mems.get(stations[i].id)!.s = stations[i];
       return null;
     }
@@ -219,12 +213,11 @@ export class NameIndex {
   }
 
   /** Bring the index up to date with a plan from `plan`. */
-  apply(p: NamePlan, cx: Complexes, rib: ReadonlyMap<string, string> | null): NamePatch {
+  apply(p: NamePlan, cx: Complexes): NamePatch {
     this.lastStations = p.stations;
     this.lastLines = p.lines;
     this.lastRoots = cx;
-    this.lastRib = rib;
-    if (p.full) return this.rebuild(p, cx, rib);
+    if (p.full) return this.rebuild(p, cx);
     const ops: NameOp[] = [];
 
     // lines first: a station's line set is what its name's count comes from
@@ -252,7 +245,7 @@ export class NameIndex {
     for (const g of affected) {
       if (!g.inList) continue;
       const at = this.find(g);
-      if (at < 0) return this.rebuild(p, cx, rib);
+      if (at < 0) return this.rebuild(p, cx);
       gone.push({ at, g });
     }
     gone.sort((a, b) => b.at - a.at);
@@ -275,14 +268,13 @@ export class NameIndex {
         if (m.group) removeMember(m.group, m);
         m.s = d.s;
         m.root = d.root;
-        m.rib = d.rib;
       } else {
-        m = { s: d.s, id: d.s.id, root: d.root, rib: d.rib, idx: -1, group: null, seen: 0 };
+        m = { s: d.s, id: d.s.id, root: d.root, idx: -1, group: null, seen: 0 };
         this.mems.set(m.id, m);
       }
       const key = `${d.root}\u0000${d.s.name}`;
       let g = this.groups.get(key);
-      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: false, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, rib: "", lines: 0 }));
+      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: false, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, lines: 0 }));
       g.members.push(m);
       m.group = g;
       touched.add(g);
@@ -316,17 +308,17 @@ export class NameIndex {
     return { full: false, ops };
   }
 
-  private rebuild(p: NamePlan, cx: Complexes, rib: ReadonlyMap<string, string> | null): NamePatch {
+  private rebuild(p: NamePlan, cx: Complexes): NamePatch {
     this.mems = new Map();
     this.groups = new Map();
     this.stationLines = linesAt(p.lines);
     this.lineSeen = new Map(p.lines.map((l) => [l.id, l]));
     p.stations.forEach((s, i) => {
-      const root = rootOf(cx, s.id), m: Mem = { s, id: s.id, root, rib: rib?.get(s.id) ?? "", idx: i, group: null, seen: 0 };
+      const root = rootOf(cx, s.id), m: Mem = { s, id: s.id, root, idx: i, group: null, seen: 0 };
       this.mems.set(s.id, m);
       const key = `${root}\u0000${s.name}`;
       let g = this.groups.get(key);
-      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: true, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, rib: "", lines: 0 }));
+      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: true, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, lines: 0 }));
       g.members.push(m);
       m.group = g;
     });
@@ -356,7 +348,6 @@ export class NameIndex {
     g.heading = lead.s.heading;
     g.built = ms.some((m) => m.s.built);
     g.park = ms.some((m) => hasUpgrade(m.s.upgrades, UPGRADE.parkRide));
-    g.rib = ms.find((m) => m.rib)?.rib ?? "";
     g.lines = ids.size;
   }
 
