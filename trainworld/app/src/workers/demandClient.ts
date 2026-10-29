@@ -59,6 +59,7 @@ import {
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
+import { linesSettled } from "../game/lineFigures";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -322,6 +323,10 @@ interface Solve {
   periods?: [number, number][];
   /** T-1609: the zones the last worker solved alone against their clusters' frozen loads */
   local?: CityId[];
+  /** T-1733: per solving worker, how many clusters it solves locally first (`plan.local`), and
+   * whether `whole` went */
+  localPlans?: number[];
+  wholeSent?: boolean;
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -462,8 +467,12 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
   };
 }
 
+/** T-1733: after an edit's local results are shown, how long the whole solve waits for the next edit
+ * (stations built, then the line, a few seconds apart): until it starts, the next edit is solved locally too */
+const EDIT_SETTLE_MS = 8000;
+
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
-function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"] } {
+function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
   const index = new Map(svc.stations.map((s, i) => [s.id, i]));
   const lines = svc.lines.filter((l) => l.stops.length >= 2 && l.stops.every((s) => index.has(s)));
   const nStops = lines.reduce((a, l) => a + l.stops.length, 0);
@@ -536,7 +545,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     }
     net.catchXY = new Float32Array(pts);
   }
-  return { net, layout };
+  return { net, layout, ids: { lines: layout.map((l) => l.id), stations: svc.stations.map((s) => s.id) } };
 }
 
 class DemandClient {
@@ -1614,7 +1623,7 @@ class DemandClient {
     const shown = cityDemandViews.peek().has(id);
     if (shown && !this.hasNewLines(svc)) return;
     this.rough = { svc, id };
-    const { net, layout } = packService(svc);
+    const { net, layout, ids } = packService(svc);
     const version = ++this.version;
     this.pushed.clear();
     const now = performance.now();
@@ -1622,7 +1631,7 @@ class DemandClient {
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ...(perfOff("estimate") ? { exact0: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ids, ...(perfOff("estimate") ? { exact0: true } : {}) };
     this.postSolve(msg);
   }
   private rough: { svc: Service; id: CityId } | null = null;
@@ -1994,7 +2003,7 @@ class DemandClient {
     // solve of no zone, without the barrier, ends the worker's at its next look)
     if (this.cur?.rough) {
       const version = ++this.version;
-      for (const w of this.workers) w.postMessage({ kind: "solve", version, net: packService(this.cur.svc).net, rounds: ROUNDS, only: [] } satisfies ToDemand);
+      for (const w of this.workers) w.postMessage({ kind: "solve", version, ...(({ net, ids }) => ({ net, ids }))(packService(this.cur.svc)), rounds: ROUNDS, only: [] } satisfies ToDemand);
     }
     demandByDay.value = days;
     this.lodShown(cities, cities.filter((id) => this.levelFor(id) === LOD_COARSE));
@@ -2122,7 +2131,11 @@ class DemandClient {
       // the nearby zones' packs may load now (T-276), and those track crosses (T-1047)
       if (nearbyZones.peek().length || trackZones.peek().built.size) this.ensure();
       this.prefetchViewed(); // a building tool picked while the card was up (T-351)
-      this.lodSoon(); // T-1223: levels wait for a load's card
+      // T-1223: levels wait for a load's card; T-1733: and the load's own time is no zone's time left
+      // alone (all of Japan's 17 minutes made 44 of 45 zones coarse the moment it ended)
+      const now = Date.now();
+      for (const id of this.fine) if (this.touched.has(id)) this.touched.set(id, now);
+      this.lodSoon();
     }
   }
 
@@ -2516,6 +2529,12 @@ class DemandClient {
         demandSolving.value = new Set(msg.solving.flat());
         if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
       }
+      // T-1733: a worker that solves nothing locally first starts its whole solve at once, so the
+      // local result can never be shown whole: the others go on too
+      const plans = (s.localPlans ??= []);
+      plans[i] = msg.local ?? 0;
+      const n = this.computeN, all = plans.slice(0, n);
+      if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0) && all.some((v) => !v)) this.wholeGo(s);
       return;
     }
     if (msg.part) {
@@ -2538,7 +2557,8 @@ class DemandClient {
       // T-392: one cluster solved ahead of the rest: a round of it is shown once every period of it
       // is in. Its rounds land in order: with the barrier (T-402) no worker starts one before every
       // worker has the one before; after an edit only the last is sent.
-      const key = msg.cluster.cities.join(",");
+      // (T-1733: a local result keyed apart from its cluster's whole one)
+      const key = (msg.cluster.local ? "local:" : "") + msg.cluster.cities.join(",");
       const round = msg.summary[0];
       const m = (s.clusterRes ??= new Map());
       let e = m.get(key);
@@ -2682,7 +2702,7 @@ class DemandClient {
     this.capPool();
     this.doneBy.clear();
     if (this.freshParts) this.refreshing = true;
-    const { net, layout } = packService(svc);
+    const { net, layout, ids } = packService(svc);
     const version = ++this.version;
     if (this.hold) this.hold.version = version;
     const cities = CITIES.map((c) => c.id).filter((id) => this.opened.has(id));
@@ -2704,7 +2724,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
@@ -3599,7 +3619,14 @@ class DemandClient {
    * (`cityVersion`), whose workers hold it. T-402: `round` below the last comes from a cluster
    * solved ahead in a solve with the barrier.
    */
-  private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array }, round: number) {
+  /** T-1733: the whole solve after an edit's local results may start (once a version) */
+  private wholeGo(s: Solve) {
+    if (s !== this.cur || s.wholeSent) return;
+    s.wholeSent = true;
+    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "whole", version: s.version } satisfies ToDemand);
+  }
+
+  private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean }, round: number) {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;
     // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
@@ -3648,6 +3675,9 @@ class DemandClient {
       this.lodShown(c.cities, s.coarse);
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
+        // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
+        linesSettled(fresh.map((l) => l.id));
+        if (c.local) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
         const left = new Set(demandSolving.peek() ?? []);
         for (const id of c.cities) { left.delete(id); this.unsettled?.delete(id); }
         demandSolving.value = left;

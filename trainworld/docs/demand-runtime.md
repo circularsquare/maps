@@ -126,8 +126,8 @@ solve covers them. That solve is a **local refine** (T-1609, notes/T-1609.md, `?
 off): in a solve without the barrier, a cluster whose network its other populations hold solved and
 whose only new populations are zones opened at another level (at most half its populations, never
 a market part) solves those alone, each period through its rounds and the capacity fit, crowding on
-the other populations' loads as the last solve left them (before its capacity fit: each cluster
-keeps, per period, where the fit changed its loads and by how much) plus their own; the others keep
+the other populations' loads round by round as their last solve was priced on (T-1733's `trail`;
+without one, as that solve left them before its capacity fit) plus their own; the others keep
 their figures, so lines carry the new zone's riders beside the others' as they were, and `plan`
 names only the refined zones; when every cluster solved is one, the other zones' bubbles' sums are
 the last solve's, sent again. Its periods are never kept as a whole solve's (T-124): the next edit
@@ -293,7 +293,23 @@ the clusters of its last six networks, and answers a question about any of them 
 asked zone's cluster holds that network solved to its last round, whatever it is solving
 meanwhile: a click in a zone whose cluster is kept, or already published, needs no wait. Questions
 about a published cluster's zones go to its solve. The status tag and the top bar's "before your
-last change" speak only for a zone still being solved (`plan`, `demandSolving`). With the barrier
+last change" speak only for a zone still being solved (`plan`, `demandSolving`).
+**The local solve after an edit** (T-1733, notes/T-1733.md, `?perfOff=refine` off): before those
+whole solves, each cluster the edit touched is solved locally first when its market part and its
+untouched cities still hold what they last solved: only the city populations whose view changed (a
+station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%
+and trains an hour within 5% count as unchanged), through their rounds and the capacity fit. Each
+round crowds on the others' loads as that round of their last solve was priced on (kept per
+population, period and round, `trail`; a shared period's market loads per round as the other worker
+sent them), plus their own, so with nothing changed it repeats the whole solve; the market's are
+read through its old route nodes, carried to the new network's by line and station ids
+(`solve.ids`). Each is sent as a cluster result marked `local`, its cities the touched zones: the page
+puts its lines, their stations and those zones' views in (never the market's own figures) and
+clears the lines' "constructing...". A worker then waits for the page's `whole`, sent 8 s after the
+local results are shown, or at once when a worker solves nothing locally, so an edit following
+within that time (the stations, then the line) is solved locally too; the whole solves follow as
+above and replace everything.
+With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the zone in view's is one of them (T-402): that cluster alone first, through every round, each
 round sent as its own cluster result and shown where the solve's estimates are (a view of the

@@ -1,6 +1,7 @@
 // T-1665: what holds back while demand is worked out. The clock runs no faster than DEMAND_CAP while a
 // solve or a load is going, and a line the player just rescheduled or built is "constructing..." where
-// its riders show (Lines tab, line panel) until the solve that counts it has finished.
+// its riders show (Lines tab, line panel) until the result that counts it lands (T-1733: its
+// cluster's local result, or the solve's end).
 
 import { effect, signal } from "@preact/signals";
 import { clock } from "./clock";
@@ -10,6 +11,14 @@ import { world } from "./world";
 
 /** Lines whose riders are being worked out again after an edit. */
 export const linesPending = signal<ReadonlySet<string>>(new Set());
+
+/** T-1733: these lines' riders have landed (a cluster's result, local or whole) */
+export function linesSettled(ids: Iterable<string>) {
+  const set = new Set(linesPending.peek());
+  let changed = false;
+  for (const id of ids) changed = set.delete(id) || changed;
+  if (changed) linesPending.value = set;
+}
 
 /** Wall ms to wait for a solve to start before deciding the edit needs none (a line with no riders, or
  * demand idle), so the label never sticks. */

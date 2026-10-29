@@ -66,7 +66,8 @@ purpose filter the purpose drawn is ringed in the bar.
   gives the real figure.
   **A running line the player just rescheduled, re-stopped or built reads "constructing..."** in
   place of its riders, here and in the line inspector's Past 24 hours (its Riders row, the purpose
-  split hidden), until the demand solve that counts the change has finished [T-1665,
+  split hidden), until the riders that count the change land: its cluster's local result after the
+  edit (T-1733, intercity lines too, their longer trips as last solved) or the whole solve [T-1665,
   `game/lineFigures.ts`]; a game load shows none.
   The "+N daily rides" after a stop edit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Opening day").

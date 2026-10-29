@@ -150,13 +150,18 @@ export type ToDemand =
       freshParts?: boolean;
       /** T-1609 `?perfOff=refine`: a cluster whose only new populations are zones opened again at
        * another level is solved whole, not those zones alone against the others' frozen loads */
-      noLocal?: boolean }
+      noLocal?: boolean;
+      /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
+       * can carry what it holds solved over to the next network's route nodes */
+      ids?: { lines: string[]; stations: string[] } }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
+  /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
+  | { kind: "whole"; version: number }
   /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */
   | { kind: "first"; id: CityId }
   /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
@@ -348,7 +353,10 @@ export type FromDemand =
        * (else the intercity fields are empty), its lines (indices into the network's); every array
        * still the whole network's, zero off the cluster. T-402: in a solve with the barrier, the
        * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]` */
-      cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array };
+      /** T-1733 `local`: the cluster after an edit with only `cities` (the zones the edit touched)
+       * solved, against the others' frozen loads, ahead of its whole solve; its lines' figures carry
+       * every population's riders, the market's as last solved */
+      cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean };
       /** T-1543: one worker's part k of n of the period's origins (`solve.part`): every figure is the
        * part's, to be added to the other parts', the market's only in the worker holding the period.
        * `fareRaw`: the sums `fareSense`'s local reach is worked out from (rail trips per curve
@@ -363,7 +371,9 @@ export type FromDemand =
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
    * keeps. `ahead` (T-402, a solve with the barrier): the cities of the cluster in view, stepped
    * through its rounds alone (group 0) before the other clusters together (group 1) */
-  | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[] }
+  | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[];
+      /** T-1733: how many clusters this worker solves locally first, after an edit */
+      local?: number }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
