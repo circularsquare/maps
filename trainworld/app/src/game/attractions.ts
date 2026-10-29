@@ -12,7 +12,7 @@ export interface Attraction {
   name: string;
   lng: number;
   lat: number;
-  /** visitors a year: Wikidata's figure, or 10,000 for each language edition writing about it */
+  /** visitors a year: Wikidata's figure, or a share of a budget by page views (pipeline/attractions_json.py) */
   visitors: number;
 }
 

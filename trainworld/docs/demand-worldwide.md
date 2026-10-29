@@ -727,20 +727,24 @@ notes/T-420.md has the tables.
   beds by hospital where one is open (Brazil's CNES, T-506).
 - **Attractions** (T-263, `pipeline/attractions_json.py`, docs/demand-sources.md 4.1). One Wikidata
   list for the world: places of attraction classes with coordinates, sized by Wikidata's visitors a
-  year (P1174) where given, else by a fit on the places that have one (ln visits from ln Wikipedia
-  editions, ln people within 25 km from GHSL and an open-scenic-place flag, T-1739; no per-country
-  term), kept from 100,000; visits a day drawn half from homes and half from leisure jobs
-  with the chance halving every 10 km. A lake, hill or island that Wikidata also tags a tourist
-  attraction counts (West Lake; in practice China's AAAAA class); a presidential palace or headquarters
-  counts only with a figure. Of 12,960 places, 1,273 carry a figure: the US 268 of 655, France
-  156, Italy 193, the UK 77, China 21 of 342, Japan 24 of 419, India 19 of 403, Nigeria none. Why it
-  may not carry over: one line for the world undercounts a big domestic-tourism country, China most
-  (a country term fitted better and is held back for Anita); editions say what is famous abroad, not how many go; the places with a figure
-  are counted, ticketed or huge, so free temples and lakes come out 3-5 times low (Kiyomizu-dera
-  1.4M against about 5M, West Lake 6M); a figure can be a whole institution's or a slip (the build
-  estimates any above 25M); a country whose places have few editions (Nigeria, Brazil) gets few
-  attractions. Hotels are not in the packs, so leisure jobs stand for where visitors stay. Check:
-  a national tourism board's visitor table for a country's top places, against the file's figures.
+  year (P1174) where given, else by a budget shared by Wikipedia page views (English plus the
+  country's own editions, T-1766): 6 outings a year for each person within 25 km (GHSL), shared
+  among the places within 25 km by views^1.3 with 0.03 views a resident for places not listed, plus
+  one world pool of tourists (World Bank international arrivals plus one domestic trip a resident a
+  year, 0.6 listed places a trip) shared by views^0.5. Global constants, no per-country term; kept
+  from 100,000; visits a day drawn half from homes and half from leisure jobs with the chance halving
+  every 10 km. A lake, hill or island that Wikidata also tags a tourist attraction counts (West Lake;
+  in practice China's AAAAA class); a presidential palace or headquarters counts only with a figure.
+  Of 12,682 places, 1,273 carry a figure (the US 268, Italy 193, France 156, China 21, Japan 24,
+  Nigeria none); against them the budget is within 3x for 68%. Why it may not carry over: Wikipedia
+  is blocked in mainland China, so Chinese places read about 0.4 of their figures (West Lake 10M on
+  its residents alone); views follow fame abroad as well as visits, so a famous lone place in a big
+  city runs high (the Oriental Pearl Tower 13M against about 3.5M, Delhi's Red Fort 22M); domestic
+  tourism is one trip a person everywhere, rich or poor; a figure can be a whole institution's or a
+  slip (the build estimates any above 25M); a country whose places have few editions (Nigeria,
+  Brazil) gets few attractions. Hotels are not in the packs, so leisure jobs stand for where
+  visitors stay. Check: a national tourism board's visitor table for a country's top places,
+  against the file's figures.
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
 - **Weekends** (T-260, T-262, docs/demand-timing.md 4.2). A Saturday's and a Sunday's trips per
@@ -790,12 +794,11 @@ notes/T-420.md has the tables.
   lean"): going out, a zone pair's longer trips lean further towards the zone with more attraction
   visits a year per resident (none below 3, fully from 30; up to 1.5 times on top of the places'
   lean, 90/10 at most), coming back the other way. From attractions.json (Wikidata, every
-  country), no tourism table. Why it may not carry over: attractions.json counts visitors by
-  Wikidata's figure or by its language editions, so a country whose sites have few figures and
-  few editions reads as untouristy: Hangzhou has 0.5M visits a year in it against tens of
-  millions at West Lake, which is left out as a lake; beaches, ski resorts and lakes are not
-  attractions there at all. Check: a country's top destinations by its tourism statistics against
-  the zones that come out touristy.
+  country), no tourism table. Why it may not carry over: attractions.json shares a budget by
+  Wikipedia page views, so a place few read about reads as untouristy (mainland China, where
+  Wikipedia is blocked, reads low); beaches, ski resorts and most lakes are not attractions there
+  at all. Check: a country's top destinations by its tourism statistics against the zones that
+  come out touristy.
 
 ## Network and stations
 

@@ -3,23 +3,23 @@
 Writes app/src/game/attractions.json from Wikidata through QLever (qlever.dev; query.wikidata.org
 rate-limits and times out on queries this size). An attraction is an item that is an instance of
 one of `KINDS` (or a subclass) or of a `DIRECT` class, with coordinates, and is none of `NOT`.
-Its visitors a year are its latest visitor figure (P1174) where it has one, else an estimate from
-the places that have one (T-1739, `Model`): a log-linear fit of the figure on the item's sitelinks,
-the people living within `POP_KM` of it (GHSL, 1 km world grid), whether it is an open scenic place
-(a lake, hill or island) and its country (shrunk towards the rest, so a country with few figures
-follows the world); the kind of place (rides, animals, museum) is in the fit as a control only. A lake, hill, island or reserve that Wikidata also gives a class under
-"tourist attraction" (West Lake, Huangshan) counts in spite of its nature class. Kept at
+Its visitors a year are its latest visitor figure (P1174) where it has one, else its share of a
+budget (T-1766, `budget`): the outings of the people living within `POP_KM` of it (GHSL, 1 km
+world grid) and its country's tourists, shared by Wikipedia page views. A lake, hill, island or
+reserve that Wikidata also gives a class under "tourist attraction" (West Lake, Huangshan) counts in
+spite of its nature class. Kept at
 `MIN_VISITORS` or more. Where one attraction lies inside another
 (P276 location or P361 part of: the Louvre Museum in the Louvre Palace) or two sit within `SAME_M`
 of each other, only the larger is kept: they draw the same visitors.
 
 Output: {"rows": [[qid, name, lon, lat, visitors a year, source], ...]}, source 0 a visitor
-figure, 1 the estimate; rows by visitors, largest first. Names are the English label, else the
+figure, 1 the estimate; rows with a figure first, each part by visitors, largest first. Names are the English label, else the
 multilingual one, else the label most languages share.
 
 Run from the maps root (`--fetch` asks QLever again; otherwise its last answers, kept in
-artifacts/trainworld/t263/wikidata.json, are reused):
-    venv/Scripts/python.exe trainworld/pipeline/attractions_json.py [--fetch]
+artifacts/trainworld/t263/wikidata.json, are reused; page views and the World Bank's tables are
+kept in data/work/t1766/, and only what is missing there is asked for):
+    venv/Scripts/python.exe trainworld/pipeline/attractions_json.py [--fetch] [--report]
 """
 
 import json
@@ -40,15 +40,7 @@ UA = "trainworld-attractions/1.0 (game data script)"
 MIN_SITELINKS = 10
 MIN_VISITORS = 100_000
 SAME_M = 100.0
-# The fit: places with a figure of at least this many and this many sitelinks; the people within
-# POP_KM; the pull of a country's own places towards the rest, as a ridge penalty on its effect.
-FIT_VISITORS = 50_000
-FIT_SITELINKS = 3
 POP_KM = 25
-POP_FLOOR = 100_000
-RIDGE = 3.0
-# Off (T-1739): a country constant in demand is Anita's call; with it Hangzhou gains, see notes/T-1739.md.
-COUNTRY_EFFECT = False
 POP_TIF = ROOT / "data" / "raw" / "worldplan" / "GHS_POP_E2025_GLOBE_R2023A_54009_1000_V1_0.tif"
 POP_CACHE = ROOT.parent / "artifacts" / "trainworld" / "t263" / "pop25.json"
 # Figures for 2020 and 2021 are the pandemic's: an older figure is taken over them.
@@ -102,8 +94,8 @@ LEFT_OUT = {
     "Q3618777": "Antiquarium in Pompeii: its figure is the whole site's, a row of its own",
 }
 # A figure above this is a whole institution's (the Smithsonian's 30M) or a slip (281M for the
-# Royal Ontario Museum): the place is sized by its language editions instead. The largest single
-# places are about 20M a year (the Forbidden City, the Grand Palace).
+# Royal Ontario Museum): the place is sized by the budget instead, which stops here too. The largest
+# single places are about 20M a year (the Forbidden City, the Grand Palace).
 MAX_FIGURE = 25_000_000
 # Links (location, part of) join two attractions only this close: the Udvar-Hazy Center is part
 # of the National Air and Space Museum 40 km away, and draws its own visitors.
@@ -164,14 +156,6 @@ PATTERN = f"""{{ VALUES ?k {{ {" ".join("wd:" + k for k in KINDS)} }} ?s wdt:P31
   FILTER(?sl >= {MIN_SITELINKS} || EXISTS {{ ?s wdt:P1174 ?any }})"""
 
 
-# Open places (the scenic classes and parks) with a visitor figure: not attractions of the game's
-# list, but they are the figures that say how many an open place draws, which the fit needs.
-OPEN_FIGURES = f"""SELECT DISTINCT ?s ?sl ?g ?cc ?v ?t ?r WHERE {{
-  VALUES ?c {{ {" ".join("wd:" + c for c in [*SCENIC, "Q22698", "Q22746"])} }}
-  ?s wdt:P31 ?c ; wdt:P625 ?g ; wikibase:sitelinks ?sl ; p:P1174 ?st . ?st ps:P1174 ?v ; wikibase:rank ?r .
-  OPTIONAL {{ ?st pq:P585 ?t }} OPTIONAL {{ ?s wdt:P17 ?n . ?n wdt:P297 ?cc }} }}"""
-
-
 def fetch(raw):
     """Asks for each part `raw` lacks, keeping the answers after each."""
     for name, query in [
@@ -180,7 +164,6 @@ def fetch(raw):
         ("figures", f"SELECT DISTINCT ?s ?v ?t ?r WHERE {{ {PATTERN} ?s p:P1174 ?st . ?st ps:P1174 ?v ; wikibase:rank ?r . OPTIONAL {{ ?st pq:P585 ?t }} }}"),
         ("links", f"SELECT DISTINCT ?s ?o WHERE {{ {PATTERN} {{ ?s wdt:P276 ?o }} UNION {{ ?s wdt:P361 ?o }} }}"),
         ("countries", f"SELECT DISTINCT ?s ?cc WHERE {{ {PATTERN} ?s wdt:P17 ?c . ?c wdt:P297 ?cc }}"),
-        ("openfigures", OPEN_FIGURES),
     ]:
         if name in raw:
             continue
@@ -204,6 +187,110 @@ def fetch(raw):
 
 
 LABEL_BATCH = 2000
+
+# Page views (T-1766): each place's article in English and in its country's own languages, kept
+# in data/work/t1766/.
+PV_DIR = ROOT / "data" / "work" / "t1766"
+PV_UA = "trainworld-pipeline/1.0 (game data script)"
+PV_DUMP = "https://dumps.wikimedia.org/other/pageview_complete/monthly/2026/2026-09/pageviews-202609-user.bz2"
+# A country's own Wikipedia editions; English for every place besides.
+LANG_OF = {
+    "CN": "zh", "TW": "zh", "HK": "zh", "MO": "zh", "SG": "zh", "JP": "ja", "KR": "ko", "KP": "ko", "VN": "vi", "TH": "th",
+    "ID": "id", "MY": "ms", "PH": "tl", "KH": "km", "LA": "lo", "MM": "my", "IN": "hi", "PK": "ur", "BD": "bn", "NP": "ne",
+    "LK": "si", "IR": "fa", "AF": "fa", "TR": "tr", "IL": "he", "GR": "el", "CY": "el", "RU": "ru", "BY": "ru", "KZ": "ru",
+    "UA": "uk", "PL": "pl", "CZ": "cs", "SK": "sk", "HU": "hu", "RO": "ro", "MD": "ro", "BG": "bg", "RS": "sr", "HR": "hr",
+    "BA": "sh", "ME": "sr", "SI": "sl", "MK": "mk", "AL": "sq", "XK": "sq", "LT": "lt", "LV": "lv", "EE": "et", "FI": "fi",
+    "SE": "sv", "NO": "no", "DK": "da", "IS": "is", "DE": "de", "AT": "de", "CH": "de", "LI": "de", "LU": "fr", "NL": "nl",
+    "BE": "nl fr", "FR": "fr", "MC": "fr", "IT": "it", "SM": "it", "VA": "it", "MT": "mt", "ES": "es", "AD": "ca", "PT": "pt",
+    "BR": "pt", "AO": "pt", "MZ": "pt", "MX": "es", "AR": "es", "CL": "es", "CO": "es", "PE": "es", "VE": "es", "EC": "es",
+    "BO": "es", "PY": "es", "UY": "es", "CU": "es", "DO": "es", "GT": "es", "HN": "es", "SV": "es", "NI": "es", "CR": "es",
+    "PA": "es", "PR": "es", "EG": "ar", "SA": "ar", "AE": "ar", "QA": "ar", "KW": "ar", "BH": "ar", "OM": "ar", "YE": "ar",
+    "JO": "ar", "LB": "ar", "SY": "ar", "IQ": "ar", "LY": "ar", "TN": "ar fr", "DZ": "ar fr", "MA": "ar fr", "SD": "ar",
+    "GE": "ka", "AM": "hy", "AZ": "az", "UZ": "uz", "MN": "mn", "ET": "am", "SN": "fr", "CI": "fr", "CM": "fr", "CD": "fr",
+    "MG": "fr", "HT": "fr",
+}
+
+
+def sitelinks(ids):
+    """Article titles by wiki (the English one and every LANG_OF one) for each item, kept in
+    PV_DIR/sitelinks.json."""
+    path = PV_DIR / "sitelinks.json"
+    have = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"done": [], "by": {}}
+    done = set(have["done"])
+    todo = [s for s in ids if s not in done]
+    wikis = sorted({"en", *(w for v in LANG_OF.values() for w in v.split())})
+    parts = " ".join(f"<https://{w}.wikipedia.org/>" for w in wikis)
+    for at in range(0, len(todo), LABEL_BATCH):
+        batch = todo[at : at + LABEL_BATCH]
+        print(f"sitelinks {at}/{len(todo)}...", end=" ", flush=True)
+        values = " ".join("wd:" + s for s in batch)
+        rows = run(f"""PREFIX schema: <http://schema.org/>
+SELECT ?s ?w ?t WHERE {{ VALUES ?s {{ {values} }} VALUES ?w {{ {parts} }} ?a schema:about ?s ; schema:isPartOf ?w ; schema:name ?t }}""")
+        print(len(rows), flush=True)
+        for r in rows:
+            have["by"].setdefault(qid(r["s"]), {})[r["w"].split("//")[1].split(".")[0]] = r["t"]
+        have["done"] += batch
+        PV_DIR.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(have, ensure_ascii=False), encoding="utf-8")
+        time.sleep(3)
+    return have["by"]
+
+
+def pageviews(articles):
+    """Views a year of each (wiki, title): a month's user views from Wikimedia's monthly
+    pageview dump (PV_DUMP, about 6 GB, read as it downloads and never kept) times 12. The API
+    allows a client that names no contact 10 requests a minute and about 10 titles a request, so
+    13,000 places would take hours. Kept in PV_DIR/pageviews.json as "wiki:title"; a title the
+    month never saw is 0; a run asks the dump again only for articles missing there."""
+    import bz2
+
+    path = PV_DIR / "pageviews.json"
+    have = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    want = {f"{w}.wikipedia {t.replace(' ', '_')}".encode(): f"{w}:{t}" for w, t in articles if f"{w}:{t}" not in have}
+    if not want:
+        return have
+    wikis = {k.split(b" ")[0] for k in want}
+    print(f"page views of {len(want)} articles from {PV_DUMP}...", flush=True)
+    got = dict.fromkeys(want.values(), 0)
+    dec, at, tail, t0 = bz2.BZ2Decompressor(), 0, b"", time.time()
+    while not dec.eof:
+        req = urllib.request.Request(PV_DUMP, headers={"User-Agent": PV_UA, "Range": f"bytes={at}-"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                while chunk := r.read(1 << 20):
+                    at += len(chunk)
+                    lines = (tail + dec.decompress(chunk)).split(b"\n")
+                    tail = lines.pop()
+                    for line in lines:
+                        p = line.split(b" ")
+                        if len(p) == 6 and p[0] in wikis and (k := p[0] + b" " + p[1]) in want:
+                            got[want[k]] += int(p[4])
+                    if at % (500 << 20) < (1 << 20):
+                        print(f"  {at / 1e9:.1f} GB, {time.time() - t0:.0f} s", flush=True)
+                    if dec.eof:
+                        break
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            print(f"  ({e}; going on from {at:,})", flush=True)
+            time.sleep(10)
+    have.update({k: v * 12 for k, v in got.items()})
+    PV_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(have, ensure_ascii=False), encoding="utf-8")
+    return have
+
+
+WB_API = "https://api.worldbank.org/v2/country/all/indicator/{ind}?format=json&per_page=20000&date={year}"
+
+
+def world_bank(ind, year):
+    """A World Bank indicator by ISO2 country for one year, kept in PV_DIR/<ind>-<year>.json."""
+    path = PV_DIR / f"{ind}-{year}.json"
+    if not path.exists():
+        req = urllib.request.Request(WB_API.format(ind=ind, year=year), headers={"User-Agent": PV_UA})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json.load(r)[1]
+        PV_DIR.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({d["country"]["id"]: d["value"] for d in data if d["value"] is not None}), encoding="utf-8")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def keep(raw):
@@ -253,13 +340,6 @@ def metres(a, b):
     return math.hypot((a["lon"] - b["lon"]) * kx, (a["lat"] - b["lat"]) * 110_540)
 
 
-def group_rows(rows):
-    by = {}
-    for r in rows:
-        by.setdefault(qid(r["s"]), []).append(r)
-    return by
-
-
 def people_within(points):
     """People within POP_KM of each (lon, lat), from the 1 km GHSL world grid; a circle in the
     grid's own metres (Mollweide, equal-area: distances are right to a few percent in the
@@ -289,75 +369,63 @@ def people_within(points):
     return [cache[key(p)] for p in points]
 
 
-# The kinds the fit tells apart, each against "other". Ride parks, animal parks and museums are in
-# the fit only so that a country's effect is not its mix of kinds (China's figures are mostly
-# theme parks); an estimate does not use them, because the places that publish a figure are the
-# large ones of their kind and that gap would lift every unmeasured ride park (an abandoned one
-# among them). Open scenic places keep theirs: their figures come from their own sample.
-RIDES = {"Q194195", "Q2416723", "Q740326"}
-ANIMALS = {"Q43501", "Q2281788", "Q167346"}
-MUSEUM = {"Q33506"}
-GROUPS = ("rides", "animals", "museum", "open")
-USED = {"open"}
+# Visits from a budget (T-1766, notes/T-1766.md). Each place's visits a year are its share of two
+# pools by its page views (English and its country's own editions): the outings of the people
+# within POP_KM (OUTINGS each a year, shared among the places within POP_KM of the place and
+# UNLISTED views' worth of places not on the list, by views to LOCAL_POWER), and the world's
+# tourists (international arrivals plus DOMESTIC trips a resident a year, each seeing SEEN listed
+# places, shared among all places by views to TOURIST_POWER). One pool for the world's tourists:
+# shared by country, a country with many small places listed (Italy's 6,000) thins its own and
+# one with few (China's 350) swamps them. Global constants, set against the places with a
+# Wikidata figure; arrivals and people by country are the World Bank's.
+OUTINGS = 6.0
+DOMESTIC = 1.0
+SEEN = 0.6
+# Page views of a place with no article in English or its country's languages: this many a
+# Wikipedia edition that writes about it.
+VIEWS_PER_EDITION = 300
+# Views of the most famous (the Eiffel Tower's 2M a year) run far ahead of their visitors, so
+# tourists follow the square root; in town the best known draws more than its views' share.
+TOURIST_POWER = 0.5
+LOCAL_POWER = 1.3
+# Views a year of the places not on the list, for each person living near: a city with few places
+# listed (Luoyang, Shanghai) does not pour all its people's outings into them.
+UNLISTED = 0.03
+ARRIVALS_YEAR = 2019
+# Not in the World Bank's tables (UNWTO 2019; the Ministry of the Interior's population).
+NOT_IN_WB = {"TW": (11_864_000, 23_603_000)}
 
 
-def kind_of(kinds, open_place):
-    if kinds & RIDES:
-        return "rides"
-    if kinds & ANIMALS:
-        return "animals"
-    if kinds & MUSEUM:
-        return "museum"
-    return "open" if open_place else "other"
+def views_of(todo):
+    """Each place's page views a year: English and its country's own editions summed."""
+    links = sitelinks(sorted(it["id"] for it in todo))
+    arts = {it["id"]: [(w, links[it["id"]][w]) for w in {"en", *LANG_OF.get(it["cc"], "").split()} if w in links.get(it["id"], {})] for it in todo}
+    pv = pageviews([a for v in arts.values() for a in v])
+    for it in todo:
+        it["pv"] = sum(pv.get(f"{w}:{t}", 0) for w, t in arts[it["id"]]) or VIEWS_PER_EDITION * max(it["sl"], 1)
 
 
-class Model:
-    """ln visitors = a + b ln sitelinks + c ln(people within POP_KM + POP_FLOOR) + the kind's
-    effect + the country's, fitted by least squares on places with a figure. The country effects
-    carry a ridge penalty (RIDGE): a country with a handful of figures stays near the world's
-    line, one with many (Italy, the US) or a clear gap (China) leaves it. Fitted on each run, so
-    new figures in Wikidata move it."""
-
-    def __init__(self, sample):
-        import numpy as np
-
-        self.np = np
-        self.countries = sorted({s["cc"] for s in sample}) if COUNTRY_EFFECT else []
-        X = np.array([self.row(s) for s in sample])
-        self.y = np.log([s["v"] for s in sample])
-        self.X, self.n_fixed = X, 3 + len(GROUPS)
-        self.b = self.solve(X, self.y)
-
-    def row(self, s):
-        return [1.0, math.log(s["sl"]), math.log(s["pop"] + POP_FLOOR)] + [float(s["group"] == g) for g in GROUPS] + [float(s["cc"] == c) for c in self.countries]
-
-    def solve(self, X, y):
-        np = self.np
-        pen = np.zeros(X.shape[1])
-        pen[self.n_fixed :] = RIDGE
-        return np.linalg.solve(X.T @ X + np.diag(pen), X.T @ y)
-
-    def predict(self, s):
-        return math.exp(float(self.np.array(self.row({**s, "group": s["group"] if s["group"] in USED else "other"})) @ self.b))
-
-    def cv_rmse(self, folds=10):
-        """Leave-a-tenth-out error of ln visitors: how far an estimate is from a real figure."""
-        np = self.np
-        order = np.random.default_rng(1).permutation(len(self.y))
-        err = np.zeros(len(self.y))
-        for f in range(folds):
-            test = order[f::folds]
-            train = np.setdiff1d(order, test)
-            err[test] = self.y[test] - self.X[test] @ self.solve(self.X[train], self.y[train])
-        return math.sqrt(float((err**2).mean()))
-
-    def describe(self):
-        eff = dict(zip(self.countries, self.b[self.n_fixed :]))
-        top = sorted(eff, key=lambda c: -abs(eff[c]))
-        fixed = dict(zip(["a", "sitelinks", "people"] + list(GROUPS), self.b[: self.n_fixed]))
-        return (f"fit on {len(self.y)} places, error {self.cv_rmse():.2f} in ln visitors (x{math.exp(self.cv_rmse()):.1f}); "
-                + ", ".join(f"{k} {v:.2f}" for k, v in fixed.items()) + "; countries: "
-                + ", ".join(f"{c or '--'} x{math.exp(eff[c]):.2f}" for c in top[:12]))
+def budget(todo):
+    """Sets each place's "est", its visits a year from the two pools."""
+    arrivals, people = world_bank("ST.INT.ARVL", ARRIVALS_YEAR), world_bank("SP.POP.TOTL", ARRIVALS_YEAR)
+    for cc, (a, p) in NOT_IN_WB.items():
+        arrivals.setdefault(cc, a)
+        people.setdefault(cc, p)
+    # residents: the views of the places within POP_KM, by a grid of POP_KM cells
+    cell = POP_KM * 1000.0
+    grid = {}
+    for it in todo:
+        it["gx"], it["gy"] = int(it["lon"] * 111_320 * math.cos(math.radians(it["lat"])) // cell), int(it["lat"] * 110_540 // cell)
+        grid.setdefault((it["gx"], it["gy"]), []).append(it)
+    for it in todo:
+        near = sum(o["pv"] ** LOCAL_POWER for dx in (-1, 0, 1) for dy in (-1, 0, 1) for o in grid.get((it["gx"] + dx, it["gy"] + dy), []) if metres(it, o) < cell)
+        it["local"] = OUTINGS * it["pop"] * it["pv"] ** LOCAL_POWER / (near + (UNLISTED * it["pop"]) ** LOCAL_POWER)
+    # tourists: the world's, by views to TOURIST_POWER
+    pool = SEEN * sum((arrivals.get(cc) or 0) + DOMESTIC * (people.get(cc) or 0) for cc in {it["cc"] for it in todo} if cc in people)
+    weight = sum(it["pv"] ** TOURIST_POWER for it in todo)
+    for it in todo:
+        it["tourist"] = pool * it["pv"] ** TOURIST_POWER / weight
+        it["est"] = min(it["local"] + it["tourist"], MAX_FIGURE)
 
 
 def build(raw):
@@ -408,23 +476,14 @@ def build(raw):
             dropped["figure"] += 1
             continue
         it["fig"], it["year"] = v, year
-        it["group"] = kind_of(it["kinds"], it["open"])
         todo.append(it)
-    # visitors: the figure, else the fit's estimate
-    sample = {it["id"]: it for it in todo if it["fig"] is not None and FIT_VISITORS <= it["fig"] and it["sl"] >= FIT_SITELINKS}
-    for s, rows in group_rows(raw["openfigures"]).items():
-        v, _ = figure(rows)
-        if s not in sample and v is not None and FIT_VISITORS <= v <= MAX_FIGURE and int(rows[0]["sl"]) >= FIT_SITELINKS and (at := point(rows[0]["g"])):
-            sample[s] = {"id": s, "lon": at[0], "lat": at[1], "sl": int(rows[0]["sl"]), "cc": rows[0].get("cc", ""), "group": "open", "fig": v}
-    need = [it for it in todo if it["fig"] is None]
-    pops = people_within([(it["lon"], it["lat"]) for it in [*sample.values(), *need]])
-    for it, pop in zip([*sample.values(), *need], pops):
+    # visitors: the figure, else the budget's estimate
+    for it, pop in zip(todo, people_within([(it["lon"], it["lat"]) for it in todo])):
         it["pop"] = pop
-    for it in sample.values():
-        it["v"] = it["fig"]
-    model = Model(list(sample.values()))
+    views_of(todo)
+    budget(todo)
     for it in todo:
-        it["v"], it["src"] = (it["fig"], 0) if it["fig"] is not None else (model.predict(it), 1)
+        it["v"], it["src"] = (it["fig"], 0) if it["fig"] is not None else (it["est"], 1)
     for it in todo:
         it["name"] = name_of(it["labels"])
         if it["v"] < MIN_VISITORS:
@@ -461,31 +520,56 @@ def build(raw):
             continue
         grid.setdefault((gx, gy), []).append(it)
     merged = [it for it in kept if it["id"] in gone]
-    return [it for it in kept if it["id"] not in gone], dropped, merged, model
+    return [it for it in kept if it["id"] not in gone], dropped, merged
 
 
 def main():
     raw = {} if "--fetch" in sys.argv or not CACHE.exists() else json.loads(CACHE.read_text(encoding="utf-8"))
     raw = fetch(raw)
-    rows, dropped, merged, model = build(raw)
+    rows, dropped, merged = build(raw)
     out = {"rows": [[int(it["id"][1:]), it["name"], round(it["lon"], 5), round(it["lat"], 5), int(round(it["v"])), it["src"]] for it in rows]}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{len(rows)} attractions ({sum(1 for it in rows if it['src'] == 0)} by visitor figure), {OUT.stat().st_size / 1e6:.2f} MB")
     print(f"dropped: {len(dropped['not'])} of a class never counted, {dropped['figure']} towers with no figure, {dropped['small']} under {MIN_VISITORS:,}, {dropped['unnamed']} unnamed; {len(merged)} inside or beside a larger one")
     if "--report" in sys.argv:
-        report(rows, dropped, merged, model)
+        report(rows, dropped, merged)
 
 
-def report(rows, dropped, merged, model):
+def check(rows):
+    """The budget against Wikidata's figures, where a place has one."""
+    figs = [it for it in rows if it["src"] == 0]
+    r = sorted(math.log(it["est"] / it["fig"]) for it in figs)
+    within = sum(abs(x) < math.log(3) for x in r) / len(r)
+    print(f"budget against {len(r)} figures: {100 * within:.0f}% within 3x, {100 * sum(abs(x) < math.log(2) for x in r) / len(r):.0f}% within 2x, median x{math.exp(r[len(r) // 2]):.2f}, quartiles x{math.exp(r[len(r) // 4]):.2f}-x{math.exp(r[3 * len(r) // 4]):.2f}")
+    by = {}
+    for it in figs:
+        by.setdefault(it["cc"], []).append(math.log(it["est"] / it["fig"]))
+    print("  by country (figures, median budget/figure): " + ", ".join(f"{c or '--'} {len(v)} x{math.exp(sorted(v)[len(v) // 2]):.2f}" for c, v in sorted(by.items(), key=lambda kv: -len(kv[1]))[:16]))
+    print(f"  visits in the file: {sum(it['v'] for it in rows) / 1e9:.2f} billion a year ({sum(it['v'] for it in rows if it['src']) / 1e9:.2f} estimated)")
+    names = ["Kiyomizu-dera", "West Lake", "Lingyin Temple", "Kinkaku-ji", "Fushimi Inari-taisha", "Tōdai-ji", "Sensō-ji", "Meiji Shrine", "Louvre", "Eiffel Tower",
+             "Notre-Dame de Paris", "Forbidden City", "Metropolitan Museum of Art", "Grand Palace", "Wat Arun", "Taj Mahal", "Colosseum"]
+    at = {it["name"]: it for it in rows}
+    for n in names:
+        if n in at:
+            it = at[n]
+            fig = "-" if it["fig"] is None else f"{it['fig'] / 1e6:.1f}M"
+            print(f"  {n}: {it['v'] / 1e6:.1f}M in the file, budget {it['est'] / 1e6:.1f}M (residents {it['local'] / 1e6:.1f}M, tourists {it['tourist'] / 1e6:.1f}M), figure {fig}, views {it['pv'] / 1e3:.0f}k")
+        else:
+            print(f"  {n}: not in the file")
+
+
+def report(rows, dropped, merged):
     sys.stdout.reconfigure(encoding="utf-8")
-    print(model.describe())
+    check(rows)
     boxes = {"New York": (40.5, 40.95, -74.3, -73.7), "London": (51.3, 51.7, -0.5, 0.3), "Tokyo": (35.5, 35.85, 139.55, 139.95),
-             "Shanghai": (30.9, 31.45, 121.2, 121.8), "Paris": (48.75, 48.95, 2.2, 2.5), "Kyoto": (34.9, 35.1, 135.65, 135.85), "Hangzhou": (30.1, 30.4, 120.0, 120.3)}
+             "Shanghai": (30.9, 31.45, 121.2, 121.8), "Paris": (48.75, 48.95, 2.2, 2.5), "Kyoto": (34.9, 35.1, 135.65, 135.85), "Hangzhou": (30.1, 30.4, 120.0, 120.3),
+             "Nara": (34.65, 34.72, 135.78, 135.87), "Bangkok": (13.6, 13.95, 100.35, 100.75), "Pittsburgh": (40.35, 40.55, -80.1, -79.85),
+             "Bruges": (51.17, 51.24, 3.17, 3.28), "Luoyang": (34.55, 34.75, 112.3, 112.6), "Rome": (41.8, 42.0, 12.35, 12.6)}
     print("\ncity boxes (attractions, visits a day on average, largest):")
     for city, (la0, la1, lo0, lo1) in boxes.items():
         inside = [it for it in rows if la0 <= it["lat"] <= la1 and lo0 <= it["lon"] <= lo1]
-        top = ", ".join(f"{it['name']} {it['v'] / 1e6:.1f}M{'' if it['src'] == 0 else ' (ed)'}" for it in inside[:8])
-        print(f"  {city}: {len(inside)}, {sum(it['v'] for it in inside) / 365:,.0f} a day; {top}")
+        top = ", ".join(f"{it['name']} {it['v'] / 1e6:.1f}M{'' if it['src'] == 0 else ' (est)'}" for it in inside[:8])
+        print(f"  {city}: {len(inside)}, {sum(it['v'] for it in inside) / 1e6:.1f}M a year, {sum(it['v'] for it in inside) / 365:,.0f} a day; {top}")
     print("\nlargest:")
     for it in rows[:120]:
         print(f"  {it['id']:>11} {it['cc']:2} {it['v'] / 1e6:6.2f}M {'fig ' + str(it['year']) if it['src'] == 0 else 'sl  ' + str(it['sl']):>9}  {it['name']}")

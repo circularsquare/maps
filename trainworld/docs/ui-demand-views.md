@@ -327,7 +327,7 @@ riders counters keep their own smoothing (Live feel).
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff
-  left out, OSM hospitals, clinics, doctors and dentists, Wikidata attractions sized by visitor figures or language editions; private schools are not modelled).
+  left out, OSM hospitals, clinics, doctors and dentists, Wikidata attractions sized by visitor figures or by page views; private schools are not modelled).
 - **Timing** [T-193]: per purpose one compact chart, a bar per period (6-10, 10-16, 16-20, 20-24,
   0-6), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that

@@ -259,10 +259,14 @@ Everywhere: places and parks from OSM, water from OSM (TIGER and StatCan in the 
 world market from the packs. U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,
 CC BY 4.0, the country's latest year, cached in `pipeline/hospital_beds.json`; none for Taiwan,
 which takes the world figure) scale every pack's hospital beds (T-387). U attractions from
-Wikidata through QLever (CC0; visitors P1174 where given, else language editions; one world file,
-`pipeline/attractions_json.py`, T-263): figures for 1,220 of 12,900 places, most in the US and
-Western Europe (China 20, Japan 24, India 19, Nigeria none); N national tourism boards' visitor
-tables, never looked for. ? Overture Places as a second place source where c is under 0.3
+Wikidata through QLever (CC0; visitors P1174 where given; one world file,
+`pipeline/attractions_json.py`, T-263): figures for 1,273 of 12,682 places, most in the US and
+Western Europe (China 21, Japan 24, India 19, Nigeria none); the rest sized by a budget shared by
+U Wikipedia page views (Wikimedia's monthly pageview dump, September 2026, CC0; English plus the
+country's editions; the per-article APIs allow a client naming no contact 10 requests a minute) and
+U the World Bank's international arrivals (ST.INT.ARVL) and population, 2019 (CC BY 4.0; Taiwan's
+from UNWTO and its Ministry of the Interior), T-1766, cached in `data/work/t1766/`; N national
+tourism boards' visitor tables, never looked for. ? Overture Places as a second place source where c is under 0.3
 (Brazil, China, India, Nigeria), T-508. Tier 0 alone covers any input marked tier 0 above; its rules are in
 demand-worldwide.md "Tier 0".
 

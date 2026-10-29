@@ -32,12 +32,14 @@ town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's 
   only every 4 km. So the corner shop draws its street, and the dense centre, where department
   stores, theatres and galleries are, draws people from across the city. Those are the long
   everyday trips a train can win.
-- **Attractions.** Museums, zoos, theme parks, temples, castles and the like, about 12,900 places
+- **Attractions.** Museums, zoos, theme parks, temples, castles and the like, about 12,700 places
   worldwide from Wikidata, each with its visitors a year: Wikidata's own figure where it has one
-  (the Met 6.5M, Tokyo Disneyland 15.1M), otherwise 10,000 for every Wikipedia language that
-  writes about the place. Each has that many visits a day, half from homes and half from where
-  visitors eat and stay, from across the city: the chance halves only every 10 km. New York
-  gets about 100,000 visits a day, London 195,000, Tokyo 130,000. Small next to the city's
+  (the Met 6.5M, Tokyo Disneyland 15.1M), otherwise a share of a budget: everyone living within
+  25 km makes 6 outings a year, and the world's tourists see 0.6 listed places a trip, both shared
+  by how often the place's Wikipedia page is read (Kiyomizu-dera 3.4M, West Lake 10M). Each has
+  that many visits a day, half from homes and half from where visitors eat and stay, from across
+  the city: the chance halves only every 10 km. New York gets about 280,000 visits a day, London
+  410,000, Tokyo 380,000. Small next to the city's
   trips, but long trips to single spots, so a station at the Met gets riders it would not have.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
   neighbouring cities. Where two cities meet, commuting across the line is damped to half (0.5;
