@@ -15386,6 +15386,306 @@
       {
         "name": "Go Cong Dong",
         "regionName": "Go Cong Dong region"
+      },
+      {
+        "name": "Bangkok",
+        "regionName": "Bangkok region"
+      },
+      {
+        "name": "Mueang Chiang Mai",
+        "regionName": "Mueang Chiang Mai region"
+      },
+      {
+        "name": "Mueang Khon Kaen",
+        "regionName": "Mueang Khon Kaen region"
+      },
+      {
+        "name": "Mueang Nakhon Ratchasima",
+        "regionName": "Mueang Nakhon Ratchasima region"
+      },
+      {
+        "name": "Mueang Lop Buri",
+        "regionName": "Mueang Lop Buri region"
+      },
+      {
+        "name": "Mueang Udon Thani",
+        "regionName": "Mueang Udon Thani region"
+      },
+      {
+        "name": "Mueang Nakhon Sawan",
+        "regionName": "Mueang Nakhon Sawan region"
+      },
+      {
+        "name": "Hat Yai",
+        "regionName": "Hat Yai region"
+      },
+      {
+        "name": "Mueang Buri Ram",
+        "regionName": "Mueang Buri Ram region"
+      },
+      {
+        "name": "Mueang Suphan Buri",
+        "regionName": "Mueang Suphan Buri region"
+      },
+      {
+        "name": "Mueang Roi Et",
+        "regionName": "Mueang Roi Et region"
+      },
+      {
+        "name": "Mueang Phitsanulok",
+        "regionName": "Mueang Phitsanulok region"
+      },
+      {
+        "name": "Mueang Surat Thani",
+        "regionName": "Mueang Surat Thani region"
+      },
+      {
+        "name": "Mueang Ubon Ratchathani",
+        "regionName": "Mueang Ubon Ratchathani region"
+      },
+      {
+        "name": "Klaeng",
+        "regionName": "Klaeng region"
+      },
+      {
+        "name": "Phan",
+        "regionName": "Phan region"
+      },
+      {
+        "name": "Mueang Chanthaburi",
+        "regionName": "Mueang Chanthaburi region"
+      },
+      {
+        "name": "Mueang Nakhon Si Thammarat",
+        "regionName": "Mueang Nakhon Si Thammarat region"
+      },
+      {
+        "name": "Mueang Kalasin",
+        "regionName": "Mueang Kalasin region"
+      },
+      {
+        "name": "Mueang Chumphon",
+        "regionName": "Mueang Chumphon region"
+      },
+      {
+        "name": "Warin Chamrap",
+        "regionName": "Warin Chamrap region"
+      },
+      {
+        "name": "Mueang Saraburi",
+        "regionName": "Mueang Saraburi region"
+      },
+      {
+        "name": "Bang Lamung",
+        "regionName": "Bang Lamung region"
+      },
+      {
+        "name": "Mueang Phrae",
+        "regionName": "Mueang Phrae region"
+      },
+      {
+        "name": "Mueang Kamphaeng Phet",
+        "regionName": "Mueang Kamphaeng Phet region"
+      },
+      {
+        "name": "Mueang Phetchabun",
+        "regionName": "Mueang Phetchabun region"
+      },
+      {
+        "name": "Mueang Lampang",
+        "regionName": "Mueang Lampang region"
+      },
+      {
+        "name": "Mueang Chiang Rai",
+        "regionName": "Mueang Chiang Rai region"
+      },
+      {
+        "name": "Chana",
+        "regionName": "Chana region"
+      },
+      {
+        "name": "Mueang Surin",
+        "regionName": "Mueang Surin region"
+      },
+      {
+        "name": "Mueang Nakhon Pathom",
+        "regionName": "Mueang Nakhon Pathom region"
+      },
+      {
+        "name": "Kantharalak",
+        "regionName": "Kantharalak region"
+      },
+      {
+        "name": "Mueang Maha Sarakham",
+        "regionName": "Mueang Maha Sarakham region"
+      },
+      {
+        "name": "Kabin Buri",
+        "regionName": "Kabin Buri region"
+      },
+      {
+        "name": "Mueang Chaiyaphum",
+        "regionName": "Mueang Chaiyaphum region"
+      },
+      {
+        "name": "Thung Song",
+        "regionName": "Thung Song region"
+      },
+      {
+        "name": "Sawang Daen Din",
+        "regionName": "Sawang Daen Din region"
+      },
+      {
+        "name": "Mueang Chon Buri",
+        "regionName": "Mueang Chon Buri region"
+      },
+      {
+        "name": "Mueang Phatthalung",
+        "regionName": "Mueang Phatthalung region"
+      },
+      {
+        "name": "Mueang Ratchaburi",
+        "regionName": "Mueang Ratchaburi region"
+      },
+      {
+        "name": "Mueang Amnat Charoen",
+        "regionName": "Mueang Amnat Charoen region"
+      },
+      {
+        "name": "Mueang Kanchanaburi",
+        "regionName": "Mueang Kanchanaburi region"
+      },
+      {
+        "name": "Mueang Phuket",
+        "regionName": "Mueang Phuket region"
+      },
+      {
+        "name": "Mueang Loei",
+        "regionName": "Mueang Loei region"
+      },
+      {
+        "name": "Mueang Sa Kaeo",
+        "regionName": "Mueang Sa Kaeo region"
+      },
+      {
+        "name": "Phimai",
+        "regionName": "Phimai region"
+      },
+      {
+        "name": "Mueang Sukhothai",
+        "regionName": "Mueang Sukhothai region"
+      },
+      {
+        "name": "Mueang Narathiwat",
+        "regionName": "Mueang Narathiwat region"
+      },
+      {
+        "name": "Mueang Chachoengsao",
+        "regionName": "Mueang Chachoengsao region"
+      },
+      {
+        "name": "Thalang",
+        "regionName": "Thalang region"
+      },
+      {
+        "name": "Mueang Pattani",
+        "regionName": "Mueang Pattani region"
+      },
+      {
+        "name": "Mueang Sakon Nakhon",
+        "regionName": "Mueang Sakon Nakhon region"
+      },
+      {
+        "name": "Phra Nakhon Si Ayutthaya",
+        "regionName": "Phra Nakhon Si Ayutthaya region"
+      },
+      {
+        "name": "Mueang Nong Bua Lam Phu",
+        "regionName": "Mueang Nong Bua Lam Phu region"
+      },
+      {
+        "name": "Mueang Nakhon Phanom",
+        "regionName": "Mueang Nakhon Phanom region"
+      },
+      {
+        "name": "Mueang Trang",
+        "regionName": "Mueang Trang region"
+      },
+      {
+        "name": "Mueang Lamphun",
+        "regionName": "Mueang Lamphun region"
+      },
+      {
+        "name": "Mae Sot",
+        "regionName": "Mae Sot region"
+      },
+      {
+        "name": "Mueang Songkhla",
+        "regionName": "Mueang Songkhla region"
+      },
+      {
+        "name": "Mueang Uttaradit",
+        "regionName": "Mueang Uttaradit region"
+      },
+      {
+        "name": "Ban Phaeo",
+        "regionName": "Ban Phaeo region"
+      },
+      {
+        "name": "Mueang Phichit",
+        "regionName": "Mueang Phichit region"
+      },
+      {
+        "name": "Mueang Mukdahan",
+        "regionName": "Mueang Mukdahan region"
+      },
+      {
+        "name": "San Pa Tong",
+        "regionName": "San Pa Tong region"
+      },
+      {
+        "name": "Mueang Phetchaburi",
+        "regionName": "Mueang Phetchaburi region"
+      },
+      {
+        "name": "Nong Suea",
+        "regionName": "Nong Suea region"
+      },
+      {
+        "name": "Mueang Prachuap Khiri Khan",
+        "regionName": "Mueang Prachuap Khiri Khan region"
+      },
+      {
+        "name": "Singapore",
+        "regionName": "Singapore region"
+      },
+      {
+        "name": "Kantharalak",
+        "regionName": "Kantharalak region"
+      },
+      {
+        "name": "Mueang Sa Kaeo",
+        "regionName": "Mueang Sa Kaeo region"
+      },
+      {
+        "name": "Mueang Chiang Mai",
+        "regionName": "Mueang Chiang Mai region"
+      },
+      {
+        "name": "Mueang Chumphon",
+        "regionName": "Mueang Chumphon region"
+      },
+      {
+        "name": "Kantharalak",
+        "regionName": "Kantharalak region"
+      },
+      {
+        "name": "Sawang Daen Din",
+        "regionName": "Sawang Daen Din region"
+      },
+      {
+        "name": "Mueang Sa Kaeo",
+        "regionName": "Mueang Sa Kaeo region"
       }
     ],
     "rule": {
@@ -64367,6 +64667,1772 @@
       "country": "VN",
       "localTrips": 432615.0,
       "realm": "vietnam"
+    },
+    {
+      "id": "ban",
+      "name": "Bangkok",
+      "origin": {
+        "lon": 100.5365,
+        "lat": 13.7226
+      },
+      "center": [
+        100.5365,
+        13.7226
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.874,
+        13.266,
+        101.181,
+        14.349
+      ],
+      "place": 3842,
+      "country": "TH",
+      "localTrips": 57008438.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "muh",
+      "name": "Mueang Khon Kaen",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.8349,
+        "lat": 16.4276
+      },
+      "center": [
+        102.8349,
+        16.4276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.73,
+        15.614,
+        103.204,
+        17.107
+      ],
+      "place": 3844,
+      "country": "TH",
+      "localTrips": 4882583.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mut",
+      "name": "Mueang Nakhon Ratchasima",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.0974,
+        "lat": 14.9751
+      },
+      "center": [
+        102.0974,
+        14.9751
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.162,
+        14.102,
+        102.824,
+        15.483
+      ],
+      "place": 3845,
+      "country": "TH",
+      "localTrips": 4737088.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mup",
+      "name": "Mueang Lop Buri",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.6106,
+        "lat": 14.803
+      },
+      "center": [
+        100.6106,
+        14.803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.163,
+        14.419,
+        101.382,
+        15.575
+      ],
+      "place": 3846,
+      "country": "TH",
+      "localTrips": 3742634.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "muu",
+      "name": "Mueang Udon Thani",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.7961,
+        "lat": 17.4065
+      },
+      "center": [
+        102.7961,
+        17.4065
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.996,
+        16.785,
+        103.688,
+        18.324
+      ],
+      "place": 3847,
+      "country": "TH",
+      "localTrips": 4100259.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "muw",
+      "name": "Mueang Nakhon Sawan",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.1347,
+        "lat": 15.7132
+      },
+      "center": [
+        100.1347,
+        15.7132
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.067,
+        14.886,
+        100.867,
+        16.361
+      ],
+      "place": 3848,
+      "country": "TH",
+      "localTrips": 3723782.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "hty",
+      "name": "Hat Yai",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.4758,
+        "lat": 7.0066
+      },
+      "center": [
+        100.4758,
+        7.0066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.145,
+        6.404,
+        100.631,
+        7.332
+      ],
+      "place": 3849,
+      "country": "TH",
+      "localTrips": 3237492.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mub",
+      "name": "Mueang Buri Ram",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.1012,
+        "lat": 14.9915
+      },
+      "center": [
+        103.1012,
+        14.9915
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.413,
+        14.111,
+        103.525,
+        15.814
+      ],
+      "place": 3850,
+      "country": "TH",
+      "localTrips": 3339020.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "meg",
+      "name": "Mueang Suphan Buri",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.1208,
+        "lat": 14.4754
+      },
+      "center": [
+        100.1208,
+        14.4754
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.257,
+        14.045,
+        100.461,
+        15.1
+      ],
+      "place": 3851,
+      "country": "TH",
+      "localTrips": 2917370.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mno",
+      "name": "Mueang Roi Et",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.6536,
+        "lat": 16.0497
+      },
+      "center": [
+        103.6536,
+        16.0497
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.248,
+        15.386,
+        104.367,
+        16.491
+      ],
+      "place": 3852,
+      "country": "TH",
+      "localTrips": 2881048.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mep",
+      "name": "Mueang Phitsanulok",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.2697,
+        "lat": 16.8222
+      },
+      "center": [
+        100.2697,
+        16.8222
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.834,
+        16.3,
+        101.129,
+        17.762
+      ],
+      "place": 3853,
+      "country": "TH",
+      "localTrips": 2703966.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnu",
+      "name": "Mueang Surat Thani",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.3259,
+        "lat": 9.1418
+      },
+      "center": [
+        99.3259,
+        9.1418
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.424,
+        8.282,
+        100.11,
+        10.145
+      ],
+      "place": 3854,
+      "country": "TH",
+      "localTrips": 2835257.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "meb",
+      "name": "Mueang Ubon Ratchathani",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.8684,
+        "lat": 15.2374
+      },
+      "center": [
+        104.8684,
+        15.2374
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.352,
+        15.146,
+        105.656,
+        16.117
+      ],
+      "place": 3855,
+      "country": "TH",
+      "localTrips": 2545597.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "kln",
+      "name": "Klaeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.6527,
+        "lat": 12.7747
+      },
+      "center": [
+        101.6527,
+        12.7747
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.965,
+        12.503,
+        101.85,
+        13.182
+      ],
+      "place": 3856,
+      "country": "TH",
+      "localTrips": 2575076.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "phx",
+      "name": "Phan",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.9007,
+        "lat": 19.1719
+      },
+      "center": [
+        99.9007,
+        19.1719
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.275,
+        18.79,
+        100.623,
+        20.421
+      ],
+      "place": 3857,
+      "country": "TH",
+      "localTrips": 2576666.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnh",
+      "name": "Mueang Chanthaburi",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.1087,
+        "lat": 12.6114
+      },
+      "center": [
+        102.1087,
+        12.6114
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.666,
+        11.627,
+        102.948,
+        13.355
+      ],
+      "place": 3858,
+      "country": "TH",
+      "localTrips": 2527884.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mna",
+      "name": "Mueang Nakhon Si Thammarat",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.9637,
+        "lat": 8.4431
+      },
+      "center": [
+        99.9637,
+        8.4431
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.499,
+        7.819,
+        100.355,
+        9.341
+      ],
+      "place": 3859,
+      "country": "TH",
+      "localTrips": 2788703.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnk",
+      "name": "Mueang Kalasin",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.5031,
+        "lat": 16.4358
+      },
+      "center": [
+        103.5031,
+        16.4358
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.077,
+        16.163,
+        104.26,
+        17.12
+      ],
+      "place": 3860,
+      "country": "TH",
+      "localTrips": 2421828.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "wan",
+      "name": "Warin Chamrap",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.8635,
+        "lat": 15.1882
+      },
+      "center": [
+        104.8635,
+        15.1882
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.65,
+        14.191,
+        105.644,
+        15.403
+      ],
+      "place": 3862,
+      "country": "TH",
+      "localTrips": 2290890.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnb",
+      "name": "Mueang Saraburi",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.9184,
+        "lat": 14.5245
+      },
+      "center": [
+        100.9184,
+        14.5245
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.554,
+        14.225,
+        101.474,
+        15.065
+      ],
+      "place": 3863,
+      "country": "TH",
+      "localTrips": 2195496.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "bng",
+      "name": "Bang Lamung",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.8785,
+        "lat": 12.9217
+      },
+      "center": [
+        100.8785,
+        12.9217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.644,
+        12.49,
+        101.566,
+        13.301
+      ],
+      "place": 3864,
+      "country": "TH",
+      "localTrips": 2328135.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnp",
+      "name": "Mueang Phrae",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.1433,
+        "lat": 18.1398
+      },
+      "center": [
+        100.1433,
+        18.1398
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.348,
+        17.669,
+        101.307,
+        19.653
+      ],
+      "place": 3865,
+      "country": "TH",
+      "localTrips": 2473342.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mne",
+      "name": "Mueang Kamphaeng Phet",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.5334,
+        "lat": 16.4769
+      },
+      "center": [
+        99.5334,
+        16.4769
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.997,
+        15.837,
+        100.054,
+        16.929
+      ],
+      "place": 3866,
+      "country": "TH",
+      "localTrips": 2313263.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnx",
+      "name": "Mueang Phetchabun",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.1532,
+        "lat": 16.4194
+      },
+      "center": [
+        101.1532,
+        16.4194
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.614,
+        15.018,
+        101.546,
+        17.197
+      ],
+      "place": 3867,
+      "country": "TH",
+      "localTrips": 2432372.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnl",
+      "name": "Mueang Lampang",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.5059,
+        "lat": 18.2883
+      },
+      "center": [
+        99.5059,
+        18.2883
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.998,
+        17.187,
+        100.145,
+        19.436
+      ],
+      "place": 3868,
+      "country": "TH",
+      "localTrips": 2237034.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mni",
+      "name": "Mueang Chiang Rai",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.8306,
+        "lat": 19.9082
+      },
+      "center": [
+        99.8306,
+        19.9082
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.238,
+        19.44,
+        100.342,
+        20.483
+      ],
+      "place": 3869,
+      "country": "TH",
+      "localTrips": 2255585.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "caj",
+      "name": "Chana",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.289,
+        "lat": 6.5525
+      },
+      "center": [
+        101.289,
+        6.5525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.526,
+        5.594,
+        101.628,
+        7.12
+      ],
+      "place": 3870,
+      "country": "TH",
+      "localTrips": 2138977.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgs",
+      "name": "Mueang Surin",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.4976,
+        "lat": 14.885
+      },
+      "center": [
+        103.4976,
+        14.885
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.07,
+        14.308,
+        104.111,
+        15.502
+      ],
+      "place": 3871,
+      "country": "TH",
+      "localTrips": 2377462.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mga",
+      "name": "Mueang Nakhon Pathom",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.0524,
+        "lat": 13.8125
+      },
+      "center": [
+        100.0524,
+        13.8125
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.798,
+        13.658,
+        100.317,
+        14.198
+      ],
+      "place": 3872,
+      "country": "TH",
+      "localTrips": 2058310.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgm",
+      "name": "Mueang Maha Sarakham",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.3073,
+        "lat": 16.1811
+      },
+      "center": [
+        103.3073,
+        16.1811
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.824,
+        15.387,
+        103.523,
+        16.662
+      ],
+      "place": 3874,
+      "country": "TH",
+      "localTrips": 1969527.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "kbi",
+      "name": "Kabin Buri",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.3788,
+        "lat": 14.058
+      },
+      "center": [
+        101.3788,
+        14.058
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.118,
+        13.564,
+        102.146,
+        14.481
+      ],
+      "place": 3875,
+      "country": "TH",
+      "localTrips": 1845382.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "muy",
+      "name": "Mueang Chaiyaphum",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.0347,
+        "lat": 15.8116
+      },
+      "center": [
+        102.0347,
+        15.8116
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.298,
+        15.182,
+        102.478,
+        16.747
+      ],
+      "place": 3876,
+      "country": "TH",
+      "localTrips": 2155428.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "tug",
+      "name": "Thung Song",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.6794,
+        "lat": 8.1021
+      },
+      "center": [
+        99.6794,
+        8.1021
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.606,
+        7.448,
+        99.917,
+        8.741
+      ],
+      "place": 3877,
+      "country": "TH",
+      "localTrips": 2013065.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgc",
+      "name": "Mueang Chon Buri",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.1763,
+        "lat": 13.4528
+      },
+      "center": [
+        101.1763,
+        13.4528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.878,
+        13.053,
+        101.739,
+        13.608
+      ],
+      "place": 3879,
+      "country": "TH",
+      "localTrips": 2088267.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgp",
+      "name": "Mueang Phatthalung",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.0788,
+        "lat": 7.6151
+      },
+      "center": [
+        100.0788,
+        7.6151
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.714,
+        7.072,
+        100.447,
+        7.958
+      ],
+      "place": 3880,
+      "country": "TH",
+      "localTrips": 1832719.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgr",
+      "name": "Mueang Ratchaburi",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.817,
+        "lat": 13.5345
+      },
+      "center": [
+        99.817,
+        13.5345
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.144,
+        13.179,
+        100.064,
+        13.976
+      ],
+      "place": 3881,
+      "country": "TH",
+      "localTrips": 1812533.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgt",
+      "name": "Mueang Amnat Charoen",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.6255,
+        "lat": 15.8609
+      },
+      "center": [
+        104.6255,
+        15.8609
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.978,
+        15.271,
+        105.08,
+        16.367
+      ],
+      "place": 3882,
+      "country": "TH",
+      "localTrips": 1844158.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgk",
+      "name": "Mueang Kanchanaburi",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.5298,
+        "lat": 14.0252
+      },
+      "center": [
+        99.5298,
+        14.0252
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.001,
+        13.707,
+        99.898,
+        14.856
+      ],
+      "place": 3883,
+      "country": "TH",
+      "localTrips": 1752664.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgh",
+      "name": "Mueang Phuket",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.3039,
+        "lat": 7.8991
+      },
+      "center": [
+        98.3039,
+        7.8991
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.239,
+        7.716,
+        98.502,
+        7.994
+      ],
+      "place": 3884,
+      "country": "TH",
+      "localTrips": 1648578.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgl",
+      "name": "Mueang Loei",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.7255,
+        "lat": 17.4888
+      },
+      "center": [
+        101.7255,
+        17.4888
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.007,
+        16.735,
+        102.175,
+        18.239
+      ],
+      "place": 3885,
+      "country": "TH",
+      "localTrips": 1638639.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "phi",
+      "name": "Phimai",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.4257,
+        "lat": 15.5901
+      },
+      "center": [
+        102.4257,
+        15.5901
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.89,
+        15.049,
+        103.032,
+        15.827
+      ],
+      "place": 3887,
+      "country": "TH",
+      "localTrips": 1663176.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgu",
+      "name": "Mueang Sukhothai",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.8192,
+        "lat": 17.0114
+      },
+      "center": [
+        99.8192,
+        17.0114
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.293,
+        16.664,
+        100.131,
+        17.84
+      ],
+      "place": 3888,
+      "country": "TH",
+      "localTrips": 1722159.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mew",
+      "name": "Mueang Narathiwat",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.9656,
+        "lat": 6.0174
+      },
+      "center": [
+        101.9656,
+        6.0174
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.352,
+        5.714,
+        102.112,
+        6.654
+      ],
+      "place": 3889,
+      "country": "TH",
+      "localTrips": 1763969.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgo",
+      "name": "Mueang Chachoengsao",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.0763,
+        "lat": 13.6899
+      },
+      "center": [
+        101.0763,
+        13.6899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.836,
+        13.16,
+        102.009,
+        13.905
+      ],
+      "place": 3890,
+      "country": "TH",
+      "localTrips": 1438496.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "thl",
+      "name": "Thalang",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.2958,
+        "lat": 7.9803
+      },
+      "center": [
+        98.2958,
+        7.9803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        97.612,
+        7.87,
+        98.727,
+        9.482
+      ],
+      "place": 3891,
+      "country": "TH",
+      "localTrips": 1366161.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgi",
+      "name": "Mueang Pattani",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.2494,
+        "lat": 6.8687
+      },
+      "center": [
+        101.2494,
+        6.8687
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.999,
+        6.531,
+        101.744,
+        6.97
+      ],
+      "place": 3892,
+      "country": "TH",
+      "localTrips": 1581763.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgx",
+      "name": "Mueang Sakon Nakhon",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.1476,
+        "lat": 17.1595
+      },
+      "center": [
+        104.1476,
+        17.1595
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.594,
+        16.754,
+        104.455,
+        17.491
+      ],
+      "place": 3893,
+      "country": "TH",
+      "localTrips": 1424804.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "phk",
+      "name": "Phra Nakhon Si Ayutthaya",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.5751,
+        "lat": 14.3526
+      },
+      "center": [
+        100.5751,
+        14.3526
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.395,
+        14.257,
+        100.816,
+        14.697
+      ],
+      "place": 3894,
+      "country": "TH",
+      "localTrips": 1327437.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mgb",
+      "name": "Mueang Nong Bua Lam Phu",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.4376,
+        "lat": 17.2007
+      },
+      "center": [
+        102.4376,
+        17.2007
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.962,
+        16.753,
+        102.699,
+        17.711
+      ],
+      "place": 3895,
+      "country": "TH",
+      "localTrips": 1385045.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mkh",
+      "name": "Mueang Nakhon Phanom",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.7857,
+        "lat": 17.3982
+      },
+      "center": [
+        104.7857,
+        17.3982
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.962,
+        15.988,
+        105.442,
+        18.042
+      ],
+      "place": 3896,
+      "country": "TH",
+      "localTrips": 1592826.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mtr",
+      "name": "Mueang Trang",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.6092,
+        "lat": 7.5583
+      },
+      "center": [
+        99.6092,
+        7.5583
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.178,
+        6.954,
+        99.968,
+        8.031
+      ],
+      "place": 3897,
+      "country": "TH",
+      "localTrips": 1555413.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mlm",
+      "name": "Mueang Lamphun",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.9979,
+        "lat": 18.5689
+      },
+      "center": [
+        98.9979,
+        18.5689
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.651,
+        17.407,
+        99.341,
+        18.727
+      ],
+      "place": 3898,
+      "country": "TH",
+      "localTrips": 1274610.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mso",
+      "name": "Mae Sot",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.5157,
+        "lat": 16.6906
+      },
+      "center": [
+        98.5157,
+        16.6906
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.657,
+        16.25,
+        99.486,
+        17.887
+      ],
+      "place": 3899,
+      "country": "TH",
+      "localTrips": 1431853.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "msn",
+      "name": "Mueang Songkhla",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.5923,
+        "lat": 7.2013
+      },
+      "center": [
+        100.5923,
+        7.2013
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.337,
+        6.855,
+        100.694,
+        7.641
+      ],
+      "place": 3900,
+      "country": "TH",
+      "localTrips": 1228010.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mud",
+      "name": "Mueang Uttaradit",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.0931,
+        "lat": 17.6124
+      },
+      "center": [
+        100.0931,
+        17.6124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.875,
+        17.12,
+        100.8,
+        18.074
+      ],
+      "place": 3901,
+      "country": "TH",
+      "localTrips": 1235006.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "bnp",
+      "name": "Ban Phaeo",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.106,
+        "lat": 13.5917
+      },
+      "center": [
+        100.106,
+        13.5917
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.833,
+        13.223,
+        100.252,
+        13.703
+      ],
+      "place": 3902,
+      "country": "TH",
+      "localTrips": 826723.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mph",
+      "name": "Mueang Phichit",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.3497,
+        "lat": 16.4358
+      },
+      "center": [
+        100.3497,
+        16.4358
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.965,
+        15.9,
+        100.819,
+        16.667
+      ],
+      "place": 3903,
+      "country": "TH",
+      "localTrips": 1276120.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnd",
+      "name": "Mueang Mukdahan",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.7264,
+        "lat": 16.5427
+      },
+      "center": [
+        104.7264,
+        16.5427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.051,
+        16.167,
+        104.998,
+        16.925
+      ],
+      "place": 3904,
+      "country": "TH",
+      "localTrips": 1140401.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "snp",
+      "name": "San Pa Tong",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.8949,
+        "lat": 18.6267
+      },
+      "center": [
+        98.8949,
+        18.6267
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.055,
+        17.759,
+        98.98,
+        18.957
+      ],
+      "place": 3905,
+      "country": "TH",
+      "localTrips": 1006705.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mpe",
+      "name": "Mueang Phetchaburi",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.9501,
+        "lat": 13.1014
+      },
+      "center": [
+        99.9501,
+        13.1014
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.583,
+        12.596,
+        100.125,
+        13.362
+      ],
+      "place": 3906,
+      "country": "TH",
+      "localTrips": 1200495.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "nog",
+      "name": "Nong Suea",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.2159,
+        "lat": 14.2053
+      },
+      "center": [
+        101.2159,
+        14.2053
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.736,
+        13.943,
+        101.525,
+        14.531
+      ],
+      "place": 3907,
+      "country": "TH",
+      "localTrips": 934463.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mpr",
+      "name": "Mueang Prachuap Khiri Khan",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.7934,
+        "lat": 11.8036
+      },
+      "center": [
+        99.7934,
+        11.8036
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.128,
+        10.936,
+        100.039,
+        12.663
+      ],
+      "place": 3908,
+      "country": "TH",
+      "localTrips": 1299313.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "sin",
+      "name": "Singapore",
+      "origin": {
+        "lon": 103.9026,
+        "lat": 1.3952
+      },
+      "center": [
+        103.9026,
+        1.3952
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        103.621,
+        1.236,
+        104.052,
+        1.49
+      ],
+      "place": 3909,
+      "country": "SG",
+      "localTrips": 18219352.0,
+      "realm": "singapore"
+    },
+    {
+      "id": "mug",
+      "name": "Mueang Chiang Mai",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.9853,
+        "lat": 18.7883
+      },
+      "center": [
+        98.9853,
+        18.7883
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.39,
+        18.514,
+        99.593,
+        20.166
+      ],
+      "place": 3912,
+      "country": "TH",
+      "localTrips": 4814046.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mnm",
+      "name": "Mueang Chumphon",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.18,
+        "lat": 10.493
+      },
+      "center": [
+        99.18,
+        10.493
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.36,
+        9.285,
+        99.539,
+        11.053
+      ],
+      "place": 3913,
+      "country": "TH",
+      "localTrips": 2494415.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "knt",
+      "name": "Kantharalak",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.322,
+        "lat": 15.1186
+      },
+      "center": [
+        104.322,
+        15.1186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.883,
+        14.325,
+        104.928,
+        15.587
+      ],
+      "place": 3914,
+      "country": "TH",
+      "localTrips": 2315836.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "swa",
+      "name": "Sawang Daen Din",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.652,
+        "lat": 18.36
+      },
+      "center": [
+        103.652,
+        18.36
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.224,
+        17.133,
+        104.21,
+        18.467
+      ],
+      "place": 3915,
+      "country": "TH",
+      "localTrips": 2035674.0,
+      "realm": "thailand"
+    },
+    {
+      "id": "mge",
+      "name": "Mueang Sa Kaeo",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.0646,
+        "lat": 13.824
+      },
+      "center": [
+        102.0646,
+        13.824
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.854,
+        13.218,
+        102.96,
+        14.214
+      ],
+      "place": 3916,
+      "country": "TH",
+      "localTrips": 1593295.0,
+      "realm": "thailand"
     }
   ]
 }

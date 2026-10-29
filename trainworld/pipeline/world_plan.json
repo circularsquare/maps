@@ -7418,13 +7418,13 @@
    "order": 95,
    "id": "ban",
    "name": "Bangkok",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "THA"
    ],
    "iso2": "TH",
-   "people": 20438009,
+   "people": 20690117,
    "origin": [
     100.5365,
     13.7226
@@ -7512,13 +7512,18 @@
      "78962969B16455268499709",
      "78962969B45511956766283",
      "78962969B48513607541542",
-     "78962969B59575898831596"
+     "78962969B59575898831596",
+     "78962969B26505935473539",
+     "78962969B9054765011768",
+     "78962969B38783163957938",
+     "78962969B53970702814040",
+     "78962969B57123874810326"
     ]
    },
    "bbox": [
-    100.053,
-    13.425,
-    101.074,
+    99.893,
+    13.284,
+    101.162,
     14.33
    ],
    "source": {
@@ -7527,7 +7532,37 @@
     ],
     "fua": [
      1894
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "78962969B26505935473539",
+      "78962969B9054765011768",
+      "78962969B38783163957938",
+      "78962969B53970702814040",
+      "78962969B57123874810326"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 112.1,
+     "stations": 1.0,
+     "places": 3.2,
+     "routes": 618.9,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:54:57",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-29T00:20:19",
+    "shipped": "2026-10-29T01:16:17"
    }
   },
   {
@@ -12487,7 +12522,7 @@
    "order": 160,
    "id": "sin",
    "name": "Singapore",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SGP"
@@ -12570,6 +12605,26 @@
     "fua": [
      154
     ]
+   },
+   "run": {
+    "run_batch": "20261029-000011",
+    "steps": {
+     "build": 88.3,
+     "stations": 0.9,
+     "places": 2.8,
+     "routes": 14.7,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-29T00:07:14",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:13:21",
+    "shipped": "2026-10-29T01:16:18"
    }
   },
   {
@@ -161384,6 +161439,5495 @@
     },
     "parked": "2026-10-28T19:47:39"
    }
+  },
+  {
+   "order": 3075,
+   "id": "mug",
+   "name": "Mueang Chiang Mai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1732557,
+   "origin": [
+    98.9853,
+    18.7883
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B21056677706601",
+     "78962969B96065605471256",
+     "78962969B91762901064506",
+     "78962969B510948306110",
+     "78962969B22433102808870",
+     "78962969B22934256607694",
+     "78962969B1723139594347",
+     "78962969B42466635698108",
+     "78962969B91444782882973",
+     "78962969B32024280119192",
+     "78962969B45040254304156",
+     "78962969B69125034410503",
+     "78962969B89522640668309",
+     "78962969B29655257456650",
+     "78962969B23255460238511",
+     "78962969B7919443073528"
+    ]
+   },
+   "bbox": [
+    98.41,
+    18.532,
+    99.573,
+    20.147
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chiang Mai",
+     "San Sai",
+     "Saraphi",
+     "San Kamphaeng",
+     "Fang",
+     "Mae Taeng",
+     "Hang Dong",
+     "Chiang Dao",
+     "Mae Rim",
+     "Doi Saket",
+     "Mae Ai",
+     "Phrao",
+     "Chai Prakan",
+     "Mae On",
+     "Samoeng",
+     "Wiang Haeng"
+    ],
+    "origin_was": [
+     98.9687,
+     19.7426
+    ]
+   },
+   "run": {
+    "run_batch": "20261029-014137",
+    "built": "2026-10-29T01:54:06",
+    "gated": "2026-10-29T02:00:52",
+    "shipped": "2026-10-29T02:51:28",
+    "steps": {
+     "build": 34.599999999999994,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 57.2,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "gate": {
+     "warn": []
+    }
+   }
+  },
+  {
+   "order": 3076,
+   "id": "muh",
+   "name": "Mueang Khon Kaen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1729635,
+   "origin": [
+    102.8349,
+    16.4276
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B54788642666507",
+     "78962969B27805721585516",
+     "78962969B93047350456374",
+     "78962969B94804173540962",
+     "78962969B72555915440890",
+     "78962969B25961051879193",
+     "78962969B10387092558373",
+     "78962969B38017205810186",
+     "78962969B87234528247492",
+     "78962969B2173089266466",
+     "78962969B4805162341011",
+     "78962969B48602997867294",
+     "78962969B78938265467215",
+     "78962969B33774110374884",
+     "78962969B29703528432140",
+     "78962969B54012072717809",
+     "78962969B79183208514946",
+     "78962969B90027256555500",
+     "78962969B76194280377642",
+     "78962969B82836358248418",
+     "78962969B36064569577825",
+     "78962969B89494926735962",
+     "78962969B89179811023698",
+     "78962969B79810553491951",
+     "78962969B8052228194876",
+     "78962969B82148856985692"
+    ]
+   },
+   "bbox": [
+    101.75,
+    15.633,
+    103.184,
+    17.088
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Khon Kaen",
+     "Chum Phae",
+     "Nam Phong",
+     "Ban Phai",
+     "Nong Ruea",
+     "Phon",
+     "Ban Fang",
+     "Nong Song Hong",
+     "Si Chomphu",
+     "Kranuan",
+     "Phu Wiang",
+     "Mancha Khiri",
+     "Chonnabot",
+     "Waeng Noi",
+     "Ubolratana",
+     "Nong Na Kham",
+     "Khao Suan Kwang",
+     "Phra Yuen",
+     "Ban Haet",
+     "Waeng Yai",
+     "Khok Pho Chai",
+     "Sam Sung",
+     "Non Sila",
+     "Phu Pha Man",
+     "Pueai Noi",
+     "Wiang Kao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 89.4,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 97.2,
+     "merge": 1.9,
+     "nocar": 1.8,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T23:45:53",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10149231484283779"
+     ]
+    },
+    "gated": "2026-10-29T00:20:19",
+    "shipped": "2026-10-29T01:16:18"
+   }
+  },
+  {
+   "order": 3077,
+   "id": "mut",
+   "name": "Mueang Nakhon Ratchasima",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1567836,
+   "origin": [
+    102.0974,
+    14.9751
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B83988834469907",
+     "78962969B19960010769064",
+     "78962969B86038514919301",
+     "78962969B78904215170305",
+     "78962969B23608126314551",
+     "78962969B49546338706429",
+     "78962969B59767339718712",
+     "78962969B33343210665646",
+     "78962969B28729751620750",
+     "78962969B14753651258608",
+     "78962969B32197143294697",
+     "78962969B888378696775",
+     "78962969B32036693641657",
+     "78962969B63002295822353",
+     "78962969B71557232877153",
+     "78962969B7842006163468",
+     "78962969B48242512834839",
+     "78962969B71200223173278"
+    ]
+   },
+   "bbox": [
+    101.181,
+    14.12,
+    102.805,
+    15.465
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nakhon Ratchasima",
+     "Pak Chong",
+     "Pak Thong Chai",
+     "Non Sung",
+     "Dan Khun Thot",
+     "Sikhio",
+     "Khon Buri",
+     "Chok Chai",
+     "Huai Thalaeng",
+     "Non Thai",
+     "Sung Noen",
+     "Chakkarat",
+     "Soeng Sang",
+     "Nong Bun Mak",
+     "Phra Thong Kham",
+     "Wang Nam Khiao",
+     "Kham Thale So",
+     "Chaloem Phra Kiat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 109.1,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 126.6,
+     "merge": 2.0,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:46:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:20",
+    "shipped": "2026-10-29T01:16:19"
+   }
+  },
+  {
+   "order": 3078,
+   "id": "mup",
+   "name": "Mueang Lop Buri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1371570,
+   "origin": [
+    100.6106,
+    14.803
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B19058811012170",
+     "78962969B63435084868089",
+     "78962969B12311956961781",
+     "78962969B13001003054051",
+     "78962969B79336823400406",
+     "78962969B38552954370862",
+     "78962969B60837596961225",
+     "78962969B68312342882015",
+     "78962969B37597222908086",
+     "78962969B87157930386242",
+     "78962969B52977923658609",
+     "78962969B8499402752452",
+     "78962969B70525804812595",
+     "78962969B63789793815437",
+     "78962969B49481349278352",
+     "78962969B20777837687039",
+     "78962969B85882398949234",
+     "78962969B19541644764840",
+     "78962969B91278990376837",
+     "78962969B89393291205833",
+     "78962969B1658466470104",
+     "78962969B27943810698325",
+     "78962969B22910342197122"
+    ]
+   },
+   "bbox": [
+    100.182,
+    14.439,
+    101.363,
+    15.563
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Lop Buri",
+     "Khok Samrong",
+     "Ban Mi",
+     "Chai Badan",
+     "Phatthana Nikhom",
+     "Wiset Chai Chan",
+     "Tha Wung",
+     "Pho Thong",
+     "Mueang Ang Thong",
+     "In Buri",
+     "Mueang Sing Buri",
+     "Nong Muang",
+     "Tha Luang",
+     "Sawaeng Ha",
+     "Khok Charoen",
+     "Pa Mok",
+     "Bang Rachan",
+     "Sa Bot",
+     "Chaiyo",
+     "Phrom Buri",
+     "Khai Bang Rachan",
+     "Samko",
+     "Tha Chang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 94.4,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 65.3,
+     "merge": 1.7,
+     "nocar": 2.3,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:45:25",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:20",
+    "shipped": "2026-10-29T01:16:19"
+   }
+  },
+  {
+   "order": 3079,
+   "id": "muu",
+   "name": "Mueang Udon Thani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1279157,
+   "origin": [
+    102.7961,
+    17.4065
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B37195167988634",
+     "78962969B49336844859905",
+     "78962969B78626790944286",
+     "78962969B68603960000153",
+     "78962969B17101559907344",
+     "78962969B13361717862760",
+     "78962969B52951901004479",
+     "78962969B97829088345215",
+     "78962969B51412577639732",
+     "78962969B39562479301608",
+     "78962969B8714303156846",
+     "78962969B41477512763413",
+     "78962969B77162965817779",
+     "78962969B45411926077812",
+     "78962969B30121377049744",
+     "78962969B71441288528708",
+     "78962969B97368388626717",
+     "78962969B28674959070038",
+     "78962969B11605835659379",
+     "78962969B54010161704756",
+     "78962969B97466858782755",
+     "78962969B36388809671077",
+     "78962969B79910801110812",
+     "78962969B67652065328847",
+     "78962969B22410583469431",
+     "78962969B6434448964303",
+     "78962969B3377071632893",
+     "78962969B47302686470604",
+     "78962969B88250797727132"
+    ]
+   },
+   "bbox": [
+    102.016,
+    16.803,
+    103.668,
+    18.305
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Udon Thani",
+     "Mueang Nong Khai",
+     "Kumphawapi",
+     "Nong Han",
+     "Ban Dung",
+     "Phon Phisai",
+     "Phen",
+     "Tha Bo",
+     "Ban Phue",
+     "Kut Chap",
+     "Nong Wua So",
+     "Fao Rai",
+     "Nam Som",
+     "Wang Sam Mo",
+     "Non Sa-At",
+     "Si That",
+     "Rattanawapi",
+     "Si Chiang Mai",
+     "Chai Wan",
+     "Thung Fon",
+     "Sakhrai",
+     "Sang Khom",
+     "Sangkhom",
+     "Na Yung",
+     "Phibun Rak",
+     "Prachaksinlapakhom",
+     "Ku Kaeo",
+     "Pho Tak",
+     "Nong Saeng"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 120.0,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 100.3,
+     "merge": 2.3,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:46:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:20",
+    "shipped": "2026-10-29T01:16:19"
+   }
+  },
+  {
+   "order": 3080,
+   "id": "muw",
+   "name": "Mueang Nakhon Sawan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1218495,
+   "origin": [
+    100.1347,
+    15.7132
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B39799880183753",
+     "78962969B90565511373435",
+     "78962969B94323331085906",
+     "78962969B36758461093431",
+     "78962969B30138061095359",
+     "78962969B15796464090467",
+     "78962969B77286306001926",
+     "78962969B24099106411844",
+     "78962969B26983912705039",
+     "78962969B23283283328110",
+     "78962969B44597518735554",
+     "78962969B55424079588300",
+     "78962969B50930938834164",
+     "78962969B70686602107551",
+     "78962969B87976118596438",
+     "78962969B11374583847622",
+     "78962969B50011174142217",
+     "78962969B57770947463323",
+     "78962969B50893667221892",
+     "78962969B93579167004560",
+     "78962969B79661322600034",
+     "78962969B88959964927567",
+     "78962969B8513684834011",
+     "78962969B59709031749795",
+     "78962969B4118502895229",
+     "78962969B91694017140585",
+     "78962969B47867684933269",
+     "78962969B62353479912268",
+     "78962969B54386166532086",
+     "78962969B80984630851813",
+     "78962969B50351990269412"
+    ]
+   },
+   "bbox": [
+    99.086,
+    14.907,
+    100.833,
+    16.343
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nakhon Sawan",
+     "Takhli",
+     "Lat Yao",
+     "Banphot Phisai",
+     "Chum Saeng",
+     "Phaisali",
+     "Tha Tako",
+     "Nong Bua",
+     "Mueang Chai Nat",
+     "Phayuha Khiri",
+     "Lan Sak",
+     "Mueang Uthai Thani",
+     "Sankhaburi",
+     "Nong Chang",
+     "Mae Wong",
+     "Hankha",
+     "Tak Fa",
+     "Sapphaya",
+     "Thap Than",
+     "Kao Liao",
+     "Sawang Arom",
+     "Bueng Samakkhi",
+     "Krok Phra",
+     "Manorom",
+     "Wat Sing",
+     "Mae Poen",
+     "Nong Khayang",
+     "Huai Khot",
+     "Nong Mamong",
+     "Noen Kham",
+     "Chum Ta Bong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 34.5,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 89.9,
+     "merge": 2.4,
+     "nocar": 2.2,
+     "everyday": 1.8
+    },
+    "built": "2026-10-28T23:47:40",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:20",
+    "shipped": "2026-10-29T01:16:19"
+   }
+  },
+  {
+   "order": 3081,
+   "id": "hty",
+   "name": "Hat Yai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1160590,
+   "origin": [
+    100.4758,
+    7.0066
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B23143470212652",
+     "78962969B3904218037840",
+     "78962969B64238633533340",
+     "78962969B14471868666252",
+     "78962969B4904051654531",
+     "78962969B48341531753784",
+     "78962969B50484514346142",
+     "78962969B58328685973452",
+     "78962969B91518300065155",
+     "78962969B83222523917082",
+     "78962969B23587469316424",
+     "78962969B89746829348507",
+     "78962969B42923555842961"
+    ]
+   },
+   "bbox": [
+    99.154,
+    6.423,
+    100.612,
+    7.313
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hat Yai",
+     "Sadao",
+     "Rattaphum",
+     "Mueang Satun",
+     "La-Ngu",
+     "Khuan Niang",
+     "Bang Klam",
+     "Khuan Kalong",
+     "Khlong Hoi Khong",
+     "Tha Phae",
+     "Khuan Don",
+     "Thung Wa",
+     "Manang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 45.3,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 31.9,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:46:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:21",
+    "shipped": "2026-10-29T01:16:20"
+   }
+  },
+  {
+   "order": 3082,
+   "id": "mub",
+   "name": "Mueang Buri Ram",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1154202,
+   "origin": [
+    103.1012,
+    14.9915
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B95913891709338",
+     "78962969B20413411154684",
+     "78962969B7360435516944",
+     "78962969B33368538988624",
+     "78962969B95819884850859",
+     "78962969B52670203653904",
+     "78962969B46029670313066",
+     "78962969B45886211066420",
+     "78962969B72247490671236",
+     "78962969B963450613013",
+     "78962969B50384711100883",
+     "78962969B34946496747939",
+     "78962969B41390045790021",
+     "78962969B74701516685822",
+     "78962969B25022287440202",
+     "78962969B51110363980363",
+     "78962969B90341089131136",
+     "78962969B38996553014175",
+     "78962969B72418392549656",
+     "78962969B83318821115464",
+     "78962969B40296665264995",
+     "78962969B2279704281351",
+     "78962969B59814899315802"
+    ]
+   },
+   "bbox": [
+    102.433,
+    14.13,
+    103.505,
+    15.796
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Buri Ram",
+     "Lam Plai Mat",
+     "Khu Mueang",
+     "Prakhon Chai",
+     "Satuek",
+     "Nang Rong",
+     "Krasang",
+     "Ban Kruat",
+     "Huai Rat",
+     "Nong Ki",
+     "Lahan Sai",
+     "Ban Dan",
+     "Nong Hong",
+     "Phutthaisong",
+     "Pakham",
+     "Phlapphla Chai",
+     "Na Pho",
+     "Chamni",
+     "Chaloem Phra Kiat",
+     "Khaen Dong",
+     "Ban Mai Chaiyaphot",
+     "Non Din Daeng",
+     "Non Suwan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 27.1,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 93.2,
+     "merge": 1.6,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:48:01",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:21",
+    "shipped": "2026-10-29T01:16:20"
+   }
+  },
+  {
+   "order": 3083,
+   "id": "meg",
+   "name": "Mueang Suphan Buri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1073156,
+   "origin": [
+    100.1208,
+    14.4754
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B42801469218282",
+     "78962969B17811208429126",
+     "78962969B33377664551397",
+     "78962969B35479109951050",
+     "78962969B7020307767392",
+     "78962969B29748545186398",
+     "78962969B95009717183464",
+     "78962969B17842271183719",
+     "78962969B87742796188893",
+     "78962969B37617655473411",
+     "78962969B69423303850724",
+     "78962969B77944548728252",
+     "78962969B611560347556"
+    ]
+   },
+   "bbox": [
+    99.276,
+    14.064,
+    100.438,
+    15.081
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Suphan Buri",
+     "Bang Pla Ma",
+     "Song Phi Nong",
+     "U Thong",
+     "Doem Bang Nang Buat",
+     "Si Prachan",
+     "Sena",
+     "Dan Chang",
+     "Sam Chuk",
+     "Nong Ya Sai",
+     "Don Chedi",
+     "Phak Hai",
+     "Bang Sai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 22.3,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 81.6,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:48:21",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:21",
+    "shipped": "2026-10-29T01:16:20"
+   }
+  },
+  {
+   "order": 3084,
+   "id": "mno",
+   "name": "Mueang Roi Et",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 1016665,
+   "origin": [
+    103.6536,
+    16.0497
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B98295189925556",
+     "78962969B73854210082339",
+     "78962969B6809780389556",
+     "78962969B97010447332872",
+     "78962969B41807577344670",
+     "78962969B17722386681463",
+     "78962969B16569105271651",
+     "78962969B4502955936571",
+     "78962969B84484798937019",
+     "78962969B71289419444255",
+     "78962969B7638603864190",
+     "78962969B43863364704456",
+     "78962969B97176317903626",
+     "78962969B887090741861",
+     "78962969B53925020566398",
+     "78962969B71401871010357",
+     "78962969B92909232830049",
+     "78962969B54867067631635",
+     "78962969B6279300393113",
+     "78962969B61419736796761"
+    ]
+   },
+   "bbox": [
+    103.267,
+    15.405,
+    104.348,
+    16.472
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Roi Et",
+     "Chaturaphak Phiman",
+     "Thawat Buri",
+     "Selaphum",
+     "Suwannaphum",
+     "Phon Thong",
+     "Kaset Wisai",
+     "Changhan",
+     "Phanom Phrai",
+     "At Samat",
+     "Si Somdet",
+     "Nong Phok",
+     "Chiang Khwan",
+     "Pho Chai",
+     "Pathum Rat",
+     "Thung Khao Luang",
+     "Nong Hi",
+     "Phon Sai",
+     "Mueang Suang",
+     "Moei Wadi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 28.0,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 81.4,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:48:40",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:22",
+    "shipped": "2026-10-29T01:16:21"
+   }
+  },
+  {
+   "order": 3085,
+   "id": "mep",
+   "name": "Mueang Phitsanulok",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 962854,
+   "origin": [
+    100.2697,
+    16.8222
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B1264982226283",
+     "78962969B63856806538884",
+     "78962969B65860849823906",
+     "78962969B88241581512503",
+     "78962969B15017109153074",
+     "78962969B82229803115956",
+     "78962969B64278922015209",
+     "78962969B51687316789717",
+     "78962969B67438013372379",
+     "78962969B59938100637315"
+    ]
+   },
+   "bbox": [
+    99.853,
+    16.319,
+    101.11,
+    17.744
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phitsanulok",
+     "Wang Thong",
+     "Bang Rakam",
+     "Phrom Phiram",
+     "Nakhon Thai",
+     "Noen Maprang",
+     "Bang Krathum",
+     "Wat Bot",
+     "Chat Trakan",
+     "Wachirabarami"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 23.4,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 61.0,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:48:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:22",
+    "shipped": "2026-10-29T01:16:21"
+   }
+  },
+  {
+   "order": 3086,
+   "id": "mnu",
+   "name": "Mueang Surat Thani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 944095,
+   "origin": [
+    99.3259,
+    9.1418
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B86261158660404",
+     "78962969B17156499788774",
+     "78962969B67039244737250",
+     "78962969B68387758575746",
+     "78962969B32749980960035",
+     "78962969B2036250841951",
+     "78962969B84478768396054",
+     "78962969B77729617047894",
+     "78962969B17621560211426",
+     "78962969B93430934816346",
+     "78962969B55330970869967",
+     "78962969B19485368092411",
+     "78962969B72176569689824",
+     "78962969B14493078239270",
+     "78962969B57683949209589",
+     "78962969B23472682189323",
+     "78962969B95788991871797",
+     "78962969B87501565170923"
+    ]
+   },
+   "bbox": [
+    98.443,
+    8.301,
+    100.091,
+    10.126
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Surat Thani",
+     "Kanchanadit",
+     "Phunphin",
+     "Ban Na San",
+     "Wiang Sa",
+     "Phrasaeng",
+     "Chaiya",
+     "Tha Chana",
+     "Khiri Rat Nikhom",
+     "Ko Samui",
+     "Don Sak",
+     "Khian Sa",
+     "Tha Chang",
+     "Phanom",
+     "Chai Buri",
+     "Ban Na Doem",
+     "Vibhavadi",
+     "Ko Pha-Ngan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 41.0,
+     "stations": 1.3,
+     "places": 2.4,
+     "routes": 41.4,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:49:12",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:22",
+    "shipped": "2026-10-29T01:16:21"
+   }
+  },
+  {
+   "order": 3087,
+   "id": "meb",
+   "name": "Mueang Ubon Ratchathani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 929199,
+   "origin": [
+    104.8684,
+    15.2374
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B98641080977503",
+     "78962969B42152310983042",
+     "78962969B53843894675562",
+     "78962969B95982372306195",
+     "78962969B49998456253138",
+     "78962969B56370266169267",
+     "78962969B51244182519846",
+     "78962969B96705611164937",
+     "78962969B76550243021032",
+     "78962969B36497134874209",
+     "78962969B64880163608761",
+     "78962969B62238671099261",
+     "78962969B4168813310505",
+     "78962969B14407217279101"
+    ]
+   },
+   "bbox": [
+    104.372,
+    15.164,
+    105.637,
+    16.098
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Ubon Ratchathani",
+     "Trakan Phuet Phon",
+     "Khueang Nai",
+     "Muang Sam Sip",
+     "Khemarat",
+     "Si Mueang Mai",
+     "Pho Sai",
+     "Kut Khaopun",
+     "Na Tan",
+     "Khong Chiam",
+     "Tan Sum",
+     "Sawang Wirawong",
+     "Don Mot Daeng",
+     "Lao Suea Kok"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 25.0,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 46.4,
+     "merge": 1.3,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:49:21",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:22",
+    "shipped": "2026-10-29T01:16:21"
+   }
+  },
+  {
+   "order": 3088,
+   "id": "kln",
+   "name": "Klaeng",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 915926,
+   "origin": [
+    101.6527,
+    12.7747
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B40888142267385",
+     "78962969B69039752575534",
+     "78962969B77323566799689",
+     "78962969B38445835691017",
+     "78962969B3621953586830",
+     "78962969B50425492619761",
+     "78962969B93638644331760",
+     "78962969B8046097083868"
+    ]
+   },
+   "bbox": [
+    100.984,
+    12.513,
+    101.831,
+    13.163
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Klaeng",
+     "Mueang Rayong",
+     "Ban Khai",
+     "Ban Chang",
+     "Wang Chan",
+     "Khao Chamao",
+     "Nikhom Phatthana",
+     "Pluak Daeng"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 21.4,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 44.2,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:49:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:23",
+    "shipped": "2026-10-29T01:16:22"
+   }
+  },
+  {
+   "order": 3089,
+   "id": "phx",
+   "name": "Phan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 913653,
+   "origin": [
+    99.9007,
+    19.1719
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B39225899035049",
+     "78962969B45148719558135",
+     "78962969B85814528086479",
+     "78962969B30724272776962",
+     "78962969B59548210806286",
+     "78962969B36758186979365",
+     "78962969B70832563966269",
+     "78962969B98243253898824",
+     "78962969B51854654401236",
+     "78962969B68909645293993",
+     "78962969B25374198487057",
+     "78962969B62058634056036",
+     "78962969B86753630377250",
+     "78962969B43873675128191",
+     "78962969B43087545511477"
+    ]
+   },
+   "bbox": [
+    99.295,
+    18.809,
+    100.603,
+    20.402
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phan",
+     "Mueang Phayao",
+     "Dok Khamtai",
+     "Thoeng",
+     "Phaya Mengrai",
+     "Wiang Pa Pao",
+     "Chiang Khong",
+     "Mae Chai",
+     "Chiang Kham",
+     "Pa Daet",
+     "Khun Tan",
+     "Chun",
+     "Wiang Kaen",
+     "Phu Kamyao",
+     "Phu Sang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 27.0,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 42.7,
+     "merge": 1.2,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:49:42",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10122361060522367"
+     ]
+    },
+    "gated": "2026-10-29T00:20:23",
+    "shipped": "2026-10-29T01:16:22"
+   }
+  },
+  {
+   "order": 3090,
+   "id": "mnh",
+   "name": "Mueang Chanthaburi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 909523,
+   "origin": [
+    102.1087,
+    12.6114
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B33919440626179",
+     "78962969B20525991474584",
+     "78962969B49294102146766",
+     "78962969B31255089270993",
+     "78962969B42542221471350",
+     "78962969B14085180257363",
+     "78962969B71557227555667",
+     "78962969B7346978747814",
+     "78962969B7506973022897",
+     "78962969B84278316034538",
+     "78962969B93590289625121",
+     "78962969B6088358830933",
+     "78962969B16379000118179",
+     "78962969B29743694445242",
+     "78962969B48901516523989"
+    ]
+   },
+   "bbox": [
+    101.685,
+    11.65,
+    102.916,
+    13.336
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chanthaburi",
+     "Tha Mai",
+     "Mueang Trat",
+     "Na Yai Am",
+     "Khao Saming",
+     "Khlung",
+     "Soi Dao",
+     "Khao Khitchakut",
+     "Bo Rai",
+     "Pong Nam Ron",
+     "Kaeng Hang Maeo",
+     "Khlong Yai",
+     "Makham",
+     "Laem Sing",
+     "Laem Ngop"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 24.1,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 31.5,
+     "merge": 1.8,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:49:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12156109868886938",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:23",
+    "shipped": "2026-10-29T01:16:22"
+   }
+  },
+  {
+   "order": 3091,
+   "id": "mna",
+   "name": "Mueang Nakhon Si Thammarat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 896549,
+   "origin": [
+    99.9637,
+    8.4431
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B67558639110399",
+     "78962969B48668485292625",
+     "78962969B88164862603856",
+     "78962969B70310108322662",
+     "78962969B60161161731937",
+     "78962969B24594080556588",
+     "78962969B22761856957978",
+     "78962969B3746185944744",
+     "78962969B18712329384624",
+     "78962969B31932959470033",
+     "78962969B66960801991597",
+     "78962969B27517873641345",
+     "78962969B39887393521722",
+     "78962969B77889758580625"
+    ]
+   },
+   "bbox": [
+    99.518,
+    7.838,
+    100.337,
+    9.326
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nakhon Si Thammarat",
+     "Pak Phanang",
+     "Tha Sala",
+     "Ron Phibun",
+     "Chulabhorn",
+     "Cha-Uat",
+     "Sichon",
+     "Hua Sai",
+     "Chian Yai",
+     "Phra Phrom",
+     "Phrom Khiri",
+     "Chaloem Phra Kiat",
+     "Nopphitam",
+     "Khanom"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 21.2,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 31.2,
+     "merge": 1.5,
+     "nocar": 2.2,
+     "everyday": 1.5
+    },
+    "built": "2026-10-28T23:50:13",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:23",
+    "shipped": "2026-10-29T01:16:23"
+   }
+  },
+  {
+   "order": 3092,
+   "id": "mnk",
+   "name": "Mueang Kalasin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 894684,
+   "origin": [
+    103.5031,
+    16.4358
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B94633890836153",
+     "78962969B97820746751247",
+     "78962969B31755539935973",
+     "78962969B96720731529484",
+     "78962969B62836080496995",
+     "78962969B13207688711695",
+     "78962969B18941921206705",
+     "78962969B62182146168517",
+     "78962969B55465518750669",
+     "78962969B61513284826640",
+     "78962969B54306826324199",
+     "78962969B25988571892080",
+     "78962969B68960900903795",
+     "78962969B7237235401003",
+     "78962969B1811381389630",
+     "78962969B80615329073531",
+     "78962969B80521164752578",
+     "78962969B70209465678714"
+    ]
+   },
+   "bbox": [
+    103.097,
+    16.182,
+    104.241,
+    17.102
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Kalasin",
+     "Yang Talat",
+     "Somdet",
+     "Kuchinarai",
+     "Huai Mek",
+     "Kham Muang",
+     "Sahatsakhan",
+     "Na Mon",
+     "Kamalasai",
+     "Nong Kung Si",
+     "Khao Wong",
+     "Tha Khantho",
+     "Huai Phueng",
+     "Na Khu",
+     "Khong Chai",
+     "Sam Chai",
+     "Don Chan",
+     "Rong Kham"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 29.3,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 51.6,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:50:50",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:24",
+    "shipped": "2026-10-29T01:16:23"
+   }
+  },
+  {
+   "order": 3093,
+   "id": "mnm",
+   "name": "Mueang Chumphon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 886106,
+   "origin": [
+    99.18,
+    10.493
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B98513792826345",
+     "78962969B42401089458559",
+     "78962969B7513532237897",
+     "78962969B12315134210543",
+     "78962969B56380938562562",
+     "78962969B1514020296761",
+     "78962969B6628282712550",
+     "78962969B3300924250293",
+     "78962969B34632522094222",
+     "78962969B32380434667170",
+     "78962969B56019548429008",
+     "78962969B98614322504757",
+     "78962969B64090503691360"
+    ]
+   },
+   "bbox": [
+    98.326,
+    9.304,
+    99.519,
+    11.034
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chumphon",
+     "Mueang Ranong",
+     "Kra Buri",
+     "Lang Suan",
+     "Tha Sae",
+     "Sawi",
+     "Kapoe",
+     "Pathio",
+     "La-Un",
+     "Lamae",
+     "Thung Tako",
+     "Suk Samran",
+     "Phato"
+    ],
+    "origin_was": [
+     98.6264,
+     9.9549
+    ]
+   },
+   "run": {
+    "run_batch": "20261029-014137",
+    "built": "2026-10-29T01:52:27",
+    "gated": "2026-10-29T02:00:52",
+    "shipped": "2026-10-29T02:51:28",
+    "steps": {
+     "build": 24.0,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 29.1,
+     "merge": 1.8,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "gate": {
+     "warn": []
+    }
+   }
+  },
+  {
+   "order": 3094,
+   "id": "wan",
+   "name": "Warin Chamrap",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 839887,
+   "origin": [
+    104.8635,
+    15.1882
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B43112408779315",
+     "78962969B44207183673479",
+     "78962969B76459956154531",
+     "78962969B96035855988054",
+     "78962969B51055039755646",
+     "78962969B1624057872614",
+     "78962969B92270071826227",
+     "78962969B9944592698324",
+     "78962969B96008774598843",
+     "78962969B14967279450618",
+     "78962969B61476236421292"
+    ]
+   },
+   "bbox": [
+    104.669,
+    14.209,
+    105.625,
+    15.385
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Warin Chamrap",
+     "Det Udom",
+     "Phibun Mangsahan",
+     "Buntharik",
+     "Samrong",
+     "Nam Yuen",
+     "Na Chaluai",
+     "Sirindhorn",
+     "Nam Khun",
+     "Thung Si Udom",
+     "Na Yia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 20.9,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 39.6,
+     "merge": 1.5,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:50:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:24",
+    "shipped": "2026-10-29T01:16:23"
+   }
+  },
+  {
+   "order": 3095,
+   "id": "mnb",
+   "name": "Mueang Saraburi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 837275,
+   "origin": [
+    100.9184,
+    14.5245
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B17861572852327",
+     "78962969B39575483913595",
+     "78962969B58188508241949",
+     "78962969B27342930325122",
+     "78962969B66109940408415",
+     "78962969B19510908422026",
+     "78962969B45095827197319",
+     "78962969B71448871190318",
+     "78962969B47603899438932",
+     "78962969B44780208263164",
+     "78962969B15444617755923",
+     "78962969B30488240486428",
+     "78962969B98799129016302"
+    ]
+   },
+   "bbox": [
+    100.575,
+    14.243,
+    101.455,
+    15.075
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Saraburi",
+     "Nong Khae",
+     "Kaeng Khoi",
+     "Phra Phutthabat",
+     "Ban Mo",
+     "Muak Lek",
+     "Wihan Daeng",
+     "Chaloem Phra Kiat",
+     "Sao Hai",
+     "Nong Saeng",
+     "Wang Muang",
+     "Nong Don",
+     "Don Phut"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 18.1,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 40.5,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:50:51",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11641999797826576"
+     ]
+    },
+    "gated": "2026-10-29T00:20:25",
+    "shipped": "2026-10-29T01:16:24"
+   }
+  },
+  {
+   "order": 3096,
+   "id": "bng",
+   "name": "Bang Lamung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 829785,
+   "origin": [
+    100.8785,
+    12.9217
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B66600196547968",
+     "78962969B45333129363776",
+     "78962969B58781089685129",
+     "78962969B4010364825513",
+     "78962969B51013887966956"
+    ]
+   },
+   "bbox": [
+    100.648,
+    12.508,
+    101.547,
+    13.282
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bang Lamung",
+     "Sattahip",
+     "Si Racha",
+     "Nong Yai",
+     "Ko Si Chang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 22.0,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 44.7,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.5
+    },
+    "built": "2026-10-28T23:51:28",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:25",
+    "shipped": "2026-10-29T01:16:24"
+   }
+  },
+  {
+   "order": 3097,
+   "id": "mnp",
+   "name": "Mueang Phrae",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 828950,
+   "origin": [
+    100.1433,
+    18.1398
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B59947573587879",
+     "78962969B92353428607909",
+     "78962969B90844485924404",
+     "78962969B48493646022270",
+     "78962969B97017444217792",
+     "78962969B64048827158998",
+     "78962969B90193228805954",
+     "78962969B55827771181130",
+     "78962969B75821341388789",
+     "78962969B57935377717299",
+     "78962969B35884662782680",
+     "78962969B69096812257828",
+     "78962969B88234986590432",
+     "78962969B24937809655740",
+     "78962969B24859706501425",
+     "78962969B85613240213831",
+     "78962969B15263035639364",
+     "78962969B68845226908078",
+     "78962969B2609342993216"
+    ]
+   },
+   "bbox": [
+    99.368,
+    17.688,
+    101.288,
+    19.638
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phrae",
+     "Sung Men",
+     "Mueang Nan",
+     "Long",
+     "Wiang Sa",
+     "Song",
+     "Pua",
+     "Rong Kwang",
+     "Wang Chin",
+     "Tha Wang Pha",
+     "Den Chai",
+     "Phu Phiang",
+     "Na Noi",
+     "Chaloem Phra Kiat",
+     "Chiang Klang",
+     "Nong Muang Khai",
+     "Thung Chang",
+     "Santi Suk",
+     "Ban Luang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 35.3,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 43.5,
+     "merge": 1.4,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:52:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1023905454375039"
+     ]
+    },
+    "gated": "2026-10-29T00:20:25",
+    "shipped": "2026-10-29T01:16:24"
+   }
+  },
+  {
+   "order": 3098,
+   "id": "mne",
+   "name": "Mueang Kamphaeng Phet",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 827100,
+   "origin": [
+    99.5334,
+    16.4769
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B14076406619672",
+     "78962969B71867994659832",
+     "78962969B33766889028899",
+     "78962969B45862873771637",
+     "78962969B94050076713993",
+     "78962969B50416991150341",
+     "78962969B67051098696053",
+     "78962969B49200867447191",
+     "78962969B12930513121480",
+     "78962969B33037447710265"
+    ]
+   },
+   "bbox": [
+    99.016,
+    15.855,
+    100.035,
+    16.911
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Kamphaeng Phet",
+     "Khanu Woralaksaburi",
+     "Khlong Khlung",
+     "Khlong Lan",
+     "Phran Kratai",
+     "Sai Ngam",
+     "Lan Krabue",
+     "Kosamphi Nakhon",
+     "Pang Sila Thong",
+     "Sai Thong Watthana"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 24.2,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 33.7,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:51:57",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:25",
+    "shipped": "2026-10-29T01:16:25"
+   }
+  },
+  {
+   "order": 3099,
+   "id": "mnx",
+   "name": "Mueang Phetchabun",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 819057,
+   "origin": [
+    101.1532,
+    16.4194
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B97134381081584",
+     "78962969B94734864821350",
+     "78962969B64397388555750",
+     "78962969B28403157938028",
+     "78962969B86434442004691",
+     "78962969B41287674230376",
+     "78962969B52356787217870",
+     "78962969B1272323537796",
+     "78962969B14448677761720",
+     "78962969B71120844941830",
+     "78962969B31401226545695"
+    ]
+   },
+   "bbox": [
+    100.633,
+    15.045,
+    101.526,
+    17.178
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phetchabun",
+     "Lom Sak",
+     "Wichian Buri",
+     "Nong Phai",
+     "Chon Daen",
+     "Bueng Sam Phan",
+     "Si Thep",
+     "Lom Kao",
+     "Wang Pong",
+     "Khao Kho",
+     "Lam Sonthi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 27.8,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 45.1,
+     "merge": 1.4,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T23:52:13",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:26",
+    "shipped": "2026-10-29T01:16:25"
+   }
+  },
+  {
+   "order": 3100,
+   "id": "mnl",
+   "name": "Mueang Lampang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 792195,
+   "origin": [
+    99.5059,
+    18.2883
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B84818875496031",
+     "78962969B17989923372642",
+     "78962969B1257188222382",
+     "78962969B93030636788506",
+     "78962969B16981445591053",
+     "78962969B20841547873304",
+     "78962969B31160624426446",
+     "78962969B2527199912665",
+     "78962969B1681063104850",
+     "78962969B66536016204177",
+     "78962969B38792830177275",
+     "78962969B39670710087023"
+    ]
+   },
+   "bbox": [
+    99.018,
+    17.206,
+    100.126,
+    19.418
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Lampang",
+     "Ko Kha",
+     "Hang Chat",
+     "Mae Tha",
+     "Thoen",
+     "Ngao",
+     "Wang Nuea",
+     "Chae Hom",
+     "Mae Mo",
+     "Mueang Pan",
+     "Soem Ngam",
+     "Sop Prap"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 32.8,
+     "stations": 1.2,
+     "places": 2.6,
+     "routes": 51.9,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:52:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:26",
+    "shipped": "2026-10-29T01:16:25"
+   }
+  },
+  {
+   "order": 3101,
+   "id": "mni",
+   "name": "Mueang Chiang Rai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 788852,
+   "origin": [
+    99.8306,
+    19.9082
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B25429486303013",
+     "78962969B91989740231276",
+     "78962969B11376495373152",
+     "78962969B62426032624456",
+     "78962969B32400228790118",
+     "78962969B57610066237696",
+     "78962969B57964456122026",
+     "78962969B15222639850860",
+     "78962969B94176504634652",
+     "78962969B15237736289159"
+    ]
+   },
+   "bbox": [
+    99.258,
+    19.458,
+    100.322,
+    20.465
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chiang Rai",
+     "Mae Chan",
+     "Mae Sai",
+     "Mae Suai",
+     "Wiang Chai",
+     "Mae Fa Luang",
+     "Chiang Saen",
+     "Mae Lao",
+     "Wiang Chiang Rung",
+     "Doi Luang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 20.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 34.1,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:52:30",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11364040633278862"
+     ]
+    },
+    "gated": "2026-10-29T00:20:26",
+    "shipped": "2026-10-29T01:16:25"
+   }
+  },
+  {
+   "order": 3102,
+   "id": "caj",
+   "name": "Chana",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 760133,
+   "origin": [
+    101.289,
+    6.5525
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B24308804777552",
+     "78962969B27848698436248",
+     "78962969B41607332504146",
+     "78962969B77762889714040",
+     "78962969B66156572835957",
+     "78962969B50866975427255",
+     "78962969B29440700427684",
+     "78962969B58904714104170",
+     "78962969B93960715397909",
+     "78962969B4997487485742",
+     "78962969B74905002065974",
+     "78962969B19846711934015"
+    ]
+   },
+   "bbox": [
+    100.545,
+    5.613,
+    101.609,
+    7.101
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chana",
+     "Mueang Yala",
+     "Thepha",
+     "Saba Yoi",
+     "Raman",
+     "Na Thawi",
+     "Betong",
+     "Bannang Sata",
+     "Yaha",
+     "Krong Pinang",
+     "Than To",
+     "Kabang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 17.6,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 27.8,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:52:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:27",
+    "shipped": "2026-10-29T01:16:26"
+   }
+  },
+  {
+   "order": 3103,
+   "id": "mgs",
+   "name": "Mueang Surin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 757316,
+   "origin": [
+    103.4976,
+    14.885
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B42978200343828",
+     "78962969B37601114893019",
+     "78962969B98513612105596",
+     "78962969B46327860609250",
+     "78962969B22875255730199",
+     "78962969B68568199624354",
+     "78962969B67487530152126",
+     "78962969B82717955014572",
+     "78962969B42359071454830",
+     "78962969B97732928781759",
+     "78962969B59792797819888",
+     "78962969B85026049699572",
+     "78962969B96676572304128",
+     "78962969B63758563457918",
+     "78962969B93743145259282",
+     "78962969B88095074466781",
+     "78962969B18818398645173"
+    ]
+   },
+   "bbox": [
+    103.089,
+    14.327,
+    104.092,
+    15.483
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Surin",
+     "Prasat",
+     "Sikhoraphum",
+     "Sangkha",
+     "Tha Tum",
+     "Rattanaburi",
+     "Chumphon Buri",
+     "Kap Choeng",
+     "Chom Phra",
+     "Samrong Thap",
+     "Sanom",
+     "Si Narong",
+     "Buachet",
+     "Khwao Sin Rin",
+     "Non Narai",
+     "Phanom Dong Rak",
+     "Lamduan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 21.3,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 65.4,
+     "merge": 1.4,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:53:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:27",
+    "shipped": "2026-10-29T01:16:26"
+   }
+  },
+  {
+   "order": 3104,
+   "id": "mga",
+   "name": "Mueang Nakhon Pathom",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 754962,
+   "origin": [
+    100.0524,
+    13.8125
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B95320028173020",
+     "78962969B43600693402373",
+     "78962969B40906880836111",
+     "78962969B43519510241877",
+     "78962969B74953703233818"
+    ]
+   },
+   "bbox": [
+    99.814,
+    13.692,
+    100.298,
+    14.179
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nakhon Pathom",
+     "Kamphaeng Saen",
+     "Nakhon Chai Si",
+     "Bang Len",
+     "Don Tum"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 13.2,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 72.8,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:53:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:27",
+    "shipped": "2026-10-29T01:16:26"
+   }
+  },
+  {
+   "order": 3105,
+   "id": "knt",
+   "name": "Kantharalak",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 747482,
+   "origin": [
+    104.322,
+    15.1186
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B93646658502298",
+     "78962969B95258731786412",
+     "78962969B84940154161268",
+     "78962969B73253531385029",
+     "78962969B74120262263658",
+     "78962969B19002153549753",
+     "78962969B91531031914262",
+     "78962969B23076564972122",
+     "78962969B17972305807054",
+     "78962969B55540018650075",
+     "78962969B56904168691236",
+     "78962969B5946354478732",
+     "78962969B85522874194306",
+     "78962969B51834817118015",
+     "78962969B29534928610541",
+     "78962969B1477833386417",
+     "78962969B12242919423404",
+     "78962969B60458593570570",
+     "78962969B41493060584817",
+     "78962969B41735347341952",
+     "78962969B71866574458891",
+     "78962969B82208254096141"
+    ]
+   },
+   "bbox": [
+    103.902,
+    14.342,
+    104.909,
+    15.568
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kantharalak",
+     "Mueang Si Sa Ket",
+     "Khukhan",
+     "Uthumphon Phisai",
+     "Khun Han",
+     "Kanthararom",
+     "Rasi Salai",
+     "Prang Ku",
+     "Phu Sing",
+     "Si Rattana",
+     "Phrai Bueng",
+     "Wang Hin",
+     "Phayu",
+     "Yang Chum Noi",
+     "Nam Kliang",
+     "Huai Thap Than",
+     "Non Khun",
+     "Benchalak",
+     "Pho Si Suwan",
+     "Sila Lat",
+     "Mueang Chan",
+     "Bueng Bun"
+    ],
+    "origin_was": [
+     104.0628,
+     14.3444
+    ]
+   },
+   "run": {
+    "run_batch": "20261029-014137",
+    "built": "2026-10-29T01:53:01",
+    "gated": "2026-10-29T02:00:52",
+    "shipped": "2026-10-29T02:51:28",
+    "steps": {
+     "build": 22.6,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 63.0,
+     "merge": 1.4,
+     "nocar": 2.1,
+     "everyday": 1.2
+    },
+    "gate": {
+     "warn": []
+    }
+   }
+  },
+  {
+   "order": 3106,
+   "id": "mgm",
+   "name": "Mueang Maha Sarakham",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 708477,
+   "origin": [
+    103.3073,
+    16.1811
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B99626144769270",
+     "78962969B36169565655926",
+     "78962969B74809477200097",
+     "78962969B23742076953899",
+     "78962969B19409562021129",
+     "78962969B87727781395141",
+     "78962969B29991085586419",
+     "78962969B5401688500865",
+     "78962969B25056088384612",
+     "78962969B11651744755844",
+     "78962969B2747980424565",
+     "78962969B22746873787701",
+     "78962969B88411393036982"
+    ]
+   },
+   "bbox": [
+    102.843,
+    15.406,
+    103.504,
+    16.644
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Maha Sarakham",
+     "Kosum Phisai",
+     "Wapi Pathum",
+     "Borabue",
+     "Phayakkhaphum Phisai",
+     "Kantharawichai",
+     "Chiang Yuen",
+     "Kae Dam",
+     "Na Chueak",
+     "Na Dun",
+     "Kut Rang",
+     "Yang Sisurat",
+     "Chuen Chom"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 23.5,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 66.1,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:54:08",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:27",
+    "shipped": "2026-10-29T01:16:27"
+   }
+  },
+  {
+   "order": 3107,
+   "id": "kbi",
+   "name": "Kabin Buri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 704251,
+   "origin": [
+    101.3788,
+    14.058
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B13244714899487",
+     "78962969B52304698369920",
+     "78962969B29475179093535",
+     "78962969B79436242048830",
+     "78962969B93124351741283",
+     "78962969B49210978895600",
+     "78962969B41561963673691"
+    ]
+   },
+   "bbox": [
+    101.137,
+    13.582,
+    102.126,
+    14.462
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kabin Buri",
+     "Mueang Prachin Buri",
+     "Si Maha Phot",
+     "Prachantakham",
+     "Na Di",
+     "Ban Sang",
+     "Si Mahosot"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 16.7,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 35.3,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:53:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:28",
+    "shipped": "2026-10-29T01:16:27"
+   }
+  },
+  {
+   "order": 3108,
+   "id": "muy",
+   "name": "Mueang Chaiyaphum",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 699084,
+   "origin": [
+    102.0347,
+    15.8116
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B81450935958728",
+     "78962969B29534138617955",
+     "78962969B30311975782623",
+     "78962969B55308089725045",
+     "78962969B31038405940383",
+     "78962969B33448846047594",
+     "78962969B6140233535847",
+     "78962969B85168062919429",
+     "78962969B35763800993101",
+     "78962969B12995220204726",
+     "78962969B89125519314325",
+     "78962969B48831916769837",
+     "78962969B25031101148047",
+     "78962969B2077127014439",
+     "78962969B21349454569090",
+     "78962969B56602789101546"
+    ]
+   },
+   "bbox": [
+    101.318,
+    15.201,
+    102.459,
+    16.729
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chaiyaphum",
+     "Phu Khiao",
+     "Kaset Sombun",
+     "Kaeng Khro",
+     "Nong Bua Daeng",
+     "Chatturat",
+     "Thep Sathit",
+     "Khon San",
+     "Khon Sawan",
+     "Ban Khwao",
+     "Bamnet Narong",
+     "Ban Thaen",
+     "Nong Bua Rawe",
+     "Thepharak",
+     "Phakdi Chumphon",
+     "Sap Yai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 30.1,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 77.0,
+     "merge": 2.1,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:55:35",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:28",
+    "shipped": "2026-10-29T01:16:27"
+   }
+  },
+  {
+   "order": 3109,
+   "id": "tug",
+   "name": "Thung Song",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 686649,
+   "origin": [
+    99.6794,
+    8.1021
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B2531694567463",
+     "78962969B35489784077256",
+     "78962969B45717742719747",
+     "78962969B73992602803930",
+     "78962969B32450695169109",
+     "78962969B85849913295543",
+     "78962969B54777225393770",
+     "78962969B52375509392370",
+     "78962969B62820682032584",
+     "78962969B56259094306641",
+     "78962969B90673540736584",
+     "78962969B43171444996165",
+     "78962969B61248323272668",
+     "78962969B4441489097555",
+     "78962969B16427813486063",
+     "78962969B74032961244175",
+     "78962969B12652914635488"
+    ]
+   },
+   "bbox": [
+    98.612,
+    7.467,
+    99.898,
+    8.723
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thung Song",
+     "Mueang Krabi",
+     "Khlong Thom",
+     "Chawang",
+     "Thung Yai",
+     "Nuea Khlong",
+     "Ao Luek",
+     "Khao Phanom",
+     "Plai Phraya",
+     "Lan Saka",
+     "Bang Khan",
+     "Chang Klang",
+     "Phipun",
+     "Na Bon",
+     "Ko Lanta",
+     "Lam Thap",
+     "Tham Phannara"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 31.3,
+     "stations": 1.4,
+     "places": 2.4,
+     "routes": 37.6,
+     "merge": 1.5,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:55:04",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:28",
+    "shipped": "2026-10-29T01:16:28"
+   }
+  },
+  {
+   "order": 3110,
+   "id": "swa",
+   "name": "Sawang Daen Din",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 667428,
+   "origin": [
+    103.652,
+    18.36
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B25029845772948",
+     "78962969B40575496973623",
+     "78962969B58196939194054",
+     "78962969B66355346971085",
+     "78962969B4789393991708",
+     "78962969B83463915016953",
+     "78962969B64071020381099",
+     "78962969B14140185659984",
+     "78962969B22667703415616",
+     "78962969B2501060362083",
+     "78962969B64295862325828",
+     "78962969B38072300244645",
+     "78962969B89858575119676",
+     "78962969B17401881155721",
+     "78962969B81717267751176",
+     "78962969B97836103025475",
+     "78962969B45700319590301"
+    ]
+   },
+   "bbox": [
+    103.242,
+    17.152,
+    104.19,
+    18.449
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sawang Daen Din",
+     "Wanon Niwat",
+     "Mueang Bueng Kan",
+     "Seka",
+     "So Phisai",
+     "Akat Amnuai",
+     "Ban Muang",
+     "Phang Khon",
+     "Waritchaphum",
+     "Phon Charoen",
+     "Charoen Sin",
+     "Si Wilai",
+     "Kham Ta Kla",
+     "Pak Khat",
+     "Bueng Khong Long",
+     "Song Dao",
+     "Bung Khla"
+    ],
+    "origin_was": [
+     103.9827,
+     17.5959
+    ]
+   },
+   "run": {
+    "run_batch": "20261029-014137",
+    "built": "2026-10-29T01:52:51",
+    "gated": "2026-10-29T02:00:53",
+    "shipped": "2026-10-29T02:51:28",
+    "steps": {
+     "build": 29.5,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 46.2,
+     "merge": 1.5,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "gate": {
+     "warn": []
+    }
+   }
+  },
+  {
+   "order": 3111,
+   "id": "mgc",
+   "name": "Mueang Chon Buri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 666620,
+   "origin": [
+    101.1763,
+    13.4528
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B92456210505100",
+     "78962969B17993818596580",
+     "78962969B10446742029293",
+     "78962969B10956756267411",
+     "78962969B86980308454796",
+     "78962969B17576291228929"
+    ]
+   },
+   "bbox": [
+    100.898,
+    13.072,
+    101.72,
+    13.589
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chon Buri",
+     "Phanat Nikhom",
+     "Ban Bueng",
+     "Phan Thong",
+     "Bo Thong",
+     "Ko Chan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 48.2,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:55:09",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.836"
+     ]
+    },
+    "gated": "2026-10-29T00:20:29",
+    "shipped": "2026-10-29T01:16:28"
+   }
+  },
+  {
+   "order": 3112,
+   "id": "mgp",
+   "name": "Mueang Phatthalung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 653837,
+   "origin": [
+    100.0788,
+    7.6151
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B3121314060328",
+     "78962969B61181446150659",
+     "78962969B50456220611467",
+     "78962969B96011402806004",
+     "78962969B11812729202220",
+     "78962969B61161891494947",
+     "78962969B88814874297751",
+     "78962969B75084248147684",
+     "78962969B29220890850544",
+     "78962969B20479375564270",
+     "78962969B8078558348171",
+     "78962969B48542053253102",
+     "78962969B76143579725906"
+    ]
+   },
+   "bbox": [
+    99.733,
+    7.09,
+    100.429,
+    7.939
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phatthalung",
+     "Khuan Khanun",
+     "Ranot",
+     "Khao Chaison",
+     "Pak Phayun",
+     "Pa Bon",
+     "Kong Ra",
+     "Pa Phayom",
+     "Krasae Sin",
+     "Tamot",
+     "Srinagarindra",
+     "Bang Kaeo",
+     "Si Banphot"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 15.8,
+     "stations": 1.4,
+     "places": 1.9,
+     "routes": 21.7,
+     "merge": 1.0,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:54:54",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1066917665786071",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:29",
+    "shipped": "2026-10-29T01:16:28"
+   }
+  },
+  {
+   "order": 3113,
+   "id": "mgr",
+   "name": "Mueang Ratchaburi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 643821,
+   "origin": [
+    99.817,
+    13.5345
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B80351946153843",
+     "78962969B74786164204095",
+     "78962969B60761780399877",
+     "78962969B9936317507075",
+     "78962969B58694700043787",
+     "78962969B91114195507687",
+     "78962969B47422412766823",
+     "78962969B25106488333665"
+    ]
+   },
+   "bbox": [
+    99.163,
+    13.198,
+    100.046,
+    13.961
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Ratchaburi",
+     "Ban Pong",
+     "Photharam",
+     "Damnoen Saduak",
+     "Pak Tho",
+     "Chom Bueng",
+     "Suan Phueng",
+     "Wat Phleng"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 49.5,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:56:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:29",
+    "shipped": "2026-10-29T01:16:29"
+   }
+  },
+  {
+   "order": 3114,
+   "id": "mgt",
+   "name": "Mueang Amnat Charoen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 637536,
+   "origin": [
+    104.6255,
+    15.8609
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B23558627244082",
+     "78962969B68944208488638",
+     "78962969B75091114631629",
+     "78962969B10753248313683",
+     "78962969B41263158681984",
+     "78962969B6297471410312",
+     "78962969B24763205139340",
+     "78962969B30801427896168",
+     "78962969B66944967065262",
+     "78962969B82059554981356",
+     "78962969B182385267454",
+     "78962969B36104557802135",
+     "78962969B95205724329229",
+     "78962969B41182893355114",
+     "78962969B71336956115942",
+     "78962969B53965297473531"
+    ]
+   },
+   "bbox": [
+    103.998,
+    15.289,
+    105.06,
+    16.349
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Amnat Charoen",
+     "Mueang Yasothon",
+     "Loeng Nok Tha",
+     "Kham Khuean Kaeo",
+     "Kut Chum",
+     "Maha Chana Chai",
+     "Hua Taphan",
+     "Pathum Ratchawongsa",
+     "Pa Tio",
+     "Sai Mun",
+     "Senangkhanikhom",
+     "Lue Amnat",
+     "Thai Charoen",
+     "Kho Wang",
+     "Chanuman",
+     "Phana"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 24.5,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 54.0,
+     "merge": 1.5,
+     "nocar": 1.9,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:56:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:30",
+    "shipped": "2026-10-29T01:16:29"
+   }
+  },
+  {
+   "order": 3115,
+   "id": "mgk",
+   "name": "Mueang Kanchanaburi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 633306,
+   "origin": [
+    99.5298,
+    14.0252
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B12534371599047",
+     "78962969B86191185108320",
+     "78962969B17416379558143",
+     "78962969B66646972334810",
+     "78962969B59995610664778",
+     "78962969B77063732556274",
+     "78962969B62176303506546",
+     "78962969B50658242834592",
+     "78962969B48992578424572"
+    ]
+   },
+   "bbox": [
+    99.021,
+    13.726,
+    99.879,
+    14.837
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Kanchanaburi",
+     "Tha Maka",
+     "Tha Muang",
+     "Phanom Thuan",
+     "Bo Phloi",
+     "Lao Khwan",
+     "Huai Krachao",
+     "Dan Makham Tia",
+     "Nong Prue"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 20.2,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 49.8,
+     "merge": 1.3,
+     "nocar": 1.8,
+     "everyday": 1.6
+    },
+    "built": "2026-10-28T23:56:22",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10079139254386428"
+     ]
+    },
+    "gated": "2026-10-29T00:20:30",
+    "shipped": "2026-10-29T01:16:29"
+   }
+  },
+  {
+   "order": 3116,
+   "id": "mgh",
+   "name": "Mueang Phuket",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 619033,
+   "origin": [
+    98.3039,
+    7.8991
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B33531913696438",
+     "78962969B91269894651951"
+    ]
+   },
+   "bbox": [
+    98.258,
+    7.479,
+    98.483,
+    7.976
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phuket",
+     "Kathu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 13.8,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 7.7,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:55:38",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13272804025471455",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-29T00:20:30",
+    "shipped": "2026-10-29T01:16:30"
+   }
+  },
+  {
+   "order": 3117,
+   "id": "mgl",
+   "name": "Mueang Loei",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 596643,
+   "origin": [
+    101.7255,
+    17.4888
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B17428732488190",
+     "78962969B15954858222696",
+     "78962969B13913499788092",
+     "78962969B28379819304677",
+     "78962969B8993470391858",
+     "78962969B41697678812601",
+     "78962969B60178316826194",
+     "78962969B77049388444937",
+     "78962969B28697465385872",
+     "78962969B23200832152912",
+     "78962969B80258711240190",
+     "78962969B75467334486203"
+    ]
+   },
+   "bbox": [
+    101.026,
+    16.754,
+    102.155,
+    18.22
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Loei",
+     "Chiang Khan",
+     "Wang Saphung",
+     "Na Duang",
+     "Pak Chom",
+     "Dan Sai",
+     "Pha Khao",
+     "Phu Kradueng",
+     "Erawan",
+     "Tha Li",
+     "Phu Luang",
+     "Nong Hin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 25.0,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 28.1,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:56:16",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:30",
+    "shipped": "2026-10-29T01:16:30"
+   }
+  },
+  {
+   "order": 3118,
+   "id": "mge",
+   "name": "Mueang Sa Kaeo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 593726,
+   "origin": [
+    102.0646,
+    13.824
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B70177105143831",
+     "78962969B91417690270455",
+     "78962969B18658138340114",
+     "78962969B24395616266318",
+     "78962969B35717105956499",
+     "78962969B65728256000348",
+     "78962969B13741578736552",
+     "78962969B89607017524872",
+     "78962969B84057693525228"
+    ]
+   },
+   "bbox": [
+    101.874,
+    13.237,
+    102.942,
+    14.197
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Sa Kaeo",
+     "Watthana Nakhon",
+     "Aranyaprathet",
+     "Wang Nam Yen",
+     "Ta Phraya",
+     "Khlong Hat",
+     "Khao Chakan",
+     "Wang Sombun",
+     "Khok Sung"
+    ],
+    "origin_was": [
+     102.3547,
+     13.3792
+    ]
+   },
+   "run": {
+    "run_batch": "20261029-014137",
+    "built": "2026-10-29T01:52:16",
+    "gated": "2026-10-29T02:00:53",
+    "shipped": "2026-10-29T02:51:29",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.3,
+     "places": 1.6,
+     "routes": 23.5,
+     "merge": 1.4,
+     "nocar": 2.5,
+     "everyday": 1.7
+    },
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11934324405232266"
+     ]
+    }
+   }
+  },
+  {
+   "order": 3119,
+   "id": "phi",
+   "name": "Phimai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 591832,
+   "origin": [
+    102.4257,
+    15.5901
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B83847555024390",
+     "78962969B3783479012099",
+     "78962969B53698738904765",
+     "78962969B76863241399521",
+     "78962969B10005729924667",
+     "78962969B43347234276039",
+     "78962969B3158146073423",
+     "78962969B38997993614203",
+     "78962969B16605171909127",
+     "78962969B77255700381962",
+     "78962969B50986245619578",
+     "78962969B37861648754674",
+     "78962969B51286671896071",
+     "78962969B30671617507476"
+    ]
+   },
+   "bbox": [
+    101.909,
+    15.068,
+    103.012,
+    15.808
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phimai",
+     "Bua Yai",
+     "Khong",
+     "Chum Phuang",
+     "Prathai",
+     "Kham Sakaesaeng",
+     "Kaeng Sanam Nang",
+     "Lam Thamenchai",
+     "Mueang Yang",
+     "Non Daeng",
+     "Sida",
+     "Bua Lai",
+     "Ban Lueam",
+     "Noen Sa-Nga"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 18.8,
+     "stations": 1.3,
+     "places": 1.7,
+     "routes": 49.4,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:56:54",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:31",
+    "shipped": "2026-10-29T01:16:31"
+   }
+  },
+  {
+   "order": 3120,
+   "id": "mgu",
+   "name": "Mueang Sukhothai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 581982,
+   "origin": [
+    99.8192,
+    17.0114
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B37959209018419",
+     "78962969B22677252120762",
+     "78962969B82720870655259",
+     "78962969B21904854514402",
+     "78962969B68558189238203",
+     "78962969B829046276221",
+     "78962969B26447913933028",
+     "78962969B72722062907305",
+     "78962969B98677957537558"
+    ]
+   },
+   "bbox": [
+    99.312,
+    16.683,
+    100.112,
+    17.822
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Sukhothai",
+     "Si Satchanalai",
+     "Sawankhalok",
+     "Si Samrong",
+     "Kong Krailat",
+     "Khiri Mat",
+     "Thung Saliam",
+     "Ban Dan Lan Hoi",
+     "Si Nakhon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 31.4,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:57:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:31",
+    "shipped": "2026-10-29T01:16:31"
+   }
+  },
+  {
+   "order": 3121,
+   "id": "mew",
+   "name": "Mueang Narathiwat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 578996,
+   "origin": [
+    101.9656,
+    6.0174
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B31308774945788",
+     "78962969B92165576967396",
+     "78962969B19527388455587",
+     "78962969B25686112002312",
+     "78962969B48534780184393",
+     "78962969B52628429870613",
+     "78962969B22586560209583",
+     "78962969B84911065588507",
+     "78962969B66673313723424",
+     "78962969B3053888418312",
+     "78962969B93940138269619",
+     "78962969B14228474631985",
+     "78962969B83718835474136"
+    ]
+   },
+   "bbox": [
+    101.371,
+    5.732,
+    102.093,
+    6.635
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Narathiwat",
+     "Ra-Ngae",
+     "Su-Ngai Kolok",
+     "Tak Bai",
+     "Rueso",
+     "Su-Ngai Padi",
+     "Bacho",
+     "Waeng",
+     "Yi-Ngo",
+     "Cho-Airong",
+     "Si Sakhon",
+     "Chanae",
+     "Sukhirin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 12.9,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 14.3,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:56:50",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:31",
+    "shipped": "2026-10-29T01:16:31"
+   }
+  },
+  {
+   "order": 3122,
+   "id": "mgo",
+   "name": "Mueang Chachoengsao",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 541729,
+   "origin": [
+    101.0763,
+    13.6899
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B6762325431778",
+     "78962969B65089616698234",
+     "78962969B69796195925566",
+     "78962969B2229675386212",
+     "78962969B14238280937071",
+     "78962969B88145432659836",
+     "78962969B34139607112253",
+     "78962969B67235524404605",
+     "78962969B64139480936177"
+    ]
+   },
+   "bbox": [
+    100.855,
+    13.179,
+    101.99,
+    13.886
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Chachoengsao",
+     "Phanom Sarakham",
+     "Sanam Chai Khet",
+     "Ban Pho",
+     "Bang Khla",
+     "Tha Takiap",
+     "Plaeng Yao",
+     "Khlong Khuean",
+     "Ratchasan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 18.8,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 59.5,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:57:48",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6004.2548828125"
+     ]
+    },
+    "gated": "2026-10-29T00:20:32",
+    "shipped": "2026-10-29T01:16:31"
+   }
+  },
+  {
+   "order": 3123,
+   "id": "thl",
+   "name": "Thalang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 541167,
+   "origin": [
+    98.2958,
+    7.9803
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B19426862373274",
+     "78962969B58912985430788",
+     "78962969B86019353442573",
+     "78962969B58097970477976",
+     "78962969B58835722808395",
+     "78962969B9320754412882",
+     "78962969B83869415857059",
+     "78962969B49834487361674",
+     "78962969B39979274143767"
+    ]
+   },
+   "bbox": [
+    97.631,
+    7.744,
+    98.708,
+    9.479
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thalang",
+     "Thai Mueang",
+     "Takua Pa",
+     "Takua Thung",
+     "Mueang Phangnga",
+     "Thap Put",
+     "Khura Buri",
+     "Kapong",
+     "Ko Yao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 25.7,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 14.9,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:57:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:32",
+    "shipped": "2026-10-29T01:16:32"
+   }
+  },
+  {
+   "order": 3124,
+   "id": "mgi",
+   "name": "Mueang Pattani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 534245,
+   "origin": [
+    101.2494,
+    6.8687
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B73457350824483",
+     "78962969B64545925987472",
+     "78962969B59272581561490",
+     "78962969B69014167770577",
+     "78962969B27197840775021",
+     "78962969B50948303321552",
+     "78962969B89271538016717",
+     "78962969B4451238967182",
+     "78962969B39593186090950",
+     "78962969B23188971822264",
+     "78962969B32664708228231",
+     "78962969B69481933598717"
+    ]
+   },
+   "bbox": [
+    101.017,
+    6.55,
+    101.725,
+    6.952
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Pattani",
+     "Yarang",
+     "Nong Chik",
+     "Yaring",
+     "Khok Pho",
+     "Sai Buri",
+     "Mayo",
+     "Panare",
+     "Thung Yang Daeng",
+     "Kapho",
+     "Mae Lan",
+     "Mai Kaen"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 11.3,
+     "stations": 1.2,
+     "places": 1.7,
+     "routes": 15.1,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:56:58",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:32",
+    "shipped": "2026-10-29T01:16:32"
+   }
+  },
+  {
+   "order": 3125,
+   "id": "mgx",
+   "name": "Mueang Sakon Nakhon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 529825,
+   "origin": [
+    104.1476,
+    17.1595
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B18932454885431",
+     "78962969B62467270664056",
+     "78962969B32881438495472",
+     "78962969B29129628084941",
+     "78962969B15613866978457",
+     "78962969B94983517253563",
+     "78962969B73602858262126",
+     "78962969B89728183001998",
+     "78962969B87350252424765"
+    ]
+   },
+   "bbox": [
+    103.614,
+    16.772,
+    104.435,
+    17.473
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Sakon Nakhon",
+     "Kusuman",
+     "Phanna Nikhom",
+     "Phu Phan",
+     "Phon Na Kaeo",
+     "Khok Si Suphan",
+     "Kut Bak",
+     "Tao Ngoi",
+     "Nikhom Nam Un"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 19.0,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 23.1,
+     "merge": 1.0,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:57:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14112600424672309"
+     ]
+    },
+    "gated": "2026-10-29T00:20:32",
+    "shipped": "2026-10-29T01:16:32"
+   }
+  },
+  {
+   "order": 3126,
+   "id": "phk",
+   "name": "Phra Nakhon Si Ayutthaya",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 525938,
+   "origin": [
+    100.5751,
+    14.3526
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B15942215938926",
+     "78962969B12192393501307",
+     "78962969B93937525115566",
+     "78962969B25127824305120",
+     "78962969B60015542915267",
+     "78962969B29377906715784",
+     "78962969B2031869857401",
+     "78962969B63768229045772",
+     "78962969B33149444798126"
+    ]
+   },
+   "bbox": [
+    100.41,
+    14.28,
+    100.797,
+    14.673
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phra Nakhon Si Ayutthaya",
+     "Bang Pahan",
+     "Bang Ban",
+     "Nakhon Luang",
+     "Tha Ruea",
+     "Uthai",
+     "Phachi",
+     "Maha Rat",
+     "Ban Phraek"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 14.8,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 23.8,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:57:40",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:33",
+    "shipped": "2026-10-29T01:16:32"
+   }
+  },
+  {
+   "order": 3127,
+   "id": "mgb",
+   "name": "Mueang Nong Bua Lam Phu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 519406,
+   "origin": [
+    102.4376,
+    17.2007
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B75435650034529",
+     "78962969B40369427634380",
+     "78962969B72189645888200",
+     "78962969B44929961465938",
+     "78962969B89578186205363",
+     "78962969B46616505195468"
+    ]
+   },
+   "bbox": [
+    101.982,
+    16.772,
+    102.679,
+    17.692
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nong Bua Lam Phu",
+     "Non Sang",
+     "Si Bun Rueang",
+     "Na Klang",
+     "Suwannakhuha",
+     "Na Wang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 18.5,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 22.5,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:57:47",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-29T00:20:33",
+    "shipped": "2026-10-29T01:16:33"
+   }
+  },
+  {
+   "order": 3128,
+   "id": "mkh",
+   "name": "Mueang Nakhon Phanom",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 510910,
+   "origin": [
+    104.7857,
+    17.3982
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B91655555555249",
+     "78962969B35250175896926",
+     "78962969B53080362722064",
+     "78962969B490988164886",
+     "78962969B23223373784889",
+     "78962969B77230188112326",
+     "78962969B9845696572141",
+     "78962969B93131496494320",
+     "78962969B93773491047037",
+     "78962969B32872774308874",
+     "78962969B75558951633427",
+     "78962969B31746602904448"
+    ]
+   },
+   "bbox": [
+    103.982,
+    16.787,
+    104.807,
+    18.024
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Nakhon Phanom",
+     "That Phanom",
+     "Na Kae",
+     "Si Songkhram",
+     "Tha Uthen",
+     "Phon Sawan",
+     "Pla Pak",
+     "Renu Nakhon",
+     "Na Wa",
+     "Ban Phaeng",
+     "Na Thom",
+     "Wang Yang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 31.5,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 38.8,
+     "merge": 1.4,
+     "nocar": 2.3,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:58:27",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:33",
+    "shipped": "2026-10-29T01:16:33"
+   }
+  },
+  {
+   "order": 3129,
+   "id": "mtr",
+   "name": "Mueang Trang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 505254,
+   "origin": [
+    99.6092,
+    7.5583
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B27556566790630",
+     "78962969B54488452023810",
+     "78962969B56840813019063",
+     "78962969B81181946303710",
+     "78962969B78626078629427",
+     "78962969B91154230125686",
+     "78962969B96586587830005",
+     "78962969B32337273254454",
+     "78962969B5329491691086",
+     "78962969B83331029808127"
+    ]
+   },
+   "bbox": [
+    99.052,
+    6.973,
+    99.949,
+    8.013
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Trang",
+     "Huai Yot",
+     "Kantang",
+     "Yan Ta Khao",
+     "Palian",
+     "Na Yong",
+     "Wang Wiset",
+     "Sikao",
+     "Ratsada",
+     "Hat Samran"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 20.8,
+     "stations": 1.2,
+     "places": 1.5,
+     "routes": 20.8,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:58:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17301503681358224",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:34",
+    "shipped": "2026-10-29T01:16:33"
+   }
+  },
+  {
+   "order": 3130,
+   "id": "mlm",
+   "name": "Mueang Lamphun",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 504668,
+   "origin": [
+    98.9979,
+    18.5689
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B31473304215935",
+     "78962969B79756650149930",
+     "78962969B72300277580274",
+     "78962969B62404267117906",
+     "78962969B26085596744311",
+     "78962969B5977206597344",
+     "78962969B75208473855809",
+     "78962969B85097268198325"
+    ]
+   },
+   "bbox": [
+    98.671,
+    17.426,
+    99.321,
+    18.708
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Lamphun",
+     "Pa Sang",
+     "Mae Tha",
+     "Li",
+     "Ban Hong",
+     "Wiang Nong Long",
+     "Ban Thi",
+     "Thung Hua Chang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 17.0,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 38.7,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T23:58:44",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14213879464305051"
+     ]
+    },
+    "gated": "2026-10-29T00:20:34",
+    "shipped": "2026-10-29T01:16:34"
+   }
+  },
+  {
+   "order": 3131,
+   "id": "mso",
+   "name": "Mae Sot",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 501479,
+   "origin": [
+    98.5157,
+    16.6906
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B92609473950758",
+     "78962969B62571443706919",
+     "78962969B58793256407954",
+     "78962969B25324759841331",
+     "78962969B53904723449117",
+     "78962969B69259908761909",
+     "78962969B10518066707852"
+    ]
+   },
+   "bbox": [
+    97.742,
+    16.269,
+    99.467,
+    17.868
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mae Sot",
+     "Mueang Tak",
+     "Tha Song Yang",
+     "Phop Phra",
+     "Ban Tak",
+     "Mae Ramat",
+     "Wang Chao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 23.9,
+     "stations": 1.5,
+     "places": 2.1,
+     "routes": 24.4,
+     "merge": 1.2,
+     "nocar": 1.6,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:58:37",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1070808589186302"
+     ]
+    },
+    "gated": "2026-10-29T00:20:34",
+    "shipped": "2026-10-29T01:16:34"
+   }
+  },
+  {
+   "order": 3132,
+   "id": "msn",
+   "name": "Mueang Songkhla",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 457537,
+   "origin": [
+    100.5923,
+    7.2013
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B11995131192654",
+     "78962969B74412362981694",
+     "78962969B2429736291194",
+     "78962969B5243255389589"
+    ]
+   },
+   "bbox": [
+    100.356,
+    6.874,
+    100.675,
+    7.623
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Songkhla",
+     "Singhanakhon",
+     "Sathing Phra",
+     "Na Mom"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 11.2,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 12.3,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T23:58:18",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:34",
+    "shipped": "2026-10-29T01:16:34"
+   }
+  },
+  {
+   "order": 3133,
+   "id": "mud",
+   "name": "Mueang Uttaradit",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 444630,
+   "origin": [
+    100.0931,
+    17.6124
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B38692905391521",
+     "78962969B15647652968597",
+     "78962969B92512161501034",
+     "78962969B89891348758584",
+     "78962969B58085194309258",
+     "78962969B33216342014207"
+    ]
+   },
+   "bbox": [
+    99.894,
+    17.139,
+    100.78,
+    18.056
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Uttaradit",
+     "Phichai",
+     "Laplae",
+     "Tha Pla",
+     "Tron",
+     "Thong Saen Khan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 17.4,
+     "stations": 1.3,
+     "places": 2.0,
+     "routes": 21.8,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:58:35",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18259076934623827",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:35",
+    "shipped": "2026-10-29T01:16:34"
+   }
+  },
+  {
+   "order": 3134,
+   "id": "bnp",
+   "name": "Ban Phaeo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 441164,
+   "origin": [
+    100.106,
+    13.5917
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B41699219692517",
+     "78962969B68169586280131",
+     "78962969B68026694261665"
+    ]
+   },
+   "bbox": [
+    99.852,
+    13.242,
+    100.233,
+    13.684
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ban Phaeo",
+     "Amphawa",
+     "Bang Khonthi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 14.3,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 19.1,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.5
+    },
+    "built": "2026-10-28T23:58:42",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10286360863255622",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-29T00:20:35",
+    "shipped": "2026-10-29T01:16:35"
+   }
+  },
+  {
+   "order": 3135,
+   "id": "mph",
+   "name": "Mueang Phichit",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 440374,
+   "origin": [
+    100.3497,
+    16.4358
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B35136792725938",
+     "78962969B26930516350058",
+     "78962969B47406793118742",
+     "78962969B53438077198492",
+     "78962969B44850282674557",
+     "78962969B83024489424242",
+     "78962969B76859973780400",
+     "78962969B2905707745355",
+     "78962969B74597047667398",
+     "78962969B60737271692218",
+     "78962969B92900042333886"
+    ]
+   },
+   "bbox": [
+    99.984,
+    15.919,
+    100.799,
+    16.648
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phichit",
+     "Taphan Hin",
+     "Pho Thale",
+     "Tap Khlo",
+     "Bang Mun Nak",
+     "Sam Ngam",
+     "Pho Prathap Chang",
+     "Wang Sai Phun",
+     "Sak Lek",
+     "Bueng Na Rang",
+     "Dong Charoen"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 30.5,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:59:13",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-29T00:20:35",
+    "shipped": "2026-10-29T01:16:35"
+   }
+  },
+  {
+   "order": 3136,
+   "id": "mnd",
+   "name": "Mueang Mukdahan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 434187,
+   "origin": [
+    104.7264,
+    16.5427
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B66704164084877",
+     "78962969B97747212455543",
+     "78962969B9288623965853",
+     "78962969B20953711752663",
+     "78962969B66357052438621",
+     "78962969B14563868158116",
+     "78962969B15109036384984"
+    ]
+   },
+   "bbox": [
+    104.07,
+    16.185,
+    104.979,
+    16.907
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Mukdahan",
+     "Nikhom Kham Soi",
+     "Khamcha-I",
+     "Don Tan",
+     "Dong Luang",
+     "Nong Sung",
+     "Wan Yai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.3,
+     "places": 1.7,
+     "routes": 18.4,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T23:59:09",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14662198432871026"
+     ]
+    },
+    "gated": "2026-10-29T00:20:36",
+    "shipped": "2026-10-29T01:16:35"
+   }
+  },
+  {
+   "order": 3137,
+   "id": "snp",
+   "name": "San Pa Tong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 417201,
+   "origin": [
+    98.8949,
+    18.6267
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B57097295633579",
+     "78962969B36039472825414",
+     "78962969B34643742441867",
+     "78962969B26500920183466",
+     "78962969B71895248722422",
+     "78962969B90127177876527",
+     "78962969B78761446480435"
+    ]
+   },
+   "bbox": [
+    98.074,
+    17.777,
+    98.96,
+    18.938
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "San Pa Tong",
+     "Chom Thong",
+     "Mae Chaem",
+     "Doi Lo",
+     "Hot",
+     "Mae Wang",
+     "Doi Tao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 19.6,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 28.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:59:30",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13286991976717555",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-29T00:20:36",
+    "shipped": "2026-10-29T01:16:35"
+   }
+  },
+  {
+   "order": 3138,
+   "id": "mpe",
+   "name": "Mueang Phetchaburi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 412995,
+   "origin": [
+    99.9501,
+    13.1014
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B35998281204361",
+     "78962969B57494861124372",
+     "78962969B57649176029209",
+     "78962969B76401698966785",
+     "78962969B82781798168468",
+     "78962969B10571681273524"
+    ]
+   },
+   "bbox": [
+    99.603,
+    12.601,
+    100.103,
+    13.343
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Phetchaburi",
+     "Tha Yang",
+     "Cha-Am",
+     "Ban Lat",
+     "Khao Yoi",
+     "Ban Laem"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 14.8,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 23.5,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T23:59:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:36",
+    "shipped": "2026-10-29T01:16:36"
+   }
+  },
+  {
+   "order": 3139,
+   "id": "nog",
+   "name": "Nong Suea",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 410144,
+   "origin": [
+    101.2159,
+    14.2053
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B25224314923642",
+     "78962969B8624849534674",
+     "78962969B12368211729718",
+     "78962969B80179535824157",
+     "78962969B43215001089078"
+    ]
+   },
+   "bbox": [
+    100.755,
+    13.961,
+    101.505,
+    14.512
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nong Suea",
+     "Mueang Nakhon Nayok",
+     "Ban Na",
+     "Ongkharak",
+     "Pak Phli"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 13.1,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 39.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T23:59:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:36",
+    "shipped": "2026-10-29T01:16:36"
+   }
+  },
+  {
+   "order": 3140,
+   "id": "mpr",
+   "name": "Mueang Prachuap Khiri Khan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "THA"
+   ],
+   "iso2": "TH",
+   "people": 409502,
+   "origin": [
+    99.7934,
+    11.8036
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/thailand"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "THA": [
+     "78962969B124127950109",
+     "78962969B16792077167163",
+     "78962969B56213444646576",
+     "78962969B53971782347722",
+     "78962969B3750900919123",
+     "78962969B26279095645158",
+     "78962969B49973516992329",
+     "78962969B56778840281183"
+    ]
+   },
+   "bbox": [
+    99.148,
+    10.955,
+    100.033,
+    12.645
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mueang Prachuap Khiri Khan",
+     "Pran Buri",
+     "Hua Hin",
+     "Bang Saphan",
+     "Thap Sakae",
+     "Kui Buri",
+     "Sam Roi Yot",
+     "Bang Saphan Noi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-233344",
+    "steps": {
+     "build": 19.2,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 21.7,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T23:59:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-29T00:20:37",
+    "shipped": "2026-10-29T01:16:36"
+   }
   }
  ],
  "dropped": [
@@ -176123,6 +181667,991 @@
     "can": [
      "81297802B83209776142835",
      "81297802B74288530741739"
+    ]
+   }
+  },
+  "THA": {
+   "built": "2026-10-28",
+   "task": "T-788",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "78962969B85526805551383",
+     "name": "Chiang Muan",
+     "people": 10834,
+     "per_km2": 15.5
+    },
+    {
+     "unit": "78962969B4700239694547",
+     "name": "Pong",
+     "people": 29546,
+     "per_km2": 17.4
+    },
+    {
+     "unit": "78962969B83426526195600",
+     "name": "Kaeng Krachan",
+     "people": 26993,
+     "per_km2": 10.4
+    },
+    {
+     "unit": "78962969B63755110473004",
+     "name": "Nong Ya Plong",
+     "people": 13810,
+     "per_km2": 11.2
+    },
+    {
+     "unit": "78962969B52588762248299",
+     "name": "Nam Nao",
+     "people": 11827,
+     "per_km2": 12.6
+    },
+    {
+     "unit": "78962969B58743174421215",
+     "name": "Ban Ta Khun",
+     "people": 15557,
+     "per_km2": 10.3
+    },
+    {
+     "unit": "78962969B63665191802101",
+     "name": "Na Haeo",
+     "people": 7238,
+     "per_km2": 11.5
+    },
+    {
+     "unit": "78962969B51593367753685",
+     "name": "Phu Ruea",
+     "people": 12973,
+     "per_km2": 19.0
+    },
+    {
+     "unit": "78962969B36547770218976",
+     "name": "Ban Rai",
+     "people": 46500,
+     "per_km2": 14.0
+    },
+    {
+     "unit": "78962969B22995817485860",
+     "name": "Sam Ngao",
+     "people": 36536,
+     "per_km2": 13.2
+    },
+    {
+     "unit": "78962969B38032656496356",
+     "name": "Umphang",
+     "people": 26765,
+     "per_km2": 5.5
+    },
+    {
+     "unit": "78962969B80719111705399",
+     "name": "Ko Chang",
+     "people": 4017,
+     "per_km2": 18.0
+    },
+    {
+     "unit": "78962969B85434613183217",
+     "name": "Ko Kut",
+     "people": 1653,
+     "per_km2": 12.7
+    },
+    {
+     "unit": "78962969B84740319728586",
+     "name": "Ban Kha",
+     "people": 16672,
+     "per_km2": 19.6
+    },
+    {
+     "unit": "78962969B52849562974755",
+     "name": "Ban Khok",
+     "people": 11367,
+     "per_km2": 11.4
+    },
+    {
+     "unit": "78962969B71814319942483",
+     "name": "Fak Tha",
+     "people": 11135,
+     "per_km2": 17.2
+    },
+    {
+     "unit": "78962969B51395146999096",
+     "name": "Nam Pat",
+     "people": 24086,
+     "per_km2": 16.5
+    },
+    {
+     "unit": "78962969B83063608577185",
+     "name": "Mae Phrik",
+     "people": 12132,
+     "per_km2": 18.2
+    },
+    {
+     "unit": "78962969B83448610007189",
+     "name": "Galyani Vadhana",
+     "people": 11821,
+     "per_km2": 19.2
+    },
+    {
+     "unit": "78962969B68352553726787",
+     "name": "Omkoi",
+     "people": 52341,
+     "per_km2": 18.3
+    },
+    {
+     "unit": "78962969B52276482887751",
+     "name": "Bo Kluea",
+     "people": 12522,
+     "per_km2": 13.5
+    },
+    {
+     "unit": "78962969B26100393225543",
+     "name": "Mae Charim",
+     "people": 13001,
+     "per_km2": 12.5
+    },
+    {
+     "unit": "78962969B50477560257037",
+     "name": "Na Muen",
+     "people": 13146,
+     "per_km2": 15.2
+    },
+    {
+     "unit": "78962969B31957869244810",
+     "name": "Song Khwae",
+     "people": 8732,
+     "per_km2": 14.5
+    },
+    {
+     "unit": "78962969B26028425570589",
+     "name": "Sai Yok",
+     "people": 40032,
+     "per_km2": 15.4
+    },
+    {
+     "unit": "78962969B87118801609333",
+     "name": "Sangkhla Buri",
+     "people": 56149,
+     "per_km2": 17.4
+    },
+    {
+     "unit": "78962969B73671934150573",
+     "name": "Si Sawat",
+     "people": 20944,
+     "per_km2": 6.9
+    },
+    {
+     "unit": "78962969B24065395096407",
+     "name": "Thong Pha Phum",
+     "people": 43142,
+     "per_km2": 11.1
+    },
+    {
+     "unit": "78962969B960185402947",
+     "name": "Khun Yuam",
+     "people": 16107,
+     "per_km2": 9.9
+    },
+    {
+     "unit": "78962969B46384371201306",
+     "name": "Mae La Noi",
+     "people": 24813,
+     "per_km2": 17.8
+    },
+    {
+     "unit": "78962969B31524896745165",
+     "name": "Mae Sariang",
+     "people": 38841,
+     "per_km2": 14.7
+    },
+    {
+     "unit": "78962969B54063413445494",
+     "name": "Mueang Mae Hong Son",
+     "people": 34714,
+     "per_km2": 14.9
+    },
+    {
+     "unit": "78962969B97978229640938",
+     "name": "Pai",
+     "people": 21170,
+     "per_km2": 9.2
+    },
+    {
+     "unit": "78962969B96104759744449",
+     "name": "Pang Mapha",
+     "people": 13356,
+     "per_km2": 12.1
+    },
+    {
+     "unit": "78962969B61327440501471",
+     "name": "Sop Moei",
+     "people": 28149,
+     "per_km2": 19.6
+    }
+   ],
+   "merges": [
+    "Ko Si Chang (5,247) joins Bang Lamung (island, 13 km)",
+    "Bueng Bun (5,476) joins Rasi Salai (biggest partner, shared border 14 km)",
+    "Wang Yang (7,613) joins Na Kae (biggest partner, shared border 27 km)",
+    "Chaloem Phra Kiat (7,617) joins Mueang Nakhon Ratchasima (biggest partner, shared border 28 km)",
+    "Sap Yai (7,728) joins Chatturat (biggest partner, shared border 21 km)",
+    "Tha Chang (8,244) joins Phrom Buri (biggest partner, shared border 11 km)",
+    "Don Phut (8,793) joins Ban Mo (biggest partner, shared border 14 km)",
+    "Mueang Chan (8,945) joins Pho Si Suwan (biggest partner that wraps nothing, shared border 19 km)",
+    "Mai Kaen (9,054) joins Sai Buri (biggest partner, shared border 11 km)",
+    "Rong Kham (9,104) joins Kamalasai (biggest partner, shared border 23 km)",
+    "Ban Phraek (9,114) joins Maha Rat (biggest partner, shared border 10 km)",
+    "Nong Saeng (9,141) joins Mueang Udon Thani (biggest partner, shared border 18 km)",
+    "Ban Luang (9,172) joins Mueang Nan (biggest partner, shared border 37 km)",
+    "Bung Khla (9,203) joins Bueng Khong Long (biggest partner that wraps nothing, shared border 19 km)",
+    "Nikhom Nam Un (9,472) joins Kut Bak (biggest partner, shared border 37 km)",
+    "Chum Ta Bong (9,882) joins Lat Yao (biggest partner, shared border 17 km)",
+    "Sila Lat (10,006) joins Rasi Salai (biggest partner, shared border 28 km)",
+    "Wat Phleng (10,144) joins Mueang Ratchaburi (biggest partner, shared border 12 km)",
+    "Noen Kham (10,392) joins Hankha (biggest partner, shared border 43 km)",
+    "Ko Pha-Ngan (10,620) joins Mueang Surat Thani (island, 78 km)",
+    "Pho Tak (10,730) joins Si Chiang Mai (biggest partner that wraps nothing, shared border 23 km)",
+    "Si Banphot (11,192) joins Khuan Khanun (biggest partner, shared border 28 km)",
+    "Nong Mamong (11,401) joins Wat Sing (biggest partner that wraps nothing, shared border 33 km)",
+    "Vibhavadi (11,427) joins Khiri Rat Nikhom (biggest partner that wraps nothing, shared border 35 km)",
+    "Mae Lan (11,571) joins Yarang (biggest partner, shared border 12 km)",
+    "Hat Samran (11,617) joins Palian (biggest partner, shared border 27 km)",
+    "Ko Yao (12,139) joins Takua Thung (biggest partner, shared border 0 km)",
+    "Non Suwan (12,155) joins Nang Rong (biggest partner, shared border 28 km)",
+    "Moei Wadi (12,196) joins Phon Thong (biggest partner, shared border 20 km)",
+    "Na Thom (12,216) joins Ban Phaeng (biggest partner, shared border 31 km)",
+    "Santi Suk (12,393) joins Phu Phiang (biggest partner that wraps nothing, shared border 28 km)",
+    "Kabang (12,636) joins Yaha (biggest partner, shared border 35 km)",
+    "Manang (12,665) joins La-Ngu (biggest partner, shared border 30 km)",
+    "Kapho (12,671) joins Sai Buri (biggest partner, shared border 17 km)",
+    "Huai Khot (12,805) joins Nong Chang (biggest partner, shared border 13 km)",
+    "Nong Khayang (12,806) joins Mueang Uthai Thani (biggest partner, shared border 30 km)",
+    "Tham Phannara (12,887) joins Chawang (biggest partner, shared border 25 km)",
+    "Mae Poen (13,332) joins Lat Yao (biggest partner, shared border 25 km)",
+    "Samko (13,344) joins Wiset Chai Chan (biggest partner, shared border 30 km)",
+    "Ku Kaeo (13,520) joins Kumphawapi (biggest partner, shared border 19 km)",
+    "Ratchasan (13,622) joins Phanom Sarakham (biggest partner, shared border 31 km)",
+    "Mueang Suang (13,626) joins Chaturaphak Phiman (biggest partner, shared border 14 km)",
+    "Kapong (13,661) joins Takua Pa (biggest partner, shared border 39 km)",
+    "Khai Bang Rachan (13,684) joins Mueang Sing Buri (biggest partner, shared border 11 km)",
+    "Non Din Daeng (14,012) joins Lahan Sai (biggest partner, shared border 34 km)",
+    "Phana (14,048) joins Mueang Amnat Charoen (biggest partner, shared border 9 km)",
+    "Wiang Kao (14,082) joins Phu Wiang (biggest partner, shared border 18 km)",
+    "Chuen Chom (14,235) joins Chiang Yuen (biggest partner, shared border 17 km)",
+    "Prachaksinlapakhom (14,352) joins Mueang Udon Thani (biggest partner, shared border 21 km)",
+    "Nong Hin (14,374) joins Pha Khao (biggest partner that wraps nothing, shared border 22 km)",
+    "Phibun Rak (14,561) joins Mueang Udon Thani (biggest partner, shared border 4 km)",
+    "Khlong Khuean (14,592) joins Mueang Chachoengsao (biggest partner, shared border 13 km)",
+    "Don Chan (14,670) joins Mueang Kalasin (biggest partner, shared border 40 km)",
+    "Phu Luang (14,927) joins Wang Saphung (biggest partner, shared border 37 km)",
+    "Sam Chai (15,031) joins Kham Muang (biggest partner, shared border 36 km)",
+    "Phon Sai (15,104) joins Suwannaphum (biggest partner, shared border 27 km)",
+    "Nong Hi (15,174) joins Suwannaphum (biggest partner, shared border 37 km)",
+    "Na Yung (15,228) joins Nam Som (biggest partner, shared border 31 km)",
+    "Sangkhom (15,237) joins Si Chiang Mai (biggest partner, shared border 16 km)",
+    "Noen Sa-Nga (15,416) joins Ban Lueam (biggest partner that wraps nothing, shared border 17 km)",
+    "Thung Yang Daeng (15,472) joins Sai Buri (biggest partner, shared border 21 km)",
+    "Thung Hua Chang (15,987) joins Li (biggest partner, shared border 61 km)",
+    "Lamduan (16,300) joins Prasat (biggest partner that wraps nothing, shared border 12 km)",
+    "Chaiyo (16,479) joins Pho Thong (biggest partner, shared border 17 km)",
+    "Dong Charoen (16,620) joins Bang Mun Nak (biggest partner, shared border 24 km)",
+    "Chanuman (16,655) joins Senangkhanikhom (biggest partner, shared border 18 km)",
+    "Pueai Noi (16,792) joins Nong Song Hong (biggest partner, shared border 25 km)",
+    "Khong Chai (17,025) joins Mueang Kalasin (biggest partner, shared border 3 km)",
+    "Than To (17,056) joins Bannang Sata (biggest partner, shared border 45 km)",
+    "Kho Wang (17,068) joins Maha Chana Chai (biggest partner, shared border 20 km)",
+    "Nong Don (17,072) joins Phra Phutthabat (biggest partner, shared border 20 km)",
+    "Lam Thap (17,106) joins Bang Khan (biggest partner, shared border 29 km)",
+    "Sang Khom (17,164) joins Phen (biggest partner, shared border 32 km)",
+    "Krong Pinang (17,315) joins Mueang Yala (biggest partner, shared border 16 km)",
+    "Phakdi Chumphon (17,322) joins Nong Bua Daeng (biggest partner, shared border 49 km)",
+    "Sukhirin (17,360) joins Waeng (biggest partner, shared border 31 km)",
+    "Ban Mai Chaiyaphot (17,361) joins Phutthaisong (biggest partner, shared border 28 km)",
+    "Phu Pha Man (17,583) joins Chum Phae (biggest partner, shared border 29 km)",
+    "Thai Charoen (17,747) joins Loeng Nok Tha (biggest partner, shared border 59 km)",
+    "Benchalak (17,754) joins Kantharalak (biggest partner, shared border 43 km)",
+    "Lue Amnat (18,143) joins Mueang Amnat Charoen (biggest partner, shared border 48 km)",
+    "Sakhrai (18,227) joins Mueang Nong Khai (biggest partner, shared border 34 km)",
+    "Laem Ngop (18,626) joins Mueang Trat (biggest partner, shared border 22 km)",
+    "Non Khun (18,687) joins Kantharalak (biggest partner, shared border 25 km)",
+    "Thung Fon (18,735) joins Nong Han (biggest partner that wraps nothing, shared border 29 km)",
+    "Thepharak (18,829) joins Bamnet Narong (biggest partner, shared border 7 km)",
+    "Khanom (18,918) joins Sichon (biggest partner, shared border 26 km)",
+    "Khaen Dong (18,969) joins Khu Mueang (biggest partner, shared border 37 km)",
+    "Phanom Dong Rak (18,990) joins Prasat (biggest partner, shared border 26 km)",
+    "Doi Luang (19,075) joins Mae Chan (biggest partner that wraps nothing, shared border 28 km)",
+    "Phato (19,085) joins Lang Suan (biggest partner, shared border 34 km)",
+    "Chaloem Phra Kiat (19,102) joins Nang Rong (biggest partner that wraps nothing, shared border 40 km)",
+    "Sa Bot (19,116) joins Khok Samrong (biggest partner, shared border 22 km)",
+    "Thung Chang (19,132) joins Chiang Klang (biggest partner, shared border 33 km)",
+    "Na Khu (19,387) joins Khao Wong (biggest partner, shared border 19 km)",
+    "Bang Kaeo (19,408) joins Khao Chaison (biggest partner, shared border 32 km)",
+    "Non Narai (19,503) joins Rattanaburi (biggest partner, shared border 29 km)",
+    "Sai Mun (19,517) joins Mueang Yasothon (biggest partner, shared border 40 km)",
+    "Bang Rachan (19,535) joins Mueang Sing Buri (biggest partner, shared border 41 km)",
+    "Chamni (19,565) joins Mueang Buri Ram (biggest partner, shared border 8 km)",
+    "Bueng Na Rang (19,638) joins Pho Thale (biggest partner, shared border 34 km)",
+    "Huai Thap Than (19,707) joins Uthumphon Phisai (biggest partner, shared border 32 km)",
+    "Na Yia (19,709) joins Warin Chamrap (biggest partner, shared border 20 km)",
+    "Non Sila (19,778) joins Ban Phai (biggest partner, shared border 31 km)",
+    "Pa Mok (19,787) joins Mueang Ang Thong (biggest partner, shared border 14 km)",
+    "Khwao Sin Rin (19,899) joins Mueang Surin (biggest partner, shared border 33 km)",
+    "Sak Lek (19,966) joins Mueang Phichit (biggest partner, shared border 12 km)",
+    "Sam Sung (19,984) joins Mueang Khon Kaen (biggest partner, shared border 13 km)",
+    "Khok Sung (20,068) joins Aranyaprathet (biggest partner, shared border 23 km)",
+    "Phu Sang (20,216) joins Chiang Kham (biggest partner, shared border 38 km)",
+    "Srinagarindra (20,265) joins Mueang Phatthalung (biggest partner, shared border 18 km)",
+    "Suk Samran (20,352) joins Kapoe (biggest partner, shared border 29 km)",
+    "Nam Kliang (20,359) joins Kantharalak (biggest partner, shared border 33 km)",
+    "Na Pho (20,369) joins Phutthaisong (biggest partner, shared border 20 km)",
+    "Ko Lanta (20,390) joins Khlong Thom (biggest partner, shared border 28 km)",
+    "Bua Lai (20,545) joins Prathai (biggest partner that wraps nothing, shared border 7 km)",
+    "Huai Phueng (20,622) joins Na Mon (biggest partner, shared border 18 km)",
+    "Sida (20,658) joins Prathai (biggest partner, shared border 37 km)",
+    "Nong Bua Rawe (20,672) joins Ban Khwao (biggest partner, shared border 49 km)",
+    "Ban Na Doem (20,732) joins Ban Na San (biggest partner, shared border 32 km)",
+    "Na Bon (20,894) joins Thung Song (biggest partner, shared border 40 km)",
+    "Wan Yai (20,924) joins Mueang Mukdahan (biggest partner, shared border 34 km)",
+    "Thung Wa (20,950) joins La-Ngu (biggest partner, shared border 63 km)",
+    "Yang Chum Noi (20,986) joins Mueang Si Sa Ket (biggest partner, shared border 26 km)",
+    "Phipun (20,995) joins Chawang (biggest partner, shared border 46 km)",
+    "Pho Si Suwan (21,049) joins Uthumphon Phisai (biggest partner, shared border 36 km)",
+    "Ratsada (21,103) joins Huai Yot (biggest partner, shared border 37 km)",
+    "Nong Muang Khai (21,113) joins Mueang Phrae (biggest partner, shared border 31 km)",
+    "Thung Tako (21,115) joins Lang Suan (biggest partner, shared border 41 km)",
+    "Sop Prap (21,239) joins Ko Kha (biggest partner, shared border 19 km)",
+    "Yang Sisurat (21,450) joins Phayakkhaphum Phisai (biggest partner, shared border 29 km)",
+    "Phayu (21,638) joins Mueang Si Sa Ket (biggest partner that wraps nothing, shared border 16 km)",
+    "Ban Laem (21,736) joins Mueang Phetchaburi (biggest partner, shared border 47 km)",
+    "Non Daeng (21,824) joins Prathai (biggest partner, shared border 36 km)",
+    "Tha Li (21,826) joins Mueang Loei (biggest partner, shared border 25 km)",
+    "Lao Suea Kok (21,830) joins Mueang Ubon Ratchathani (biggest partner, shared border 14 km)",
+    "Erawan (21,866) joins Wang Saphung (biggest partner, shared border 46 km)",
+    "Khok Charoen (21,882) joins Nong Muang (biggest partner that wraps nothing, shared border 27 km)",
+    "Song Dao (21,936) joins Sawang Daen Din (biggest partner, shared border 57 km)",
+    "Phu Kradueng (22,007) joins Pha Khao (biggest partner, shared border 53 km)",
+    "Khok Pho Chai (22,015) joins Mancha Khiri (biggest partner, shared border 34 km)",
+    "Wachirabarami (22,027) joins Bang Rakam (biggest partner, shared border 23 km)",
+    "Khuan Don (22,036) joins Mueang Satun (biggest partner, shared border 33 km)",
+    "Nopphitam (22,106) joins Tha Sala (biggest partner, shared border 39 km)",
+    "Tha Khantho (22,123) joins Nong Kung Si (biggest partner, shared border 37 km)",
+    "Wiang Chiang Rung (22,194) joins Wiang Chai (biggest partner that wraps nothing, shared border 24 km)",
+    "Kut Rang (22,249) joins Borabue (biggest partner, shared border 41 km)",
+    "Pak Phli (22,274) joins Mueang Nakhon Nayok (biggest partner, shared border 64 km)",
+    "Pa Tio (22,292) joins Mueang Yasothon (biggest partner, shared border 24 km)",
+    "Tamot (22,297) joins Khao Chaison (biggest partner, shared border 19 km)",
+    "Lam Sonthi (22,340) joins Si Thep (biggest partner, shared border 28 km)",
+    "Khao Kho (22,368) joins Lom Sak (biggest partner, shared border 32 km)",
+    "Phrom Buri (22,495) joins Mueang Sing Buri (biggest partner, shared border 21 km)",
+    "Pathum Ratchawongsa (22,511) joins Mueang Amnat Charoen (biggest partner, shared border 43 km)",
+    "Buachet (22,580) joins Sangkha (biggest partner, shared border 52 km)",
+    "Wang Hin (22,714) joins Mueang Si Sa Ket (biggest partner, shared border 35 km)",
+    "Chai Wan (22,745) joins Nong Han (biggest partner, shared border 23 km)",
+    "Don Mot Daeng (22,850) joins Mueang Ubon Ratchathani (biggest partner, shared border 50 km)",
+    "Khura Buri (22,862) joins Takua Pa (biggest partner, shared border 14 km)",
+    "Manorom (22,874) joins Mueang Chai Nat (biggest partner, shared border 28 km)",
+    "Krasae Sin (23,074) joins Ranot (biggest partner, shared border 28 km)",
+    "Thong Saen Khan (23,190) joins Mueang Uttaradit (biggest partner, shared border 32 km)",
+    "Na Dun (23,263) joins Wapi Pathum (biggest partner, shared border 30 km)",
+    "Thung Si Udom (23,364) joins Det Udom (biggest partner, shared border 52 km)",
+    "Hua Taphan (23,407) joins Mueang Amnat Charoen (biggest partner, shared border 37 km)",
+    "Phu Kamyao (23,614) joins Mueang Phayao (biggest partner, shared border 31 km)",
+    "Pak Khat (23,692) joins So Phisai (biggest partner, shared border 30 km)",
+    "Kham Ta Kla (23,741) joins Wanon Niwat (biggest partner, shared border 43 km)",
+    "Mueang Yang (23,828) joins Prathai (biggest partner, shared border 16 km)",
+    "Chanae (23,838) joins Ra-Ngae (biggest partner, shared border 28 km)",
+    "Si Sakhon (23,891) joins Ra-Ngae (biggest partner, shared border 50 km)",
+    "Nong Sung (23,912) joins Khamcha-I (biggest partner that wraps nothing, shared border 31 km)",
+    "Krok Phra (23,947) joins Mueang Nakhon Sawan (biggest partner, shared border 43 km)",
+    "Phrai Bueng (23,967) joins Khukhan (biggest partner, shared border 36 km)",
+    "Chang Klang (24,115) joins Chawang (biggest partner, shared border 34 km)",
+    "Waeng Yai (24,160) joins Phon (biggest partner, shared border 15 km)",
+    "Wang Sai Phun (24,363) joins Mueang Phichit (biggest partner, shared border 62 km)",
+    "Phlapphla Chai (24,407) joins Mueang Buri Ram (biggest partner, shared border 17 km)",
+    "Pa Phayom (24,429) joins Khuan Khanun (biggest partner, shared border 40 km)",
+    "Tha Phae (24,467) joins Mueang Satun (biggest partner, shared border 28 km)",
+    "Wiang Haeng (24,549) joins Chiang Dao (biggest partner, shared border 67 km)",
+    "Laem Sing (24,559) joins Mueang Chanthaburi (biggest partner, shared border 25 km)",
+    "Si Narong (24,753) joins Sangkha (biggest partner, shared border 37 km)",
+    "Lamae (24,792) joins Lang Suan (biggest partner, shared border 49 km)",
+    "Samoeng (24,795) joins Mae Rim (biggest partner, shared border 35 km)",
+    "Pakham (24,809) joins Nang Rong (biggest partner, shared border 24 km)",
+    "Nam Khun (24,839) joins Nam Yuen (biggest partner, shared border 42 km)",
+    "Soem Ngam (24,900) joins Ko Kha (biggest partner, shared border 55 km)",
+    "Sanom (24,919) joins Rattanaburi (biggest partner, shared border 37 km)",
+    "Sawaeng Ha (25,027) joins Pho Thong (biggest partner, shared border 26 km)",
+    "Ban Thi (25,033) joins Mueang Lamphun (biggest partner, shared border 27 km)",
+    "Sawang Wirawong (25,208) joins Mueang Ubon Ratchathani (biggest partner, shared border 23 km)",
+    "Khlong Hoi Khong (25,311) joins Sadao (biggest partner that wraps nothing, shared border 40 km)",
+    "Thap Put (25,348) joins Mueang Phangnga (biggest partner, shared border 39 km)",
+    "Bang Khonthi (25,477) joins Amphawa (biggest partner, shared border 22 km)",
+    "Makham (25,560) joins Mueang Chanthaburi (biggest partner, shared border 28 km)",
+    "Kong Ra (25,592) joins Mueang Phatthalung (biggest partner, shared border 41 km)",
+    "Mueang Pan (25,664) joins Mueang Lampang (biggest partner, shared border 22 km)",
+    "Khlong Yai (25,706) joins Mueang Trat (biggest partner, shared border 8 km)",
+    "Tha Luang (25,721) joins Chai Badan (biggest partner, shared border 66 km)",
+    "Phachi (25,729) joins Nakhon Luang (biggest partner, shared border 15 km)",
+    "Si Rattana (25,734) joins Kantharalak (biggest partner, shared border 47 km)",
+    "Sikao (25,806) joins Mueang Trang (biggest partner, shared border 6 km)",
+    "Si Wilai (25,871) joins Phon Charoen (biggest partner, shared border 28 km)",
+    "Chaloem Phra Kiat (25,936) joins Chiang Klang (biggest partner, shared border 45 km)",
+    "Tan Sum (26,167) joins Mueang Ubon Ratchathani (biggest partner, shared border 28 km)",
+    "Chai Buri (26,247) joins Phrasaeng (biggest partner, shared border 54 km)",
+    "Na Noi (26,264) joins Wiang Sa (biggest partner, shared border 74 km)",
+    "Suan Phueng (26,420) joins Chom Bueng (biggest partner, shared border 49 km)",
+    "Na Wa (26,483) joins Si Songkhram (biggest partner, shared border 47 km)",
+    "Nong Yai (26,518) joins Si Racha (biggest partner, shared border 4 km)",
+    "Kham Thale So (26,654) joins Mueang Nakhon Ratchasima (biggest partner, shared border 24 km)",
+    "Wat Sing (26,655) joins Mueang Chai Nat (biggest partner, shared border 24 km)",
+    "Lam Thamenchai (26,668) joins Chum Phuang (biggest partner, shared border 38 km)",
+    "Renu Nakhon (26,724) joins That Phanom (biggest partner that wraps nothing, shared border 39 km)",
+    "Bueng Samakkhi (26,816) joins Banphot Phisai (biggest partner, shared border 13 km)",
+    "Sawang Arom (27,051) joins Thap Than (biggest partner, shared border 37 km)",
+    "Ban Haet (27,092) joins Mueang Khon Kaen (biggest partner, shared border 18 km)",
+    "Chaloem Phra Kiat (27,211) joins Chian Yai (biggest partner that wraps nothing, shared border 34 km)",
+    "Charoen Sin (27,229) joins Sawang Daen Din (biggest partner, shared border 54 km)",
+    "Nong Hong (27,239) joins Lam Plai Mat (biggest partner, shared border 24 km)",
+    "Khuan Kalong (27,355) joins Mueang Satun (biggest partner, shared border 46 km)",
+    "Phrom Khiri (27,408) joins Mueang Nakhon Si Thammarat (biggest partner, shared border 25 km)",
+    "Phanom (27,452) joins Khiri Rat Nikhom (biggest partner, shared border 16 km)",
+    "Pla Pak (27,454) joins Mueang Nakhon Phanom (biggest partner, shared border 59 km)",
+    "Tron (27,541) joins Phichai (biggest partner that wraps nothing, shared border 35 km)",
+    "Khong Chiam (27,568) joins Si Mueang Mai (biggest partner that wraps nothing, shared border 56 km)",
+    "Rattanawapi (27,586) joins Fao Rai (biggest partner that wraps nothing, shared border 15 km)",
+    "Si Nakhon (27,588) joins Sawankhalok (biggest partner, shared border 46 km)",
+    "Phon Sawan (27,688) joins Mueang Nakhon Phanom (biggest partner, shared border 30 km)",
+    "Thung Khao Luang (27,691) joins Thawat Buri (biggest partner, shared border 28 km)",
+    "Ban Thaen (27,711) joins Phu Khiao (biggest partner, shared border 35 km)",
+    "La-Un (27,808) joins Mueang Ranong (biggest partner, shared border 50 km)",
+    "Tao Ngoi (27,972) joins Mueang Sakon Nakhon (biggest partner, shared border 30 km)",
+    "Kao Liao (28,155) joins Mueang Nakhon Sawan (biggest partner, shared border 24 km)",
+    "Sapphaya (28,229) joins Mueang Chai Nat (biggest partner, shared border 31 km)",
+    "Si That (28,359) joins Kumphawapi (biggest partner, shared border 47 km)",
+    "Wiang Kaen (28,371) joins Chiang Khong (biggest partner, shared border 33 km)",
+    "Nong Prue (28,481) joins Bo Phloi (biggest partner, shared border 44 km)",
+    "Pathum Rat (28,597) joins Kaset Wisai (biggest partner, shared border 37 km)",
+    "Bang Saphan Noi (28,634) joins Bang Saphan (biggest partner, shared border 38 km)",
+    "Maha Rat (28,636) joins Bang Pahan (biggest partner, shared border 16 km)",
+    "Tak Fa (28,691) joins Takhli (biggest partner, shared border 60 km)",
+    "Chun (28,811) joins Dok Khamtai (biggest partner, shared border 44 km)",
+    "Sai Thong Watthana (28,918) joins Khlong Khlung (biggest partner, shared border 28 km)",
+    "Phra Yuen (29,213) joins Mueang Khon Kaen (biggest partner, shared border 40 km)",
+    "Non Sa-At (29,240) joins Kumphawapi (biggest partner, shared border 42 km)",
+    "Lan Saka (29,415) joins Thung Song (biggest partner that wraps nothing, shared border 9 km)",
+    "Khun Tan (29,429) joins Phaya Mengrai (biggest partner, shared border 34 km)",
+    "Kaeng Sanam Nang (29,446) joins Bua Yai (biggest partner, shared border 21 km)",
+    "Wiang Nong Long (29,503) joins Pa Sang (biggest partner, shared border 13 km)",
+    "Samrong Thap (29,529) joins Sikhoraphum (biggest partner, shared border 32 km)",
+    "Si Mahosot (29,709) joins Si Maha Phot (biggest partner, shared border 34 km)",
+    "Doi Tao (30,289) joins Hot (biggest partner, shared border 70 km)",
+    "Mae Mo (30,358) joins Mueang Lampang (biggest partner, shared border 54 km)",
+    "Wang Wiset (30,367) joins Mueang Trang (biggest partner, shared border 85 km)",
+    "Wang Pong (30,390) joins Mueang Phetchabun (biggest partner, shared border 37 km)",
+    "Wang Muang (30,432) joins Kaeng Khoi (biggest partner, shared border 14 km)",
+    "Cho-Airong (30,872) joins Ra-Ngae (biggest partner, shared border 29 km)",
+    "Wang Chao (31,075) joins Mueang Tak (biggest partner, shared border 72 km)",
+    "Na Tan (31,101) joins Khemarat (biggest partner, shared border 46 km)",
+    "Dan Makham Tia (31,320) joins Mueang Kanchanaburi (biggest partner, shared border 69 km)",
+    "Wang Nam Khiao (31,360) joins Pak Thong Chai (biggest partner, shared border 64 km)",
+    "Khao Suan Kwang (31,423) joins Nam Phong (biggest partner, shared border 32 km)",
+    "In Buri (31,466) joins Mueang Sing Buri (biggest partner, shared border 26 km)",
+    "Waritchaphum (31,523) joins Sawang Daen Din (biggest partner, shared border 35 km)",
+    "Pang Sila Thong (31,815) joins Khanu Woralaksaburi (biggest partner, shared border 54 km)",
+    "Wang Sombun (31,923) joins Wang Nam Yen (biggest partner, shared border 33 km)",
+    "Ban Phaeng (31,943) joins Si Songkhram (biggest partner, shared border 46 km)",
+    "Dan Sai (31,965) joins Wang Saphung (biggest partner, shared border 29 km)",
+    "Na Wang (32,065) joins Na Klang (biggest partner, shared border 45 km)",
+    "Chae Hom (32,525) joins Mueang Lampang (biggest partner, shared border 104 km)",
+    "Bueng Khong Long (32,536) joins Seka (biggest partner, shared border 77 km)",
+    "Nong Na Kham (32,581) joins Phu Wiang (biggest partner, shared border 38 km)",
+    "Wang Sam Mo (32,610) joins Kumphawapi (biggest partner, shared border 38 km)",
+    "Pho Chai (32,724) joins Phon Thong (biggest partner, shared border 41 km)",
+    "Kaeng Hang Maeo (32,905) joins Khao Khitchakut (biggest partner that wraps nothing, shared border 44 km)",
+    "Pa Bon (32,912) joins Khao Chaison (biggest partner, shared border 49 km)",
+    "Huai Krachao (32,928) joins Phanom Thuan (biggest partner, shared border 31 km)",
+    "Phu Sing (33,076) joins Khukhan (biggest partner, shared border 42 km)",
+    "Chiang Khwan (33,145) joins Mueang Roi Et (biggest partner, shared border 8 km)",
+    "Chom Phra (33,146) joins Mueang Surin (biggest partner, shared border 34 km)",
+    "Phang Khon (33,215) joins Sawang Daen Din (biggest partner, shared border 35 km)",
+    "Tha Chang (33,434) joins Phunphin (biggest partner, shared border 30 km)",
+    "Pho Prathap Chang (33,627) joins Mueang Phichit (biggest partner, shared border 27 km)",
+    "Ban Lueam (33,788) joins Bua Yai (biggest partner, shared border 26 km)",
+    "Na Mom (33,823) joins Mueang Songkhla (biggest partner that wraps nothing, shared border 6 km)",
+    "Plai Phraya (33,945) joins Ao Luek (biggest partner, shared border 48 km)",
+    "Khian Sa (34,039) joins Ban Na San (biggest partner, shared border 44 km)",
+    "Kut Khaopun (34,069) joins Khemarat (biggest partner, shared border 29 km)",
+    "Mae Wang (34,306) joins San Pa Tong (biggest partner, shared border 30 km)",
+    "Phra Phrom (34,340) joins Mueang Nakhon Si Thammarat (biggest partner, shared border 34 km)",
+    "Mae Wong (34,345) joins Lat Yao (biggest partner, shared border 94 km)",
+    "Khon Sawan (34,598) joins Mueang Chaiyaphum (biggest partner, shared border 35 km)",
+    "Tha Uthen (34,670) joins Mueang Nakhon Phanom (biggest partner, shared border 57 km)",
+    "Pak Chom (34,829) joins Chiang Khan (biggest partner, shared border 57 km)",
+    "Sam Ngam (34,947) joins Mueang Phichit (biggest partner, shared border 50 km)",
+    "Nong Saeng (35,161) joins Mueang Saraburi (biggest partner, shared border 10 km)",
+    "Yi-Ngo (35,245) joins Mueang Narathiwat (biggest partner, shared border 29 km)",
+    "Kosamphi Nakhon (35,297) joins Mueang Kamphaeng Phet (biggest partner, shared border 58 km)",
+    "Prang Ku (35,355) joins Khukhan (biggest partner, shared border 32 km)",
+    "Wang Nuea (35,423) joins Ngao (biggest partner that wraps nothing, shared border 14 km)",
+    "Tha Pla (35,552) joins Mueang Uttaradit (biggest partner, shared border 67 km)",
+    "Senangkhanikhom (35,739) joins Mueang Amnat Charoen (biggest partner, shared border 69 km)",
+    "Pa Daet (36,071) joins Phan (biggest partner, shared border 26 km)",
+    "Ban Dan (36,145) joins Mueang Buri Ram (biggest partner, shared border 19 km)",
+    "Sam Roi Yot (36,148) joins Pran Buri (biggest partner, shared border 64 km)",
+    "Phra Thong Kham (36,186) joins Dan Khun Thot (biggest partner, shared border 17 km)",
+    "Den Chai (36,231) joins Sung Men (biggest partner, shared border 38 km)",
+    "Kap Choeng (36,250) joins Prasat (biggest partner, shared border 51 km)",
+    "Ubolratana (36,315) joins Nam Phong (biggest partner, shared border 53 km)",
+    "Kham Sakaesaeng (36,318) joins Khong (biggest partner, shared border 36 km)",
+    "Chumphon Buri (36,655) joins Tha Tum (biggest partner, shared border 41 km)",
+    "Nong Phok (36,943) joins Phon Thong (biggest partner, shared border 50 km)",
+    "Pho Sai (36,971) joins Khemarat (biggest partner, shared border 42 km)",
+    "Na Yong (37,002) joins Mueang Trang (biggest partner, shared border 33 km)",
+    "Sao Hai (37,019) joins Mueang Saraburi (biggest partner, shared border 22 km)",
+    "Na Chueak (37,067) joins Borabue (biggest partner, shared border 35 km)",
+    "Bang Sai (37,252) joins Sena (biggest partner, shared border 29 km)",
+    "Dong Luang (37,354) joins Mueang Mukdahan (biggest partner, shared border 30 km)",
+    "Waeng Noi (37,387) joins Phon (biggest partner, shared border 50 km)",
+    "Khon San (37,449) joins Phu Khiao (biggest partner, shared border 15 km)",
+    "Phak Hai (37,580) joins Sena (biggest partner, shared border 20 km)",
+    "Pluak Daeng (37,801) joins Ban Khai (biggest partner, shared border 41 km)",
+    "Khao Yoi (37,804) joins Mueang Phetchaburi (biggest partner, shared border 29 km)",
+    "Panare (37,962) joins Yaring (biggest partner, shared border 20 km)",
+    "Pathio (38,391) joins Mueang Chumphon (biggest partner, shared border 12 km)",
+    "Pong Nam Ron (38,393) joins Soi Dao (biggest partner that wraps nothing, shared border 44 km)",
+    "Nikhom Phatthana (38,511) joins Mueang Rayong (biggest partner, shared border 25 km)",
+    "Don Sak (38,766) joins Kanchanadit (biggest partner, shared border 46 km)",
+    "Nong Wua So (38,852) joins Mueang Udon Thani (biggest partner, shared border 51 km)",
+    "Khao Phanom (38,854) joins Nuea Khlong (biggest partner that wraps nothing, shared border 32 km)",
+    "Ban Hong (38,879) joins Pa Sang (biggest partner, shared border 42 km)",
+    "Ko Samui (38,920) joins Mueang Surat Thani (island, 9 km)",
+    "Kae Dam (38,950) joins Mueang Maha Sarakham (biggest partner, shared border 32 km)",
+    "Chat Trakan (39,122) joins Nakhon Thai (biggest partner, shared border 69 km)",
+    "Thep Sathit (39,159) joins Bamnet Narong (biggest partner, shared border 55 km)",
+    "Bacho (39,190) joins Mueang Narathiwat (biggest partner, shared border 22 km)",
+    "Kut Chap (39,244) joins Mueang Udon Thani (biggest partner, shared border 53 km)",
+    "Kui Buri (39,365) joins Pran Buri (biggest partner, shared border 73 km)",
+    "Mae On (39,484) joins San Kamphaeng (biggest partner, shared border 30 km)",
+    "Don Chedi (39,563) joins Mueang Suphan Buri (biggest partner, shared border 23 km)",
+    "Ko Chan (39,805) joins Phanat Nikhom (biggest partner, shared border 26 km)",
+    "Sirindhorn (40,056) joins Phibun Mangsahan (biggest partner, shared border 65 km)",
+    "Pak Phayun (40,103) joins Khao Chaison (biggest partner, shared border 65 km)",
+    "Chaloem Phra Kiat (40,266) joins Mueang Saraburi (biggest partner, shared border 40 km)",
+    "Tap Khlo (40,282) joins Taphan Hin (biggest partner, shared border 41 km)",
+    "Plaeng Yao (40,415) joins Phanom Sarakham (biggest partner, shared border 23 km)",
+    "Tha Takiap (40,420) joins Sanam Chai Khet (biggest partner, shared border 68 km)",
+    "Mae Ramat (40,664) joins Mae Sot (biggest partner, shared border 59 km)",
+    "Tha Wang Pha (40,785) joins Pua (biggest partner, shared border 59 km)",
+    "Nong Ki (40,819) joins Lam Plai Mat (biggest partner, shared border 27 km)",
+    "Mae Lao (41,045) joins Mueang Chiang Rai (biggest partner, shared border 53 km)",
+    "Sankhaburi (41,108) joins Mueang Chai Nat (biggest partner, shared border 33 km)",
+    "Wat Bot (41,142) joins Mueang Phitsanulok (biggest partner, shared border 24 km)",
+    "Huai Rat (41,228) joins Mueang Buri Ram (biggest partner, shared border 41 km)",
+    "Khok Si Suphan (41,334) joins Mueang Sakon Nakhon (biggest partner, shared border 42 km)",
+    "Lan Sak (41,359) joins Thap Than (biggest partner, shared border 35 km)",
+    "Kut Chum (41,415) joins Mueang Yasothon (biggest partner, shared border 84 km)",
+    "Uthai (41,508) joins Phra Nakhon Si Ayutthaya (biggest partner, shared border 16 km)",
+    "Ban Muang (41,602) joins Wanon Niwat (biggest partner, shared border 38 km)",
+    "Akat Amnuai (41,618) joins Wanon Niwat (biggest partner, shared border 58 km)",
+    "Ban Dan Lan Hoi (41,865) joins Mueang Sukhothai (biggest partner, shared border 23 km)",
+    "Laplae (41,928) joins Mueang Uttaradit (biggest partner, shared border 57 km)",
+    "Khao Wong (42,005) joins Kuchinarai (biggest partner, shared border 37 km)",
+    "Na Duang (42,102) joins Mueang Loei (biggest partner, shared border 41 km)",
+    "Bo Rai (42,242) joins Khao Saming (biggest partner, shared border 41 km)",
+    "Mayo (42,392) joins Yarang (biggest partner, shared border 26 km)",
+    "Si Somdet (42,403) joins Mueang Roi Et (biggest partner, shared border 37 km)",
+    "At Samat (42,540) joins Chaturaphak Phiman (biggest partner that wraps nothing, shared border 29 km)",
+    "Bang Khan (42,639) joins Thung Song (biggest partner, shared border 41 km)",
+    "Tha Ruea (42,809) joins Nakhon Luang (biggest partner, shared border 29 km)",
+    "Ban Kruat (42,882) joins Prakhon Chai (biggest partner, shared border 35 km)",
+    "Nong Ya Sai (42,938) joins Mueang Suphan Buri (biggest partner, shared border 24 km)",
+    "Phu Phiang (42,945) joins Mueang Nan (biggest partner, shared border 54 km)",
+    "Phon Na Kaeo (43,020) joins Mueang Sakon Nakhon (biggest partner, shared border 51 km)",
+    "Wihan Daeng (43,481) joins Nong Khae (biggest partner, shared border 27 km)",
+    "Bang Klam (43,582) joins Hat Yai (biggest partner, shared border 54 km)",
+    "Mae Chai (43,868) joins Mueang Phayao (biggest partner, shared border 39 km)",
+    "Khuan Niang (44,073) joins Hat Yai (biggest partner, shared border 35 km)",
+    "Chonnabot (44,216) joins Ban Phai (biggest partner, shared border 37 km)",
+    "Phayuha Khiri (44,267) joins Mueang Nakhon Sawan (biggest partner, shared border 55 km)",
+    "Hankha (44,375) joins Mueang Chai Nat (biggest partner, shared border 68 km)",
+    "Don Tan (44,452) joins Mueang Mukdahan (biggest partner, shared border 38 km)",
+    "Phu Phan (44,466) joins Mueang Sakon Nakhon (biggest partner, shared border 48 km)",
+    "Wang Chin (44,777) joins Long (biggest partner, shared border 51 km)",
+    "Nong Bun Mak (45,140) joins Chok Chai (biggest partner, shared border 35 km)",
+    "Phanom Phrai (45,217) joins Suwannaphum (biggest partner, shared border 37 km)",
+    "Chiang Saen (45,302) joins Mae Chan (biggest partner, shared border 64 km)",
+    "Tha Wung (45,341) joins Mueang Lop Buri (biggest partner, shared border 42 km)",
+    "Lan Krabue (45,437) joins Sai Ngam (biggest partner that wraps nothing, shared border 38 km)",
+    "Khao Chamao (45,654) joins Klaeng (biggest partner, shared border 51 km)",
+    "Thap Sakae (46,134) joins Bang Saphan (biggest partner, shared border 25 km)",
+    "Thai Mueang (46,557) joins Takua Thung (biggest partner, shared border 29 km)",
+    "Su-Ngai Padi (46,558) joins Su-Ngai Kolok (biggest partner, shared border 23 km)",
+    "Kantharawichai (46,570) joins Mueang Maha Sarakham (biggest partner, shared border 50 km)",
+    "Na Chaluai (46,873) joins Nam Yuen (biggest partner, shared border 53 km)",
+    "Lao Khwan (47,083) joins Bo Phloi (biggest partner, shared border 39 km)",
+    "Thoen (47,168) joins Ko Kha (biggest partner, shared border 35 km)",
+    "Nong Bua (47,184) joins Tha Tako (biggest partner, shared border 32 km)",
+    "Thung Saliam (47,255) joins Sawankhalok (biggest partner, shared border 20 km)",
+    "Betong (47,292) joins Bannang Sata (biggest partner, shared border 68 km)",
+    "Kut Bak (47,326) joins Mueang Sakon Nakhon (biggest partner, shared border 57 km)",
+    "Kham Khuean Kaeo (47,390) joins Mueang Yasothon (biggest partner, shared border 41 km)",
+    "Bo Thong (47,483) joins Phanat Nikhom (biggest partner, shared border 39 km)",
+    "Sam Chuk (47,537) joins Doem Bang Nang Buat (biggest partner that wraps nothing, shared border 32 km)",
+    "Khlung (48,004) joins Mueang Chanthaburi (biggest partner, shared border 84 km)",
+    "Phaisali (48,061) joins Tha Tako (biggest partner, shared border 75 km)",
+    "Nong Chang (48,120) joins Thap Than (biggest partner, shared border 85 km)",
+    "Nam Som (48,365) joins Ban Phue (biggest partner, shared border 46 km)",
+    "Ban Tak (48,387) joins Mueang Tak (biggest partner, shared border 80 km)",
+    "Thung Yai (48,572) joins Thung Song (biggest partner, shared border 61 km)",
+    "Dan Chang (49,053) joins Mueang Suphan Buri (biggest partner, shared border 22 km)",
+    "Lom Kao (49,238) joins Lom Sak (biggest partner, shared border 61 km)",
+    "Rong Kwang (49,467) joins Mueang Phrae (biggest partner, shared border 42 km)",
+    "Na Kae (49,676) joins That Phanom (biggest partner, shared border 44 km)",
+    "Sahatsakhan (49,800) joins Mueang Kalasin (biggest partner, shared border 26 km)",
+    "Doi Lo (50,447) joins San Pa Tong (biggest partner, shared border 43 km)",
+    "Ban Sang (50,789) joins Mueang Prachin Buri (biggest partner, shared border 19 km)",
+    "Nong Muang (51,034) joins Khok Samrong (biggest partner, shared border 69 km)",
+    "Phanna Nikhom (51,074) joins Mueang Sakon Nakhon (biggest partner, shared border 81 km)",
+    "Mae Fa Luang (51,078) joins Mae Sai (biggest partner that wraps nothing, shared border 12 km)",
+    "Kanthararom (51,284) joins Mueang Si Sa Ket (biggest partner, shared border 42 km)",
+    "Chum Saeng (51,454) joins Mueang Nakhon Sawan (biggest partner, shared border 49 km)",
+    "Khiri Mat (51,506) joins Mueang Sukhothai (biggest partner, shared border 61 km)",
+    "Khun Han (51,518) joins Kantharalak (biggest partner, shared border 65 km)",
+    "Tha Chana (51,602) joins Chaiya (biggest partner, shared border 64 km)",
+    "Mae Tha (51,685) joins Mueang Lampang (biggest partner, shared border 53 km)",
+    "Si Chiang Mai (51,720) joins Tha Bo (biggest partner, shared border 30 km)",
+    "Ongkharak (51,845) joins Ban Na (biggest partner that wraps nothing, shared border 26 km)",
+    "Chai Prakan (52,079) joins Fang (biggest partner, shared border 50 km)",
+    "Phan Thong (52,098) joins Mueang Chon Buri (biggest partner, shared border 18 km)",
+    "Phop Phra (52,477) joins Mae Sot (biggest partner, shared border 44 km)",
+    "Kamalasai (52,719) joins Mueang Kalasin (biggest partner, shared border 64 km)",
+    "Rueso (52,798) joins Mueang Narathiwat (biggest partner, shared border 26 km)",
+    "Kusuman (52,863) joins Mueang Sakon Nakhon (biggest partner, shared border 53 km)",
+    "Yaha (53,328) joins Mueang Yala (biggest partner, shared border 47 km)",
+    "Chiang Yuen (53,346) joins Mueang Maha Sarakham (biggest partner, shared border 9 km)",
+    "Hua Sai (53,526) joins Chian Yai (biggest partner, shared border 29 km)",
+    "Bang Khla (53,768) joins Mueang Chachoengsao (biggest partner, shared border 49 km)",
+    "Soeng Sang (53,794) joins Khon Buri (biggest partner, shared border 60 km)",
+    "Pak Tho (53,866) joins Mueang Ratchaburi (biggest partner, shared border 52 km)",
+    "Maha Chana Chai (54,027) joins Mueang Yasothon (biggest partner, shared border 33 km)",
+    "Mueang Uthai Thani (54,076) joins Thap Than (biggest partner, shared border 39 km)",
+    "Wang Chan (54,156) joins Klaeng (biggest partner, shared border 53 km)",
+    "Tak Bai (54,169) joins Su-Ngai Kolok (biggest partner, shared border 36 km)",
+    "Chatturat (54,206) joins Bamnet Narong (biggest partner that wraps nothing, shared border 85 km)",
+    "Chakkarat (54,354) joins Mueang Nakhon Ratchasima (biggest partner, shared border 44 km)",
+    "Lahan Sai (54,372) joins Nang Rong (biggest partner, shared border 59 km)",
+    "Ban Pho (54,407) joins Mueang Chachoengsao (biggest partner, shared border 47 km)",
+    "Suwannakhuha (54,601) joins Na Klang (biggest partner, shared border 43 km)",
+    "Waeng (54,629) joins Su-Ngai Kolok (biggest partner, shared border 41 km)",
+    "Ban Khwao (54,721) joins Mueang Chaiyaphum (biggest partner, shared border 57 km)",
+    "Changhan (54,732) joins Mueang Roi Et (biggest partner, shared border 48 km)",
+    "Bang Mun Nak (54,757) joins Taphan Hin (biggest partner, shared border 49 km)",
+    "Khok Pho (54,801) joins Nong Chik (biggest partner, shared border 23 km)",
+    "Phon Charoen (54,916) joins Seka (biggest partner, shared border 47 km)",
+    "Song (54,941) joins Mueang Phrae (biggest partner, shared border 73 km)",
+    "Mae Tha (55,083) joins Mueang Lamphun (biggest partner, shared border 42 km)",
+    "Khao Chakan (55,272) joins Wang Nam Yen (biggest partner, shared border 44 km)",
+    "Yan Ta Khao (55,512) joins Kantang (biggest partner that wraps nothing, shared border 16 km)",
+    "Muak Lek (55,604) joins Kaeng Khoi (biggest partner, shared border 92 km)",
+    "Mueang Ang Thong (55,952) joins Wiset Chai Chan (biggest partner, shared border 18 km)",
+    "Khlong Hat (56,080) joins Wang Nam Yen (biggest partner, shared border 54 km)",
+    "Don Tum (56,624) joins Mueang Nakhon Pathom (biggest partner, shared border 11 km)",
+    "Huai Mek (56,788) joins Yang Talat (biggest partner, shared border 38 km)",
+    "Ban Chang (57,232) joins Mueang Rayong (biggest partner, shared border 26 km)",
+    "Kong Krailat (57,501) joins Mueang Sukhothai (biggest partner, shared border 47 km)",
+    "Mueang Bueng Kan (57,766) joins So Phisai (biggest partner, shared border 74 km)",
+    "Rasi Salai (57,793) joins Uthumphon Phisai (biggest partner, shared border 41 km)",
+    "Na Yai Am (57,794) joins Tha Mai (biggest partner, shared border 69 km)",
+    "Ban Lat (57,839) joins Mueang Phetchaburi (biggest partner, shared border 49 km)",
+    "Ta Phraya (58,103) joins Aranyaprathet (biggest partner, shared border 32 km)",
+    "Wiang Pa Pao (58,156) joins Phan (biggest partner, shared border 9 km)",
+    "Bang Ban (58,363) joins Phra Nakhon Si Ayutthaya (biggest partner, shared border 14 km)",
+    "Mae Chaem (58,542) joins San Pa Tong (biggest partner, shared border 31 km)",
+    "Krasang (58,859) joins Mueang Buri Ram (biggest partner, shared border 59 km)",
+    "Bang Krathum (58,996) joins Mueang Phitsanulok (biggest partner, shared border 22 km)",
+    "Sathing Phra (59,197) joins Singhanakhon (biggest partner, shared border 10 km)",
+    "Kaeng Khro (59,323) joins Mueang Chaiyaphum (biggest partner, shared border 71 km)",
+    "Bueng Sam Phan (59,991) joins Wichian Buri (biggest partner, shared border 70 km)",
+    "Phatthana Nikhom (60,298) joins Mueang Lop Buri (biggest partner, shared border 27 km)",
+    "Sawi (61,084) joins Mueang Chumphon (biggest partner, shared border 38 km)",
+    "Nikhom Kham Soi (61,153) joins Khamcha-I (biggest partner that wraps nothing, shared border 16 km)",
+    "Palian (61,236) joins Kantang (biggest partner, shared border 63 km)",
+    "Phrao (61,812) joins Mae Taeng (biggest partner, shared border 34 km)",
+    "Kaset Sombun (62,211) joins Phu Khiao (biggest partner, shared border 94 km)",
+    "Fao Rai (62,232) joins Phon Phisai (biggest partner, shared border 81 km)",
+    "Tha Sae (62,466) joins Mueang Chumphon (biggest partner, shared border 94 km)",
+    "Si Prachan (62,690) joins Mueang Suphan Buri (biggest partner, shared border 38 km)",
+    "Nong Kung Si (62,763) joins Yang Talat (biggest partner, shared border 45 km)",
+    "Cha-Am (63,092) joins Tha Yang (biggest partner, shared border 63 km)",
+    "Phutthaisong (63,184) joins Khu Mueang (biggest partner, shared border 22 km)",
+    "Sung Noen (63,623) joins Mueang Nakhon Ratchasima (biggest partner, shared border 46 km)",
+    "Chiang Kham (63,634) joins Dok Khamtai (biggest partner, shared border 38 km)",
+    "Pha Khao (63,763) joins Wang Saphung (biggest partner, shared border 79 km)",
+    "Satuek (63,775) joins Mueang Buri Ram (biggest partner, shared border 48 km)",
+    "Chon Daen (64,066) joins Mueang Phetchabun (biggest partner, shared border 58 km)",
+    "Non Thai (64,364) joins Mueang Nakhon Ratchasima (biggest partner, shared border 37 km)",
+    "Cha-Uat (64,456) joins Chulabhorn (biggest partner, shared border 27 km)",
+    "Mueang Phangnga (64,483) joins Takua Thung (biggest partner, shared border 56 km)",
+    "Kapoe (64,864) joins Mueang Ranong (biggest partner, shared border 24 km)",
+    "Hua Hin (65,266) joins Pran Buri (biggest partner, shared border 99 km)",
+    "Kranuan (65,456) joins Mueang Khon Kaen (biggest partner, shared border 19 km)",
+    "Na Mon (65,711) joins Somdet (biggest partner that wraps nothing, shared border 48 km)",
+    "Ban Mo (65,732) joins Mueang Saraburi (biggest partner, shared border 7 km)",
+    "Hang Chat (65,878) joins Mueang Lampang (biggest partner, shared border 43 km)",
+    "Huai Thalaeng (65,912) joins Mueang Nakhon Ratchasima (biggest partner, shared border 22 km)",
+    "Si Chomphu (66,133) joins Chum Phae (biggest partner, shared border 45 km)",
+    "Mae Suai (66,186) joins Mueang Chiang Rai (biggest partner, shared border 56 km)",
+    "Noen Maprang (67,163) joins Wang Thong (biggest partner, shared border 72 km)",
+    "Pho Thale (67,581) joins Taphan Hin (biggest partner, shared border 51 km)",
+    "Chiang Klang (67,743) joins Pua (biggest partner, shared border 66 km)",
+    "Na Thawi (68,023) joins Chana (biggest partner that wraps nothing, shared border 31 km)",
+    "Raman (68,146) joins Mueang Yala (biggest partner, shared border 28 km)",
+    "Si Samrong (68,231) joins Mueang Sukhothai (biggest partner, shared border 81 km)",
+    "Ron Phibun (68,533) joins Mueang Nakhon Si Thammarat (biggest partner, shared border 15 km)",
+    "Tha Song Yang (68,802) joins Mae Sot (biggest partner, shared border 37 km)",
+    "Amphawa (69,098) joins Ban Phaeo (biggest partner, shared border 1 km, another region)",
+    "Samrong (70,099) joins Warin Chamrap (biggest partner, shared border 43 km)",
+    "Li (70,161) joins Mueang Lamphun (biggest partner, shared border 10 km)",
+    "Wiang Sa (70,187) joins Ban Na San (biggest partner, shared border 45 km)",
+    "Ban Fang (70,367) joins Mueang Khon Kaen (biggest partner, shared border 59 km)",
+    "Ban Dung (70,612) joins Mueang Udon Thani (biggest partner, shared border 9 km)",
+    "Saba Yoi (70,646) joins Thepha (biggest partner that wraps nothing, shared border 41 km)",
+    "Thoeng (70,831) joins Phan (biggest partner, shared border 35 km)",
+    "Muang Sam Sip (70,875) joins Mueang Ubon Ratchathani (biggest partner, shared border 57 km)",
+    "Phran Kratai (71,052) joins Mueang Kamphaeng Phet (biggest partner, shared border 72 km)",
+    "Kham Muang (71,382) joins Mueang Kalasin (biggest partner, shared border 36 km)",
+    "Mueang Prachuap Khiri Khan (71,632) joins Pran Buri (biggest partner, shared border 42 km)",
+    "Chom Thong (71,710) joins San Pa Tong (biggest partner, shared border 98 km)",
+    "Na Di (72,096) joins Kabin Buri (biggest partner, shared border 76 km)",
+    "Khlong Lan (72,546) joins Mueang Kamphaeng Phet (biggest partner, shared border 104 km)",
+    "Chom Bueng (73,232) joins Mueang Ratchaburi (biggest partner, shared border 54 km)",
+    "Selaphum (73,960) joins Thawat Buri (biggest partner, shared border 51 km)",
+    "Si Thep (74,819) joins Wichian Buri (biggest partner, shared border 84 km)",
+    "Buntharik (74,889) joins Det Udom (biggest partner, shared border 36 km)",
+    "Nong Bua Daeng (75,551) joins Mueang Chaiyaphum (biggest partner, shared border 74 km)",
+    "Phayakkhaphum Phisai (76,063) joins Wapi Pathum (biggest partner, shared border 28 km)",
+    "Khlong Thom (76,808) joins Nuea Khlong (biggest partner, shared border 69 km)",
+    "Kosum Phisai (76,818) joins Mueang Maha Sarakham (biggest partner, shared border 67 km)",
+    "Khao Khitchakut (77,845) joins Tha Mai (biggest partner, shared border 78 km)",
+    "Loeng Nok Tha (78,202) joins Mueang Yasothon (biggest partner, shared border 56 km)",
+    "Nong Ruea (78,239) joins Mueang Khon Kaen (biggest partner, shared border 36 km)",
+    "Ao Luek (78,454) joins Mueang Krabi (biggest partner that wraps nothing, shared border 26 km)",
+    "Khiri Rat Nikhom (79,155) joins Phunphin (biggest partner, shared border 130 km)",
+    "Pho Thong (79,155) joins Wiset Chai Chan (biggest partner, shared border 49 km)",
+    "Sichon (79,233) joins Tha Sala (biggest partner, shared border 50 km)",
+    "Ban Mi (79,495) joins Mueang Lop Buri (biggest partner, shared border 28 km)",
+    "Ngao (80,104) joins Mueang Lampang (biggest partner, shared border 165 km)",
+    "Prachantakham (80,302) joins Mueang Prachin Buri (biggest partner, shared border 44 km)",
+    "Hot (80,599) joins San Pa Tong (biggest partner, shared border 92 km)",
+    "Phen (80,673) joins Mueang Udon Thani (biggest partner, shared border 114 km)",
+    "Takua Pa (81,478) joins Takua Thung (biggest partner, shared border 52 km)",
+    "Wiang Sa (81,564) joins Mueang Nan (biggest partner, shared border 85 km)",
+    "Mae Ai (82,740) joins Fang (biggest partner, shared border 59 km)",
+    "Si Mueang Mai (83,168) joins Mueang Ubon Ratchathani (biggest partner, shared border 20 km)",
+    "Nong Song Hong (83,313) joins Phon (biggest partner, shared border 26 km)",
+    "Wiang Chai (84,210) joins Mueang Chiang Rai (biggest partner, shared border 74 km)",
+    "Chiang Khong (84,441) joins Phaya Mengrai (biggest partner that wraps nothing, shared border 46 km)",
+    "Phichai (85,537) joins Mueang Uttaradit (biggest partner, shared border 66 km)",
+    "Si Bun Rueang (85,621) joins Mueang Nong Bua Lam Phu (biggest partner, shared border 41 km)",
+    "Mancha Khiri (85,657) joins Mueang Khon Kaen (biggest partner, shared border 62 km)",
+    "Soi Dao (86,058) joins Tha Mai (biggest partner, shared border 77 km)",
+    "Damnoen Saduak (86,569) joins Mueang Ratchaburi (biggest partner, shared border 18 km)",
+    "Kaset Wisai (86,580) joins Chaturaphak Phiman (biggest partner, shared border 39 km)",
+    "Sai Buri (87,174) joins Yarang (biggest partner, shared border 35 km)",
+    "Pak Phanang (87,263) joins Mueang Nakhon Si Thammarat (biggest partner, shared border 27 km)",
+    "Doi Saket (87,499) joins Mueang Chiang Mai (biggest partner, shared border 1 km)",
+    "Phanom Thuan (87,677) joins Mueang Kanchanaburi (biggest partner, shared border 6 km)",
+    "Phrasaeng (87,781) joins Ban Na San (biggest partner, shared border 88 km)",
+    "Non Sang (88,423) joins Mueang Nong Bua Lam Phu (biggest partner, shared border 52 km)",
+    "Banphot Phisai (89,252) joins Mueang Nakhon Sawan (biggest partner, shared border 43 km)",
+    "Bang Pahan (90,063) joins Phra Nakhon Si Ayutthaya (biggest partner, shared border 19 km)",
+    "Nong Phai (90,726) joins Mueang Phetchabun (biggest partner, shared border 132 km)",
+    "Si Satchanalai (90,901) joins Sawankhalok (biggest partner, shared border 94 km)",
+    "Khao Saming (91,435) joins Mueang Trat (biggest partner, shared border 96 km)",
+    "Tha Tum (91,489) joins Rattanaburi (biggest partner, shared border 53 km)",
+    "Chum Phuang (94,134) joins Phimai (biggest partner that wraps nothing, shared border 60 km)",
+    "La-Ngu (94,694) joins Mueang Satun (biggest partner, shared border 69 km)",
+    "Si Songkhram (95,054) joins Mueang Nakhon Phanom (biggest partner, shared border 112 km)",
+    "Khueang Nai (95,548) joins Mueang Ubon Ratchathani (biggest partner, shared border 69 km)",
+    "Chai Badan (98,996) joins Khok Samrong (biggest partner that wraps nothing, shared border 47 km)",
+    "Watthana Nakhon (99,664) joins Aranyaprathet (biggest partner, shared border 105 km)",
+    "Sikhio (100,178) joins Mueang Nakhon Ratchasima (nearest centre, partner 1.00)",
+    "Huai Yot (100,397) joins Mueang Trang (nearest centre, partner 1.00)",
+    "Yaring (101,523) joins Yarang (nearest centre, partner 1.00)",
+    "Long (102,159) joins Sung Men (nearest centre, partner 0.53)",
+    "Mueang Pattani (102,762) joins Nong Chik (nearest centre, partner 0.64)",
+    "Ban Bueng (103,210) joins Mueang Chon Buri (nearest centre, partner 0.53)",
+    "Tha Muang (103,261) joins Mueang Kanchanaburi (nearest centre, partner 0.53)",
+    "Phrom Phiram (103,379) joins Mueang Phitsanulok (nearest centre, partner 1.00)",
+    "U Thong (103,526) joins Mueang Suphan Buri (nearest centre, partner 1.00)",
+    "Khong (103,819) joins Bua Yai (nearest centre, partner 0.72)",
+    "Sai Ngam (104,101) joins Mueang Kamphaeng Phet (nearest centre, partner 1.00)",
+    "Bang Len (104,146) joins Kamphaeng Saen (nearest centre, compact 0.77)",
+    "Chaiya (105,229) joins Phunphin (nearest centre, partner 1.00)",
+    "Bannang Sata (105,797) joins Mueang Yala (nearest centre, partner 1.00)",
+    "Rattaphum (106,434) joins Hat Yai (nearest centre, partner 1.00)",
+    "Song Phi Nong (106,662) joins Bang Pla Ma (nearest centre, compact 0.78)",
+    "Non Sung (106,847) joins Mueang Nakhon Ratchasima (nearest centre, partner 1.00)",
+    "Kuchinarai (107,418) joins Somdet (nearest centre, partner 1.00)",
+    "Sikhoraphum (107,498) joins Mueang Surin (nearest centre, partner 1.00)",
+    "Trakan Phuet Phon (107,650) joins Mueang Ubon Ratchathani (nearest centre, partner 1.00)",
+    "Chawang (109,621) joins Thung Song (nearest centre, partner 1.00)",
+    "Ban Phue (109,723) joins Mueang Udon Thani (every join wraps; left to the ring cut)",
+    "Mueang Nakhon Nayok (110,152) joins Ban Na (nearest centre, compact 0.83)",
+    "Mueang Sa Kaeo (110,167) joins Aranyaprathet (nearest centre, partner 0.70)",
+    "Doem Bang Nang Buat (110,561) joins Mueang Suphan Buri (nearest centre, partner 1.00)",
+    "Hang Dong (111,035) joins Mueang Chiang Mai (nearest centre, partner 1.00)",
+    "Phu Wiang (111,105) joins Chum Phae (nearest centre, partner 0.65)",
+    "Nong Han (112,633) joins Mueang Udon Thani (every join wraps; left to the ring cut)",
+    "Kra Buri (113,000) joins Mueang Ranong (nearest centre, compact 0.55)",
+    "Chok Chai (113,040) joins Mueang Nakhon Ratchasima (nearest centre, partner 1.00)",
+    "Tha Bo (113,699) joins Mueang Nong Khai (nearest centre, partner 0.88)",
+    "Sangkha (114,359) joins Prasat (nearest centre, partner 0.76)",
+    "Sanam Chai Khet (114,791) joins Phanom Sarakham (nearest centre, compact 0.86)",
+    "Photharam (115,179) joins Ban Pong (nearest centre, compact 0.75)",
+    "Takhli (115,288) joins Tha Tako (nearest centre, compact 0.85)",
+    "Si Maha Phot (115,471) joins Mueang Prachin Buri (nearest centre, compact 0.69)",
+    "Ranot (116,074) joins Mueang Phatthalung (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Mueang Sing Buri (116,729) joins Mueang Lop Buri (nearest centre, partner 1.00, another region)",
+    "Prakhon Chai (117,087) joins Nang Rong (nearest centre, partner 0.77)",
+    "Phra Phutthabat (118,048) joins Mueang Saraburi (nearest centre, compact 0.78)",
+    "Chian Yai (119,048) joins Mueang Nakhon Si Thammarat (nearest centre, partner 1.00)",
+    "Nakhon Chai Si (119,550) joins Mueang Nakhon Pathom (nearest centre, compact 0.76)",
+    "Khlong Khlung (120,506) joins Khanu Woralaksaburi (nearest centre, partner 0.52)",
+    "Lat Yao (120,557) joins Mueang Nakhon Sawan (every join wraps; left to the ring cut)",
+    "That Phanom (123,644) joins Mueang Nakhon Phanom (nearest centre, partner 0.97)",
+    "Nakhon Luang (124,280) joins Phra Nakhon Si Ayutthaya (nearest centre, partner 0.63)",
+    "Tha Maka (126,284) joins Mueang Kanchanaburi (nearest centre, compact 0.69)",
+    "Saraphi (126,471) joins Mueang Chiang Mai (nearest centre, partner 1.00)",
+    "Borabue (127,546) joins Mueang Maha Sarakham (nearest centre, partner 1.00)",
+    "Lang Suan (128,055) joins Mueang Chumphon (nearest centre, partner 0.63)",
+    "Bo Phloi (128,487) joins Mueang Kanchanaburi (nearest centre, partner 0.52)",
+    "Sena (128,516) joins Bang Pla Ma (nearest centre, none of its region passing, compact 0.79, another region)",
+    "Bang Rakam (128,625) joins Mueang Phitsanulok (nearest centre, partner 1.00)",
+    "Mae Sai (129,152) joins Mae Chan (nearest centre, partner 1.00)",
+    "Chulabhorn (129,346) joins Mueang Nakhon Si Thammarat (nearest centre, partner 1.00)",
+    "Mae Rim (130,163) joins Mueang Chiang Mai (every join wraps; left to the ring cut)",
+    "Bang Saphan (131,208) joins Pran Buri (nearest centre, partner 0.77)",
+    "Phon Phisai (131,333) joins Mueang Nong Khai (nearest centre, partner 0.65)",
+    "Nam Yuen (131,472) joins Det Udom (nearest centre, partner 1.00)",
+    "Khon Buri (132,126) joins Mueang Nakhon Ratchasima (every join wraps; left to the ring cut)",
+    "Chiang Dao (132,452) joins Fang (nearest centre, partner 1.00)",
+    "Nakhon Thai (132,898) joins Wang Thong (nearest centre, partner 0.63)",
+    "So Phisai (133,725) joins Seka (nearest centre, partner 0.55)",
+    "Khamcha-I (137,084) joins Mueang Mukdahan (nearest centre, partner 1.00)",
+    "Chiang Khan (139,036) joins Mueang Loei (nearest centre, partner 1.00)",
+    "Dan Khun Thot (140,513) joins Mueang Nakhon Ratchasima (every join wraps; left to the ring cut)",
+    "Pak Thong Chai (141,086) joins Mueang Nakhon Ratchasima (nearest centre, partner 1.00)",
+    "Suwannaphum (141,992) joins Chaturaphak Phiman (nearest centre, partner 0.70)",
+    "Phon Thong (142,363) joins Thawat Buri (nearest centre, partner 0.80)",
+    "San Sai (144,235) joins Mueang Chiang Mai (nearest centre, partner 1.00)",
+    "Tha Yang (144,756) joins Mueang Phetchaburi (nearest centre, partner 0.82)",
+    "Bamnet Narong (145,523) joins Mueang Chaiyaphum (nearest centre, partner 0.74)",
+    "Kanchanadit (145,604) joins Mueang Surat Thani (nearest centre, partner 1.00)",
+    "Ra-Ngae (148,163) joins Mueang Narathiwat (nearest centre, partner 1.00)",
+    "Prathai (149,708) joins Phimai (nearest centre, partner 0.80)",
+    "Khuan Khanun (149,846) joins Mueang Phatthalung (nearest centre, partner 1.00)",
+    "Pak Chong (150,166) joins Mueang Nakhon Ratchasima (smallest neighbour, none within the cap, partner 0.89)",
+    "Thepha (150,783) joins Chana (nearest centre, partner 0.86)",
+    "Sadao (153,250) joins Hat Yai (every join wraps; left to the ring cut)",
+    "Uthumphon Phisai (155,063) joins Mueang Si Sa Ket (nearest centre, partner 1.00)",
+    "Ban Phai (155,067) joins Phon (nearest centre, partner 0.56)",
+    "Pa Sang (155,652) joins Mueang Lamphun (nearest centre, partner 0.71)",
+    "Mueang Krabi (157,461) joins Nuea Khlong (nearest centre, partner 1.00)",
+    "Phibun Mangsahan (157,852) joins Warin Chamrap (nearest centre, partner 0.51)",
+    "Singhanakhon (159,321) joins Mueang Songkhla (nearest centre, partner 1.00)",
+    "Pua (159,404) joins Mueang Nan (nearest centre, partner 1.00)",
+    "Khu Mueang (159,706) joins Mueang Buri Ram (nearest centre, partner 1.00)",
+    "San Kamphaeng (160,177) joins Mueang Chiang Mai (nearest centre, partner 1.00)",
+    "Nam Phong (163,068) joins Mueang Khon Kaen (nearest centre, partner 1.00)",
+    "Khukhan (165,240) joins Kantharalak (nearest centre, partner 0.88)",
+    "Khemarat (166,325) joins Mueang Ubon Ratchathani (nearest centre, partner 1.00)",
+    "Na Klang (167,986) joins Mueang Nong Bua Lam Phu (nearest centre, partner 1.00)",
+    "Wapi Pathum (169,976) joins Mueang Maha Sarakham (nearest centre, partner 1.00)",
+    "Phaya Mengrai (172,718) joins Phan (nearest centre that wraps nothing, partner 0.54)",
+    "Mae Taeng (174,487) joins Mueang Chiang Mai (nearest centre, partner 1.00)",
+    "Khao Chaison (174,534) joins Mueang Phatthalung (nearest centre, partner 1.00)",
+    "Nong Khae (176,814) joins Mueang Saraburi (nearest centre, compact 0.75)",
+    "Tha Sala (177,523) joins Mueang Nakhon Si Thammarat (nearest centre, partner 1.00)",
+    "Ban Khai (179,998) joins Mueang Rayong (nearest centre, partner 1.00)",
+    "Ko Kha (180,472) joins Mueang Lampang (nearest centre, partner 1.00)",
+    "Kathu (180,880) joins Mueang Phuket (nearest centre, partner 1.00)",
+    "Kumphawapi (181,640) joins Mueang Udon Thani (every join wraps; left to the ring cut)",
+    "Wanon Niwat (182,213) joins Sawang Daen Din (nearest centre, partner 1.00)",
+    "Dok Khamtai (183,597) joins Mueang Phayao (nearest centre, partner 1.00)",
+    "Kantang (184,124) joins Mueang Trang (nearest centre, partner 1.00)",
+    "Rattanaburi (187,479) joins Mueang Surin (nearest centre, partner 0.91)",
+    "Nong Suea (189,123) joins Ban Na (nearest centre, compact 0.78, another region)",
+    "Lom Sak (192,214) joins Mueang Phetchabun (nearest centre, partner 1.00)",
+    "Wiset Chai Chan (197,576) joins Mueang Lop Buri (nearest centre, partner 1.00, another region)",
+    "Thap Than (198,791) joins Mueang Nakhon Sawan (every join wraps; left to the ring cut, another region)",
+    "Mueang Tak (202,398) joins Mae Sot (nearest centre, partner 0.54)",
+    "Phu Khiao (203,446) joins Mueang Chaiyaphum (nearest centre, compact 0.88)",
+    "Wang Saphung (203,984) joins Mueang Loei (nearest centre, partner 0.81)",
+    "Mueang Chai Nat (207,554) joins Tha Tako (nearest centre, partner 0.60, another region)",
+    "Kaeng Khoi (210,851) joins Mueang Saraburi (nearest centre, partner 1.00)",
+    "Wang Nam Yen (212,184) joins Aranyaprathet (nearest centre, partner 1.00)",
+    "Su-Ngai Kolok (213,986) joins Mueang Narathiwat (nearest centre, partner 1.00)",
+    "Sung Men (217,802) joins Mueang Phrae (nearest centre, partner 1.00)",
+    "Mueang Phichit (219,144) joins Taphan Hin (nearest centre, partner 0.53)",
+    "Nong Chik (221,717) joins Yarang (nearest centre, partner 1.00)",
+    "Lam Plai Mat (223,374) joins Mueang Buri Ram (nearest centre, partner 1.00)",
+    "Phanat Nikhom (223,507) joins Mueang Chon Buri (nearest centre, compact 0.76)",
+    "Si Racha (224,362) joins Bang Lamung (nearest centre, partner 0.68)",
+    "Mueang Trat (235,997) joins Mueang Chanthaburi (nearest centre, partner 1.00, another region)",
+    "Wichian Buri (236,470) joins Mueang Phetchabun (nearest centre, partner 0.87)",
+    "Bua Yai (239,264) joins Phimai (nearest centre, partner 0.66)",
+    "Somdet (239,825) joins Mueang Kalasin (nearest centre, partner 1.00)",
+    "Sattahip (243,608) joins Bang Lamung (every join wraps; left to the ring cut)",
+    "Takua Thung (246,466) joins Thalang (nearest centre, partner 1.00, another region)",
+    "Kamphaeng Saen (251,534) joins Mueang Nakhon Pathom (nearest centre, compact 0.88)",
+    "Khok Samrong (251,747) joins Mueang Lop Buri (nearest centre, partner 1.00)",
+    "Sawankhalok (252,504) joins Mueang Sukhothai (nearest centre, partner 0.66)",
+    "Ban Pong (252,807) joins Mueang Ratchaburi (nearest centre, compact 0.72)",
+    "Phanom Sarakham (256,730) joins Mueang Chachoengsao (nearest centre, compact 0.78)",
+    "Mueang Satun (268,700) joins Hat Yai (nearest centre, partner 1.00, another region)",
+    "Prasat (270,587) joins Mueang Surin (nearest centre, partner 1.00)",
+    "Yang Talat (272,363) joins Mueang Kalasin (nearest centre, partner 1.00)",
+    "Kabin Buri (276,986) joins Mueang Prachin Buri (nearest centre, partner 0.84)",
+    "Seka (278,031) joins Sawang Daen Din (nearest centre, partner 1.00, another region)",
+    "Khanu Woralaksaburi (280,351) joins Mueang Kamphaeng Phet (nearest centre, partner 1.00)",
+    "Nang Rong (287,555) joins Mueang Buri Ram (nearest centre, partner 1.00)",
+    "Mueang Amnat Charoen (293,672) joins Mueang Yasothon (nearest centre, partner 0.73, another region)",
+    "Ban Na San (294,666) joins Mueang Surat Thani (nearest centre, partner 0.92)",
+    "Mae Chan (299,897) joins Mueang Chiang Rai (nearest centre, partner 1.00)",
+    "Phunphin (302,094) joins Mueang Surat Thani (nearest centre, partner 1.00)",
+    "Chum Phae (303,040) joins Mueang Khon Kaen (nearest centre, partner 1.00)",
+    "Mueang Roi Et (309,830) joins Thawat Buri (nearest centre, partner 1.00)",
+    "Nuea Khlong (320,864) joins Thung Song (nearest centre, partner 0.84, another region)",
+    "Wang Thong (337,520) joins Mueang Phitsanulok (nearest centre, partner 1.00)",
+    "Tha Mai (346,739) joins Mueang Chanthaburi (nearest centre, partner 1.00)",
+    "Mueang Si Sa Ket (349,025) joins Kantharalak (nearest centre, partner 0.65)",
+    "Mueang Nan (354,417) joins Mueang Phrae (nearest centre, partner 1.00, another region)",
+    "Mueang Nong Khai (367,940) joins Mueang Udon Thani (nearest centre, partner 1.00, another region)",
+    "Chana (370,359) joins Mueang Yala (nearest centre, none of its region passing, compact 0.66, another region)",
+    "Phon (376,494) joins Mueang Khon Kaen (smallest neighbour, none within the cap, partner 1.00)",
+    "Det Udom (376,833) joins Warin Chamrap (nearest centre, partner 1.00)",
+    "Fang (380,944) joins Mueang Chiang Mai (smallest neighbour, none within the cap, partner 0.56)",
+    "Chaturaphak Phiman (381,953) joins Thawat Buri (nearest centre, partner 1.00)",
+    "Bang Pla Ma (393,099) joins Mueang Suphan Buri (nearest centre, compact 0.64)",
+    "Mueang Ranong (394,230) joins Mueang Chumphon (nearest centre, partner 1.00, another region)",
+    "Mueang Phayao (398,653) joins Phan (nearest centre, partner 1.00, another region)",
+    "Klaeng (408,536) joins Mueang Rayong (nearest centre, partner 0.93)",
+    "Pran Buri (409,502) stays as it is: no zone beside it",
+    "Ban Na (410,144) stays as it is: no zone beside it",
+    "Mueang Phetchaburi (412,995) stays as it is: no zone beside it",
+    "San Pa Tong (417,201) stays as it is: no neighbour within the cap",
+    "Mueang Mukdahan (434,187) stays as it is: no zone beside it",
+    "Taphan Hin (440,374) stays as it is: no zone beside it",
+    "Ban Phaeo (441,164) stays as it is: no zone beside it",
+    "Mueang Uttaradit (444,630) stays as it is: no zone beside it",
+    "Mueang Songkhla (457,537) stays as it is: no neighbour within the cap",
+    "Tha Tako (465,962) joins Mueang Nakhon Sawan (nearest centre, partner 0.77)"
+   ],
+   "remnants": {
+    "ban": [
+     "78962969B26505935473539",
+     "78962969B9054765011768",
+     "78962969B38783163957938",
+     "78962969B53970702814040",
+     "78962969B57123874810326"
     ]
    }
   }

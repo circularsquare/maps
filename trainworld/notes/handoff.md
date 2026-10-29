@@ -106,15 +106,16 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 ## or drop the small fixes ("up to you"). Core cap 15. Deploy only on her word.
 - T-1759 committed e894d357 (bunting gone); 8800 rebuilt there, smoke 20/20 both shades.
 - T-1735 agent t1735 (Opus), tree .tw-trees/t1735 from e894d357; Vite 6123; 5 cores; ids T-1760-1761.
-- T-1644 agent t1644 (Sonnet), main tree app/src/map/; Vite 6124; 3 cores.
+- T-1644 committed (z15 pan GPU 36% to 23%, overlay -70%, pixel-checked); T-1763 (cull stations/trains) filed P3.
 - T-1739 agent t1739 (Sonnet), main tree attractions.json; Vite 6125; 2 cores.
 - TH,SG join done 2026-10-29 (68/68 shipped, registry 1,960). Chiang Mai's origin is a border village (densest GHSL
   pixel), same flaw in mnm knt swa mge: t1757 rebuilding those 5 + second TH join (~90 min, writes data/packs; t1739
   told to keep off packs). Planner rule filed as T-1762. Uncommitted: all TH/SG/T-1758 json until it reports.
-- T-1739 first round: fitted estimate for sites without a figure (editions, people within 25 km, scenic flag, a
-  per-country effect China x3.4); Hangzhou +53% on rush days; Zhongnanhai 3.4M odd. Sent back: drop the country
-  term (needs Anita), keep closed places out. Uncommitted in the main tree (attractions_json.py, attractions.json).
-- t263-attractions' Tokyo National Museum hover check fails on old data too (a station card covers the mark): look.
+- T-1739 committed (no country term, COUNTRY_EFFECT=False; closed palaces need a figure; figured places win merges):
+  Hangzhou +45%/+31% on rush days, Kyoto +58-60%; real save 12,644,085 (+0.6%). Asked Anita: country term?
+  page views task? Not yet on 8800 (rebuild after TH/SG lands).
+- t263-attractions' Tokyo National Museum hover check fails on old data too (a station card covers the mark): look
+  (likely the check's view, not a game bug; T-1644 was not the cause, it fails on the old code).
 - Still to decide: T-1744 (after TH/SG join; pack writes), T-1737 (investigate), T-1736 (P3, keep), T-1634/T-1647
   (collide with T-1735's demand/market files: after it).
 
