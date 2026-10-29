@@ -113,8 +113,12 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1766 agent t1766 (Opus): attraction visits from a city budget shared by Wikipedia page views (Anita 2026-10-29:
   "order of magnitude correctness" is enough; country term stays off). attractions_json.py + attractions.json; Vite 6141;
   3 cores. Review its numbers before committing.
-- T-1770 agent t1770 (Sonnet): real line colours (GTFS route_color, noritetsu, palette) into the seven real saves,
-  staged in artifacts/trainworld/t1770-realnet/; ship after T-1765's join. Vite 6152, 2 cores.
+- T-1770 committed 3edfe9a0; saves staged in artifacts/trainworld/t1770-realnet/. Follow-up running (t1770 resumed):
+  Tokyo's default-blue matches back to palette, realcolour.py only. SHIP after T-1765's join, from trainworld/:
+  `set REALNET_OUT=C:\Users\anita\projects\maps\artifacts\trainworld\t1770-realnet` then
+  `..\venv\Scripts\python.exe pipeline\realnet.py ship`; then rebuild 8800.
+- T-1305 stage 1 agent t1305s1 (Opus): NYC corridors in Python, new pipeline/realcorridors.py + realroute.py chains;
+  output artifacts/trainworld/t1305-shared/. 2 cores. Stage 2 (realsave from the file) after.
 - T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once
   t1770 is done with realnet.py; then stage 2 (NYC save). One colour per trunk until she looks.
 - T-1771 analytics: Anita yes (own-server heartbeat), but WAIT until she says her City Circles tracking is done.

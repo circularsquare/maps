@@ -46,6 +46,8 @@ JP_OPERATOR = {
     "tx": "首都圏新都市鉄道", "tokyo_monorail": "東京モノレール",
 }
 
+GUESS_BLUE = {"#0000ff"}
+
 _CSS = None
 
 
@@ -69,7 +71,7 @@ def hexcol(v):
         return "#" + v.lstrip("#").lower()
     if re.fullmatch(r"#[0-9a-fA-F]{3}", v):
         return "#" + "".join(c * 2 for c in v[1:]).lower()
-    return css_names().get(v.lower())
+    return (css_names().get(v.lower()) or "").lower() or None
 
 
 def _oklab_l(rgb):
@@ -195,5 +197,9 @@ def line_colours(cfg, lines):
                 c = nori_by_id("kr", SEO_LINES.get(route, ""))
             elif cfg.get("pack") == "tyo":
                 c = nori_by_name("jp", l["name"], JP_OPERATOR.get(l["operator"]))
+        # pure CSS blue on a line from OSM or noritetsu is a mapper's default, wrong more often than the
+        # palette's colour; GTFS colours are the operator's own. Deepskyblue is often true (Sendai Tozai)
+        if c in GUESS_BLUE and ad != "gtfs":
+            c = None
         out.append(legible(c) if c else None)
     return out
