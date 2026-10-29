@@ -64,6 +64,7 @@ import importlib
 import importlib.abc
 import importlib.machinery
 import json
+import math
 import os
 import re
 import shutil
@@ -359,6 +360,7 @@ class Run:
         with self.held("registry", f"unregister {' '.join(ids)}"[:200]):
             reg = self.registry()
             before = len(reg["cities"])
+            gone = [c["center"] for c in reg["cities"] if c["id"] in ids and c.get("center")]
             reg["cities"] = [c for c in reg["cities"] if c["id"] not in ids]
             if len(reg["cities"]) != before:
                 shared().write_atomic(self.reg_path, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
@@ -368,6 +370,35 @@ class Run:
                 p = self.packs / f"{i}.market.json"
                 if p.exists():
                     p.unlink()
+        if gone:
+            self.heal_market(gone)
+
+    HEAL_KM = 400  # past the market's 250 km reach (market_zones near_km) and any joint group's commutes
+
+    def heal_market(self, near):
+        """T-1743, T-1231: registered market packs within HEAL_KM of `near` ([lon, lat] of packs just
+        unregistered) still naming a place no registered pack holds are rewritten, or the next
+        `market_pack` refuses them ("invalid commute between zones")."""
+        reg = self.registry()
+        held = {c.get("place") for c in reg["cities"]}
+
+        def close(c):
+            if not c.get("center"):
+                return True
+            lon, lat = c["center"]
+            return any(math.hypot((lon - x) * math.cos(math.radians((lat + y) / 2)), lat - y) * 111.2 < self.HEAL_KM
+                       for x, y in near)
+        stale = []
+        for c in reg["cities"]:
+            p = self.packs / f"{c['id']}.market.json"
+            if close(c) and p.exists():
+                m = json.loads(p.read_text(encoding="utf-8"))
+                if any(q not in held for k in ("commute_place", "everyday_place") for q in m.get(k, [])):
+                    stale.append(c["id"])
+        if stale:
+            ok, _, tail = self.step("market_zones", stale, self.logs / "market-heal.log")
+            if not ok:
+                self.report.setdefault("problems", []).append(f"market packs naming gone places not rewritten ({' '.join(stale)[:200]}): {str(tail)[-300:]}")
 
     def stop_asked(self):
         return self.stopping or self.stop_file.exists()
@@ -910,6 +941,8 @@ class Run:
         if self.stop_asked():
             return
         print(f"  {cid} {r['name']}: building", flush=True)
+        if r["status"] == "planned":
+            self.clear_row_caches(cid)
         self.set_row(cid, run_batch=self.batch, reason=None, steps=None, gate=None, parked=None)
         L = self.logs / cid
         steps, t0 = {}, time.time()
@@ -939,6 +972,25 @@ class Run:
             self.streak = (None, 0)
         self.rec(cid, name=r["name"], build_s=round(time.time() - t0), steps=steps)
         print(f"  {cid}: built in {time.time() - t0:.0f} s", flush=True)
+
+    # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern
+    ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz")),
+                  ("data/raw/ca", ("osm_jobs_{}.csv.gz",)), ("data/raw", ("osm_places_{}.json",)),
+                  ("data/raw/t142b", ("osm_*_{}.json",)), ("data/raw/t196", ("osm_*_{}.json",)),
+                  ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")))
+
+    def clear_row_caches(self, cid):
+        """A planned row (new, or its units changed since it was last built) is built from scratch: an
+        earlier row with its id, or its own old outline, left caches the build would read back."""
+        gone = []
+        for d, pats in self.ROW_CACHES:
+            base = (self.root if d == "data/work" else REAL) / d  # data/raw is the real tree's in a scratch run too
+            for pat in pats:
+                for p in base.glob(pat.format(cid)):
+                    p.unlink()
+                    gone.append(p.name)
+        if gone:
+            print(f"  {cid}: cleared {len(gone)} old caches ({', '.join(gone)[:200]})", flush=True)
 
     STREAK = 3
 

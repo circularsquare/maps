@@ -2,6 +2,11 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1758 [P1] Market packs commuting thousands of km (old joint_commutes pairs of reused ids). Done 2026-10-28: a file solving a pack replaces all its older pairs (market_zones.Groups); 140 packs rewritten, 145 far pairs (1.26M trips a day) gone, no other pair moved; smoke 20/20. notes/T-1738.md "T-1743 and T-1758".
+- T-1743 [P2] world_run clears a planned row's id caches and rewrites market packs naming gone places. Done 2026-10-28: `clear_row_caches` in build_row, `heal_market` after every unregister (400 km); closes T-891 and T-1231. notes/T-1738.md "T-1743 and T-1758".
+- T-1231 [P2] Rebuilt rows break neighbours' market packs. Done 2026-10-28 with T-1743 (`heal_market` after unregister).
+- T-891 [P3] Rebuilt or reused-id rows keep old per-city caches. Done 2026-10-28 with T-1743 (`clear_row_caches` for planned rows).
+
 - T-1756 [P2] Anita's asks 2026-10-28. Done 2026-10-28: Snap beside track off by default; a new line's name is not focused after a touch (keyboard stays down); a station placed by tap-tap leaves no ghost until the finger moves or taps elsewhere; the triangles under names are T-1434's opening-day bunting, kept.
 - T-1755 [P2] Car ownership 5% dearer (Anita, after T-1750). Done 2026-10-28: $2.10 a trip + $0.1365 a km (kernel.rs `car_own_usd_*`); no ceiling tests (Anita: a small change).
 - T-1752 [P2] The car side of mode choice for Tokyo. Abandoned 2026-10-28: Anita declined more parking time and took T-1755's 5% dearer ownership instead.

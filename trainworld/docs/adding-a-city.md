@@ -88,7 +88,11 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
-- **Per row**: `build_city`, `pack_gate stations` (the gate's station file, section 8), `places`,
+- **Per row**: a `planned` row (new, or its units changed) first loses the per-city caches named
+  after its id, which an earlier row of that id or its old outline left (T-1743, T-891):
+  `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `osm_*_<id>.json` in `data/raw/t142b` and
+  `t196`, `osm_places_<id>.json`, and `data/work/<id>`'s outline, units and tier 0 signals. Then
+  `build_city`, `pack_gate stations` (the gate's station file, section 8), `places`,
   with `--coarse T` `coarse_zones` (4 km blocks in thin country, T-852; off by default),
   `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it
   replaces the pack, and fails the step otherwise), `nocar`, `everyday_rates`, each its own process
@@ -108,7 +112,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   over three browser sessions at once (T-928, T-965; `city-browser.mjs` with `ROWS`, 8 zones a page
   load, a 180 s solve wait, a zone whose wait timed out tried once more in a fresh page). A pack that ships stays registered; one that parks is taken out again
   with its market pack, its market place left unused (place ids are positions), and its failing
-  checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
+  checks are its reason. Whenever the runner takes packs out of the registry, the registered market
+  packs within 400 km still naming their places are rewritten (`market_zones.py <ids>`, T-1743),
+  or the next `market_pack` refuses them. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
 - **Joint gravity**, once for the batch after its last region (T-723; a run stopped before it
   leaves the gated rows registered and `built`, for the next run to gate again; with `--no-join`,

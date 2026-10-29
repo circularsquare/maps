@@ -42,8 +42,10 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   (Anita 2026-10-28); asks me before each join; up to 6 cores; Vite 6182, runner 6382; ids T-1758-1765.
 - T-1755 car ownership +5% (Anita) committed 669e81a3; 8800 rebuilt there, smoke 20/20, real save 12,564,193 (+0.65%).
   Not in 28g. T-1752 abandoned.
-- T-1756 agent t1756 (Sonnet), main tree UI: snapBeside default off, mobile name focus, tap-tap ghost,
-  the triangles under station names; Vite 6198; 2 cores.
+- T-1756 committed e833b0cf; 8800 rebuilt there, smoke 20/20 both shades. Triangles = opening-day bunting
+  (T-1434), kept; asked Anita.
+- T-1758 (found by t1757): reused ids left 1.27M commute trips a day in market packs going 700+ km (VN, CA);
+  pair rule fixed; repair of ~250 market packs given the go 2026-10-28 late. Live 28g has the bad pairs.
 - T-1752 (car side of mode choice) asked Anita. T-1738 open for the next SE Asian country (Thailand easiest).
 - (was) T-1733 DONE in .tw-trees/t1733, not landed: Japan 118 s after the line is built, big lines within 0.47%;
   China 9.3 s. Fix: local rounds crowd on the rest's per-round loads (trail). Smoke 20/20 in the tree.

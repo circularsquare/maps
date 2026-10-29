@@ -205,12 +205,15 @@ class Groups:
         self.reg = {c["id"]: c for c in reg["cities"]}
         self.rows, self.source, self.keys = {}, {}, {}
         # each pair of packs from the newest file covering it (T-786: a country's file covers its own
-        # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves)
+        # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves).
+        # A file solving a pack replaces all its pairs, those with packs it leaves out included: an
+        # older file's pairs could name an earlier row of the same id (T-1758: Vietnam's tox and
+        # Henan's hag, 3,000 km apart)
         import intercity
         pairs = {}
         for path, f in intercity.joint_files(ROOT / "data/work").items():  # oldest first
             g = json.loads(path.read_text(encoding="utf-8"))
-            for k in [k for k in pairs if k[0] in f["packs"] and k[1] in f["packs"] and (k[0] in f["solved"] or k[1] in f["solved"])]:
+            for k in [k for k in pairs if k[0] in f["solved"] or k[1] in f["solved"]]:
                 del pairs[k]
             ids = g["packs"]
             for k in range(len(g["trips"])):

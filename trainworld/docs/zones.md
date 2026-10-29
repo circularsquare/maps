@@ -334,7 +334,9 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   zones are in the unit's sums across the cut, but are neither balanced nor written. The unit's
   file (`<first member>-<country>`) lists its packs as `solved` and holds every commute with an
   end in them, the fixed neighbours' into the country too; each pair of packs takes its commutes
-  from the newest file covering it, and a file a newer one covers whole is removed. A country's
+  from the newest file covering it, none from a file older than one solving either pack (an old
+  file's pairs could name an earlier row of the same id, T-1758), and a file a newer one covers
+  whole is removed. A country's
   join so costs its own solve only, however long the chain of covered countries; a neighbour's
   own commutes and factors stay as its last solve left them until it is solved again. National
   borders take the 0.05 default, so under 0.02% of commuters cross one (notes/T-786.md).

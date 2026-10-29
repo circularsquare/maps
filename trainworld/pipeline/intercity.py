@@ -117,7 +117,7 @@ def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), ho
 def joint_files(work):
     """T-786: every joint commutes file as {path: {solved, packs, t}}, oldest first. A file covers
     the pairs of its packs with an end among its solved ones; market_zones.py takes each pair from
-    the newest file covering it. A file from before T-786 solved every pack it lists."""
+    the newest file covering it, and none from a file older than one solving either end. A file from before T-786 solved every pack it lists."""
     files = {}
     for p in sorted(Path(work).glob("*.joint_commutes.json")):
         g = json.loads(p.read_text(encoding="utf-8"))
