@@ -146,7 +146,7 @@ export class BusDraw {
     addEventListener("pointermove", (e) => e.pointerType === "touch" && this.onDrag(e));
     addEventListener("pointerup", (e) => this.onTouchEnd(e));
     addEventListener("pointercancel", (e) => this.onTouchEnd(e));
-    // B: a new bus line, from any tab. Registered before main.ts's key handler, which would take it
+    // U (BUS_KEY): a new bus line, from any tab. Registered before main.ts's key handler, which would take it
     // for nothing; stopImmediatePropagation keeps it from the others.
     window.addEventListener("keydown", (e) => {
       if (e.key.toLowerCase() !== BUS_KEY || e.ctrlKey || e.metaKey || e.altKey || e.repeat || keyIsTheirs(e) || ask.peek() || !world.peek()) return;

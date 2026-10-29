@@ -13,7 +13,7 @@
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
 // Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave";
-// beside each slot its demand cache and two backups under keys the saves list does not show).
+// beside each slot its demand cache and backups under keys the saves list does not show).
 
 import registry from "../game/registry.json";
 import successors from "../game/zone-successors.json";
@@ -105,6 +105,25 @@ export interface SaveHeader {
   demandFine?: string[];
   /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
   newCars?: number;
+  /** T-1826: the save level of the build that wrote it (`TrackApi.save_level`, sim/src/track/save.rs
+   * `LEVEL`); absent before it, read as 0 */
+  level?: number;
+}
+
+/** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
+const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
+  game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, fleet: true, fleetFast: true,
+  fleetBus: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
+  opened: true, demandFine: true, newCars: true, level: true,
+};
+
+/** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher
+ * level, or (in a save with a level, so from a build that lists its fields) a field it does not know.
+ * Saves from before levels can carry retired fields (`points`, T-694) and are judged by their
+ * network bytes alone. */
+export function headerUnread(h: SaveHeader, level: number): boolean {
+  if (h.level === undefined) return false;
+  return h.level > level || Object.keys(h).some((k) => !(k in HEADER_FIELDS));
 }
 
 /** T-728: a sandbox is the normal game with nothing refused for money and the cash not shown. */
@@ -461,26 +480,91 @@ export function newGameName(slots: { name: string }[], spec: NewGameSpec): strin
   return name;
 }
 
-// T-744: two backups of each slot, `backup:<slot>:0` and `:1`, the older one written over next. A
-// backup is the slot's record without its picture.
+// T-744, T-1826: a slot's backups, the slot's record without its picture: four tiers
+// `backup:<slot>:t0` to `:t3`, reaching back about 10 minutes, an hour, a day and a week, and
+// `backup:<slot>:pull`, the slot as it was before the account's copy last replaced it. Backups from
+// before T-1826 (`:0`, `:1`) are listed until the next tier write folds them in.
 const BACKUP_PREFIX = "backup:";
-export interface SlotBackup { key: string; at: number; day: number; }
+const TIERS = ["t0", "t1", "t2", "t3"];
+/** T-1826: wall ms. Tier 0 takes the slot at most once a step; the backup it held moves down to
+ * tier i+1 only when it is at least step i+1 newer than the one there, else it goes. So tier 0 is up
+ * to 10 min old, tier 1 up to about 1 h 10 min, tier 2 about a day, tier 3 about a week. */
+export const BACKUP_STEPS = [10 * 60_000, 3600_000, 86400_000, 7 * 86400_000];
+/** T-1826: the most a slot's tier backups hold, bytes; past it the oldest tiers are dropped (tier 0
+ * is always kept). About 100 KB a save is usual. */
+export const BACKUP_CAP = 8 << 20;
+export interface SlotBackup { key: string; at: number; day: number; /** the slot before the account's copy replaced it */ pull?: boolean }
+const backupKey = (slot: string, tier: string) => `${BACKUP_PREFIX}${slot}:${tier}`;
 
 export async function listBackups(slot: string): Promise<SlotBackup[]> {
+  const s = await store("readonly");
+  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && isBackupOf(k, slot));
   const out: SlotBackup[] = [];
-  for (const i of [0, 1]) {
-    const key = `${BACKUP_PREFIX}${slot}:${i}`, b = await readStored(key);
-    if (b) out.push({ key, at: b.at, day: b.day });
+  for (const key of keys) {
+    const b = (await req(s.get(key))) as StoredSave | undefined;
+    if (b) out.push({ key, at: b.at, day: b.day, ...(key.endsWith(":pull") ? { pull: true } : {}) });
   }
   return out.sort((a, b) => b.at - a.at);
 }
 
-/** Write a slot's backup over its older one (or into an empty place). */
-export async function writeBackup(slot: string, v: StoredSave): Promise<boolean> {
-  const have = await listBackups(slot);
-  const free = [0, 1].map((i) => `${BACKUP_PREFIX}${slot}:${i}`).find((k) => !have.some((b) => b.key === k));
-  const { thumb: _, ...rest } = v;
-  return writeStored(free ?? have[have.length - 1].key, rest);
+/** T-1826: the tiers after `add` (newest first, `null` for an empty tier), or null when tier 0 is
+ * less than a step old and nothing changes. */
+export function planBackups<T extends { at: number }>(tiers: (T | null)[], add: T, steps: number[] = BACKUP_STEPS): (T | null)[] | null {
+  if (tiers[0] && add.at - tiers[0].at < steps[0]) return null;
+  const out = steps.map((_, i) => tiers[i] ?? null);
+  let carry: T | null = add;
+  for (let i = 0; i < steps.length && carry; i++) {
+    const old: T | null = out[i];
+    out[i] = carry;
+    const next = out[i + 1];
+    carry = old && i + 1 < steps.length && (!next || old.at - next.at >= steps[i + 1]) ? old : null;
+  }
+  return out;
+}
+
+/** An autosave's backup, written when tier 0 is a step old (`planBackups`), in one transaction. */
+export async function writeBackup(slot: string, v: StoredSave, steps: number[] = BACKUP_STEPS): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    const get = async (tier: string) => ((await req(s.get(backupKey(slot, tier)))) as StoredSave | undefined) ?? null;
+    let tiers = [await get("t0")];
+    if (tiers[0] && v.at - tiers[0].at < steps[0]) { await done; return true; }
+    for (const t of TIERS.slice(1)) tiers.push(await get(t));
+    const legacy = [await get("0"), await get("1")].filter((b): b is StoredSave => !!b).sort((a, b) => b.at - a.at);
+    if (legacy.length && tiers.every((t) => !t)) tiers = [legacy[0], legacy[1] ?? null, null, null];
+    const { thumb: _, ...rest } = v;
+    const plan = planBackups(tiers, rest, steps) ?? tiers;
+    for (let i = 1, sum = plan[0]?.bytes.length ?? 0; i < plan.length; i++) {
+      sum += plan[i]?.bytes.length ?? 0;
+      if (sum > BACKUP_CAP) plan[i] = null;
+    }
+    plan.forEach((b, i) => { if (b) s.put(b, backupKey(slot, TIERS[i])); else s.delete(backupKey(slot, TIERS[i])); });
+    s.delete(backupKey(slot, "0"));
+    s.delete(backupKey(slot, "1"));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** T-1826: before anything replaces slot `key` with another copy (the account's), the slot as it
+ * was, under `backup:<slot>:pull`. Nothing is written when the slot is empty or already holds `next`. */
+export async function backupBeforeReplace(key: string, next: { at: number; bytes: Uint8Array }): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    const old = (await req(s.get(key))) as StoredSave | undefined;
+    if (old && !(old.at === next.at && old.bytes.length === next.bytes.length)) {
+      const { thumb: _, ...rest } = old;
+      await req(s.put(rest, backupKey(key, "pull")));
+    }
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function isBackupOf(key: string, slot: string): boolean {

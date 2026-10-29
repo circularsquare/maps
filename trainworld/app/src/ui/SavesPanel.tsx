@@ -166,9 +166,9 @@ const OPEN_TIP = "Play this game. The game you are playing is saved first.";
 /** One saved game in this browser. */
 function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, onRenamed, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; renaming: boolean; copying: boolean; onRename: () => void; onRenamed: () => void; onCopy: () => void; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
-  const byHand = savedByHand.value;
+  const byHand = savedByHand.value, newer = saveSlotsState.value.newer;
   const autosaved = playing && writable && !(byHand && Math.abs(byHand - slot.at) < 2000);
-  const saveTip = writable ? "Save this game now (Ctrl+S)" : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
+  const saveTip = writable ? "Save this game now (Ctrl+S)" : newer ? "A newer version saved this game. Reload the page to update." : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
   return (
     <div class="save-card">
       <SlotThumb slot={slot} />
@@ -184,8 +184,8 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
         {msg && <div class="small bad">{msg}</div>}
         <div class="save-actions">
           {playing ? <>
-            <button class="btn icon save-copy" data-tip="Make a copy" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
-            <button class="btn icon save-download" data-tip="Download as a file" aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
+            <button class="btn icon save-copy" data-tip={newer ? "Make a copy to play on here. The copy leaves out what only the newer version can read." : "Make a copy"} aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
+            <button class="btn icon save-download" data-tip={newer ? "Download as a file, as the newer version saved it" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
             <button class={"btn icon save-versions" + (versionsOpen.value ? " on" : "")} data-tip="Earlier versions" aria-label="Earlier versions" aria-pressed={versionsOpen.value}
               onClick={() => (versionsOpen.value = !versionsOpen.peek())}><Icon.history /></button>
             <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
@@ -203,26 +203,36 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
 
 const RESTORE_TIP = "Open this backup as a new saved game. The game you are playing is saved first.";
 
-/** "Today at 2:58 PM", "Oct 24 at 2:58 PM". */
-const versionWhen = (at: number, now: number) => sameDay(at, now) ? `Today at ${clockTime(at)}` : atTime(at, now);
+/** T-1826: "Just now", "12 min ago", "3 h ago", "2 days ago", "3 weeks ago". */
+function ageText(at: number, now: number): string {
+  const min = Math.floor((now - at) / 60000);
+  if (min < 1) return "Just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 14) return d === 1 ? "1 day ago" : `${d} days ago`;
+  return `${Math.floor(d / 7)} weeks ago`;
+}
 
-/** The playing game's earlier versions, newest first, each opened as a new slot: the account's when
- * the account keeps the game (T-988), else this browser's (T-744). */
+/** The playing game's earlier versions, newest first, each opened as a new slot: the account's while
+ * the account keeps the game (T-988) and this browser's (T-744, T-1826), in one list. */
 function Versions({ slot, backups, account, now }: { slot: SaveSlot; backups: SlotBackup[]; account: AccountBackup[] | null; now: number }) {
   const [msg, setMsg] = useState("");
-  const rows = account
-    ? account.map((b) => <div class="save-backup small" data-account-backup={b.rev}>
-      <span class="muted num" data-tip={`A backup of this game on your account from ${fullDate(b.savedAt * 1000)}`}>{versionWhen(b.savedAt * 1000, now)}</span>
+  const rows = [
+    ...(account ?? []).map((b) => ({ at: b.savedAt * 1000, row: <div class="save-backup small" data-account-backup={b.rev}>
+      <span class="muted num" data-tip={`A backup of this game on your account from ${fullDate(b.savedAt * 1000)}`}>{ageText(b.savedAt * 1000, now)}<span class="save-cloud"><Icon.cloud /></span></span>
       <button class="btn text" data-tip={RESTORE_TIP} onClick={async () => {
         setMsg("");
         if (await restoreAccountBackup(slot, b)) savesOpen.value = false;
         else setMsg("This backup could not be downloaded.");
       }}>Open as a copy</button>
-    </div>)
-    : backups.map((b) => <div class="save-backup small" data-backup={b.key}>
-      <span class="muted num" data-tip={`A backup of this game from ${fullDate(b.at)}, game day ${b.day}`}>{versionWhen(b.at, now)} · Day {b.day}</span>
+    </div> })),
+    ...backups.map((b) => ({ at: b.at, row: <div class="save-backup small" data-backup={b.key}>
+      <span class="muted num" data-tip={b.pull ? `This game in this browser on ${fullDate(b.at)}, game day ${b.day}, before your account's copy replaced it` : `A backup of this game in this browser from ${fullDate(b.at)}, game day ${b.day}`}>{ageText(b.at, now)} · Day {b.day}</span>
       <button class="btn text" data-tip={RESTORE_TIP} onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Open as a copy</button>
-    </div>);
+    </div> })),
+  ].sort((a, b) => b.at - a.at).map((x) => x.row);
   return <div class="save-backups">
     {rows.length ? rows : <div class="small muted">No earlier versions yet</div>}
     {msg && <div class="small bad">{msg}</div>}

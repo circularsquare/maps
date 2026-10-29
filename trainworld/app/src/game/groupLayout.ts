@@ -57,7 +57,7 @@ export interface GroupOpts {
 /** A bar's width, the gap between lines running together, lines apart, px. */
 export const BAR = 5, GAP = 2, PITCH = BAR + GAP, SPREAD = 24;
 /** A named row's height, a tick row's, the bullets' pitch, room above and below, px. */
-export const NAME_H = 18, TICK_H = 7, CHIP = 18;
+export const NAME_H = 18, TICK_H = 8, CHIP = 18;
 const PAD = 22, MARGIN = 11;
 /** Rows looked ahead when ordering; a crossing's cost against a row of likeness. */
 const AHEAD = 60, CROSS = 8;
@@ -152,49 +152,84 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
     const rest = seq.length - last - 1;
     block(pending.length <= rest ? last + 1 : seq.length);
   }
-  const R = seq.length;
   const cell = (k: number, r: number) => seq[r].cells[k];
   const stopAt = (k: number, r: number) => !!seq[r].cells[k]?.stop;
-  const spans = lines.map((_, k): [number, number] => {
-    let a = -1, b = -1;
-    for (let r = 0; r < R; r++) if (seq[r].cells[k]) { if (a < 0) a = r; b = r; }
-    return [a, b];
-  });
-  const present = (k: number, r: number) => spans[k][0] >= 0 && spans[k][0] <= r && r <= spans[k][1];
-
-  // ---- together: from a stop both make to the next, unless each makes stops the other does not
-  // (skip-stop: drawn apart); the two stops on either side of a stretch one of them skips are named
-  const tog = new Map<number, Uint8Array>();
   const pk = (a: number, b: number) => (a < b ? a * n + b : b * n + a);
   const name = (k: number, r: number) => { const c = cell(k, r); if (c?.stop) c.named = true; };
-  for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
-    const t = new Uint8Array(R);
-    const common: number[] = [];
-    for (let r = 0; r < R; r++) if (stopAt(a, r) && stopAt(b, r)) common.push(r);
-    common.forEach((c, i) => {
-      t[c] = 1;
-      const d = common[i + 1];
-      if (d === undefined) return;
-      let oa = false, ob = false;
-      for (let r = c + 1; r < d; r++) { oa ||= stopAt(a, r); ob ||= stopAt(b, r); }
-      if (oa && ob) return;
-      t.fill(1, c, d + 1);
-      if (oa || ob) for (const k of [a, b]) { name(k, c); name(k, d); }
-    });
-    // where they meet and where they part
-    for (let r = 0; r < R; r++) if (t[r] && (!r || !t[r - 1] || r === R - 1 || !t[r + 1])) { name(a, r); name(b, r); }
-    tog.set(pk(a, b), t);
-  }
+  let R = 0, spans: [number, number][] = [], tog = new Map<number, Uint8Array>();
+  const present = (k: number, r: number) => spans[k][0] >= 0 && spans[k][0] <= r && r <= spans[k][1];
   const together = (a: number, b: number, r: number) => a === b || !!tog.get(pk(a, b))?.[r];
+  // ---- together: from a stop both make to the next, unless each makes stops the other does not
+  // (skip-stop: drawn apart); when `naming`, the two stops either side of a stretch one skips are named
+  const analyse = (naming: boolean) => {
+    R = seq.length;
+    spans = lines.map((_, k): [number, number] => {
+      let a = -1, b = -1;
+      for (let r = 0; r < R; r++) if (seq[r].cells[k]) { if (a < 0) a = r; b = r; }
+      return [a, b];
+    });
+    tog = new Map();
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+      const t = new Uint8Array(R);
+      const common: number[] = [];
+      for (let r = 0; r < R; r++) if (stopAt(a, r) && stopAt(b, r) && cell(a, r)!.key === cell(b, r)!.key) common.push(r);
+      common.forEach((c, i) => {
+        t[c] = 1;
+        const d = common[i + 1];
+        if (d === undefined) return;
+        let oa = false, ob = false;
+        for (let r = c + 1; r < d; r++) { oa ||= stopAt(a, r); ob ||= stopAt(b, r); }
+        if (oa && ob) return;
+        t.fill(1, c, d + 1);
+        if (naming && (oa || ob)) for (const k of [a, b]) { name(k, c); name(k, d); }
+      });
+      // where they meet and where they part
+      if (naming) for (let r = 0; r < R; r++) if (t[r] && (!r || !t[r - 1] || r === R - 1 || !t[r + 1])) { name(a, r); name(b, r); }
+      tog.set(pk(a, b), t);
+    }
+  };
+  analyse(true);
   lines.forEach((_, k) => { if (spans[k][0] >= 0) { name(k, spans[k][0]); name(k, spans[k][1]); } });
   if (o.transfer) for (const s of seq) for (const c of s.cells) if (c?.stop && o.transfer(c.key)) c.named = true;
 
+  // ---- branches side by side share rows where both have only ticks (Anita, T-1817): a tick row
+  // moves up into the first tick row after its lines' previous places, beside lines apart from them
+  if (!all) {
+    const named = (s: Node) => s.cells.some((c) => c?.named);
+    const at0 = seq.map((_, r) => r); // each row's index in the analysis above
+    for (let r = 1; r < seq.length; r++) {
+      const s = seq[r];
+      if (named(s)) continue;
+      const ks = s.cells.map((c, k) => (c ? k : -1)).filter((k) => k >= 0);
+      let lo = 0, starts = false;
+      for (const k of ks) {
+        let q = r - 1;
+        while (q >= 0 && !seq[q].cells[k]) q--;
+        if (q < 0) starts = true;
+        lo = Math.max(lo, q + 1);
+      }
+      if (starts) continue;
+      for (let q = lo; q < r; q++) {
+        const t = seq[q];
+        if (named(t) || ks.some((k) => t.cells[k])) continue;
+        const others = t.cells.map((c, j) => (c ? j : -1)).filter((j) => j >= 0);
+        if (others.some((j) => ks.some((k) => together(j, k, at0[q]) || together(j, k, at0[r])))) continue;
+        for (const k of ks) t.cells[k] = s.cells[k];
+        seq.splice(r, 1);
+        at0.splice(r, 1);
+        r--;
+        break;
+      }
+    }
+    if (seq.length < R) analyse(false);
+  }
+
   // ---- order per row: clusters of lines together side by side; inside one, lines alike for longer
-  // nearer; apart, lines that will run alike soon nearer; few crossings against the row before
+  // ahead nearer; apart, lines that will run alike soon nearer; few crossings against the rows next
+  // to it. Swept down, up and down again, so an order a meeting needs reaches back up the branches.
   const alike = (a: number, b: number, r: number) => present(a, r) && present(b, r) && together(a, b, r) && stopAt(a, r) === stopAt(b, r);
-  const order: number[][] = [];
   const cluster: number[][] = []; // per row, each line's cluster id (-1 absent)
-  let prev: number[] = [];
+  const rowsIn: { P: number[]; groups: number[][]; wt: Map<number, number> }[] = [];
   for (let r = 0; r < R; r++) {
     const P = lines.map((_, k) => k).filter((k) => present(k, r));
     const id = lines.map((_, k) => (present(k, r) ? k : -1));
@@ -202,21 +237,25 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
     for (const a of P) for (const b of P) if (a < b && together(a, b, r)) id[root(a)] = root(b);
     const cid = lines.map((_, k) => (present(k, r) ? root(k) : -1));
     cluster.push(cid);
-    const prevPos = new Map(prev.map((k, i) => [k, i]));
-    const byPrev = (a: number, b: number) => (prevPos.get(a) ?? 99 + a) - (prevPos.get(b) ?? 99 + b);
-    const groups = [...new Set(P.map((k) => cid[k]))].map((c) => P.filter((k) => cid[k] === c).sort(byPrev));
-    groups.sort((x, y) => byPrev(x[0], y[0]));
+    const groups = [...new Set(P.map((k) => cid[k]))].map((c) => P.filter((k) => cid[k] === c));
     const run = (a: number, b: number) => { let d = 0; while (r + d < R && d < AHEAD && alike(a, b, r + d)) d++; return d; };
     const soon = (a: number, b: number) => { let s = 0; for (let d = 1; d <= AHEAD && r + d < R; d++) if (alike(a, b, r + d)) s += 1 - d / (AHEAD + 1); return s; };
     const wt = new Map<number, number>();
     for (const a of P) for (const b of P) if (a < b) wt.set(pk(a, b), cid[a] === cid[b] ? run(a, b) : soon(a, b));
+    rowsIn.push({ P, groups, wt });
+  }
+  const order: number[][] = Array.from({ length: R }, (_, r) => rowsIn[r].groups.flat());
+  const orderRow = (r: number, nb: (number[] | undefined)[]) => {
+    const { P, groups: gs0, wt } = rowsIn[r];
+    const pos = nb.filter((x): x is number[] => !!x).map((x) => new Map(x.map((k, i) => [k, i])));
+    const near = (k: number) => { for (const p of pos) { const v = p.get(k); if (v !== undefined) return v; } return 99 + k; };
+    const groups = gs0.map((g) => [...g].sort((a, b) => near(a) - near(b))).sort((x, y) => near(x[0]) - near(y[0]));
     const cost = (ord: number[]) => {
       let c = 0;
       for (let i = 0; i < ord.length; i++) for (let j = i + 1; j < ord.length; j++) {
         const a = ord[i], b = ord[j];
         c += (j - i) * wt.get(pk(a, b))!;
-        const pa = prevPos.get(a), pb = prevPos.get(b);
-        if (pa !== undefined && pb !== undefined && pa > pb) c += CROSS;
+        for (const p of pos) { const pa = p.get(a), pb = p.get(b); if (pa !== undefined && pb !== undefined && pa > pb) c += CROSS; }
         if (a > b) c += 0.01;
       }
       return c;
@@ -232,9 +271,11 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
       };
       for (const gs of perms(groups)) walk(gs, 0, []);
     }
-    order.push(best);
-    prev = best;
-  }
+    order[r] = best;
+  };
+  for (let r = 0; r < R; r++) orderRow(r, [order[r - 1]]);
+  for (let r = R - 1; r >= 0; r--) orderRow(r, [order[r + 1]]);
+  for (let r = 0; r < R; r++) orderRow(r, [order[r - 1], order[r + 1]]);
 
   // ---- x: each cluster tight, clusters SPREAD apart, each line as straight as it can stay
   const xs = lines.map(() => new Array<number>(R).fill(NaN));

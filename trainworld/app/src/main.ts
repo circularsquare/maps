@@ -8,6 +8,7 @@
 // URL parameters: docs/code-map.md, "URL switches".
 
 import "./ui/style.css";
+import "./ui/zenmaru.css";
 import { computed, effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, startClock } from "./game/clock";
@@ -19,7 +20,7 @@ import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
-import { ACTION_KEYS, levelOfKeyCode, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
+import { ACTION_KEYS, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
@@ -462,7 +463,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  // 1, 2, 3, 4: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
+  // R, P, X, M: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
   // key of the tool already on does nothing (Esc is the way out), so a half-drawn route survives.
   // T: the trip explorer (T-195, T-444), from any tab; the tab stays (the inspector shows the trip)
   if (e.key.toLowerCase() === TRIP_KEY &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
@@ -472,7 +473,7 @@ window.addEventListener("keydown", (e) => {
     if (tool.peek() !== "trip") pickTool("trip");
     return;
   }
-  // N new line, L edit stops of the selected line, C construct blueprints (T-670); not under a question
+  // N new line, S edit stops of the selected line, C construct blueprints (T-670); not under a question
   const act = ACTION_KEYS[e.key.toLowerCase()];
   if (act && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !ask.peek()) {
     e.preventDefault();
@@ -484,14 +485,21 @@ window.addEventListener("keydown", (e) => {
     else void constructBlueprints();
     return;
   }
-  // Shift+1 to Shift+7: the drawing elevation (T-1701), from any tab
-  const lvKey = e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
+  // 1 to 7: the drawing elevation (T-1701, T-1819), from any tab
+  const lvKey = !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
   if (lvKey !== null) {
     e.preventDefault();
     if (!e.repeat) buildLevel.value = lvKey;
     return;
   }
-  const k = TOOL_KEYS[e.key];
+  // B, L, A, F, Y: the dock's tabs (T-1819), from any tab; a half-drawn route stays
+  const tabKey = TAB_KEYS[e.key.toLowerCase()];
+  if (tabKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
+    e.preventDefault();
+    tab.value = tabKey;
+    return;
+  }
+  const k = TOOL_KEYS[e.key.toLowerCase()];
   if (k &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
     nodeDrag.cancel();

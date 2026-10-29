@@ -128,7 +128,7 @@ export type ToClock =
    * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player
    * saves a copy; `fresh` also does not read one. `newSlot`: the start menu's New game beside
    * saved games (T-677): an empty game in a new slot of that name, written once something changes.
-   * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
+   * `backupMs`: wall ms of the first backup step, 10 minutes, the others scaled with it (T-744, T-1826; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
   | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string }
@@ -591,8 +591,11 @@ export type FromClock =
   | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
   /** the answer to a save by hand (T-1251): when it was written, or why not */
   | { kind: "savedByHand"; at?: number; error?: string }
-  /** `backups`: the active slot's (T-744), newest first */
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
+  /** T-1826: the player changed the game while nothing can write it (the page asks before closing) */
+  | { kind: "unsaved"; on: boolean }
+  /** `backups`: the active slot's (T-744), newest first; `newer`: a newer build saved the game in
+   * hand, which is not written here (T-1826) */
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean }
   | { kind: "error"; message: string }
   /** T-988: the server refused the session's token (the main thread signs out) */
   | { kind: "accountGone" }

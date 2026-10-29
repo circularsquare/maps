@@ -138,7 +138,7 @@ try {
   const lng = mtn.a[0], lat = mtn.a[1] + 0.004, len = mtn.b[0] - mtn.a[0];
   await page.evaluate(([lng, lat, len]) => void window.tw.map.jumpTo({ center: [lng + len / 2, lat], zoom: 14 }), [lng, lat, len]);
   await page.waitForTimeout(1500);
-  await page.keyboard.press('1');
+  await page.keyboard.press('r');
   await page.waitForTimeout(400);
   const px = async (x, y) => page.evaluate(([x, y]) => { const r = window.tw.map.getCanvas().getBoundingClientRect(), p = window.tw.map.project([x, y]); return [r.left + p.x, r.top + p.y]; }, [x, y]);
   const [x0, y0] = await px(lng, lat), [x1, y1] = await px(lng + len, lat);

@@ -6,7 +6,7 @@
 // write and claims the game it opens (clock.worker.ts); the main thread settles every slot on the
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
-import { deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 
 /** What a page needs to reach the account: the server, the session and this browser's device id.
  * `on`: the server keeps games (`/noritetsu/config`'s `trainworldGames`); records are still tied
@@ -117,8 +117,10 @@ export async function fetchGame(ctx: CloudContext, g: AccountGame): Promise<Fetc
   return { stored, id: g.id, rev, savedAt };
 }
 
-/** A downloaded game written into slot `key` (whose lock the caller holds), its record synced to it. */
+/** A downloaded game written into slot `key` (whose lock the caller holds), its record synced to it;
+ * what the slot held is kept as its `pull` backup first (T-1826). */
 export async function writeFetched(ctx: CloudContext, key: string, got: Fetched) {
+  await backupBeforeReplace(key, got.stored);
   await writeSlot(key, got.stored);
   await writeSync(key, { id: got.id, acct: ctx.acct, rev: got.rev, syncedAt: got.stored.at, okAt: got.savedAt * 1000 });
 }

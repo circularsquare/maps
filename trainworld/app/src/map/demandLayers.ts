@@ -16,7 +16,7 @@ import type { WorldView } from "../game/types";
 import type { NetworkBuffers } from "./network";
 import type { NetworkLayers } from "./renderer";
 import { anchor, kAtY } from "./geo";
-import { trafficBands } from "./lineBands";
+import { LINE_VIEW_WIDTH, trafficBands } from "./lineBands";
 
 export interface LayerSwitches {
   lineLoad: boolean;
@@ -43,9 +43,10 @@ export interface LayerSwitches {
  * do not change as the periods pass; the platforms and trains show the hour.
  */
 export const W_MIN = 0.5, W_MAX = 6.6;
-/** T-1799 stage 2: the Traffic view's widths drawn at this share, since lines sharing track now sit
- * side by side and a trunk is their sum (Anita, 2026-10-29: "adjust default line width down a tad") */
-export const TRAFFIC_WIDTH = 0.85;
+/** T-1799 stage 2: the Traffic view's widths drawn at 85% of the width before T-1821, since lines
+ * sharing track now sit side by side and a trunk is their sum (Anita, 2026-10-29: "adjust default
+ * line width down a tad") */
+export const TRAFFIC_WIDTH = 0.85 / LINE_VIEW_WIDTH;
 export function widthFor(ridersPerDay: number, busiest: number): number {
   return W_MIN + (W_MAX - W_MIN) * (busiest > 0 ? Math.min(1, Math.max(0, ridersPerDay) / busiest) : 0);
 }

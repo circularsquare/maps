@@ -231,9 +231,7 @@ The player draws curved track (straights and circular arcs, double, quad or high
 to 350 degrees round [T-418, T-422, T-442], its curves laid out for a target max speed the player picks
 (160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
 price, its target max speed 320 by default; track caps trains at 160 km/h, high-speed track at 320),
-places stations (on track, or on open ground with a
-straight piece of their own track, one click for one end of the platform and one for its direction [T-794, T-907, T-917,
-T-834]), and makes lines, all as
+places stations (on track only [T-1820]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to
 disable, re-level or remove together [T-333, T-815, T-829]. A station clicked on quad track goes on the pair clicked only; the game
@@ -304,13 +302,13 @@ Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/cod
 
 A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three colours each [T-039].
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
-ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
+ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Finances, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
 moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's train trips a day ("11.8M trips/day", T-1440), the cash, the local time and date beside or over
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
-game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
-motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
+game's own tag, never a browser tooltip [T-194, T-210]. Motion is allowed where it helps, never
+slowing a control (Anita 2026-10-29). **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
 biggest car flows as arcs [T-1435]) show demand's
@@ -353,8 +351,10 @@ game, Open a file and opening a backup as a copy each start a new slot; no slot 
 another game [T-743]. A game is normal or a sandbox (nothing refused for money, the cash hidden;
 a normal game can become one once, never back), starts in a city or on the world map, and a sandbox
 in one of seven cities can start from its real network [T-728, T-731; docs/ui-panels.md "Saved
-games"]. Each slot keeps two rotating backups, about 5 wall minutes apart, restorable
-as a new slot [T-744]. Beside each slot the page keeps its last final demand result, shown at once
+games"]. Each slot keeps backups reaching back about 10 minutes, an hour, a day and a week, and
+one from before the account's copy last replaced it, each restorable as a new slot [T-744,
+T-1826]. A game saved by a newer build with parts this one cannot read plays but is never written
+or uploaded here [T-1826]; closing the page asks first only while a change cannot be saved. Beside each slot the page keeps its last final demand result, shown at once
 on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on

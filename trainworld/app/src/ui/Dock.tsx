@@ -18,13 +18,14 @@ import { SettingsTab } from "./SettingsTab";
 import { HelpPanel } from "./HelpPanel";
 import { startAccountUi } from "./AccountPanel";
 import { Icon } from "./widgets";
+import { tabKeyName } from "./toolKeys";
 
 /** T-252: the tabs are icons, their names in the hover */
 const TABS: [Tab, string, () => JSX.Element][] = [
   ["build", "Build", Icon.wrench],
   ["lines", "Lines", Icon.route],
   ["stations", "Stations", Icon.building],
-  ["money", "Money", Icon.money],
+  ["money", "Finances", Icon.money],
   ["cities", "Cities", Icon.cities],
 ];
 
@@ -127,7 +128,7 @@ export function Dock() {
     <aside id="dock" class={inspecting ? "inspecting" : undefined} ref={ref} style={style}>
       <nav class="tabs">
         {TABS.map(([id, label, Glyph]) => (
-          <button class={"tab" + (t === id ? " on" : "")} data-tip={label} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
+          <button class={"tab" + (t === id ? " on" : "")} data-tip={`${label} (${tabKeyName(id)})`} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
             <Glyph />
           </button>
         ))}

@@ -111,8 +111,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   **Several nodes together** (T-475, `move_nodes`, the Select tool's pick): each moves by the same
   offset; an edge between two of them shifts whole, PIs included; an edge to a node that stays
   follows the one-node rule above. All must be movable, or nothing moves.
-- **Placing stations**: click on track (it is split there) or on a node. On open ground the station
-  brings its own track [T-794, `TrackApi::add_free_station`]: a straight blueprint piece at the
+- **Placing stations**: click on track (it is split there) or on a node; the station tool takes
+  nothing else (T-1820). The sim can still place one on open ground, where the station
+  brings its own track [T-794, `TrackApi::add_free_station`], no tool calls it: a straight blueprint piece at the
   selected level, double or quad as the Build tab is set, the platform plus 10 m past each end
   long, with the station at its middle (on quad on the drawn pair only, T-1687), one undoable edit
   priced as the track and station together. Its ends are ordinary loose ends, so later track joins

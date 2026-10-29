@@ -1,5 +1,5 @@
-// T-1791, T-1813: the line panel's group row, when the line is in a group: the group's bullet and
-// name (a click opens the group view) and Leave group.
+// T-1791, T-1813, T-1818: the line panel's group row, when the line is in a group: "Part of", the
+// group's bullet (a click opens the group view), "group", and Leave group.
 
 import { groupBullet, groupName, lineGroups } from "../../game/lineGroups";
 import type { LineInput } from "../../game/types";
@@ -13,12 +13,13 @@ export function LineGroup({ l }: { l: LineInput }) {
   const ls = l.group && w ? lineGroups(w.save.lines).get(l.group) : undefined;
   if (!ls) return null;
   const open = () => (selection.value = { kind: "group", group: l.group! });
-  // the name only where the bullet does not read the same
+  // the hover carries the full name where the bullet reads it shorter
   const name = groupName(ls), same = groupBullet(ls, () => 0).text.toLowerCase() === name.toLowerCase();
   return (
     <div class="line-group">
-      <GroupPill ls={ls} tip="Open the group" onClick={open} />
-      <span class="name link" data-tip="Open the group" onClick={open}>{same ? "" : name}</span>
+      <span class="muted">Part of</span>
+      <GroupPill ls={ls} tip={same ? "Open the group" : `${name}\nOpen the group`} onClick={open} />
+      <span class="muted">group</span>
       <button class="btn icon" data-tip="Leave group" aria-label="Leave group" onClick={() => void edit({ op: "lineGroup", lines: [l.num], group: 0 })}>
         <Icon.leaveGroup />
       </button>

@@ -530,6 +530,17 @@ impl TrackApi {
         let Some(to) = FrameKind::from_u8(kind) else { return vec![] };
         save::convert_frame(bytes, to).unwrap_or_default()
     }
+    /// T-1826: how much of a save's network bytes this build does not read (`save::decode_read`,
+    /// with a trailing eras tail it does not know counted too); 0 if it reads them all or they do
+    /// not decode (the load says so).
+    pub fn save_unread(bytes: &[u8]) -> u32 {
+        let (bytes, _) = split_eras(bytes);
+        save::decode_read(bytes).map_or(0, |(_, n)| n as u32)
+    }
+    /// T-1826: the save level this build writes and reads up to (`save::LEVEL`).
+    pub fn save_level() -> u32 {
+        save::LEVEL
+    }
     /// A save's node and curve points, x, y flat, read without deriving it (T-737: the clock worker
     /// fetches the water masks they fall in before the one real load). Empty if it does not decode.
     pub fn save_points(bytes: &[u8]) -> Vec<f64> {

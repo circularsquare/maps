@@ -10,6 +10,9 @@
 
 import { kAtY } from "./geo";
 
+/** T-1821: the Line view's line width as a multiple of the width the Traffic view's scale is set
+ * against (Anita, 2026-10-29: "raise normal line thickness by like 30% relative to traffic mode") */
+export const LINE_VIEW_WIDTH = 1.3;
 /** a band's width as a share of a line's (Anita, 2026-10-29) */
 export const BAND_SHARE = 0.8;
 /** where a line's slot changes at a node, its shift eases over this much of the edge, m */
@@ -324,50 +327,6 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
     }
   }
   return { seg: out, sample, pick };
-}
-
-/** how near a line's run must end to a station's node to pass through it, local units */
-const AT_NODE = 3;
-
-/**
- * T-1807: per station, half the width of the widest ribbon of lines sharing track through it, line
- * widths, unfolded; 0 where no shared track passes. A ribbon passes through a station when one of its
- * lines' runs along an edge ends at its node. The Line view's bands (`L.band`), or the Traffic view's
- * (`traffic`, with `width` per segment, line widths).
- */
-export function stationRibbons(L: TrafficStrokes, stations: Float32Array, count: number, traffic: TrafficBands | null, width: Float32Array | null): Float32Array {
-  const out = new Float32Array(count), B = L.band, n = L.count, seg = L.seg;
-  if (!B || B.length < n * 4 || !count) return out;
-  const S = BAND_RANGE / 32767, cell = (v: number) => Math.floor(v / (4 * AT_NODE));
-  const grid = new Map<string, number[]>();
-  for (let i = 0; i < count; i++) {
-    const k = `${cell(stations[i * 3])},${cell(stations[i * 3 + 1])}`;
-    let v = grid.get(k);
-    if (!v) grid.set(k, (v = []));
-    v.push(i);
-  }
-  const mark = (x: number, y: number, r: number) => {
-    const cx = cell(x), cy = cell(y);
-    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const i of grid.get(`${cx + dx},${cy + dy}`) ?? []) {
-      if (Math.abs(stations[i * 3] - x) <= AT_NODE && Math.abs(stations[i * 3 + 1] - y) <= AT_NODE) out[i] = Math.max(out[i], r);
-    }
-  };
-  for (let i0 = 0; i0 < n; ) {
-    let i1 = i0 + 1;
-    while (i1 < n && L.edge[i1] === L.edge[i0] && L.colour[i1] === L.colour[i0]) i1++;
-    let r = 0;
-    for (let i = i0; i < i1; i++) for (const e of [0, 1]) {
-      const q = B[i * 4 + 2 + e] / 32767;
-      if (q <= 0) continue;
-      r = Math.max(r, traffic && width ? Math.abs(traffic.seg[i * 2 + e]) + width[i] / 2 : Math.abs(B[i * 4 + e] * S) + (1 - q) / 2);
-    }
-    if (r > 0) {
-      mark(seg[i0 * 4], seg[i0 * 4 + 1], r);
-      mark(seg[(i1 - 1) * 4 + 2], seg[(i1 - 1) * 4 + 3], r);
-    }
-    i0 = i1;
-  }
-  return out;
 }
 
 /** A path entry's band at `t` metres from its start (its travel direction) on an edge `len` m long:

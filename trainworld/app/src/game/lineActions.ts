@@ -116,14 +116,14 @@ export function toggleEditStops(l: LineInput) {
   selection.value = { kind: "line", line: l.id };
 }
 
-/** Edit stops on the selected line (the L key); nothing when no line is selected. */
+/** Edit stops on the selected line (the S key); nothing when no line is selected. */
 export function toggleEditStopsSelected() {
   const s = selection.peek();
   const l = s && (s.kind === "line" || s.kind === "train") ? lineById(s.line) : undefined;
   if (l) toggleEditStops(l);
 }
 
-/** The A key (T-1417): every station the selected line's path passes becomes a stop; nothing when
+/** The G key (T-1417): every station the selected line's path passes becomes a stop; nothing when
  * no line panel is open or the line passes none. */
 export async function addAllPassedSelected() {
   const s = selection.peek();

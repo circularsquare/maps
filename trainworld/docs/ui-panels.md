@@ -33,8 +33,9 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   Cities lists'), rows holding a stepper, button or box 28 px [T-1802].
   A rule only separates sections about different things (the line panel's `.h.divided`, the
   inspector's top edge); a list's column headers keep their thin rule over the rows.
-- **No motion but trains.** Instant state changes, no CSS transitions. Camera moves the game makes
-  (search, Go to) jump with no flight [T-182]; the map's own gestures keep MapLibre's easing.
+- **Motion where it helps** (Anita 2026-10-29, dropping the old "no motion but trains" rule): state
+  changes stay quick and no control waits on an animation. Camera moves the game makes (search, Go to)
+  jump with no flight [T-182]; the map's own gestures keep MapLibre's easing.
 - **Panels show what can change** (Anita) [T-253]: labels, numbers and states. No explanatory
   notes or how-it-works sentences; a fact worth keeping goes in the hover of the label it explains.
   Icons with hovers over word labels where the icon is clear.
@@ -63,8 +64,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 **Fixed layout, no floating windows** (the saved games panel and confirmations are the
 exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
-- A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
-  **Stations** (a platform under its canopy), **Money** (a bill and a coin), **Cities** (a skyline) [T-749], sharing the row's width
+- A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a wrench), **Lines** (a route with stops),
+  **Stations** (a platform under its canopy), **Finances** (a bill and a coin) [T-1819], **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
@@ -309,12 +310,28 @@ the button is gone.
 
 ## Keys and focus
 
-[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, N, L, A, C, Esc, Space, Ctrl+Z/Y, the line tool's
-Enter and Backspace) and search's `/`, Ctrl+K and Ctrl+F. A text field keeps every key (search's
+[T-183, `ui/keys.ts`] One rule for the game's keys (listed below) and search's `/`, Ctrl+K and Ctrl+F. A text field keeps every key (search's
 own box gives Ctrl+K and Ctrl+F to selecting its text). Another form control keeps only its own
 keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a letter); the rest reach
 the game. A select picked with the mouse gives up focus at once, so the next Space pauses; one
 reached with Tab keeps it. Buttons show the browser's focus ring for keyboard focus only [T-169].
+
+The key map [T-1819; tables in `ui/toolKeys.ts`; letters read lowercase, so Caps Lock does not matter; none fires
+with Ctrl, Meta or Alt held, and the numbers not with Shift]. Each button's or tab's hover shows its key.
+
+| Key | Does | From |
+|---|---|---|
+| 1 to 7 | draw at elevation +3 down to -3 (4 is ground level) | any tab |
+| B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
+| R, P, X, M | tool: draw track, place stations, delete, select; opens Build (`TOOLS`) | any tab |
+| U | start a new bus line (`BUS_KEY`) | any tab |
+| T | explore a trip; the tab stays | any tab |
+| N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
+| D, E, Delete | disable, enable, remove the picked blueprints | select tool |
+| Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
+
+C stays Construct's, so Cities has Y; A opens Stations and S is Edit stops (Anita's pick); add-passed-stations
+has G (gaps); T is the trip explorer's, so the track tool has R.
 
 ## Controls
 
@@ -322,8 +339,8 @@ reached with Tab keeps it. Buttons show the browser's focus ring for keyboard fo
 map beside the dock, under the tab row, listing only the controls no button shows: the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
-the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (tool numbers, T, N, L, A, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
-the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`; F2 hides the interface, below) and panel gestures (double click
+the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
 changed that a button does not show gets its row here.
@@ -398,7 +415,7 @@ and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campa
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
 not the browser's.
 
-## Money tab
+## Finances tab (the Money tab until T-1819; id `money`)
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
 T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
@@ -596,16 +613,25 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   downloads it here."), bin (hover "Delete", asked first: "Delete "Tokyo" from your account?") and
   Open (downloads it into a new slot and opens it as Open does). Deleting a tied slot asks "Delete
   "Tokyo" from this browser and your account?".
-- **Earlier versions** [T-744, T-988 stage 3, T-1395]: the clock icon lists them under the Playing
-  card (the icon lit while open; open or shut is kept for the visit), newest first, each "Today at
-  2:58 PM" ("Oct 24 at 2:58 PM" before today; "· Day 26" after a browser backup; exact time on
-  hover) with Open as a copy, which closes the panel and opens it in a new slot, named "<game> at
-  2:05 PM" (an earlier restore's time dropped). One list only: the account's two backups when the
-  game is on the account signed in and the account listed it (its Open as a copy downloads it and
-  opens it as Open a file does, a new game on the account; a failed download says "This backup
-  could not be downloaded."), otherwise this browser's two. The browser keeps writing its own for
-  every game; signed in they are hidden, and they show again when the account cannot be reached
-  or after signing out. With none yet the list says "No earlier versions yet".
+- **Earlier versions** [T-744, T-988 stage 3, T-1395, T-1826]: the clock icon lists them under the
+  Playing card (the icon lit while open; open or shut is kept for the visit), newest first, each
+  by its age, "Just now", "12 min ago", "3 h ago", "2 days ago", "3 weeks ago" (the exact time on
+  hover), with Open as a copy, which closes the panel and opens it in a new slot, named "<game> at
+  2:05 PM" (an earlier restore's time dropped). One list holds this browser's backups (up to four
+  tiers reaching back about 10 minutes, an hour, a day and a week, and the one from before the
+  account's copy last replaced the slot, whose hover says so; "· Day 26" after each) and, while the
+  game is on the account signed in and the account listed it, the account's two, a small cloud
+  after their age (their Open as a copy downloads it and opens it as Open a file does, a new game
+  on the account; a failed download says "This backup could not be downloaded."). With none yet
+  the list says "No earlier versions yet".
+- **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
+  top bar and the callout say "This game was saved by a newer version. Reload the page to
+  update."; Save refuses with the same words (its hover too). Download's hover is "Download as a
+  file, as the newer version saved it" (the file as loaded); Make a copy's is "Make a copy to play
+  on here. The copy leaves out what only the newer version can read."
+- **Leave page?** [T-1826]: closing or reloading the page asks first (the browser's own question)
+  only while a change the player made could not be saved: autosave off in this tab for any reason
+  above, or a failed write.
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Make a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no card Playing, and the copy icon above the cards gives the game

@@ -22,12 +22,15 @@ import { selection } from "../../game/ui";
 import { edit, stationNames, world } from "../../game/world";
 import type { EditOp } from "../../workers/protocol";
 import { locateLine } from "../locate";
+import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { DEMAND_LABEL } from "./LineInspector";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
+/** How far a crossing bar runs past the outermost line it crosses, px. */
+const CROSS_STUB = 10;
 /** Bullets shown after a named row's name, as the line panel's. */
 const STOP_CHIPS = 2;
 
@@ -149,7 +152,7 @@ export function GroupInspector({ group }: { group: number }) {
     const ord = row.order.filter((k) => row.cells[k]?.stop);
     for (let i = 0; i < ord.length;) {
       let j = i;
-      while (j + 1 < ord.length && Math.abs(lay.xs[ord[j + 1]][r] - lay.xs[ord[j]][r]) <= PITCH + 0.5) j++;
+      while (j + 1 < ord.length && Math.abs(lay.xs[ord[j + 1]][r] - lay.xs[ord[j]][r]) <= PITCH + 0.5 && row.cells[ord[j + 1]]!.key === row.cells[ord[j]]!.key) j++;
       out.push([lay.xs[ord[i]][r], lay.xs[ord[j]][r]]);
       i = j + 1;
     }
@@ -220,8 +223,11 @@ export function GroupInspector({ group }: { group: number }) {
               const key = row.cells.find((c) => c)!.key;
               const xs = across(key).slice(0, TALL_MAX);
               const bars = xs.length > ROUND_MAX ? xs : xs.slice(0, ROUND_MAX);
+              // T-1817: across the lines with a place here only, a short way past either side
+              const at = row.cells.map((c, k) => (c ? lay.xs[k][r] : NaN)).filter(Number.isFinite);
+              const x0 = Math.max(1, Math.min(...at) - CROSS_STUB), x1 = Math.min(W - 1, Math.max(...at) + CROSS_STUB);
               return bars.map((o, i) => (
-                <line class="group-cross" x1={1} x2={W - 1} y1={row.y + barOffset(i, bars.length)} y2={row.y + barOffset(i, bars.length)} stroke={o.colour} stroke-width={LINE}
+                <line class="group-cross" x1={x0} x2={x1} y1={row.y + barOffset(i, bars.length)} y2={row.y + barOffset(i, bars.length)} stroke={o.colour} stroke-width={LINE - 1}
                   data-tip={`${o.name} stops at ${rowTip(r).split("\n")[0]}`} onClick={() => (selection.value = { kind: "line", line: o.id })} />
               ));
             })}
@@ -246,10 +252,11 @@ export function GroupInspector({ group }: { group: number }) {
                   const st = w.lineStats[l.id];
                   const n = l.stops.length;
                   const rail = !!st && !st.bus;
+                  const B = tipBullet(l.letter, l.colour);
                   const [x0, x1] = hitOf(k, r), x = lay.xs[k][r];
                   const hit = <rect class="hit" x={x0} y={row.y - row.h / 2} width={x1 - x0} height={row.h} />;
                   if (!c.stop) {
-                    const tip = rail ? `Click to add the ${l.name}'s stop at ${nm(c.station)}` : `${l.name} passes ${nm(c.station)}`;
+                    const tip = rail ? `Click to add ${B} stop at ${nm(c.station)}` : `${B} passes ${nm(c.station)}`;
                     return (
                       <g class={"group-cell" + (rail ? " edit" : "")} data-tip={tip} onClick={rail ? () => void change({ op: "stopPassed", line: l.num, station: Number(c.station) }) : undefined}>
                         {hit}
@@ -267,8 +274,8 @@ export function GroupInspector({ group }: { group: number }) {
                   const here = nm(c.station);
                   const end = c.index === 0 || c.index === n - 1;
                   const tip = keep
-                    ? (turns ? `${l.name} turns back at ${here}` : `${l.name} stops at ${here}`)
-                    : `Click to remove the ${l.name}'s stop at ${here}` + (end || loop || n < 3 ? "" : `\nShift-click to end the ${l.name} here`);
+                    ? (turns ? `${B} turns back at ${here}` : `${B} stops at ${here}`)
+                    : `Click to remove ${B} stop at ${here}` + (end || loop || n < 3 ? "" : `\nShift-click to end ${B} here`);
                   const click = (e: MouseEvent) => {
                     if (e.shiftKey && !end && !loop) void change({ op: "endLineAt", line: l.num, index: c.index });
                     else void change({ op: "dropStop", line: l.num, index: c.index });

@@ -128,10 +128,13 @@ purpose filter the purpose drawn is ringed in the bar.
   typing the oldest line's name back clears it), and its lines' riders, money and trains added up,
   each hover listing the lines' own figures (riders "1.59M riders in the past 24 hours, each
   line's added up", since a rider changing between two of its lines counts twice), the trains
-  uncoloured. Only running lines count; a group with none reads Planned (or Broken). The chevron
-  opens it to its lines, indented 24 px, each a line row as any other, sorted by the tab's sort
-  (or the hand order);
-  open or closed is kept while the page is open. The group row sorts among the lines by its
+  uncoloured. Only running lines count; a group with none reads Planned (or Broken). A group
+  shows open by default [T-1818], its lines indented 24 px, each a line row as any other, sorted
+  by the tab's sort (or the hand order); the chevron closes it, and what the player closed stays
+  closed while the page is open. The riders, money and trains columns have fixed widths that
+  never shrink, so every row, a group's and its lines' and the header's, has them in the same
+  place at any dock width; a wide bullet or a long group name gives up room from the name,
+  never from the columns. The group row sorts among the lines by its
   totals (Near by its nearest line, City and the tie by its oldest line, Name by its name), and
   shows, with all its lines, when any of them is in the viewed place. A click on it opens the group
   view (below), a double click fits the map to all its lines'
@@ -142,7 +145,10 @@ purpose filter the purpose drawn is ringed in the bar.
   line" taken off, any case ("Tokaido Main Line" reads "Tokaido"; "Line 1" stays), and likewise a
   trailing 線, 线, 本線, ライン or 선 unless a number is left ("東海道本線" reads "東海道", "1号线"
   stays). Its colour is the one most of the group's lines share, the busiest line's (riders in the
-  past 24 hours, then the oldest) breaking a tie. Both can be set by hand in the group view's
+  past 24 hours, then the oldest) breaking a tie; drawn, it is kept legible on the page (T-1817,
+  `legibleOn`): a colour lighter than 0.45 relative luminance is mixed toward black on the light
+  shade until it reaches it, one darker than 0.14 toward white on the dark. The text's ink box is
+  centred in the pill as a line bullet's symbol is (`inkShift`, ui/bullet.ts). Both can be set by hand in the group view's
   title; set ones are kept on every line of the group, so they join, copy and undo with it, and a
   line leaving loses them. It is the group's mark in the Lines tab's group row, the line panel's
   group row and the group view's title.
@@ -172,13 +178,15 @@ purpose filter the purpose drawn is ringed in the bar.
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
-- **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
-  "High-speed, " on a line of high-speed trains [T-1280]. Above it, for a line in a group
-  [T-1791, T-1813], a row with the group's bullet and the group's name where it reads otherwise
-  (either a click to open the group view, hover "Open the group") and a Leave group button
-  (an arrow out of a box, hover "Leave group"), there for touch, where dragging rows is not; a
-  bus line's panel has the same row.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161;
+- **Under the title** a muted line, left aligned with the title's bullet, gives the stop count
+  and length, "24 stops, 16.3 km", led by "High-speed, " on a line of high-speed trains [T-1280].
+  Above it, for a line in a group [T-1791, T-1813, T-1818], a row reading "Part of [bullet]
+  group", the group's bullet inline (a click opens the group view, hover "Open the group", led
+  by the group's full name where the bullet reads it shorter; a long name is cut with an
+  ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
+  there for touch, where dragging rows is not; a bus line's panel has the same row. The row
+  starts 6 px below the title, which covers that much of whatever follows it.
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key O), Copy line (duplicates route and settings with no trains, T-1161;
   the copy keeps the symbol its line shows, T-1475, joins its source's group, making one of the
   two when the source had none, and the group view opens, T-1791), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
@@ -341,12 +349,15 @@ line panel's own remove button works as before.
   way, and its own places go in as one block: between the rows it leaves and rejoins, or above its
   first shared row or below its last, whichever leaves the shorter bar running beside them. So a
   branch hangs off the row where it leaves and its stops stay together. A line sharing no place goes
-  below the rest.
+  below the rest. Then, in the default view, a tick row moves up into the first tick row after its
+  lines' previous places where only lines apart from them are, so two branches' unnamed stops sit
+  side by side on shared rows (named rows never move).
 - **Named rows and ticks**: by default only key stops get a row of 18 px with the name: each line's
   termini; where two lines meet and where they part; the stops on either side of a stretch one of
   two lines skips (an express's stops beside a local); stops where lines outside the group stop.
-  Other stops are a white tick across the bar in a 7 px row with no name; a row every line passes
-  is a bare 7 px row, where a ghost can add the stop. The switch names every row (a row every line
+  Other stops are a white tick across the bar, 4 px tall with a 1 px outline in the pills' outline
+  colour, in an 8 px row with no name; a row every line passes is a bare 8 px row, where a ghost can
+  add the stop. The switch names every row (a row every line
   passes muted).
 - **Together and apart**: two lines run together from a stop both make to the next unless each
   makes stops the other does not between them (skip-stop: drawn apart). Lines together at a row
@@ -355,12 +366,14 @@ line panel's own remove button works as before.
   room to run at about 50 degrees. The left-to-right order is chosen row by row: lines together
   side by side; inside a bundle, the lines alike (same stops, still together) for longer are
   nearer each other, so the one that differs or leaves soonest is outside; apart, lines that will
-  run alike soon are nearer; each crossing against the row before costs as much as 8 rows of
-  likeness, so the order changes where that pays.
+  run alike soon are nearer; each crossing against a neighbouring row costs as much as 8 rows of
+  likeness, so the order changes where that pays. The rows are ordered down, then up (so the order
+  a meeting needs reaches back up the branches before it), then down again against both neighbours.
 - **Marks**: in a named row a white pill where a line stops, one elongated pill over lines
   stopping side by side, a passed station's pill with its outline at 40%. Lines outside the group
-  stopping there are drawn as the related lines view's crossing bars, up to 6 (past 2 the row and
-  pill grow to fit), and their bullets after the name (busiest two, or up to 6 in two rows where
+  stopping there are drawn as the related lines view's crossing bars but 2 px, across only the
+  lines with a place in the row and 10 px past them, up to 6 (past 2 the row and pill grow to fit),
+  and their bullets after the name (busiest two, or up to 6 in two rows where
   the row grows, then "+" with a hover naming the rest; a bar's click opens its line). Each line's
   bullet sits above its first stop and below its last (side by side where several end at one
   place, moved out to the side where another line runs through); while a line's top bullet is
@@ -372,15 +385,16 @@ line panel's own remove button works as before.
   re-solves, one undo each; sim `drop_stop`, `end_line_at`, `stop_passed`, track-and-service.md).
   Each line has its own click target at each of its places, half way to its neighbours (at most
   11 px a side) and the row's height, ticks included: over a stop the hovered line's part of the
-  mark shows its colour (a dot in a pill, the tick filled), and the hover names the line ("Click to
-  remove the 4's stop at 14 St-Union Sq"); the click takes that line's stop out and no other's. A
+  mark shows its colour (a dot in a pill, the tick filled), and the hover shows the line's bullet
+  inline ("Click to remove [4] stop at 14 St-Union Sq", the bullet drawn in the text; `tipBullet`
+  in ui/tip.ts); the click takes that line's stop out and no other's. A
   stop between the ends leaves the track as it is, an end stop's removal shortens the path to the
   new end. Shift-click on a stop between the ends ends the line there, the stops past it toward the
-  nearer end going (hover's second line "Shift-click to end the 4 here"). Over a passed station
+  nearer end going (hover's second line "Shift-click to end [4] here"). Over a passed station
   the mark darkens (a named row's faded pill) or a ghost tick shows, and the click adds the stop
-  (hover "Click to add the 4's stop at 23 St"). A stop that cannot go has no click and the plain
-  hover: a bus line's, a line's last two, a loop's ends, and where trains turn back (hover "4 turns
-  back at X"). One edit at a time; a refusal says "The line has to keep this stop."
+  (hover "Click to add [4] stop at 23 St"). A stop that cannot go has no click and the plain
+  hover: a bus line's, a line's last two, a loop's ends, and where trains turn back (hover "[4]
+  turns back at X"). One edit at a time; a refusal says "The line has to keep this stop."
 
 ## The bus line panel
 

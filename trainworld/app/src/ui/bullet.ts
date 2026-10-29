@@ -48,6 +48,7 @@ const loading = new Set<string>();
 function forget() {
   family = "";
   cache.clear();
+  shifts.clear();
   bulletEpoch.value++;
 }
 function watchRatio() {
@@ -122,6 +123,28 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   cache.set(key, ok ? v : null);
   return ok ? v : null;
 }
+
+/** T-1817: how far HTML text in bold at `fontPx` on a `lineH` line box moves down so its ink box is
+ * centred in the line, as a bullet's symbol is (the group pill's text), px; 0 where unmeasured. */
+export function inkShift(text: string, fontPx: number, lineH: number): number {
+  if (typeof document === "undefined" || !text) return 0;
+  ctx ??= document.createElement("canvas").getContext("2d");
+  if (!ctx) return 0;
+  family ||= getComputedStyle(document.body).fontFamily;
+  const key = `shift|${family}|${fontPx}|${lineH}|${text}`;
+  const hit = shifts.get(key);
+  if (hit !== undefined) return hit;
+  ctx.font = `700 ${MEASURE_PX}px ${family}`;
+  ctx.textBaseline = "alphabetic";
+  const m = ctx.measureText(text), k = fontPx / MEASURE_PX;
+  // the line box puts the font's ascent and descent around its middle; the ink box is what shows
+  const css = lineH / 2 + ((m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2) * k;
+  const ink = lineH / 2 + ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2) * k;
+  const v = Number.isFinite(ink - css) ? Math.round((ink - css) * 4) / 4 : 0;
+  shifts.set(key, v);
+  return v;
+}
+const shifts = new Map<string, number>();
 
 /** `bulletText` when it is measured already; else null (the caller draws plain text for now) and it is
  * measured in idle time, and `bulletEpoch` bumped once done. T-1021: a big save's Lines tab measured

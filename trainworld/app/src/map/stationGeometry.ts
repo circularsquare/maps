@@ -331,10 +331,9 @@ export function polyFrame(q: ArrayLike<number>, a: number, b: number): [number, 
  * A station on screen. `x, y`: the node; `sh`: its platform (`PlatformShape`) and `halfWidth`, the
  * platform's true half width in local units; `transfer`: served by more than one line. A box's
  * length and width are both fixed on the ground, so it has one shape at every zoom (T-204), and
- * the same width for every station (T-239), but where a ribbon of lines side by side runs through it
- * (T-1807): `ribbonPx`, CSS px, the least half width or dot radius that covers it and the rim.
+ * the same width for every station (T-239).
  */
-export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, ribbonPx = 0): StationShape {
+export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean): StationShape {
   const mx = x + sh.mx, my = y + sh.my;
   const [cx, cy] = project(mx, my), [ex, ey] = project(mx + sh.ax, my + sh.ay), [qx, qy] = project(mx - sh.ay, my + sh.ax);
   const len = Math.hypot(ex - cx, ey - cy), nl = Math.hypot(qx - cx, qy - cy);
@@ -344,9 +343,9 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const axisLoc = Math.hypot(sh.ax, sh.ay);
   const [ox, oy] = axisLoc > 1e-9 ? [0, 0] : project(mx + 1, my);
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
-  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0, st.boxes ? ribbonPx : 0);
+  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0);
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
-  const cover = Math.max(0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1, ribbonPx);
+  const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle
   const line = platformPoints(sh), pts = new Float32Array(2 * PLATFORM_POINTS);
   let total = 2 * len;

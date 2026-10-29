@@ -81,7 +81,7 @@ try {
   check(await page.$$eval('.lines-box .sort-btn.on', (e) => e.length) === 0, 'no sort column is on while the hand order holds');
 
   // 3. inside an open group: a reorder of the group's lines
-  await page.click(`${G(g)} .chevron`);
+  check(await page.$eval(`${G(g)} .chevron`, (e) => e.getAttribute('aria-expanded')) === 'true', 'a group shows open by default (T-1818)');
   await settle();
   m = await drag(L(l6.id), L(l4.id), 0.1, 'light-drop-in-group.png');
   order = await rows();
@@ -196,7 +196,9 @@ try {
     }, [ta.id, tb.id]);
     const col = await page.$eval(`${G(tg)} .group-pill`, (e) => getComputedStyle(e).color);
     check(p.text === p.name.replace(/(本線|ライン|線)$/u, '') && p.text.length > 0, `Tokyo pill "${p.text}" for "${p.name}"`);
-    check(col === rgb(want), `Tokyo pill in the busier line's colour ${want} (${col})`);
+    // T-1817: the pill's colour is kept legible on the shade, a little lighter or darker
+    const near = (a, b) => { const p = (s) => s.match(/\d+/g).map(Number); return p(a).every((v, i) => Math.abs(v - p(b)[i]) <= 24); };
+    check(near(col, rgb(want)), `Tokyo pill in the busier line's colour ${want} (${col})`);
     await page.$eval(G(tg), (e) => e.scrollIntoView({ block: 'center' }));
     await page.screenshot({ path: join(OUT, 'dark-tokyo-lines.png'), clip: { x: 0, y: 40, width: 440, height: 520 } });
     await page.evaluate(async () => { (await import('/src/game/ui.ts')).shade.value = 'light'; });

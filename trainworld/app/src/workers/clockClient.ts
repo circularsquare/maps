@@ -29,12 +29,12 @@ import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
 import { saveRefusal } from "../game/memoryCheck";
-import { keepStorage } from "../game/saveSafety";
+import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
-export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
+export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
 export const savedByHand = signal<number | null>(null);
 export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
@@ -828,9 +828,12 @@ export class ClockClient {
         const then = this.onLeft;
         this.onLeft = null;
         if (msg.error) say(msg.error, true);
-        else then?.();
+        else { askBeforeLeaving(false); then?.(); }
         break;
       }
+      case "unsaved":
+        askBeforeLeaving(msg.on);
+        break;
       case "exported": {
         const { slots, active } = saveSlotsState.value;
         downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day);
@@ -838,7 +841,7 @@ export class ClockClient {
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, newer: msg.newer };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)

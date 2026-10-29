@@ -260,10 +260,11 @@ def copy_site(dist, dest, base, dry):
         t = os.path.join(dest, *r.split("/"))
         os.makedirs(os.path.dirname(t), exist_ok=True)
         shutil.copy2(p, t)
-    tmp = os.path.join(STAGE, "index.html")
-    os.makedirs(STAGE, exist_ok=True)
-    open(tmp, "w", encoding="utf-8", newline="").write(page_html(dist, base))
-    web_wrap.wrap(tmp, os.path.join(dest, "index.html"), sitemap="false")
+    # Front matter only, no analytics include: the game page leaves the site's Google Analytics out
+    # (Anita, 2026-10-29, T-1833), so web_wrap.wrap, which adds it, is not used here.
+    page = os.path.join(dest, "index.html")
+    fm = web_wrap.existing_front_matter(page) or "---\nsitemap: false\n---\n"
+    open(page, "w", encoding="utf-8", newline="").write(fm + page_html(dist, base))
 
 
 REDIRECT = """{fm}<!doctype html>

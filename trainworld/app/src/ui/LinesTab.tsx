@@ -9,7 +9,7 @@ import { busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
 import { edit, stationsById } from "../game/world";
-import { groupName, lineGroups, openGroups, toggleGroup } from "../game/lineGroups";
+import { closedGroups, groupName, lineGroups, toggleGroup } from "../game/lineGroups";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
 import type { WorldView } from "../game/types";
@@ -198,7 +198,7 @@ export function LinesTab() {
   const items = sorted.filter((it) => it.ls.some((l) => shownIds.has(l.id)));
   /** every line in the order shown, the hidden ones included */
   const fullOrder = () => sorted.flatMap((it) => membersOf(it).map((l) => l.id));
-  const open = openGroups.value;
+  const closed = closedGroups.value;
   const periodOf = (l: LineInput) => PERIODS[periodAt(lineSeconds(w.lineStats[l.id]))]?.name ?? "";
 
   // T-1791, T-1813: drag a line's row onto the middle of another to group the two, or into a gap
@@ -206,7 +206,7 @@ export function LinesTab() {
   // group, which it then joins); a group's row moves the whole group, between rows only
   type Row = { key: string; it: Item; line?: LineInput; member: number };
   const rowList: Row[] = items.flatMap((it): Row[] => it.g === 0 ? [{ key: "l:" + it.ls[0].id, it, line: it.ls[0], member: 0 }]
-    : [{ key: "g:" + it.g, it, member: 0 }, ...(open.has(it.g) ? membersOf(it).map((l) => ({ key: "l:" + l.id, it, line: l, member: it.g })) : [])]);
+    : [{ key: "g:" + it.g, it, member: 0 }, ...(!closed.has(it.g) ? membersOf(it).map((l) => ({ key: "l:" + l.id, it, line: l, member: it.g })) : [])]);
   /** What a drop does: `with` the line or group dropped onto, or `at` the gap (a row index) */
   type Drop = { with: Row } | { at: number };
   const dropAt = (d: Drag): Drop | null => {
@@ -324,7 +324,7 @@ export function LinesTab() {
     );
   };
   const groupRows = (it: Item) => {
-    const isOpen = open.has(it.g), drop = "g:" + it.g;
+    const isOpen = !closed.has(it.g), drop = "g:" + it.g;
     const on = !isOpen && sel?.kind === "group" && sel.group === it.g;
     const ls = isOpen ? membersOf(it) : [];
     return (
@@ -361,7 +361,7 @@ export function LinesTab() {
       <div class="line-list-actions">
         <span style={{ display: "flex", gap: "6px" }}>
           <button class="btn text" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
-          <button class="btn icon new-bus" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
+          <button class="btn icon new-bus" data-tip="Draw a new bus line (U)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
         </span>
         <ScopeToggle />
       </div>

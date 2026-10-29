@@ -137,7 +137,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; the strokes kept between changes in `strokeCache.ts`, T-1638, and simplified and culled in `strokeLod.ts`, T-1639, the few that show gathered into one buffer in `strokeGather.ts`, T-1644; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing, and the camera: `Camera` for the flat map or the globe, `PROJECT_GLSL` and `setCamera` for the shaders, `mercToCss` and `clipToCss` to CSS px, `behindHorizon`; T-033; shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `transferBubbles.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
-  T-496, and posted as changes to the last, `NetPatch` and `mergeNet`, T-1029; moved to a new draw anchor by `shiftNetCache`, T-1170), `lineBands.ts` (lines sharing track side by side: each edge's order of its lines and each line's sideways shift, T-1799; the Traffic view's shifts by riders, `trafficBands`; each station's widest ribbon, `stationRibbons`, T-1807), `strokePost.ts` (how the track and line strokes are posted: whole with room after the last segment, unchanged, or only the new segments written over the page's arrays, and the page's merge; T-1381), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
+  T-496, and posted as changes to the last, `NetPatch` and `mergeNet`, T-1029; moved to a new draw anchor by `shiftNetCache`, T-1170), `lineBands.ts` (lines sharing track side by side: each edge's order of its lines and each line's sideways shift, T-1799; the Traffic view's shifts by riders, `trafficBands`), `strokePost.ts` (how the track and line strokes are posted: whole with room after the last segment, unchanged, or only the new segments written over the page's arrays, and the page's merge; T-1381), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts; `hiddenOnGlobe` for DOM marks, T-033), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
@@ -358,7 +358,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
   platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),
   `old/t1260-touch.mjs` (building by touch on a 390 px phone page: track by tap, preview and confirm, a
-  pan placing nothing, stations on track and open ground, a line by taps, delete's cancel, the
+  pan placing nothing, stations on track (and open ground, as it was then), a line by taps, delete's cancel, the
   Select tool's taps and held box, then two mouse clicks on a desktop page; screenshots in t1260/;
   port 6165 by default),
   `old/t727-snap.mjs` (the snap to the real network in a new game: Tokyo to Shin-Osaka and Penn
@@ -409,6 +409,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   moved; the hand order and a group bullet set by hand kept on export and reload, a header click
   dropping the order; the pill's default text and colour; a group in the shared Tokyo start; light
   and dark into artifacts/trainworld/t1813/; about two minutes),
+  `t1826-saves.mjs [url]` (backup tiers simulated and live with `?backupMs=50`, a pull's backup, a
+  newer save with an extra block or a higher level opened read-only and left byte for byte through
+  an edit and a minute, Download and Make a copy of it, the leave-page question only with an
+  unsaved change; about three minutes),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `old/t1515-click-priority.mjs` (a click on a rail line, bus
   line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the

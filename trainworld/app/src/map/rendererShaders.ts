@@ -344,8 +344,6 @@ in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + an
                          // and whether that side is full (zw)
 in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform side, 0-1, and 1 if
                          // it is full
-in float a_ribbon;       // T-1807: half the widest ribbon of lines side by side through it, line widths; 0 none
-uniform float u_band_px; // px a line width of a ribbon is drawn (folding included)
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
 flat out vec3 v_size;    // half length, half width; 1 a waiting room, 3 a terminal
@@ -405,11 +403,8 @@ void main() {
   // it keeps one shape from there in; further out it keeps that width on screen (T-553)
   float perLoc = axisLoc > 1e-9 ? len / axisLoc : 0.0;
   float hw = max(max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc, boxes ? u_fixed.x : 0.0);
-  // as wide as the ribbon of lines side by side through it, and its rim (T-1807)
-  float ribbon = a_ribbon > 0.0 && u_band_px > 0.0 ? a_ribbon * u_band_px + u_ring + u_pixel : 0.0;
-  if (boxes) hw = max(hw, ribbon);
   // a dot covers a plain line through it as drawn now
-  float cover = max(0.3 * u_line + u_ring + u_pixel, ribbon);
+  float cover = 0.3 * u_line + u_ring + u_pixel;
   float hl = max(len, hw);
   // zoomed out every station is its own dot at its platform's middle (T-313)
   if (!boxes) v_dot = max((flags & 1) != 0 ? u_radius.y : u_radius.x, cover);

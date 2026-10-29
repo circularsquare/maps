@@ -221,6 +221,20 @@ export function rgbf(hex: string): Float32Array {
   return c;
 }
 
+/** T-1817: a line colour used as text or outline on the page: a light one a little darker on the
+ * light shade, a dark one a little lighter on the dark, mixed toward black or white only as far as
+ * the relative luminance needs, so the hue stays. */
+export function legibleOn(hex: string, dark: boolean): string {
+  const lin = (v: number) => { const c = v / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const lum = (c: number[]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+  const c = rgb(hex), to = dark ? 255 : 0, target = dark ? 0.14 : 0.45;
+  if (dark ? lum(c) >= target : lum(c) <= target) return hex;
+  const mix = (t: number) => c.map((v) => Math.round(v + (to - v) * t));
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 12; i++) { const m = (lo + hi) / 2; if (dark ? lum(mix(m)) < target : lum(mix(m)) > target) lo = m; else hi = m; }
+  return "#" + mix(hi).map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 /** Letter colour on a line chip: dark on light lines (yellow), white on the rest. */
 export function inkOn(hex: string): string {
   const [r, g, b] = rgb(hex).map((v) => v / 255);

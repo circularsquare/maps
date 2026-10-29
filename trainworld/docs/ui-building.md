@@ -10,12 +10,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3), select (4, [below](#the-select-tool)), in a
-  2 by 2 grid [T-1128], and under them the full-width Bus button (B, [below](#drawing-a-bus-line))
+- **Tools**: draw track (key R), station (P), delete (X), select (M, [below](#the-select-tool)), in a
+  2 by 2 grid [T-1128, letters T-1819], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  (hover "Elevation +3 (Shift+1)" and so on down to Shift+7; Shift+1 to Shift+7 pick the drawing
-  elevation from any tab, by key code, Shift+4 being 0 [T-1701]; the draw-at-the-elevation-of-the-track-you-extend
+  (hover "Ground level (4)" and so on: the number keys 1 to 7 pick the drawing
+  elevation from any tab, by key code, 4 being 0, and not with Shift held [T-1701, T-1819]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
   (below), then the **ramp switch** (track humping over a line seen side on;
@@ -45,11 +45,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
   by default [T-942].
-  The number keys work from any tab and open the Build tab; the key of the tool already on does
-  nothing. Each button shows its key. Three letter keys work from any tab [T-670, `ACTION_KEYS` in
+  The tool letters work from any tab and open the Build tab; the key of the tool already on does
+  nothing. Each button shows its key. Three more letter keys work from any tab [T-670, `ACTION_KEYS` in
   `ui/toolKeys.ts`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
-  there is nothing to build), N makes a new line and L starts or finishes editing the selected line's
-  stops; none fires while a text field has focus or a question is open. There is no button for plain selecting: clicking the active tool again or
+  there is nothing to build), N makes a new line and S starts or finishes editing the selected line's
+  stops; none fires while a text field has focus or a question is open. Full key list: Keys and focus in
+  [ui-panels.md](ui-panels.md#keys-and-focus). There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key T) is in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
@@ -89,8 +90,7 @@ mouse moving again takes it back).
   end or the handle, or confirm, places the segment, and with keep placing the next starts at its
   end. A tap on the start with no end waiting ends the run, as a click on it does.
 - **Stations**: on track, a tap shows the platform ghost and its tag, a second tap or confirm
-  places it. On open ground the first tap is one end of the platform (as a click), the next taps
-  set its direction (the ghost and tag show), and confirm or a tap on that point places it. After
+  places it. A tap on open ground is refused at once (no second tap, as a click). After
   it is placed no ghost shows there until the finger moves or taps elsewhere [T-1756].
 - **Delete**: a tap shows what would go (drawn red, its name in the tag); confirm or a second tap
   removes it (built things still ask), cancel drops it.
@@ -120,7 +120,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 
 - **Drawing beside track** [T-1685, T-1721]: with the beside switch on and the track tool in hand, a
   faint blue band 40 px either side of all track, blueprint or built, marks where drawing snaps beside
-  it. A start clicked in the band on open ground (further than the 10 px that joins track) goes on
+  it. A start clicked in the band on open ground (further than the 15 px that joins track) goes on
   the line 8 m (`QUAD_SPACING`) from that track, on the click's side. From any start (that one, a
   track end, the end of the last segment), while the pointer is on open ground in the band, the
   segment ends on the line beside the pointer, on the pointer's side, and runs along it, curves
@@ -210,7 +210,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 ## Drawing a bus line
 
 [T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, full
-width, key B), the Lines tab's bus button beside New line, or B from any tab starts the bus tool for a
+width, key U), the Lines tab's bus button beside New line, or U from any tab starts the bus tool for a
 new line; the Build tab's button again, while it is on, leaves it. Each click adds a
 point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
 shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
@@ -314,7 +314,7 @@ switch on, the track tool follows the real network the layer draws.
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
   quad track it is on the pair under the pointer only, as the station will be [T-1687]. With the
   pointer off the map, no ghost, ring or tag shows for the station, track and delete tools (a
-  run's segment and an open-ground station after its first click stay) [T-1777].
+  run's segment stays) [T-1777].
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
   and shows that: a node with a station or a junction is refused; a spot is refused when the
@@ -333,8 +333,9 @@ switch on, the track tool follows the real network the layer draws.
   tries the ghost's spot first, so the ghost and the click cannot disagree.
 - **What is under the pointer** [T-469, T-671]: the ghost and the click take the first spot the
   track model would accept (the same trial edit as above), tried in this order: the nodes within
-  12 px (nearest first, at most 3), then the tracks within 4 px of the nearest, then the rest within
-  10 px (at most 5 tracks). Among the near tracks the order is: one where the station would not meet
+  18 px (nearest first, at most 3), then the tracks within 4 px of the nearest, then the rest within
+  15 px (at most 5 tracks) [T-1820: 1.5 times the earlier 12 and 10; the track tool's snap onto a
+  node or track uses the same two radii (`SNAP_NODE_PX`, `SNAP_EDGE_PX` in `map/tools.ts`)]. Among the near tracks the order is: one where the station would not meet
   a station (none within the two platforms' reaches along the track, up to a junction), blueprint
   over built, the track the last station of the session went on (from its node along the track to
   the next junctions), then the nearest (`map/stationSnap.ts`). A spot that would be refused never
@@ -353,22 +354,11 @@ switch on, the track tool follows the real network the layer draws.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
-- **On open ground** [T-794, T-834, T-907, T-917; `freeSpan`, `freePiece`, `freeGhost` in `map/tools.ts`]:
-  where the pointer is not within reach of track or a node (above), a station is placed like track,
-  in two clicks: it lays a straight blueprint piece of track one platform long (plus 10 m each end)
-  at the selected elevation, double, quad or high speed as set, with the station at its middle, one
-  undoable edit (rules: [track-and-service.md](track-and-service.md) 6.1). The first click is one
-  end of the platform. Before it there is no ghost, only the snap ring at the pointer. After it the
-  platform, at the set platform length, runs from that end towards the pointer, and the second
-  click (anywhere, track or not) sets that direction and places it. Within 8 px of the first end
-  it keeps the heading of the last station placed this way (east at first). Esc after the first
-  click drops it and the tool stays on. The ghost
-  is the piece's track drawn as the track tool's (red when refused) with the platform box on it
-  (and the twin's on quad), the 1 and 2 km rings round its middle, and the tag (by the pointer) has
-  the lengths and the price, "200 m platform and 220 m of track, $16M", over the placement help
-  lines for the middle. The clock worker tries the
-  same edit and rolls it back (`TrackApi.preview_free_station`), so the ghost and the click agree;
-  a refused spot shows the reason instead.
+- **Only on track** [T-1820]: with the pointer further than the snap radii from track and nodes, the
+  ghost is a refusal: no platform, no rings, the tag "Place stations on track" in red by the pointer.
+  A click there places nothing and says the same in the notice. The game has no station on open
+  ground any more; a save's old ones stay. The sim's `add_free_station` and the worker's free
+  `StationAt` stay for other callers, and the page no longer calls them.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 
@@ -407,7 +397,7 @@ line panel. A bus route under the pointer, where no track is, is removable too [
 ## The Select tool
 
 [T-333, T-815, T-829; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx`
-`BlueprintBar`] The Select tool (key 4, a dashed box icon) picks several pieces at once to disable,
+`BlueprintBar`] The Select tool (key M, a dashed box icon) picks several pieces at once to disable,
 re-level or remove them. A pick is of one kind (Anita, T-829): one that holds any blueprint takes
 only blueprint, track and stations; one with no blueprint takes constructed track and constructed
 stations. Disabled blueprint is left out by Construct and the blueprint total, and drawn grey

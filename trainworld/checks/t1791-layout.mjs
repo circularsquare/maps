@@ -110,12 +110,23 @@ const seqOf = (str) => str.split(' ').map((s) => (s.startsWith('(') ? P(s.slice(
   const o = lay.rows[r].order;
   check(o.indexOf(f) === 1 || o.indexOf(one) === 1, `the express Y outside the locals at d (order ${o.map((k) => lines[k].num)})`);
   const ry = row('y2');
-  check(Math.abs(lay.xs[y][ry] - lay.xs[f][ry]) >= SPREAD, 'Y and F apart on their branches');
-  check(lay.rows.slice(row('g1'), row('g3') + 1).every((x) => x.cells[one]), "1's tail rows are together");
+  check(Math.abs(lay.xs[y][ry] - lay.xs[f][ry]) >= SPREAD - 0.01, `Y and F apart on their branches (${(lay.xs[y][ry] - lay.xs[f][ry]).toFixed(1)} px)`);
+  check(row('g1') === row('f9'), "after t, the ticks of F's and 1's tails share a row (f9 and g1)");
   check(Number.isFinite(lay.xs[y][ry]) && lay.bullets.filter((b) => b.col === y).length === 2, "Y's bullets at both ends");
   const all = groupLayout(lines, { all: true });
   check(all.rows.every((x) => x.named), 'all stops: every row named');
   check(all.height > lay.height, `all stops: a longer diagram (${Math.round(lay.height)} to ${Math.round(all.height)} px)`);
+}
+{
+  // T-1817: T1 runs with T3 from the north and with T2 after they meet: T1 between them
+  const T1 = seqOf('a1 a2 a3 m x1 x2 x3 x4 x5 x6 e');
+  const T2 = seqOf('b1 b2 b3 m x1 x2 x3 x4 x5 x6 e');
+  const T3 = seqOf('a1 a2 a3 m x1 z1');
+  const lay = groupLayout([{ num: 1, places: T1 }, { num: 2, places: T2 }, { num: 3, places: T3 }]);
+  draw('synthetic: a line between two it shares with', lay);
+  const rb = lay.rows.findIndex((r) => r.cells[1]?.station === 'b2'), ra = lay.rows.findIndex((r) => r.cells[0]?.station === 'a2');
+  check(lay.rows[rb].order.indexOf(0) === 1, `T1 in the middle beside T2's branch (order ${lay.rows[rb].order.map((k) => k + 1)})`);
+  check(Math.sign(lay.xs[0][ra] - lay.xs[2][ra]) === Math.sign(lay.xs[1][rb] - lay.xs[0][rb]), 'T1 on the side of T3 facing T2 from the top');
 }
 {
   // skip-stop on one track: A stops at 1 3 5 7, B at 2 4 6 7, each passing the other's

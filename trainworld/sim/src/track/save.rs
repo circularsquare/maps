@@ -32,6 +32,15 @@ const MAGIC_TWT5: &[u8; 4] = b"TWT5";
 /// Radii are ground metres, as the player set them.
 const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
+/// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
+/// know stops the decoder, which then reports the bytes left over (`decode_read`).
+pub const BLOCKS: [&[u8; 4]; 10] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1"];
+/// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
+/// with every new block, every new field inside a header field (a new top-level header field is seen
+/// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
+/// save even when it has nothing left over. Saves from before it have none, read as 0.
+pub const LEVEL: u32 = 1;
+
 struct W(Vec<u8>);
 impl W {
     fn u(&mut self, mut v: u64) {
@@ -383,6 +392,14 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
 
 /// Decode into a fresh network (dense ids). Derive with `TrackWorld::new`.
 pub fn decode(bytes: &[u8]) -> Result<Network, String> {
+    decode_read(bytes).map(|(net, _)| net)
+}
+
+/// `decode`, and how much of the save this build did not read (T-1826): the bytes after the last
+/// block it knows, plus one per node or edge with flag bits it does not know. Not 0 means a newer
+/// build wrote it, and writing the network back would lose that part.
+pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
+    let mut unknown = 0usize;
     if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6) {
         return Err("not a trainworld track save".into());
     }
@@ -403,6 +420,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         (px, py) = (x, y);
         let level = r.i()? as i8;
         let flags = r.u()?;
+        unknown += (flags >> 12 != 0) as usize;
         net.set_node(id, Some(NodeData { x, y, level, flying: flags & 1 == 1 })).map_err(|e| format!("{e:?}"))?;
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
@@ -418,6 +436,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let b = a + r.i()?;
         prev_a = a;
         let tb = r.u()?;
+        unknown += (tb >> 8 != 0) as usize;
         let (tracks, built, off, crossover, hsr, sep) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0, tb & 64 != 0, tb & 128 != 0);
         let n = r.u()? as usize;
         let (mut px, mut py) = (net.node_x[a as usize], net.node_y[a as usize]);
@@ -566,5 +585,98 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         }
     }
     net.take_touch();
-    Ok(net)
+    Ok((net, bytes.len() - r.1 + unknown))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A small network with a station, an edge and a line, in the world frame.
+    fn sample() -> Vec<u8> {
+        let mut net = Network::new_in(FrameKind::Merc, -73.985, 40.758, true);
+        for x in [0.0f64, 1000.0] {
+            let n = net.alloc_node();
+            net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), built: true, off: false, upgrades: 0 })).unwrap();
+        }
+        let e = net.alloc_edge();
+        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false })).unwrap();
+        let l = net.alloc_line();
+        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() })).unwrap();
+        encode(&net)
+    }
+
+    #[test]
+    fn a_save_this_build_wrote_is_read_whole() {
+        let bytes = sample();
+        let (net, unread) = decode_read(&bytes).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!(encode(&net), bytes);
+    }
+
+    #[test]
+    fn an_unknown_trailing_block_is_reported() {
+        let mut bytes = sample();
+        let known = decode(&bytes).unwrap();
+        bytes.extend_from_slice(b"ZZZ1");
+        bytes.extend_from_slice(&[3, 1, 2, 3]);
+        let (net, unread) = decode_read(&bytes).unwrap();
+        assert_eq!(unread, 8, "the unknown block's tag and body are left over");
+        // what it does know loads as before
+        assert_eq!(encode(&net), encode(&known));
+    }
+
+    #[test]
+    fn an_unknown_block_before_known_ones_leaves_them_unread_too() {
+        let bytes = sample();
+        let at = bytes.windows(4).position(|w| w == b"LUI1").unwrap();
+        let mut newer = bytes[..at].to_vec();
+        newer.extend_from_slice(b"ZZZ1\x00");
+        newer.extend_from_slice(&bytes[at..]);
+        assert_eq!(decode_read(&newer).unwrap().1, bytes.len() - at + 5);
+    }
+
+    #[test]
+    fn unknown_flag_bits_are_reported() {
+        // two plain nodes and a single-track edge, written by hand with the flags given
+        let raw = |node: u64, edge: u64| {
+            let mut w = W(MAGIC_TWT6.to_vec());
+            w.0.extend_from_slice(&0f64.to_le_bytes());
+            w.0.extend_from_slice(&0f64.to_le_bytes());
+            w.u(1);
+            w.u(2);
+            for dx in [0.0, 100.0] {
+                w.mm(dx);
+                w.mm(0.0);
+                w.i(0);
+                w.u(node);
+            }
+            w.u(1);
+            w.i(0);
+            w.i(1);
+            w.u(edge);
+            w.u(0);
+            w.u(0);
+            w.0
+        };
+        assert_eq!(decode_read(&raw(0, 1)).unwrap().1, 0);
+        assert_eq!(decode_read(&raw(1 << 12, 1)).unwrap().1, 2, "both nodes");
+        assert_eq!(decode_read(&raw(0, 1 | 1 << 8)).unwrap().1, 1);
+    }
+
+    /// Adding a block means listing it in BLOCKS and raising LEVEL; this pin fails until both are done.
+    #[test]
+    fn every_written_block_is_listed_and_counted_in_the_level() {
+        let src = include_str!("save.rs");
+        let mut written: Vec<&str> = vec![];
+        for part in src.split("w.0.extend_from_slice(b\"").skip(1) {
+            let tag = &part[..4];
+            if !written.contains(&tag) { written.push(tag); }
+        }
+        for tag in &written {
+            assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
+        }
+        assert_eq!((LEVEL, BLOCKS.len()), (1, 10), "a new block raises LEVEL: raise it, then update this pin");
+    }
 }

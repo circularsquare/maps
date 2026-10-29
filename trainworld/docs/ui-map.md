@@ -81,8 +81,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 
 ## Lines and track
 
-- **Widths** [T-191, T-205]: a line is 0.85 px at zoom 9, 3.9 at 12 and 6.6 at 15 (linear between,
-  held outside); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
+- **Widths** [T-191, T-205, T-1821]: a line is 1.1 px at zoom 9, 5.1 at 12 and 8.6 at 15 (linear
+  between, held outside; `LINE_PX`: 0.85, 3.9 and 6.6 times `LINE_VIEW_WIDTH` 1.3; the Traffic view
+  scales its widths by 0.85 / 1.3, so they stay where they were); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
   the dark theme [T-039]; line colours are the same in both), drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
   still, and a selected line or group [T-1812] draws every other line's stroke and train at 55%
@@ -141,9 +142,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   each band as wide as its own line's riders (`trafficBands` in `map/lineBands.ts`, from
   `buildLayers`), so a trunk is the sum of its lines; its shifts ease at nodes as the Line view's
   (every shared edge's line segments are cut 30 m from each end for it, `F_EASE`). A station's box
-  or dot is as wide as the widest ribbon through it, with its rim outside [T-1807,
-  `stationRibbons`]; through the box (T-236) the bands take the Line view's slots, narrowed to
-  fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
+  or dot stays as wide as for one line (T-1821); through the box (T-236) the bands take the Line
+  view's slots, narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
   run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). Not yet: the
   Elevation and Speed views and a four-track trunk's two pairs (their ribbons lie over each other)
   are drawn as below; `?perfOff=bands` turns the bands off.
@@ -287,10 +287,8 @@ number) and shows n as its symbol.
   there (11.25 px, about 24 m at New York's latitude; `BOX_NARROW`, T-652), so its shape never changes with zoom and it is
   never shorter than it is wide. Further out, to zoom 14, it keeps that 11.25 px on screen (white 7.25 px
   across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
-  width in every mode: a wide traffic line can be wider than its stations. A ribbon of lines side by
-  side is not: where one runs through a station (one of its lines' runs along an edge ends at the
-  node), the box, or zoomed out the dot, is at least the widest such ribbon's half width plus the
-  rim and a pixel either side, as folded at the time (T-1807, `a_ribbon`). Everything that draws or
+  width in every mode: a wide traffic line or a ribbon of lines side by side can be wider than its
+  stations (T-1821). Everything that draws or
   tests a platform (box, crowd fill, track stencil, picking, placement ghost, selection
   outline, the cut-out in the bubbles) uses that one line (`polyFrame` in the shaders,
   `stationShape`, `stationPath`). Blueprint stations are faded.

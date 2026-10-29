@@ -370,6 +370,24 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   as its opened list. The slot's summary has `mode` too, for the saves cards. The clock worker sends
   the list (`opened`, before a game's snapshot) and the main thread sends it back whole when it
   grows.
+- **Saves from a newer build** [T-1826]: the header's `level` is the writing build's save level
+  (`LEVEL` in `sim/src/track/save.rs`, `TrackApi.save_level`; absent before T-1826, read as 0).
+  It goes up by one with every new trailing block (listed in `save.rs` `BLOCKS`; a Rust test pins
+  the level and the block count, so a block added without raising it fails), every new field inside
+  a header field (a fares setting, a ledger figure) and every new meaning of existing bytes. A new
+  top-level header field needs no raise: `headerUnread` (workers/saveFile.ts) treats a field missing
+  from `HEADER_FIELDS` as unread in any save with a level. A load counts a game as unread in part
+  when its level is above this build's, its header has an unknown field, or `TrackApi.save_unread`
+  finds network bytes left after the last block it knows (an unknown block stops the decoder, so
+  known blocks after it are unread too) or node or edge flag bits it does not know. Such a game
+  plays, but nothing writes its slot (autosave, Save, the frame conversion) or reaches the account
+  (no claim, no upload), so the device playing it in the newer build keeps it; the top bar and the
+  saves panel say "This game was saved by a newer version. Reload the page to update." A newer file
+  opened with Open a file (or a backup restored) is written to its new slot as it was loaded.
+  Download gives the file as loaded, with everything; Make a copy gives a slot of this build's
+  with the game as played here, without the parts it could not read, and autosaves from then on.
+  Saves without a level are judged by their network bytes alone (they can carry retired header
+  fields such as `points`), so every older save opens as before.
 - **Removed zones** [T-1053]: a save opens if its header names the registry's world (or none, as
   legacy New York files do); the zones it names need not all exist. The header's `cities` lists
   every zone registered when it was written, so a replan that merges or re-splits zones would
@@ -425,12 +443,24 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   keeps its GTFS shape or a straight line. A sandbox started from one loads
   it as a new game: its network, fleet and fares, with the clock, cash, ledgers and stars of a new
   game. They are in older frames and converted as they load (above).
-- **Backups** [T-744]: two per slot in the same store, `backup:<slot>:0` and `:1`, the slot's record
-  without its picture. An autosave at least 5 wall minutes after the slot's newest backup (or with
-  none) is also written over the older backup, so backups only follow changes. The saves panel lists
-  the playing slot's under its card's Earlier versions, each with Open as a copy, unless the account
-  keeps the game, when it lists the account's instead [T-1395]. Deleting a slot deletes them.
-  `?backupMs=` shortens the interval for checks.
+- **Backups** [T-744, T-1826]: in the same store, the slot's record without its picture, in four
+  tiers `backup:<slot>:t0` to `:t3` (`writeBackup`, `planBackups` in workers/saveFile.ts). An
+  autosave at least 10 wall minutes after tier 0's backup becomes tier 0; the backup it replaces
+  moves to tier 1 only if it is at least an hour newer than tier 1's (else it goes), and so on with
+  a day for tier 2 and a week for tier 3. So the tiers reach back about 10 minutes, an hour (up to
+  about 1 h 10 min), a day and a week of wall time, and backups only follow changes. Past 8 MB in
+  all for a slot's tiers the oldest are dropped (tier 0 always stays; a save is usually about
+  100 KB). Before the account's copy replaces a slot (`writeFetched`: a newer copy taken in, after
+  giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`.
+  Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. The saves panel
+  lists the playing slot's under its card's Earlier versions with the account's [T-1395], each with
+  Open as a copy. Deleting a slot deletes them. `?backupMs=` sets the 10-minute step for checks,
+  the others scaled with it.
+- **Leave page?** [T-1826]: while the player has changed the game (an edit, a list order, sandbox;
+  not the clock's own money) and nothing can write it (autosave off for any reason above, or a
+  failed write), the clock worker tells the page (`unsaved`) and the page holds a `beforeunload`
+  handler, so closing or reloading it asks first (game/saveSafety.ts). A tab whose autosave is on
+  never asks: the hidden-page save covers it.
 - **Outside the browser's storage** [T-1214]: a full disk let Chrome empty the site's IndexedDB
   (2026-10-24). Once a slot is written the page asks `navigator.storage.persist()`. A `copy-folder`
   handle left in the store by T-1214's folder copies (dropped in T-1395) is deleted at start.

@@ -9,7 +9,12 @@
 // the game does not write (MapLibre's attribution button), a `title` met under the pointer is moved
 // to `data-tip` at once, before the browser's own tooltip would show.
 
+import { inkOn } from "../game/palette";
 import { hoverHeld, isModifierKey } from "./blurHold";
+
+/** T-1817: a line's bullet inside a hover's text, drawn as a small chip (`tipBullet`). */
+const BULLET = /\u0002([^|\u0003]*)\|([^\u0003]*)\u0003/;
+export const tipBullet = (letter: string, colour: string) => `\u0002${letter.replace(/[\u0002\u0003|]/g, "")}|${colour}\u0003`;
 
 export function startTips() {
   const tag = document.createElement("div");
@@ -50,7 +55,17 @@ export function startTips() {
       text = t;
       tag.replaceChildren(...t.split("\n").map((line) => {
         const d = document.createElement("div");
-        d.textContent = line;
+        const parts = line.split(BULLET);
+        for (let i = 0; i < parts.length; i += 3) {
+          if (parts[i]) d.append(parts[i]);
+          if (i + 2 >= parts.length) break;
+          const s = document.createElement("span");
+          s.className = "chip sm tip-chip";
+          s.style.setProperty("--c", parts[i + 2]);
+          s.style.setProperty("--ct", inkOn(parts[i + 2]));
+          s.textContent = parts[i + 1];
+          d.append(s);
+        }
         return d;
       }));
     }

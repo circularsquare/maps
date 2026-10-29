@@ -846,7 +846,7 @@ function RailLineInspector({ id }: { id: string }) {
         </div>
       )}
       <LineGroup l={l} />
-      <div class="sub muted">
+      <div class="sub muted flush">
         {st.fast && "High-speed, "}{plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
       </div>
       {st.status === "planned" && l.stops.length >= 2 && (
@@ -860,7 +860,7 @@ function RailLineInspector({ id }: { id: string }) {
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? "Finish editing stops (L)" : "Click stations on the map to add stops to the line (L)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
+        <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>

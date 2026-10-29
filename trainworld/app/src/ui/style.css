@@ -196,7 +196,9 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .w-riders { width: 40px; }
 .lines-box .w-linemoney { width: 54px; white-space: nowrap; }
 .lines-box .w-trains { width: 40px; }
-.lines-box .rows .grow.line-name, .lines-box .sort-btn.grow { min-width: 56px; }
+.lines-box .sort-btn.grow { min-width: 56px; }
+/* T-1818: a wide bullet takes room from the name, not from the columns, so they stay in line */
+.lines-box .rows .grow.line-name { min-width: 0; }
 @container lines (max-width: 250px) { .lines-box .w-linemoney { display: none; } }
 @container lines (max-width: 308px) { .lines-box.with-city .w-linemoney { display: none; } }
 @container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
@@ -204,8 +206,10 @@ body.resizing, body.resizing * { user-select: none; }
 @container lines (max-width: 312px) { .lines-box.with-city.near-on .w-city { display: none; } }
 /* T-1791: a line group's row (chevron, its lines' chips, its name) and its lines indented under it;
    a dragged row's target outlined */
-.lines-box .group-row { gap: 6px; }
-.lines-box .chevron { margin: 0 -4px 0 -6px; }
+/* T-1818: the figure columns never shrink, and a group's row has the same gaps as a line's, so the
+   three columns stand in one place on every row */
+.lines-box .rows > li > .val { flex: none; }
+.lines-box .chevron { margin: 0 -6px 0 -6px; }
 .lines-box .chevron svg { width: 12px; height: 12px; }
 .lines-box .chevron.open svg { transform: rotate(90deg); }
 .lines-box .group-chips { display: flex; gap: 2px; flex: none; max-width: 45%; overflow: hidden; }
@@ -238,25 +242,28 @@ body.resizing, body.resizing * { user-select: none; }
 .group-diagram .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
 .group-diagram .pill.idle { opacity: 0.4; }
 .group-diagram .pill.pass { stroke-opacity: 0.4; }
-.group-diagram .tick { fill: #fff; }
-.group-diagram .ghost { fill: #fff; opacity: 0; }
+.group-diagram .tick, .group-diagram .ghost { fill: #fff; stroke: var(--net-ink); stroke-width: 1; }
+.group-diagram .ghost { opacity: 0; }
 .group-diagram .hit { fill: transparent; }
 .group-diagram .dot { opacity: 0; }
 .group-diagram .group-cell.edit { cursor: pointer; }
 .group-diagram .group-cell.edit:hover .dot { opacity: 1; }
 .group-diagram .group-cell.edit:hover .ghost { opacity: 0.7; }
 .group-diagram .group-cell.edit:hover .pill.pass { stroke-opacity: 1; }
-.line-group .name.link { cursor: pointer; }
-.line-group { display: flex; align-items: center; gap: 8px; min-height: 28px; }
-.line-group .group-chips { display: flex; gap: 2px; flex: none; }
-.line-group .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* T-1818: "Part of [pill] group"; the top margin keeps the pill clear of the sticky title's 6 px of padding */
+.line-group { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 6px; }
+.line-group > .muted { flex: none; }
+.line-group .group-pill { flex: 0 1 auto; }
+.line-group > .btn { margin-left: auto; }
+.sub.flush { margin-left: 0; }
 /* T-1813: a group's bullet, see-through, outlined and lettered in its colour */
 .group-pill { display: inline-block; vertical-align: middle; flex: none; min-width: 0; max-width: 100%; height: 20px; padding: 0 7px; box-sizing: border-box;
   border: 2px solid var(--c); border-radius: 999px; color: var(--c); background: transparent;
   font-size: 12px; font-weight: 700; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .group-pill.lg { height: 30px; padding: 0 11px; font-size: 16px; line-height: 26px; }
 .group-pill.link { cursor: pointer; }
-.lines-box .group-row .group-pill { max-width: 45%; }
+.group-pill-text { position: relative; }
+.lines-box .group-row .group-pill { max-width: 45%; min-width: 28px; flex: 0 1 auto; }
 .lines-box .rows > li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
 .lines-box .rows > li.drop-after, .rows.stations > li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
 .rows.stations > li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
@@ -911,6 +918,8 @@ button.save-add:hover { color: var(--text); }
 .pi-label, .tool-tag { font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; padding: 3px 6px; }
+/* T-1817: a line's bullet in a hover's text */
+.tool-tag .tip-chip { vertical-align: -3px; margin: 0 1px; }
 /* T-1495: a coloured span in a tag stops 2 px short at the bottom, so the spans of rows below one another leave a gap
    (its colour is the --chip-bg that `chip` in map/trackTagRows.ts sets) */
 .tag-chip { background: linear-gradient(var(--chip-bg), var(--chip-bg)) no-repeat 0 0 / 100% calc(100% - 2px); }

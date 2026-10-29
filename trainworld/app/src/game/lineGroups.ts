@@ -55,11 +55,11 @@ export const groupHover = signal<number | null>(null);
 /** T-1809: the group view names every stop, not only the key ones; kept while the page is open. */
 export const groupAllStops = signal(false);
 
-/** The groups opened in the Lines tab, kept while the page is open. */
-export const openGroups = signal<ReadonlySet<number>>(new Set());
+/** The groups the player closed in the Lines tab, kept while the page is open; the rest show open (T-1818). */
+export const closedGroups = signal<ReadonlySet<number>>(new Set());
 
 export function toggleGroup(g: number) {
-  const s = new Set(openGroups.peek());
+  const s = new Set(closedGroups.peek());
   if (!s.delete(g)) s.add(g);
-  openGroups.value = s;
+  closedGroups.value = s;
 }

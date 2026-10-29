@@ -28,7 +28,7 @@ import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
@@ -61,8 +61,8 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
-/** T-744: an autosave this long after the slot's newest backup is also written as a backup, wall ms */
-let backupMs = 5 * 60_000;
+/** T-744, T-1826: the backup tiers' steps (`BACKUP_STEPS`), scaled down by `?backupMs=` for checks */
+let backupSteps = BACKUP_STEPS;
 /** Days of money kept in the ledger, and hours in the hourly one (T-447). */
 const LEDGER_DAYS = 30;
 const LEDGER_HOURS = 48;
@@ -273,6 +273,26 @@ function loanOp(op: { op: "borrow"; amount: number } | { op: "repay" }): number 
 const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
 slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); });
 
+/** T-1826: the game in hand was saved by a newer build that wrote parts this one does not read, so
+ * nothing writes its slot or sends it to the account (writing it would drop them). Download gives
+ * `newerFile`, the file as it was loaded; Make a copy keeps the game as played here without them. */
+let newer = false;
+let newerFile: Uint8Array | null = null;
+const NEWER = "This game was saved by a newer version. Reload the page to update.";
+/** T-1826: a player's change (an edit, a list order, sandbox) not yet written, for the page's
+ * "leave page?" prompt; the clock's own settling is not one */
+let edited = false;
+let unsavedSent = false;
+
+function writableNow(): boolean {
+  return !!activeLease && storageReady && !saveFailure && !(!!activeSlot && cloudTaken === activeSlot) && !newer;
+}
+/** T-1826: tell the page whether closing it would lose a change: one made while nothing can write it. */
+function noteUnsaved() {
+  const on = edited && !writableNow();
+  if (on !== unsavedSent) send({ kind: "unsaved", on: (unsavedSent = on) });
+}
+
 async function publishSlots(error?: string) {
   let slots: Awaited<ReturnType<typeof listSlots>> = [];
   let backups: SlotBackup[] = [];
@@ -281,18 +301,21 @@ async function publishSlots(error?: string) {
     if (activeSlot) backups = await listBackups(activeSlot);
   } catch { storageReady = false; }
   const taken = !!activeSlot && cloudTaken === activeSlot;
-  const writable = !!activeLease && storageReady && !saveFailure && !taken;
-  const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Download this game as a file to keep it."
+  const writable = writableNow();
+  noteUnsaved();
+  const reason = newer ? NEWER : saveFailure || (!storageReady ? "Browser storage is unavailable. Download this game as a file to keep it."
     : taken ? "Autosave is off here because this game was opened on another device."
     : !activeLease ? testPage ? "Autosave is off in this test page. Make a copy to keep the game."
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Make a copy, or close the other tab and reload."
       : "This browser cannot protect save slots. Download this game as a file to keep it." : undefined);
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups });
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}) });
 }
 
 async function flushBeforeSwitch() {
-  if (dirty && (!activeLease || cloudTaken === activeSlot)) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
+  // T-1826: a newer game's slot is left as it was; only a change made here would be lost
+  if (newer && !edited) return;
+  if (dirty && (!activeLease || cloudTaken === activeSlot || newer)) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
   if (!await autosave()) throw new Error("This game could not be saved. Download it as a file before leaving it.");
 }
 
@@ -325,8 +348,22 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   saveFailure = undefined;
   dirty = writeNow;
   savedAt = Date.now();
-  if (!writeNow || !await autosave()) await publishSlots();
+  if (newer && newerFile) await keepAsLoaded(key);
+  else if (!writeNow || !await autosave()) await publishSlots();
   slotChanges?.postMessage({ key });
+}
+
+/** T-1826: a newer build's file opened into slot `key` is written there as it was loaded, so nothing
+ * it holds is lost; the card's picture and figures are this build's. */
+async function keepAsLoaded(key: string) {
+  const name = newSlotName?.key === key ? newSlotName.name : undefined;
+  try {
+    await writeSlot(key, { bytes: newerFile!, at: Date.now(), day: Math.floor(gameNow() / 86400), city, ...await slotSummary(), name });
+    if (name) newSlotName = null;
+    if (unwritten === key) unwritten = null;
+    dirty = false;
+  } catch { /* storage unavailable: publishSlots says so */ }
+  await publishSlots();
 }
 // T-988: games on the account (workers/cloud.ts, notes/T-988.md). The main thread posts the account;
 // each slot write goes up after it (a save by hand at once, autosaves at most every GAP_MS), and the
@@ -372,7 +409,7 @@ function cloudUp(key: string, force = false): Promise<unknown> {
 }
 async function upNow(key: string, force: boolean) {
   const ctx = cloudCtx;
-  if (!ctx?.on || testPage) return;
+  if (!ctx?.on || testPage || (key === activeSlot && newer)) return;
   if (key === activeSlot && !force && cloudClaimed !== key) { await openOnAccount(ctx); await publishSlots(); return; }
   if (!force) {
     const [s, r] = await Promise.all([readStored(key), readSync(key)]);
@@ -413,7 +450,8 @@ function cloudKick(): Promise<unknown> {
  * the old slot takes the account's. Offline it plays on and claims when back. */
 async function openOnAccount(ctx: CloudContext) {
   const key = activeSlot;
-  if (!key || !activeLease || cloudClaimed === key || cloudTaken === key) return;
+  // T-1826: a newer game is not claimed, so the device playing it in the newer build keeps it
+  if (!key || !activeLease || cloudClaimed === key || cloudTaken === key || newer) return;
   let [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
   if (!stored || !tiedTo(rec, ctx)) return; // a new game not written yet, or not on this account
   const list = await listGames(ctx);
@@ -477,7 +515,7 @@ async function openOnAccount(ctx: CloudContext) {
   await messages;
   if (fork) {
     if (activeSlot === fork && await upload(ctx, fork) === "ok") cloudClaimed = fork;
-  } else if (activeSlot === key) {
+  } else if (activeSlot === key && !newer) {
     const now = await readSync(key);
     if (now && await claim(ctx, now) === "ok") cloudClaimed = key;
   }
@@ -1668,7 +1706,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...(loan > 0 ? { loan } : {}), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...(loan > 0 ? { loan } : {}), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1819,16 +1857,17 @@ async function slotSummary(): Promise<SlotSummary> {
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
-  if (!activeLease || switching || cloudTaken === activeSlot) return Promise.resolve(false);
+  if (!activeLease || switching || cloudTaken === activeSlot || newer) return Promise.resolve(false);
   // T-677: a new game whose slot was never written is not kept while its network is empty
   if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
-    dirty = false;
+    dirty = edited = false;
     return Promise.resolve(true);
   }
   const key = activeSlot; // an in-flight write must never move to the next slot
   const force = byHandNext;
+  const wasEdited = edited;
   byHandNext = false;
-  dirty = false;
+  dirty = edited = false;
   saveInFlight = (async () => {
     try {
       const day = Math.floor(gameNow() / 86400);
@@ -1842,8 +1881,7 @@ function autosave(): Promise<boolean> {
       const fresh = await writeSlot(key, { bytes, at, day, city, ...summary, name });
       if (name) newSlotName = null;
       if (unwritten === key) unwritten = null;
-      const backups = await listBackups(key).catch(() => null);
-      if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
+      await writeBackup(key, { bytes, at, day, city, ...summary }, backupSteps);
       void cloudAfterWrite(key, force, fresh); // T-988
       savedAt = at;
       saveFailure = undefined;
@@ -1853,6 +1891,7 @@ function autosave(): Promise<boolean> {
       return true;
     } catch (err) {
       dirty = true;
+      edited ||= wasEdited;
       if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
       savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
       saveFailure = "The browser could not save this game. Download it as a file to keep your changes.";
@@ -1868,6 +1907,7 @@ function autosave(): Promise<boolean> {
 async function saveByHand() {
   try {
     if (testPage || !activeSlot) throw new Error("This test page keeps no saved game. Make a copy to keep it.");
+    if (newer) throw new Error(NEWER);
     if (!activeLease) {
       const lease = await leaseSlot(activeSlot, true);
       if (!lease) throw new Error("This browser cannot protect save slots. Download the game as a file instead.");
@@ -1906,6 +1946,9 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         activeSlot = key;
         hold(lease);
         saveFailure = undefined;
+        // T-1826: the copy is this build's game, without what only the newer build read
+        newer = false;
+        newerFile = null;
         dirty = true;
         savedAt = Date.now();
       } catch (err) { lease.release(); throw err; }
@@ -1974,6 +2017,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
     : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
+  // T-1826: before any conversion, which would write only what this build read
+  const unread = !fresh && (headerUnread(decoded.header, TrackApi.save_level()) || TrackApi.save_unread(track) > 0);
   let net = track, converted = false;
   if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {
     const c = TrackApi.convert_save_frame(track, frameKindNumber(NEW_GAME_FRAME.kind));
@@ -2004,9 +2049,11 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   loan = mode === "sandbox" ? 0 : Math.max(0, h.loan ?? 0);
   startZone = h.start;
   opened = h.opened;
+  newer = unread;
+  newerFile = unread ? bytes : null;
   convertedOnLoad = converted;
   restart(h.clock, from);
-  return converted;
+  return converted && !unread;
 }
 
 /** A new game's clock (T-728): the first time from day 1 07:00 on the game clock at which it is
@@ -2048,6 +2095,8 @@ async function newGame(spec?: NewGameSpec) {
   }
   setNewGame(spec);
   loan = 0;
+  newer = false;
+  newerFile = null;
   api!.load(emptyTrack!);
   api!.set_cash(START_CASH);
   api!.set_fleet(0);
@@ -2068,6 +2117,7 @@ async function newGame(spec?: NewGameSpec) {
 function restart(t: number, from: "autosave" | "file" | "new") {
   clk = { t, rate: clk.rate, at: wallNow() };
   game++;
+  edited = false;
   // T-284: the loaded hour counts as paid up to the clock, evenly (its trains' timing is not known yet)
   settledT = t;
   partHour = Math.floor(t / 3600);
@@ -2905,7 +2955,7 @@ async function processMessage(msg: ToClock) {
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
-      if (msg.backupMs && msg.backupMs > 0) backupMs = msg.backupMs;
+      if (msg.backupMs && msg.backupMs > 0) backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from kept to fall back on
       const pending = msg.pending ? await takePending() : null;
@@ -2963,6 +3013,7 @@ async function processMessage(msg: ToClock) {
       if (stored) {
         try {
           if (await loadGame(stored.bytes, "autosave") && activeLease) await saveConverted(activeSlot, stored);
+          if (newer) await publishSlots();
           return;
         } catch (err) {
           // Keep the unreadable save aside, and its slot as it is: the new game gets a slot of its own (T-743).
@@ -3030,6 +3081,7 @@ function failAnswer(msg: ToClock) {
 function tick() {
   if (!api || modelDown) return;
   if (dirty && Date.now() - savedAt >= AUTOSAVE_MS) void autosave();
+  noteUnsaved();
 }
 
 /** T-284: how often the cash is settled and sent while the clock runs, wall ms: 15 game seconds at
@@ -3044,7 +3096,8 @@ function liveMoney() {
 /** Messages that replace or copy the whole game. */
 async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGame" }>) {
   if (msg.kind === "export") {
-    const bytes = await saveBytes();
+    // T-1826: a newer game downloads as the newer build saved it, with everything this one cannot read
+    const bytes = newer && newerFile ? newerFile.slice() : await saveBytes();
     send({ kind: "exported", bytes, day: Math.floor(gameNow() / 86400) }, [bytes.buffer]);
   } else {
     try {
@@ -3087,17 +3140,17 @@ async function handle(msg: ToClock) {
     dirty = true;
   } else if (msg.kind === "listOrder") {
     api.set_list_order(msg.list, new Uint32Array(msg.ids));
-    dirty = true;
+    dirty = edited = true;
   } else if (msg.kind === "sandbox") {
     if (mode === "sandbox") return;
     setMode("sandbox");
-    dirty = true;
+    dirty = edited = true;
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
     if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareTransfer") {
       apply(msg.op);
-      dirty = true;
+      dirty = edited = true;
       sendMoney();
       scheduleSnapshot();
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
@@ -3106,7 +3159,7 @@ async function handle(msg: ToClock) {
     if (msg.op.op === "borrow" || msg.op.op === "repay") {
       const r = loanOp(msg.op);
       if (r === 0) {
-        dirty = true;
+        dirty = edited = true;
         sendMoney();
         keep();
       }
@@ -3120,7 +3173,7 @@ async function handle(msg: ToClock) {
       // T-1281: a passage between constructed stations is paid at once
       const charge = r === 0 && msg.op.on ? api.link_charge() : 0;
       if (r === 0) {
-        dirty = true;
+        dirty = edited = true;
         if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
         scheduleSnapshot();
@@ -3147,7 +3200,7 @@ async function handle(msg: ToClock) {
     const charge = r === 0 ? api.last_charge() : 0;
     // The new state first, so the world is up to date when the edit's answer arrives.
     if (r === 0) {
-      dirty = true;
+      dirty = edited = true;
       if (charge > 0) bookCharge(msg.seq, charge, api.last_train_charge());
       forget();
       const demand = api.dirty_demand_lines();

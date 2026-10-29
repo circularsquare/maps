@@ -13,6 +13,17 @@ export function startSaveSafety() {
   void forgetCopyFolder();
 }
 
+/** T-1826: the browser's "leave page?" question is on while the game has a change nothing could
+ * write (autosave off, a failed write), and only then. */
+export const askingBeforeLeaving = signal(false);
+const holdPage = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+export function askBeforeLeaving(on: boolean) {
+  if (on === askingBeforeLeaving.peek()) return;
+  askingBeforeLeaving.value = on;
+  if (on) addEventListener("beforeunload", holdPage);
+  else removeEventListener("beforeunload", holdPage);
+}
+
 let asked = false;
 /** Once a slot has been written: ask the browser to keep the storage (it decides without a prompt in
  * Chrome, by how the site is used). */

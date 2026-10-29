@@ -18,7 +18,7 @@ import { styleUp } from "./styleReady";
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
 const FONT = ["Zen Maru Gothic Regular", "Noto Sans Regular"];
-const RTL_PLUGIN = "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js";
+const RTL_PLUGIN = "rtl/mapbox-gl-rtl-text.min.js";
 
 function mix(a: string, b: string, t: number) {
   const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -189,7 +189,7 @@ export function loadBasemap(map: maplibregl.Map) {
   });
   // Arabic and Hebrew names (world view) are drawn unjoined and reversed without it. Lazy: fetched
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).
-  if (maplibregl.getRTLTextPluginStatus() === "unavailable") maplibregl.setRTLTextPlugin(RTL_PLUGIN, true).catch(() => {});
+  if (maplibregl.getRTLTextPluginStatus() === "unavailable") maplibregl.setRTLTextPlugin(new URL(RTL_PLUGIN, document.baseURI).href, true).catch(() => {});
   map.setStyle(POSITRON, { transformStyle: (_previous, next) => restyle(next) });
   // T-957: changes that came while there was no style (a lost context) are painted when it is back
   map.on("style.load", () => {

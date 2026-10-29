@@ -72,10 +72,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
-- T-1818 [P2] Line panel's group row reads 'Part of [pill] group', stats left-aligned, Lines tab figures aligned for groups, groups open by default (Anita 2026-10-29). taking (agent t1818)
+- T-1827 [P2] Recently deleted games in the browser: a deleted slot kept 30 days with its backups, Open as a copy (T-1823 fix 4). Open; notes/T-1823.md
+- T-1828 [P2] Recently deleted games on the account: DELETE keeps the save 30 days, a restore route, privacy page wording (T-1823 fix 5, shonei-server). Open: Anita's call is in DECISIONS 2026-10-29 (30 days); notes/T-1823.md
+- T-1829 [P2] Storage full or cleared while open: drop demand caches and retry, reopen a closed database (T-1823 fix 6). Open; notes/T-1823.md
+- T-1830 [P2] Account backups at 1 day and 1 week beside the two 30-minute ones (T-1823 fix 7, shonei-server). Open; notes/T-1823.md
+- T-1831 [P3] Unreadable saves listed as a card with Download and Delete (T-1823 fix 8). Open; notes/T-1823.md
+- T-1832 [P2] A nudge for games kept only in this browser after an hour of play (T-1823 fix 9). Open: Anita's call is in DECISIONS 2026-10-29 (a card warning that leads to sign in or download); notes/T-1823.md
+- T-1823 [P2] Save safety review before release (Anita's TODO 2026-10-29). taking (agent t1823); notes/T-1823.md
 - T-1822 [P2] Tutorial: an askew post-it with checked steps and a ripple highlight (Anita's TODO 2026-10-29). Design for Anita, taking (agent t1822); notes/T-1822.md
-- T-1821 [P2] Station marks back to their pre-T-1807 size, Line view lines ~30% thicker (Anita's TODO 2026-10-29). taking (agent t1821)
-- T-1817 [P2] Group view refinements from Anita's playtest 2026-10-29: outlined ticks with more room, thinner crossing bars, the line's bullet in edit hovers, branch ticks sharing rows, crossing bars only across the branches they cross, a shared line in the middle, group pill labels legible per shade. taking, 2026-10-29 (agent t1809)
 - T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Designed; Anita's calls 2026-10-29 in the note; stage 1 (Line view bands) built 2026-10-29 by agent t1799s1 in tree t1799, waiting to land; stage 2 (Traffic view bands at each line's rider width) built 2026-10-29 by agent t1799s2 in tree t1799b, waiting to land; stages 3 (corridors, four-track trunks) and 4 (joins, not needed so far) open; notes/T-1799.md
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
@@ -117,7 +121,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Track and trains
 - T-1794 [P3] T-1787 leftovers: on shared-track New York a headway edit on its busiest line still takes 150-400 ms (two or three settles of ~15 rounds), and Paris placements p95 237 ms (about 9 holds a run and level, 2-3 ms a profile); options in notes/T-1779.md "T-1787" (a held line's fill want from its fleet alone, a cheaper crawl bisection in run_with). Open.
 - T-1788 [P3] The rest of T-1780: a blueprint click to the next ghost is ~156 ms on the real New York save (state build and post ~45 ms in the worker, ~40 ms on the main thread); under 20 ms needs the next preview answered before the state arrives. Open; notes/T-1779.md.
-- T-1807 [P2] With lines side by side (T-1799), station boxes and dots stay one line wide, so a wide ribbon sticks out past its platforms (Penn's 8-10 lines are ~40 px at zoom 15): size a station's mark to the ribbon through it. Built 2026-10-29 by agent t1799s2 in tree t1799b, waiting to land with T-1799 stage 2; notes/T-1799.md.
 - T-1816 [P3] Demand's `transfers` question names the zone in view, so a player who pans to a zone outside the solve and then edits probably gets no transfer pulses until they look back (found in T-1814, untested): ask by the edited network's zones instead. Open; notes/T-1810.md "T-1814".
 - T-1815 [P2] Track previews wait 100-200 ms during a demand solve on shared NYC and T-007, and 250-480 ms a few times a solve on shared Tokyo (measured with tyo.save in a New York page, see T-1814: redo with CITY=tyo), with no transfers involved (found in T-1810): find what blocks the clock worker then. Open; notes/T-1810.md.
 - T-1808 [P3] `pipeline/calib.py run nyc` fails on its `--areas` file: data/work/realnet/cell_county.u8 has 61,427 values against the pack's 54,218 cells (found in T-1801); rebuild it from the current New York pack. Open.
