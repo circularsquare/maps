@@ -10,7 +10,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { stopKey } from "../../game/complexView";
 import { BAR, CHIP, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
-import { groupAllStops, groupHover, groupName, lineGroups } from "../../game/lineGroups";
+import { groupAllStops, groupBullet, groupHover, groupLabel, groupName, lineGroups } from "../../game/lineGroups";
+import { byHand, handOrder } from "../../game/handOrder";
+import { LINE_PALETTE } from "../../game/palette";
+import { ColourPicker } from "../ColourPicker";
+import { GroupPill } from "../GroupPill";
 import { LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight } from "../../game/relatedLayout";
 import { today } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type WorldView } from "../../game/types";
@@ -53,9 +57,29 @@ function scrollerOf(el: HTMLElement | null): HTMLElement | null {
 
 export function GroupInspector({ group }: { group: number }) {
   const w = world.value;
-  const ls = w ? lineGroups(w.save.lines).get(group) : undefined;
+  const byNum = w ? lineGroups(w.save.lines).get(group) : undefined;
+  // T-1813: the columns in the Lines tab's hand order, where it has one
+  const ls = byNum && byHand(byNum, (l) => [l.id], handOrder.value.lines);
   const all = groupAllStops.value;
   const [copying, setCopying] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [symbol, setSymbol] = useState<string | null>(null);
+  // a click away, or Esc outside the name box (it handles its own), closes the editor
+  useEffect(() => {
+    if (!editing) return;
+    const away = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.("[data-group-edit]")) setEditing(false); };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || (e.target as Element | null)?.closest?.(".name-edit")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setEditing(false);
+    };
+    window.addEventListener("pointerdown", away, true);
+    window.addEventListener("keydown", esc, true);
+    return () => { window.removeEventListener("pointerdown", away, true); window.removeEventListener("keydown", esc, true); };
+  }, [editing]);
+  useEffect(() => { setEditing(false); setSymbol(null); setPreview(null); }, [group]);
   // how far the panel is scrolled past the diagram's top, px (0 while its top shows)
   const [past, setPast] = useState(0);
   const body = useRef<HTMLDivElement>(null);
@@ -75,11 +99,20 @@ export function GroupInspector({ group }: { group: number }) {
     document.addEventListener("scroll", on, { capture: true, passive: true });
     return () => document.removeEventListener("scroll", on, { capture: true });
   }, []);
-  if (!w || !ls) return <p class="muted">No such group.</p>;
+  if (!w || !ls || !byNum) return <p class="muted">No such group.</p>;
   const names = stationNames(w);
   const nm = (s: string) => names.get(s) ?? "";
-  const name = groupName(ls);
-  const rename = (n: string) => void edit({ op: "groupName", group, name: n === ls[0].name ? "" : n });
+  const name = groupName(byNum);
+  const rename = (n: string) => void edit({ op: "groupName", group, name: n === byNum[0].name ? "" : n });
+  // T-1813: the bullet's text and colour set by hand, sent together
+  const look = { symbol: byNum[0].groupSymbol ?? "", colour: byNum[0].groupColour || null };
+  const setLook = (v: { symbol?: string; colour?: string | null }) => void edit({ op: "groupLook", group, symbol: v.symbol ?? look.symbol, colour: v.colour === undefined ? look.colour : v.colour }).then(() => setPreview(null));
+  const commitSymbol = () => {
+    if (symbol === null) return;
+    const v = symbol.trim();
+    setSymbol(null);
+    if (v !== look.symbol) setLook({ symbol: v });
+  };
   const copy = async (l: LineInput) => { setCopying(false); await edit({ op: "copyLine", line: l.num }); };
 
   // lines outside the group stopping at each place, busiest there first (as the line panel's bullets)
@@ -147,14 +180,24 @@ export function GroupInspector({ group }: { group: number }) {
   const shown = lay.rows.map((row, r) => ({ row, r }));
   return (
     <>
-      <div class="title">
-        <span class="group-chips">{ls.map((l) => <Chip line={l} />)}</span>
-        <NameEdit key={group} name={name} onRename={rename}>
+      <div class="title" data-group-edit>
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, bullet and colour (double click also opens it)" aria-label="Edit the name, bullet and colour"
+          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
+        <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>
           <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(ls.flatMap((l) => l.stops))}>
             <Icon.locate />
           </button>
         </NameEdit>
       </div>
+      {editing && (
+        <div class="line-identity" data-group-edit>
+          <label>Bullet <input aria-label="Group bullet" value={symbol ?? look.symbol} placeholder={groupLabel(name)}
+            onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (e.key === "Enter") commitSymbol(); }} />
+            {look.colour && <button class="btn icon mini" data-tip="Back to the lines' colour" aria-label="Back to the lines' colour" onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
+          </label>
+          <ColourPicker value={preview ?? groupBullet(byNum, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
+        </div>
+      )}
       <div class="h divided">
         Stops
         <button class={"btn icon mini related-toggle" + (all ? " on" : "")} data-tip={all ? "Show fewer stops" : "Show all stops"} aria-label={all ? "Show fewer stops" : "Show all stops"} aria-pressed={all} onClick={() => (groupAllStops.value = !all)}>

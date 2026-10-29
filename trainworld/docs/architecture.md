@@ -343,7 +343,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   links [T-197], `LAU1` lines kept by headway [T-625] and `LHS1` lines running high-speed trains
   [T-817], then `LRT1`, the settled rates of the lines with trains to the bit and the lines the
   settle left circling [T-1787], without which a load settles in full, and `LGR1` line groups
-  (each grouped line's index and group number, then each named group's number and name) [T-1791];
+  (each grouped line's index and group number, then each named group's number and name) [T-1791],
+  `LGL1` group bullets set by hand (group number, text, colour + 1 or 0) and `LOR1` the Lines and
+  Stations tabs' hand order (line indices, then node indices, first first) [T-1813];
   a save without one loads with none. While a line's trains change over after a service
   edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
   (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops

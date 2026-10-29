@@ -8,13 +8,20 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { display, selection, shownDayPhrase, stationSort, type StationUseMode } from "../game/ui";
+import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, todayLoaded, useToday } from "../game/today";
 import { Chip, SortHead } from "./widgets";
 import { locateStation } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
+import { byHand, handOrder, setHandOrder } from "../game/handOrder";
+
+/** how far a row is dragged before it counts as a drag, not a click (px) */
+const DRAG_PX = 6;
+/** T-1813: a drag of a station row: its first member, where it started, the row it is over and
+ * which half of it */
+interface Drag { id: string; x0: number; y0: number; x: number; y: number; on: boolean; over: string | null; after: boolean }
 
 /** T-905: a station's or complex's riders: under the map's Origins or Transfers, the circle's own
  * figure (the demand solve's, game/stationUse.ts); otherwise its boardings in the past 24 hours (T-446). */
@@ -159,36 +166,87 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
 export function StationsTab() {
   useToday(); // T-293
   const [limit, setLimit] = useState(ROWS_FIRST);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  /** a drag just ended: the click that follows it selects nothing */
+  const dragged = useRef(false);
   void accountVersion.value; // re-sorted each game hour, as the lines
   void todayLoaded.value;
   const w = listWorld.value;
   if (!w) return null;
   const sel = selection.value;
-  const { key, dir } = stationSort.value;
+  // T-1813: while the player's hand order holds, no sort
+  const hand = handOrder.value.stations;
+  const key = hand.length ? null : stationSort.value.key, dir = stationSort.value.dir;
   const d = display.value;
   const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
   // re-sorted each game hour (the past 24 hours), or as the split for the map's mode arrives
   const riders = (r: StationRow) => untracked(() => stationRiders(r.members, d.stationUse)) ?? 0;
   const split = d.stationUse === "origins" || d.stationUse === "transfers";
   if (split) void stationUse.value;
-  const st = stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist).sort((a, b) =>
+  const order = (a: StationRow, b: StationRow) =>
     (key === "riders" ? (riders(a) - riders(b)) * dir
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
-    || natural(a.lead.name, b.lead.name) * (key === "name" ? dir : 1));
+    || natural(a.lead.name, b.lead.name) * (key === "name" ? dir : 1);
+  const inOrder = (rows: StationRow[]) => (hand.length ? byHand(rows.sort(order), (r) => r.members, hand) : rows.sort(order));
+  const st = inOrder(stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist));
+  // T-1813: a row dragged into the gap above or below another goes there; the order then covers
+  // every station, the viewed place's or not
+  const dropRow = (d: Drag) => {
+    const from = st.find((r) => r.members[0] === d.id), to = st.find((r) => r.members[0] === d.over);
+    if (!from || !to || from === to) return;
+    const all = inOrder(stationRows(w.save.stations, w.save.stations, w.save.lines, sc.stationDist)).flatMap((r) => r.members);
+    const rest = all.filter((id) => !from.members.includes(id));
+    const anchor = d.after ? to.members[to.members.length - 1] : to.members[0];
+    const i = rest.indexOf(anchor) + (d.after ? 1 : 0);
+    const next = [...rest.slice(0, i), ...from.members, ...rest.slice(i)];
+    if (next.join() !== all.join()) setHandOrder("stations", next);
+  };
+  const pointerDown = (e: PointerEvent, id: string) => {
+    if (e.button !== 0 || e.pointerType === "touch") return;
+    const d: Drag = { id, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, over: null, after: false };
+    const move = (m: PointerEvent) => {
+      if (!d.on && Math.hypot(m.clientX - d.x0, m.clientY - d.y0) < DRAG_PX) return;
+      d.on = true;
+      d.x = m.clientX; d.y = m.clientY;
+      const row = document.elementFromPoint(m.clientX, m.clientY)?.closest("[data-drop]") as HTMLElement | null;
+      d.over = row?.dataset.drop ?? null;
+      if (row) { const b = row.getBoundingClientRect(); d.after = m.clientY > b.top + b.height / 2; }
+      setDrag({ ...d });
+    };
+    const end = (u: PointerEvent | KeyboardEvent) => {
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("keydown", key);
+      if (d.on) {
+        dragged.current = true;
+        setTimeout(() => { dragged.current = false; }, 0);
+        if (u.type === "pointerup") dropRow(d);
+      }
+      setDrag(null);
+    };
+    const key = (k: KeyboardEvent) => { if (k.key === "Escape") end(k); };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", end);
+    addEventListener("keydown", key);
+  };
+  const mark = (r: StationRow) => (drag?.on && drag.over === r.members[0] && drag.id !== drag.over ? (drag.after ? " drop-after" : " drop-before") : "")
+    + (drag?.on && drag.id === r.members[0] ? " dragged" : "");
+  const ghost = drag?.on ? st.find((r) => r.members[0] === drag.id) : undefined;
   const ridersWhat = d.stationUse === "origins" ? `riders starting a rail trip ${shownDayPhrase.value}`
     : d.stationUse === "transfers" ? `riders changing lines ${shownDayPhrase.value}` : "boardings in the past 24 hours";
   return (
     <>
       <div class="line-list-actions"><ScopeToggle /></div>
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
-      {st.length > 0 && <SortHead sort={stationSort} cols={[
+      {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "riders", label: "Riders", tip: `Sort by ${ridersWhat}`, first: -1, cls: "w-num" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
-      <ul class="rows pick stations">
+      <ul class={"rows pick stations" + (drag?.on ? " dragging" : "")}>
         {st.slice(0, limit).map((r) => (
-          <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
+          <li class={(sel?.kind === "station" && r.members.includes(sel.station) ? "on" : "") + mark(r)} data-drop={r.members[0]} onPointerDown={(e) => pointerDown(e, r.members[0])}
+            onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: r.lead.id }; }} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
             <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
             <Chips lines={r.lines} name={r.lead.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">Plan</span>}
@@ -197,6 +255,10 @@ export function StationsTab() {
         ))}
         {st.length > limit && <MoreRows key={limit} more={() => setLimit((n) => n + ROWS_MORE)} />}
       </ul>
+      {ghost && drag && (
+        // the dock is zoomed by the UI scale, the pointer is not
+        <div class="row-ghost" style={{ left: (drag.x + 12) / uiScale.value + "px", top: (drag.y + 8) / uiScale.value + "px" }}><span>{ghost.lead.name}</span></div>
+      )}
       {st.length > 0 && (
         <div class="pane-foot">
           <span class="muted">{sc.zone ? `${st.length} of ${complexes.value.members.length}` : st.length} stations, {ridersWhat}</span>

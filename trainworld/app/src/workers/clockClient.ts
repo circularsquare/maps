@@ -7,6 +7,7 @@ import { effect, signal } from "@preact/signals";
 import { clock } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
+import { setHandOrderSink, takeHandOrder } from "../game/handOrder";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
@@ -158,7 +159,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     let v = lineViews.get(l);
     if (!v) lineViews.set(l, v = {
       id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
-      ...(l.group ? { group: l.group, groupName: l.groupName } : {}),
+      ...(l.group ? { group: l.group, groupName: l.groupName, groupSymbol: l.groupSymbol, groupColour: l.groupColour } : {}),
       tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
     });
     return v;
@@ -440,6 +441,7 @@ export class ClockClient {
     setEditSink((op) => this.edit(op));
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
     setDemandFineSink((zones) => this.post({ kind: "demandFine", zones }));
+    setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
@@ -786,6 +788,9 @@ export class ClockClient {
         // T-975: a save older than its start zone shows the realm it opens in
         setGameStart(msg.start ?? (msg.zones === null && viewedZone.peek() ? activeCity.peek() : null));
         setGameOpened(msg.zones, viewedZone.peek() ? activeCity.peek() : null);
+        break;
+      case "listOrder":
+        takeHandOrder(msg.lines, msg.stations);
         break;
       case "stationsAhead":
         stationsAheadSink?.(msg.frame, msg.xy, msg.fine);

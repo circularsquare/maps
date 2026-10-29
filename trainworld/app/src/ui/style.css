@@ -250,6 +250,18 @@ body.resizing, body.resizing * { user-select: none; }
 .line-group { display: flex; align-items: center; gap: 8px; min-height: 28px; }
 .line-group .group-chips { display: flex; gap: 2px; flex: none; }
 .line-group .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* T-1813: a group's bullet, see-through, outlined and lettered in its colour */
+.group-pill { display: inline-block; vertical-align: middle; flex: none; min-width: 0; max-width: 100%; height: 20px; padding: 0 7px; box-sizing: border-box;
+  border: 2px solid var(--c); border-radius: 999px; color: var(--c); background: transparent;
+  font-size: 12px; font-weight: 700; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.group-pill.lg { height: 30px; padding: 0 11px; font-size: 16px; line-height: 26px; }
+.group-pill.link { cursor: pointer; }
+.lines-box .group-row .group-pill { max-width: 45%; }
+.lines-box .rows > li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.lines-box .rows > li.drop-after, .rows.stations > li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
+.rows.stations > li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.rows.stations.dragging > li { cursor: grabbing; }
+.rows.stations > li.dragged { opacity: 0.5; }
 .lines-box.with-city .w-riders { width: 36px; }
 .lines-box.with-city .w-trains { width: 32px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */

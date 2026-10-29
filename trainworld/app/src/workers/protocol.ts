@@ -105,6 +105,8 @@ export type EditOp =
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
   | { op: "lineGroup"; lines: number[]; group: number | "new" }
   | { op: "groupName"; group: number; name: string }
+  /** T-1813: a group's bullet text ("" for its name's) and colour (null for its lines') */
+  | { op: "groupLook"; group: number; symbol: string; colour: string | null }
   /** the fare curve (T-883, game/fareCurve.ts): its nodes, or a base and rate as two nodes; not undoable, a setting */
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
@@ -216,6 +218,8 @@ export type ToClock =
   | { kind: "opened"; zones: string[] }
   /** T-1223: the zones demand holds fine, for the save's header */
   | { kind: "demandFine"; zones: string[] }
+  /** T-1813: the Lines (0) or Stations (1) tab's hand order, ids first first; empty for none */
+  | { kind: "listOrder"; list: 0 | 1; ids: number[] }
   /** `restore`: `key` is a backup's (T-744) */
   | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
@@ -345,6 +349,9 @@ export interface ClockLine {
   /** the line's group, 0 for none, and the group's name, "" for its oldest line's (T-1791) */
   group: number;
   groupName: string;
+  /** T-1813: the group's bullet text and colour ("#rrggbb") set by hand, "" for none */
+  groupSymbol: string;
+  groupColour: string;
   colour: string;
   ok: boolean;
   running: boolean;
@@ -568,6 +575,8 @@ export type FromClock =
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
    * before T-729; `start`, its start zone (T-728), whose realm shows (T-975) */
   | { kind: "opened"; zones: string[] | null; start?: string }
+  /** T-1813: the loaded game's hand order of lines and of stations, sent with "opened" */
+  | { kind: "listOrder"; lines: number[]; stations: number[] }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the

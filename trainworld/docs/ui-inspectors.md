@@ -106,26 +106,46 @@ purpose filter the purpose drawn is ringed in the bar.
   City column follows Name (the first stop's city, named as the Cities list names it, `stationZone`;
   hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
   Trains columns.
-- **Line groups** [T-1791, `game/lineGroups.ts`; the model in [track-and-service.md](track-and-service.md) 6.3]:
-  dragging a line's row onto another line's row (a pointer moved 6 px or more with the mouse or a
-  pen; touch scrolls the list as before) makes a group of the two; onto a group's row or one of
-  its lines, the line joins that group. Dragging a line out of its group's rows and letting go
-  anywhere else (another row of no group excepted, which makes a new group of the two) takes it
-  out; a group left with one line is no group. While dragging, the row's bullet and name follow
-  the pointer, the dragged row is faded and the row it would join is outlined; Esc cancels. A group
-  is one row: a chevron (hover "Show the group's lines", "Close the group"), the bullets of its
-  lines oldest (lowest number) first, its name (the player's, else its oldest line's name; a
+- **Line groups and dragging** [T-1791, T-1813, `game/lineGroups.ts`, `game/handOrder.ts`; the model in [track-and-service.md](track-and-service.md) 6.3]:
+  a row is dragged with the mouse or a pen once the pointer has moved 6 px (touch scrolls the list
+  as before). Let go over the middle third of a line's row and the two make a group; over the
+  middle of a group's row or one of its lines, the line joins that group. Let go over the top or
+  bottom third, and the line goes into the gap there: out of its group if it was in one, unless the
+  gap is inside an open group (between its row and its first line, or between two of its lines),
+  where it goes into that group at that place; the gap under a group's last line counts as inside
+  for that group's own lines and outside for any other. A group's row is dragged the same way, its
+  whole row only into gaps (top or bottom half). While dragging, the row's bullet and name follow
+  the pointer, the dragged row is faded, the row it would join is outlined and a gap is a 2 px
+  line in the accent colour; a drop that would change nothing shows nothing; Esc cancels. A group
+  left with one line is no group. **The hand order**: a drop into a gap that moves a row puts the
+  whole list, every line in every place, in the player's own order (the order shown, then the
+  move), saved with the game; while it holds, no column header is lit and new lines go last. A
+  click on a header sorts by it and drops the hand order. Inside a group, the hand order is also
+  the group view's left-to-right order where its layout has no reason of its own. A group
+  is one row: a chevron (hover "Show the group's lines", "Close the group"), the group's bullet
+  (below; hover lists its lines), its name (the player's, else its oldest line's name; a
   double click on it opens a name box, Enter or leaving it keeps the name, Esc drops it, and
   typing the oldest line's name back clears it), and its lines' riders, money and trains added up,
   each hover listing the lines' own figures (riders "1.59M riders in the past 24 hours, each
   line's added up", since a rider changing between two of its lines counts twice), the trains
   uncoloured. Only running lines count; a group with none reads Planned (or Broken). The chevron
-  opens it to its lines, indented 24 px, each a line row as any other, sorted by the tab's sort;
+  opens it to its lines, indented 24 px, each a line row as any other, sorted by the tab's sort
+  (or the hand order);
   open or closed is kept while the page is open. The group row sorts among the lines by its
   totals (Near by its nearest line, City and the tie by its oldest line, Name by its name), and
   shows, with all its lines, when any of them is in the viewed place. A click on it opens the group
   view (below), a double click fits the map to all its lines'
-  stops. A group edit is one undo step and wakes no demand.
+  stops. A group edit is one undo step and wakes no demand; the hand order is outside the undo
+  history, as a sort is.
+- **A group's bullet** [T-1813, `ui/GroupPill.tsx`]: a pill with a see-through body, a 2 px
+  outline and bold text in one colour, reading the group's name with a trailing " line" or " main
+  line" taken off, any case ("Tokaido Main Line" reads "Tokaido"; "Line 1" stays), and likewise a
+  trailing 線, 线, 本線, ライン or 선 unless a number is left ("東海道本線" reads "東海道", "1号线"
+  stays). Its colour is the one most of the group's lines share, the busiest line's (riders in the
+  past 24 hours, then the oldest) breaking a tie. Both can be set by hand in the group view's
+  title; set ones are kept on every line of the group, so they join, copy and undo with it, and a
+  line leaving loses them. It is the group's mark in the Lines tab's group row, the line panel's
+  group row and the group view's title.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
   ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
@@ -154,8 +174,8 @@ purpose filter the purpose drawn is ringed in the bar.
   swatch click, an arrow key step or a typed hex.
 - **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
   "High-speed, " on a line of high-speed trains [T-1280]. Above it, for a line in a group
-  [T-1791], a row with the group's bullets (each but the line's own a link to its line), the
-  group's name (a click opens the group view, hover "Open the group") and a Leave group button
+  [T-1791, T-1813], a row with the group's bullet and the group's name where it reads otherwise
+  (either a click to open the group view, hover "Open the group") and a Leave group button
   (an arrow out of a box, hover "Leave group"), there for touch, where dragging rows is not; a
   bus line's panel has the same row.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161;
@@ -305,9 +325,14 @@ check `checks/t1791-layout.mjs`; notes/T-1809.md] A line group's panel, opened f
 row, the group name in a line panel, and Copy line. Stops are edited in its diagram (below); the
 line panel's own remove button works as before.
 
-- **Title**: the group's bullets, its name (renamed as a line's is: double click or the pencil;
-  the oldest line's name typed back clears it) and Show on the map (all its lines' stops). No row
-  per line: a line's bullet in the diagram opens its panel.
+- **Title**: the group's bullet, large, its name and Show on the map (all its lines' stops). A
+  click on the bullet (hover "Edit the name, bullet and colour (double click also opens it)") opens
+  the editor as a line's badge does: the name box (the oldest line's name typed back clears it),
+  a Bullet box (its placeholder the text from the name; blank gives the name's text back; Enter or
+  leaving it sends it) and the colour picker, with a "Back to the lines' colour" button (arrows in
+  a circle) beside the box once a colour is set; a click away or Esc closes it. No row per line: a
+  line's bullet in the diagram opens its panel. The diagram's lines are taken in the Lines tab's
+  hand order where there is one (T-1813).
 - **Stops header**: the all-stops switch (hover "Show all stops" / "Show fewer stops", kept while
   the page is open) and Copy line, which opens a row of the group's bullets; a click on one copies
   that line (hover "Copy 4") into the group.
@@ -410,7 +435,9 @@ the Build tab's quote has rows for bus routes and new buses.
 
 - **The Stations tab** follows the map's station ridership row (on the map since T-1448;
   [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"). The list sorts like the Lines
-  tab's [T-310], by Name, Riders or Near, Riders by default. Riders follows the ridership choice
+  tab's [T-310], by Name, Riders or Near, Riders by default. A row dragged into the gap above or
+below another (mouse or pen, top or bottom half of the row) goes there and puts the list in a hand
+order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the ridership choice
   [T-905]: under Origins or Transfers it is the map circle's own figure (riders starting a rail trip,
   or changing lines, a day from the demand solve shown, `game/stationUse.ts`); under None or Total it
   is boardings in the past 24 hours. Its hovers, header and footer say which. The scope

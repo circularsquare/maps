@@ -230,16 +230,18 @@ export function Check(p: { checked: boolean; onChange: (v: boolean) => void; chi
  * click reverses it, and the sorted column carries a small arrow. A column with a `cls` is a
  * right-aligned number column of that width; the arrow sits before its label so the label stays
  * over the figures. */
-export function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string; left?: boolean }[] }) {
+/** `hand` (T-1813): the list is in the player's own order, so no column is on; a click sorts again
+ * and calls it to drop the order. */
+export function SortHead<K extends string>({ sort, cols, hand }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string; left?: boolean }[]; hand?: () => void }) {
   const s = sort.value;
   return (
     <div class="sort-head">
       {cols.map((c) => {
-        const on = s.key === c.key;
+        const on = !hand && s.key === c.key;
         const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
         return (
           <button class={"sort-btn" + (c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
-            onClick={() => (sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first })}>
+            onClick={() => { hand?.(); sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first }; }}>
             {c.cls && !c.left && arrow}{c.label}{(!c.cls || c.left) && arrow}
           </button>
         );

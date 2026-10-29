@@ -2084,6 +2084,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   syncFrame();
   keep();
   sendOpened();
+  send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
   convertedOnLoad = false;
   sendState();
@@ -2790,6 +2791,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
     case "groupName":
       return { r: a.set_line_group_name(op.group, op.name) };
+    case "groupLook":
+      return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
       fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
       return { r: 0 };
@@ -3081,6 +3084,9 @@ async function handle(msg: ToClock) {
     dirty = true;
   } else if (msg.kind === "demandFine") {
     demandFine = [...msg.zones];
+    dirty = true;
+  } else if (msg.kind === "listOrder") {
+    api.set_list_order(msg.list, new Uint32Array(msg.ids));
     dirty = true;
   } else if (msg.kind === "sandbox") {
     if (mode === "sandbox") return;

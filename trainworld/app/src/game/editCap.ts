@@ -74,7 +74,7 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
 }
 
 /** Ops that change nothing demand reads. */
-const NEUTRAL = new Set(["lineLook", "lineGroup", "groupName", "borrow", "repay"]);
+const NEUTRAL = new Set(["lineLook", "lineGroup", "groupName", "groupLook", "borrow", "repay"]);
 
 /** The player made an edit: called before it is sent. */
 export function noteEdit(op: EditOp, w: WorldView | null) {

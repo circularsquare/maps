@@ -3040,3 +3040,48 @@ fn line_groups_join_copy_leave_and_save() {
     assert_eq!(a.set_line_group(&[l4], 0), 0);
     assert!(!a.save().windows(4).any(|w| w == b"LGR1"));
 }
+
+#[test]
+fn group_looks_and_hand_order_save() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let nodes = a.nodes_info();
+    let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+    assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
+    assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
+    let ls: Vec<u32> = (0..3).map(|k| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(l, &[n0, n1], 4, 4, 2, 30.0, 180.0, 0, 0x00933c, format!("{k}")), 0);
+        l
+    }).collect();
+    let g = a.new_line_group();
+    assert_eq!(a.set_line_group(&ls[..2], g), 0);
+    // a look set by hand, undone in one step, taken by a line that joins, dropped by one leaving
+    assert_eq!(a.set_line_group_look(g, "Lex".into(), 0xff0000), 0);
+    assert_eq!((a.line_group_symbol(ls[1]), a.line_group_colour(ls[1])), ("Lex".to_string(), 0xff0000));
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.line_group_colour(ls[0]), -1);
+    assert_eq!(a.redo(), 0);
+    assert_eq!(a.set_line_group(&[ls[2]], g), 0);
+    assert_eq!(a.line_group_symbol(ls[2]), "Lex");
+    assert_eq!(a.set_line_group(&[ls[2]], 0), 0);
+    assert_eq!((a.line_group_symbol(ls[2]), a.line_group_colour(ls[2])), (String::new(), -1));
+    // the hand order, outside the undo history
+    a.set_list_order(0, &[ls[2], ls[0], ls[1]]);
+    a.set_list_order(1, &[n1, n0]);
+    assert_eq!(a.list_order(0), vec![ls[2], ls[0], ls[1]]);
+    let bytes = a.save();
+    let mut b = api();
+    assert!(b.load(&bytes));
+    assert_eq!((b.line_group_symbol(1), b.line_group_colour(0)), ("Lex".to_string(), 0xff0000));
+    assert_eq!(b.list_order(0), vec![2, 0, 1]);
+    let st = b.list_order(1);
+    assert_eq!(st.len(), 2);
+    assert!(b.node_name(st[0]) == "East" && b.node_name(st[1]) == "West", "{st:?}");
+    a.set_list_order(0, &[]);
+    a.set_list_order(1, &[]);
+    assert!(!a.save().windows(4).any(|w| w == b"LOR1"));
+    assert!(a.list_order(0).is_empty());
+}

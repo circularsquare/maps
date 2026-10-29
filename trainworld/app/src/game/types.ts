@@ -66,6 +66,9 @@ export interface LineInput {
   /** the player's line group (T-1791), absent for none, and its name, "" for its oldest line's */
   group?: number;
   groupName?: string;
+  /** T-1813: the group's bullet text and colour set by hand, absent or "" for none */
+  groupSymbol?: string;
+  groupColour?: string;
 }
 
 /** A stretch of track between two nodes (SPEC 6.2). */

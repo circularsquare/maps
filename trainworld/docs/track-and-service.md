@@ -565,7 +565,11 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   source's group, making a new one of the two when the source had none (one edit). The service
   never reads the group: a group edit rebuilds the lines' service like a colour change, wakes no
   demand and shows no "constructing...". Saved in a trailing `LGR1` block (architecture.md, the
-  save format); a save without it loads every line ungrouped.
+  save format); a save without it loads every line ungrouped. The group's bullet set by hand
+  (`group_look`, text and colour, T-1813) rides beside the name the same way, `set_line_group_look`
+  one undoable edit, saved in `LGL1`. The Lines and Stations tabs' hand order is a rank per line
+  and per node on the network (`set_list_order`, `list_order`), outside the undo history, saved in
+  `LOR1`; a deleted line's rank stays with its id, so a new line reusing it takes its place.
   The group view edits stops without moving the line (`wasm/lines.rs`): `drop_stop(line, i)`
   takes a stop out and keeps the path (`set_stops` finds the route again, which can move a local
   onto express track); an end stop's removal cuts the path back to the new end. `end_line_at(line,

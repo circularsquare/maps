@@ -195,6 +195,16 @@ pub struct LineData {
     pub group: u32,
     /// The group's name, the same on every line of it; empty for the default (its oldest line's).
     pub group_name: String,
+    /// The group's bullet as the player set it (T-1813), the same on every line of it.
+    pub group_look: GroupLook,
+}
+
+/// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
+/// (None for the colour most of its lines share).
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GroupLook {
+    pub symbol: String,
+    pub colour: Option<u32>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -380,6 +390,11 @@ pub struct Network {
     pub line_bus: Vec<Option<BusRoute>>,
     pub line_group: Vec<u32>,
     pub line_group_name: Vec<String>,
+    pub line_group_look: Vec<GroupLook>,
+    /// T-1813: the Lines and Stations tabs' hand order, by line and by node id: 1 first, 0 for none.
+    /// Outside the undo history, like the sort it replaces.
+    pub line_rank: Vec<u32>,
+    pub node_rank: Vec<u32>,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -637,6 +652,9 @@ impl Network {
             line_bus: vec![],
             line_group: vec![],
             line_group_name: vec![],
+            line_group_look: vec![],
+            line_rank: vec![],
+            node_rank: vec![],
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -832,6 +850,7 @@ impl Network {
         self.line_bus.push(None);
         self.line_group.push(0);
         self.line_group_name.push(String::new());
+        self.line_group_look.push(GroupLook::default());
         self.line_broken.push(false);
     }
     fn claim_node(&mut self, id: u32) {
@@ -902,6 +921,7 @@ impl Network {
                 bus: self.line_bus[i].clone(),
                 group: self.line_group[i],
                 group_name: self.line_group_name[i].clone(),
+                group_look: self.line_group_look[i].clone(),
             }
         })
     }
@@ -1191,6 +1211,7 @@ impl Network {
                 self.line_bus[i] = d.bus;
                 self.line_group[i] = d.group;
                 self.line_group_name[i] = if d.group == 0 { String::new() } else { d.group_name };
+                self.line_group_look[i] = if d.group == 0 { GroupLook::default() } else { d.group_look };
             }
             None => {
                 if old.is_none() {
@@ -1200,6 +1221,7 @@ impl Network {
                 self.line_alive[i] = false;
                 self.line_bus[i] = None;
                 self.line_group[i] = 0;
+                self.line_group_look[i] = GroupLook::default();
                 self.stops.free(self.line_stops[i]);
                 self.paths.free(self.line_path[i]);
                 self.line_stops[i] = Span::default();

@@ -15,7 +15,7 @@ use super::bridge;
 use super::cost::{ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
-use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
+use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData};
 use super::params::*;
 use super::profile;
 use super::save;
@@ -1399,7 +1399,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })

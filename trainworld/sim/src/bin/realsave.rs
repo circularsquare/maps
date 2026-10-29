@@ -161,7 +161,7 @@ fn main() {
             let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
             let name = names::tidy_line(&name, "").unwrap_or(name);
             let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-            let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, group: 0, group_name: String::new() }));
+            let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }));
             if r.is_ok() {
                 n_lines_ok += 1;
             }
@@ -276,7 +276,7 @@ fn main() {
         let name = names::tidy_line(&name, "").unwrap_or(name);
         // the line's real colour ("#rrggbb", `pipeline/realcolour.py`), else the palette
         let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None, group: 0, group_name: String::new() }));
+        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }));
         if r.is_ok() {
             n_lines_ok += 1;
         }

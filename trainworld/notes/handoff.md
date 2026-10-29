@@ -24,10 +24,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Uncommitted: Anita's TODO.md (never commit), and the in-flight agents' files below.
 
 ## In flight
-- Tree .tw-trees/t1799b (T-1799 stage 2 Traffic bands + T-1807 station marks span ribbons, built and checked) is
-  MID-REBASE onto master: conflicts in app/src/map/renderer.ts and rendererShaders.ts against T-1812's highlight.
-  Agent t1799m (Sonnet) resolves and `git add`s. Then: `git -C .tw-trees/t1799b -c core.editor=true rebase
-  --continue`, `node trainworld/checks/agent-tree.mjs land t1799b "<sentence>"`, remove the tree, rebuild 8800.
+- T-1799 stage 2 + T-1807 landed 2ae23d3a (tree removed). 8800 at 2ae23d3a, smoke 20/20 both shades.
 - T-1813 Lines-tab drag (centre groups, between reorders/ungroups, hand order, station reorder) + group pill bullets:
   agent t1813 (Opus), main tree, Vite 6185.
 - T-1814 shared Tokyo gets no transfer pulses: agent t1814 (Sonnet), main tree (demandClient.ts), Vite 6177.

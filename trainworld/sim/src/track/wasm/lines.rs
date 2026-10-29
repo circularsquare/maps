@@ -11,7 +11,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -123,21 +123,23 @@ impl TrackApi {
             return self.refuse(Issue::NoSuchLine { line: l });
         }
         let live = || (0..n.line_count() as u32).filter(|&l| n.line_ok(l));
-        let name = if group == 0 { String::new() } else { live().find(|&l| n.line_group[l as usize] == group && !lines.contains(&l)).map_or(String::new(), |l| n.line_group_name[l as usize].clone()) };
-        let mut after: Vec<(u32, u32, String)> = live().map(|l| {
-            if lines.contains(&l) { (l, group, name.clone()) } else { (l, n.line_group[l as usize], n.line_group_name[l as usize].clone()) }
+        let meta = |l: u32| (n.line_group_name[l as usize].clone(), n.line_group_look[l as usize].clone());
+        let joined = if group == 0 { Default::default() } else { live().find(|&l| n.line_group[l as usize] == group && !lines.contains(&l)).map_or_else(Default::default, meta) };
+        let mut after: Vec<(u32, u32, (String, GroupLook))> = live().map(|l| {
+            if lines.contains(&l) { (l, group, joined.clone()) } else { (l, n.line_group[l as usize], meta(l)) }
         }).collect();
         // a group of one dissolves
         for k in 0..after.len() {
             let g = after[k].1;
             if g != 0 && after.iter().filter(|x| x.1 == g).count() == 1 {
-                after[k] = (after[k].0, 0, String::new());
+                after[k] = (after[k].0, 0, Default::default());
             }
         }
-        let ops: Vec<Op> = after.into_iter().filter(|(l, g, s)| n.line_group[*l as usize] != *g || n.line_group_name[*l as usize] != *s).map(|(l, g, s)| {
+        let ops: Vec<Op> = after.into_iter().filter(|(l, g, m)| n.line_group[*l as usize] != *g || meta(*l) != *m).map(|(l, g, (s, look))| {
             let mut d = n.line_data(l).unwrap();
             d.group = g;
             d.group_name = s;
+            d.group_look = look;
             Op::Line { id: l, data: Some(d) }
         }).collect();
         if ops.is_empty() {
@@ -147,16 +149,41 @@ impl TrackApi {
     }
     /// Name a group (empty: its oldest line's name again), one undoable edit.
     pub fn set_line_group_name(&mut self, group: u32, name: String) -> u32 {
-        let n = &self.w.net;
-        let ops: Vec<Op> = (0..n.line_count() as u32).filter(|&l| group != 0 && n.line_ok(l) && n.line_group[l as usize] == group).map(|l| {
-            let mut d = n.line_data(l).unwrap();
-            d.group_name = name.clone();
-            Op::Line { id: l, data: Some(d) }
-        }).collect();
-        if ops.is_empty() {
-            return self.refuse(Issue::NoSuchLine { line: u32::MAX });
+        self.edit_group(group, |d| d.group_name = name.clone())
+    }
+    /// T-1813: a group's bullet text (empty: from its name) and colour (negative: the colour most
+    /// of its lines share), one undoable edit.
+    pub fn set_line_group_look(&mut self, group: u32, symbol: String, colour: i32) -> u32 {
+        let look = GroupLook { symbol, colour: u32::try_from(colour).ok().map(|c| c & 0xff_ffff) };
+        self.edit_group(group, |d| d.group_look = look.clone())
+    }
+    /// A group's bullet text set by hand, empty for none.
+    pub fn line_group_symbol(&self, id: u32) -> String {
+        if self.w.net.line_ok(id) { self.w.net.line_group_look[id as usize].symbol.clone() } else { String::new() }
+    }
+    /// A group's bullet colour set by hand, -1 for none.
+    pub fn line_group_colour(&self, id: u32) -> i32 {
+        if self.w.net.line_ok(id) { self.w.net.line_group_look[id as usize].colour.map_or(-1, |c| c as i32) } else { -1 }
+    }
+    // ---- T-1813: the Lines and Stations tabs' hand order, a setting outside the undo history
+    /// Set the hand order of lines (`kind` 0) or stations (1) to `ids`, first first; empty: none.
+    pub fn set_list_order(&mut self, kind: u8, ids: &[u32]) {
+        let n = &mut self.w.net;
+        let len = if kind == 0 { n.line_count() } else { n.node_count() };
+        let rank = if kind == 0 { &mut n.line_rank } else { &mut n.node_rank };
+        rank.clear();
+        rank.resize(len, 0);
+        for (i, &id) in ids.iter().enumerate() {
+            if (id as usize) < len && rank[id as usize] == 0 { rank[id as usize] = i as u32 + 1; }
         }
-        self.run(Op::Batch(ops))
+    }
+    /// The hand order of lines (`kind` 0) or stations (1): the live ids with a place, first first.
+    pub fn list_order(&self, kind: u8) -> Vec<u32> {
+        let n = &self.w.net;
+        let (rank, ok): (&[u32], &dyn Fn(u32) -> bool) = if kind == 0 { (&n.line_rank, &|l| n.line_ok(l)) } else { (&n.node_rank, &|k| n.node_ok(k)) };
+        let mut v: Vec<(u32, u32)> = rank.iter().enumerate().filter(|&(id, &r)| r > 0 && ok(id as u32)).map(|(id, &r)| (r, id as u32)).collect();
+        v.sort_unstable();
+        v.into_iter().map(|x| x.1).collect()
     }
     pub fn next_line_name(&mut self) -> String {
         loop {
@@ -432,4 +459,20 @@ fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
         stops.insert(pos, station);
         super::super::net::match_stops(&nodes, &stops, &must).map(|_| stops)
     })
+}
+
+impl TrackApi {
+    /// Change every line of a group (T-1791, T-1813) in one undoable edit.
+    fn edit_group(&mut self, group: u32, f: impl Fn(&mut LineData)) -> u32 {
+        let n = &self.w.net;
+        let ops: Vec<Op> = (0..n.line_count() as u32).filter(|&l| group != 0 && n.line_ok(l) && n.line_group[l as usize] == group).map(|l| {
+            let mut d = n.line_data(l).unwrap();
+            f(&mut d);
+            Op::Line { id: l, data: Some(d) }
+        }).collect();
+        if ops.is_empty() {
+            return self.refuse(Issue::NoSuchLine { line: u32::MAX });
+        }
+        self.run(Op::Batch(ops))
+    }
 }

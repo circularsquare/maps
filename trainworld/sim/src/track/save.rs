@@ -5,7 +5,7 @@
 
 use super::frame::FrameKind;
 use super::geom::Pi;
-use super::net::{EdgeData, LineData, Network, NodeData, StationData};
+use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData};
 use super::params::*;
 
 /// TWT4 (T-104) is the oldest format read (TWT2 and TWT3 stopped loading, T-1146). A line carries
@@ -289,6 +289,38 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.s(s);
         }
     }
+    // T-1813: the groups' bullets set by hand, after LGR1: count, then per group its number, text
+    // and colour (0 for none, else the colour + 1)
+    let mut looks: Vec<(u32, &GroupLook)> = vec![];
+    for &l in &lines {
+        let (g, k) = (net.line_group[l as usize], &net.line_group_look[l as usize]);
+        if g != 0 && *k != GroupLook::default() && !looks.iter().any(|x| x.0 == g) { looks.push((g, k)); }
+    }
+    if !looks.is_empty() {
+        w.0.extend_from_slice(b"LGL1");
+        w.u(looks.len() as u64);
+        for (g, k) in looks {
+            w.u(g as u64);
+            w.s(&k.symbol);
+            w.u(k.colour.map_or(0, |c| c as u64 + 1));
+        }
+    }
+    // T-1813: the Lines and Stations tabs' hand order: count, then the lines' indices first
+    // first; then the same for nodes
+    let rank_of = |rank: &[u32], id: u32| rank.get(id as usize).copied().unwrap_or(0);
+    let mut lo: Vec<(u32, usize)> = lines.iter().enumerate().filter_map(|(i, &l)| Some((rank_of(&net.line_rank, l), i)).filter(|x| x.0 > 0)).collect();
+    let mut no: Vec<(u32, usize)> = nodes.iter().enumerate().filter_map(|(i, &k)| Some((rank_of(&net.node_rank, k), i)).filter(|x| x.0 > 0)).collect();
+    if !lo.is_empty() || !no.is_empty() {
+        lo.sort_unstable();
+        no.sort_unstable();
+        w.0.extend_from_slice(b"LOR1");
+        for v in [lo, no] {
+            w.u(v.len() as u64);
+            for (_, i) in v {
+                w.u(i as u64);
+            }
+        }
+    }
     w.0
 }
 
@@ -430,7 +462,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new() })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -509,6 +541,28 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             for i in 0..n_lines {
                 if g != 0 && net.line_group[i] == g { net.line_group_name[i] = s.clone(); }
             }
+        }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LGL1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (g, symbol, c) = (r.u()? as u32, r.s()?, r.u()?);
+            let look = GroupLook { symbol, colour: c.checked_sub(1).map(|c| (c as u32) & 0xff_ffff) };
+            for i in 0..n_lines {
+                if g != 0 && net.line_group[i] == g { net.line_group_look[i] = look.clone(); }
+            }
+        }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LOR1") {
+        r.1 += 4;
+        for kind in 0..2 {
+            let len = if kind == 0 { n_lines } else { net.node_count() };
+            let mut rank = vec![0u32; len];
+            for k in 0..r.u()? {
+                let i = r.u()? as usize;
+                if i < len && rank[i] == 0 { rank[i] = k as u32 + 1; }
+            }
+            if kind == 0 { net.line_rank = rank } else { net.node_rank = rank }
         }
     }
     net.take_touch();
