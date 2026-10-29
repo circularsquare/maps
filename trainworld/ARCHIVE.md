@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1785 [P2] Riders vanished at a terminal before the train filled. Done 2026-10-29 (agent t1785): during any stand the platform empties and the train's gauge fills linearly together (at a terminal, to its next trip's load); drawing only, account and fares unchanged. Samples artifacts/trainworld/t1785/.
 - T-1786 [P2] Related lines view: one gap, tall station marks. Done 2026-10-29 (agent t1786): all side-by-side lines and crossing bars 2 px apart; a row with 3+ crossing lines is 1.5 rows tall with a stretched pill, up to 6 bars and 6 bullets in two rows. Shots artifacts/trainworld/t1786/.
 
 - T-1781 [P2] Curving in beside track took tight turns. Done 2026-10-29: the turn onto the line is the widest of 17 places along the run (to the design radius), its straight in clear of the track; over 1000 m where it was ~500 m from 150 m off. notes/T-1779.md.

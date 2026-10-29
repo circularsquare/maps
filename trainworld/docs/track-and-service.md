@@ -1016,10 +1016,16 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   stopped there (its stand before it leaves, the closing stand at a first stop, never before the
   train ahead left; T-1123), its steady arrival rate, its pulses of riders changing lines (below),
   the hour's riders left behind and longest wait, and the stretches at capacity (below). The
-  renderer reads the train's load for the stretch it is drawn on (empty once at its last
-  stop; packed to crush, drawn full with a red edge, T-207, T-218), and a platform's crowd at any
-  moment is what the last train to stop there left plus, once it has left, who has arrived since
-  (its riders get on as it stops), drawn as the platform filling up
+  renderer reads the train's load for the stretch it is drawn on (packed to crush, drawn full with
+  a red edge, T-207, T-218), and a platform's crowd at any moment is what the last train to stop
+  there left plus, once it has left, who has arrived since. While a train stands at a stop its
+  riders move aboard evenly over the stand (T-1785): the platform falls linearly from the crowd it
+  found to the one it leaves, and the train's load goes linearly from the stretch it came in on to
+  the one it leaves on (held at the incoming until it stops). At its last stop everyone gets off as
+  it arrives, and through its stand there the train fills linearly to its next trip's first
+  stretch (`trainStands` in game/boarding.ts: the stand is the platform's, from when the train
+  stopped to its departure). Only the drawing does this: the account, its boardings and the fares
+  are unchanged. The crowd is drawn as the platform filling up
   wherever platforms are drawn (zoom 14 and in, T-189, T-204, T-219, T-553; [ui-map.md](ui-map.md)).
 - **Riders changing lines arrive with their train** (T-554, `Boarding::pulses`, notes/T-554.md):
   in the drawn crowd, not the account. Demand's transfers a day between platforms (the solve

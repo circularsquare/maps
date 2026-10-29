@@ -332,8 +332,9 @@ fills as one. A side fills from the middle outwards by its riders' share of the 
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
 both ends at that or more. A side is red instead of grey once it is full [T-559]; the red stays inside the box like the grey (T-713). A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
 grows between trains at the steady arrival rate, jumps as riders changing from another line's train
-reach it [T-554], and drops when one of its own trains stops [T-1123] to the riders that train
-will leave behind, growing again once it has left; worked out on the main thread at most once a
+reach it [T-554], and while one of its own trains stands there [T-1123] falls evenly over the stand
+to the riders that train will leave behind, as the train's gauge fills alike [T-1785], growing again
+once it has left; worked out on the main thread at most once a
 game second, only while drawn.
 
 **Riders changing trains** [T-1124; `map/transferBubbles.ts`]: with the crowds, from zoom 14, the

@@ -624,6 +624,9 @@ in float a_end;              // drawn until - epoch (s): standing at the termina
 
 ivec2 tc(int i, int w) { return ivec2(i % w, i / w); }
 
+// set by trainDist: how far through a stand after its first stop the train is (0-1), else -1
+float g_stand = -1.0;
+
 /** The point at distance d (m) along run 0 of a line (L from the line table). */
 vec2 lineAt(vec4 L, float d) {
   float first = L.x, count = L.y, len = L.z, step = L.w;
@@ -653,6 +656,12 @@ bool trainDist(out vec4 L, out float d, out int line) {
   float tt = max(tau - p.x, 0.0);
   if (p.w < 0.0) tt = min(tt, p.z / -p.w);
   float s = p.y + p.z * tt + 0.5 * p.w * tt * tt;
+  if (lo > int(M.x) && lo < int(M.x + M.y) - 1) {
+    vec4 p1 = texelFetch(u_phases, tc(lo + 1, ${TEX_W}), 0);
+    if (p.z == 0.0 && p.w == 0.0) g_stand = clamp((tau - p.x) / max(p1.x - p.x, 1e-3), 0.0, 1.0);
+    // braking into a stand: not there yet, though the stretch ahead may already be the next one
+    else if (p.w < 0.0 && p1.z == 0.0 && p1.w == 0.0) g_stand = 0.0;
+  }
   line = prof / 6;
   int run = (prof / 3) % 2;
   d = run == 0 ? s : M.w - s;
@@ -683,6 +692,8 @@ uniform highp sampler2D u_lane_tex; // R32F per sample: how far apart its track'
 uniform vec2 u_lane;               // px from the centre line to a track's once parted, how far parted (0-1)
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
+in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
+                              // trip's first load in u_loads or -1, else its riders leaving or -1
 ${POS_GLSL}
 out vec2 v_uv;
 flat out float v_k;
@@ -785,10 +796,25 @@ void main() {
   vec2 f = texelFetch(u_fill, tc(si, ${TEX_W}), 0).xy;
   v_fill = run == 0 ? f.x : f.y;
   // Its own load from the boarding account where there is one (T-164); the fill above then only
-  // says whether train loads are shown for this line. Empty once at its last stop.
+  // says whether train loads are shown for this line. Empty once at its last stop, then filling
+  // over its stand there with its next trip's riders (T-1785), as the platform empties.
   float st = texelFetch(u_stretch, tc(si, ${TEX_W}), 0).x;
   if (v_fill >= 0.0 && a_load.x >= 0.0 && st >= 0.0) {
-    float aboard = u_time - a_trip.y >= a_load.y ? 0.0 : texelFetch(u_loads, tc(int(a_load.x + st + 0.5), ${TEX_W}), 0).x;
+    float aboard;
+    if (u_time - a_trip.y >= a_load.y) {
+      float f = clamp((u_time - a_stand.x) / max(a_stand.y - a_stand.x, 1.0), 0.0, 1.0);
+      aboard = f * (a_stand.z >= 0.0 ? texelFetch(u_loads, tc(int(a_stand.z + st + 0.5), ${TEX_W}), 0).x : max(a_stand.w, 0.0));
+    } else {
+      aboard = texelFetch(u_loads, tc(int(a_load.x + st + 0.5), ${TEX_W}), 0).x;
+      // standing at a stop: from the load it came in with to the one it leaves with (T-1785); a
+      // stand between stops has the same stretch behind it as ahead
+      int sb = int(L.x + clamp(i + (run == 0 ? -2.0 : 2.0), 0.0, L.y - 1.0));
+      float back = texelFetch(u_stretch, tc(sb, ${TEX_W}), 0).x;
+      if (g_stand >= 0.0 && back >= 0.0 && abs(back - st) > 0.5) {
+        float came = texelFetch(u_loads, tc(int(a_load.x + st + (run == 0 ? -1.0 : 1.0) + 0.5), ${TEX_W}), 0).x;
+        aboard = mix(came, aboard, g_stand);
+      }
+    }
     float seats = ${SEATS_PER_CAR.toFixed(1)} * cars, crush = ${CRUSH_PER_CAR.toFixed(1)} * cars;
     v_fill = aboard <= seats ? 0.5 * aboard / seats : min(1.0, 0.5 + 0.5 * (aboard - seats) / (crush - seats));
     // packed to crush (the account never goes past it: whoever does not fit waits) draws as full

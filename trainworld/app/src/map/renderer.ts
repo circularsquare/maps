@@ -13,7 +13,7 @@
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
 import { ANNEX_ROOM, stationAnnexes, stationCoords, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
-import { readBoardHour, type BoardHour } from "../game/boarding";
+import { readBoardHour, trainStands, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
@@ -228,6 +228,8 @@ export class NetworkRenderer {
   private endBuf: WebGLBuffer | null = null;
   /** per trip in the trip buffer: its first load and when it reaches its last stop (T-164) */
   private loadBuf: WebGLBuffer | null = null;
+  /** per trip in the trip buffer: its stand at the terminal before its next trip (T-1785, `trainStands`) */
+  private standBuf: WebGLBuffer | null = null;
   /** the hour's loads (T-164), replaced with the trips; kept apart from `res`, like the trips */
   private loadTex: WebGLTexture | null = null;
   private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
@@ -563,6 +565,9 @@ export class NetworkRenderer {
     this.loadBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.loadBuf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, 0]), gl.DYNAMIC_DRAW);
+    this.standBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.standBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, -1]), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.loadTex = this.texture(new Float32Array(1), "r32f", TEX_W, []);
   }
@@ -999,6 +1004,7 @@ export class NetworkRenderer {
     this.attrib(this.trainProg, "a_trip", this.tripBuf!, 2, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_end", this.endBuf!, 1, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_load", this.loadBuf!, 2, gl.FLOAT, 1);
+    this.attrib(this.trainProg, "a_stand", this.standBuf!, 4, gl.FLOAT, 1);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -1148,6 +1154,8 @@ export class NetworkRenderer {
       const offs = t.board ? t.board.offs : new Float32Array(Math.max(1, t.data.length / 2) * 2).fill(-1);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.loadBuf);
       gl.bufferData(gl.ARRAY_BUFFER, offs.length ? offs : new Float32Array([-1, 0]), gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.standBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, t.board ? trainStands(t.board, t.data, t.nexts ?? null) : new Float32Array(Math.max(1, t.data.length / 2) * 4).fill(-1), gl.DYNAMIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       if (t.board?.loads.length) {
         if (this.loadTex) gl.deleteTexture(this.loadTex);

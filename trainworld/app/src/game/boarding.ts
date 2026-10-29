@@ -148,15 +148,25 @@ export function lastStopped(h: BoardHour, q: number, t: number): number {
   return lo;
 }
 
+/** Riders at platform `q` at `t` (>= its departure) after event `e`'s train left. */
+function grownAt(h: BoardHour, q: number, e: number, t: number): number {
+  const t0 = h.events[e * 2];
+  return Math.min(WAITING_CAP, h.events[e * 2 + 1] + (t - t0) * h.queues[q * QUEUE_STRIDE + 4] + pulsesBetween(h, q, t0, t));
+}
+
 /** Riders waiting at platform `q` at `t` seconds from the hour's epoch: those the last train to
- * stop there left, plus, once it has gone, who has arrived since (T-164, T-1123: a train's riders
- * get on as it stops). 0 without events. */
+ * stop there left, plus, once it has gone, who has arrived since (T-164). While a train stands
+ * there its riders get on evenly over the stand (T-1785: the train's drawn load fills alike, in the
+ * renderer's train shader), from the crowd it found to the crowd it leaves. 0 without events. */
 export function waitingAt(h: BoardHour, q: number, t: number): number {
   const e = lastStopped(h, q, t);
   if (e < 0) return 0;
   const t0 = h.events[e * 2], left = h.events[e * 2 + 1];
-  if (t < t0) return left;
-  return Math.min(WAITING_CAP, left + (t - t0) * h.queues[q * QUEUE_STRIDE + 4] + pulsesBetween(h, q, t0, t));
+  if (t >= t0) return grownAt(h, q, e, t);
+  const first = h.queues[q * QUEUE_STRIDE + 8], stop = stoppedAt(h, e);
+  if (e <= first || t < stop || t0 - stop < 1) return left;
+  const found = grownAt(h, q, e - 1, stop);
+  return found + (left - found) * ((t - stop) / (t0 - stop));
 }
 
 /** Riders waiting at platform `q` at `t` seconds from the hour's epoch, whether the last train
@@ -248,6 +258,47 @@ export function nextLeavingAt(h: BoardHour, node: number, t: number): number {
     }
   }
   return best;
+}
+
+/** Per trip of the hour, its train's stand at the terminal before its next departure (T-1785),
+ * four numbers the train shader reads: the stand's start and end (s from the epoch, the platform
+ * event's, so train and platform flow together), the next trip's first load in `h.loads` (-1 when
+ * that trip is in a later hour), and then the riders the train leaves with by the platform (-1
+ * none). All -1 where the trip has no next departure or its platform no event for it.
+ * `nexts`: per trip, its train's next departure from the epoch (NaN none). */
+export function trainStands(h: BoardHour, trips: Float32Array, nexts: Float32Array | null): Float32Array {
+  const n = trips.length / 2, out = new Float32Array(Math.max(1, n) * 4).fill(-1);
+  if (!nexts) return out;
+  const Q = h.queues;
+  // each line and run's first stop: the lowest offset along run 0 for run 0, the highest for run 1
+  const firstStop = new Map<number, number>();
+  for (let q = 0; q < h.queueCount; q++) {
+    const b = q * QUEUE_STRIDE, key = Q[b + 1] * 2 + Q[b + 2], was = firstStop.get(key);
+    if (was === undefined || (Q[b + 2] === 0 ? Q[b + 3] < Q[was * QUEUE_STRIDE + 3] : Q[b + 3] > Q[was * QUEUE_STRIDE + 3])) firstStop.set(key, q);
+  }
+  const tripAt = new Map<string, number>();
+  for (let i = 0; i < n; i++) tripAt.set(`${trips[i * 2]}|${Math.round(trips[i * 2 + 1])}`, i);
+  for (let i = 0; i < n; i++) {
+    const next = nexts[i];
+    if (!Number.isFinite(next)) continue;
+    const prof = trips[i * 2], line = Math.floor(prof / 6), run = 1 - (Math.floor(prof / 3) % 2);
+    const q = firstStop.get(line * 2 + run);
+    if (q === undefined) continue;
+    const b = q * QUEUE_STRIDE, first = Q[b + 8], end = first + Q[b + 9];
+    let e = first;
+    while (e < end && h.events[e * 2] < next - 0.5) e++;
+    if (e >= end || h.events[e * 2] > next + 0.5) continue;
+    const stop = stoppedAt(h, e);
+    out[i * 4] = stop;
+    out[i * 4 + 1] = h.events[e * 2];
+    // the next trip: the other run's at any level (profile = line * 6 + run * 3 + level)
+    for (let lv = 0; lv < 3; lv++) {
+      const j = tripAt.get(`${line * 6 + run * 3 + lv}|${Math.round(next)}`);
+      if (j !== undefined && h.offs[j * 2] >= 0) out[i * 4 + 2] = h.offs[j * 2];
+    }
+    out[i * 4 + 3] = Math.max(0, waitingAt(h, q, stop - 1e-3) + Q[b + 4] * (h.events[e * 2] - stop) + pulsesBetween(h, q, stop, h.events[e * 2]) - h.events[e * 2 + 1]);
+  }
+  return out;
 }
 
 /** Riders aboard trip `i` of the hour on stretch `s` (run 0's numbering), or null if the trip has
