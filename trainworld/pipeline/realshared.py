@@ -3,10 +3,12 @@ sim's `realsave --shared` builds as it is: nodes, edges and each line's stops an
 
 Each piece is one double-track edge per pair, the pairs 8 m apart side by side. At each corridor node the piece
 ends a line runs between are one group (an express pair the locals never join is its own group,
-so an express station has a platform on each pair). A group with stops is one station node (a
-station takes two edge ends, one each way); where more than one end leaves on a side, a junction
-node stands past the platform's end, as the drawing tool puts one (nearer, where the next node
-that side is closer). A group with no stops is one
+so an express station has a platform on each pair). A group with stops is a station node (a
+station takes two edge ends, one each way), or several side by side where its trains need more
+platform tracks than one (PLAT_LOAD: a terminus fed by one pair, London Bridge, Clapham
+Junction); where more than one end or platform meets on a side, a junction node stands past the
+platforms' end, as the drawing tool puts one (nearer, where the next node that side is closer).
+A group with no stops is one
 plain or junction node. Every node gets a heading from its ends, and every edge leaves it along
 that heading through a lead point, as `realsave` does for a station. A line changing pair at a
 node is a junction there (the crossover). One level for all (-1; levels per piece are T-1773),
@@ -24,6 +26,11 @@ NUDGE = 6.0
 LEVEL = -1
 LEAD_MAX = 80.0
 HEAD_M = 40.0
+MAX_PORTS = 8
+# docs 6.2 and realsave's lines: a platform track's hold per train
+DWELL_S, MARGIN_S, PASSING_S, TURN_S = 30.0, 60.0, 40.0, 180.0
+SECTION_S = 144.0
+PLAT_LOAD = 0.8
 
 
 def platform_len(cars):
@@ -51,7 +58,8 @@ def track_model(doc, polys, net):
     # a piece shorter than a cut point's snap can have both ends on one node: lines pass it inside the node
     loop = {P["id"] for P in pieces if P["ends"][0] == P["ends"][1]}
     st["pieces inside one node"] = len(loop)
-    clines = [dict(L, path=[e for e in L["path"] if e[0] not in loop]) for L in clines]
+    clines = [dict(L, path=[e for e in L["path"] if e[0] not in loop],
+                   occ=[s for e, s in zip(L["path"], L.get("occ", [SECTION_S] * len(L["path"]))) if e[0] not in loop]) for L in clines]
     pair_poly = {}
     for P, poly in zip(pieces, polys):
         if P["id"] in loop:
@@ -124,10 +132,26 @@ def track_model(doc, polys, net):
     for li, matched in enumerate(line_stops):
         for j, k in matched.items():
             gstops[find(end_at(li, j))].append((li, k))
+    # each line's visit to each group: (line, path node index, arriving end, leaving end, stops)
+    visits = defaultdict(list)
+    for li, ends in enumerate(line_ends):
+        for j in range(len(ends) + 1 if ends else 0):
+            a = ends[j - 1][1] if j > 0 else None
+            b = ends[j][0] if j < len(ends) else None
+            visits[find(a if a is not None else b)].append((li, j, a, b, j in line_stops[li]))
+
+    def platform_s(a, b, stop, side, dead):
+        """A train's hold on its platform track (docs 6.2): dwell and margin, a turn on a through
+        platform, half a turn at a dead end (two tracks pooled), or passing."""
+        if not stop:
+            return PASSING_S
+        if a is None or b is None or side[a] == side[b]:
+            return (TURN_S + MARGIN_S) / (2 if dead else 1)
+        return DWELL_S + MARGIN_S
 
     nodes, edges = [], []
     placed, reoriented = [], []
-    g_chain, g_side, node_of = {}, {}, {}
+    g_chain, g_side, node_of, plat_of = {}, {}, {}, {}
     for g, ends in groups.items():
         pts = np.array([pair_poly[e[:2]][0] if e[2] == 0 else pair_poly[e[:2]][-1] for e in ends])
         us = [along_dir(pair_poly[e[:2]], e[2] == 1) for e in ends]
@@ -173,41 +197,65 @@ def track_model(doc, polys, net):
             li0, k0 = stops[0]
             s = stations[lines[li0]["stops"][k0]]
             plat = platform_len(max(lines[li]["cars"] for li, _ in stops))
-            sid = len(nodes)
-            nodes.append({"xy": base.round(3).tolist(), "level": LEVEL, "station": {"platform": plat, "name": s["name"], "key": s["key"]}})
+            # platform tracks: as many as the trains need (a terminus fed by one pair, London
+            # Bridge's through lines), each a station node side by side with a junction each side;
+            # a move's lines (same ends, stopping or not) keep to one
+            dead = min(per_side) == 0
+            moves = defaultdict(list)
+            for li, j, a, b, stop in visits[g]:
+                moves[(a, b, stop)].append((li, j))
+
+            def hold_s(m, li, j):
+                # the platform track, or the edge to it from the junction, which a train holds as
+                # long as a section of its piece (docs 6.2), whichever is longer
+                occ = clines[li]["occ"]
+                sec = max([occ[x] for x in (j - 1, j) if 0 <= x < len(occ)], default=SECTION_S)
+                return max(platform_s(*m, side, dead), sec)
+            mload = {m: sum(max(clines[li]["tph"][:2]) * hold_s(m, li, j) for li, j in v) / 3600 for m, v in moves.items()}
+            n_plat = min(max(1, math.ceil(sum(mload.values()) / PLAT_LOAD - 1e-9)), max(1, MAX_PORTS - max(per_side)), len(moves))
+            bins = [0.0] * n_plat
+            for m in sorted(moves, key=lambda m: -mload[m]):
+                k = int(np.argmin(bins))
+                bins[k] += mload[m]
+                for v in moves[m]:
+                    plat_of[v] = k
+            if n_plat > 1:
+                st["stations with more than one platform track"] += 1
+                st["platform tracks added"] += n_plat - 1
+            perp = np.array([-hv[1], hv[0]])
+            sids = []
+            for k in range(n_plat):
+                q = base + perp * PAIR_GAP * (k - (n_plat - 1) / 2)
+                sids.append(len(nodes))
+                nodes.append({"xy": q.round(3).tolist(), "level": LEVEL, "station": {"platform": plat, "name": s["name"], "key": s["key"]}})
+            sid = sids[0]
             chain = []
             for sd in (0, 1):
-                if per_side[sd] > 1:
+                if per_side[sd] > 1 or (n_plat > 1 and per_side[sd] > 0):
                     # past the platform, but short of the next node that side: a junction beyond
                     # it would take its edges back in a hairpin
                     sgn = 1 if sd == 1 else -1
                     far = [float((pair_poly[e[:2]][-1 if e[2] == 0 else 0] - base) @ (sgn * hv)) for e in ends if side[e] == sd]
                     room = min([f for f in far if f > 1.0], default=math.inf)
-                    off = min(plat / 2 + BRANCH_CLEAR + 10, max(0.5 * room, JUNCTION_MIN))
+                    off = min(plat / 2 + BRANCH_CLEAR + 10, max(0.4 * room, JUNCTION_MIN))
                     if off < plat / 2 + BRANCH_CLEAR:
                         st["junctions inside a platform's clearance (no room)"] += 1
                     q = base + sgn * off * hv
                     chain.append((sd, len(nodes)))
                     nodes.append({"xy": q.round(3).tolist(), "level": LEVEL, "station": None})
-            order = [n for sd, n in chain if sd == 0] + [sid] + [n for sd, n in chain if sd == 1]
             for e in ends:
                 j = next((n for sd, n in chain if sd == side[e]), sid)
                 node_of[e] = j
-            g_chain[g] = (order, sid)
+            g_chain[g] = (chain, sids)
         else:
             nid = len(nodes)
             nodes.append({"xy": base.round(3).tolist(), "level": LEVEL, "station": None})
             for e in ends:
                 node_of[e] = nid
-            g_chain[g] = ([nid], None)
-            if len(ends) > 8:
+            g_chain[g] = ([], [])
+            if len(ends) > MAX_PORTS:
                 st["nodes over 8 ends"] += 1
         g_side[g] = (hv, side)
-    chain_edge = {}
-    for g, (order, sid) in g_chain.items():
-        for i in range(len(order) - 1):
-            chain_edge[(order[i], order[i + 1])] = len(edges)
-            edges.append({"a": order[i], "b": order[i + 1], "lead_a": None, "lead_b": None, "line": []})
 
     def add_edge(a, b, ha, da, hb, db, poly):
         """An edge a to b leaving a along da * ha and b along db * hb, the polyline between."""
@@ -233,6 +281,21 @@ def track_model(doc, polys, net):
         edges.append({"a": a, "b": b, "lead_a": la.round(3).tolist(), "lead_b": lb.round(3).tolist(), "line": inner.round(2).tolist()})
         return len(edges) - 1
 
+    # a station's own edges: junction to platform to junction; platforms side by side get leads
+    # along the heading, so their edges leave the junction straight and swing out to the platform
+    conn = {}
+    for g, (chain, sids) in g_chain.items():
+        hv = g_side[g][0]
+        for k, sid in enumerate(sids):
+            for sd, j in chain:
+                a, b = (j, sid) if sd == 0 else (sid, j)
+                if len(sids) == 1:
+                    conn[(a, b)] = len(edges)
+                    edges.append({"a": a, "b": b, "lead_a": None, "lead_b": None, "line": []})
+                else:
+                    A, B = np.array(nodes[a]["xy"]), np.array(nodes[b]["xy"])
+                    conn[(a, b)] = add_edge(a, b, hv, 1, hv, -1, np.array([A, B]))
+
     piece_edge = {}
     for (pid, k), poly in pair_poly.items():
         ea, eb = (pid, k, 0), (pid, k, 1)
@@ -257,22 +320,11 @@ def track_model(doc, polys, net):
         e2 = add_edge(m, b, hm, 1, hb, db, poly[i:])
         piece_edge[(pid, k)] = [e1, e2]
 
-    def walk(i, j, out):
-        """Edges from node i to node j along a group's chain."""
-        if i == j:
+    def hop(u, v, out):
+        """The station edge from node u to node v, if they differ."""
+        if u is None or v is None or u == v:
             return
-        order = g_chain_of[i][0]
-        a, b = order.index(i), order.index(j)
-        step = 1 if b > a else -1
-        for x in range(a, b, step):
-            u, v = order[x], order[x + step]
-            e = chain_edge[(u, v)] if step == 1 else chain_edge[(v, u)]
-            out.append(e << 1 | (0 if step == 1 else 1))
-
-    g_chain_of = {}
-    for g, c in g_chain.items():
-        for n in c[0]:
-            g_chain_of[n] = c
+        out.append(conn[(u, v)] << 1 if (u, v) in conn else conn[(v, u)] << 1 | 1)
 
     out_lines, reversals = [], []
     for li, L in enumerate(clines):
@@ -289,7 +341,8 @@ def track_model(doc, polys, net):
             here = j in matched
             arrive = node_of[ends[j - 1][1]] if j > 0 else None
             leave = node_of[ends[j][0]] if j < n_path else None
-            sid = g_chain_of[arrive if arrive is not None else leave][1]
+            sids = g_chain[find(ends[j - 1][1] if j > 0 else ends[j][0])][1]
+            sid = sids[plat_of.get((li, j), 0)] if sids else None
             if here:
                 if sid is None:
                     st["stops on a node with no station"] += 1
@@ -302,17 +355,13 @@ def track_model(doc, polys, net):
                 if sd[a_end] == sd[b_end]:
                     nm = nodes[sid]["station"]["name"] if sid is not None else "a junction"
                     reversals.append(f"{lines[li]['feed']} {lines[li]['name']} (line {li}) at {nm}{'' if here else ', not a stop'}")
-            via = sid if here and sid is not None else None
-            frm = arrive if arrive is not None else via
-            to = leave if leave is not None else via
-            if via is not None:
-                walk(frm, via, path)
-                walk(via, to, path)
-            elif frm is not None and to is not None:
+            if sid is not None and (here or arrive != leave):
+                hop(arrive, sid, path)
+                hop(sid, leave, path)
+            elif arrive is not None and leave is not None:
                 hv, side = g_side[find(ends[j - 1][1])]
-                if frm == to and side[ends[j - 1][1]] == side[ends[j][0]]:
+                if arrive == leave and side[ends[j - 1][1]] == side[ends[j][0]]:
                     st["turns back at a node it does not stop at"] += 1
-                walk(frm, to, path)
             if j < n_path:
                 pid, d, k = L["path"][j]
                 es = piece_edge[(pid, k)]
@@ -322,8 +371,8 @@ def track_model(doc, polys, net):
                "lines": sum(1 for l in out_lines if l)})
     st["partway reversals"] = len(reversals)
     for g in reoriented:
-        order, sid = g_chain[g]
-        n = nodes[sid if sid is not None else order[0]]
+        chain, sids = g_chain[g]
+        n = nodes[sids[0] if sids else node_of[groups[g][0]]]
         names = sorted({lines[li]["name"] for li, _ in gstops.get(g, [])})
         print(f"  sides set by the lines: {n['station']['name'] if n['station'] else 'junction'} at {n['xy']} {names}")
     print("model:", dict(st))

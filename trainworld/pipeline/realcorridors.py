@@ -3,17 +3,20 @@
     python pipeline/realcorridors.py <city> [--out DIR]
 
 Every hop is routed again over the real-network graph as `realnet.py route` does (same rules and
-acceptance), keeping the chains it runs on. Parallel chains (within NEAR, same heading) of one
-kind of railway (all main-line rail together, else per operator), both in tunnel or both not, and
-joined by track within CONNECT_M, become one corridor, laid on the first of them in order of how
-many lines use it. The geom file needs each line's shapes (its stops on its own track): built from
+acceptance), keeping the chains it runs on, then a second time off track whose trains are mostly
+another class's (`route_hops`: London's tube lines, the sub-surface lines and main-line rail each
+on their own where OSM has it), and a whole build again off pieces the first found full with
+several routes, where a parallel line runs (the Brighton line's fast trains on the Quarry line).
+Parallel chains (within NEAR, same heading) of one kind of railway (all main-line rail together,
+else per kind), both in tunnel or both not, and joined by track within CONNECT_M, become one
+corridor, laid on the first of them in order of how many lines use it. The geom file needs each line's shapes (its stops on its own track): built from
 station centroids, a line at a big complex snaps to another line's track. A line's run along a
 corridor is one way: where it turns back at a station (the GWR's Gatwick trains at Redhill) it is
 two runs. Each corridor is cut at stations and wherever its set of lines changes; cuts that change
 nothing are joined again, so a piece runs between stations or junctions.
 
-A piece's lines are packed into double tracks (pairs) by load (docs 6.2), at most MAX_LOAD each,
-as many as its trains need and OSM's parallel chains within WIDE allow (half of them, rounded up),
+A piece's lines are packed into double tracks (pairs) by load (docs 6.2), at most PACK_LOAD each
+(PACK_LOAD_RAIL on main-line rail) and then spread evenly over them, as many as its trains need and OSM's parallel chains within WIDE allow (half of them, rounded up),
 and never fewer than the sets of lines that never run on one chain there. Where some lines pass a
 station at its end that others stop at, and OSM shows three or more tracks within NEAR, the
 passing lines (express) and the stopping ones (local) go on pairs of their own; a pair past
@@ -65,9 +68,17 @@ CONNECT_M = 2000.0
 TRACK_STEP = 50.0
 WANT_LOAD = 0.8
 MAX_LOAD = 0.9
+# pairs are filled to this at most (docs 6.2 estimate), main-line rail lower: its trunks carry many
+# stopping patterns, which the game queues as separate streams (T-1774)
+PACK_LOAD, PACK_LOAD_RAIL = 0.9, 0.6
+
 # no real pair is this loaded in the game's physics with more than one route on it (New York's
 # busiest shared pair is 1.0): past it, the lines were laid on one chain by the router
 APART_LOAD = 1.15
+# a chain's cost, second routing, for a line of another class than the one with most trains on it
+OTHER_CLASS = 3.0
+# a chain's cost, second build, on a piece the first found over MAX_LOAD with several routes
+AVOID = 3.0
 # docs 6.2 (sim track/params.rs): section headway 70 s + v / 0.6; traction 1.0 m/s² to 60 km/h,
 # 0.5 above, braking 0.9, top 160 km/h; platform dwell + 60 s a stopping train, 40 s a passing one
 SECTION_BASE_S, SIGNAL_BRAKE = 70.0, 0.6
@@ -119,36 +130,89 @@ class Union:
             self.p[b] = a
 
 
-def route_hops(graph, net, geo):
-    """Per line, per hop: {"legs", "a", "b"} (snaps as (chain, along)) on the graph, or {"poly"}."""
-    out, why = [], Counter()
-    for l, g in zip(net["lines"], geo):
-        nodes = [np.array(p) for p in g["nodes"]]
-        fams = [f for f in (graph.family_near(p, realnet.ROUTE_R) for p in nodes) if f is not None]
-        fam = Counter(fams).most_common(1)[0][0] if fams else (1 if l.get("kind") == "metro" else 0)
+def line_class(l):
+    """Lines of one class may share track where the router finds them on one chain: main-line rail
+    all together, else per kind and operator (London's tube lines, the sub-surface lines, the DLR)."""
+    k = l.get("kind")
+    return "rail" if k == "commuter" else f"{k}:{l.get('operator') or l['feed']}"
+
+
+def route_hops(graph, net, geo, avoid=frozenset()):
+    """Per line, per hop: {"legs", "a", "b"} (snaps as (chain, along)) on the graph, or {"poly"}.
+
+    Routed twice: the second time each chain costs OTHER_CLASS times more for a line of another
+    class than the one with most trains on it the first time, so a line the router laid on its
+    neighbour's track (the Bakerloo on the Northern's tunnel to Waterloo, the Piccadilly on the
+    District's at South Kensington) takes its own where OSM has it, and keeps the shared one where
+    there is none (the Piccadilly on the Metropolitan to Uxbridge)."""
+    lines = net["lines"]
+    fam_of, why = [], Counter()
+
+    def one(li, g, k, extra=None):
+        a, b = np.array(g["nodes"][k]), np.array(g["nodes"][k + 1])
+        r = graph.route(a, b, realnet.ROUTE_R, fam_of[li], extra)
+        if r is None or len(r[0]) < 2:
+            return None, "no route"
+        if length(r[0]) > realnet.ROUTE_SLACK * np.hypot(*(b - a)) + realnet.ROUTE_SLACK_M:
+            return None, "detour"
+        if g["hops"][k] and far_from(np.array(g["hops"][k]), r[0]) > realnet.ROUTE_SHAPE_M:
+            return None, "off its shape"
+        return r, None
+
+    first = []
+    for li, (l, g) in enumerate(zip(lines, geo)):
+        # a main-line line on rail where most of its stops have rail in reach: the nearest track
+        # alone put the Heathrow Express on subway (the Piccadilly at Heathrow, the Circle at Paddington)
+        if l.get("kind") == "commuter":
+            near = [{graph.fam[c] for _, c, _, _ in graph.candidates(np.array(p), realnet.ROUTE_R)} for p in g["nodes"]]
+            near = [s for s in near if s]
+            fam_of.append(0 if not near or 2 * sum(0 in s for s in near) >= len(near) else 1)
+        else:
+            fams = [f for f in (graph.family_near(np.array(p), realnet.ROUTE_R) for p in g["nodes"]) if f is not None]
+            fam_of.append(Counter(fams).most_common(1)[0][0] if fams else (1 if l.get("kind") == "metro" else 0))
+        first.append([one(li, g, k) for k in range(len(g["nodes"]) - 1)])
+    cls = [line_class(l) for l in lines]
+    used = {c for hs in first for r, _ in hs if r is not None for c, _, _ in r[3]}
+    grp = track_groups(graph, used)
+    trains = defaultdict(Counter)
+    for li, hs in enumerate(first):
+        for g in {grp.find(c) for r, _ in hs if r is not None for c, _, _ in r[3]}:
+            trains[g][cls[li]] += lines[li]["tph"][0]
+    owner = {c: trains[grp.find(c)].most_common(1)[0][0] for c in used}
+    out, rerouted = [], Counter()
+    for li, (l, g) in enumerate(zip(lines, geo)):
+        other = {c for c, o in owner.items() if o != cls[li]}
+        extra = {c: OTHER_CLASS for c in other}
+        for c in avoid:
+            extra[c] = extra.get(c, 1.0) * AVOID
         hops = []
-        for k in range(len(nodes) - 1):
-            a, b = nodes[k], nodes[k + 1]
-            r = graph.route(a, b, realnet.ROUTE_R, fam)
-            if r is None or len(r[0]) < 2:
-                why["no route"] += 1
-                r = None
-            elif length(r[0]) > realnet.ROUTE_SLACK * np.hypot(*(b - a)) + realnet.ROUTE_SLACK_M:
-                why["detour"] += 1
-                r = None
-            elif g["hops"][k] and far_from(np.array(g["hops"][k]), r[0]) > realnet.ROUTE_SHAPE_M:
-                why["off its shape"] += 1
-                r = None
+        for k, (r, w) in enumerate(first[li]):
+            if r is not None and any(c in extra for c, _, _ in r[3]):
+                r2, _ = one(li, g, k, extra)
+                by_class = any(c in other for c, _, _ in r[3])
+                # off a full piece, only a route away from it counts: a swap between a trunk's own
+                # tracks (New York's express and local) changes nothing but which chains are shared
+                if r2 is not None and [c for c, _, _ in r2[3]] != [c for c, _, _ in r[3]] and (by_class or far_from(r2[0], r[0]) > WIDE):
+                    if os.environ.get("REALCORR_DEBUG"):
+                        print(f"reroute {l['name']} hop {k}: {length(r[0]):.0f} m -> {length(r2[0]):.0f} m,"
+                              f" families {sorted({graph.fam[c] for c, _, _ in r2[3]})}")
+                    r = r2
+                    rerouted["rerouted onto their own class's track" if by_class else "rerouted off a full piece"] += 1
             if r is None:
+                why[w] += 1
+                a, b = g["nodes"][k], g["nodes"][k + 1]
                 hops.append({"poly": np.array([a] + (g["hops"][k] or []) + [b], float)})
             else:
                 hops.append({"legs": r[3]})
         out.append(hops)
+    why.update(rerouted)
     return out, why
 
 
 def line_key(l):
-    return "rail" if l.get("kind") == "commuter" else l.get("operator") or l["feed"]
+    """Chains of lines of one key may be laid on one corridor (where joined by track): main-line
+    rail, else per kind, so London's sub-surface lines share where their tracks are one pair."""
+    return "rail" if l.get("kind") == "commuter" else l.get("kind") or l["feed"]
 
 
 def chain_samples(graph, c):
@@ -162,27 +226,7 @@ def chain_samples(graph, c):
     return a, np.stack([x, y], 1), h
 
 
-def map_chains(graph, net, hops):
-    """Each used chain's samples laid on a corridor master: {chain: (alongs, master[], m_along[], sign[])}."""
-    users = defaultdict(set)
-    for li, hs in enumerate(hops):
-        for h in hs:
-            for c, _, _ in h.get("legs", ()):
-                users[c].add(li)
-    key = {c: Counter(line_key(net["lines"][li]) for li in ls).most_common(1)[0][0] for c, ls in users.items()}
-    order = sorted(users, key=lambda c: (-len(users[c]), -graph.len[c], c))
-    rank = {c: i for i, c in enumerate(order)}
-    samp = {c: chain_samples(graph, c) for c in order}
-    base, xy, owner, heads = {}, [], [], []
-    for c in order:
-        base[c] = len(owner)
-        a, p, h = samp[c]
-        xy.append(p)
-        heads.append(h)
-        owner += [c] * len(a)
-    xy, heads, owner = np.concatenate(xy), np.concatenate(heads), np.array(owner)
-    tree = cKDTree(xy)
-    tunnel = {c: bool(graph.flags[c] & 4) for c in order}
+def connector(graph):
     joined = {}
 
     def connected(c1, c2):
@@ -210,6 +254,59 @@ def map_chains(graph, net, hops):
                         heapq.heappush(heap, (d2, j2))
             joined[k] = ok
         return joined[k]
+    return connected
+
+
+def track_groups(graph, chains):
+    """Chains of one trunk whatever lines use them: parallel within NEAR for MIN_RUN, same family,
+    both in tunnel or both not, joined by track within CONNECT_M (a pair's two tracks, mapped as
+    two ways; a four-track trunk). Union over chain ids."""
+    chains = sorted(chains)
+    samp = [chain_samples(graph, c) for c in chains]
+    xy = np.concatenate([p for _, p, _ in samp])
+    hd = np.concatenate([h for _, _, h in samp])
+    own = np.concatenate([np.full(len(a), i) for i, (a, _, _) in enumerate(samp)])
+    tree = cKDTree(xy)
+    hits = Counter()
+    for i, j in tree.query_pairs(NEAR, output_type="ndarray"):
+        a, b = own[i], own[j]
+        if a != b and parallel(hd[i], hd[j]):
+            hits[(min(a, b), max(a, b))] += 1
+    connected = connector(graph)
+    u = Union()
+    for c in chains:
+        u.find(c)
+    for (a, b), n in hits.items():
+        ca, cb = chains[a], chains[b]
+        if n * STEP < MIN_RUN or graph.fam[ca] != graph.fam[cb] or bool(graph.flags[ca] & 4) != bool(graph.flags[cb] & 4):
+            continue
+        if connected(ca, cb):
+            u.join(ca, cb)
+    return u
+
+
+def map_chains(graph, net, hops):
+    """Each used chain's samples laid on a corridor master: {chain: (alongs, master[], m_along[], sign[])}."""
+    users = defaultdict(set)
+    for li, hs in enumerate(hops):
+        for h in hs:
+            for c, _, _ in h.get("legs", ()):
+                users[c].add(li)
+    key = {c: Counter(line_key(net["lines"][li]) for li in ls).most_common(1)[0][0] for c, ls in users.items()}
+    order = sorted(users, key=lambda c: (-len(users[c]), -graph.len[c], c))
+    rank = {c: i for i, c in enumerate(order)}
+    samp = {c: chain_samples(graph, c) for c in order}
+    base, xy, owner, heads = {}, [], [], []
+    for c in order:
+        base[c] = len(owner)
+        a, p, h = samp[c]
+        xy.append(p)
+        heads.append(h)
+        owner += [c] * len(a)
+    xy, heads, owner = np.concatenate(xy), np.concatenate(heads), np.array(owner)
+    tree = cKDTree(xy)
+    tunnel = {c: bool(graph.flags[c] & 4) for c in order}
+    connected = connector(graph)
     m_of = np.empty(len(owner), np.int64)
     a_of = np.empty(len(owner))
     s_of = np.empty(len(owner))
@@ -362,7 +459,10 @@ def cluster(values):
     return pos, of
 
 
-def build(city, out_dir):
+def build(city, out_dir, avoid=None):
+    """`avoid`: chains of pieces the first build found over MAX_LOAD with lines of more than one
+    route on a pair; the second routes lines off them where a parallel line runs (T-1774: the
+    Brighton line's fast trains on the Quarry line, not all through Redhill and Merstham)."""
     t0 = time.time()
     cfg = realnet.CITIES[city]
     o = realnet.origin(cfg["pack"])
@@ -375,7 +475,7 @@ def build(city, out_dir):
     box = (*(xy.min(0) - 5000), *(xy.max(0) + 5000))
     graph = Graph(os.path.join(realnet.PACKS, "realgraph", f"{realnet.REGION[city]}.rgr"), o, box, realnet.R_EARTH)
     t_graph = time.time() - t0
-    hops, why = route_hops(graph, net, geo)
+    hops, why = route_hops(graph, net, geo, avoid or frozenset())
     t_route = time.time() - t0
     cmap, users = map_chains(graph, net, hops)
     lines = net["lines"]
@@ -621,6 +721,10 @@ def build(city, out_dir):
     def load(pid, ls):
         return sum(tph[li] * s_of[(pid, li)] for li in ls) / 3600
 
+    def pack_load(pid):
+        ls = pieces[pid]["lines"]
+        return PACK_LOAD_RAIL if ls and all(lines[li].get("kind") == "commuter" for li in ls) else PACK_LOAD
+
     def units(pid, ls):
         """A route's patterns that stop alike here (the A's two branches) keep to one pair."""
         by = defaultdict(list)
@@ -649,10 +753,20 @@ def build(city, out_dir):
                     by_chain[k] = li
         return len({u.find(li) for li in ls})
 
-    def pack(pid, ls, cap, limit=MAX_LOAD):
-        """First fit by load into pairs of at most `limit`, at most `cap` pairs."""
+    def pack(pid, ls, cap, limit=None):
+        """As few pairs as first fit by load at most `limit` needs (at most `cap`), the lines then
+        spread evenly over them (busiest first onto the least loaded): a first pair filled to 0.9
+        of the estimate is full in the game, which brakes for curves and stations the estimate
+        leaves out (SWR at Clapham Junction, T-1774)."""
+        limit = pack_load(pid) if limit is None else limit
         bins = []
+        us = []
         for g in units(pid, ls):
+            # a unit too heavy for one pair is its patterns again (a London operator's stopping
+            # patterns all count as one route: SWR's ten fast patterns out of Waterloo)
+            us += [[li] for li in g] if len(g) > 1 and load(pid, g) > limit and cap > 1 else [g]
+        us.sort(key=lambda g: (-load(pid, g), g))
+        for g in us:
             lg = load(pid, g)
             fit = [b for b in bins if load(pid, b) + lg <= limit]
             if fit:
@@ -661,6 +775,12 @@ def build(city, out_dir):
                 bins.append(list(g))
             else:
                 min(bins, key=lambda b: load(pid, b)).extend(g)
+        if len(bins) > 1:
+            even = [[] for _ in bins]
+            for g in us:
+                min(even, key=lambda b: load(pid, b)).extend(g)
+            if max(load(pid, b) for b in even) <= max(load(pid, b) for b in bins) + 1e-9:
+                bins = even
         return bins or [[]]
 
     # pairs: lines packed into double tracks by load, as many as the trains need and OSM's tracks
@@ -724,7 +844,7 @@ def build(city, out_dir):
         have = {li for _, b in cand for li in b}
         for g in units(q, [li for li in Q["lines"] if li not in have]):
             lg = load(q, g)
-            fit = [b for _, b in cand if load(q, b) + lg <= MAX_LOAD and is_light(b[0]) == is_light(g[0])]
+            fit = [b for _, b in cand if load(q, b) + lg <= pack_load(q) and is_light(b[0]) == is_light(g[0])]
             if fit:
                 fit[0].extend(g)
             else:
@@ -733,7 +853,7 @@ def build(city, out_dir):
             return None
         if any(len({is_light(li) for li in b}) > 1 for _, b in cand):
             return None
-        if max(load(q, b) for _, b in cand) > max(MAX_LOAD, max(load(q, b) for _, b in Q["fresh"])) + 1e-9:
+        if max(load(q, b) for _, b in cand) > max(pack_load(q), max(load(q, b) for _, b in Q["fresh"])) + 1e-9:
             return None
         if Q["split"]:
             roles = []
@@ -801,6 +921,17 @@ def build(city, out_dir):
         P["load"] = [round(load(pid, ls), 3) for ls in P["pair_lines"]]
 
     split_by_hand(city, o, pieces, paths, pair, s_of, span, lines, load)
+    if avoid is None:
+        full = set()
+        for pid, P in enumerate(pieces):
+            if P["off"]:
+                continue
+            for ls in P["pair_lines"]:
+                if load(pid, ls) > MAX_LOAD and len({(lines[li]["feed"], lines[li].get("route", lines[li]["name"])) for li in ls}) > 1:
+                    full |= {c for li in ls for c in P["chains"].get(li, ())}
+        if full:
+            print(f"pieces over {MAX_LOAD} with more than one route: {len(full)} chains, routed again")
+            return build(city, out_dir, frozenset(full))
     trim = trim_lines(pieces, paths, pair, s_of, lines)
 
     # nodes
@@ -863,6 +994,7 @@ def build(city, out_dir):
         out_lines.append({"index": li, "name": lines[li]["name"], "feed": lines[li]["feed"],
                           "tph": [round(t * k, 3) for t, k in zip(lines[li]["tph"], f)], "trimmed": li in trim,
                           "path": [[pid, dirn, pair[(pid, li)]] for pid, dirn in path],
+                          "occ": [round(s_of[(pid, li)], 1) for pid, _ in path],
                           "stops": [node_ids[stop_node[li][k]] for k in range(len(lines[li]["stops"]))]})
 
     # ---- checks ----
@@ -953,18 +1085,26 @@ def split_by_hand(city, o, pieces, paths, pair, s_of, span, lines, load):
 def trim_lines(pieces, paths, pair, s_of, lines):
     """The note's trim: a pair loaded past MAX_LOAD at a demand level has its lines' trains cut in
     proportion; a line keeps the smallest factor of any pair it runs on. Returns {line: [f, f, f]}."""
-    out = {}
+    out, merged = {}, {}
     for pid, P in enumerate(pieces):
         for ls in P["pair_lines"]:
+            # a pair of one route's patterns is the line's own load; of several, a merge's
+            routes = len({(lines[li]["feed"], lines[li].get("route", lines[li]["name"])) for li in ls})
             for lev in range(3):
                 rho = sum(lines[li]["tph"][lev] * s_of[(pid, li)] for li in ls) / 3600
                 if rho > MAX_LOAD:
                     f = MAX_LOAD / rho
                     for li in ls:
                         out.setdefault(li, [1.0, 1.0, 1.0])
-                        out[li][lev] = min(out[li][lev], f)
+                        if f < out[li][lev]:
+                            out[li][lev] = f
+                            if lev == 0:
+                                merged[li] = routes > 1
     for li, f in sorted(out.items()):
-        print(f"trim {lines[li]['feed']} {lines[li]['name']} (line {li}): trains an hour {lines[li]['tph']} x {[round(x, 3) for x in f]}")
+        print(f"trim {lines[li]['feed']} {lines[li]['name']} (line {li}): trains an hour {lines[li]['tph']} x {[round(x, 3) for x in f]}"
+              f"{' (merge)' if merged.get(li) else ''}")
+    worst = min((out[li][0] for li in out if merged.get(li)), default=1.0)
+    print(f"trimmed lines {len(out)}, worst {min((f[0] for f in out.values()), default=1.0):.3f}, worst by a merge {worst:.3f}")
     return out
 
 

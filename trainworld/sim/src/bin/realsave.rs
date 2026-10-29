@@ -350,12 +350,30 @@ fn main() {
                 held[lev] += end(&r.prof[lev]);
             }
             worst.push((end(&r.prof[0]) - end(&r.free), li));
-            for h in &r.holds[1] {
+            for h in &r.holds[0] {
                 let k = r.node_s.partition_point(|&s| s <= h.s).saturating_sub(1);
                 *at_node.entry(r.nodes[k]).or_insert(0.0) += h.delay;
             }
         }
         let cap = &w.svc.cap;
+        // T-1774: every line's holds and every loaded resource, for a closer look (`<city>_holds.json`)
+        let line_rows: Vec<Value> = line_ids.iter().filter(|&&(_, id)| w.svc.lines[id as usize].running).map(|&(li, id)| {
+            let r = &w.svc.lines[id as usize].runs[0];
+            let end = |p: &trainworld_sim::track::profile::Profile| p.arr.last().copied().unwrap_or(0.0) - p.dep.first().copied().unwrap_or(0.0);
+            let held: Vec<f64> = (0..3).map(|lev| (end(&r.prof[lev]) - end(&r.free)) / 60.0).collect();
+            let at: Vec<Value> = r.holds[0].iter().map(|h| {
+                let k = r.node_s.partition_point(|&s| s <= h.s).saturating_sub(1);
+                let n = r.nodes[k] as usize;
+                json!([node_names[n], w.net.node_x[n].round(), w.net.node_y[n].round(), (h.delay * 10.0).round() / 10.0, h.s.round()])
+            }).collect();
+            json!({"index": li, "name": lines[li]["name"], "feed": lines[li]["feed"], "operator": lines[li]["operator"], "free_min": end(&r.free) / 60.0, "held_min": held, "holds": at})
+        }).collect();
+        let res_rows: Vec<Value> = (0..cap.res.len()).filter(|&r| cap.rho[r][0] > 0.5).map(|r| {
+            let x = &cap.res[r];
+            let names: std::collections::BTreeSet<String> = cap.users_of(r).iter().filter_map(|u| line_ids.iter().find(|l| l.1 == u.line).map(|l| lines[l.0]["name"].as_str().unwrap_or("").to_string())).collect();
+            json!({"kind": format!("{:?}", x.kind), "x": x.x, "y": x.y, "rho": cap.rho[r], "users": cap.users_of(r).len(), "lines": names})
+        }).collect();
+        std::fs::write(format!("{out_dir}/{city}_holds.json"), serde_json::to_string(&json!({"lines": line_rows, "resources": res_rows})).unwrap()).unwrap();
         for lev in 0..3 {
             let mut kinds = std::collections::BTreeMap::new();
             for (r, x) in cap.res.iter().enumerate() {
@@ -365,17 +383,17 @@ fn main() {
             }
             eprintln!("  level {lev}: resources over 90%: {kinds:?}");
         }
-        let mut over: Vec<(f64, usize)> = (0..cap.res.len()).map(|r| (cap.rho[r][1], r)).filter(|x| x.0 > 0.9).collect();
+        let mut over: Vec<(f64, usize)> = (0..cap.res.len()).map(|r| (cap.rho[r][0], r)).filter(|x| x.0 > 0.9).collect();
         over.sort_by(|a, b| b.0.total_cmp(&a.0));
         for (rho, r) in over.iter().take(12) {
             let x = &cap.res[*r];
             let names: std::collections::BTreeSet<String> = cap.users_of(*r).iter().filter_map(|u| line_ids.iter().find(|l| l.1 == u.line).map(|l| lines[l.0]["name"].as_str().unwrap_or("").to_string())).collect();
-            eprintln!("  {:?} at {:.0},{:.0} medium {:.2}: {:?}", x.kind, x.x, x.y, rho, names);
+            eprintln!("  {:?} at {:.0},{:.0} high {:.2}: {:?}", x.kind, x.x, x.y, rho, names);
         }
         let mut hot: Vec<(u32, f64)> = at_node.into_iter().collect();
         hot.sort_by(|a, b| b.1.total_cmp(&a.1));
         for (n, d) in hot.iter().take(15) {
-            eprintln!("  holds after node {n} ({}) at {:.0},{:.0}: {:.1} line-min (medium demand)", node_names[*n as usize], w.net.node_x[*n as usize], w.net.node_y[*n as usize], d / 60.0);
+            eprintln!("  holds after node {n} ({}) at {:.0},{:.0}: {:.1} line-min (high demand)", node_names[*n as usize], w.net.node_x[*n as usize], w.net.node_y[*n as usize], d / 60.0);
         }
         eprintln!("slow: one-way minutes over lines, free run {:.0}, with the capacity pass's holds {:.0} / {:.0} / {:.0} (high, medium, low demand)", free / 60.0, held[0] / 60.0, held[1] / 60.0, held[2] / 60.0);
         worst.sort_by(|a, b| b.0.total_cmp(&a.0));

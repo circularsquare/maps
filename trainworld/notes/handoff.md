@@ -136,15 +136,18 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1787 (Opus, 1 core) continuing in the same tree; first a six-save bench table so the fast cities can ship early.
 - T-1790 committed 420652eb (status 1/2, 2/2, shown whenever capped). T-1792 agent t1792 (Sonnet, Vite 6159, 2 cores).
   T-1774 London shared agent t1774 (Opus, Vite 6177, 2 cores, staging only).
-- T-1791 stage 1 (Anita yes; her answers in DECISIONS): agent t1791s1 (Opus) in tree .tw-trees/t1791 (8bd9f0f6),
-  WASM interface change, Vite 6171, 1 core. Land after China join, rebuild main WASM.
+- T-1791 stages 1+2 BUILT in tree .tw-trees/t1791 (smoke 20/20 there); stage 3 (editing in the diagram) agent
+  t1791s3 (Sonnet, 2 cores) in the same tree. WASM interface change: land after China join, rebuild main WASM. Touches clock.worker.ts (4 lines) and
+  sim/src/bin/realsave.rs (LineData literal) — t1774 may edit realsave.rs too.
+- Land order after the join: t1779 (track + T-1787), t1782 (walking), t1791 (groups); rebuild main WASM; 8800; ship
+  the fast shared saves per T-1787's table.
 - T-1786 committed 8ca72cc6, T-1791 design b978e9ed, T-1785 8bd9f0f6 (T-1793 pulses
   overstate platform crowds, filed P3). T-1790 agent t1790 (Opus, 1 core, Vite 6165). T-1792 queued.
 - (was) T-1791 line groups: design agent t1791 (Opus, no cores, notes/T-1791.md) for Anita. Queued: T-1790 (demand status
   1/4 then nothing while capped 4x), T-1792 (dim bullets of lines with no trains): start when cores free (<= 12 total).
 - T-1783/1784 committed b6ff5d9f. T-1782: Anita chose "no train slower than walking" plus a soft ramp above (10% faster
   still cut a lot); BUILT in tree .tw-trees/t1782 (walk_fade 0.3, linear; rail -10.7% on the real save, ceilings pass,
-  Houston A 85.6%). Land after China join; told Anita the -11%. T-1786 agent t1786 (Opus, Vite 6188, 2 cores), T-1785 agent t1785 (Opus, Vite 6193,
+  Houston A 85.6%). Land after China join. Anita OK with -11% ("mostly short ones anyways"): keep walk_fade 0.3. T-1786 agent t1786 (Opus, Vite 6188, 2 cores), T-1785 agent t1785 (Opus, Vite 6193,
   1 core; may touch boarding.rs/clock.worker.ts that t1779's tree also edits).
 - (was) From Anita's TODO 2026-10-29: T-1783 (no crowding bubble on a line with no trains) + T-1784 (shorter tooltips,
   "ordinary" -> "normal"): agent t1783 (Sonnet), 1 core, Vite 6159. Queued for free cores: T-1785 terminal boarding

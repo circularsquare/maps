@@ -107,13 +107,17 @@ class Graph:
         c = self.candidates(at, r)
         return self.fam[c[0][1]] if c else None
 
-    def route(self, a, b, r, fam0):
+    def route(self, a, b, r, fam0, extra=None):
         """The cheapest route from a to b: (polyline (n, 2), start snap, end snap, legs), or None;
-        legs are the chains it runs on in order, (chain, from along, to along) (T-1305)."""
+        legs are the chains it runs on in order, (chain, from along, to along) (T-1305). `extra`
+        multiplies chosen chains' cost ({chain: factor}, T-1774)."""
         starts, ends = self.candidates(a, r), self.candidates(b, r)
         if not starts or not ends:
             return None
-        fac = lambda c: 1.0 if self.fam[c] == fam0 else OTHER_FAMILY
+        if extra:
+            fac = lambda c: (1.0 if self.fam[c] == fam0 else OTHER_FAMILY) * extra.get(c, 1.0)
+        else:
+            fac = lambda c: 1.0 if self.fam[c] == fam0 else OTHER_FAMILY
         ends_on = {}
         for e in ends:
             ends_on.setdefault(e[1], []).append(e)
