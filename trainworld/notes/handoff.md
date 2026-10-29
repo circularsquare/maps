@@ -129,7 +129,11 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - shonei-server DEPLOYED and pushed (f74bfad, Anita's word 2026-10-29); /trainworld/stats live (empty until the site
   deploy carries efb32d52). T-1777 agent t1777 (Opus): screen-stuck ghosts, one preview owner; Vite 6196, 2 cores.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
-- T-1775 agent t1775 (Sonnet): narrow top bar, time beside sky; Vite 6191, 2 cores. T-1776 train sounds filed P3.
+- T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
+- T-1779 [P1] branching freezes / ghost stuck near a line; T-1780 blueprint click 150 ms; T-1781 snap curves too
+  tight: agent t1779 (Opus) in tree .tw-trees/t1779 (branched e10f72b5), Vite 6199, 3 cores. Land: smoke in tree,
+  agent-tree land, rebuild main WASM if sim changed. May conflict with t1777's tools.ts edits.
+- (was) T-1775 agent t1775 (Sonnet): narrow top bar, time beside sky; Vite 6191, 2 cores. T-1776 train sounds filed P3.
   Anita OK'd the E/F 10% trim and the real colours. NJ-lines calibration note in notes/T-1750.md.
 - T-1772 agent t1772 (Opus): capacity markers as clock-face dots, short tooltips, reversal icons lighter; Vite 6185, 3 cores.
 - T-1305 stage 2 committed 680119fe: shared NYC save staged at artifacts/trainworld/t1305-shared/nyc_real.save
