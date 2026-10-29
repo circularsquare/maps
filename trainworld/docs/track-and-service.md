@@ -222,8 +222,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   (a node within half the spacing of it, open ground within three spacings of the track) runs along
   it from the start, an open-ground start moving onto it and no lead-ins at the ends; a node start
   on the line's other side gives the plain route. Any other start comes in: its route keeps its
-  lead-in and turns, at an auto-radius corner, onto the line where it has gone along the run as far
-  as the start is from the run (at most half the way to the end). Every PI is at the end's level
+  lead-in and turns, at an auto-radius corner, onto the line at the roundest of 17 places (T-1781):
+  from where it has gone along the run as far as the start is from the run (at most half the way to
+  the end) out to 90% of the way, the one whose fitted corner is widest (to the design radius, then
+  the nearest), its straight in not crossing the run and the line's own corners still fitting; the
+  nearest if none qualifies. Every PI is at the end's level
   (the run's ramps are not copied, T-1722); the route ramps over what it crosses as any route does.
   Otherwise it is an ordinary route: the same checks, its own loose ends, no crossovers. The
   drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
@@ -481,7 +484,13 @@ frequencies from capacity-adjusted round trips with a bounded, damped solve on e
 Delays and derived frequencies feed back until settled, with at most 80 iterations and continuous
 delays on resources used by count schedules. Each level settles on its own (levels share no
 capacity): a level whose fleets already match their counts within 0.0001 trains is not stepped,
-so its rates and run times stay the same to the bit (T-415). A line a save loads at a frequency
+so its rates and run times stay the same to the bit (T-415). On an edit, a line within 0.0001
+trains of its fleet is left as it is while the rest of its level steps (T-1787: on shared track
+each line moved re-times its neighbours), and the step's 1% probe reads each round trip's rise
+from the capacity solve alone, as the change in the line's hold delays, so the run profiles are
+worked out once a round instead of twice. A save carries the settled rates to the bit, so a load
+settles from them with an edit's settle and changes nothing; a save without them (older ones, or
+one changed to another frame) settles in full, every line of an unsettled level stepped. A line a save loads at a frequency
 rather than trains takes the whole trains that frequency needs first (architecture.md 11).
 The underlying capacity pass is incremental: an edit
 rebuilds only the resources around the edges, nodes and lines it touched and re-solves those and
@@ -920,7 +929,9 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
 The clock worker owns the network. The main thread sends edit operations (each with an inverse,
 for undo); the worker answers with the new state, then the edit's answer (or the reasons it was
 refused). The alignment being drawn is previewed by the worker as a trial edit, applied, measured
-and rolled back, so the preview knows everything an edit would refuse (timings in notes/T-025.md). The
+and rolled back, so the preview knows everything an edit would refuse (timings in notes/T-025.md);
+the trial leaves the services alone (`TrackWorld::trial`, T-1779), as no preview shows a train's
+run. A blueprint route that changes no line for demand sends no new trips or boarding hour (T-1780). The
 worker sends the whole network state after an edit, with the renderer's buffers already built;
 the main thread uploads them. Both sides redo only what the edit changed (T-496): the worker keeps
 each edge's, line's and station's piece of the buffers from the last build and reuses any whose

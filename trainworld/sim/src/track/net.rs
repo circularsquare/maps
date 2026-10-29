@@ -358,6 +358,15 @@ pub struct Network {
     pub line_tph: Vec<[f32; 3]>,
     pub line_trains: Vec<Option<[u32; 3]>>,
     pub line_auto: Vec<Option<[u32; 3]>>,
+    /// T-1787: `line_tph` holds settled rates (a settle has run, or a save carried them), so a save
+    /// writes them to the bit in `LRT1`
+    pub rates_settled: bool,
+    /// T-1787: the rates came from a save's `LRT1`, so loading settles from them with an edit's
+    /// quick settle, a no-op when nothing changed; without it a load settles fully, as before
+    pub rates_from_save: bool,
+    /// The lines and levels the last settle left circling (`TrackWorld::settle_counts`): line, level,
+    /// rate and round trip bits, trains. Saved with the rates, so a load keeps them settled.
+    pub settle_kept: Vec<(u32, usize, u32, u64, u32)>,
     pub line_dwell: Vec<f32>,
     pub line_turn: Vec<f32>,
     pub line_cars: Vec<u8>,
@@ -611,6 +620,9 @@ impl Network {
             line_tph: vec![],
             line_trains: vec![],
             line_auto: vec![],
+            rates_settled: false,
+            rates_from_save: false,
+            settle_kept: vec![],
             line_dwell: vec![],
             line_turn: vec![],
             line_cars: vec![],

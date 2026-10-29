@@ -2104,7 +2104,7 @@ const SHIFT_REACH = 2 ** 22;
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
-function sendState(service = false, effectiveAt?: number) {
+function sendState(service = false, effectiveAt?: number, trips = true) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
@@ -2153,7 +2153,7 @@ function sendState(service = false, effectiveAt?: number) {
   if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
   timing.post = performance.now() - t2;
-  sendTrips();
+  if (trips) sendTrips();
 }
 
 // ---------------------------------------------------------------- posting only what changed (T-1029)
@@ -3094,7 +3094,10 @@ async function handle(msg: ToClock) {
       if (charge > 0) bookCharge(msg.seq, charge, api.last_train_charge());
       forget();
       const demand = api.dirty_demand_lines();
-      sendState(service, service ? api.edit_time() : undefined);
+      // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
+      // (about 60 ms on New York's real save, more on shared track)
+      const trips = !(msg.op.op === "route" && charge === 0 && !demand.length);
+      sendState(service, service ? api.edit_time() : undefined, trips);
       if (service) serviceEditMs = performance.now() - tA;
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
     }

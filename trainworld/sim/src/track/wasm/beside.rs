@@ -45,11 +45,7 @@ impl TrackApi {
             cum.push(cum[cum.len() - 1] + (w[1].x - w[0].x).hypot(w[1].y - w[0].y));
         }
         let along = |s: f64| { let i = (s.floor() as usize).min(v.len() - 2); cum[i] + (cum[i + 1] - cum[i]) * (s - i as f64) };
-        let from = if on_line {
-            pa.0
-        } else {
-            let (la, le) = (along(pa.0), along(pb.0));
-            let l = la + pa.2.min((le - la) / 2.0);
+        let at_len = |l: f64| {
             let i = (0..v.len() - 1).find(|&i| cum[i + 1] >= l).unwrap_or(v.len() - 2);
             i as f64 + if cum[i + 1] > cum[i] { (l - cum[i]) / (cum[i + 1] - cum[i]) } else { 0.0 }
         };
@@ -58,25 +54,59 @@ impl TrackApi {
             let t = s - i as f64;
             Pi::new(v[i].x + (v[i + 1].x - v[i].x) * t, v[i].y + (v[i + 1].y - v[i].y) * t, 0.0, v[i].level)
         };
-        let mut sub = vec![point(from)];
-        let first = from.floor() as usize + 1;
-        let last = (pb.0.ceil() as usize).saturating_sub(1);
-        for p in v.iter().take(last + 1).skip(first) {
-            if (p.x - sub[sub.len() - 1].x).hypot(p.y - sub[sub.len() - 1].y) > 0.01 {
-                sub.push(*p);
+        // the line from `from` (a place along `v`) to the end, and its route corners
+        let line = |from: f64| -> Option<(Vec<Pi>, (f64, f64), (f64, f64))> {
+            let mut sub = vec![point(from)];
+            let first = from.floor() as usize + 1;
+            let last = (pb.0.ceil() as usize).saturating_sub(1);
+            for p in v.iter().take(last + 1).skip(first) {
+                if (p.x - sub[sub.len() - 1].x).hypot(p.y - sub[sub.len() - 1].y) > 0.01 {
+                    sub.push(*p);
+                }
             }
-        }
-        let end = point(pb.0);
-        while sub.len() > 1 && (end.x - sub[sub.len() - 1].x).hypot(end.y - sub[sub.len() - 1].y) < 0.01 {
-            sub.pop();
-        }
-        sub.push(end);
-        if (end.x - sub[0].x).hypot(end.y - sub[0].y) < 1.0 {
-            return None;
-        }
-        let own = |k: usize, p: (f64, f64, bool)| if p.2 && on_line && k == 0 { (p.0, p.1) } else { express_end(&sub, k, side, scaled) };
-        let (oa, ob) = (own(0, a), own(1, b));
-        let (ex, _, _) = express_verts(&sub, 1, sub.len() - 2, scaled, side, Some(oa), Some(ob))?;
+            let end = point(pb.0);
+            while sub.len() > 1 && (end.x - sub[sub.len() - 1].x).hypot(end.y - sub[sub.len() - 1].y) < 0.01 {
+                sub.pop();
+            }
+            sub.push(end);
+            if (end.x - sub[0].x).hypot(end.y - sub[0].y) < 1.0 {
+                return None;
+            }
+            let own = |k: usize, p: (f64, f64, bool)| if p.2 && on_line && k == 0 { (p.0, p.1) } else { express_end(&sub, k, side, scaled) };
+            let (oa, ob) = (own(0, a), own(1, b));
+            let (ex, _, _) = express_verts(&sub, 1, sub.len() - 2, scaled, side, Some(oa), Some(ob))?;
+            Some((ex, oa, ob))
+        };
+        let (ex, oa, ob) = if on_line {
+            line(pa.0)?
+        } else {
+            // T-1781: coming in, the turn onto the line where its auto radius is largest (to the
+            // design radius, then the nearest), its straight in clear of the track; at the least
+            // the start's own distance along
+            let (la, le) = (along(pa.0), along(pb.0));
+            let near = la + pa.2.min((le - la) / 2.0);
+            let mut best: Option<(f64, (Vec<Pi>, (f64, f64), (f64, f64)))> = None;
+            for k in 0..=TURN_IN_TRIES {
+                let l = near + (le - near) * 0.9 * k as f64 / TURN_IN_TRIES as f64;
+                let Some(c) = line(at_len(l)) else { continue };
+                if c.0.len() < 2 || (k > 0 && crosses(&v, (a.0, a.1), (c.0[0].x, c.0[0].y))) {
+                    continue;
+                }
+                // the route's own fit sizes the turn, the line's corners keeping their radii
+                let mut route = vec![Pi::new(a.0, a.1, 0.0, ends[9] as i8)];
+                route.extend(c.0.iter().map(|p| Pi { level: ends[9] as i8, ..*p }));
+                route[1].radius = 0.0;
+                let f = geom::fit_capped(&route, scaled, self.route_cap);
+                if !f.issues.is_empty() && k > 0 {
+                    continue;
+                }
+                let r = f.radius[1];
+                if best.as_ref().map_or(true, |b| r > b.0 + 1.0) {
+                    best = Some((r, c));
+                }
+            }
+            best?.1
+        };
         let mut e = ends.to_vec();
         if e[0] as i32 == 0 && on_line {
             (e[2], e[3]) = oa;
@@ -148,6 +178,18 @@ impl TrackApi {
         }
         Some(v)
     }
+}
+
+/// Turn-in points tried along the track coming in to the line beside it (T-1781).
+const TURN_IN_TRIES: usize = 16;
+
+/// Whether the straight from `a` to `b` crosses polyline `v`.
+fn crosses(v: &[Pi], a: (f64, f64), b: (f64, f64)) -> bool {
+    let side = |p: (f64, f64), q: (f64, f64), r: (f64, f64)| (q.0 - p.0) * (r.1 - p.1) - (q.1 - p.1) * (r.0 - p.0);
+    v.windows(2).any(|w| {
+        let (c, d) = ((w[0].x, w[0].y), (w[1].x, w[1].y));
+        side(a, b, c) * side(a, b, d) < 0.0 && side(c, d, a) * side(c, d, b) < 0.0
+    })
 }
 
 /// Where (x, y) falls along polyline `v`: leg index plus the share of that leg, and which side

@@ -341,7 +341,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   metres. After the lines come optional trailing blocks (`sim/src/track/save.rs`): `LUI1` (custom
   badge symbols and the line-name counter, T-110/T-111), then, each only when there are any, `LNK1`
   links [T-197], `LAU1` lines kept by headway [T-625] and `LHS1` lines running high-speed trains
-  [T-817]; a save without one loads with none. While a line's trains change over after a service
+  [T-817], then `LRT1`, the settled rates of the lines with trains to the bit and the lines the
+  settle left circling [T-1787], without which a load settles in full; a save without one loads
+  with none. While a line's trains change over after a service
   edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
   (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops
   before them. Formats older than TWT4 (TWT2, TWT3) no longer open: the load says the save is from

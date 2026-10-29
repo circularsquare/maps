@@ -324,8 +324,10 @@ impl Hash {
             self.0 = self.0.wrapping_mul(0x100000001b3);
         }
     }
+    /// To the microsecond (or millionth of a train an hour): a plain joint cut into a line's track
+    /// moves its times by about 1e-10 s, which must not redo its account (T-1780).
     fn f(&mut self, v: f64) {
-        self.add(v.to_bits());
+        self.add(((v * 1e6).round() as i64) as u64);
     }
 }
 

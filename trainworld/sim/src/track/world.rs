@@ -32,6 +32,8 @@ pub enum Op {
     Batch(Vec<Op>),
 }
 
+/// Trains off its fleet a settle stops at: a line within it is settled.
+const SETTLED: f64 = 0.0001;
 /// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
 const SWING_NEAR: f64 = 0.05;
 /// Turns that do not shrink the shortfall by half before it counts as circling (T-1283).
@@ -99,9 +101,6 @@ pub struct TrackWorld {
     redo: Vec<Op>,
     /// T-752: a line switching between counts and headways, whose counts this edit's settle keeps
     switching: Option<u32>,
-    /// T-1283: the lines and levels the last settle left circling, with the rate and round trip
-    /// (bits) they were left at; one found just so again stays settled, so the level keeps its bits
-    kept: Vec<(u32, usize, u32, u64)>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -114,7 +113,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, kept: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None };
         w.reload();
         w
     }
@@ -126,7 +125,7 @@ impl TrackWorld {
         let t = self.net.take_touch();
         self.net.derive(&t);
         self.svc.update_all(&self.net);
-        self.settle_train_counts();
+        self.settle_train_counts(!self.net.rates_from_save);
     }
 
     /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
@@ -136,7 +135,7 @@ impl TrackWorld {
             return;
         }
         self.svc.update(&self.net, &buses, &[], false);
-        self.settle_train_counts();
+        self.settle_train_counts(!self.net.rates_from_save);
     }
 
     /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.
@@ -156,13 +155,15 @@ impl TrackWorld {
             self.net.line_trains[l] = Some(self.svc.lines.get(l).filter(|s| s.ok).map_or([0; 3], |s| s.trains));
             any = true;
         }
-        if any { self.settle_train_counts(); }
+        if any { self.settle_train_counts(true); }
         any
     }
 
-    fn settle_train_counts(&mut self) -> Vec<u32> {
+    /// `full`: every line of an unsettled level is stepped, as a load without saved rates needs;
+    /// otherwise (an edit) only the lines off their fleet are (T-1787).
+    fn settle_train_counts(&mut self, full: bool) -> Vec<u32> {
         if !self.net.line_auto.iter().any(|a| a.is_some()) {
-            return self.settle_counts();
+            return self.settle_counts(full);
         }
         // T-625: the counts of headway lines follow their round trips, which follow the counts
         // through shared track, so settle and ask again until they hold still (a few rounds).
@@ -170,11 +171,11 @@ impl TrackWorld {
         let first = self.net.line_trains.clone();
         for round in 0..AUTO_ROUNDS {
             let moved = self.auto_counts(round + 1 == AUTO_ROUNDS);
-            affected.extend(self.settle_counts());
+            affected.extend(self.settle_counts(full));
             if !moved && round > 0 { break; }
         }
         // counts the full track would keep waiting at the ends are not bought
-        if self.trim_auto() { affected.extend(self.settle_counts()); }
+        if self.trim_auto() { affected.extend(self.settle_counts(full)); }
         affected.extend((0..self.net.line_count() as u32).filter(|&l| self.net.line_trains[l as usize] != first[l as usize]));
         affected.sort_unstable(); affected.dedup(); affected
     }
@@ -229,7 +230,8 @@ impl TrackWorld {
         trimmed
     }
 
-    fn settle_counts(&mut self) -> Vec<u32> {
+    fn settle_counts(&mut self, full: bool) -> Vec<u32> {
+        self.net.rates_settled = true;
         let ids: Vec<u32> = (0..self.net.line_count() as u32)
             .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
         if ids.is_empty() { return vec![]; }
@@ -251,6 +253,7 @@ impl TrackWorld {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
             let mut active = [false; LEVELS];
+            let mut off = vec![[false; LEVELS]; ids.len()];
             let keep = &mut kept_now;
             keep.iter_mut().for_each(|k| *k = [false; LEVELS]);
             let worst = self.svc.cap.bottlenecks(self.net.line_count());
@@ -264,7 +267,7 @@ impl TrackWorld {
                     // and going) has no rate that fits the fleet exactly, and the steps below circle
                     // it to the cap, each a pass over every line. Near the fit, a shortfall that
                     // keeps turning without shrinking is settled on its side with trains to spare.
-                    let sign = if short >= 0.0001 { 1 } else if short <= -0.0001 { -1 } else { 0 };
+                    let sign = if short >= SETTLED { 1 } else if short <= -SETTLED { -1 } else { 0 };
                     let sw = &mut swings[j][lev];
                     if short.abs() >= SWING_NEAR {
                         *sw = (0, 0, 0.0);
@@ -273,28 +276,42 @@ impl TrackWorld {
                         sw.2 = short.abs();
                     }
                     if sign != 0 { sw.0 = sign; }
-                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits());
-                    keep[j][lev] = (sw.1 >= SWING_TURNS && short > 0.0) || self.kept.contains(&left);
+                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits(), counts[lev]);
+                    keep[j][lev] = (sw.1 >= SWING_TURNS && short > 0.0) || self.net.settle_kept.contains(&left);
+                    // T-1787: on an edit a settled line is left as it is, not probed and stepped
+                    // with the rest of its level: on shared track each line moved re-times its
+                    // neighbours. A held line is stepped, as the fill shares full track by what each
+                    // fleet would run.
+                    off[j][lev] = (full || sign != 0) && !keep[j][lev];
                     if sign != 0 && !held && !keep[j][lev] { active[lev] = true; }
                 }
             }
-            if !active.contains(&true) { break; }            // A common 1% upward probe measures the sum of positive congestion derivatives.
+            if !active.contains(&true) { break; }
+            // A common 1% upward probe measures the sum of positive congestion derivatives.
             // Dividing by this bound damps shared-track feedback even close to saturation.
-            for &id in &ids {
-                for lev in (0..LEVELS).filter(|&lev| active[lev]) { self.net.line_tph[id as usize][lev] *= 1.01; }
+            for (j, &id) in ids.iter().enumerate() {
+                for lev in (0..LEVELS).filter(|&lev| active[lev] && (full || off[j][lev])) { self.net.line_tph[id as usize][lev] *= 1.01; }
             }
-            let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
-            affected.extend(d.recomputed);
+            // T-1787: an edit probes from the capacity solve alone (`Service::probe_trips`), the
+            // profiles worked out once a round; a full settle probes with them, as before
+            let probed = if full {
+                let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+                affected.extend(d.recomputed);
+                None
+            } else {
+                Some(self.svc.probe_trips(&self.net, &ids))
+            };
             for (j, &id) in ids.iter().enumerate() {
                 let i = id as usize;
                 let counts = self.net.line_trains[i].unwrap();
                 for lev in (0..LEVELS).filter(|&lev| active[lev]) {
-                    if keep[j][lev] {
+                    if !off[j][lev] {
                         self.net.line_tph[i][lev] = rates[j][lev];
                         continue;
                     }
                     let trip = trips[j][lev];
-                    let rise = ((self.svc.lines[i].round_trip[lev] - trip) / 0.01).max(0.0);
+                    let probe = probed.as_ref().map_or(self.svc.lines[i].round_trip[lev], |p| p[j][lev]);
+                    let rise = ((probe - trip) / 0.01).max(0.0);
                     let old = rates[j][lev] as f64;
                     let residual = old * trip - counts[lev] as f64 * 3600.0;
                     self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else {
@@ -317,10 +334,10 @@ impl TrackWorld {
             if still { break; }
         }
         for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
-        self.kept.clear();
+        self.net.settle_kept.clear();
         for (j, &id) in ids.iter().enumerate() {
             for lev in (0..LEVELS).filter(|&lev| kept_now[j][lev]) {
-                self.kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits()));
+                self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.line_trains[id as usize].unwrap()[lev]));
             }
         }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
@@ -395,10 +412,14 @@ impl TrackWorld {
         })
     }
 
-    /// What an edit would do, without doing it: applied, measured and rolled back. The drawing
-    /// tool's preview, with every check a real edit gets (crossings, ports, platforms).
+    /// What an edit would do to the track, without doing it: applied, measured and rolled back. The
+    /// drawing tool's preview, with every check a real edit gets (crossings, ports, platforms). The
+    /// services are left as they are (T-1779: rebuilding a long line's took 0.4-0.8 s each way on a
+    /// shared real network), so the result's `dirty` has no lines, resources or service.
     pub fn trial(&mut self, op: Op) -> Result<EditResult, Vec<Issue>> {
-        self.trial_with(op, |_| ()).map(|(r, _)| r)
+        let (r, inv) = self.commit_with(op, true, false)?;
+        let _ = self.commit_with(inv, false, false);
+        Ok(r)
     }
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.
@@ -454,17 +475,18 @@ impl TrackWorld {
     }
 
     fn commit(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
-        self.commit_with(op, true)
+        self.commit_with(op, true, true)
     }
 
     /// T-1649: an undo, a redo or a trial's rollback puts back what an edit took, so it is not
     /// checked afresh: track the saved game already had problems on (an old save under a newer
     /// water mask) would otherwise make the restore refuse, leaving a trial's deletions in place.
     fn restore(&mut self, op: Op) -> Result<(EditResult, Op), Vec<Issue>> {
-        self.commit_with(op, false)
+        self.commit_with(op, false, true)
     }
 
-    fn commit_with(&mut self, op: Op, checked: bool) -> Result<(EditResult, Op), Vec<Issue>> {
+    /// `service`: rebuild the services the edit touches (every real edit; a `trial` skips it).
+    fn commit_with(&mut self, op: Op, checked: bool, service: bool) -> Result<(EditResult, Op), Vec<Issue>> {
         let (cost_before, built_before) = self.net.total_and_built_cost();
         let again = op.clone();
         let switch = match &op {
@@ -487,6 +509,12 @@ impl TrackWorld {
             }
             (inv, t, der) = self.apply_and_derive(again)?;
         }
+        if !service {
+            let (cost_after, built_after) = self.net.total_and_built_cost();
+            let dirty = Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, ..Default::default() };
+            let charge = if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 };
+            return Ok((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, inv));
+        }
         let lines = self.lines_touched(&t, &der);
         let junction_touched = der.nodes.iter().any(|&n| self.net.node_ok(n) && self.net.node_ports[n as usize].n >= 3);
         // A station touched with no line stopping there still changes passing lines' platforms.
@@ -498,7 +526,7 @@ impl TrackWorld {
         if cap_dirty || !lines.is_empty() || !t.schedules.is_empty() {
             // T-752: a switch between counts and headways never buys or sells a train
             self.switching = switch;
-            let counts = self.settle_train_counts();
+            let counts = self.settle_train_counts(false);
             self.switching = None;
             for id in counts {
                 svc.demand.push(id);

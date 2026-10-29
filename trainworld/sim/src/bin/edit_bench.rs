@@ -64,6 +64,12 @@ fn main() {
     all.push(time(&mut a, "undo", &|a| a.undo()));
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(format!("{path}.end"), format!("{:?}\n", a.lines_info())).unwrap();
+        // saved and loaded again (T-1787): the same figures, to the bit
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        let t = Instant::now();
+        assert!(b.load(&a.save()), "not a save");
+        eprintln!("reload {:.0} ms", t.elapsed().as_secs_f64() * 1e3);
+        std::fs::write(format!("{path}.reload"), format!("{:?}\n", b.lines_info())).unwrap();
     }
     let mean = all.iter().sum::<f64>() / all.len() as f64;
     let mut s = all.clone();

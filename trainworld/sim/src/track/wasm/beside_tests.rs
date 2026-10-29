@@ -65,6 +65,25 @@ fn route_beside_track_runs_parallel() {
     assert!((pv[6] + QUAD_SPACING).abs() < 0.01, "start at {}", pv[6]);
 }
 
+/// T-1781: coming in from open ground 150 m off a straight, the route turns onto the line beside it
+/// in a wide curve (the turn at the start's own distance along gave about 500 m), still on its side.
+#[test]
+fn coming_in_beside_takes_the_roundest_turn() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_tangent(true);
+    assert_eq!(a.add_route(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0], &[], 1, false), 0, "{}", a.issues());
+    let local = live(&a);
+    let end = (2800.0, 10.0);
+    a.set_route_beside(u32::MAX, nearest(&a, &local, end.0, end.1));
+    let pv = a.preview_route(&[0.0, 0.0, 300.0, 150.0, 0.0, 0.0, 0.0, end.0, end.1, 0.0], &[], 2, false);
+    assert_eq!(pv[0], 1.0, "{}", a.issues());
+    let nv = pv[3] as usize;
+    let radius = (1..nv - 1).map(|i| pv[5 + i * 4 + 2]).fold(0.0, f64::max);
+    assert!(radius > 1000.0, "turn in at {radius} m");
+    let p0 = 5 + nv * 4;
+    assert!(pv[p0..].chunks(3).all(|q| q[1] > 0.0), "stays on its side");
+}
+
 /// T-1708: a route ramping over a line with a station near the crossing keeps a level stretch on
 /// the bridge at least that station's platform long; with no station there it is shorter.
 #[test]

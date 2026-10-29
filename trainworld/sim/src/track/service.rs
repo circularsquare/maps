@@ -796,6 +796,32 @@ impl Service {
         v
     }
 
+    /// The round trips `lines` would have at the rates `net` holds now, from the capacity solve
+    /// alone, leaving the service as it is (T-1787: an edit's settle probes with these). A hold adds
+    /// its delay to the run, so each run's duration moves by the change in its holds' delays; the
+    /// profiles, most of a settle's cost, are not worked out.
+    pub fn probe_trips(&self, net: &Network, lines: &[u32]) -> Vec<[f64; LEVELS]> {
+        let mut cap = self.cap.clone();
+        let affected = cap.update(net, &self.lines, &[], &[], lines);
+        let holds = capacity::holds_for(&cap, &self.lines, Some(&affected));
+        let total = |h: &[Hold], stops: &[f64]| h.iter().filter(|h| h.delay >= HOLD_MIN_S).map(|h| h.delay).sum::<f64>() + stops.iter().sum::<f64>();
+        lines.iter().map(|&l| {
+            let ls = &self.lines[l as usize];
+            if !ls.ok || !affected[l as usize] {
+                return ls.round_trip;
+            }
+            let stand = ls.close_stand(net, l);
+            std::array::from_fn(|lev| {
+                let [a, b] = [0, 1].map(|r| {
+                    let run = &ls.runs[r];
+                    let (h, sh) = &holds[l as usize][r][lev];
+                    run.prof[lev].duration + total(h, sh) - total(&run.holds[lev], &run.stop_holds[lev])
+                });
+                if ls.is_loop() { 2.0 * (a.max(b) + stand) } else { a + b + 2.0 * stand }
+            })
+        }).collect()
+    }
+
     /// Every line from scratch.
     pub fn update_all(&mut self, net: &Network) -> ServiceDirty {
         let all: Vec<u32> = (0..net.line_count() as u32).collect();

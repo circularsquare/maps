@@ -20,7 +20,8 @@ use super::params::*;
 /// high-speed track (T-817); older saves have none. A trailing `LHS1` block (T-817) lists the
 /// lines running high-speed trains; without it all are ordinary. A trailing `LBS2` block (T-1465;
 /// `LBS1`, T-1464, is the same without a kind per point) gives the bus lines their routes; without
-/// it there are none.
+/// it there are none. A trailing `LRT1` block (T-1787) carries the settled rates of the lines with
+/// trains to the bit, and the lines the settle left circling; without it a load settles in full.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -244,6 +245,29 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-1787: the settled rates of the lines with trains, to the bit (count, then index and three
+    // f32 bits), then the circling lines the settle kept (count, then index, level, rate bits, round
+    // trip bits, trains), after LBS2 and only once a settle has run
+    let mut index = vec![u32::MAX; net.line_count()];
+    for (i, &l) in lines.iter().enumerate() { index[l as usize] = i as u32; }
+    let rated: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_trains[l as usize].is_some()).map(|(i, _)| i).collect();
+    if net.rates_settled && !rated.is_empty() {
+        w.0.extend_from_slice(b"LRT1");
+        w.u(rated.len() as u64);
+        for i in rated {
+            w.u(i as u64);
+            for r in net.line_tph[lines[i] as usize] { w.u(r.to_bits() as u64); }
+        }
+        let kept: Vec<_> = net.settle_kept.iter().filter(|k| index.get(k.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
+        w.u(kept.len() as u64);
+        for &(l, lev, rate, trip, trains) in kept {
+            w.u(index[l as usize] as u64);
+            w.u(lev as u64);
+            w.u(rate as u64);
+            w.u(trip);
+            w.u(trains as u64);
+        }
+    }
     w.0
 }
 
@@ -438,6 +462,20 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             }
             if i < n_lines { net.line_bus[i] = Some(super::bus::BusRoute::new(points, kinds, built)); }
         }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LRT1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let rates = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
+            if i < n_lines && net.line_trains[i].is_some() { net.line_tph[i] = rates; }
+        }
+        for _ in 0..r.u()? {
+            let (l, lev, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
+            if (l as usize) < n_lines && lev < 3 { net.settle_kept.push((l, lev, rate, trip, trains)); }
+        }
+        net.rates_settled = true;
+        net.rates_from_save = true;
     }
     net.take_touch();
     Ok(net)

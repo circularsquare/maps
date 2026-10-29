@@ -272,6 +272,29 @@ fn a_game_saved_while_trains_change_over_loads_the_same() {
 }
 
 #[test]
+fn a_save_carries_its_settled_rates() {
+    // T-1787: the rates an edit's settle left load to the bit; a save without them settles in full
+    let (mut w, ns) = corridor(6);
+    let long = line(&mut w, &ns, [8.0, 6.0, 3.0]);
+    let short = line(&mut w, &ns[1..5], [8.0, 6.0, 3.0]);
+    counts(&mut w, long, [3, 5, 4]);
+    counts(&mut w, short, [3, 3, 2]);
+    let bytes = super::save::encode(&w.net);
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert_eq!(back.net.line_tph, w.net.line_tph);
+    assert_eq!(super::save::encode(&back.net), bytes);
+    let at = bytes.windows(4).position(|x| x == b"LRT1").unwrap();
+    let old = TrackWorld::new(super::save::decode(&bytes[..at]).unwrap());
+    for l in [long, short] {
+        for lev in 0..3 {
+            let (a, b) = (old.net.line_tph[l as usize][lev], w.net.line_tph[l as usize][lev]);
+            assert!((a - b).abs() < 0.01, "line {l} level {lev}: {a} loaded in full against {b}");
+        }
+    }
+    assert!(super::save::encode(&old.net).windows(4).any(|x| x == b"LRT1"));
+}
+
+#[test]
 fn a_change_just_before_a_new_level_moves_no_train() {
     let (mut w, ns) = corridor(7);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);

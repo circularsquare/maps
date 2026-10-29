@@ -16,7 +16,8 @@ tests natively.
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`), `crossings.rs`, `links.rs`,
   `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
-  `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283).
+  `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283; `TW_DUMP=<file>` writes `lines_info` at load, after the edits and after a save and reload, T-1787);
+  `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779).
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
@@ -351,6 +352,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),
   `old/t734-track-drag.mjs` (the real save with the track tool: a press and drag on a blueprint node
   moves it, a click still places track; port 6112 by default),
+  `t1779-branch-ghost.mjs [url] [save]` (branches off a line on a real save, the shared-track New York by default: each preview's ms, how far the ghost is behind when the pointer stops, click to placed and to the next ghost, the clock worker's ms per step; about 3 minutes, port 6199 by default; T-1779, T-1780),
   `old/t1155-branch.mjs` (track drawn from a station, through the track tool's clicks, on the real save
   and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
   platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),
