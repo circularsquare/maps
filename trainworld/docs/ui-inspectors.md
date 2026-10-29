@@ -250,7 +250,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
   "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
-  notes/T-1168.md, T-1391]: an icon after "Stops" (two lines crossing at a station; hover "Show
+  notes/T-1168.md, T-1391]: an icon after "Stops" (two lines side by side, a station oval between them, the right line curving away at the bottom, T-1802; hover "Show
   related lines" / "Hide related lines", one setting for every line, on at first and kept while
   the page is open, kept while stops are edited, the stations passed then between the rows) draws
   the stops with the lines related to the line (`TrackApi.line_related`,

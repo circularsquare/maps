@@ -170,7 +170,9 @@ body.resizing, body.resizing * { user-select: none; }
 
 /* T-1237: no rules between rows within a section (trainworld/CLAUDE.md); the row height spaces them */
 .rows { list-style: none; margin: 0; padding: 0; }
-.rows > li { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+/* T-1802: a row of plain text is 24 px, one holding a stepper, button or box keeps 28 */
+.rows > li { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.rows > li:has(:where(.stepper, .btn:not(.mini), input, select, textarea)) { min-height: 28px; }
 .rows .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rows .val { font-variant-numeric: tabular-nums; text-align: right; }
 .rows.pick > li { cursor: pointer; padding: 0 6px; margin: 0 -6px; user-select: none; }
@@ -429,7 +431,7 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .rows.waiting .bad, .rows.waiting .val { color: var(--bad); }
 table.ledger { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
 table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
-table.ledger td { text-align: right; padding: 4px 0; white-space: nowrap; }
+table.ledger td { text-align: right; padding: 2px 0; white-space: nowrap; }
 table.ledger td:first-child { text-align: left; }
 table.ledger tr.b td { font-weight: 700; }
 /* T-447: the money history charts; T-1111: revenue blue, expenses red, in every theme */
@@ -534,6 +536,7 @@ rect.now { fill-opacity: .45; }
 /* T-1293: the schedule's copy and paste, small and muted beside the heading */
 .h .sched-copy { display: inline-flex; align-self: center; margin-left: 6px; font-weight: 400; }
 .sched-copy .btn { color: var(--muted); }
+.sched-copy .btn.mini svg { width: 14px; height: 14px; }
 .sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
@@ -552,8 +555,7 @@ rect.now { fill-opacity: .45; }
 /* T-1168: the stops with the related lines; the drawing (--gw wide, the line at --spine) is one SVG
    beside the rows, so the rows draw no bar or dot of their own */
 .h .related-toggle { align-self: center; margin-left: 6px; color: var(--muted); width: 22px; min-width: 22px; height: 22px; }
-.h .related-toggle svg { width: 16px; height: 16px; stroke-width: 1.6; }
-.h .related-toggle svg path { stroke-width: 2.4; stroke-linecap: butt; }
+.h .related-toggle svg { width: 19px; height: 19px; }
 .h .related-toggle:hover { color: var(--text); }
 .h .btn.related-toggle.on { background: var(--tint); color: var(--text); }
 .related { position: relative; }
@@ -863,12 +865,15 @@ button.save-add:hover { color: var(--text); }
 .group.tool-pick > .tool-bus { grid-column: 1 / -1; }
 #tool-notes .bus-acts { display: flex; gap: 4px; }
 .pane .price { margin-top: 4px; }
-.price-row { flex-wrap: nowrap; justify-content: space-between; margin-top: 4px; }
-.price-row .price { margin: 0; }
+.price-row { flex-wrap: nowrap; margin-top: 4px; }
+.price-row .price { margin: 0; min-width: 0; }
 #tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
               border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
 #tool-notes p + p { margin-top: 4px; }
 .tool-pick > .btn { padding: 0 6px; gap: 4px; }
+/* T-1802: the construct icons a tad bigger than the 14 px text-button glyph and the 16 px icon-button one */
+.tool-pick > .btn svg { width: 17px; height: 17px; }
+.build-track-row > .btn.icon svg, .btn.icon.new-bus svg { width: 19px; height: 19px; }
 .tool-pick .key { margin-left: 2px; }
 #tool-notes .bad, .tool-tag.bad { color: var(--bad); }
 

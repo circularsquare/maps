@@ -46,15 +46,15 @@ export function BuildTab() {
         <div class="h">Elevation</div>
         <div class="build-track-row">
           <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})`} onPick={(l) => (buildLevel.value = l)} />
-          <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
-            data-tip="Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps don't fit, the crossing is flat."
-            onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
         </div>
-        {/* T-1394: the Terrain switch beside the price it changes */}
+        {/* T-1394: the Terrain switch beside the price it changes; T-1802: the ramp switch left of it */}
         <div class="build-track-row price-row">
           <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}`}>
             ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
           </p>
+          <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
+            data-tip="Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps don't fit, the crossing is flat."
+            onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
             data-tip="Show terrain. Track costs more on slopes, hills and mountains."
             onClick={() => setDisplay("hillshade", !display.peek().hillshade)}><Icon.terrain /></button>

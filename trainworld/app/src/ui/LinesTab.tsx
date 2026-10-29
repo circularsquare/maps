@@ -291,7 +291,7 @@ export function LinesTab() {
       <div class="line-list-actions">
         <span style={{ display: "flex", gap: "6px" }}>
           <button class="btn text" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
-          <button class="btn icon" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
+          <button class="btn icon new-bus" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
         </span>
         <ScopeToggle />
       </div>

@@ -17,12 +17,13 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   (hover "Elevation +3 (Shift+1)" and so on down to Shift+7; Shift+1 to Shift+7 pick the drawing
   elevation from any tab, by key code, Shift+4 being 0 [T-1701]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
-  `Tools.freeLevel`). After them the **ramp switch** (track humping over a line seen side on;
+  `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
+  (below), then the **ramp switch** (track humping over a line seen side on;
   hover "Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps
   don't fit, the crossing is flat."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
-  6.1 "Ramping over track"]. At the end of the price row below, the **Terrain** switch (a mountain;
+  6.1 "Ramping over track"], then the **Terrain** switch (a mountain;
   hover "Show terrain. Track costs more on slopes, hills and mountains."), the same switch as
-  Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394]. Then the picked elevation's price per km and multiplier, "$99M per
+  Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394], both left aligned after the price [T-1802]. The price is the picked elevation's price per km and multiplier, "$99M per
   km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
   multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
   it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation

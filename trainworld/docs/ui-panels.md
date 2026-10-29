@@ -29,7 +29,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Square buttons**, 1 px borders, small line icons as inline SVG (`ui/widgets.tsx`). No
   decoration that does nothing: section headings are plain text.
 - **No rules within a section** (Anita) [T-1237]: rows in a list, the ledger, the Cities total,
-  purpose blocks, leaderboard rows and a slot's backups are spaced (rows at least 28 px), never ruled.
+  purpose blocks, leaderboard rows and a slot's backups are spaced, never ruled: rows of plain text are 24 px high (the ledger's, the Lines, Stations and
+  Cities lists'), rows holding a stepper, button or box 28 px [T-1802].
   A rule only separates sections about different things (the line panel's `.h.divided`, the
   inspector's top edge); a list's column headers keep their thin rule over the rows.
 - **No motion but trains.** Instant state changes, no CSS transitions. Camera moves the game makes

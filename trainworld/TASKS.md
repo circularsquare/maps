@@ -72,7 +72,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
-- T-1802 [P2] Text-only rows 4 px tighter, tool icons a little bigger, a new related-lines icon, ramp button left of terrain (Anita 2026-10-29). taking, 2026-10-29 (agent t1802)
 - T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Designed; Anita's calls 2026-10-29 in the note; stage 1 (Line view bands) built 2026-10-29 by agent t1799s1 in tree t1799, waiting to land; stages 2 (Traffic), 3 (corridors, four-track trunks) and 4 (joins, not needed so far) open; notes/T-1799.md
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
