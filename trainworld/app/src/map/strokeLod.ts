@@ -5,19 +5,22 @@
 
 import type { Strokes } from "./network";
 
-/** instances per culled chunk, and chunks per group tested first */
-export const CHUNK = 256;
-const GROUP = 16;
+/** instances per culled chunk, and boxes per box of the next level up */
+export const CHUNK = 16;
+const FAN = 8;
 /** a merged run's speeds (the Speed view's colour) stay within this many km/h of its first's */
 const SPEED_STEP = 10;
 /** longest run simplified as one, which bounds Douglas-Peucker's worst case */
 const MAX_RUN = 512;
 
-/** Per chunk of CHUNK instances its box (min x, min y, max x, max y, local units); then per group of
- * GROUP chunks the same, after the chunks. */
-export function chunkBoxes(seg: Float32Array, count: number): { boxes: Float32Array; chunks: number } {
-  const chunks = Math.ceil(count / CHUNK), groups = Math.ceil(chunks / GROUP);
-  const out = new Float32Array((chunks + groups) * 4);
+/** Boxes (min x, min y, max x, max y, local units) in levels: level 0 one per chunk of CHUNK instances,
+ * each level above one per FAN boxes of the one below, up to a level of at most FAN boxes. */
+export type ChunkBoxes = Float32Array[];
+
+export function chunkBoxes(seg: Float32Array, count: number): ChunkBoxes {
+  const chunks = Math.max(1, Math.ceil(count / CHUNK));
+  const levels = [new Float32Array(chunks * 4)];
+  const l0 = levels[0];
   for (let c = 0; c < chunks; c++) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (let i = c * CHUNK, e = Math.min(count, i + CHUNK) * 4; i * 4 < e; i++) {
@@ -27,47 +30,70 @@ export function chunkBoxes(seg: Float32Array, count: number): { boxes: Float32Ar
       y0 = Math.min(y0, seg[o + 1], seg[o + 3]);
       y1 = Math.max(y1, seg[o + 1], seg[o + 3]);
     }
-    out.set([x0, y0, x1, y1], c * 4);
-    const g = (chunks + Math.floor(c / GROUP)) * 4;
-    if (c % GROUP === 0) out.set([x0, y0, x1, y1], g);
-    else {
-      out[g] = Math.min(out[g], x0);
-      out[g + 1] = Math.min(out[g + 1], y0);
-      out[g + 2] = Math.max(out[g + 2], x1);
-      out[g + 3] = Math.max(out[g + 3], y1);
-    }
+    l0[c * 4] = x0;
+    l0[c * 4 + 1] = y0;
+    l0[c * 4 + 2] = x1;
+    l0[c * 4 + 3] = y1;
   }
-  return { boxes: out, chunks };
+  for (let below = l0; below.length / 4 > FAN; ) {
+    const n = Math.ceil(below.length / 4 / FAN), up = new Float32Array(n * 4);
+    for (let g = 0; g < n; g++) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let k = g * FAN; k < Math.min(below.length / 4, (g + 1) * FAN); k++) {
+        x0 = Math.min(x0, below[k * 4]);
+        y0 = Math.min(y0, below[k * 4 + 1]);
+        x1 = Math.max(x1, below[k * 4 + 2]);
+        y1 = Math.max(y1, below[k * 4 + 3]);
+      }
+      up.set([x0, y0, x1, y1], g * 4);
+    }
+    levels.push(up);
+    below = up;
+  }
+  return levels;
+}
+
+/** Ranges (start, count, ...) with each gap of `gap` instances or fewer drawn through, as one range */
+export function mergeRanges(r: number[], gap: number): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < r.length; i += 2) {
+    const k = out.length;
+    if (k && out[k - 2] + out[k - 1] >= r[i] - gap) out[k - 1] = r[i] + r[i + 1] - out[k - 2];
+    else out.push(r[i], r[i + 1]);
+  }
+  return out;
 }
 
 /** The instance ranges (start, count, ...) whose chunks may show on a `w` x `h` CSS px view, a box
- * counted off only when all its corners project to one side of it, `margin` px out; null: all. */
-export function visibleRanges(b: { boxes: Float32Array; chunks: number }, count: number, project: (x: number, y: number) => [number, number], w: number, h: number, margin: number): number[] | null {
-  const { boxes, chunks } = b;
-  const off = (k: number) => {
-    let l = 0, r = 0, t = 0, d = 0;
+ * counted off only when all its corners project to one side of it, `margin` px out; null: all. A box
+ * wholly inside the view, or on `minLevel` or below, is drawn without testing the boxes in it. */
+export function visibleRanges(levels: ChunkBoxes, count: number, project: (x: number, y: number) => [number, number], w: number, h: number, margin: number, minLevel = 0): number[] | null {
+  const out: number[] = [];
+  let all = true;
+  const emit = (start: number, end: number) => {
+    const k = out.length;
+    if (k && out[k - 2] + out[k - 1] >= start) out[k - 1] = end - out[k - 2];
+    else out.push(start, end - start);
+  };
+  const visit = (level: number, k: number) => {
+    const b = levels[level], span = CHUNK * FAN ** level, start = k * span, end = Math.min(count, start + span);
+    if (start >= end) return;
+    let l = 0, r = 0, t = 0, d = 0, inside = 0;
     for (let j = 0; j < 4; j++) {
-      const [px, py] = project(boxes[k * 4 + (j & 1 ? 2 : 0)], boxes[k * 4 + (j & 2 ? 3 : 1)]);
-      if (!(px === px && py === py)) return false;
+      const [px, py] = project(b[k * 4 + (j & 1 ? 2 : 0)], b[k * 4 + (j & 2 ? 3 : 1)]);
+      if (!(px === px && py === py)) { l = r = t = d = 0; inside = -1; break; }
       if (px < -margin) l++;
       if (px > w + margin) r++;
       if (py < -margin) t++;
       if (py > h + margin) d++;
+      if (px >= -margin && px <= w + margin && py >= -margin && py <= h + margin) inside++;
     }
-    return l === 4 || r === 4 || t === 4 || d === 4;
+    if (l === 4 || r === 4 || t === 4 || d === 4) { all = false; return; }
+    if (level <= minLevel || inside === 4) emit(start, end);
+    else for (let c = k * FAN; c < Math.min(levels[level - 1].length / 4, (k + 1) * FAN); c++) visit(level - 1, c);
   };
-  const out: number[] = [];
-  let all = true;
-  for (let g = 0; g * GROUP < chunks; g++) {
-    if (off(chunks + g)) { all = false; continue; }
-    for (let c = g * GROUP; c < Math.min(chunks, (g + 1) * GROUP); c++) {
-      if (off(c)) { all = false; continue; }
-      const start = c * CHUNK, n = Math.min(count, start + CHUNK) - start, k = out.length;
-      // a gap of a chunk or two is drawn through: each range costs a rebinding per pass
-      if (k && out[k - 2] + out[k - 1] >= start - 2 * CHUNK) out[k - 1] = start + n - out[k - 2];
-      else out.push(start, n);
-    }
-  }
+  const top = levels.length - 1;
+  for (let k = 0; k < levels[top].length / 4; k++) visit(top, k);
   return all ? null : out;
 }
 

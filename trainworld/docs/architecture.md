@@ -149,10 +149,17 @@ Web first, so it can be shared as a link.
   and speed (within 10 km/h) is cut to the Douglas-Peucker points at 0.25 device px of the band's
   top zoom, each merged segment carrying its first segment's values (the demand widths and traffic
   marks gathered by that index). A copy is made on the first draw that needs it and dropped with
-  the network. From zoom 7 only the 256-instance chunks whose box may show (all four corners not
-  off one side of the view, 48 CSS px out) are drawn, in order, so which line is drawn over which
-  is as before. `?perfOff=strokeLod` and `?perfOff=strokeCull` (or `renderer.strokeLod` and
-  `renderer.strokeCull`) switch them off.
+  the network. From zoom 7 only the chunks whose box may show (all four corners not off one side
+  of the view, 48 CSS px out) are drawn, in order, so which line is drawn over which is as before.
+  Chunks are 16 instances in boxes of 8 boxes, level on level; a box wholly in the view is drawn
+  without testing what is in it, and below zoom 12 the testing stops at boxes of 128 instances
+  (zoom 10-12) or 1024 (below 10), since each test costs more in the globe's projection.
+  [T-1644] When at most 40,000 instances show, they are gathered into one small buffer set
+  (`map/strokeGather.ts`, from the arrays the strokes were made from) and each pass is one draw;
+  drawing them range by range rebinds nine attribute buffers per range per pass, hundreds of ranges
+  at zoom 15, which cost more than the strokes. More are drawn by ranges, gaps under 512 instances
+  drawn through. `?perfOff=strokeLod`, `strokeCull` and `strokeGather` (or `renderer.strokeLod`,
+  `strokeCull` and `strokeGather`) switch them off.
 - **While the camera moves** [T-1207; `map/moving.ts`]: work done for each MapLibre frame that need
   not be runs at most every 100 ms (`MOVING_PLACE_MS`) and in full on the frame after the move ends:
   the DOM placers (station names, capacity tags, attraction marks, zone loading bars), whose marks

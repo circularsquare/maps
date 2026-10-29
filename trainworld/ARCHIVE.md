@@ -3,6 +3,7 @@
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
 
+- T-1644 [P3] GPU at zoom 15 on the Japan save. Done 2026-10-29: the strokes' draw calls, not MSAA; the visible strokes are gathered into one buffer (`map/strokeGather.ts`). Panning 37% to 23-27% GPU, overlay 6-7 to 1.7-2.3 ms, pixels the same. notes/T-1644.md.
 - T-1739 [P3] attractions.json undercounts sites with few Wikidata figures. Done 2026-10-29: lakes, hills and islands that Wikidata also tags a tourist attraction count (West Lake); a site with no figure is sized by a fit on those with one (editions, people within 25 km), no country term; presidential palaces and headquarters need a figure; Hangzhou 0.5M to 4.7M a year, Kiyomizu-dera 0.77M to 1.5M, Hangzhou zones +31-45% going out. notes/T-1739.md.
 - T-1759 [P2] Drop the opening-day bunting. Done 2026-10-29: the pennants under station names (T-1434) are gone from CSS, `ribbonColours`, the label index and its checks; the Lines tab riders count stays. DECISIONS.
 - T-1758 [P1] Market packs commuting thousands of km (old joint_commutes pairs of reused ids). Done 2026-10-28: a file solving a pack replaces all its older pairs (market_zones.Groups); 140 packs rewritten, 145 far pairs (1.26M trips a day) gone, no other pair moved; smoke 20/20. notes/T-1738.md "T-1743 and T-1758".

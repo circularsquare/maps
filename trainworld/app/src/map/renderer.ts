@@ -23,7 +23,8 @@ import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt,
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
-import { chunkBoxes, significance, simplified, visibleRanges } from "./strokeLod";
+import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
+import { StrokeGather, type StrokeCpu } from "./strokeGather";
 import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -160,20 +161,28 @@ const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lan
  * merged where they stray from the full set by at most LOD_TOL_PX device px; from CULL_ZOOM only the
  * chunks near the view drawn, CULL_MARGIN_PX (CSS) round it covering the widest stroke */
 const LOD_TOP_ZOOM = 15, LOD_TOL_PX = 0.25, CULL_ZOOM = 7, CULL_MARGIN_PX = 48;
+/** T-1644: a set's visible instances are gathered into one buffer (strokeGather.ts) when there are at most
+ * this many; more are drawn by ranges, a gap of RANGE_GAP instances or fewer drawn through */
+const GATHER_MAX = 40000, RANGE_GAP = 512;
+/** the finest chunk boxes tested at `zoom` (strokeLod.ts level 0 is a chunk): below zoom 12 the globe's
+ * projection makes each box test dear, and boxes of 128 or 1024 instances are fine enough */
+const cullLevel = (zoom: number) => (zoom < 10 ? 2 : zoom < 12 ? 1 : 0);
 /** T-1640: the longest a still picture goes undrawn, ms; the fastest train's speed, m/s; the game
  * seconds a platform's crowd is drawn in steps of */
 const STILL_MAX_MS = 1000, TRAIN_MAX_MPS = 100, CROWD_STEP_S = 5;
 
 /** a network stroke set's chunk boxes, and its simplified copies by zoom band (T-1639) */
 interface StrokeLodState {
-  boxes: { boxes: Float32Array; chunks: number } | null;
+  boxes: ChunkBoxes | null;
   speed: Float32Array | null | undefined;
   sig: Float32Array | null;
   /** how far `sig` is worked out, and whether that work is under way */
   sigAt: number;
   working: boolean;
-  bands: Map<number, { vao: StrokeVao; first: Uint32Array; boxes: { boxes: Float32Array; chunks: number }; v: number; res: { del: () => void }[] }>;
+  bands: Map<number, StrokeBand>;
 }
+/** a simplified copy of a stroke set for one zoom band, with the arrays its buffers hold (T-1644) */
+interface StrokeBand { vao: StrokeVao; strokes: Strokes; first: Uint32Array; boxes: ChunkBoxes; v: number; res: { del: () => void }[]; wm: Float32Array | null; fu: Float32Array | null }
 
 /**
  * The demand views drawn by the network renderer (T-084, map/demandLayers.ts), one value per
@@ -501,6 +510,10 @@ export class NetworkRenderer {
   strokeCull = !perfOff("strokeCull");
   strokeLod = !perfOff("strokeLod");
   private lodOf = new Map<StrokeVao, StrokeLodState>();
+  /** T-1644: off with `?perfOff=strokeGather` */
+  strokeGather = !perfOff("strokeGather");
+  private gathers = new Map<StrokeVao, StrokeGather>();
+  private speedShown = new WeakMap<Strokes, Float32Array>();
   /** the line strokes' demand widths and traffic marks as last written (null: the defaults), and a
    * count of their writes, which the simplified copies follow */
   private linesWmul: Float32Array | null = null;
@@ -695,7 +708,7 @@ export class NetworkRenderer {
     if (!s || !s.count) return null;
     let st = this.lodOf.get(s);
     if (!st) this.lodOf.set(s, (st = { boxes: null, speed: undefined, sig: null, sigAt: 0, working: false, bands: new Map() }));
-    let vao = s, boxes = st.boxes;
+    let vao = s, boxes = st.boxes, used: StrokeBand | null = null;
     const bz = Math.ceil(zoom + Math.log2(dpr) - 1e-6);
     if (this.strokeLod && grow === 0 && bz < LOD_TOP_ZOOM && (st.sig && st.sigAt >= src.count || this.workLod(s, st, src))) {
       let band = st.bands.get(bz);
@@ -703,7 +716,7 @@ export class NetworkRenderer {
         const t0 = performance.now();
         const { strokes, first } = simplified(src, st.sig!, LOD_TOL_PX / pxPerUnitAt(bz), st.speed ?? null);
         const res: { del: () => void }[] = [];
-        band = { vao: this.strokes(strokes, res), first, boxes: chunkBoxes(strokes.seg, strokes.count), v: -1, res };
+        band = { vao: this.strokes(strokes, res), strokes, first, boxes: chunkBoxes(strokes.seg, strokes.count), v: -1, res, wm: null, fu: null };
         st.bands.set(bz, band);
         this.lodMs += performance.now() - t0;
       }
@@ -711,16 +724,36 @@ export class NetworkRenderer {
         if (lines && band.v !== this.perSegV) {
           band.v = this.perSegV;
           const f = band.first, wm = this.linesWmul, fu = this.linesFull;
-          this.rewrite(band.vao.wmulBuf, wm ? Float32Array.from(f, (i) => wm[i]) : new Float32Array(f.length).fill(1));
-          this.rewrite(band.vao.fullBuf, fu ? Float32Array.from(f, (i) => fu[i]) : new Float32Array(f.length));
+          band.wm = wm ? Float32Array.from(f, (i) => wm[i]) : null;
+          band.fu = fu ? Float32Array.from(f, (i) => fu[i]) : null;
+          this.rewrite(band.vao.wmulBuf, band.wm ?? new Float32Array(f.length).fill(1));
+          this.rewrite(band.vao.fullBuf, band.fu ?? new Float32Array(f.length));
         }
         vao = band.vao;
         boxes = band.boxes;
+        used = band;
       }
     }
     if (!this.strokeCull || zoom < CULL_ZOOM) return { vao, ranges: null };
     if (vao === s) boxes = st.boxes ??= chunkBoxes(src.seg, src.count);
-    return { vao, ranges: visibleRanges(boxes!, vao.count, project, w, h, CULL_MARGIN_PX) };
+    const ranges = visibleRanges(boxes!, vao.count, project, w, h, CULL_MARGIN_PX, cullLevel(zoom));
+    if (!ranges) return { vao, ranges: null };
+    let total = 0;
+    for (let i = 1; i < ranges.length; i += 2) total += ranges[i];
+    if (!total) return { vao, ranges };
+    if (!this.strokeGather || total > GATHER_MAX) return { vao, ranges: mergeRanges(ranges, RANGE_GAP) };
+    let g = this.gathers.get(s);
+    if (!g) this.gathers.set(s, (g = new StrokeGather(this.gl, (name) => this.strokeLoc[name])));
+    const b = used?.strokes ?? src;
+    g.fill({ seg: b.seg, colour: b.colour, edge: b.edge, level: b.level, flags: b.flags, speed: this.shownOf(b), lane: b.lane, wmul: lines ? (used ? used.wm : this.linesWmul) : null, full: lines ? (used ? used.fu : this.linesFull) : null }, ranges, total);
+    return { vao: g, ranges: null };
+  }
+
+  /** a stroke set's speeds as its buffer holds them, kept per set */
+  private shownOf(s: Strokes): Float32Array {
+    let v = this.speedShown.get(s);
+    if (!v) this.speedShown.set(s, (v = s.speed ? shownSpeed(s.speed, s.trainSpeed?.length === s.speed.length ? s.trainSpeed : undefined) : new Float32Array(s.count).fill(160)));
+    return v;
   }
 
   /** T-1639: the runs' significance worked out in 8 ms slices between frames, so an edit's first
@@ -771,6 +804,8 @@ export class NetworkRenderer {
   private dropLod() {
     for (const st of this.lodOf.values()) for (const b of st.bands.values()) for (const r of b.res) r.del();
     this.lodOf.clear();
+    for (const g of this.gathers.values()) g.dispose();
+    this.gathers.clear();
   }
 
   /** Rewrite a dynamic buffer in place (sizes never change between `setNetwork`s). */
@@ -1204,7 +1239,7 @@ export class NetworkRenderer {
     // again only when one of those changes; GL uploads outside the per-frame passes count as a change
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
