@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1756 [P2] Anita's asks 2026-10-28. Done 2026-10-28: Snap beside track off by default; a new line's name is not focused after a touch (keyboard stays down); a station placed by tap-tap leaves no ghost until the finger moves or taps elsewhere; the triangles under names are T-1434's opening-day bunting, kept.
 - T-1755 [P2] Car ownership 5% dearer (Anita, after T-1750). Done 2026-10-28: $2.10 a trip + $0.1365 a km (kernel.rs `car_own_usd_*`); no ceiling tests (Anita: a small change).
 - T-1752 [P2] The car side of mode choice for Tokyo. Abandoned 2026-10-28: Anita declined more parking time and took T-1755's 5% dearer ownership instead.
 - T-1751 [P2] Real-network saves' service (T-1750 fixes 1 and 2). Done 2026-10-28: imported edges are marked separated (`EdgeData.sep`), so no flat crossing is left in any of the seven saves; Tokyo's peaks 24 to 27-28 (Chuo, Odakyu and Keihin-Tohoku held at 25 by the section rule); every Tokyo line within 10% of its request; saves regenerated (T-1183's regeneration); rail trips +0 to +7%, Tokyo +5.1%. notes/T-1751.md.

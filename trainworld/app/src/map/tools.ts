@@ -178,6 +178,8 @@ export class Tools {
   /** T-1260, on touch: the tap whose preview waits to be confirmed (the track's end, a station's
    * spot or an open-ground station's direction, what the delete tool would remove) */
   private touchAt: LngLatish | null = null;
+  /** a station just placed by touch: no ghost at that point until the finger moves or taps elsewhere (T-1756) */
+  private ghostSpent = false;
   /** the touch control bar's host (ui/TouchBar.tsx draws into it), and the drag handle on `touchAt` */
   readonly touchHost: HTMLDivElement;
   private handle: HTMLDivElement;
@@ -237,6 +239,7 @@ export class Tools {
       tool.value;
       touchInput.value;
       this.touchAt = null;
+      this.ghostSpent = false;
       this.place();
     });
     // T-1039: a run ends with the track tool however it is left (a game loaded sets the tool directly)
@@ -413,6 +416,7 @@ export class Tools {
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "bus") return this.bus.move(e);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
+    this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
     // T-1721: from any start, and before the first click for the ring
@@ -500,11 +504,16 @@ export class Tools {
       if (this.freeAt) {
         const p = this.pointer;
         this.touchAt = null;
+        this.ghostSpent = true;
         await this.freeStationClick(this.evAt(p ?? toLngLatObj(this.freeAt)));
       } else if (at) {
         this.touchAt = null;
         this.place();
-        await this.stationClick(this.evAt(at));
+        this.ghostSpent = true;
+        const placed = this.stationClick(this.evAt(at));
+        this.place();
+        await placed;
+        this.place();
       }
     } else if (t === "delete" && at) {
       this.touchAt = null;
@@ -1650,7 +1659,7 @@ export class Tools {
     }
     // the snap ring and the cursor tag
     if (t === "station" && !this.freeAt) this.checkGhost();
-    const h = t === "station" ? this.freeAt ?? this.stationSpot() : this.hover;
+    const h = t === "station" ? (this.ghostSpent ? null : this.freeAt ?? this.stationSpot()) : this.hover;
     const v = t === "station" ? this.verdict() : null;
     if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
     if (t === "station" && h?.kind === "free" && !this.freeAt) {

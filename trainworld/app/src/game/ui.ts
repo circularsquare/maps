@@ -255,7 +255,7 @@ export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== fa
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);
 /** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
-export const snapBeside = signal(saved.build?.beside !== false);
+export const snapBeside = signal(saved.build?.beside === true);
 /** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];

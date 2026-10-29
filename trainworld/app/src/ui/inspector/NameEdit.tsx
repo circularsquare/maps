@@ -5,6 +5,7 @@
 
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { touchInput } from "../../map/touch";
 import { Icon } from "../widgets";
 
 export function NameEdit({ name, onRename, prompt = false, onPrompted, control, children }: {
@@ -25,8 +26,10 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   const [draft, setDraft] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const done = useRef(false);
+  const prompted = useRef(false);
   useEffect(() => {
     if (prompt) {
+      prompted.current = !editing;
       setEditing(true);
       onPrompted?.();
     }
@@ -35,8 +38,13 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
     setDraft(null);
     if (editing) {
       done.current = false;
-      input.current?.focus();
-      input.current?.select();
+      // a new line's name opened by a finger is not focused: the on-screen keyboard would cover the map (T-1756)
+      const skip = prompted.current && touchInput.peek();
+      prompted.current = false;
+      if (!skip) {
+        input.current?.focus();
+        input.current?.select();
+      }
     }
   }, [editing]);
   const commit = (close: boolean) => {

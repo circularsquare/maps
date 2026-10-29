@@ -104,7 +104,7 @@ purpose filter the purpose drawn is ringed in the bar.
   hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
   Trains columns.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
-  ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]. m is the lowest number no line in the same
+  ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
   stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
   is a random `LINE_PALETTE` colour no line in that city uses, else a random one of the least used [T-856]

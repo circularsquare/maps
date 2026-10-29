@@ -38,7 +38,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  Then the **beside switch** (two curving tracks, "Snap beside track"), on by default [T-1685]: what it
+  Then the **beside switch** (two curving tracks, "Snap beside track"), off by default [T-1685, T-1756]: what it
   does is under [Drawing track](#drawing-track).
   The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
@@ -88,7 +88,8 @@ mouse moving again takes it back).
   end. A tap on the start with no end waiting ends the run, as a click on it does.
 - **Stations**: on track, a tap shows the platform ghost and its tag, a second tap or confirm
   places it. On open ground the first tap is one end of the platform (as a click), the next taps
-  set its direction (the ghost and tag show), and confirm or a tap on that point places it.
+  set its direction (the ghost and tag show), and confirm or a tap on that point places it. After
+  it is placed no ghost shows there until the finger moves or taps elsewhere [T-1756].
 - **Delete**: a tap shows what would go (drawn red, its name in the tag); confirm or a second tap
   removes it (built things still ask), cancel drops it.
 - **Line stops** are toggled by a tap at once, as clicks are; the hints say "tap" and leave out Enter.

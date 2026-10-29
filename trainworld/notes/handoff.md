@@ -30,7 +30,22 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   website da0cfe7 pushed (Anita's go), verify --page all pass; R2 holds only trainworld/2026-10-28f
   (rclone purge prints a harmless GetBucketVersioning 403).
 - T-1609 landed db77a72b (refine 4.7 s vs 53 s on all-China); 8800 rebuilt at f5961ca2, smoke 20/20 both shades. Not deployed.
-- T-1733 DONE in .tw-trees/t1733, not landed: Japan 118 s after the line is built, big lines within 0.47%;
+- Vietnam committed 2b955e0c (93/95 shipped; next SE Asia: Thailand easiest). T-1733 landed ff76b15e;
+  8800 rebuilt there, smoke 20/20 both shades. Deploy 2026-10-28g refused by the permission
+  check: asked Anita to approve it explicitly. Then website add/commit/push, gh run watch, verify --page, purge 28f.
+- T-1734: second T-1733 agent resumed, tree .tw-trees/t1734 from ff76b15e; Vite 6122; 4 cores; may file T-1736-1737.
+- T-1751 committed 1550be70 (EdgeData.sep: imported crossings separated; Tokyo peak 27; real saves regenerated);
+  8800 rebuilt there, smoke 20/20 both shades.
+- LIVE: 2026-10-28g (= 1550be70, before T-1755), website e74fa0e pushed (Anita allowed pushes), verify --page
+  all pass; R2 holds only trainworld/2026-10-28g.
+- T-1757 agent t1757 (Opus), main tree: T-1743 (+T-891, T-1231 if covered), then Thailand, then Singapore
+  (Anita 2026-10-28); asks me before each join; up to 6 cores; Vite 6182, runner 6382; ids T-1758-1765.
+- T-1755 car ownership +5% (Anita) committed 669e81a3; 8800 rebuilt there, smoke 20/20, real save 12,564,193 (+0.65%).
+  Not in 28g. T-1752 abandoned.
+- T-1756 agent t1756 (Sonnet), main tree UI: snapBeside default off, mobile name focus, tap-tap ghost,
+  the triangles under station names; Vite 6198; 2 cores.
+- T-1752 (car side of mode choice) asked Anita. T-1738 open for the next SE Asian country (Thailand easiest).
+- (was) T-1733 DONE in .tw-trees/t1733, not landed: Japan 118 s after the line is built, big lines within 0.47%;
   China 9.3 s. Fix: local rounds crowd on the rest's per-round loads (trail). Smoke 20/20 in the tree.
   Land after Vietnam's join reports (the join's browser checks use the main tree's app), then 8800, then
   deploy (Anita: deploy after T-1733). Then T-1734 to the same agent (second T-1733 agent).
