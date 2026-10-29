@@ -72,6 +72,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
+- T-1818 [P2] Line panel's group row reads 'Part of [pill] group', stats left-aligned, Lines tab figures aligned for groups, groups open by default (Anita 2026-10-29). taking (agent t1818)
+- T-1822 [P2] Tutorial: an askew post-it with checked steps and a ripple highlight (Anita's TODO 2026-10-29). Design for Anita, taking (agent t1822); notes/T-1822.md
+- T-1821 [P2] Station marks back to their pre-T-1807 size, Line view lines ~30% thicker (Anita's TODO 2026-10-29). taking (agent t1821)
+- T-1817 [P2] Group view refinements from Anita's playtest 2026-10-29: outlined ticks with more room, thinner crossing bars, the line's bullet in edit hovers, branch ticks sharing rows, crossing bars only across the branches they cross, a shared line in the middle, group pill labels legible per shade. taking, 2026-10-29 (agent t1809)
 - T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Designed; Anita's calls 2026-10-29 in the note; stage 1 (Line view bands) built 2026-10-29 by agent t1799s1 in tree t1799, waiting to land; stage 2 (Traffic view bands at each line's rider width) built 2026-10-29 by agent t1799s2 in tree t1799b, waiting to land; stages 3 (corridors, four-track trunks) and 4 (joins, not needed so far) open; notes/T-1799.md
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
@@ -108,6 +112,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
 - T-1791 [P2] Line groups (Anita's TODO 2026-10-29): drop a line on another in the Lines tab to group them, a copy joins its source's group, a group view with one combined diagram where clicking a line's dot removes the stop and a ghost adds one. Design written and decided by Anita 2026-10-29; stages 1 and 2 built in tree t1791, to land (agent t1791s1, 2026-10-29); stages 3-4 open; notes/T-1791.md.
+- T-1824 [P2] Legal check before release (Anita's TODO 2026-10-29). taking (agent t1824); research/release-legal.md
 
 ## Track and trains
 - T-1794 [P3] T-1787 leftovers: on shared-track New York a headway edit on its busiest line still takes 150-400 ms (two or three settles of ~15 rounds), and Paris placements p95 237 ms (about 9 holds a run and level, 2-3 ms a profile); options in notes/T-1779.md "T-1787" (a held line's fill want from its fleet alone, a cheaper crawl bisection in run_with). Open.
