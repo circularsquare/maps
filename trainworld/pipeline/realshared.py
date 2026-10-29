@@ -110,13 +110,19 @@ def track_model(doc, polys, net):
     groups = defaultdict(list)
     for e in parent:
         groups[find(e)].append(e)
+    through = defaultdict(set)
+    for ends in line_ends:
+        for i in range(len(ends) - 1):
+            a, b = ends[i][1], ends[i + 1][0]
+            through[a].add(b)
+            through[b].add(a)
     gstops = defaultdict(list)  # group -> [(line, stop k)]
     for li, matched in enumerate(line_stops):
         for j, k in matched.items():
             gstops[find(end_at(li, j))].append((li, k))
 
     nodes, edges = [], []
-    placed = []
+    placed, reoriented = [], []
     g_chain, g_side, node_of = {}, {}, {}
     for g, ends in groups.items():
         pts = np.array([pair_poly[e[:2]][0] if e[2] == 0 else pair_poly[e[:2]][-1] for e in ends])
@@ -125,7 +131,34 @@ def track_model(doc, polys, net):
         v = sum((1 if math.cos(math.atan2(u[1], u[0]) - h0) >= 0 else -1) * u for u in us)
         h = math.atan2(v[1], v[0])
         hv = np.array([math.cos(h), math.sin(h)])
-        side = {e: (1 if float(u @ hv) > 0 else 0) for e, u in zip(ends, us)}
+        geo = {e: (1 if float(u @ hv) > 0 else 0) for e, u in zip(ends, us)}
+        # a line runs through: the two ends it passes between are on opposite sides, whatever the
+        # end geometry says (a node joining cut points apart can point an end backwards); geometry
+        # picks only which way round each connected set lies
+        side = {}
+        for e0 in sorted(ends, key=lambda e: -len(through[e])):
+            if e0 in side:
+                continue
+            comp, todo = {e0: 0}, [e0]
+            while todo:
+                a = todo.pop()
+                for b in through[a]:
+                    if b not in comp:
+                        comp[b] = 1 - comp[a]
+                        todo.append(b)
+                    elif comp[b] == comp[a]:
+                        st["through moves that cannot all be on opposite sides"] += 1
+            agree = sum(1 for e, c in comp.items() if geo[e] == c)
+            flip = agree * 2 < len(comp)
+            for e, c in comp.items():
+                side[e] = (1 - c) if flip else c
+        if any(side[e] != geo[e] for e in ends):
+            st["groups with a side set by the lines over the geometry"] += 1
+            reoriented.append(g)
+            v = sum((1 if side[e] == 1 else -1) * u for e, u in zip(ends, us))
+            if np.hypot(*v) > 1e-9:
+                h = math.atan2(v[1], v[0])
+                hv = np.array([math.cos(h), math.sin(h)])
         base = pts.mean(0)
         while any(np.hypot(*(base - q)) < NUDGE for q in placed):
             base = base + 8.0 * np.array([-hv[1], hv[0]])
@@ -218,7 +251,7 @@ def track_model(doc, polys, net):
         for n in c[0]:
             g_chain_of[n] = c
 
-    out_lines = []
+    out_lines, reversals = [], []
     for li, L in enumerate(clines):
         ends, matched = line_ends[li], line_stops[li]
         if not ends or len(matched) < 2 or any((pid, k) not in piece_edge for pid, _, k in L["path"]):
@@ -240,6 +273,12 @@ def track_model(doc, polys, net):
                 else:
                     if not stops or stops[-1] != sid:
                         stops.append(sid)
+            if 0 < j < n_path:
+                a_end, b_end = ends[j - 1][1], ends[j][0]
+                sd = g_side[find(a_end)][1]
+                if sd[a_end] == sd[b_end]:
+                    nm = nodes[sid]["station"]["name"] if sid is not None else "a junction"
+                    reversals.append(f"{lines[li]['feed']} {lines[li]['name']} (line {li}) at {nm}{'' if here else ', not a stop'}")
             via = sid if here and sid is not None else None
             frm = arrive if arrive is not None else via
             to = leave if leave is not None else via
@@ -258,5 +297,13 @@ def track_model(doc, polys, net):
         out_lines.append({"index": li, "stops": stops, "path": path, "tph": L["tph"]})
     st.update({"nodes": len(nodes), "stations": sum(1 for n in nodes if n["station"]), "edges": len(edges),
                "lines": sum(1 for l in out_lines if l)})
+    st["partway reversals"] = len(reversals)
+    for g in reoriented:
+        order, sid = g_chain[g]
+        n = nodes[sid if sid is not None else order[0]]
+        names = sorted({lines[li]["name"] for li, _ in gstops.get(g, [])})
+        print(f"  sides set by the lines: {n['station']['name'] if n['station'] else 'junction'} at {n['xy']} {names}")
     print("model:", dict(st))
-    return {"nodes": nodes, "edges": edges, "lines": out_lines, "stats": dict(st)}
+    for r in reversals:
+        print("  reverses:", r)
+    return {"nodes": nodes, "edges": edges, "lines": out_lines, "stats": dict(st), "reversals": reversals}

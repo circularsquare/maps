@@ -110,14 +110,25 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1765 Canada's five far origins: t1762 agent resumed (then maybe Kerkyra, Poland's two); only data/packs writer.
 - T-1764 rule 1 committed 0ea6169e (smoke 20/20 on its Vite; couldn't reproduce the 9 span-only zones on master,
   kept as harmless). 8800 still at afb89cbc: rebuild with T-1766's landing. Its 0.16% whole-vs-fresh gap folded into T-1736.
-- T-1766 agent t1766 (Opus): attraction visits from a city budget shared by Wikipedia page views (Anita 2026-10-29:
+- T-1766 committed 2b722f2a (West Lake 10.2M, Kiyomizu 3.4M, 68% within 3x, real save +0.9% to 12,758,872).
+  8800 NOT rebuilt for it yet: wait for the China join to end (packs in flux), then one rebuild + smoke.
+- (was) T-1766 agent t1766 (Opus): attraction visits from a city budget shared by Wikipedia page views (Anita 2026-10-29:
   "order of magnitude correctness" is enough; country term stays off). attractions_json.py + attractions.json; Vite 6141;
   3 cores. Review its numbers before committing.
-- T-1770 committed 3edfe9a0; saves staged in artifacts/trainworld/t1770-realnet/. Follow-up running (t1770 resumed):
+- T-1765 eight zones committed 2b8cdda6 (status 1,897 shipped, 5 parked as before). T-1770 colour saves SHIPPED to
+  data/packs/real. 8800 at 2b8cdda6, smoke 20/20 both shades. China's 11 city zones (my call): t1762 resumed, only
+  data/packs writer, 6 cores; batch id in notes/T-1738.md.
+- (was) T-1770 committed 3edfe9a0; saves staged in artifacts/trainworld/t1770-realnet/. Follow-up running (t1770 resumed):
   Tokyo's default-blue matches back to palette, realcolour.py only. SHIP after T-1765's join, from trainworld/:
   `set REALNET_OUT=C:\Users\anita\projects\maps\artifacts\trainworld\t1770-realnet` then
   `..\venv\Scripts\python.exe pipeline\realnet.py ship`; then rebuild 8800.
-- T-1305 stage 1 committed cebb5c03 (4 trunks right; Queens Blvd express 100.6% because game trains hit 160 km/h on
+- Anita 2026-10-29 on shared NYC: "can replace current start... definitely an improvement". Two wrong reversals (N/W at
+  Canal St, Ronkonkoma at Woodside): t1305 agent resumed to fix (2 cores, ~350k tokens; stage 3 goes to a fresh agent).
+  Ship the shared nyc save after the China join ends. Stage 3 (other six) next.
+- T-1772 agent t1772 (Opus): capacity markers as clock-face dots, short tooltips, reversal icons lighter; Vite 6185, 3 cores.
+- T-1305 stage 2 committed 680119fe: shared NYC save staged at artifacts/trainworld/t1305-shared/nyc_real.save
+  (track 4,551 to 2,447 km, rail -4.6%, junction delays +1:30-2:40 on 8th Av). Waits on Anita's look before stage 3/ship.
+- (was) T-1305 stage 1 committed cebb5c03 (4 trunks right; Queens Blvd express 100.6% because game trains hit 160 km/h on
   the 4 km run). Stage 2 running (same agent resumed): realsave from corridors, staged in t1305-shared/; calls: trim
   Queens Blvd per 90% rule, W 4 St split by hand, fresh geom. Vite 6174, 3 cores. Not shipped until Anita looks.
 - T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once

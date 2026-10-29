@@ -303,6 +303,13 @@ fn main() {
     eprintln!("validation (not checked on load): {kinds:?}");
     let flat = w.net.crossings.iter().filter(|c| matches!(c.kind, trainworld_sim::track::net::CrossKind::Flat(_))).count();
     eprintln!("crossings {} ({} flat), total cost US${:.0}M", w.net.crossings.len(), flat, w.net.total_cost());
+    // T-1305: a line turning back partway (arriving and leaving a node on one side); real service has none
+    for &(li, id) in &line_ids {
+        let r = w.net.path_reversals(w.net.line_path(id));
+        if !r.is_empty() {
+            eprintln!("line {li} ({}) turns back partway at path nodes {r:?}", lines[li]["name"].as_str().unwrap_or(""));
+        }
+    }
     let live: Vec<usize> = (0..w.net.edge_count()).filter(|&e| w.net.edge_alive[e]).collect();
     eprintln!("{} edges, {:.0} km of double track", live.len(), live.iter().map(|&e| w.net.edge_len[e]).sum::<f64>() / 1000.0);
 
