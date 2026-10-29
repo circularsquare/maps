@@ -1,7 +1,7 @@
 // T-263: attractions. The real save reaches a final with the attractions purpose in it (its rail
 // trips, solve time, attraction boardings); the marks show in Manhattan at zoom 13 and the Met's
 // hover gives its name, visits a day and a share by train; the purpose filter on Attractions with
-// Destinations bubbles; then a new game with a short line at Ueno, the Tokyo National Museum's
+// Destinations bubbles; then a new game with a short line just north of Ueno, the Tokyo National Museum's
 // hover. Screenshots to artifacts/trainworld/t263/ (light, or SHADE=dark). About four minutes.
 //   node trainworld/checks/t263-attractions.mjs [url]   (from the maps root; default localhost:6123)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -81,7 +81,8 @@ try {
   await tyo.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await tyo.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && window.twViews, undefined, { timeout: 180000 });
   await tyo.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), UENO);
-  if ((await acrossLine(tyo, UENO, 3)) === null) throw new Error('no line at Ueno');
+  // the line runs 330 m north of the museum: a station on its mark would sit above it (hover gives way to station circles)
+  if ((await acrossLine(tyo, [UENO[0], UENO[1] + 0.003], 3)) === null) throw new Error('no line at Ueno');
   await tyo.waitForFunction(() => { const v = window.twDemand.view(); return v && v.final && v.lines.size === 1; }, undefined, { timeout: 300000, polling: 500 });
   await tyo.evaluate((ll) => void window.tw.map.jumpTo({ center: ll, zoom: 14 }), TNM);
   await tyo.waitForTimeout(8000);

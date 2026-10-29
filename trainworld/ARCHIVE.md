@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1737 [P3] Why far lines' trains move after edits elsewhere. Answered 2026-10-29: far zones are touched by service-span steps of 0.05 (one train a day), not trains an hour; real knock-ons are local (a crossing at grade cuts a long line everywhere); 12 of 44 zones on a 17-edit repro. Fix T-1764. notes/T-1737.md.
 
 - T-1644 [P3] GPU at zoom 15 on the Japan save. Done 2026-10-29: the strokes' draw calls, not MSAA; the visible strokes are gathered into one buffer (`map/strokeGather.ts`). Panning 37% to 23-27% GPU, overlay 6-7 to 1.7-2.3 ms, pixels the same. notes/T-1644.md.
 - T-1739 [P3] attractions.json undercounts sites with few Wikidata figures. Done 2026-10-29: lakes, hills and islands that Wikidata also tags a tourist attraction count (West Lake); a site with no figure is sized by a fit on those with one (editions, people within 25 km), no country term; presidential palaces and headquarters need a figure; Hangzhou 0.5M to 4.7M a year, Kiyomizu-dera 0.77M to 1.5M, Hangzhou zones +31-45% going out. notes/T-1739.md.

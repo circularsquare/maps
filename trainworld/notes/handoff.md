@@ -116,7 +116,12 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   page views task? Not yet on 8800 (rebuild after TH/SG lands).
 - t263-attractions' Tokyo National Museum hover check fails on old data too (a station card covers the mark): look
   (likely the check's view, not a game bug; T-1644 was not the cause, it fails on the old code).
-- Still to decide: T-1744 (after TH/SG join; pack writes), T-1737 (investigate), T-1736 (P3, keep), T-1634/T-1647
+- Thailand (67/67) and Singapore committed aa523771 with T-1758's market rows; 8800 rebuilt there (includes T-1739,
+  T-1644), smoke 20/20 both shades, real save 12,644,085. Not deployed.
+- T-1762 + T-1744 agent t1762 (Sonnet), main tree: origin rule, Vietnam's 10 far origins rebuilt, muo/cxx, VN rejoin;
+  writes data/packs (only writer); 6 cores; Vite 6183, runner 6383; may file T-1765.
+- T-1737 agent t1737 (Sonnet), read-only + checks/t263-attractions.mjs; Vite 6126; 2 cores; may file T-1764.
+- Was "still to decide": T-1744 (after TH/SG join; pack writes), T-1737 (investigate), T-1736 (P3, keep), T-1634/T-1647
   (collide with T-1735's demand/market files: after it).
 
 ## Next (Anita 2026-10-28 evening: "this order is fine"; she is away)
