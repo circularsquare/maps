@@ -477,8 +477,8 @@ notes/T-420.md has the tables.
   model's (notes/T-295.md has the US, Toronto and London ones), and the city's published average
   driving speed against the ceiling harness's `drive` output (notes/T-1147.md).
 - **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
-  regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $2.00 a trip
-  and $0.13 a km, T-938, local layers only), plus for a paid
+  regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $2.10 a trip
+  and $0.1365 a km, T-938 and T-1755, local layers only), plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
   charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New

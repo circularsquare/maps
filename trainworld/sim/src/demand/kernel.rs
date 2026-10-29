@@ -305,9 +305,9 @@ impl Default for Params {
             // T-854: dense cores keep about the rail share the car-free split gave them
             home_park_f: 0.4,
             home_dens: None,
-            // T-938: T-621's $1.50 + $0.10 raised about 30% (Anita)
-            car_own_usd_trip: 2.0,
-            car_own_usd_km: 0.13,
+            // T-938 then T-1755: T-621's $1.50 + $0.10 raised about 30%, then 5% (Anita)
+            car_own_usd_trip: 2.1,
+            car_own_usd_km: 0.1365,
             cordon: None,
             period: 0,
             period_share: 0.45,
