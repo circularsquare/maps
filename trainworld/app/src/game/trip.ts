@@ -142,6 +142,8 @@ export interface TripPeriod {
   pTrain: number;
   pDrive: number;
   baseFarePerceived: number;
+  /** T-1801: the transfer fare each change pays, perceived minutes (0 none) */
+  xferFarePerceived: number;
   /** perceived minutes a fare dollar, the riders' country's (T-1277); the car's money is at
    * `CAR_MIN_PER_USD` */
   minPerUsd: number;
@@ -218,7 +220,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
     round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why, railPerceived: offered || why === "slowerThanWalk" ? v[14] : NaN, walkFade: v[44], railOfMotor: v[15], utility: v[16],
-    pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
+    pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], xferFarePerceived: v[45] ?? 0, minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
     groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
     rideToStation: RIDE[v[41]] ?? "none", rideMinKm: v[42], pairWalkMax: v[43],
   };
@@ -395,7 +397,8 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
 }
 
 /** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
- * and walking between stations, the changes, and the fare in dollars (base fare included). */
+ * and walking between stations, the changes, and the fare in dollars (base fare and transfer fares
+ * included; `xferUsd` the transfer fares alone). */
 export function routeTotals(t: TripPeriod, r: TripRoute) {
   const pair = t.pairs[r.pair];
   const driveMin = pair?.accessRide ? pair.accessMin : 0;
@@ -406,7 +409,8 @@ export function routeTotals(t: TripPeriod, r: TripRoute) {
     if (l.kind === "ride") { wait += l.waitMin; ride += l.min; fare += l.farePerceived; rides++; }
     else xfer += l.min;
   }
-  return { driveMin, walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
+  const changes = Math.max(0, rides - 1), xferFare = changes * (t.xferFarePerceived ?? 0);
+  return { driveMin, walkMin, walkM, wait, ride, xfer, changes, fareUsd: (fare + xferFare) / t.minPerUsd, xferUsd: xferFare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 
 /** What crowded trains add to a route: the rides' perceived minutes beyond their real ones (the
@@ -464,7 +468,9 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   if (changeP > 0) out.push(tot.changes > 1
     ? { label: "changes", real: tot.changes, weight: changeP / tot.changes, perceived: changeP, unit: "count" }
     : { label: "change", real: 0, weight: 1, perceived: changeP, unit: "min" });
-  out.push({ label: "fare", real: tot.fareUsd, weight: t.minPerUsd, perceived: tot.fareUsd * t.minPerUsd, unit: "usd" });
+  const fare = tot.fareUsd - tot.xferUsd;
+  out.push({ label: "fare", real: fare, weight: t.minPerUsd, perceived: fare * t.minPerUsd, unit: "usd" });
+  if (tot.xferUsd > 0) out.push({ label: "transfer fare", real: tot.xferUsd, weight: t.minPerUsd, perceived: tot.xferUsd * t.minPerUsd, unit: "usd" });
   return out;
 }
 

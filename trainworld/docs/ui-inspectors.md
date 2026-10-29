@@ -659,7 +659,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
 - **The inspector**: under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
-  "Drive to" with its drive minutes; the hovers give real minutes only), the fare, and on a route
+  "Drive to" with its drive minutes; the hovers give real minutes only), the fare (with any
+  transfer fares [T-1801], its hover the base fare and, where one is set, the transfer fare at each
+  change), and on a route
   that starts with a drive to the station a **Car** row [T-915] (dollars: the car's cost per trip
   and per km on the road to the station plus any paid parking there, its hover the two apart),
   where full trains add anything a **Crowding** row (the rides' perceived minutes beyond their
@@ -669,7 +671,8 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   (the minutes the model weighs against the other methods; its hover is only the equation, the
   first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
   wait 2.1 + ride 10.1 + crowding 1.0 + change 2 + fare $1.92 × 3 − choice of routes 11.8 = 16
-  min", the wait for a train with room its own term after the wait, two
+  min", the wait for a train with room its own term after the wait, the transfer fares a term
+  after the fare, "transfer fare $1.00 × 3", where the route changes and one is set [T-1801], two
   changes or more as "changes 2 × 2" [T-717]; a drive to the station is its parts [T-915],
   "Starting the drive 15 + drive 9.2 × 2.66 + parking at the station 7 + parking at home 3 + car
   $2.85 × 3", or "drop-off 10" where that is cheaper than parking; the

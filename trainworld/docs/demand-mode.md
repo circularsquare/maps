@@ -58,7 +58,14 @@ mode's money alike (T-1431, docs/regional.md 5.1). The
 fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares;
 a new game's matches real fares, T-1521)
 times the trip's country's fare scale, charged once per trip including transfers on actual track
-length. The regional market takes the curve unscaled at India's weight (the same perceived fare as
+length. **A transfer fare** (T-1801, `Params::xfer_fare`, $0 in a new game) is paid on each
+boarding after a trip's first, a change within a station complex included and a circle line ridden
+round not one, in the curve's units times the trip's country's scale like the curve, at `fare_w`.
+It is in each boarding's cost with the change's fixed minutes (`Params::change_min`), which the
+trip's first boarding takes off again, so route choice sees it on each strategy's expected
+changes and mode choice on the skim; fare income counts it at the route node boarded after the
+change (`fare_extra`, from `transfers_in`). The regional market's trips change free: its fares
+weigh by origin and income group on the base and km, which a cost inside the skim would miss. The regional market takes the curve unscaled at India's weight (the same perceived fare as
 every country at its default scale), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
 its strategy (the riders' split over lines by their departures), and the assignment counts that

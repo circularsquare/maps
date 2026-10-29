@@ -1,11 +1,11 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
 import { busesText, busRouteRule, busRunRule, busUpkeepRule, money, runCostRule, shortDistance, upkeepText } from "../game/format";
-import { borrow, repay, setFareHsr, setFareScale, stationsById, world } from "../game/world";
+import { borrow, repay, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, type FareNode } from "../game/fareCurve";
+import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
 import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
@@ -126,6 +126,21 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   );
 }
 
+/** T-1801: the transfer fare as charged where the panel looks (times its scale): a stepper by
+ * $0.25, typed on a click, as the base fare. */
+function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
+  const shown = fare * scale;
+  const set = (v: number) => void setFareTransfer(tidyTransfer(Math.max(0, v) / scale));
+  return (
+    <li>
+      <span class="fr-what">Transfer fare</span>
+      <Stepper value={`$${shown.toFixed(2)}`} wide label="transfer fare" onStep={(d) => set(Math.round(shown * 100) / 100 + d * 0.25)}
+        type={{ text: shown.toFixed(2), set, tip: "Paid each time a trip changes lines. Click to type an amount." }} />
+      <span />
+    </li>
+  );
+}
+
 /** T-1300: what the fare being dragged, or one demand has yet to solve, would do to rail trips and
  * fare income a day; nothing otherwise. */
 function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: number }) {
@@ -222,6 +237,7 @@ export function MoneyTab() {
       <FareNodeRows nodes={f} scale={scale}
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
+          <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
           <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />

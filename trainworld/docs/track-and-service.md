@@ -893,7 +893,11 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,
   and the assignment spreads the extra over each km times its multiplier; the market's income
   groups weigh the same fares (`IntercityApi::fare_col`). Fare income takes the rate times it on
-  that line's passenger-km. Fare income is the first stretch's base on
+  that line's passenger-km. **Transfer fare** [T-1801]: `Fares.transfer` (curve units, absent for
+  $0, saved in the header; an older save loads with none) is paid on each boarding after a trip's
+  first, times the trip's country's scale, in route choice and mode choice (docs/demand-mode.md)
+  and in fare income on the line boarded after the change (`fare_extra`, so inside `LineDemand.fareX`);
+  the regional market's trips change free. Fare income is the first stretch's base on
   each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the
   line it is counted at (`LineDemand.fareX`, `app/src/game/money.ts`; on a weekend the extra follows
   each stretch's riders), so demand and income charge the same trips the same fares. Changing the fare

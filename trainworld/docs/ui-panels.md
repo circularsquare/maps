@@ -469,7 +469,9 @@ their steppers lined up in one column: "Base fare" with its fare in a stepper, t
 the first's end; the last node's distance changes no fare, so it is only dragged). Then, once any
 line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.50x",
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
-to 1.50x") [T-1626]. Last, one row "Japan fares" (the country above; its hover "Set fare multiplier
+to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
+("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
+fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; its hover "Set fare multiplier
 for Japan") with its scale in a stepper as a multiple of Japan's fares, "1.00x" (Japan's default;
 India 0.16x, the US 1.90x), stepping by 0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth
 of a baseline unit); once the player has set one, an undo icon after the stepper ("Back to 1.90x, the

@@ -196,7 +196,9 @@ function FareRows({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const parking = pair?.accessRide ? pair.rideStationMoney / CAR_MIN_PER_USD : 0;
   return (
     <>
-      <li data-tip={`Base fare ${usd(t.baseFarePerceived / t.minPerUsd)} once a trip, plus the distance fare`}>
+      <li data-tip={`Base fare ${usd(t.baseFarePerceived / t.minPerUsd)} once a trip, plus the distance fare`
+        // T-1801
+        + (tot.xferUsd > 0 ? ` and a transfer fare of ${usd(tot.xferUsd / tot.changes)} at each change` : "")}>
         <span class="grow">Fare</span>
         <span class="val">{usd(tot.fareUsd)}</span>
       </li>

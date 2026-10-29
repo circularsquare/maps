@@ -106,6 +106,19 @@ pub(crate) fn fare_x_usd(v: &[f32], fare_w: f32) -> Vec<f32> {
     v.iter().map(|x| x / fare_w).collect()
 }
 
+/// `fare_x_usd` plus the transfer fare (T-1801) on each rider boarding a route node after a change
+/// (`transfers_in`), all at `p`'s weight.
+pub(crate) fn fare_extra_usd(v: &[f32], p: &Params, g: &Graph, xi: &XferIndex, xfer: &[f32]) -> Vec<f32> {
+    let mut out = fare_x_usd(v, p.fare_w);
+    if p.xfer_fare > 0.0 {
+        let usd = p.xfer_fare / p.fare_w;
+        for (o, x) in out.iter_mut().zip(transfers_in(g, xi, xfer)) {
+            *o += x * usd;
+        }
+    }
+    out
+}
+
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
 /// smallest first (they go to the cut totals), to keep the answer small (T-098).
 pub const FLOW_CUT: f64 = 0.01;
@@ -1128,6 +1141,21 @@ impl DemandApi {
         Ok(())
     }
 
+    /// T-1801: the transfer fare, US$, paid on each boarding after a trip's first; after
+    /// `set_fare_weight`, which it is weighed at.
+    pub fn set_transfer_fare(&mut self, usd: f32) -> Result<(), String> {
+        if !(usd.is_finite() && usd >= 0.0) {
+            return Err("invalid transfer fare".into());
+        }
+        let v = usd * self.base.fare_w;
+        if v.to_bits() != self.base.xfer_fare.to_bits() {
+            self.base.xfer_fare = v;
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
     /// Run one solve and one crowding round on a small cross of two lines at the pack origin,
     /// then forget it. V8 runs a wasm function's first calls in its baseline compiler and swaps
     /// in optimised code only for later calls, so the first real solve took 3x as long as the
@@ -1397,9 +1425,10 @@ impl DemandApi {
         self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| st.avg.rn_alight.clone())
     }
     /// The fare curve's extra in period `q` (T-1143), US$, at each route node where the trips paying
-    /// it first board: what the trips pay beyond the base and the first stretch's rate per km.
+    /// it first board: what the trips pay beyond the base and the first stretch's rate per km; with
+    /// the transfer fares (T-1801) at the route nodes riders board after changing.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x, self.base.fare_w))
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_extra_usd(&st.avg.rn_fare_x, &st.p, &st.g, &st.xi, &st.xfer))
     }
     /// Riders in period `q` boarding at each route node after changing lines (T-1530); empty when
     /// the period has no result.

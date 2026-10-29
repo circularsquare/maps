@@ -1058,6 +1058,34 @@ fn transfers_in_sums_the_pairs_by_boarding_node() {
     assert!(api.transfers_in(3).is_empty(), "no result for an unsolved period");
 }
 
+/// T-1801: a transfer fare costs the trips that change, so fewer ride and fewer change, and fare
+/// income takes it on each rider boarding after a change; back at $0 the loads are as before to
+/// the bit.
+#[test]
+fn transfer_fare_costs_changes_and_is_income() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let run = |api: &mut DemandApi| {
+        api.solve(0);
+        let into: f64 = api.transfers_in(0).iter().map(|&x| x as f64).sum();
+        let extra: f64 = api.fare_extra(0).iter().map(|&x| x as f64).sum();
+        (api.summary(0)[2], into, extra, api.seg(0))
+    };
+    let (rail0, into0, extra0, seg0) = run(&mut api);
+    assert!(into0 > 0.0, "the two lines share a station, so some riders change");
+    assert_eq!(extra0, 0.0, "a straight fare line and no transfer fare: no extra");
+    assert!(api.set_transfer_fare(-1.0).is_err());
+    api.set_transfer_fare(2.0).unwrap();
+    let (rail1, into1, extra1, _) = run(&mut api);
+    assert!(rail1 < rail0, "rail trips {rail0} to {rail1}");
+    assert!(into1 < into0, "changes {into0} to {into1}");
+    assert!((extra1 - 2.0 * into1).abs() < 1e-3 * extra1.max(1.0), "income {extra1} against {into1} changes at $2");
+    api.set_transfer_fare(0.0).unwrap();
+    let (rail2, _, _, seg2) = run(&mut api);
+    assert_eq!(rail2.to_bits(), rail0.to_bits());
+    assert!(seg2.iter().zip(&seg0).all(|(a, b)| a.to_bits() == b.to_bits()), "loads at $0 as before");
+}
+
 /// T-176: transfers on the real New York network (nyc_real_track.json), commutes and the
 /// everyday purposes, periods 0 and 2, free flow and three crowding rounds, counted and not:
 /// the loads must be the same to the bit; prints the stage times both ways, the transfer

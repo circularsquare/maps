@@ -67,6 +67,9 @@ pub struct Params {
     /// A fixed cost per change of train, perceived minutes (Anita, T-717): a change costs this, its
     /// wait and the walk between the two platforms.
     pub transfer_min: f32,
+    /// The player's transfer fare (T-1801), perceived minutes, paid on each boarding after a
+    /// trip's first; 0 unless set.
+    pub xfer_fare: f32,
     pub fare_min: f32,
     /// Perceived minutes a fare dollar costs the riders of this population (T-1277: by their
     /// country's income, set by the app; the car's money stays at `api::FARE_MIN_PER_USD`).
@@ -279,6 +282,7 @@ impl Default for Params {
             // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
             transfer_min: 2.0,
+            xfer_fare: 0.0,
             fare_min: 6.0,
             fare_w: super::api::FARE_MIN_PER_USD,
             // T-636: Anita's set (notes/T-636.md)
@@ -366,6 +370,12 @@ impl Default for Params {
 }
 
 impl Params {
+    /// What every boarding adds besides its wait, perceived minutes: the change's fixed cost and
+    /// the transfer fare; the trip's first boarding takes it off again (`DestSearch::run_by`).
+    #[inline]
+    pub fn change_min(&self) -> f32 {
+        self.transfer_min + self.xfer_fare
+    }
     /// Set a parameter by name, for the checking tools (`calib --set`); not every field.
     pub fn set_extra(&mut self, k: &str, v: f32) -> Result<(), String> {
         match k {
@@ -385,6 +395,7 @@ impl Params {
             "w_drive" => self.w_drive = v,
             "park_min" => self.park_min = v,
             "fare_min" => self.fare_min = v,
+            "xfer_fare" => self.xfer_fare = v,
             // before `set_fares`, which reads it
             "fare_w" => self.fare_w = v,
             "transfer_min" => self.transfer_min = v,
@@ -2695,7 +2706,7 @@ impl FareCurve {
 
 /// A wait is plain minutes, half the headway (Anita, T-585), times the station's `wait_factor`.
 pub fn board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
-    wait_f * headway_min / 2.0 + p.transfer_min
+    wait_f * headway_min / 2.0 + p.change_min()
 }
 
 /// T-1430: an inter-city trip's first wait, planned around the timetable: half the headway, but at
@@ -2704,7 +2715,7 @@ pub fn board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
 pub const PLANNED_EARLY_MIN: f32 = 5.0;
 pub const PLANNED_WAIT_CAP_MIN: f32 = 30.0;
 pub fn planned_board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
-    wait_f * (headway_min / 2.0).min(PLANNED_EARLY_MIN + headway_min / 6.0).min(PLANNED_WAIT_CAP_MIN) + p.transfer_min
+    wait_f * (headway_min / 2.0).min(PLANNED_EARLY_MIN + headway_min / 6.0).min(PLANNED_WAIT_CAP_MIN) + p.change_min()
 }
 
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
@@ -3387,9 +3398,9 @@ impl<'a> DestSearch<'a> {
                 }
                 // The first boarding is not a transfer; the trip's base fare is added later.
                 let x = if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
-                put(src, q.dist[src] - q.p.transfer_min + x);
+                put(src, q.dist[src] - q.p.change_min() + x);
                 if q.entry[src] < q.dist[src] - 1e-4 {
-                    entry.push((src as u32, q.entry[src] - q.p.transfer_min + x));
+                    entry.push((src as u32, q.entry[src] - q.p.change_min() + x));
                 }
             }
             d.entry = entry.into_boxed_slice();
@@ -3985,12 +3996,12 @@ struct SkimKey {
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, st_wait: g.st_wait.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), st_wait: g.st_wait.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone() }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
-            && self.transfer_min == p.transfer_min
+            && self.transfer_min == p.change_min()
             && self.st_wait == g.st_wait
             && self.fare_curve == g.fare_curve
             && self.rn_km == g.rn_km

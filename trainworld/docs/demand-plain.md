@@ -142,7 +142,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   China, 1.0 in India, where the curve is set, or the player's own), paid once a trip; choosing
   between routes sees only its first stretch. On high-speed lines the fare above the base is 1.5
   times as much (or the player's multiplier), by the share of the trip's km on them, so riders weigh
-  the dearer fare. At the default scales a fare weighs the same
+  the dearer fare. A transfer fare the player sets ($0 to start) is paid at each change of line,
+  times the country's scale too; people weigh it when picking a route and the train, and the line
+  they change onto takes it. Trips between regions change free. At the default scales a fare weighs the same
   everywhere; poorer countries just pay less per ride. A new game's curve is about what real trains
   charge: in New York $1.50 plus $0.10 a km to 20 km, then $0.25 a km, so $3.50 at 20 km, $23.50
   at 100 km and $98 at 400 km; Beijing to Shanghai about $75 (a real ticket is about $83).

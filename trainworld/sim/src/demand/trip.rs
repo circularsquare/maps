@@ -35,7 +35,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 45;
+pub const HEAD: usize = 46;
 pub const PAIR_LEN: usize = 20;
 pub const LEG_LEN: usize = 13;
 
@@ -589,6 +589,7 @@ impl DemandApi {
         }
         h[22] = p.fare_min as f64;
         h[23] = p.fare_w as f64;
+        h[45] = p.xfer_fare as f64;
         h[27] = city.x[o] as f64;
         h[28] = city.y[o] as f64;
         h[29] = city.x[d] as f64;
@@ -767,7 +768,8 @@ impl DemandApi {
     /// the subzones' chance of walking, rail and driving, and their cheapest walk at the home end,
     /// real minutes (-1 none); whether the home end could drive to a station (`RIDE_TOO_SHORT`..
     /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`; the factor on
-    /// rail's share for being barely cheaper than walking (`Params::walk_fade_of`, T-1782).
+    /// rail's share for being barely cheaper than walking (`Params::walk_fade_of`, T-1782); the
+    /// transfer fare a change pays (perceived minutes, `Params::xfer_fare`, T-1801).
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and

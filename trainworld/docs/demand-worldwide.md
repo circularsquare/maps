@@ -559,6 +559,10 @@ notes/T-420.md has the tables.
   and China's high-speed fares sit at a similar premium over conventional ones. Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
+  **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line, times the
+  country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At
+  $0 it is a free change everywhere; a player who sets one models a system that charges each
+  boarding.
 - **Income groups on longer trips** (T-1431, docs/regional.md 5.1). A country's travellers are three
   equal groups by income from the World Bank's income shares by quintile (SI.DST.FRST.20 to
   SI.DST.05TH.20, 170 countries with a survey from 1992 to 2025; the rest take their subregion's

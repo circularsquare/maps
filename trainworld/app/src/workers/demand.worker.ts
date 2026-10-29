@@ -1634,6 +1634,8 @@ async function run() {
           p.set_fares(rounded ? rounded.base : m.fare.base * scale, rounded ? rounded.perKm : m.fare.perKm * scale, m.hopKm);
           p.set_fare_mul(m.fareW ?? new Float32Array(0));
           p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
+          // T-1801: the market's trips change lines free (its fares weigh by income group)
+          if (!(p instanceof IntercityApi)) p.set_transfer_fare((m.fare.transfer ?? 0) * scale);
         }
       };
       const setUp = (c: JobCluster) => {

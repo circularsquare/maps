@@ -2,7 +2,7 @@
 //! Coarse destination gravity is integrated by deterministic stratified cell samples. Endpoint
 //! distances, the 150 m exclusion, walking and regional overlap use the actual sampled cells.
 use super::{
-    api::{fare_x_usd, put_fares, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
+    api::{fare_extra_usd, put_fares, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
     clock::now_ms,
     days::{day_rate, everyday, load_factor, share_out, share_ret, SATURDAY, SUNDAY, WEEKDAY},
     kernel::*,
@@ -1643,6 +1643,14 @@ impl EverydayApi {
         }
         Ok(())
     }
+    /// T-1801: `DemandApi::set_transfer_fare`.
+    pub fn set_transfer_fare(&mut self, usd: f32) -> Result<(), String> {
+        self.engine.set_transfer_fare(usd)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         if q >= PERIODS {
             return false;
@@ -1929,7 +1937,7 @@ impl EverydayApi {
     }
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_x_usd(&s.loads.rn_fare_x, self.engine.base.fare_w))
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_extra_usd(&s.loads.rn_fare_x, &s.p, &s.g, &s.xi, &s.xfer))
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else {

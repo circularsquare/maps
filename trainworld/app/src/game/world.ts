@@ -338,6 +338,10 @@ export function setFareScale(country: string, scale: number | null) {
 export function setFareHsr(mul: number) {
   return edit({ op: "fareHsr", mul });
 }
+/** T-1801: the transfer fare, in the curve's units. */
+export function setFareTransfer(usd: number) {
+  return edit({ op: "fareTransfer", usd });
+}
 
 /** T-1661: take a loan of `amount` US$M, or repay the one out; the answer says whether it was done. */
 export function borrow(amount: number) {

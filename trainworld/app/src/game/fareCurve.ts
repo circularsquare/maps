@@ -28,6 +28,20 @@ export interface Fares {
   basis?: "usd";
   /** T-1626: the fare multiplier on high-speed lines; absent for `HSR_FARE` */
   hsr?: number;
+  /** T-1801: the transfer fare, paid on each boarding after a trip's first, in the curve's units
+   * (times a country's scale where charged); absent for 0 */
+  transfer?: number;
+}
+
+/** T-1801: the transfer fare of `f`, 0 unless set. */
+export function transferFare(f: { transfer?: number } | undefined): number {
+  const v = f?.transfer;
+  return v !== undefined && Number.isFinite(v) && v > 0 ? v : 0;
+}
+/** A transfer fare the player set, in the curve's units: not below 0, to a hundredth of a cent
+ * (as the curve's fares, so a fare typed in a country with a scale reads back as typed). */
+export function tidyTransfer(v: number): number {
+  return Number.isFinite(v) ? Math.max(0, Math.round(v * 1e4) / 1e4) : 0;
 }
 
 /** T-1626: a high-speed line's fares are the curve's times this unless the player sets another.

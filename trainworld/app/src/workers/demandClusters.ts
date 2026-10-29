@@ -387,7 +387,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))) };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.transfer ? `|x${n.fare.transfer}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
   const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);

@@ -3,7 +3,7 @@ import type { CorridorTable } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 45, PAIR_LEN: 20, LEG_LEN: 13 } as const;
+export const TRIP_LAYOUT = { HEAD: 46, PAIR_LEN: 20, LEG_LEN: 13 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
 //
 // Each worker owns a copy of the city (parsed from the pack it is sent once) and a fixed set of
@@ -45,7 +45,7 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; transfer?: number };
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
   /** T-1626 (`DemandApi.set_fare_mul`): each route node's fare multiplier, as `hopKm`; absent: all 1 */

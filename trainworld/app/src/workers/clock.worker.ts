@@ -14,7 +14,7 @@ import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame
 import { PERIODS } from "../game/periods";
 import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
 import { letterOf } from "../game/lineLetter";
-import { faresOf, START_FARE, START_NODES, tidyHsr, type Fares } from "../game/fareCurve";
+import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
 import { FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf, levelOn, quietKind } from "../game/days";
@@ -54,7 +54,9 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : tidyScale(v);
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
-  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr };
+  // T-1801: a save from before has none: changes are free
+  const transfer = tidyTransfer(f.transfer ?? 0);
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...(transfer > 0 ? { transfer } : {}) };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -2768,12 +2770,18 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "groupName":
       return { r: a.set_line_group_name(op.group, op.name) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
       return { r: 0 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
       fares = { ...fares, hsr: tidyHsr(op.mul) };
       return { r: 0 };
+    case "fareTransfer": {
+      if (!Number.isFinite(op.usd)) return { r: 1 };
+      const { transfer: _, ...rest } = fares, v = tidyTransfer(op.usd);
+      fares = v > 0 ? { ...rest, transfer: v } : rest;
+      return { r: 0 };
+    }
     case "fareScale": {
       const scales = { ...fares.scales };
       if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
@@ -3060,7 +3068,7 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareTransfer") {
       apply(msg.op);
       dirty = true;
       sendMoney();
