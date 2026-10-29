@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1792 [P2] Dim the bullet of a line with no trains. Done 2026-10-29 (agent t1792): every line bullet (`Chip` and the map tags' `lineBullet`) fades to 0.4 opacity, greyed, for a line with 0 trains or no headway at its level now or not running; hover adds "Not running". Shots artifacts/trainworld/t1792/.
 - T-1790 [P2] Demand status stuck at 1/4, cap with no status. Done 2026-10-29 (agent t1790): after an edit "Updating demand 1/2…" (local solve) then "2/2…" (8 s wait and whole solve); a status shows whenever the clock is capped, its hover saying so. notes/T-1790.md.
 - T-1785 [P2] Riders vanished at a terminal before the train filled. Done 2026-10-29 (agent t1785): during any stand the platform empties and the train's gauge fills linearly together (at a terminal, to its next trip's load); drawing only, account and fares unchanged. Samples artifacts/trainworld/t1785/.
 - T-1786 [P2] Related lines view: one gap, tall station marks. Done 2026-10-29 (agent t1786): all side-by-side lines and crossing bars 2 px apart; a row with 3+ crossing lines is 1.5 rows tall with a stretched pill, up to 6 bars and 6 bullets in two rows. Shots artifacts/trainworld/t1786/.

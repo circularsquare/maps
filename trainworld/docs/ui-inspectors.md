@@ -343,6 +343,11 @@ the Build tab's quote has rows for bus routes and new buses.
   for the device pixel ratio and CSS zoom it is drawn at, and the circle moved with it, so the ink,
   not the font's line box, is centred in the circle at any font, UI scale and pixel ratio, within
   half a device pixel (`checks/t745-bullets.mjs` measures it on the rendered pixels).
+  A line with no trains at the demand level in force on its own clock (a train count of 0 or a
+  headway of 0, or a planned or broken line; counts typed but not yet applied count) has its
+  bullet dimmed, everywhere it is drawn: grey at 0.4 opacity, flat, readable in both shades, and
+  its hover adds "Not running" (`game/lineRunning.ts`, one set read by `Chip` and `lineBullet`;
+  `checks/t1792-idle-bullets.mjs`) [T-1792]. The GPU map layers draw no symbol bullets.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".

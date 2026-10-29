@@ -285,6 +285,8 @@ body.resizing, body.resizing * { user-select: none; }
 .chip.bus { border-radius: 3px; }
 .chip.lg.bus { border-radius: 5px; }
 .chip > svg text { fill: currentColor; }
+/* T-1792: a line with no trains at its level now */
+.chip.idle { opacity: 0.4; filter: grayscale(0.6); }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 /* T-521: a station row keeps at least 3 bullets, its name gives way */

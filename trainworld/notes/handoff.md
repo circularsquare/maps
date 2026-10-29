@@ -132,6 +132,10 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
 - T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
+- T-1787 stage 1 in tree t1779 (NYC shared edits 631 -> 393 ms mean, not enough; Tokyo shared fine 24 ms). Fresh agent
+  t1787 (Opus, 1 core) continuing in the same tree; first a six-save bench table so the fast cities can ship early.
+- T-1790 committed 420652eb (status 1/2, 2/2, shown whenever capped). T-1792 agent t1792 (Sonnet, Vite 6159, 2 cores).
+  T-1774 London shared agent t1774 (Opus, Vite 6177, 2 cores, staging only).
 - T-1791 stage 1 (Anita yes; her answers in DECISIONS): agent t1791s1 (Opus) in tree .tw-trees/t1791 (8bd9f0f6),
   WASM interface change, Vite 6171, 1 core. Land after China join, rebuild main WASM.
 - T-1786 committed 8ca72cc6, T-1791 design b978e9ed, T-1785 8bd9f0f6 (T-1793 pulses

@@ -3,6 +3,7 @@
 
 import { levelLabel, speed } from "../game/format";
 import { bulletNode, isBusLine } from "../ui/bullet";
+import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { TERRAIN_COLOURS, TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
 import type { Level, LineInput } from "../game/types";
@@ -99,7 +100,7 @@ export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElem
 /** One line bullet: the markup and CSS of ui/widgets.tsx's Chip (a tag is plain DOM, not Preact). */
 export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
   const c = document.createElement("span");
-  c.className = small ? "chip sm" : "chip";
+  c.className = (small ? "chip sm" : "chip") + (idleLines.peek().has(l.id) ? " idle" : "");
   c.style.setProperty("--c", l.colour);
   c.style.setProperty("--ct", inkOn(l.colour));
   c.append(bulletNode(l.letter, small ? "sm" : "", isBusLine(l.id)));

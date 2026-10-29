@@ -4,6 +4,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { levelLabel } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
+import { IDLE_TIP, isIdleLine } from "../game/lineRunning";
 import { PLANE_PATH } from "../map/glyphs";
 import { bulletEpoch, bulletRadius, bulletTextSoon, isBusLine } from "./bullet";
 import { LEVELS, type Level, type LineInput } from "../game/types";
@@ -116,9 +117,10 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
   const zoom = useCssZoom();
   const b = bulletTextSoon(line.letter, size, zoom.value);
   const bus = isBusLine(line.id);
+  const idle = isIdleLine(line.id);
   return (
-    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (bus ? " bus" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
-      data-tip={plain ? undefined : tip ?? line.name} onClick={click}>
+    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (bus ? " bus" : "") + (idle ? " idle" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
+      data-tip={plain ? undefined : (tip ?? line.name) + (idle ? "\n" + IDLE_TIP : "")} onClick={click}>
       {b ? (
         <svg style={{ width: b.w + "px", height: b.h + "px" }}>
           <rect y={b.top} width={b.w} height={b.h} rx={bulletRadius(b.h, bus)} />

@@ -394,6 +394,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   tags, plus digits, two characters and kana, light and dark, 100% and 90% UI, pixel ratio 1 and 2:
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
   port 6160 by default, about four minutes),
+  `t1792-idle-bullets.mjs [url]` (the real save with one line at 0 trains at the level now: its
+  bullet dimmed with a "Not running" hover in the Lines tab, station panel, related lines view and
+  map tags, light and dark, into artifacts/trainworld/t1792/; about a minute),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `old/t1515-click-priority.mjs` (a click on a rail line, bus
   line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
