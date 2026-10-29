@@ -73,7 +73,7 @@ purpose filter the purpose drawn is ringed in the bar.
   The "+N daily rides" after a stop edit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Opening day").
 - **Trains to add** [T-472, T-491, T-818, T-1255, T-1677]: a row's train count (the trains its level needs now, the bare
-  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
+  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted (a 0 is muted and has no hover). The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
   [T-1255]: rider-minutes spent on the platform after a full train left them, each waiting the
   gap to the next departure, and 30 minutes for each rider a full platform turned away, over the
@@ -162,7 +162,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "How many trains run in this time interval. (Which time interval a scheduled train falls into is
   determined by when the train reaches the midpoint of its route.)" (the steppers have no such
   hover) [T-823, T-835, T-1242]; on a
-  running line one dot before each level's name grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
+  running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 3, yellow at 6, orange at 9, red at 15, crimson at 20, plum at 25, purple at 35 and indigo from 50 (T-1553; `crowdColour` in
@@ -172,10 +172,10 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4/10
   trains full" [T-1523, T-1672], then "Ring, on a weekday: riders wait ~15 min for a train with room"
   [T-1684]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
-  [T-516]; under the table a **Trains** row with an Ordinary / High speed switch [T-817], each
-  option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
-  and 160 km/h on other track"), a car's price and the running costs, and on a running line what
-  switching buys or takes from the depot and that the cars running now stay in the depot; then
+  [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
+  option's hover giving its top speed ("High speed trains run up to 320 km/h on high speed track
+  or 160 km/h on normal track", "Normal trains run up to 160 km/h") and, on a running line, what
+  switching buys ("Buys 270 cars for US$x", or "Uses N cars from the depot"), nothing else; then
   **Average speed**, both ways over the round trip less the turning at the ends, so stops and
   waiting at busy track count (hover gives the distance and time) [T-549, T-1159]; then a **Train length** stepper in cars [T-733], 1 up to what the line's
   shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
@@ -202,7 +202,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "Past 24 hours", with a rule above it and none between its rows
   (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
   the start (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
-  the trains' top speed, ordinary track, curves or a crossover, and when the stops are too close
+  the trains' top speed, normal track, curves or a crossover, and when the stops are too close
   to reach it [T-817]; dropped from a row whose name, time and bullets do not all fit, T-1391) and
   boardings in the past 24 hours, each transfer stop (any station of its complex
   served by another line, or by the line itself at a stop other than the next or the one before,

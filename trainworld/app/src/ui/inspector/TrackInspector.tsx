@@ -85,7 +85,7 @@ export function TrackInspector({ edge }: { edge: number }) {
       {!e.built && e.off && <p class="muted" data-tip="Will not be constructed unless enabled">Disabled</p>}
       <ul class="rows">
         {!e.crossover && (
-          <li data-tip={e.hsr ? "High-speed trains run up to 320 km/h here and ordinary trains up to 160 km/h" : "Trains run up to 160 km/h here. Over 160 needs high-speed track."}>
+          <li data-tip={e.hsr ? "High-speed trains run up to 320 km/h here and normal trains up to 160 km/h" : "Trains run up to 160 km/h here. Over 160 needs high-speed track."}>
             <span class="grow">Speed limit</span>
             <span class="val">{speed(e.hsr ? 320 : 160)}</span>
           </li>

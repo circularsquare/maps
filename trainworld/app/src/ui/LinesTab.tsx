@@ -62,9 +62,9 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
  * room in the period now, hovered with the weekday's figures for the level now as the line panel's
  * ring is (`crowdLevel`). */
 function TrainsNow({ line, n, period, bus, v, lev }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand }) {
-  const c = !bus && v ? crowdLevel(v, lev) : null;
+  const c = !bus && v && n > 0 ? crowdLevel(v, lev) : null;
   const d = today.value.get(line);
-  const now = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
+  const now = d && n > 0 ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = now ? crowdClass(now.score) : "";
   const tip = bus ? `${period}: ${busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;

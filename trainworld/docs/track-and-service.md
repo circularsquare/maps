@@ -523,7 +523,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 
 ### 6.3 Trains, lines, schedules
 
-- **Two train kinds, chosen per line** (T-817; Anita 2026-10-21): **ordinary** (top speed 160
+- **Two train kinds, chosen per line** (T-817; Anita 2026-10-21): **normal** (top speed 160
   km/h) and **high speed** (320, on high-speed track only; 160 elsewhere). They differ by top speed
   and cost (6.4), never by urban vs intercity; a line's choice is saved with it (`LineData::fast`,
   old saves ordinary). Both accelerate at 1.0 m/s² to 60 km/h, 0.5 m/s² to 200 and 0.3 m/s² above

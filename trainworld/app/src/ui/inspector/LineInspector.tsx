@@ -411,7 +411,7 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
   if (cars > 0) {
     return head + "\n" + carsBought(trainKind(m, st.fast), cars);
   }
-  return cars < 0 ? head + `\nFrees ${carsText(-cars)}, which stay in the depot` : head;
+  return cars < 0 ? head + `\nFrees ${carsText(-cars)}` : head;
 }
 
 /** Train length (T-733): 1 car up to what the line's shortest platform fits. At the cap the line
@@ -445,21 +445,16 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-817: the line's kind of train, ordinary or high speed, and its average speed (T-1159). A
+/** T-817: the line's kind of train, normal or high speed, and its average speed (T-1159). A
  * switch buys the line's cars of the other kind beyond that kind's spares; the cars it leaves
  * stay in the depot. */
 function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number }) {
   const m = moneyState.value;
   const tip = (fast: boolean) => {
     const k = m && trainKind(m, fast);
-    let t = fast ? "High-speed trains run up to 320 km/h on high-speed track and 160 km/h on other track" : "Ordinary trains run up to 160 km/h";
-    if (!k) return t;
-    t += `\nA car costs ${money(k.carPrice * 1e6)}. Running costs ${runCostRule(k)}`;
+    let t = fast ? "High speed trains run up to 320 km/h on high speed track or 160 km/h on normal track" : "Normal trains run up to 160 km/h";
     const need = Math.max(...st.trainsNeeded) * st.cars;
-    if (fast !== st.fast && st.status === "running" && need > 0) {
-      t += "\n" + carsBought(k, need);
-      t += `\nThe ${carsText(need)} running now stay in the depot`;
-    }
+    if (k && fast !== st.fast && st.status === "running" && need > 0) t += "\n" + carsBought(k, need);
     return t;
   };
   return (
@@ -468,7 +463,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
         <span class="grow">Trains</span>
         <Segmented<boolean>
           options={[
-            [false, <span data-tip={tip(false)}>Ordinary</span>],
+            [false, <span data-tip={tip(false)}>Normal</span>],
             [true, <span data-tip={tip(true)}>High speed</span>],
           ]}
           value={st.fast}
@@ -484,7 +479,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
 function stretchTip(s: { reached: number; limit: number; why: number } | undefined): string | undefined {
   if (!s) return undefined;
   const lim = speed(s.limit);
-  const why = s.why === 0 ? `The trains' top speed is ${lim}` : s.why === 1 ? `Ordinary track holds trains to ${lim}` : s.why === 2 ? `Curves hold trains to ${lim} here` : `A crossover holds trains to ${lim} here`;
+  const why = s.why === 0 ? `The trains' top speed is ${lim}` : s.why === 1 ? `Normal track holds trains to ${lim}` : s.why === 2 ? `Curves hold trains to ${lim} here` : `A crossover holds trains to ${lim} here`;
   return `Trains reach ${speed(s.reached)}\n${why}` + (s.reached < s.limit - 1 ? "\nThe stops are too close together to reach it" : "");
 }
 
@@ -534,7 +529,6 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   const real = l.tph[d] > 0 ? 3600 / l.tph[d] : 0;
   // the world's running headway belongs to the headway it last took, so it waits for the edit
   const clamped = !autoPending![lev] && !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
-  const typeTip = "Click to type a headway in minutes. 0 is no service.";
   return (
     <>
       <td>
@@ -547,7 +541,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
         {wrap(<Stepper wide label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
           tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
           tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends.\n${typeTip}` : typeTip }} />)}
+          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends` : undefined }} />)}
       </td>
     </>
   );
@@ -869,7 +863,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

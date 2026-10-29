@@ -2,6 +2,12 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1781 [P2] Curving in beside track took tight turns. Done 2026-10-29: the turn onto the line is the widest of 17 places along the run (to the design radius), its straight in clear of the track; over 1000 m where it was ~500 m from 150 m off. notes/T-1779.md.
+- T-1779 [P1] Branching froze 1-5 s with a stuck ghost. Done 2026-10-29: each preview's trial edit rebuilt and settled the line services twice (0.3-0.9 s each on the shared-track New York); trials now skip the services. Ghost lag 2.5 s mean, 4.9 s max to 0 ms. notes/T-1779.md.
+
+- T-1784 [P2] Shorter line-panel tooltips. Done 2026-10-29 (agent t1783): the headway typing hover is gone, "Frees N cars" alone, the train types' hovers are their speed line plus "Buys N cars for $x", and "ordinary" is "normal" in the panel, track hover and docs.
+- T-1783 [P2] No crowding dot on a level with no trains. Done 2026-10-29 (agent t1783): the line panel's dot and the Lines list's trains cell hover and colour skip a level whose train count is 0 (no headway); docs/ui-inspectors.md.
+
 - T-1305 [P2] Real networks share track. Done 2026-10-29: New York, Paris, Tokyo, Seoul, Toronto and Sendai built on shared pairs, staged in artifacts/trainworld/t1305-shared/, ships after the join; London staged apart, not sound (T-1774); levels are T-1773. notes/T-1305.md.
 - T-1777 [P2] Track ghosts stuck on the screen. Done 2026-10-29: the select tool's end squares on the globe's far side projected to NaN, which the browser ignores, so they kept their last spot; all projected marks now go through `placeAt` (map/screenPlace.ts), hidden there. notes/T-1777.md, checks/t1777-stuck-marks.mjs.
 - T-1772 [P2] Capacity markers restyled. Done 2026-10-29: clock-face dots (yellow to red, hand = wait, full turn 10 min) fixed at their resource under names, three-line hovers, reversal icons in the flat junction badge's style hidden below zoom 9, both badges sized by the square-root rule; reversal icons no longer stray after a draw-anchor move.
