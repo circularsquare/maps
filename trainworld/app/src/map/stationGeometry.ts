@@ -210,8 +210,16 @@ export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): nu
  * it, and is held between a floor and a ceiling so it never vanishes or gets huge. */
 export const HALO_REF_ZOOM = 12, HALO_REF_PX = 40, HALO_MIN_PX = 14, HALO_MAX_PX = 72;
 export function stationHaloRadius(zoom: number) {
-  return Math.min(HALO_MAX_PX, Math.max(HALO_MIN_PX, HALO_REF_PX * 2 ** (0.5 * (zoom - HALO_REF_ZOOM))));
+  return sqrtZoomPx(zoom, HALO_REF_ZOOM, HALO_REF_PX, HALO_MIN_PX, HALO_MAX_PX);
 }
+/** A size on screen that is `px` at `refZoom` and follows the square root of the map's scale (halved
+ * two zoom levels out), held between `minPx` and `maxPx`: the ridership circles' rule, also the
+ * built flat junction badges' and the reversal icons' (T-1772). */
+export function sqrtZoomPx(zoom: number, refZoom: number, px: number, minPx: number, maxPx: number) {
+  return Math.min(maxPx, Math.max(minPx, px * 2 ** (0.5 * (zoom - refZoom))));
+}
+/** The built flat junction and crossing badge's radius and the small reversal icon's, CSS px (T-1772). */
+export const quietBadgeRadius = (zoom: number) => sqrtZoomPx(zoom, 14, 7.5, 4.5, 9.5);
 /** The dark rim of a station, CSS px. */
 export function stationRing(zoom: number) { return interp(zoom, [[9, 1.2], [13, 2]]); }
 /** A dot's dark rim (and its connectors'), CSS px: a quarter thinner than a box's (T-322, Anita: "a

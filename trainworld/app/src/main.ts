@@ -339,7 +339,7 @@ effect(() => {
   const w = world.peek();
   if (w && !SYNTH) labels.set(w);
 });
-const capacity = new CapacityMarkers(map.getContainer(), overlay, map, labels); // tags keep off names (T-184)
+const capacity = new CapacityMarkers(map.getContainer(), overlay, map);
 capacity.demandClick = demandOnTop;
 effect(() => {
   const w = world.value;

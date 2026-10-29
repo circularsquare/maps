@@ -1,12 +1,10 @@
-// Capacity markers (SPEC 6.2, T-031): a tag on every resource at 75% and up for the demand level
-// in force, with the delay per train, coloured busy (75-90%), near full (90-100%) or overloaded
-// (over 100%, or full with some line's trains waiting for room, T-517). Nothing shows below 75% or zoom 12. Like station names, tags leave room around
-// one another; the worst delays win collisions. DOM tags move on MapLibre's frames.
-// A junction's tag is a link to the junction's inspector, where a flyover can be built (T-080).
-// Hovering a tag says what it means (T-099). The tags sit under the demand views' canvas.
-// Station names are placed first and tags keep off them (T-184): a tag takes the first of six
-// spots around its resource (above right, above left, below right, below left, right, left)
-// clear of every shown name and every tag already placed, and hides only when none is.
+// Capacity markers (SPEC 6.2, T-031, T-1772): a round dot on every resource at 75% and up for the
+// demand level in force, yellow at 75% to red when overloaded (over 100%, or full with some line's
+// trains waiting for room, T-517), with a clock face whose hand shows each train's wait there.
+// Nothing shows below 75% or zoom 12. Each dot sits on its resource's anchor; dots keep a little
+// room between them and the worst delays win. Station names draw over them and never move them.
+// A junction's dot is a link to the junction's inspector, where a flyover can be built (T-080).
+// Hovering a dot says what it means (T-099). The dots sit under the demand views' canvas.
 
 import { effect } from "@preact/signals";
 import { CAPACITY_KINDS } from "../game/capacityKinds";
@@ -19,39 +17,79 @@ import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
-import { BoxGrid, MIN_LABEL_ZOOM, labelPadding, tipBeside } from "./labelLayout";
-import type { StationLabels } from "./stationLabels";
+import { BoxGrid, MIN_LABEL_ZOOM, tipBeside } from "./labelLayout";
 import { PlaceThrottle } from "./moving";
 
 /** ?perfOff=markers (T-045, measurement only). */
 const NO_MARKERS = perfOff("markers");
-/** px between a tag's corner and its resource, and kept clear around a station name (T-184). */
-const GAP_X = 6, GAP_Y = 5, NAME_CLEAR = 3;
+/** the dot's diameter, CSS px */
+const DOT = 16;
+/** room kept clear round a shown dot, CSS px, zoomed out and from zoom 14 */
+const PAD_FAR = 6, PAD_NEAR = 3;
+/** a wait of this many seconds turns the hand once round; longer waits stay there */
+const FULL_TURN_S = 600;
 
 const DEMAND = ["high", "medium", "low"];
 
+/** The dot's colour by utilisation: yellow at 75%, orange at 90%, red at 100% and over. */
+const RAMP: [number, [number, number, number]][] = [[0.75, [232, 180, 37]], [0.9, [229, 122, 36]], [1, [204, 58, 44]]];
+function dotColour(rho: number, over: boolean): string {
+  if (over || rho >= 1) return rgbText(RAMP[2][1]);
+  if (rho <= RAMP[0][0]) return rgbText(RAMP[0][1]);
+  const i = rho < RAMP[1][0] ? 1 : 2;
+  const [r0, a] = RAMP[i - 1], [r1, b] = RAMP[i], t = (rho - r0) / (r1 - r0);
+  return rgbText([0, 1, 2].map((k) => a[k] + (b[k] - a[k]) * t) as [number, number, number]);
+}
+const rgbText = (c: [number, number, number]) => `rgb(${c.map(Math.round).join(",")})`;
+
+const HAND_INK = "#262626";
+const n2 = (v: number) => +v.toFixed(2);
+
+/** The dot as SVG: a disc on the casing colour, a mark at 12 o'clock, and with a wait, a hand and
+ * the lighter sweep from 12 to it. */
+export function clockDot(rho: number, over: boolean, waitS: number): string {
+  const col = dotColour(rho, over), R = 5.2;
+  let face = "";
+  if (waitS >= 2) {
+    const t = Math.min(1, waitS / FULL_TURN_S), a = 2 * Math.PI * t;
+    const x = n2(R * Math.sin(a)), y = n2(-R * Math.cos(a));
+    face = t >= 1
+      ? `<circle r="${R}" fill="#fff" fill-opacity="0.45"/>`
+      : `<path d="M0 0V${-R}A${R} ${R} 0 ${t > 0.5 ? 1 : 0} 1 ${x} ${y}Z" fill="#fff" fill-opacity="0.45"/>`;
+    face += `<path d="M0 0L${n2(0.92 * x)} ${n2(0.92 * y)}" stroke="${HAND_INK}" stroke-width="1.5" stroke-linecap="round"/>`;
+  }
+  return `<svg viewBox="-8 -8 16 16" aria-hidden="true"><circle r="7.25" fill="${col}" stroke="var(--map-casing, #fff)" stroke-width="1.5"/>`
+    + face + `<path d="M0 -6.1V-4.9" stroke="${HAND_INK}" stroke-width="1.2" stroke-linecap="round"/><circle r="1.2" fill="${HAND_INK}"/></svg>`;
+}
+
+/** The dot's hover: what it is at what utilisation, its trains an hour against the most it takes,
+ * and each train's wait at the level in force. */
+export function capacityTip(kind: number, rho: number, tph: number, waitS: number, level: number): string[] {
+  const k = CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
+  const tip = [`${k.short} at ${rho > 1.005 ? ">100%" : `${Math.round(rho * 100)}%`} of capacity`];
+  if (rho > 0) tip.push(`${Math.round(tph)}/${Math.round(tph / rho)} trains per hour`);
+  if (Math.round(waitS) >= 2) tip.push(`at ${DEMAND[level] ?? "this"} demand, slows trains by ${duration(waitS)}`);
+  return tip;
+}
+
 export class CapacityMarkers {
-  /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
+  /** Demand discs draw above these DOM dots; wired to the same select handler as the map. */
   demandClick: ((px: number, py: number, add: boolean) => Selection | undefined) | null = null;
-  /** The select tool's click at a map point (px), for a click on a tag that opens nothing of its
-   * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
+  /** The select tool's click at a map point (px), for a click on a dot that opens nothing of its
+   * own: the station, train or track under the dot is selected as if the dot were not there (T-256). */
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
   private plane: HTMLDivElement;
-  /** `ox`, `oy`: the tag's top left from its resource's rounded screen point at its last full placement */
-  private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number; ox: number; oy: number; shown?: boolean; transform?: string }[] = [];
+  private items: { el: HTMLDivElement; x: number; y: number; shown?: boolean; transform?: string }[] = [];
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
-  private placedLabels = -1;
   private throttle: PlaceThrottle;
   private key = "";
 
   private tip: HTMLDivElement;
 
-  /** `labels` must be constructed first: its frame hook then runs before this one, so a pan's
-   * label offset is current when the tags are placed. */
-  constructor(private container: HTMLElement, private overlay: Overlay, private map: MlMap, private labels: StationLabels | null = null) {
+  constructor(private container: HTMLElement, private overlay: Overlay, private map: MlMap) {
     this.box = document.createElement("div");
     this.box.className = "cap-marks";
     container.appendChild(this.box);
@@ -63,22 +101,14 @@ export class CapacityMarkers {
     this.tip.className = "tool-tag demand-tag";
     this.tip.style.display = "none";
     container.appendChild(this.tip);
-    // T-224: with any tool on, the tags take no pointer events, so every press, move and double
-    // click reaches the map (a tag can sit on a station or track the tool wants)
+    // T-224: with any tool on, the dots take no pointer events, so every press, move and double
+    // click reaches the map (a dot can sit on a station or track the tool wants)
     effect(() => {
       const pass = tool.value !== "select";
       this.box.classList.toggle("pass", pass);
       if (pass) this.tip.style.display = "none";
     });
     overlay.afterMapFrame.push(() => this.place());
-    if (labels) labels.onPlace = () => this.place();
-    const remeasure = () => {
-      for (const it of this.items) it.w = 0;
-      this.placedMatrix = null;
-      this.place();
-    };
-    document.fonts.ready.then(remeasure);
-    document.addEventListener("tw-fontchange", remeasure);
     map.on("movestart", () => (this.tip.style.display = "none"));
   }
 
@@ -86,7 +116,7 @@ export class CapacityMarkers {
     // Keep the worst bottlenecks when several compete for the same screen space.
     const sorted = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y);
     const junctions = sorted.map((m) => (m.kind === 4 ? nearestJunction(w, m.x, m.y) : null));
-    // most edits leave the tags as they were: keep them then, no rebuild and no layout (T-496)
+    // most edits leave the dots as they were: keep them then, no rebuild and no layout (T-496)
     const key = level + "|" + sorted.map((m, i) => `${m.kind},${m.rho},${m.delayS},${m.tph},${m.held},${m.x},${m.y},${junctions[i]}`).join("|");
     if (key === this.key) return;
     this.key = key;
@@ -95,28 +125,12 @@ export class CapacityMarkers {
     this.placedMatrix = null;
     this.items = sorted.map((m, i) => {
       const el = document.createElement("div");
-      el.className = "cap-mark " + (m.rho > 1 || m.held ? "over" : m.rho >= 0.9 ? "near" : "busy");
+      el.className = "cap-mark";
       if (perfTry("labelLayers")) el.style.willChange = "transform"; // T-045 measurement
-      const d = Math.round(m.delayS);
-      el.textContent = d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`;
-      // the tooltip (T-099): what the tag means, in plain words
-      const text = CAPACITY_KINDS[m.kind] ?? CAPACITY_KINDS[0];
-      const tip = [`${text.name} at ${Math.round(m.rho * 100)}% of capacity`];
-      // T-517: its trains an hour against the most it takes
-      if (m.rho > 0) tip.push(`${Math.round(m.tph)} trains an hour${text.ways} against a limit of ${Math.round(m.tph / m.rho)}`);
-      tip.push(text.cause, text.help);
-      if (m.held) tip.push("The line's extra trains are held out of service at its ends");
-      if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand`);
-      else if (!m.held) tip.push("Trains do not wait here yet");
-      let junction: number | null = null;
-      if (m.kind === 4) {
-        const node = junctions[i];
-        if (node !== null) {
-          junction = node;
-          el.classList.add("link");
-          tip.push("Click to see the junction and its flyover");
-        }
-      }
+      el.innerHTML = clockDot(m.rho, !!m.held, m.delayS);
+      const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level);
+      const junction = m.kind === 4 ? junctions[i] : null;
+      if (junction !== null) el.classList.add("link");
       const point = (e: MouseEvent) => {
         const r = this.container.getBoundingClientRect();
         return [e.clientX - r.left, e.clientY - r.top] as const;
@@ -132,7 +146,7 @@ export class CapacityMarkers {
           selection.value = { kind: "junction", node: junction };
           e.stopPropagation();
         } else if (this.selectClick) {
-          // T-256: otherwise what is drawn under the tag (its station, a train, the track)
+          // T-256: otherwise what is drawn under the dot (its station, a train, the track)
           this.selectClick(x, y, e.shiftKey);
           e.stopPropagation();
         }
@@ -146,7 +160,7 @@ export class CapacityMarkers {
       el.onmousemove = hover;
       el.onmouseleave = () => hoverHeld() || (this.tip.style.display = "none");
       this.plane.appendChild(el);
-      return { el, x: m.x, y: m.y, w: 0, h: 0, ox: 0, oy: 0 };
+      return { el, x: m.x, y: m.y };
     });
     this.place();
   }
@@ -170,62 +184,44 @@ export class CapacityMarkers {
     if (!m) return;
     const W = this.overlay.cssW, H = this.overlay.cssH;
     const size = `${W},${H},${zoom < 14}`;
-    const labelsAt = this.labels?.version ?? 0;
-    if (size === this.placedSize && labelsAt === this.placedLabels && this.placedMatrix?.every((v, i) => v === m[i])) return;
-    // T-1614: between full placements every shown tag follows its resource each frame, at the spot
-    // it last took (pan, zoom and globe alike); collisions are worked out again only when due
+    if (size === this.placedSize && this.placedMatrix?.every((v, i) => v === m[i])) return;
+    // T-1614: between full placements every shown dot follows its resource each frame; which dots
+    // show is worked out again only when due
     if (!this.throttle.due()) return this.follow();
     this.throttle.done();
     this.placedMatrix = Array.from(m);
     this.placedSize = size;
-    this.placedLabels = labelsAt;
-    const [padX, padY] = labelPadding(zoom);
-    // Shown station names on or near the screen, with a little clearance (T-184).
-    const names = (this.labels?.rects() ?? [])
-      .filter((n) => n[2] > -64 && n[0] < W + 64 && n[3] > -64 && n[1] < H + 64)
-      .map((n) => [n[0] - NAME_CLEAR, n[1] - NAME_CLEAR, n[2] + NAME_CLEAR, n[3] + NAME_CLEAR]);
-    const nameGrid = new BoxGrid(), takenGrid = new BoxGrid();
-    for (const n of names) nameGrid.add(n);
-    // Batch measurements before writes, and repeat only when tags or fonts change.
-    for (const it of this.items) if (!it.w) {
-      it.w = it.el.offsetWidth;
-      it.h = it.el.offsetHeight;
-    }
+    const pad = zoom < 14 ? PAD_FAR : PAD_NEAR, half = DOT / 2;
+    const taken = new BoxGrid();
     for (const it of this.items) {
       const [x, y] = this.overlay.toScreen(it.x, it.y);
-      const sx = Math.round(x), sy = Math.round(y), w = it.w, h = it.h;
-      // The tag's top left at each spot around the resource, in order of preference.
-      const spots: [number, number][] = [
-        [sx + GAP_X, sy - GAP_Y - h], [sx - GAP_X - w, sy - GAP_Y - h],
-        [sx + GAP_X, sy + GAP_Y], [sx - GAP_X - w, sy + GAP_Y],
-        [sx + GAP_X + 2, sy - Math.round(h / 2)], [sx - GAP_X - 2 - w, sy - Math.round(h / 2)],
-      ];
-      let at: [number, number] | null = null;
-      for (const [tx, ty] of spots) {
-        if (tx + w < 0 || tx > W || ty + h < 0 || ty > H) continue;
-        if (nameGrid.hits([tx, ty, tx + w, ty + h])) continue;
-        const r = [tx - padX, ty - padY, tx + w + padX, ty + h + padY];
-        if (takenGrid.hits(r)) continue;
-        takenGrid.add(r);
-        at = [tx, ty];
-        break;
+      const tx = Math.round(x) - half, ty = Math.round(y) - half;
+      let on = Number.isFinite(tx + ty) && !(tx + DOT < 0 || tx > W || ty + DOT < 0 || ty > H); // NaN: far side of the globe (T-1777)
+      if (on) {
+        const r = [tx - pad, ty - pad, tx + DOT + pad, ty + DOT + pad];
+        if (taken.hits(r)) on = false;
+        else taken.add(r);
       }
       // only what changed is written (T-689)
-      if (it.shown !== !!at) it.el.style.visibility = at ? "" : "hidden";
-      it.shown = !!at;
-      if (!at) continue;
-      it.ox = at[0] - sx;
-      it.oy = at[1] - sy;
-      const transform = `translate(${at[0]}px, ${at[1]}px)`;
+      if (it.shown !== on) it.el.style.visibility = on ? "" : "hidden";
+      it.shown = on;
+      if (!on) continue;
+      const transform = `translate(${tx}px, ${ty}px)`;
       if (transform !== it.transform) it.el.style.transform = it.transform = transform;
     }
   }
 
   private follow() {
+    const half = DOT / 2;
     for (const it of this.items) {
       if (!it.shown) continue;
       const [x, y] = this.overlay.toScreen(it.x, it.y);
-      const transform = `translate(${Math.round(x) + it.ox}px, ${Math.round(y) + it.oy}px)`;
+      if (!Number.isFinite(x + y)) {
+        it.el.style.visibility = "hidden";
+        it.shown = false;
+        continue;
+      }
+      const transform = `translate(${Math.round(x) - half}px, ${Math.round(y) - half}px)`;
       if (transform !== it.transform) it.el.style.transform = it.transform = transform;
     }
   }

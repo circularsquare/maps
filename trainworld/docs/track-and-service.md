@@ -491,26 +491,31 @@ at the resource's entry: a slower approach when the delay is shorter than what b
 and starting again there would cost, otherwise a stop in front of it. So trains visibly crawl or
 queue at a tangle.
 
-**Shown** on the map as markers on resources at 75-90% (busy), 90-100% (near full) and over 100%
-or full with some line's trains waiting for room (overloaded, red), with the delay per train, for
-the demand level in force; nothing shows below 75%.
-A marker reads "+1:03" (each train's wait there) or, with no wait yet, "81%"; hovering it shows
-a tooltip in plain words ("Junction at 104% of capacity", "31 trains an hour each way against a
-limit of 34", what limits it and what helps, for a full one "The line's extra trains are held out
-of service at its ends", "Each train waits 1m03s here at high demand", and for a junction "Click to
-see the junction and its flyover"). Each resource has a kind the app words by (`Capacity::wire_kind`,
-`game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
-turning on a through station's platform (the line ends there and holds the platform for its
-turnaround plus 60 s; helped by building a terminal there), track several lines run
-over, a turn across the other track at a through station, the limiter on reversing partway
-("Reversing at Nerul Village is full"), and a terminal's sidings (T-1281). A line whose fleet is cut shows an
+**Shown** on the map as a round dot on every resource at 75% and up, for the demand level in
+force; nothing shows below 75%. Its colour runs from yellow at 75% through orange at 90% to red at
+100%, and it is red when over 100% or full with some line's trains waiting for room (overloaded).
+On it a clock face: a mark at 12 o'clock and, once trains wait there, a hand with the sweep from 12
+lighter, one full turn for a 10 minute wait per train (longer waits stay at a full turn); with no
+wait yet, no hand. No number on the dot (T-1772). Hovering it shows three lines: what it is and its
+utilisation ("shared track at 81% of capacity", ">100%" when over), its trains an hour against the
+most it takes ("20/25 trains per hour"), and the wait per train at the level in force ("at high
+demand, slows trains by 1m21s"; no line without a wait). Each resource has a kind the app words by
+(`Capacity::wire_kind`, `game/capacityKinds.ts`, the hover's word in brackets): track, single track,
+platform, terminus, junction, flat crossing, a line turning on a through station's platform ("trains
+turning on the platform": the line ends there and holds the platform for its turnaround plus 60 s;
+helped by building a terminal there), track several lines run over ("shared track"), a turn across
+the other track at a through station ("trains turning across the track"), the limiter on reversing
+partway ("trains reversing"; "Reversing at Nerul Village is full" in the line panel), and a
+terminal's sidings (T-1281). A line whose fleet is cut shows an
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
-hover (`TrackApi.line_held`). Markers sit over the
-network and under the demand views' bubbles (T-099). Like station names, they hide below zoom 12
-and keep the names' padding; larger delays win collisions, then higher utilisation (T-102); they
-never cover a station name ([ui-map.md](ui-map.md) "Station names and capacity tags", T-184).
+hover (`TrackApi.line_held`). Dots sit over the
+network, under station names and the demand views' bubbles (T-099). Like station names, they hide
+below zoom 12; each sits on its resource's point, and where two would touch the larger delay wins,
+then the higher utilisation (T-102); names never move or hide them ([ui-map.md](ui-map.md)
+"Station names and capacity tags", T-1772). A junction's dot, like the junction itself, opens the
+junction inspector.
 The junction inspector (T-031, [ui-building.md](ui-building.md)) lists the junction's moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The

@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1772 [P2] Capacity markers restyled. Done 2026-10-29: clock-face dots (yellow to red, hand = wait, full turn 10 min) fixed at their resource under names, three-line hovers, reversal icons in the flat junction badge's style hidden below zoom 9, both badges sized by the square-root rule; reversal icons no longer stray after a draw-anchor move.
+
+- T-1775 [P2] Compact top bar on narrow maps. Done 2026-10-29: in the two-row bars (360-700 px) the time and date stand beside the sky, so row one is one line high and the bar 60-62 px instead of 77-80; the sky narrows to 73-103 px, stacked below 360 px. Shots in artifacts/trainworld/t1775/.
 - T-1766 [P2] Attraction visits from a budget. Done 2026-10-29: residents' outings within 25 km plus a world pool of tourists, shared by Wikipedia page views; Kiyomizu-dera 3.4M, West Lake 10.2M, 68% of Wikidata figures within 3x, 12.3 billion visits, real save +0.9%. notes/T-1766.md.
 - T-1771 [P3] Plays and playtime, anonymous and per account, on her own server. Built 2026-10-29: `game/playtime.ts` pings shonei-server's `/trainworld/ping` each minute from an open game; `/trainworld/stats` and `tools/trainworld_plays.py` read it. Needs deploy.ps1 and a site deploy (Anita's word).
 - T-1770 [P2] Real line colours in the real networks. Built 2026-10-29, ships after the join: `pipeline/realcolour.py` (GTFS route_color, OSM colour tag, else noritetsu's line colour, else palette) gives New York 111 of 111 lines, Toronto 40, London 171, Paris 97, Seoul 42, Sendai 13 of 17, Tokyo 76 of 133; saves staged in `artifacts/trainworld/t1770-realnet/`.

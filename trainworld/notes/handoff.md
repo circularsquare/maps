@@ -123,8 +123,14 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   `set REALNET_OUT=C:\Users\anita\projects\maps\artifacts\trainworld\t1770-realnet` then
   `..\venv\Scripts\python.exe pipeline\realnet.py ship`; then rebuild 8800.
 - Anita 2026-10-29 on shared NYC: "can replace current start... definitely an improvement". Two wrong reversals (N/W at
-  Canal St, Ronkonkoma at Woodside): t1305 agent resumed to fix (2 cores, ~350k tokens; stage 3 goes to a fresh agent).
-  Ship the shared nyc save after the China join ends. Stage 3 (other six) next.
+  Canal St, Ronkonkoma at Woodside): fixed, committed c0e2bd69, no partway reversals left; 12.39M rail trips.
+  SHIP shared nyc save (artifacts/trainworld/t1305-shared/nyc_real.save -> data/packs/real/nyc.save) after China join.
+  Stage 3 (other six) agent t1305s3 (Opus), 1 core, Vite 6177, staging only.
+- shonei-server DEPLOYED and pushed (f74bfad, Anita's word 2026-10-29); /trainworld/stats live (empty until the site
+  deploy carries efb32d52). T-1777 agent t1777 (Opus): screen-stuck ghosts, one preview owner; Vite 6196, 2 cores.
+  t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
+- T-1775 agent t1775 (Sonnet): narrow top bar, time beside sky; Vite 6191, 2 cores. T-1776 train sounds filed P3.
+  Anita OK'd the E/F 10% trim and the real colours. NJ-lines calibration note in notes/T-1750.md.
 - T-1772 agent t1772 (Opus): capacity markers as clock-face dots, short tooltips, reversal icons lighter; Vite 6185, 3 cores.
 - T-1305 stage 2 committed 680119fe: shared NYC save staged at artifacts/trainworld/t1305-shared/nyc_real.save
   (track 4,551 to 2,447 km, rail -4.6%, junction delays +1:30-2:40 on 8th Av). Waits on Anita's look before stage 3/ship.

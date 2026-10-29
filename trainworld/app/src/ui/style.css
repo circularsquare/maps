@@ -880,14 +880,12 @@ button.save-add:hover { color: var(--text); }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .cap-plane, .mark-plane { position: absolute; inset: 0; }
-.cap-mark { position: absolute; left: 0; top: 0; padding: 0 4px; font-size: 12px;
-            color: #fff; white-space: nowrap; pointer-events: auto; cursor: default; }
+/* T-1772: a clock dot (map/capacityMarkers.ts draws it, 16 px); station names (z 2) draw over it */
+.cap-mark { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; pointer-events: auto; cursor: default; }
+.cap-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .cap-mark.link { cursor: pointer; }
-/* T-224: while a tool is on, presses and moves on a tag reach the map underneath */
+/* T-224: while a tool is on, presses and moves on a dot reach the map underneath */
 .cap-marks.pass .cap-mark { pointer-events: none; }
-.cap-mark.busy { background: #c98a12; }
-.cap-mark.near { background: #d0601c; }
-.cap-mark.over { background: #c0392b; }
 
 /* stop editing (T-233, map/stopMarkers.ts): the demand views go, a toggle marker sits on every
    station. Markers take no pointer events; the map's own clicks pick them. */
@@ -911,17 +909,16 @@ button.save-add:hover { color: var(--text); }
 .stop-mark.reverse { width: calc(var(--ms) * 0.65); height: calc(var(--ms) * 0.65);
              margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: var(--mk-reroute-fill);
              border: 2px dashed var(--mk-reroute-ring); box-shadow: none; opacity: 0.85; z-index: 1; }
-/* reversal icons (T-797, map/reversalMarks.ts): one size at every zoom, floating above the station */
-.rev-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
-.rev-mark { position: absolute; left: 0; top: 0; width: 30px; height: 30px; margin: -42px 0 0 -15px; box-sizing: border-box;
-            border-radius: 50%; background: #f2b705; color: #1a1a1a; border: 2px solid #1a1a1a;
-            box-shadow: 0 0 0 2px #fff; pointer-events: auto; cursor: default; }
+/* reversal icons (T-797, T-1772, map/reversalMarks.ts): the built flat junction badge's look (casing
+   fill, thin ring and glyph), amber, floating above the station; --rs is the diameter, set by zoom */
+.rev-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; --rs: 15px; --rev-ink: #c98a00; }
+:root[data-shade="dark"] .rev-marks { --rev-ink: #e8b020; }
+.rev-mark { position: absolute; left: 0; top: 0; width: var(--rs); height: var(--rs); margin: calc(-1 * var(--rs) - 9px) 0 0 calc(var(--rs) / -2);
+            box-sizing: border-box; border-radius: 50%; background: var(--map-casing, #fff); color: var(--rev-ink);
+            border: 1px solid var(--rev-ink); opacity: 0.9; pointer-events: auto; cursor: default; }
 .rev-mark svg { display: block; width: 100%; height: 100%; }
-.rev-mark::after { content: ""; position: absolute; left: 50%; top: 100%; margin: 2px 0 0 -1px; width: 2px; height: 8px; background: #1a1a1a; }
+.rev-mark::after { content: ""; position: absolute; left: 50%; top: 100%; margin: 1px 0 0 -0.5px; width: 1px; height: 6px; background: var(--rev-ink); }
 .rev-marks.pass .rev-mark { pointer-events: none; }
-/* with no placing tool on the icon is small, like the built junction badge (T-1581) */
-.rev-marks.small .rev-mark { width: 18px; height: 18px; margin: -31px 0 0 -9px; border-width: 1px; box-shadow: 0 0 0 1px #fff; }
-.rev-marks.small .rev-mark::after { width: 1px; margin: 2px 0 0 -0.5px; }
 .rev-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap; }
 .stop-edit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .stop-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
@@ -1058,6 +1055,21 @@ button.save-add:hover { color: var(--text); }
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "city cash" "split split" "clock speed"; }
   #topbar .clock { justify-self: start; }
+}
+/* T-1775: in the two-row bars the time and date stand beside the sky too (row one one line high) where
+   row one has the room: the name keeps at least 90 px (72 px with speed in row two), the clock takes
+   up to 250 px, the sky what the date leaves (at least 44 px). Below 360 px they stay over the sky. */
+@container map-column (min-width: 360px) and (max-width: 700px) {
+  #topbar .clock { justify-self: stretch; }
+  .clock-box { width: auto; flex: 1; min-width: 0; flex-direction: row; align-items: center; gap: 10px; }
+  .clock-text { flex: none; }
+  .clock-box .sky { flex: 1; min-width: 44px; }
+}
+@container map-column (min-width: 521px) and (max-width: 700px) {
+  #topbar { grid-template-columns: minmax(90px, 1fr) auto minmax(auto, 250px) auto; }
+}
+@container map-column (min-width: 360px) and (max-width: 520px) {
+  #topbar { grid-template-columns: minmax(72px, 1fr) auto minmax(auto, 250px); }
 }
 
 /* ---------- shorter screens ---------- */
@@ -1308,7 +1320,7 @@ button.save-add:hover { color: var(--text); }
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
 #dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
-.stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
+.stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
 html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }

@@ -107,7 +107,9 @@ figures in a box of fixed width, and the split bar is centred in the bar with no
 status is a tag over the map (Status, below). The time and date are one line ("06:50 Mon May 5")
 [T-1136]: from 940 px of map column it stands beside the sky and band in a box 300 px wide, the sky
 taking what the date leaves (so a longer date narrows the sky by a few pixels and moves nothing
-else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
+else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky too, in a box up to
+250 px wide that takes the room the name keeps back (the sky then at least 44 px); between 700 and
+940 px, and below 360 px, it sits over the sky, 148 px wide [T-1109, T-861, T-1775].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
@@ -222,8 +224,10 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
 - **Narrow maps**: secondary labels drop first; two rows below 700 px (name, cash, time and speed
   over the split), a different two below 520
   px (speed beside the split), three below 300 px, with cash, time, train share and all speed
-  controls kept. Hovering the split or the time gives what
-  was dropped [T-106].
+  controls kept. In the two-row bars from 360 px up, the time and date stand beside the sky, so row
+  one is one line high and the sky narrows to fit; the name keeps at least 90 px (72 px below 520),
+  and the clock stacks over the sky again below 360 px [T-1775]. Hovering the split or the time gives
+  what was dropped [T-106].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
   games.
 

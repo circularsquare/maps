@@ -3,8 +3,7 @@
 // move on MapLibre's frames only (the camera does not change otherwise). A flat pan translates
 // one compositor layer; other camera changes re-place names. A greedy pass hides any label that
 // overlaps a more important one (transfers first, then lines, then constructed). Stations of one
-// complex that share a name have one label between them (T-169, labelGroups below). Capacity tags
-// are placed after the names and keep off them (T-184, rects() and onPlace).
+// complex that share a name have one label between them (T-169, labelGroups below).
 //
 // Winning over basemap place names (T-032): an invisible symbol layer on top of the basemap holds
 // the same names at the same spots. MapLibre places symbols from the top layer down, so basemap
@@ -74,15 +73,9 @@ export class StationLabels {
   private anchor: [number, number] = [0, 0];
   private needsPlacement = true;
   /** Shown labels' boxes in screen px at the last full placement, before the pan offset. */
-  private placed: [number, number, number, number][] = [];
-  private offset: [number, number] = [0, 0];
   /** The labels behind `placed`, same order, for `follow`. */
   private shownLabels: Label[] = [];
   private projected: [number, number] = [0, 0];
-  /** Bumped whenever the shown names change place, so capacity tags know to place again (T-184). */
-  version = 0;
-  /** Called after the names change place outside a pan (capacity tags follow, T-184). */
-  onPlace: (() => void) | null = null;
 
   private throttle: PlaceThrottle;
 
@@ -278,14 +271,6 @@ export class StationLabels {
     this.place();
   }
 
-  /** The shown names' boxes in screen px as they are now, pan included; capacity tags keep off
-   * them (T-184). */
-  rects(): [number, number, number, number][] {
-    if (!this.shown) return [];
-    const [dx, dy] = this.offset;
-    return this.placed.map((r) => [r[0] + dx, r[1] + dy, r[2] + dx, r[3] + dy]);
-  }
-
   place() {
     const zoom = this.map.getZoom();
     const show = this.visible && zoom >= MIN_LABEL_ZOOM && !NO_LABELS;
@@ -293,8 +278,6 @@ export class StationLabels {
       this.shown = show;
       this.box.style.display = show ? "" : "none";
       this.needsPlacement = true;
-      this.version++;
-      if (!show) this.onPlace?.();
     }
     if (!show || !this.overlay.camMatrix) return;
     const W = this.overlay.cssW, H = this.overlay.cssH;
@@ -314,7 +297,6 @@ export class StationLabels {
       if (!due || (Math.abs(dx) < PAN_MARGIN / 2 && Math.abs(dy) < PAN_MARGIN / 2)) {
         const transform = `translate(${dx}px, ${dy}px)`;
         if (this.plane.style.transform !== transform) this.plane.style.transform = transform;
-        this.offset = [dx, dy];
         return;
       }
     }
@@ -325,8 +307,6 @@ export class StationLabels {
     this.placedSize = [W, H];
     this.anchor = this.overlay.toScreen(0, 0);
     this.plane.style.transform = "";
-    this.offset = [0, 0];
-    this.placed = [];
     this.shownLabels = [];
     const margin = PAN ? PAN_MARGIN : 0;
     // Reserve breathing room around each name, especially at neighbourhood scale.
@@ -352,7 +332,8 @@ export class StationLabels {
       const y = l.below ? sy + gap - 2 : sy - l.h / 2;
       const r: [number, number, number, number] = [x, y, x + l.w, y + l.h];
       const collision: [number, number, number, number] = [r[0] - padX, r[1] - padY, r[2] + padX, r[3] + padY];
-      const off = r[2] < -margin || r[0] > W + margin || r[3] < -margin || r[1] > H + margin;
+      // NaN: the far side of the globe (T-1777)
+      const off = !Number.isFinite(sx + sy) || r[2] < -margin || r[0] > W + margin || r[3] < -margin || r[1] > H + margin;
       if (off || placedBoxes.hits(collision)) {
         hide(l);
         continue;
@@ -363,30 +344,28 @@ export class StationLabels {
       const rx = Math.round(x), ry = Math.round(y);
       const transform = `translate(${rx}px, ${ry}px)`;
       if (l.transform !== transform) l.el.style.transform = l.transform = transform;
-      this.placed.push([rx, ry, rx + l.w, ry + l.h]);
       this.shownLabels.push(l);
       l.ox = rx - sx;
       l.oy = ry - sy;
     }
-    this.version++;
-    this.onPlace?.();
   }
 
   /** T-1621: between full placements, for a camera change other than a flat pan (zoom, rotation,
    * pitch, globe), every shown name keeps its place beside its station each frame. */
   private follow() {
     if (this.plane.style.transform) this.plane.style.transform = "";
-    this.offset = [0, 0];
     const p = this.projected;
     for (let i = 0; i < this.shownLabels.length; i++) {
       const l = this.shownLabels[i];
       this.overlay.toScreenInto(l.x, l.y, p);
-      if (Number.isNaN(p[0])) continue;
+      // gone behind the globe: hidden until the next full placement (a NaN transform would leave it in place, T-1777)
+      const gone = Number.isNaN(p[0]);
+      if (l.hidden !== gone) l.el.style.visibility = gone ? "hidden" : "";
+      l.hidden = gone;
+      if (gone) continue;
       const rx = Math.round(p[0] + l.ox!), ry = Math.round(p[1] + l.oy!);
       const transform = `translate(${rx}px, ${ry}px)`;
       if (l.transform !== transform) l.el.style.transform = l.transform = transform;
-      const r = this.placed[i];
-      r[0] = rx; r[1] = ry; r[2] = rx + l.w; r[3] = ry + l.h;
     }
   }
 }

@@ -2,8 +2,8 @@
 // one instanced pass after the track and before stations and trains:
 //   - a flat crossing (an X) and a flat junction (a fork) in a round badge. Big on blueprint track
 //     and while drawing (the preview); small and quiet on built track. Both are in the Elevation
-//     colour of the level they are on. They grow with zoom only part way, by far less than the
-//     track's width does.
+//     colour of the level they are on. A built one follows the square root of the map's scale,
+//     like the ridership circles (T-1772).
 //   - a ramp (a wedge) where track climbs from level 0 and a tunnel portal (a half disc) where it
 //     drops from level 0, at the level 0 end, along the track, in the level's Elevation colour.
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
@@ -16,16 +16,16 @@ import { display } from "../game/ui";
 import { compile, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
 import { M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
+import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
 
 /** ?perfOff=marks (measurement only, src/perfFlags.ts) */
 const NO_MARKS = perfOff("marks");
 
-/** Badge radius by zoom, CSS px: blueprint and drawing, then built (the track is 0.85 px wide at
- * zoom 9 and 6.6 at 15, a badge 2 to 3 times larger over that range). */
+/** Blueprint and drawing badge radius by zoom, CSS px (the track is 0.85 px wide at zoom 9 and 6.6
+ * at 15); a built badge's is `quietBadgeRadius`. */
 const LOUD_R: [number, number][] = [[9, 7], [12, 11], [15, 15]];
-const QUIET_R: [number, number][] = [[11, 5], [13, 6.5], [15, 8.5]];
 const RAMP_R: [number, number][] = [[11, 3.5], [13, 5], [15, 7]];
 /** Below these zooms the marks are not drawn, so a region is not covered in them. */
 const LOUD_ZOOM = 9, QUIET_ZOOM = 11, RAMP_ZOOM = 11;
@@ -36,7 +36,7 @@ const SAME_PLACE = 6;
 
 /** The radii (CSS px) of the loud badge, the quiet badge and the ramp mark at a zoom; 0 = not drawn. */
 export function markRadii(zoom: number): [number, number, number] {
-  return [zoom >= LOUD_ZOOM ? interp(zoom, LOUD_R) : 0, zoom >= QUIET_ZOOM ? interp(zoom, QUIET_R) : 0, zoom >= RAMP_ZOOM ? interp(zoom, RAMP_R) : 0];
+  return [zoom >= LOUD_ZOOM ? interp(zoom, LOUD_R) : 0, zoom >= QUIET_ZOOM ? quietBadgeRadius(zoom) : 0, zoom >= RAMP_ZOOM ? interp(zoom, RAMP_R) : 0];
 }
 
 const VS = `#version 300 es

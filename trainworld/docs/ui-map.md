@@ -67,16 +67,17 @@ the class under the pointer: "Hills, track costs 1.6x".
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
   `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a click or hover finds the
-  line. A selected station or complex is still drawn and clickable. The station ridership circles hide
-  with the stations, hover and all [T-1274]; the other demand drawings and capacity tags are
-  unchanged.
+  line. A selected station or complex is still drawn and clickable. The station ridership circles
+  and reversal icons hide with the stations, hover and all [T-1274, T-1772]; the other demand
+  drawings are unchanged.
 - **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
 - **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
   platform crowds are drawn.
 - **About zoom 17** (T-658; set by 4 m on screen, so the same in every city):
   double track opens into its two tracks ("Lines and track").
-- Station names and capacity tags hide below zoom 12 [T-101].
+- Station names and capacity dots hide below zoom 12 [T-101]; reversal icons hide with the
+  stations below zoom 9 [T-1772].
 
 ## Lines and track
 
@@ -201,7 +202,9 @@ the class under the pointer: "Hills, track costs 1.6x".
     and no station, not a flyover) in a round badge with a thin ring. On blueprint track and in the
     drawing tool's preview (the crossings and junctions the new track would make, from the track
     model) the badge is big: radius 7 px at zoom 9, 11 at 12, 15 at 15. On built track it is small
-    and quiet: 5 px at zoom 11, 6.5 at 13, 8.5 at 15, at 85% opacity. Its ring and glyph are in the
+    and quiet from zoom 11, at 85% opacity: 7.5 px at zoom 14, following the square root of the
+    map's scale as the ridership circles do (halved two zoom levels out), held between 4.5 and 9.5
+    px (`quietBadgeRadius`, T-1772). Its ring and glyph are in the
     Elevation colour of the level the meeting is on [T-673]. A junction is built once three of its ends are, a crossing
     once both tracks are. A crossing the model refuses (under one elevation step apart, or on a
     ramp) is a red X.
@@ -447,23 +450,27 @@ those who got on, less the load carried on.
   line's riders a day before and after. It is the change in the line's `ridersPerDay` (the day
   shown), nothing new summed; a change that rounds to 0, a line with no earlier figure and a switch
   of the shown day make none. Hidden with the rest of the interface (F2). Not saved. The same place and look carry other one-line passing notes (the sent feedback's, T-1709).
-- **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
-  [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
-  tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags
-  (above right, above left, below right, below left, right, left, 5-6 px out), else hides. While the
-  camera moves, each shown tag follows its resource every frame at the spot it last took, and the
-  spots are chosen again at most every 100 ms [T-1614]. While a
-  tool other than select is on they take no pointer events, so a press reaches what is under them.
-  With select, a tag that opens nothing of its own (not a junction) selects what is under it, its
-  station first.
+- **Capacity dots** [T-184, T-224, T-256, T-1772; `map/capacityMarkers.ts`; what they mean and
+  how they look in [track-and-service.md](track-and-service.md) 6.2]: a 16 px dot centred on its
+  resource's point, a 1.5 px ring in the casing colour (white, near-black in the dark theme). Dots
+  keep 6 px clear of one another below zoom 14 and 3 px from it; the worst delays place first and a
+  dot that would crowd one already placed hides. Station names neither move nor hide them: names
+  draw over dots (z 2 over 1). While the camera moves, each shown dot follows its resource every
+  frame, and which dots show is worked out again at most every 100 ms [T-1614]. While a tool other
+  than select is on they take no pointer events, so a press reaches what is under them. With
+  select, a dot that opens nothing of its own (not a junction) selects what is under it, its station
+  first.
 - **Reversal icons** [T-797, T-1581; `map/reversalMarks.ts`]: over every station where a line's trains
   reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) and every bare track end
-  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), an amber disc with
-  a dark U-turn arrow, floating on a short stem just above the place so the stop editing marker
-  on it stays clickable. Like the built junction badges it is small (18 px, a 1 px outline, a 1 px
-  stem) unless a placing tool is on (track, station, line, blueprint or bus: 30 px, a 2 px outline),
-  switching at once. It keeps its size at every zoom and never hides for names or zoom, so a
-  reversal, most often an accident, shows from far out; it shows during stop editing too. Hover
+  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), a badge in the built flat
+  junction badge's style: the casing colour inside, a 1 px amber ring and an amber U-turn arrow
+  (#c98a00, #e8b020 in the dark theme), at 0.9 opacity, floating on a 1 px stem 6 px long just
+  above the place so the stop editing marker on it stays clickable. Its diameter is twice the
+  built flat junction badge's radius (`quietBadgeRadius` in `map/stationGeometry.ts`: 7.5 px at
+  zoom 14, following the square root of the map's scale as the ridership circles do, held between
+  4.5 and 9.5), 1.6 times that while a placing tool is on (track, station, line, blueprint or bus),
+  switching at once. It hides with the stations below zoom 9 (`STATIONS_ZOOM`), never for names,
+  and shows during stop editing too. Hover
   (a game tag) names the station ("Track end" at a bare end), each line "<line> reverses here", and
   that 12 trains an hour at most reverse there (from each side, at a station). With select, a click selects the first of those lines (not
   while stops are edited); with another tool it takes no pointer events.
