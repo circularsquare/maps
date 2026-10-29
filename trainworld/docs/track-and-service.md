@@ -404,7 +404,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 **The graph.** Nodes (end, junction, station; the kind follows from how many edge ends meet
 there) and edges (one alignment between two nodes: its PIs with radius and level, and its track
-count). **Flat crossings are not nodes**: where two edges cross at the same level, the crossing is
+count). **Flat crossings are not nodes**: where two edges cross at the same level (two edges of an imported real network, `EdgeData.sep`, never make one, T-1751), the crossing is
 found from their geometry, costs money and loads capacity, but splits nothing, so dragging a PI
 across track never rewrites the graph or line paths. Each edge gives one directed track per
 direction (shared on single track): `(edge, direction)` is the segment in SPEC 2.1's keyframes.

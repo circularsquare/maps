@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1751 [P2] Real-network saves' service (T-1750 fixes 1 and 2). Done 2026-10-28: imported edges are marked separated (`EdgeData.sep`), so no flat crossing is left in any of the seven saves; Tokyo's peaks 24 to 27-28 (Chuo, Odakyu and Keihin-Tohoku held at 25 by the section rule); every Tokyo line within 10% of its request; saves regenerated (T-1183's regeneration); rail trips +0 to +7%, Tokyo +5.1%. notes/T-1751.md.
 - T-1733 [P2] T-1650 stage 1, local solve after an edit. Done 2026-10-28 (tree tw/t1733): touched zones solved round by round on the rest's loads as last priced; all of Japan's Tokyo line shown 118 s after it was built, China 9.3 s; no line of 10,000+ past 2% against the whole solve. notes/T-1733.md.
 - T-1750 [P2] What holds Tokyo's real network down. Done 2026-10-28, written answer only: speeds, crowding, service limits and access together are at most +5% of Tokyo's rail trips; biggest is flat crossings cutting 20 of 133 lines' trains (+1.6%); the rest is the car side of mode choice (park_min 7 to 14: +14% Tokyo, +7% New York). notes/T-1750.md.
 - T-1742 [P2] Real networks against published figures. Done 2026-10-28, written answer only: game rail trips a weekday against published entries are Tokyo 0.4-0.5, Sendai 0.8, London 1.0, Toronto 1.0, Paris 1.2, Seoul 1.5, New York 2.4-2.7; not Japan alone. notes/T-1742.md.

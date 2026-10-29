@@ -403,7 +403,10 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
   Toronto and Sendai (`pipeline/realnet.py ship` copies them from realnet's game
   files into `data/packs/real/`, and the build copies that folder). Each line has its own double
-  track at its own level. Between stations it follows the real track [T-1303]: each hop routed over
+  track at its own level (one of six, chosen so that few lines cross at one level), and imported track
+  is grade-separated from other imported track whatever the levels (`EdgeData.sep`, bit 7 of the edge
+  flags in the save; T-1751): two lines at one level meet in no flat crossing, hold or price, while
+  track the player draws crosses it by the usual rule. Between stations it follows the real track [T-1303]: each hop routed over
   the real-network graph (the track tool's router and fit, run when the saves are built, never in
   the game), lines over the same track set 6 m apart side by side; a hop with no real track near
   (trams, monorails, people movers: about a sixth in Paris and Tokyo, most of Toronto's streetcars)

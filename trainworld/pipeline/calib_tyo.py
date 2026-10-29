@@ -78,9 +78,17 @@ TRAIN_M = {"_": 200, "010": 220, "150": 96, "151": 108, "152": 54, "053": 132, "
 # figure ranks lines (the Yamanote's busiest segment 338k, the Toei Arakawa tram's 1.4k, so it is
 # not a full day's count); the peaks are judgement against Tokyo's known headways (2-3 minutes on
 # the trunk subways and JR lines, 5-10 on branches)
-TIERS = {"metro": [(80_000, 24), (30_000, 18), (0, 8)],
-         "commuter": [(150_000, 24), (80_000, 18), (30_000, 12), (10_000, 8), (0, 4)],
+TIERS = {"metro": [(80_000, 27), (30_000, 18), (0, 8)],
+         "commuter": [(150_000, 27), (80_000, 18), (30_000, 12), (10_000, 8), (0, 4)],
          "_": [(30_000, 12), (0, 8)]}
+# trains an hour each way at the peak where the real line's is known (T-1750: Chuo Rapid 28 and Hibiya 27
+# from MLIT's FY2023 table, the rest from the operators' timetables, +-15%), by operator and census line
+# name; it replaces the tier. A section holds 25 an hour at 160 km/h and 28 at 130 (the game's rule, T-1750), so
+# the 160 km/h lines (Chuo, Odakyu and the tier's top) ask 27 and run 25; the slower metros can ask 28.
+REAL_PEAK = {("jr_east", "山手線"): 25, ("jr_east", "京浜東北・根岸線"): 26, ("jr_east", "中央本線"): 27,
+             ("jr_east", "総武線各駅停車"): 24, ("tokyo_metro", "東西線"): 27, ("tokyo_metro", "丸ノ内線（１）"): 26,
+             ("tokyo_metro", "銀座線"): 28, ("tokyo_metro", "日比谷線"): 27, ("toei", "大江戸線"): 20,
+             ("tokyu", "田園都市線"): 27, ("tokyu", "東横線"): 24, ("odakyu", "小田原線"): 27}
 
 
 def kind_of(op, line):
@@ -101,7 +109,8 @@ def norm(name):
 
 
 def hours_tph(peak):
-    """24 hourly trains each way: OSM_TPH's commuter shape scaled to this peak."""
+    """24 hourly trains each way: OSM_TPH's commuter shape scaled to this peak. The hour is the
+    one a train passes the count point in (`cmd_trips` times it so), as realnet counts it."""
     p, m, f = rn.OSM_TPH["commuter"]
     mid, first = peak * m / p, peak * f / p
     tph = [0.0] * 5 + [first] + [mid] * 16 + [mid / 2] * 2
@@ -218,10 +227,12 @@ def cmd_trips():
         by_line[s["line_code"]].append(s)
     rows, meta = [], {}
     lon0, lat0 = o
+    cxy = [float(v) for v in rn.to_xy(*rn.CITIES["tyo"]["count_point"], o)]
     for lc, ss in sorted(by_line.items()):
         info = seg["lines"][lc]
         kind = kind_of(info["op_name"], info["line_name"])
         peak = next(t for v, t in TIERS.get(kind, TIERS["_"]) if max(s["riders"] for s in ss) >= v)
+        peak = REAL_PEAK.get((OPERATORS.get(info["op_name"], "other"), info["line_name"]), peak)
         tph = hours_tph(peak)
         edges = [(key_of[s["from_code"]], key_of[s["to_code"]]) for s in ss]
         for j, path in enumerate(paths(edges, [s["riders"] for s in ss])):
@@ -234,6 +245,7 @@ def cmd_trips():
             hop = [float(np.hypot(xy[i + 1][0] - xy[i][0], xy[i + 1][1] - xy[i][1])) * rn.OSM_DETOUR / (rn.OSM_KMH[kind] / 3.6)
                    for i in range(len(path) - 1)]
             at = np.concatenate([[0.0], np.cumsum(hop)])
+            q_cp = int(np.argmin([np.hypot(x - cxy[0], y - cxy[1]) for x, y in xy]))
             for dr, seq in (("0", list(range(len(path)))), ("1", list(range(len(path) - 1, -1, -1)))):
                 t_rel = at if dr == "0" else at[-1] - at
                 acc = 0.0
@@ -242,7 +254,7 @@ def cmd_trips():
                     m = int(acc)
                     acc -= m
                     for i in range(m):
-                        dep = h * 3600 + (i + 0.5) * 3600 / m
+                        dep = h * 3600 + (i + 0.5) * 3600 / m - t_rel[q_cp]
                         trip = f"{route}_{dr}_{h}_{i}"
                         for q in seq:
                             k = path[q]

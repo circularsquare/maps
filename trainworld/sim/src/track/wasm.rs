@@ -1339,7 +1339,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false, upgrades: 0 }) })

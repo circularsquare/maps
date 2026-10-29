@@ -148,6 +148,10 @@ pub struct EdgeData {
     pub crossover: bool,
     /// High-speed track (T-817): always double, priced at `HSR_COST`.
     pub hsr: bool,
+    /// Grade-separated from every edge with this set, itself included (T-1751): where two meet there is no
+    /// crossing at all, flat or bad. Set on an imported real network's edges, whose lines were
+    /// each given one of six levels and cannot all avoid one another.
+    pub sep: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -327,6 +331,7 @@ pub struct Network {
     pub edge_thru: Vec<Vec<Pi>>,
     pub edge_crossover: Vec<bool>,
     pub edge_hsr: Vec<bool>,
+    pub edge_sep: Vec<bool>,
     pub edge_len: Vec<f64>,
     pub edge_pieces: Vec<Span>,
     pub edge_vert: Vec<Span>,
@@ -582,6 +587,7 @@ impl Network {
             edge_thru: vec![],
             edge_crossover: vec![],
             edge_hsr: vec![],
+            edge_sep: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
             edge_vert: vec![],
@@ -778,6 +784,7 @@ impl Network {
         self.edge_thru.push(vec![]);
         self.edge_crossover.push(false);
         self.edge_hsr.push(false);
+        self.edge_sep.push(false);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
         self.edge_vert.push(Span::default());
@@ -846,7 +853,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i], sep: self.edge_sep[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -1070,6 +1077,7 @@ impl Network {
                 self.edge_thru[i] = d.thru;
                 self.edge_crossover[i] = d.crossover;
                 self.edge_hsr[i] = d.hsr;
+                self.edge_sep[i] = d.sep;
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -1088,6 +1096,7 @@ impl Network {
                 self.edge_thru[i] = vec![];
                 self.edge_crossover[i] = false;
                 self.edge_hsr[i] = false;
+                self.edge_sep[i] = false;
                 self.edge_free.push(id);
             }
         }
@@ -1451,6 +1460,9 @@ impl Network {
 
     fn find_crossings(&mut self, e: u32, f: u32, changed: &mut Vec<[f64; 2]>) {
         let (ie, i_f) = (e as usize, f as usize);
+        if self.edge_sep[ie] && self.edge_sep[i_f] {
+            return;
+        }
         let mut hits = vec![];
         cross::intersect_alignments(self.edge_pieces(e), self.edge_pieces(f), e == f, &mut hits);
         if hits.is_empty() {
@@ -2263,7 +2275,7 @@ impl Network {
             }
         }
         let i = e as usize;
-        let (tracks, built, off, hsr) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_hsr[i]);
+        let (tracks, built, off, hsr, sep) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_hsr[i], self.edge_sep[i]);
         // A T-079 edge's clicked points go with the half they lie on; one at the split is the
         // node now.
         let (mut t1, mut t2) = (vec![], vec![]);
@@ -2275,8 +2287,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr, sep };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr, sep };
         Ok((node, a, b))
     }
 }

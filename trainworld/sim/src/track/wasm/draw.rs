@@ -536,7 +536,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr, sep: false }) });
             from = to;
         }
     }

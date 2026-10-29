@@ -674,12 +674,13 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
   also has New York's older targets and the save: `geom` (GTFS shapes per hop), `route` (each hop
   over the real-network graph with `realroute.py`, the track tool's router ported, lines on the same
-  track set side by side and levels chosen on that geometry, T-1303), the sim's `realsave` bin (the
+  track set side by side and levels chosen on that geometry, T-1303), the sim's `realsave` bin (every edge marked `sep`, grade-separated from the others whatever its level, T-1751; the
   track model's network, routed hops traced with `trace.rs` at 3 m, names tidied by `track/names.rs`:
   lines lose their feed word, stations get title case without "STATION", T-1442; the sim's `load`
   runs the same on older saves), `gamesave` (the game file
   `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
-  (T-731). `REALNET_OUT` stages geom, route and gamesave outside data/. `realnet_n02.py` is
+  (T-731; new files, since data/frozen/ links to the old ones). Tokyo's trips file is `calib_tyo.py trips` (peak trains an hour
+  by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. `realnet_n02.py` is
   its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves): each line is
   cut where MLIT's passing count changes, each piece gets cars and whole trains from its count,
   Shinkansen run on high-speed track, and `n02_trim.json` holds the cuts and omissions game runs

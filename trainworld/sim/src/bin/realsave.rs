@@ -163,7 +163,7 @@ fn main() {
             }
             pis.push(Pi::new(lead_b.0, lead_b.1, 0.0, level).quantised());
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr })).unwrap();
+            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr, sep: true })).unwrap();
             path.push(e << 1);
         }
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();

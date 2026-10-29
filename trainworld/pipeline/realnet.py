@@ -1343,8 +1343,10 @@ def cmd_ship():
         header["city"] = reg["cities"][0]["id"]
         hj = json.dumps(header).encode()
         p = os.path.join(out, f"{city}.save")
-        with open(p, "wb") as f:
+        # a new file, not a rewrite: data/frozen/ holds hard links to the old one (T-1751)
+        with open(p + ".new", "wb") as f:
             f.write(gzip.compress(b"TWG1" + struct.pack("<I", len(hj)) + hj + raw[8 + n:], mtime=0))
+        os.replace(p + ".new", p)
         print(f"{city}: {os.path.getsize(p):,} bytes -> {p}")
 
 

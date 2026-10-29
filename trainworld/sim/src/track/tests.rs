@@ -21,7 +21,7 @@ pub fn node(w: &mut TrackWorld, x: f64, y: f64, level: i8) -> u32 {
 pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -> Result<u32, Vec<Issue>> {
     let id = w.net.alloc_edge();
     let pis = pis.iter().map(|&(x, y)| Pi::new(x, y, 0.0, level)).collect();
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false }) })?;
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false }) })?;
     Ok(id)
 }
 
@@ -55,7 +55,7 @@ fn unused_blueprint_extension_preserves_running_service_but_planned_lines_previe
         let trips = w.svc.trips(&w.net, 28800.0, 32400.0);
         let blueprint = w.net.alloc_edge();
         w.apply(Op::Edge { id: blueprint, data: Some(EdgeData {
-            a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, hsr: false,
+            a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false,
         }) }).unwrap();
         let check = |w: &TrackWorld| {
             let after = &w.svc.lines[l as usize];
@@ -238,6 +238,30 @@ fn crossings_flat_separated_or_invalid() {
     let ops = vec![Op::Edge { id: e, data: Some(ed) }, Op::Node { id: d, data: Some(NodeData { x: 2000.0, y: 2000.0, level: -1, flying: false }) }];
     let err = w.apply(Op::Batch(ops)).unwrap_err();
     assert!(err.iter().any(|i| matches!(i, Issue::Crossing { .. })), "{err:?}");
+}
+
+#[test]
+fn two_separated_edges_make_no_crossing_and_the_flag_is_saved() {
+    let mut w = world();
+    let (a, b) = (node(&mut w, 0.0, 0.0, 0), node(&mut w, 4000.0, 0.0, 0));
+    let e1 = edge(&mut w, a, b, &[], 0).unwrap();
+    let (c, d) = (node(&mut w, 2000.0, -2000.0, 0), node(&mut w, 2000.0, 2000.0, 0));
+    let e2 = edge(&mut w, c, d, &[], 0).unwrap();
+    assert_eq!(w.net.crossings.len(), 1);
+    for e in [e1, e2] {
+        let mut ed = w.net.edge_data(e).unwrap();
+        ed.sep = true;
+        w.apply(Op::Edge { id: e, data: Some(ed) }).unwrap();
+        // one flagged edge still crosses the other flat
+        assert_eq!(w.net.crossings.len(), usize::from(e == e1));
+    }
+    let (f, g) = (node(&mut w, 1000.0, -2000.0, 0), node(&mut w, 1000.0, 2000.0, 0));
+    edge(&mut w, f, g, &[], 0).unwrap();
+    assert_eq!(w.net.crossings.len(), 1, "an edge without the flag still crosses a flagged one");
+    let bytes = super::save::encode(&w.net);
+    let back = super::save::decode(&bytes).unwrap();
+    assert_eq!(back.edge_sep[e1 as usize], true);
+    assert_eq!(back.edge_sep[(e2 + 1) as usize], false);
 }
 
 /// Y junction: trunk T-J, main J-M, branch J-Br. Line A runs T-Br, line B T-M.
@@ -1190,7 +1214,7 @@ fn hsr_world(hsr: [bool; 2], fast: bool) -> (TrackWorld, u32) {
     let c = node(&mut w, 80000.0, 0.0, 0);
     for (k, (p, q)) in [(a, b), (b, c)].into_iter().enumerate() {
         let id = w.net.alloc_edge();
-        w.apply(Op::Edge { id, data: Some(EdgeData { a: p, b: q, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: hsr[k] }) }).unwrap();
+        w.apply(Op::Edge { id, data: Some(EdgeData { a: p, b: q, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: hsr[k], sep: false }) }).unwrap();
     }
     station(&mut w, a, 200);
     station(&mut w, c, 200);
@@ -1243,7 +1267,7 @@ fn curves_cap_high_speed_trains_below_the_track_cap() {
     let id = w.net.alloc_edge();
     // one bend of 3,000 m radius in the middle: sqrt(1.1 x 3000) = 57.4 m/s, 207 km/h
     let pis = vec![Pi::new(40000.0, 0.0, 3000.0, 0)];
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b: c, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: true }) }).unwrap();
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b: c, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: true, sep: false }) }).unwrap();
     station(&mut w, a, 200);
     station(&mut w, c, 200);
     let l = line(&mut w, &[a, c], [4.0, 2.0, 1.0]);
