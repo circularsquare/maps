@@ -151,6 +151,8 @@ export type ToDemand =
       /** T-1609 `?perfOff=refine`: a cluster whose only new populations are zones opened again at
        * another level is solved whole, not those zones alone against the others' frozen loads */
       noLocal?: boolean;
+      /** T-1735 `?perfOff=window`: an edit's local solve leaves the whole market frozen */
+      noWindow?: boolean;
       /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
        * can carry what it holds solved over to the next network's route nodes */
       ids?: { lines: string[]; stations: string[] } }

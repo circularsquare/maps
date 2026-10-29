@@ -30,7 +30,8 @@ tests natively.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; `intercity/drives.rs` the routed drives between places and the ferry, T-279; its pass goes through a window of destination zones,
   `pass_window`, searching destinations as the window needs them on a big cluster, `pass_searched`
-  with `kernel::DestSearch` and `DestAssign`, T-761, T-1545), `warm.rs` (the
+  with `kernel::DestSearch` and `DestAssign`, T-761, T-1545; a window of zones' pairs alone, `set_window`
+  and `window_loads`, for an edit's local solve, T-1735), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's, Sunday's and a superholiday's away, going-out and coming-back days' factors per
   purpose and period and the lean's sign, T-260, T-262, T-264, T-1373), `routes.rs` (routed walks over water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the

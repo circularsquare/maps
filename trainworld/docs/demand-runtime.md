@@ -309,6 +309,22 @@ clears the lines' "constructing...". A worker then waits for the page's `whole`,
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time (the stations, then the line) is solved locally too; the whole solves follow as
 above and replace everything.
+**The market's pairs in a window** (T-1735, notes/T-1735.md, `?perfOff=window` off): when the
+edit's longest changed run (between a line's first and last changed stops: a stop added or dropped,
+or a hop's run time past 1%, trains an hour not counted; the edit diffed against the network the
+market part last solved on) is at least 20 minutes, the local solve also re-solves
+the market's pairs with an end in a window of zones, in a population of their own beside the
+frozen market (`IntercityApi.set_window`): the zones with a changed station in an access list, then
+the zones whose nearest station is within that run's minutes by rail at free flow (at most 180),
+nearest first, while the window's stations are at most 9% of those the market searches or 800,
+whichever is more. Each pair is
+searched towards its end in the window alone: a pair starting there and ending outside is priced on
+the route costs the other way, a leg ending outside (a trip home, or the trip out of a pair kept
+under its home) is assigned as the leg the other way turned round onto the same lines. It is solved
+in one pass a period at the crowding the touched cities' last round ended on, then held to the
+trains' room with them; the old market part gives the same pairs' old loads in one pass at its last
+crowding (`window_loads`), and the result's loads are the frozen market's less those plus the
+window's, each purpose to its own. A shorter edit (a city line) leaves the whole market frozen.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the zone in view's is one of them (T-402): that cluster alone first, through every round, each

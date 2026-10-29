@@ -1297,6 +1297,188 @@ fn the_window_keeps_every_trip() {
     assert!((pairs - s.rail).abs() < 1e-4 * s.rail, "pairs {pairs} against {}", s.rail);
     assert!((c_legs - s.c_rail).abs() < 1e-4 * s.c_rail.max(1.), "commute legs {c_legs} against {}", s.c_rail);
 }
+/// T-1735: a window of every zone is the pass to the bit; a window of a few zones keeps every
+/// trip of its pairs, the legs turned round included, and is the pass's where its pairs are.
+#[test]
+fn a_window_keeps_its_pairs_trips() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut times = vec![];
+    for len in [4, 5] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = 600.;
+                t[(3 + lev) * len + k + 1] = 600.;
+            }
+        }
+        times.extend(t);
+    }
+    let (line_n, stops, tph, cars) = ([4, 5], [0, 1, 2, 3, 4, 0, 5, 6, 7], [12., 12., 12., 8., 8., 8.], [10., 10.]);
+    api.set_network_ll(&ll, &line_n, &stops, &times, &tph, &cars).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    assert!(api.solve(0));
+    let whole = {
+        let per = api.per(0).unwrap();
+        api.pass_searched(&per.g, &per.p, 0, &per.xi)
+    };
+    let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+    let every: Vec<u32> = (0..api.m.zones.len() as u32).collect();
+    let l = &whole.loads;
+    let blocks = api.window_loads(0, &every);
+    let nr = l.seg.len();
+    let c = &whole.c_loads;
+    assert_eq!(bits(&blocks[..6 * nr]), bits(&[&l.seg[..], &l.rn_board, &l.rn_alight, &c.seg, &c.rn_board, &c.rn_alight].concat()));
+    // the zones Gunma's end station (7) serves
+    let mut mask = vec![0u8; 8];
+    mask[7] = 1;
+    let zones = api.zones_at(&mask);
+    assert!(!zones.is_empty() && zones.len() < api.m.zones.len() / 2, "{} of {} zones", zones.len(), api.m.zones.len());
+    let mut sub = api.beside();
+    sub.set_window(&mask, &[], 0., 1., 0);
+    sub.set_network_ll(&ll, &line_n, &stops, &times, &tph, &cars).unwrap();
+    sub.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    assert_eq!(sub.window_zones(), zones);
+    let inw = |z: u32| zones.contains(&z);
+    assert!(!sub.pairs.is_empty() && sub.pairs.len() < api.pairs.len() && sub.pairs.iter().all(|p| inw(p.a) || inw(p.b)));
+    assert!(sub.solve(0));
+    let s = sub.per(0).unwrap();
+    // every trip of the window's pairs enters and leaves once
+    let entries: f64 = s.avg.entry.iter().map(|&v| v as f64).sum();
+    let exits: f64 = s.avg.exit.iter().map(|&v| v as f64).sum();
+    let want = s.rail + s.c_rail + s.e_rail;
+    assert!(want > 0. && (entries - want).abs() < 1e-4 * want && (exits - want).abs() < 1e-4 * want, "entries {entries}, exits {exits}, trips {want}");
+    // the longer trips the same as the whole pass gives those pairs, both ways
+    let mut of_pairs = 0.;
+    let mut parts = [0f64; 3];
+    for (i, p) in api.pairs.iter().enumerate() {
+        if inw(p.a) || inw(p.b) {
+            of_pairs += whole.pair_rail[i] as f64;
+            parts[if inw(p.a) && inw(p.b) { 0 } else if inw(p.b) { 1 } else { 2 }] += whole.pair_rail[i] as f64;
+        }
+    }
+    eprintln!("both in {:.1}, into {:.1}, out of {:.1}; window pairs {} of {}", parts[0], parts[1], parts[2], sub.pairs.len(), api.pairs.len());
+    assert!((s.rail - of_pairs).abs() < 0.02 * of_pairs, "the window's longer trips {} against the pass's {of_pairs}", s.rail);
+    // and on the lines no more than the pass carries
+    let (a, b): (f64, f64) = (s.avg.seg.iter().map(|&v| v as f64).sum(), whole.loads.seg.iter().map(|&v| v as f64).sum());
+    assert!(a > 0. && a <= b * 1.001, "{a} {b}");
+}
+/// T-1735 (measurement): one period at free flow on a plain net before and after an edit (the new
+/// line last), the market whole and the edit's window, and per line the market's boardings.
+/// `TW_T1735_OLD=<plain net> TW_T1735_NEW=<plain net> TW_T1735_OUT=<out.json> cargo test --release --features demand t1735_window -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1735_window() {
+    let q = 1;
+    let (old_p, new_p) = (std::env::var("TW_T1735_OLD").unwrap(), std::env::var("TW_T1735_NEW").unwrap());
+    let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&new_p).unwrap()).unwrap();
+    let u = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as usize).collect::<Vec<usize>>();
+    let (line_n, stops) = (u("lineN"), u("stops"));
+    let n_st = j["stXY"].as_array().unwrap().len() / 2;
+    let at: usize = line_n[..line_n.len() - 1].iter().sum();
+    let mut mask = vec![0u8; n_st];
+    for &s in &stops[at..] {
+        mask[s] = 1;
+    }
+    // or (TW_T1735_AT=lon,lat,km) the stations within km of a point, as an edit there would mark
+    if let Ok(v) = std::env::var("TW_T1735_AT") {
+        let v: Vec<f64> = v.split(',').map(|x| x.parse().unwrap()).collect();
+        let fr = &j["frame"];
+        let frame = Frame::equirect(fr["lon"].as_f64().unwrap(), fr["lat"].as_f64().unwrap()).with_kind(crate::track::frame::FrameKind::Merc);
+        let xy: Vec<f64> = j["stXY"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
+        mask.fill(0);
+        for s in 0..n_st {
+            let (lon, lat) = frame.to_lonlat(xy[2 * s], xy[2 * s + 1]);
+            let km = ((lon - v[0]) * 111.32 * (lat.to_radians().cos())).hypot((lat - v[1]) * 110.57);
+            mask[s] = (km <= v[2]) as u8;
+        }
+        eprintln!("{} stations within {} km of {}, {}", mask.iter().filter(|&&m| m != 0).count(), v[2], v[0], v[1]);
+    }
+    let by_line = |g: &Graph, v: &[f32]| {
+        let mut out = vec![0f64; *g.rn_line.iter().max().unwrap() as usize + 1];
+        for (r, &l) in g.rn_line.iter().enumerate() {
+            out[l as usize] += v[r] as f64;
+        }
+        out
+    };
+    let t = now_ms();
+    let reach: f32 = std::env::var("TW_T1735_MIN").map(|v| v.parse().unwrap()).unwrap_or(45.);
+    let mut sub = t780_net_with(&new_p, MARKET_CHUNK, |a| a.set_window(&mask, &[], reach, std::env::var("TW_T1735_SHARE").map(|v| v.parse().unwrap()).unwrap_or(0.09), std::env::var("TW_T1735_FLOOR").map(|v| v.parse().unwrap()).unwrap_or(800)));
+    let t_sub_net = now_ms() - t;
+    let zones = sub.window_zones();
+    let t = now_ms();
+    assert!(sub.solve(q));
+    let t_sub = now_ms() - t;
+    let s = sub.per(q).unwrap();
+    let sub_b = by_line(&s.g, &s.avg.rn_board);
+    eprintln!("window: {} zones, {} pairs, set up {t_sub_net:.0} ms, solve {t_sub:.0} ms, rail {:.0} {:.0} {:.0}", zones.len(), sub.pairs.len(), s.rail, s.c_rail, s.e_rail);
+    let mut old = t780_net(&old_p, MARKET_CHUNK);
+    let t = now_ms();
+    assert!(old.solve(q));
+    let t_old = now_ms() - t;
+    let t = now_ms();
+    let ow = old.window_loads(q, &zones);
+    let t_ow = now_ms() - t;
+    let og = &old.per(q).unwrap().g;
+    let nr = og.rn_line.len();
+    let old_b = by_line(og, &old.per(q).unwrap().avg.rn_board);
+    let ow_b = by_line(og, &ow[nr..2 * nr]);
+    eprintln!("old whole solve {t_old:.0} ms, its window's pass {t_ow:.0} ms");
+    let mut new = t780_net(&new_p, MARKET_CHUNK);
+    let t = now_ms();
+    assert!(new.solve(q));
+    let t_new = now_ms() - t;
+    let ng = &new.per(q).unwrap().g;
+    let new_b = by_line(ng, &new.per(q).unwrap().avg.rn_board);
+    eprintln!("new whole solve {t_new:.0} ms");
+    let nl = new_b.len();
+    let local: Vec<f64> = (0..nl).map(|l| old_b.get(l).copied().unwrap_or(0.) - ow_b.get(l).copied().unwrap_or(0.) + sub_b[l]).collect();
+    let frozen: Vec<f64> = (0..nl).map(|l| old_b.get(l).copied().unwrap_or(0.)).collect();
+    eprintln!("new line {}: whole {:.0}, window {:.0} ({:.1}%)", nl - 1, new_b[nl - 1], local[nl - 1], 100. * local[nl - 1] / new_b[nl - 1]);
+    let hidden = |v: &[f64]| (0..nl).map(|l| (v[l] - new_b[l]).abs()).sum::<f64>();
+    eprintln!("boardings off the whole solve's, summed over lines: frozen {:.0}, window {:.0}", hidden(&frozen), hidden(&local));
+    // wider windows: the zones whose stations are within t perceived minutes by rail of an edited one
+    let per = new.per(q).unwrap();
+    let smap = new.station_map();
+    let ns = per.g.n_st;
+    let mut best = vec![f32::INFINITY; ns];
+    let mut col = vec![0f32; ns];
+    let mut ds = DestSearch::new(&per.g, &per.p);
+    let mut done = std::collections::HashSet::new();
+    for (i, &v) in mask.iter().enumerate() {
+        let e = smap[i] as usize;
+        if v != 0 && done.insert(e) {
+            ds.run_col(e, &mut col);
+            for x in 0..ns {
+                best[x] = best[x].min(col[x]);
+            }
+        }
+    }
+    let lists = [&new.access, &new.access_work, &new.access_c, &new.access_cw, &new.access_c_walk, &new.access_ew];
+    let nzz = new.m.zones.len();
+    let zd: Vec<f32> = (0..nzz).map(|z| lists.iter().filter_map(|l| l.get(z)).flatten().map(|&(st, _)| best[st]).fold(f32::INFINITY, f32::min)).collect();
+    let wanted = new.want.iter().filter(|&&w| w).count();
+    let mut rows = vec![];
+    let base = new.zones_at(&mask);
+    for t in [0f32, 30., 45., 60.] {
+        let zs: Vec<u32> = (0..nzz as u32).filter(|&z| base.contains(&z) || zd[z as usize] <= t).collect();
+        let mut sts: Vec<usize> = zs.iter().flat_map(|&z| lists.iter().filter_map(move |l| l.get(z as usize)).flatten().map(|e| e.0)).collect();
+        sts.sort_unstable();
+        sts.dedup();
+        let t0 = now_ms();
+        let nw = new.window_loads(q, &zs);
+        let ms = now_ms() - t0;
+        let ow = old.window_loads(q, &zs);
+        let nwb = by_line(ng, &nw[ng.rn_line.len()..2 * ng.rn_line.len()]);
+        let owb = by_line(og, &ow[nr..2 * nr]);
+        let loc: Vec<f64> = (0..nl).map(|l| old_b.get(l).copied().unwrap_or(0.) - owb.get(l).copied().unwrap_or(0.) + nwb[l]).collect();
+        eprintln!("within {t} min: {} zones, {} of {wanted} stations, pass {ms:.0} ms ({:.1}% of the whole), new line {:.1}%, off {:.0}", zs.len(), sts.len(), 100. * ms / t_new, 100. * loc[nl - 1] / new_b[nl - 1], hidden(&loc));
+        rows.push(serde_json::json!({ "t": t, "zones": zs.len(), "stations": sts.len(), "ms": ms, "local": loc }));
+    }
+    let out = serde_json::json!({ "rows": rows, "zones": zones, "whole": new_b, "local": local, "frozen": frozen, "sub_ms": t_sub, "sub_net_ms": t_sub_net, "whole_ms": t_new, "old_window_ms": t_ow });
+    std::fs::write(std::env::var("TW_T1735_OUT").unwrap(), out.to_string()).unwrap();
+}
 /// T-1286: fare factors of 1, or for a country outside the market, leave the pass alone to the bit;
 /// a factor of 2 where the trips start costs rail riders, the same streamed or not.
 #[test]
@@ -1578,6 +1760,10 @@ fn regional_station_pairs_take_the_local_scale() {
 /// T-780: a captured network's market (`checks/t761-plain-net.mjs`'s output), set up natively.
 #[cfg(test)]
 pub(crate) fn t780_net(path: &str, chunk: f64) -> IntercityApi {
+    t780_net_with(path, chunk, |_| {})
+}
+/// `t780_net` with `before` done before the network is set (T-1735: a window).
+pub(crate) fn t780_net_with(path: &str, chunk: f64, before: impl FnOnce(&mut IntercityApi)) -> IntercityApi {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let f = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
@@ -1591,6 +1777,7 @@ pub(crate) fn t780_net(path: &str, chunk: f64) -> IntercityApi {
     let g32 = |k: &str| f(k).into_iter().map(|v| v as f32).collect::<Vec<f32>>();
     a.set_complexes(&u("complex"));
     a.set_chunk(chunk);
+    before(&mut a);
     a.set_network_ll(&ll, &u("lineN"), &u("stops"), &g32("times"), &g32("tph"), &g32("cars")).unwrap();
     a.set_fares(j["fare"]["base"].as_f64().unwrap() as f32, j["fare"]["perKm"].as_f64().unwrap() as f32, &g32("hopKm")).unwrap();
     a
