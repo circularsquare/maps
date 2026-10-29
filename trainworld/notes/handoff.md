@@ -102,8 +102,21 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   day. Clock speed not saved. No automatic crossovers; stations placed by the player. Weekends
   run the medium timetable. Bus running cost US$6 a bus-km. Select on key 4; Shift+1-7 elevation.
 
-## PAUSE (Anita 2026-10-29: "after thailand and singapore, we can just pause. we're at a good state")
-Land TH/SG and T-1759 (commit, 8800, smoke), then start nothing new. Deploy only on her word.
+## Overnight 2026-10-29 (Anita, off to bed): keep going with T-1735, think about the other perf tasks, and do
+## or drop the small fixes ("up to you"). Core cap 15. Deploy only on her word.
+- T-1759 committed e894d357 (bunting gone); 8800 rebuilt there, smoke 20/20 both shades.
+- T-1735 agent t1735 (Opus), tree .tw-trees/t1735 from e894d357; Vite 6123; 5 cores; ids T-1760-1761.
+- T-1644 agent t1644 (Sonnet), main tree app/src/map/; Vite 6124; 3 cores.
+- T-1739 agent t1739 (Sonnet), main tree attractions.json; Vite 6125; 2 cores.
+- TH,SG join done 2026-10-29 (68/68 shipped, registry 1,960). Chiang Mai's origin is a border village (densest GHSL
+  pixel), same flaw in mnm knt swa mge: t1757 rebuilding those 5 + second TH join (~90 min, writes data/packs; t1739
+  told to keep off packs). Planner rule filed as T-1762. Uncommitted: all TH/SG/T-1758 json until it reports.
+- T-1739 first round: fitted estimate for sites without a figure (editions, people within 25 km, scenic flag, a
+  per-country effect China x3.4); Hangzhou +53% on rush days; Zhongnanhai 3.4M odd. Sent back: drop the country
+  term (needs Anita), keep closed places out. Uncommitted in the main tree (attractions_json.py, attractions.json).
+- t263-attractions' Tokyo National Museum hover check fails on old data too (a station card covers the mark): look.
+- Still to decide: T-1744 (after TH/SG join; pack writes), T-1737 (investigate), T-1736 (P3, keep), T-1634/T-1647
+  (collide with T-1735's demand/market files: after it).
 
 ## Next (Anita 2026-10-28 evening: "this order is fine"; she is away)
 1. Land T-1733 and T-1654 (smoke, commit, 8800). Deploy: asked her, no answer yet; don't publish without it.

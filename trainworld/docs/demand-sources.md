@@ -260,9 +260,11 @@ One world file, `app/src/game/attractions.json` from `pipeline/attractions_json.
 through QLever: those classes and their subclasses, with coordinates; squares, streets, bridges,
 settlements, districts, parks and nature, stadiums and arenas, stations, airports, universities,
 libraries, hospitals, hotels, shops and offices left out; a tower or skyscraper only with a visitor
-figure). Each has its visitors a year: its latest Wikidata figure (P1174; a 2020 or 2021 figure only
-when there is no other, and none above 25M, which is an institution's or a slip), else 10,000 for
-each Wikipedia language edition writing about it (fitted on 2,102 places with both, notes/T-263.md);
+figure; a lake, hill or island that Wikidata also tags a tourist attraction, as West Lake is, counts).
+Each has its visitors a year: its latest Wikidata figure (P1174; a 2020 or 2021 figure only
+when there is no other, and none above 25M, which is an institution's or a slip), else an estimate
+fitted on the places that have one (ln Wikipedia editions, ln people within 25 km from GHSL, an
+open-scenic-place flag; a presidential palace or headquarters only with a figure; notes/T-1739.md);
 kept from 100,000. One that lies in another (location or part of, within 500 m) or within 100 m of
 a larger one is left to the larger, and a few the build names (passers-by, a resort beside its own
 parks) are left out. About 12,900 worldwide. At a pack's opening the demand worker hands its
