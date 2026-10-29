@@ -3,8 +3,8 @@
 // network now drawn, the world and the demand result, whenever one of them, the period in force
 // or a display setting changes: one pass over the line stroke segments and train samples (a few ms on New York's real network, notes/T-084.md), never per frame.
 //
-// Lines sharing track are drawn over each other (T-190), so a line's width moves nothing else; a
-// station's box covers the widest line through it.
+// Lines sharing track are drawn side by side (T-1799), each band its own line's width, so a trunk's
+// ribbon is their sum; folded back over each other zoomed out (renderer.ts).
 
 import { gauge } from "../game/boarding";
 import { lineLoadsFor, type DemandView } from "../game/demand";
@@ -15,6 +15,8 @@ import type { PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
 import type { NetworkBuffers } from "./network";
 import type { NetworkLayers } from "./renderer";
+import { anchor, kAtY } from "./geo";
+import { trafficBands } from "./lineBands";
 
 export interface LayerSwitches {
   lineLoad: boolean;
@@ -41,6 +43,9 @@ export interface LayerSwitches {
  * do not change as the periods pass; the platforms and trains show the hour.
  */
 export const W_MIN = 0.5, W_MAX = 6.6;
+/** T-1799 stage 2: the Traffic view's widths drawn at this share, since lines sharing track now sit
+ * side by side and a trunk is their sum (Anita, 2026-10-29: "adjust default line width down a tad") */
+export const TRAFFIC_WIDTH = 0.85;
 export function widthFor(ridersPerDay: number, busiest: number): number {
   return W_MIN + (W_MAX - W_MIN) * (busiest > 0 ? Math.min(1, Math.max(0, ridersPerDay) / busiest) : 0);
 }
@@ -128,15 +133,18 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   }
 
   // widths per stroke segment, the day's riders against the busiest stretch-day (T-227, T-274)
-  const lineWidth = new Float32Array(nSeg).fill(1);
+  const lineWidth = new Float32Array(nSeg).fill(on.lineLoad ? TRAFFIC_WIDTH : 1);
   if (on.lineLoad && stretchOf) {
     const busiest = Math.max(busiestDay(w, dv, on.purpose, on.stopKey), ...(on.days ?? []).map((d) => busiestDay(w, d, on.purpose, on.stopKey)));
     for (let r = 0; r < runs.length; r += 2) {
       const i = runs[r];
       const v = nums.get(L.colour[i]);
-      if (v) lineWidth.fill(widthFor(v.perDay[stretchOf[i]] ?? 0, busiest), i, runs[r + 1]);
+      if (v) lineWidth.fill(TRAFFIC_WIDTH * widthFor(v.perDay[stretchOf[i]] ?? 0, busiest), i, runs[r + 1]);
     }
   }
+  // lines sharing track side by side, each band its riders' width (T-1799 stage 2)
+  const anc = net.anchor ?? anchor();
+  const bands = on.lineLoad ? trafficBands(L, lineWidth, (y) => kAtY(y, anc), net.samples, net.sampleStroke) : null;
 
   // the trains: gauges per sample; PENDING for a running line demand has no figures for yet
   // (T-324: drawn striped, never like a full train)
@@ -163,5 +171,5 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
       fill[k * 2 + 1] = v.g1[s] ?? -1;
     }
 
-  return { lineWidth, fill, traffic: on.lineLoad };
+  return { lineWidth, fill, traffic: on.lineLoad, bands };
 }

@@ -29,6 +29,7 @@ import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
+import { BAND_RANGE, stationRibbons, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
 
 /** The render epoch moves to the start of each game hour. */
@@ -172,6 +173,13 @@ interface StrokeVao {
 
 type TexName = "phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane";
 
+/** `a_wmul` for `n` plain segments: width 1, no Traffic view band shift (T-1799) */
+function plainWmul(n: number): Float32Array {
+  const v = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) v[i * 3] = 1;
+  return v;
+}
+
 /** The stroke attributes a network's strokes keep on the GPU between edits (T-1028), in order. */
 const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lane", "band"] as const;
 
@@ -212,9 +220,10 @@ export interface NetworkLayers {
   /** per train sample: how full run 0's and run 1's trains are (2 each: 0-1 of the gauge, 2 over
    * full, -1 not known) */
   fill: Float32Array;
-  /** the widths are the riders' (the traffic view): lines sharing track drawn over each other until
-   * T-1799's stage 2 */
+  /** the widths are the riders' (the traffic view) */
   traffic?: boolean;
+  /** the traffic view's bands side by side (T-1799 stage 2), null where no track is shared */
+  bands?: TrafficBands | null;
 }
 
 export class NetworkRenderer {
@@ -335,11 +344,28 @@ export class NetworkRenderer {
     }
     return out;
   }
-  /** Station `i` on screen as a platform or its own dot (stationGeometry.ts). */
-  stationShapeOf(i: number, project: Project): StationShape {
+  /** Station `i` on screen as a platform or its own dot (stationGeometry.ts); `ribbon` false: as
+   * wide as with no lines side by side through it. */
+  stationShapeOf(i: number, project: Project, ribbon = true): StationShape {
     const n = this.net!;
     const flag = Math.round(n.stations[i * 3 + 2]);
-    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0);
+    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0, ribbon ? this.ribbonPx(this.ribbons[i] ?? 0) : 0);
+  }
+  /** T-1807: per station, half its widest ribbon of lines side by side (`stationRibbons`), line
+   * widths, the Line or the Traffic view's as drawn; and the most of any */
+  private ribbons: Float32Array = new Float32Array(0);
+  private ribbonMax = 0;
+  private ribbonBuf: WebGLBuffer | null = null;
+  /** a ribbon half `r` line widths wide as drawn at the last draw: a station's half width covering
+   * it and its rim, CSS px; 0 none */
+  private ribbonPx(r: number) {
+    return r > 0 && this.bandPx > 0 ? r * this.bandPx + this.stationStyle.ringPx + 1 : 0;
+  }
+  private setRibbons(r: Float32Array) {
+    this.ribbons = r;
+    this.ribbonMax = 0;
+    for (const v of r) this.ribbonMax = Math.max(this.ribbonMax, v);
+    if (this.ribbonBuf && r.length) this.rewrite(this.ribbonBuf, r);
   }
   private hotList = new Int32Array(HOT_STATIONS);
   /** The bridge program's hovered instances (T-730): the pairs in `pairs` (station indices, two
@@ -373,7 +399,7 @@ export class NetworkRenderer {
     const flat = Math.abs(fx - (ex + nx - ox)) + Math.abs(fy - (ey + ny - oy)) < 0.01;
     const reach = flat ? this.stationReachNow(n) : null;
     const perLoc = 1.01 * Math.max(Math.hypot(a, c), Math.hypot(b, e));
-    const extra = reach ? stationReachPx(this.stationStyle, reach.halfWidth, perLoc) + padding + 2 : 0;
+    const extra = reach ? Math.max(stationReachPx(this.stationStyle, reach.halfWidth, perLoc), 2 * this.ribbonPx(this.ribbonMax)) + padding + 2 : 0;
     for (const sel of this.stationStyle.hidden ? [true] : [true, false]) {
       let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
@@ -483,6 +509,24 @@ export class NetworkRenderer {
    * where lines sharing track are drawn as one stroke (picking); the same in metres for trains */
   bandPx = 0;
   bandShiftM = 0;
+  /** T-1799: the bands picked against (`Strokes.band`'s layout) and CSS px a unit of their shift is
+   * drawn at the last draw; the Traffic view's own (`TrafficBands.pick`) while it is shown */
+  get pickBand(): Int16Array | undefined {
+    return this.trafficBands?.pick ?? this.net?.lines.band;
+  }
+  get pickBandPx(): number {
+    return this.trafficBands ? this.bandPx * TRAFFIC_PICK_DIV : this.bandPx;
+  }
+  /** per train sample, its band's shift as drawn (`NetworkBuffers.sampleBand`, or the Traffic view's) */
+  get sampleBand(): Float32Array | undefined {
+    return this.trafficBands?.sample ?? this.net?.sampleBand;
+  }
+  /** the most line widths a train is drawn off its line's centre line by its band (train picking's reach) */
+  get bandReach(): number {
+    return this.trafficBands ? this.trafficReach : BAND_RANGE / 2;
+  }
+  private trafficBands: TrafficBands | null = null;
+  private trafficReach = 0;
   /** per line stroke segment, its width as a multiple of `slotPx` (traffic thickness), or null
    * when all are plain: picking reaches across wide lines (T-227) */
   lineWidths: Float32Array | null = null;
@@ -544,8 +588,9 @@ export class NetworkRenderer {
   private trafficWidths = false;
   private gathers = new Map<StrokeVao, StrokeGather>();
   private speedShown = new WeakMap<Strokes, Float32Array>();
-  /** the line strokes' demand widths and traffic marks as last written (null: the defaults), and a
-   * count of their writes, which the simplified copies follow */
+  /** the line strokes' demand widths (3 a segment: width, the Traffic view's band shift at its start
+   * and end) and traffic marks as last written (null: the defaults), and a count of their writes,
+   * which the simplified copies follow */
   private linesWmul: Float32Array | null = null;
   private linesFull: Float32Array | null = null;
   private perSegV = 0;
@@ -577,8 +622,8 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_band_px"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -688,8 +733,8 @@ export class NetworkRenderer {
     this.attrib(p, "a_level", make(sub(s.level, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
     this.attrib(p, "a_flags", make(sub(s.flags, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
     this.attrib(p, "a_speed", make(speedOf, 1, 4, new Float32Array(1).fill(160)), 1, gl.FLOAT, 1);
-    const wmulBuf = this.buffer(new Float32Array(Math.max(1, n)).fill(1), list);
-    this.attrib(p, "a_wmul", wmulBuf, 1, gl.FLOAT, 1);
+    const wmulBuf = this.buffer(plainWmul(Math.max(1, n)), list);
+    this.attrib(p, "a_wmul", wmulBuf, 3, gl.FLOAT, 1);
     const fullBuf = this.buffer(new Float32Array(Math.max(1, n)), list);
     this.attrib(p, "a_full", fullBuf, 1, gl.FLOAT, 1);
     const lane = s.lane;
@@ -767,9 +812,19 @@ export class NetworkRenderer {
         if (lines && band.v !== this.perSegV) {
           band.v = this.perSegV;
           const f = band.first, wm = this.linesWmul, fu = this.linesFull;
-          band.wm = wm ? Float32Array.from(f, (i) => wm[i]) : null;
+          // a merged segment's width and shift at its start are its first segment's, at its end its last's
+          if (wm) {
+            const m = f.length, all = wm.length / 3, out = new Float32Array(m * 3);
+            for (let k = 0; k < m; k++) {
+              const i = f[k], last = (k + 1 < m ? f[k + 1] : all) - 1;
+              out[k * 3] = wm[i * 3];
+              out[k * 3 + 1] = wm[i * 3 + 1];
+              out[k * 3 + 2] = wm[last * 3 + 2];
+            }
+            band.wm = out;
+          } else band.wm = null;
           band.fu = fu ? Float32Array.from(f, (i) => fu[i]) : null;
-          this.rewrite(band.vao.wmulBuf, band.wm ?? new Float32Array(f.length).fill(1));
+          this.rewrite(band.vao.wmulBuf, band.wm ?? plainWmul(f.length));
           this.rewrite(band.vao.fullBuf, band.fu ?? new Float32Array(f.length));
         }
         vao = band.vao;
@@ -840,7 +895,7 @@ export class NetworkRenderer {
     set("a_speed", a[5].buf, 1, gl.FLOAT, 4);
     set("a_lane", a[6].buf, 2, gl.UNSIGNED_BYTE, 2, false, true);
     set("a_band", a[7].buf, 4, gl.SHORT, 8, false, true);
-    set("a_wmul", v.wmulBuf, 1, gl.FLOAT, 4);
+    set("a_wmul", v.wmulBuf, 3, gl.FLOAT, 12);
     set("a_full", v.fullBuf, 1, gl.FLOAT, 4);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -867,10 +922,28 @@ export class NetworkRenderer {
     if (!n || !this.lines) return;
     this.layersSrc = l;
     const lines = this.lines;
-    if (lines.count) this.rewrite(lines.wmulBuf, l ? l.lineWidth : new Float32Array(lines.count).fill(1));
-    this.lineWidths = l && l.lineWidth.length === lines.count ? l.lineWidth : null;
-    this.linesWmul = l ? l.lineWidth : null;
+    const ok = !!l && l.lineWidth.length === lines.count;
+    const tb = ok && l.bands && l.bands.seg.length === lines.count * 2 ? l.bands : null;
+    let wm: Float32Array | null = null;
+    if (ok) {
+      wm = new Float32Array(lines.count * 3);
+      for (let i = 0; i < lines.count; i++) {
+        wm[i * 3] = l.lineWidth[i];
+        if (tb) (wm[i * 3 + 1] = tb.seg[i * 2]), (wm[i * 3 + 2] = tb.seg[i * 2 + 1]);
+      }
+    }
+    if (lines.count) this.rewrite(lines.wmulBuf, wm ?? plainWmul(lines.count));
+    this.lineWidths = ok ? l.lineWidth : null;
+    this.linesWmul = wm;
     this.trafficWidths = !!l?.traffic;
+    // trains on their Traffic view band (T-1799 stage 2): the lane texture's band channel
+    if (tb !== this.trafficBands) {
+      this.trafficBands = tb;
+      this.trafficReach = 0;
+      if (tb) for (const v of tb.sample) this.trafficReach = Math.max(this.trafficReach, Math.abs(v));
+      this.putLane(n);
+      this.setRibbons(stationRibbons(n.lines, n.stations, n.stationCount, tb, tb ? l!.lineWidth : null));
+    }
     this.perSegV++;
     const samples = Math.max(1, n.samples.length / 2);
     const upload = (tex: WebGLTexture | null, data: Float32Array, kind: "r32f" | "rg32f") => {
@@ -977,15 +1050,10 @@ export class NetworkRenderer {
     put("phases", "phases", () => [n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W]);
     put("meta", "meta", () => [n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W]);
     put("samples", "samples", () => [n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W]);
-    // per sample: how far apart its tracks are (T-658) and its line's band's shift (T-1799)
-    put("lane", ["sampleLane", "sampleBand"], () => {
-      const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane, band = n.sampleBand, v = new Float32Array(m * 2);
-      for (let k = 0; k < m; k++) {
-        v[k * 2] = lane?.length ? lane[k] ?? 1 : 1;
-        v[k * 2 + 1] = band?.[k] ?? 0;
-      }
-      return [v, "rg32f", TEX_W];
-    });
+    // the Traffic view's bands were the last network's
+    const hadTraffic = this.trafficBands !== null;
+    this.trafficBands = null;
+    if (hadTraffic || !(same.has("sampleLane") && same.has("sampleBand") && this.tex.lane)) this.putLane(n);
     put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
     put("colours", "lineColours", () => [n.lineColours, "rgba8", LINES_W]);
     put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
@@ -1031,6 +1099,10 @@ export class NetworkRenderer {
     this.dotCrowdBuf = this.buffer(this.crowds.dotCrowds);
     this.attrib(this.stationProg, "a_dcrowd", this.dotCrowdBuf, 2, gl.FLOAT, 1);
     this.attrib(this.stationProg, "a_crowd", this.crowdBuf, 4, gl.FLOAT, 1);
+    // boxes and dots as wide as the ribbon through them (T-1807)
+    this.ribbonBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount)));
+    this.attrib(this.stationProg, "a_ribbon", this.ribbonBuf, 1, gl.FLOAT, 1);
+    this.setRibbons(stationRibbons(n.lines, n.stations, n.stationCount, null, null));
     this.selectedAlso = new Set();
     this.selectedAlsoKey = "";
     this.selDrawnKey = "";
@@ -1071,6 +1143,16 @@ export class NetworkRenderer {
   /** each network texture's GL object, freed when it is replaced (T-1028: kept across edits while its
    * data is the same) */
   private texRes: Partial<Record<TexName, { del: () => void }[]>> = {};
+  /** per sample: how far apart its tracks are (T-658) and its line's band's shift as drawn (T-1799) */
+  private putLane(n: NetworkBuffers) {
+    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane, band = this.trafficBands?.sample ?? n.sampleBand, v = new Float32Array(m * 2);
+    for (let k = 0; k < m; k++) {
+      v[k * 2] = lane?.length ? lane[k] ?? 1 : 1;
+      v[k * 2 + 1] = band?.[k] ?? 0;
+    }
+    this.putTexture("lane", v, "rg32f", TEX_W);
+  }
+
   private putTexture(name: TexName, data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number) {
     for (const r of this.texRes[name] ?? []) r.del();
     const list: { del: () => void }[] = [];
@@ -1288,7 +1370,7 @@ export class NetworkRenderer {
     // without casing, where the stencil marks a station's white (1 the unselected, 2 the selected).
     const through = n.stationCount > 0 && boxes && this.hasStencil;
     // every box has one width on the ground (T-239); any station's gives it on screen here
-    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project).halfWidth : 0) - ring);
+    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project, false).halfWidth : 0) - ring);
     const trackCap = Math.max(1, TRACK_IN_BOX * boxWhite) * dpr;
     // T-1638: everything up to the stations changes only with the camera, the network and how it is
     // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
@@ -1322,10 +1404,12 @@ export class NetworkRenderer {
     // T-1799: lines sharing track side by side in the Line view, folding into one stroke as lines
     // thin out zoomed out and as double track opens into its two tracks close in
     const lanes = laneState(zoom);
-    const bandOn = !this.lineBands || opt.byLevel || opt.bySpeed || this.trafficWidths ? 0 : smoothstep(BAND_FOLD_PX[0], BAND_FOLD_PX[1], wLine / dpr) * (1 - lanes.grow);
+    // and in the Traffic view (stage 2) each band its riders' width, the shifts `a_wmul.yz`
+    const bandOn = !this.lineBands || opt.byLevel || opt.bySpeed || (this.trafficWidths && !this.trafficBands) ? 0 : smoothstep(BAND_FOLD_PX[0], BAND_FOLD_PX[1], wLine / dpr) * (1 - lanes.grow);
     this.bandPx = bandOn * wLine / dpr;
     this.bandShiftM = this.bandPx / (pxPerUnitAt(zoom) * kAtY(0));
     gl.uniform1f(u.u_band, bandOn);
+    gl.uniform1i(u.u_band_traffic, this.trafficWidths ? 1 : 0);
     gl.uniform3fv(u.u_level_colours, this.levelColours);
     gl.uniform3fv(u.u_track, TRACK_RGB);
     gl.uniform3fv(u.u_bad, BAD_RGB);
@@ -1524,6 +1608,7 @@ export class NetworkRenderer {
       gl.uniform2f(su.u_fixed, (boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) - (opt.boxShrinkPx ?? 0)) * dpr, unitAtBox);
       gl.bindVertexArray(this.stationVao);
       gl.uniform1f(su.u_pixel, dpr);
+      gl.uniform1f(su.u_band_px, this.bandPx * dpr);
       gl.uniform1i(su.u_layer, 0);
       // the player's links as bridges between platforms (T-217)
       const bridges = boxes && this.bridgeProg ? (n.stationLinkIdx?.length ?? 0) / 2 : 0;

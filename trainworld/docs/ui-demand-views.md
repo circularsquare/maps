@@ -87,9 +87,12 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 [T-227, T-267, T-274] In the Traffic track display, each stretch between two stops is as wide as
 its riders over the whole day shown, both directions together, linear: 0.5 times the normal width
 with no riders up to 6.6 times for the network's busiest stretch-day (`busiestDay`: the purpose
-shown, the larger of the days, so a weekend's or the average's lines are thinner). The width does not
-change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep their own width
-[T-239].
+shown, the larger of the days, so a weekend's or the average's lines are thinner), all of it drawn
+at 85% (`TRAFFIC_WIDTH`, T-1799 stage 2; a line demand has no figures for yet is 0.85 wide). The
+width does not change as the periods pass. At zoom 15 the widest line is about 37 px. Lines sharing
+track sit side by side, each band its own width, so a trunk is their sum (ui-map.md "Lines sharing
+track side by side"). Stations keep their own width [T-239], except where such a ribbon runs through one, which is then as
+wide as the ribbon [T-1807].
 
 ## Station ridership circles
 

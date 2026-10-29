@@ -137,11 +137,16 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   line alone keeps its full width. Zoomed out the bands fold into one stroke as a line narrows from
   1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
   centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
-  drawn over each other on the real tracks again. Through a station's box (T-236) the ribbon is
-  narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the
-  slop; trains run on their line's band (`sampleBand`, `tripAt`'s `bandM`). Not yet: the Traffic
-  view, the Elevation and Speed views and a four-track trunk's two pairs (their ribbons lie over
-  each other) are drawn as below; `?perfOff=bands` turns the bands off.
+  drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same order,
+  each band as wide as its own line's riders (`trafficBands` in `map/lineBands.ts`, from
+  `buildLayers`), so a trunk is the sum of its lines; its shifts ease at nodes as the Line view's
+  (every shared edge's line segments are cut 30 m from each end for it, `F_EASE`). A station's box
+  or dot is as wide as the widest ribbon through it, with its rim outside [T-1807,
+  `stationRibbons`]; through the box (T-236) the bands take the Line view's slots, narrowed to
+  fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
+  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). Not yet: the
+  Elevation and Speed views and a four-track trunk's two pairs (their ribbons lie over each other)
+  are drawn as below; `?perfOff=bands` turns the bands off.
 - **Lines sharing track drawn over each other** [T-190, T-533] where they are not side by side
   (zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet
   zero) goes under every line that runs trains; within each group the shorter route (end to end,
@@ -168,7 +173,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     mark as strong as that wait: 50% of full strength at 0.2 min plus the rest in proportion, all
     of it from 8 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
     mixed from the casing's colour towards the red and the darkening scaled alike, so the real
-    save's typical stretch (1.5 min at 08:00) shows at about 60%. The hover adds "Track at capacity at high
+    save's typical stretch (1.5 min at 08:00) shows at about 60%. Where lines sit side by side
+    the wait marks only that line's band: its red dashes run inside both edges of the band, 20% of
+    its width each, with the casing colour's outline inside them, and the band darkens; track at
+    capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
     demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
     crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
     and their hover lines.
@@ -279,7 +287,10 @@ number) and shows n as its symbol.
   there (11.25 px, about 24 m at New York's latitude; `BOX_NARROW`, T-652), so its shape never changes with zoom and it is
   never shorter than it is wide. Further out, to zoom 14, it keeps that 11.25 px on screen (white 7.25 px
   across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
-  width in every mode: a wide traffic line can be wider than its stations. Everything that draws or
+  width in every mode: a wide traffic line can be wider than its stations. A ribbon of lines side by
+  side is not: where one runs through a station (one of its lines' runs along an edge ends at the
+  node), the box, or zoomed out the dot, is at least the widest such ribbon's half width plus the
+  rim and a pixel either side, as folded at the time (T-1807, `a_ribbon`). Everything that draws or
   tests a platform (box, crowd fill, track stencil, picking, placement ghost, selection
   outline, the cut-out in the bubbles) uses that one line (`polyFrame` in the shaders,
   `stationShape`, `stationPath`). Blueprint stations are faded.

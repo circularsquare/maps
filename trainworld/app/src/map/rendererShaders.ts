@@ -110,13 +110,15 @@ uniform vec2 u_ghost_min;    // the ghost's least width across its rails (px), a
 uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple (one stroke, built), and the
                              // stroke widths (px) between which its centre line comes in
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
+uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
 in float a_level;
 in float a_flags;
 in float a_speed;
-in float a_wmul;           // width as a multiple of the line width (riders, T-084); 1 otherwise
+in vec3 a_wmul;            // width as a multiple of the line width (riders, T-084), 1 otherwise; the
+                           // Traffic view's band shift at its start and end, line widths left (T-1799)
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
 in float a_full;            // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its riders' wait for a train with room (min), 0 none
 in vec4 a_band;             // T-1799: its band's shift left at its start and end (share of ${BAND_RANGE} line widths), 1 - its width share at both
@@ -126,8 +128,10 @@ out vec4 v_cap;             // px: along from the segment's start, along to its 
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
+flat out vec3 v_inner;      // T-1799: red dashes inside both edges of a band: their width and period (px), strength; 0 none
 ${SEL_GLSL}
 void main() {
+  v_inner = vec3(0.0);
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   v_stripe = vec4(0.0);
@@ -156,25 +160,32 @@ void main() {
   bool bpShape = bpTrack || bpLine || ghost;
   float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z;
   float core = bpShape ? u_bp.x + 2.0 * u_bp.y : u_width.x;
-  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : a_wmul));
-  float extra = sel ? u_width.y : 0.0;
-  bool full = u_full_pass > 0;
-  bool fullOut = u_full_pass == 2;
-  if (full && !(u_kind == 1 && a_full != 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
-  float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * a_wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   int id = gl_VertexID;
   float along = float(id & 1);
   // lines sharing track side by side (T-1799): each a band narrower than a line, shifted across;
-  // every casing is drawn before any colour, so the bands get one outline round them all
+  // every casing is drawn before any colour, so the bands get one outline round them all. In the
+  // Traffic view each band is its riders' width (a_wmul.yz the shifts); through a station's box
+  // (u_cap) every view takes the Line view's slots, a line wide each before the cap
   float bandOn = u_kind == 1 ? u_band : 0.0;
-  float bandW = 1.0 - bandOn * mix(a_band.z, a_band.w, along);
+  bool shared = bandOn > 0.0 && max(a_band.z, a_band.w) > 0.0;
+  bool tBand = u_band_traffic == 1 && u_cap <= 0.0;
+  float wmul = shared && u_cap > 0.0 ? 1.0 : a_wmul.x;
+  float bandW = tBand ? 1.0 : 1.0 - bandOn * mix(a_band.z, a_band.w, along);
+  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : wmul));
+  float extra = sel ? u_width.y : 0.0;
+  bool full = u_full_pass > 0;
+  bool fullOut = u_full_pass == 2;
+  // riders waiting for a train with room on a band of shared track: marked inside that band (below)
+  bool waitIn = shared && tBand && a_full > 0.0;
+  if (full && (!(u_kind == 1 && a_full != 0.0) || waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
+  float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (ghost ? core
       : bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
       : bpLine ? u_bp.x * bandW + extra + cas
-      : u_width.x * a_wmul * (hsr ? u_hsr.x : 1.0) * bandW + extra + cas) + grow;
+      : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * bandW + extra + cas) + grow;
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
@@ -183,7 +194,7 @@ void main() {
     float wl = lfm > 0.0 ? 0.5 * (max(core, G + lt) - gap) : mix(core, lt, t);
     float half_ = 0.5 * (gap + wl);
     lane_off = half_;
-    float band = max(core * (bpShape ? 1.0 : a_wmul), lfm * 2.0 * half_ + wl);
+    float band = max(core * (bpShape ? 1.0 : wmul), lfm * 2.0 * half_ + wl);
     bool casing = u_casing > 0.0;
     bool keep = u_lane_mode == 1
       ? !ghost && (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (hsr && u_kind == 0))
@@ -221,7 +232,8 @@ void main() {
   if (turnback) lv = 2.0 * lv - 1.0;
   if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * lv * lane_off;
   // through a station's box (u_cap) the bands close up as they narrow to fit
-  if (bandOn > 0.0) off += nrm * mix(a_band.x, a_band.y, along) * ${BAND_RANGE.toFixed(1)} * bandOn * u_width.x * (u_cap > 0.0 ? min(1.0, u_cap / (${BAND_SHARE.toFixed(2)} * u_width.x)) : 1.0);
+  if (bandOn > 0.0) off += nrm * bandOn * u_width.x * (tBand ? mix(a_wmul.y, a_wmul.z, along)
+    : mix(a_band.x, a_band.y, along) * ${BAND_RANGE.toFixed(1)} * (u_cap > 0.0 ? min(1.0, u_cap / (${BAND_SHARE.toFixed(2)} * u_width.x)) : 1.0));
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
@@ -262,6 +274,7 @@ void main() {
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
   if (u_kind == 1 && a_full != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
+  if (waitIn && u_casing <= 0.0 && !full && u_lane_mode == 0 && u_full_dash > 0.0) v_inner = vec3(max(0.5, 0.18 * w), u_full_dash, fs);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
@@ -276,12 +289,23 @@ in vec4 v_cap;
 flat in vec4 v_stripe;
 flat in float v_stripe_only;
 flat in float v_dash;
+flat in vec3 v_inner;
+uniform vec3 u_full_rgb;
+uniform vec3 u_casing_rgb;
+uniform float u_full_out;
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
   if (v_dash > 0.0 && mod(v_cap.x, v_dash) > 0.6 * v_dash) discard;
   vec3 c = v_color;
+  // T-1799: red dashes inside a band's edges, with a line of the casing's colour inside them, so
+  // they read on a red line as T-1284's outline does
+  if (v_inner.x > 0.0 && mod(v_cap.x, v_inner.y) <= 0.6 * v_inner.y) {
+    float e = abs(v_cap.z) - (v_cap.w - v_inner.x);
+    c = mix(c, u_casing_rgb, v_inner.z * clamp(e + 0.5 + min(0.5 * u_full_out, 0.5 * v_inner.x), 0.0, 1.0));
+    c = mix(c, u_full_rgb, v_inner.z * clamp(e + 0.5, 0.0, 1.0));
+  }
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
     c = mix(c, v_stripe.rgb, s);
@@ -320,6 +344,8 @@ in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + an
                          // and whether that side is full (zw)
 in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform side, 0-1, and 1 if
                          // it is full
+in float a_ribbon;       // T-1807: half the widest ribbon of lines side by side through it, line widths; 0 none
+uniform float u_band_px; // px a line width of a ribbon is drawn (folding included)
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
 flat out vec3 v_size;    // half length, half width; 1 a waiting room, 3 a terminal
@@ -379,8 +405,11 @@ void main() {
   // it keeps one shape from there in; further out it keeps that width on screen (T-553)
   float perLoc = axisLoc > 1e-9 ? len / axisLoc : 0.0;
   float hw = max(max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc, boxes ? u_fixed.x : 0.0);
+  // as wide as the ribbon of lines side by side through it, and its rim (T-1807)
+  float ribbon = a_ribbon > 0.0 && u_band_px > 0.0 ? a_ribbon * u_band_px + u_ring + u_pixel : 0.0;
+  if (boxes) hw = max(hw, ribbon);
   // a dot covers a plain line through it as drawn now
-  float cover = 0.3 * u_line + u_ring + u_pixel;
+  float cover = max(0.3 * u_line + u_ring + u_pixel, ribbon);
   float hl = max(len, hw);
   // zoomed out every station is its own dot at its platform's middle (T-313)
   if (!boxes) v_dot = max((flags & 1) != 0 ? u_radius.y : u_radius.x, cover);

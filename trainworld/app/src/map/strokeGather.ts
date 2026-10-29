@@ -13,6 +13,7 @@ export interface StrokeCpu {
   lane: Uint8Array | undefined;
   /** T-1799: absent, all 0 */
   band: Int16Array | undefined;
+  /** 3 an instance (width, the Traffic view's band shift at its start and end); null: 1, 0, 0 */
   wmul: Float32Array | null;
   full: Float32Array | null;
 }
@@ -60,7 +61,7 @@ export class StrokeGather {
     attrib("a_flags", 1, gl.FLOAT);
     attrib("a_speed", 1, gl.FLOAT);
     attrib("a_lane", 2, gl.UNSIGNED_BYTE, false, true);
-    this.wmulBuf = attrib("a_wmul", 1, gl.FLOAT);
+    this.wmulBuf = attrib("a_wmul", 3, gl.FLOAT);
     this.fullBuf = attrib("a_full", 1, gl.FLOAT);
     attrib("a_band", 4, gl.SHORT, false, true);
     gl.bindVertexArray(null);
@@ -79,10 +80,10 @@ export class StrokeGather {
     this.flags = new Float32Array(cap);
     this.speed = new Float32Array(cap);
     this.lane = new Uint8Array(cap * 2);
-    this.wmul = new Float32Array(cap);
+    this.wmul = new Float32Array(cap * 3);
     this.full = new Float32Array(cap);
     this.band = new Int16Array(cap * 4);
-    const bytes = [16, 4, 4, 4, 4, 4, 2, 4, 4, 8];
+    const bytes = [16, 4, 4, 4, 4, 4, 2, 12, 4, 8];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferData(gl.ARRAY_BUFFER, cap * bytes[i], gl.DYNAMIC_DRAW);
@@ -104,17 +105,20 @@ export class StrokeGather {
       copy(flags, at, cpu.flags, start, n);
       copy(speed, at, cpu.speed, start, n);
       if (cpu.lane) copy(lane, at * 2, cpu.lane, start * 2, n * 2);
-      if (cpu.wmul) copy(wmul, at, cpu.wmul, start, n);
+      if (cpu.wmul) copy(wmul, at * 3, cpu.wmul, start * 3, n * 3);
       if (cpu.full) copy(full, at, cpu.full, start, n);
       if (cpu.band) copy(band, at * 4, cpu.band, start * 4, n * 4);
       at += n;
     }
     if (!cpu.lane) lane.fill(255, 0, total * 2);
-    if (!cpu.wmul) wmul.fill(1, 0, total);
+    if (!cpu.wmul) {
+      wmul.fill(0, 0, total * 3);
+      for (let i = 0; i < total; i++) wmul[i * 3] = 1;
+    }
     if (!cpu.full) full.fill(0, 0, total);
     if (!cpu.band) band.fill(0, 0, total * 4);
     const data: ArrayBufferView[] = [seg, colour, edge, level, flags, speed, lane, wmul, full, band];
-    const per = [4, 1, 1, 1, 1, 1, 2, 1, 1, 4];
+    const per = [4, 1, 1, 1, 1, 1, 2, 3, 1, 4];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, data[i], 0, total * per[i]);

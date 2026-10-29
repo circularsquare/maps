@@ -179,6 +179,197 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   return { of, order, rule };
 }
 
+/** `TrafficBands.pick` holds a shift as a share of this many times BAND_RANGE line widths, since a
+ * trunk of busy lines is wider than BAND_RANGE */
+export const TRAFFIC_PICK_DIV = 4;
+
+export interface TrafficBands {
+  /** per line stroke segment, 2: its band's shift at its start and end, line widths left of its direction */
+  seg: Float32Array;
+  /** per train sample: its line's band's shift there, line widths left of run 0 (as `sampleBand`) */
+  sample: Float32Array;
+  /** per segment, `Strokes.band`'s layout for picking: the shifts over TRAFFIC_PICK_DIV, full width */
+  pick: Int16Array;
+}
+
+interface TrafficStrokes { seg: Float32Array; colour: Uint32Array; edge: Uint32Array; band?: Int16Array; count: number }
+
+/**
+ * The Traffic view's bands (T-1799 stage 2): on an edge the Line view draws side by side, the same
+ * order, each band as wide as its line's riders (`width`, per segment, line widths), so the ribbon is
+ * their sum; eased at nodes as the Line view's (`lineBands`' rule on which side of a node the ease
+ * sits, over BAND_RAMP_M, network.ts `bandPoints` cutting the segments there). The order is read back
+ * from the Line view's shifts in `L.band`. `perM`: local units per metre at a y. `samples` and
+ * `sampleStroke` as `NetworkBuffers`'. Null when no edge is shared.
+ */
+export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: number) => number, samples: Float32Array, sampleStroke: Int32Array | undefined): TrafficBands | null {
+  const n = L.count, B = L.band, seg = L.seg;
+  if (!B || B.length < n * 4) return null;
+  const S = BAND_RANGE / 32767;
+  // runs: one line's consecutive segments on one edge, one path entry each, a line's in path order
+  const start: number[] = [];
+  for (let i = 0; i < n; ) {
+    let j = i + 1;
+    while (j < n && L.edge[j] === L.edge[i] && L.colour[j] === L.colour[i]) j++;
+    start.push(i);
+    i = j;
+  }
+  const R = start.length;
+  start.push(n);
+  const runOf = new Int32Array(n);
+  const len = new Float64Array(R), mid = new Float64Array(R), sgn = new Int8Array(R).fill(1), count = new Int32Array(R).fill(1);
+  const T = new Float64Array(R);
+  const byEdge = new Map<number, number[]>();
+  let any = false;
+  for (let r = 0; r < R; r++) {
+    const i0 = start[r], i1 = start[r + 1];
+    let at = 0;
+    for (let i = i0; i < i1; i++) {
+      runOf[i] = r;
+      at += Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
+    }
+    len[r] = at;
+    // the Line view's shift at the end point nearest the middle, which lies between the eases
+    let best = Infinity, shared = false;
+    at = 0;
+    for (let i = i0; i < i1; i++) {
+      for (const e of [0, 1]) {
+        const d = Math.abs(at - len[r] / 2);
+        if (d < best) (best = d), (mid[r] = B[i * 4 + e] * S), (shared = B[i * 4 + 2 + e] > 0);
+        if (e === 0) at += Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
+      }
+    }
+    if (!shared) continue;
+    any = true;
+    const e = L.edge[i0];
+    let v = byEdge.get(e);
+    if (!v) byEdge.set(e, (v = []));
+    v.push(r);
+  }
+  if (!any) return null;
+  for (const v of byEdge.values()) {
+    // each run's direction against the first's, by their chords: the shifts in one frame
+    const chord = (r: number) => {
+      const a = start[r], b = start[r + 1] - 1;
+      return [seg[b * 4 + 2] - seg[a * 4], seg[b * 4 + 3] - seg[a * 4 + 1]];
+    };
+    const [rx, ry] = chord(v[0]);
+    const first = new Map<number, number>();
+    for (const r of v) {
+      const [x, y] = chord(r);
+      sgn[r] = x * rx + y * ry >= 0 ? 1 : -1;
+      if (!first.has(L.colour[start[r]])) first.set(L.colour[start[r]], r);
+    }
+    if (first.size < 2) continue;
+    const lines = [...first.values()].sort((a, b) => mid[b] * sgn[b] - mid[a] * sgn[a]);
+    let total = 0;
+    for (const r of lines) total += width[start[r]];
+    const own = new Map<number, number>();
+    let left = 0;
+    for (const r of lines) {
+      const w = width[start[r]];
+      own.set(L.colour[start[r]], total / 2 - left - w / 2);
+      left += w;
+    }
+    for (const r of v) {
+      T[r] = own.get(L.colour[start[r]])! * sgn[r];
+      count[r] = first.size;
+    }
+  }
+  const out = new Float32Array(n * 2), pick = new Int16Array(n * 4);
+  const P = 32767 / (BAND_RANGE * TRAFFIC_PICK_DIV);
+  const ease = new Float64Array(BAND_STRIDE);
+  for (let r = 0; r < R; r++) {
+    const i0 = start[r], i1 = start[r + 1];
+    const same = (q: number) => q >= 0 && q < R && L.colour[start[q]] === L.colour[i0];
+    if (!T[r] && !(same(r - 1) && T[r - 1]) && !(same(r + 1) && T[r + 1])) continue;
+    // as lineBands' `atNode`: the side with fewer lines' value, half way between equals
+    const atNode = (q: number) => (!same(q) ? T[r] : count[q] < count[r] ? T[q] : count[q] > count[r] ? T[r] : (T[q] + T[r]) / 2);
+    ease[0] = atNode(r - 1);
+    ease[1] = T[r];
+    ease[2] = atNode(r + 1);
+    const k = perM(seg[i0 * 4 + 1]), lm = len[r] / k;
+    let at = 0;
+    for (let i = i0; i < i1; i++) {
+      const l = Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
+      const s0 = bandAlong(ease, 0, at / k, lm)[0], s1 = bandAlong(ease, 0, (at + l) / k, lm)[0];
+      at += l;
+      out[i * 2] = s0;
+      out[i * 2 + 1] = s1;
+      pick[i * 4] = Math.round(s0 * P);
+      pick[i * 4 + 1] = Math.round(s1 * P);
+    }
+  }
+  // a train sample's run is its stroke's (the first segment of its path entry); where it is along
+  // the run, by walking the run's segments forwards with the line's samples
+  const ns = samples.length / 2, sample = new Float32Array(ns);
+  let lastRun = -1, s = 0;
+  for (let q = 0; sampleStroke && q < ns; q++) {
+    const f = sampleStroke[q];
+    if (f < 0 || f >= n) continue;
+    const r = runOf[f], i1 = start[r + 1];
+    if (r !== lastRun) (lastRun = r), (s = start[r]);
+    if (out[start[r] * 2] === 0 && out[(i1 - 1) * 2 + 1] === 0 && T[r] === 0) continue;
+    const x = samples[q * 2], y = samples[q * 2 + 1];
+    for (;;) {
+      const ax = seg[s * 4], ay = seg[s * 4 + 1], dx = seg[s * 4 + 2] - ax, dy = seg[s * 4 + 3] - ay, l2 = dx * dx + dy * dy;
+      const t = l2 > 0 ? ((x - ax) * dx + (y - ay) * dy) / l2 : 0;
+      if (t > 1 && s < i1 - 1) {
+        s++;
+        continue;
+      }
+      const u = Math.max(0, Math.min(1, t));
+      sample[q] = out[s * 2] + (out[s * 2 + 1] - out[s * 2]) * u;
+      break;
+    }
+  }
+  return { seg: out, sample, pick };
+}
+
+/** how near a line's run must end to a station's node to pass through it, local units */
+const AT_NODE = 3;
+
+/**
+ * T-1807: per station, half the width of the widest ribbon of lines sharing track through it, line
+ * widths, unfolded; 0 where no shared track passes. A ribbon passes through a station when one of its
+ * lines' runs along an edge ends at its node. The Line view's bands (`L.band`), or the Traffic view's
+ * (`traffic`, with `width` per segment, line widths).
+ */
+export function stationRibbons(L: TrafficStrokes, stations: Float32Array, count: number, traffic: TrafficBands | null, width: Float32Array | null): Float32Array {
+  const out = new Float32Array(count), B = L.band, n = L.count, seg = L.seg;
+  if (!B || B.length < n * 4 || !count) return out;
+  const S = BAND_RANGE / 32767, cell = (v: number) => Math.floor(v / (4 * AT_NODE));
+  const grid = new Map<string, number[]>();
+  for (let i = 0; i < count; i++) {
+    const k = `${cell(stations[i * 3])},${cell(stations[i * 3 + 1])}`;
+    let v = grid.get(k);
+    if (!v) grid.set(k, (v = []));
+    v.push(i);
+  }
+  const mark = (x: number, y: number, r: number) => {
+    const cx = cell(x), cy = cell(y);
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const i of grid.get(`${cx + dx},${cy + dy}`) ?? []) {
+      if (Math.abs(stations[i * 3] - x) <= AT_NODE && Math.abs(stations[i * 3 + 1] - y) <= AT_NODE) out[i] = Math.max(out[i], r);
+    }
+  };
+  for (let i0 = 0; i0 < n; ) {
+    let i1 = i0 + 1;
+    while (i1 < n && L.edge[i1] === L.edge[i0] && L.colour[i1] === L.colour[i0]) i1++;
+    let r = 0;
+    for (let i = i0; i < i1; i++) for (const e of [0, 1]) {
+      const q = B[i * 4 + 2 + e] / 32767;
+      if (q <= 0) continue;
+      r = Math.max(r, traffic && width ? Math.abs(traffic.seg[i * 2 + e]) + width[i] / 2 : Math.abs(B[i * 4 + e] * S) + (1 - q) / 2);
+    }
+    if (r > 0) {
+      mark(seg[i0 * 4], seg[i0 * 4 + 1], r);
+      mark(seg[(i1 - 1) * 4 + 2], seg[(i1 - 1) * 4 + 3], r);
+    }
+    i0 = i1;
+  }
+  return out;
+}
+
 /** A path entry's band at `t` metres from its start (its travel direction) on an edge `len` m long:
  * [shift, 1 - width share]. `b`: its BAND_STRIDE numbers at `o`. */
 export function bandAlong(b: ArrayLike<number>, o: number, t: number, len: number): [number, number] {
