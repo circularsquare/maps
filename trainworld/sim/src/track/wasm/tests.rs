@@ -2941,3 +2941,65 @@ fn drawing_on_from_a_dead_end_station_keeps_its_platform() {
         assert_eq!((a.w.net.node_x[st as usize], a.w.net.node_ports[st as usize].n), (x0, 1), "one undo step");
     }
 }
+
+#[test]
+fn line_groups_join_copy_leave_and_save() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let nodes = a.nodes_info();
+    let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+    assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
+    assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
+    let l4 = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l4, &[n0, n1], 4, 4, 2, 30.0, 180.0, 0, 0x00933c, "4".into()), 0);
+    let l5 = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l5, &[n0, n1], 4, 4, 2, 30.0, 180.0, 0, 0x00933c, "5".into()), 0);
+    assert_eq!(a.construct_line(l4), 0, "{}", a.issues());
+    let times = a.stop_times(l4, 0, 0);
+    // a join: no service edit
+    let g = a.new_line_group();
+    assert_eq!(a.set_line_group(&[l4, l5], g), 0, "{}", a.issues());
+    assert!(a.dirty_demand_lines().is_empty());
+    assert_eq!((a.line_group(l4), a.line_group(l5)), (g, g));
+    assert_eq!(a.stop_times(l4, 0, 0), times);
+    assert_eq!(a.undo(), 0);
+    assert_eq!((a.line_group(l4), a.line_group(l5)), (0, 0));
+    assert_eq!(a.redo(), 0);
+    assert_eq!(a.line_group(l5), g);
+    // a name, kept by a line that joins
+    assert_eq!(a.set_line_group_name(g, "Lex".into()), 0);
+    assert_eq!(a.line_group_name(l5), "Lex");
+    let c = a.new_line_id();
+    assert_eq!(a.copy_line(l4, c, "4 copy".into()), 0, "{}", a.issues());
+    assert_eq!((a.line_group(c), a.line_group_name(c)), (g, "Lex".to_string()));
+    // leaving: the copy goes, then the 5 leaves the 4 alone, which stops being a group
+    assert_eq!(a.set_line_group(&[c], 0), 0);
+    assert_eq!((a.line_group(c), a.line_group_name(c), a.line_group(l4)), (0, String::new(), g));
+    assert_eq!(a.set_line_group(&[l5], 0), 0);
+    assert_eq!((a.line_group(l4), a.line_group(l5)), (0, 0));
+    assert_eq!(a.undo(), 0, "one step");
+    assert_eq!((a.line_group(l4), a.line_group(l5)), (g, g));
+    // a copy of an ungrouped line makes a group of the two
+    let c2 = a.new_line_id();
+    assert_eq!(a.copy_line(c, c2, "4 copy 2".into()), 0, "{}", a.issues());
+    let g2 = a.line_group(c);
+    assert!(g2 != 0 && g2 != g && a.line_group(c2) == g2);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.line_group(c), 0, "the copy's grouping goes with it");
+    assert_eq!(a.redo(), 0);
+    // deleting one of two ends the group
+    assert_eq!(a.remove_line(c2), 0);
+    assert_eq!(a.line_group(c), 0);
+    // saves keep groups and names; a save without the block loads ungrouped
+    let bytes = a.save();
+    let at = bytes.windows(4).rposition(|w| w == b"LGR1").expect("LGR1 written");
+    let mut b = api();
+    assert!(b.load(&bytes));
+    let (b4, b5) = (0u32, 1u32);
+    assert_eq!((b.line_group(b4), b.line_group(b5), b.line_group_name(b5)), (g, g, "Lex".to_string()));
+    assert!(save::decode(&bytes[..at]).map(|n| n.line_group.iter().all(|&g| g == 0)).unwrap());
+    assert_eq!(a.set_line_group(&[l4], 0), 0);
+    assert!(!a.save().windows(4).any(|w| w == b"LGR1"));
+}

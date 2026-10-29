@@ -552,6 +552,24 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
+- **Line groups** (T-1791; Anita 2026-10-29): a grouping for the player's eyes only, each line
+  still its own service. A group is a number on each line (`LineData::group`, 0 for none) with
+  the group's name beside it (`group_name`, empty for its oldest line's name, the same on every
+  line of it), so a copy, an undo and a delete carry it. `TrackApi.set_line_group(lines, group)`
+  moves lines in or out (0) as one undoable edit, a joining line taking the group's name; a group
+  left with one line stops being one, in the same edit, and so on deleting a line.
+  `set_line_group_name` renames every line of it in one edit. Copy line puts the copy in its
+  source's group, making a new one of the two when the source had none (one edit). The service
+  never reads the group: a group edit rebuilds the lines' service like a colour change, wakes no
+  demand and shows no "constructing...". Saved in a trailing `LGR1` block (architecture.md, the
+  save format); a save without it loads every line ungrouped.
+  The group view edits stops without moving the line (`wasm/lines.rs`): `drop_stop(line, i)`
+  takes a stop out and keeps the path (`set_stops` finds the route again, which can move a local
+  onto express track); an end stop's removal cuts the path back to the new end. `end_line_at(line,
+  i)` drops the stops past `i` toward the nearer end (the later end when level) the same way.
+  `stop_passed(line, station)` makes a station the path passes a stop, path untouched. Each is
+  one ordinary service edit and one undo. `drop_stop` and `end_line_at` are refused where a train
+  turns back at the stop, at a loop's ends, below two stops, and for a bus line.
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
   bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.

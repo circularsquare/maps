@@ -268,6 +268,27 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(trains as u64);
         }
     }
+    // T-1791: the line groups, after LRT1 and only when there are any: count, then per
+    // line its index and group; then count, then per named group its number and name
+    let grouped: Vec<(usize, u32)> = lines.iter().enumerate().filter(|(_, &l)| net.line_group[l as usize] != 0).map(|(i, &l)| (i, net.line_group[l as usize])).collect();
+    if !grouped.is_empty() {
+        w.0.extend_from_slice(b"LGR1");
+        w.u(grouped.len() as u64);
+        for &(i, g) in &grouped {
+            w.u(i as u64);
+            w.u(g as u64);
+        }
+        let mut names: Vec<(u32, &str)> = vec![];
+        for &l in &lines {
+            let (g, s) = (net.line_group[l as usize], net.line_group_name[l as usize].as_str());
+            if g != 0 && !s.is_empty() && !names.iter().any(|x| x.0 == g) { names.push((g, s)); }
+        }
+        w.u(names.len() as u64);
+        for (g, s) in names {
+            w.u(g as u64);
+            w.s(s);
+        }
+    }
     w.0
 }
 
@@ -409,7 +430,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new() })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -476,6 +497,19 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         }
         net.rates_settled = true;
         net.rates_from_save = true;
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LGR1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, g) = (r.u()? as usize, r.u()? as u32);
+            if i < n_lines { net.line_group[i] = g; }
+        }
+        for _ in 0..r.u()? {
+            let (g, s) = (r.u()? as u32, r.s()?);
+            for i in 0..n_lines {
+                if g != 0 && net.line_group[i] == g { net.line_group_name[i] = s.clone(); }
+            }
+        }
     }
     net.take_touch();
     Ok(net)

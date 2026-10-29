@@ -63,6 +63,9 @@ export interface LineInput {
   colour: string;
   stops: StationId[];
   tph: Tph;
+  /** the player's line group (T-1791), absent for none, and its name, "" for its oldest line's */
+  group?: number;
+  groupName?: string;
 }
 
 /** A stretch of track between two nodes (SPEC 6.2). */
@@ -236,6 +239,8 @@ export interface WorldView {
 /** What the inspector shows. `null` = nothing selected, and the inspector is empty. */
 export type Selection =
   | { kind: "line"; line: LineId }
+  /** a line group's view (T-1791): its group number */
+  | { kind: "group"; group: number }
   | { kind: "station"; station: StationId }
   | { kind: "track"; edge: EdgeId }
   | { kind: "junction"; node: NodeId }

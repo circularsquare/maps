@@ -37,6 +37,8 @@ import { demandPending, Spinner } from "../Spinner";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
+import { LineGroup } from "./LineGroup";
+import { afterCopy } from "../../game/lineGroups";
 
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -710,11 +712,8 @@ function RailLineInspector({ id }: { id: string }) {
     try {
       const a = await edit({ op: "copyLine", line: l.num });
       if (!a.ok || a.line === undefined) return;
-      live.tools?.exit();
-      lineDraft.value = { line: a.line, stops: [] };
-      renameLinePrompt.value = String(a.line);
-      selection.value = { kind: "line", line: String(a.line) };
-      tool.value = "line";
+      // T-1791: the copy joins its source's group, whose view opens
+      selection.value = afterCopy(world.peek()?.save.lines ?? [], a.line);
     } finally { setCopying(false); }
   };
 
@@ -825,6 +824,7 @@ function RailLineInspector({ id }: { id: string }) {
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
         </div>
       )}
+      <LineGroup l={l} />
       <div class="sub muted">
         {st.fast && "High-speed, "}{plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
       </div>

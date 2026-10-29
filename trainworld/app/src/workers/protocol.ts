@@ -88,6 +88,10 @@ export type EditOp =
   /** T-648: the station put in where the line tool's search fits it best (`TrackApi::insert_stop`),
    * then set as `setStops`; refused with "InsertStop" when no track joins it in */
   | { op: "insertStop"; line: number; station: NodeId }
+  /** T-1791, the group view's stop edits, all keeping the line's path: stop `index` out (an end's removal cuts the path back), the line ended at stop `index` (the stops past it toward the nearer end go), a station the line passes made a stop; refused with "LinePath" */
+  | { op: "dropStop"; line: number; index: number }
+  | { op: "endLineAt"; line: number; index: number }
+  | { op: "stopPassed"; line: number; station: NodeId }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
@@ -96,6 +100,9 @@ export type EditOp =
   /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
   | { op: "lineCars"; line: number; cars: number }
   | { op: "lineFast"; line: number; fast: boolean }
+  /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
+  | { op: "lineGroup"; lines: number[]; group: number | "new" }
+  | { op: "groupName"; group: number; name: string }
   /** the fare curve (T-883, game/fareCurve.ts): its nodes, or a base and rate as two nodes; not undoable, a setting */
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
@@ -332,6 +339,9 @@ export interface ClockLine {
   id: number;
   name: string;
   letter: string;
+  /** the line's group, 0 for none, and the group's name, "" for its oldest line's (T-1791) */
+  group: number;
+  groupName: string;
   colour: string;
   ok: boolean;
   running: boolean;

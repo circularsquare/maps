@@ -190,6 +190,11 @@ pub struct LineData {
     pub fast: bool,
     /// A bus line (T-1464): its route; its stops and path stay empty (`bus::plan` places the stops).
     pub bus: Option<BusRoute>,
+    /// The player's line group (T-1791), 0 for none: a grouping for the Lines tab only, which
+    /// the service never reads. Kept on the line so a copy, an undo and a delete carry it.
+    pub group: u32,
+    /// The group's name, the same on every line of it; empty for the default (its oldest line's).
+    pub group_name: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -373,6 +378,8 @@ pub struct Network {
     pub line_fast: Vec<bool>,
     /// Per line: its bus route (T-1464), None for a rail line.
     pub line_bus: Vec<Option<BusRoute>>,
+    pub line_group: Vec<u32>,
+    pub line_group_name: Vec<String>,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -628,6 +635,8 @@ impl Network {
             line_cars: vec![],
             line_fast: vec![],
             line_bus: vec![],
+            line_group: vec![],
+            line_group_name: vec![],
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -821,6 +830,8 @@ impl Network {
         self.line_cars.push(0);
         self.line_fast.push(false);
         self.line_bus.push(None);
+        self.line_group.push(0);
+        self.line_group_name.push(String::new());
         self.line_broken.push(false);
     }
     fn claim_node(&mut self, id: u32) {
@@ -889,6 +900,8 @@ impl Network {
                 cars: self.line_cars[i],
                 fast: self.line_fast[i],
                 bus: self.line_bus[i].clone(),
+                group: self.line_group[i],
+                group_name: self.line_group_name[i].clone(),
             }
         })
     }
@@ -1176,6 +1189,8 @@ impl Network {
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
                 self.line_bus[i] = d.bus;
+                self.line_group[i] = d.group;
+                self.line_group_name[i] = if d.group == 0 { String::new() } else { d.group_name };
             }
             None => {
                 if old.is_none() {
@@ -1184,6 +1199,7 @@ impl Network {
                 let i = id as usize;
                 self.line_alive[i] = false;
                 self.line_bus[i] = None;
+                self.line_group[i] = 0;
                 self.stops.free(self.line_stops[i]);
                 self.paths.free(self.line_path[i]);
                 self.line_stops[i] = Span::default();

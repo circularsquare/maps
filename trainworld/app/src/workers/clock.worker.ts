@@ -2729,6 +2729,18 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       const stops = a.insert_stop(op.line, op.station);
       return stops.length ? { r: a.set_stops(op.line, Uint32Array.from(stops)) } : { r: INSERT_REFUSED };
     }
+    case "dropStop": {
+      const r = a.drop_stop(op.line, op.index);
+      return { r: r === 0 ? 0 : DROP_REFUSED };
+    }
+    case "endLineAt": {
+      const r = a.end_line_at(op.line, op.index);
+      return { r: r === 0 ? 0 : DROP_REFUSED };
+    }
+    case "stopPassed": {
+      const r = a.stop_passed(op.line, op.station);
+      return { r: r === 0 ? 0 : INSERT_REFUSED };
+    }
     case "setTrainCount":
       return { r: a.set_train_counts(op.line, ...op.trains) };
     case "setHeadway":
@@ -2747,6 +2759,10 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     }
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
+    case "lineGroup":
+      return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
+    case "groupName":
+      return { r: a.set_line_group_name(op.group, op.name) };
     case "fares":
       fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}) };
       return { r: 0 };
@@ -2775,6 +2791,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
 
 /** `apply`'s answer for an insertStop with nowhere to go (the track model's own codes are >= 0) */
 const INSERT_REFUSED = -1;
+/** the same for a dropStop or endLineAt the line cannot take (T-1791) */
+const DROP_REFUSED = -2;
 
 function issues(): string[] {
   return api!.issue_kinds().split("\n").filter(Boolean);
@@ -3101,7 +3119,7 @@ async function handle(msg: ToClock) {
       if (service) serviceEditMs = performance.now() - tA;
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
     }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
+    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     if (r === 0) keep();
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();

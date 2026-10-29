@@ -104,6 +104,26 @@ purpose filter the purpose drawn is ringed in the bar.
   City column follows Name (the first stop's city, named as the Cities list names it, `stationZone`;
   hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
   Trains columns.
+- **Line groups** [T-1791, `game/lineGroups.ts`; the model in [track-and-service.md](track-and-service.md) 6.3]:
+  dragging a line's row onto another line's row (a pointer moved 6 px or more with the mouse or a
+  pen; touch scrolls the list as before) makes a group of the two; onto a group's row or one of
+  its lines, the line joins that group. Dragging a line out of its group's rows and letting go
+  anywhere else (another row of no group excepted, which makes a new group of the two) takes it
+  out; a group left with one line is no group. While dragging, the row's bullet and name follow
+  the pointer, the dragged row is faded and the row it would join is outlined; Esc cancels. A group
+  is one row: a chevron (hover "Show the group's lines", "Close the group"), the bullets of its
+  lines oldest (lowest number) first, its name (the player's, else its oldest line's name; a
+  double click on it opens a name box, Enter or leaving it keeps the name, Esc drops it, and
+  typing the oldest line's name back clears it), and its lines' riders, money and trains added up,
+  each hover listing the lines' own figures (riders "1.59M riders in the past 24 hours, each
+  line's added up", since a rider changing between two of its lines counts twice), the trains
+  uncoloured. Only running lines count; a group with none reads Planned (or Broken). The chevron
+  opens it to its lines, indented 24 px, each a line row as any other, sorted by the tab's sort;
+  open or closed is kept while the page is open. The group row sorts among the lines by its
+  totals (Near by its nearest line, City and the tie by its oldest line, Name by its name), and
+  shows, with all its lines, when any of them is in the viewed place. A click on it opens the group
+  view (below), a double click fits the map to all its lines'
+  stops. A group edit is one undo step and wakes no demand.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
   ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
@@ -125,9 +145,14 @@ purpose filter the purpose drawn is ringed in the bar.
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
 - **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
-  "High-speed, " on a line of high-speed trains [T-1280].
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161, then opens
-  naming and editing; the copy keeps the symbol its line shows, T-1475), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  "High-speed, " on a line of high-speed trains [T-1280]. Above it, for a line in a group
+  [T-1791], a row with the group's bullets (each but the line's own a link to its line), the
+  group's name (a click opens the group view, hover "Open the group") and a Leave group button
+  (an arrow out of a box, hover "Leave group"), there for touch, where dragging rows is not; a
+  bus line's panel has the same row.
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161;
+  the copy keeps the symbol its line shows, T-1475, joins its source's group, making one of the
+  two when the source had none, and the group view opens, T-1791), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
@@ -264,6 +289,46 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   stop count under the name counts the first stop once.
 - A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].
+
+## The group view
+
+[T-1791 stages 2 and 3; `ui/inspector/GroupInspector.tsx`, layout `game/groupLayout.ts`, check
+`checks/t1791-layout.mjs`] A line group's panel, opened from its Lines-tab row, the group name in
+a line panel, and Copy line. Stops are edited in its diagram (below); the line panel's own remove
+button works as before.
+
+- **Title**: the group's bullets, its name (renamed as a line's is: double click or the pencil;
+  the oldest line's name typed back clears it) and Show on the map (all its lines' stops).
+- **A row per line**, oldest first: bullet, name, its trains at its level now (hover "High
+  demand: 21 trains", muted at 0) and a Copy line button (hover "Copy line"); a click opens the
+  line's panel. No times, no past 24 hours, no schedule.
+- **The diagram**: a column per line (22 px, its bullet on top), a row per place (18 px). Rows
+  start from the line with most stops in its path order; each other line is matched to them by
+  station complex (`stopKey`), turned round if it runs the other way, and its own stations go in
+  new rows where it leaves the rows it shares; a branch past the shared rows goes below all the
+  rows, its column broken where it leaves. A line sharing no place takes the rows from the top,
+  beside the others. On its rows a column shows a white pill where the line stops, and its bar
+  between. Where lines stop side by side at one place (one station complex) the pill is one
+  elongated pill over their columns, as the related lines view draws an interchange; a line stopping
+  alone has a round one. A station a line passes has the same pill with its outline at 40% (as the
+  related lines view fades a passed station), so it reads as a stop not made. To the right of the columns, a name per row (the row's stations joined with " / " where
+  they differ, cut with an ellipsis, muted where no line stops; a click selects the station); the
+  row's hover also names each line's station where they differ. A line with no trains at its
+  level now is drawn at 40%, its bullet too (hover adds "No trains at high demand"). While the
+  pointer is on a column the map draws that line full and every other line at 30%, as stop
+  editing does.
+- **Editing stops**, every edit keeping the line's path and a normal service edit (demand
+  re-solves, one undo each; sim `drop_stop`, `end_line_at`, `stop_passed`, track-and-service.md).
+  Each line has its own click target at a stop, 22 px wide over its column, also inside an
+  elongated pill: the hovered line's part of the pill shows a dot in that line's colour, and the
+  hover names the line ("Click to remove the 4's stop at 14 St-Union Sq"); the click takes that
+  line's stop out and no other's. A stop between the ends leaves the track as it is, an end stop's
+  removal shortens the path to the new end. Shift-click on a stop between the ends ends the line
+  there, the stops past it toward the nearer end going (hover's second line "Shift-click to end
+  the 4 here"). Hovering a passed station's mark darkens its outline to a stop's and the click adds
+  the stop (hover "Click to add the 4's stop at 23 St"). A stop that cannot go has no click and the
+  plain hover: a bus line's, a line's last two, a loop's ends, and where trains turn back (hover
+  "4 turns back at X"). One edit at a time; a refusal says "The line has to keep this stop."
 
 ## The bus line panel
 

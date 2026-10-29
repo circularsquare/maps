@@ -267,6 +267,62 @@ fn passed_stations_in_path_order() {
     }
 }
 
+/// T-1791: the group view's stop edits keep the line's track. A stop between the ends goes with
+/// the path untouched, a passed station becomes a stop with the path untouched, an end's removal
+/// cuts the path back, and ending a line at a stop takes the stops past it toward the nearer end.
+/// Each is one undo.
+#[test]
+fn drop_stop_end_line_and_stop_passed_keep_the_path() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_tangent(true);
+    route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 6000.0, 0.0, 4);
+    let xs = [500.0, 1700.0, 2900.0, 4100.0, 5500.0];
+    for (k, &x) in xs.iter().enumerate() {
+        assert_eq!(a.add_station(2, track_at(&a, x, 0.0), x, 0.0, 120, format!("S{k}")), 0, "{}", a.issues());
+    }
+    let on_drawn = |a: &TrackApi, k: usize| *stations(a, &format!("S{k}")).iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
+    let s: Vec<u32> = (0..xs.len()).map(|k| on_drawn(&a, k)).collect();
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &s, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    let (stops0, path0) = (a.w.net.line_stops(id).to_vec(), a.w.net.line_path(id).to_vec());
+    let now = |a: &TrackApi| (a.w.net.line_stops(id).to_vec(), a.w.net.line_path(id).to_vec());
+    // a middle stop out: the path is the same, the station is passed
+    assert_eq!(a.drop_stop(id, 2), 0, "{}", a.issues());
+    assert_eq!(now(&a), (vec![s[0], s[1], s[3], s[4]], path0.clone()));
+    assert_eq!(a.passed_stations(id), vec![1.0, s[2] as f64]);
+    // and back by the passed station
+    assert_eq!(a.stop_passed(id, s[2]), 0, "{}", a.issues());
+    assert_eq!(now(&a), (stops0.clone(), path0.clone()));
+    assert_ne!(a.stop_passed(id, s[2]), 0, "already a stop");
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.w.net.line_stops(id), &[s[0], s[1], s[3], s[4]]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(now(&a), (stops0.clone(), path0.clone()));
+    // the first stop out cuts the path to start at the new first
+    assert_eq!(a.drop_stop(id, 0), 0, "{}", a.issues());
+    let (stops, path) = now(&a);
+    assert_eq!(stops, s[1..]);
+    assert!(path.len() < path0.len() && path0.ends_with(&path));
+    assert_eq!(a.undo(), 0);
+    // ending at a stop: the nearer end goes
+    assert_eq!(a.end_line_at(id, 1), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &s[1..]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.end_line_at(id, 3), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &s[..4]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.end_line_at(id, 2), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &s[..3], "level: the later end goes");
+    assert_eq!(a.undo(), 0);
+    assert_eq!(now(&a), (stops0, path0));
+    // an end has nothing past it, and a line keeps two stops
+    assert_ne!(a.end_line_at(id, 0), 0);
+    assert_ne!(a.end_line_at(id, 4), 0);
+    assert_eq!(a.set_stops(id, &[s[0], s[4]]), 0);
+    assert_ne!(a.drop_stop(id, 0), 0);
+    assert_ne!(a.drop_stop(id, 9), 0);
+}
+
 /// T-733: a line's train length. 0 runs the most the shortest platform fits; a set length runs
 /// as set, never past that cap; a platform shortened below it caps the trains while the
 /// setting stays, so lengthening the platform again brings it back. Fleet cost follows.

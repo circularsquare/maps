@@ -158,6 +158,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     let v = lineViews.get(l);
     if (!v) lineViews.set(l, v = {
       id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
+      ...(l.group ? { group: l.group, groupName: l.groupName } : {}),
       tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
     });
     return v;

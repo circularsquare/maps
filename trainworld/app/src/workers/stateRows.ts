@@ -35,6 +35,8 @@ export interface RowEnv {
 interface Heavy {
   name: string;
   letter: string;
+  group: number;
+  groupName: string;
   stops: number[];
   path: number[];
   fromStart: number[][];
@@ -270,7 +272,7 @@ export class StateRows {
       const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
       const row: ClockLine = {
         upkeep,
-        id, name: heavy.name, letter: heavy.letter, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
+        id, name: heavy.name, letter: heavy.letter, group: heavy.group, groupName: heavy.groupName, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
         lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(auto), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
         stops: heavy.stops, path: heavy.path,
         fromStart: heavy.fromStart,
@@ -375,6 +377,8 @@ export class StateRows {
     return {
       name: a.line_name(id),
       letter: a.line_symbol(id),
+      group: a.line_group(id),
+      groupName: a.line_group_name(id),
       stops: [...a.line_stops(id)],
       path: [...a.line_path(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),

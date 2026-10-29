@@ -4,6 +4,7 @@ import { selection } from "../../game/ui";
 import { CityInspector } from "./CityInspector";
 import { CommutersInspector } from "./CommutersInspector";
 import { LineInspector } from "./LineInspector";
+import { GroupInspector } from "./GroupInspector";
 import { TripInspector } from "./TripInspector";
 import { JunctionInspector } from "./JunctionInspector";
 import { StationInspector } from "./StationInspector";
@@ -15,6 +16,7 @@ export function Inspector() {
   let body = null;
   if (!s) body = null; // nothing selected: the area stays, empty
   else if (s.kind === "line") body = <LineInspector key={s.line} id={s.line} />;
+  else if (s.kind === "group") body = <GroupInspector key={s.group} group={s.group} />;
   else if (s.kind === "station") body = <StationInspector id={s.station} />;
   else if (s.kind === "train") body = <TrainInspector line={s.line} profile={s.profile} dep={s.dep} />;
   else if (s.kind === "track") body = <TrackInspector edge={s.edge} />;

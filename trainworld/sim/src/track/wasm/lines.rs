@@ -11,12 +11,44 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new() }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
+        d.path = path;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-1791: take stop `i` out and keep the path: a stop between the ends leaves the track as it
+    /// is (`set_stops` would find the route again, and could move a local onto faster track); an
+    /// end stop's removal cuts the path back to the new end. Refused if a train turns back there
+    /// (a reversal falls on a stop), for a loop's ends, and below two stops.
+    pub fn drop_stop(&mut self, id: u32, i: u32) -> u32 {
+        self.drop_stops(id, i as usize, i as usize)
+    }
+    /// T-1791: end the line at stop `i`: every stop past it toward the nearer end goes, and the path
+    /// is cut there (the last stop's end when the two are level).
+    pub fn end_line_at(&mut self, id: u32, i: u32) -> u32 {
+        let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let (i, n) = (i as usize, d.stops.len());
+        if i >= n || n < 3 || i == 0 || i == n - 1 {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        if i < n - 1 - i { self.drop_stops(id, 0, i - 1) } else { self.drop_stops(id, i + 1, n - 1) }
+    }
+    /// T-1791: make a station the line passes a stop, keeping the path.
+    pub fn stop_passed(&mut self, id: u32, station: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(stops) = stopped_at(&self.w.net, &d, station) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// Stops `lo..=hi` out; `lo..=hi` is one interior stop, a start or an end of the line.
+    fn drop_stops(&mut self, id: u32, lo: usize, hi: usize) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some((stops, path)) = dropped(&self.w.net, &d, lo, hi) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
@@ -55,9 +87,76 @@ impl TrackApi {
         if d.auto.is_some() {
             d.auto = Some([0; 3]);
         }
-        let r = self.run(Op::Line { id, data: Some(d) });
+        // T-1791: the copy joins its source's group, a new one with the source if it had none
+        let mut ops = vec![];
+        if d.group == 0 {
+            d.group = self.new_line_group();
+            let mut s = self.w.net.line_data(source).unwrap();
+            s.group = d.group;
+            ops.push(Op::Line { id: source, data: Some(s) });
+        }
+        ops.push(Op::Line { id, data: Some(d) });
+        let r = self.run(if ops.len() == 1 { ops.pop().unwrap() } else { Op::Batch(ops) });
         if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
         r
+    }
+
+    // ---- line groups (T-1791): a grouping for the Lines tab; no service edit
+    /// A group number no live line has.
+    pub fn new_line_group(&self) -> u32 {
+        let n = &self.w.net;
+        (0..n.line_count()).filter(|&l| n.line_ok(l as u32)).map(|l| n.line_group[l]).max().unwrap_or(0) + 1
+    }
+    /// A line's group, 0 for none.
+    pub fn line_group(&self, id: u32) -> u32 {
+        if self.w.net.line_ok(id) { self.w.net.line_group[id as usize] } else { 0 }
+    }
+    /// A line's group's name as the player set it, empty for the default.
+    pub fn line_group_name(&self, id: u32) -> String {
+        if self.w.net.line_ok(id) { self.w.net.line_group_name[id as usize].clone() } else { String::new() }
+    }
+    /// Put `lines` in `group` (0: out of any group), one undoable edit. A line joining takes the
+    /// group's name; a group left with one line stops being one.
+    pub fn set_line_group(&mut self, lines: &[u32], group: u32) -> u32 {
+        let n = &self.w.net;
+        if let Some(&l) = lines.iter().find(|&&l| !n.line_ok(l)) {
+            return self.refuse(Issue::NoSuchLine { line: l });
+        }
+        let live = || (0..n.line_count() as u32).filter(|&l| n.line_ok(l));
+        let name = if group == 0 { String::new() } else { live().find(|&l| n.line_group[l as usize] == group && !lines.contains(&l)).map_or(String::new(), |l| n.line_group_name[l as usize].clone()) };
+        let mut after: Vec<(u32, u32, String)> = live().map(|l| {
+            if lines.contains(&l) { (l, group, name.clone()) } else { (l, n.line_group[l as usize], n.line_group_name[l as usize].clone()) }
+        }).collect();
+        // a group of one dissolves
+        for k in 0..after.len() {
+            let g = after[k].1;
+            if g != 0 && after.iter().filter(|x| x.1 == g).count() == 1 {
+                after[k] = (after[k].0, 0, String::new());
+            }
+        }
+        let ops: Vec<Op> = after.into_iter().filter(|(l, g, s)| n.line_group[*l as usize] != *g || n.line_group_name[*l as usize] != *s).map(|(l, g, s)| {
+            let mut d = n.line_data(l).unwrap();
+            d.group = g;
+            d.group_name = s;
+            Op::Line { id: l, data: Some(d) }
+        }).collect();
+        if ops.is_empty() {
+            return 0;
+        }
+        self.run(Op::Batch(ops))
+    }
+    /// Name a group (empty: its oldest line's name again), one undoable edit.
+    pub fn set_line_group_name(&mut self, group: u32, name: String) -> u32 {
+        let n = &self.w.net;
+        let ops: Vec<Op> = (0..n.line_count() as u32).filter(|&l| group != 0 && n.line_ok(l) && n.line_group[l as usize] == group).map(|l| {
+            let mut d = n.line_data(l).unwrap();
+            d.group_name = name.clone();
+            Op::Line { id: l, data: Some(d) }
+        }).collect();
+        if ops.is_empty() {
+            return self.refuse(Issue::NoSuchLine { line: u32::MAX });
+        }
+        self.run(Op::Batch(ops))
     }
     pub fn next_line_name(&mut self) -> String {
         loop {
@@ -166,10 +265,20 @@ impl TrackApi {
     }
     /// Remove a line. A constructed bus route goes for good, like constructed track (T-1464).
     pub fn remove_line(&mut self, id: u32) -> u32 {
-        if self.w.net.line_bus.get(id as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.built) {
-            return self.run_charged(Op::Line { id, data: None });
+        let mut op = Op::Line { id, data: None };
+        // the last other line of its group leaves it too (T-1791)
+        let n = &self.w.net;
+        let g = self.line_group(id);
+        let rest: Vec<u32> = (0..n.line_count() as u32).filter(|&l| g != 0 && l != id && n.line_ok(l) && n.line_group[l as usize] == g).collect();
+        if let [other] = rest[..] {
+            let mut d = n.line_data(other).unwrap();
+            d.group = 0;
+            op = Op::Batch(vec![op, Op::Line { id: other, data: Some(d) }]);
         }
-        self.run(Op::Line { id, data: None })
+        if self.w.net.line_bus.get(id as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.built) {
+            return self.run_charged(op);
+        }
+        self.run(op)
     }
 
     /// Allocate whole trains to the entire line, across both directions.
@@ -275,4 +384,52 @@ fn edited_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
     let kept = distinct_stops(&kept);
     let path = net.route(&kept)?;
     Some((kept, path))
+}
+
+/// A path's node list, `path.len() + 1` nodes.
+fn path_node_list(net: &Network, path: &[u32]) -> Vec<u32> {
+    path.first().map_or(vec![], |&f| std::iter::once(net.path_nodes(f).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect())
+}
+
+/// T-1791: a line's stops and path with stops `lo..=hi` out (one interior stop, or a run at the start
+/// or the end), the path kept between the new first and last stop. None if a train reverses at a
+/// stop that goes, for a loop's ends, below two stops, or for a bus route.
+fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32>, Vec<u32>)> {
+    let n = d.stops.len();
+    if d.bus.is_some() || lo > hi || hi >= n || !(lo == hi || lo == 0 || hi == n - 1) || n - (hi - lo + 1) < 2 {
+        return None;
+    }
+    if closed(&d.stops) && (lo == 0 || hi == n - 1 || n - (hi - lo + 1) < 3) {
+        return None;
+    }
+    let at = super::super::net::match_stops(&path_node_list(net, &d.path), &d.stops, &net.stop_reversals(&d.path))?;
+    let stops: Vec<u32> = d.stops[..lo].iter().chain(&d.stops[hi + 1..]).copied().collect();
+    if stops.windows(2).any(|w| w[0] == w[1]) {
+        return None;
+    }
+    let first = if lo == 0 { hi + 1 } else { 0 };
+    let last = if hi == n - 1 { lo - 1 } else { n - 1 };
+    let path = d.path[at[first]..at[last]].to_vec();
+    super::super::net::match_stops(&path_node_list(net, &path), &stops, &net.stop_reversals(&path))?;
+    Some((stops, path))
+}
+
+/// T-1791: a line's stops with a station its path passes put in, the path untouched. None if it is
+/// a stop already, not on the path, or the path would turn back where no stop is.
+fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
+    if d.bus.is_some() || d.stops.contains(&station) || !net.is_station(station) {
+        return None;
+    }
+    let nodes = path_node_list(net, &d.path);
+    let must = net.stop_reversals(&d.path);
+    let at = super::super::net::match_stops(&nodes, &d.stops, &must)?;
+    nodes.iter().enumerate().filter(|x| *x.1 == station).find_map(|(k, _)| {
+        let pos = at.iter().filter(|&&a| a < k).count();
+        let mut stops = d.stops.clone();
+        if pos == 0 || pos == stops.len() {
+            return None;
+        }
+        stops.insert(pos, station);
+        super::super::net::match_stops(&nodes, &stops, &must).map(|_| stops)
+    })
 }

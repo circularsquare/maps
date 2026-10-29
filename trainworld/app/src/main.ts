@@ -15,6 +15,7 @@ import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
+import { groupHover } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
@@ -162,9 +163,10 @@ const overlay = new Overlay(map, renderer, () => {
     showTrains: d.trains,
     byLevel: d.trackColour === "height",
     bySpeed: d.trackColour === "speed",
-    selLine: sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1,
+    selLine: groupHover.peek() ?? (sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1),
     selTrain: sel?.kind === "train" ? sel : null, // T-242: drawn over the others with a halo
-    dimOthers: stopEditing.peek() ? STOP_EDIT_DIM : 1, // T-233: the other lines recede while stops are edited
+    // T-233: the other lines recede while stops are edited, and past the group view's hovered line (T-1791)
+    dimOthers: stopEditing.peek() || groupHover.peek() !== null ? STOP_EDIT_DIM : 1,
     selEdge: sel?.kind === "track" ? sel.edge : -1,
     selStation: sel?.kind === "station" && n ? stationIndexOf(n, sel.station) : -1,
     // complex view: every member's box drawn selected (T-163)
@@ -183,6 +185,7 @@ const overlay = new Overlay(map, renderer, () => {
   };
 });
 onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens
+groupHover.subscribe(() => overlay.invalidate());
 live.map = map;
 live.overlay = overlay;
 if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`

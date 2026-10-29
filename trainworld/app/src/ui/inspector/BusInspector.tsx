@@ -30,6 +30,8 @@ import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
 import { DEMAND_LABEL, levelTimes, StopTransfers, useLiveColour } from "./LineInspector";
+import { LineGroup } from "./LineGroup";
+import { afterCopy } from "../../game/lineGroups";
 
 /** A bus holds this many riders at crush (`BUS_CRUSH`, sim/src/track/params.rs). */
 const BUS_CRUSH = 80;
@@ -345,8 +347,7 @@ export function BusInspector({ id }: { id: string }) {
     try {
       const a = await edit({ op: "copyLine", line: l.num });
       if (!a.ok || a.line === undefined) return;
-      renameLinePrompt.value = String(a.line);
-      selection.value = { kind: "line", line: String(a.line) };
+      selection.value = afterCopy(world.peek()?.save.lines ?? [], a.line);
     } finally { setCopying(false); }
   };
 
@@ -379,6 +380,7 @@ export function BusInspector({ id }: { id: string }) {
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
         </div>
       )}
+      <LineGroup l={l} />
       <div class="sub muted">
         {plural(stopCount(bus), "stop")}, {distance(bus.roadM)}
       </div>

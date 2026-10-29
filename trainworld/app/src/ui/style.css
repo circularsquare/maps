@@ -200,6 +200,46 @@ body.resizing, body.resizing * { user-select: none; }
 @container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 374px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 312px) { .lines-box.with-city.near-on .w-city { display: none; } }
+/* T-1791: a line group's row (chevron, its lines' chips, its name) and its lines indented under it;
+   a dragged row's target outlined */
+.lines-box .group-row { gap: 6px; }
+.lines-box .chevron { margin: 0 -4px 0 -6px; }
+.lines-box .chevron svg { width: 12px; height: 12px; }
+.lines-box .chevron.open svg { transform: rotate(90deg); }
+.lines-box .group-chips { display: flex; gap: 2px; flex: none; max-width: 45%; overflow: hidden; }
+.lines-box .rows > li.in-group { padding-left: 24px; }
+.lines-box .rows > li .name-edit { min-width: 56px; }
+.lines-box .rows.dragging > li { cursor: grabbing; }
+.lines-box .rows > li.drop-on { box-shadow: inset 0 0 0 2px var(--accent); }
+.lines-box .rows > li.dragged { opacity: 0.5; }
+.row-ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; gap: 6px; padding: 3px 8px;
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 2px 8px rgb(0 0 0 / 0.25); }
+/* T-1791 stage 2: the group view */
+.title .group-chips { display: flex; gap: 2px; flex: none; }
+.group-lines { margin: 6px 0 12px; }
+.group-diagram { overflow-x: auto; padding-bottom: 4px; }
+.group-heads { display: flex; margin-bottom: 2px; }
+.group-head { display: flex; justify-content: center; }
+.group-head.idle .chip, .group-diagram .group-col.idle { opacity: 0.4; }
+.group-body { display: flex; align-items: flex-start; }
+.group-body > svg { display: block; flex: none; overflow: visible; stroke: none; stroke-width: 1; }
+.group-names { flex: 1; min-width: 110px; padding-left: 8px; box-sizing: border-box; overflow: hidden; }
+.group-name { line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.group-name:hover { background: var(--shade); }
+.group-diagram .group-row { fill: transparent; }
+.group-diagram .group-row:hover { fill: var(--shade); }
+.group-diagram .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
+.group-diagram .pill.idle { opacity: 0.4; }
+.group-diagram .pill.pass { stroke-opacity: 0.4; }
+.group-diagram .hit { fill: transparent; }
+.group-diagram .dot { opacity: 0; }
+.group-diagram .group-cell.edit { cursor: pointer; }
+.group-diagram .group-cell.edit:hover .dot { opacity: 1; }
+.group-diagram .group-cell.edit:hover .pill.pass { stroke-opacity: 1; }
+.line-group .name.link { cursor: pointer; }
+.line-group { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.line-group .group-chips { display: flex; gap: 2px; flex: none; }
+.line-group .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lines-box.with-city .w-riders { width: 36px; }
 .lines-box.with-city .w-trains { width: 32px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
