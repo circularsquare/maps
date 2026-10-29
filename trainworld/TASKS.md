@@ -105,6 +105,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
+- T-1791 [P2] Line groups (Anita's TODO 2026-10-29): drop a line on another in the Lines tab to group them, a copy joins its source's group, a group view with one combined diagram where clicking a line's dot removes the stop and a ghost adds one. Design for Anita, taking, 2026-10-29 (agent t1791); design written, waits on Anita; notes/T-1791.md.
 
 ## Track and trains
 - T-1787 [P1] On the shared-track saves every service edit settles in 0.3-2.9 s (headway 0.4-2.9, count 0.24-1.2 in `edit_bench`): the settle circles, lines far from the edit moving about 11 s each pass; a branch that splits a built line takes 1.3-1.8 s to place. Fix before the shared saves ship. Taking, 2026-10-29 (agent t1779, same tree); notes/T-1779.md.
