@@ -188,12 +188,13 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   day [T-882]. Flat clouds sit at fixed game times, none to two a day as the day's number falls,
   white by day and dim blue at night [T-902]. Along the bottom is a track with sleepers, darker at
   night. At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
-  to the right) on the track, with the sun, or a crescent moon at night, peeking in from the top
-  edge above it. Everything but the train and the sun or moon is fixed to its time and slides left
-  under them as game time passes. It is redrawn on animation frames from the clock's `now()`
+  to the right) on the track. The sun peeks in from the top edge at the middle of each day (the sun
+  above -3 degrees) and a crescent moon at the middle of each night [T-1800], so they pass over the
+  train as game time passes. Everything but the train is fixed to its time and slides left under
+  it. It is redrawn on animation frames from the clock's `now()`
   whenever it has moved a fifth of a device pixel, never through Preact. The band under it has each
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
-  the colour under the sun or moon is the level now; its hover says "Low demand until 06:00", the time the level next changes
+  the colour under the train is the level now; its hover says "Low demand until 06:00", the time the level next changes
   [T-902, T-1242]. A public holiday in a country
   the player has built track or stations in (blueprint not counted) [T-862, T-1098] is a pink ribbon along the sky's top over its day (its
   country's local day), with a tick where it starts; the sky's hover lists those in view, and is the sky's only hover ("Tomorrow:
@@ -217,7 +218,7 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
-  speeds (1x, 4x, 16x). **Double-click the 16x button** for a slider of 0.5x to 100x [T-1664]
+  speeds (1x, 4x, 16x; hovers "Normal speed", "4x speed", "16x speed" [T-1800]). **Double-click the 16x button** for a slider of 0.5x to 100x [T-1664]
   (18 round stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye); the speed picked shows
   as text on that button and stays until another speed button is pressed (not saved with the game).
   **While demand is being worked out** (a solve running, a load going, the zone in view shown rough)

@@ -60,8 +60,8 @@ so it shows exactly what is charged and nothing for a zone not loaded. `map/terr
 one image over the view and half its size again round it, rows even in mercator, each cell its
 lattice class (nearest, no smoothing), redrawn when the camera stops; above the hillshade, under the
 water, roads and labels; hidden below zoom 7. The lighter map hides the hillshade but keeps
-`water_over_shade` while Terrain is on, so the tint stays off the water there too. The hover on washed ground, in the map's tag, names
-the class under the pointer: "Hills, track costs 1.6x".
+`water_over_shade` while Terrain is on, so the tint stays off the water there too. Washed ground
+has no hover of its own; the track tool's tag names the class and its factor [T-1797].
 
 ## Zoom bands
 
@@ -227,7 +227,8 @@ with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is
 badge and name, "Bus line", then "Not running yet" while planned or, with the Traffic track
 display, the riders on the stretch between the stops under the pointer; "Bus stop" or "End of the
 line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
-short narrow car. A bus line's badge is a rounded square everywhere (corner 18% of its side, the
+short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
+its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the
 map's end squares too), a rail line's a circle. A new bus line is named "Bus n" (the next free
 number) and shows n as its symbol.
 ## Stations
@@ -400,7 +401,13 @@ those who got on, less the load carried on.
   `setBeforeEdit` as it sends, and the track and station tools play theirs in their click handlers.
   A click the ghost already shows refused is silent; any other that the worker then refuses has
   sounded. The exception is the construct sound (below), which plays after the worker accepts, via
-  `setAfterEdit`, so a construct refused for cash is the knock alone [T-1683]. One sound per click however many pieces it places (a pasted schedule or a folded train
+  `setAfterEdit`, so a construct refused for cash is the knock alone [T-1683]. A train count step the
+  cash will not cover is refused before it is sent (`trainShortfall` in `game/money.ts`, the worker's
+  rule: the cars the line's busiest level needs beyond the cars owned, at the car price, against the
+  cash): the knock alone, nothing changes [T-1797]; so is a headway step (or typed headway) at or
+  over the level's shortest headway (`headwayTrains` in `game/world.ts`, from the limits the line's
+  panel last read) whose trains the cash will not cover; a shorter headway, a line whose limits are
+  unread and a bus line go to the worker, which may then refuse after the pop [T-1800]. One sound per click however many pieces it places (a pasted schedule or a folded train
   count is one sound per click, not per edit). Recordings (`app/public/sounds/`, with
   their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
   `buildSound.ts` `PEAK`): a finger snap on placing track as blueprint (0.21) and, three semitones lower (rate times 0.84,
@@ -408,7 +415,7 @@ those who got on, less the load carried on.
   a gun magazine insert (`construct.wav`, 0.66 s, 0.15) once the worker has accepted Construct
   blueprints (the button and C), a line's or a piece's construct, and a station upgrade or passage
   built for money; one added only to the blueprint gets the pop; a wood knock (`knock.wav`, 0.16 s, 0.12) on every refusal, that is every
-  `say(text, true)` in `game/world.ts` (a train count or headway the cash will not cover, a track
+  `say(text, true)` in `game/world.ts` (a train count or headway the cash will not cover (the pop is still played for a headway), a track
   or move that cannot go there, a bus line that cannot be drawn; a refusal for money says what it
   would have bought, "Not enough money to buy trains" for a line edit, "to build this" for track, T-1696); a cork pop, quiet (0.09), on a panel click that changes the world: train
   count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or

@@ -74,6 +74,10 @@ const layoutOf = (name, width = 340) => {
   const { lay, col } = layoutOf('subway 4');
   check(lay.columns.length >= 4, `the 4: ${lay.columns.length} columns`);
   check(col('6').length + col('6X').length >= 2, 'the 4: the Lexington locals beside it');
+  // T-1795: a mark the 4 does not stop in has a faded rim; the 4's own stops each have one full mark
+  const full = lay.pills.filter((p) => !p.passed);
+  check(lay.pills.some((p) => p.passed), 'the 4: marks it passes are faded');
+  check(full.length === lay.rows.filter((r) => r.lStop >= 0).length && full.every((p) => lay.rows[p.row].lStop >= 0), `the 4: ${full.length} full marks, one per stop`);
 }
 {
   const { lay } = layoutOf('subway 4', 280);

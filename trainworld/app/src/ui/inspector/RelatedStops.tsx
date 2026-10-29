@@ -130,7 +130,7 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
         {lay.loopEnds.map((d) => <path d={d} fill="none" stroke={colour} stroke-width={BAR} />)}
         {lay.pills.map((p) => {
           const r = lay.rows[p.row], n = bars[p.row].length, h = pillHeight(n, p.big), w = Math.min(h, 10);
-          return <rect class="pill" x={p.x0 - w / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + w + 2} height={h + 2} rx={w / 2 + 1} data-tip={p.tip} />;
+          return <rect class={p.passed ? "pill passed" : "pill"} x={p.x0 - w / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + w + 2} height={h + 2} rx={w / 2 + 1} data-tip={p.tip} />;
         })}
         </g>
       </svg>

@@ -164,9 +164,23 @@ const sendTrainCounts = folded(pendingTrains, async (id, trains) => {
   noteAnswer(id, a, trains, had);
   return a.ok;
 });
-/** Each click is heard as it is made, however the edits behind it are folded. */
+/** T-1797: what new train counts for a line cost beyond the cash, US$M, or null when the cash
+ * covers them (game/money.ts sets it; the worker applies the same rule when it gets the edit). */
+let trainBuyCheck: ((id: LineId, trains: readonly number[]) => { need: number; have: number } | null) | null = null;
+export function setTrainBuyCheck(f: typeof trainBuyCheck) {
+  trainBuyCheck = f;
+}
+
+/** Each click is heard as it is made, however the edits behind it are folded. A count the cash
+ * cannot cover is refused here, with the knock alone and nothing sent. */
 const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
   const was = trainsShown(id);
+  const short = trainBuyCheck?.(id, trains);
+  if (short) {
+    refusedForCash.value = { id, levs: trains.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+    return;
+  }
   if (!was || trains.some((n, i) => n !== was[i])) clickSound({ op: "setTrainCount" });
   sendTrainCounts(id, trains);
 };
@@ -240,8 +254,44 @@ const sendHeadway = folded(pendingHeadway, async (id, secs) => {
   if (secs) noteAnswer(id, a, secs, had);
   return a.ok;
 });
+/** T-1800: each level's shortest headway the line's inspector last read (`lineHeld`), 0 where none. */
+const headwayLimits = new Map<LineId, readonly number[]>();
+export function noteHeadwayLimits(id: LineId, s: readonly number[]) {
+  headwayLimits.set(id, s);
+}
+export const headwayLimitsOf = (id: LineId) => headwayLimits.get(id);
+
+/** T-1800: the trains a headway edit will leave each level with, as far as the panel can tell, or
+ * null when it cannot. A level kept as it is keeps its trains. A headway at or over the level's
+ * shortest is the round trip over the headway, as `autoTrainsFor`; a shorter one is trimmed by the
+ * sim to what the track takes, over several rounds the panel cannot reproduce, and a line whose
+ * limits the panel has not read (a bus line's too) is unknown, so the worker decides. */
+function headwayTrains(id: LineId, secs: readonly number[], was: readonly number[] | null): number[] | null {
+  const st = world.peek()?.lineStats[id], lim = headwayLimits.get(id);
+  if (!st || st.bus || !lim) return null;
+  const out: number[] = [];
+  for (let i = 0; i < secs.length; i++) {
+    if (secs[i] === was?.[i]) out.push(st.trainsNeeded[i]);
+    else if (secs[i] * AUTO_SLACK < lim[i]) return null;
+    else out.push(autoTrainsFor(st.roundTripByLevel[i], secs[i], lim[i], !!st.loop));
+  }
+  return out;
+}
+
+/** Each click is heard as it is made. A headway whose trains the cash cannot cover is refused here,
+ * with the knock alone and nothing sent (T-1800, as `setTrainCounts`). */
 const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
-  if (JSON.stringify(secs) !== JSON.stringify(headwayShown(id))) clickSound({ op: "setHeadway" });
+  const was = headwayShown(id);
+  const trains = secs && trainBuyCheck ? headwayTrains(id, secs, was) : null;
+  if (trains) {
+    const short = trainBuyCheck!(id, trains);
+    if (short) {
+      refusedForCash.value = { id, levs: secs!.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
+      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+      return;
+    }
+  }
+  if (JSON.stringify(secs) !== JSON.stringify(was)) clickSound({ op: "setHeadway" });
   sendHeadway(id, secs);
 };
 

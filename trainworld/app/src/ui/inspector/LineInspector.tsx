@@ -24,7 +24,7 @@ import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
-import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, noteHeadwayLimits, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
@@ -41,13 +41,13 @@ import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, schedul
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
- * demand: 06:00 to 20:00". */
+ * demand: 6-20 on weekdays". */
 export function levelTimes(d: Demand): string {
-  const t = (h: number) => clockTime((h * 60) % 1440);
-  const hours = `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
+  const own = levelHours(d);
+  const hours = `${DEMAND_LABEL[d]} demand: ${own.map(([a, b]) => `${a}-${b}`).join(", ")}`;
   // T-1720: a weekend day runs the medium trains through the high hours
   const high = levelHours("high");
-  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length ? `${hours}, and from ${t(high[0][0])} on weekends` : hours;
+  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length && own.length ? `${hours} on weekdays, ${high[0][0]}-${own[own.length - 1][1]} on weekends` : hours;
 }
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
@@ -271,7 +271,7 @@ export function CrowdDots({ v, wk, d }: { v: Float64Array; wk: Float64Array | nu
   const c = crowdLevel(v, d), r = wk && crowdLevel(wk, d);
   if (!c) return null;
   // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
-  const tip = r ? `${c.tip}\nRing, on a weekday: ${r.phrase}` : c.tip;
+  const tip = r ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
   return <i class="crowd-dot" style={{ background: crowdColour(c.wait), outlineColor: r ? crowdColour(r.wait) : "transparent" }} data-tip={tip} />;
 }
 
@@ -643,6 +643,7 @@ function RailLineInspector({ id }: { id: string }) {
   const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? [];
   const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
+  if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
   // T-872, T-262: the line's country decides the kind of day
@@ -868,7 +869,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

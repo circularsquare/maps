@@ -215,8 +215,8 @@ function Speed() {
         <Icon.pause />
       </button>
       {btn(0, <Icon.play1 />, "Normal speed")}
-      {btn(1, <Icon.play2 />, `${SPEEDS[1] / SPEEDS[0]} times as fast`)}
-      {btn(2, <Icon.play3 />, `${custom ?? SPEEDS[2] / SPEEDS[0]} times as fast\nDouble-click to pick a speed`, { onDblClick: () => setOpen((o) => !o) })}
+      {btn(1, <Icon.play2 />, `${times(SPEEDS[1] / SPEEDS[0])} speed`)}
+      {btn(2, <Icon.play3 />, `${times(custom ?? SPEEDS[2] / SPEEDS[0])} speed\nDouble-click to pick a speed`, { onDblClick: () => setOpen((o) => !o) })}
       {open && (
         <div class="slider speed-pop">
           <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label="Clock speed" data-tip={`Clock speed, ${times(SLIDER_STOPS[0])} to ${times(SLIDER_STOPS[SLIDER_STOPS.length - 1])}`}

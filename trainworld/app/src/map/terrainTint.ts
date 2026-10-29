@@ -8,7 +8,7 @@ import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { computed, effect } from "@preact/signals";
 import { display, isBuildTool, shade, tool } from "../game/ui";
-import { terrainGrids, terrainText, terrainVersion, type ClassGrid } from "../game/terrain";
+import { terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 
@@ -27,25 +27,6 @@ const WASH = {
 };
 
 const shown = computed(() => display.value.hillshade && isBuildTool(tool.value));
-let visibleNow = false;
-
-/** The class at a point from the grids in hand (first that covers it, as the sim's `Terrain`), or
- * -1 where none does. */
-function classAt(lon: number, lat: number): number {
-  for (const g of terrainGrids.values()) {
-    const c = Math.floor((lon + 180) * g.perDeg) - g.col0, r = Math.floor((lat + 90) * g.perDeg) - g.row0;
-    if (c >= 0 && r >= 0 && c < g.w && r < g.h) return g.cls[r * g.w + c];
-  }
-  return -1;
-}
-
-/** The hover over washed ground while the wash is shown: its class and what it does to the price. */
-export function terrainTip(map: MlMap, px: number, py: number): string[] | null {
-  if (!visibleNow || map.getZoom() < MIN_ZOOM) return null;
-  const at = map.unproject([px, py]);
-  const c = classAt(at.lng, at.lat);
-  return c > 0 ? [terrainText(c)] : null;
-}
 
 export function startTerrainTint(map: MlMap): () => void {
   const canvas = document.createElement("canvas");
@@ -73,7 +54,6 @@ export function startTerrainTint(map: MlMap): () => void {
   };
 
   const setVisible = (on: boolean) => {
-    visibleNow = on;
     if (map.getLayer(ID) && (map.getLayoutProperty(ID, "visibility") === "visible") !== on) map.setLayoutProperty(ID, "visibility", on ? "visible" : "none");
   };
 

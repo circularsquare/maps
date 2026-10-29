@@ -416,7 +416,7 @@ export function BusInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && demandPending.value && <Spinner class="row-dot" tip="Figures appear when demand has loaded" />}<span data-tip={levelTimes(d) + "\nHow many buses run in this time interval."}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && demandPending.value && <Spinner class="row-dot" tip="Figures appear when demand has loaded" />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} />
           </tr>
         ))}

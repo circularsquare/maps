@@ -1,7 +1,8 @@
 // The top bar's sky (T-861, T-882, T-896, T-902): a little scene of the day at the place in view, 12
 // hours back and 12 ahead, sliding left as game time passes: flat sky colours by the sun's height,
 // stars at night, a few clouds, a track along the bottom, and at now in the middle a small train on
-// the track with the sun or moon peeking in from the top above it, and the demand level of each
+// the track, the sun at the middle of each day and the moon at the middle of each night peeking in
+// from the top (T-1800), and the demand level of each
 // hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()`, never through
 // Preact: on animation frames while the clock runs (and only when it has moved a fraction of a
 // pixel, so it costs next to nothing between game minutes), and paused, only when the clock, the
@@ -67,6 +68,38 @@ const css = (c: RGB) => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
 const STAR_LOW = 10, RAIL_Y = 15.5, SLEEPER_EVERY = 3, STAR_EVERY = 7;
 /** T-896: the train sits at now, nose to the right, the scene sliding under it: css px. */
 const TRAIN_LEN = 18, TRAIN_H = 5;
+
+/** T-1800: the times, in the clock's seconds, of the middle of each day (the sun above -3 degrees)
+ * and each night in the 24 hours around `now`. Found by 10-minute steps over 36 hours either side,
+ * so the segments at the strip's ends are whole; where the sun never sets or rises in that stretch
+ * (near the poles), the sun is placed at each clock day's highest point and the moon at its lowest. */
+const BODY_STEP = 600, BODY_SPAN = 36 * 3600;
+let bodiesKey = "", bodiesAt = NaN, bodiesOut: { sun: number[]; moon: number[] } = { sun: [], moon: [] };
+function sunMoon(now: number, lon: number, lat: number, off: number): { sun: number[]; moon: number[] } {
+  const key = `${lon} ${lat} ${off}`;
+  if (key === bodiesKey && Math.abs(now - bodiesAt) < 6 * 3600) return bodiesOut;
+  const sun: number[] = [], moon: number[] = [];
+  const t0 = Math.floor((now - BODY_SPAN) / BODY_STEP) * BODY_STEP;
+  let start = NaN, was = false, high: [number, number] = [-99, 0], low: [number, number] = [99, 0];
+  const days: { hi: [number, number]; lo: [number, number] }[] = [];
+  let day = Math.floor(t0 / 86400);
+  for (let t = t0; t <= now + BODY_SPAN; t += BODY_STEP) {
+    const e = sunElevation(t, lon, lat, off), up = e > -3;
+    if (Math.floor(t / 86400) !== day) { days.push({ hi: high, lo: low }); high = [-99, 0]; low = [99, 0]; day = Math.floor(t / 86400); }
+    if (e > high[0]) high = [e, t];
+    if (e < low[0]) low = [e, t];
+    if (t > t0 && up !== was) {
+      if (!Number.isNaN(start)) (was ? sun : moon).push((start + t - BODY_STEP) / 2);
+      start = t;
+    }
+    was = up;
+  }
+  days.push({ hi: high, lo: low });
+  if (!sun.length) for (const d of days) if (d.hi[0] > -3) sun.push(d.hi[1]);
+  if (!moon.length) for (const d of days) if (d.lo[0] <= -3) moon.push(d.lo[1]);
+  bodiesKey = key; bodiesAt = now; bodiesOut = { sun, moon };
+  return bodiesOut;
+}
 
 interface Colours { band: Record<Demand, RGB>; dark: boolean; bg: RGB }
 function readColours(): Colours {
@@ -195,20 +228,27 @@ function startSky(cv: HTMLCanvasElement): () => void {
       ctx.fillRect(x0, 0, x1 - x0, 2 * scale);
       ctx.fillRect(x0 - scale / 2, 0, scale, railRow);
     }
-    // the sun, or the moon, peeking in from the top at now
-    const e = sunElevation(now, lon, lat, off);
-    if (e > -3) {
+    // T-1800: the sun at the middle of each day and the moon at the middle of each night, peeking in
+    // from the top, fixed to their times so they slide with the sky and the train passes beneath
+    const bodies = sunMoon(now, lon, lat, off);
+    for (const t of bodies.sun) {
+      const x = nowX + (t - now) / secPx;
+      if (x < -6 * scale || x > w + 6 * scale) continue;
       ctx.fillStyle = css(shade(hex("#ffd84d")));
-      ctx.beginPath(); ctx.arc(nowX, -0.5 * scale, 5 * scale, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, -0.5 * scale, 5 * scale, 0, 2 * Math.PI); ctx.fill();
       ctx.fillStyle = css(shade(hex("#fff1a8")));
-      ctx.beginPath(); ctx.arc(nowX, -0.5 * scale, 3 * scale, 0, 2 * Math.PI); ctx.fill();
-    } else {
-      ctx.fillStyle = css(shade(hex("#f6f0d4")));
-      ctx.beginPath(); ctx.arc(nowX, 0, 4.5 * scale, 0, 2 * Math.PI); ctx.fill();
-      ctx.fillStyle = css(shade(skyAt(e)));
-      ctx.beginPath(); ctx.arc(nowX + 2.2 * scale, -1 * scale, 4 * scale, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, -0.5 * scale, 3 * scale, 0, 2 * Math.PI); ctx.fill();
     }
-    // the train at now, under the sun or moon: the present-time marker
+    for (const t of bodies.moon) {
+      const x = nowX + (t - now) / secPx;
+      if (x < -6 * scale || x > w + 6 * scale) continue;
+      ctx.fillStyle = css(shade(hex("#f6f0d4")));
+      ctx.beginPath(); ctx.arc(x, 0, 4.5 * scale, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = css(shade(skyAt(sunElevation(t, lon, lat, off))));
+      ctx.beginPath(); ctx.arc(x + 2.2 * scale, -1 * scale, 4 * scale, 0, 2 * Math.PI); ctx.fill();
+    }
+    // the train at now: the present-time marker
+    const e = sunElevation(now, lon, lat, off);
     const len = TRAIN_LEN * scale, th = TRAIN_H * scale, tx = nowX - len / 2;
     const top = railRow - th, l = daylight(e);
     ctx.fillStyle = css(shade(mix(hex("#9c3a33"), hex("#e2574a"), l)));

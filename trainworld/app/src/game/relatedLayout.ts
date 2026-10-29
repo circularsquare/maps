@@ -68,7 +68,9 @@ export interface LayoutRow {
  * past the selected line's end. */
 export interface LayoutEnd { d: string; tip: string }
 export interface LayoutColumn { line: number; side: "L" | "R"; x: number; r0: number; r1: number; up: boolean; down: boolean; d: string; tip: string; ends: LayoutEnd[] }
-export interface LayoutPill { row: number; x0: number; x1: number; big: boolean; tip: string }
+/** `passed`: the selected line does not stop in this mark (a side line's stop, or the line's own
+ * beyond a column that passes), drawn with a faded rim (T-1795). */
+export interface LayoutPill { row: number; x0: number; x1: number; big: boolean; passed: boolean; tip: string }
 
 export interface RelatedLayout {
   rows: LayoutRow[];
@@ -328,12 +330,13 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     const stopping = on.filter(({ it }) => stopsHere(it)).map(({ it }) => who(it));
     const passing = on.filter(({ it }) => !stopsHere(it)).map(({ it }) => who(it));
     const tip = `${andList(stopping)} ${stopping.length === 1 ? "stops" : "stop"} at ${name(i)}` + (passing.length ? `\n${andList(passing)} ${passing.length === 1 ? "passes" : "pass"}` : "");
-    let run: number[] = [];
+    let run: number[] = [], withLine = false;
     for (const c of [...on, null]) {
-      if (c && stopsHere(c.it)) run.push(c.x);
+      if (c && stopsHere(c.it)) { run.push(c.x); if (!c.it) withLine = true; }
       else if (run.length) {
-        pills.push({ row: i, x0: run[0], x1: run[run.length - 1], big: r.cross.length > 0, tip });
+        pills.push({ row: i, x0: run[0], x1: run[run.length - 1], big: r.cross.length > 0, passed: !withLine, tip });
         run = [];
+        withLine = false;
       }
     }
   });

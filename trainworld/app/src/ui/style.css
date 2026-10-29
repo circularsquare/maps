@@ -521,6 +521,7 @@ rect.now { fill-opacity: .45; }
 .related-draw > * { pointer-events: visiblePainted; }
 .related-draw .link { cursor: pointer; }
 .related-draw .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
+.related-draw .pill.passed { stroke-opacity: 0.4; }
 .related-bullet { position: absolute; z-index: 2; transform: translate(-50%, -50%); line-height: 0; }
 .stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
 .stops.related-rows li::before, .stops.related-rows li::after { display: none; }

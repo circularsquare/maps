@@ -91,7 +91,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
     if (!(v[o] > 0)) continue;
     const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
     trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
-    lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
+    if (Math.round(v[o + 1]) > 0) lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
   }
   if (!(trains > 0)) return null;
   const avg = weight > 0 ? wait / weight : 0;

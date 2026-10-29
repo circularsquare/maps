@@ -84,7 +84,7 @@ purpose filter the purpose drawn is ringed in the bar.
   colour scale's steps): yellow from 6 min, orange from 9, red from 15; orange and red colour the
   count (`crowdClass`). The hover is the line panel's dot hover for the same level [T-1672, T-1677]:
   "When trains come full, riders wait ~9 min for a train with room" (or "Riders get on the first
-  train with room"), then "6-10: 22/88 trains full" for each of the level's periods; one function
+  train with room"), then "6-10: 22/88 trains full" for each of the level's periods with any full; one function
   (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's `line_periods` numbers, which
   the tab asks for every running train line in one clock query (`linesPeriods`, one block of
   numbers per line). A bus line's hover is its bus count.
@@ -157,11 +157,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00 to 20:00 on weekdays", "Medium demand: 20:00 to 00:00, and from 06:00 on
-  weekends": a weekend day runs the medium trains 6-24, T-1720) [T-406, T-1536], then
-  "How many trains run in this time interval. (Which time interval a scheduled train falls into is
-  determined by when the train reaches the midpoint of its route.)" (the steppers have no such
-  hover) [T-823, T-835, T-1242]; on a
+  "High demand: 6-20 on weekdays", "Medium demand: 20-24 on weekdays, 6-24 on weekends" (a weekend day
+  runs the medium trains 6-24, T-1720), "Low demand: 0-6": that one line only [T-406, T-1536,
+  T-1797]; on a
   running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
@@ -169,9 +167,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
   riders wait ~11 min for a train with room" (or "Riders get on the first train
-  with room"), then a line for each of the level's periods with trains, in time order: "10-16: 4/10
-  trains full" [T-1523, T-1672], then "Ring, on a weekday: riders wait ~15 min for a train with room"
-  [T-1684]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  with room"), then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
+  trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then "On weekdays,
+  riders wait ~15 min for a train with room" [T-1684, T-1797]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
   option's hover giving its top speed ("High speed trains run up to 320 km/h on high speed track
   or 160 km/h on normal track", "Normal trains run up to 160 km/h") and, on a running line, what
@@ -247,7 +245,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
   at each row both stop at next to one only one of them does (where an express's stops part from a
   local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
-  (10 px at a row with crossings, else 8); the crossing lines as 3 px bars across the drawing, 2 px
+  (10 px at a row with crossings, else 8; never sized by riders), its rim at 40% strength where the
+  line itself does not stop in that mark [T-1795]; the crossing lines as 3 px bars across the drawing, 2 px
   apart: the two bulleted ones at a row with up to two, and at a row with more [T-1786] all of
   them up to 6, the row 38 px tall, its pill 10 px wide and stretched to (bars − 1) × 5 + 13 px with
   5 px corners so each bar meets its straight side, and its bullets (up to 6, in the bars' order, the

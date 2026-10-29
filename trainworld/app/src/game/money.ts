@@ -26,9 +26,9 @@ import { roundedDefault } from "./fareDefault";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { stopsById, world } from "./world";
+import { setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
-import type { LineInput, LineStats, StationInput, WorldView } from "./types";
+import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -44,6 +44,20 @@ export function setMoneyState(m: MoneyState) {
   moneyState.value = m;
   liveMoney.value = { cash: m.cash, today: m.ledger[m.ledger.length - 1] ?? null, hour: m.hours[m.hours.length - 1] ?? null };
 }
+/** T-1797: the rule the worker applies to a train count edit (`apply_paid`): a running line pays for
+ * the cars its busiest level needs beyond the cars the network owns, and the edit is refused when
+ * that comes to more than the cash. A sandbox is never refused. */
+export function trainShortfall(id: LineId, trains: readonly number[]): { need: number; have: number } | null {
+  const m = moneyState.peek(), st = world.peek()?.lineStats[id];
+  if (!m || !st || st.status !== "running" || m.mode === "sandbox") return null;
+  const more = Math.max(...trains) - Math.max(...st.trainsNeeded);
+  if (!(more > 0)) return null;
+  const [owned, needed, price] = st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
+    : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
+  const need = Math.max(0, needed + more * (st.bus ? 1 : st.cars) - owned) * price, have = liveMoney.peek().cash;
+  return need > 1e-9 && need > have + 1e-6 ? { need, have } : null;
+}
+setTrainBuyCheck(trainShortfall);
 /** When the last autosave was written (Date.now()), null before the first. */
 export const lastSaved = signal<number | null>(null);
 

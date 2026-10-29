@@ -8,12 +8,6 @@ export const TERRAIN_NAMES = ["Flat", "Hills", "Hills", "Mountains"] as const;
 export const TERRAIN_FACTORS = [1, 1.25, 1.6, 2.5] as const;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 
-/** "Hills, track costs 1.6x" for a class 0-3. */
-export function terrainText(c: number): string {
-  const k = Math.max(0, Math.min(3, Math.round(c)));
-  return k ? `${TERRAIN_NAMES[k]}, track costs ${TERRAIN_FACTORS[k]}x` : TERRAIN_NAMES[0];
-}
-
 /** A zone's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world
  * lattice of `perDeg` cells a degree, row-major from the south-west cell at `col0`, `row0`. */
 export interface ClassGrid { perDeg: number; col0: number; row0: number; w: number; h: number; cls: Uint8Array }

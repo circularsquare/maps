@@ -132,6 +132,13 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
 - T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
+- LANDED: T-1798 bus sim 6eee462a; t1779 tree (T-1779/1780/1781/1787) e06533ff; t1782 tree (walking rule) beea3af0;
+  main WASM rebuilt; trees t1779/t1782 removed. t1791 tree (groups stages 1-3) being brought up to master by its agent
+  (LGR1 after LRT1), then land. Uncommitted in main: T-1795, T-1797, T-1798 docs/ui-map, T-1800 (running). China join's
+  final steps write app/src/game/*.json: don't commit those until it reports.
+- T-1799 stage 1 (Anita yes, 80% bands, fold zoomed out, Traffic keeps own widths + default width a tad lower):
+  agent t1799s1 (Opus) in tree .tw-trees/t1799 (ed9b5641), Vite 6197, 2 cores. T-1795 done, uncommitted: commit with
+  T-1797 (both edit ui-inspectors.md).
 - From Anita's TODO (short term) 2026-10-29: T-1797 small fixes (hills hover, 0-full rows, "on weekdays", demand level
   hover "6-24", one sound) agent t1797 (Sonnet, Vite 6161); T-1798 buses stop + bigger agent t1798 (Sonnet, Vite 6163);
   T-1799 interlined lines side by side, design agent t1799 (Opus, no cores). Passed stations faded outline (Anita) sent to
