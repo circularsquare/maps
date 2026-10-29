@@ -46,7 +46,8 @@ fn main() {
         let p = format!("{out_dir}/{name}");
         if std::path::Path::new(&p).exists() { p } else { format!("{dir}/{name}") }
     };
-    let net_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/{city}_real.json")).unwrap()).unwrap();
+    // T-1770: `realnet.py colours` stages a network JSON with the lines' real colours beside the others
+    let net_j: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real.json"))).unwrap()).unwrap();
     let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real_geom.json"))).unwrap()).unwrap();
     let route_j: Option<Value> = std::fs::read_to_string(first(format!("{city}_real_route.json"))).ok().map(|s| serde_json::from_str(&s).unwrap());
     if route_j.is_none() {
@@ -170,7 +171,9 @@ fn main() {
         let id = net.alloc_line();
         let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
         let name = names::tidy_line(&name, "").unwrap_or(name);
-        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None }));
+        // the line's real colour ("#rrggbb", `pipeline/realcolour.py`), else the palette
+        let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
+        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None }));
         if r.is_ok() {
             n_lines_ok += 1;
         }

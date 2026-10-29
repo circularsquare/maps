@@ -108,10 +108,18 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - T-1762/T-1744 committed a6e9fc29 (VN 93/93; origins in towns). T-1735 landed afb89cbc (perfFlags conflict
   resolved by hand); main WASM rebuilt; 8800 at afb89cbc, smoke 20/20 both shades, real save 12,644,085.
 - T-1765 Canada's five far origins: t1762 agent resumed (then maybe Kerkyra, Poland's two); only data/packs writer.
-- T-1764 rule 1 agent t1764 (Sonnet), demand.worker.ts span tolerance 0.06; Vite 6127; 4 cores.
+- T-1764 rule 1 committed 0ea6169e (smoke 20/20 on its Vite; couldn't reproduce the 9 span-only zones on master,
+  kept as harmless). 8800 still at afb89cbc: rebuild with T-1766's landing. Its 0.16% whole-vs-fresh gap folded into T-1736.
 - T-1766 agent t1766 (Opus): attraction visits from a city budget shared by Wikipedia page views (Anita 2026-10-29:
   "order of magnitude correctness" is enough; country term stays off). attractions_json.py + attractions.json; Vite 6141;
   3 cores. Review its numbers before committing.
+- T-1770 agent t1770 (Sonnet): real line colours (GTFS route_color, noritetsu, palette) into the seven real saves,
+  staged in artifacts/trainworld/t1770-realnet/; ship after T-1765's join. Vite 6152, 2 cores.
+- T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once
+  t1770 is done with realnet.py; then stage 2 (NYC save). One colour per trunk until she looks.
+- T-1771 analytics: Anita yes (own-server heartbeat), but WAIT until she says her City Circles tracking is done.
+- Thai zone names: Anita has no thoughts; dropped from asks.
+- Anita 2026-10-29: no deploy yet.
 - (was) T-1735 DONE in .tw-trees/t1735, not landed: measured express 85% of market riders for 18% of a pass; in play a
   new Japan express shows ~26% until the whole solve (T-1760 filed). WASM interface changed (IntercityApi window fns).
   Land after T-1762's VN run ends (its gate uses the main tree's app/WASM), then rebuild main WASM, 8800, smoke.

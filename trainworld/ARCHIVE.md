@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1770 [P2] Real line colours in the real networks. Built 2026-10-29, ships after the join: `pipeline/realcolour.py` (GTFS route_color, OSM colour tag, else noritetsu's line colour, else palette) gives New York 111 of 111 lines, Toronto 40, London 171, Paris 97, Seoul 42, Sendai 15 of 17, Tokyo 78 of 133; saves staged in `artifacts/trainworld/t1770-realnet/`.
 - T-1764 rule 1 [P2] A span step of one train a day no longer touches far zones. Done 2026-10-29: the touch rule takes a stop's `span` within 0.06 as the same view; all of Japan, 17 lines in a row: tyo, yns, szo touched, whole solve bit-equal to before the change. Rule 2 open. notes/T-1764.md.
 - T-1762 [P2] A zone's origin was the densest GHSL pixel anywhere in the zone, not in its named town. Done 2026-10-29: `world_plan.py` takes it from the named unit; Vietnam's 11 zones over 25 km off (cba thc rah huu cmk hox lao pha quy dib kya, 28-78 km) rebuilt and joined, all shipped, Lao Cai's test line 12,008 riders to 67,887 with school; other countries listed in T-1765. notes/T-1738.md 10.
 - T-1744 [P3] Muong Nhe (40,000) and Con Dao (6,800) parked in Vietnam. Done 2026-10-29: dead space (`ALONE_MIN`, Vietnam only, 100,000 people for a zone that joined nothing), their rows and unregistered files removed; Vietnam is 93 of 93 shipped. notes/T-1738.md 10.

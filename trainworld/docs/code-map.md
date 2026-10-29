@@ -681,7 +681,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   runs the same on older saves), `gamesave` (the game file
   `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
   (T-731; new files, since data/frozen/ links to the old ones). Tokyo's trips file is `calib_tyo.py trips` (peak trains an hour
-  by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. `realnet_n02.py` is
+  by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. Each line has its real colour (T-1770,
+  `realcolour.py`, called by `net`; `realnet.py colours <city>` adds it to an older network JSON, staged
+  under `REALNET_OUT`, which `realsave` reads first): the GTFS `route_color` (New York, Toronto, Paris,
+  London's National Rail), else the OSM relation's `colour` tag (Sendai), else noritetsu's line colour
+  (read only: London and Seoul by line id, Tokyo and N02 by line name and operator), else `realsave`'s
+  palette; a colour too dark or light for either map is moved to OKLab lightness 0.40-0.90. `realnet_n02.py` is
   its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves): each line is
   cut where MLIT's passing count changes, each piece gets cars and whole trains from its count,
   Shinkansen run on high-speed track, and `n02_trim.json` holds the cuts and omissions game runs

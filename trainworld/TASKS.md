@@ -107,6 +107,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
 
 ## Track and trains
+- T-1305 [P2] Real networks share track (Anita 2026-10-29 asked again: "currently in the nyc subway it seems like every line runs on its own independent double track"): corridors, cut where the set of lines changes, one station node per corridor with expresses passing; notes/T-1303.md "Shared track". Design written 2026-10-29 (notes/T-1305.md): no new track features needed, all build work; stage 1 New York corridors in Python (about half a day), stage 2 the New York save (a day), stage 3 the other six (a day). Anita 2026-10-29: pairs of two (option a); New York first, stage 1 starts once T-1770 is done with realnet.py.
+- T-1771 [P3] Analytics (Anita's TODO 2026-10-29): plays and playtime, anonymous for everyone and per account when signed in; the page has no analytics at all now. Anita 2026-10-29: yes, own-server anonymous heartbeat (per account when signed in), no Google; waits until her City Circles tracking (a separate session, her site) is done, to share its server side. Open.
 - T-658 [P3] Double track drawn as its two tracks when zoomed far in (Anita 2026-10-19: "somewhat important"; all four stages built 2026-10-19, notes/T-658.md "as built"). Left: a node drag's preview of single track still shows two tracks close in (`map/nodeDrag.ts`); then archive.
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-1072 [P3] Changing a line's stops at an end (a stop added past the last, the first removed) moves the other direction's running trains by the length added or removed: flights are kept as offsets along the run; match them by place on the ground instead. Open; notes/T-1071.md "Limits".
@@ -260,7 +262,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-346 [P3] A cached reload hides the fresh solve's estimates. notes/someday.md
 
 ### Interface
-- T-1305 [P3] Real networks share track: corridors, one node per corridor; a few days, design with Anita (later, Anita 2026-10-25). notes/someday.md
 - T-750 [P3] Add a city's real network to a running sandbox game (Anita wants it, not urgent). notes/someday.md
 - T-685 [P3] Drawn city stamps at 10% rail share (stars done). notes/T-684.md
 - T-651 [P3] Unopened zones look fully red zoomed out; give them their walk split (Anita's TODO). notes/someday.md

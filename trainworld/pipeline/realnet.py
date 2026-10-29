@@ -6,6 +6,7 @@
     python pipeline/realnet.py counties   # county of every pack cell -> cell_county.u8
     python pipeline/realnet.py geom <city>      # track geometry from GTFS shapes, for the `realsave` bin
     python pipeline/realnet.py route <city>     # each hop routed over the real-network graph (T-1303)
+    python pipeline/realnet.py colours <city>   # each line's real colour into the network JSON (T-1770; `net` does it too)
     (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR]
     python pipeline/realnet.py gamesave <city>  # the `realsave` output as a game file, <city>_real.save
     python pipeline/realnet.py ship       # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731)
@@ -801,6 +802,10 @@ def cmd_net(city=None):
             continue
         good.append(l)
     lines = good
+    import realcolour
+    for l, c in zip(lines, realcolour.line_colours(cfg, lines)):
+        if c:
+            l["colour"] = c
     # the arrays DemandApi::set_network takes
     st_xy, line_n, stops, times, tph, cars = [], [], [], [], [], []
     for s in st_list:
@@ -1291,6 +1296,27 @@ def along(line, d):
     return line[i - 1] + (line[i] - line[i - 1]) * t
 
 
+def cmd_colours():
+    """Give each line of a city's network JSON its real colour (T-1770, pipeline/realcolour.py), for
+    a network built before `net` did: writes `<city>_real.json` to $REALNET_OUT (which `realsave` reads
+    first), else in place."""
+    import realcolour
+    city = sys.argv[2] if len(sys.argv) > 2 else "nyc"
+    cfg = CITIES[city]
+    src = cfg["out"] if os.path.exists(cfg["out"]) else os.path.join(WORK, os.path.basename(cfg["out"]))
+    net = json.load(open(src, encoding="utf-8"))
+    cols = realcolour.line_colours(cfg, net["lines"])
+    for l, c in zip(net["lines"], cols):
+        if c:
+            l["colour"] = c
+        else:
+            l.pop("colour", None)
+    os.makedirs(OUT, exist_ok=True)
+    p = os.path.join(OUT, os.path.basename(cfg["out"]))
+    json.dump(net, open(p, "w"))
+    print(f"{city}: {sum(1 for c in cols if c)} of {len(cols)} lines have a real colour ({len(set(c for c in cols if c))} different) -> {p}")
+
+
 def cmd_gamesave():
     """Wrap the track save (`realsave` bin) as a game file the app's "Load a file" reads (T-029's
     format: gzip of "TWG1", u32 header length, JSON header, the track save): day 1 07:00, $6B, the fleet the
@@ -1384,4 +1410,5 @@ out body;"""
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "net"
-    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "geom": cmd_geom, "route": cmd_route, "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()
+    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "geom": cmd_geom, "route": cmd_route, "colours": cmd_colours,
+     "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()
