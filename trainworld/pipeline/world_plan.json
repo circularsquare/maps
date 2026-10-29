@@ -7733,13 +7733,13 @@
    "order": 99,
    "id": "hoc",
    "name": "Ho Chi Minh City",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VNM"
    ],
    "iso2": "VN",
-   "people": 16614348,
+   "people": 16847708,
    "origin": [
     106.7018,
     10.7607
@@ -7789,12 +7789,16 @@
      "81297802B50864428315087",
      "81297802B37514703849012",
      "81297802B44556348511886",
-     "81297802B36271966780528"
+     "81297802B36271966780528",
+     "81297802B7309999559024",
+     "81297802B67867529169474",
+     "81297802B44215588050468",
+     "81297802B79980761269040"
     ]
    },
    "bbox": [
-    106.326,
-    10.436,
+    106.09,
+    10.431,
     107.232,
     11.513
    ],
@@ -7807,7 +7811,36 @@
     ],
     "satellites": [
      5473
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "81297802B7309999559024",
+      "81297802B67867529169474",
+      "81297802B44215588050468",
+      "81297802B79980761269040"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 86.5,
+     "stations": 0.9,
+     "places": 2.5,
+     "routes": 325.9,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T19:12:53",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:40",
+    "shipped": "2026-10-28T20:57:20"
    }
   },
   {
@@ -10532,13 +10565,13 @@
    "order": 132,
    "id": "hao",
    "name": "Hanoi",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VNM"
    ],
    "iso2": "VN",
-   "people": 8598507,
+   "people": 9191156,
    "origin": [
     105.8387,
     21.0193
@@ -10592,14 +10625,21 @@
      "81297802B29926011513196",
      "81297802B91668671895601",
      "81297802B88984924666070",
-     "81297802B55955468315553"
+     "81297802B55955468315553",
+     "81297802B64104222015073",
+     "81297802B85606551737880",
+     "81297802B40785510400399",
+     "81297802B92770026846870",
+     "81297802B72352297629850",
+     "81297802B93646092032264",
+     "81297802B6982011035243"
     ]
    },
    "bbox": [
-    105.293,
-    20.65,
-    106.257,
-    21.443
+    105.213,
+    20.522,
+    106.27,
+    21.542
    ],
    "source": {
     "ucdb": [
@@ -10610,7 +10650,37 @@
     ],
     "satellites": [
      1828
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "81297802B64104222015073",
+      "81297802B85606551737880",
+      "81297802B40785510400399",
+      "81297802B92770026846870",
+      "81297802B72352297629850",
+      "81297802B93646092032264",
+      "81297802B6982011035243"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 59.1,
+     "stations": 1.1,
+     "places": 3.0,
+     "routes": 412.5,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:13:53",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:41",
+    "shipped": "2026-10-28T20:57:20"
    }
   },
   {
@@ -26130,13 +26200,13 @@
    "order": 387,
    "id": "can",
    "name": "Cần Thơ",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VNM"
    ],
    "iso2": "VN",
-   "people": 1768502,
+   "people": 1948918,
    "origin": [
     105.7851,
     10.0444
@@ -26155,14 +26225,16 @@
      "81297802B54398389952996",
      "81297802B2084996388105",
      "81297802B56741553336234",
-     "81297802B92843974613199"
+     "81297802B92843974613199",
+     "81297802B83209776142835",
+     "81297802B74288530741739"
     ]
    },
    "bbox": [
     105.557,
-    9.939,
+    9.86,
     105.899,
-    10.203
+    10.205
    ],
    "source": {
     "ucdb": [
@@ -26170,7 +26242,43 @@
     ],
     "fua": [
      4545
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "81297802B83209776142835",
+      "81297802B74288530741739"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 46.6,
+     "stations": 1.0,
+     "places": 1.3,
+     "routes": 14.9,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T19:07:02",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:30",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.8157436719776183",
+      "pop_vs_ghsl 0.8383559427678142",
+      "top_zone_jobs_share 0.10229581073499522",
+      "top_school_cell_pupils 6000.00048828125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T20:09:08",
+    "shipped": "2026-10-28T20:57:20"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "1.82 against 1.5: the row is Can Tho's districts grown by remnants (T-1191) and the plan row agrees; GHS-FUA 2015 holds the core only (T-1738, 2026-10-28)"
    }
   },
   {
@@ -30942,13 +31050,13 @@
    "order": 472,
    "id": "ann",
    "name": "Đà Nẵng",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VNM"
    ],
    "iso2": "VN",
-   "people": 1440421,
+   "people": 1469240,
    "origin": [
     108.2096,
     16.0662
@@ -30970,14 +31078,15 @@
      "81297802B64444176527608",
      "81297802B31644345342604",
      "81297802B70720207353538",
-     "81297802B62948768430814"
+     "81297802B62948768430814",
+     "81297802B42791937018990"
     ]
    },
    "bbox": [
-    107.819,
+    107.509,
     15.812,
     108.698,
-    16.216
+    16.243
    ],
    "source": {
     "ucdb": [
@@ -30988,7 +31097,33 @@
     ],
     "satellites": [
      5448
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "81297802B42791937018990"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 56.2,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 19.4,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:07:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5060.3974609375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:41",
+    "shipped": "2026-10-28T20:57:21"
    }
   },
   {
@@ -154605,6 +154740,6650 @@
     "reason": "build failed:     medical_parks(city, els, names)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 1348, in medical_parks\n    enrich_parks.main(city)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\enrich_parks.py\", line 297, in main\n    raise ValueError(\"park location coverage below 85%\")\nValueError: park location coverage below 85%",
     "parked": "2026-10-26T10:10:44"
    }
+  },
+  {
+   "order": 2984,
+   "id": "ple",
+   "name": "Pleiku",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1748638,
+   "origin": [
+    108.0767,
+    13.698
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B26419635481013",
+     "81297802B12572198720361",
+     "81297802B36312306774318",
+     "81297802B50675624734559",
+     "81297802B6416238429405",
+     "81297802B51008955299030",
+     "81297802B15377501666570",
+     "81297802B21786246689715",
+     "81297802B94904539855050",
+     "81297802B6947069841891",
+     "81297802B35293124334630",
+     "81297802B62904822955283",
+     "81297802B73536270925214",
+     "81297802B8571934498047",
+     "81297802B76302638024773",
+     "81297802B45369844815447",
+     "81297802B91685830390053"
+    ]
+   },
+   "bbox": [
+    107.453,
+    12.996,
+    108.873,
+    14.603
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pleiku",
+     "Chu Se",
+     "Dak Doa",
+     "Chu Prong",
+     "Ia Grai",
+     "Krong Pa",
+     "Phu Thien",
+     "Chu Pah",
+     "An Khe",
+     "Duc Co",
+     "KBang",
+     "Chu Puh",
+     "Mang Yang",
+     "Ia Pa",
+     "Kong Chro",
+     "Dak Po",
+     "Ayun Pa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 58.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 75.0,
+     "merge": 1.5,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:08:15",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6052.43017578125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:41",
+    "shipped": "2026-10-28T20:57:21"
+   }
+  },
+  {
+   "order": 2985,
+   "id": "rah",
+   "name": "Rach Gia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1729237,
+   "origin": [
+    104.532,
+    10.1746
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B54016933640468",
+     "81297802B19779239086561",
+     "81297802B18356226761800",
+     "81297802B94247950786042",
+     "81297802B5868916674827",
+     "81297802B76509043653809",
+     "81297802B3825263519858",
+     "81297802B42244354568951",
+     "81297802B62462651678890",
+     "81297802B871478188231",
+     "81297802B41363610148385",
+     "81297802B37875930391216",
+     "81297802B34321495303848"
+    ]
+   },
+   "bbox": [
+    103.187,
+    9.255,
+    105.54,
+    10.463
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Rach Gia",
+     "Giong Rieng",
+     "Hon Dat",
+     "Chau Thanh",
+     "Tan Hiep",
+     "Go Quao",
+     "An Bien",
+     "An Minh",
+     "Vinh Thuan",
+     "Phu Quoc",
+     "Kien Luong",
+     "U Minh Thuong",
+     "Ha Tien"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 50.699999999999996,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 33.8,
+     "merge": 1.3,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:08:26",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6061.39208984375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:47:42",
+    "shipped": "2026-10-28T20:57:21"
+   }
+  },
+  {
+   "order": 2986,
+   "id": "hiu",
+   "name": "Hai Duong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1455809,
+   "origin": [
+    106.3123,
+    20.9363
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B68427461655945",
+     "81297802B31270346353021",
+     "81297802B38910067880652",
+     "81297802B77309747732529",
+     "81297802B74485828948407",
+     "81297802B65658789050233",
+     "81297802B3696641207460",
+     "81297802B14141540631295",
+     "81297802B53771614429572"
+    ]
+   },
+   "bbox": [
+    106.239,
+    20.69,
+    106.664,
+    21.087
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hai Duong",
+     "An Duong",
+     "Tu Ky",
+     "Thanh Ha",
+     "Ninh Giang",
+     "An Lao",
+     "Kim Thanh",
+     "Gia Loc",
+     "Nam Sach"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.1,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 59.5,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:09:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6124.57763671875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:47:42",
+    "shipped": "2026-10-28T20:57:22"
+   }
+  },
+  {
+   "order": 2987,
+   "id": "thn",
+   "name": "Thanh Hoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1426324,
+   "origin": [
+    105.7772,
+    19.8006
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B5241398972305",
+     "81297802B91620400281223",
+     "81297802B97142358911210",
+     "81297802B47590181438391",
+     "81297802B18173194226488",
+     "81297802B47963627673209",
+     "81297802B67206181597957",
+     "81297802B98540731986743",
+     "81297802B8967556658808"
+    ]
+   },
+   "bbox": [
+    105.426,
+    19.712,
+    106.076,
+    20.156
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thanh Hoa",
+     "Hoang Hoa",
+     "Trieu Son",
+     "Hau Loc",
+     "Thieu Hoa",
+     "Nga Son",
+     "Ha Trung",
+     "Dong Son",
+     "Bim Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.6,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 44.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:08:19",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6277.40673828125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:42",
+    "shipped": "2026-10-28T20:57:22"
+   }
+  },
+  {
+   "order": 2988,
+   "id": "thg",
+   "name": "Thai Nguyen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1337730,
+   "origin": [
+    105.8443,
+    21.5926
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B43105107768719",
+     "81297802B22157258808987",
+     "81297802B19798201223775",
+     "81297802B92827581567655",
+     "81297802B24165490506756",
+     "81297802B71869801036686",
+     "81297802B90284781247335",
+     "81297802B13645799597087",
+     "81297802B36883846114124",
+     "81297802B66276855595229",
+     "81297802B41242908240864",
+     "81297802B17568713952999",
+     "81297802B30321615980530",
+     "81297802B24308322432437",
+     "81297802B24696745321038",
+     "81297802B68784640933993",
+     "81297802B12739753000309"
+    ]
+   },
+   "bbox": [
+    105.431,
+    21.394,
+    106.288,
+    22.74
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thai Nguyen",
+     "Dai Tu",
+     "Phu Binh",
+     "Phu Luong",
+     "Yen The",
+     "Dong Hy",
+     "Dinh Hoa",
+     "Vo Nhai",
+     "Ba Be",
+     "Song Cong",
+     "Cho Don",
+     "Bac Kan",
+     "Na Ri",
+     "Cho Moi",
+     "Bach Thong",
+     "Ngan Son",
+     "Pac Nam"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 20.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 77.6,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:10:00",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:43",
+    "shipped": "2026-10-28T20:57:22"
+   }
+  },
+  {
+   "order": 2989,
+   "id": "qun",
+   "name": "Quang Ngai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1320427,
+   "origin": [
+    108.8,
+    15.1226
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B1045120286230",
+     "81297802B15613357308975",
+     "81297802B82760747397164",
+     "81297802B55656475848083",
+     "81297802B20968372540645",
+     "81297802B23204917551818",
+     "81297802B973126409201",
+     "81297802B11658146957456",
+     "81297802B2421652022296",
+     "81297802B78342510004852",
+     "81297802B47494931699472",
+     "81297802B89663618716792",
+     "81297802B63810165613250"
+    ]
+   },
+   "bbox": [
+    108.261,
+    14.533,
+    109.147,
+    15.433
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Quang Ngai",
+     "Son Tinh",
+     "Binh Son",
+     "Tu Nghia",
+     "Duc Pho",
+     "Mo Duc",
+     "Nghia Hanh",
+     "Son Ha",
+     "Ba To",
+     "Tra Bong",
+     "Tay Tra",
+     "Minh Long",
+     "Ly Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 23.7,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 33.6,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:09:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6038.529296875"
+     ]
+    },
+    "gated": "2026-10-28T19:47:43",
+    "shipped": "2026-10-28T20:57:22"
+   }
+  },
+  {
+   "order": 2990,
+   "id": "cma",
+   "name": "Ca Mau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1288480,
+   "origin": [
+    105.1462,
+    9.1825
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B56186863938752",
+     "81297802B31922203315935",
+     "81297802B79677528710757",
+     "81297802B26446696948049",
+     "81297802B72962934651760",
+     "81297802B51702434363712",
+     "81297802B9286931688743",
+     "81297802B22159011638398",
+     "81297802B77939005638096"
+    ]
+   },
+   "bbox": [
+    104.705,
+    8.409,
+    105.419,
+    9.562
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ca Mau",
+     "Tran Van Thoi",
+     "Dam Doi",
+     "Cai Nuoc",
+     "Thoi Binh",
+     "Phu Tan",
+     "U Minh",
+     "Ngoc Hien",
+     "Nam Can"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 20.1,
+     "stations": 1.2,
+     "places": 1.6,
+     "routes": 22.0,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:09:16",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:31",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6181.6259765625",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 547.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T20:09:08",
+    "shipped": "2026-10-28T20:57:23"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.15 against 2.0: the Mekong delta's rivers and canals: roads go round the water to few bridges (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 2991,
+   "id": "din",
+   "name": "Dien Chau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1230860,
+   "origin": [
+    105.3476,
+    19.1719
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B64936965881183",
+     "81297802B75629290490646",
+     "81297802B92574261409002",
+     "81297802B2130126961507",
+     "81297802B12421029194754",
+     "81297802B23970425053168",
+     "81297802B27308287932068"
+    ]
+   },
+   "bbox": [
+    104.53,
+    18.578,
+    105.657,
+    19.353
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dien Chau",
+     "Yen Thanh",
+     "Thanh Chuong",
+     "Do Luong",
+     "Tan Ky",
+     "Anh Son",
+     "Con Cuong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.6,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 64.5,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:10:41",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:43",
+    "shipped": "2026-10-28T20:57:23"
+   }
+  },
+  {
+   "order": 2992,
+   "id": "cup",
+   "name": "Chau Phu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1212611,
+   "origin": [
+    105.2378,
+    10.8014
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B67223328663780",
+     "81297802B56486108937036",
+     "81297802B24408052099516",
+     "81297802B41294306698552",
+     "81297802B61282348708206",
+     "81297802B29469680325647",
+     "81297802B35428568609668"
+    ]
+   },
+   "bbox": [
+    104.778,
+    10.271,
+    105.368,
+    10.961
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chau Phu",
+     "Phu Tan",
+     "Tan Chau",
+     "An Phu",
+     "Tri Ton",
+     "Chau Doc",
+     "Tinh Bien"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.7,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 13.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:09:57",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6159.91162109375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:43",
+    "shipped": "2026-10-28T20:57:23"
+   }
+  },
+  {
+   "order": 2993,
+   "id": "btr",
+   "name": "Ba Tri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1173605,
+   "origin": [
+    106.591,
+    10.0444
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B69586170313052",
+     "81297802B83890760772965",
+     "81297802B48166206611574",
+     "81297802B56564979250046",
+     "81297802B66163336026361",
+     "81297802B66468397901634",
+     "81297802B1495670326955",
+     "81297802B92984212454641"
+    ]
+   },
+   "bbox": [
+    106.143,
+    9.79,
+    106.792,
+    10.34
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ba Tri",
+     "Giong Trom",
+     "Mo Cay Nam",
+     "Chau Thanh",
+     "Binh Dai",
+     "Thanh Phu",
+     "Ben Tre",
+     "Mo Cay Bac"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.0,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 29.0,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:10:14",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6249.17431640625"
+     ]
+    },
+    "gated": "2026-10-28T19:47:44",
+    "shipped": "2026-10-28T20:57:24"
+   }
+  },
+  {
+   "order": 2994,
+   "id": "buo",
+   "name": "Buon Ma Thuot",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1172492,
+   "origin": [
+    108.0779,
+    12.8155
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B34862108658790",
+     "81297802B57943820891789",
+     "81297802B8003578408571",
+     "81297802B29162792012865",
+     "81297802B38165084831058",
+     "81297802B83612510149562",
+     "81297802B42534502413482"
+    ]
+   },
+   "bbox": [
+    107.484,
+    12.161,
+    108.728,
+    13.088
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Buon Ma Thuot",
+     "Cu Mgar",
+     "Cu Kuin",
+     "Krong Bong",
+     "Krong A Na",
+     "Lak",
+     "Buon Don"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 23.7,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 28.3,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T19:10:56",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6031.70947265625"
+     ]
+    },
+    "gated": "2026-10-28T19:47:44",
+    "shipped": "2026-10-28T20:57:24"
+   }
+  },
+  {
+   "order": 2995,
+   "id": "nha",
+   "name": "Nha Trang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1171661,
+   "origin": [
+    109.1871,
+    12.2523
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B68033195953544",
+     "81297802B58839501230111",
+     "81297802B57264474428475",
+     "81297802B88990967828920",
+     "81297802B51561347842325",
+     "81297802B15274858883665",
+     "81297802B87924827202169",
+     "81297802B29051358194838"
+    ]
+   },
+   "bbox": [
+    108.671,
+    11.769,
+    109.469,
+    12.869
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nha Trang",
+     "Ninh Hoa",
+     "Dien Khanh",
+     "Cam Ranh",
+     "Van Ninh",
+     "Cam Lam",
+     "Khanh Vinh",
+     "Khanh Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 20.3,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 21.6,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:10:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:45",
+    "shipped": "2026-10-28T20:57:24"
+   }
+  },
+  {
+   "order": 2996,
+   "id": "pha",
+   "name": "Phan Thiet",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1164979,
+   "origin": [
+    108.7342,
+    11.2249
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B56109009945364",
+     "81297802B59459676884366",
+     "81297802B10372149063277",
+     "81297802B73162737965460",
+     "81297802B84889732636102",
+     "81297802B85161602276488",
+     "81297802B72040378952039",
+     "81297802B68049284687871",
+     "81297802B21171501026834"
+    ]
+   },
+   "bbox": [
+    107.394,
+    10.569,
+    108.876,
+    11.556
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phan Thiet",
+     "Ham Thuan Bac",
+     "Duc Linh",
+     "Tuy Phong",
+     "Bac Binh",
+     "La Gi",
+     "Tanh Linh",
+     "Ham Thuan Nam",
+     "Ham Tan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 25.4,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 39.1,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:11:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10370548000377758",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:45",
+    "shipped": "2026-10-28T20:57:25"
+   }
+  },
+  {
+   "order": 2997,
+   "id": "dox",
+   "name": "Dong Hung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1130137,
+   "origin": [
+    106.339,
+    20.4468
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B28789600266311",
+     "81297802B99897160628736",
+     "81297802B82663613485319",
+     "81297802B12405297659236",
+     "81297802B85054848055124"
+    ]
+   },
+   "bbox": [
+    106.178,
+    20.244,
+    106.629,
+    20.614
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dong Hung",
+     "Vu Thu",
+     "Kien Xuong",
+     "Tien Hai",
+     "Thai Binh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 41.7,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:11:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11485839217677588",
+      "top_school_cell_pupils 6087.0830078125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:46",
+    "shipped": "2026-10-28T20:57:25"
+   }
+  },
+  {
+   "order": 2998,
+   "id": "thc",
+   "name": "Thuan Chau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1097075,
+   "origin": [
+    104.6462,
+    21.2685
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B46916310956334",
+     "81297802B85756054610964",
+     "81297802B25580956843795",
+     "81297802B18330735489877",
+     "81297802B22446045808118",
+     "81297802B47097666741506",
+     "81297802B85331365285334",
+     "81297802B99176770386813",
+     "81297802B11613956410948",
+     "81297802B44532488811780",
+     "81297802B72197288944143",
+     "81297802B35904575630157"
+    ]
+   },
+   "bbox": [
+    103.212,
+    20.573,
+    105.025,
+    22.028
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thuan Chau",
+     "Mai Son",
+     "Song Ma",
+     "Moc Chau",
+     "Phu Yen",
+     "Son La",
+     "Muong La",
+     "Yen Chau",
+     "Quynh Nhai",
+     "Bac Yen",
+     "Van Ho",
+     "Sop Cop"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 27.7,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 45.5,
+     "merge": 1.3,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:12:09",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:31",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-10-28T20:09:08",
+    "shipped": "2026-10-28T20:57:25"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.08 against 2.0: mountain roads of the far north (Son La) (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 2999,
+   "id": "thb",
+   "name": "Thang Binh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1089865,
+   "origin": [
+    108.4757,
+    15.5737
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B72056692107631",
+     "81297802B98438479076374",
+     "81297802B34920687321908",
+     "81297802B11134761285152",
+     "81297802B35959496403420",
+     "81297802B89611140069217",
+     "81297802B11022979046189",
+     "81297802B51785257245499",
+     "81297802B65636962466894",
+     "81297802B47304896634130",
+     "81297802B33972751107769",
+     "81297802B98842550999199",
+     "81297802B9107629386142"
+    ]
+   },
+   "bbox": [
+    107.588,
+    14.951,
+    108.739,
+    16.067
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thang Binh",
+     "Dai Loc",
+     "Nui Thanh",
+     "Duy Xuyen",
+     "Tam Ky",
+     "Que Son",
+     "Phu Ninh",
+     "Tien Phuoc",
+     "Bac Tra My",
+     "Hiep Duc",
+     "Nong Son",
+     "Nam Tra My",
+     "Dong Giang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 34.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 43.7,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:12:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11321616646013395",
+      "top_school_cell_pupils 6027.115234375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:46",
+    "shipped": "2026-10-28T20:57:26"
+   }
+  },
+  {
+   "order": 3000,
+   "id": "tcu",
+   "name": "Tra Cu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1054319,
+   "origin": [
+    106.338,
+    9.9387
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B8258305147124",
+     "81297802B14177599577280",
+     "81297802B55022771369511",
+     "81297802B90196015208533",
+     "81297802B65507223487475",
+     "81297802B7308282486980",
+     "81297802B81116648730753",
+     "81297802B52504001228047"
+    ]
+   },
+   "bbox": [
+    105.955,
+    9.53,
+    106.607,
+    10.082
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tra Cu",
+     "Cang Long",
+     "Chau Thanh",
+     "Cau Ngang",
+     "Cau Ke",
+     "Tieu Can",
+     "Duyen Hai",
+     "Tra Vinh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.6,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 18.9,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:12:09",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6134.10791015625"
+     ]
+    },
+    "gated": "2026-10-28T19:47:46",
+    "shipped": "2026-10-28T20:57:26"
+   }
+  },
+  {
+   "order": 3001,
+   "id": "dax",
+   "name": "Da Lat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1044372,
+   "origin": [
+    108.3693,
+    11.7303
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B86448730167777",
+     "81297802B43116981701202",
+     "81297802B8144414429904",
+     "81297802B58085294619279",
+     "81297802B74216529473028",
+     "81297802B48811804766969"
+    ]
+   },
+   "bbox": [
+    107.875,
+    11.215,
+    108.702,
+    12.23
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Da Lat",
+     "Duc Trong",
+     "Di Linh",
+     "Lam Ha",
+     "Don Duong",
+     "Dam Rong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 26.9,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 19.7,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:12:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17780390950607697",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:47",
+    "shipped": "2026-10-28T20:57:26"
+   }
+  },
+  {
+   "order": 3002,
+   "id": "hux",
+   "name": "Hue",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1043138,
+   "origin": [
+    107.5966,
+    16.4605
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B88130440660417",
+     "81297802B31894177777214",
+     "81297802B61067118889021",
+     "81297802B61752422174773",
+     "81297802B27432396017289",
+     "81297802B35670860897871",
+     "81297802B21993860278161",
+     "81297802B94706269623038"
+    ]
+   },
+   "bbox": [
+    107.016,
+    16.015,
+    108.211,
+    16.742
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hue",
+     "Phu Vang",
+     "Phu Loc",
+     "Huong Tra",
+     "Huong Thuy",
+     "Phong Dien",
+     "Quang Dien",
+     "A Luoi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 23.6,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 21.4,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:13:01",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11554262648880778",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:47",
+    "shipped": "2026-10-28T20:57:26"
+   }
+  },
+  {
+   "order": 3003,
+   "id": "hot",
+   "name": "Hoa Thanh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1034812,
+   "origin": [
+    106.1319,
+    11.282
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B16996300923424",
+     "81297802B30323481145094",
+     "81297802B48058598464830",
+     "81297802B68440719308655",
+     "81297802B96522155706340",
+     "81297802B37342354446447"
+    ]
+   },
+   "bbox": [
+    105.81,
+    11.179,
+    106.492,
+    11.78
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hoa Thanh",
+     "Chau Thanh",
+     "Tay Ninh",
+     "Tan Chau",
+     "Duong Minh Chau",
+     "Tan Bien"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.2,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 23.3,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T19:12:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:47",
+    "shipped": "2026-10-28T20:57:27"
+   }
+  },
+  {
+   "order": 3004,
+   "id": "hia",
+   "name": "Hai Hau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1021142,
+   "origin": [
+    106.2955,
+    20.1981
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B21970288414729",
+     "81297802B51483513425235",
+     "81297802B4294080644708",
+     "81297802B30905014988311",
+     "81297802B91982413663988"
+    ]
+   },
+   "bbox": [
+    106.092,
+    19.889,
+    106.592,
+    20.378
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hai Hau",
+     "Giao Thuy",
+     "Nghia Hung",
+     "Truc Ninh",
+     "Xuan Truong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 9.1,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 30.1,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:13:07",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6036.10107421875"
+     ]
+    },
+    "gated": "2026-10-28T19:47:47",
+    "shipped": "2026-10-28T20:57:27"
+   }
+  },
+  {
+   "order": 3005,
+   "id": "vun",
+   "name": "Vung Tau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 1005740,
+   "origin": [
+    107.0883,
+    10.3536
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B39135443664879",
+     "81297802B24499966976565",
+     "81297802B9398077823445",
+     "81297802B66449035371360",
+     "81297802B14105634475822"
+    ]
+   },
+   "bbox": [
+    107.042,
+    10.32,
+    107.573,
+    10.804
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Vung Tau",
+     "Xuyen Moc",
+     "Long Dien",
+     "Ba Ria",
+     "Dat Do"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 23.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 18.0,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:13:21",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:48",
+    "shipped": "2026-10-28T20:57:27"
+   }
+  },
+  {
+   "order": 3006,
+   "id": "cmo",
+   "name": "Cho Moi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 994379,
+   "origin": [
+    105.4404,
+    10.378
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B9073555262789",
+     "81297802B27304776569222",
+     "81297802B55991258422340",
+     "81297802B33105171569216"
+    ]
+   },
+   "bbox": [
+    105.095,
+    10.184,
+    105.576,
+    10.577
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cho Moi",
+     "Long Xuyen",
+     "Thoai Son",
+     "Chau Thanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 14.4,
+     "stations": 1.0,
+     "places": 1.3,
+     "routes": 12.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:13:26",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6064.08544921875"
+     ]
+    },
+    "gated": "2026-10-28T19:47:48",
+    "shipped": "2026-10-28T20:57:28"
+   }
+  },
+  {
+   "order": 3007,
+   "id": "log",
+   "name": "Long Ho",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 992429,
+   "origin": [
+    105.9778,
+    10.2478
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B86807381296423",
+     "81297802B24233120148790",
+     "81297802B334334492772",
+     "81297802B90328181900706",
+     "81297802B51499597672373",
+     "81297802B13885304658875",
+     "81297802B20675443699466"
+    ]
+   },
+   "bbox": [
+    105.837,
+    9.883,
+    106.29,
+    10.33
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Long Ho",
+     "Vung Liem",
+     "Tam Binh",
+     "Tra On",
+     "Vinh Long",
+     "Cho Lach",
+     "Mang Thit"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.6,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 20.7,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:13:34",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10937334483547091",
+      "top_school_cell_pupils 6086.33740234375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:48",
+    "shipped": "2026-10-28T20:57:28"
+   }
+  },
+  {
+   "order": 3008,
+   "id": "kim",
+   "name": "Kim Son",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 973032,
+   "origin": [
+    106.0842,
+    20.0904
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B55928452292311",
+     "81297802B37600217906847",
+     "81297802B59755992581592",
+     "81297802B79786453625721",
+     "81297802B33091662264636",
+     "81297802B9308814425220",
+     "81297802B36566531846362",
+     "81297802B4597997720172"
+    ]
+   },
+   "bbox": [
+    105.543,
+    19.916,
+    106.168,
+    20.455
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kim Son",
+     "Nho Quan",
+     "Yen Khanh",
+     "Gia Vien",
+     "Ninh Bình",
+     "Yen Mo",
+     "Hoa Lu",
+     "Tam Diep"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.7,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 45.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:14:05",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6070.78173828125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:49",
+    "shipped": "2026-10-28T20:57:28"
+   }
+  },
+  {
+   "order": 3009,
+   "id": "lao",
+   "name": "Lao Cai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 966011,
+   "origin": [
+    104.4756,
+    22.2335
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B32838967164839",
+     "81297802B25560916681091",
+     "81297802B47938422647464",
+     "81297802B34365172713310",
+     "81297802B25948208667731",
+     "81297802B88663047044628",
+     "81297802B70449859021509",
+     "81297802B11536853186467",
+     "81297802B83473395979783",
+     "81297802B8345144496926",
+     "81297802B71116262659242",
+     "81297802B16025441122040",
+     "81297802B9711168823282",
+     "81297802B74546691476320",
+     "81297802B8681355150837"
+    ]
+   },
+   "bbox": [
+    103.071,
+    21.685,
+    104.629,
+    22.845
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lao Cai",
+     "Bao Thang",
+     "Phong Tho",
+     "Van Ban",
+     "Bao Yen",
+     "Sin Ho",
+     "Than Uyen",
+     "Bat Xat",
+     "Tan Uyen",
+     "Tam Duong",
+     "Bac Ha",
+     "Sa Pa",
+     "Muong Khuong",
+     "Lai Chau",
+     "Si Ma Cai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 19.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 29.7,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:14:02",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:31",
+    "gate": {
+     "warn": [
+      "browser None",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-10-28T20:09:09",
+    "shipped": "2026-10-28T20:57:29"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.08 against 2.0: mountain roads of the far north (Lao Cai) (T-1738, 2026-10-28)",
+    "browser": "the test line carries 12,008 riders of every required purpose but school (0; 105 school sites, pupils within reach walk), a mountain town (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 3010,
+   "id": "ung",
+   "name": "Ung Hoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 947667,
+   "origin": [
+    105.6784,
+    20.7952
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B95308085705563",
+     "81297802B48632704069528",
+     "81297802B21968879828656",
+     "81297802B80649611591308",
+     "81297802B22385523751240",
+     "81297802B65575052729344",
+     "81297802B25708049906691",
+     "81297802B54863694878388",
+     "81297802B52142956360096"
+    ]
+   },
+   "bbox": [
+    104.836,
+    20.306,
+    105.925,
+    20.875
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ung Hoa",
+     "My Duc",
+     "Lac Son",
+     "Kim Bang",
+     "Tan Lac",
+     "Yen Thuy",
+     "Lac Thuy",
+     "Mai Chau",
+     "Cao Phong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.9,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 55.5,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:14:37",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:49",
+    "shipped": "2026-10-28T20:57:29"
+   }
+  },
+  {
+   "order": 3011,
+   "id": "lyh",
+   "name": "Ly Nhan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 940128,
+   "origin": [
+    106.0577,
+    20.6624
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B63925273406451",
+     "81297802B47692200365960",
+     "81297802B7902592700170",
+     "81297802B85424672096974",
+     "81297802B31840185218616",
+     "81297802B83594447255",
+     "81297802B99776560080545"
+    ]
+   },
+   "bbox": [
+    105.851,
+    20.363,
+    106.183,
+    20.815
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ly Nhan",
+     "Binh Luc",
+     "Duy Tien",
+     "Thanh Liem",
+     "Kim Dong",
+     "Hung Yen",
+     "Phu Ly"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.6,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 53.2,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:14:36",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:50",
+    "shipped": "2026-10-28T20:57:29"
+   }
+  },
+  {
+   "order": 3012,
+   "id": "bcl",
+   "name": "Bac Lieu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 932307,
+   "origin": [
+    105.7289,
+    9.2881
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B6284379291034",
+     "81297802B21221579574343",
+     "81297802B74217032443586",
+     "81297802B5473399388769",
+     "81297802B80223312825495",
+     "81297802B62740202990840",
+     "81297802B93911642889100"
+    ]
+   },
+   "bbox": [
+    105.233,
+    9.015,
+    105.86,
+    9.637
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bac Lieu",
+     "Dong Hai",
+     "Gia Rai",
+     "Phuoc Long",
+     "Hong Dan",
+     "Hoa Binh",
+     "Vinh Loi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.9,
+     "stations": 1.0,
+     "places": 1.3,
+     "routes": 17.0,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:14:08",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6131.59716796875"
+     ]
+    },
+    "gated": "2026-10-28T19:47:50",
+    "shipped": "2026-10-28T20:57:29"
+   }
+  },
+  {
+   "order": 3013,
+   "id": "dau",
+   "name": "Dau Tieng",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 914840,
+   "origin": [
+    106.6112,
+    11.6487
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B65073062645065",
+     "81297802B21040073838815",
+     "81297802B13642047560711",
+     "81297802B41717626545623",
+     "81297802B26799209243085",
+     "81297802B43417057118199",
+     "81297802B36298380371063"
+    ]
+   },
+   "bbox": [
+    106.326,
+    11.135,
+    107.142,
+    11.786
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dau Tieng",
+     "Phu Giao",
+     "Dong Xoai",
+     "Dong Phu",
+     "Hon Quan",
+     "Binh Long",
+     "Chon Thanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 21.5,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 35.7,
+     "merge": 1.0,
+     "nocar": 2.2,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T19:14:58",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:50",
+    "shipped": "2026-10-28T20:57:30"
+   }
+  },
+  {
+   "order": 3014,
+   "id": "quy",
+   "name": "Quynh Luu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 913627,
+   "origin": [
+    105.1825,
+    19.329
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B4221517004962",
+     "81297802B66096195927531",
+     "81297802B32908759949092",
+     "81297802B46675680885513",
+     "81297802B96353597468260",
+     "81297802B26083936626584",
+     "81297802B2701886719052",
+     "81297802B37103290877054",
+     "81297802B85029486143959"
+    ]
+   },
+   "bbox": [
+    103.873,
+    18.979,
+    105.806,
+    19.998
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Quynh Luu",
+     "Quy Hop",
+     "Thai Hoa",
+     "Hoang Mai",
+     "Nghia Dan",
+     "Tuong Duong",
+     "Ky Son",
+     "Que Phong",
+     "Quy Chau"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.9,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 50.8,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:15:18",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:51",
+    "shipped": "2026-10-28T20:57:30"
+   }
+  },
+  {
+   "order": 3015,
+   "id": "nah",
+   "name": "Nam Định",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 910693,
+   "origin": [
+    106.1761,
+    20.4302
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B54089788823696",
+     "81297802B2331859269186",
+     "81297802B82332241258399",
+     "81297802B77828019918781",
+     "81297802B55456276640785"
+    ]
+   },
+   "bbox": [
+    105.924,
+    20.217,
+    106.286,
+    20.499
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nam Định",
+     "Y Yen",
+     "Nam Truc",
+     "Vu Ban",
+     "My Loc"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.8,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 38.3,
+     "merge": 1.0,
+     "nocar": 2.2,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:15:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13528386651327312",
+      "top_school_cell_pupils 6165.62646484375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:51",
+    "shipped": "2026-10-28T20:57:30"
+   }
+  },
+  {
+   "order": 3016,
+   "id": "tuy",
+   "name": "Tuy Hoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 873298,
+   "origin": [
+    109.3062,
+    13.085
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B45106503001809",
+     "81297802B47177978604160",
+     "81297802B45644811289425",
+     "81297802B36488646512837",
+     "81297802B95398881806036",
+     "81297802B65581648571900",
+     "81297802B78420794750623",
+     "81297802B61701358015931",
+     "81297802B28811761284346"
+    ]
+   },
+   "bbox": [
+    108.673,
+    12.706,
+    109.459,
+    13.695
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tuy Hoa",
+     "Tuy An",
+     "Dong Hoa",
+     "Tay Hoa",
+     "Phu Hoa",
+     "Song Cau",
+     "Dong Xuan",
+     "Son Hoa",
+     "Song Hinh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 20.7,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:14:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:52",
+    "shipped": "2026-10-28T20:57:31"
+   }
+  },
+  {
+   "order": 3017,
+   "id": "cmk",
+   "name": "Cam Khe",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 870350,
+   "origin": [
+    105.3459,
+    20.8201
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B31371166923700",
+     "81297802B60314868788909",
+     "81297802B29311833142389",
+     "81297802B68203584934419",
+     "81297802B43584820413656",
+     "81297802B97239523369157",
+     "81297802B78626005730568",
+     "81297802B30557639912850",
+     "81297802B6788314119837",
+     "81297802B73795447547430",
+     "81297802B95846226867008",
+     "81297802B60514422076531",
+     "81297802B6810559606516"
+    ]
+   },
+   "bbox": [
+    104.815,
+    20.744,
+    105.463,
+    21.72
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cam Khe",
+     "Thanh Son",
+     "Hoa Binh",
+     "Thanh Ba",
+     "Ha Hoa",
+     "Doan Hung",
+     "Yen Lap",
+     "Tan Son",
+     "Tam Nong",
+     "Thanh Thuy",
+     "Phu Tho",
+     "Da Bac",
+     "Ky Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 19.4,
+     "stations": 1.7,
+     "places": 1.7,
+     "routes": 63.4,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:16:07",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6173.42724609375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:52",
+    "shipped": "2026-10-28T20:57:31"
+   }
+  },
+  {
+   "order": 3018,
+   "id": "bot",
+   "name": "Bo Trach",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 867846,
+   "origin": [
+    106.4243,
+    17.7524
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B63375818356773",
+     "81297802B23145234920875",
+     "81297802B46228878369339",
+     "81297802B5400707592531",
+     "81297802B18152468964479",
+     "81297802B14659466260998",
+     "81297802B61927033163821",
+     "81297802B57556187754980"
+    ]
+   },
+   "bbox": [
+    105.608,
+    16.921,
+    106.994,
+    18.09
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bo Trach",
+     "Le Thuy",
+     "Ba Don",
+     "Dong Hoi",
+     "Quang Ninh",
+     "Tuyen Hoa",
+     "Quang Trach",
+     "Minh Hoa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 18.6,
+     "stations": 1.5,
+     "places": 1.7,
+     "routes": 30.9,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:15:34",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6052.5478515625"
+     ]
+    },
+    "gated": "2026-10-28T19:47:52",
+    "shipped": "2026-10-28T20:57:31"
+   }
+  },
+  {
+   "order": 3019,
+   "id": "lea",
+   "name": "Le Chan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 841707,
+   "origin": [
+    106.6816,
+    20.8532
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B93912769577432",
+     "81297802B29420287983322",
+     "81297802B19362557849536",
+     "81297802B18343005733844",
+     "81297802B17638458778811",
+     "81297802B63499365755438",
+     "81297802B62167717430855",
+     "81297802B95607767906649"
+    ]
+   },
+   "bbox": [
+    106.595,
+    20.666,
+    106.832,
+    20.899
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Le Chan",
+     "Kien Thuy",
+     "Hai An",
+     "Ngo Quyen",
+     "Kien An",
+     "Hong Bang",
+     "Duong Kinh",
+     "Do Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 14.9,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 14.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:15:29",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5567.7353515625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:52",
+    "shipped": "2026-10-28T20:57:32"
+   }
+  },
+  {
+   "order": 3020,
+   "id": "hox",
+   "name": "Hoai Nhon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 832620,
+   "origin": [
+    108.9202,
+    13.9107
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B87599740731463",
+     "81297802B92234400822922",
+     "81297802B75835306112543",
+     "81297802B3478153063518",
+     "81297802B64656263356693",
+     "81297802B21955309192571",
+     "81297802B61161719512326"
+    ]
+   },
+   "bbox": [
+    108.601,
+    13.757,
+    109.296,
+    14.703
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hoai Nhon",
+     "Phu Cat",
+     "Phu My",
+     "Tay Son",
+     "Hoai An",
+     "Vinh Thanh",
+     "An Lao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 20.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 35.3,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:53",
+    "shipped": "2026-10-28T20:57:32"
+   }
+  },
+  {
+   "order": 3021,
+   "id": "vih",
+   "name": "Vinh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 808616,
+   "origin": [
+    105.6981,
+    18.668
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B9978574523269",
+     "81297802B54877143810300",
+     "81297802B50427055609681",
+     "81297802B19242536298701",
+     "81297802B13550924224659"
+    ]
+   },
+   "bbox": [
+    105.405,
+    18.552,
+    105.783,
+    18.899
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Vinh",
+     "Nam Dan",
+     "Nghi Loc",
+     "Hung Nguyen",
+     "Cua Lo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.5,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 32.5,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:15:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6110.71337890625"
+     ]
+    },
+    "gated": "2026-10-28T19:47:53",
+    "shipped": "2026-10-28T20:57:32"
+   }
+  },
+  {
+   "order": 3022,
+   "id": "qux",
+   "name": "Quang Xuong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 804228,
+   "origin": [
+    105.895,
+    19.7343
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B40676303665635",
+     "81297802B97652803071493",
+     "81297802B57234015442712",
+     "81297802B85505749224324",
+     "81297802B29351066345319",
+     "81297802B12977108616150"
+    ]
+   },
+   "bbox": [
+    105.155,
+    19.287,
+    105.938,
+    19.806
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Quang Xuong",
+     "Tinh Gia",
+     "Nong Cong",
+     "Nhu Thanh",
+     "Nhu Xuan",
+     "Sam Son"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.7,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 34.2,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:16:12",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6090.19482421875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:54",
+    "shipped": "2026-10-28T20:57:32"
+   }
+  },
+  {
+   "order": 3023,
+   "id": "bua",
+   "name": "Bu Dang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 767933,
+   "origin": [
+    107.2466,
+    11.8118
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B33312647698223",
+     "81297802B78542366840504",
+     "81297802B87348344277653",
+     "81297802B44117863394749",
+     "81297802B5857215594058"
+    ]
+   },
+   "bbox": [
+    106.413,
+    11.502,
+    107.427,
+    12.296
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bu Dang",
+     "Bu Gia Map",
+     "Loc Ninh",
+     "Phuoc Long",
+     "Bu Dop"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 29.0,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 18.8,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:24",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6004.0029296875"
+     ]
+    },
+    "gated": "2026-10-28T19:47:54",
+    "shipped": "2026-10-28T20:57:33"
+   }
+  },
+  {
+   "order": 3024,
+   "id": "diq",
+   "name": "Dinh Quan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 746192,
+   "origin": [
+    107.2082,
+    11.0864
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B49967994067833",
+     "81297802B74333052983118",
+     "81297802B78615286204020"
+    ]
+   },
+   "bbox": [
+    107.059,
+    10.849,
+    107.543,
+    11.582
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dinh Quan",
+     "Tan Phu",
+     "Thong Nhat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.2,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 21.4,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:19",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6166.751953125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:54",
+    "shipped": "2026-10-28T20:57:33"
+   }
+  },
+  {
+   "order": 3025,
+   "id": "tho",
+   "name": "Thoi Lai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 738623,
+   "origin": [
+    105.4323,
+    10.0932
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B52248438909521",
+     "81297802B1021983329449",
+     "81297802B2345271224879",
+     "81297802B96455619083063"
+    ]
+   },
+   "bbox": [
+    105.226,
+    9.92,
+    105.631,
+    10.325
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thoi Lai",
+     "Co Do",
+     "Thot Not",
+     "Vinh Thanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.9,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 12.5,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13536564726381778",
+      "top_school_cell_pupils 5498.26171875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:55",
+    "shipped": "2026-10-28T20:57:33"
+   }
+  },
+  {
+   "order": 3026,
+   "id": "vac",
+   "name": "Van Chan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 726345,
+   "origin": [
+    104.6881,
+    21.8755
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B1430654702420",
+     "81297802B29692958480362",
+     "81297802B89523168412992",
+     "81297802B76693228184167",
+     "81297802B97878568873252",
+     "81297802B887089272157",
+     "81297802B12607058922832",
+     "81297802B35519691635120",
+     "81297802B29855819440848"
+    ]
+   },
+   "bbox": [
+    103.886,
+    21.326,
+    105.1,
+    22.292
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Van Chan",
+     "Van Yen",
+     "Yen Bai",
+     "Yen Binh",
+     "Luc Yen",
+     "Tran Yen",
+     "Mu Cang Chai",
+     "Nghia Lo",
+     "Tram Tau"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 23.3,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 30.3,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:02",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6054.26318359375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:55",
+    "shipped": "2026-10-28T20:57:34"
+   }
+  },
+  {
+   "order": 3027,
+   "id": "huy",
+   "name": "Huyen Cao Lanh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 723935,
+   "origin": [
+    105.6389,
+    10.4594
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B29684412204466",
+     "81297802B77463595408425",
+     "81297802B60372874404879",
+     "81297802B37339373723835"
+    ]
+   },
+   "bbox": [
+    105.488,
+    10.279,
+    105.942,
+    10.753
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Huyen Cao Lanh",
+     "Lap Vo",
+     "Thi xa Cao Lanh",
+     "Thap Muoi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.6,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 18.7,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:46",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6073.29736328125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:55",
+    "shipped": "2026-10-28T20:57:34"
+   }
+  },
+  {
+   "order": 3028,
+   "id": "xua",
+   "name": "Xuan Loc",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 713644,
+   "origin": [
+    107.244,
+    10.9317
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B96051805348654",
+     "81297802B33413589576034",
+     "81297802B61199528191319"
+    ]
+   },
+   "bbox": [
+    107.072,
+    10.668,
+    107.577,
+    11.089
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Xuan Loc",
+     "Cam My",
+     "Long Khanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.5,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 29.0,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:05",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:56",
+    "shipped": "2026-10-28T20:57:34"
+   }
+  },
+  {
+   "order": 3029,
+   "id": "kea",
+   "name": "Ke Sach",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 708029,
+   "origin": [
+    105.9702,
+    9.6052
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B85563269288439",
+     "81297802B1985987011497",
+     "81297802B88406709239333",
+     "81297802B53741861263416",
+     "81297802B36147607104720",
+     "81297802B9638596310151"
+    ]
+   },
+   "bbox": [
+    105.544,
+    9.378,
+    106.074,
+    9.938
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ke Sach",
+     "Soc Trang",
+     "My Tu",
+     "Chau Thanh",
+     "Thanh Tri",
+     "Nga Nam"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.4,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 17.7,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:16:54",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1350337119401593",
+      "top_school_cell_pupils 6152.80224609375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:56",
+    "shipped": "2026-10-28T20:57:35"
+   }
+  },
+  {
+   "order": 3030,
+   "id": "sog",
+   "name": "Son Duong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 706109,
+   "origin": [
+    105.2087,
+    21.8255
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B77321226192187",
+     "81297802B47439602304770",
+     "81297802B74193371644879",
+     "81297802B40107493867560",
+     "81297802B77229581138550",
+     "81297802B83942116722165",
+     "81297802B32233799995516"
+    ]
+   },
+   "bbox": [
+    104.849,
+    21.498,
+    105.598,
+    22.696
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Son Duong",
+     "Tuyen Quang",
+     "Yen Son",
+     "Chiem Hoa",
+     "Ham Yen",
+     "Lam Binh",
+     "Na Hang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 20.6,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 43.1,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:33",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6052.26611328125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:56",
+    "shipped": "2026-10-28T20:57:35"
+   }
+  },
+  {
+   "order": 3031,
+   "id": "baq",
+   "name": "Bac Quang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 702815,
+   "origin": [
+    104.8121,
+    22.4168
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B46816941364430",
+     "81297802B6357673458882",
+     "81297802B77958779459732",
+     "81297802B55460345655510",
+     "81297802B50713424689894",
+     "81297802B33189914091729",
+     "81297802B35887218353447",
+     "81297802B2489932619372",
+     "81297802B85329428934549",
+     "81297802B31175014332346",
+     "81297802B3651989276752"
+    ]
+   },
+   "bbox": [
+    104.335,
+    22.166,
+    105.541,
+    23.392
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bac Quang",
+     "Vi Xuyen",
+     "Yen Minh",
+     "Hoang Su Phi",
+     "Xin Man",
+     "Quang Binh",
+     "Dong Van",
+     "Meo Vac",
+     "Bac Me",
+     "Quan Ba",
+     "Ha Giang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 16.3,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 21.2,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:09",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11345303310466931",
+      "drive_factor_median 2.3616841797309096"
+     ]
+    },
+    "gated": "2026-10-28T20:09:09",
+    "shipped": "2026-10-28T20:57:35"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.36 against 2.0: mountain roads of the far north (Ha Giang) (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 3032,
+   "id": "dai",
+   "name": "Dak Mil",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 700985,
+   "origin": [
+    107.8963,
+    12.5869
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B8433513238207",
+     "81297802B43064907961903",
+     "81297802B2917427008212",
+     "81297802B95536504011076",
+     "81297802B66581332316021",
+     "81297802B14510014839166",
+     "81297802B66925040014305",
+     "81297802B52664178073196"
+    ]
+   },
+   "bbox": [
+    107.206,
+    11.749,
+    108.117,
+    12.812
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dak Mil",
+     "Cu Jut",
+     "Dak Rlap",
+     "Krong No",
+     "Dak Song",
+     "Tuy Duc",
+     "Gia Nghia",
+     "Dak Glong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 31.4,
+     "stations": 1.3,
+     "places": 2.0,
+     "routes": 30.8,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:56",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:57",
+    "shipped": "2026-10-28T20:57:35"
+   }
+  },
+  {
+   "order": 3033,
+   "id": "huu",
+   "name": "Huu Lung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 683494,
+   "origin": [
+    106.4759,
+    22.2585
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B35079403712963",
+     "81297802B94679881937971",
+     "81297802B21506651579478",
+     "81297802B22471082550929",
+     "81297802B55451481919262",
+     "81297802B43959874007568",
+     "81297802B89235073975729",
+     "81297802B86040607446214",
+     "81297802B55237865359696",
+     "81297802B84784766195181",
+     "81297802B72919536287172"
+    ]
+   },
+   "bbox": [
+    106.095,
+    21.325,
+    107.364,
+    22.461
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Huu Lung",
+     "Cao Loc",
+     "Lang Son",
+     "Loc Binh",
+     "Chi Lang",
+     "Bac Son",
+     "Van Quan",
+     "Binh Gia",
+     "Trang Dinh",
+     "Van Lang",
+     "Dinh Lap"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 47.6,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:18:05",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:57",
+    "shipped": "2026-10-28T20:57:36"
+   }
+  },
+  {
+   "order": 3034,
+   "id": "phu",
+   "name": "Phung Hiep",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 682769,
+   "origin": [
+    105.8202,
+    9.8166
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B32262425524101",
+     "81297802B29776873812270",
+     "81297802B94036559538482",
+     "81297802B65836895267297",
+     "81297802B29627750987730",
+     "81297802B83257848753409"
+    ]
+   },
+   "bbox": [
+    105.329,
+    9.582,
+    105.867,
+    9.994
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phung Hiep",
+     "Long My",
+     "Chau Thanh A",
+     "Vi Thuy",
+     "Vi Thanh",
+     "Nga Bay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.2,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 17.0,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:17:35",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13383723057123761",
+      "top_school_cell_pupils 6067.6708984375"
+     ]
+    },
+    "gated": "2026-10-28T19:47:57",
+    "shipped": "2026-10-28T20:57:36"
+   }
+  },
+  {
+   "order": 3035,
+   "id": "myx",
+   "name": "My Xuyen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 674058,
+   "origin": [
+    105.991,
+    9.5564
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B12004492777163",
+     "81297802B36990393529741",
+     "81297802B35680204276393",
+     "81297802B46768613136824",
+     "81297802B41374649859024"
+    ]
+   },
+   "bbox": [
+    105.753,
+    9.244,
+    106.335,
+    9.784
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "My Xuyen",
+     "Vinh Chau",
+     "Tran De",
+     "Long Phu",
+     "Cu Lao Dung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.6,
+     "stations": 1.3,
+     "places": 1.6,
+     "routes": 15.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:40",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:47:58",
+    "shipped": "2026-10-28T20:57:36"
+   }
+  },
+  {
+   "order": 3036,
+   "id": "quo",
+   "name": "Quy Nhon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 657303,
+   "origin": [
+    109.2253,
+    13.7716
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B6190272756602",
+     "81297802B14138193507010",
+     "81297802B71017047307278",
+     "81297802B17102674968438"
+    ]
+   },
+   "bbox": [
+    108.814,
+    13.515,
+    109.371,
+    13.963
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Quy Nhon",
+     "An Nhon",
+     "Tuy Phuoc",
+     "Van Canh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.2,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 17.1,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:17:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:47:58",
+    "shipped": "2026-10-28T20:57:37"
+   }
+  },
+  {
+   "order": 3037,
+   "id": "bvi",
+   "name": "Ba Vi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 656038,
+   "origin": [
+    105.6133,
+    21.0276
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B94958861355476",
+     "81297802B69837826881440",
+     "81297802B79469395018575"
+    ]
+   },
+   "bbox": [
+    105.285,
+    20.946,
+    105.64,
+    21.304
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ba Vi",
+     "Thach That",
+     "Son Tay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.2,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 36.2,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:18:28",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:47:59",
+    "shipped": "2026-10-28T20:57:37"
+   }
+  },
+  {
+   "order": 3038,
+   "id": "kou",
+   "name": "Kon Tum",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 630141,
+   "origin": [
+    108.0029,
+    14.3526
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B636661033486",
+     "81297802B44208556699353",
+     "81297802B78907971348627",
+     "81297802B1803091954954",
+     "81297802B20367953633835",
+     "81297802B52627388081803",
+     "81297802B49611781778497",
+     "81297802B16541954250717",
+     "81297802B37970290892439",
+     "81297802B56181672233009"
+    ]
+   },
+   "bbox": [
+    107.332,
+    13.92,
+    108.547,
+    15.418
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kon Tum",
+     "Dak Ha",
+     "Sa Thay",
+     "Ngoc Hoi",
+     "Dak Glei",
+     "Dak To",
+     "Kon Ray",
+     "Tu Mo Rong",
+     "Kon Plong",
+     "Son Tay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 26.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 30.4,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:18:39",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:47:59",
+    "shipped": "2026-10-28T20:57:37"
+   }
+  },
+  {
+   "order": 3039,
+   "id": "kya",
+   "name": "Ky Anh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 624603,
+   "origin": [
+    105.9018,
+    18.3378
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B12468750690576",
+     "81297802B99684516055458",
+     "81297802B93916372624290",
+     "81297802B53129181429645",
+     "81297802B52387636717940"
+    ]
+   },
+   "bbox": [
+    105.452,
+    17.908,
+    106.511,
+    18.472
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ky Anh",
+     "Cam Xuyen",
+     "Thach Ha",
+     "Huong Khe",
+     "Ha Tinh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.1,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 30.7,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:18:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1230366851535742",
+      "top_school_cell_pupils 6115.77783203125"
+     ]
+    },
+    "gated": "2026-10-28T19:47:59",
+    "shipped": "2026-10-28T20:57:38"
+   }
+  },
+  {
+   "order": 3040,
+   "id": "hlo",
+   "name": "Ha Long",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 621133,
+   "origin": [
+    107.2718,
+    21.011
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B5641238333098",
+     "81297802B71504358310710",
+     "81297802B53592665760601",
+     "81297802B7752291855220",
+     "81297802B1435628045096",
+     "81297802B85934029741785",
+     "81297802B53696601888295",
+     "81297802B18420716282175"
+    ]
+   },
+   "bbox": [
+    106.826,
+    20.91,
+    107.824,
+    21.663
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ha Long",
+     "Cam Pha",
+     "Hai Ha",
+     "Hoanh Bo",
+     "Tien Yen",
+     "Dam Ha",
+     "Binh Lieu",
+     "Ba Che"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 25.5,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 18.1,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:18:35",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:48:00",
+    "shipped": "2026-10-28T20:57:38"
+   }
+  },
+  {
+   "order": 3041,
+   "id": "cib",
+   "name": "Cai Be",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 620230,
+   "origin": [
+    106.1226,
+    10.4106
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B56348725354679",
+     "81297802B21182108853425",
+     "81297802B17596796998347"
+    ]
+   },
+   "bbox": [
+    105.816,
+    10.274,
+    106.206,
+    10.536
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cai Be",
+     "Huyen Cai Lay",
+     "Thi xa Cai Lay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 9.7,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 17.6,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:18:30",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.14158310135752597",
+      "top_school_cell_pupils 6138.91552734375",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-10-28T19:48:00",
+    "shipped": "2026-10-28T20:57:38"
+   }
+  },
+  {
+   "order": 3042,
+   "id": "thh",
+   "name": "Thach Thanh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 619851,
+   "origin": [
+    105.6762,
+    20.1318
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B70743667519193",
+     "81297802B82512093072214",
+     "81297802B68109668722051",
+     "81297802B10763760406842",
+     "81297802B3900213451305",
+     "81297802B43083568307928",
+     "81297802B81765499113898",
+     "81297802B72565329345275"
+    ]
+   },
+   "bbox": [
+    104.376,
+    19.92,
+    105.816,
+    20.671
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thach Thanh",
+     "Ngoc Lac",
+     "Cam Thuy",
+     "Ba Thuoc",
+     "Lang Chanh",
+     "Quan Hoa",
+     "Quan Son",
+     "Muong Lat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.2,
+     "places": 1.5,
+     "routes": 45.8,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:13",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6031.68408203125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:00",
+    "shipped": "2026-10-28T20:57:38"
+   }
+  },
+  {
+   "order": 3043,
+   "id": "tht",
+   "name": "Thai Thuy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 612588,
+   "origin": [
+    106.5655,
+    20.5629
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B86878375688696",
+     "81297802B55266176914642",
+     "81297802B70010606578992"
+    ]
+   },
+   "bbox": [
+    106.401,
+    20.443,
+    106.707,
+    20.808
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thai Thuy",
+     "Vinh Bao",
+     "Tien Lang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 9.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 33.0,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:18",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6133.8056640625",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:01",
+    "shipped": "2026-10-28T20:57:39"
+   }
+  },
+  {
+   "order": 3044,
+   "id": "thx",
+   "name": "Thanh Binh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 609433,
+   "origin": [
+    105.3404,
+    10.8095
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B14212334557839",
+     "81297802B50587214410487",
+     "81297802B81919693811276",
+     "81297802B34572770830938",
+     "81297802B45020933584847"
+    ]
+   },
+   "bbox": [
+    105.187,
+    10.516,
+    105.68,
+    10.974
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thanh Binh",
+     "Huyen Hong Ngu",
+     "Tam Nong",
+     "Tan Hong",
+     "Thi xa Hong Ngu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.5,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 10.5,
+     "merge": 0.9,
+     "nocar": 2.0,
+     "everyday": 1.5
+    },
+    "built": "2026-10-28T19:19:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1334105848288599",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:01",
+    "shipped": "2026-10-28T20:57:39"
+   }
+  },
+  {
+   "order": 3045,
+   "id": "trp",
+   "name": "Trieu Phong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 605579,
+   "origin": [
+    107.1043,
+    16.814
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B12813150904873",
+     "81297802B80628180194499",
+     "81297802B84418908504415",
+     "81297802B74996211829814",
+     "81297802B57271723433997",
+     "81297802B55643895945103",
+     "81297802B81560237884054",
+     "81297802B86066179794931",
+     "81297802B92774803000720"
+    ]
+   },
+   "bbox": [
+    106.514,
+    16.302,
+    107.389,
+    17.162
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Trieu Phong",
+     "Dong Ha",
+     "Vinh Linh",
+     "Hai Lang",
+     "Gio Linh",
+     "Huong Hoa",
+     "Cam Lo",
+     "Da Krong",
+     "Quang Tri"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 21.4,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6020.51318359375"
+     ]
+    },
+    "gated": "2026-10-28T19:48:01",
+    "shipped": "2026-10-28T20:57:39"
+   }
+  },
+  {
+   "order": 3046,
+   "id": "eah",
+   "name": "EA Hleo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 602654,
+   "origin": [
+    108.2662,
+    12.9135
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B9030212335391",
+     "81297802B49219208970184",
+     "81297802B72254139131894",
+     "81297802B87471755079038",
+     "81297802B2573632778711"
+    ]
+   },
+   "bbox": [
+    107.512,
+    12.752,
+    108.521,
+    13.417
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "EA Hleo",
+     "Krong Nang",
+     "Buon Ho",
+     "Ea Sup",
+     "Krong Buk"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 16.4,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 23.3,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6025.478515625",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:01",
+    "shipped": "2026-10-28T20:57:40"
+   }
+  },
+  {
+   "order": 3047,
+   "id": "cnl",
+   "name": "Can Loc",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 582770,
+   "origin": [
+    105.5855,
+    18.5359
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B44635779635670",
+     "81297802B24299836434530",
+     "81297802B16083563480391",
+     "81297802B92253150972948",
+     "81297802B55071935880129",
+     "81297802B12079916150099",
+     "81297802B66107700635107"
+    ]
+   },
+   "bbox": [
+    105.103,
+    18.154,
+    105.965,
+    18.805
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Can Loc",
+     "Huong Son",
+     "Duc Tho",
+     "Nghi Xuan",
+     "Loc Ha",
+     "Hong Linh",
+     "Vu Quang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.3,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 42.6,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:42",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6055.7841796875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:02",
+    "shipped": "2026-10-28T20:57:40"
+   }
+  },
+  {
+   "order": 3048,
+   "id": "cmg",
+   "name": "Cam Giang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 577062,
+   "origin": [
+    106.1473,
+    21.1522
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B85581314164043",
+     "81297802B99638089462809",
+     "81297802B29506934186430",
+     "81297802B42689754920120",
+     "81297802B26729031323268"
+    ]
+   },
+   "bbox": [
+    106.09,
+    20.9,
+    106.337,
+    21.288
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cam Giang",
+     "Yen Dung",
+     "Que Vo",
+     "Luong Tai",
+     "Gia Binh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.8,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 48.0,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:20:08",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:02",
+    "shipped": "2026-10-28T20:57:40"
+   }
+  },
+  {
+   "order": 3049,
+   "id": "phr",
+   "name": "Phan Rang-Thap Cham",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 576502,
+   "origin": [
+    108.9888,
+    11.5754
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B48689828615161",
+     "81297802B18401806223645",
+     "81297802B76244887601508",
+     "81297802B88768197538102",
+     "81297802B94482771357603",
+     "81297802B93158398760307",
+     "81297802B54055270393742"
+    ]
+   },
+   "bbox": [
+    108.552,
+    11.307,
+    109.233,
+    12.164
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phan Rang-Thap Cham",
+     "Ninh Phuoc",
+     "Ninh Hai",
+     "Ninh Son",
+     "Thuan Nam",
+     "Thuan Bac",
+     "Bac Ai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.2,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 15.3,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-28T19:48:02",
+    "shipped": "2026-10-28T20:57:40"
+   }
+  },
+  {
+   "order": 3050,
+   "id": "cog",
+   "name": "Cho Gao",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 544427,
+   "origin": [
+    106.6768,
+    10.3618
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B70172971551103",
+     "81297802B95868582932177",
+     "81297802B95643835690721",
+     "81297802B81408558281677"
+    ]
+   },
+   "bbox": [
+    106.345,
+    10.276,
+    106.715,
+    10.532
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cho Gao",
+     "Go Cong",
+     "Go Cong Tay",
+     "Chau Thanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.2,
+     "stations": 1.0,
+     "places": 1.3,
+     "routes": 22.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:19:55",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6034.66748046875",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-10-28T19:48:03",
+    "shipped": "2026-10-28T20:57:41"
+   }
+  },
+  {
+   "order": 3051,
+   "id": "tox",
+   "name": "Tho Xuan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 540873,
+   "origin": [
+    105.5452,
+    19.9165
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B55629975533372",
+     "81297802B9474885125507",
+     "81297802B72882386082996",
+     "81297802B11071874803157"
+    ]
+   },
+   "bbox": [
+    104.907,
+    19.709,
+    105.766,
+    20.123
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tho Xuan",
+     "Yen Dinh",
+     "Thuong Xuan",
+     "Vinh Loc"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.1,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 26.2,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T19:20:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6132.37890625",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:03",
+    "shipped": "2026-10-28T20:57:41"
+   }
+  },
+  {
+   "order": 3052,
+   "id": "kro",
+   "name": "Krong Pac",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 539110,
+   "origin": [
+    108.3032,
+    12.7093
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B85821133415944",
+     "81297802B96415917644052",
+     "81297802B27744921596224"
+    ]
+   },
+   "bbox": [
+    108.13,
+    12.452,
+    108.995,
+    13.035
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Krong Pac",
+     "Ea Kar",
+     "Mdrak District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 15.8,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 17.6,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-10-28T19:20:03",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6042.607421875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:04",
+    "shipped": "2026-10-28T20:57:41"
+   }
+  },
+  {
+   "order": 3053,
+   "id": "thy",
+   "name": "Thuy Nguyen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 518902,
+   "origin": [
+    106.7622,
+    21.0359
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B48433290328639",
+     "81297802B38356347526872",
+     "81297802B42641748496229"
+    ]
+   },
+   "bbox": [
+    106.555,
+    20.812,
+    106.951,
+    21.168
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thuy Nguyen",
+     "Quang Yen",
+     "Uong Bi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.7,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 20.9,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:20:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6076.59228515625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:04",
+    "shipped": "2026-10-28T20:57:42"
+   }
+  },
+  {
+   "order": 3054,
+   "id": "hug",
+   "name": "Hung Ha",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 514215,
+   "origin": [
+    106.2229,
+    20.5877
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B42785936874032",
+     "81297802B64676269296055"
+    ]
+   },
+   "bbox": [
+    106.11,
+    20.512,
+    106.464,
+    20.729
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hung Ha",
+     "Quynh Phu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.3,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 31.5,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:20:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6030.55419921875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:04",
+    "shipped": "2026-10-28T20:57:42"
+   }
+  },
+  {
+   "order": 3055,
+   "id": "trg",
+   "name": "Trang Bang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 509246,
+   "origin": [
+    106.2694,
+    11.0864
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B3309919066987",
+     "81297802B39580963826669",
+     "81297802B61263365113672"
+    ]
+   },
+   "bbox": [
+    106.014,
+    10.963,
+    106.448,
+    11.273
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Trang Bang",
+     "Go Dau",
+     "Ben Cau"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 9.1,
+     "stations": 1.1,
+     "places": 1.4,
+     "routes": 18.2,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.3
+    },
+    "built": "2026-10-28T19:20:29",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10343437973873505",
+      "top_school_cell_pupils 6144.4228515625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:05",
+    "shipped": "2026-10-28T20:57:42"
+   }
+  },
+  {
+   "order": 3056,
+   "id": "cil",
+   "name": "Chi Linh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 497243,
+   "origin": [
+    106.3893,
+    21.1106
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B28152038240632",
+     "81297802B98282177960136",
+     "81297802B3249391660958"
+    ]
+   },
+   "bbox": [
+    106.295,
+    20.931,
+    106.719,
+    21.237
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chi Linh",
+     "Kinh Mon",
+     "Dong Trieu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.3,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 36.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:20:57",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12099339383933136",
+      "top_school_cell_pupils 6025.68798828125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:05",
+    "shipped": "2026-10-28T20:57:42"
+   }
+  },
+  {
+   "order": 3057,
+   "id": "boc",
+   "name": "Bao Loc",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 492882,
+   "origin": [
+    107.8088,
+    11.5428
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B17535514855325",
+     "81297802B89982379831919",
+     "81297802B88275273163475",
+     "81297802B49537212124970",
+     "81297802B42288402015377"
+    ]
+   },
+   "bbox": [
+    107.266,
+    11.323,
+    107.968,
+    11.922
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bao Loc",
+     "Bao Lam",
+     "Da Teh",
+     "Cat Tien",
+     "Da Huoai"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 19.1,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 13.2,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:20:43",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10689295409489843",
+      "top_school_cell_pupils 5592.208984375"
+     ]
+    },
+    "gated": "2026-10-28T19:48:05",
+    "shipped": "2026-10-28T20:57:43"
+   }
+  },
+  {
+   "order": 3058,
+   "id": "laa",
+   "name": "Lang Giang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 482891,
+   "origin": [
+    106.1291,
+    21.2518
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B94506734482800",
+     "81297802B30186135932553",
+     "81297802B62704406726497"
+    ]
+   },
+   "bbox": [
+    106.003,
+    21.198,
+    106.35,
+    21.468
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lang Giang",
+     "Viet Yen",
+     "Tan Yen"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.3,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 38.1,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:04",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:06",
+    "shipped": "2026-10-28T20:57:43"
+   }
+  },
+  {
+   "order": 3059,
+   "id": "cut",
+   "name": "Chau Thanh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 481432,
+   "origin": [
+    106.3542,
+    10.3618
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B2434648618604",
+     "81297802B97193335039618"
+    ]
+   },
+   "bbox": [
+    106.179,
+    10.314,
+    106.414,
+    10.529
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chau Thanh",
+     "My Tho"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.3,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 13.2,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:20:51",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11952375505291819",
+      "top_school_cell_pupils 6070.69287109375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:06",
+    "shipped": "2026-10-28T20:57:43"
+   }
+  },
+  {
+   "order": 3060,
+   "id": "lng",
+   "name": "Luc Ngan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 453672,
+   "origin": [
+    106.5708,
+    21.3765
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B38321972927223",
+     "81297802B23878626253121",
+     "81297802B10167820950608"
+    ]
+   },
+   "bbox": [
+    106.292,
+    21.149,
+    107.033,
+    21.609
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Luc Ngan",
+     "Luc Nam",
+     "Son Dong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.9,
+     "stations": 1.1,
+     "places": 1.4,
+     "routes": 36.0,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:25",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:06",
+    "shipped": "2026-10-28T20:57:44"
+   }
+  },
+  {
+   "order": 3061,
+   "id": "cba",
+   "name": "Cao Bang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 453534,
+   "origin": [
+    105.4919,
+    22.8337
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B72621516483988",
+     "81297802B56496932739620",
+     "81297802B42277751936117",
+     "81297802B75378675708985",
+     "81297802B7761745227660",
+     "81297802B42250510796537",
+     "81297802B34664406606726",
+     "81297802B58374178577075",
+     "81297802B24341511138047",
+     "81297802B64889817574793",
+     "81297802B75623207701482",
+     "81297802B5716614329371",
+     "81297802B46332855119377"
+    ]
+   },
+   "bbox": [
+    105.272,
+    22.357,
+    106.78,
+    23.109
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cao Bang",
+     "Bao Lam",
+     "Trung Khanh",
+     "Hoa An",
+     "Bao Lac",
+     "Quang Uyen",
+     "Nguyen Binh",
+     "Ha Quang",
+     "Thach An",
+     "Thong Nong",
+     "Ha Lang",
+     "Tra Linh",
+     "Phuc Hoa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.5,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 14.8,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:21:08",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:32",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_vs_size 601.3261010268304",
+      "top_zone_jobs_share 0.10603547977811771",
+      "top_school_cell_pupils 6038.81494140625",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T20:09:09",
+    "shipped": "2026-10-28T20:57:44"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.08 against 2.0: mountain roads of the far north (Cao Bang) (T-1738, 2026-10-28)",
+    "top_cell_jobs_vs_size": "601 against 600: Cao Bang town's centre in a zone of 0.45M (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 3062,
+   "id": "duc",
+   "name": "Duc Hoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 450382,
+   "origin": [
+    106.4043,
+    10.5978
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B22890149890322",
+     "81297802B60662496728573",
+     "81297802B23772600550478",
+     "81297802B63095135263844"
+    ]
+   },
+   "bbox": [
+    106.039,
+    10.543,
+    106.535,
+    11.026
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Duc Hoa",
+     "Thu Thua",
+     "Duc Hue",
+     "Thanh Hoa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.9,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 52.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:53",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.110306148416474",
+      "top_school_cell_pupils 6024.05712890625"
+     ]
+    },
+    "gated": "2026-10-28T19:48:07",
+    "shipped": "2026-10-28T20:57:44"
+   }
+  },
+  {
+   "order": 3063,
+   "id": "lax",
+   "name": "Lai Vung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 439472,
+   "origin": [
+    105.7645,
+    10.2885
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B97779454887068",
+     "81297802B15585210216113",
+     "81297802B46621499872955"
+    ]
+   },
+   "bbox": [
+    105.558,
+    10.134,
+    105.92,
+    10.382
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lai Vung",
+     "Chau Thanh",
+     "Sa Dec"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 11.4,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 11.5,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:21",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6140.2490234375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:07",
+    "shipped": "2026-10-28T20:57:45"
+   }
+  },
+  {
+   "order": 3064,
+   "id": "dib",
+   "name": "Dien Bien",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 439419,
+   "origin": [
+    103.423,
+    21.5926
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B1284717956892",
+     "81297802B47935602128313",
+     "81297802B35707987060986",
+     "81297802B75517223780643",
+     "81297802B50800303075237",
+     "81297802B95485897365368",
+     "81297802B30042560711823",
+     "81297802B55776801112281"
+    ]
+   },
+   "bbox": [
+    102.808,
+    20.893,
+    103.599,
+    22.156
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dien Bien",
+     "Tuan Giao",
+     "Dien Bien Dong",
+     "Dien Bien Phu",
+     "Tua Chua",
+     "Muong Ang",
+     "Muong Cha",
+     "Muong Lay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 13.7,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 13.2,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:30",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14166042002249654",
+      "top_school_cell_pupils 6059.455078125",
+      "drive_factor_median 2.0200555277086965"
+     ]
+    },
+    "gated": "2026-10-28T20:09:09",
+    "shipped": "2026-10-28T20:57:45"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02 against 2.0: mountain roads of the far north (Dien Bien) (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 3065,
+   "id": "cuu",
+   "name": "Chau Duc",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 410651,
+   "origin": [
+    107.2418,
+    10.6467
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B77796697839152",
+     "81297802B41485876419304"
+    ]
+   },
+   "bbox": [
+    106.997,
+    10.462,
+    107.37,
+    10.774
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chau Duc",
+     "Tan Thanh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 17.0,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 18.8,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:47",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:07",
+    "shipped": "2026-10-28T20:57:45"
+   }
+  },
+  {
+   "order": 3066,
+   "id": "hip",
+   "name": "Hiep Hoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 337768,
+   "origin": [
+    105.9483,
+    21.2435
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B61782089337393",
+     "81297802B3855346019179"
+    ]
+   },
+   "bbox": [
+    105.667,
+    21.223,
+    106.04,
+    21.577
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hiep Hoa",
+     "Pho Yen"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 12.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 34.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:22:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14022932085463616",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:08",
+    "shipped": "2026-10-28T20:57:45"
+   }
+  },
+  {
+   "order": 3067,
+   "id": "lpt",
+   "name": "Lap Thach",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 291463,
+   "origin": [
+    105.4782,
+    21.3349
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B47675849617506",
+     "81297802B22502411355715",
+     "81297802B33900605812276"
+    ]
+   },
+   "bbox": [
+    105.423,
+    21.275,
+    105.688,
+    21.574
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lap Thach",
+     "Tam Duong",
+     "Tam Dao"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.4,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 21.4,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-28T19:22:00",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-28T19:48:08",
+    "shipped": "2026-10-28T20:57:46"
+   }
+  },
+  {
+   "order": 3068,
+   "id": "tah",
+   "name": "Tan Thanh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 260191,
+   "origin": [
+    105.9387,
+    10.7769
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B33329086183777",
+     "81297802B51272444346298",
+     "81297802B65804618727956",
+     "81297802B15581259777878",
+     "81297802B7527818717712"
+    ]
+   },
+   "bbox": [
+    105.498,
+    10.523,
+    106.117,
+    11.032
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tan Thanh",
+     "Vinh Hung",
+     "Tan Hung",
+     "Kien Tuong",
+     "Moc Hoa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.6,
+     "stations": 1.1,
+     "places": 1.5,
+     "routes": 15.5,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:21:58",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10519008726217562",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-28T19:48:08",
+    "shipped": "2026-10-28T20:57:46"
+   }
+  },
+  {
+   "order": 3069,
+   "id": "thm",
+   "name": "Thanh Mien",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 243436,
+   "origin": [
+    106.2234,
+    20.8284
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B67689154766571",
+     "81297802B56696175700764"
+    ]
+   },
+   "bbox": [
+    106.124,
+    20.685,
+    106.288,
+    20.933
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thanh Mien",
+     "Binh Giang"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 20.3,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:22:05",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6129.55322265625",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:08",
+    "shipped": "2026-10-28T20:57:46"
+   }
+  },
+  {
+   "order": 3070,
+   "id": "goc",
+   "name": "Go Cong Dong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 224107,
+   "origin": [
+    106.7713,
+    10.6629
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B63663693246644",
+     "81297802B7702852417854"
+    ]
+   },
+   "bbox": [
+    106.661,
+    10.258,
+    107.014,
+    10.675
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Go Cong Dong",
+     "Can Gio"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 13.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:22:27",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-28T19:55:32",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.289022796332201",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T20:09:10",
+    "shipped": "2026-10-28T20:57:47"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.29 against 2.0: Go Cong Dong and Can Gio either side of the Soai Rap estuary, no bridge (T-1738, 2026-10-28)"
+   }
+  },
+  {
+   "order": 3071,
+   "id": "phc",
+   "name": "Phuc Tho",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 183385,
+   "origin": [
+    105.5456,
+    21.1106
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B65234108276491"
+    ]
+   },
+   "bbox": [
+    105.501,
+    21.04,
+    105.665,
+    21.179
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phuc Tho"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.4,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 14.0,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:22:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.12410967935870036",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:09",
+    "shipped": "2026-10-28T20:57:47"
+   }
+  },
+  {
+   "order": 3072,
+   "id": "yen",
+   "name": "Yen Lac",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 152341,
+   "origin": [
+    105.5798,
+    21.2352
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B65483274658502"
+    ]
+   },
+   "bbox": [
+    105.523,
+    21.154,
+    105.639,
+    21.286
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Yen Lac"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.2,
+     "stations": 1.1,
+     "places": 1.4,
+     "routes": 11.7,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-28T19:22:24",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6010.69287109375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-28T19:48:09",
+    "shipped": "2026-10-28T20:57:47"
+   }
+  },
+  {
+   "order": 3073,
+   "id": "muo",
+   "name": "Muong Nhe",
+   "kind": "zone",
+   "status": "parked",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 39752,
+   "origin": [
+    102.4578,
+    22.1918
+   ],
+   "tz": "Asia/Bangkok",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "81297802B77284470547112"
+    ]
+   },
+   "bbox": [
+    102.144,
+    21.978,
+    102.762,
+    22.548
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Muong Nhe"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 8.5,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 7.0,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-28T19:22:22",
+    "reason": "gate: top_zone_jobs_share 0.44451725325633135 at [102.4643, 22.1889]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.44451725325633135 at [102.4643, 22.1889]"
+     ],
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-28T19:47:39"
+   }
+  },
+  {
+   "order": 3074,
+   "id": "cxx",
+   "name": "Côn Đảo",
+   "kind": "zone",
+   "status": "parked",
+   "region": "world",
+   "countries": [
+    "VNM"
+   ],
+   "iso2": "VN",
+   "people": 6803,
+   "origin": [
+    106.6055,
+    8.6868
+   ],
+   "tz": "Asia/Ho_Chi_Minh",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/vietnam"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VNM": [
+     "63759600B5991530625500"
+    ]
+   },
+   "bbox": [
+    106.534,
+    8.629,
+    106.716,
+    8.753
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Côn Đảo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261028-185827",
+    "steps": {
+     "build": 10.9,
+     "stations": 1.4,
+     "places": 1.6,
+     "routes": 5.4,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-28T19:22:25",
+    "reason": "gate: top_zone_jobs_share 0.47639169393824327 at [106.6022, 8.6942]; mean_commute_km 2.1724736963214246",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.47639169393824327 at [106.6022, 8.6942]",
+      "mean_commute_km 2.1724736963214246"
+     ],
+     "warn": [
+      "fleet_range 6"
+     ]
+    },
+    "parked": "2026-10-28T19:47:39"
+   }
   }
  ],
  "dropped": [
@@ -168752,6 +175531,598 @@
      "43193130B88059527879075",
      "43193130B75397990036863",
      "43193130B32819211094377"
+    ]
+   }
+  },
+  "VNM": {
+   "built": "2026-10-28",
+   "task": "T-788",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "81297802B39086824409595",
+     "name": "Nam Po",
+     "people": 28005,
+     "per_km2": 18.5
+    },
+    {
+     "unit": "81297802B31774141557678",
+     "name": "Giang Thanh",
+     "people": 7832,
+     "per_km2": 19.5
+    },
+    {
+     "unit": "81297802B94651516294700",
+     "name": "Muong Te",
+     "people": 36512,
+     "per_km2": 13.6
+    },
+    {
+     "unit": "81297802B14703404520131",
+     "name": "Nam Nhun",
+     "people": 27109,
+     "per_km2": 19.3
+    },
+    {
+     "unit": "81297802B90979220295161",
+     "name": "Lac Duong",
+     "people": 24977,
+     "per_km2": 19.6
+    },
+    {
+     "unit": "81297802B72423367852086",
+     "name": "Nam Giang",
+     "people": 22865,
+     "per_km2": 12.3
+    },
+    {
+     "unit": "81297802B80912783182295",
+     "name": "Phuoc Son",
+     "people": 23123,
+     "per_km2": 19.9
+    },
+    {
+     "unit": "81297802B8357375846053",
+     "name": "Tay Giang",
+     "people": 16929,
+     "per_km2": 18.5
+    }
+   ],
+   "merges": [
+    "Côn Đảo (6,803) stays as it is: an island with no zone within reach",
+    "Ly Son (11,694) joins Quang Ngai (island, 33 km)",
+    "Phuc Hoa (11,704) joins Thach An (biggest partner, shared border 28 km)",
+    "Muong Lay (13,066) joins Muong Cha (biggest partner, shared border 36 km)",
+    "Minh Long (15,714) joins Nghia Hanh (biggest partner, shared border 31 km)",
+    "Ha Tien (15,930) joins Kien Luong (biggest partner, shared border 10 km)",
+    "Tra Linh (16,743) joins Trung Khanh (biggest partner that wraps nothing, shared border 22 km)",
+    "Tay Tra (18,207) joins Tra Bong (biggest partner that wraps nothing, shared border 37 km)",
+    "Son Tay (18,614) joins Kon Plong (biggest partner, shared border 37 km)",
+    "Ba Che (18,780) joins Cam Pha (biggest partner, shared border 20 km)",
+    "Ha Lang (19,357) joins Trung Khanh (biggest partner, shared border 29 km)",
+    "Thong Nong (21,598) joins Ha Quang (biggest partner, shared border 22 km)",
+    "Khanh Son (22,082) joins Cam Lam (biggest partner, shared border 25 km)",
+    "Dong Giang (23,893) joins Dai Loc (biggest partner, shared border 33 km)",
+    "Ky Son (24,606) joins Hoa Binh (biggest partner, shared border 26 km)",
+    "Pac Nam (24,667) joins Ba Be (biggest partner, shared border 32 km)",
+    "Bac Ai (24,895) joins Ninh Son (biggest partner, shared border 53 km)",
+    "An Lao (25,035) joins Hoai Nhon (biggest partner, shared border 18 km)",
+    "Van Canh (25,062) joins Quy Nhon (biggest partner, shared border 22 km)",
+    "Moc Hoa (25,212) joins Kien Tuong (biggest partner, shared border 29 km)",
+    "Dinh Lap (25,370) joins Loc Binh (biggest partner, shared border 62 km)",
+    "Nam Tra My (25,839) joins Bac Tra My (biggest partner, shared border 56 km)",
+    "Tram Tau (25,971) joins Nghia Lo (biggest partner that wraps nothing, shared border 7 km)",
+    "Binh Lieu (26,711) joins Dam Ha (biggest partner that wraps nothing, shared border 12 km)",
+    "Ngan Son (26,995) joins Ba Be (biggest partner, shared border 27 km)",
+    "Vinh Thanh (29,356) joins Phu Cat (biggest partner, shared border 4 km)",
+    "Vu Quang (29,742) joins Duc Tho (biggest partner, shared border 25 km)",
+    "Bach Thong (29,780) joins Bac Kan (biggest partner, shared border 40 km)",
+    "Si Ma Cai (29,951) joins Muong Khuong (biggest partner, shared border 35 km)",
+    "Quang Tri (30,008) joins Trieu Phong (biggest partner, shared border 30 km)",
+    "Lai Chau (30,743) joins Tam Duong (biggest partner, shared border 46 km)",
+    "Tu Mo Rong (31,215) joins Dak To (biggest partner, shared border 35 km)",
+    "Kon Ray (31,690) joins Kon Tum (biggest partner, shared border 13 km)",
+    "Nong Son (32,173) joins Dai Loc (biggest partner, shared border 21 km)",
+    "Muong Lat (33,395) joins Quan Hoa (biggest partner, shared border 38 km)",
+    "Na Hang (33,737) joins Lam Binh (biggest partner that wraps nothing, shared border 56 km)",
+    "Van Lang (34,488) joins Van Quan (biggest partner that wraps nothing, shared border 39 km)",
+    "Hong Linh (35,009) joins Duc Tho (biggest partner, shared border 13 km)",
+    "Khanh Vinh (35,211) joins Dien Khanh (biggest partner, shared border 45 km)",
+    "Cho Moi (35,613) joins Bac Kan (biggest partner, shared border 46 km)",
+    "Quan Son (35,888) joins Ba Thuoc (biggest partner, shared border 13 km)",
+    "Na Ri (35,969) joins Bac Kan (biggest partner, shared border 74 km)",
+    "Da Krong (36,338) joins Trieu Phong (biggest partner, shared border 20 km)",
+    "Thach An (36,926) joins Cao Bang (biggest partner that wraps nothing, shared border 7 km)",
+    "Nguyen Binh (37,731) joins Ha Quang (biggest partner that wraps nothing, shared border 33 km)",
+    "Quang Uyen (38,096) joins Cao Bang (biggest partner, shared border 39 km)",
+    "Hiep Duc (38,325) joins Que Son (biggest partner that wraps nothing, shared border 14 km)",
+    "Bao Lac (38,958) joins Bao Lam (biggest partner, shared border 73 km)",
+    "Cao Phong (39,091) joins Tan Lac (biggest partner, shared border 42 km)",
+    "Thuan Bac (39,670) joins Ninh Hai (biggest partner, shared border 46 km)",
+    "Muong Nhe (39,752) stays as it is: no zone beside it",
+    "Sop Cop (39,833) joins Song Ma (biggest partner, shared border 64 km)",
+    "Muong Ang (41,133) joins Tuan Giao (biggest partner, shared border 52 km)",
+    "Hoa An (41,908) joins Cao Bang (biggest partner, shared border 135 km)",
+    "Da Huoai (44,038) joins Bao Loc (biggest partner, shared border 12 km)",
+    "Tien Yen (44,096) joins Cam Pha (biggest partner, shared border 38 km)",
+    "A Luoi (44,534) joins Huong Tra (biggest partner, shared border 31 km)",
+    "Ha Giang (44,843) joins Vi Xuyen (biggest partner, shared border 63 km)",
+    "Cam Lo (44,844) joins Dong Ha (biggest partner, shared border 19 km)",
+    "Do Son (45,106) joins Kien Thuy (biggest partner, shared border 12 km)",
+    "Quan Ba (45,183) joins Yen Minh (biggest partner, shared border 44 km)",
+    "Lang Chanh (45,201) joins Ba Thuoc (biggest partner, shared border 76 km)",
+    "Van Ho (45,755) joins Moc Chau (biggest partner, shared border 74 km)",
+    "Hoanh Bo (46,193) joins Ha Long (biggest partner, shared border 37 km)",
+    "Cho Don (46,828) joins Bac Kan (biggest partner, shared border 43 km)",
+    "Cat Tien (47,104) joins Da Teh (biggest partner, shared border 29 km)",
+    "Sam Son (47,630) joins Quang Xuong (biggest partner, shared border 8 km)",
+    "Bac Me (47,679) joins Vi Xuyen (biggest partner, shared border 50 km)",
+    "Trang Dinh (47,790) joins Van Quan (biggest partner, shared border 31 km)",
+    "Kon Plong (47,920) joins Kon Tum (biggest partner, shared border 53 km)",
+    "Mu Cang Chai (48,129) joins Van Yen (biggest partner, shared border 23 km)",
+    "Thuan Nam (48,203) joins Ninh Phuoc (biggest partner, shared border 51 km)",
+    "Minh Hoa (48,357) joins Tuyen Hoa (biggest partner, shared border 90 km)",
+    "Tra Bong (48,408) joins Son Tinh (biggest partner, shared border 16 km)",
+    "Ayun Pa (48,497) joins Phu Thien (biggest partner that wraps nothing, shared border 22 km)",
+    "Tua Chua (48,892) joins Tuan Giao (biggest partner, shared border 30 km)",
+    "Song Hinh (48,893) joins Son Hoa (biggest partner, shared border 50 km)",
+    "Song Cong (48,903) joins Thai Nguyen (biggest partner, shared border 23 km)",
+    "Mai Chau (49,104) joins Tan Lac (biggest partner, shared border 35 km)",
+    "Da Bac (50,008) joins Hoa Binh (biggest partner, shared border 22 km)",
+    "Cua Lo (50,273) joins Nghi Loc (biggest partner, shared border 20 km)",
+    "Binh Gia (50,280) joins Bac Son (biggest partner, shared border 48 km)",
+    "Dam Rong (50,597) joins Lam Ha (biggest partner, shared border 50 km)",
+    "Tan Hung (51,353) joins Vinh Hung (biggest partner, shared border 46 km)",
+    "Sa Pa (51,573) joins Lao Cai (biggest partner, shared border 27 km)",
+    "Bac Ha (51,743) joins Bao Thang (biggest partner, shared border 36 km)",
+    "Hai Ha (51,786) joins Dam Ha (biggest partner, shared border 56 km)",
+    "Ba To (52,192) joins Duc Pho (biggest partner, shared border 38 km)",
+    "Phu Tho (52,321) joins Thanh Ba (biggest partner, shared border 18 km)",
+    "Meo Vac (52,536) joins Dong Van (biggest partner that wraps nothing, shared border 43 km)",
+    "Dak Po (52,662) joins An Khe (biggest partner, shared border 32 km)",
+    "Nghia Lo (52,939) joins Van Chan (biggest partner, shared border 99 km)",
+    "Bim Son (53,242) joins Ha Trung (biggest partner, shared border 28 km)",
+    "Duong Kinh (53,257) joins Le Chan (biggest partner, shared border 6 km)",
+    "Tan Uyen (53,314) joins Tam Duong (biggest partner, shared border 26 km)",
+    "Quy Chau (53,888) joins Que Phong (biggest partner, shared border 68 km)",
+    "Muong Cha (54,102) joins Tuan Giao (biggest partner, shared border 72 km)",
+    "Thanh Thuy (54,423) joins Thanh Son (biggest partner, shared border 45 km)",
+    "Dak Glei (54,441) joins Dak To (biggest partner, shared border 30 km)",
+    "Dien Bien Phu (54,788) joins Dien Bien (biggest partner, shared border 38 km)",
+    "Tam Nong (54,847) joins Thanh Son (biggest partner, shared border 30 km)",
+    "Nga Bay (55,267) joins Phung Hiep (biggest partner, shared border 21 km)",
+    "Lac Thuy (55,300) joins My Duc (biggest partner, shared border 19 km)",
+    "Dak Glong (56,279) joins Gia Nghia (biggest partner, shared border 39 km)",
+    "Tran Yen (56,638) joins Yen Bai (biggest partner, shared border 41 km)",
+    "Quang Binh (57,146) joins Bac Quang (biggest partner, shared border 64 km)",
+    "Tan Son (57,288) joins Thanh Son (biggest partner, shared border 43 km)",
+    "Yen Thuy (57,552) joins My Duc (biggest partner, shared border 28 km)",
+    "Thanh Hoa (57,731) joins Thu Thua (biggest partner, shared border 37 km)",
+    "Bac Yen (57,763) joins Phu Yen (biggest partner, shared border 62 km)",
+    "Dien Bien Dong (58,291) joins Dien Bien (biggest partner, shared border 90 km)",
+    "Ngoc Hoi (58,327) joins Dak To (biggest partner, shared border 95 km)",
+    "Kong Chro (58,642) joins An Khe (biggest partner, shared border 67 km)",
+    "Xin Man (59,061) joins Hoang Su Phi (biggest partner, shared border 42 km)",
+    "Quynh Nhai (59,585) joins Thuan Chau (biggest partner, shared border 47 km)",
+    "Dong Xuan (60,167) joins Tuy An (biggest partner, shared border 24 km)",
+    "Tam Diep (60,926) joins Yen Mo (biggest partner, shared border 18 km)",
+    "Vo Nhai (61,852) joins Dong Hy (biggest partner, shared border 57 km)",
+    "Yen Lap (61,869) joins Cam Khe (biggest partner that wraps nothing, shared border 41 km)",
+    "Duc Hue (62,767) joins Duc Hoa (biggest partner, shared border 34 km)",
+    "Nhu Xuan (64,340) joins Nhu Thanh (biggest partner, shared border 53 km)",
+    "Bac Tra My (65,145) joins Tien Phuoc (biggest partner, shared border 34 km)",
+    "Dong Son (65,649) joins Thanh Hoa (biggest partner, shared border 20 km)",
+    "Con Cuong (65,695) joins Anh Son (biggest partner, shared border 79 km)",
+    "Tuy Duc (65,716) joins Dak Rlap (biggest partner, shared border 34 km)",
+    "Son Dong (66,213) joins Luc Ngan (biggest partner, shared border 43 km)",
+    "Bat Xat (66,583) joins Lao Cai (biggest partner, shared border 59 km)",
+    "Than Uyen (67,132) joins Tam Duong (biggest partner, shared border 43 km)",
+    "Ia Pa (67,452) joins Phu Thien (biggest partner, shared border 69 km)",
+    "Cu Lao Dung (67,578) joins Long Phu (biggest partner, shared border 31 km)",
+    "Sa Thay (67,770) joins Dak Ha (biggest partner that wraps nothing, shared border 15 km)",
+    "Quang Trach (68,486) joins Ba Don (biggest partner, shared border 24 km)",
+    "Son Ha (69,259) joins Son Tinh (biggest partner, shared border 44 km)",
+    "Tam Dao (69,943) joins Lap Thach (biggest partner, shared border 16 km)",
+    "Ky Son (70,739) joins Tuong Duong (biggest partner, shared border 107 km)",
+    "Yen Chau (70,858) joins Phu Yen (biggest partner, shared border 47 km)",
+    "Nam Can (71,033) joins Dam Doi (biggest partner, shared border 35 km)",
+    "Sin Ho (71,287) joins Tam Duong (biggest partner, shared border 76 km)",
+    "Hoa Lu (71,463) joins Ninh Bình (biggest partner, shared border 29 km)",
+    "Chi Lang (72,039) joins Huu Lung (biggest partner, shared border 31 km)",
+    "U Minh Thuong (72,481) joins Go Quao (biggest partner, shared border 19 km)",
+    "Mang Yang (72,849) joins Dak Doa (biggest partner, shared border 81 km)",
+    "Krong Buk (72,902) joins Buon Ho (biggest partner, shared border 18 km)",
+    "Vi Thanh (73,018) joins Vi Thuy (biggest partner, shared border 23 km)",
+    "Ham Tan (73,695) joins La Gi (biggest partner, shared border 32 km)",
+    "Kien Tuong (74,386) joins Vinh Hung (biggest partner, shared border 24 km)",
+    "Bao Yen (74,487) joins Van Ban (biggest partner, shared border 36 km)",
+    "Huong Hoa (74,632) joins Gio Linh (biggest partner that wraps nothing, shared border 17 km)",
+    "Loc Ha (75,323) joins Can Loc (biggest partner, shared border 17 km)",
+    "Lam Binh (75,323) joins Chiem Hoa (biggest partner, shared border 79 km)",
+    "Chu Puh (76,393) joins Chu Se (biggest partner, shared border 50 km)",
+    "Lang Son (76,995) joins Cao Loc (biggest partner, shared border 51 km)",
+    "Quan Hoa (77,149) joins Ba Thuoc (biggest partner, shared border 110 km)",
+    "Ea Sup (78,148) joins EA Hleo (biggest partner, shared border 51 km)",
+    "Phu Ninh (78,329) joins Tam Ky (biggest partner, shared border 21 km)",
+    "Muong Khuong (78,749) joins Bao Thang (biggest partner, shared border 66 km)",
+    "Doan Hung (79,421) joins Ha Hoa (biggest partner, shared border 29 km)",
+    "Hai Lang (79,956) joins Trieu Phong (biggest partner, shared border 59 km)",
+    "My Loc (80,029) joins Nam Định (biggest partner, shared border 21 km)",
+    "Bu Dop (80,031) joins Loc Ninh (biggest partner, shared border 20 km)",
+    "Buon Don (80,324) joins Cu Mgar (biggest partner that wraps nothing, shared border 49 km)",
+    "Lak (80,813) joins Krong A Na (biggest partner, shared border 43 km)",
+    "Dak Song (81,246) joins Dak Mil (biggest partner, shared border 30 km)",
+    "Tan Thanh (81,295) joins Vinh Hung (biggest partner, shared border 49 km)",
+    "Vinh Loc (81,339) joins Yen Dinh (biggest partner, shared border 37 km)",
+    "Thi xa Hong Ngu (82,435) joins Huyen Hong Ngu (biggest partner, shared border 21 km)",
+    "Trung Khanh (82,464) joins Cao Bang (biggest partner, shared border 97 km)",
+    "Quang Dien (83,313) joins Phu Vang (biggest partner that wraps nothing, shared border 2 km)",
+    "Hong Bang (83,401) joins Le Chan (biggest partner, shared border 4 km)",
+    "Thuong Xuan (83,792) joins Tho Xuan (biggest partner, shared border 21 km)",
+    "Vinh Linh (83,868) joins Gio Linh (biggest partner, shared border 66 km)",
+    "Ngoc Hien (84,026) joins Dam Doi (biggest partner, shared border 58 km)",
+    "Nghia Dan (84,445) joins Thai Hoa (biggest partner, shared border 72 km)",
+    "Nga Nam (84,625) joins Thanh Tri (biggest partner, shared border 25 km)",
+    "KBang (84,851) joins An Khe (biggest partner, shared border 49 km)",
+    "Dinh Hoa (85,157) joins Phu Luong (biggest partner that wraps nothing, shared border 33 km)",
+    "Song Cau (85,186) joins Tuy An (biggest partner, shared border 49 km)",
+    "Hoai An (85,268) joins Hoai Nhon (biggest partner, shared border 89 km)",
+    "Duc Co (85,979) joins Chu Prong (biggest partner, shared border 50 km)",
+    "Mdrak District (86,262) joins Ea Kar (biggest partner, shared border 66 km)",
+    "Phu Quoc (86,333) joins Rach Gia (island, 94 km)",
+    "Phu Ly (88,304) joins Thanh Liem (biggest partner, shared border 15 km)",
+    "Hoang Mai (88,443) joins Quynh Luu (biggest partner, shared border 38 km)",
+    "Kien An (88,774) joins Le Chan (biggest partner, shared border 18 km)",
+    "Phong Dien (89,218) joins Phu Vang (biggest partner, shared border 36 km)",
+    "Krong No (89,295) joins Dak Mil (biggest partner, shared border 58 km)",
+    "Ha Tinh (90,475) joins Thach Ha (biggest partner, shared border 37 km)",
+    "Yen The (90,805) joins Phu Binh (biggest partner, shared border 11 km)",
+    "Ha Quang (91,419) joins Cao Bang (biggest partner, shared border 126 km)",
+    "Kien Luong (91,537) joins Hon Dat (biggest partner, shared border 23 km)",
+    "Quang Ninh (91,618) joins Dong Hoi (biggest partner, shared border 29 km)",
+    "Muong La (91,681) joins Son La (biggest partner that wraps nothing, shared border 15 km)",
+    "Bao Lam (91,740) joins Cao Bang (biggest partner, shared border 44 km)",
+    "Chu Pah (92,185) joins Pleiku (biggest partner, shared border 12 km)",
+    "Ben Cau (92,955) joins Go Dau (biggest partner, shared border 34 km)",
+    "Phong Tho (93,652) joins Tam Duong (biggest partner, shared border 77 km)",
+    "Nghi Xuan (94,167) joins Duc Tho (biggest partner, shared border 18 km)",
+    "Huong Thuy (94,169) joins Hue (biggest partner, shared border 24 km)",
+    "Tan Hong (94,314) joins Huyen Hong Ngu (biggest partner, shared border 20 km)",
+    "Ngo Quyen (96,636) joins Le Chan (biggest partner, shared border 12 km)",
+    "Gia Binh (96,759) joins Luong Tai (biggest partner, shared border 35 km)",
+    "Huong Khe (97,978) joins Thach Ha (biggest partner, shared border 33 km)",
+    "Tam Duong (98,537) joins Lap Thach (biggest partner, shared border 44 km)",
+    "Vinh Thuan (99,122) joins Go Quao (biggest partner, shared border 48 km)",
+    "Nam Sach (99,255) joins Hai Duong (biggest partner, shared border 20 km)",
+    "Ninh Son (99,547) joins Phan Rang-Thap Cham (biggest partner that wraps nothing, shared border 17 km)",
+    "Krong Pa (99,814) joins Phu Thien (biggest partner, shared border 59 km)",
+    "Cam Thuy (100,482) joins Thach Thanh (nearest centre, partner 0.84)",
+    "Tra Vinh (100,951) joins Chau Thanh (nearest centre, partner 1.00)",
+    "Luc Yen (101,059) joins Van Yen (nearest centre, partner 1.00)",
+    "Ba Be (101,297) joins Bac Kan (nearest centre, partner 0.80)",
+    "Vinh Loi (101,659) joins Bac Lieu (nearest centre, partner 1.00)",
+    "Loc Binh (101,826) joins Cao Loc (nearest centre, partner 0.75)",
+    "Mang Thit (102,541) joins Vung Liem (nearest centre that wraps nothing, compact 0.74)",
+    "Duyen Hai (102,725) joins Cau Ngang (nearest centre, partner 0.77)",
+    "Ham Thuan Nam (102,773) joins Phan Thiet (nearest centre, partner 1.00)",
+    "Dat Do (103,322) joins Long Dien (nearest centre, partner 0.66)",
+    "Mo Cay Bac (103,692) joins Ben Tre (nearest centre, compact 0.76)",
+    "Yen Binh (104,128) joins Yen Bai (nearest centre, partner 1.00)",
+    "Son Hoa (104,146) joins Tuy An (nearest centre that wraps nothing, partner 1.00)",
+    "Chau Thanh (104,187) joins Cho Gao (nearest centre, compact 0.77)",
+    "Chon Thanh (104,545) joins Hon Quan (every join wraps; left to the ring cut)",
+    "Hung Nguyen (105,167) joins Vinh (nearest centre, partner 1.00)",
+    "Da Teh (105,798) joins Bao Lam (every join wraps; left to the ring cut)",
+    "Chau Thanh A (105,934) joins Phung Hiep (nearest centre, none of its region passing, compact 0.80, another region)",
+    "Chau Thanh (106,294) joins Soc Trang (nearest centre, partner 0.90)",
+    "Tanh Linh (106,591) joins Duc Linh (nearest centre, compact 0.81)",
+    "Uong Bi (107,093) joins Thuy Nguyen (nearest centre, partner 1.00)",
+    "Nghia Hanh (107,398) joins Quang Ngai (nearest centre that wraps nothing, partner 1.00)",
+    "Can Gio (107,671) joins Go Cong Dong (nearest centre, compact 0.77, another region)",
+    "Sa Dec (107,984) joins Lai Vung (nearest centre, compact 0.77)",
+    "Phu Hoa (108,539) joins Tuy Hoa (nearest centre, partner 1.00)",
+    "Ham Yen (109,355) joins Chiem Hoa (nearest centre, partner 1.00)",
+    "Tam Nong (109,393) joins Thanh Binh (nearest centre, partner 0.77)",
+    "Dong Van (109,533) joins Yen Minh (nearest centre, partner 1.00)",
+    "U Minh (109,646) joins Thoi Binh (nearest centre, partner 1.00)",
+    "Phu Tan (109,747) joins Cai Nuoc (nearest centre, partner 0.90)",
+    "Binh Giang (111,023) joins Thanh Mien (nearest centre, none of its region passing, compact 0.78, another region)",
+    "Dam Ha (111,609) joins Cam Pha (nearest centre, partner 1.00)",
+    "My Tu (111,820) joins Soc Trang (nearest centre, partner 1.00)",
+    "Ia Grai (112,159) joins Pleiku (nearest centre, partner 1.00)",
+    "Hoa Binh (112,450) joins Bac Lieu (nearest centre, partner 1.00)",
+    "Binh Long (112,558) joins Hon Quan (nearest centre, partner 1.00)",
+    "Cho Lach (113,547) joins Vung Liem (nearest centre, none of its region passing, partner 0.55, another region)",
+    "Tieu Can (113,678) joins Cau Ke (nearest centre, partner 0.67)",
+    "Que Vo (113,710) joins Yen Dung (nearest centre, compact 0.80)",
+    "Bac Son (113,817) joins Van Quan (nearest centre, compact 0.83)",
+    "Hong Dan (114,295) joins Phuoc Long (nearest centre, partner 0.72)",
+    "Krong Bong (115,209) joins Cu Kuin (nearest centre, partner 0.66)",
+    "Hung Yen (115,600) joins Duy Tien (nearest centre, compact 0.66)",
+    "Gia Nghia (116,422) joins Dak Rlap (nearest centre, partner 1.00)",
+    "Dong Phu (116,726) joins Dong Xoai (nearest centre, compact 0.86)",
+    "Que Phong (116,860) joins Quy Hop (nearest centre, partner 0.67)",
+    "Huong Son (117,070) joins Duc Tho (nearest centre, partner 0.83)",
+    "Yen Son (118,140) joins Tuyen Quang (nearest centre, partner 1.00)",
+    "Hoang Su Phi (118,576) joins Vi Xuyen (nearest centre, partner 0.72)",
+    "Tay Hoa (119,138) joins Tuy Hoa (nearest centre, partner 1.00)",
+    "Dong Hoa (119,297) joins Tuy Hoa (nearest centre, partner 1.00)",
+    "Duy Xuyen (121,176) joins Dai Loc (nearest centre, compact 0.66)",
+    "Cam Lam (121,914) joins Cam Ranh (nearest centre, partner 0.50)",
+    "Van Ninh (122,349) joins Ninh Hoa (nearest centre, partner 1.00)",
+    "Bac Binh (122,494) joins Tuy Phong (nearest centre, partner 1.00)",
+    "Kim Dong (123,587) joins Duy Tien (nearest centre, compact 0.69, another region)",
+    "Don Duong (124,160) joins Duc Trong (nearest centre, partner 1.00)",
+    "Que Son (124,453) joins Dai Loc (nearest centre, partner 0.56)",
+    "An Minh (124,601) joins An Bien (nearest centre, partner 0.91)",
+    "Kim Bang (124,936) joins Ung Hoa (nearest centre, compact 0.72)",
+    "Tay Son (125,742) joins Phu Cat (nearest centre, partner 0.86)",
+    "Tinh Bien (125,770) joins Tri Ton (nearest centre, partner 0.80)",
+    "Cu Jut (125,773) joins Dak Mil (nearest centre, compact 0.71)",
+    "Mo Duc (126,560) joins Tu Nghia (nearest centre that wraps nothing, partner 0.52)",
+    "Chau Doc (126,931) joins Chau Phu (nearest centre that wraps nothing, partner 1.00)",
+    "Lac Son (127,056) joins My Duc (nearest centre, compact 0.66)",
+    "Go Cong Tay (127,490) joins Go Cong (nearest centre, none of its region passing, compact 0.78, another region)",
+    "Ngoc Lac (127,996) joins Thach Thanh (nearest centre, partner 0.77)",
+    "Phuoc Long (128,110) joins Bu Gia Map (nearest centre, partner 1.00)",
+    "Gia Vien (128,553) joins Nho Quan (nearest centre, partner 1.00)",
+    "Vinh Thanh (129,177) joins Co Do (nearest centre, compact 0.81)",
+    "Quang Yen (129,495) joins Thuy Nguyen (nearest centre, partner 0.82)",
+    "Gia Loc (129,599) joins Hai Duong (nearest centre, compact 0.76)",
+    "Kim Thanh (129,632) joins Thanh Ha (nearest centre, partner 0.62)",
+    "Dong Ha (129,784) joins Trieu Phong (nearest centre, partner 1.00)",
+    "Ninh Hai (130,065) joins Phan Rang-Thap Cham (nearest centre, partner 1.00)",
+    "Tuyen Hoa (130,568) joins Ba Don (nearest centre, partner 1.00)",
+    "Tan Ky (131,051) joins Anh Son (nearest centre, partner 0.97)",
+    "Thanh Phu (131,090) joins Ba Tri (nearest centre, partner 0.99)",
+    "Hai An (132,769) joins Le Chan (nearest centre, partner 1.00)",
+    "Phu Loc (134,398) joins Hue (nearest centre, partner 0.91)",
+    "Thanh Ba (134,565) joins Cam Khe (nearest centre, compact 0.76)",
+    "Nga Son (135,186) joins Hau Loc (nearest centre, partner 0.89)",
+    "Tien Phuoc (135,358) joins Tam Ky (nearest centre, partner 1.00)",
+    "Pho Yen (135,783) joins Hiep Hoa (nearest centre, compact 0.63, another region)",
+    "Binh Dai (136,014) joins Giong Trom (nearest centre, compact 0.68)",
+    "Nui Thanh (136,076) joins Tam Ky (nearest centre, partner 1.00)",
+    "Tan Bien (136,676) joins Tan Chau (nearest centre, partner 1.00)",
+    "Tran De (137,926) joins Long Phu (nearest centre, partner 0.85)",
+    "Mai Son (138,006) joins Son La (nearest centre, partner 1.00)",
+    "Cam Xuyen (138,074) joins Thach Ha (nearest centre, partner 1.00)",
+    "Vinh Long (140,871) joins Long Ho (nearest centre, partner 1.00)",
+    "Tra On (140,888) joins Tam Binh (nearest centre, compact 0.85)",
+    "Gia Rai (141,482) joins Dong Hai (nearest centre, partner 0.90)",
+    "Vu Ban (141,767) joins Y Yen (nearest centre, partner 0.70)",
+    "Yen Khanh (142,526) joins Yen Mo (nearest centre, partner 0.88)",
+    "Son Tay (142,799) joins Thach That (nearest centre, compact 0.70)",
+    "Duong Minh Chau (143,475) joins Hoa Thanh (nearest centre, partner 0.57)",
+    "Ba Ria (143,514) joins Long Dien (nearest centre, compact 0.80)",
+    "Tuong Duong (144,155) joins Quy Hop (nearest centre, partner 1.00)",
+    "Le Thuy (144,710) joins Dong Hoi (nearest centre, partner 1.00)",
+    "Nhu Thanh (144,762) joins Nong Cong (nearest centre, partner 1.00)",
+    "Cam Giang (145,601) joins Luong Tai (nearest centre, none of its region passing, compact 0.87, another region)",
+    "An Lao (146,876) joins Thanh Ha (nearest centre, compact 0.76)",
+    "Dong Hy (148,317) joins Thai Nguyen (nearest centre, partner 1.00)",
+    "Thap Muoi (148,506) joins Huyen Cao Lanh (every join wraps; left to the ring cut)",
+    "Ninh Giang (149,162) joins Tu Ky (nearest centre, compact 0.78)",
+    "Van Ban (149,597) joins Bao Thang (nearest centre, partner 0.86)",
+    "Thu Thua (149,740) joins Duc Hoa (nearest centre, compact 0.76)",
+    "Thi xa Cai Lay (150,271) joins Huyen Cai Lay (nearest centre, compact 0.84)",
+    "Phu Giao (150,388) joins Dong Xoai (nearest centre, compact 0.86, another region)",
+    "Nam Dan (150,700) joins Vinh (nearest centre, partner 1.00)",
+    "Thot Not (150,805) joins Co Do (nearest centre, compact 0.84)",
+    "Cang Long (151,873) joins Chau Thanh (nearest centre, partner 0.94)",
+    "Yen Lac (152,341) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Tan Hiep (153,261) joins Rach Gia (nearest centre, partner 0.74)",
+    "Dak Ha (153,766) joins Kon Tum (nearest centre, partner 1.00)",
+    "Tan Yen (154,133) joins Lang Giang (nearest centre, compact 0.77)",
+    "Dai Tu (155,063) joins Thai Nguyen (nearest centre, partner 0.64)",
+    "Moc Chau (155,191) joins Phu Yen (nearest centre, compact 0.83)",
+    "Dong Trieu (155,853) joins Kinh Mon (nearest centre, partner 0.64)",
+    "Binh Luc (156,429) joins Ly Nhan (nearest centre, partner 0.62)",
+    "Viet Yen (156,689) joins Lang Giang (nearest centre, none of its region passing, compact 0.72, another region)",
+    "Tien Lang (156,947) joins Vinh Bao (nearest centre, none of its region passing, partner 0.61, another region)",
+    "Chau Thanh (157,301) joins Ben Tre (nearest centre, compact 0.79)",
+    "Thieu Hoa (157,331) joins Trieu Son (nearest centre, partner 0.80)",
+    "Krong Nang (157,593) joins Buon Ho (nearest centre, partner 1.00)",
+    "Mo Cay Nam (158,429) joins Ben Tre (nearest centre, partner 0.90)",
+    "Long My (160,000) joins Vi Thuy (nearest centre, partner 0.58)",
+    "Ha Hoa (160,071) joins Cam Khe (nearest centre, partner 1.00)",
+    "Huong Tra (160,231) joins Phu Vang (every join wraps; left to the ring cut)",
+    "Ha Trung (160,349) joins Hau Loc (nearest centre, partner 1.00)",
+    "Chau Thanh (160,410) joins Lai Vung (nearest centre, compact 0.75)",
+    "Bac Quang (161,589) joins Vi Xuyen (nearest centre, partner 0.79)",
+    "Hoa Binh (163,149) joins Thanh Son (nearest centre, none of its region passing, compact 0.75, another region)",
+    "Tan Lac (164,290) joins My Duc (nearest centre, compact 0.61)",
+    "Chau Thanh (166,188) joins Rach Gia (nearest centre, partner 1.00)",
+    "An Phu (166,437) joins Tan Chau (nearest centre, partner 1.00)",
+    "Son Duong (166,501) joins Tuyen Quang (nearest centre, compact 0.80)",
+    "Ky Anh (166,890) joins Thach Ha (nearest centre, partner 0.99)",
+    "Song Ma (168,246) joins Son La (nearest centre, partner 1.00)",
+    "Tuy Phuoc (168,995) joins Quy Nhon (nearest centre, partner 1.00)",
+    "Ke Sach (169,116) joins Soc Trang (nearest centre, compact 0.78)",
+    "Phu My (169,442) joins Phu Cat (nearest centre, partner 1.00)",
+    "Chi Linh (171,046) joins Kinh Mon (nearest centre, compact 0.81)",
+    "Binh Son (173,168) joins Son Tinh (nearest centre, partner 1.00)",
+    "Dien Khanh (173,610) joins Nha Trang (nearest centre, partner 1.00)",
+    "Chau Thanh (173,944) joins Long Xuyen (nearest centre that wraps nothing, partner 0.69)",
+    "Vinh Chau (173,959) joins My Xuyen (nearest centre, partner 0.68)",
+    "Thanh Tri (174,110) joins Soc Trang (nearest centre, partner 0.97)",
+    "Xuan Truong (175,574) joins Truc Ninh (nearest centre, partner 1.00)",
+    "Thi xa Cao Lanh (176,539) joins Lap Vo (nearest centre, partner 0.58)",
+    "Thang Binh (177,069) joins Dai Loc (nearest centre, partner 0.92)",
+    "Kim Son (178,160) joins Yen Mo (nearest centre, partner 0.90)",
+    "Ham Thuan Bac (178,951) joins Phan Thiet (nearest centre, partner 1.00)",
+    "Huu Lung (179,577) joins Van Quan (nearest centre, compact 0.79)",
+    "La Gi (180,588) joins Phan Thiet (nearest centre, partner 0.56)",
+    "An Nhon (181,907) joins Quy Nhon (nearest centre, partner 1.00)",
+    "Phuc Tho (183,385) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Dau Tieng (183,514) joins Hon Quan (nearest centre, compact 0.82, another region)",
+    "Kien Thuy (183,730) joins Le Chan (nearest centre, partner 1.00)",
+    "Thai Hoa (185,425) joins Quynh Luu (nearest centre, partner 1.00)",
+    "Tra Cu (185,849) joins Cau Ngang (nearest centre, partner 0.85)",
+    "Ninh Phuoc (186,435) joins Phan Rang-Thap Cham (nearest centre, partner 1.00)",
+    "Krong A Na (187,806) joins Cu Kuin (nearest centre, partner 0.75)",
+    "Do Luong (188,208) joins Yen Thanh (nearest centre, partner 0.99)",
+    "Phu Luong (188,529) joins Thai Nguyen (nearest centre, partner 1.00)",
+    "Tay Ninh (189,785) joins Chau Thanh (nearest centre, partner 0.61)",
+    "Luc Nam (190,800) joins Luc Ngan (nearest centre, compact 0.84)",
+    "Nghia Hung (190,877) joins Hai Hau (nearest centre, partner 0.55)",
+    "Ninh Bình (190,939) joins Yen Mo (nearest centre, partner 0.79)",
+    "Nghi Loc (193,463) joins Vinh (nearest centre, partner 1.00)",
+    "Van Chan (194,342) joins Yen Bai (nearest centre, partner 1.00)",
+    "Duc Pho (194,664) joins Tu Nghia (every join wraps; left to the ring cut)",
+    "Tan Thanh (195,452) joins Chau Duc (nearest centre, compact 0.78)",
+    "Dak To (196,005) joins Kon Tum (nearest centre, partner 1.00)",
+    "Thoai Son (196,085) joins Long Xuyen (nearest centre, partner 1.00)",
+    "Long Khanh (196,640) joins Xuan Loc (nearest centre, compact 0.80)",
+    "An Duong (199,020) joins Thanh Ha (nearest centre, compact 0.80)",
+    "Giao Thuy (199,903) joins Truc Ninh (nearest centre, partner 1.00)",
+    "Tran Van Thoi (199,931) joins Cai Nuoc (nearest centre, partner 1.00)",
+    "Xuyen Moc (200,318) joins Long Dien (nearest centre, compact 0.75)",
+    "Nam Truc (201,719) joins Nam Định (nearest centre, partner 0.77)",
+    "Can Loc (201,844) joins Duc Tho (nearest centre, partner 0.75)",
+    "Phu Tan (203,259) joins Chau Phu (nearest centre, partner 1.00)",
+    "Bo Trach (203,613) joins Ba Don (nearest centre, partner 0.95)",
+    "Thai Binh (204,542) joins Vu Thu (nearest centre, partner 1.00)",
+    "Cam My (205,117) joins Xuan Loc (nearest centre, compact 0.82)",
+    "Di Linh (205,605) joins Lam Ha (nearest centre, partner 0.72)",
+    "Bu Dang (207,300) joins Bu Gia Map (nearest centre, partner 1.00)",
+    "Dak Doa (209,485) joins Pleiku (nearest centre, partner 1.00)",
+    "Tinh Gia (209,710) joins Quang Xuong (nearest centre, partner 0.56)",
+    "Thuan Chau (210,823) joins Son La (nearest centre, partner 1.00)",
+    "Hoang Hoa (213,644) joins Thanh Hoa (nearest centre, partner 1.00)",
+    "Thanh Chuong (214,680) joins Yen Thanh (nearest centre, partner 0.90)",
+    "Dien Bien (218,262) joins Tuan Giao (nearest centre, partner 1.00)",
+    "Phu Binh (219,814) joins Thai Nguyen (nearest centre, compact 0.78)",
+    "Tien Hai (219,974) joins Kien Xuong (nearest centre, partner 0.78)",
+    "Lao Cai (220,209) joins Bao Thang (nearest centre, partner 1.00)",
+    "Trang Bang (221,089) joins Go Dau (nearest centre, compact 0.73)",
+    "Chu Prong (221,587) joins Pleiku (every join wraps; left to the ring cut)",
+    "Thong Nhat (223,510) joins Dinh Quan (nearest centre, compact 0.78)",
+    "Go Cong Dong (224,107) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Thanh Liem (225,508) joins Ly Nhan (nearest centre, partner 0.60)",
+    "Giong Rieng (226,304) joins Rach Gia (nearest centre, partner 0.64)",
+    "Chu Se (227,167) joins Pleiku (nearest centre, partner 1.00)",
+    "Cau Ke (229,158) joins Chau Thanh (nearest centre, partner 0.96)",
+    "Ca Mau (230,143) joins Cai Nuoc (nearest centre, partner 1.00)",
+    "Yen Dung (231,253) joins Luong Tai (nearest centre, compact 0.83)",
+    "Yen Minh (232,867) joins Vi Xuyen (nearest centre, partner 1.00)",
+    "Gio Linh (233,199) joins Trieu Phong (nearest centre, partner 1.00)",
+    "Tan Phu (235,463) joins Dinh Quan (nearest centre, partner 0.56)",
+    "My Tho (237,771) joins Chau Thanh (nearest centre, compact 0.69)",
+    "EA Hleo (239,044) joins Buon Ho (nearest centre, partner 1.00)",
+    "Duc Linh (240,153) joins Phan Thiet (nearest centre, compact 0.83)",
+    "Bao Loc (241,489) joins Bao Lam (nearest centre, partner 1.00)",
+    "Thanh Mien (243,436) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Phuoc Long (243,594) joins Dong Hai (nearest centre, partner 0.69)",
+    "Dong Hung (245,270) joins Vu Thu (nearest centre, partner 1.00)",
+    "Yen Dinh (245,271) joins Tho Xuan (nearest centre, partner 1.00)",
+    "Loc Ninh (249,832) joins Bu Gia Map (nearest centre, partner 0.96)",
+    "Quynh Phu (250,096) joins Hung Ha (nearest centre, partner 0.60)",
+    "Thoi Binh (252,701) joins Cai Nuoc (nearest centre, partner 1.00)",
+    "Tuy Phong (254,658) joins Phan Thiet (nearest centre, partner 1.00)",
+    "Ba Thuoc (254,770) joins Thach Thanh (nearest centre, compact 0.81)",
+    "Cam Ranh (255,298) joins Nha Trang (nearest centre, partner 1.00)",
+    "Ha Long (255,633) joins Cam Pha (nearest centre, partner 0.71)",
+    "An Bien (255,908) joins Rach Gia (nearest centre, partner 1.00)",
+    "Cao Loc (256,002) joins Van Quan (nearest centre, partner 1.00)",
+    "Da Lat (257,932) joins Duc Trong (nearest centre, partner 1.00)",
+    "Vinh Hung (260,191) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Go Cong (260,707) joins Cho Gao (nearest centre, compact 0.83)",
+    "Thai Thuy (261,804) joins Vinh Bao (nearest centre, partner 0.61)",
+    "Van Yen (262,380) joins Yen Bai (nearest centre, partner 1.00)",
+    "Krong Pac (263,062) joins Ea Kar (nearest centre, partner 0.88)",
+    "Tri Ton (268,890) joins Chau Phu (nearest centre, partner 1.00)",
+    "Hon Dat (270,439) joins Rach Gia (nearest centre, partner 1.00)",
+    "Thanh Binh (273,747) joins Huyen Hong Ngu (nearest centre, compact 0.85)",
+    "Dak Rlap (278,131) joins Dak Mil (nearest centre, partner 0.88)",
+    "Dien Chau (278,578) joins Yen Thanh (nearest centre, partner 1.00)",
+    "Nho Quan (281,103) joins Yen Mo (nearest centre, partner 1.00)",
+    "An Khe (283,909) joins Pleiku (nearest centre, partner 0.99)",
+    "Bac Kan (285,726) joins Thai Nguyen (nearest centre, partner 1.00, another region)",
+    "Lap Thach (291,463) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Thoi Lai (292,487) joins Co Do (nearest centre, compact 0.86)",
+    "Ba Vi (292,851) joins Thach That (nearest centre, compact 0.79)",
+    "Anh Son (297,149) joins Yen Thanh (nearest centre, partner 1.00)",
+    "Cai Be (299,383) joins Huyen Cai Lay (nearest centre, partner 0.59)",
+    "Tam Binh (299,499) joins Vung Liem (nearest centre, compact 0.76)",
+    "Chiem Hoa (299,797) joins Tuyen Quang (nearest centre, partner 0.74)",
+    "Cu Mgar (300,004) joins Buon Ma Thuot (nearest centre, partner 1.00)",
+    "Giong Trom (305,436) joins Ben Tre (nearest centre, partner 0.61)",
+    "Phu Thien (313,417) joins Pleiku (smallest neighbour, none within the cap, partner 1.00)",
+    "Long Ho (314,446) joins Vung Liem (nearest centre, partner 0.62)",
+    "Tan Chau (315,612) joins Chau Thanh (nearest centre, partner 1.00)",
+    "Go Quao (317,303) joins Rach Gia (smallest neighbour, none within the cap, partner 1.00)",
+    "Tu Ky (318,215) joins Thanh Ha (nearest centre, partner 0.74)",
+    "Hoai Nhon (318,351) joins Phu Cat (nearest centre, partner 1.00)",
+    "Long Phu (318,831) joins My Xuyen (nearest centre, partner 0.57)",
+    "Ba Tri (324,648) joins Ben Tre (nearest centre, partner 1.00)",
+    "Nong Cong (329,225) joins Quang Xuong (nearest centre, partner 1.00)",
+    "Vi Thuy (333,312) joins Phung Hiep (nearest centre, partner 0.52)",
+    "Hiep Hoa (337,768) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Hoa Thanh (338,588) joins Chau Thanh (nearest centre, partner 1.00)",
+    "Ung Hoa (346,108) joins My Duc (nearest centre, compact 0.65, another region)",
+    "Dam Doi (346,225) joins Cai Nuoc (nearest centre, partner 1.00)",
+    "Dong Hoi (347,132) joins Ba Don (nearest centre, partner 1.00)",
+    "Quang Ngai (349,309) joins Son Tinh (nearest centre, partner 0.59)",
+    "Tan Chau (352,666) joins Chau Phu (nearest centre, partner 1.00)",
+    "Trieu Son (354,020) joins Thanh Hoa (nearest centre, partner 1.00)",
+    "Ninh Hoa (354,387) joins Nha Trang (nearest centre, partner 1.00)",
+    "Huyen Cao Lanh (356,845) joins Lap Vo (nearest centre, partner 1.00)",
+    "Cho Moi (362,573) joins Long Xuyen (nearest centre, partner 1.00)",
+    "Tam Duong (368,663) joins Bao Thang (nearest centre, partner 1.00, another region)",
+    "Tuy An (369,948) joins Tuy Hoa (nearest centre, partner 1.00)",
+    "Vung Tau (374,701) joins Long Dien (nearest centre, partner 0.75)",
+    "Y Yen (376,534) joins Nam Định (nearest centre, partner 0.83)",
+    "Duy Tien (378,578) joins Ly Nhan (nearest centre, compact 0.75)",
+    "Quy Hop (379,604) joins Quynh Luu (nearest centre, partner 0.89)",
+    "Bac Lieu (381,772) joins Dong Hai (nearest centre, partner 1.00)",
+    "Phu Yen (392,894) joins Son La (nearest centre, compact 0.71)",
+    "Dong Xoai (400,223) joins Hon Quan (nearest centre, compact 0.79)",
+    "Chau Duc (410,651) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Thanh Son (419,594) joins Cam Khe (nearest centre, compact 0.83)",
+    "Cau Ngang (424,650) joins Chau Thanh (nearest centre, partner 1.00)",
+    "Cu Kuin (435,515) joins Buon Ma Thuot (nearest centre, partner 1.00)",
+    "Lam Ha (439,053) joins Duc Trong (nearest centre, partner 1.00)",
+    "Tuan Giao (439,419) stays as it is: no zone beside it",
+    "Lai Vung (439,472) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Kien Xuong (447,718) joins Vu Thu (nearest centre, partner 1.00)",
+    "Duc Hoa (450,382) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Cao Bang (453,534) stays as it is: no zone beside it",
+    "Luc Ngan (453,672) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Hau Loc (459,312) joins Thanh Hoa (nearest centre, partner 1.00)",
+    "Hai Hau (460,188) joins Truc Ninh (nearest centre, partner 1.00)",
+    "Tam Ky (461,584) joins Dai Loc (nearest centre, partner 1.00)",
+    "Chau Thanh (481,432) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Lang Giang (482,891) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Tu Nghia (489,497) joins Son Tinh (nearest centre, partner 1.00)",
+    "Bao Lam (492,882) stays as it is: no neighbour within the cap",
+    "Hai Duong (496,441) joins Thanh Ha (nearest centre, partner 0.54)",
+    "Kinh Mon (497,243) stays as it is: no neighbour within the cap",
+    "Phu Vang (499,279) joins Hue (nearest centre, partner 1.00)"
+   ],
+   "remnants": {
+    "ann": [
+     "81297802B42791937018990"
+    ],
+    "hoc": [
+     "81297802B7309999559024",
+     "81297802B67867529169474",
+     "81297802B44215588050468",
+     "81297802B79980761269040"
+    ],
+    "hao": [
+     "81297802B64104222015073",
+     "81297802B85606551737880",
+     "81297802B40785510400399",
+     "81297802B92770026846870",
+     "81297802B72352297629850",
+     "81297802B93646092032264",
+     "81297802B6982011035243"
+    ],
+    "can": [
+     "81297802B83209776142835",
+     "81297802B74288530741739"
     ]
    }
   }
