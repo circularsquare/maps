@@ -41,13 +41,13 @@ const opts = (l, width) => ({
 let fail = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) fail++; };
 const layoutOf = (name, width = 340) => {
-  const l = ids.find((x) => api.line_name(x) === name);
+  const l = ids.find((x) => short(api.line_name(x)) === short(name));
   const t = performance.now();
   const lay = relatedLayout(decodeRelated(api.line_related(l, of)), opts(l, width));
   const ms = performance.now() - t;
   const nm = (i) => opts(l, width).stopName(lay.rows[i].ref.line, lay.rows[i].ref.stop);
   console.log(`\n== ${name}: ${lay.rows.length} rows (${lay.rows.filter((r) => r.lStop < 0).length} side-only), ${lay.columns.length} columns, ${lay.width} px wide, ${ms.toFixed(1)} ms`);
-  for (const c of lay.columns) console.log(`  ${short(api.line_name(c.line)).padEnd(4)} ${c.side}${Math.floor(Math.abs(c.x - lay.spineX) / 7)} rows ${c.r0}-${c.r1} ${nm(c.r0)} .. ${nm(c.r1)}${c.up ? ' up' : ''}${c.down ? ' down' : ''}`);
+  for (const c of lay.columns) console.log(`  ${short(api.line_name(c.line)).padEnd(4)} ${c.side}${Math.round((Math.abs(c.x - lay.spineX) - 6.5) / 5) + 1} rows ${c.r0}-${c.r1} ${nm(c.r0)} .. ${nm(c.r1)}${c.up ? ' up' : ''}${c.down ? ' down' : ''}`);
   return { lay, col: (n) => lay.columns.filter((c) => short(api.line_name(c.line)) === n), nm };
 };
 

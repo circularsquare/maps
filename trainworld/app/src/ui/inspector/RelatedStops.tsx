@@ -6,7 +6,7 @@
 import type { ComponentChildren, RefObject } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { decodeRelated, type RelatedGroup } from "../../game/relatedLines";
-import { BAR, LINE, relatedLayout } from "../../game/relatedLayout";
+import { BAR, LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight, relatedLayout } from "../../game/relatedLayout";
 import { distance } from "../../game/format";
 import type { LineInput } from "../../game/types";
 import { selection } from "../../game/ui";
@@ -85,11 +85,12 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
   });
   const pick = (n: number) => { const o = byNum.get(n); if (o) selection.value = { kind: "line", line: o.id }; };
 
-  // crossing bars: the first two bullets after a row's name, or the lines crossing a side line's row
+  // crossing bars: the bullets after a row's name (all of them, up to TALL_MAX, where more than two
+  // stretch the row's mark, T-1786), or the first two lines crossing a side line's row
   const bars = lay.rows.map((r, i) => {
     const drawn = new Set(r.drawn);
-    const lines = r.lStop >= 0 ? transfers(r.lStop, drawn).map((o) => o.num) : r.cross;
-    return lines.slice(0, 2).map((n) => ({ n, tip: lay.crossTip(i, n) }));
+    const lines = r.lStop >= 0 ? transfers(r.lStop, drawn).map((o) => o.num) : r.cross.slice(0, ROUND_MAX);
+    return lines.slice(0, lines.length > ROUND_MAX ? TALL_MAX : ROUND_MAX).map((n) => ({ n, tip: lay.crossTip(i, n) }));
   });
   const W = lay.width;
   const rows: ComponentChildren[] = [];
@@ -112,7 +113,7 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
       <svg class="related-draw" width={W} height={listH + geo.pad[0] + geo.pad[1]}>
         <g transform={`translate(0 ${geo.pad[0]})`}>
         {lay.rows.map((r, i) => bars[i].map((b, k) => (
-          <line x1={1} x2={W - 1} y1={r.y + (bars[i].length > 1 ? (k ? 3 : -3) : 0)} y2={r.y + (bars[i].length > 1 ? (k ? 3 : -3) : 0)}
+          <line x1={1} x2={W - 1} y1={r.y + barOffset(k, bars[i].length)} y2={r.y + barOffset(k, bars[i].length)}
             stroke={byNum.get(b.n)?.colour} stroke-width={LINE} data-tip={b.tip} onClick={() => pick(b.n)} />
         )))}
         {lay.columns.map((c) => {
@@ -128,8 +129,8 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
         {lay.rows.length > 0 && <line x1={lay.spineX} x2={lay.spineX} y1={lay.rows[lay.spine[0]].y} y2={lay.rows[lay.spine[1]].y} stroke={colour} stroke-width={BAR} />}
         {lay.loopEnds.map((d) => <path d={d} fill="none" stroke={colour} stroke-width={BAR} />)}
         {lay.pills.map((p) => {
-          const r = lay.rows[p.row], h = p.big || bars[p.row].length ? 10 : 8;
-          return <rect class="pill" x={p.x0 - h / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + h + 2} height={h + 2} rx={h / 2 + 1} data-tip={p.tip} />;
+          const r = lay.rows[p.row], n = bars[p.row].length, h = pillHeight(n, p.big), w = Math.min(h, 10);
+          return <rect class="pill" x={p.x0 - w / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + w + 2} height={h + 2} rx={w / 2 + 1} data-tip={p.tip} />;
         })}
         </g>
       </svg>

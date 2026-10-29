@@ -29,6 +29,7 @@ import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
+import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
 import { NameEdit } from "./NameEdit";
 import { BusInspector } from "./BusInspector";
 import { locateLine, locateStation } from "../locate";
@@ -300,13 +301,16 @@ function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>): Li
 
 /** The busiest two as bullets, then `extra` (lines drawn beside it whose bullet shows at this row,
  * T-1391), the rest behind a "+" whose hover names them. */
-export function StopTransfers({ l, i, drawn, extra = [] }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[] }) {
+export function StopTransfers({ l, i, drawn, extra = [], tall }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[]; tall?: boolean }) {
   const others = [...transferLines(l, i, drawn), ...extra];
   if (!others.length) return null;
-  const rest = others.slice(STOP_CHIPS);
+  // T-1786: a tall row of the related-lines view has its bullets in two rows, in the bars' order
+  const shown = others.slice(0, tall ? TALL_MAX : STOP_CHIPS), rest = others.slice(shown.length);
   return (
     <>
-      {others.slice(0, STOP_CHIPS).map((o) => <Chip line={o} size="sm" />)}
+      {tall
+        ? <span class="stop-chips2" style={{ gridTemplateColumns: `repeat(${Math.ceil(shown.length / 2)}, auto)` }}>{shown.map((o) => <Chip line={o} size="sm" />)}</span>
+        : shown.map((o) => <Chip line={o} size="sm" />)}
       {rest.length > 0 && <span class="stop-more" data-tip={[...new Set(rest.map((o) => o.name))].join("\n")}>+</span>}
     </>
   );
@@ -719,8 +723,9 @@ function RailLineInspector({ id }: { id: string }) {
   const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[]) => {
     const s = l.stops[i];
     const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || selfTransfer(l, i);
+    const tall = !!drawn && transferLines(l, i, drawn).length > ROUND_MAX;
     return (
-      <li class={xfer ? "xfer" : ""} data-r={drawn ? true : undefined}>
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "")} data-r={drawn ? true : undefined}>
         {looks && !drawn && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
         {looks && !drawn && i < looks.length && <StretchHalf s={looks[i]} down />}
         <span class="grow">
@@ -734,7 +739,7 @@ function RailLineInspector({ id }: { id: string }) {
             </span>
           )}
         </span>
-        <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} />
+        <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} />
         <StopToday line={l.id} i={i} />
         <RouteMarks marks={marks.filter((m) => m.gap === i)} />
         {editingStops && (

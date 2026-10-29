@@ -523,6 +523,9 @@ rect.now { fill-opacity: .45; }
 .stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
 .stops.related-rows li::before, .stops.related-rows li::after { display: none; }
 .stops.related-rows .route-mark { left: calc(var(--spine) - 6px); z-index: 2; }
+/* T-1786: a row with more than two crossing lines is 1.5 rows tall, its bullets in two rows */
+.stops.related-rows li.tall { min-height: 38px; }
+.stops .stop-chips2 { flex: none; display: grid; grid-template-rows: 16px 16px; gap: 2px; justify-items: start; }
 /* T-1391: a stop row too tight for its name, time and bullets drops the time; a loop's bar goes on
    past its first and last stops and curves round */
 .stops li[data-tight] .t { display: none; }

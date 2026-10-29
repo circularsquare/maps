@@ -235,11 +235,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   line running beside it (shared track, or its track within 100 m + 3.5% of the first 5 km of its own
   run + 2% of the rest of the line's between stations both reach; a line meeting only twice gets 2%
   throughout unless neither line stops between the two; a line whose stops are all on the line's
-  route always) in a 3 px column (as thin as a crossing line's bar) 7 px out a step,
-  3 px further for one on its own track, right for one stopping more often over the span and left
+  route always) in a 3 px column (as thin as a crossing line's bar), 2 px apart from the line and
+  from each other whether on shared or its own track [T-1786], right for one stopping more often over the span and left
   otherwise, at most 3 a side and only as many as fit in 40% of the panel; where the other line goes
   on, its column goes straight on 13 px past the line's own first or last row, and elsewhere turns
-  out to its side half a row past where it leaves (turns at one gap 6 px apart); where it ends, the
+  out to its side half a row past where it leaves (turns at one gap 5 px apart); where it ends, the
   column ends at its stop; a span over one row only, or a line with no column left, is drawn as
   crossings; beside a loop, a line running on across the loop's first stop goes on past the last
   row; rows are the line's stops (as in the plain list, bullets leaving out the lines drawn there)
@@ -247,8 +247,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
   at each row both stop at next to one only one of them does (where an express's stops part from a
   local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
-  (10 px at a row with crossings, else 8); the first two crossing lines as 3 px bars across the
-  drawing. Hovers: a column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of
+  (10 px at a row with crossings, else 8); the crossing lines as 3 px bars across the drawing, 2 px
+  apart: the two bulleted ones at a row with up to two, and at a row with more [T-1786] all of
+  them up to 6, the row 38 px tall, its pill 10 px wide and stretched to (bars − 1) × 5 + 13 px with
+  5 px corners so each bar meets its straight side, and its bullets (up to 6, in the bars' order, the
+  rest behind the "+") in two rows; a side line's own row keeps two bars. Hovers: a column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of
   its own, "On the same track", its own-track km beside the line's and how far it strays at most), a
   pill ("6, 6 and 6X stop at 23 St", "4 and 5 pass"), a column's turn or straight end ("4 goes on to
   Woodlawn", "14 more stops", or "5 leaves here", "Back beside 2 at 149 St after 10 stops of its

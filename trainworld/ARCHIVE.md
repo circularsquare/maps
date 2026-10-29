@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1786 [P2] Related lines view: one gap, tall station marks. Done 2026-10-29 (agent t1786): all side-by-side lines and crossing bars 2 px apart; a row with 3+ crossing lines is 1.5 rows tall with a stretched pill, up to 6 bars and 6 bullets in two rows. Shots artifacts/trainworld/t1786/.
+
 - T-1781 [P2] Curving in beside track took tight turns. Done 2026-10-29: the turn onto the line is the widest of 17 places along the run (to the design radius), its straight in clear of the track; over 1000 m where it was ~500 m from 150 m off. notes/T-1779.md.
 - T-1779 [P1] Branching froze 1-5 s with a stuck ghost. Done 2026-10-29: each preview's trial edit rebuilt and settled the line services twice (0.3-0.9 s each on the shared-track New York); trials now skip the services. Ghost lag 2.5 s mean, 4.9 s max to 0 ms. notes/T-1779.md.
 

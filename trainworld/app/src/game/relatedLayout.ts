@@ -5,14 +5,24 @@
 
 import type { RelatedGroup } from "./relatedLines";
 
-/** Column pitch, the selected line's width and a side line's (as thin as a crossing line's bar,
- * Anita 2026-10-26), px. A line on its own track sits OWN_GAP further out than one sharing the
- * selected line's track (Anita, 2026-10-24). */
-export const COL = 7, OWN_GAP = 3, BAR = 6, LINE = 3;
+/** The selected line's width, a side line's (as thin as a crossing line's bar, Anita 2026-10-26)
+ * and the one gap between any two lines side by side, shared track or not (T-1786), px. */
+export const BAR = 6, LINE = 3, GAP = 2;
+/** Side lines' and crossing bars' pitch, px. */
+export const PITCH = LINE + GAP;
 /** A turn's corner radius; how far a turn runs out past the outermost column; a line going on past
  * the selected line's end runs this far past the end row's centre; turns at one gap fan out this
  * far apart, px. */
-const R = 5, TAIL = 9, EXT = 13, FAN = 6;
+const R = 5, TAIL = 9, EXT = 13, FAN = PITCH;
+
+/** T-1786: a row with more crossing lines than this draws them all, up to TALL_MAX, through a
+ * station mark stretched down the row. */
+export const ROUND_MAX = 2, TALL_MAX = 6;
+/** Crossing bar `k` of `n`'s offset from the row's centre, px. */
+export const barOffset = (k: number, n: number) => (k - (n - 1) / 2) * PITCH;
+/** A stop mark's inner height at a row with `n` crossing bars, px: round for up to two, else tall
+ * enough that every bar meets its straight side (the corners are 5 px). */
+export const pillHeight = (n: number, big: boolean) => (n > ROUND_MAX ? (n - 1) * PITCH + LINE + 10 : big || n ? 10 : 8);
 /** The spine's centre at least this far in, and the drawing at least this wide, px: with no
  * columns the rows' names sit where the plain list's do. */
 const MIN_X0 = 10, MIN_W = 24, EDGE = 3;
@@ -160,7 +170,7 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
   // sides: a line stopping more often than the spine over its span goes right, as often or less
   // left; most stops in common nearest; the other side when its own is full
   items.sort((a, b) => b.shared - a.shared || (b.r1 - b.r0) - (a.r1 - a.r0));
-  const perSide = Math.max(1, Math.min(MAX_SIDE, Math.floor((o.width * WIDTH_SHARE - 2 * MIN_X0 - 2 * TAIL) / (2 * COL))));
+  const perSide = Math.max(1, Math.min(MAX_SIDE, Math.floor((o.width * WIDTH_SHARE - 2 * MIN_X0 - 2 * TAIL) / (2 * PITCH))));
   const taken: Record<string, [number, number][]> = {};
   const over: Item[] = [];
   for (const it of items) {
@@ -186,7 +196,7 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
   // (Anita: it does not curve off there), else a turn out to its side
   const turnsUp = (it: Item) => it.up && it.r0 > spine[0];
   const turnsDown = (it: Item) => it.down && it.r1 < spine[1];
-  const off = (it: Item) => it.slot! * COL + (groups[it.g].shared ? 0 : OWN_GAP);
+  const off = (it: Item) => BAR / 2 + GAP + LINE / 2 + (it.slot! - 1) * PITCH;
   const sideItems = (s: "L" | "R") => items.filter((it) => it.side === s);
   const reach = (s: "L" | "R") => {
     const its = sideItems(s);
