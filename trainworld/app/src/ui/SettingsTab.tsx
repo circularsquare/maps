@@ -9,7 +9,7 @@ import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
 import { liteDetected } from "../map/lite";
 import { RES_AREA_M2 } from "../workers/commutersProtocol";
-import { makeSandbox } from "../workers/clockClient";
+import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./toolKeys";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
@@ -196,6 +196,12 @@ function GameMode() {
           yes: "Switch to sandbox mode", no: "Stay in normal mode", run: makeSandbox,
         })}>Switch to sandbox mode</button>}
       </div>
+      {!sandbox && m.guide?.hidden && !m.guide.closed && (
+        <div class="game-mode">
+          <span>Getting started</span>
+          <button class="btn text" onClick={() => saveGuide({ done: m.guide!.done })}>Show</button>
+        </div>
+      )}
     </>
   );
 }

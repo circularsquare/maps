@@ -157,7 +157,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585). */
 const VERSION = 11;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -241,7 +241,9 @@ export const relatedLines = signal(true);
 export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
-export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 0);
+export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
+/** T-1822: this browser has finished the Getting started guide once, so new games start without it. */
+export const guideFinished = signal(saved.guide === true);
 /** T-1615: track drawn across other track at its own elevation ramps over it (under it from -1
  * down) where that fits; on unless turned off. */
 export const autoRamp = signal(saved.build?.ramp !== false);
@@ -335,7 +337,7 @@ if (typeof window !== "undefined") {
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

@@ -61,8 +61,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
 ## The dock
 
-**Fixed layout, no floating windows** (the saved games panel and confirmations are the
-exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
+**Fixed layout, no floating windows** (the saved games panel, confirmations and the
+[Getting started card](#getting-started-card) are the exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 - A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Finances** (a bill and a coin) [T-1819], **Cities** (a skyline) [T-749], sharing the row's width
@@ -280,6 +280,41 @@ the button is gone.
   them; the past 24 hours' counts are asked once a game hour and when riders are worked out again
   (`accountVersion`), not the panels' four times a second.
 
+## Getting started card
+
+[T-1822; `ui/Guide.tsx`, `game/guide.ts`] A flat post-it at the map's upper right under the search
+button, 240 px wide, turned 2 degrees anticlockwise: a pale yellow (`--yellow` at 24% over the
+background; 14% in the dark theme), no shadow. Heading "Getting started" (14 px, bold) and an x
+(hover "Hide the guide"), then six rows of 12 px type: a 12 px tick box, the step, its counter right
+in tabular figures. Done steps carry a tick; the step in hand (the first not done) is in the text
+colour, steps after it muted. Ticks show at once. The search results open over it.
+
+| # | Step | Counter | Counts |
+|---|---|---|---|
+| 1 | Lay 5 km of track where the bubbles are big | 2.3/5.0 km (hover "Track laid") | any track, blueprint or built, not switched off; the words steer, nothing checks the bubbles |
+| 2 | Put stations along it, about one a km | 1/3 (hover "Stations on the track, at least 500 m apart") | stations, blueprint or built, at least 500 m apart |
+| 3 | Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart |
+| 4 | Make a new line | none | any line |
+| 5 | Click your stations to make them stops | 1/3 (hover "Stops on the line") | stops of the line with most, goal the lesser of 3 and the built stations |
+| 6 | Give the line a train | 0/1 | any line with a train at any demand level |
+
+A step ticks the first time its check holds and stays ticked (undo never unticks it); counters keep
+following the world and cap at their goal. A later step can tick before an earlier one. After the
+sixth, a line "Your first line is open." and a Done button (closes the card for good in this game).
+
+- **Who sees it**: a new Normal game in a browser that has not finished the guide once; not a
+  sandbox, a real-network start or a `?new=1` page, and not a save made before it existed. Finishing
+  (all six ticked) is remembered in the browser's UI settings (`guide`); a game started after it has
+  no card. Switching a game to sandbox takes the card away.
+- **Kept in the save**: the header's `guide` (ticked steps as bits, `hidden`, `closed`), set by the
+  clock worker on a new game and updated by the page's `guide` message. A reload picks up where it
+  was.
+- **Hidden and back**: the x hides it in this game; Game in Settings has a row "Getting started" with
+  Show while it is hidden and not closed.
+- **Out of the way**: it hides while a confirmation or the saved games panel is open, and with F2.
+- **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
+  hand; a tap on the heading opens all six.
+
 ## Search
 
 [T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
@@ -413,7 +448,8 @@ it means). A normal game has "Switch to sandbox mode", which asks first ("Confir
 "Money cannot be turned back on in this game.", with Stay in normal mode
 and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
-not the browser's.
+not the browser's. While a normal game's [Getting started card](#getting-started-card) is hidden, a
+row "Getting started" with a Show button sits under the mode [T-1822].
 
 ## Finances tab (the Money tab until T-1819; id `money`)
 

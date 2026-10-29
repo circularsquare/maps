@@ -1,41 +1,46 @@
 ﻿# Orchestrator handoff, trainworld
 
-Orchestrator: session f9a7f88d-0531-4963-9df6-6771326e513f, name maps-45, since 2026-10-28 evening
-Updated: 2026-10-29 evening (past 600k: cycle when convenient; older detail is in this file's git history)
+Orchestrator: session f537e44c-15c4-40d9-bcb8-a6d7cafc4ace, name maps-da, since 2026-10-29 night
+Updated: 2026-10-29 night
+
+Anita 2026-10-29 night (to maps-da): tokens still low all week, pick the token-efficient method over the
+compute-efficient one; keep at least 4 of 16 cores free for the next few hours (so 12 at most, all sessions).
+maps-45 wound down and confirmed: everything landed in a945e323, no agents or trees of its own left.
+deploy.py now writes the trainsworld page without the GA include: untested, check the page after the next deploy.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master a1037e0e (plus doc commits after). LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed.
+- master a945e323. 8800 at a945e323, smoke 20/20 both shades (maps-da). Anita: "looks good".
+- LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed.
   Anita 2026-10-29: "no need to deploy yet". Deploy only on her word (she has said pushing is allowed).
 - shonei-server f74bfad deployed and pushed: /trainworld/ping + /trainworld/stats live; stats stay empty until the
   next site deploy (the ping code is efb32d52).
 - data/packs/real: all seven shared-track saves shipped 2026-10-29 (no LRT1 block, so a full settle on load).
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
-- 8800: last smoked build bcee8c05 (20/20 both shades). A rebuild at a1037e0e was started (background bdm6vykh6, log
-  scratchpad\snap_a103.log): smoke it both shades, then tell Anita.
-- 8800 rebuild recipe: `cmd /c <scratchpad>\snapbuild.cmd <explicit master hash>` (scratchpad:
+- 8800 rebuild recipe: `cmd /c <scratchpad>\snapbuild.cmd <explicit master hash>` (maps-45's scratchpad, still usable:
   C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f9a7f88d-0531-4963-9df6-6771326e513f\scratchpad),
   then `node trainworld/checks/smoke.mjs http://localhost:8800/trainworld/` and again with SMOKE_SHADE=dark.
   Never pass HEAD (it means .tw-snap's own HEAD).
 - Deploy recipe: deploy.py --version <v> --smoked; website add trainsworld/ trainworld/, commit "trainsworld",
   push; gh run watch; deploy.py --verify --page --version <v>; rclone purge the old R2 prefix.
-- Core cap 15 (Anita out 2026-10-29 evening, "feel free to use more cores"); 12 while she is up.
-- Uncommitted: Anita's TODO.md (never commit), and the in-flight agents' files below.
+- Core cap 12 while Anita is up; keep 4 free for now (her ask, 2026-10-29 night).
+- Uncommitted: Anita's TODO.md (never commit).
+- Next free task id: T-1834.
+- Old tree .tw-trees/t1734 kept for later thought (Anita). T-1801 had already landed (bcee8c05); archived.
+- Website repo: T-1833's GA-off change not committed or pushed (goes with the next deploy, on her word).
 
 ## In flight
-- T-1799 stage 2 + T-1807 landed 2ae23d3a (tree removed). 8800 at 2ae23d3a, smoke 20/20 both shades.
-- T-1813 Lines-tab drag (centre groups, between reorders/ungroups, hand order, station reorder) + group pill bullets:
-  agent t1813 (Opus), main tree, Vite 6185.
-- T-1814 shared Tokyo gets no transfer pulses: agent t1814 (Sonnet), main tree (demandClient.ts), Vite 6177.
-- Old tree .tw-trees/t1734 kept for later thought (Anita).
+- Nothing. T-1822 stage 1 (agent t1822b, done) committed; see git log.
 
 ## Next
-1. Land t1799b, rebuild 8800, smoke both shades, tell Anita what's on it.
-2. T-1799 stage 3 (four-track trunks as one ribbon); T-1815 (preview waits during solves); T-1808 (calib areas file).
-3. Smaller open: T-1794, T-1788, T-1806, T-1793, T-1778, T-1773, T-1776, T-1765's remaining zones.
-4. Line groups stage 4 (boardings in the group view) only if Anita wants it.
-5. Open asks for Anita: the bent group view, the flipped t, 55% selected dimming, Penn's 64 px Traffic dot.
+1. Rebuild 8800 at the T-1822 commit if not done, smoke both shades.
+2. T-1822 stage 2 (ripple, Opus) after stage 1. T-1827..T-1832 save fixes 4-9 (fix 5 = 30 days on the account,
+   fix 9 = hour-of-play warning, both yes from Anita).
+3. T-1799 stage 3 (four-track trunks as one ribbon); T-1815 (preview waits during solves); T-1808 (calib areas file).
+4. Smaller open: T-1794, T-1788, T-1806, T-1793, T-1778, T-1773, T-1776, T-1765's remaining zones.
+5. Line groups stage 4 (boardings in the group view) only if Anita wants it.
+6. Open asks for Anita: the bent group view, the flipped t, 55% selected dimming, Penn's 64 px Traffic dot.
 
 ## Anita's calls this session (in DECISIONS.md)
 - Attractions: order-of-magnitude is enough; budget model by page views (T-1766); no per-country term.

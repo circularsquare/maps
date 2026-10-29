@@ -108,13 +108,19 @@ export interface SaveHeader {
   /** T-1826: the save level of the build that wrote it (`TrackApi.save_level`, sim/src/track/save.rs
    * `LEVEL`); absent before it, read as 0 */
   level?: number;
+  /** T-1822: the Getting started card's progress; absent where the game has none (older saves, sandboxes) */
+  guide?: GuideSave;
 }
+
+/** T-1822: `done` is a bit per ticked step (bit 0 the first); `hidden`: closed with the x, brought back
+ * in Settings; `closed`: finished and dismissed with Done. */
+export interface GuideSave { done: number; hidden?: true; closed?: true }
 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, fleet: true, fleetFast: true,
   fleetBus: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
-  opened: true, demandFine: true, newCars: true, level: true,
+  opened: true, demandFine: true, newCars: true, level: true, guide: true,
 };
 
 /** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher

@@ -17,14 +17,14 @@ import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
 import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
-import { lineDraft, selection, tool } from "../game/ui";
+import { guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
-import { decodeSave, readStored, writePending, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
+import { decodeSave, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
@@ -309,6 +309,10 @@ async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () 
 export function makeSandbox() {
   current?.post({ kind: "sandbox" });
 }
+/** T-1822: keep the Getting started card's progress in the save. */
+export function saveGuide(guide: GuideSave) {
+  current?.post({ kind: "guide", guide });
+}
 /** Ask the clock worker an inspector question (T-031); null before the worker is there. */
 export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array | null> {
   return current ? current.query(q) : Promise.resolve(null);
@@ -424,7 +428,7 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     this.patchMode = q.get("patch") ?? "1";
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }

@@ -10,7 +10,7 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
-import type { DayLedger, GameMode, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
+import type { DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
 
@@ -131,7 +131,11 @@ export type ToClock =
    * `backupMs`: wall ms of the first backup step, 10 minutes, the others scaled with it (T-744, T-1826; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
-  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string }
+  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
+      /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
+      guide?: boolean }
+  /** T-1822: the Getting started card's progress, to keep in the save */
+  | { kind: "guide"; guide: GuideSave }
   /** T-1029: the client could not take a state as changes to the last: post the next whole */
   | { kind: "wholeState" }
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
@@ -294,6 +298,8 @@ export interface MoneyState {
   goals: Record<string, Record<string, number>>;
   /** T-706: each line's station note and the city it was chosen in (see `SaveHeader.notes`) */
   notes: Record<string, [number, string]>;
+  /** T-1822: the Getting started card's progress; absent where the game has no card */
+  guide?: GuideSave;
 }
 
 export interface ClockEdge {

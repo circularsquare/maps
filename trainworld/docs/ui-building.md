@@ -44,7 +44,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   does is under [Drawing track](#drawing-track).
   The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
-  by default [T-942].
+  by default [T-942]. A browser with nothing remembered starts at +1, the first visit's elevation
+  (ground track bridges water and ramps over other track, which brings refusals a new player has no
+  reason to expect) [T-1822].
   The tool letters work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. Three more letter keys work from any tab [T-670, `ACTION_KEYS` in
   `ui/toolKeys.ts`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when

@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1801 [P2] Settable transfer fare, default 0. Done 2026-10-29 (agent t1801), landed bcee8c05: charged at each change of line and weighed in route and mode choice; $0 matches the old figures (real save 11,388,675).
 - T-1826 [P1] Save safety fixes 1-3 from T-1823. Done 2026-10-29 (agent t1826): a game with unread parts (save `level`, unknown header field or block) is never written or uploaded; backups in tiers to about 10 min, 1 h, 1 day, 1 week plus one before an account pull; leave-page question only for unsaved changes. `checks/t1826-saves.mjs`.
 - T-1833 [P2] Keys: A Stations, S Edit stops; GA off the trainsworld page (Anita 2026-10-29). Done 2026-10-29 (agent t1833): A opens Stations, S edits stops, G adds passed stations (was A); `tools/deploy.py` writes the trainsworld page with front matter and no analytics include (redirect pages never had it). `checks/t1819-keys.mjs`.
 - T-1825 [P2] Release-legal fixes (T-1824). Done 2026-10-29 (agent t1825): Zen Maru Gothic and the RTL text plugin served locally (no Google or unpkg requests), credits for TfL, Network Rail, MTA, PATH, IDFM and ASPECT, privacy and terms pages brought current; waiting on Anita's approval of the wording and her Google Analytics call.

@@ -308,7 +308,10 @@ moves. The top bar holds the mode split (the goal number) of the city in view, o
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. Motion is allowed where it helps, never
-slowing a control (Anita 2026-10-29). **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
+slowing a control (Anita 2026-10-29). A new normal game shows a **Getting started card**, a post-it
+under the search button with six steps ticked as the player does them (track, stations, construct,
+a line, stops, a train), until the player has finished it once in the browser [T-1822;
+docs/ui-panels.md "Getting started card"]; a browser's first elevation is +1. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
 biggest car flows as arcs [T-1435]) show demand's
