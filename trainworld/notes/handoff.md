@@ -132,7 +132,14 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
 - T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
-- LANDED: T-1798 bus sim 6eee462a; t1779 tree (T-1779/1780/1781/1787) e06533ff; t1782 tree (walking rule) beea3af0;
+- 2026-10-29 afternoon, Anita: "this game is so awesome". New: T-1801 transfer fare (agent t1801, Opus, tree
+  .tw-trees/t1801 from a8d08f74, Vite 6169); T-1802 rows 4 px tighter + icons + related-lines icon + ramp button (agent
+  t1802, Sonnet, main tree, Vite 6159). Queued: T-1803 (no 4x cap for small edits), T-1804 (loading bars lag on zoom),
+  T-1805 (lag timing on 8800, after the rebuild). Bus size/pause: Anita OK.
+- LANDED t1791 (groups 1-3) a8d08f74, main WASM rebuilt, tree removed; small fixes a89c6487. Waiting only on the
+  China join, then: commit its JSONs, ship shared saves (copy t1305-shared/{nyc,par,tyo,seo,tor,sdj}_real.save and
+  london/lon_real.save to data/packs/real/), snapbuild + smoke both shades, then a lag-timing agent.
+- (was) LANDED: T-1798 bus sim 6eee462a; t1779 tree (T-1779/1780/1781/1787) e06533ff; t1782 tree (walking rule) beea3af0;
   main WASM rebuilt; trees t1779/t1782 removed. t1791 tree (groups stages 1-3) being brought up to master by its agent
   (LGR1 after LRT1), then land. Uncommitted in main: T-1795, T-1797, T-1798 docs/ui-map, T-1800 (running). China join's
   final steps write app/src/game/*.json: don't commit those until it reports.

@@ -100280,8 +100280,8 @@
    "iso2": "CN",
    "people": 2497431,
    "origin": [
-    111.8501,
-    34.7583
+    112.5841,
+    35.0897
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -100317,29 +100317,32 @@
      "Mianchi County",
      "Yima City",
      "Jili District"
+    ],
+    "origin_was": [
+     111.8501,
+     34.7583
     ]
    },
    "solve_region": "henan",
    "run": {
-    "run_batch": "20261025-124019-33420",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T09:08:31",
+    "gated": "2026-10-29T11:03:22",
+    "shipped": "2026-10-29T14:11:50",
     "steps": {
-     "build": 30.0,
-     "stations": 1.0,
-     "places": 1.8,
-     "coarse": 1.7,
-     "routes": 35.6,
-     "merge": 1.4,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 24.5,
+     "stations": 0.9,
+     "places": 1.3,
+     "routes": 18.5,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T12:53:09",
     "gate": {
      "warn": [
-      "osm_land_share 0.9536"
+      "osm_land_share 0.9539"
      ]
-    },
-    "gated": "2026-10-25T14:54:30",
-    "shipped": "2026-10-25T22:25:05"
+    }
    }
   },
   {
@@ -101449,8 +101452,8 @@
    "iso2": "CN",
    "people": 2422519,
    "origin": [
-    106.8203,
-    39.6434
+    107.3992,
+    40.754
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -101494,33 +101497,38 @@
      "Dengkou County",
      "Urat Rear Banner",
      "Wuda District"
+    ],
+    "origin_was": [
+     106.8203,
+     39.6434
     ]
    },
    "solve_region": "innermongolia",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T09:22:12",
+    "gated": "2026-10-29T12:02:55",
+    "shipped": "2026-10-29T14:11:50",
     "steps": {
-     "build": 80.4,
-     "stations": 2.1,
-     "places": 2.3,
-     "coarse": 26.5,
-     "routes": 103.1,
+     "build": 69.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 62.6,
      "merge": 5.6,
-     "nocar": 3.0,
-     "everyday": 1.6
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-10-25T13:52:09",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T09:28:34",
     "gate": {
      "warn": [
-      "area_km2 104468.25512478827",
+      "area_km2 104468.25464283323",
       "top_school_cell_pupils 6000.9345703125",
-      "road_snap_median_m 402.8",
+      "road_snap_median_m 399.7",
       "osm_land_share 0.9814",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-10-25T15:26:07",
-    "shipped": "2026-10-25T22:25:09"
+    }
    }
   },
   {
@@ -102376,8 +102384,8 @@
    "iso2": "CN",
    "people": 2382599,
    "origin": [
-    125.173,
-    45.4732
+    125.9864,
+    46.0568
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -102407,6 +102415,10 @@
      "Lanxi County",
      "Zhaoyuan County",
      "Zhaozhou County"
+    ],
+    "origin_was": [
+     125.173,
+     45.4732
     ]
    },
    "solve_region": "heilongjiang",
@@ -102414,32 +102426,33 @@
     "pop_vs_plan": "T-1185: the zone holds the 2020 census by township, which GHSL's older counts miss in China (people placed in their home counties, the boom towns short); the townships agree with the county census"
    },
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T09:36:39",
+    "gated": "2026-10-29T12:02:55",
+    "shipped": "2026-10-29T14:11:51",
     "steps": {
-     "build": 30.3,
-     "stations": 1.9,
-     "places": 2.7,
-     "coarse": 3.7,
-     "routes": 59.4,
-     "merge": 2.4,
-     "nocar": 2.1,
-     "everyday": 1.2
+     "build": 21.1,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 24.9,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-10-25T13:51:17",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T09:42:21",
     "gate": {
      "warn": [
       "university_rate 0.0",
-      "pop_vs_plan 0.6757986474438971",
-      "pop_vs_ghsl_other 0.6750133130658424",
-      "top_zone_jobs_share 0.11777642783045984",
+      "pop_vs_plan 0.6757986475137985",
+      "pop_vs_ghsl_other 0.6750133131356626",
+      "top_zone_jobs_share 0.11618897155171949",
       "top_school_cell_pupils 6225.39697265625",
-      "road_snap_median_m 497.6",
+      "road_snap_median_m 495.1",
       "osm_land_share 0.9504",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-10-25T15:26:07",
-    "shipped": "2026-10-25T22:25:12"
+    }
    }
   },
   {
@@ -106735,8 +106748,8 @@
    "iso2": "CN",
    "people": 2175633,
    "origin": [
-    116.6043,
-    28.2429
+    117.2053,
+    28.2853
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -106770,29 +106783,34 @@
      "Yiyang County",
      "Yuehu District",
      "Hengfeng County"
+    ],
+    "origin_was": [
+     116.6043,
+     28.2429
     ]
    },
    "solve_region": "jiangxi",
    "run": {
-    "run_batch": "20261025-124019-29608",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T09:49:54",
+    "gated": "2026-10-29T12:02:55",
+    "shipped": "2026-10-29T14:11:51",
     "steps": {
-     "build": 45.0,
-     "stations": 1.4,
-     "places": 2.2,
-     "coarse": 1.9,
-     "routes": 48.7,
-     "merge": 1.6,
-     "nocar": 2.3,
-     "everyday": 1.6
+     "build": 26.7,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 18.4,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T14:07:32",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T09:55:07",
     "gate": {
      "warn": [
-      "road_snap_median_m 309.8"
+      "road_snap_median_m 309.7"
      ]
-    },
-    "gated": "2026-10-25T14:22:04",
-    "shipped": "2026-10-25T22:25:27"
+    }
    }
   },
   {
@@ -108812,8 +108830,8 @@
    "iso2": "CN",
    "people": 2085759,
    "origin": [
-    103.097,
-    38.6194
+    102.574,
+    37.9368
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -108847,31 +108865,36 @@
      "Jinchuan District",
      "Minqin County",
      "Bairi Tibetan Autonomous County"
+    ],
+    "origin_was": [
+     103.097,
+     38.6194
     ]
    },
    "solve_region": "gansu",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:02:05",
+    "gated": "2026-10-29T12:02:56",
+    "shipped": "2026-10-29T14:11:51",
     "steps": {
-     "build": 32.6,
-     "stations": 1.0,
-     "places": 1.8,
-     "coarse": 1.6,
-     "routes": 38.8,
-     "merge": 1.4,
+     "build": 26.3,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 22.6,
+     "merge": 1.5,
      "nocar": 1.4,
-     "everyday": 0.9
+     "everyday": 1.0
     },
-    "built": "2026-10-25T14:44:51",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T10:07:25",
     "gate": {
      "warn": [
-      "area_km2 40056.844176536484",
+      "area_km2 40056.80574464831",
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.9584"
      ]
-    },
-    "gated": "2026-10-25T15:26:16",
-    "shipped": "2026-10-25T22:25:34"
+    }
    }
   },
   {
@@ -109514,8 +109537,8 @@
    "iso2": "CN",
    "people": 2060820,
    "origin": [
-    108.7953,
-    31.2215
+    108.3686,
+    30.7584
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -109541,32 +109564,36 @@
     "unit_names": [
      "Wanzhou",
      "Yunyang"
+    ],
+    "origin_was": [
+     108.7953,
+     31.2215
     ]
    },
    "solve_region": "chongqing",
    "run": {
-    "run_batch": "20261025-124019",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:14:29",
+    "gated": "2026-10-29T12:02:56",
+    "shipped": "2026-10-29T14:11:52",
     "steps": {
-     "build": 17.4,
-     "stations": 1.0,
-     "places": 1.4,
-     "coarse": 1.0,
-     "routes": 32.3,
-     "merge": 1.5,
-     "nocar": 2.0,
-     "everyday": 1.5
+     "build": 15.8,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 14.4,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-10-25T14:25:19",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T10:20:28",
     "gate": {
      "warn": [
-      "pop_vs_plan 1.2130872428494213",
-      "top_school_cell_pupils 6446.828125",
-      "drive_factor_median 2.593802640698535"
+      "pop_vs_plan 1.2130842577906502",
+      "top_school_cell_pupils 6446.73583984375",
+      "drive_factor_median 2.6346490888156313"
      ]
-    },
-    "parked": "2026-10-25T15:03:25",
-    "gated": "2026-10-25T15:56:11",
-    "shipped": "2026-10-25T22:25:36"
+    }
    },
    "gate_relax": {
     "drive_factor_median": "T-897: the mountains of Sichuan and Chongqing (the Daba, the Three Gorges, the Liangshan and the western plateau), Shaanxi's Qinling and Guangxi's karst: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows (carried by T-1185 from waz, which shared 1 of this zone's counties)"
@@ -113467,8 +113494,8 @@
    "iso2": "CN",
    "people": 1911786,
    "origin": [
-    124.2901,
-    45.4917
+    122.8497,
+    45.6212
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -113500,32 +113527,41 @@
      "Da'an City",
      "Tongyu County",
      "Zhenlai County"
+    ],
+    "origin_was": [
+     124.2901,
+     45.4917
     ]
    },
    "solve_region": "jilin",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:28:10",
+    "gated": "2026-10-29T12:10:09",
+    "shipped": "2026-10-29T14:11:52",
     "steps": {
-     "build": 33.7,
-     "stations": 1.1,
+     "build": 26.5,
+     "stations": 1.3,
      "places": 1.8,
-     "coarse": 5.4,
-     "routes": 64.1,
+     "routes": 36.2,
      "merge": 2.7,
-     "nocar": 1.9,
-     "everyday": 1.2
+     "nocar": 1.5,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T13:27:32",
+    "reason": "gate: drive_factor_median 2.0200555277086965",
+    "parked": "2026-10-29T11:50:21",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.8134641533486703",
+      "pop_vs_plan 0.8134603020999636",
       "top_school_cell_pupils 6047.89404296875",
-      "road_snap_median_m 472.6",
+      "drive_factor_median 2.0200555277086965",
+      "road_snap_median_m 472.2",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-10-25T15:26:04",
-    "shipped": "2026-10-25T22:25:49"
+    }
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02 against 2.0: the Nen and Taoer rivers and the wetlands of the Songnen plain round Baicheng leave few crossings (T-1765, 2026-10-29)"
    }
   },
   {
@@ -118821,8 +118857,8 @@
    "iso2": "CN",
    "people": 1745060,
    "origin": [
-    102.9301,
-    26.9134
+    103.7096,
+    27.3192
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -118850,30 +118886,34 @@
      "Zhaoyang",
      "Qiaojia",
      "Ludian"
+    ],
+    "origin_was": [
+     102.9301,
+     26.9134
     ]
    },
    "solve_region": "yunnan",
    "run": {
-    "run_batch": "20261025-124019",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:42:11",
+    "gated": "2026-10-29T12:02:56",
+    "shipped": "2026-10-29T14:11:52",
     "steps": {
-     "build": 12.9,
-     "stations": 1.3,
-     "places": 1.6,
-     "coarse": 0.7,
-     "routes": 23.3,
-     "merge": 1.1,
-     "nocar": 1.3,
-     "everyday": 1.1
+     "build": 11.1,
+     "stations": 0.9,
+     "places": 1.3,
+     "routes": 12.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-10-25T14:32:58",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T10:48:08",
     "gate": {
      "warn": [
-      "drive_factor_median 2.4366520830322917"
+      "drive_factor_median 2.553589458062927"
      ]
-    },
-    "parked": "2026-10-25T15:03:30",
-    "gated": "2026-10-25T15:56:24",
-    "shipped": "2026-10-25T22:26:06"
+    }
    },
    "gate_relax": {
     "drive_factor_median": "T-897: the Yunnan-Guizhou plateau, the Hengduan ranges and Guizhou's karst: roads wind round ridges, gorges and sinkholes, so a drive runs two to three times the straight line, as in the Alpine rows (carried by T-1185 from zhy, which shared 2 of this zone's counties)"
@@ -129382,8 +129422,8 @@
    "iso2": "CN",
    "people": 1337981,
    "origin": [
-    87.9961,
-    44.1566
+    93.4979,
+    42.8327
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -129419,33 +129459,38 @@
      "Barköl Kazakh Autonomous County",
      "Mori Kazakh Autonomous County",
      "Yiwu County"
+    ],
+    "origin_was": [
+     87.9961,
+     44.1566
     ]
    },
    "solve_region": "xinjiang",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:57:00",
+    "gated": "2026-10-29T12:02:57",
+    "shipped": "2026-10-29T14:11:52",
     "steps": {
-     "build": 42.8,
-     "stations": 0.9,
-     "places": 1.3,
-     "coarse": 2.9,
-     "routes": 42.0,
-     "merge": 2.0,
+     "build": 45.1,
+     "stations": 1.1,
+     "places": 1.4,
+     "routes": 36.3,
+     "merge": 2.5,
      "nocar": 1.7,
-     "everyday": 1.3
+     "everyday": 1.1
     },
-    "built": "2026-10-25T15:10:39",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T11:03:21",
     "gate": {
      "warn": [
-      "area_km2 184080.1135658148",
+      "area_km2 184080.10020138888",
       "top_school_cell_pupils 6017.32373046875",
-      "road_snap_median_m 363.9",
+      "road_snap_median_m 368.0",
       "osm_land_share 0.9866",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-10-25T15:26:22",
-    "shipped": "2026-10-25T22:26:40"
+    }
    }
   },
   {
@@ -130145,8 +130190,8 @@
    "iso2": "CN",
    "people": 1305079,
    "origin": [
-    74.3672,
-    39.5363
+    75.9894,
+    39.4738
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -130176,34 +130221,34 @@
      "Shufu County",
      "Artux City",
      "Ulugqat County"
+    ],
+    "origin_was": [
+     74.3672,
+     39.5363
     ]
    },
    "solve_region": "xinjiang",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:56:11",
+    "gated": "2026-10-29T12:02:57",
+    "shipped": "2026-10-29T14:11:53",
     "steps": {
-     "build": 18.6,
-     "stations": 1.0,
-     "places": 1.3,
-     "coarse": 0.7,
-     "routes": 18.3,
-     "merge": 1.0,
+     "build": 20.0,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 14.0,
+     "merge": 0.8,
      "nocar": 1.4,
      "everyday": 1.1
     },
-    "built": "2026-10-25T15:10:26",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T11:03:22",
     "gate": {
      "warn": [
-      "browser None",
       "top_school_cell_pupils 6005.89208984375"
      ]
-    },
-    "parked": "2026-10-25T15:21:12",
-    "gated": "2026-10-25T16:59:23",
-    "shipped": "2026-10-25T22:26:43"
-   },
-   "gate_relax": {
-    "browser": "T-1185: the Gate test line crosses the Tarim basin's empty land round Kashgar's zone origin, so no school trip rides it (work, shopping and social do); the page's other checks pass"
+    }
    }
   },
   {
@@ -142951,8 +142996,8 @@
    "iso2": "CN",
    "people": 681847,
    "origin": [
-    87.1974,
-    46.5682
+    88.1373,
+    47.85
    ],
    "tz": "Asia/Shanghai",
    "utc_offset": 8,
@@ -142988,36 +143033,36 @@
      "Burqin County",
      "Qinghe County",
      "Jeminay County"
+    ],
+    "origin_was": [
+     87.1974,
+     46.5682
     ]
    },
    "solve_region": "xinjiang",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261029-090125",
+    "built": "2026-10-29T10:56:56",
+    "gated": "2026-10-29T12:02:57",
+    "shipped": "2026-10-29T14:11:53",
     "steps": {
-     "build": 58.8,
-     "stations": 1.3,
+     "build": 53.6,
+     "stations": 1.0,
      "places": 1.9,
-     "coarse": 3.6,
-     "routes": 39.9,
-     "merge": 1.9,
-     "nocar": 2.0,
-     "everyday": 1.3
+     "routes": 24.9,
+     "merge": 1.8,
+     "nocar": 1.5,
+     "everyday": 1.2
     },
-    "built": "2026-10-25T15:13:26",
+    "reason": "register failed: release\\\\market_pack.exe', '--root', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld', '--out', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.json', '--only', 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\market_rows.only.json']' returned non-zero exit status 101.",
+    "parked": "2026-10-29T11:03:22",
     "gate": {
      "warn": [
-      "browser None",
-      "area_km2 117659.64114347819",
-      "road_snap_median_m 382.6",
+      "area_km2 117659.64941784316",
+      "road_snap_median_m 378.0",
       "fleet_range 2"
      ]
-    },
-    "parked": "2026-10-25T15:21:13",
-    "gated": "2026-10-25T16:59:23",
-    "shipped": "2026-10-25T22:27:27"
-   },
-   "gate_relax": {
-    "browser": "T-1185: the Gate test line runs through the plan origin (GHSL's densest pixel, 87.20 E 46.57 N), desert 130 km south of Altay city where the township census puts almost no one, so it carries no rider; the pack (668,499 people, Altay city and Burqin) passes every other check. The origin wants moving to Altay city (a rebuild)"
+    }
    }
   },
   {

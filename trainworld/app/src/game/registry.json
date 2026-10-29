@@ -15762,6 +15762,94 @@
       {
         "name": "Tracadie",
         "regionName": "Tracadie region"
+      },
+      {
+        "name": "Jiyuan",
+        "regionName": "Jiyuan region"
+      },
+      {
+        "name": "Linhe",
+        "regionName": "Linhe region"
+      },
+      {
+        "name": "Zhaodong",
+        "regionName": "Zhaodong region"
+      },
+      {
+        "name": "Guixi",
+        "regionName": "Guixi region"
+      },
+      {
+        "name": "Liangzhou",
+        "regionName": "Liangzhou region"
+      },
+      {
+        "name": "Wanzhou",
+        "regionName": "Wanzhou region"
+      },
+      {
+        "name": "Taobei",
+        "regionName": "Taobei region"
+      },
+      {
+        "name": "Zhaoyang",
+        "regionName": "Zhaoyang region"
+      },
+      {
+        "name": "Yizhou, Fukang",
+        "regionName": "Yizhou, Fukang region"
+      },
+      {
+        "name": "Kashgar",
+        "regionName": "Kashgar region"
+      },
+      {
+        "name": "Altay",
+        "regionName": "Altay region"
+      },
+      {
+        "name": "Linhe",
+        "regionName": "Linhe region"
+      },
+      {
+        "name": "Zhaodong",
+        "regionName": "Zhaodong region"
+      },
+      {
+        "name": "Guixi",
+        "regionName": "Guixi region"
+      },
+      {
+        "name": "Liangzhou",
+        "regionName": "Liangzhou region"
+      },
+      {
+        "name": "Wanzhou",
+        "regionName": "Wanzhou region"
+      },
+      {
+        "name": "Taobei",
+        "regionName": "Taobei region"
+      },
+      {
+        "name": "Zhaoyang",
+        "regionName": "Zhaoyang region"
+      },
+      {
+        "name": "Yizhou, Fukang",
+        "regionName": "Yizhou, Fukang region"
+      },
+      {
+        "name": "Kashgar",
+        "regionName": "Kashgar region"
+      },
+      {
+        "name": "Altay",
+        "regionName": "Altay region"
+      },
+      {
+        "name": "Taobei",
+        "regionName": "Taobei region"
       }
     ],
     "rule": {
@@ -42047,7 +42135,7 @@
       ],
       "place": 2621,
       "country": "CN",
-      "localTrips": 29492928.0,
+      "localTrips": 29595225.0,
       "realm": "cn-southwest"
     },
     {
@@ -42572,7 +42660,7 @@
       ],
       "place": 2644,
       "country": "CN",
-      "localTrips": 14657080.0,
+      "localTrips": 14660232.0,
       "realm": "cn-northeast"
     },
     {
@@ -42722,7 +42810,7 @@
       ],
       "place": 2657,
       "country": "CN",
-      "localTrips": 10178692.0,
+      "localTrips": 10177906.0,
       "realm": "cn-northwest"
     },
     {
@@ -42747,7 +42835,7 @@
       ],
       "place": 2670,
       "country": "CN",
-      "localTrips": 15694337.0,
+      "localTrips": 15699532.0,
       "realm": "cn-east"
     },
     {
@@ -42772,7 +42860,7 @@
       ],
       "place": 2671,
       "country": "CN",
-      "localTrips": 3040722.0,
+      "localTrips": 3063018.0,
       "realm": "cn-east"
     },
     {
@@ -42797,7 +42885,7 @@
       ],
       "place": 2672,
       "country": "CN",
-      "localTrips": 5558409.0,
+      "localTrips": 5559686.0,
       "realm": "cn-east"
     },
     {
@@ -42822,7 +42910,7 @@
       ],
       "place": 2673,
       "country": "CN",
-      "localTrips": 14664994.0,
+      "localTrips": 14666131.0,
       "realm": "cn-northeast"
     },
     {
@@ -42847,7 +42935,7 @@
       ],
       "place": 2674,
       "country": "CN",
-      "localTrips": 5489214.0,
+      "localTrips": 5487961.0,
       "realm": "cn-northeast"
     },
     {
@@ -42922,7 +43010,7 @@
       ],
       "place": 2677,
       "country": "CN",
-      "localTrips": 8750222.0,
+      "localTrips": 8750873.0,
       "realm": "cn-northwest"
     },
     {
@@ -42947,7 +43035,7 @@
       ],
       "place": 2678,
       "country": "CN",
-      "localTrips": 15617482.0,
+      "localTrips": 15616849.0,
       "realm": "cn-southwest"
     },
     {
@@ -42972,7 +43060,7 @@
       ],
       "place": 2679,
       "country": "CN",
-      "localTrips": 6616884.0,
+      "localTrips": 6619881.0,
       "realm": "cn-north"
     },
     {
@@ -42997,7 +43085,7 @@
       ],
       "place": 2680,
       "country": "CN",
-      "localTrips": 7445509.0,
+      "localTrips": 7446010.0,
       "realm": "cn-north"
     },
     {
@@ -43623,7 +43711,7 @@
       "place": 2710,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 23943393.0
+      "localTrips": 23943392.0
     },
     {
       "id": "deg",
@@ -43648,7 +43736,7 @@
       "place": 2711,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 3215923.0
+      "localTrips": 3215924.0
     },
     {
       "id": "any",
@@ -43673,7 +43761,7 @@
       "place": 2712,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 6366237.0
+      "localTrips": 6366236.0
     },
     {
       "id": "xuc",
@@ -43698,7 +43786,7 @@
       "place": 2713,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 5482870.0
+      "localTrips": 5482872.0
     },
     {
       "id": "luo",
@@ -43723,7 +43811,7 @@
       "place": 2714,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 3462101.0
+      "localTrips": 3462102.0
     },
     {
       "id": "luy",
@@ -43748,7 +43836,7 @@
       "place": 2715,
       "country": "CN",
       "realm": "cn-central",
-      "localTrips": 6799960.0
+      "localTrips": 6800845.0
     },
     {
       "id": "kai",
@@ -45719,7 +45807,7 @@
       ],
       "place": 2813,
       "country": "CN",
-      "localTrips": 4130548.0,
+      "localTrips": 4130549.0,
       "realm": "cn-east"
     },
     {
@@ -48241,7 +48329,7 @@
       ],
       "place": 2911,
       "country": "CN",
-      "localTrips": 2466209.0,
+      "localTrips": 2464131.0,
       "realm": "cn-northeast"
     },
     {
@@ -48319,7 +48407,7 @@
       ],
       "place": 2914,
       "country": "CN",
-      "localTrips": 5865446.0,
+      "localTrips": 5865117.0,
       "realm": "cn-northeast"
     },
     {
@@ -48449,7 +48537,7 @@
       ],
       "place": 2919,
       "country": "CN",
-      "localTrips": 4803238.0,
+      "localTrips": 4799477.0,
       "realm": "cn-northeast"
     },
     {
@@ -48501,7 +48589,7 @@
       ],
       "place": 2921,
       "country": "CN",
-      "localTrips": 3645109.0,
+      "localTrips": 3645002.0,
       "realm": "cn-northeast"
     },
     {
@@ -48557,32 +48645,6 @@
       "realm": "cn-northeast"
     },
     {
-      "id": "tbe",
-      "name": "Taobei",
-      "kind": "zone",
-      "origin": {
-        "lon": 124.2901,
-        "lat": 45.4917
-      },
-      "center": [
-        124.2901,
-        45.4917
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        121.609,
-        44.213,
-        124.393,
-        46.322
-      ],
-      "place": 2924,
-      "country": "CN",
-      "localTrips": 4269146.0,
-      "realm": "cn-northeast"
-    },
-    {
       "id": "nna",
       "name": "Nong'an",
       "kind": "zone",
@@ -48605,7 +48667,7 @@
       ],
       "place": 2925,
       "country": "CN",
-      "localTrips": 4157502.0,
+      "localTrips": 4196166.0,
       "realm": "cn-northeast"
     },
     {
@@ -48631,7 +48693,7 @@
       ],
       "place": 2926,
       "country": "CN",
-      "localTrips": 4368936.0,
+      "localTrips": 4368940.0,
       "realm": "cn-northeast"
     },
     {
@@ -48683,7 +48745,7 @@
       ],
       "place": 2928,
       "country": "CN",
-      "localTrips": 4038085.0,
+      "localTrips": 4031800.0,
       "realm": "cn-northeast"
     },
     {
@@ -48735,7 +48797,7 @@
       ],
       "place": 2930,
       "country": "CN",
-      "localTrips": 3821996.0,
+      "localTrips": 3821470.0,
       "realm": "cn-northeast"
     },
     {
@@ -48787,7 +48849,7 @@
       ],
       "place": 2932,
       "country": "CN",
-      "localTrips": 3723856.0,
+      "localTrips": 3723964.0,
       "realm": "cn-northeast"
     },
     {
@@ -48917,7 +48979,7 @@
       ],
       "place": 2937,
       "country": "CN",
-      "localTrips": 2067305.0,
+      "localTrips": 2069089.0,
       "realm": "cn-northeast"
     },
     {
@@ -51127,7 +51189,7 @@
       ],
       "place": 3183,
       "country": "CN",
-      "localTrips": 6406774.0,
+      "localTrips": 6488626.0,
       "realm": "cn-east"
     },
     {
@@ -51153,7 +51215,7 @@
       ],
       "place": 3184,
       "country": "CN",
-      "localTrips": 5750236.0,
+      "localTrips": 5749192.0,
       "realm": "cn-east"
     },
     {
@@ -51179,7 +51241,7 @@
       ],
       "place": 3185,
       "country": "CN",
-      "localTrips": 6194350.0,
+      "localTrips": 6194582.0,
       "realm": "cn-east"
     },
     {
@@ -51205,7 +51267,7 @@
       ],
       "place": 3186,
       "country": "CN",
-      "localTrips": 4644142.0,
+      "localTrips": 4645658.0,
       "realm": "cn-east"
     },
     {
@@ -51231,7 +51293,7 @@
       ],
       "place": 3187,
       "country": "CN",
-      "localTrips": 5925557.0,
+      "localTrips": 5924931.0,
       "realm": "cn-east"
     },
     {
@@ -51257,33 +51319,7 @@
       ],
       "place": 3188,
       "country": "CN",
-      "localTrips": 5611225.0,
-      "realm": "cn-east"
-    },
-    {
-      "id": "gxi",
-      "name": "Guixi",
-      "kind": "zone",
-      "origin": {
-        "lon": 116.6043,
-        "lat": 28.2429
-      },
-      "center": [
-        116.6043,
-        28.2429
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        116.319,
-        27.829,
-        117.797,
-        28.806
-      ],
-      "place": 3189,
-      "country": "CN",
-      "localTrips": 5696744.0,
+      "localTrips": 5630699.0,
       "realm": "cn-east"
     },
     {
@@ -51309,7 +51345,7 @@
       ],
       "place": 3190,
       "country": "CN",
-      "localTrips": 4508451.0,
+      "localTrips": 4509859.0,
       "realm": "cn-east"
     },
     {
@@ -51335,7 +51371,7 @@
       ],
       "place": 3191,
       "country": "CN",
-      "localTrips": 5537187.0,
+      "localTrips": 5539319.0,
       "realm": "cn-east"
     },
     {
@@ -51361,7 +51397,7 @@
       ],
       "place": 3192,
       "country": "CN",
-      "localTrips": 5012138.0,
+      "localTrips": 5030462.0,
       "realm": "cn-east"
     },
     {
@@ -51387,7 +51423,7 @@
       ],
       "place": 3193,
       "country": "CN",
-      "localTrips": 4576741.0,
+      "localTrips": 4575091.0,
       "realm": "cn-east"
     },
     {
@@ -51413,7 +51449,7 @@
       ],
       "place": 3194,
       "country": "CN",
-      "localTrips": 4385183.0,
+      "localTrips": 4424242.0,
       "realm": "cn-east"
     },
     {
@@ -51439,7 +51475,7 @@
       ],
       "place": 3195,
       "country": "CN",
-      "localTrips": 3419009.0,
+      "localTrips": 3419271.0,
       "realm": "cn-east"
     },
     {
@@ -51465,7 +51501,7 @@
       ],
       "place": 3196,
       "country": "CN",
-      "localTrips": 3602163.0,
+      "localTrips": 3609341.0,
       "realm": "cn-east"
     },
     {
@@ -51491,7 +51527,7 @@
       ],
       "place": 3197,
       "country": "CN",
-      "localTrips": 3734418.0,
+      "localTrips": 3733153.0,
       "realm": "cn-east"
     },
     {
@@ -51517,7 +51553,7 @@
       ],
       "place": 3198,
       "country": "CN",
-      "localTrips": 3483151.0,
+      "localTrips": 3481965.0,
       "realm": "cn-east"
     },
     {
@@ -51543,7 +51579,7 @@
       ],
       "place": 3199,
       "country": "CN",
-      "localTrips": 3241057.0,
+      "localTrips": 3246288.0,
       "realm": "cn-east"
     },
     {
@@ -51569,7 +51605,7 @@
       ],
       "place": 3200,
       "country": "CN",
-      "localTrips": 2492381.0,
+      "localTrips": 2493363.0,
       "realm": "cn-east"
     },
     {
@@ -51595,7 +51631,7 @@
       ],
       "place": 3201,
       "country": "CN",
-      "localTrips": 2885323.0,
+      "localTrips": 2886282.0,
       "realm": "cn-east"
     },
     {
@@ -51621,7 +51657,7 @@
       ],
       "place": 3202,
       "country": "CN",
-      "localTrips": 2456512.0,
+      "localTrips": 2473981.0,
       "realm": "cn-east"
     },
     {
@@ -51647,7 +51683,7 @@
       ],
       "place": 3203,
       "country": "CN",
-      "localTrips": 1964583.0,
+      "localTrips": 1965230.0,
       "realm": "cn-east"
     },
     {
@@ -51673,7 +51709,7 @@
       ],
       "place": 3204,
       "country": "CN",
-      "localTrips": 2462683.0,
+      "localTrips": 2462539.0,
       "realm": "cn-east"
     },
     {
@@ -51699,7 +51735,7 @@
       ],
       "place": 3205,
       "country": "CN",
-      "localTrips": 1861587.0,
+      "localTrips": 1863781.0,
       "realm": "cn-east"
     },
     {
@@ -51725,59 +51761,7 @@
       ],
       "place": 3206,
       "country": "CN",
-      "localTrips": 2864013.0,
-      "realm": "cn-northeast"
-    },
-    {
-      "id": "lhe",
-      "name": "Linhe",
-      "kind": "zone",
-      "origin": {
-        "lon": 106.8203,
-        "lat": 39.6434
-      },
-      "center": [
-        106.8203,
-        39.6434
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        105.189,
-        38.356,
-        109.922,
-        42.479
-      ],
-      "place": 3207,
-      "country": "CN",
-      "localTrips": 6493742.0,
-      "realm": "cn-north"
-    },
-    {
-      "id": "zag",
-      "name": "Zhaodong",
-      "kind": "zone",
-      "origin": {
-        "lon": 125.173,
-        "lat": 45.4732
-      },
-      "center": [
-        125.173,
-        45.4732
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        123.968,
-        45.362,
-        126.662,
-        46.658
-      ],
-      "place": 3208,
-      "country": "CN",
-      "localTrips": 4207372.0,
+      "localTrips": 2864061.0,
       "realm": "cn-northeast"
     },
     {
@@ -51803,7 +51787,7 @@
       ],
       "place": 3209,
       "country": "CN",
-      "localTrips": 5713316.0,
+      "localTrips": 5700024.0,
       "realm": "cn-north"
     },
     {
@@ -51855,7 +51839,7 @@
       ],
       "place": 3211,
       "country": "CN",
-      "localTrips": 5340040.0,
+      "localTrips": 5340081.0,
       "realm": "cn-northeast"
     },
     {
@@ -51881,7 +51865,7 @@
       ],
       "place": 3212,
       "country": "CN",
-      "localTrips": 5819464.0,
+      "localTrips": 5823723.0,
       "realm": "cn-north"
     },
     {
@@ -51907,7 +51891,7 @@
       ],
       "place": 3213,
       "country": "CN",
-      "localTrips": 5711694.0,
+      "localTrips": 5721214.0,
       "realm": "cn-northeast"
     },
     {
@@ -51933,7 +51917,7 @@
       ],
       "place": 3214,
       "country": "CN",
-      "localTrips": 5992783.0,
+      "localTrips": 5986459.0,
       "realm": "cn-north"
     },
     {
@@ -51959,7 +51943,7 @@
       ],
       "place": 3215,
       "country": "CN",
-      "localTrips": 4898417.0,
+      "localTrips": 4898563.0,
       "realm": "cn-northeast"
     },
     {
@@ -51985,7 +51969,7 @@
       ],
       "place": 3216,
       "country": "CN",
-      "localTrips": 4969051.0,
+      "localTrips": 4967751.0,
       "realm": "cn-northeast"
     },
     {
@@ -52011,7 +51995,7 @@
       ],
       "place": 3217,
       "country": "CN",
-      "localTrips": 4053826.0,
+      "localTrips": 4054214.0,
       "realm": "cn-northeast"
     },
     {
@@ -52037,7 +52021,7 @@
       ],
       "place": 3218,
       "country": "CN",
-      "localTrips": 4655130.0,
+      "localTrips": 4655595.0,
       "realm": "cn-northeast"
     },
     {
@@ -52089,7 +52073,7 @@
       ],
       "place": 3220,
       "country": "CN",
-      "localTrips": 4927304.0,
+      "localTrips": 4928074.0,
       "realm": "cn-north"
     },
     {
@@ -52115,7 +52099,7 @@
       ],
       "place": 3222,
       "country": "CN",
-      "localTrips": 4625994.0,
+      "localTrips": 4625957.0,
       "realm": "cn-northeast"
     },
     {
@@ -52141,7 +52125,7 @@
       ],
       "place": 3223,
       "country": "CN",
-      "localTrips": 4517443.0,
+      "localTrips": 4517795.0,
       "realm": "cn-northeast"
     },
     {
@@ -52167,7 +52151,7 @@
       ],
       "place": 3224,
       "country": "CN",
-      "localTrips": 4184080.0,
+      "localTrips": 4191288.0,
       "realm": "cn-north"
     },
     {
@@ -52193,7 +52177,7 @@
       ],
       "place": 3225,
       "country": "CN",
-      "localTrips": 3663561.0,
+      "localTrips": 3691309.0,
       "realm": "cn-northeast"
     },
     {
@@ -52219,7 +52203,7 @@
       ],
       "place": 3226,
       "country": "CN",
-      "localTrips": 3676550.0,
+      "localTrips": 3694193.0,
       "realm": "cn-northeast"
     },
     {
@@ -52245,7 +52229,7 @@
       ],
       "place": 3227,
       "country": "CN",
-      "localTrips": 3651422.0,
+      "localTrips": 3651398.0,
       "realm": "cn-north"
     },
     {
@@ -52271,7 +52255,7 @@
       ],
       "place": 3228,
       "country": "CN",
-      "localTrips": 2918535.0,
+      "localTrips": 2918849.0,
       "realm": "cn-northeast"
     },
     {
@@ -52297,7 +52281,7 @@
       ],
       "place": 3229,
       "country": "CN",
-      "localTrips": 3624718.0,
+      "localTrips": 3624199.0,
       "realm": "cn-north"
     },
     {
@@ -52323,7 +52307,7 @@
       ],
       "place": 3230,
       "country": "CN",
-      "localTrips": 2979027.0,
+      "localTrips": 2978438.0,
       "realm": "cn-northeast"
     },
     {
@@ -52349,7 +52333,7 @@
       ],
       "place": 3231,
       "country": "CN",
-      "localTrips": 3154558.0,
+      "localTrips": 3160283.0,
       "realm": "cn-north"
     },
     {
@@ -52375,7 +52359,7 @@
       ],
       "place": 3232,
       "country": "CN",
-      "localTrips": 2804358.0,
+      "localTrips": 2808632.0,
       "realm": "cn-northeast"
     },
     {
@@ -52401,7 +52385,7 @@
       ],
       "place": 3233,
       "country": "CN",
-      "localTrips": 2285782.0,
+      "localTrips": 2285721.0,
       "realm": "cn-northeast"
     },
     {
@@ -52427,7 +52411,7 @@
       ],
       "place": 3234,
       "country": "CN",
-      "localTrips": 1778732.0,
+      "localTrips": 1778364.0,
       "realm": "cn-northeast"
     },
     {
@@ -52453,7 +52437,7 @@
       ],
       "place": 3235,
       "country": "CN",
-      "localTrips": 2156818.0,
+      "localTrips": 2174727.0,
       "realm": "cn-north"
     },
     {
@@ -52479,7 +52463,7 @@
       ],
       "place": 3236,
       "country": "CN",
-      "localTrips": 1915005.0,
+      "localTrips": 1913844.0,
       "realm": "cn-north"
     },
     {
@@ -52505,7 +52489,7 @@
       ],
       "place": 3237,
       "country": "CN",
-      "localTrips": 2380868.0,
+      "localTrips": 2382829.0,
       "realm": "cn-north"
     },
     {
@@ -52557,7 +52541,7 @@
       ],
       "place": 3239,
       "country": "CN",
-      "localTrips": 1723755.0,
+      "localTrips": 1723643.0,
       "realm": "cn-northeast"
     },
     {
@@ -52583,7 +52567,7 @@
       ],
       "place": 3240,
       "country": "CN",
-      "localTrips": 1602884.0,
+      "localTrips": 1610686.0,
       "realm": "cn-northeast"
     },
     {
@@ -52609,7 +52593,7 @@
       ],
       "place": 3241,
       "country": "CN",
-      "localTrips": 1631809.0,
+      "localTrips": 1631738.0,
       "realm": "cn-north"
     },
     {
@@ -52635,7 +52619,7 @@
       ],
       "place": 3242,
       "country": "CN",
-      "localTrips": 643150.0,
+      "localTrips": 646159.0,
       "realm": "cn-north"
     },
     {
@@ -52739,7 +52723,7 @@
       ],
       "place": 3246,
       "country": "CN",
-      "localTrips": 5196084.0,
+      "localTrips": 5196083.0,
       "realm": "cn-central"
     },
     {
@@ -52765,7 +52749,7 @@
       ],
       "place": 3247,
       "country": "CN",
-      "localTrips": 4685640.0,
+      "localTrips": 4685641.0,
       "realm": "cn-central"
     },
     {
@@ -52817,7 +52801,7 @@
       ],
       "place": 3249,
       "country": "CN",
-      "localTrips": 4215301.0,
+      "localTrips": 4215328.0,
       "realm": "cn-central"
     },
     {
@@ -52895,7 +52879,7 @@
       ],
       "place": 3252,
       "country": "CN",
-      "localTrips": 3369222.0,
+      "localTrips": 3369225.0,
       "realm": "cn-central"
     },
     {
@@ -52973,7 +52957,7 @@
       ],
       "place": 3255,
       "country": "CN",
-      "localTrips": 1925738.0,
+      "localTrips": 1925746.0,
       "realm": "cn-central"
     },
     {
@@ -53025,7 +53009,7 @@
       ],
       "place": 3257,
       "country": "CN",
-      "localTrips": 1952068.0,
+      "localTrips": 1952071.0,
       "realm": "cn-central"
     },
     {
@@ -53079,32 +53063,6 @@
       "country": "CN",
       "localTrips": 7478370.0,
       "realm": "cn-northwest"
-    },
-    {
-      "id": "jyu",
-      "name": "Jiyuan",
-      "kind": "zone",
-      "origin": {
-        "lon": 111.8501,
-        "lat": 34.7583
-      },
-      "center": [
-        111.8501,
-        34.7583
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        110.556,
-        33.531,
-        112.789,
-        35.3
-      ],
-      "place": 3261,
-      "country": "CN",
-      "localTrips": 6438328.0,
-      "realm": "cn-central"
     },
     {
       "id": "lgy",
@@ -53285,7 +53243,7 @@
       ],
       "place": 3269,
       "country": "CN",
-      "localTrips": 5815473.0,
+      "localTrips": 5815474.0,
       "realm": "cn-central"
     },
     {
@@ -53311,7 +53269,7 @@
       ],
       "place": 3270,
       "country": "CN",
-      "localTrips": 5822312.0,
+      "localTrips": 5822313.0,
       "realm": "cn-central"
     },
     {
@@ -53467,7 +53425,7 @@
       ],
       "place": 3276,
       "country": "CN",
-      "localTrips": 8278153.0,
+      "localTrips": 8278151.0,
       "realm": "cn-central"
     },
     {
@@ -53493,7 +53451,7 @@
       ],
       "place": 3278,
       "country": "CN",
-      "localTrips": 6994396.0,
+      "localTrips": 6994397.0,
       "realm": "cn-central"
     },
     {
@@ -53623,7 +53581,7 @@
       ],
       "place": 3283,
       "country": "CN",
-      "localTrips": 6073724.0,
+      "localTrips": 6073941.0,
       "realm": "cn-central"
     },
     {
@@ -53675,7 +53633,7 @@
       ],
       "place": 3285,
       "country": "CN",
-      "localTrips": 5637024.0,
+      "localTrips": 5637025.0,
       "realm": "cn-central"
     },
     {
@@ -53779,7 +53737,7 @@
       ],
       "place": 3291,
       "country": "CN",
-      "localTrips": 5831635.0,
+      "localTrips": 5831636.0,
       "realm": "cn-central"
     },
     {
@@ -53857,7 +53815,7 @@
       ],
       "place": 3294,
       "country": "CN",
-      "localTrips": 5484046.0,
+      "localTrips": 5484044.0,
       "realm": "cn-central"
     },
     {
@@ -53961,7 +53919,7 @@
       ],
       "place": 3298,
       "country": "CN",
-      "localTrips": 5122907.0,
+      "localTrips": 5123213.0,
       "realm": "cn-central"
     },
     {
@@ -53987,7 +53945,7 @@
       ],
       "place": 3299,
       "country": "CN",
-      "localTrips": 5148327.0,
+      "localTrips": 5150618.0,
       "realm": "cn-central"
     },
     {
@@ -54117,7 +54075,7 @@
       ],
       "place": 3305,
       "country": "CN",
-      "localTrips": 5566216.0,
+      "localTrips": 5566217.0,
       "realm": "cn-central"
     },
     {
@@ -54273,7 +54231,7 @@
       ],
       "place": 3312,
       "country": "CN",
-      "localTrips": 4834367.0,
+      "localTrips": 4834368.0,
       "realm": "cn-central"
     },
     {
@@ -54299,7 +54257,7 @@
       ],
       "place": 3313,
       "country": "CN",
-      "localTrips": 3930253.0,
+      "localTrips": 3930251.0,
       "realm": "cn-central"
     },
     {
@@ -54351,7 +54309,7 @@
       ],
       "place": 3315,
       "country": "CN",
-      "localTrips": 4258803.0,
+      "localTrips": 4258804.0,
       "realm": "cn-central"
     },
     {
@@ -54481,7 +54439,7 @@
       ],
       "place": 3320,
       "country": "CN",
-      "localTrips": 4600929.0,
+      "localTrips": 4600930.0,
       "realm": "cn-central"
     },
     {
@@ -54533,7 +54491,7 @@
       ],
       "place": 3322,
       "country": "CN",
-      "localTrips": 4317033.0,
+      "localTrips": 4317034.0,
       "realm": "cn-central"
     },
     {
@@ -54611,7 +54569,7 @@
       ],
       "place": 3325,
       "country": "CN",
-      "localTrips": 3893916.0,
+      "localTrips": 3895117.0,
       "realm": "cn-central"
     },
     {
@@ -54793,7 +54751,7 @@
       ],
       "place": 3335,
       "country": "CN",
-      "localTrips": 3189028.0,
+      "localTrips": 3189027.0,
       "realm": "cn-central"
     },
     {
@@ -55183,7 +55141,7 @@
       ],
       "place": 3353,
       "country": "CN",
-      "localTrips": 3756159.0,
+      "localTrips": 3756166.0,
       "realm": "cn-central"
     },
     {
@@ -55235,7 +55193,7 @@
       ],
       "place": 3355,
       "country": "CN",
-      "localTrips": 3496506.0,
+      "localTrips": 3496505.0,
       "realm": "cn-central"
     },
     {
@@ -55469,7 +55427,7 @@
       ],
       "place": 3366,
       "country": "CN",
-      "localTrips": 2934868.0,
+      "localTrips": 2934869.0,
       "realm": "cn-central"
     },
     {
@@ -55521,7 +55479,7 @@
       ],
       "place": 3368,
       "country": "CN",
-      "localTrips": 2583744.0,
+      "localTrips": 2583746.0,
       "realm": "cn-central"
     },
     {
@@ -55625,7 +55583,7 @@
       ],
       "place": 3374,
       "country": "CN",
-      "localTrips": 2675181.0,
+      "localTrips": 2675179.0,
       "realm": "cn-central"
     },
     {
@@ -55677,7 +55635,7 @@
       ],
       "place": 3377,
       "country": "CN",
-      "localTrips": 2059271.0,
+      "localTrips": 2059274.0,
       "realm": "cn-central"
     },
     {
@@ -55859,7 +55817,7 @@
       ],
       "place": 3385,
       "country": "CN",
-      "localTrips": 1599059.0,
+      "localTrips": 1599058.0,
       "realm": "cn-central"
     },
     {
@@ -55989,7 +55947,7 @@
       ],
       "place": 3391,
       "country": "CN",
-      "localTrips": 5249515.0,
+      "localTrips": 5322267.0,
       "realm": "cn-southwest"
     },
     {
@@ -56015,7 +55973,7 @@
       ],
       "place": 3392,
       "country": "CN",
-      "localTrips": 3102145.0,
+      "localTrips": 3138705.0,
       "realm": "cn-southwest"
     },
     {
@@ -56067,7 +56025,7 @@
       ],
       "place": 3394,
       "country": "CN",
-      "localTrips": 4502418.0,
+      "localTrips": 4516787.0,
       "realm": "cn-southwest"
     },
     {
@@ -56093,7 +56051,7 @@
       ],
       "place": 3395,
       "country": "CN",
-      "localTrips": 3078096.0,
+      "localTrips": 3095403.0,
       "realm": "cn-southwest"
     },
     {
@@ -56119,7 +56077,7 @@
       ],
       "place": 3396,
       "country": "CN",
-      "localTrips": 2000588.0,
+      "localTrips": 2004226.0,
       "realm": "cn-southwest"
     },
     {
@@ -56171,7 +56129,7 @@
       ],
       "place": 3398,
       "country": "CN",
-      "localTrips": 3984779.0,
+      "localTrips": 4021852.0,
       "realm": "cn-southwest"
     },
     {
@@ -56483,7 +56441,7 @@
       ],
       "place": 3432,
       "country": "CN",
-      "localTrips": 4409270.0,
+      "localTrips": 4436544.0,
       "realm": "cn-southwest"
     },
     {
@@ -56717,7 +56675,7 @@
       ],
       "place": 3458,
       "country": "CN",
-      "localTrips": 3262324.0,
+      "localTrips": 3265482.0,
       "realm": "cn-southwest"
     },
     {
@@ -56743,7 +56701,7 @@
       ],
       "place": 3466,
       "country": "CN",
-      "localTrips": 3373052.0,
+      "localTrips": 3411046.0,
       "realm": "cn-southwest"
     },
     {
@@ -56769,7 +56727,7 @@
       ],
       "place": 3468,
       "country": "CN",
-      "localTrips": 2948980.0,
+      "localTrips": 2948836.0,
       "realm": "cn-southwest"
     },
     {
@@ -56821,7 +56779,7 @@
       ],
       "place": 3477,
       "country": "CN",
-      "localTrips": 3249880.0,
+      "localTrips": 3249677.0,
       "realm": "cn-southwest"
     },
     {
@@ -56899,7 +56857,7 @@
       ],
       "place": 3484,
       "country": "CN",
-      "localTrips": 1254379.0,
+      "localTrips": 1253297.0,
       "realm": "cn-southwest"
     },
     {
@@ -56925,7 +56883,7 @@
       ],
       "place": 3485,
       "country": "CN",
-      "localTrips": 6374917.0,
+      "localTrips": 6384164.0,
       "realm": "cn-northwest"
     },
     {
@@ -56951,7 +56909,7 @@
       ],
       "place": 3486,
       "country": "CN",
-      "localTrips": 6540426.0,
+      "localTrips": 6541650.0,
       "realm": "cn-northwest"
     },
     {
@@ -56981,32 +56939,6 @@
       "realm": "cn-northwest"
     },
     {
-      "id": "lgz",
-      "name": "Liangzhou",
-      "kind": "zone",
-      "origin": {
-        "lon": 103.097,
-        "lat": 38.6194
-      },
-      "center": [
-        103.097,
-        38.6194
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        101.309,
-        36.595,
-        104.224,
-        39.479
-      ],
-      "place": 3488,
-      "country": "CN",
-      "localTrips": 5411101.0,
-      "realm": "cn-northwest"
-    },
-    {
       "id": "qnz",
       "name": "Qinzhou",
       "kind": "zone",
@@ -57029,7 +56961,7 @@
       ],
       "place": 3489,
       "country": "CN",
-      "localTrips": 4713451.0,
+      "localTrips": 4712903.0,
       "realm": "cn-northwest"
     },
     {
@@ -57055,7 +56987,7 @@
       ],
       "place": 3490,
       "country": "CN",
-      "localTrips": 4538743.0,
+      "localTrips": 4572415.0,
       "realm": "cn-northwest"
     },
     {
@@ -57081,7 +57013,7 @@
       ],
       "place": 3491,
       "country": "CN",
-      "localTrips": 4889256.0,
+      "localTrips": 4893804.0,
       "realm": "cn-northwest"
     },
     {
@@ -57107,7 +57039,7 @@
       ],
       "place": 3492,
       "country": "CN",
-      "localTrips": 4933297.0,
+      "localTrips": 4976228.0,
       "realm": "cn-northwest"
     },
     {
@@ -57133,7 +57065,7 @@
       ],
       "place": 3494,
       "country": "CN",
-      "localTrips": 3932889.0,
+      "localTrips": 3934261.0,
       "realm": "cn-northwest"
     },
     {
@@ -57159,7 +57091,7 @@
       ],
       "place": 3495,
       "country": "CN",
-      "localTrips": 3709377.0,
+      "localTrips": 3729097.0,
       "realm": "cn-northwest"
     },
     {
@@ -57185,7 +57117,7 @@
       ],
       "place": 3496,
       "country": "CN",
-      "localTrips": 3088164.0,
+      "localTrips": 3088483.0,
       "realm": "cn-northwest"
     },
     {
@@ -57211,7 +57143,7 @@
       ],
       "place": 3497,
       "country": "CN",
-      "localTrips": 3209117.0,
+      "localTrips": 3207173.0,
       "realm": "cn-northwest"
     },
     {
@@ -57965,7 +57897,7 @@
       ],
       "place": 3526,
       "country": "CN",
-      "localTrips": 3282464.0,
+      "localTrips": 3282468.0,
       "realm": "cn-central"
     },
     {
@@ -57991,7 +57923,7 @@
       ],
       "place": 3527,
       "country": "CN",
-      "localTrips": 6738054.0,
+      "localTrips": 6738315.0,
       "realm": "cn-northwest"
     },
     {
@@ -58017,7 +57949,7 @@
       ],
       "place": 3528,
       "country": "CN",
-      "localTrips": 6064415.0,
+      "localTrips": 6064821.0,
       "realm": "cn-northwest"
     },
     {
@@ -58043,7 +57975,7 @@
       ],
       "place": 3529,
       "country": "CN",
-      "localTrips": 5859143.0,
+      "localTrips": 5859132.0,
       "realm": "cn-northwest"
     },
     {
@@ -58069,7 +58001,7 @@
       ],
       "place": 3530,
       "country": "CN",
-      "localTrips": 4452175.0,
+      "localTrips": 4452413.0,
       "realm": "cn-northwest"
     },
     {
@@ -58095,7 +58027,7 @@
       ],
       "place": 3531,
       "country": "CN",
-      "localTrips": 3978302.0,
+      "localTrips": 3978321.0,
       "realm": "cn-northwest"
     },
     {
@@ -58121,7 +58053,7 @@
       ],
       "place": 3532,
       "country": "CN",
-      "localTrips": 4883107.0,
+      "localTrips": 4883392.0,
       "realm": "cn-northwest"
     },
     {
@@ -58147,7 +58079,7 @@
       ],
       "place": 3533,
       "country": "CN",
-      "localTrips": 5281344.0,
+      "localTrips": 5281649.0,
       "realm": "cn-northwest"
     },
     {
@@ -58173,7 +58105,7 @@
       ],
       "place": 3534,
       "country": "CN",
-      "localTrips": 3868209.0,
+      "localTrips": 3868254.0,
       "realm": "cn-northwest"
     },
     {
@@ -58199,33 +58131,7 @@
       ],
       "place": 3535,
       "country": "CN",
-      "localTrips": 3371574.0,
-      "realm": "cn-northwest"
-    },
-    {
-      "id": "yik",
-      "name": "Yizhou, Fukang",
-      "kind": "zone",
-      "origin": {
-        "lon": 87.9961,
-        "lat": 44.1566
-      },
-      "center": [
-        87.9961,
-        44.1566
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        87.746,
-        40.853,
-        96.413,
-        45.506
-      ],
-      "place": 3536,
-      "country": "CN",
-      "localTrips": 3600963.0,
+      "localTrips": 3371895.0,
       "realm": "cn-northwest"
     },
     {
@@ -58251,7 +58157,7 @@
       ],
       "place": 3538,
       "country": "CN",
-      "localTrips": 3064876.0,
+      "localTrips": 3064832.0,
       "realm": "cn-northwest"
     },
     {
@@ -58277,7 +58183,7 @@
       ],
       "place": 3539,
       "country": "CN",
-      "localTrips": 2137295.0,
+      "localTrips": 2137229.0,
       "realm": "cn-northwest"
     },
     {
@@ -58303,7 +58209,7 @@
       ],
       "place": 3541,
       "country": "CN",
-      "localTrips": 1932238.0,
+      "localTrips": 1932156.0,
       "realm": "cn-northwest"
     },
     {
@@ -58329,7 +58235,7 @@
       ],
       "place": 3542,
       "country": "CN",
-      "localTrips": 1251879.0,
+      "localTrips": 1251866.0,
       "realm": "cn-northwest"
     },
     {
@@ -58407,33 +58313,7 @@
       ],
       "place": 3550,
       "country": "CN",
-      "localTrips": 4951750.0,
-      "realm": "cn-southwest"
-    },
-    {
-      "id": "wau",
-      "name": "Wanzhou",
-      "kind": "zone",
-      "origin": {
-        "lon": 108.7953,
-        "lat": 31.2215
-      },
-      "center": [
-        108.7953,
-        31.2215
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        107.845,
-        30.374,
-        109.267,
-        31.46
-      ],
-      "place": 3551,
-      "country": "CN",
-      "localTrips": 6856544.0,
+      "localTrips": 4960582.0,
       "realm": "cn-southwest"
     },
     {
@@ -58459,7 +58339,7 @@
       ],
       "place": 3552,
       "country": "CN",
-      "localTrips": 5180515.0,
+      "localTrips": 5258162.0,
       "realm": "cn-southwest"
     },
     {
@@ -58485,7 +58365,7 @@
       ],
       "place": 3553,
       "country": "CN",
-      "localTrips": 5616575.0,
+      "localTrips": 5716748.0,
       "realm": "cn-southwest"
     },
     {
@@ -58511,7 +58391,7 @@
       ],
       "place": 3554,
       "country": "CN",
-      "localTrips": 4301940.0,
+      "localTrips": 4321775.0,
       "realm": "cn-southwest"
     },
     {
@@ -58537,7 +58417,7 @@
       ],
       "place": 3555,
       "country": "CN",
-      "localTrips": 3775348.0,
+      "localTrips": 3785409.0,
       "realm": "cn-southwest"
     },
     {
@@ -58641,7 +58521,7 @@
       ],
       "place": 3559,
       "country": "CN",
-      "localTrips": 6546924.0,
+      "localTrips": 6544934.0,
       "realm": "cn-southwest"
     },
     {
@@ -58719,7 +58599,7 @@
       ],
       "place": 3562,
       "country": "CN",
-      "localTrips": 5688690.0,
+      "localTrips": 5722580.0,
       "realm": "cn-southwest"
     },
     {
@@ -58745,7 +58625,7 @@
       ],
       "place": 3563,
       "country": "CN",
-      "localTrips": 5225192.0,
+      "localTrips": 5225447.0,
       "realm": "cn-southwest"
     },
     {
@@ -58797,7 +58677,7 @@
       ],
       "place": 3565,
       "country": "CN",
-      "localTrips": 5627517.0,
+      "localTrips": 5627454.0,
       "realm": "cn-southwest"
     },
     {
@@ -58927,7 +58807,7 @@
       ],
       "place": 3570,
       "country": "CN",
-      "localTrips": 4711045.0,
+      "localTrips": 4711921.0,
       "realm": "cn-southwest"
     },
     {
@@ -59031,7 +58911,7 @@
       ],
       "place": 3574,
       "country": "CN",
-      "localTrips": 4307663.0,
+      "localTrips": 4307611.0,
       "realm": "cn-southwest"
     },
     {
@@ -59057,7 +58937,7 @@
       ],
       "place": 3575,
       "country": "CN",
-      "localTrips": 4816101.0,
+      "localTrips": 4820057.0,
       "realm": "cn-southwest"
     },
     {
@@ -59083,7 +58963,7 @@
       ],
       "place": 3576,
       "country": "CN",
-      "localTrips": 4541244.0,
+      "localTrips": 4540842.0,
       "realm": "cn-southwest"
     },
     {
@@ -59109,7 +58989,7 @@
       ],
       "place": 3577,
       "country": "CN",
-      "localTrips": 3669999.0,
+      "localTrips": 3670648.0,
       "realm": "cn-southwest"
     },
     {
@@ -59136,32 +59016,6 @@
       "place": 3578,
       "country": "CN",
       "localTrips": 3966811.0,
-      "realm": "cn-southwest"
-    },
-    {
-      "id": "zay",
-      "name": "Zhaoyang",
-      "kind": "zone",
-      "origin": {
-        "lon": 102.9301,
-        "lat": 26.9134
-      },
-      "center": [
-        102.9301,
-        26.9134
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        102.849,
-        26.517,
-        103.957,
-        27.671
-      ],
-      "place": 3579,
-      "country": "CN",
-      "localTrips": 4797176.0,
       "realm": "cn-southwest"
     },
     {
@@ -59291,7 +59145,7 @@
       ],
       "place": 3584,
       "country": "CN",
-      "localTrips": 3309278.0,
+      "localTrips": 3308448.0,
       "realm": "cn-southwest"
     },
     {
@@ -59317,7 +59171,7 @@
       ],
       "place": 3585,
       "country": "CN",
-      "localTrips": 3264005.0,
+      "localTrips": 3210771.0,
       "realm": "cn-southwest"
     },
     {
@@ -59369,7 +59223,7 @@
       ],
       "place": 3587,
       "country": "CN",
-      "localTrips": 4080362.0,
+      "localTrips": 4080255.0,
       "realm": "cn-southwest"
     },
     {
@@ -59395,7 +59249,7 @@
       ],
       "place": 3588,
       "country": "CN",
-      "localTrips": 3330116.0,
+      "localTrips": 3319386.0,
       "realm": "cn-southwest"
     },
     {
@@ -59421,7 +59275,7 @@
       ],
       "place": 3589,
       "country": "CN",
-      "localTrips": 3467117.0,
+      "localTrips": 3479103.0,
       "realm": "cn-southwest"
     },
     {
@@ -59499,7 +59353,7 @@
       ],
       "place": 3592,
       "country": "CN",
-      "localTrips": 2679385.0,
+      "localTrips": 2680140.0,
       "realm": "cn-southwest"
     },
     {
@@ -59525,7 +59379,7 @@
       ],
       "place": 3593,
       "country": "CN",
-      "localTrips": 3732102.0,
+      "localTrips": 3733289.0,
       "realm": "cn-southwest"
     },
     {
@@ -59577,7 +59431,7 @@
       ],
       "place": 3595,
       "country": "CN",
-      "localTrips": 3398877.0,
+      "localTrips": 3401877.0,
       "realm": "cn-southwest"
     },
     {
@@ -59603,7 +59457,7 @@
       ],
       "place": 3596,
       "country": "CN",
-      "localTrips": 2749516.0,
+      "localTrips": 2751577.0,
       "realm": "cn-southwest"
     },
     {
@@ -59629,7 +59483,7 @@
       ],
       "place": 3597,
       "country": "CN",
-      "localTrips": 3591674.0,
+      "localTrips": 3591544.0,
       "realm": "cn-southwest"
     },
     {
@@ -59707,7 +59561,7 @@
       ],
       "place": 3600,
       "country": "CN",
-      "localTrips": 2961737.0,
+      "localTrips": 2961779.0,
       "realm": "cn-southwest"
     },
     {
@@ -59785,7 +59639,7 @@
       ],
       "place": 3603,
       "country": "CN",
-      "localTrips": 2782631.0,
+      "localTrips": 2781891.0,
       "realm": "cn-southwest"
     },
     {
@@ -59811,7 +59665,7 @@
       ],
       "place": 3604,
       "country": "CN",
-      "localTrips": 2837352.0,
+      "localTrips": 2837526.0,
       "realm": "cn-southwest"
     },
     {
@@ -59941,7 +59795,7 @@
       ],
       "place": 3609,
       "country": "CN",
-      "localTrips": 5163042.0,
+      "localTrips": 5163040.0,
       "realm": "cn-north"
     },
     {
@@ -60253,7 +60107,7 @@
       ],
       "place": 3621,
       "country": "CN",
-      "localTrips": 3411401.0,
+      "localTrips": 3412663.0,
       "realm": "cn-northeast"
     },
     {
@@ -60565,7 +60419,7 @@
       ],
       "place": 3633,
       "country": "CN",
-      "localTrips": 4886140.0,
+      "localTrips": 4886330.0,
       "realm": "cn-northwest"
     },
     {
@@ -60591,7 +60445,7 @@
       ],
       "place": 3635,
       "country": "CN",
-      "localTrips": 3687992.0,
+      "localTrips": 3688645.0,
       "realm": "cn-northwest"
     },
     {
@@ -60621,58 +60475,6 @@
       "realm": "cn-central"
     },
     {
-      "id": "ksg",
-      "name": "Kashgar",
-      "kind": "zone",
-      "origin": {
-        "lon": 74.3672,
-        "lat": 39.5363
-      },
-      "center": [
-        74.3672,
-        39.5363
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        73.809,
-        38.81,
-        78.388,
-        40.703
-      ],
-      "place": 3641,
-      "country": "CN",
-      "localTrips": 3675760.0,
-      "realm": "cn-northwest"
-    },
-    {
-      "id": "aty",
-      "name": "Altay",
-      "kind": "zone",
-      "origin": {
-        "lon": 87.1974,
-        "lat": 46.5682
-      },
-      "center": [
-        87.1974,
-        46.5682
-      ],
-      "zoom": 10.5,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        85.5,
-        44.981,
-        91.102,
-        49.198
-      ],
-      "place": 3642,
-      "country": "CN",
-      "localTrips": 1860411.0,
-      "realm": "cn-northwest"
-    },
-    {
       "id": "qim",
       "name": "Qiemo",
       "kind": "zone",
@@ -60695,7 +60497,7 @@
       ],
       "place": 3643,
       "country": "CN",
-      "localTrips": 313572.0,
+      "localTrips": 313555.0,
       "realm": "cn-northwest"
     },
     {
@@ -60773,7 +60575,7 @@
       ],
       "place": 3646,
       "country": "CN",
-      "localTrips": 3682038.0,
+      "localTrips": 3705556.0,
       "realm": "cn-central"
     },
     {
@@ -66509,6 +66311,292 @@
       "country": "CA",
       "localTrips": 309488.0,
       "realm": "canada"
+    },
+    {
+      "id": "jyu",
+      "name": "Jiyuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.5841,
+        "lat": 35.0897
+      },
+      "center": [
+        112.5841,
+        35.0897
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.556,
+        33.531,
+        112.789,
+        35.3
+      ],
+      "place": 3936,
+      "country": "CN",
+      "localTrips": 6443406.0,
+      "realm": "cn-central"
+    },
+    {
+      "id": "lhe",
+      "name": "Linhe",
+      "kind": "zone",
+      "origin": {
+        "lon": 107.3992,
+        "lat": 40.754
+      },
+      "center": [
+        107.3992,
+        40.754
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        105.188,
+        38.356,
+        109.922,
+        42.479
+      ],
+      "place": 3947,
+      "country": "CN",
+      "localTrips": 6498316.0,
+      "realm": "cn-north"
+    },
+    {
+      "id": "zag",
+      "name": "Zhaodong",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.9864,
+        "lat": 46.0568
+      },
+      "center": [
+        125.9864,
+        46.0568
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.967,
+        45.362,
+        126.662,
+        46.658
+      ],
+      "place": 3948,
+      "country": "CN",
+      "localTrips": 4231055.0,
+      "realm": "cn-northeast"
+    },
+    {
+      "id": "gxi",
+      "name": "Guixi",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.2053,
+        "lat": 28.2853
+      },
+      "center": [
+        117.2053,
+        28.2853
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.319,
+        27.829,
+        117.797,
+        28.806
+      ],
+      "place": 3949,
+      "country": "CN",
+      "localTrips": 5698633.0,
+      "realm": "cn-east"
+    },
+    {
+      "id": "lgz",
+      "name": "Liangzhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.574,
+        "lat": 37.9368
+      },
+      "center": [
+        102.574,
+        37.9368
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        101.309,
+        36.595,
+        104.223,
+        39.479
+      ],
+      "place": 3950,
+      "country": "CN",
+      "localTrips": 5449637.0,
+      "realm": "cn-northwest"
+    },
+    {
+      "id": "wau",
+      "name": "Wanzhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.3686,
+        "lat": 30.7584
+      },
+      "center": [
+        108.3686,
+        30.7584
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        107.845,
+        30.374,
+        109.267,
+        31.46
+      ],
+      "place": 3951,
+      "country": "CN",
+      "localTrips": 6887883.0,
+      "realm": "cn-southwest"
+    },
+    {
+      "id": "zay",
+      "name": "Zhaoyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.7096,
+        "lat": 27.3192
+      },
+      "center": [
+        103.7096,
+        27.3192
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        102.849,
+        26.517,
+        103.957,
+        27.67
+      ],
+      "place": 3953,
+      "country": "CN",
+      "localTrips": 4820872.0,
+      "realm": "cn-southwest"
+    },
+    {
+      "id": "yik",
+      "name": "Yizhou, Fukang",
+      "kind": "zone",
+      "origin": {
+        "lon": 93.4979,
+        "lat": 42.8327
+      },
+      "center": [
+        93.4979,
+        42.8327
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        87.746,
+        40.853,
+        96.413,
+        45.506
+      ],
+      "place": 3954,
+      "country": "CN",
+      "localTrips": 3595481.0,
+      "realm": "cn-northwest"
+    },
+    {
+      "id": "ksg",
+      "name": "Kashgar",
+      "kind": "zone",
+      "origin": {
+        "lon": 75.9894,
+        "lat": 39.4738
+      },
+      "center": [
+        75.9894,
+        39.4738
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        73.809,
+        38.81,
+        78.388,
+        40.703
+      ],
+      "place": 3955,
+      "country": "CN",
+      "localTrips": 3676208.0,
+      "realm": "cn-northwest"
+    },
+    {
+      "id": "aty",
+      "name": "Altay",
+      "kind": "zone",
+      "origin": {
+        "lon": 88.1373,
+        "lat": 47.85
+      },
+      "center": [
+        88.1373,
+        47.85
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        85.499,
+        44.981,
+        91.103,
+        49.198
+      ],
+      "place": 3956,
+      "country": "CN",
+      "localTrips": 1861266.0,
+      "realm": "cn-northwest"
+    },
+    {
+      "id": "tbe",
+      "name": "Taobei",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.8497,
+        "lat": 45.6212
+      },
+      "center": [
+        122.8497,
+        45.6212
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.609,
+        44.213,
+        124.393,
+        46.322
+      ],
+      "place": 3957,
+      "country": "CN",
+      "localTrips": 4266287.0,
+      "realm": "cn-northeast"
     }
   ]
 }
