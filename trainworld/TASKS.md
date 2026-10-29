@@ -71,6 +71,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
+- T-1797 [P2] Small fixes from Anita's TODO 2026-10-29: hills hover, empty full-train rows, 'on weekdays', demand level hover, one sound for a too-dear train step. taking, 2026-10-29 (agent t1797)
+- T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Design for Anita, taking, 2026-10-29 (agent t1799); notes/T-1799.md
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
 - T-1481 [P3] Marey diagrams (Anita: nothing built yet makes them interesting, but might be nice). Idea. Open.
@@ -100,6 +102,7 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 - T-1445 [P2] Buses, design first (Anita): draw a line (along roads if that is easy) and stops place themselves, where it meets a train station and otherwise every 400 m or so; maybe no concept of stops at all. A cheap slow feeder; a demand change, so the design goes to her. Design written 2026-10-26, waits on Anita; notes/T-1445.md
 - T-1446 [P3] Share a game by link, read only (Anita: yes). Open.
 - T-1447 [P3] Copy and paste blueprints between saves (Anita: yes). Open.
+- T-1798 [P2] Buses drawn stopping at their stops and a little bigger (Anita's TODO 2026-10-29). taking, 2026-10-29 (agent t1798)
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1270 [P3] Terrain, stage 4 (stages 1-3 built, ARCHIVE): optional, not recommended first, a 120 km/h cap on mountain-class track at -1 and up. Open; notes/T-1270.md.
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
@@ -108,7 +111,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1791 [P2] Line groups (Anita's TODO 2026-10-29): drop a line on another in the Lines tab to group them, a copy joins its source's group, a group view with one combined diagram where clicking a line's dot removes the stop and a ghost adds one. Design written and decided by Anita 2026-10-29; stages 1 and 2 built in tree t1791, to land (agent t1791s1, 2026-10-29); stages 3-4 open; notes/T-1791.md.
 
 ## Track and trains
-- T-1787 [P1] On the shared-track saves every service edit settles in 0.3-2.9 s (headway 0.4-2.9, count 0.24-1.2 in `edit_bench`): the settle circles, lines far from the edit moving about 11 s each pass; a branch that splits a built line takes 1.3-1.8 s to place. Fix before the shared saves ship. Stage 1 in tree t1779 (2026-10-29): settled lines left out of the settle, New York shared mean 631 to 393 ms; faster variants failed the reload test; state and next steps in notes/T-1779.md "T-1787". Open.
+- T-1794 [P3] T-1787 leftovers: on shared-track New York a headway edit on its busiest line still takes 150-400 ms (two or three settles of ~15 rounds), and Paris placements p95 237 ms (about 9 holds a run and level, 2-3 ms a profile); options in notes/T-1779.md "T-1787" (a held line's fill want from its fleet alone, a cheaper crawl bisection in run_with). Open.
 - T-1788 [P3] The rest of T-1780: a blueprint click to the next ghost is ~156 ms on the real New York save (state build and post ~45 ms in the worker, ~40 ms on the main thread); under 20 ms needs the next preview answered before the state arrives. Open; notes/T-1779.md.
 - T-1793 [P3] The drawn platform crowd overstates riders where transfer pulses (T-554) are large: at Jamaica (line 40's terminal, 08:34) pulses plus the steady rate make about 9,750 an hour against 7,297 arrivals, so the platform shows about 1,958 while the train leaves with 1,501. Found in T-1785. Open; artifacts/trainworld/t1785/.
 - T-1780 [P2] Placing a blueprint segment takes ~150 ms before the next ghost shows; aim under ~20 ms (Anita 2026-10-29). Stage 1 done 2026-10-29 (agent t1779, in its tree): no trips or boarding hour after a blueprint route, 255 to 156 ms on the real save. Left: the state build and post (~45 ms worker) and the main thread's state handling (~40 ms) before the next preview; needs the preview answered ahead of the state, a design change. notes/T-1779.md.

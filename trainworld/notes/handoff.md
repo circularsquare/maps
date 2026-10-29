@@ -132,13 +132,24 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
 - T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
-- T-1787 stage 1 in tree t1779 (NYC shared edits 631 -> 393 ms mean, not enough; Tokyo shared fine 24 ms). Fresh agent
+- From Anita's TODO (short term) 2026-10-29: T-1797 small fixes (hills hover, 0-full rows, "on weekdays", demand level
+  hover "6-24", one sound) agent t1797 (Sonnet, Vite 6161); T-1798 buses stop + bigger agent t1798 (Sonnet, Vite 6163);
+  T-1799 interlined lines side by side, design agent t1799 (Opus, no cores). Passed stations faded outline (Anita) sent to
+  t1795 (related view) and t1791s3 (group view).
+- Anita 2026-10-29: dim bullets fine; big rounded squares fine. Group view: names back + interchanges as elongated
+  pills (sent to t1791s3). T-1795 agent t1795 (Sonnet, Vite 6159, 1 core): no size-by-riders in related view; why two
+  pills at Fulton St.
+- T-1787 DONE in tree t1779 (NYC shared edits mean 97 ms, Paris 7; new save block LRT1 after LBS2 — t1791 adds LGR1
+  after LBS2 too: resolve the order when landing t1791 after t1779). Leftovers T-1794 P3. All shared saves may ship.
+- (was) T-1787 stage 1 in tree t1779 (NYC shared edits 631 -> 393 ms mean, not enough; Tokyo shared fine 24 ms). Fresh agent
   t1787 (Opus, 1 core) continuing in the same tree; first a six-save bench table so the fast cities can ship early.
 - T-1790 committed 420652eb (status 1/2, 2/2, shown whenever capped). T-1792 agent t1792 (Sonnet, Vite 6159, 2 cores).
   T-1774 London shared agent t1774 (Opus, Vite 6177, 2 cores, staging only).
 - T-1791 stages 1+2 BUILT in tree .tw-trees/t1791 (smoke 20/20 there); stage 3 (editing in the diagram) agent
   t1791s3 (Sonnet, 2 cores) in the same tree. WASM interface change: land after China join, rebuild main WASM. Touches clock.worker.ts (4 lines) and
   sim/src/bin/realsave.rs (LineData literal) — t1774 may edit realsave.rs too.
+- T-1774 London shared committed (13.6% holds accepted, my call). All seven shared saves now staged in
+  artifacts/trainworld/t1305-shared/ (london/ subfolder for lon). Ship per T-1787's table.
 - Land order after the join: t1779 (track + T-1787), t1782 (walking), t1791 (groups); rebuild main WASM; 8800; ship
   the fast shared saves per T-1787's table.
 - T-1786 committed 8ca72cc6, T-1791 design b978e9ed, T-1785 8bd9f0f6 (T-1793 pulses
