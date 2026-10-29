@@ -132,10 +132,15 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   t1772 also asked to fix reversal icons drawn over Batam after panning from a NYC save to Singapore.
 - T-1772 + T-1775 committed e10f72b5 (8800 not rebuilt yet: wait for China join). Favicon fine (Anita, hard refresh).
 - T-1777 committed 0a1ec789 (NaN projection on the globe; placeAt owner). Favicon redrawn f9ca7929 (Anita's design).
-- T-1791 line groups: design agent t1791 (Opus, no cores, notes/T-1791.md) for Anita. Queued: T-1790 (demand status
+- T-1791 stage 1 (Anita yes; her answers in DECISIONS): agent t1791s1 (Opus) in tree .tw-trees/t1791 (8bd9f0f6),
+  WASM interface change, Vite 6171, 1 core. Land after China join, rebuild main WASM.
+- T-1786 committed 8ca72cc6, T-1791 design b978e9ed, T-1785 8bd9f0f6 (T-1793 pulses
+  overstate platform crowds, filed P3). T-1790 agent t1790 (Opus, 1 core, Vite 6165). T-1792 queued.
+- (was) T-1791 line groups: design agent t1791 (Opus, no cores, notes/T-1791.md) for Anita. Queued: T-1790 (demand status
   1/4 then nothing while capped 4x), T-1792 (dim bullets of lines with no trains): start when cores free (<= 12 total).
 - T-1783/1784 committed b6ff5d9f. T-1782: Anita chose "no train slower than walking" plus a soft ramp above (10% faster
-  still cut a lot); agent t1782 building in tree .tw-trees/t1782 (b6ff5d9f), Vite 6157, 2 cores. Land after China join. T-1786 agent t1786 (Opus, Vite 6188, 2 cores), T-1785 agent t1785 (Opus, Vite 6193,
+  still cut a lot); BUILT in tree .tw-trees/t1782 (walk_fade 0.3, linear; rail -10.7% on the real save, ceilings pass,
+  Houston A 85.6%). Land after China join; told Anita the -11%. T-1786 agent t1786 (Opus, Vite 6188, 2 cores), T-1785 agent t1785 (Opus, Vite 6193,
   1 core; may touch boarding.rs/clock.worker.ts that t1779's tree also edits).
 - (was) From Anita's TODO 2026-10-29: T-1783 (no crowding bubble on a line with no trains) + T-1784 (shorter tooltips,
   "ordinary" -> "normal"): agent t1783 (Sonnet), 1 core, Vite 6159. Queued for free cores: T-1785 terminal boarding

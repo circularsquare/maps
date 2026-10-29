@@ -327,6 +327,10 @@ interface Solve {
    * whether `whole` went */
   localPlans?: number[];
   wholeSent?: boolean;
+  /** T-1790: local cluster results shown so far */
+  localShown?: number;
+  /** solved with the round barrier (estimates by round); else after an edit, counted by stage */
+  barrier?: boolean;
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -2534,7 +2538,10 @@ class DemandClient {
       const plans = (s.localPlans ??= []);
       plans[i] = msg.local ?? 0;
       const n = this.computeN, all = plans.slice(0, n);
-      if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0) && all.some((v) => !v)) this.wholeGo(s);
+      if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
+        if (all.some((v) => !v)) this.wholeGo(s);
+        else if (s === this.cur && !s.barrier) demandStep.value = { done: 0, of: 2 };
+      }
       return;
     }
     if (msg.part) {
@@ -2628,6 +2635,7 @@ class DemandClient {
     this.lastKey = key;
     this.lastStir = performance.now();
     demandUpdating.value = true;
+    demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
     // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones
     const prev = this.latest();
     if (gameLoad && !this.ahead) this.lodReset(null);
@@ -2716,15 +2724,18 @@ class DemandClient {
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates };
+    const barrier = (showEstimates || !!this.hold) && !perfOff("ahead");
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
-    demandStep.value = { done: 0, of: ROUNDS + 1 };
+    // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
+    // whole one (`plan` says whether there is a local one), not rounds
+    demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
@@ -3528,7 +3539,7 @@ class DemandClient {
   /** Every period has reached `round`: build the view the UI reads. */
   private publish(s: Solve, round: number) {
     if (round === 0) s.firstAt = performance.now();
-    if (s === this.cur) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
+    if (s === this.cur && s.barrier) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     // T-232: a round before the final one is shown only when nothing final would be held instead
     const final = round >= ROUNDS && !s.rough;
     const res = s.results as Result[];
@@ -3631,6 +3642,8 @@ class DemandClient {
     const final = round >= ROUNDS;
     // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
     if (round === 0 && !final && !s.showEstimates && !perfOff("early")) return this.publishNewLines(s, res);
+    // T-1790: the zone in view's cluster solved ahead counts its own rounds
+    if (s.barrier && c.cities.includes(activeCity.peek())) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     this.inOrder(async () => {
       const shown = demandByDay.peek()[0].view;
@@ -3678,6 +3691,8 @@ class DemandClient {
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
         linesSettled(fresh.map((l) => l.id));
         if (c.local) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
+        // T-1790: an edit's step 2 (the whole solve) once every local result is in
+        if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) demandStep.value = { done: 1, of: 2 };
         const left = new Set(demandSolving.peek() ?? []);
         for (const id of c.cities) { left.delete(id); this.unsettled?.delete(id); }
         demandSolving.value = left;

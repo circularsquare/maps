@@ -143,9 +143,15 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
   below, taking no row of its own [T-1704]; the rows stop 46 px short of the right edge, where the
   search glass sits at the top right, and the demand stopped alert and the selection bar are under
-  the rows. While a solve runs after an edit that changes the zone in view's figures, "Updating
-  demand 2/4…" and the split faded, the figures held [T-232]; a zone the edit does not touch, or
-  whose cluster is already done, shows neither [T-392]; and the same while a reload shows the cached
+  the rows. **Whenever the clock is capped (below) a status shows**, and its hover ends "The clock
+  runs at 4x at most until it's done." [T-1790]. While a solve runs after an edit, "Updating demand
+  1/2…" while the trips the edit touches are solved (the local solve), "Updating demand 2/2…" from
+  when those are shown until the whole solve's final (the 8 s wait for a further edit included,
+  docs/demand-runtime.md); with no local solve (none possible, or it is off) "Updating demand…"
+  with no count. Each step's hover says what it is working out. While the edit changes the zone in
+  view's figures the split is faded, the figures held [T-232]; a zone the edit does not touch, or
+  whose cluster is already done, keeps its split unfaded and its hover says its figures are done and
+  demand elsewhere is still being worked out [T-392, T-1790]; and the same while a reload shows the cached
   figures from the last time the game was open, with a hover saying so [T-328]; during startup's
   refinement "Estimate, refining 2/4…", which goes once the zone in view's own cluster has its final,
   though other clusters still solve, and the split's hover then stops saying "an early estimate"
@@ -217,7 +223,8 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   **While demand is being worked out** (a solve running, a load going, the zone in view shown rough)
   the clock runs no faster than 4x [T-1665, `game/lineFigures.ts`]: the chosen speed's button is dimmed,
   its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
-  the cap lifts by itself when demand is final. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  the cap lifts by itself when demand is final; the status tag shows all the while it holds [T-1790].
+  Demand that stopped (its red alert) caps nothing. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
@@ -816,9 +823,10 @@ registry centre and zoom, or over New York with none [T-310].
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].
-- **After an edit** nothing changes until the new solve's final round: split, riders, bubbles and
+- **After an edit** nothing changes until a final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
-  demand 2/4…", then all change at once [T-232]. Queries asked meanwhile (a station's riders, a bubble
+  demand 1/2…" (Status, above), then each changes in one step [T-232]: the zones the local solve
+  covers when it lands, everything at the whole solve's final (docs/demand-runtime.md). Queries asked meanwhile (a station's riders, a bubble
   selection, a trip) wait for that round. A line new or changed by the edit has no figures to keep,
   so it takes the free-flow estimate's riders as soon as that lands, as do stations only such
   lines serve [T-324]; until a running line has any figures its trains are striped

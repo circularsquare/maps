@@ -6,7 +6,7 @@
 import { effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { demandUpdating, refiningZone } from "./demand";
-import { loadProgress } from "./loading";
+import { demandStopped, loadProgress } from "./loading";
 import { world } from "./world";
 
 /** Lines whose riders are being worked out again after an edit. */
@@ -26,7 +26,8 @@ const NO_SOLVE_MS = 8000;
 
 export function startLineFigures() {
   effect(() => {
-    clock.setCapped(demandUpdating.value || !!loadProgress.value || !!refiningZone.value);
+    // T-1790: demand that stopped will finish nothing, so it holds nothing back
+    clock.setCapped(!demandStopped.value && (demandUpdating.value || !!loadProgress.value || !!refiningZone.value));
   });
 
   /** each line's last signature, null before the first world */

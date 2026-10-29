@@ -2,7 +2,8 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandStep, demandView, refiningZone, viewFinal, viewUpdating } from "../game/demand";
+import { demandStep, demandUpdating, demandView, refiningZone, viewFinal, viewUpdating } from "../game/demand";
+import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
@@ -12,6 +13,8 @@ import { bubblesWaiting } from "../map/commuterView";
 
 export function StatusTag() {
   const step = demandStep.value;
+  // T-1790: a step count only where the steps are really several
+  const count = step.of > 1 ? ` ${Math.min(step.done + 1, step.of)}/${step.of}` : "";
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
   // far it has got
   const load = loadProgress.value;
@@ -33,8 +36,9 @@ export function StatusTag() {
     : refiningZone.value ? `Working out ${cityById(refiningZone.value).name} in detail`
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
     // T-421: and the zone in view counts as final once its own cluster is, whatever else still solves
-    : !viewFinal.value ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
-    : viewUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
+    : !viewFinal.value ? `Estimate, refining${count}…`
+    // T-1790: any solve still running says so, the zone in view's own figures done or not, since it caps the clock
+    : demandUpdating.value ? `Updating demand${count}…` : null;
   if (!busy) return null;
   const tip = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
@@ -43,7 +47,12 @@ export function StatusTag() {
     : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
     // T-328: the figures kept from the last time this game was open, while it is worked out again
     : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
-    : "These figures are for the network before your last change. They change once the new forecast is finished.");
+    // T-1790: an edit's two steps, the trips it touches (local solve) and then everything (whole solve)
+    : step.of === 2 && step.done === 0 ? "Working out the trips your change touches first, then longer trips and the rest of the network."
+    : step.of === 2 && !viewUpdating.value ? "The trips your change touches are done. Now longer trips and the rest of the network."
+    : viewUpdating.value ? "These figures are for the network before your last change. They change once the new forecast is finished."
+    : "These figures are done. Demand elsewhere is still being worked out.")
+    + (clock.capped.value ? ` The clock runs at ${DEMAND_CAP}x at most until it's done.` : "");
   return <div class="status-tag" role="status" data-tip={tip}>
     {!loadFailure.value && !zoneFailure && <BunnyTrain small />}
     <span class="demand-busy">{busy}</span>

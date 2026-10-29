@@ -292,8 +292,10 @@ is set up only when its turn comes, so until then it still holds the shown resul
 the clusters of its last six networks, and answers a question about any of them at once while the
 asked zone's cluster holds that network solved to its last round, whatever it is solving
 meanwhile: a click in a zone whose cluster is kept, or already published, needs no wait. Questions
-about a published cluster's zones go to its solve. The status tag and the top bar's "before your
-last change" speak only for a zone still being solved (`plan`, `demandSolving`).
+about a published cluster's zones go to its solve. The top bar's faded split and "before your
+last change" speak only for a zone still being solved (`plan`, `demandSolving`); the status tag shows
+while any solve runs, its step (`demandStep`) the local solve then the whole one after an edit, the
+rounds with the barrier (T-1790, docs/ui-panels.md "Status").
 **The local solve after an edit** (T-1733, notes/T-1733.md, `?perfOff=refine` off): before those
 whole solves, each cluster the edit touched is solved locally first when its market part and its
 untouched cities still hold what they last solved: only the city populations whose view changed (a
