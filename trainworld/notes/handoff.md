@@ -46,7 +46,7 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
 - 8800 at 88cc568c (T-1520), smoke 20/20 both shades. Not deployed: asked Anita.
 - Anita 2026-10-28 late: deploy waits for T-1733; superholiday 1.5x fine; 0.48 of MLIT "pretty low", asked how
   other countries fit: T-1742 (agent t1742, Sonnet, written answer only, 3 cores, Vite 6195).
-- T-1641 agent t1641 (Sonnet), SkyBanner.tsx; Vite 6191; 2 cores.
+- T-1641 committed c2d883b6 (0 rAF callbacks paused, was ~60/s); 8800 rebuilt there, smoke 20/20 both shades.
 - T-1625 committed (807 lines, 0.48 of MLIT pkm; save at artifacts/trainworld/t737-japan-trains.save, untracked).
   Its calls (89 thin lines left out, Shinkansen not cut) I accepted: a stress save. Old notes still say 709 lines.
 - T-1650 design done (notes/T-1650.md); Anita approved, stages T-1733-1735 filed. T-1732 unassigned.
