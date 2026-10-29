@@ -625,6 +625,7 @@ shade (cut into pieces no longer than about 5.6 degrees so it bends with the sph
 both poles), zone outlines, the real network, labels, airport badges, realm circles and loading bars.
 Sizes on screen are the flat map's at the same zoom (a line's width, a dot, a bubble's radius).
 What lies beyond the horizon is not drawn and takes no click or hover; a DOM mark whose place is
-there is hidden (`hiddenOnGlobe` in `map/live.ts`). Clicks, hovers and the building tools work at
+there is hidden (`hiddenOnGlobe` in `map/live.ts`; a mark placed through the overlay's projection,
+which gives NaN there, goes through `placeAt` in `map/screenPlace.ts`, which hides it, T-1777). Clicks, hovers and the building tools work at
 every zoom on the globe: picking projects with the globe's camera and narrows its candidates round
 the pointer's own place (`pointerLocal` in `map/pick.ts`).

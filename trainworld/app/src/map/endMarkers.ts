@@ -13,6 +13,7 @@ import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import type { Overlay } from "./overlay";
+import { onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag";
 
@@ -173,7 +174,7 @@ export class EndMarkers {
       for (const p of this.pts) {
         if (near === null) break;
         const [x, y] = this.overlay.toScreen(p.lx, p.ly);
-        if (x < -8 || y < -8 || x > w + 8 || y > h + 8) continue;
+        if (!onScreen(x, y, w, h, 8)) continue;
         if (near && (x - near[0]) ** 2 + (y - near[1]) ** 2 > NEAR_PX * NEAR_PX) continue;
         if (kind === "drag" && this.badged(p.lx, p.ly)) continue;
         if (p.stub && !this.visible(p.stub)) continue;
@@ -186,7 +187,7 @@ export class EndMarkers {
         const cls = kind === "loose" ? "end-mark" : "pi-mark";
         if (m.className !== cls) m.className = cls;
         m.style.display = "";
-        m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+        placeAt(m, x, y);
         k++;
       }
     }

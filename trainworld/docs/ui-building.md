@@ -305,7 +305,9 @@ switch on, the track tool follows the real network the layer draws.
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
-  quad track it is on the pair under the pointer only, as the station will be [T-1687].
+  quad track it is on the pair under the pointer only, as the station will be [T-1687]. With the
+  pointer off the map, no ghost, ring or tag shows for the station, track and delete tools (a
+  run's segment and an open-ground station after its first click stay) [T-1777].
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
   and shows that: a node with a station or a junction is refused; a spot is refused when the

@@ -22,6 +22,7 @@ import { strokesFromPreview } from "./network";
 import { setGrabbing } from "./nodeDrag";
 import { curveLabels, setCurveLabel } from "./tools";
 import type { Overlay } from "./overlay";
+import { placeAt } from "./screenPlace";
 
 /** A PI of a stretch, pack metres. */
 export interface EdgePi {
@@ -201,7 +202,7 @@ export class EdgeEditor {
       // the game's own tag (ui/tip.ts, T-210), set only when it changes as this runs every frame
       const tip = `Drag to move corner ${i + 1}`;
       if (m.dataset.tip !== tip) m.dataset.tip = tip;
-      m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      placeAt(m, x, y);
     }
     for (let i = pis.length; i < this.marks.length; i++) this.marks[i].style.display = "none";
     // curve labels: from the preview while dragging (local units), else the stretch's own (a
@@ -220,7 +221,7 @@ export class EdgeEditor {
       const [x, y] = this.overlay.toScreen(...c.at);
       const l = this.el(this.labels, i, "pi-label");
       setCurveLabel(l, c.kmh);
-      l.style.transform = `translate(${Math.round(x + 8)}px, ${Math.round(y + 6)}px)`;
+      placeAt(l, x, y, 8, 6);
     });
     for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
     if (pv && !pv.ok && this.drag) {
@@ -228,7 +229,7 @@ export class EdgeEditor {
       this.tag.className = "tool-tag bad";
       this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
       this.tag.style.display = "";
-      this.tag.style.transform = `translate(${Math.round(x + 14)}px, ${Math.round(y - 30)}px)`;
+      placeAt(this.tag, x, y, 14, -30);
     } else this.tag.style.display = "none";
   }
 }

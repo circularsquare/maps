@@ -46,6 +46,7 @@ import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
+import { placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import { chip, costTint, elevationFact, factRow, speedFact, terrainFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
@@ -203,6 +204,12 @@ export class Tools {
     this.bus = new BusDraw(map, this.box, this.tag, client, overlay, { exit: () => this.exit() });
     effect(() => { if (tool.value !== "bus") this.bus.clear(); });
     overlay.afterMapFrame.push(() => this.place());
+    // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was (a run's segment stays)
+    map.getContainer().addEventListener("mouseleave", () => {
+      if (touchInput.peek() || (!this.hover && !this.hoverBeside && !this.delHover)) return;
+      this.hover = this.hoverBeside = this.delHover = null;
+      this.place();
+    });
     effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; highSpeed.value; if (tool.value === "station") this.place(); else { this.freeAt = null; this.clearFree(); } });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
@@ -1231,7 +1238,7 @@ export class Tools {
     this.ring.style.display="none";
     this.ghost.style.display="";
     this.ghost.setAttribute("class",`station-ghost ${bad?"bad":"ok"}`);
-    this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
+    placeAt(this.ghost,shape.x,shape.y,0,0,false);
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
     let twin=this.ghost.children[1] as SVGPathElement|undefined;
     if (twinAt) {
@@ -1370,7 +1377,7 @@ export class Tools {
     const [ex,ey]=this.screen(...toLocal(lng+unitMetres()/(EARTH_R*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
     const km1=Math.hypot(ex-cx,ey-cy);
     this.rings.style.display="";
-    this.rings.style.transform=`translate(${cx}px,${cy}px)`;
+    placeAt(this.rings,cx,cy,0,0,false);
     const kids=this.rings.children;
     for (let i=0;i<2;i++) {
       const r=km1*(i+1), c=kids[i*2], t=kids[i*2+1];
@@ -1530,7 +1537,7 @@ export class Tools {
     }
     this.circle.style.display = "";
     this.circle.setAttribute("class", "curve-circle" + (pv!.ok ? "" : " bad"));
-    this.circle.style.transform = `translate(${c.x}px,${c.y}px)`;
+    placeAt(this.circle, c.x, c.y, 0, 0, false);
     this.circle.firstElementChild!.setAttribute("r", String(c.r));
   }
 
@@ -1605,7 +1612,7 @@ export class Tools {
     let k = 0;
     const put = (m: HTMLDivElement, lx: number, ly: number, dx = 0, dy = 0) => {
       const [x, y] = this.screen(lx, ly);
-      m.style.transform = `translate(${Math.round(x + dx)}px, ${Math.round(y + dy)}px)`;
+      placeAt(m, x, y, dx, dy);
     };
     const t = tool.peek();
     if (t === "track" && this.start) {

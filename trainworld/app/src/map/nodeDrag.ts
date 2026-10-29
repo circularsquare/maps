@@ -21,6 +21,7 @@ import { toLocal } from "./geo";
 import { live } from "./live";
 import { strokesFromPreview, type Strokes } from "./network";
 import type { Overlay } from "./overlay";
+import { placeAt } from "./screenPlace";
 import { curveLabels, setCurveLabel } from "./tools";
 
 const HIT_PX = 9;
@@ -182,11 +183,11 @@ export class NodeDrag {
     if (d) {
       const [x, y] = this.overlay.toScreen(d.lx, d.ly);
       this.ring.style.display = "";
-      this.ring.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      placeAt(this.ring, x, y);
       if (pv && !pv.ok) {
         this.tag.style.display = "";
         this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
-        this.tag.style.transform = `translate(${Math.round(x + 14)}px, ${Math.round(y - 30)}px)`;
+        placeAt(this.tag, x, y, 14, -30);
       } else this.tag.style.display = "none";
     } else {
       this.ring.style.display = "none";
@@ -203,7 +204,7 @@ export class NodeDrag {
       const [x, y] = this.overlay.toScreen(c.x, c.y);
       l.style.display = "";
       setCurveLabel(l, c.kmh);
-      l.style.transform = `translate(${Math.round(x + 8)}px, ${Math.round(y + 6)}px)`;
+      placeAt(l, x, y, 8, 6);
     });
     for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
   }

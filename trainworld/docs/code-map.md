@@ -163,7 +163,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
-  (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
+  (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
@@ -448,6 +448,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   network, Anita's London-Shanghai-London repro, whose far click must be refused at once and whose
   requests after Esc must stay in one city, and T-1039's long pieces and snapped routes zoomed out
   followed by short track in Belfast, with how long the clock worker takes to answer meanwhile),
+  `t1777-stuck-marks.mjs` (screen-space marks left in place while the map moves: a blueprint piece in
+  Manhattan with the select, track and station tools, a wheel zoom out, a jump to Singapore and a pan,
+  on the globe and the flat map; about 1.5 minutes, T-1777),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
