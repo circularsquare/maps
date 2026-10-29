@@ -156,7 +156,7 @@ Web first, so it can be shared as a link.
   (zoom 10-12) or 1024 (below 10), since each test costs more in the globe's projection.
   [T-1644] When at most 40,000 instances show, they are gathered into one small buffer set
   (`map/strokeGather.ts`, from the arrays the strokes were made from) and each pass is one draw;
-  drawing them range by range rebinds nine attribute buffers per range per pass, hundreds of ranges
+  drawing them range by range rebinds ten attribute buffers per range per pass, hundreds of ranges
   at zoom 15, which cost more than the strokes. More are drawn by ranges, gaps under 512 instances
   drawn through. `?perfOff=strokeLod`, `strokeCull` and `strokeGather` (or `renderer.strokeLod`,
   `strokeCull` and `strokeGather`) switch them off.

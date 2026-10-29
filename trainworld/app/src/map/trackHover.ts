@@ -153,8 +153,10 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     const sel = selection.peek();
     // as wide as drawn (traffic thickness, T-227), as pick() takes it
     const wide = ov.renderer.lineWidths, widePx = ov.renderer.slotPx;
-    let [i] = sel?.kind === "line" ? topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === sel.line, wide, widePx) : [-1];
-    if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === hit.line, wide, widePx);
+    // side by side (T-1799) the band pick() hit, the selected line's only when that is it
+    const bandPx = ov.renderer.bandPx;
+    let [i] = sel?.kind === "line" && (!(bandPx > 0) || sel.line === hit.line) ? topSeg(ov, L.seg, L.count, px, py, slop, L.band, bandPx, (j) => String(L.colour[j]) === sel.line, wide, widePx) : [-1];
+    if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, L.band, bandPx, (j) => String(L.colour[j]) === hit.line, wide, widePx);
     if (i < 0) return null;
     if (out) out.hot = { line: L.colour[i] };
     // T-473: the track under the line says its elevation and speed too; T-559: and every line on it

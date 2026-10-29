@@ -2162,7 +2162,7 @@ function sendState(service = false, effectiveAt?: number, trips = true) {
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post

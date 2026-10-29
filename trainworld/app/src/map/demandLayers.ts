@@ -163,5 +163,5 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
       fill[k * 2 + 1] = v.g1[s] ?? -1;
     }
 
-  return { lineWidth, fill };
+  return { lineWidth, fill, traffic: on.lineLoad };
 }

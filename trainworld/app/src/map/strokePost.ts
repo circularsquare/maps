@@ -18,14 +18,14 @@ export type StrokeKind = "track" | "lines";
 export type StrokeMode = "whole" | "same" | "patch";
 
 /** values per segment of each array of a set */
-const WIDTH = { seg: 4, colour: 1, edge: 1, level: 1, flags: 1, dist: 1, lane: 2, stretch: 1, speed: 1, trainSpeed: 1 } as const;
+const WIDTH = { seg: 4, colour: 1, edge: 1, level: 1, flags: 1, dist: 1, lane: 2, stretch: 1, band: 4, speed: 1, trainSpeed: 1 } as const;
 type Field = keyof typeof WIDTH;
-type TypedArray = Float32Array | Uint32Array | Uint8Array;
+type TypedArray = Float32Array | Uint32Array | Uint8Array | Int16Array;
 const FIELDS: Record<StrokeKind, readonly Field[]> = {
   track: ["seg", "colour", "edge", "level", "flags", "dist", "lane", "speed", "trainSpeed"],
-  lines: ["seg", "colour", "edge", "level", "flags", "dist", "lane", "stretch"],
+  lines: ["seg", "colour", "edge", "level", "flags", "dist", "lane", "stretch", "band"],
 };
-const make = (f: Field, n: number): TypedArray => (f === "colour" || f === "edge" ? new Uint32Array(n) : f === "lane" ? new Uint8Array(n) : new Float32Array(n));
+const make = (f: Field, n: number): TypedArray => (f === "colour" || f === "edge" ? new Uint32Array(n) : f === "lane" ? new Uint8Array(n) : f === "band" ? new Int16Array(n) : new Float32Array(n));
 
 /** One edge's or line's piece of a set: its strokes, and for track the speed limit and fastest train
  * speed of each of its segments. */

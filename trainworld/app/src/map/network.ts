@@ -12,6 +12,7 @@ import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
+import { BAND_RAMP_M, BAND_RANGE, BAND_STRIDE, bandAlong, lineBands } from "./lineBands";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
@@ -59,6 +60,10 @@ export interface Strokes {
   /** 2 per segment (T-658): how far apart its two tracks are drawn at its start and end, 0 (single
    * track, one track on the centre line) to 255 (double track); absent: all double */
   lane?: Uint8Array;
+  /** line strokes, 4 per segment (T-1799, map/lineBands.ts): its band's shift left of its direction
+   * at its start and end, as a share of BAND_RANGE line widths, and `1 - its width share` at both,
+   * all Int16 normalised; absent or 0: one stroke on the centre line */
+  band?: Int16Array;
   count: number;
 }
 
@@ -112,6 +117,9 @@ export interface NetworkBuffers {
   /** per sample of `samples`: how far apart its track's two tracks are drawn there (T-658), 0
    * single track to 1 double, as `Strokes.lane`; absent: 1 */
   sampleLane?: Float32Array;
+  /** per sample of `samples` (T-1799): its line's band's shift there, line widths left of run 0's
+   * direction (`lineBands`); absent: 0 */
+  sampleBand?: Float32Array;
   /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`) */
   turnbacks?: Strokes;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
@@ -166,13 +174,15 @@ class StrokeBuilder {
   /** `Strokes.stretch`, only when built with `withStretch` */
   stretch = new Float32Array(0);
   lane = new Uint8Array(0);
+  /** `Strokes.band`, only when built with `withStretch` (line strokes) */
+  band = new Int16Array(0);
   constructor(private withStretch = false) {}
   private grow(need: number) {
     if (need <= this.cap) return;
     // a fresh builder takes what it is asked for: most hold one edge, and a 1,024 floor made every
     // edge's eight arrays ~50 kB (seconds of allocation on a 2,000-edge load, T-1156)
     const cap = this.cap ? Math.max(need, this.cap * 2) : need;
-    const g = <T extends Float32Array | Uint32Array | Uint8Array>(a: T, k: number): T => {
+    const g = <T extends Float32Array | Uint32Array | Uint8Array | Int16Array>(a: T, k: number): T => {
       const b = new (a.constructor as any)(cap * k) as T;
       b.set(a);
       return b;
@@ -185,11 +195,13 @@ class StrokeBuilder {
     this.dist = g(this.dist, 1);
     this.lane = g(this.lane, 2);
     if (this.withStretch) this.stretch = g(this.stretch, 1);
+    if (this.withStretch) this.band = g(this.band, 4);
     this.cap = cap;
   }
   /** pts: x, y, z triples; `stretch` as `Strokes.stretch`, for every segment added; `lane`: per point of
-   * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all */
-  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255): number {
+   * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all; `band`: per point, its
+   * shift (line widths) and `1 - width share` (`Strokes.band`) */
+  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255, band?: ArrayLike<number>): number {
     const n = pts.length / 3;
     let d = dist0;
     this.grow(this.count + Math.max(0, n - 1));
@@ -209,6 +221,13 @@ class StrokeBuilder {
       this.dist[c] = d;
       this.lane[c * 2] = typeof lane === "number" ? lane : lane[i];
       this.lane[c * 2 + 1] = typeof lane === "number" ? lane : lane[j];
+      if (band && this.withStretch) {
+        const S = 32767 / BAND_RANGE;
+        this.band[c * 4] = Math.round(band[i * 2] * S);
+        this.band[c * 4 + 1] = Math.round(band[j * 2] * S);
+        this.band[c * 4 + 2] = Math.round(band[i * 2 + 1] * 32767);
+        this.band[c * 4 + 3] = Math.round(band[j * 2 + 1] * 32767);
+      }
       d += Math.hypot(x1 - x0, y1 - y0);
     }
     return d;
@@ -223,7 +242,7 @@ class StrokeBuilder {
       flags: this.flags.slice(0, n),
       dist: this.dist.slice(0, n),
       lane: this.lane.slice(0, n * 2),
-      ...(this.withStretch ? { stretch: this.stretch.slice(0, n) } : {}),
+      ...(this.withStretch ? { stretch: this.stretch.slice(0, n), band: this.band.slice(0, n * 4) } : {}),
       count: n,
     };
   }
@@ -533,6 +552,43 @@ function terminalSidings(b: StrokeBuilder, s: ClockState, ways: (node: number) =
   }
 }
 
+/**
+ * An edge's drawn points for a line on it (T-1799): with a point added where its band's shift starts
+ * and stops easing (`bandAlong`), and per point its shift and `1 - width share` (`StrokeBuilder.add`'s
+ * `band`). `b` at `o`: the path entry's BAND_STRIDE numbers, in its travel direction (`reverse`: b to a).
+ */
+function bandPoints(dr: LanePoints, reverse: boolean, b: ArrayLike<number>, o: number): { pts: Float32Array; lane: number | Uint8Array; band: Float32Array } {
+  const p = dr.lpts, n = p.length / 3;
+  const at = new Float64Array(n);
+  for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+  const perM = kAtY(p[1]), len = at[n - 1] / perM;
+  const r = Math.min(BAND_RAMP_M, len / 2);
+  // where the ease ends, m along the edge a to b
+  const cuts: number[] = [];
+  const eases0 = b[o] !== b[o + 1] || b[o + 3] !== b[o + 4], eases1 = b[o + 1] !== b[o + 2] || b[o + 4] !== b[o + 5];
+  if (eases0) cuts.push(reverse ? len - r : r);
+  if (eases1 && (!eases0 || len - 2 * r > 1e-3)) cuts.push(reverse ? r : len - r);
+  cuts.sort((x, y) => x - y);
+  const out: number[] = [], lane: number[] = [], band: number[] = [];
+  const laneAt = (k: number) => (typeof dr.lane === "number" ? dr.lane : dr.lane[k]);
+  const push = (x: number, y: number, z: number, m: number, l: number) => {
+    out.push(x, y, z);
+    lane.push(l);
+    band.push(...bandAlong(b, o, reverse ? len - m : m, len));
+  };
+  push(p[0], p[1], p[2], 0, laneAt(0));
+  for (let k = 0; k < n - 1; k++) {
+    const m0 = at[k] / perM, m1 = at[k + 1] / perM;
+    for (const c of cuts) {
+      if (c <= m0 + 1e-3 || c >= m1 - 1e-3) continue;
+      const f = (c - m0) / (m1 - m0);
+      push(p[k * 3] + (p[k * 3 + 3] - p[k * 3]) * f, p[k * 3 + 1] + (p[k * 3 + 4] - p[k * 3 + 1]) * f, p[k * 3 + 2] + (p[k * 3 + 5] - p[k * 3 + 2]) * f, c, Math.round(laneAt(k) + (laneAt(k + 1) - laneAt(k)) * f));
+    }
+    push(p[k * 3 + 3], p[k * 3 + 4], p[k * 3 + 5], m1, laneAt(k + 1));
+  }
+  return { pts: out.length === p.length ? p : new Float32Array(out), lane: typeof dr.lane === "number" && out.length === p.length ? dr.lane : Uint8Array.from(lane), band: new Float32Array(band) };
+}
+
 /** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
 function laneAlong(dr: LanePoints, f: number): number {
   if (typeof dr.lane === "number") return dr.lane / 255;
@@ -580,6 +636,8 @@ interface LineEntry {
   running: boolean;
   /** high-speed trains: only such a line is drawn in the high-speed look (T-1494) */
   fast: boolean;
+  /** its bands (`LineBands.of`), null on no shared track */
+  band: Float32Array | null;
   strokes: Strokes;
   firstStroke: number[];
 }
@@ -600,6 +658,8 @@ interface LineSamples {
   lens: number[];
   rel: Int32Array;
   lane: Float32Array;
+  /** `sampleBand`'s, empty for a line on no shared track */
+  band: Float32Array;
 }
 
 /**
@@ -820,13 +880,17 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const nSamples = r.samples.length / 2;
   const sampleStroke = new Int32Array(nSamples).fill(-1);
   const sampleLane = new Float32Array(nSamples).fill(1);
+  const sampleBand = new Float32Array(nSamples);
   const sampleStretch = new Float32Array(Math.max(1, nSamples)).fill(-1);
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
+  // lines sharing track side by side (T-1799)
+  const bands = lineBands(s.lines, s.edges, edgePts);
   for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
-    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1))) {
+    const band = bands.of.get(l.id) ?? null;
+    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || !sameFloats(c.band, band))) {
       const lines = new StrokeBuilder(true);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -841,7 +905,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0);
           const stretchOf = Math.min(stretch, Math.max(0, l.stops.length - 2));
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
-          d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
+          if (band && dr.lpts.length >= 6) {
+            const bp = bandPoints(dr, (p & 1) === 1, band, k * BAND_STRIDE);
+            d = lines.add(bp.pts, l.id, e, flags, (p & 1) === 1, d, stretchOf, bp.lane, bp.band);
+          } else d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
         }
         // a path entry runs a -> b, or b -> a when its low bit is set
         const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
@@ -850,7 +917,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           next++;
         }
       });
-      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, strokes: lines.build(), firstStroke };
+      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, band, strokes: lines.build(), firstStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);
@@ -863,7 +930,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
       const firstStroke = c.firstStroke;
       // a bus has one centre line, not two tracks (T-1464)
-      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1);
+      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count : 0);
       let j = 0, end = lens[0] ?? 0;
       for (let k = 0; k < count; k++) {
         const at = k * step;
@@ -875,8 +942,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
           lane[k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
         }
+        // its band's shift (T-1799), left of run 0
+        if (c.band) bandOf[k] = bandAlong(c.band, j * BAND_STRIDE, Math.max(0, Math.min(len, len - (end - at))), len)[0];
       }
-      sm = { c, count, step, lens, rel, lane };
+      sm = { c, count, step, lens, rel, lane, band: bandOf };
     }
     samplesSeen.set(l.id, sm);
     const stretchOf = c.strokes.stretch!;
@@ -886,6 +955,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       if (f >= 0) sampleStretch[first + k] = stretchOf[f];
     }
     sampleLane.set(sm.lane, first);
+    if (sm.band.length) sampleBand.set(sm.band, first);
   }
   cache.lines = linesSeen;
   cache.samples = samplesSeen;
@@ -1030,6 +1100,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationLine,
     sampleStroke,
     sampleLane,
+    sampleBand,
     sampleStretch,
     turnbacks,
     edgePts,
@@ -1101,8 +1172,9 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
 
 /** A trip's state at game time `t` (`dep` absolute): null if it is not on the track. `dx, dy`:
  * run 0's direction there. `shiftM`: metres to the right of its direction of travel on double
- * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number } | null {
+ * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`); `bandM`:
+ * metres a line width is drawn, where its line's band shifts it (T-1799, `NetworkRenderer.bandShiftM`). */
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -1111,16 +1183,31 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d, run, shiftM), s, run, line, shiftM };
+  return { ...pointAt(n, line, d, run, shiftM, bandM), s, run, line, shiftM, bandM };
 }
 
 /** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
-function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0) {
+function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0) {
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
   const dx = fx - bx, dy = fy - by;
-  const [ox, oy] = rightOf(n, line, d, y, dx, dy, run, shiftM);
+  let [ox, oy] = rightOf(n, line, d, y, dx, dy, run, shiftM);
+  const len = Math.hypot(dx, dy);
+  if (bandM && n.sampleBand && len > 1e-9) {
+    // left of run 0's direction (local y points south, so left of (dx, dy) is (dy, -dx))
+    const k = bandAt(n, line, d) * bandM * kAtY(y, n.anchor ?? anchor()) / len;
+    ox += dy * k;
+    oy -= dx * k;
+  }
   return { x: x + ox, y: y + oy, dx, dy };
+}
+
+/** A line's band's shift at offset `d` along run 0, line widths left of it (`sampleBand`). */
+function bandAt(n: NetworkBuffers, line: number, d: number): number {
+  const b = n.sampleBand!, first = n.lineTable[line * 4];
+  if (n.lineTable[line * 4 + 1] < 2) return b[first] ?? 0;
+  const [si, f] = sampleSegment(n, line, d);
+  return b[si] + (b[si + 1] - b[si]) * f;
 }
 
 /** The shift to the right of travel (local y points south, so right of (dx, dy) is (-dy, dx)). */
@@ -1139,7 +1226,7 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  const p = pointAt(n, at.line, carD, at.run, at.shiftM);
+  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM);
   const [cx, cy] = lineAt(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
   const [bx, by] = lineAt(n, at.line, carD - half), [fx, fy] = lineAt(n, at.line, carD + half);
   return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };

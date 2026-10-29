@@ -105,7 +105,7 @@ export function visibleRanges(levels: ChunkBoxes, count: number, project: (x: nu
  * stopped, `s.count` once done. */
 export function significance(s: Strokes, speed: Float32Array | null, sig: Float32Array, a = 0, deadline = Infinity): number {
   const n = s.count, seg = s.seg;
-  const st = s.stretch, stack: number[] = [];
+  const st = s.stretch, bd = s.band, stack: number[] = [];
   for (let k = 0; a < n; k++) {
     if ((k & 255) === 255 && performance.now() > deadline) return a;
     let b = a + 1;
@@ -114,6 +114,8 @@ export function significance(s: Strokes, speed: Float32Array | null, sig: Float3
       if (Math.abs(seg[o] - seg[o - 2]) + Math.abs(seg[o + 1] - seg[o - 1]) > 1e-3) break;
       if (s.colour[b] !== s.colour[a] || s.edge[b] !== s.edge[a] || s.level[b] !== s.level[a] || s.flags[b] !== s.flags[a]) break;
       if (st && st[b] !== st[a]) break;
+      // a band's shift easing at a node (T-1799) is never merged away
+      if (bd && (bd[b * 4] !== bd[a * 4] || bd[b * 4 + 1] !== bd[a * 4 + 1] || bd[b * 4 + 2] !== bd[a * 4 + 2] || bd[b * 4 + 3] !== bd[a * 4 + 3] || bd[a * 4] !== bd[a * 4 + 1] || bd[a * 4 + 2] !== bd[a * 4 + 3])) break;
       if (speed && Math.abs(speed[b] - speed[a]) > SPEED_STEP) break;
     }
     sig[a] = Infinity;
@@ -151,7 +153,7 @@ export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Fl
   const first = new Uint32Array(m);
   for (let i = 0, k = 0; i < n; i++) if (sig[i] > tol) first[k++] = i;
   const seg = new Float32Array(m * 4), colour = new Uint32Array(m), edge = new Uint32Array(m), level = new Float32Array(m), flags = new Float32Array(m);
-  const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined;
+  const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined, band = s.band ? new Int16Array(m * 4) : undefined;
   for (let k = 0; k < m; k++) {
     const i = first[k], last = (k + 1 < m ? first[k + 1] : n) - 1;
     seg[k * 4] = s.seg[i * 4];
@@ -168,6 +170,13 @@ export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Fl
       lane[k * 2] = s.lane![i * 2];
       lane[k * 2 + 1] = s.lane![last * 2 + 1];
     }
+    if (band) {
+      const b = s.band!;
+      band[k * 4] = b[i * 4];
+      band[k * 4 + 1] = b[last * 4 + 1];
+      band[k * 4 + 2] = b[i * 4 + 2];
+      band[k * 4 + 3] = b[last * 4 + 3];
+    }
   }
-  return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, count: m }, first };
+  return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, band, count: m }, first };
 }

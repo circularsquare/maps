@@ -13,6 +13,7 @@ import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "
 import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
 import { LOT_STRIDE } from "./facilityPlace";
+import { BAND_RANGE } from "./lineBands";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -114,12 +115,18 @@ function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reac
   return m;
 }
 
-/** Topmost segment of a stroke set within the slop: [index, squared px distance]. `offset` and
- * `slot`: segments shifted sideways as the renderer draws them (lines side by side, T-062).
- * Also used by the track tooltip (trackHover.ts, T-157) to find the segment `pick` hit.
- * `wide` and `widePx`: per segment, the drawn width as a multiple of `widePx` (line widths by
- * riders, T-227); a segment drawn wider than the slop is hit anywhere across it. */
-export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number, py: number, best: number, offset?: Float32Array, slot = 0, accept?: (index: number) => boolean, wide?: Float32Array | null, widePx = 0, only?: Int32Array): [number, number] {
+/** a band's shift, line widths, from `Strokes.band`'s Int16 */
+const BAND_UNIT = BAND_RANGE / 32767;
+/** the largest band shift of a band array, line widths, worked out once per array */
+const widestShift = new WeakMap<Int16Array, number>();
+
+/** Topmost segment of a stroke set within the slop: [index, squared px distance]. `band` and
+ * `slot`: line segments shifted sideways as the renderer draws lines sharing track side by side
+ * (`Strokes.band`, `slot` CSS px a shift of one line width; T-1799): then the band under the pointer
+ * wins, else the nearest within the slop. Also used by the track tooltip (trackHover.ts, T-157) to
+ * find the segment `pick` hit. `wide` and `widePx`: per segment, the drawn width as a multiple of
+ * `widePx` (line widths by riders, T-227); a segment drawn wider than the slop is hit anywhere across it. */
+export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number, py: number, best: number, band?: Int16Array | null, slot = 0, accept?: (index: number) => boolean, wide?: Float32Array | null, widePx = 0, only?: Int32Array): [number, number] {
   // T-180: a segment whose box, grown by the slop and its sideways shift (and a pixel to spare),
   // misses the pointer cannot be within the slop, so it is skipped before the exact sum: first in
   // local units without projecting it (the pointer taken into local units once), then on screen.
@@ -130,10 +137,22 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   // off the globe nothing is under the pointer
   if (!at && ov.globe) return [-1, best];
   const lx = at ? at[0] : 0, ly = at ? at[1] : 0, perPx = at ? at[2] : 0;
+  const bands = band && slot > 0 && band.length >= count * 4 ? band : null;
+  let maxShift = 0;
+  if (bands) {
+    const had = widestShift.get(bands);
+    if (had !== undefined) maxShift = had;
+    else {
+      for (let i = 0; i < bands.length; i += 4) maxShift = Math.max(maxShift, Math.abs(bands[i]), Math.abs(bands[i + 1]));
+      widestShift.set(bands, (maxShift *= BAND_UNIT));
+    }
+  }
   let near: Int32Array | null = null, nearCount = 0;
+  // the nearest banded segment within the slop, when none is under the pointer
+  let bestI = -1, bestD = Infinity;
   // `only`: the caller's own candidates, highest first (the blueprint's few segments, T-630)
   if (only) (near = only), (nearCount = only.length);
-  else if (at && !offset) {
+  else if (at) {
     let maxWide = 0;
     if (wide && widePx) {
       const had = widest.get(wide);
@@ -143,7 +162,7 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
         widest.set(wide, maxWide);
       }
     }
-    const reachMax = (Math.max(slop, 0.5 * maxWide * widePx) + 1) * perPx;
+    const reachMax = (Math.max(slop, 0.5 * maxWide * widePx) + maxShift * slot + 1) * perPx;
     nearCount = segsNear(seg, count, lx, ly, reachMax);
     if (nearCount >= 0) near = NEAR;
   }
@@ -153,33 +172,38 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
     // a line drawn wider than the slop is hit anywhere on it (T-227)
     const half = wide && widePx ? Math.max(slop, 0.5 * wide[i] * widePx) : slop;
     const reach = half + 1;
+    const o0 = bands ? bands[i * 4] * BAND_UNIT * slot : 0, o1 = bands ? bands[i * 4 + 1] * BAND_UNIT * slot : 0;
+    const om = Math.max(Math.abs(o0), Math.abs(o1));
     if (at) {
-      const rl = (reach + Math.abs(offset ? offset[i] * slot : 0)) * perPx;
+      const rl = (reach + om) * perPx;
       const ax = seg[i * 4], ay = seg[i * 4 + 1], bx = seg[i * 4 + 2], by = seg[i * 4 + 3];
       if ((ax > lx + rl && bx > lx + rl) || (ax < lx - rl && bx < lx - rl) || (ay > ly + rl && by > ly + rl) || (ay < ly - rl && by < ly - rl)) continue;
     }
     ov.toScreenInto(seg[i * 4], seg[i * 4 + 1], p, 0);
     ov.toScreenInto(seg[i * 4 + 2], seg[i * 4 + 3], p, 2);
     let x0 = p[0], y0 = p[1], x1 = p[2], y1 = p[3];
-    const o = offset ? offset[i] * slot : 0;
-    const r = reach + Math.abs(o);
+    const r = reach + om;
     if ((x0 > px + r && x1 > px + r) || (x0 < px - r && x1 < px - r) || (y0 > py + r && y1 > py + r) || (y0 < py - r && y1 < py - r)) continue;
     let dx = x1 - x0, dy = y1 - y0;
-    if (o) {
-      // the renderer's normal, in screen px with y down: (dy, -dx) for a unit direction
+    if (om) {
+      // the renderer's normal, left of the segment, in screen px with y down: (dy, -dx) for a unit direction
       const l = Math.hypot(dx, dy) || 1;
-      const ox = (dy / l) * o, oy = (-dx / l) * o;
-      x0 += ox, y0 += oy, x1 += ox, y1 += oy;
+      x0 += (dy / l) * o0, y0 += (-dx / l) * o0, x1 += (dy / l) * o1, y1 += (-dx / l) * o1;
       dx = x1 - x0, dy = y1 - y0;
     }
     const l2 = dx * dx + dy * dy;
     const t = l2 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
     const d = (x0 + t * dx - px) ** 2 + (y0 + t * dy - py) ** 2;
-    if (d < Math.max(best, half * half)) {
-      return [i, d];
+    if (!bands) {
+      if (d < Math.max(best, half * half)) return [i, d];
+      continue;
     }
+    // the band under the pointer, topmost first; else the nearest
+    const bw = 0.5 * widePx * (1 - Math.min(1, slot / Math.max(widePx, 1e-9)) * (bands[i * 4 + 2] + bands[i * 4 + 3]) / 65534);
+    if (d <= bw * bw) return [i, d];
+    if (d < Math.max(best, half * half) && d < bestD) (bestI = i), (bestD = d);
   }
-  return [-1, best];
+  return bestI >= 0 ? [bestI, bestD] : [-1, best];
 }
 
 /** Up to `max` different lines with a stroke under the pointer, in `pick`'s order: the selected
@@ -195,10 +219,12 @@ export function linesAt(ov: Overlay, px: number, py: number, current: Selection,
   if (ov.renderer.hasBlueprint) tiers.push((i) => (L.flags[i] & F_BLUEPRINT) !== 0);
   tiers.push(() => true);
   const out: string[] = [];
+  // lines side by side (T-1799): past the first, only those whose band is under the pointer
+  const bandPx = ov.renderer.bandPx, under = (0.5 * widePx + 1) ** 2;
   for (const tier of tiers) {
     while (out.length < max) {
-      const [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => tier(j) && !out.includes(String(L.colour[j])), wide, widePx);
-      if (i < 0) break;
+      const [i, d] = topSeg(ov, L.seg, L.count, px, py, slop, L.band, bandPx, (j) => tier(j) && !out.includes(String(L.colour[j])), wide, widePx);
+      if (i < 0 || (bandPx > 0 && out.length > 0 && d > under)) break;
       out.push(String(L.colour[i]));
     }
   }
@@ -325,13 +351,13 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     const first = current?.kind === "train" ? r.tripIndex(current.profile, current.dep - r.tripsEpoch) : -1;
     const at = pointerLocal(ov, px, py);
     // T-724: only trips on a stretch of line near the pointer are placed (same answers)
-    const marked = at ? markNearBlocks(n, at[0], at[1], (Math.sqrt(best) + 1) * at[2] + 3 * r.laneShiftM + 1) : null;
+    const marked = at ? markNearBlocks(n, at[0], at[1], (Math.sqrt(best) + 1) * at[2] + 3 * r.laneShiftM + 8 * r.bandShiftM + 1) : null;
     for (let k = r.tripCount - (first >= 0 ? 0 : 1); k >= 0; k--) {
       const i = k === r.tripCount ? first : k;
       if (k < r.tripCount && i === first) continue;
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch;
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
-      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM);
+      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM);
       if (!at) continue;
       if (r.detailedTrains) {
         const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
@@ -360,22 +386,26 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   // existing repeat-click-to-track interaction even where that pass crosses another line.
   // lines wider than the slop (traffic thickness, T-227) are hit across their drawn width
   const wide = ov.renderer.lineWidths, widePx = ov.renderer.slotPx;
-  const [selectedLi] = ov.renderer.slotPx && current?.kind === "line"
-    ? topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, (i) => String(n.lines.colour[i]) === current.line, wide, widePx)
-    : [-1];
+  // lines sharing track side by side (T-1799): the band under the pointer, the selected line's only
+  // when its own band is
+  const bandPx = ov.renderer.bandPx, B = n.lines.band;
+  const [selectedLi, selectedD] = ov.renderer.slotPx && current?.kind === "line"
+    ? topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, B, bandPx, (i) => String(n.lines.colour[i]) === current.line, wide, widePx)
+    : [-1, 0];
   // blueprint track and the lines planned on it are drawn over built track and its lines (T-695)
   const bp = ov.renderer.hasBlueprint;
-  let li = selectedLi;
-  if (li < 0 && bp && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx, blueprintOf(n.lines));
+  let li = bandPx > 0 && selectedD > (0.5 * widePx + 1) ** 2 ? -1 : selectedLi;
+  if (li < 0 && bp && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, B, bandPx, undefined, wide, widePx, blueprintOf(n.lines));
   if (li < 0 && bp) {
     const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop, undefined, 0, undefined, null, 0, blueprintOf(n.track));
     if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
   }
-  if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx);
+  if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, B, bandPx, undefined, wide, widePx);
   const lineHit = li >= 0 ? String(n.lines.colour[li]) : null;
   if (lineHit && !(current?.kind === "line" && current.line === lineHit)) {
-    // track several lines run over opens the track's list of them rather than the line on top (T-654)
-    if (chooseShared && linesOnEdge(n.lines, n.lines.edge[li]) > 1) return { kind: "track", edge: n.lines.edge[li] };
+    // track several lines run over opens the track's list of them rather than the line on top (T-654),
+    // unless each line has its own band to click
+    if (chooseShared && !(bandPx > 0) && linesOnEdge(n.lines, n.lines.edge[li]) > 1) return { kind: "track", edge: n.lines.edge[li] };
     return { kind: "line", line: lineHit };
   }
 

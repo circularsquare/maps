@@ -1,5 +1,5 @@
 // A stroke set's visible instances gathered into one small buffer set (T-1644, notes/T-1644.md). Drawing
-// a set by ranges (strokeLod.ts) rebinds its nine attribute buffers for every range, in every pass, and
+// a set by ranges (strokeLod.ts) rebinds its ten attribute buffers for every range, in every pass, and
 // zoomed in that is hundreds of ranges a pass. Gathered, a pass is one draw of a few thousand instances.
 
 /** one stroke set's per-instance values, as its attribute buffers hold them; `wmul` and `full` null: all 1 and all 0 */
@@ -11,6 +11,8 @@ export interface StrokeCpu {
   flags: Float32Array;
   speed: Float32Array;
   lane: Uint8Array | undefined;
+  /** T-1799: absent, all 0 */
+  band: Int16Array | undefined;
   wmul: Float32Array | null;
   full: Float32Array | null;
 }
@@ -34,6 +36,7 @@ export class StrokeGather {
   private lane = new Uint8Array(0);
   private wmul = new Float32Array(0);
   private full = new Float32Array(0);
+  private band = new Int16Array(0);
 
   /** `loc`: the stroke program's attribute location by name (negative: unused) */
   constructor(private gl: WebGL2RenderingContext, loc: (name: string) => number) {
@@ -59,6 +62,7 @@ export class StrokeGather {
     attrib("a_lane", 2, gl.UNSIGNED_BYTE, false, true);
     this.wmulBuf = attrib("a_wmul", 1, gl.FLOAT);
     this.fullBuf = attrib("a_full", 1, gl.FLOAT);
+    attrib("a_band", 4, gl.SHORT, false, true);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -77,7 +81,8 @@ export class StrokeGather {
     this.lane = new Uint8Array(cap * 2);
     this.wmul = new Float32Array(cap);
     this.full = new Float32Array(cap);
-    const bytes = [16, 4, 4, 4, 4, 4, 2, 4, 4];
+    this.band = new Int16Array(cap * 4);
+    const bytes = [16, 4, 4, 4, 4, 4, 2, 4, 4, 8];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferData(gl.ARRAY_BUFFER, cap * bytes[i], gl.DYNAMIC_DRAW);
@@ -88,7 +93,7 @@ export class StrokeGather {
   fill(cpu: StrokeCpu, ranges: number[], total: number) {
     const gl = this.gl;
     if (total > this.cap) this.grow(total);
-    const { seg, colour, edge, level, flags, speed, lane, wmul, full } = this;
+    const { seg, colour, edge, level, flags, speed, lane, wmul, full, band } = this;
     let at = 0;
     for (let r = 0; r < ranges.length; r += 2) {
       const start = ranges[r], n = ranges[r + 1];
@@ -101,13 +106,15 @@ export class StrokeGather {
       if (cpu.lane) copy(lane, at * 2, cpu.lane, start * 2, n * 2);
       if (cpu.wmul) copy(wmul, at, cpu.wmul, start, n);
       if (cpu.full) copy(full, at, cpu.full, start, n);
+      if (cpu.band) copy(band, at * 4, cpu.band, start * 4, n * 4);
       at += n;
     }
     if (!cpu.lane) lane.fill(255, 0, total * 2);
     if (!cpu.wmul) wmul.fill(1, 0, total);
     if (!cpu.full) full.fill(0, 0, total);
-    const data: ArrayBufferView[] = [seg, colour, edge, level, flags, speed, lane, wmul, full];
-    const per = [4, 1, 1, 1, 1, 1, 2, 1, 1];
+    if (!cpu.band) band.fill(0, 0, total * 4);
+    const data: ArrayBufferView[] = [seg, colour, edge, level, flags, speed, lane, wmul, full, band];
+    const per = [4, 1, 1, 1, 1, 1, 2, 1, 1, 4];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, data[i], 0, total * per[i]);
@@ -125,7 +132,7 @@ export class StrokeGather {
   }
 }
 
-type Typed = Float32Array | Uint32Array | Uint8Array;
+type Typed = Float32Array | Uint32Array | Uint8Array | Int16Array;
 
 /** `n` elements from `src` at `from` to `dst` at `at`; short runs by hand, since a subarray costs more than they do */
 function copy(dst: Typed, at: number, src: Typed, from: number, n: number) {

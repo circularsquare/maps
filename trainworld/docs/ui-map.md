@@ -122,11 +122,29 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   stroke widens from 3 to 5 px (`HSR_STRIPE_PX`), so far out they are a solid stroke a little
   heavier than ordinary track [T-1097]. Once the two tracks part, the line runs between them in the
   track's or the line's own colour.
-- **Lines sharing track are drawn over each other** [T-190, T-533], each of the two tracks too
-  close in: interlining is not represented.
-  One order for all lines: a line with no trains (fleet zero) goes under every line that runs
-  trains; within each group the shorter route (end to end, one direction) is on top, ties to the
-  higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
+- **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], in the
+  Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
+  colour, the bands touching, one casing round them all (every casing is drawn before any colour).
+  Order on each edge, left to right: of two lines, the one turning more to the left where they
+  part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
+  number on the left of that line's travel; an edge's order is by how many of the others each line
+  is left of, which is the pairwise order wherever that is one. So bands cross only at a node where
+  the two routes part or meet, or where three or more lines' partings go round in a circle (some
+  pair has to cross). Where a line's place changes at a node it eases over 30 m (`BAND_RAMP_M`;
+  half a short edge at most), on the side with more lines, so a bundle opens out after the node; a
+  line alone keeps its full width. Zoomed out the bands fold into one stroke as a line narrows from
+  1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
+  centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
+  drawn over each other on the real tracks again. Through a station's box (T-236) the ribbon is
+  narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the
+  slop; trains run on their line's band (`sampleBand`, `tripAt`'s `bandM`). Not yet: the Traffic
+  view, the Elevation and Speed views and a four-track trunk's two pairs (their ribbons lie over
+  each other) are drawn as below; `?perfOff=bands` turns the bands off.
+- **Lines sharing track drawn over each other** [T-190, T-533] where they are not side by side
+  (zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet
+  zero) goes under every line that runs trains; within each group the shorter route (end to end,
+  one direction) is on top, ties to the higher id. The line on top wins a click. It is rebuilt when
+  lines or fleets change.
 - **Track display** [T-105, T-703; on the map under the demand buttons], four choices, remembered per browser:
   - **Line** (the default [T-1101]; a stored Traffic from before settings version 10 is dropped
     once, T-1244): uniform width in the line colours.
@@ -559,7 +577,8 @@ drawn under 8 px in radius are hit within 8 px of their centre [T-566, `MIN_PICK
 the pointer; where those areas overlap the nearest centre wins.
 Clicking the line already selected selects the track under it; a click on track several lines run
 over (one edge, more than one line on it) selects the track whose inspector lists those lines to
-choose from, in every track display [T-654, `pick`'s `chooseShared`]. Clicking a selection's longer-trip discs keeps the
+choose from [T-654, `pick`'s `chooseShared`], except where the lines are side by side, where it
+selects the band's line [T-1799]. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.
 
