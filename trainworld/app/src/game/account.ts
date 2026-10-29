@@ -20,6 +20,7 @@
 import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { pointsPast24h } from "./points";
+import { startPlaytime } from "./playtime";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
 import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
@@ -32,7 +33,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldPing?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -339,6 +340,8 @@ export function startAccount() {
       const t = setInterval(again, CONFIG_RETRY_MS);
       addEventListener("online", again);
     });
+    // T-1771: plays and playtime, only against a server that says it takes them
+    if (accountConfig.peek()?.trainworldPing) startPlaytime((p) => api("POST", "trainworld/ping", p));
     if (accountState.peek() !== "on") return;
     if (session.peek()) {
       try { storeSession(await api("POST", "noritetsu/refresh")); }

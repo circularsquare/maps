@@ -117,8 +117,9 @@ this session's landings are in ARCHIVE.md (T-1561 to T-1691) and `git log`.
   Tokyo's default-blue matches back to palette, realcolour.py only. SHIP after T-1765's join, from trainworld/:
   `set REALNET_OUT=C:\Users\anita\projects\maps\artifacts\trainworld\t1770-realnet` then
   `..\venv\Scripts\python.exe pipeline\realnet.py ship`; then rebuild 8800.
-- T-1305 stage 1 agent t1305s1 (Opus): NYC corridors in Python, new pipeline/realcorridors.py + realroute.py chains;
-  output artifacts/trainworld/t1305-shared/. 2 cores. Stage 2 (realsave from the file) after.
+- T-1305 stage 1 committed cebb5c03 (4 trunks right; Queens Blvd express 100.6% because game trains hit 160 km/h on
+  the 4 km run). Stage 2 running (same agent resumed): realsave from corridors, staged in t1305-shared/; calls: trim
+  Queens Blvd per 90% rule, W 4 St split by hand, fresh geom. Vite 6174, 3 cores. Not shipped until Anita looks.
 - T-1305 design done (notes/T-1305.md); Anita: pairs of two (option a), go. Start stage 1 (NYC corridors, Python) once
   t1770 is done with realnet.py; then stage 2 (NYC save). One colour per trunk until she looks.
 - T-1771 analytics: agent t1771 (Sonnet) building, reusing shonei-server d758c53 / website ce16e92 (notrack).

@@ -168,12 +168,16 @@ export const showZoneRealm = (zone: CityId) => showRealm(zoneRealm(zone));
  * its start zone, or for a save older than its `start` field the zone it opens on. The realms shown
  * by a click go with the game before. */
 export function setGameStart(start: CityId | null | undefined) {
+  startZone = start ?? null;
   startRealm.value = start ? zoneRealm(start) ?? null : null;
   mapStart.value = !start;
   clicked.value = new Set();
   waitFor = world.peek();
 }
 let waitFor: unknown;
+let startZone: CityId | null = null;
+/** The zone the game in hand was started in (null for an old save with none), for the playtime ping. */
+export const gameStartZone = (): CityId | null => startZone;
 
 /** T-1539: the realms of the first game's built stations as its save is read (`stationsAhead`), shown
  * until its first state, so its cached figures drawn before then show only its realms. */
