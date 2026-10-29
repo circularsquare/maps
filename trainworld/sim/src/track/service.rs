@@ -557,8 +557,8 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
 }
 
 /// A bus line's service (T-1464): its stops from `bus::plan`, each hop run at the speed of the
-/// streets it crosses (`bus::Pace`), standing the line's dwell at the train stations, with no
-/// capacity holds.
+/// streets it crosses (`bus::Pace`), standing the line's dwell at the train stations and a short
+/// stand at each street stop (T-1798), with no capacity holds.
 fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let mut ls = LineSvc::default();
     let plan = super::bus::plan(net, l, &r.points, &r.kinds, r.built);
@@ -574,8 +574,9 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
     let top = pace.top();
-    let make = |s: Vec<f64>, dw: &[f64], pace: &super::bus::Pace| {
-        let p = super::bus::profile(&s, dw, pace);
+    let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
+    let make = |s: Vec<f64>, dw: &[f64], street: &[f64], pace: &super::bus::Pace| {
+        let p = super::bus::profile(&s, dw, street, pace);
         Run {
             len,
             turn: vec![false; n],
@@ -590,7 +591,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
         }
     };
     ls.stops = plan.stops.iter().map(|s| s.id).collect();
-    ls.runs = [make(fwd_s, &fwd_dw, &pace), make(rev_s, &rev_dw, &pace.reversed())];
+    ls.runs = [make(fwd_s, &fwd_dw, &plan.street, &pace), make(rev_s, &rev_dw, &rev_street, &pace.reversed())];
     ls.cars = 1;
     ls.train_len = super::bus::BUS_LEN_M;
     ls.ok = true;

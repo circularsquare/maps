@@ -1102,8 +1102,10 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   demand-mode.md), so a bus does 18 outside the dense places and 11.5 in the densest. Each 100 m of road
   has its own speed and a hop between stops takes the time of the streets it crosses (`bus::Pace`). The
   street speeds come from the packs (below); a route in a zone with none runs at 18. The line's dwell
-  stands only at train stations, the line's turnaround at the ends (120 s for a new bus line). No
-  accelerating, no capacity, no holds.
+  stands at train stations, the line's turnaround at the ends (120 s for a new bus line). At each
+  street stop (the drawn ones, `plan.street`) the bus stands 20 s (`bus::STREET_DWELL_S`, T-1798), taken out
+  of the hop's time (at most 40% of it), so the bus runs faster between stands and arrives when it
+  did before: run times and demand do not see the stands. No accelerating, no capacity, no holds.
 - **Riders**: 80 at crush (demand: 0.5 of a 160-rider car, 22 seats); the boarding account keeps no
   platform crowd at its stops that are no station.
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'

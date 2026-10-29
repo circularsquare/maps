@@ -3,7 +3,7 @@ use crate::track::profile::state_at;
 
 #[test]
 fn profile_runs_flat_and_stands_between() {
-    let p = profile(&[0.0, 1000.0, 3000.0], &[0.0, 30.0, 0.0], &Pace::default());
+    let p = profile(&[0.0, 1000.0, 3000.0], &[0.0, 30.0, 0.0], &[], &Pace::default());
     let hop = 1000.0 / BUS_V;
     assert_eq!(p.arr, vec![0.0, hop, hop + 30.0 + 2000.0 / BUS_V]);
     assert_eq!(p.dep[1] - p.arr[1], 30.0);
@@ -91,9 +91,32 @@ fn a_hop_takes_the_time_of_the_streets_it_crosses() {
     assert_eq!(pace.top(), 10.0);
     assert_eq!(Pace::default().time(0.0, 1800.0), 1800.0 / BUS_V);
     // the profile runs each hop at its mean
-    let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &pace);
+    let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &[], &pace);
     assert!((p.arr[1] - pace.time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.time(0.0, 1000.0)).abs() < 1e-9);
     assert!((p.phases[0].v - 500.0 / pace.time(0.0, 500.0)).abs() < 1e-9);
+}
+
+#[test]
+fn a_bus_stands_at_its_street_stops_within_the_hops_time() {
+    let stops = [0.0, 2000.0];
+    let street = [400.0, 800.0, 1200.0, 1600.0];
+    let flat = profile(&stops, &[0.0, 0.0], &[], &Pace::default());
+    let p = profile(&stops, &[0.0, 0.0], &street, &Pace::default());
+    // the trip takes the same time, so demand's run times do not move
+    assert!((p.duration - flat.duration).abs() < 1e-9 && (p.arr[1] - flat.arr[1]).abs() < 1e-9);
+    // standing STREET_DWELL_S at each street stop, then away
+    for &s in &street {
+        let t = crate::track::profile::time_at(&p.phases, s);
+        assert_eq!(crate::track::profile::state_at(&p.phases, t - STREET_DWELL_S / 2.0), (s, 0.0), "at {s}");
+        assert!(crate::track::profile::state_at(&p.phases, t + 1.0).1 > 0.0);
+    }
+    // never behind the flat run by more than the stands, never ahead of the end
+    assert_eq!(crate::track::profile::state_at(&p.phases, p.duration + 50.0), (2000.0, 0.0));
+    // a short hop gives up at most 40% of its time to standing
+    let short = profile(&[0.0, 100.0], &[0.0, 0.0], &[50.0], &Pace::default());
+    let flat = profile(&[0.0, 100.0], &[0.0, 0.0], &[], &Pace::default());
+    assert!((short.duration - flat.duration).abs() < 1e-9);
+    assert!(short.phases.iter().all(|p| p.v == 0.0 || p.v < 2.0 * BUS_V));
 }
 
 #[test]

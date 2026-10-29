@@ -738,8 +738,9 @@ void main() {
   // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
-  vec2 px = max(bus ? u_min_px * 0.55 : u_min_px, vec2(cars * carM, bus ? 2.5 : 3.0) * kM * u_px_per_unit);
-  if (u_detail) px.x = max(2.0 * u_dpr, pitchM * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
+  // a bus (T-1798) is drawn 1.4 times its size from a distance and 1.2 times its real one close up
+  vec2 px = max(bus ? u_min_px * 0.77 : u_min_px, vec2(cars * carM, bus ? 2.5 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
+  if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
   float lane = u_lane.y * laneAt(L, carD);

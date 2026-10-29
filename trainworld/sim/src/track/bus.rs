@@ -3,8 +3,8 @@
 //! a road path (`K_ROAD`: the road length is the drawn length) and runs straight elsewhere, where
 //! the road length is the drawn length times `ROAD_FACTOR`. The road length sets the run time, the
 //! price and the running cost. A bus runs door to door at its share of the car's street speed
-//! where it is (`Pace`, `streets.rs`), at most `BUS_V`, standing the line's dwell only at the train
-//! stations it meets.
+//! where it is (`Pace`, `streets.rs`), at most `BUS_V`, standing the line's dwell at the train
+//! stations it meets and `STREET_DWELL_S` at each street stop (drawn only, within the hop's time).
 //!
 //! Demand sees a few stops of each route (`plan`): the train stations it passes within
 //! `STATION_REACH_M`, its ends, a stop where it crosses another bus route, and one every
@@ -34,6 +34,8 @@ pub const STATION_REACH_M: f64 = 200.0;
 pub const STREET_STOP_M: f64 = 400.0;
 /// About one demand stop this far along the road, m.
 pub const DEMAND_STOP_M: f64 = 2000.0;
+/// Seconds a bus stands at a street stop, taken out of the hop's running time (T-1798).
+pub const STREET_DWELL_S: f64 = 20.0;
 /// Two stations closer than this along the road: the bus stops at the one nearer the route.
 const STATION_GAP_M: f64 = 100.0;
 /// Two stations this far apart along the road get a stop between them even under `DEMAND_STOP_M`.
@@ -450,7 +452,9 @@ impl Pace {
 
 /// A bus's trip over stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
 /// stop between the ends: constant speed between stops (the hop's mean over `pace`), no accelerating.
-pub fn profile(stop_s: &[f64], dwell: &[f64], pace: &Pace) -> Profile {
+/// It also stands `STREET_DWELL_S` at each street stop of `street` (ascending) inside a hop, which
+/// is drawn only: the hop's time stays what `pace` gives, the bus running faster between the stands.
+pub fn profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace) -> Profile {
     let n = stop_s.len();
     let mut p = Profile::default();
     if n < 2 {
@@ -462,7 +466,19 @@ pub fn profile(stop_s: &[f64], dwell: &[f64], pace: &Pace) -> Profile {
     for i in 0..n - 1 {
         let run = pace.time(stop_s[i], stop_s[i + 1]);
         let d = (stop_s[i + 1] - stop_s[i]).max(0.0);
-        p.phases.push(Phase { t, s: stop_s[i], v: if run > 0.0 { d / run } else { BUS_V }, a: 0.0 });
+        let lo = street.partition_point(|&s| s <= stop_s[i]);
+        let hi = street.partition_point(|&s| s < stop_s[i + 1]);
+        let ss = &street[lo..hi.max(lo)];
+        // at most 40% of the hop standing; the rest is the same time spent moving
+        let stand_at = if ss.is_empty() || run <= 0.0 { 0.0 } else { STREET_DWELL_S.min(0.4 * run / ss.len() as f64) };
+        let moving = run - stand_at * ss.len() as f64;
+        let v = if moving > 0.0 { d / moving } else { BUS_V };
+        p.phases.push(Phase { t, s: stop_s[i], v, a: 0.0 });
+        for (k, &s) in ss.iter().enumerate() {
+            let arrive = t + (s - stop_s[i]) / v + stand_at * k as f64;
+            p.phases.push(Phase { t: arrive, s, v: 0.0, a: 0.0 });
+            p.phases.push(Phase { t: arrive + stand_at, s, v, a: 0.0 });
+        }
         t += run;
         p.arr.push(t);
         let stand = if i + 1 < n - 1 { dwell.get(i + 1).copied().unwrap_or(0.0).max(0.0) } else { 0.0 };
