@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1762 [P2] A zone's origin was the densest GHSL pixel anywhere in the zone, not in its named town. Done 2026-10-29: `world_plan.py` takes it from the named unit; Vietnam's 11 zones over 25 km off (cba thc rah huu cmk hox lao pha quy dib kya, 28-78 km) rebuilt and joined, all shipped, Lao Cai's test line 12,008 riders to 67,887 with school; other countries listed in T-1765. notes/T-1738.md 10.
+- T-1744 [P3] Muong Nhe (40,000) and Con Dao (6,800) parked in Vietnam. Done 2026-10-29: dead space (`ALONE_MIN`, Vietnam only, 100,000 people for a zone that joined nothing), their rows and unregistered files removed; Vietnam is 93 of 93 shipped. notes/T-1738.md 10.
+
+- T-1735 [P2] The market's pairs round an edit re-solved with the local solve (T-1650 stage 3). Done 2026-10-29: an edit with a 20-minute run or more re-solves the pairs with an end in a window of zones (9% of the market's stations, or 800); T-1650's express 85% of its market riders for about 18% of a pass, but 26% in play on all of Japan (T-1760). notes/T-1735.md.
 - T-1737 [P3] Why far lines' trains move after edits elsewhere. Answered 2026-10-29: far zones are touched by service-span steps of 0.05 (one train a day), not trains an hour; real knock-ons are local (a crossing at grade cuts a long line everywhere); 12 of 44 zones on a 17-edit repro. Fix T-1764. notes/T-1737.md.
 
 - T-1644 [P3] GPU at zoom 15 on the Japan save. Done 2026-10-29: the strokes' draw calls, not MSAA; the visible strokes are gathered into one buffer (`map/strokeGather.ts`). Panning 37% to 23-27% GPU, overlay 6-7 to 1.7-2.3 ms, pixels the same. notes/T-1644.md.

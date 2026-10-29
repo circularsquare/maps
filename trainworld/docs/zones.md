@@ -121,7 +121,8 @@ own figures (pop_vs_plan, top_zone_jobs_share, the browser's test line, a named 
 not carried; the gate decides them afresh.
 A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
-any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
+any "/"), and has its origin at the densest square km of the unit it is named after (T-1762; Korea's grouped zones: of the zone). Vietnam's
+zones under 100,000 people that join nothing are dead space (`ALONE_MIN`, T-1744: Muong Nhe, Con Dao). A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below; China's zones take the `china` module, so their
 people are the 2020 census by township as its metros', T-1185). Which countries are covered, and with how many zones:

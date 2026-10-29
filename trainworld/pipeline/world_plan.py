@@ -165,6 +165,8 @@ COUNTY_ISO = {"72": "PRI", "60": None, "66": None, "69": None, "78": None}
 WATER_GAP_KM = 10.0
 ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one archipelago (Anita, 2026-10-22)
 ZONE_ALONE_MIN = 10_000  # with `contiguous`, a zone that joined nothing and holds fewer people is dead space
+# the same for a country on the default rule that wants it (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800: T-1744)
+ALONE_MIN = {"VNM": ZONE_MIN_POP}
 # a country's joint commute solve split by first-level unit (T-897: one China group would pass
 # intercity.MAX_GROUP_ZONES); first-level names as geoBoundaries gives them, to the solve region's
 # name; a first-level unit not listed is its own region, named by its first word
@@ -2360,8 +2362,9 @@ def plan_zones(isos3, out_path=None, replan=False):
         cities = city_units(zunits, zfree, city_pop)
         groups, lines = zone_groups(zunits, zfree, region, floor, cap, rule.get("contiguous", False), fixed, travel,
                                     fixed_units, big, cities, rule.get("join_km", 0.0))
-        if rule.get("contiguous"):  # T-897: no pack for an islet of a few hundred people that can join nothing
-            for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < ZONE_ALONE_MIN]:
+        alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN if rule.get("contiguous") else 0)
+        if alone_min:  # T-897: no pack for an islet of a few hundred people that can join nothing
+            for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < alone_min]:
                 for i in (m for g in groups.pop(lead) for m in members[g]):
                     dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "alone": True})
         lead_of = {lead: sorted((zby[g] for g in ids), key=lambda u: -u.free) for lead, ids in groups.items()}
@@ -2387,14 +2390,15 @@ def plan_zones(isos3, out_path=None, replan=False):
                     log(f"  {us[0].name}: {len(far)} parts over {WATER_GAP_KM:g} km from its main part "
                         f"({sum(p.area for p in far) / 1e6:,.0f} km2; a unit's own exclave or a pack's cut)")
             ll = to_ll(g)
-            best = None
-            for u in us:
-                x, y, p = u.px
-                if len(p) and (best is None or p.max() > best[0]):
-                    i = int(np.argmax(p))
-                    best = (float(p[i]), x[i], y[i], u.id)
-            lon, lat = INV.transform(best[1], best[2])
-            tz = COUNTRY_TZ.get(iso) or tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
+            def densest(units):
+                best = None
+                for u in units:
+                    x, y, p = u.px
+                    if len(p) and (best is None or p.max() > best[0]):
+                        i = int(np.argmax(p))
+                        best = (float(p[i]), x[i], y[i], u.id)
+                return best
+            best = densest(us)
             # the most populous unit with a name in Latin script (Taiwan's file has some in Chinese only); a
             # group of units, the one holding the origin (T-1191: Korea's dong lines put Jeju city's people
             # in Seogwipo's Namwon-eup)
@@ -2403,6 +2407,10 @@ def plan_zones(isos3, out_path=None, replan=False):
                 top = next(g for g in byname if best[3] in members[g.id])
                 byname = [top] + [g for g in byname if g is not top]
             named = [u for u in byname if latin(zone_name(u.name, iso))] or byname
+            if level is None:  # T-1762: the origin is in the unit the zone is named after, not on a far border village
+                best = densest(named[:1]) or best
+            lon, lat = INV.transform(best[1], best[2])
+            tz = COUNTRY_TZ.get(iso) or tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
             name = zone_name(named[0].name, iso)
             if iso == "KOR" and level is not None and re.search(r"-gu( \[|$)", named[0].name) and named[0].parents:
                 name = named[0].parents[0][1]  # a gu is a district of a metropolitan city: the city (Ulsan)

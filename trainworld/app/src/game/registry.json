@@ -15686,6 +15686,50 @@
       {
         "name": "Mueang Sa Kaeo",
         "regionName": "Mueang Sa Kaeo region"
+      },
+      {
+        "name": "Rach Gia",
+        "regionName": "Rach Gia region"
+      },
+      {
+        "name": "Phan Thiet",
+        "regionName": "Phan Thiet region"
+      },
+      {
+        "name": "Thuan Chau",
+        "regionName": "Thuan Chau region"
+      },
+      {
+        "name": "Lao Cai",
+        "regionName": "Lao Cai region"
+      },
+      {
+        "name": "Quynh Luu",
+        "regionName": "Quynh Luu region"
+      },
+      {
+        "name": "Cam Khe",
+        "regionName": "Cam Khe region"
+      },
+      {
+        "name": "Hoai Nhon",
+        "regionName": "Hoai Nhon region"
+      },
+      {
+        "name": "Huu Lung",
+        "regionName": "Huu Lung region"
+      },
+      {
+        "name": "Cao Bang",
+        "regionName": "Cao Bang region"
+      },
+      {
+        "name": "Dien Bien",
+        "regionName": "Dien Bien region"
+      },
+      {
+        "name": "Ky Anh",
+        "regionName": "Ky Anh region"
       }
     ],
     "rule": {
@@ -62276,7 +62320,7 @@
       ],
       "place": 3731,
       "country": "VN",
-      "localTrips": 46161160.0,
+      "localTrips": 46162306.0,
       "realm": "vietnam"
     },
     {
@@ -62301,7 +62345,7 @@
       ],
       "place": 3732,
       "country": "VN",
-      "localTrips": 26724503.0,
+      "localTrips": 26723591.0,
       "realm": "vietnam"
     },
     {
@@ -62326,7 +62370,7 @@
       ],
       "place": 3734,
       "country": "VN",
-      "localTrips": 4344837.0,
+      "localTrips": 4344068.0,
       "realm": "vietnam"
     },
     {
@@ -62352,33 +62396,7 @@
       ],
       "place": 3735,
       "country": "VN",
-      "localTrips": 4836222.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "rah",
-      "name": "Rach Gia",
-      "kind": "zone",
-      "origin": {
-        "lon": 104.532,
-        "lat": 10.1746
-      },
-      "center": [
-        104.532,
-        10.1746
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        103.814,
-        9.364,
-        105.558,
-        10.551
-      ],
-      "place": 3736,
-      "country": "VN",
-      "localTrips": 4970583.0,
+      "localTrips": 4837290.0,
       "realm": "vietnam"
     },
     {
@@ -62404,7 +62422,7 @@
       ],
       "place": 3737,
       "country": "VN",
-      "localTrips": 3632943.0,
+      "localTrips": 3633043.0,
       "realm": "vietnam"
     },
     {
@@ -62430,7 +62448,7 @@
       ],
       "place": 3738,
       "country": "VN",
-      "localTrips": 4027707.0,
+      "localTrips": 4027449.0,
       "realm": "vietnam"
     },
     {
@@ -62456,7 +62474,7 @@
       ],
       "place": 3739,
       "country": "VN",
-      "localTrips": 3757967.0,
+      "localTrips": 3758679.0,
       "realm": "vietnam"
     },
     {
@@ -62482,7 +62500,7 @@
       ],
       "place": 3740,
       "country": "VN",
-      "localTrips": 3908567.0,
+      "localTrips": 3908187.0,
       "realm": "vietnam"
     },
     {
@@ -62508,7 +62526,7 @@
       ],
       "place": 3742,
       "country": "VN",
-      "localTrips": 3589289.0,
+      "localTrips": 3589041.0,
       "realm": "vietnam"
     },
     {
@@ -62534,7 +62552,7 @@
       ],
       "place": 3743,
       "country": "VN",
-      "localTrips": 3475656.0,
+      "localTrips": 3470311.0,
       "realm": "vietnam"
     },
     {
@@ -62560,7 +62578,7 @@
       ],
       "place": 3744,
       "country": "VN",
-      "localTrips": 3167173.0,
+      "localTrips": 3167372.0,
       "realm": "vietnam"
     },
     {
@@ -62586,7 +62604,7 @@
       ],
       "place": 3745,
       "country": "VN",
-      "localTrips": 3160748.0,
+      "localTrips": 3160926.0,
       "realm": "vietnam"
     },
     {
@@ -62612,33 +62630,7 @@
       ],
       "place": 3746,
       "country": "VN",
-      "localTrips": 3720428.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "pha",
-      "name": "Phan Thiet",
-      "kind": "zone",
-      "origin": {
-        "lon": 108.7342,
-        "lat": 11.2249
-      },
-      "center": [
-        108.7342,
-        11.2249
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        107.375,
-        10.549,
-        108.896,
-        11.575
-      ],
-      "place": 3747,
-      "country": "VN",
-      "localTrips": 3546055.0,
+      "localTrips": 3720635.0,
       "realm": "vietnam"
     },
     {
@@ -62664,7 +62656,7 @@
       ],
       "place": 3748,
       "country": "VN",
-      "localTrips": 2914928.0,
+      "localTrips": 2915122.0,
       "realm": "vietnam"
     },
     {
@@ -62690,7 +62682,7 @@
       ],
       "place": 3750,
       "country": "VN",
-      "localTrips": 3063231.0,
+      "localTrips": 3063371.0,
       "realm": "vietnam"
     },
     {
@@ -62716,7 +62708,7 @@
       ],
       "place": 3751,
       "country": "VN",
-      "localTrips": 2989748.0,
+      "localTrips": 2989963.0,
       "realm": "vietnam"
     },
     {
@@ -62742,7 +62734,7 @@
       ],
       "place": 3752,
       "country": "VN",
-      "localTrips": 2838627.0,
+      "localTrips": 2836967.0,
       "realm": "vietnam"
     },
     {
@@ -62768,7 +62760,7 @@
       ],
       "place": 3753,
       "country": "VN",
-      "localTrips": 3228940.0,
+      "localTrips": 3231034.0,
       "realm": "vietnam"
     },
     {
@@ -62794,7 +62786,7 @@
       ],
       "place": 3754,
       "country": "VN",
-      "localTrips": 2815749.0,
+      "localTrips": 2815868.0,
       "realm": "vietnam"
     },
     {
@@ -62820,7 +62812,7 @@
       ],
       "place": 3755,
       "country": "VN",
-      "localTrips": 2719794.0,
+      "localTrips": 2720166.0,
       "realm": "vietnam"
     },
     {
@@ -62846,7 +62838,7 @@
       ],
       "place": 3756,
       "country": "VN",
-      "localTrips": 2736163.0,
+      "localTrips": 2736301.0,
       "realm": "vietnam"
     },
     {
@@ -62872,7 +62864,7 @@
       ],
       "place": 3757,
       "country": "VN",
-      "localTrips": 2613035.0,
+      "localTrips": 2612472.0,
       "realm": "vietnam"
     },
     {
@@ -62898,7 +62890,7 @@
       ],
       "place": 3758,
       "country": "VN",
-      "localTrips": 2576333.0,
+      "localTrips": 2576454.0,
       "realm": "vietnam"
     },
     {
@@ -62924,7 +62916,7 @@
       ],
       "place": 3759,
       "country": "VN",
-      "localTrips": 2524001.0,
+      "localTrips": 2524054.0,
       "realm": "vietnam"
     },
     {
@@ -62950,7 +62942,7 @@
       ],
       "place": 3761,
       "country": "VN",
-      "localTrips": 2405582.0,
+      "localTrips": 2405727.0,
       "realm": "vietnam"
     },
     {
@@ -62976,7 +62968,7 @@
       ],
       "place": 3762,
       "country": "VN",
-      "localTrips": 2319447.0,
+      "localTrips": 2319483.0,
       "realm": "vietnam"
     },
     {
@@ -63002,7 +62994,7 @@
       ],
       "place": 3763,
       "country": "VN",
-      "localTrips": 2618930.0,
+      "localTrips": 2620562.0,
       "realm": "vietnam"
     },
     {
@@ -63028,33 +63020,7 @@
       ],
       "place": 3764,
       "country": "VN",
-      "localTrips": 2267183.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "quy",
-      "name": "Quynh Luu",
-      "kind": "zone",
-      "origin": {
-        "lon": 105.1825,
-        "lat": 19.329
-      },
-      "center": [
-        105.1825,
-        19.329
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        103.855,
-        18.962,
-        105.826,
-        20.021
-      ],
-      "place": 3765,
-      "country": "VN",
-      "localTrips": 2577331.0,
+      "localTrips": 2267174.0,
       "realm": "vietnam"
     },
     {
@@ -63080,7 +63046,7 @@
       ],
       "place": 3766,
       "country": "VN",
-      "localTrips": 2243263.0,
+      "localTrips": 2243076.0,
       "realm": "vietnam"
     },
     {
@@ -63106,33 +63072,7 @@
       ],
       "place": 3767,
       "country": "VN",
-      "localTrips": 2701175.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "cmk",
-      "name": "Cam Khe",
-      "kind": "zone",
-      "origin": {
-        "lon": 105.3459,
-        "lat": 20.8201
-      },
-      "center": [
-        105.3459,
-        20.8201
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        104.794,
-        20.724,
-        105.485,
-        21.738
-      ],
-      "place": 3768,
-      "country": "VN",
-      "localTrips": 2405508.0,
+      "localTrips": 2700850.0,
       "realm": "vietnam"
     },
     {
@@ -63158,7 +63098,7 @@
       ],
       "place": 3769,
       "country": "VN",
-      "localTrips": 2629704.0,
+      "localTrips": 2632752.0,
       "realm": "vietnam"
     },
     {
@@ -63184,33 +63124,7 @@
       ],
       "place": 3770,
       "country": "VN",
-      "localTrips": 2448751.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "hox",
-      "name": "Hoai Nhon",
-      "kind": "zone",
-      "origin": {
-        "lon": 108.9202,
-        "lat": 13.9107
-      },
-      "center": [
-        108.9202,
-        13.9107
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        108.582,
-        13.738,
-        109.286,
-        14.722
-      ],
-      "place": 3771,
-      "country": "VN",
-      "localTrips": 2420701.0,
+      "localTrips": 2448870.0,
       "realm": "vietnam"
     },
     {
@@ -63236,7 +63150,7 @@
       ],
       "place": 3772,
       "country": "VN",
-      "localTrips": 2354842.0,
+      "localTrips": 2355416.0,
       "realm": "vietnam"
     },
     {
@@ -63262,7 +63176,7 @@
       ],
       "place": 3773,
       "country": "VN",
-      "localTrips": 2163363.0,
+      "localTrips": 2164268.0,
       "realm": "vietnam"
     },
     {
@@ -63288,7 +63202,7 @@
       ],
       "place": 3774,
       "country": "VN",
-      "localTrips": 1973785.0,
+      "localTrips": 1974327.0,
       "realm": "vietnam"
     },
     {
@@ -63314,7 +63228,7 @@
       ],
       "place": 3775,
       "country": "VN",
-      "localTrips": 1762641.0,
+      "localTrips": 1762505.0,
       "realm": "vietnam"
     },
     {
@@ -63340,7 +63254,7 @@
       ],
       "place": 3776,
       "country": "VN",
-      "localTrips": 1488014.0,
+      "localTrips": 1489957.0,
       "realm": "vietnam"
     },
     {
@@ -63366,7 +63280,7 @@
       ],
       "place": 3777,
       "country": "VN",
-      "localTrips": 2137931.0,
+      "localTrips": 2137961.0,
       "realm": "vietnam"
     },
     {
@@ -63392,7 +63306,7 @@
       ],
       "place": 3778,
       "country": "VN",
-      "localTrips": 1774385.0,
+      "localTrips": 1774268.0,
       "realm": "vietnam"
     },
     {
@@ -63418,7 +63332,7 @@
       ],
       "place": 3779,
       "country": "VN",
-      "localTrips": 1820212.0,
+      "localTrips": 1819825.0,
       "realm": "vietnam"
     },
     {
@@ -63444,7 +63358,7 @@
       ],
       "place": 3780,
       "country": "VN",
-      "localTrips": 1825784.0,
+      "localTrips": 1825301.0,
       "realm": "vietnam"
     },
     {
@@ -63470,7 +63384,7 @@
       ],
       "place": 3781,
       "country": "VN",
-      "localTrips": 2038986.0,
+      "localTrips": 2039120.0,
       "realm": "vietnam"
     },
     {
@@ -63496,33 +63410,7 @@
       ],
       "place": 3783,
       "country": "VN",
-      "localTrips": 1863301.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "huu",
-      "name": "Huu Lung",
-      "kind": "zone",
-      "origin": {
-        "lon": 106.4759,
-        "lat": 22.2585
-      },
-      "center": [
-        106.4759,
-        22.2585
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        106.075,
-        21.307,
-        107.384,
-        22.48
-      ],
-      "place": 3784,
-      "country": "VN",
-      "localTrips": 1999170.0,
+      "localTrips": 1864923.0,
       "realm": "vietnam"
     },
     {
@@ -63548,7 +63436,7 @@
       ],
       "place": 3785,
       "country": "VN",
-      "localTrips": 1618446.0,
+      "localTrips": 1620452.0,
       "realm": "vietnam"
     },
     {
@@ -63574,7 +63462,7 @@
       ],
       "place": 3786,
       "country": "VN",
-      "localTrips": 1729998.0,
+      "localTrips": 1729870.0,
       "realm": "vietnam"
     },
     {
@@ -63600,7 +63488,7 @@
       ],
       "place": 3787,
       "country": "VN",
-      "localTrips": 1940087.0,
+      "localTrips": 1938674.0,
       "realm": "vietnam"
     },
     {
@@ -63626,7 +63514,7 @@
       ],
       "place": 3788,
       "country": "VN",
-      "localTrips": 1475113.0,
+      "localTrips": 1475198.0,
       "realm": "vietnam"
     },
     {
@@ -63652,33 +63540,7 @@
       ],
       "place": 3789,
       "country": "VN",
-      "localTrips": 1724820.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "kya",
-      "name": "Ky Anh",
-      "kind": "zone",
-      "origin": {
-        "lon": 105.9018,
-        "lat": 18.3378
-      },
-      "center": [
-        105.9018,
-        18.3378
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        105.432,
-        17.891,
-        106.515,
-        18.491
-      ],
-      "place": 3790,
-      "country": "VN",
-      "localTrips": 1879379.0,
+      "localTrips": 1725589.0,
       "realm": "vietnam"
     },
     {
@@ -63704,7 +63566,7 @@
       ],
       "place": 3791,
       "country": "VN",
-      "localTrips": 1844423.0,
+      "localTrips": 1844828.0,
       "realm": "vietnam"
     },
     {
@@ -63730,7 +63592,7 @@
       ],
       "place": 3792,
       "country": "VN",
-      "localTrips": 1607720.0,
+      "localTrips": 1607750.0,
       "realm": "vietnam"
     },
     {
@@ -63756,7 +63618,7 @@
       ],
       "place": 3793,
       "country": "VN",
-      "localTrips": 1656172.0,
+      "localTrips": 1656419.0,
       "realm": "vietnam"
     },
     {
@@ -63782,7 +63644,7 @@
       ],
       "place": 3794,
       "country": "VN",
-      "localTrips": 1473772.0,
+      "localTrips": 1473952.0,
       "realm": "vietnam"
     },
     {
@@ -63808,7 +63670,7 @@
       ],
       "place": 3795,
       "country": "VN",
-      "localTrips": 1460109.0,
+      "localTrips": 1459820.0,
       "realm": "vietnam"
     },
     {
@@ -63834,7 +63696,7 @@
       ],
       "place": 3796,
       "country": "VN",
-      "localTrips": 1836078.0,
+      "localTrips": 1839936.0,
       "realm": "vietnam"
     },
     {
@@ -63860,7 +63722,7 @@
       ],
       "place": 3797,
       "country": "VN",
-      "localTrips": 1576966.0,
+      "localTrips": 1577398.0,
       "realm": "vietnam"
     },
     {
@@ -63886,7 +63748,7 @@
       ],
       "place": 3798,
       "country": "VN",
-      "localTrips": 1547356.0,
+      "localTrips": 1547710.0,
       "realm": "vietnam"
     },
     {
@@ -63912,7 +63774,7 @@
       ],
       "place": 3799,
       "country": "VN",
-      "localTrips": 1184431.0,
+      "localTrips": 1184432.0,
       "realm": "vietnam"
     },
     {
@@ -63938,7 +63800,7 @@
       ],
       "place": 3800,
       "country": "VN",
-      "localTrips": 1775373.0,
+      "localTrips": 1775702.0,
       "realm": "vietnam"
     },
     {
@@ -63964,7 +63826,7 @@
       ],
       "place": 3801,
       "country": "VN",
-      "localTrips": 1310681.0,
+      "localTrips": 1310724.0,
       "realm": "vietnam"
     },
     {
@@ -63990,7 +63852,7 @@
       ],
       "place": 3802,
       "country": "VN",
-      "localTrips": 1381733.0,
+      "localTrips": 1381731.0,
       "realm": "vietnam"
     },
     {
@@ -64016,7 +63878,7 @@
       ],
       "place": 3803,
       "country": "VN",
-      "localTrips": 1424245.0,
+      "localTrips": 1424276.0,
       "realm": "vietnam"
     },
     {
@@ -64042,7 +63904,7 @@
       ],
       "place": 3804,
       "country": "VN",
-      "localTrips": 1286518.0,
+      "localTrips": 1286686.0,
       "realm": "vietnam"
     },
     {
@@ -64068,7 +63930,7 @@
       ],
       "place": 3805,
       "country": "VN",
-      "localTrips": 1148084.0,
+      "localTrips": 1148108.0,
       "realm": "vietnam"
     },
     {
@@ -64094,7 +63956,7 @@
       ],
       "place": 3806,
       "country": "VN",
-      "localTrips": 1131448.0,
+      "localTrips": 1131507.0,
       "realm": "vietnam"
     },
     {
@@ -64120,7 +63982,7 @@
       ],
       "place": 3807,
       "country": "VN",
-      "localTrips": 1219065.0,
+      "localTrips": 1219081.0,
       "realm": "vietnam"
     },
     {
@@ -64146,7 +64008,7 @@
       ],
       "place": 3808,
       "country": "VN",
-      "localTrips": 1307316.0,
+      "localTrips": 1307543.0,
       "realm": "vietnam"
     },
     {
@@ -64172,7 +64034,7 @@
       ],
       "place": 3809,
       "country": "VN",
-      "localTrips": 1046720.0,
+      "localTrips": 1046622.0,
       "realm": "vietnam"
     },
     {
@@ -64198,7 +64060,7 @@
       ],
       "place": 3810,
       "country": "VN",
-      "localTrips": 1181722.0,
+      "localTrips": 1181757.0,
       "realm": "vietnam"
     },
     {
@@ -64224,7 +64086,7 @@
       ],
       "place": 3811,
       "country": "VN",
-      "localTrips": 1231745.0,
+      "localTrips": 1231304.0,
       "realm": "vietnam"
     },
     {
@@ -64250,7 +64112,7 @@
       ],
       "place": 3813,
       "country": "VN",
-      "localTrips": 980011.0,
+      "localTrips": 980039.0,
       "realm": "vietnam"
     },
     {
@@ -64276,7 +64138,7 @@
       ],
       "place": 3814,
       "country": "VN",
-      "localTrips": 926251.0,
+      "localTrips": 926174.0,
       "realm": "vietnam"
     },
     {
@@ -64302,7 +64164,7 @@
       ],
       "place": 3816,
       "country": "VN",
-      "localTrips": 896523.0,
+      "localTrips": 896533.0,
       "realm": "vietnam"
     },
     {
@@ -64328,7 +64190,7 @@
       ],
       "place": 3817,
       "country": "VN",
-      "localTrips": 736600.0,
+      "localTrips": 736565.0,
       "realm": "vietnam"
     },
     {
@@ -64354,7 +64216,7 @@
       ],
       "place": 3818,
       "country": "VN",
-      "localTrips": 670984.0,
+      "localTrips": 670902.0,
       "realm": "vietnam"
     },
     {
@@ -64380,7 +64242,7 @@
       ],
       "place": 3819,
       "country": "VN",
-      "localTrips": 673087.0,
+      "localTrips": 673146.0,
       "realm": "vietnam"
     },
     {
@@ -64406,7 +64268,7 @@
       ],
       "place": 3820,
       "country": "VN",
-      "localTrips": 459835.0,
+      "localTrips": 459874.0,
       "realm": "vietnam"
     },
     {
@@ -64432,7 +64294,7 @@
       ],
       "place": 3822,
       "country": "VN",
-      "localTrips": 318955.0,
+      "localTrips": 318947.0,
       "realm": "vietnam"
     },
     {
@@ -64458,7 +64320,7 @@
       ],
       "place": 3823,
       "country": "VN",
-      "localTrips": 283075.0,
+      "localTrips": 283065.0,
       "realm": "vietnam"
     },
     {
@@ -64483,7 +64345,7 @@
       ],
       "place": 3834,
       "country": "VN",
-      "localTrips": 4720482.0,
+      "localTrips": 4714839.0,
       "realm": "vietnam"
     },
     {
@@ -64509,59 +64371,7 @@
       ],
       "place": 3835,
       "country": "VN",
-      "localTrips": 3780239.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "thc",
-      "name": "Thuan Chau",
-      "kind": "zone",
-      "origin": {
-        "lon": 104.6462,
-        "lat": 21.2685
-      },
-      "center": [
-        104.6462,
-        21.2685
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        103.192,
-        20.554,
-        105.045,
-        22.049
-      ],
-      "place": 3836,
-      "country": "VN",
-      "localTrips": 3308016.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "lao",
-      "name": "Lao Cai",
-      "kind": "zone",
-      "origin": {
-        "lon": 104.4756,
-        "lat": 22.2335
-      },
-      "center": [
-        104.4756,
-        22.2335
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        103.051,
-        21.668,
-        104.651,
-        22.864
-      ],
-      "place": 3837,
-      "country": "VN",
-      "localTrips": 2839306.0,
+      "localTrips": 3781353.0,
       "realm": "vietnam"
     },
     {
@@ -64587,59 +64397,7 @@
       ],
       "place": 3838,
       "country": "VN",
-      "localTrips": 2057096.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "cba",
-      "name": "Cao Bang",
-      "kind": "zone",
-      "origin": {
-        "lon": 105.4919,
-        "lat": 22.8337
-      },
-      "center": [
-        105.4919,
-        22.8337
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        105.246,
-        22.338,
-        106.8,
-        23.129
-      ],
-      "place": 3839,
-      "country": "VN",
-      "localTrips": 1310036.0,
-      "realm": "vietnam"
-    },
-    {
-      "id": "dib",
-      "name": "Dien Bien",
-      "kind": "zone",
-      "origin": {
-        "lon": 103.423,
-        "lat": 21.5926
-      },
-      "center": [
-        103.423,
-        21.5926
-      ],
-      "zoom": 10.5,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        102.788,
-        20.806,
-        103.619,
-        22.175
-      ],
-      "place": 3840,
-      "country": "VN",
-      "localTrips": 1317840.0,
+      "localTrips": 2056545.0,
       "realm": "vietnam"
     },
     {
@@ -64665,7 +64423,7 @@
       ],
       "place": 3841,
       "country": "VN",
-      "localTrips": 432615.0,
+      "localTrips": 432639.0,
       "realm": "vietnam"
     },
     {
@@ -66433,6 +66191,292 @@
       "country": "TH",
       "localTrips": 1593295.0,
       "realm": "thailand"
+    },
+    {
+      "id": "rah",
+      "name": "Rach Gia",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.0904,
+        "lat": 9.9956
+      },
+      "center": [
+        105.0904,
+        9.9956
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.814,
+        9.365,
+        105.558,
+        10.551
+      ],
+      "place": 3917,
+      "country": "VN",
+      "localTrips": 4938264.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "pha",
+      "name": "Phan Thiet",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.1036,
+        "lat": 10.9398
+      },
+      "center": [
+        108.1036,
+        10.9398
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.375,
+        10.549,
+        108.895,
+        11.575
+      ],
+      "place": 3918,
+      "country": "VN",
+      "localTrips": 3546450.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "thc",
+      "name": "Thuan Chau",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.6871,
+        "lat": 21.4347
+      },
+      "center": [
+        103.6871,
+        21.4347
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.192,
+        20.554,
+        105.045,
+        22.049
+      ],
+      "place": 3919,
+      "country": "VN",
+      "localTrips": 3308797.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "lao",
+      "name": "Lao Cai",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.9671,
+        "lat": 22.4918
+      },
+      "center": [
+        103.9671,
+        22.4918
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.051,
+        21.668,
+        104.652,
+        22.863
+      ],
+      "place": 3920,
+      "country": "VN",
+      "localTrips": 2835448.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "quy",
+      "name": "Quynh Luu",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.6239,
+        "lat": 19.1388
+      },
+      "center": [
+        105.6239,
+        19.1388
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.855,
+        18.962,
+        105.825,
+        20.021
+      ],
+      "place": 3921,
+      "country": "VN",
+      "localTrips": 2578432.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "cmk",
+      "name": "Cam Khe",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.1294,
+        "lat": 21.418
+      },
+      "center": [
+        105.1294,
+        21.418
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.794,
+        20.725,
+        105.485,
+        21.738
+      ],
+      "place": 3922,
+      "country": "VN",
+      "localTrips": 2407740.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "hox",
+      "name": "Hoai Nhon",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.0146,
+        "lat": 14.4345
+      },
+      "center": [
+        109.0146,
+        14.4345
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.582,
+        13.738,
+        109.286,
+        14.722
+      ],
+      "place": 3923,
+      "country": "VN",
+      "localTrips": 2417739.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "huu",
+      "name": "Huu Lung",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.3455,
+        "lat": 21.5012
+      },
+      "center": [
+        106.3455,
+        21.5012
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        106.075,
+        21.306,
+        107.384,
+        22.48
+      ],
+      "place": 3924,
+      "country": "VN",
+      "localTrips": 1997670.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "cba",
+      "name": "Cao Bang",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.2615,
+        "lat": 22.6669
+      },
+      "center": [
+        106.2615,
+        22.6669
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.247,
+        22.338,
+        106.8,
+        23.129
+      ],
+      "place": 3925,
+      "country": "VN",
+      "localTrips": 1311029.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "dib",
+      "name": "Dien Bien",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.0279,
+        "lat": 21.31
+      },
+      "center": [
+        103.0279,
+        21.31
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.788,
+        20.806,
+        103.619,
+        22.175
+      ],
+      "place": 3926,
+      "country": "VN",
+      "localTrips": 1318062.0,
+      "realm": "vietnam"
+    },
+    {
+      "id": "kya",
+      "name": "Ky Anh",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.2761,
+        "lat": 18.0739
+      },
+      "center": [
+        106.2761,
+        18.0739
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.432,
+        17.891,
+        106.515,
+        18.491
+      ],
+      "place": 3927,
+      "country": "VN",
+      "localTrips": 1879159.0,
+      "realm": "vietnam"
     }
   ]
 }
