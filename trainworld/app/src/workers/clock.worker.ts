@@ -987,11 +987,12 @@ function later(run: () => void, fail: () => void, waitMs: number, step?: () => b
     try {
       if (f.step?.()) { followTimer = setTimeout(go, 0) as unknown as number; return; }
     } catch (err) {
-      // a panic in a step: the follow-up's own run meets it again and answers the edit
-      if (!isPanic(err)) throw err;
+      // a step that throws ends the stepping, never the follow-up: its run (which meets a panic
+      // again) still answers the edit
+      if (!isPanic(err)) send({ kind: "error", message: String(err) });
     }
     f.step = undefined;
-    messages = messages.then(guardedFollowUp);
+    queueFollowUp();
   };
   followTimer = setTimeout(go, Math.max(1, waitMs)) as unknown as number;
 }
@@ -1002,6 +1003,11 @@ function runFollowUp() {
   followUp = null;
   if (!f) return;
   try { f.run(); } catch (err) { f.fail(); throw err; }
+}
+/** the follow-up into the message queue; a failure there never leaves the queue rejected, which
+ * would skip the next message (and an edit's answer with it) */
+function queueFollowUp() {
+  messages = messages.then(guardedFollowUp).catch((err) => send({ kind: "error", message: String(err) }));
 }
 async function guardedFollowUp() {
   try { runFollowUp(); } catch (err) {
@@ -3151,7 +3157,7 @@ async function processMessage(msg: ToClock) {
     await handle(msg);
     // T-1407: an edit's follow-up after the previews asked so far
     // (one still stepping goes on in its own tasks)
-    if (followUp && !followUp.step && jumpsAhead(msg)) messages = messages.then(guardedFollowUp);
+    if (followUp && !followUp.step && jumpsAhead(msg)) queueFollowUp();
   } catch (err) {
     if (isPanic(err)) await recover(err, msg.kind, msg.kind === "edit" ? EDIT_UNDONE : MODEL_RESTORED, performance.now(), msg.kind === "edit");
     else send({ kind: "error", message: String(err) });
