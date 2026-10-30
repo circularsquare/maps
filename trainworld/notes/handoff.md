@@ -6,8 +6,8 @@ Updated: 2026-10-30 evening (maps-da wound down; nothing in flight)
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master: T-1854 finer terrain landed last (see git log). 8800 rebuilt and smoked at it (see the last landing's
-  hash in git log; logs `artifacts/trainworld/smoke-<hash>-{light,dark}.log`).
+- master 4db47c92 (T-1854 finer terrain). 8800 at 4db47c92, smoke 20/20 both shades, 1,988 terrain files in its dist,
+  real save 11,392,296 rail trips a day (same as before T-1854).
 - **Deploy 2026-10-30 is half done** (= ba582afb, with Australia, before T-1854): data on R2 `trainworld/2026-10-30`,
   verified; website files staged in ../website (no GA in the page). The website commit was refused by the auto-mode
   classifier, so Anita runs: `git -C C:\Users\anita\projects\website commit -m "trainsworld"`, `... push`,
@@ -26,10 +26,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Cores: cap raised to 15 while Anita was out (2026-10-30 evening); set back to 10 when she is at the machine.
 - data/work/pre-T1854/terrain (58 MB) backup: delete once T-1854 is seen clean in play. data/work/terrain-fine/
   (3.1 GB) is T-1854's intermediate, kept for later threshold tweaks.
-- Next free task id: T-1883. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
+- Next free task id: T-1884. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
 
 ## In flight
-Nothing. Anita at 94% of the week's usage (2026-10-30): no new tasks until the week resets (~11-01/02).
+- T-1883 two-row bar landed (money on row one, a two-row divider before the clock, 1 px row gap). Anita wants it in the deploy: then redeploy as version 2026-10-30b from a new master build (full data,
+  since T-1854's terrain files are new), re-stage the website, and purge both 2026-10-28g and 2026-10-30 once live.
+- Anita 2026-10-30: dragging as built is fine (no pivot); triangles good; all listed text acknowledged.
+Otherwise nothing. Anita at 94% of the week's usage (2026-10-30): no new tasks until the week resets (~11-01/02).
 
 ## Waiting on Anita (asked in the final message of 2026-10-30)
 - The website commit and push above.

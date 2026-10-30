@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1883 [P1] Two-line top bar follow-up. Done 2026-10-30 (agent t1865): the cash moved to row one after the name, a divider two rows high left of the clock and speed buttons (the wide bar's thin rule), row gap 0 to 1 px, bar 56 px; under 300 px no divider. Pictures artifacts/trainworld/t1883/.
 - T-1854 [P2] Finer terrain cells. Done 2026-10-30 (agent t1854b): 115 m classes from GEDTM30 30 m via an AWS-built 3.1 GB intermediate ($0.11 machine), thresholds 2.5 / 5.5 / 11 degrees, capped by the 920 m ground against towers; mix kept. notes/T-1854.md.
 - T-1857 [P2] Australia. Done 2026-10-30 (agent t1857): 28 of 28 shipped (mel syd bri per, 24 zones on Canada's reach rule), every row with ABS 2021 census people by SA1 (`pipeline/australia.py`); Adelaide one zone and Greater Sydney whole by hand; smoke 20 of 20. notes/T-1857.md.
 - T-1866 [P2] Why a destination's homes are a few equal ~2k discs among ~10-people dots. Answered 2026-10-30 (agent t1866): equal-share everyday samples, at most 16 per school; Anita's fix built as T-1874. notes/T-1866.md.

@@ -287,6 +287,7 @@ export function TopBar() {
         </div>
       </div>
       <Cash />
+      <i class="bar-rule" />
       <Clock />
       <Speed />
     </header><SaveNotice /></>

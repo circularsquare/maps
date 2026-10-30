@@ -232,11 +232,12 @@ wide so a longer date moves nothing [T-1868].
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
-- **Narrow maps** [T-1853, T-1868, Anita's sketch]: two rows below 700 px of map column, 55 px high.
-  Row one has the name, then the time and date at the row's end, standing over the speed buttons; row two has the mode bar running
-  under them, the train share, the cash (the same box; no divider, as the clock is on the row above), then the speed buttons. The first row sits 4 px lower than it
-  did and the space under it is 4 px less; the name and the bar are 12 px from the left edge. On a short row the name
-  gives way (onto two lines, whole words). Below 300 px the bar takes three rows (the name; the split and cash; the clock and speed),
+- **Narrow maps** [T-1853, T-1868, T-1883, Anita's sketch]: two rows below 700 px of map column, 56 px high.
+  Row one has the name, the cash (the same box as the wide bar's), then the time and date at the row's end; row two has the mode bar
+  with the train share under the name and cash, then the speed buttons under the clock. The same thin divider as the wide bar spans both
+  rows, left of the clock and the speed buttons (`.bar-rule`). The rows are 1 px apart; the first row sits 4 px lower than it
+  did and the name and the bar are 12 px from the left edge. On a short row the name
+  gives way (onto two lines, whole words). Below 300 px the bar takes three rows (the name and cash; the split; the clock and speed, no divider),
   with cash, time, train share and all speed controls kept. Hovering the split or the time gives
   what was dropped [T-106, T-1775].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved

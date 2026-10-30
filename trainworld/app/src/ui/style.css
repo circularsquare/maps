@@ -704,6 +704,7 @@ rect.now { fill-opacity: .45; }
 /* T-832, T-861, T-1853, T-1868: the clock (the time and date on one line) sits right of the cash, behind a
    thin divider, and left of the speed buttons, in a box of fixed width (the widest date, "Wed May 28", fits)
    so nothing else moves day to day. The day and night picture is on the map (.map-sky). */
+.bar-rule { display: none; }
 .clock { flex: none; display: flex; align-items: center; height: 24px; padding-left: 14px; border-left: 1px solid var(--rule);
   font-variant-numeric: tabular-nums; }
 .clock-text { flex: none; width: 132px; display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
@@ -1135,25 +1136,28 @@ button.save-add:hover { color: var(--text); }
 @container map-column (max-width: 760px) {
   .city { max-width: 96px; }
 }
-/* T-349, T-1853, T-1865, T-1868 (Anita's sketch): below 700 px the bar takes two rows. The first has the name
-   and the time and date at the row's end; the second the mode bar with the train share, then the cash, then
-   the speed buttons (no divider: the cash and the clock are on different rows). The first row sits 4 px
-   lower and the space under it is 4 px less (the 1 px margins make up what the 0 px row gap cannot); the
-   name and the bar are 2 px further from the left edge. */
+/* T-349, T-1853, T-1865, T-1868, T-1883 (Anita's sketch): below 700 px the bar takes two rows. The first has
+   the name, the cash and the time and date at the row's end; the second the mode bar with the train share
+   under the name and cash, then the speed buttons under the clock. The thin divider (.bar-rule) spans both
+   rows, left of the clock and the speed buttons. The first row sits 4 px lower; the space under it is 3 px
+   less than the old 3 px gap (a 1 px row gap and a -1 px margin on the first row's items); the name and the
+   bar are 2 px further from the left edge. */
 @container map-column (max-width: 700px) {
   #topbar { height: auto; padding: 8px 10px 4px 12px;
-    display: grid; grid-template-columns: minmax(min-content, max-content) auto 1fr auto auto;
-    grid-template-areas: "city city . clock clock" "split split split cash speed"; gap: 0 10px; }
+    display: grid; grid-template-columns: minmax(min-content, max-content) 1fr auto auto auto;
+    grid-template-areas: "city . cash rule clock" "split split split rule speed"; gap: 1px 10px; }
   #topbar .city { grid-area: city; width: auto; max-width: 150px; min-width: 0; overflow-wrap: break-word; margin-bottom: -1px; }
-  #topbar .cash { grid-area: cash; }
+  #topbar .cash { grid-area: cash; margin-bottom: -1px; }
+  #topbar .bar-rule { display: block; grid-area: rule; align-self: stretch; width: 1px; background: var(--rule); }
   #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; height: auto; padding-left: 0; border-left: 0; margin-bottom: -1px; }
   #topbar .split { grid-area: split; }
   #topbar .speed { grid-area: speed; justify-self: end; }
 }
-/* below 300 px the clock takes a row of its own */
+/* below 300 px the clock takes a row of its own, the divider going */
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "city city" "split cash" "clock speed"; }
+    grid-template-areas: "city cash" "split split" "clock speed"; }
+  #topbar .bar-rule { display: none; }
   #topbar .clock { justify-self: start; }
 }
 
