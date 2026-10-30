@@ -297,6 +297,7 @@ sources. Each field comes from the row or a rule:
   | usa | outline (TIGER/Line counties drawn, the cartographic ones as footprint), people by 2020 block less institutions, LODES WAC jobs and sectors (newest year back to 2016), ACS work from home over the row's counties, the US curve and state factor 0.23 with each cell's state as its region; per-state caches in `data/work/usa/` (`usa.py state <fips>` ahead of a run, `usa.py check <id>` for figures by county) | US rows (unit set USA, county GEOIDs); Puerto Rico rows (PRI) take the outline, people and work from home only |
   | brazil | population by 2022 census tract | the states of the plan's municipalities |
   | canada | everyday destinations by census tract of work | any province |
+  | australia | population by 2021 census SA1 (ABS ArcGIS layer, no account) | every Australian row, zones too (T-1857) |
   | china, india, korea, nigeria | none | |
 
   A country outline is the plan's own units in the census's polygons, so it needs no cut along

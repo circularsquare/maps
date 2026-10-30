@@ -287,6 +287,16 @@ Tier 0 with one national upgrade; notes/T-457.md has the sources.
 - **Universities**: Wikidata has student counts for few sites; the national tertiary rate scales
   the total, so only the spread by site area is weak.
 
+## Australia (world plan rows, `pipeline/australia.py`, T-1857, 2026-10-30)
+
+Tier 0 with one national upgrade, for every row; notes/T-1857.md has the sources.
+
+- **Population**: the 2021 census by SA1 (200-800 people), GHSL inside each, as Canada's DAs.
+- **Jobs**: tier 0's proxy. The 2021 census's place of work and journey to work were counted in the
+  Sydney, Melbourne and Canberra lockdowns (August 2021), with home workers coded at home, so they would
+  empty the city centres; the flows are also behind TableBuilder's account.
+- **Curve**: borrowed (metros) and the zone curve (zones); **work from home** 0, as tier 0.
+
 ## Japan (Tokyo, `pipeline/japan.py`, T-420, 2026-10-15)
 
 Tier 0 with Japan's national inputs, written to serve every Japanese pack (research/japan.md);

@@ -146,7 +146,10 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "KOR": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "group_level": 1,
                       "task": "T-1191"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
-                      "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"}}
+                      "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
+              # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
+              "AUS": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
+                      "reach": (150.0, 100_000), "join_km": 150.0, "module": "australia", "task": "T-1857"}}
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -166,7 +169,8 @@ WATER_GAP_KM = 10.0
 ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one archipelago (Anita, 2026-10-22)
 ZONE_ALONE_MIN = 10_000  # with `contiguous`, a zone that joined nothing and holds fewer people is dead space
 # the same for a country on the default rule that wants it (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800: T-1744)
-ALONE_MIN = {"VNM": ZONE_MIN_POP}
+# (Whyalla, 24,000 between dead LGAs, T-1857; Port Pirie's grouped 98,000 stays)
+ALONE_MIN = {"VNM": ZONE_MIN_POP, "AUS": 50_000}
 # a country's joint commute solve split by first-level unit (T-897: one China group would pass
 # intercity.MAX_GROUP_ZONES); first-level names as geoBoundaries gives them, to the solve region's
 # name; a first-level unit not listed is its own region, named by its first word
@@ -195,7 +199,7 @@ SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipal
 ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germany"),
              "CAN": ("A", "canada"), "JPN": ("A", "japan"), "BRA": ("C", "brazil"),
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
-             "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa")}
+             "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)

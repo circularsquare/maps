@@ -15934,6 +15934,138 @@
       {
         "name": "Innsbruck",
         "regionName": "Innsbruck region"
+      },
+      {
+        "name": "Melbourne",
+        "regionName": "Melbourne region"
+      },
+      {
+        "name": "Sydney",
+        "regionName": "Sydney region"
+      },
+      {
+        "name": "Brisbane",
+        "regionName": "Brisbane region"
+      },
+      {
+        "name": "Newcastle (NSW)",
+        "regionName": "Newcastle (NSW) region"
+      },
+      {
+        "name": "Gold Coast",
+        "regionName": "Gold Coast region"
+      },
+      {
+        "name": "Greater Geelong",
+        "regionName": "Greater Geelong region"
+      },
+      {
+        "name": "Wollongong",
+        "regionName": "Wollongong region"
+      },
+      {
+        "name": "Unincorporated ACT",
+        "regionName": "Unincorporated ACT region"
+      },
+      {
+        "name": "Sunshine Coast",
+        "regionName": "Sunshine Coast region"
+      },
+      {
+        "name": "Greater Shepparton",
+        "regionName": "Greater Shepparton region"
+      },
+      {
+        "name": "Port Macquarie-Hastings",
+        "regionName": "Port Macquarie-Hastings region"
+      },
+      {
+        "name": "Latrobe (Vic.)",
+        "regionName": "Latrobe (Vic.) region"
+      },
+      {
+        "name": "Fraser Coast",
+        "regionName": "Fraser Coast region"
+      },
+      {
+        "name": "Toowoomba",
+        "regionName": "Toowoomba region"
+      },
+      {
+        "name": "Cairns",
+        "regionName": "Cairns region"
+      },
+      {
+        "name": "Dubbo",
+        "regionName": "Dubbo region"
+      },
+      {
+        "name": "Townsville",
+        "regionName": "Townsville region"
+      },
+      {
+        "name": "Greater Bendigo",
+        "regionName": "Greater Bendigo region"
+      },
+      {
+        "name": "Rockhampton",
+        "regionName": "Rockhampton region"
+      },
+      {
+        "name": "Mackay",
+        "regionName": "Mackay region"
+      },
+      {
+        "name": "Perth",
+        "regionName": "Perth region"
+      },
+      {
+        "name": "Rockingham",
+        "regionName": "Rockingham region"
+      },
+      {
+        "name": "Port Pirie",
+        "regionName": "Port Pirie region"
+      },
+      {
+        "name": "Adelaide",
+        "regionName": "Adelaide region"
+      },
+      {
+        "name": "Mount Barker",
+        "regionName": "Mount Barker region"
+      },
+      {
+        "name": "Whyalla",
+        "regionName": "Whyalla region"
+      },
+      {
+        "name": "Launceston",
+        "regionName": "Launceston region"
+      },
+      {
+        "name": "Clarence",
+        "regionName": "Clarence region"
+      },
+      {
+        "name": "Darwin",
+        "regionName": "Darwin region"
+      },
+      {
+        "name": "Launceston",
+        "regionName": "Launceston region"
+      },
+      {
+        "name": "Clarence",
+        "regionName": "Clarence region"
+      },
+      {
+        "name": "Darwin",
+        "regionName": "Darwin region"
+      },
+      {
+        "name": "Darwin",
+        "regionName": "Darwin region"
       }
     ],
     "rule": {
@@ -66681,6 +66813,730 @@
       "country": "AT",
       "localTrips": 3089004.0,
       "realm": "ch-at"
+    },
+    {
+      "id": "mel",
+      "name": "Melbourne",
+      "origin": {
+        "lon": 144.9583,
+        "lat": -37.8217
+      },
+      "center": [
+        144.9583,
+        -37.8217
+      ],
+      "zoom": 11.2,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        143.859,
+        -38.7,
+        149.942,
+        -36.817
+      ],
+      "place": 3979,
+      "country": "AU",
+      "localTrips": 15379999.0,
+      "realm": "australia"
+    },
+    {
+      "id": "syd",
+      "name": "Sydney",
+      "origin": {
+        "lon": 151.2115,
+        "lat": -33.8799
+      },
+      "center": [
+        151.2115,
+        -33.8799
+      ],
+      "zoom": 11.2,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        149.729,
+        -34.356,
+        151.652,
+        -32.861
+      ],
+      "place": 3980,
+      "country": "AU",
+      "localTrips": 16111069.0,
+      "realm": "australia"
+    },
+    {
+      "id": "bri",
+      "name": "Brisbane",
+      "origin": {
+        "lon": 153.0336,
+        "lat": -27.4631
+      },
+      "center": [
+        153.0336,
+        -27.4631
+      ],
+      "zoom": 11.2,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        151.921,
+        -27.996,
+        153.567,
+        -26.774
+      ],
+      "place": 3981,
+      "country": "AU",
+      "localTrips": 7579648.0,
+      "realm": "australia"
+    },
+    {
+      "id": "cer",
+      "name": "Newcastle (NSW)",
+      "kind": "zone",
+      "origin": {
+        "lon": 151.7817,
+        "lat": -32.9283
+      },
+      "center": [
+        151.7817,
+        -32.9283
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        148.789,
+        -33.222,
+        152.827,
+        -29.731
+      ],
+      "place": 3982,
+      "country": "AU",
+      "localTrips": 2576905.0,
+      "realm": "australia"
+    },
+    {
+      "id": "gol",
+      "name": "Gold Coast",
+      "kind": "zone",
+      "origin": {
+        "lon": 153.2981,
+        "lat": -27.8782
+      },
+      "center": [
+        153.2981,
+        -27.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        151.344,
+        -29.446,
+        153.66,
+        -27.672
+      ],
+      "place": 3983,
+      "country": "AU",
+      "localTrips": 2756630.0,
+      "realm": "australia"
+    },
+    {
+      "id": "grr",
+      "name": "Greater Geelong",
+      "kind": "zone",
+      "origin": {
+        "lon": 144.3329,
+        "lat": -38.1404
+      },
+      "center": [
+        144.3329,
+        -38.1404
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        140.943,
+        -38.877,
+        144.744,
+        -35.272
+      ],
+      "place": 3984,
+      "country": "AU",
+      "localTrips": 1934974.0,
+      "realm": "australia"
+    },
+    {
+      "id": "wog",
+      "name": "Wollongong",
+      "kind": "zone",
+      "origin": {
+        "lon": 150.9032,
+        "lat": -34.4187
+      },
+      "center": [
+        150.9032,
+        -34.4187
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        148.178,
+        -37.282,
+        151.088,
+        -33.87
+      ],
+      "place": 3985,
+      "country": "AU",
+      "localTrips": 1697493.0,
+      "realm": "australia"
+    },
+    {
+      "id": "uni",
+      "name": "Unincorporated ACT",
+      "kind": "zone",
+      "origin": {
+        "lon": 149.1348,
+        "lat": -35.2643
+      },
+      "center": [
+        149.1348,
+        -35.2643
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        146.048,
+        -36.028,
+        150.238,
+        -33.502
+      ],
+      "place": 3986,
+      "country": "AU",
+      "localTrips": 1745423.0,
+      "realm": "australia"
+    },
+    {
+      "id": "sun",
+      "name": "Sunshine Coast",
+      "kind": "zone",
+      "origin": {
+        "lon": 153.0744,
+        "lat": -26.7276
+      },
+      "center": [
+        153.0744,
+        -26.7276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        149.076,
+        -28.033,
+        153.212,
+        -25.58
+      ],
+      "place": 3987,
+      "country": "AU",
+      "localTrips": 1534801.0,
+      "realm": "australia"
+    },
+    {
+      "id": "grs",
+      "name": "Greater Shepparton",
+      "kind": "zone",
+      "origin": {
+        "lon": 145.4082,
+        "lat": -36.3941
+      },
+      "center": [
+        145.4082,
+        -36.3941
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        143.265,
+        -37.294,
+        148.832,
+        -34.065
+      ],
+      "place": 3988,
+      "country": "AU",
+      "localTrips": 1542086.0,
+      "realm": "australia"
+    },
+    {
+      "id": "pom",
+      "name": "Port Macquarie-Hastings",
+      "kind": "zone",
+      "origin": {
+        "lon": 152.9171,
+        "lat": -31.4448
+      },
+      "center": [
+        152.9171,
+        -31.4448
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        150.457,
+        -31.747,
+        153.398,
+        -28.615
+      ],
+      "place": 3989,
+      "country": "AU",
+      "localTrips": 1004979.0,
+      "realm": "australia"
+    },
+    {
+      "id": "lab",
+      "name": "Latrobe (Vic.)",
+      "kind": "zone",
+      "origin": {
+        "lon": 146.5192,
+        "lat": -38.1936
+      },
+      "center": [
+        146.5192,
+        -38.1936
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        145.582,
+        -39.155,
+        150.0,
+        -36.594
+      ],
+      "place": 3990,
+      "country": "AU",
+      "localTrips": 741659.0,
+      "realm": "australia"
+    },
+    {
+      "id": "frs",
+      "name": "Fraser Coast",
+      "kind": "zone",
+      "origin": {
+        "lon": 152.8547,
+        "lat": -25.2955
+      },
+      "center": [
+        152.8547,
+        -25.2955
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        150.349,
+        -26.115,
+        153.381,
+        -24.373
+      ],
+      "place": 3991,
+      "country": "AU",
+      "localTrips": 644983.0,
+      "realm": "australia"
+    },
+    {
+      "id": "tow",
+      "name": "Toowoomba",
+      "kind": "zone",
+      "origin": {
+        "lon": 151.9358,
+        "lat": -27.5986
+      },
+      "center": [
+        151.9358,
+        -27.5986
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        150.682,
+        -29.087,
+        152.778,
+        -26.434
+      ],
+      "place": 3992,
+      "country": "AU",
+      "localTrips": 661646.0,
+      "realm": "australia"
+    },
+    {
+      "id": "cis",
+      "name": "Cairns",
+      "kind": "zone",
+      "origin": {
+        "lon": 145.7349,
+        "lat": -16.9127
+      },
+      "center": [
+        145.7349,
+        -16.9127
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        144.722,
+        -18.597,
+        146.243,
+        -15.884
+      ],
+      "place": 3993,
+      "country": "AU",
+      "localTrips": 712082.0,
+      "realm": "australia"
+    },
+    {
+      "id": "dbb",
+      "name": "Dubbo",
+      "kind": "zone",
+      "origin": {
+        "lon": 148.6444,
+        "lat": -32.2365
+      },
+      "center": [
+        148.6444,
+        -32.2365
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        147.275,
+        -34.224,
+        150.384,
+        -30.587
+      ],
+      "place": 3994,
+      "country": "AU",
+      "localTrips": 713909.0,
+      "realm": "australia"
+    },
+    {
+      "id": "tos",
+      "name": "Townsville",
+      "kind": "zone",
+      "origin": {
+        "lon": 146.8043,
+        "lat": -19.2463
+      },
+      "center": [
+        146.8043,
+        -19.2463
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        145.718,
+        -20.415,
+        147.683,
+        -18.346
+      ],
+      "place": 3995,
+      "country": "AU",
+      "localTrips": 663315.0,
+      "realm": "australia"
+    },
+    {
+      "id": "grb",
+      "name": "Greater Bendigo",
+      "kind": "zone",
+      "origin": {
+        "lon": 144.2971,
+        "lat": -36.7633
+      },
+      "center": [
+        144.2971,
+        -36.7633
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        140.939,
+        -37.289,
+        144.877,
+        -33.962
+      ],
+      "place": 3996,
+      "country": "AU",
+      "localTrips": 677276.0,
+      "realm": "australia"
+    },
+    {
+      "id": "rok",
+      "name": "Rockhampton",
+      "kind": "zone",
+      "origin": {
+        "lon": 150.5453,
+        "lat": -23.3514
+      },
+      "center": [
+        150.5453,
+        -23.3514
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        149.347,
+        -24.811,
+        152.74,
+        -22.107
+      ],
+      "place": 3997,
+      "country": "AU",
+      "localTrips": 541241.0,
+      "realm": "australia"
+    },
+    {
+      "id": "mck",
+      "name": "Mackay",
+      "kind": "zone",
+      "origin": {
+        "lon": 149.1917,
+        "lat": -21.1522
+      },
+      "center": [
+        149.1917,
+        -21.1522
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        146.829,
+        -21.79,
+        149.508,
+        -19.687
+      ],
+      "place": 3998,
+      "country": "AU",
+      "localTrips": 469708.0,
+      "realm": "australia"
+    },
+    {
+      "id": "per",
+      "name": "Perth",
+      "origin": {
+        "lon": 115.8006,
+        "lat": -31.7113
+      },
+      "center": [
+        115.8006,
+        -31.7113
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.427,
+        -32.835,
+        116.983,
+        -31.07
+      ],
+      "place": 3999,
+      "country": "AU",
+      "localTrips": 5659204.0,
+      "realm": "australia"
+    },
+    {
+      "id": "roc",
+      "name": "Rockingham",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.8047,
+        "lat": -32.3485
+      },
+      "center": [
+        115.8047,
+        -32.3485
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.952,
+        -35.079,
+        118.23,
+        -30.056
+      ],
+      "place": 4000,
+      "country": "AU",
+      "localTrips": 1463283.0,
+      "realm": "australia"
+    },
+    {
+      "id": "sls",
+      "name": "Port Pirie",
+      "kind": "zone",
+      "origin": {
+        "lon": 138.0167,
+        "lat": -33.1858
+      },
+      "center": [
+        138.0167,
+        -33.1858
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        136.799,
+        -35.319,
+        140.988,
+        -32.924
+      ],
+      "place": 4001,
+      "country": "AU",
+      "localTrips": 272185.0,
+      "realm": "australia"
+    },
+    {
+      "id": "ade",
+      "name": "Adelaide",
+      "kind": "zone",
+      "origin": {
+        "lon": 138.6007,
+        "lat": -34.9285
+      },
+      "center": [
+        138.6007,
+        -34.9285
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        138.071,
+        -35.684,
+        139.195,
+        -34.169
+      ],
+      "place": 4002,
+      "country": "AU",
+      "localTrips": 4374939.0,
+      "realm": "australia"
+    },
+    {
+      "id": "mtb",
+      "name": "Mount Barker",
+      "kind": "zone",
+      "origin": {
+        "lon": 138.8579,
+        "lat": -35.081
+      },
+      "center": [
+        138.8579,
+        -35.081
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        138.672,
+        -38.08,
+        140.996,
+        -34.546
+      ],
+      "place": 4003,
+      "country": "AU",
+      "localTrips": 365628.0,
+      "realm": "australia"
+    },
+    {
+      "id": "lnc",
+      "name": "Launceston",
+      "kind": "zone",
+      "origin": {
+        "lon": 147.1543,
+        "lat": -41.4471
+      },
+      "center": [
+        147.1543,
+        -41.4471
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        144.583,
+        -42.761,
+        148.384,
+        -40.37
+      ],
+      "place": 4008,
+      "country": "AU",
+      "localTrips": 783340.0,
+      "realm": "australia"
+    },
+    {
+      "id": "cln",
+      "name": "Clarence",
+      "kind": "zone",
+      "origin": {
+        "lon": 147.403,
+        "lat": -42.8782
+      },
+      "center": [
+        147.403,
+        -42.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        144.886,
+        -43.662,
+        148.037,
+        -41.564
+      ],
+      "place": 4009,
+      "country": "AU",
+      "localTrips": 865651.0,
+      "realm": "australia"
+    },
+    {
+      "id": "daw",
+      "name": "Darwin",
+      "kind": "zone",
+      "origin": {
+        "lon": 130.8375,
+        "lat": -12.4563
+      },
+      "center": [
+        130.8375,
+        -12.4563
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        130.635,
+        -13.507,
+        131.416,
+        -12.125
+      ],
+      "place": 4011,
+      "country": "AU",
+      "localTrips": 430541.0,
+      "realm": "australia"
     }
   ]
 }

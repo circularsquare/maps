@@ -10,6 +10,7 @@ const LINES = [
   <>Contains public sector information licensed under the Open Government Licence v3.0 (ONS, Nomis, Department for Education, National Records of Scotland, NISRA) and the Open Government Licence (Ontario).</>,
   <>Powered by TfL Open Data. Contains Network Rail Infrastructure Limited data, used under the Open Government Licence v3.0.</>,
   <>Adapted from Statistics Canada, 2021 Census. This does not constitute an endorsement by Statistics Canada of this product.</>,
+  <>Australian Bureau of Statistics, 2021 Census and statistical areas (CC BY 4.0).</>,
   <>US Census Bureau, NCES, FAA and the Bureau of Transportation Statistics.</>,
   <>New York subway, LIRR and Metro-North timetables from MTA open data, and PATH timetables from the Port Authority of New York and New Jersey. The game is not affiliated with or endorsed by the MTA or the Port Authority.</>,
   <>Paris timetables © Île-de-France Mobilités, under the <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License</a>.</>,

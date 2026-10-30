@@ -9,7 +9,8 @@ to maps-da, which relays each outcome to maps-18 to land, and messages when the 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master: T-1862 landed after T-1865 and T-1859/T-1860; 8800 rebuilt at each landing (hash in git log).
+- master a05c453d (evening batch). 8800 at a05c453d, smoke 20/20 both shades (rail trips 11,392,296, T-1874's
+  figure); t1832-keep passes on a dev Vite (it imports source, so never against 8800).
   t1848 has DECISIONS and code-map lines written but has not reported; left out of commits until it does.
   network.ts and code-map.md were staged partially (t1848's and t1854b's hunks left out) by
   maps-18 scratchpad stage_t1859.py; do the same for any file two agents share.
@@ -31,7 +32,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1876.
+- Next free task id: T-1880.
+- T-1857 Australia landed by maps-18 (28 of 28 shipped, world 1,925). T-1876 to T-1879 filed from its report.
+  Deploy next. t1854b told (via maps-da) to hold data/packs and data/terrain writes until the deploy is done; it may
+  already have rewritten data/terrain 12:39-13:03: check before deploying.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
 
 Anita away from ~evening 2026-10-30: cores cap raised to 15 (`cores.py cap 15`); lower to 10 when she's back.

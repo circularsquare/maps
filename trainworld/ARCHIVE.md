@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1857 [P2] Australia. Done 2026-10-30 (agent t1857): 28 of 28 shipped (mel syd bri per, 24 zones on Canada's reach rule), every row with ABS 2021 census people by SA1 (`pipeline/australia.py`); Adelaide one zone and Greater Sydney whole by hand; smoke 20 of 20. notes/T-1857.md.
 - T-1866 [P2] Why a destination's homes are a few equal ~2k discs among ~10-people dots. Answered 2026-10-30 (agent t1866): equal-share everyday samples, at most 16 per school; Anita's fix built as T-1874. notes/T-1866.md.
 - T-1874 [P2] More, uneven sample homes for everyday trips. Done 2026-10-30 (agent t1874): campuses one home per 30 trips, 2 to 100 (Columbia 16 -> 93 homes, 198-1,058 legs); every sample's share times a seeded 0.5-1.5, cell totals kept; rail -0.005%, worst line -2.2%. notes/T-1874.md.
 - T-1870 [P1] Station placement follows the pointer. Done 2026-10-30 (agent t1870): no node snap for stations (it pulled them onto joints, up to 103 m at zoom 13); a spot short of room moves to the nearest that fits; refusals split (station, junction). Sweep 18/11/1 moved to 0/0/0. checks/t1870-station-follow.mjs.

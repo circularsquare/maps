@@ -24,6 +24,7 @@
     { "id": "vietnam", "name": "Vietnam", "countries": ["VN"] },
     { "id": "thailand", "name": "Thailand", "countries": ["TH"] },
     { "id": "singapore", "name": "Singapore", "countries": ["SG"] },
+    { "id": "australia", "name": "Australia", "countries": ["AU"] },
     { "id": "cn-north", "name": "China north", "units": { "CN": ["Beijing", "Tianjin", "Hebei", "Shanxi", "Inner Mongolia"] } },
     { "id": "cn-northeast", "name": "China northeast", "units": { "CN": ["Liaoning", "Jilin", "Heilongjiang"] } },
     { "id": "cn-east", "name": "China east", "units": { "CN": ["Shanghai", "Jiangsu", "Zhejiang", "Anhui", "Fujian", "Jiangxi", "Shandong"] } },

@@ -11,9 +11,9 @@ RAW = os.path.join(ROOT, "data", "raw")
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
 
 
-def features(name, layer_url, where="1=1", fields="*", geometry=True, bbox=None, page=1000):
+def features(name, layer_url, where="1=1", fields="*", geometry=True, bbox=None, page=1000, params=None):
     """Every feature of `layer_url` matching `where` (and meeting bbox = (w, s, e, n) lon/lat),
-    as GeoJSON feature dicts."""
+    as GeoJSON feature dicts; `params` go into each query as they are (maxAllowableOffset, say)."""
     out, offset = [], 0
     while True:
         path = os.path.join(RAW, f"{name}_{offset}.json")
@@ -27,6 +27,7 @@ def features(name, layer_url, where="1=1", fields="*", geometry=True, bbox=None,
             if bbox is not None:
                 q.update(geometry=",".join(str(v) for v in bbox), geometryType="esriGeometryEnvelope",
                          inSR=4326, spatialRel="esriSpatialRelIntersects")
+            q.update(params or {})
             r = requests.post(layer_url + "/query", data=q, headers=UA, timeout=300)
             r.raise_for_status()
             data = r.json()

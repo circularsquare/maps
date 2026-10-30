@@ -7,6 +7,12 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 
 ## 2026-10-30
 
+- **Australia's plan set by hand where the rule cut cities** (T-1857): Adelaide one zone of 1.47M over the 1.5M-cap split
+  (Salisbury and Onkaparinga), its rural north a Port Pirie zone; Sydney takes Central Coast, Campbelltown, Camden and
+  Wollondilly (Greater Sydney; GHS-FUA gave Campbelltown its own area); Whyalla (24,000 alone) and geoBoundaries'
+  scattered "Unincorporated NT" dead space (`ALONE_MIN` 50,000). Every Australian row takes census people by SA1;
+  jobs stay tier 0's, since 2021's place of work was counted in lockdown. notes/T-1857.md.
+
 - Everyday sample sizes (agent's calls, T-1874, Anita's rule from T-1866): a school or university takes one home sample per 30 trips, rounded down, 2 to 100 (the minimum of 2 kept from T-397, so a small school now has fewer samples than its old one per 8); every everyday sample's share is times a factor uniform in 0.5-1.5 (not a lognormal: a bounded spread keeps the largest home at most 3x the smallest, enough to look uneven without one sample carrying a campus), seeded from the fixed cell's H3 index, the purpose and the sample's place, and a cell's drawn samples are scaled together so its total is what equal shares gave (samples dropped under 150 m don't count). Coarse zones keep T-1222's one per 64, 1 to 8, for campuses too.
 
 - **Dragging a curve's middle moves its PI so the curve runs through the pointer; a platform end moves the whole station** (T-1869). The curve keeps its radius rule (auto stays auto), as T-079 made the radius follow the points: the PI steps by the preview's miss, times the measured ratio of PI to middle movement, until the middle is within 0.3 m, and the shape made is the one last previewed. Changing only the radius (PI fixed) was the other choice; it moves the curve on one line only, so the curve would not follow a sideways drag. A platform end drags the station node by the pointer's move, heading and length kept: pivoting or stretching the platform from one end would need a move that sets the node's heading and platform length in one edit, a new `TrackApi` call (a WASM interface change), and was left for Anita to ask for. The Select tool's pick shows a square on each movable node from zoom 9, as the other draggable points, and its drag the node drag's speed labels and refusal tag.

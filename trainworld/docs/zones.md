@@ -140,7 +140,9 @@ than **150 km** apart never join (`join_km`: across dead space, any two zones' f
 them travel partners, Regina and Saskatoon's); a unit under 100,000 still joins its biggest partner
 however far, or small towns would stand as zones of 10,000-50,000. Canada's units are the plan's census subdivisions
 (`plan_units`; read afresh, Natural Earth's land would give the Great Lakes to the shore units).
-notes/T-1191.md.
+notes/T-1191.md. **Australia** takes Canada's rule on geoBoundaries LGAs, read afresh, with its zones on the
+`australia` module (census people by SA1); the interior, the north-west and Cape York are dead space. Adelaide is one
+zone over the cap and Sydney holds all of Greater Sydney, both set by hand in the plan (T-1857).
 **No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
 themselves, "kinda like voronoi"). Of the joins the merge rule allows, one that makes a zone
 **wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's

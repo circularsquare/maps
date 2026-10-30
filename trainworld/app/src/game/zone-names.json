@@ -729,5 +729,18 @@
 "mnd": {"name": "Mukdahan", "aliases": ["Mueang Mukdahan"]},
 "mpe": {"name": "Phetchaburi", "aliases": ["Mueang Phetchaburi"]},
 "nog": {"name": "Nakhon Nayok", "aliases": ["Nong Suea"]},
-"mpr": {"name": "Prachuap Khiri Khan", "aliases": ["Mueang Prachuap Khiri Khan"]}
+"mpr": {"name": "Prachuap Khiri Khan", "aliases": ["Mueang Prachuap Khiri Khan"]},
+"uni": {"name": "Canberra", "aliases": ["Unincorporated ACT", "Queanbeyan"]},
+"cln": {"name": "Hobart", "aliases": ["Clarence", "Glenorchy"]},
+"grr": {"name": "Geelong", "aliases": ["Greater Geelong", "Ballarat", "Warrnambool"]},
+"grs": {"name": "Shepparton", "aliases": ["Greater Shepparton", "Albury", "Wodonga", "Wagga Wagga"]},
+"grb": {"name": "Bendigo", "aliases": ["Greater Bendigo", "Mildura"]},
+"lab": {"name": "Latrobe Valley", "aliases": ["Latrobe (Vic.)", "Traralgon", "Morwell"]},
+"frs": {"name": "Hervey Bay", "aliases": ["Fraser Coast", "Bundaberg"]},
+"pom": {"name": "Port Macquarie", "aliases": ["Port Macquarie-Hastings", "Coffs Harbour"]},
+"cer": {"name": "Newcastle", "aliases": ["Newcastle (NSW)", "Lake Macquarie", "Maitland"]},
+"ade": {"name": "Adelaide", "aliases": ["Onkaparinga", "Salisbury"]},
+"roc": {"name": "Rockingham", "aliases": ["Mandurah", "Bunbury"]},
+"dbb": {"name": "Dubbo", "aliases": ["Bathurst", "Orange"]},
+"tow": {"name": "Toowoomba", "aliases": ["Warwick"]}
 }

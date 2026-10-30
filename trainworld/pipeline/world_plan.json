@@ -12945,13 +12945,13 @@
    "order": 167,
    "id": "mel",
    "name": "Melbourne",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AUS"
    ],
    "iso2": "AU",
-   "people": 5599720,
+   "people": 5657324,
    "origin": [
     144.9583,
     -37.8217
@@ -12961,8 +12961,8 @@
    "extracts": [
     "australia-oceania/australia/victoria"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "australia",
    "units": {
     "AUS": [
      "25037944B35750934340746",
@@ -12998,13 +12998,17 @@
      "25037944B28600424223398",
      "25037944B15313699759774",
      "25037944B16645516556899",
-     "25037944B70077936823133"
+     "25037944B70077936823133",
+     "25037944B89965825243629",
+     "25037944B49622483033966",
+     "25037944B67422185849488",
+     "25037944B92127790017854"
     ]
    },
    "bbox": [
-    143.883,
-    -38.499,
-    146.193,
+    141.993,
+    -39.159,
+    149.918,
     -36.835
    ],
    "source": {
@@ -13013,7 +13017,34 @@
     ],
     "fua": [
      1266
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "25037944B89965825243629",
+      "25037944B49622483033966",
+      "25037944B67422185849488",
+      "25037944B92127790017854"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 385.2,
+     "stations": 1.2,
+     "places": 7.0,
+     "routes": 466.2,
+     "merge": 2.4,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-30T11:39:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:52",
+    "shipped": "2026-10-30T14:32:52"
    }
   },
   {
@@ -14095,13 +14126,13 @@
    "order": 186,
    "id": "syd",
    "name": "Sydney",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AUS"
    ],
    "iso2": "AU",
-   "people": 4823214,
+   "people": 5472318,
    "origin": [
     151.2115,
     -33.8799
@@ -14111,8 +14142,8 @@
    "extracts": [
     "australia-oceania/australia/new-south-wales"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "australia",
    "units": {
     "AUS": [
      "25037944B57870334231273",
@@ -14144,14 +14175,19 @@
      "25037944B61801605957585",
      "25037944B61039645174942",
      "25037944B78861208186776",
-     "25037944B50824863548632"
+     "25037944B50824863548632",
+     "25037944B76556859341208",
+     "25037944B67888909972324",
+     "25037944B45643684874460",
+     "25037944B29927872698138",
+     "25037944B50548000085953"
     ]
    },
    "bbox": [
-    150.166,
-    -34.172,
-    151.343,
-    -32.996
+    149.752,
+    -34.337,
+    151.631,
+    -32.88
    ],
    "source": {
     "ucdb": [
@@ -14159,7 +14195,41 @@
     ],
     "fua": [
      1830
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "25037944B76556859341208"
+     ]
+    },
+    "hand": {
+     "task": "T-1857",
+     "units": [
+      "25037944B67888909972324",
+      "25037944B45643684874460",
+      "25037944B29927872698138",
+      "25037944B50548000085953"
+     ],
+     "why": "Greater Sydney units GHS-FUA gave other areas"
+    }
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 618.2,
+     "stations": 1.2,
+     "places": 5.7,
+     "routes": 176.9,
+     "merge": 1.4,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T11:38:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:53",
+    "shipped": "2026-10-30T14:32:52"
    }
   },
   {
@@ -21904,13 +21974,13 @@
    "order": 307,
    "id": "bri",
    "name": "Brisbane",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AUS"
    ],
    "iso2": "AU",
-   "people": 2535407,
+   "people": 2578666,
    "origin": [
     153.0336,
     -27.4631
@@ -21920,20 +21990,21 @@
    "extracts": [
     "australia-oceania/australia/queensland"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "australia",
    "units": {
     "AUS": [
      "25037944B26487143019559",
      "25037944B52648858671508",
      "25037944B44262560811074",
      "25037944B19400187923346",
-     "25037944B35450059513963"
+     "25037944B35450059513963",
+     "25037944B69715811070998"
     ]
    },
    "bbox": [
-    152.383,
-    -27.939,
+    151.942,
+    -27.978,
     153.547,
     -26.792
    ],
@@ -21943,7 +22014,31 @@
     ],
     "fua": [
      2355
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "25037944B69715811070998"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 380.1,
+     "stations": 1.3,
+     "places": 3.7,
+     "routes": 155.1,
+     "merge": 1.5,
+     "nocar": 2.2,
+     "everyday": 1.2
+    },
+    "built": "2026-10-30T11:35:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:53",
+    "shipped": "2026-10-30T14:32:53"
    }
   },
   {
@@ -25485,13 +25580,13 @@
    "order": 374,
    "id": "per",
    "name": "Perth",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AUS"
    ],
    "iso2": "AU",
-   "people": 1852943,
+   "people": 1874553,
    "origin": [
     115.8006,
     -31.7113
@@ -25501,8 +25596,8 @@
    "extracts": [
     "australia-oceania/australia/western-australia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "australia",
    "units": {
     "AUS": [
      "25037944B45600387855719",
@@ -25532,14 +25627,18 @@
      "25037944B80977400134390",
      "25037944B59054376052464",
      "25037944B82328591625586",
-     "25037944B9363307042095"
+     "25037944B9363307042095",
+     "25037944B32288278809201",
+     "25037944B97460463632510",
+     "25037944B8066772871928",
+     "25037944B49536287471778"
     ]
    },
    "bbox": [
     115.45,
-    -32.469,
-    116.415,
-    -31.455
+    -32.816,
+    116.961,
+    -31.089
    ],
    "source": {
     "ucdb": [
@@ -25547,7 +25646,34 @@
     ],
     "fua": [
      360
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "25037944B32288278809201",
+      "25037944B97460463632510",
+      "25037944B8066772871928",
+      "25037944B49536287471778"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 350.9,
+     "stations": 1.2,
+     "places": 3.5,
+     "routes": 93.0,
+     "merge": 1.2,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T12:24:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:22:00",
+    "shipped": "2026-10-30T14:32:53"
    }
   },
   {
@@ -166900,6 +167026,1990 @@
     "gated": "2026-10-29T00:20:37",
     "shipped": "2026-10-29T01:16:36"
    }
+  },
+  {
+   "order": 3141,
+   "id": "cer",
+   "name": "Newcastle (NSW)",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 855934,
+   "origin": [
+    151.7817,
+    -32.9283
+   ],
+   "tz": "Australia/Sydney",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B40753124190116",
+     "25037944B69528063359333",
+     "25037944B78442704405462",
+     "25037944B62637049608158",
+     "25037944B52772221720298",
+     "25037944B76870107962046",
+     "25037944B68071810644037",
+     "25037944B56685676634678",
+     "25037944B88537048948574",
+     "25037944B30189264259012",
+     "25037944B84147386402076",
+     "25037944B38691483406712",
+     "25037944B39236446518145",
+     "25037944B45289981242640",
+     "25037944B3824833794033"
+    ]
+   },
+   "bbox": [
+    148.811,
+    -33.203,
+    152.806,
+    -29.749
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lake Macquarie",
+     "Newcastle",
+     "Mid-Coast",
+     "Maitland",
+     "Port Stephens",
+     "Tamworth",
+     "Cessnock",
+     "Singleton",
+     "Muswellbrook",
+     "Upper Hunter",
+     "Gunnedah",
+     "Narrabri",
+     "Dungog",
+     "Liverpool Plains",
+     "Walcha"
+    ],
+    "origin_was": [
+     151.4815,
+     -33.2471
+    ],
+    "hand": "T-1857"
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 394.4,
+     "stations": 1.2,
+     "places": 3.1,
+     "routes": 131.1,
+     "merge": 12.7,
+     "nocar": 3.0,
+     "everyday": 1.6
+    },
+    "built": "2026-10-30T11:34:15",
+    "gate": {
+     "warn": [
+      "area_km2 72331.64668174344",
+      "road_snap_median_m 307.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:54",
+    "shipped": "2026-10-30T14:32:53"
+   }
+  },
+  {
+   "order": 3142,
+   "id": "gol",
+   "name": "Gold Coast",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 978172,
+   "origin": [
+    153.2981,
+    -27.8782
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales",
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B76061046607907",
+     "25037944B14398404968325",
+     "25037944B52457612567816",
+     "25037944B45717157651515",
+     "25037944B99333709196563",
+     "25037944B26997804636733",
+     "25037944B67552272844427",
+     "25037944B88748338867232",
+     "25037944B39208221478861"
+    ]
+   },
+   "bbox": [
+    151.366,
+    -29.427,
+    153.639,
+    -27.692
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gold Coast",
+     "Tweed",
+     "Lismore",
+     "Ballina",
+     "Scenic Rim",
+     "Byron",
+     "Richmond Valley",
+     "Kyogle",
+     "Tenterfield"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 424.3,
+     "stations": 1.6,
+     "places": 3.5,
+     "routes": 104.7,
+     "merge": 2.9,
+     "nocar": 2.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-30T11:35:10",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:54",
+    "shipped": "2026-10-30T14:32:53"
+   }
+  },
+  {
+   "order": 3143,
+   "id": "sls",
+   "name": "Port Pirie",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 97672,
+   "origin": [
+    138.0167,
+    -33.1858
+   ],
+   "tz": "Australia/Adelaide",
+   "utc_offset": 9,
+   "extracts": [
+    "australia-oceania/australia/south-australia"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B53650156153507",
+     "25037944B48925496758456",
+     "25037944B39877699410120",
+     "25037944B91781040485830",
+     "25037944B48526955129661",
+     "25037944B42711318671021",
+     "25037944B98973302778113",
+     "25037944B28741170589797",
+     "25037944B38569575724277",
+     "25037944B76718204715141",
+     "25037944B23405884319913"
+    ]
+   },
+   "bbox": [
+    136.822,
+    -35.378,
+    140.966,
+    -32.942
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Port Pirie",
+     "Copper Coast",
+     "Yorke Peninsula",
+     "Loxton Waikerie",
+     "Renmark Paringa",
+     "Clare and Gilbert Valleys",
+     "Mid Murray",
+     "Wakefield",
+     "Northern Areas",
+     "Goyder",
+     "Barunga West"
+    ],
+    "origin_was": [
+     138.5989,
+     -34.7496
+    ],
+    "hand": "T-1857"
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 76.4,
+     "stations": 1.2,
+     "places": 2.8,
+     "routes": 79.4,
+     "merge": 4.8,
+     "nocar": 2.4,
+     "everyday": 1.4
+    },
+    "built": "2026-10-30T12:43:18",
+    "gate": {
+     "warn": [
+      "area_km2 40319.86839291292",
+      "top_zone_jobs_share 0.13532053934990168",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:22:01",
+    "shipped": "2026-10-30T14:32:54"
+   }
+  },
+  {
+   "order": 3144,
+   "id": "ade",
+   "name": "Adelaide",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 1473270,
+   "origin": [
+    138.6007,
+    -34.9285
+   ],
+   "tz": "Australia/Adelaide",
+   "utc_offset": 9,
+   "extracts": [
+    "australia-oceania/australia/south-australia"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B62747843124796",
+     "25037944B64238988080325",
+     "25037944B19747941889194",
+     "25037944B96315201731576",
+     "25037944B76769094445269",
+     "25037944B5908676794620",
+     "25037944B2025658304279",
+     "25037944B32453744991132",
+     "25037944B39543590028882",
+     "25037944B24690359827006",
+     "25037944B81627065680382",
+     "25037944B26153550017793",
+     "25037944B56627334914518",
+     "25037944B95616539853674",
+     "25037944B47979939025085",
+     "25037944B16955456805205",
+     "25037944B97586454911655",
+     "25037944B38277479897228",
+     "25037944B81795940513405",
+     "25037944B32211395389119",
+     "25037944B31531764292735",
+     "25037944B26135803940358",
+     "25037944B8971178176615",
+     "25037944B85276451636106",
+     "25037944B33474506304148"
+    ]
+   },
+   "bbox": [
+    138.094,
+    -35.665,
+    139.172,
+    -34.188
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Onkaparinga",
+     "Charles Sturt",
+     "Marion",
+     "Mitcham",
+     "West Torrens",
+     "Norwood Payneham and St Peters",
+     "Burnside",
+     "Adelaide",
+     "Holdfast Bay",
+     "Alexandrina",
+     "Unley",
+     "Victor Harbor",
+     "Yankalilla",
+     "Salisbury",
+     "Port Adelaide Enfield",
+     "Playford",
+     "Tea Tree Gully",
+     "Campbelltown (SA)",
+     "Adelaide Hills",
+     "Gawler",
+     "Barossa",
+     "Prospect",
+     "Light",
+     "Adelaide Plains",
+     "Walkerville"
+    ],
+    "origin_was": [
+     138.56,
+     -35.0984
+    ],
+    "hand": "T-1857"
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 51.3,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 78.4,
+     "merge": 1.5,
+     "nocar": 2.1,
+     "everyday": 1.5
+    },
+    "built": "2026-10-30T12:42:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:22:01",
+    "shipped": "2026-10-30T14:32:54"
+   }
+  },
+  {
+   "order": 3145,
+   "id": "grr",
+   "name": "Greater Geelong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 654678,
+   "origin": [
+    144.3329,
+    -38.1404
+   ],
+   "tz": "Australia/Melbourne",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/victoria"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B24812283687541",
+     "25037944B10145309156113",
+     "25037944B61768543919434",
+     "25037944B46822546280655",
+     "25037944B31372279830401",
+     "25037944B58594911461534",
+     "25037944B68247262621131",
+     "25037944B92361056365890",
+     "25037944B46844675944162",
+     "25037944B62573329843514",
+     "25037944B54836880156068",
+     "25037944B22879671704108",
+     "25037944B6031326285684",
+     "25037944B95428670663886",
+     "25037944B36221284354416",
+     "25037944B34836506967909",
+     "25037944B93002214322562",
+     "25037944B23801424172448"
+    ]
+   },
+   "bbox": [
+    140.665,
+    -38.858,
+    144.986,
+    -35.291
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Greater Geelong",
+     "Ballarat",
+     "Surf Coast",
+     "Warrnambool",
+     "Golden Plains",
+     "Colac Otway",
+     "Glenelg",
+     "Horsham",
+     "Moyne",
+     "Corangamite",
+     "Southern Grampians",
+     "Hepburn",
+     "Central Goldfields",
+     "Northern Grampians",
+     "Ararat",
+     "Pyrenees",
+     "Yarriambiack",
+     "Queenscliffe"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 423.0,
+     "stations": 1.3,
+     "places": 3.5,
+     "routes": 249.5,
+     "merge": 16.4,
+     "nocar": 2.6,
+     "everyday": 1.6
+    },
+    "built": "2026-10-30T11:36:49",
+    "gate": {
+     "warn": [
+      "area_km2 60651.68923697755",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:54",
+    "shipped": "2026-10-30T14:32:54"
+   }
+  },
+  {
+   "order": 3146,
+   "id": "wog",
+   "name": "Wollongong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 561034,
+   "origin": [
+    150.9032,
+    -34.4187
+   ],
+   "tz": "Australia/Sydney",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B78024073086928",
+     "25037944B24149747688554",
+     "25037944B55724853403969",
+     "25037944B71438306812596",
+     "25037944B87455208948659",
+     "25037944B47240806764449",
+     "25037944B41308394801248",
+     "25037944B85069153423068",
+     "25037944B54834386088268"
+    ]
+   },
+   "bbox": [
+    148.201,
+    -37.263,
+    151.066,
+    -33.888
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Wollongong",
+     "Shoalhaven",
+     "Shellharbour",
+     "Wingecarribee",
+     "Eurobodalla",
+     "Goulburn Mulwaree",
+     "Kiama",
+     "Snowy Monaro",
+     "Upper Lachlan"
+    ],
+    "hand": "T-1857"
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 341.5,
+     "stations": 1.1,
+     "places": 14.1,
+     "routes": 111.2,
+     "merge": 4.2,
+     "nocar": 2.2,
+     "everyday": 1.5
+    },
+    "built": "2026-10-30T11:33:04",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12769031780976997"
+     ]
+    },
+    "gated": "2026-10-30T13:21:55",
+    "shipped": "2026-10-30T14:32:54"
+   }
+  },
+  {
+   "order": 3147,
+   "id": "roc",
+   "name": "Rockingham",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 558836,
+   "origin": [
+    115.8047,
+    -32.3485
+   ],
+   "tz": "Australia/Perth",
+   "utc_offset": 8,
+   "extracts": [
+    "australia-oceania/australia/western-australia"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B36908504302594",
+     "25037944B7523913669113",
+     "25037944B63650800772080",
+     "25037944B46798430259876",
+     "25037944B68706686187302",
+     "25037944B91209319772795",
+     "25037944B63911738750692",
+     "25037944B25972327200509",
+     "25037944B11828737752872",
+     "25037944B56639802047851",
+     "25037944B67416490528235",
+     "25037944B58524535883846",
+     "25037944B94844051789605",
+     "25037944B27145137337674",
+     "25037944B53188273537939",
+     "25037944B12129239120455",
+     "25037944B30802850607008",
+     "25037944B97234562917936",
+     "25037944B25957721357526",
+     "25037944B46034099777028",
+     "25037944B18898865249121",
+     "25037944B63512656480867",
+     "25037944B89171502248139",
+     "25037944B18504039205701",
+     "25037944B27165515239628",
+     "25037944B96867361654532",
+     "25037944B2745809655475",
+     "25037944B83412079426782",
+     "25037944B20309273511019",
+     "25037944B17845862979070",
+     "25037944B17943761568072",
+     "25037944B4799895230449",
+     "25037944B61457505310320",
+     "25037944B87064425958741",
+     "25037944B89790845522775",
+     "25037944B92991223821328",
+     "25037944B36470505967652",
+     "25037944B57924194295774",
+     "25037944B81892326519969"
+    ]
+   },
+   "bbox": [
+    114.957,
+    -35.069,
+    118.208,
+    -30.074
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Rockingham",
+     "Mandurah",
+     "Kwinana",
+     "Busselton",
+     "Bunbury",
+     "Harvey",
+     "Capel",
+     "Murray",
+     "Augusta Margaret River",
+     "Dardanup",
+     "Collie",
+     "Manjimup",
+     "Donnybrook-Balingup",
+     "Narrogin",
+     "Gingin",
+     "Bridgetown-Greenbushes",
+     "Waroona",
+     "York",
+     "Dandaragan",
+     "Boddington",
+     "Kojonup",
+     "Wagin",
+     "Beverley",
+     "Boyup Brook",
+     "Cunderdin",
+     "Nannup",
+     "Broomehill-Tambellup",
+     "Pingelly",
+     "Cranbrook",
+     "Corrigin",
+     "Quairading",
+     "Goomalling",
+     "Brookton",
+     "Williams",
+     "West Arthur",
+     "Cuballing",
+     "Victoria Plains",
+     "Wickepin",
+     "Woodanilling"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 449.9,
+     "stations": 0.9,
+     "places": 5.1,
+     "routes": 212.7,
+     "merge": 13.1,
+     "nocar": 2.1,
+     "everyday": 1.2
+    },
+    "built": "2026-10-30T12:28:42",
+    "gate": {
+     "warn": [
+      "area_km2 79489.4067140799",
+      "road_snap_median_m 367.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-30T13:22:01",
+    "shipped": "2026-10-30T14:32:55"
+   }
+  },
+  {
+   "order": 3148,
+   "id": "uni",
+   "name": "Unincorporated ACT",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 544995,
+   "origin": [
+    149.1348,
+    -35.2643
+   ],
+   "tz": "Australia/Sydney",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B15172244637897",
+     "25037944B93129192801754",
+     "25037944B92973083305975",
+     "25037944B7628366145494",
+     "25037944B16131127641558",
+     "25037944B57482962875901",
+     "25037944B54195415642362",
+     "25037944B42386149342522"
+    ]
+   },
+   "bbox": [
+    146.07,
+    -36.009,
+    150.216,
+    -33.521
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Unincorporated ACT",
+     "Queanbeyan-Palerang",
+     "Hilltops",
+     "Yass Valley",
+     "Cootamundra-Gundagai",
+     "Temora",
+     "Bland",
+     "Weddin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 394.9,
+     "stations": 1.1,
+     "places": 3.2,
+     "routes": 83.4,
+     "merge": 5.9,
+     "nocar": 2.4,
+     "everyday": 1.5
+    },
+    "built": "2026-10-30T11:34:20",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14922322106147312",
+      "road_snap_median_m 352.8",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:55",
+    "shipped": "2026-10-30T14:32:55"
+   }
+  },
+  {
+   "order": 3149,
+   "id": "sun",
+   "name": "Sunshine Coast",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 544409,
+   "origin": [
+    153.0744,
+    -26.7276
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B96271376045080",
+     "25037944B90533392045393",
+     "25037944B82919316631597",
+     "25037944B91914901383533",
+     "25037944B15079852191884",
+     "25037944B27259655099788"
+    ]
+   },
+   "bbox": [
+    149.097,
+    -28.014,
+    153.21,
+    -25.599
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sunshine Coast",
+     "Noosa",
+     "Gympie",
+     "South Burnett",
+     "Western Downs",
+     "Cherbourg"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 324.8,
+     "stations": 1.0,
+     "places": 3.4,
+     "routes": 142.1,
+     "merge": 6.8,
+     "nocar": 2.4,
+     "everyday": 1.6
+    },
+    "built": "2026-10-30T11:33:11",
+    "gate": {
+     "warn": [
+      "area_km2 56553.516357471766",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:56",
+    "shipped": "2026-10-30T14:32:55"
+   }
+  },
+  {
+   "order": 3150,
+   "id": "grs",
+   "name": "Greater Shepparton",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 517711,
+   "origin": [
+    145.4082,
+    -36.3941
+   ],
+   "tz": "Australia/Melbourne",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales",
+    "australia-oceania/australia/victoria"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B15813892804113",
+     "25037944B76630671058420",
+     "25037944B24790092852260",
+     "25037944B99055337236234",
+     "25037944B18187162419032",
+     "25037944B99849949120083",
+     "25037944B46502413321481",
+     "25037944B92431338165184",
+     "25037944B29539471298626",
+     "25037944B29882714445476",
+     "25037944B90980309349747",
+     "25037944B21518620554178",
+     "25037944B19057969948609",
+     "25037944B78114295205688",
+     "25037944B57687505469181",
+     "25037944B5872723036943",
+     "25037944B88873459559234",
+     "25037944B50058704827939",
+     "25037944B16722839752740",
+     "25037944B79892386490083",
+     "25037944B17734063205402",
+     "25037944B78152286064279",
+     "25037944B16840847352668",
+     "25037944B40233060499011",
+     "25037944B53831779764710",
+     "25037944B87274721652905"
+    ]
+   },
+   "bbox": [
+    143.288,
+    -37.276,
+    148.809,
+    -34.084
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Greater Shepparton",
+     "Wagga Wagga",
+     "Albury",
+     "Wodonga",
+     "Campaspe",
+     "Moira",
+     "Wangaratta",
+     "Griffith",
+     "Indigo",
+     "Snowy Valleys",
+     "Benalla",
+     "Alpine",
+     "Federation",
+     "Murray River",
+     "Leeton",
+     "Greater Hume",
+     "Strathbogie",
+     "Gannawarra",
+     "Edward River",
+     "Berrigan",
+     "Towong",
+     "Junee",
+     "Narrandera",
+     "Coolamon",
+     "Murrumbidgee",
+     "Lockhart"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 437.0,
+     "stations": 0.9,
+     "places": 2.6,
+     "routes": 180.0,
+     "merge": 19.5,
+     "nocar": 2.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T11:43:48",
+    "gate": {
+     "warn": [
+      "area_km2 107690.56742980641",
+      "road_snap_median_m 347.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-30T13:21:56",
+    "shipped": "2026-10-30T14:32:56"
+   }
+  },
+  {
+   "order": 3151,
+   "id": "pom",
+   "name": "Port Macquarie-Hastings",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 345474,
+   "origin": [
+    152.9171,
+    -31.4448
+   ],
+   "tz": "Australia/Sydney",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B90970778714828",
+     "25037944B5888724581246",
+     "25037944B11916296746250",
+     "25037944B28322742618410",
+     "25037944B44637712818530",
+     "25037944B440592647056",
+     "25037944B83825062814696",
+     "25037944B1782787006296",
+     "25037944B18987498065819",
+     "25037944B63393422883772"
+    ]
+   },
+   "bbox": [
+    150.479,
+    -31.728,
+    153.395,
+    -28.634
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Port Macquarie-Hastings",
+     "Coffs Harbour",
+     "Clarence Valley",
+     "Kempsey",
+     "Armidale",
+     "Nambucca Valley",
+     "Inverell",
+     "Bellingen",
+     "Glen Innes Severn",
+     "Uralla"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 235.8,
+     "stations": 1.8,
+     "places": 7.7,
+     "routes": 61.7,
+     "merge": 4.8,
+     "nocar": 2.1,
+     "everyday": 1.1
+    },
+    "built": "2026-10-30T11:38:27",
+    "gate": {
+     "warn": [
+      "area_km2 47826.199991158566",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:56",
+    "shipped": "2026-10-30T14:32:56"
+   }
+  },
+  {
+   "order": 3152,
+   "id": "lnc",
+   "name": "Launceston",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 269427,
+   "origin": [
+    147.1543,
+    -41.4471
+   ],
+   "tz": "Australia/Hobart",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/tasmania"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B58577428038391",
+     "25037944B44278737612916",
+     "25037944B75055977098300",
+     "25037944B34694615904571",
+     "25037944B77423054355343",
+     "25037944B18161391001525",
+     "25037944B19706345556765",
+     "25037944B94548184912338",
+     "25037944B83996664476279",
+     "25037944B64479708811178",
+     "25037944B6865905771327",
+     "25037944B7753328322432",
+     "25037944B7589359748935",
+     "25037944B54594589896924",
+     "25037944B36269977330964"
+    ]
+   },
+   "bbox": [
+    144.607,
+    -42.743,
+    148.364,
+    -40.372
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Launceston",
+     "Devonport",
+     "West Tamar",
+     "Central Coast (Tas.)",
+     "Burnie",
+     "Meander Valley",
+     "Waratah-Wynyard",
+     "Northern Midlands",
+     "Latrobe (Tas.)",
+     "Circular Head",
+     "Kentish",
+     "Dorset",
+     "Break O'Day",
+     "George Town",
+     "Glamorgan-Spring Bay"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 213.4,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 43.9,
+     "merge": 2.4,
+     "nocar": 2.2,
+     "everyday": 1.4
+    },
+    "built": "2026-10-30T12:58:11",
+    "reason": "gate: browser None failed: ['ground track across the water bridged (or refused for want of room), a tunnel accepted']",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-30T13:08:15",
+    "gated": "2026-10-30T13:43:18",
+    "shipped": "2026-10-30T14:32:56"
+   },
+   "gate_relax": {}
+  },
+  {
+   "order": 3153,
+   "id": "cln",
+   "name": "Clarence",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 267851,
+   "origin": [
+    147.403,
+    -42.8782
+   ],
+   "tz": "Australia/Hobart",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/tasmania"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B57151940201314",
+     "25037944B41007206704884",
+     "25037944B30082174620136",
+     "25037944B97802920285494",
+     "25037944B48970679767962",
+     "25037944B40163460524303",
+     "25037944B32706868282963",
+     "25037944B77062531378131",
+     "25037944B17356947881143",
+     "25037944B97850876136128",
+     "25037944B68362175930798",
+     "25037944B3196758006224"
+    ]
+   },
+   "bbox": [
+    144.911,
+    -43.74,
+    148.055,
+    -41.582
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Clarence",
+     "Hobart",
+     "Glenorchy",
+     "Kingborough",
+     "Brighton",
+     "Huon Valley",
+     "Sorell",
+     "Derwent Valley",
+     "Southern Midlands",
+     "West Coast",
+     "Central Highlands (Tas.)",
+     "Tasman"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 358.9,
+     "stations": 1.3,
+     "places": 2.0,
+     "routes": 22.3,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 1.3
+    },
+    "built": "2026-10-30T13:00:12",
+    "reason": "gate: browser None failed: ['ground track across the water bridged (or refused for want of room), a tunnel accepted']",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13407232175561337"
+     ]
+    },
+    "parked": "2026-10-30T13:08:16",
+    "gated": "2026-10-30T13:43:18",
+    "shipped": "2026-10-30T14:32:56"
+   },
+   "gate_relax": {}
+  },
+  {
+   "order": 3154,
+   "id": "lab",
+   "name": "Latrobe (Vic.)",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 253149,
+   "origin": [
+    146.5192,
+    -38.1936
+   ],
+   "tz": "Australia/Melbourne",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/victoria"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B78078629114467",
+     "25037944B5488167520198",
+     "25037944B19226887893594",
+     "25037944B69891051906105",
+     "25037944B76361191538419"
+    ]
+   },
+   "bbox": [
+    145.606,
+    -39.145,
+    149.985,
+    -36.612
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Latrobe (Vic.)",
+     "Baw Baw",
+     "East Gippsland",
+     "Wellington",
+     "South Gippsland"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 152.7,
+     "stations": 1.5,
+     "places": 2.5,
+     "routes": 61.8,
+     "merge": 3.5,
+     "nocar": 2.7,
+     "everyday": 2.5
+    },
+    "built": "2026-10-30T11:38:04",
+    "gate": {
+     "warn": [
+      "area_km2 40451.64185007755"
+     ]
+    },
+    "gated": "2026-10-30T13:21:57",
+    "shipped": "2026-10-30T14:32:57"
+   }
+  },
+  {
+   "order": 3155,
+   "id": "frs",
+   "name": "Fraser Coast",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 249861,
+   "origin": [
+    152.8547,
+    -25.2955
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B97488266373518",
+     "25037944B53664742087650",
+     "25037944B97560087028013"
+    ]
+   },
+   "bbox": [
+    150.37,
+    -26.097,
+    153.374,
+    -24.392
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Fraser Coast",
+     "Bundaberg",
+     "North Burnett"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 150.2,
+     "stations": 1.3,
+     "places": 2.5,
+     "routes": 39.4,
+     "merge": 4.4,
+     "nocar": 3.0,
+     "everyday": 1.9
+    },
+    "built": "2026-10-30T11:37:43",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:57",
+    "shipped": "2026-10-30T14:32:57"
+   }
+  },
+  {
+   "order": 3157,
+   "id": "tow",
+   "name": "Toowoomba",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 246906,
+   "origin": [
+    151.9358,
+    -27.5986
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B99590448240631",
+     "25037944B10938266492584",
+     "25037944B77651628616749"
+    ]
+   },
+   "bbox": [
+    150.703,
+    -29.068,
+    152.757,
+    -26.453
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Toowoomba",
+     "Southern Downs",
+     "Somerset"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 88.7,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 69.0,
+     "merge": 3.7,
+     "nocar": 2.4,
+     "everyday": 1.7
+    },
+    "built": "2026-10-30T11:38:00",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:57",
+    "shipped": "2026-10-30T14:32:57"
+   }
+  },
+  {
+   "order": 3158,
+   "id": "cis",
+   "name": "Cairns",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 244846,
+   "origin": [
+    145.7349,
+    -16.9127
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B34353436415485",
+     "25037944B5935933559707",
+     "25037944B15390433377666",
+     "25037944B93362533996498",
+     "25037944B68165922230856",
+     "25037944B81164112312357"
+    ]
+   },
+   "bbox": [
+    144.741,
+    -18.578,
+    146.358,
+    -15.903
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cairns",
+     "Tablelands",
+     "Cassowary Coast",
+     "Douglas",
+     "Yarrabah",
+     "Wujal Wujal"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 125.9,
+     "stations": 1.5,
+     "places": 3.1,
+     "routes": 24.8,
+     "merge": 1.7,
+     "nocar": 2.8,
+     "everyday": 1.6
+    },
+    "built": "2026-10-30T11:37:58",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17650670814443925"
+     ]
+    },
+    "gated": "2026-10-30T13:21:58",
+    "shipped": "2026-10-30T14:32:57"
+   }
+  },
+  {
+   "order": 3159,
+   "id": "dbb",
+   "name": "Dubbo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 243020,
+   "origin": [
+    148.6444,
+    -32.2365
+   ],
+   "tz": "Australia/Sydney",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/new-south-wales"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B69125352721348",
+     "25037944B26387144583263",
+     "25037944B16030223882467",
+     "25037944B76580037794190",
+     "25037944B17305446148962",
+     "25037944B28032354001178",
+     "25037944B9471741195126",
+     "25037944B19485668266020",
+     "25037944B5205782179519",
+     "25037944B69063028114827",
+     "25037944B72215071742446",
+     "25037944B83786043255817",
+     "25037944B57868667695206"
+    ]
+   },
+   "bbox": [
+    147.297,
+    -34.206,
+    150.363,
+    -30.606
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dubbo",
+     "Bathurst",
+     "Orange",
+     "Mid-Western",
+     "Parkes",
+     "Cabonne",
+     "Cowra",
+     "Warrumbungle",
+     "Forbes",
+     "Blayney",
+     "Narromine",
+     "Oberon",
+     "Gilgandra"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 191.8,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 60.0,
+     "merge": 9.7,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-10-30T11:42:17",
+    "gate": {
+     "warn": [
+      "area_km2 67681.53145806324",
+      "road_snap_median_m 372.7",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-30T13:21:58",
+    "shipped": "2026-10-30T14:32:58"
+   }
+  },
+  {
+   "order": 3160,
+   "id": "tos",
+   "name": "Townsville",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 235117,
+   "origin": [
+    146.8043,
+    -19.2463
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B93557893838922",
+     "25037944B77283019061987",
+     "25037944B17459590153092",
+     "25037944B36323732446250"
+    ]
+   },
+   "bbox": [
+    145.738,
+    -20.397,
+    147.705,
+    -18.364
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Townsville",
+     "Burdekin",
+     "Hinchinbrook",
+     "Palm Island"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 64.8,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 16.1,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T11:40:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-30T13:21:59",
+    "shipped": "2026-10-30T14:32:58"
+   }
+  },
+  {
+   "order": 3161,
+   "id": "grb",
+   "name": "Greater Bendigo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 225064,
+   "origin": [
+    144.2971,
+    -36.7633
+   ],
+   "tz": "Australia/Melbourne",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/victoria"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B4073485904680",
+     "25037944B71441363107667",
+     "25037944B33361376852028",
+     "25037944B58383707208646",
+     "25037944B85643834616367",
+     "25037944B21796127243371"
+    ]
+   },
+   "bbox": [
+    140.962,
+    -37.27,
+    144.854,
+    -33.981
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Greater Bendigo",
+     "Mildura",
+     "Mount Alexander",
+     "Swan Hill",
+     "Loddon",
+     "Buloke"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 114.6,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 57.9,
+     "merge": 3.5,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T11:42:00",
+    "gate": {
+     "warn": [
+      "area_km2 47543.74023752331",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:21:59",
+    "shipped": "2026-10-30T14:32:58"
+   }
+  },
+  {
+   "order": 3162,
+   "id": "rok",
+   "name": "Rockhampton",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 209515,
+   "origin": [
+    150.5453,
+    -23.3514
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B96392818490355",
+     "25037944B21166714819483",
+     "25037944B91391383703186"
+    ]
+   },
+   "bbox": [
+    149.368,
+    -24.792,
+    152.719,
+    -21.915
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Rockhampton",
+     "Gladstone",
+     "Livingstone"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 69.3,
+     "stations": 1.2,
+     "places": 2.9,
+     "routes": 22.0,
+     "merge": 1.3,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T11:40:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10896059896493902"
+     ]
+    },
+    "gated": "2026-10-30T13:21:59",
+    "shipped": "2026-10-30T14:32:59"
+   }
+  },
+  {
+   "order": 3163,
+   "id": "mck",
+   "name": "Mackay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 195947,
+   "origin": [
+    149.1917,
+    -21.1522
+   ],
+   "tz": "Australia/Brisbane",
+   "utc_offset": 10,
+   "extracts": [
+    "australia-oceania/australia/queensland"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B90195923531970",
+     "25037944B87142005071762"
+    ]
+   },
+   "bbox": [
+    146.849,
+    -21.771,
+    149.936,
+    -19.691
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mackay",
+     "Whitsunday"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 76.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 21.7,
+     "merge": 1.2,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-30T11:40:49",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8186307808259156",
+      "top_zone_jobs_share 0.10076383307624119"
+     ]
+    },
+    "gated": "2026-10-30T13:22:00",
+    "shipped": "2026-10-30T14:32:59"
+   }
+  },
+  {
+   "order": 3164,
+   "id": "daw",
+   "name": "Darwin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 156439,
+   "origin": [
+    130.8375,
+    -12.4563
+   ],
+   "tz": "Australia/Darwin",
+   "utc_offset": 9,
+   "extracts": [
+    "australia-oceania/australia/northern-territory"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B80188408210929",
+     "25037944B38638552543628",
+     "25037944B87513158470011",
+     "25037944B16759006021093",
+     "25037944B77006542086789",
+     "25037944B50083435969321",
+     "25037944B37494903355321"
+    ]
+   },
+   "bbox": [
+    130.654,
+    -13.489,
+    131.397,
+    -12.143
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Darwin",
+     "Palmerston",
+     "Litchfield",
+     "Coomalie",
+     "Darwin Waterfront Precinct",
+     "Wagait",
+     "Belyuen"
+    ],
+    "hand": "T-1857"
+   },
+   "run": {
+    "run_batch": "20261030-145054",
+    "built": "2026-10-30T14:52:20",
+    "gated": "2026-10-30T13:43:18",
+    "shipped": "2026-10-30T15:13:02",
+    "steps": {
+     "build": 9.6,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 5.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10905786611781902"
+     ]
+    }
+   },
+   "gate_relax": {
+    "water_points_in_water": "37 of 40 OSM water polygons' points in water: the three dry ones lie in the seasonal floodplain wetlands of the Adelaide, Finniss and Mary rivers (T-1857, 2026-10-30)"
+   }
+  },
+  {
+   "order": 3165,
+   "id": "mtb",
+   "name": "Mount Barker",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AUS"
+   ],
+   "iso2": "AU",
+   "people": 131537,
+   "origin": [
+    138.8579,
+    -35.081
+   ],
+   "tz": "Australia/Adelaide",
+   "utc_offset": 9,
+   "extracts": [
+    "australia-oceania/australia/south-australia"
+   ],
+   "archetype": "C",
+   "module": "australia",
+   "units": {
+    "AUS": [
+     "25037944B83528217861906",
+     "25037944B55090185866802",
+     "25037944B7394804053319",
+     "25037944B1081142143908",
+     "25037944B94364154888431",
+     "25037944B24842060506409",
+     "25037944B1672021896244",
+     "25037944B88075036338207",
+     "25037944B47874528632088",
+     "25037944B29779306176871",
+     "25037944B45596854652330"
+    ]
+   },
+   "bbox": [
+    138.695,
+    -38.061,
+    140.974,
+    -34.565
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mount Barker",
+     "Mount Gambier",
+     "Murray Bridge",
+     "Wattle Range",
+     "Naracoorte Lucindale",
+     "Grant",
+     "Tatiara",
+     "Coorong",
+     "Southern Mallee",
+     "Kingston (SA)",
+     "Karoonda East Murray"
+    ]
+   },
+   "run": {
+    "run_batch": "20261030-111017",
+    "steps": {
+     "build": 69.1,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 77.3,
+     "merge": 4.2,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-30T12:43:04",
+    "gate": {
+     "warn": [
+      "area_km2 41880.84524162211",
+      "top_zone_jobs_share 0.10130428184666473",
+      "road_snap_median_m 350.3",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-30T13:22:02",
+    "shipped": "2026-10-30T14:32:59"
+   }
   }
  ],
  "dropped": [
@@ -182636,6 +184746,1340 @@
      "78962969B38783163957938",
      "78962969B53970702814040",
      "78962969B57123874810326"
+    ]
+   }
+  },
+  "AUS": {
+   "built": "2026-10-30",
+   "task": "T-1857",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "25037944B43785864788030",
+     "name": "Balranald",
+     "people": 2177,
+     "within_reach": 7877
+    },
+    {
+     "unit": "25037944B16891547173569",
+     "name": "Bega Valley",
+     "people": 35039,
+     "within_reach": 77763
+    },
+    {
+     "unit": "25037944B35156214632360",
+     "name": "Bogan",
+     "people": 2446,
+     "within_reach": 62696
+    },
+    {
+     "unit": "25037944B48990901921332",
+     "name": "Bourke",
+     "people": 2388,
+     "within_reach": 3620
+    },
+    {
+     "unit": "25037944B28138275471855",
+     "name": "Brewarrina",
+     "people": 1469,
+     "within_reach": 11281
+    },
+    {
+     "unit": "25037944B37547853464186",
+     "name": "Broken Hill",
+     "people": 16491,
+     "within_reach": 17509
+    },
+    {
+     "unit": "25037944B9270414762897",
+     "name": "Carrathool",
+     "people": 2452,
+     "within_reach": 61836
+    },
+    {
+     "unit": "25037944B50105666035452",
+     "name": "Central Darling",
+     "people": 1730,
+     "within_reach": 1338
+    },
+    {
+     "unit": "25037944B19938962930750",
+     "name": "Cobar",
+     "people": 4033,
+     "within_reach": 8475
+    },
+    {
+     "unit": "25037944B2591711256956",
+     "name": "Coonamble",
+     "people": 3450,
+     "within_reach": 25110
+    },
+    {
+     "unit": "25037944B33520850609711",
+     "name": "Gwydir",
+     "people": 4974,
+     "within_reach": 90391
+    },
+    {
+     "unit": "25037944B78300731498703",
+     "name": "Hay",
+     "people": 2592,
+     "within_reach": 51194
+    },
+    {
+     "unit": "25037944B93105500759341",
+     "name": "Lachlan",
+     "people": 6147,
+     "within_reach": 58750
+    },
+    {
+     "unit": "25037944B16767086981220",
+     "name": "Moree Plains",
+     "people": 11891,
+     "within_reach": 56272
+    },
+    {
+     "unit": "25037944B85732743205299",
+     "name": "Walgett",
+     "people": 5396,
+     "within_reach": 20660
+    },
+    {
+     "unit": "25037944B92926148840872",
+     "name": "Warren",
+     "people": 2366,
+     "within_reach": 77460
+    },
+    {
+     "unit": "25037944B48452017149194",
+     "name": "Wentworth",
+     "people": 6067,
+     "within_reach": 64325
+    },
+    {
+     "unit": "25037944B59579883363479",
+     "name": "Unincorporated NSW",
+     "people": 948,
+     "within_reach": 987
+    },
+    {
+     "unit": "25037944B30828491037515",
+     "name": "Hindmarsh",
+     "people": 5448,
+     "within_reach": 90237
+    },
+    {
+     "unit": "25037944B702157588032",
+     "name": "West Wimmera",
+     "people": 3920,
+     "within_reach": 98628
+    },
+    {
+     "unit": "25037944B73642390976852",
+     "name": "Aurukun",
+     "people": 1614,
+     "within_reach": 8060
+    },
+    {
+     "unit": "25037944B99375808826492",
+     "name": "Balonne",
+     "people": 4950,
+     "within_reach": 8613
+    },
+    {
+     "unit": "25037944B6409140573096",
+     "name": "Banana",
+     "people": 17238,
+     "within_reach": 29010
+    },
+    {
+     "unit": "25037944B32668450975374",
+     "name": "Barcaldine",
+     "people": 2939,
+     "within_reach": 3460
+    },
+    {
+     "unit": "25037944B38568063774568",
+     "name": "Barcoo",
+     "people": 313,
+     "within_reach": 326
+    },
+    {
+     "unit": "25037944B98295779161883",
+     "name": "Blackall Tambo",
+     "people": 2006,
+     "within_reach": 3041
+    },
+    {
+     "unit": "25037944B33105605540770",
+     "name": "Boulia",
+     "people": 426,
+     "within_reach": 629
+    },
+    {
+     "unit": "25037944B79296808644120",
+     "name": "Bulloo",
+     "people": 350,
+     "within_reach": 348
+    },
+    {
+     "unit": "25037944B14025919363288",
+     "name": "Burke",
+     "people": 583,
+     "within_reach": 2027
+    },
+    {
+     "unit": "25037944B42158127814454",
+     "name": "Carpentaria",
+     "people": 2192,
+     "within_reach": 2452
+    },
+    {
+     "unit": "25037944B88333903625107",
+     "name": "Central Highlands (Qld)",
+     "people": 36080,
+     "within_reach": 45373
+    },
+    {
+     "unit": "25037944B10597176528862",
+     "name": "Charters Towers",
+     "people": 12263,
+     "within_reach": 12778
+    },
+    {
+     "unit": "25037944B6261933942264",
+     "name": "Cloncurry",
+     "people": 3272,
+     "within_reach": 25570
+    },
+    {
+     "unit": "25037944B35622910690770",
+     "name": "Cook",
+     "people": 5598,
+     "within_reach": 569
+    },
+    {
+     "unit": "25037944B33150906552836",
+     "name": "Croydon",
+     "people": 355,
+     "within_reach": 2347
+    },
+    {
+     "unit": "25037944B3552129947749",
+     "name": "Diamantina",
+     "people": 251,
+     "within_reach": 148
+    },
+    {
+     "unit": "25037944B37268575436611",
+     "name": "Doomadgee",
+     "people": 1348,
+     "within_reach": 3132
+    },
+    {
+     "unit": "25037944B75577230273205",
+     "name": "Etheridge",
+     "people": 1004,
+     "within_reach": 1534
+    },
+    {
+     "unit": "25037944B81088097646541",
+     "name": "Flinders (Qld)",
+     "people": 1782,
+     "within_reach": 2752
+    },
+    {
+     "unit": "25037944B7624735907381",
+     "name": "Goondiwindi",
+     "people": 11076,
+     "within_reach": 43748
+    },
+    {
+     "unit": "25037944B25466476596436",
+     "name": "Hope Vale",
+     "people": 1196,
+     "within_reach": 7291
+    },
+    {
+     "unit": "25037944B43894874276355",
+     "name": "Isaac",
+     "people": 28981,
+     "within_reach": 31909
+    },
+    {
+     "unit": "25037944B1656499074776",
+     "name": "Kowanyama",
+     "people": 1231,
+     "within_reach": 2094
+    },
+    {
+     "unit": "25037944B30530613092043",
+     "name": "Lockhart River",
+     "people": 595,
+     "within_reach": 7034
+    },
+    {
+     "unit": "25037944B74261156915694",
+     "name": "Longreach",
+     "people": 3843,
+     "within_reach": 6584
+    },
+    {
+     "unit": "25037944B31801469695154",
+     "name": "McKinlay",
+     "people": 1050,
+     "within_reach": 4560
+    },
+    {
+     "unit": "25037944B16136262303417",
+     "name": "Mapoon",
+     "people": 279,
+     "within_reach": 7008
+    },
+    {
+     "unit": "25037944B80919931419893",
+     "name": "Maranoa",
+     "people": 14271,
+     "within_reach": 16167
+    },
+    {
+     "unit": "25037944B55743987265110",
+     "name": "Mareeba",
+     "people": 23953,
+     "within_reach": 39542
+    },
+    {
+     "unit": "25037944B95382354250521",
+     "name": "Mornington",
+     "people": 1209,
+     "within_reach": 2110
+    },
+    {
+     "unit": "25037944B13114344079677",
+     "name": "Mount Isa",
+     "people": 22317,
+     "within_reach": 22545
+    },
+    {
+     "unit": "25037944B20792422717007",
+     "name": "Murweh",
+     "people": 4237,
+     "within_reach": 6170
+    },
+    {
+     "unit": "25037944B72297710108089",
+     "name": "Napranum",
+     "people": 997,
+     "within_reach": 8630
+    },
+    {
+     "unit": "25037944B13244512579669",
+     "name": "Northern Peninsula Area",
+     "people": 2759,
+     "within_reach": 9194
+    },
+    {
+     "unit": "25037944B13506382949724",
+     "name": "Paroo",
+     "people": 1691,
+     "within_reach": 2293
+    },
+    {
+     "unit": "25037944B5517287997374",
+     "name": "Pormpuraaw",
+     "people": 792,
+     "within_reach": 2089
+    },
+    {
+     "unit": "25037944B55337411871300",
+     "name": "Quilpie",
+     "people": 882,
+     "within_reach": 1046
+    },
+    {
+     "unit": "25037944B62712341328684",
+     "name": "Richmond",
+     "people": 826,
+     "within_reach": 2982
+    },
+    {
+     "unit": "25037944B43303794043608",
+     "name": "Torres",
+     "people": 2909,
+     "within_reach": 9395
+    },
+    {
+     "unit": "25037944B93306496735140",
+     "name": "Torres Strait Island",
+     "people": 6388,
+     "within_reach": 56314
+    },
+    {
+     "unit": "25037944B24701814738895",
+     "name": "Weipa",
+     "people": 3475,
+     "within_reach": 8623
+    },
+    {
+     "unit": "25037944B95324883935739",
+     "name": "Winton",
+     "people": 1187,
+     "within_reach": 1528
+    },
+    {
+     "unit": "25037944B71447631493326",
+     "name": "Woorabinda",
+     "people": 1123,
+     "within_reach": 93403
+    },
+    {
+     "unit": "25037944B76937209298521",
+     "name": "Anangu Pitjantjatjara Yunkunytjatjara",
+     "people": 2545,
+     "within_reach": 1255
+    },
+    {
+     "unit": "25037944B16571921668942",
+     "name": "Berri Barmera",
+     "people": 10901,
+     "within_reach": 74129
+    },
+    {
+     "unit": "25037944B93610458864606",
+     "name": "Ceduna",
+     "people": 3204,
+     "within_reach": 7496
+    },
+    {
+     "unit": "25037944B98257545318432",
+     "name": "Cleve",
+     "people": 1862,
+     "within_reach": 40300
+    },
+    {
+     "unit": "25037944B54111637534658",
+     "name": "Coober Pedy",
+     "people": 1565,
+     "within_reach": 1619
+    },
+    {
+     "unit": "25037944B88670568151833",
+     "name": "Elliston",
+     "people": 1000,
+     "within_reach": 31757
+    },
+    {
+     "unit": "25037944B48952282466613",
+     "name": "Flinders Ranges",
+     "people": 1743,
+     "within_reach": 23559
+    },
+    {
+     "unit": "25037944B21501160534360",
+     "name": "Kangaroo Island",
+     "people": 5359,
+     "within_reach": 44080
+    },
+    {
+     "unit": "25037944B98652038613248",
+     "name": "Kimba",
+     "people": 1115,
+     "within_reach": 49418
+    },
+    {
+     "unit": "25037944B64122646541538",
+     "name": "Lower Eyre Peninsula",
+     "people": 5307,
+     "within_reach": 28123
+    },
+    {
+     "unit": "25037944B7661444660063",
+     "name": "Maralinga Tjarutja",
+     "people": 84,
+     "within_reach": 86
+    },
+    {
+     "unit": "25037944B97955965068321",
+     "name": "Mount Remarkable",
+     "people": 2544,
+     "within_reach": 78132
+    },
+    {
+     "unit": "25037944B41363903956940",
+     "name": "Orroroo Carrieton",
+     "people": 838,
+     "within_reach": 43315
+    },
+    {
+     "unit": "25037944B63042885451223",
+     "name": "Peterborough",
+     "people": 1668,
+     "within_reach": 51643
+    },
+    {
+     "unit": "25037944B82439387593982",
+     "name": "Port Augusta",
+     "people": 14356,
+     "within_reach": 75587
+    },
+    {
+     "unit": "25037944B26241388024664",
+     "name": "Port Lincoln",
+     "people": 14633,
+     "within_reach": 33221
+    },
+    {
+     "unit": "25037944B13028513234480",
+     "name": "Robe",
+     "people": 1411,
+     "within_reach": 96589
+    },
+    {
+     "unit": "25037944B85106510810268",
+     "name": "Roxby Downs",
+     "people": 5235,
+     "within_reach": 7121
+    },
+    {
+     "unit": "25037944B67387382130548",
+     "name": "Streaky Bay",
+     "people": 2145,
+     "within_reach": 10954
+    },
+    {
+     "unit": "25037944B80191544000233",
+     "name": "Tumby Bay",
+     "people": 2680,
+     "within_reach": 42412
+    },
+    {
+     "unit": "25037944B74799247287960",
+     "name": "Wudinna",
+     "people": 1278,
+     "within_reach": 13240
+    },
+    {
+     "unit": "25037944B19571193858150",
+     "name": "Unincorporated SA",
+     "people": 4781,
+     "within_reach": 6900
+    },
+    {
+     "unit": "25037944B82098291834434",
+     "name": "Albany",
+     "people": 36861,
+     "within_reach": 65859
+    },
+    {
+     "unit": "25037944B95548638033328",
+     "name": "Ashburton",
+     "people": 18829,
+     "within_reach": 14851
+    },
+    {
+     "unit": "25037944B66848731281736",
+     "name": "Broome",
+     "people": 18112,
+     "within_reach": 17433
+    },
+    {
+     "unit": "25037944B90464299025642",
+     "name": "Bruce Rock",
+     "people": 976,
+     "within_reach": 46089
+    },
+    {
+     "unit": "25037944B79646276692029",
+     "name": "Carnamah",
+     "people": 586,
+     "within_reach": 62115
+    },
+    {
+     "unit": "25037944B73025640718230",
+     "name": "Carnarvon",
+     "people": 5349,
+     "within_reach": 5399
+    },
+    {
+     "unit": "25037944B4139819915576",
+     "name": "Chapman Valley",
+     "people": 1338,
+     "within_reach": 55654
+    },
+    {
+     "unit": "25037944B30748912552839",
+     "name": "Coolgardie",
+     "people": 4277,
+     "within_reach": 40446
+    },
+    {
+     "unit": "25037944B10831634124389",
+     "name": "Coorow",
+     "people": 994,
+     "within_reach": 50135
+    },
+    {
+     "unit": "25037944B79165272170091",
+     "name": "Cue",
+     "people": 312,
+     "within_reach": 2213
+    },
+    {
+     "unit": "25037944B57812572751517",
+     "name": "Dalwallinu",
+     "people": 1245,
+     "within_reach": 13479
+    },
+    {
+     "unit": "25037944B90574007914814",
+     "name": "Denmark",
+     "people": 5788,
+     "within_reach": 74842
+    },
+    {
+     "unit": "25037944B76695994650709",
+     "name": "Derby-West Kimberley",
+     "people": 10170,
+     "within_reach": 9970
+    },
+    {
+     "unit": "25037944B58207809126055",
+     "name": "Dowerin",
+     "people": 684,
+     "within_reach": 55685
+    },
+    {
+     "unit": "25037944B51137520992535",
+     "name": "Dumbleyung",
+     "people": 614,
+     "within_reach": 36165
+    },
+    {
+     "unit": "25037944B97036074912579",
+     "name": "Dundas",
+     "people": 1240,
+     "within_reach": 267
+    },
+    {
+     "unit": "25037944B14743311013482",
+     "name": "East Pilbara",
+     "people": 25441,
+     "within_reach": 2009
+    },
+    {
+     "unit": "25037944B71614254655380",
+     "name": "Esperance",
+     "people": 14599,
+     "within_reach": 16055
+    },
+    {
+     "unit": "25037944B77099976714827",
+     "name": "Exmouth",
+     "people": 2204,
+     "within_reach": 3206
+    },
+    {
+     "unit": "25037944B50241547651602",
+     "name": "Gnowangerup",
+     "people": 1298,
+     "within_reach": 36474
+    },
+    {
+     "unit": "25037944B20957215446412",
+     "name": "Greater Geraldton",
+     "people": 42095,
+     "within_reach": 56605
+    },
+    {
+     "unit": "25037944B45139039746134",
+     "name": "Halls Creek",
+     "people": 4274,
+     "within_reach": 3618
+    },
+    {
+     "unit": "25037944B44454952814800",
+     "name": "Irwin",
+     "people": 4538,
+     "within_reach": 60867
+    },
+    {
+     "unit": "25037944B23551861043119",
+     "name": "Jerramungup",
+     "people": 1088,
+     "within_reach": 15673
+    },
+    {
+     "unit": "25037944B94303413523862",
+     "name": "Kalgoorlie-Boulder",
+     "people": 35074,
+     "within_reach": 31
+    },
+    {
+     "unit": "25037944B65347816419811",
+     "name": "Karratha",
+     "people": 42574,
+     "within_reach": 46758
+    },
+    {
+     "unit": "25037944B94110641032660",
+     "name": "Katanning",
+     "people": 4461,
+     "within_reach": 68208
+    },
+    {
+     "unit": "25037944B15582539719607",
+     "name": "Kellerberrin",
+     "people": 1202,
+     "within_reach": 44029
+    },
+    {
+     "unit": "25037944B61750008694929",
+     "name": "Kent",
+     "people": 530,
+     "within_reach": 28052
+    },
+    {
+     "unit": "25037944B57185706761007",
+     "name": "Kondinin",
+     "people": 1055,
+     "within_reach": 14750
+    },
+    {
+     "unit": "25037944B75420720277181",
+     "name": "Koorda",
+     "people": 441,
+     "within_reach": 18750
+    },
+    {
+     "unit": "25037944B90327134540623",
+     "name": "Kulin",
+     "people": 834,
+     "within_reach": 27723
+    },
+    {
+     "unit": "25037944B30102722037957",
+     "name": "Lake Grace",
+     "people": 1380,
+     "within_reach": 10899
+    },
+    {
+     "unit": "25037944B80817080024086",
+     "name": "Laverton",
+     "people": 1440,
+     "within_reach": 3
+    },
+    {
+     "unit": "25037944B70988604830145",
+     "name": "Leonora",
+     "people": 2892,
+     "within_reach": 4651
+    },
+    {
+     "unit": "25037944B5193502600366",
+     "name": "Meekatharra",
+     "people": 1558,
+     "within_reach": 403
+    },
+    {
+     "unit": "25037944B67042441314136",
+     "name": "Menzies",
+     "people": 447,
+     "within_reach": 987
+    },
+    {
+     "unit": "25037944B40039133464345",
+     "name": "Merredin",
+     "people": 3274,
+     "within_reach": 19066
+    },
+    {
+     "unit": "25037944B46578815208654",
+     "name": "Mingenew",
+     "people": 522,
+     "within_reach": 57184
+    },
+    {
+     "unit": "25037944B54845573421137",
+     "name": "Moora",
+     "people": 2458,
+     "within_reach": 42013
+    },
+    {
+     "unit": "25037944B80693108839344",
+     "name": "Morawa",
+     "people": 973,
+     "within_reach": 56587
+    },
+    {
+     "unit": "25037944B8385607479474",
+     "name": "Mount Magnet",
+     "people": 732,
+     "within_reach": 1431
+    },
+    {
+     "unit": "25037944B9675874244357",
+     "name": "Mount Marshall",
+     "people": 463,
+     "within_reach": 6341
+    },
+    {
+     "unit": "25037944B31087465274776",
+     "name": "Mukinbudin",
+     "people": 500,
+     "within_reach": 9530
+    },
+    {
+     "unit": "25037944B75354234976201",
+     "name": "Murchison",
+     "people": 128,
+     "within_reach": 493
+    },
+    {
+     "unit": "25037944B21858000962433",
+     "name": "Narembeen",
+     "people": 810,
+     "within_reach": 17746
+    },
+    {
+     "unit": "25037944B86885707589826",
+     "name": "Ngaanyatjarraku",
+     "people": 1634,
+     "within_reach": 784
+    },
+    {
+     "unit": "25037944B43886071852017",
+     "name": "Northampton",
+     "people": 5134,
+     "within_reach": 48176
+    },
+    {
+     "unit": "25037944B34284730981486",
+     "name": "Nungarin",
+     "people": 227,
+     "within_reach": 16733
+    },
+    {
+     "unit": "25037944B82153403198712",
+     "name": "Perenjori",
+     "people": 976,
+     "within_reach": 12186
+    },
+    {
+     "unit": "25037944B3535860838783",
+     "name": "Plantagenet",
+     "people": 5389,
+     "within_reach": 92366
+    },
+    {
+     "unit": "25037944B61185375235969",
+     "name": "Port Hedland",
+     "people": 24824,
+     "within_reach": 34963
+    },
+    {
+     "unit": "25037944B73720065991414",
+     "name": "Ravensthorpe",
+     "people": 2248,
+     "within_reach": 19162
+    },
+    {
+     "unit": "25037944B59235958721533",
+     "name": "Sandstone",
+     "people": 119,
+     "within_reach": 1225
+    },
+    {
+     "unit": "25037944B60313460254351",
+     "name": "Shark Bay",
+     "people": 754,
+     "within_reach": 892
+    },
+    {
+     "unit": "25037944B7078020583356",
+     "name": "Tammin",
+     "people": 410,
+     "within_reach": 90130
+    },
+    {
+     "unit": "25037944B87416382826718",
+     "name": "Three Springs",
+     "people": 681,
+     "within_reach": 61900
+    },
+    {
+     "unit": "25037944B98291984831496",
+     "name": "Trayning",
+     "people": 344,
+     "within_reach": 22579
+    },
+    {
+     "unit": "25037944B28786779473224",
+     "name": "Upper Gascoyne",
+     "people": 228,
+     "within_reach": 273
+    },
+    {
+     "unit": "25037944B31947016083721",
+     "name": "Westonia",
+     "people": 270,
+     "within_reach": 8794
+    },
+    {
+     "unit": "25037944B27628401872150",
+     "name": "Wiluna",
+     "people": 1313,
+     "within_reach": 46
+    },
+    {
+     "unit": "25037944B4040834169290",
+     "name": "Wongan-Ballidu",
+     "people": 1439,
+     "within_reach": 39134
+    },
+    {
+     "unit": "25037944B8068903410129",
+     "name": "Wyalkatchem",
+     "people": 536,
+     "within_reach": 41506
+    },
+    {
+     "unit": "25037944B52727077839859",
+     "name": "Wyndham-East Kimberley",
+     "people": 9655,
+     "within_reach": 1650
+    },
+    {
+     "unit": "25037944B40013954886351",
+     "name": "Yalgoo",
+     "people": 457,
+     "within_reach": 2173
+    },
+    {
+     "unit": "25037944B56581938984526",
+     "name": "Yilgarn",
+     "people": 1625,
+     "within_reach": 6245
+    },
+    {
+     "unit": "25037944B15550630319657",
+     "name": "Flinders (Tas.)",
+     "people": 643,
+     "within_reach": 1971
+    },
+    {
+     "unit": "25037944B96070195853153",
+     "name": "King Island",
+     "people": 1511,
+     "within_reach": 64935
+    },
+    {
+     "unit": "25037944B49978280072491",
+     "name": "Alice Springs",
+     "people": 27427,
+     "within_reach": 31241
+    },
+    {
+     "unit": "25037944B87984246529450",
+     "name": "Barkly",
+     "people": 8031,
+     "within_reach": 4576
+    },
+    {
+     "unit": "25037944B81249572637263",
+     "name": "Central Desert",
+     "people": 4060,
+     "within_reach": 2200
+    },
+    {
+     "unit": "25037944B47305351718046",
+     "name": "East Arnhem",
+     "people": 11434,
+     "within_reach": 12217
+    },
+    {
+     "unit": "25037944B85754900082747",
+     "name": "Katherine",
+     "people": 10633,
+     "within_reach": 13419
+    },
+    {
+     "unit": "25037944B32264354424251",
+     "name": "MacDonnell",
+     "people": 6315,
+     "within_reach": 3171
+    },
+    {
+     "unit": "25037944B80645640934935",
+     "name": "Roper Gulf",
+     "people": 7163,
+     "within_reach": 2797
+    },
+    {
+     "unit": "25037944B16072859725230",
+     "name": "Victoria Daly",
+     "people": 3487,
+     "within_reach": 1584
+    },
+    {
+     "unit": "25037944B28082311396997",
+     "name": "West Arnhem",
+     "people": 8161,
+     "within_reach": 8148
+    },
+    {
+     "unit": "25037944B73531494726593",
+     "name": "West Daly",
+     "people": 4382,
+     "within_reach": 5358
+    },
+    {
+     "unit": "25037944B52215188187413",
+     "name": "Christmas Island",
+     "people": 3332,
+     "within_reach": 3582
+    },
+    {
+     "unit": "25037944B17338277063313",
+     "name": "Cocos Islands",
+     "people": 51,
+     "within_reach": 520
+    },
+    {
+     "unit": "25037944B57060386363407",
+     "name": "Unincorp. Other Territories",
+     "people": 2728,
+     "within_reach": 0
+    },
+    {
+     "unit": "25037944B62285809064209",
+     "name": "Tiwi Islands",
+     "people": 3466,
+     "alone": true
+    },
+    {
+     "unit": "25037944B64884179183706",
+     "name": "Whyalla",
+     "people": 24181,
+     "alone": true
+    },
+    {
+     "unit": "25037944B7803908509786",
+     "name": "Franklin Harbour",
+     "people": 0,
+     "alone": true
+    },
+    {
+     "unit": "25037944B66789818675827",
+     "name": "Unincorporated NT",
+     "people": 8533,
+     "hand": "T-1857"
+    }
+   ],
+   "merges": [
+    "Belyuen (254) joins Unincorporated NT (biggest partner, shared border 26 km)",
+    "Wujal Wujal (345) joins Douglas (biggest partner, shared border 30 km)",
+    "Woodanilling (448) joins Wagin (biggest partner, shared border 80 km)",
+    "Wagait (454) joins Unincorporated NT (biggest partner, shared border 16 km)",
+    "Wickepin (749) joins Narrogin (biggest partner, shared border 54 km)",
+    "Victoria Plains (889) joins Goomalling (biggest partner, shared border 44 km)",
+    "Palm Island (898) joins Hinchinbrook (biggest partner, shared border 2 km)",
+    "Cuballing (908) joins Narrogin (biggest partner, shared border 96 km)",
+    "West Arthur (911) joins Collie (biggest partner, shared border 40 km)",
+    "Williams (948) joins Narrogin (biggest partner, shared border 73 km)",
+    "Brookton (952) joins Pingelly (biggest partner, shared border 82 km)",
+    "Karoonda East Murray (1,034) joins Murray Bridge (biggest partner, shared border 34 km)",
+    "Quairading (1,068) joins York (biggest partner, shared border 33 km)",
+    "Darwin Waterfront Precinct (1,079) joins Darwin (biggest partner, shared border 3 km)",
+    "Corrigin (1,083) joins Pingelly (biggest partner that wraps nothing, shared border 61 km)",
+    "Cranbrook (1,140) joins Manjimup (biggest partner that wraps nothing, shared border 56 km)",
+    "Broomehill-Tambellup (1,200) joins Kojonup (biggest partner, shared border 60 km)",
+    "Franklin Harbour (1,207) joins Whyalla (biggest partner, shared border 11 km)",
+    "Nannup (1,302) joins Manjimup (biggest partner that wraps nothing, shared border 88 km)",
+    "Cunderdin (1,331) joins York (biggest partner, shared border 73 km)",
+    "Cherbourg (1,365) joins South Burnett (biggest partner, shared border 37 km)",
+    "Coomalie (1,600) joins Litchfield (biggest partner, shared border 43 km)",
+    "Boyup Brook (1,638) joins Bridgetown-Greenbushes (biggest partner, shared border 87 km)",
+    "Beverley (1,649) joins York (biggest partner, shared border 167 km)",
+    "Goomalling (1,883) joins York (biggest partner, shared border 23 km)",
+    "Kingston (SA) (2,047) joins Naracoorte Lucindale (biggest partner, shared border 84 km)",
+    "Southern Mallee (2,070) joins Murray Bridge (biggest partner, shared border 75 km)",
+    "Yarrabah (2,319) joins Cairns (biggest partner, shared border 47 km)",
+    "Barunga West (2,348) joins Copper Coast (biggest partner, shared border 63 km)",
+    "Wagin (2,368) joins Narrogin (biggest partner, shared border 89 km)",
+    "Tasman (2,476) joins Sorell (biggest partner, shared border 14 km)",
+    "Central Highlands (Tas.) (2,529) joins Derwent Valley (biggest partner, shared border 81 km)",
+    "Boddington (2,537) joins Murray (biggest partner, shared border 56 km)",
+    "Walcha (3,153) joins Tamworth (biggest partner, shared border 161 km)",
+    "Lockhart (3,179) joins Wagga Wagga (biggest partner, shared border 105 km)",
+    "Pingelly (3,217) joins Narrogin (biggest partner, shared border 139 km)",
+    "Kojonup (3,291) joins Collie (biggest partner, shared border 40 km)",
+    "Dandaragan (3,329) joins Gingin (biggest partner, shared border 100 km)",
+    "Queenscliffe (3,388) joins Greater Geelong (biggest partner, shared border 18 km)",
+    "Tiwi Islands (3,466) stays as it is: an island with no zone within reach",
+    "Weddin (3,520) joins Hilltops (biggest partner, shared border 114 km)",
+    "Murrumbidgee (3,619) joins Griffith (biggest partner, shared border 13 km)",
+    "Waroona (3,937) joins Mandurah (biggest partner, shared border 47 km)",
+    "Glamorgan-Spring Bay (4,213) joins Northern Midlands (biggest partner, shared border 105 km)",
+    "Goyder (4,313) joins Clare and Gilbert Valleys (biggest partner, shared border 95 km)",
+    "Coolamon (4,343) joins Wagga Wagga (biggest partner, shared border 57 km)",
+    "Gilgandra (4,405) joins Dubbo (biggest partner, shared border 65 km)",
+    "Northern Areas (4,433) joins Port Pirie (biggest partner, shared border 92 km)",
+    "West Coast (4,463) joins Derwent Valley (biggest partner, shared border 197 km)",
+    "Walkerville (4,559) joins Port Adelaide Enfield (biggest partner, shared border 6 km)",
+    "Coorong (5,095) joins Murray Bridge (biggest partner, shared border 264 km)",
+    "Bland (5,535) joins Hilltops (biggest partner, shared border 98 km)",
+    "Narrandera (5,587) joins Wagga Wagga (biggest partner, shared border 158 km)",
+    "Donnybrook-Balingup (5,607) joins Dardanup (biggest partner that wraps nothing, shared border 47 km)",
+    "Oberon (5,651) joins Bathurst (biggest partner, shared border 164 km)",
+    "Buloke (5,775) joins Loddon (biggest partner, shared border 111 km)",
+    "Yankalilla (5,820) joins Onkaparinga (biggest partner, shared border 25 km)",
+    "Temora (5,968) joins Hilltops (biggest partner that wraps nothing, shared border 136 km)",
+    "George Town (6,051) joins Launceston (biggest partner, shared border 48 km)",
+    "Bridgetown-Greenbushes (6,137) joins Dardanup (biggest partner, shared border 98 km)",
+    "Break O'Day (6,153) joins Dorset (biggest partner that wraps nothing, shared border 136 km)",
+    "Uralla (6,263) joins Armidale (biggest partner, shared border 136 km)",
+    "Junee (6,338) joins Wagga Wagga (biggest partner, shared border 115 km)",
+    "Yarriambiack (6,560) joins Horsham (biggest partner, shared border 71 km)",
+    "Towong (6,647) joins Wodonga (biggest partner, shared border 12 km)",
+    "Tatiara (6,708) joins Murray Bridge (biggest partner, shared border 162 km)",
+    "Narromine (6,730) joins Dubbo (biggest partner, shared border 151 km)",
+    "Pyrenees (6,887) joins Ballarat (biggest partner, shared border 53 km)",
+    "Southern Midlands (6,904) joins Brighton (biggest partner that wraps nothing, shared border 40 km)",
+    "Wakefield (6,908) joins Clare and Gilbert Valleys (biggest partner that wraps nothing, shared border 116 km)",
+    "Tenterfield (7,071) joins Kyogle (biggest partner that wraps nothing, shared border 160 km)",
+    "Kentish (7,262) joins Devonport (biggest partner, shared border 14 km)",
+    "Circular Head (7,391) joins Waratah-Wynyard (biggest partner, shared border 170 km)",
+    "Grant (7,819) joins Mount Gambier (biggest partner, shared border 24 km)",
+    "Blayney (7,860) joins Orange (biggest partner, shared border 12 km)",
+    "Liverpool Plains (7,927) joins Gunnedah (biggest partner that wraps nothing, shared border 193 km)",
+    "Berrigan (7,999) joins Federation (biggest partner, shared border 72 km)",
+    "Edward River (8,266) joins Federation (biggest partner, shared border 49 km)",
+    "Mid Murray (8,325) joins Barossa (biggest partner, shared border 81 km)",
+    "Upper Lachlan (8,340) joins Goulburn Mulwaree (biggest partner, shared border 192 km)",
+    "Gingin (8,380) joins York (biggest partner, shared border 47 km)",
+    "Forbes (8,776) joins Parkes (biggest partner, shared border 130 km)",
+    "Glen Innes Severn (8,972) joins Inverell (biggest partner, shared border 104 km)",
+    "Unincorporated NT (9,271) joins Darwin (biggest partner, shared border 15 km)",
+    "Renmark Paringa (9,303) joins Loxton Waikerie (biggest partner, shared border 35 km)",
+    "Gannawarra (9,476) joins Campaspe (biggest partner, shared border 27 km)",
+    "Warrumbungle (9,616) joins Dubbo (biggest partner, shared border 246 km)",
+    "Dungog (10,038) joins Port Stephens (biggest partner, shared border 57 km)",
+    "Strathbogie (10,311) joins Greater Shepparton (biggest partner, shared border 107 km)",
+    "Adelaide Plains (10,407) joins Playford (biggest partner, shared border 25 km)",
+    "Greater Hume (10,539) joins Albury (biggest partner, shared border 62 km)",
+    "Naracoorte Lucindale (10,540) joins Wattle Range (biggest partner, shared border 87 km)",
+    "Ararat (10,675) joins Ballarat (biggest partner, shared border 140 km)",
+    "Leeton (10,767) joins Griffith (biggest partner, shared border 122 km)",
+    "North Burnett (11,103) joins Bundaberg (biggest partner that wraps nothing, shared border 255 km)",
+    "Yorke Peninsula (11,164) joins Copper Coast (biggest partner, shared border 63 km)",
+    "Northern Grampians (11,187) joins Ballarat (biggest partner, shared border 172 km)",
+    "Murray River (11,291) joins Federation (biggest partner, shared border 320 km)",
+    "Cootamundra-Gundagai (11,574) joins Hilltops (biggest partner, shared border 203 km)",
+    "Manjimup (11,617) joins Dardanup (biggest partner that wraps nothing, shared border 207 km)",
+    "Narrabri (11,618) joins Tamworth (biggest partner, shared border 91 km)",
+    "Cowra (11,692) joins Parkes (biggest partner, shared border 18 km)",
+    "Douglas (11,829) joins Cairns (biggest partner, shared border 4 km)",
+    "Latrobe (Tas.) (11,856) joins Devonport (biggest partner, shared border 67 km)",
+    "Hinchinbrook (12,068) joins Townsville (biggest partner, shared border 24 km)",
+    "Central Goldfields (12,449) joins Ballarat (biggest partner, shared border 104 km)",
+    "Loddon (12,718) joins Greater Bendigo (biggest partner, shared border 109 km)",
+    "Dorset (13,170) joins Launceston (biggest partner, shared border 108 km)",
+    "Narrogin (13,351) joins Collie (biggest partner that wraps nothing, shared border 254 km)",
+    "Alpine (13,491) joins Wangaratta (biggest partner, shared border 121 km)",
+    "Benalla (13,908) joins Greater Shepparton (biggest partner, shared border 108 km)",
+    "Cabonne (14,026) joins Orange (biggest partner, shared border 163 km)",
+    "Bellingen (14,246) joins Coffs Harbour (biggest partner, shared border 71 km)",
+    "Hepburn (15,000) joins Ballarat (biggest partner, shared border 103 km)",
+    "Snowy Valleys (15,042) joins Wagga Wagga (biggest partner, shared border 66 km)",
+    "Upper Hunter (15,146) joins Muswellbrook (biggest partner, shared border 153 km)",
+    "Southern Grampians (15,949) joins Glenelg (biggest partner that wraps nothing, shared border 138 km)",
+    "Augusta Margaret River (16,343) joins Busselton (biggest partner, shared border 134 km)",
+    "Corangamite (16,635) joins Colac Otway (biggest partner, shared border 188 km)",
+    "Kyogle (16,746) joins Tweed (biggest partner that wraps nothing, shared border 32 km)",
+    "Moyne (16,926) joins Warrnambool (biggest partner, shared border 55 km)",
+    "Huon Valley (17,023) joins Kingborough (biggest partner, shared border 76 km)",
+    "Burdekin (17,150) joins Townsville (biggest partner, shared border 87 km)",
+    "Derwent Valley (17,476) joins Glenorchy (biggest partner, shared border 34 km)",
+    "Sorell (17,551) joins Clarence (biggest partner, shared border 57 km)",
+    "Indigo (17,744) joins Wodonga (biggest partner, shared border 130 km)",
+    "York (17,885) joins Collie (biggest partner, shared border 148 km)",
+    "Northern Midlands (17,898) joins Meander Valley (biggest partner that wraps nothing, shared border 75 km)",
+    "Yass Valley (18,017) joins Queanbeyan-Palerang (biggest partner, shared border 60 km)",
+    "Swan Hill (18,811) joins Mildura (biggest partner, shared border 87 km)",
+    "Victor Harbor (18,986) joins Onkaparinga (biggest partner, shared border 95 km)",
+    "Mount Alexander (19,724) joins Greater Bendigo (biggest partner, shared border 89 km)",
+    "Light (20,008) joins Gawler (biggest partner, shared border 16 km)",
+    "Loxton Waikerie (20,251) joins Barossa (biggest partner, shared border 125 km)",
+    "Nambucca Valley (20,284) joins Coffs Harbour (biggest partner, shared border 82 km)",
+    "Clare and Gilbert Valleys (20,498) joins Gawler (biggest partner, shared border 109 km)",
+    "Gunnedah (20,996) joins Tamworth (biggest partner, shared border 339 km)",
+    "Snowy Monaro (21,069) joins Eurobodalla (biggest partner that wraps nothing, shared border 24 km)",
+    "Burnie (21,591) joins Waratah-Wynyard (biggest partner, shared border 85 km)",
+    "Port Pirie (21,617) joins Gawler (biggest partner, shared border 159 km)",
+    "Central Coast (Tas.) (22,290) joins Devonport (biggest partner, shared border 108 km)",
+    "Prospect (22,447) joins Port Adelaide Enfield (biggest partner, shared border 19 km)",
+    "Wattle Range (22,527) joins Mount Gambier (biggest partner, shared border 105 km)",
+    "Murray (22,840) joins Mandurah (biggest partner, shared border 112 km)",
+    "Kiama (23,104) joins Shellharbour (biggest partner, shared border 43 km)",
+    "Richmond Valley (23,195) joins Lismore (biggest partner, shared border 99 km)",
+    "Mid-Western (23,496) joins Dubbo (biggest partner, shared border 272 km)",
+    "Whyalla (24,181) stays as it is: no zone beside it",
+    "Cassowary Coast (24,220) joins Cairns (biggest partner, shared border 43 km)",
+    "West Tamar (25,427) joins Launceston (biggest partner, shared border 109 km)",
+    "Capel (25,487) joins Bunbury (biggest partner, shared border 35 km)",
+    "Horsham (25,530) joins Ballarat (biggest partner, shared border 241 km)",
+    "Somerset (25,825) joins Toowoomba (biggest partner, shared border 123 km)",
+    "Golden Plains (26,047) joins Greater Geelong (biggest partner, shared border 61 km)",
+    "Inverell (26,869) joins Armidale (biggest partner, shared border 263 km)",
+    "Brighton (26,962) joins Glenorchy (biggest partner, shared border 171 km)",
+    "Harvey (27,600) joins Bunbury (biggest partner, shared border 5 km)",
+    "Litchfield (27,761) joins Palmerston (biggest partner, shared border 25 km)",
+    "Copper Coast (28,029) joins Gawler (biggest partner, shared border 152 km)",
+    "Tablelands (28,121) joins Cairns (biggest partner, shared border 258 km)",
+    "Singleton (29,771) joins Cessnock (biggest partner that wraps nothing, shared border 115 km)",
+    "Moira (30,573) joins Greater Shepparton (biggest partner, shared border 139 km)",
+    "Kempsey (30,967) joins Port Macquarie-Hastings (biggest partner, shared border 94 km)",
+    "South Gippsland (31,287) joins Baw Baw (biggest partner, shared border 73 km)",
+    "Byron (31,322) joins Tweed (biggest partner, shared border 55 km)",
+    "Muswellbrook (32,569) joins Cessnock (biggest partner, shared border 208 km)",
+    "Unley (33,014) joins West Torrens (biggest partner, shared border 7 km)",
+    "Alexandrina (33,271) joins Onkaparinga (biggest partner, shared border 99 km)",
+    "Parkes (34,616) joins Orange (biggest partner, shared border 361 km)",
+    "Glenelg (34,942) joins Warrnambool (biggest partner, shared border 159 km)",
+    "Western Downs (35,112) joins South Burnett (biggest partner that wraps nothing, shared border 175 km)",
+    "Surf Coast (36,604) joins Greater Geelong (biggest partner, shared border 149 km)",
+    "Murray Bridge (36,754) joins Mount Barker (biggest partner that wraps nothing, shared border 34 km)",
+    "Colac Otway (37,553) joins Greater Geelong (biggest partner, shared border 228 km)",
+    "Holdfast Bay (37,619) joins Marion (biggest partner, shared border 15 km)",
+    "Dardanup (38,301) joins Busselton (biggest partner that wraps nothing, shared border 137 km)",
+    "Griffith (38,509) joins Wagga Wagga (biggest partner, shared border 157 km)",
+    "Meander Valley (38,639) joins Launceston (biggest partner, shared border 291 km)",
+    "Goulburn Mulwaree (39,114) joins Wingecarribee (biggest partner that wraps nothing, shared border 156 km)",
+    "Southern Downs (39,114) joins Toowoomba (biggest partner, shared border 120 km)",
+    "Whitsunday (39,685) joins Mackay (biggest partner, shared border 113 km)",
+    "Federation (39,856) joins Albury (biggest partner, shared border 136 km)",
+    "Adelaide (40,344) joins Charles Sturt (biggest partner, shared border 5 km)",
+    "Livingstone (40,401) joins Rockhampton (biggest partner, shared border 241 km)",
+    "Wangaratta (41,266) joins Greater Shepparton (biggest partner, shared border 168 km)",
+    "Burnside (41,839) joins Charles Sturt (biggest partner, shared border 5 km)",
+    "Scenic Rim (42,962) joins Gold Coast (biggest partner, shared border 76 km)",
+    "Wellington (42,989) joins Latrobe (Vic.) (biggest partner, shared border 155 km)",
+    "Ballina (43,137) joins Lismore (biggest partner, shared border 57 km)",
+    "Waratah-Wynyard (43,370) joins Devonport (biggest partner, shared border 101 km)",
+    "Kwinana (44,941) joins Rockingham (biggest partner, shared border 18 km)",
+    "Norwood Payneham and St Peters (45,386) joins Charles Sturt (biggest partner, shared border 14 km)",
+    "Collie (45,404) joins Bunbury (biggest partner, shared border 91 km)",
+    "Campaspe (46,966) joins Greater Shepparton (biggest partner, shared border 211 km)",
+    "Hilltops (47,006) joins Queanbeyan-Palerang (biggest partner, shared border 168 km)",
+    "Adelaide Hills (47,137) joins Tea Tree Gully (biggest partner that wraps nothing, shared border 23 km)",
+    "East Gippsland (47,827) joins Latrobe (Vic.) (biggest partner, shared border 394 km)",
+    "Campbelltown (SA) (48,169) joins Port Adelaide Enfield (biggest partner, shared border 7 km)",
+    "Bathurst (50,400) joins Orange (biggest partner, shared border 184 km)",
+    "Hobart (51,715) joins Glenorchy (biggest partner, shared border 21 km)",
+    "Gympie (53,657) joins Noosa (biggest partner that wraps nothing, shared border 120 km)",
+    "Clarence Valley (53,869) joins Coffs Harbour (biggest partner, shared border 188 km)",
+    "Barossa (54,380) joins Playford (biggest partner that wraps nothing, shared border 16 km)",
+    "Wollondilly (54,901) joins Wollongong (biggest partner, shared border 40 km)",
+    "Mount Gambier (57,522) joins Mount Barker (biggest partner, shared border 215 km)",
+    "Kingborough (57,613) joins Glenorchy (biggest partner, shared border 236 km)",
+    "Eurobodalla (59,854) joins Shoalhaven (biggest partner that wraps nothing, shared border 91 km)",
+    "Armidale (61,900) joins Port Macquarie-Hastings (biggest partner, shared border 78 km)",
+    "Wodonga (66,643) joins Greater Shepparton (biggest partner, shared border 231 km)",
+    "Palmerston (68,738) joins Darwin (biggest partner, shared border 434 km)",
+    "Clarence (70,823) joins Glenorchy (biggest partner, shared border 71 km)",
+    "South Burnett (72,055) joins Toowoomba (biggest partner, shared border 462 km)",
+    "Mildura (73,835) joins Greater Bendigo (biggest partner that wraps nothing, shared border 152 km)",
+    "Mitcham (74,433) joins Marion (biggest partner that wraps nothing, shared border 14 km)",
+    "Gladstone (76,101) joins Rockhampton (biggest partner, shared border 80 km)",
+    "Baw Baw (85,556) joins Latrobe (Vic.) (biggest partner, shared border 308 km)",
+    "Warrnambool (86,038) joins Greater Geelong (biggest partner, shared border 168 km)",
+    "Port Stephens (88,764) joins Maitland (biggest partner, shared border 57 km)",
+    "Wingecarribee (89,293) joins Wollongong (biggest partner, shared border 160 km)",
+    "Camden (89,875) joins Campbelltown (NSW) (biggest partner, shared border 25 km)",
+    "Dubbo (93,438) joins Orange (biggest partner, shared border 371 km)",
+    "Shellharbour (94,609) joins Wollongong (biggest partner, shared border 58 km)",
+    "Mid-Coast (95,381) joins Maitland (biggest partner, shared border 171 km)",
+    "Busselton (96,541) joins Bunbury (biggest partner, shared border 585 km)",
+    "Tamworth (97,679) joins Maitland (biggest partner, shared border 85 km)",
+    "West Torrens (98,017) joins Charles Sturt (biggest partner, shared border 36 km)",
+    "Albury (103,295) joins Wagga Wagga (nearest centre, compact 0.68)",
+    "Lismore (111,882) joins Tweed (nearest centre, partner 1.00)",
+    "Devonport (113,355) joins Launceston (nearest centre, partner 1.00)",
+    "Gawler (116,090) joins Playford (nearest centre, partner 1.00)",
+    "Noosa (120,389) joins Sunshine Coast (nearest centre, partner 1.00)",
+    "Bundaberg (122,625) joins Fraser Coast (nearest centre, partner 1.00)",
+    "Cessnock (123,811) joins Newcastle (nearest centre, partner 0.82)",
+    "Mandurah (128,350) joins Rockingham (nearest centre, partner 1.00)",
+    "Mount Barker (131,537) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Queanbeyan-Palerang (133,239) joins Unincorporated ACT (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Tea Tree Gully (144,068) joins Salisbury (nearest centre, partner 1.00)",
+    "Darwin (165,002) stays as it is: no zone beside it",
+    "Shoalhaven (165,482) joins Wollongong (nearest centre, partner 1.00)",
+    "Coffs Harbour (165,777) joins Port Macquarie-Hastings (nearest centre, partner 1.00)",
+    "Mackay (195,947) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Ballarat (199,267) joins Greater Geelong (nearest centre, compact 0.70)",
+    "Marion (205,692) joins Charles Sturt (nearest centre, partner 1.00)",
+    "Rockhampton (209,515) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Port Adelaide Enfield (209,568) joins Salisbury (nearest centre, partner 0.52)",
+    "Lake Macquarie (219,672) joins Newcastle (nearest centre, partner 1.00)",
+    "Greater Bendigo (225,064) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Bunbury (227,786) joins Rockingham (every join wraps; left to the ring cut)",
+    "Townsville (235,117) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Onkaparinga (237,899) joins Charles Sturt (nearest centre, partner 1.00)",
+    "Wagga Wagga (241,180) joins Greater Shepparton (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Orange (243,020) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Cairns (244,846) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Campbelltown (NSW) (249,800) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Fraser Coast (249,861) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Latrobe (Vic.) (253,149) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Tweed (267,714) joins Gold Coast (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Glenorchy (267,851) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Launceston (269,427) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Playford (282,777) joins Salisbury (nearest centre, partner 1.00)",
+    "Toowoomba (318,962) joins Sunshine Coast (every join wraps; left to the ring cut)",
+    "Central Coast (NSW) (338,941) joins Newcastle (nearest centre, compact 0.74)",
+    "Port Macquarie-Hastings (345,474) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Maitland (374,257) joins Newcastle (nearest centre, partner 1.00)",
+    "ring cut 1: Rockingham wraps Perth, cut into Augusta Margaret River (9 units) and Nannup (30)",
+    "ring cut 1: Sunshine Coast wraps Brisbane, cut into Sunshine Coast (2 units) and Gympie (7)",
+    "ring cut 1: Wollongong wraps Campbelltown (NSW), cut into Upper Lachlan (7 units) and Shellharbour (3)",
+    "Nannup (95,542) joins Augusta Margaret River (biggest partner, shared border 513 km)",
+    "Upper Lachlan (309,676) joins Shellharbour (nearest centre, partner 0.57)",
+    "Gympie (372,619) stays as it is: every join would wrap",
+    "Sunshine Coast (418,696) stays as it is: every join would wrap",
+    "ring cut 2: Augusta Margaret River wraps Perth, cut into Augusta Margaret River (9 units) and Nannup (30)",
+    "ring cut 2: Shellharbour wraps Campbelltown (NSW), cut into Upper Lachlan (7 units) and Shellharbour (3)",
+    "ring cut 2: Gympie wraps Sunshine Coast, cut into Gympie (4 units) and Toowoomba (3)",
+    "Nannup (95,542) joins Augusta Margaret River (biggest partner, shared border 513 km)",
+    "Gympie (125,712) joins Sunshine Coast (nearest centre, partner 1.00)",
+    "Toowoomba (246,906) stays as it is: every join would wrap",
+    "Upper Lachlan (309,676) joins Shellharbour (nearest centre, partner 0.57)",
+    "ring cut 3: Augusta Margaret River wraps Perth, cut into Augusta Margaret River (9 units) and Nannup (30)",
+    "ring cut 3: Shellharbour wraps Campbelltown (NSW), cut into Upper Lachlan (7 units) and Shellharbour (3)",
+    "Nannup (95,542) joins Augusta Margaret River (biggest partner, shared border 513 km)",
+    "Upper Lachlan (309,676) joins Shellharbour (nearest centre, partner 0.57)",
+    "ring left: Augusta Margaret River wraps Perth",
+    "ring left: Shellharbour wraps Campbelltown (NSW)"
+   ],
+   "remnants": {
+    "per": [
+     "25037944B32288278809201",
+     "25037944B97460463632510",
+     "25037944B8066772871928",
+     "25037944B49536287471778"
+    ],
+    "mel": [
+     "25037944B89965825243629",
+     "25037944B49622483033966",
+     "25037944B67422185849488",
+     "25037944B92127790017854"
+    ],
+    "syd": [
+     "25037944B76556859341208"
+    ],
+    "bri": [
+     "25037944B69715811070998"
     ]
    }
   }
