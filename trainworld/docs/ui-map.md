@@ -144,7 +144,12 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   (every shared edge's line segments are cut 30 m from each end for it, `F_EASE`). A station's box
   or dot stays as wide as for one line (T-1821); through the box (T-236) the bands take the Line
   view's slots, narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
-  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). **Corridors**
+  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). **Corridors are
+  off** since T-1846 (`CORRIDORS` in `map/lineBands.ts`): two tracks side by side are cut into edges
+  at different places, so edges fell in and out of a corridor one after another and a line's band
+  stepped sideways at each (Anita's Tokyo trunk in pieces, 2026-10-30); off, only lines on the same
+  edge are side by side and parallel tracks draw over each other as before stage 3. What stage 3 did,
+  kept behind the flag (`lineBands(..., { corridors: true })`): **corridors**
   (stage 3, `map/corridors.ts`): edges that run side by side within 20 m along at least 60% of each
   one's length, in the same direction or not (a four-track trunk is two double tracks 8 m apart,
   T-1305; player-built double tracks beside each other count too), with an end of one within about

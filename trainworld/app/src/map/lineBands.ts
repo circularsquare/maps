@@ -46,12 +46,19 @@ export interface LineBands {
 
 export const CORRIDOR_STRIDE = 5;
 
+/** T-1799 stage 3's corridors (edges side by side drawn as one ribbon), off since T-1846: on real and
+ * player-built tracks the two sides are cut into edges at different places, so edges fell in and out
+ * of a corridor one after another and a line's band stepped sideways at each (Anita, 2026-10-30, a
+ * Tokyo trunk in pieces). Off, each edge's lines are a ribbon of their own (stage 2's look). The way to
+ * turn it back on is in notes/T-1799.md, "T-1846". */
+export const CORRIDORS = false;
+
 
 /** how far along an edge its leaving direction is measured, m, so a short first segment does not decide it */
 const BEARING_M = 60;
 
 /** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). */
-export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>): LineBands {
+export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number }): LineBands {
   const ends = new Map(edges.map((e) => [e.id, e]));
   /** per edge: the lines on it, each with its first entry in its path */
   const on = new Map<number, { line: BandLine; k: number }[]>();
@@ -157,7 +164,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   // each line's shift on each edge it is on, line widths left of the edge's a to b direction
   const pos = new Map<number, Map<number, number>>();
   const cnt = new Map<number, number>();
-  const cor = on.size > 1 ? findCorridors([...on.keys()], pts) : null;
+  const cor = (opts?.corridors ?? CORRIDORS) && on.size > 1 ? findCorridors([...on.keys()], pts, opts?.within) : null;
   for (const [edge, o] of order) {
     if (cor?.of.has(edge)) continue;
     pos.set(edge, new Map(o.map((id, i) => [id, ((o.length - 1) / 2 - i) * BAND_SHARE])));

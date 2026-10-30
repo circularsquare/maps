@@ -20,12 +20,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
 - Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1846.
+- Next free task id: T-1849.
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
 ## In flight
-- Nothing. Overnight notes for the morning report:
+- T-1846 done: corridors (stage 3) switched off (`CORRIDORS = false`), back to the stage-2 look with stage 4 kept; per-edge
+  corridor membership caused the steps. Proper fix filed T-1848 (Opus; asked Anita whether P1).
+- T-1847 Ceuta first-line demand slow (agent t1847, Sonnet, Vite 6189): written answer, small fix if obvious.
+- T-1840 text review doc ready (notes/T-1840-text-review.md, 66 items, committed); waiting on Anita's answers, then an agent
+  applies them by [file:line]. Possible factual bugs inside: items 64 (Ctrl+F vs Ctrl K), 65 (stale "single or double"), 28.
+  The sweep skipped short labels and helper-built hovers (SkyBanner periodTip, map/ hover builders): second pass if wanted.
+- Anita 2026-10-30 morning: expand looks good; laying track feels good.
+- Overnight notes:
 - T-925 done: 9 rebuilt and shipped + 9 neighbours recut; ceu checks relaxed (whole municipality ~80k); unheld land:
   Bodensee water, Oinousses islets (~800 people), slivers by lis/lez. Credits line changed (Spain's IGN).
 - T-1407/T-1780/T-1788 landed 4f316064 (tree removed; typecheck + smoke on master pass). Next ghost after an edit 9-16 ms

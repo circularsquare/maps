@@ -68,7 +68,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
-- T-1840 [P1] Every player-facing string in one review document for Anita, with the ones likely to read as machine-written flagged and a plain rewrite proposed (Anita 2026-10-29). After T-1838 lands. Open.
+- T-1840 [P1] Every player-facing string in one review document for Anita, with the ones likely to read as machine-written flagged and a plain rewrite proposed (Anita 2026-10-29). taking, 2026-10-30 (agent t1840, Sonnet)
+- T-1848 [P2] Corridors (T-1799 stage 3) back on with no sideways steps: decide side-by-side along each line's length and smooth it, instead of edge by edge (proper fix written up in notes/T-1799.md "T-1846"; switched off by `CORRIDORS = false` in map/lineBands.ts). Opus. Open.
+- T-1847 [P2] Demand for a first line in Ceuta took more than a few seconds (Anita 2026-10-30, nothing else built in Europe in that save): measure why, given the viewed zone is solved first. taking, 2026-10-30 (agent t1847, Sonnet)
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
 - T-1481 [P3] Marey diagrams (Anita: nothing built yet makes them interesting, but might be nice). Idea. Open.
 Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted: riders before you pay ("people can just build it and find out"), growth near good stations (confusing), flights or freight you run.

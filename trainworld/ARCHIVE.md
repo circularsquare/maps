@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1846 [P1] Interlined lines turn as disjoint pieces where ribbons change. Done 2026-10-30 (agent t1846) as the fallback: the cause was stage 3's corridors, whose per-edge membership flickered along side-by-side tracks cut at different places (446 sideways steps on the Tokyo shared save, 94 off; 449 on the real save, 0 off), and two fixes tried did not cut it; `CORRIDORS = false` in `map/lineBands.ts`, so parallel tracks draw as before stage 3 and stage 4 stays. The proper fix is written up in notes/T-1799.md ("T-1846"); pictures artifacts/trainworld/t1846/.
+
 - T-925 [P2] The 9 NUTS-filled outlines from geoBoundaries. Done 2026-10-30 (agent t925): `osm_units` fills a NUTS-3 unit's gap from open-licence geoBoundaries units; the 9 and 9 neighbours (slivers) rebuilt and shipped, no NUTS polygon left in any pack. notes/T-925.md.
 
 - T-1407 [P2] The ghost stalls after an edit. Done 2026-10-30 (agent t1407, tree t1407): the clock worker answers the previews asked during an edit before the edit's state, trips, boarding hour and answer (`later`); the boarding lines an edit moved are worked out three a task with previews between, and the trips' next hour a task later. Real save, first ghost after a headway edit 59 -> 11 ms (worst in the next 1.5 s 50); after a train count 328 -> 106 ms (the settle itself; one asked from 150 ms on 52). notes/T-1407.md; checks/t1407-edit-ghost.mjs.

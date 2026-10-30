@@ -43,6 +43,8 @@ interface Pair { cover: number[]; off: number; rel: number }
 
 /** pairs tested last time, keyed by the two edges; kept while both geometries are as they were */
 let pairCache = new Map<number, { fa: number; fb: number; res: Pair | null }>();
+/** the `within` those pairs were tested at */
+let lastWithin = 0;
 
 /** each edge's measures, kept while its points array is the same one (the cache hands the same arrays back) */
 const prepCache = new WeakMap<Float32Array, Prep | null>();
@@ -80,9 +82,9 @@ const fingerprint = (p: Float32Array) => {
 
 /** how many of `a`'s samples have a parallel stretch of `b` within CORRIDOR_M, and (summed) the lateral
  * offset of that stretch left of `a`'s direction (m) and the sign of its direction against a's */
-function against(a: Prep, b: Prep): { hits: number; n: number; off: number; dot: number } {
+function against(a: Prep, b: Prep, within: number): { hits: number; n: number; off: number; dot: number } {
   const n = Math.max(3, Math.min(80, Math.ceil(a.len / a.k / SAMPLE_M)));
-  const P = a.p, Q = b.p, nq = Q.length / 3, reach = CORRIDOR_M * a.k;
+  const P = a.p, Q = b.p, nq = Q.length / 3, reach = within * a.k;
   let hits = 0, off = 0, dot = 0, seg = 0, at = 0, segLen = Math.hypot(P[3] - P[0], P[4] - P[1]);
   const maxMiss = Math.floor((1 - COVER) * n);
   let miss = 0;
@@ -124,10 +126,10 @@ function against(a: Prep, b: Prep): { hits: number; n: number; off: number; dot:
   return { hits, n, off: hits ? off / hits : 0, dot };
 }
 
-function pairOf(a: Prep, b: Prep): Pair | null {
-  const x = against(a, b);
+function pairOf(a: Prep, b: Prep, within: number): Pair | null {
+  const x = against(a, b, within);
   if (x.hits < COVER * x.n) return null;
-  const y = against(b, a);
+  const y = against(b, a, within);
   if (y.hits < COVER * y.n) return null;
   return { cover: [x.hits / x.n, y.hits / y.n], off: x.off, rel: x.dot >= 0 ? 1 : -1 };
 }
@@ -136,9 +138,11 @@ function pairOf(a: Prep, b: Prep): Pair | null {
  * The corridors among `ids` (edges that carry lines). `pts`: each edge's local polyline (x, y, z
  * triples, a to b). Two edges are side by side when each has at least COVER of its length within
  * CORRIDOR_M of the other, running the same way or the opposite; side by side is passed on, so a
- * third track 8 m further out joins the corridor.
+ * third track 8 m further out joins the corridor. `within`: that distance, m.
  */
-export function findCorridors(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>): Corridors {
+export function findCorridors(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, within = CORRIDOR_M): Corridors {
+  if (within !== lastWithin) pairCache = new Map();
+  lastWithin = within;
   const out: Corridors = { of: new Map(), members: new Map(), dir: new Map() };
   const list: Prep[] = [];
   let kMax = 1;
@@ -165,7 +169,7 @@ export function findCorridors(ids: readonly number[], pts: ReadonlyMap<number, F
       else grid.set(c, [e]);
     }
   }
-  const reach = CORRIDOR_M * kMax;
+  const reach = within * kMax;
   const seen = new Set<number>(), cache = new Map<number, { fa: number; fb: number; res: Pair | null }>();
   const nbr = new Map<number, { to: number; off: number; rel: number }[]>();
   for (const v of grid.values()) {
@@ -184,7 +188,7 @@ export function findCorridors(ids: readonly number[], pts: ReadonlyMap<number, F
       seen.add(pk);
       const old = pairCache.get(pk);
       let hit = old && old.fa === a.fp && old.fb === b.fp ? old : null;
-      if (!hit) hit = { fa: a.fp, fb: b.fp, res: pairOf(a, b) };
+      if (!hit) hit = { fa: a.fp, fb: b.fp, res: pairOf(a, b, within) };
       cache.set(pk, hit);
       const r = hit.res;
       if (!r) continue;
