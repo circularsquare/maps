@@ -1,6 +1,6 @@
-// Top bar: city (or the world, zoomed far out), the mode split (the goal number: the bar and the train
-// share), cash, the time and date on one line beside or over the sky and demand band, speed and pause. The clock is
-// its own component so a game minute re-renders only it.
+// Top bar: city (or the world, zoomed far out), cash, the mode split (the goal number: the bar and the
+// train share), the sky and demand band with the time and date on one line right of it (T-1853), speed
+// and pause. The clock is its own component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
@@ -129,7 +129,8 @@ function Calendar() {
   );
 }
 
-/** T-861, T-1136: the time and date on one line, beside or over the sky banner (ui/SkyBanner.tsx) and its demand band. */
+/** T-861, T-1853: the time and date on one line right of the sky banner (ui/SkyBanner.tsx) and its demand
+ * band (over it in a map column under 360 px). */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
   // T-309: the local time and day where the player is looking
@@ -146,11 +147,11 @@ function Clock() {
     <div class="clock">
       <Calendar />
       <div class="clock-box">
+        <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
         <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
           <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
           <span class="date">{todayHols.length > 0 && <i class="holiday-dot" />}{dateName(day)}</span>
         </div>
-        <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
       </div>
     </div>
   );
@@ -164,7 +165,7 @@ function Cash() {
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}, upkeep ${money(-(today.upkeep ?? 0) * 1e6)}` : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Infinite money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
-  // T-1136: right-aligned in a box of fixed width, so it ends the usual gap before the clock
+  // T-1853: right after the name, its own width (no box held open for a longer figure)
   const shown = m ? moneyCash(live.cash * 1e6) : "";
   return <div class={"cash num" + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? tip : undefined}>{shown}</div>;
 }
@@ -274,6 +275,7 @@ export function TopBar() {
     <><header id="topbar">
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name="World" tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
+      <Cash />
       <div class="split">
         <div data-tip={total ? worldShareTip(total, where, note) : splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
@@ -286,7 +288,6 @@ export function TopBar() {
           <b class={"lg pct" + (far ? " trips" : "")}>{pct(s.train)}</b>
         </div>
       </div>
-      <Cash />
       <Clock />
       <Speed />
     </header><SaveNotice /></>

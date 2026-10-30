@@ -552,6 +552,36 @@ async function leave(msg: Extract<ToClock, { kind: "leave" }>) {
   } catch (err) { send({ kind: "left", error: (err as Error).message }); }
 }
 
+/** T-1852: the game being played is deleted (its backups and account copy with it); nothing may write
+ * the slot again, and the page then reloads to the start menu on "left". */
+async function deletePlaying() {
+  const key = activeSlot;
+  try {
+    if (!activeLease) throw new Error("That slot is open in another tab. Close it before changing this save.");
+    switching = true; // autosave stands off from here
+    if (saveInFlight) await saveInFlight;
+    dirty = edited = false;
+    byHandNext = false;
+    unwritten = null;
+    newSlotName = null;
+    await removeSlot(key);
+    activeLease.release();
+    hold(null);
+    activeSlot = "";
+    activeName = null;
+    const ctx = cloudCtx;
+    // the account's copy goes before the page reloads, or the next menu lists it as a game only online
+    if (ctx) await Promise.race([cloudRun(() => sendDeletes(ctx)), new Promise((go) => setTimeout(go, 5000))]);
+    await publishSlots();
+    slotChanges?.postMessage({ key });
+    send({ kind: "left" });
+  } catch (err) {
+    switching = false;
+    await publishSlots((err as Error).message);
+    send({ kind: "left", error: (err as Error).message });
+  }
+}
+
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
 let moneyParams = [2.5, 2, 100, 9];
@@ -778,7 +808,11 @@ function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
       const res = await fetch(new URL(`terrain/${id}.terrain`, packBase).href);
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`${res.status}`);
-      return await res.arrayBuffer();
+      const b = await res.arrayBuffer();
+      // T-1854: the files are gzip (a server may already have unzipped them on the way)
+      const gz = new Uint8Array(b, 0, Math.min(2, b.byteLength));
+      if (gz[0] !== 0x1f || gz[1] !== 0x8b) return b;
+      return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
     })();
     terrainFetches.set(id, p);
     // a failed fetch is tried again by the next view or edit that needs it
@@ -2072,7 +2106,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
     } else {
       const key = msg.key;
       if (!key) throw new Error("Choose a save slot first.");
-      if (msg.action === "delete" && key === activeSlot) throw new Error("Open another slot before deleting this one.");
+      if (msg.action === "delete" && key === activeSlot) { await deletePlaying(); return; }
       const temporary = key === activeSlot ? null : await leaseSlot(key);
       if (key === activeSlot ? !activeLease : !temporary) throw new Error("That slot is open in another tab. Close it before changing this save.");
       try {

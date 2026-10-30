@@ -19,7 +19,7 @@ import { nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
 import { stationUpkeep } from "../../game/regionMoney";
-import { Built, Chip, ConstructRemove, Icon, Row, Stepper } from "../widgets";
+import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
 import { locateStation } from "../locate";
@@ -248,7 +248,7 @@ export function StationInspector({ id }: { id: string }) {
         </div>
       )}
       {linking.value === id && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
-      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip="" />}
+      {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>Construct station</button></Actions>}
       <div class="h">Station upgrades</div>
       <StationUpgrades s={s} members={asComplex ? members : undefined} />
       {asComplex ? (
@@ -258,6 +258,7 @@ export function StationInspector({ id }: { id: string }) {
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
+      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>Remove station</button></Actions>}
     </>
   );
 }

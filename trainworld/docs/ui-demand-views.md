@@ -187,7 +187,8 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   once, so the setting costs no rebuild.
 - **Area is trip legs**, outward and return, at a fixed density: 88,900 legs/km² for homes
   (50,000 with the radius then cut by a quarter, T-1294) and 160,000 for destinations, so a home
-  bubble is 1.34 times the radius of a destination bubble of the same legs; times the Bubble size
+  bubble is 1.34 times the radius of a destination bubble of the same legs; times 0.75
+  (`BUBBLE_BASE`, T-1852: the old 0.75x is the new 1x) times the Bubble size
   setting (0.5-2x width). No minimum size; nobody
   means no bubble.
 - **Colour** by the **Colors** setting: **2-color** (the old Train share) (default since T-833; a stored Mode mix

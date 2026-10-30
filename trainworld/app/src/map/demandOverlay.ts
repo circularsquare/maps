@@ -156,6 +156,9 @@ void main() {
   o = vec4(col * a, a);
 }`;
 
+/** The radius every bubble is drawn at, before the settings slider (Anita, 2026-10-30: the old 0.75x is the new 1x). */
+export const BUBBLE_BASE = 0.75;
+
 /** One turn of a loading outline, ms: the panels' spinner's (style.css `.spin`). */
 const SPIN_MS = 1200;
 
@@ -400,9 +403,10 @@ export class DemandOverlay {
     this.invalidate();
   }
 
-  /** Commuter bubbles' radius as a multiple of the built one (the settings slider, T-099). */
-  bubbleSize = 1;
+  /** Bubbles' radius as a multiple of the built one: the settings slider (T-099) times `BUBBLE_BASE`. */
+  bubbleSize = BUBBLE_BASE;
   setBubbleSize(s: number) {
+    s *= BUBBLE_BASE;
     if (s === this.bubbleSize) return;
     this.bubbleSize = s;
     this.invalidate();

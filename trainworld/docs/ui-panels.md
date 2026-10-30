@@ -82,14 +82,14 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Narrow screens** [T-951, T-1259, `style.css`]: at most 600 px wide and at least 560 px tall (a
   phone held upright) the dock goes under the map, full width and 40% of the height, so the map and
   top bar keep the whole width and the map column's container queries see the real width. Under the
-  tab row the tab area takes the dock's whole height. While something is selected and the Build,
-  Lines or Stations tab is open, the inspector stands beside the tab area instead of under it, the tab
-  area 40% of the width and the inspector the rest until the divider between them is dragged (30% to
-  70%, remembered per browser); on Money, Cities and Settings the tab keeps the whole width and the
-  inspector shows again on the other three. At that width the Build tab's tools show their icons only,
+  tab row the tab area takes the dock's whole height. While the Build, Lines, Stations or Cities tab
+  is open, the inspector always stands beside the tab area instead of under it, empty when nothing is
+  selected [T-1852], the tab area 40% of the width and the inspector the rest until the divider
+  between them is dragged (30% to 70%, remembered per browser); on Money and Settings the tab keeps
+  the whole width. At that width the Build tab's tools show their icons only,
   its button rows share the width, and the Lines list drops its Near column. The width handle is gone
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
-  (landscape) screen. Every key hint is one peach (`--key`; the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835].
+  (landscape) screen. Every key hint is in the theme's accent (the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835, T-1852].
   On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
   `ui/tip.ts`]. The Select tool's selection bar leaves the top of the map for its bottom edge
@@ -97,22 +97,21 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
 ## The top bar
 
-`ui/TopBar.tsx`, left to right, 54 px high, **every part centred on one line** [T-349]: the name,
-the split (the bar, then the train share), cash, the clock, speed buttons. **Three type
-styles only**: normal (14 px, regular, text colour: name, cash), figure (18 px, bold: the
-train share and the time) and small (12 px, regular, muted: status). **The cash, clock and
-speed buttons have fixed widths** [T-341, T-1136] and sit together at the right with the usual gap
-between each, so nothing moves them: the name and the split fill all the room left of them [T-1108]. The name takes
-what it needs up to 104 px (88 px under 760 px of map column), on two lines at most with an ellipsis
-(the whole name on hover, with the city's points and points a day, T-684, T-694), and the mode bar
-(at least 80 px) widens into the rest, so a short name leaves no gap. The train share is in tabular
-figures in a box of fixed width, and the split bar is centred in the bar with nothing under it: the
-status is a tag over the map (Status, below). The time and date are one line ("06:50 Mon May 5")
-[T-1136]: from 940 px of map column it stands beside the sky and band in a box 300 px wide, the sky
-taking what the date leaves (so a longer date narrows the sky by a few pixels and moves nothing
-else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky too, in a box up to
-250 px wide that takes the room the name keeps back (the sky then at least 44 px); between 700 and
-940 px, and below 360 px, it sits over the sky, 148 px wide [T-1109, T-861, T-1775].
+`ui/TopBar.tsx`, left to right, 44 px high, **every part centred on one line** [T-349, T-1853]: the
+name, cash, the split (the bar, then the train share), the clock (calendar, sky, then the time and
+date), speed buttons. **The name, cash, train share and time are one size, 16 px** (Anita: equally
+important numbers, T-1853), the train share and time bold, the name and cash regular; the date is 14
+px and the status small (12 px, regular, muted). **The clock and speed buttons have fixed widths**
+[T-341, T-1136] and sit together at the right, so nothing moves them. The cash sits right after the
+name at the usual gap, at its own width [T-1853: no box held open before the bar], and the mode bar
+(at least 60 px) widens into the rest. The name takes what it needs up to 120 px (96 px under 760 px
+of map column), on two lines at most with an ellipsis (the whole name on hover, with the city's
+points and points a day, T-684, T-694) [T-1108]. The train share is in tabular figures in a box of
+fixed width, and the split bar is centred in the bar with nothing under it: the status is a tag
+over the map (Status, below). The time and date are one line ("06:50 Mon May 5") right of the sky
+and band [T-1136, T-1853, Anita's sketch], in a box 300 px wide from 940 px of map column and 230 px
+below, the sky taking what the date leaves (so a longer date narrows the sky by a few pixels and
+moves nothing else) [T-1109, T-861].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
@@ -167,15 +166,15 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   learnt from its last runs in this page, so a fast desktop rarely sees it and a phone often. Not
   while the loading card is up.
 - **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
-  running costs drain [T-284, T-722]. A box of fixed width sized to "−$37.34B", the figure
-  right-aligned in tabular figures with the $ right before it, so it always ends the usual gap before
-  the clock and a changing figure never moves the rest of the bar [T-305, T-310, T-1136]; a longer
-  figure ("−$999,949") reaches left into the gap before it. In a sandbox the box says
+  running costs drain [T-284, T-722], in tabular figures right after the name, so a changing digit
+  moves nothing; a figure that gains or loses a character moves the mode bar's left end by that much
+  [T-305, T-310, T-1853]. In a sandbox the box says
   "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
   (figure style) and the date without the year (normal style) on one line 6 px apart, "13:24 Mon Feb
-  24" (hover "Monday, February 24, day 29"), beside or over an 18 px scene and a 2 px demand band.
+  24" (hover "Monday, February 24, day 29"), right of an 18 px scene and a 2 px demand band (over
+  them below 360 px of map column).
   The calendar is in [world.md](world.md) "Calendar". The scene
   (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 12 back and 12 ahead, now being its middle
   [T-896]. Its sky takes flat colours by the sun's height at the view's centre on that date
@@ -205,7 +204,7 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   each, right for out, left for back; its days away a pink ribbon. The sky's hover adds
   "Tomorrow: Golden Week, Apr 29-30, China", "Today: Golden Week, May 6-7, China" (the name and
   the dates of that part of the run, `RushSpan.dates` [T-1697]), and the same on a day away that is
-  no holiday. **The calendar icon** left of the time
+  no holiday. **The calendar icon** left of the sky
   [T-264, T-1476]: a bare calendar (no button box) with a pink dot in its body, there only while a
   superholiday where the player has built is under way or goes out within 2 game days, and not
   there otherwise. Its hover gives each run within 21 days with the dates of its days
@@ -230,13 +229,14 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
-- **Narrow maps**: secondary labels drop first; two rows below 700 px (name, cash, time and speed
-  over the split), a different two below 520
-  px (speed beside the split), three below 300 px, with cash, time, train share and all speed
-  controls kept. In the two-row bars from 360 px up, the time and date stand beside the sky, so row
-  one is one line high and the sky narrows to fit; the name keeps at least 90 px (72 px below 520),
-  and the clock stacks over the sky again below 360 px [T-1775]. Hovering the split or the time gives
-  what was dropped [T-106].
+- **Narrow maps** [T-1853, Anita's sketch]: two rows below 700 px of map column, about 61 px high
+  (was 66-69). Row one has the name, the cash, then the clock at the row's end (calendar, sky up to
+  200 px, then the time and date, standing over the speed buttons); row two has the mode bar running
+  under them, the train share, then the speed buttons. On a short row the sky (down to 36 px) and the
+  name (onto two lines, whole words) give way. Below 360 px the time and date stack over the sky
+  again, and below 300 px the bar takes three rows (name and cash; the split; the clock and speed),
+  with cash, time, train share and all speed controls kept. Hovering the split or the time gives
+  what was dropped [T-106, T-1775].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
   games.
 
@@ -444,7 +444,7 @@ dismissed, and the map and tools are blocked meanwhile.
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
 "Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, three sliders: Size
-(0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
+(0.5-2x, [T-099]; the radius is the slider times `BUBBLE_BASE`, 0.75, so 1x is the old 0.75x, T-1852), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
 commuter and longer-trip bubbles, not station discs; ignored while bubbles are selected, T-936, but not while a whole zone is, T-1726) and Detail (4 steps from coarser to finer,
 the third by default; its hover reads "How many bubbles are aggregated together"; [T-795, T-1838]), the Colors
 choice (3-color by default [T-1724], the old Mode mix, or 2-color [T-833], the old Train share, which shows two colour pickers labelled 0% train and
@@ -571,8 +571,7 @@ line runs high-speed trains, "High speed" with the high-speed fare multiplier in
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
-fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; its hover "Set fare multiplier
-for Japan") with its scale in a stepper as a multiple of Japan's fares, "1.00x" (Japan's default;
+fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852) with its scale in a stepper as a multiple of Japan's fares, "1.00x" (Japan's default;
 India 0.16x, the US 1.90x), stepping by 0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth
 of a baseline unit); once the player has set one, an undo icon after the stepper ("Back to 1.90x, the
 scale by income") returns to the income's. Its stepper sits in the same column as the rows above
@@ -644,8 +643,11 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   first [T-743; the slot rules in architecture.md]. On a test page, whose game has no card, a copy
   icon (hover "Make a copy") follows them. Each of these, and Open and Open as a copy, reloads the
   page into its game ("Loading" below).
-- One card per browser slot: a 240 x 160 picture of its network, drawn by the clock worker when the
-  slot is saved, at twice that resolution, on the land colour of the theme it was saved in [T-543].
+- One card per browser slot: a 204 x 136 picture of its network, drawn by the clock worker when the
+  slot is saved, at 480 x 320, on the land colour of the theme it was saved in [T-543]. The card
+  shows it in the theme now set, whichever it was saved in: the page recolours the picture's land,
+  rule and grey track to the other theme's and leaves the lines' colours, and the names over it use
+  the current theme's ink and land (`ui/thumbShade.ts`, T-1852). The panel is 540 px wide.
   The picture is one panel per city with stations (each station in its zone by the coarse outlines,
   [zones.md](zones.md) "A place's zone", T-1265), the most stations first, at most four, leaving
   out a city with under 8% of the biggest one's stations (a fringe of its network) [T-894]:
@@ -663,7 +665,11 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   saved. Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
   - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
     (hover "Make a copy"), download (hover "Download as a file", `trainsworld-nyc-day-12.save`),
-    clock (hover "Earlier versions"), and Save.
+    clock (hover "Earlier versions"), bin (hover "Delete", asked first: `Delete "Tokyo" from this
+    browser? The game ends and you go back to the start menu.`, from this browser and your account
+    when tied) and Save [T-1852]. Deleting the game being played removes the slot, its backups and
+    the account's copy, stops autosave writing it again, and reloads the page to the start menu as a
+    page opened with no game chosen (`ClockClient.leave`, worker `deletePlaying`).
   - **Every other card in this browser**: download (its last save in this browser, read from
     storage) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
     loads it).

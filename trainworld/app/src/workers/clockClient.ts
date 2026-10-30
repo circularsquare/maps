@@ -46,6 +46,10 @@ export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | 
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
+  // T-1852: deleting the game being played ends it; the page then goes back to the start menu
+  if (action === "delete" && key && key === saveSlotsState.peek().active && current?.running) {
+    return void current.leave(undefined, toStartMenu, { kind: "saveSlot", action, key });
+  }
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -299,10 +303,16 @@ export function pageWith(params: Record<string, string>): string {
 export function switchGame(params: Record<string, string>, pending?: PendingLoad) {
   current?.leave(pending, () => location.replace(pageWith(params)));
 }
+/** The page reloads to the start menu; a page already at that address (it came without a game switch) is reloaded, since replacing it with itself would not be (T-1852). */
+function toStartMenu() {
+  const to = pageWith({});
+  if (to === location.href) location.reload();
+  else location.replace(to);
+}
 /** T-988: the page goes to the start menu, the game in hand saved and let go first; `then` runs just
  * before the reload, and only if the game could be saved. */
 export function leaveToMenu(then: () => void) {
-  const go = () => { then(); location.replace(pageWith({})); };
+  const go = () => { then(); toStartMenu(); };
   if (current) current.leave(undefined, go);
   else go();
 }
@@ -594,12 +604,12 @@ export class ClockClient {
   get fitPending() { return this.fitNext; }
   /** T-1196: what to do once the worker has saved and let go of the game in hand */
   private onLeft: (() => void) | null = null;
-  leave(pending: PendingLoad | undefined, then: () => void) {
+  leave(pending: PendingLoad | undefined, then: () => void, instead?: ToClock) {
     if (this.onLeft) return;
     // a worker that never started has no game to keep
     if (!this.worker) return then();
     this.onLeft = then;
-    this.post({ kind: "leave", pending });
+    this.post(instead ?? { kind: "leave", pending });
   }
 
   get running() { return !!this.worker; }

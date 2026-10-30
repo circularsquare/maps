@@ -520,14 +520,15 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
 - **Buttons come first** [T-1134, Anita: never put stuff at the bottom after an arbitrarily long
   list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
   header, above all rows and lists. A station has, in station view, Construct station (a blueprint
-  only) and Remove station in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
+  only) in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof) and
   passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
   passage, the first two for every station of the complex at once [T-1528]: built at all of them or
   none, a complex where only some have it shows as not built and a click builds it at the rest,
   priced one station's price at each station that has none, and a click on a built one removes it
-  from all. Each is outlined when
+  from all. A single station's Remove station is at the panel's bottom, in red text (Anita, T-1852:
+  the Delete tool does the same). Each upgrade is outlined when
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
   in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing

@@ -306,7 +306,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   down at once where there is room (400 m) to go up again before it [T-1269].
   With no room on land otherwise (water within 200 m of the segment's start or end, so of a
   station or junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
-  `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
+  `BridgeNoRoom`: "Not enough space for bridge ramps" (T-1852)
 - **Ramping over track** (T-1615, `draw.rs` `shaped`, `bridge::ramp_over`): with the Build tab's
   ramp switch on (the default; `set_route_ramp`), a route that would cross other track flat (both
   at the route's level, the other not on a ramp, more than `SHARED_NODE_CLEAR` 25 m from the

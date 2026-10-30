@@ -6,7 +6,10 @@ Updated: 2026-10-30 early morning
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 878f2d8e (corridors off, T-1846; overnight work before it). 8800 at 878f2d8e, smoke 20/20 both shades. Cap 12.
+- master 9f3257c4 (T-1851 text answers + T-1855 group fix). 8800 at 9f3257c4, smoke 20/20 both shades. Cap 12.
+- T-1852 done, uncommitted (style.css shared with t1853's top bar): land both together, then deploy.
+- Anita 2026-10-30: "text acknowledged"; DEPLOY approved once T-1852 and T-1853 land (deploy recipe below; check the
+  trainsworld page has no GA after). Australia/terrain packs only if done and smoked by then.
 - Anita back in the morning: T-1840 text review with her first.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.

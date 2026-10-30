@@ -416,7 +416,8 @@ those who got on, less the load carried on.
   round mouth, a z) 4% on happy and tired faces; crying (eyes shut, a wailing mouth, two streams of
   tears) 8% and knocked out (cartoon X eyes, a tongue out) 3% on sad ones; a bucket hat, a
   baseball cap or sunglasses 2.5% each on any face (no sunglasses over shut or X'd eyes, and no z
-  under a hat); and a child, drawn at 72% size, 6%. Three sprites on a 2D canvas over the network; a frame loop
+  under a hat); short hair 10% and long hair 10%, in one of four colours (brown, black, auburn,
+  honey), on a face with no hat [T-1852]; and a child, drawn at 72% size, 6%. Three sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
 - **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own, one of the 12 semitones from C5
   [T-706]: a city's first five lines (a line's city is where its first stop is) take C, E, G, D, A in

@@ -49,16 +49,29 @@ const LOOK: Record<Mood, { fill: string; edge: string; ink: string }> = {
  * at CHILD_SCALE. */
 export type Expression = "" | "flat" | "sleepy" | "crying" | "dead";
 export type Accessory = "" | "bucket" | "cap" | "shades";
+/** T-1852: hair, short or long, in one of `HAIR` colours; a face with a hat has none. */
+export type Hair = "" | "short" | "long";
 export interface Look {
   mood: Mood;
   expr: Expression;
   acc: Accessory;
   child: boolean;
+  hair: Hair;
+  /** index into `HAIR` */
+  tint: number;
 }
 export const EXPR_CHANCE: Record<Exclude<Expression, "">, number> = { flat: 0.04, sleepy: 0.04, crying: 0.08, dead: 0.03 };
 export const ACC_CHANCE: Record<Exclude<Accessory, "">, number> = { bucket: 0.025, cap: 0.025, shades: 0.025 };
+export const HAIR_CHANCE: Record<Exclude<Hair, "">, number> = { short: 0.1, long: 0.1 };
 export const CHILD_CHANCE = 0.06;
 export const CHILD_SCALE = 0.72;
+
+const HAIR = [
+  { fill: "#5a3d2b", edge: "#3a2519" },
+  { fill: "#34303b", edge: "#1c1922" },
+  { fill: "#b8602e", edge: "#8a4519" },
+  { fill: "#d9a441", edge: "#a97c24" },
+];
 
 export function pickLook(mood: Mood, rand: () => number = Math.random): Look {
   let expr: Expression = "", acc: Accessory = "";
@@ -69,10 +82,14 @@ export function pickLook(mood: Mood, rand: () => number = Math.random): Look {
   t = 0;
   for (const a of ["bucket", "cap", "shades"] as const) if (!acc && ra < (t += ACC_CHANCE[a])) acc = a;
   if (acc === "shades" && (expr === "dead" || expr === "sleepy" || expr === "crying")) acc = "";
-  return { mood, expr, acc, child: rand() < CHILD_CHANCE };
+  const child = rand() < CHILD_CHANCE;
+  let hair: Hair = "";
+  const rh = rand(), tint = Math.floor(rand() * HAIR.length);
+  if (!acc || acc === "shades") hair = rh < HAIR_CHANCE.short ? "short" : rh < HAIR_CHANCE.short + HAIR_CHANCE.long ? "long" : "";
+  return { mood, expr, acc, child, hair, tint };
 }
 
-export const lookKey = (l: Look) => `${l.mood}|${l.expr}|${l.acc}`;
+export const lookKey = (l: Look) => `${l.mood}|${l.expr}|${l.acc}|${l.hair}${l.hair ? l.tint : ""}`;
 
 const HATS = {
   bucket: { fill: "#a9d8b8", edge: "#5f9e76" },
@@ -82,8 +99,8 @@ const HATS = {
 /** One face, its centre at SPRITE/2 across and 4 px under SPRITE/2 down, leaving room above for a
  * hat. */
 export function sprite(look: Look | Mood): HTMLCanvasElement {
-  const l: Look = typeof look === "string" ? { mood: look, expr: "", acc: "", child: false } : look;
-  const { mood, expr, acc } = l;
+  const l: Look = typeof look === "string" ? { mood: look, expr: "", acc: "", child: false, hair: "", tint: 0 } : look;
+  const { mood, expr, acc, hair } = l;
   const c = document.createElement("canvas");
   c.width = c.height = SPRITE;
   const g = c.getContext("2d")!;
@@ -91,6 +108,8 @@ export function sprite(look: Look | Mood): HTMLCanvasElement {
   const { fill, edge, ink } = LOOK[mood];
   g.lineCap = "round";
   g.lineJoin = "round";
+  const h = hair ? HAIR[l.tint % HAIR.length] : null;
+  if (h && hair === "long") drawLongBack(g, mx, my, h);
   g.beginPath();
   g.arc(mx, my, FACE_R, 0, Math.PI * 2);
   g.fillStyle = fill;
@@ -98,6 +117,7 @@ export function sprite(look: Look | Mood): HTMLCanvasElement {
   g.lineWidth = 3;
   g.strokeStyle = edge;
   g.stroke();
+  if (h) drawFringe(g, mx, my, h, hair === "long");
   g.fillStyle = ink;
   g.strokeStyle = ink;
   g.lineWidth = 3;
@@ -109,6 +129,49 @@ export function sprite(look: Look | Mood): HTMLCanvasElement {
 }
 
 const FACE_R = 20;
+
+/** Long hair behind the head: a mass wider than the face that falls past the chin. */
+function drawLongBack(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }) {
+  g.fillStyle = h.fill;
+  g.strokeStyle = h.edge;
+  g.lineWidth = 2.4;
+  g.beginPath();
+  g.moveTo(mx - 24, my + 22);
+  g.lineTo(mx - 24, my - 2);
+  g.bezierCurveTo(mx - 24, my - 32, mx + 24, my - 32, mx + 24, my - 2);
+  g.lineTo(mx + 24, my + 22);
+  g.quadraticCurveTo(mx + 18, my + 26, mx + 13, my + 19);
+  g.lineTo(mx - 13, my + 19);
+  g.quadraticCurveTo(mx - 18, my + 26, mx - 24, my + 22);
+  g.closePath();
+  g.fill(); g.stroke();
+}
+
+/** The hair over the forehead: a cap of hair with a ragged lower edge; long hair parts in the middle
+ * and comes down the face's sides. */
+function drawFringe(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }, long: boolean) {
+  g.fillStyle = h.fill;
+  g.strokeStyle = h.edge;
+  g.lineWidth = 2.4;
+  g.beginPath();
+  g.moveTo(mx - 20, my - 3);
+  g.bezierCurveTo(mx - 24, my - 30, mx + 24, my - 30, mx + 20, my - 3);
+  if (long) {
+    g.quadraticCurveTo(mx + 15, my - 9, mx + 3, my - 15);
+    g.lineTo(mx - 3, my - 15);
+    g.quadraticCurveTo(mx - 15, my - 9, mx - 20, my - 3);
+  } else {
+    g.quadraticCurveTo(mx + 17, my - 10, mx + 9, my - 12);
+    g.quadraticCurveTo(mx + 4, my - 17, mx - 2, my - 12);
+    g.quadraticCurveTo(mx - 8, my - 16, mx - 12, my - 10);
+    g.quadraticCurveTo(mx - 17, my - 9, mx - 20, my - 3);
+  }
+  g.closePath();
+  g.fill(); g.stroke();
+  if (long) {
+    g.beginPath(); g.moveTo(mx, my - 27); g.lineTo(mx, my - 15); g.stroke();
+  }
+}
 
 function drawShades(g: CanvasRenderingContext2D, mx: number, my: number) {
   g.fillStyle = "#33313f";

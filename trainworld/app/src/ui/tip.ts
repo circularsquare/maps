@@ -17,7 +17,7 @@ const BULLET = /\u0002([^|\u0003]*)\|([^\u0003]*)\u0003/;
 export const tipBullet = (letter: string, colour: string) => `\u0002${letter.replace(/[\u0002\u0003|]/g, "")}|${colour}\u0003`;
 
 /** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
- * "Keep placing (Caps Lock)", is lettered in the one hotkey colour (`--key`). */
+ * "Keep placing (Caps Lock)", is lettered in the theme's accent. */
 const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
 /** T-1851: a negative amount of money in a hover ("−$1.2M", the minus `money()` writes) is red, as in the panels. */
 const NEG_MONEY = /(−\$[\d.,]+[KMBT]?)/;

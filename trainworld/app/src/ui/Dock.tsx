@@ -5,7 +5,7 @@
 
 import type { JSX } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { dockLayout, selection, tab, uiScale, type Tab } from "../game/ui";
+import { dockLayout, tab, uiScale, type Tab } from "../game/ui";
 import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
 import { BuildTab } from "./BuildTab";
@@ -121,9 +121,9 @@ export function Dock() {
       startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight((y - top) / uiScale.peek()) }));
     }
   };
-  // T-1259: on a phone held upright the inspector sits beside the tab area while something is
-  // selected, with the tabs that hold up at that width; the others keep the whole width
-  const inspecting = selection.value !== null && BESIDE.has(t);
+  // T-1259, T-1852: on a phone held upright the inspector sits beside the tab area on the tabs that
+  // hold up at that width, empty when nothing is selected; the others keep the whole width
+  const inspecting = BESIDE.has(t);
   return (
     <aside id="dock" class={inspecting ? "inspecting" : undefined} ref={ref} style={style}>
       <nav class="tabs">

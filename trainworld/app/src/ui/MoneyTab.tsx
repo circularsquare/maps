@@ -95,7 +95,7 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
-      <span class="fr-what" data-tip={`Set fare multiplier for ${name}`}>{`${name} fares`}</span>
+      <span class="fr-what">{`${name} fares`}</span>
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
         type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}.` }} />
       {own

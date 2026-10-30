@@ -1,7 +1,7 @@
 /* trainworld UI. Three colour tokens per colour theme and light or dark (--bg, --text, --accent),
    two for warnings (--bad, --warn); everything else in the UI is mixed from them. The map's own
    light and dark colours (--map-land, --map-ink) are set from game/shades.ts. Line, mode and level
-   colours never change (game/palette.ts). Nunito, Zen Maru Gothic for kana and kanji; sizes 12, 14, 18 px; weights 400 and
+   colours never change (game/palette.ts). Nunito, Zen Maru Gothic for kana and kanji; sizes 12, 14, 18 px (16 for the top bar's figures); weights 400 and
    700. No transitions. */
 
 :root,
@@ -15,10 +15,8 @@
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
 :root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --good: #3f8a3a; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
 :root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; --good: #7cc576; }
-/* T-1835: every hotkey hint (key letters on buttons, bracketed keys in hovers, the Help panel's keys) is one peach */
-:root { --key: #c8664c; }
-:root[data-shade="dark"] { --key: #f0a58a; }
-.key, .key.muted, .tip-key, .help-panel dt { color: var(--key); }
+/* T-1835, T-1852: every hotkey hint (key letters on buttons, bracketed keys in hovers, the Help panel's keys) is in the theme's accent */
+.key, .key.muted, .tip-key, .help-panel dt { color: var(--accent); }
 /* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
 :root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
 :root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }
@@ -35,7 +33,7 @@
   --tint: color-mix(in srgb, var(--accent) 18%, var(--bg));
   --net-ink: #2b2b2b; /* station rims, in both themes */
   --dock-w: clamp(304px, 24vw, 352px);
-  --bar-h: 54px; /* T-349: one centre line; the status lies under the bar. T-861: room for the sky */
+  --bar-h: 44px; /* T-349: one centre line; the status lies under the bar. T-1853: the sky beside the time */
   /* T-1695: one device pixel inside the zoomed panels (game/ui.ts sets --ui and --dpr): a hairline
      measured in these is the same whole pixels at every UI scale */
   --px: calc(1px / (var(--ui, 1) * var(--dpr, 1)));
@@ -646,25 +644,25 @@ rect.now { fill-opacity: .45; }
 #main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column;
         container-type: inline-size; container-name: map-column; }
 #topbar {
-  flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px; line-height: 1.2;
+  flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 14px; line-height: 1.2;
   padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
 }
-/* T-349: three type styles in the whole bar and one centre line. The base is the normal style (14 px,
-   400, the text colour: name, "Train", cash); .lg is the figure style (18 px, 700, text colour: the
-   train share and the time); .sm is the small muted style (12 px, 400, muted: rides, walking, driving,
-   day, demand level, status). Every part is centred on the bar's middle. */
-#topbar .lg { font-size: 18px; font-weight: 700; }
+/* T-349, T-1853: the name, cash, train share and time are one size (16 px), the time and share bold;
+   the date 14 px; .sm is the small muted style (12 px, 400, muted). Every part is centred on the bar's
+   middle. */
+#topbar .lg { font-size: 16px; font-weight: 700; }
+#topbar .city, #topbar .cash { font-size: 16px; }
 #topbar .sm { font-size: 12px; font-weight: 400; color: var(--muted); }
-/* T-341, T-1108: the cash, clock and speed buttons have fixed widths, so the name and the mode bar
-   together fill the same room whatever the name. The name takes what it needs up to a cap, on two
-   lines at most with an ellipsis (its whole name on hover), and the bar widens into the rest. The split
-   is one row (bar, then the train share), centred in the bar (T-349). */
-.city { flex: none; width: max-content; max-width: 104px; white-space: normal; overflow: hidden; overflow-wrap: anywhere;
+/* T-341, T-1108, T-1853: left to right the name, the cash, the mode bar and its train share, the clock
+   and the speed buttons. The clock and speed buttons have fixed widths and the bar takes the rest. The
+   name takes what it needs up to a cap, on two lines at most with an ellipsis (its whole name on
+   hover). The split is one row (bar, then the train share), centred in the bar (T-349). */
+.city { flex: none; width: max-content; max-width: 120px; white-space: normal; overflow: hidden; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .split { flex: 1; min-width: 0; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
-.split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; height: 24px; }
+.split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 24px; }
 .split-row.updating .bar, .split-row.updating .pct { opacity: 0.6; }
-.bar-box { flex: 1; min-width: 80px; position: relative; display: block; height: 10px; }
+.bar-box { flex: 1; min-width: 60px; position: relative; display: block; height: 10px; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
 /* T-1440: zoomed out the figure is the train trips a day ("11.8M trips/day") */
 .pct.trips { width: auto; }
@@ -700,17 +698,17 @@ rect.now { fill-opacity: .45; }
 .seg-walk { background: var(--mode-walk); }
 .seg-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
-/* T-305, T-1136: the cash moves as fares land, so its box has a fixed width sized to "−$37.34B" (four
-   significant figures, game/format.ts moneyCash), the figure right-aligned in tabular figures so it
-   always ends the bar's usual gap before the clock; a longer figure ("−$999,949") reaches left */
-.cash { flex: none; width: 8ch; display: flex; justify-content: flex-end; font-variant-numeric: tabular-nums; }
-/* T-832, T-861, T-1136: the clock sits right of the cash and left of the speed buttons, the mode bar
-   taking the spare room. The time then the date on one line over the sky (ui/SkyBanner.tsx), its
-   demand band under that, all 148 px wide; on a wide map column (below) the line stands beside the sky,
-   the box a fixed width and the sky taking what the date leaves, so nothing else moves day to day. */
+/* T-305, T-1853: the cash moves as fares land, in tabular figures; it sits right after the name with the
+   bar's usual gap, no box held open for a longer figure (Anita: too much space before the bar) */
+.cash { flex: none; font-variant-numeric: tabular-nums; }
+/* T-832, T-861, T-1853: the clock sits right of the train share and left of the speed buttons: the
+   calendar, the sky (ui/SkyBanner.tsx) with its demand band, then the time and date on one line right of
+   it (Anita's sketch). The box is a fixed width, the sky taking what the date leaves, so nothing else
+   moves day to day. */
 .clock { flex: none; display: flex; font-variant-numeric: tabular-nums; }
-.clock-box { flex: none; width: 148px; display: flex; flex-direction: column; gap: 2px; }
-.clock-text { display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
+.clock-box { flex: none; width: 230px; display: flex; align-items: center; gap: 10px; }
+.clock-box .sky { flex: 1; min-width: 0; }
+.clock-text { flex: none; display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
 .sky { position: relative; height: 21px; }
 .sky-canvas { display: block; width: 100%; height: 21px; }
@@ -1126,53 +1124,42 @@ button.save-add:hover { color: var(--text); }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
 @container map-column (max-width: 1000px) {
-  #topbar { gap: 12px; }
-  .split-row { gap: 10px; }
+  #topbar { gap: 10px; }
 }
 @container map-column (max-width: 760px) {
-  .city { max-width: 88px; }
+  .city { max-width: 96px; }
 }
-/* T-1109, T-1136: room enough, the time and date stand beside the sky rather than over it */
+/* T-1109, T-1853: a wide column gives the sky more room */
 @container map-column (min-width: 940px) {
-  .clock-box { width: 300px; flex-direction: row; align-items: center; gap: 10px; }
-  .clock-text { flex: none; }
-  .clock-box .sky { flex: 1; min-width: 0; }
+  .clock-box { width: 300px; }
 }
-/* T-349: below 700 px the bar takes two rows: name, cash, time and speed on the first, the split
-   (bar, labels, status under the bar) on the second */
+/* T-349, T-1853 (Anita's sketch): below 700 px the bar takes two rows. The first has the name, the cash
+   and the clock (calendar, sky, then the time and date at the row's end, over the speed buttons); the
+   second the mode bar running under them with the train share, then the speed buttons. The sky takes up
+   to 200 px; on a short row the sky (to 36 px) and the name (onto two lines) give way, the empty third
+   column taking whatever room is left. */
 @container map-column (max-width: 700px) {
-  #topbar { height: auto; min-height: 64px; padding: 6px 10px;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto;
-    grid-template-areas: "city cash clock speed" "split split split split"; gap: 4px 12px; }
-  #topbar .city { grid-area: city; width: auto; max-width: none; min-width: 0; }
+  #topbar { height: auto; padding: 4px 10px;
+    display: grid; grid-template-columns: minmax(min-content, max-content) auto 1fr auto auto;
+    grid-template-areas: "city cash . clock clock" "split split split split speed"; gap: 3px 10px; }
+  #topbar .city { grid-area: city; width: auto; max-width: 150px; min-width: 0; overflow-wrap: break-word; }
   #topbar .cash { grid-area: cash; }
-  #topbar .clock { grid-area: clock; justify-self: end; }
-  #topbar .split { grid-area: split; max-width: none; }
+  #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; }
+  .clock-box { width: auto; flex: 1; }
+  .clock-box .sky { flex: 0 1 200px; min-width: 36px; }
+  #topbar .split { grid-area: split; }
   #topbar .speed { grid-area: speed; justify-self: end; }
 }
-@container map-column (max-width: 520px) {
-  #topbar { grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-areas: "city cash clock" "split split speed"; }
+/* below 360 px the time and date stand over the sky; below 300 px the clock takes a row of its own */
+@container map-column (max-width: 359px) {
+  .clock-box { flex-direction: column; align-items: stretch; gap: 2px; }
+  .clock-box .sky { flex: none; width: 100%; }
+  .clock-text { order: -1; }
 }
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "city cash" "split split" "clock speed"; }
   #topbar .clock { justify-self: start; }
-}
-/* T-1775: in the two-row bars the time and date stand beside the sky too (row one one line high) where
-   row one has the room: the name keeps at least 90 px (72 px with speed in row two), the clock takes
-   up to 250 px, the sky what the date leaves (at least 44 px). Below 360 px they stay over the sky. */
-@container map-column (min-width: 360px) and (max-width: 700px) {
-  #topbar .clock { justify-self: stretch; }
-  .clock-box { width: auto; flex: 1; min-width: 0; flex-direction: row; align-items: center; gap: 10px; }
-  .clock-text { flex: none; }
-  .clock-box .sky { flex: 1; min-width: 44px; }
-}
-@container map-column (min-width: 521px) and (max-width: 700px) {
-  #topbar { grid-template-columns: minmax(90px, 1fr) auto minmax(auto, 250px) auto; }
-}
-@container map-column (min-width: 360px) and (max-width: 520px) {
-  #topbar { grid-template-columns: minmax(72px, 1fr) auto minmax(auto, 250px); }
 }
 
 /* ---------- shorter screens ---------- */
@@ -1192,8 +1179,8 @@ button.save-add:hover { color: var(--text); }
   #tools { right: 0; }
   #tool-notes { width: auto; max-width: none; border-right: 0; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
-  /* T-1259: under the tab row the tab area takes the dock's whole height, and while something is
-     selected the inspector stands beside it (40% and 60% until the divider is dragged) */
+  /* T-1259, T-1852: under the tab row the tab area takes the dock's whole height, and on the tabs that
+     fit the inspector always stands beside it (40% and 60% until the divider is dragged) */
   #dock { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   #dock.inspecting { grid-template-columns: minmax(0, var(--pane-w, 40%)) 0 minmax(0, 1fr); }
   #dock > .tabs { grid-column: 1 / -1; }
@@ -1223,7 +1210,7 @@ button.save-add:hover { color: var(--text); }
 /* T-241: the game being played is marked with the accent, the others have an Open button */
 .save-slots > li.on { border-color: var(--accent); background: var(--tint); }
 /* T-251: the saved games in a centred panel, like the confirmation dialog */
-.saves-panel { width: min(600px, calc(100vw - 40px)); max-height: calc(100vh - 60px); padding: 0; border: 1px solid var(--rule);
+.saves-panel { width: min(540px, calc(100vw - 40px)); max-height: calc(100vh - 60px); padding: 0; border: 1px solid var(--rule);
   background: var(--bg); color: var(--text); overflow: hidden; }
 .saves-panel[open] { display: flex; flex-direction: column; }
 .saves-panel::backdrop { background: rgb(0 0 0 / 28%); }
@@ -1236,7 +1223,7 @@ button.save-add:hover { color: var(--text); }
 .btn.save-head-mark:hover { color: var(--text); }
 .save-head-mark svg { width: 16px; height: 16px; }
 .save-card { display: flex; gap: 14px; align-items: stretch; }
-.save-thumb { flex: none; width: 240px; height: 160px; position: relative; overflow: hidden; background: var(--map-land); border: 1px solid var(--rule); }
+.save-thumb { flex: none; width: 204px; height: 136px; position: relative; overflow: hidden; background: var(--map-land); border: 1px solid var(--rule); }
 .save-thumb img { display: block; width: 100%; height: 100%; }
 /* T-894: a city's name over its panel, in the ink and land of the theme the picture was drawn in */
 .thumb-label { position: absolute; padding: 3px 6px; pointer-events: auto; font-size: 12px; line-height: 1.25;

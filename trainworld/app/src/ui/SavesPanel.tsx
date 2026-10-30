@@ -10,6 +10,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { cityById, isCity } from "../game/cities";
 import { money, plural } from "../game/format";
 import { SHADES } from "../game/shades";
+import { shade } from "../game/ui";
+import { useThumbIn } from "./thumbShade";
 import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
 import { exportGame, exportSlot, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
@@ -56,11 +58,14 @@ const atTime = (at: number, now: number) => sameDay(at, now) ? clockTime(at) : `
  * stations first, each named, with its stations when there is more than one (T-894). The names are
  * text over the picture, in the colours of the theme it was drawn in. */
 export function SlotThumb({ slot }: { slot: SaveSlot }) {
+  // T-1852: drawn in the theme now set, whichever it was saved in
+  const now = shade.value;
+  const src = useThumbIn(slot.thumb ?? "", slot.shade ?? "light", now);
   if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
   const panels = (slot.panels ?? []).filter((p) => isCity(p.city));
-  const sh = SHADES[slot.shade ?? "light"];
+  const sh = SHADES[now];
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
-    <img src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
+    {src && <img src={src} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />}
     {panels.map((p) => {
       const name = cityById(p.city).name, stations = plural(p.stations, "station");
       return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={`${name}: ${stations}`}>
@@ -188,6 +193,7 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
             <button class="btn icon save-download" data-tip={newer ? "Download as a file, as the newer version saved it" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
             <button class={"btn icon save-versions" + (versionsOpen.value ? " on" : "")} data-tip="Earlier versions" aria-label="Earlier versions" aria-pressed={versionsOpen.value}
               onClick={() => (versionsOpen.value = !versionsOpen.peek())}><Icon.history /></button>
+            <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
             <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
           </> : <>
             <button class="btn icon save-download" data-tip="Download as a file" aria-label="Download as a file"
@@ -308,7 +314,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
               onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onCopy={copy} onDelete={() => setRemoving(slot.key)} />
             {playing && versionsOpen.value && <Versions slot={slot} backups={saves.backups} account={accountBackups(slot)} now={t} />}
             {removing === slot.key && <div class="callout bad">
-              <p>{deleteQuestion(slot)}</p>
+              <p>{deleteQuestion(slot, playing)}</p>
               <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
             </div>}
           </li>;
@@ -362,8 +368,9 @@ function onAccount(slot: SaveSlot): boolean {
 }
 
 /** The confirmation before a slot is deleted; also the start menu's (T-1612). */
-export function deleteQuestion(slot: SaveSlot): string {
-  return onAccount(slot) ? `Delete "${slot.name}" from this browser and your account?` : `Delete "${slot.name}" from this browser?`;
+export function deleteQuestion(slot: SaveSlot, playing = false): string {
+  const where = onAccount(slot) ? "this browser and your account" : "this browser";
+  return playing ? `Delete "${slot.name}" from ${where}? The game ends and you go back to the start menu.` : `Delete "${slot.name}" from ${where}?`;
 }
 
 /** The modal. */

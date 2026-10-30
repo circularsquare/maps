@@ -41,7 +41,7 @@ import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
-import { bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
+import { BUBBLE_BASE, bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
 import { hiddenOnGlobe } from "./live";
 
@@ -333,7 +333,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
     const dot = rgb(UNBUILT_FILL);
-    const size = display.peek().bubbleSize;
+    const size = display.peek().bubbleSize * BUBBLE_BASE;
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
