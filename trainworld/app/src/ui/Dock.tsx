@@ -1,7 +1,9 @@
 // The dock: tabs, a tab area of fixed height that scrolls, and the inspector below it. The tab
 // area never changes height when the tab changes, so the inspector's top edge stays put; the
 // player can drag the dock's right edge to make it wider or narrower and the line between the tab
-// area and the inspector up or down (T-085), both remembered per browser (game/ui.ts).
+// area and the inspector up or down (T-085), both remembered per browser (game/ui.ts). On a phone
+// held upright the dock is under the map, the inspector always beside the tab area (T-1885), and
+// the strip above the tabs drags its height (T-1884).
 
 import type { JSX } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -48,8 +50,9 @@ const dockWidth = (w: number) => Math.round(Math.max(DOCK_MIN, Math.min(DOCK_MAX
 const paneHeight = (h: number) => Math.round(Math.max(PANE_MIN, Math.min(h, innerHeight / uiScale.peek() - TABS_H - INSPECTOR_MIN)));
 /** the tab area's share of a phone's width beside the inspector (T-1259) */
 const paneShare = (f: number) => Math.max(0.3, Math.min(0.7, f));
-/** the tabs the inspector stands beside on a phone (T-1259) */
-const BESIDE = new Set<Tab>(["build", "lines", "stations", "cities"]);
+/** a phone's dock height as a share of the window: the map under the top bar keeps about 30%, the
+ *  dock its tab row and a couple of rows of the tab (T-1884) */
+const phoneShare = (f: number) => Math.max((TABS_H + 84) * uiScale.peek() / innerHeight, Math.min(0.58, f));
 /** a phone held upright: the dock under the map (T-951), the same query as style.css */
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
@@ -89,7 +92,7 @@ export function Dock() {
   const scale = uiScale.value;
   useEffect(() => {
     live.map?.resize();
-  }, [lay.dockW, scale]);
+  }, [lay.dockW, lay.phoneH, scale]);
   // T-215: each tab keeps its own scroll position (this session), so a tab opens where it was
   // left, at its top the first time, never at another tab's scroll. The Build tab scrolls its
   // options list, the others the whole tab area.
@@ -121,11 +124,14 @@ export function Dock() {
       startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight((y - top) / uiScale.peek()) }));
     }
   };
-  // T-1259, T-1852: on a phone held upright the inspector sits beside the tab area on the tabs that
-  // hold up at that width, empty when nothing is selected; the others keep the whole width
-  const inspecting = BESIDE.has(t);
+  if (lay.phoneH) style["--phone-h"] = Math.round(phoneShare(lay.phoneH) * 1000) / 10 + "dvh";
+  const dragHeight = (e: PointerEvent) => {
+    const off = ref.current!.getBoundingClientRect().top - e.clientY;
+    startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, phoneH: phoneShare((innerHeight - y - off) / innerHeight) }));
+  };
   return (
-    <aside id="dock" class={inspecting ? "inspecting" : undefined} ref={ref} style={style}>
+    <aside id="dock" ref={ref} style={style}>
+      <div class="dock-grab" onPointerDown={dragHeight} />
       <nav class="tabs">
         {TABS.map(([id, label, Glyph]) => (
           <button class={"tab" + (t === id ? " on" : "")} data-guide-tab={id} data-tip={`${label} (${tabKeyName(id)})`} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>

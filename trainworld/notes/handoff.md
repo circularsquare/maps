@@ -6,9 +6,17 @@ Updated: 2026-10-30 evening (maps-da wound down; nothing in flight)
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 4db47c92 (T-1854 finer terrain). 8800 at 4db47c92, smoke 20/20 both shades, 1,988 terrain files in its dist,
+- master 5f232d9b (T-1883, Cities spacing, after T-1854 finer terrain). 8800 at 5f232d9b, smoke 20/20 both shades, 1,988 terrain files in its dist,
   real save 11,392,296 rail trips a day (same as before T-1854).
-- **Deploy 2026-10-30 is half done** (= ba582afb, with Australia, before T-1854): data on R2 `trainworld/2026-10-30`,
+- **LIVE: 2026-10-30b** (pushed by Anita 2026-10-30 ~18:00; verify --page all PASS after Pages finished; her first
+  verify ran before the Pages build ended). R2 still holds 2026-10-28g and 2026-10-30: her purge printed rclone's
+  harmless "Failed to read versioning status ... AccessDenied" and the folder was still there after; my purge was
+  refused by the classifier (Cloud Storage Mass Delete). She reruns both purges and lets them finish.
+- **Deploy 2026-10-30b supersedes 2026-10-30** (= 5f232d9b: T-1854 terrain, T-1883 two-row bar, the Cities World-row
+  spacing fix). Data on R2 `trainworld/2026-10-30b` verified; website re-staged (git add done, page names 30b). Anita
+  runs the website commit and push, `deploy.py --verify --page --version 2026-10-30b`, then purges BOTH
+  `trainworld/2026-10-28g` and `trainworld/2026-10-30`. The lines below about 2026-10-30 are history.
+- (history) **Deploy 2026-10-30 was half done** (= ba582afb, with Australia, before T-1854): data on R2 `trainworld/2026-10-30`,
   verified; website files staged in ../website (no GA in the page). The website commit was refused by the auto-mode
   classifier, so Anita runs: `git -C C:\Users\anita\projects\website commit -m "trainsworld"`, `... push`,
   `venv\Scripts\python.exe trainworld\tools\deploy.py --verify --page --version 2026-10-30`, then
@@ -26,9 +34,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Cores: cap raised to 15 while Anita was out (2026-10-30 evening); set back to 10 when she is at the machine.
 - data/work/pre-T1854/terrain (58 MB) backup: delete once T-1854 is seen clean in play. data/work/terrain-fine/
   (3.1 GB) is T-1854's intermediate, kept for later threshold tweaks.
-- Next free task id: T-1884. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
+- Next free task id: T-1886. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
 
 ## In flight
+- T-1884/T-1885 landed (phone dock grab strip, height kept per browser, 58% max; the inspector beside every tab on a
+  phone, Settings too). On 8800, not deployed: deploy only on Anita's word (data unchanged, so
+  `deploy.py --skip-data --version 2026-10-30b` then a website commit/push by her).
 - T-1883 two-row bar landed (money on row one, a two-row divider before the clock, 1 px row gap). Anita wants it in the deploy: then redeploy as version 2026-10-30b from a new master build (full data,
   since T-1854's terrain files are new), re-stage the website, and purge both 2026-10-28g and 2026-10-30 once live.
 - Anita 2026-10-30: dragging as built is fine (no pivot); triangles good; all listed text acknowledged.

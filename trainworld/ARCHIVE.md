@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1885 [P1] Phone: inspector hidden on the cash tab. Done 2026-10-30 (agent t1884): Dock.tsx put it beside only four tabs on purpose; now beside on every tab, the Money ledger and fare rows stack name over figures in the narrow column. Pictures artifacts/trainworld/t1884/.
+- T-1884 [P1] Phone: drag the bottom panel's height. Done 2026-10-30 (agent t1884): a strip above the tabs, touch and mouse, 120 px to 58% of the screen, remembered per browser like the desktop width.
+
 - T-1883 [P1] Two-line top bar follow-up. Done 2026-10-30 (agent t1865): the cash moved to row one after the name, a divider two rows high left of the clock and speed buttons (the wide bar's thin rule), row gap 0 to 1 px, bar 56 px; under 300 px no divider. Pictures artifacts/trainworld/t1883/.
 - T-1854 [P2] Finer terrain cells. Done 2026-10-30 (agent t1854b): 115 m classes from GEDTM30 30 m via an AWS-built 3.1 GB intermediate ($0.11 machine), thresholds 2.5 / 5.5 / 11 degrees, capped by the 920 m ground against towers; mix kept. notes/T-1854.md.
 - T-1857 [P2] Australia. Done 2026-10-30 (agent t1857): 28 of 28 shipped (mel syd bri per, 24 zones on Canada's reach rule), every row with ABS 2021 census people by SA1 (`pipeline/australia.py`); Adelaide one zone and Greater Sydney whole by hand; smoke 20 of 20. notes/T-1857.md.

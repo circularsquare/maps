@@ -81,13 +81,17 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   show at the map's bottom left (`ui/ToolNotes.tsx`); the build tools have no hint there [T-1159].
 - **Narrow screens** [T-951, T-1259, `style.css`]: at most 600 px wide and at least 560 px tall (a
   phone held upright) the dock goes under the map, full width and 40% of the height, so the map and
-  top bar keep the whole width and the map column's container queries see the real width. Under the
-  tab row the tab area takes the dock's whole height. While the Build, Lines, Stations or Cities tab
-  is open, the inspector always stands beside the tab area instead of under it, empty when nothing is
-  selected [T-1852], the tab area 40% of the width and the inspector the rest until the divider
-  between them is dragged (30% to 70%, remembered per browser); on Money and Settings the tab keeps
-  the whole width. At that width the Build tab's tools show their icons only,
-  its button rows share the width, and the Lines list drops its Near column. The width handle is gone
+  top bar keep the whole width and the map column's container queries see the real width. A strip
+  above the tab row, a short line in the rule colour, drags the dock taller or shorter with a finger
+  or the mouse, from the tab row and about two rows of the tab up to 58% of the screen (the map
+  under the top bar keeps about 30%), remembered per browser [T-1884]. Under the tab row the tab
+  area takes the dock's whole height. On every tab the inspector stands beside the tab area instead
+  of under it, empty when nothing is selected [T-1852, T-1885], the tab area 40% of the width and
+  the inspector the rest until the divider between them is dragged (30% to 70%, remembered per
+  browser); a tab wider than its share scrolls sideways. At that width the Build tab's tools show
+  their icons only, its button rows share the width, the Lines list drops its Near column, and the
+  Money tab's ledger and fare rows put each name on its own line with the figures or stepper under
+  it. The width handle is gone
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
   (landscape) screen. Every key hint is in the theme's accent (the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835, T-1852].
   On a touch screen the buttons show no key hints, and a press held on a control
