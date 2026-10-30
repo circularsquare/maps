@@ -229,7 +229,7 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
       <ul class="rows">
         <Row label="Riders">{pending ? <span class="muted" data-tip="Riders are being worked out for the change">constructing...</span> : count(d.riders)}</Row>
         {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
-        <li data-tip={`Profit in the past 24 hours: ${money(d.fares - run - st.upkeep)}, fares minus running trains and upkeep\nFares ${money(d.fares)}\nRunning trains ${money(-run)}\nUpkeep ${money(-st.upkeep)}${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
+        <li data-tip={`Profit in the past 24 hours: ${money(d.fares - run - st.upkeep)}, fares minus running trains and upkeep\nFares ${money(d.fares)}\nRunning trains ${money(-run)}\nUpkeep ${money(-st.upkeep)}${rule}\nUpkeep of track and stations several lines use is shared by their trains per day.`}>
           <span class="grow">Profit</span>
           <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
         </li>
@@ -830,7 +830,7 @@ function RailLineInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title" data-line-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and colour (double click also opens it)" aria-label="Edit the name, symbol and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and color (double click also opens it)" aria-label="Edit the name, symbol and colour"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
           control={{ open: editing, set: setEditing }}>

@@ -6,9 +6,7 @@ import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
-import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
-import { liteDetected } from "../map/lite";
-import { RES_AREA_M2 } from "../workers/commutersProtocol";
+import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./toolKeys";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
@@ -21,12 +19,13 @@ import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
 type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away" | "out" | "back";
-const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
+const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "3-color"], ["ramp", "2-color"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["saturday", "Sat"], ["sunday", "Sun"]];
 type Projection = "flat" | "globe";
 const PROJECTION_OPTIONS: [Projection, string][] = [["flat", "Flat"], ["globe", "Globe"]];
+// Map detail (the saved key is still `lighterMap`): Low is the lighter map that was "on", High is "off"
 type LighterMap = "auto" | "on" | "off";
-const LIGHTER_OPTIONS: [LighterMap, string][] = [["auto", "Auto"], ["on", "On"], ["off", "Off"]];
+const LIGHTER_OPTIONS: [LighterMap, string][] = [["auto", "Auto"], ["on", "Low"], ["off", "High"]];
 
 export function SettingsTab() {
   const d = display.value;
@@ -52,28 +51,28 @@ export function SettingsTab() {
       <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} tip={`Bubbles at ${Math.round(d.bubbleOpacity * 100)}% of their full opacity`} set={(v) => setDisplay("bubbleOpacity", v)} />
       {/* finer bubbles are more and smaller ones, at the same area per trip */}
       <Slider label="Detail" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step={1} value={d.bubbleDetail}
-        tip={`Smallest bubbles group trips by areas of ${(RES_AREA_M2[0] / 1e6).toFixed(1)} km², from zoom ${finestFromZoom(d.bubbleDetail).toFixed(1)}`} set={(v) => setDisplay("bubbleDetail", v)} />
+        tip="How many bubbles are aggregated together" set={(v) => setDisplay("bubbleDetail", v)} />
       {/* the bubbles' colours; bars and swatches by mode keep the mode colours */}
-      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where no trips go by train to another where all do.">
-        <span>Colours</span>
+      <div class="slider">
+        <span>Colors</span>
         <Segmented<BubbleScheme> options={SCHEME_OPTIONS} value={d.bubbleColours === "ramp" ? "ramp" : "mode"} onChange={(v) => setDisplay("bubbleColours", v)} />
       </div>
       {d.bubbleColours === "ramp" && (
         <div class="pickers">
-          <label data-tip="Bubbles where nobody goes by train">
+          <label>
             <input type="color" value={d.rampFrom} onInput={(e) => setDisplay("rampFrom", (e.target as HTMLInputElement).value)} />
             0% train
           </label>
-          <label data-tip="Bubbles where everyone goes by train">
+          <label>
             <input type="color" value={d.rampTo} onInput={(e) => setDisplay("rampTo", (e.target as HTMLInputElement).value)} />
             100% train
           </label>
         </div>
       )}
       <div class="h">Station circles</div>
-      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} tip={`Station circles at ${Math.round(d.stationCircleSize * 100)}% of their usual size`} set={(v) => setDisplay("stationCircleSize", v)} />
+      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} set={(v) => setDisplay("stationCircleSize", v)} />
       {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
-      <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays, a Saturday and a Sunday over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
+      <div class="slider" data-tip="Which day demand figures are shown for">
         <span>Day</span>
         <Segmented<DayShown> options={DAY_OPTIONS} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
       </div>
@@ -101,7 +100,7 @@ export function SettingsTab() {
           <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>
         </Check>
         <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
-          <span data-tip="Arcs for the car trips a train would speed up most. Wider for more car trips a day, stronger for more minutes saved.">Drives</span>
+          <span data-tip="Arcs for the car trips a train would speed up most. Wider for more car trips per day, stronger for more minutes saved.">Drives</span>
         </Check>
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
@@ -119,7 +118,7 @@ export function SettingsTab() {
           How full each train is
         </Check>
         <Check checked={d.platformCrowds !== "off"} onChange={(v) => setDisplay("platformCrowds", v ? "patch" : "off")}>
-          <span data-tip="Grey fills a platform as riders wait, red when a full train leaves some behind. From street zooms.">How full each platform is</span>
+          How full each platform is
         </Check>
       </div>
       <div class="h">Stations up close</div>
@@ -133,12 +132,12 @@ export function SettingsTab() {
       </div>
       {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`All sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
       <div class="h">Map</div>
-      <div class="stack" data-tip="Zoomed in to a city, the globe becomes the flat map">
+      <div class="stack">
         <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />
       </div>
-      <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} tip={`Lines, track and trains at ${Math.round(d.lineWidth * 100)}% of their usual width`} set={(v) => setDisplay("lineWidth", v)} />
+      <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} set={(v) => setDisplay("lineWidth", v)} />
       <Slider label="Base map" min={0} max={1} step={0.05} value={d.basemapContrast}
-        tip={`Roads, place names, parks and the real network at ${Math.round(d.basemapContrast * 100)}% contrast against the land. Water keeps its colour.`} set={(v) => setDisplay("basemapContrast", v)} />
+        tip="Base map contrast" set={(v) => setDisplay("basemapContrast", v)} />
       <div class="h">Theme</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />
@@ -148,7 +147,7 @@ export function SettingsTab() {
       <div class="h">Units and performance</div>
       <div class="checks">
         <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>
-          <span data-tip="Miles, mph and feet. Off shows kilometres, km/h and metres.">US units</span>
+          <span data-tip="Miles, mph and feet. Off shows kilometers, km/h and meters.">US units</span>
         </Check>
         <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
           <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Takes effect after a reload.">Use more cores</span>
@@ -157,8 +156,8 @@ export function SettingsTab() {
           <span data-tip="The clock, fares and running costs carry on at the chosen speed while this tab is hidden. Off, the game pauses until the tab is shown again.">Run in background</span>
         </Check>
       </div>
-      <div class="slider" data-tip={"Fewer roads, buildings and place names, drawn at a lower resolution. Auto turns it on if the map moves slowly." + (d.lighterMap === "auto" && liteDetected.value ? "\nOn now" : "")}>
-        <span>Lighter map</span>
+      <div class="slider" data-tip="Show fewer roads and other details">
+        <span>Map detail</span>
         <Segmented<LighterMap> options={LIGHTER_OPTIONS} value={d.lighterMap ?? "auto"} onChange={(v) => setDisplay("lighterMap", v)} />
       </div>
       <GameMode />
@@ -172,7 +171,7 @@ export function SettingsTab() {
 }
 
 /** A labelled range input. */
-function Slider({ label, min, max, step, value, tip, set }: { label: string; min: number; max: number; step: number; value: number; tip: string; set: (v: number) => void }) {
+function Slider({ label, min, max, step, value, tip, set }: { label: string; min: number; max: number; step: number; value: number; tip?: string; set: (v: number) => void }) {
   return (
     <label class="slider">
       <span>{label}</span>
@@ -196,10 +195,10 @@ function GameMode() {
           yes: "Switch to sandbox mode", no: "Stay in normal mode", run: makeSandbox,
         })}>Switch to sandbox mode</button>}
       </div>
-      {!sandbox && m.guide?.hidden && !m.guide.closed && (
+      {!sandbox && (
         <div class="game-mode">
-          <span>Getting started</span>
-          <button class="btn text" onClick={() => saveGuide({ done: m.guide!.done })}>Show</button>
+          <span>Tutorial</span>
+          <button class="btn text" data-guide-restart onClick={() => saveGuide({ done: 0 })}>Start again</button>
         </div>
       )}
     </>

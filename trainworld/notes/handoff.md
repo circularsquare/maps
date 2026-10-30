@@ -3,62 +3,47 @@
 Orchestrator: session f537e44c-15c4-40d9-bcb8-a6d7cafc4ace, name maps-da, since 2026-10-29 night
 Updated: 2026-10-29 night
 
-Anita 2026-10-29 night (to maps-da): tokens still low all week, pick the token-efficient method over the
-compute-efficient one; keep at least 4 of 16 cores free for the next few hours (so 12 at most, all sessions).
-maps-45 wound down and confirmed: everything landed in a945e323, no agents or trees of its own left.
-deploy.py now writes the trainsworld page without the GA include: untested, check the page after the next deploy.
-
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 95d0809e (keys back to 1-4, tutorial ripple). 8800 at 95d0809e, smoke 20/20 both shades.
-- 8800 rebuild script now also in maps-da's scratchpad: C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f537e44c-15c4-40d9-bcb8-a6d7cafc4ace\scratchpad\snapbuild.cmd Anita OK'd a945e323 ("looks good").
-- LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed.
-  Anita 2026-10-29: "no need to deploy yet". Deploy only on her word (she has said pushing is allowed).
-- shonei-server f74bfad deployed and pushed: /trainworld/ping + /trainworld/stats live; stats stay empty until the
-  next site deploy (the ping code is efb32d52).
-- data/packs/real: all seven shared-track saves shipped 2026-10-29 (no LRT1 block, so a full settle on load).
-- World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
-- 8800 rebuild recipe: `cmd /c <scratchpad>\snapbuild.cmd <explicit master hash>` (maps-45's scratchpad, still usable:
-  C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f9a7f88d-0531-4963-9df6-6771326e513f\scratchpad),
-  then `node trainworld/checks/smoke.mjs http://localhost:8800/trainworld/` and again with SMOKE_SHADE=dark.
-  Never pass HEAD (it means .tw-snap's own HEAD).
+- master: the 2026-10-29 night batch (T-1799 st3, T-1815, T-1827 removed, T-1829, T-1832 dot, T-1835-T-1839, tutorial
+  wording, privacy wording); 8800 rebuilt and smoked at it (see git log for the hash).
+- LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
+  Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
+- shonei-server 5719c6f deployed by Anita 2026-10-29 (day/week backups; deleting is for good), not pushed. The auto-mode
+  classifier refuses deploy.ps1 from me: hand her `cd C:\Users\anita\projects\shonei-server` + `.\deploy\deploy.ps1`.
+- 8800 rebuild: `cmd /c C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f537e44c-15c4-40d9-bcb8-a6d7cafc4ace\scratchpad\snapbuild.cmd <explicit master hash>`
+  (log to a file), then smoke on http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Never pass HEAD.
 - Deploy recipe: deploy.py --version <v> --smoked; website add trainsworld/ trainworld/, commit "trainsworld",
   push; gh run watch; deploy.py --verify --page --version <v>; rclone purge the old R2 prefix.
-- Core cap 12 while Anita is up; keep 4 free for now (her ask, 2026-10-29 night).
+- World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
+- Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1834.
-- Old tree .tw-trees/t1734 kept for later thought (Anita). T-1801 had already landed (bcee8c05); archived.
-- Website repo: T-1833's GA-off change not committed or pushed (goes with the next deploy, on her word).
+- Next free task id: T-1843.
+- Old tree .tw-trees/t1734 kept for later thought (Anita).
+- Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
 ## In flight
-- None. T-1827, T-1829, T-1832 landed together (see git log). Left of T-1823's fixes: T-1831 (unreadable saves card, P3); server-side T-1828/T-1830 (shonei-server) not started: ask Anita about a server deploy first.
-- Anita has card style notes coming (T-1822 stage 3).
+- T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
+  screenshot in maps-da scratchpad images/2.png): to resume agent t1799c (Sonnet) after the batch commit.
 
 ## Next
-1. Card style notes from Anita (T-1822 stage 3) when she sends them.
-2. T-1827..T-1832 save fixes 4-9 (fix 5 = 30 days on the account,
-   fix 9 = hour-of-play warning, both yes from Anita).
-3. T-1799 stage 3 (four-track trunks as one ribbon); T-1815 (preview waits during solves); T-1808 (calib areas file).
-4. Smaller open: T-1794, T-1788, T-1806, T-1793, T-1778, T-1773, T-1776, T-1765's remaining zones.
-5. Line groups stage 4 (boardings in the group view) only if Anita wants it.
-6. Open asks for Anita: the bent group view, the flipped t, 55% selected dimming, Penn's 64 px Traffic dot.
-
-## Anita's calls this session (in DECISIONS.md)
-- Attractions: order-of-magnitude is enough; budget model by page views (T-1766); no per-country term.
-- Real networks share track, four-track = two double tracks (T-1305); London at 13.6% holds accepted (my call).
-- No train slower than walking, ramp to full share at 30% quicker (T-1782); -11% rail trips OK.
-- Line groups are only a grouping; names default to the oldest line, editable; copy joins and opens the group view;
-  the group view has station names and shared pills at interchanges; passed stations have faded outlines.
-- Side-by-side bands 80% width, fold zoomed out, Traffic keeps own widths (T-1799).
-- Analytics: own-server heartbeat, no Google (T-1771). Favicon redrawn to her design. Bus size and pause OK.
+1. T-1840: every player-facing string in one review doc with flagged lines and proposed rewrites (also fix
+   docs/ui-panels.md's old tutorial step words).
+2. Doc tidy: stale TASKS lines (T-1782, T-1791, T-1823, T-1824 landed).
+3. T-1407 / T-1780 ghost stalls after an edit (setTrainCount holds the worker 320-570 ms, found in T-1815); T-1842.
+4. T-925 licence rebuild of nine European zones (asked Anita whether next). T-1831 unreadable-saves card (P3).
+5. Waiting on Anita: tutorial card style notes (T-1822 st3), bus design (T-1445), base map palette (T-676).
 
 ## Anita's standing asks
+- Player-facing text: agents propose wording per the style rules and list every string old -> new; land without
+  waiting; show her the list; she says "text acknowledged" or names lines. Never ask her to write text from scratch.
+- TODO.md short-term = batch of prompts: copy item text verbatim into briefs (trainworld/CLAUDE.md).
+- Tokens tight this week (to ~11-01): token-efficient over compute-efficient; Sonnet for settled work, Opus for
+  design, data correctness, unknown bugs.
 - Every demand task (loosely perf) has a "done when"; stop once met. No single-pair demand tuning.
 - Performance: approximations welcome when a player can't tell; name them in DECISIONS.md.
 - Buses settled: no more tuning unless she asks.
-- Thanks to agents in my own reply, not by message; ask after agents quiet 45+ min; final checks
-  in the foreground; browser loads count their demand workers in core claims.
-- Tokens tight this week (to ~11-01): Sonnet for settled work, Opus for design, data correctness,
-  unknown bugs; compute-heavy token-light approaches; investigations stop at a written answer.
+- Thanks to agents in my own reply, not by message; ask after agents quiet 45+ min; final checks in the foreground;
+  browser loads count their demand workers in core claims.
 - Someday tasks are real open tasks.

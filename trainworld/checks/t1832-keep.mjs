@@ -1,11 +1,11 @@
-// T-1832: the "Saved in this browser only" card after an hour of play (here `?keepMs=3000`, three
-// seconds). Against a local shonei-server (as t988-cloud.mjs) with one browser profile:
-//   - a `?new=1` page that owns no slot shows no card;
-//   - a game saved into a slot shows it (Sign in, Download), light and dark screenshots;
-//   - the x closes it for good: a reload and a wait show none;
-//   - a game downloaded from the card, or signed in and added to the account, never shows it;
-//   - Sign in opens the account panel.
-//   node trainworld/checks/t1832-keep.mjs [app url] [--server]     (from the maps root; default localhost:6199)
+// T-1832: the "Saved only in this browser" dot beside the search glass after an hour of play (here
+// `?keepMs=3000`, three seconds). Against a local shonei-server (as t988-cloud.mjs), one browser profile:
+//   - a `?new=1` page that owns no slot shows no dot;
+//   - a game saved into a slot shows it, with its tip, just left of the search glass; a reload keeps it;
+//   - a download, or the game added to the account, takes it away for good;
+//   - clicking it opens the account panel;
+//   - with accounts off (`?acct=off`) a game on no account shows the download-only tip and a click downloads it.
+//   node trainworld/checks/t1832-keep.mjs [app url] [--server]     (from the maps root; default localhost:6191)
 // Prints PASS or FAIL lines and exits 1 on a failure. Screenshots go to artifacts/trainworld/t1832/.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, copyFileSync } from 'node:fs';
@@ -15,7 +15,7 @@ import { launchChrome, ANGLE, ARTIFACTS, MAPS, NOISE } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const OWN_SERVER = !args.includes('--server');
-const APP = args.find((a) => !a.startsWith('--')) ?? 'http://localhost:6199/';
+const APP = args.find((a) => !a.startsWith('--')) ?? 'http://localhost:6191/';
 const SERVER = 'http://127.0.0.1:8083/';
 const Q = 'debug=1&acct=local&keepMs=3000';
 const SUB = 't1832-check-' + Date.now().toString(36);
@@ -53,66 +53,67 @@ const p = await d.ctx.newPage();
 p.on('pageerror', (e) => errors.push(e.message));
 p.on('console', (m) => { if (m.type() === 'error' && !NOISE.test(m.text()) && !/127\.0\.0\.1:8083|Failed to load resource/.test(m.text())) errors.push(m.text()); });
 const go = (query) => p.goto(`${APP}?${Q}${query}&v=${Date.now()}`);
+const goOff = (query) => p.goto(`${APP}?debug=1&acct=off&keepMs=3000${query}&v=${Date.now()}`);
 const inGame = async () => {
   await p.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  await p.addStyleTag({ content: '#debug-root { display: none !important; }' }); // the debug panel covers the card
+  await p.addStyleTag({ content: '#debug-root { display: none !important; }' }); // the debug panel covers the map's corner
 };
-const card = () => p.locator('.keep-card');
-const cardIn = (ms) => card().waitFor({ state: 'visible', timeout: ms }).then(() => true, () => false);
-const keepStore = () => p.evaluate(() => localStorage.getItem('anitabuilder-keep'));
+const dot = () => p.locator('.keep-dot');
+const dotIn = (ms) => dot().waitFor({ state: 'visible', timeout: ms }).then(() => true, () => false);
 const theme = (shade) => p.evaluate(async (s) => { (await import('/src/game/ui.ts')).shade.value = s; }, shade);
 const active = () => p.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active);
 const forget = () => p.evaluate(() => localStorage.removeItem('anitabuilder-keep'));
+const TIP = 'Saved only in this browser!\nIf your browser data is cleared, this game will be lost. You can make an account to save it online, or download a copy locally.';
+const TIP_OFF = 'Saved only in this browser!\nIf your browser data is cleared, this game will be lost. You can download a copy to keep it.';
 
 try {
-  // 1. a `?new=1` page owns no slot: no card however long it runs
+  // 1. a `?new=1` page owns no slot: no dot however long it runs
   await go('&new=1');
   await inGame();
-  report('?new=1: no card', !await cardIn(14000), '(14 s)');
+  report('?new=1: no dot', !await dotIn(14000), '(14 s)');
 
-  // 2. saved into a slot: the card comes, with Sign in and Download
+  // 2. saved into a slot: the dot comes, with its tip, left of the search glass
   await p.evaluate(async () => (await import('/src/workers/clockClient.ts')).manageSaveSlot('create', undefined, 'Keep check'));
   const slot = await until(async () => { const a = await active(); return a.startsWith('slot-') ? a : null; }, 30000, 500);
-  const shown = await cardIn(20000);
-  const text = shown ? (await card().innerText()).replace(/\s+/g, ' ') : '';
-  report('saved game: card after the hour', !!slot && shown, `(${slot})`);
-  console.log('     card:', text);
-  report('card words and buttons', /Saved in this browser only/.test(text) && /Sign in/.test(text) && /Download/.test(text));
-  await p.screenshot({ path: join(OUT, 'card-light.png') });
-  await theme('dark');
-  await p.waitForTimeout(400);
-  await p.screenshot({ path: join(OUT, 'card-dark.png') });
+  const shown = await dotIn(20000);
+  report('saved game: dot after the hour', !!slot && shown, `(${slot})`);
+  const tip = await dot().getAttribute('data-tip').catch(() => null);
+  report('tip words', tip === TIP, JSON.stringify(tip));
+  const [db, sb] = await Promise.all([dot().boundingBox(), p.locator('.search-open').boundingBox()]);
+  report('dot sits just left of the search glass', !!db && !!sb && db.x + db.width <= sb.x && sb.x - (db.x + db.width) < 16 && Math.abs((db.y + db.height / 2) - (sb.y + sb.height / 2)) < 3,
+    JSON.stringify({ dot: db, glass: sb }));
+  for (const sh of ['light', 'dark']) {
+    await theme(sh);
+    await p.mouse.move(5, 500);
+    await p.waitForTimeout(300);
+    await p.screenshot({ path: join(OUT, `dot-${sh}.png`), clip: { x: 900, y: 0, width: 400, height: 90 } });
+    await p.mouse.move(db.x + db.width / 2, db.y + db.height / 2);
+    await p.waitForTimeout(900);
+    await p.screenshot({ path: join(OUT, `dot-hover-${sh}.png`), clip: { x: 750, y: 0, width: 550, height: 200 } });
+  }
   await theme('light');
-
-  // 3. the x closes it for good
-  await card().locator('.keep-x').click();
-  report('x closes the card', !await cardIn(1500));
-  const stored = JSON.parse(await keepStore());
-  report('x is kept for the slot', stored?.[slot]?.closed === true, JSON.stringify(stored));
+  await p.mouse.move(5, 500);
+  // no way to close it: a reload keeps it
   await go('&continue=1');
   await inGame();
-  report('after a reload and a wait: still closed', !await cardIn(16000));
+  report('after a reload: the dot is still there', await dotIn(20000));
 
-  // 4. Download from the card hides it for good
-  await forget();
-  await go('&continue=1');
-  await inGame();
-  report('card comes back with a fresh count', await cardIn(20000));
-  const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 20000 }), card().locator('button:has-text("Download")').click()]);
+  // 3. downloading the game (the saved games panel's Download) takes it away for good
+  const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 20000 }), p.evaluate(async () => (await import('/src/workers/clockClient.ts')).exportGame())]);
   report('Download saves a file', /^trainsworld-.*\.save$/.test(dl.suggestedFilename()), dl.suggestedFilename());
-  report('card goes after Download', !await cardIn(1500));
+  report('dot goes after Download', !await dotIn(1500));
   await go('&continue=1');
   await inGame();
-  report('after a reload and a wait: no card', !await cardIn(16000));
+  report('after a reload and a wait: no dot', !await dotIn(16000));
 
-  // 5. Sign in opens the account panel; adding the game to the account ends the card for good
+  // 4. the dot opens the account panel; adding the game to the account takes it away
   await forget();
   await go('&continue=1');
   await inGame();
-  await cardIn(20000);
-  await card().locator('button:has-text("Sign in")').click();
+  await dotIn(20000);
+  await dot().click();
   const opened = await p.locator('dialog.acct-panel[open]').waitFor({ timeout: 10000 }).then(() => true, () => false);
-  report('Sign in opens the account panel', opened);
+  report('the dot opens the account panel', opened);
   await p.waitForSelector('dialog.acct-panel[open] input[name="sub"]', { timeout: 30000 });
   await p.fill('dialog.acct-panel input[name="sub"]', SUB);
   await p.click('dialog.acct-panel .acct-row button[type="submit"]');
@@ -124,10 +125,34 @@ try {
     return !!s.slots.find((x) => x.key === s.active)?.cloud?.acct;
   }), 30000);
   report('game is on the account', !!onAcct);
+  report('dot goes once the game is on the account', !await dotIn(1500));
   await forget();
   await go('&continue=1');
   await inGame();
-  report('signed in and on the account: no card', !await cardIn(16000));
+  report('signed in and on the account: no dot', !await dotIn(16000));
+
+  // 5. accounts off (`?acct=off`): the same game, already on an account, shows no dot; a new game kept only
+  // here shows the download-only tip, and a click downloads it and takes the dot away
+  await goOff('&continue=1');
+  await inGame();
+  report('accounts off, game on an account: no dot', !await dotIn(16000));
+  await goOff('&new=1');
+  await inGame();
+  await p.evaluate(async () => (await import('/src/workers/clockClient.ts')).manageSaveSlot('create', undefined, 'Keep check 2'));
+  report('accounts off: dot after the hour', await dotIn(30000));
+  const tip2 = await dot().getAttribute('data-tip').catch(() => null);
+  report('accounts off: tip words', tip2 === TIP_OFF, JSON.stringify(tip2));
+  const b2 = await dot().boundingBox();
+  for (const sh of ['light', 'dark']) {
+    await theme(sh);
+    await p.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2);
+    await p.waitForTimeout(900);
+    await p.screenshot({ path: join(OUT, `dot-off-hover-${sh}.png`), clip: { x: 750, y: 0, width: 550, height: 200 } });
+  }
+  await theme('light');
+  const [dl2] = await Promise.all([p.waitForEvent('download', { timeout: 20000 }), dot().click()]);
+  report('accounts off: a click downloads the game', /^trainsworld-.*\.save$/.test(dl2.suggestedFilename()), dl2.suggestedFilename());
+  report('accounts off: dot goes after the download', !await dotIn(1500));
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } catch (e) {
   report('check ran', false, String(e?.stack ?? e));

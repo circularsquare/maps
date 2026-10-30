@@ -145,7 +145,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   }
   // lines sharing track side by side, each band its riders' width (T-1799 stage 2)
   const anc = net.anchor ?? anchor();
-  const bands = on.lineLoad ? trafficBands(L, lineWidth, (y) => kAtY(y, anc), net.samples, net.sampleStroke) : null;
+  const bands = on.lineLoad ? trafficBands(L, lineWidth, (y) => kAtY(y, anc), net.samples, net.sampleStroke, net.corridor) : null;
 
   // the trains: gauges per sample; PENDING for a running line demand has no figures for yet
   // (T-324: drawn striped, never like a full train)

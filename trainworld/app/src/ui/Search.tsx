@@ -33,8 +33,8 @@ const PLACE_ZOOM: Record<string, number> = {
 };
 /** The words a place's row uses for its OSM kind. */
 const PLACE_KIND: Record<string, string> = {
-  city: "City", town: "Town", borough: "Borough", suburb: "Neighbourhood", quarter: "Neighbourhood",
-  village: "Village", neighbourhood: "Neighbourhood", hamlet: "Village",
+  city: "City", town: "Town", borough: "Borough", suburb: "Neighborhood", quarter: "Neighborhood",
+  village: "Village", neighbourhood: "Neighborhood", hamlet: "Village",
 };
 
 /** Move the camera to a result and select it. */

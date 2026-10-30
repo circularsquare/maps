@@ -25,7 +25,7 @@ function Note({ id, n }: { id: string; n: RidesNote }) {
   if (!line) return null;
   const shown = shownDelta(n), up = n.delta > 0;
   const word = Math.abs(n.delta) === 1 ? "daily ride" : "daily rides";
-  return <div class={"rides-note" + (up ? "" : " down")} data-tip={`Riders a day went from ${count(n.from)} to ${count(n.to)} after the stops changed`}>
+  return <div class={"rides-note" + (up ? "" : " down")} data-tip={`Riders per day went from ${count(n.from)} to ${count(n.to)} after the stops changed`}>
     <Chip line={line} size="sm" />
     <span>{up ? "+" : "−"}{Math.abs(shown).toLocaleString("en-US")} {word}</span>
   </div>;

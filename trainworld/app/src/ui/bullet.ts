@@ -48,7 +48,6 @@ const loading = new Set<string>();
 function forget() {
   family = "";
   cache.clear();
-  shifts.clear();
   bulletEpoch.value++;
 }
 function watchRatio() {
@@ -124,27 +123,24 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   return ok ? v : null;
 }
 
-/** T-1817: how far HTML text in bold at `fontPx` on a `lineH` line box moves down so its ink box is
- * centred in the line, as a bullet's symbol is (the group pill's text), px; 0 where unmeasured. */
-export function inkShift(text: string, fontPx: number, lineH: number): number {
-  if (typeof document === "undefined" || !text) return 0;
+/** T-1835: the span of bold text at `fontPx` that is centred in a pill: from `up` above the baseline to
+ * `down` below it, px. Latin text is its capital height (a descender, the y of "Keiyo", hangs below
+ * the middle and the letters' bodies stay in it); other scripts are their own ink box. null where
+ * unmeasured. The pill (GroupPill) puts the baseline where this box is centred, measured in the page
+ * (the dock is zoomed, which rounds the line box, so the font's metrics cannot place it). */
+export function inkBox(text: string, fontPx: number): { up: number; down: number } | null {
+  if (typeof document === "undefined" || !text) return null;
   ctx ??= document.createElement("canvas").getContext("2d");
-  if (!ctx) return 0;
+  if (!ctx) return null;
   family ||= getComputedStyle(document.body).fontFamily;
-  const key = `shift|${family}|${fontPx}|${lineH}|${text}`;
-  const hit = shifts.get(key);
-  if (hit !== undefined) return hit;
   ctx.font = `700 ${MEASURE_PX}px ${family}`;
   ctx.textBaseline = "alphabetic";
-  const m = ctx.measureText(text), k = fontPx / MEASURE_PX;
-  // the line box puts the font's ascent and descent around its middle; the ink box is what shows
-  const css = lineH / 2 + ((m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2) * k;
-  const ink = lineH / 2 + ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2) * k;
-  const v = Number.isFinite(ink - css) ? Math.round((ink - css) * 4) / 4 : 0;
-  shifts.set(key, v);
-  return v;
+  const k = fontPx / MEASURE_PX;
+  const latin = /^[ -~À-ɏ]+$/.test(text);
+  const m = ctx.measureText(latin ? "H" : text);
+  const up = m.actualBoundingBoxAscent * k, down = latin ? 0 : m.actualBoundingBoxDescent * k;
+  return Number.isFinite(up + down) ? { up, down } : null;
 }
-const shifts = new Map<string, number>();
 
 /** `bulletText` when it is measured already; else null (the caller draws plain text for now) and it is
  * measured in idle time, and `bulletEpoch` bumped once done. T-1021: a big save's Lines tab measured

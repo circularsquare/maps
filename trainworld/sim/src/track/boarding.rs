@@ -1089,19 +1089,22 @@ impl Boarding {
                 }
                 let (t_before, q_before) = if lo > 0 { (ts[lo - 1], q(lo - 1)) } else { (ts[m - 1] - DAY, q(m - 1)) };
                 let last = done - 1;
-                let mut b = (arr.cum(ts[last]) - q(last)) - (arr.cum(t_before) - q_before);
-                let (mut prev, mut q_prev) = (t_before, q_before);
+                // T-1815: each departure's `cum` is the next one's `cum(prev)`, worked out once
+                let c_before = arr.cum(t_before);
+                let mut b = (arr.cum(ts[last]) - q(last)) - (c_before - q_before);
+                let (mut prev, mut q_prev, mut c_prev) = (t_before, q_before, c_before);
                 for j in lo..done {
-                    let mut a = (arr.cum(ts[j]) - arr.cum(prev)).max(0.0);
+                    let c_j = arr.cum(ts[j]);
+                    let mut a = (c_j - c_prev).max(0.0);
                     if prev < open && open <= ts[j] {
                         // whoever was waiting then never was: the platform starts empty
-                        b -= q_prev + arr.cum(open) - arr.cum(prev);
-                        a = (arr.cum(ts[j]) - arr.cum(open)).max(0.0);
+                        b -= q_prev + arr.cum(open) - c_prev;
+                        a = (c_j - arr.cum(open)).max(0.0);
                     }
                     w.left += a.min(q(j));
                     // T-1067: those who went another way never boarded
                     b -= ra.gone[ord[j] as usize * n + k] as f64;
-                    (prev, q_prev) = (ts[j], q(j));
+                    (prev, q_prev, c_prev) = (ts[j], q(j), c_j);
                 }
                 let b = b.max(0.0);
                 w.stops[if r == 0 { k } else { n - 1 - k }] += b;

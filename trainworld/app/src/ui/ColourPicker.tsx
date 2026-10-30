@@ -127,7 +127,7 @@ export function ColourPicker({ value, presets = [], onPreview, onCommit }: {
       </div>
       <div class="cpick-row">
         <span class="cpick-now" style={{ background: hex }} />
-        <input class="cpick-hex" aria-label="Colour as hex" spellcheck={false} maxLength={7} value={draft ?? hex}
+        <input class="cpick-hex" aria-label="Color as hex" spellcheck={false} maxLength={7} value={draft ?? hex}
           onInput={(e) => setDraft(e.currentTarget.value)}
           onBlur={(e) => { if (draft !== null) typed(e.currentTarget.value.trim()); }}
           onKeyDown={(e) => { if (e.key === "Enter") { typed(e.currentTarget.value.trim()); e.currentTarget.blur(); } }} />

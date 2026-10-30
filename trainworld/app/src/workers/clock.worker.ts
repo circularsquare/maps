@@ -28,7 +28,7 @@ import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, listDeleted, finishUndelete, isDeletedKey, makeRoom, lastSync, type DeletedGame, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
@@ -300,12 +300,10 @@ function noteUnsaved() {
 async function publishSlots(error?: string) {
   let slots: Awaited<ReturnType<typeof listSlots>> = [];
   let backups: SlotBackup[] = [];
-  let deleted: DeletedGame[] = [];
   try {
     slots = await listSlots(); storageReady = true;
     if (activeSlot) backups = await listBackups(activeSlot);
   } catch { storageReady = false; }
-  if (storageReady) deleted = await listDeleted().catch(() => []);
   const mine = slots.find((s) => s.key === activeSlot);
   if (mine) activeName = { key: mine.key, name: mine.name };
   const taken = !!activeSlot && cloudTaken === activeSlot;
@@ -317,7 +315,7 @@ async function publishSlots(error?: string) {
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Make a copy, or close the other tab and reload."
       : "This browser cannot protect save slots. Download this game as a file to keep it." : undefined);
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, deleted, ...(newer ? { newer } : {}) });
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}) });
 }
 /** T-1829: the playing slot's name as last listed, kept should the database be cleared under it */
 let activeName: { key: string; name: string } | null = null;
@@ -533,13 +531,8 @@ async function openOnAccount(ctx: CloudContext) {
 
 /** T-1196: a pending file or backup's bytes and the name of the slot it goes into; null if the backup
  * has gone */
-async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string; undelete?: string } | null> {
+async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string } | null> {
   if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game" };
-  if (p.kind === "undelete") {
-    // T-1827: under its own name; the entry goes once the new slot is written
-    const g = isDeletedKey(p.key) ? await readStored(p.key) : null;
-    return g ? { bytes: g.bytes, name: g.name || "Saved game", undelete: p.key } : null;
-  }
   if (!isBackupOf(p.key, p.from)) return null;
   const backup = await readStored(p.key), slot = await readStored(p.from);
   if (!backup) return null;
@@ -1630,8 +1623,19 @@ function linesPeriods(a: TrackApi, lines: number[], day: number): Float64Array {
  * `settle` pays the network's, and the hour a day ago by the rest. */
 function today(): Float64Array {
   if (settle()) sendMoney();
-  return packDays(lineDaysAt(Math.min(gameNow(), settledT), false, undefined, true));
+  const now = Math.min(gameNow(), settledT);
+  // T-1815: `past_day` takes ~40-50 ms on shared New York, and the panels ask several times over
+  // while a solve publishes; the same question with nothing changed since gets the last answer
+  const key = `${todayGen}|${now}|${partHour}|${partFare}`;
+  if (todayLast?.key === key) return todayLast.data.slice();
+  const data = packDays(lineDaysAt(now, false, undefined, true));
+  todayLast = { key, data };
+  return data.slice();
 }
+/** T-1815: moved on by every message and task that can change what `today` reads (the account,
+ * the network, the fares); previews and queries leave it */
+let todayGen = 0;
+let todayLast: { key: string; data: Float64Array } | null = null;
 
 /** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M). */
 interface LineDay { id: number; block: ArrayLike<number>; fare: number }
@@ -2035,6 +2039,8 @@ let convertedOnLoad = false;
  * (`unsettleAfter`). With `fresh`, the save is a real network a new game starts from (T-731): only
  * its network, fleet and fares are kept, the rest is a new game's. */
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
+  todayGen++;
+  todayLast = null;
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
@@ -2244,7 +2250,7 @@ function sendState(service = false, effectiveAt?: number, trips = true) {
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "corridor", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post
@@ -2468,6 +2474,7 @@ let prep = { ms: 0, max: 0 };
 function stepBoarding() {
   clearTimeout(boardingTimer);
   if (!api) return;
+  todayGen++;
   const t0 = performance.now();
   const more = api.boarding_step(BOARDING_STEP_LINES);
   const ms = performance.now() - t0;
@@ -2483,6 +2490,7 @@ let nextHourTimer = 0;
 function sendTrips(split = false, hours?: number[]) {
   clearTimeout(nextHourTimer);
   if (!api || !Number.isFinite(epoch)) return;
+  todayGen++;
   api.set_now(gameNow());
   syncHolidays();
   timing.trips = 0;
@@ -2987,7 +2995,8 @@ async function processMessage(msg: ToClock) {
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from kept to fall back on
       const pending = msg.pending ? await takePending() : null;
-      let incoming: { bytes: Uint8Array; name: string; undelete?: string } | null = null;
+      await sweepDeleted(); // T-1827's leftovers, if any
+      let incoming: { bytes: Uint8Array; name: string } | null = null;
       if (pending?.kind === "new") {
         msg.newSlot = pending.name || newGameName(await listSlots().catch(() => []), pending.spec);
         msg.game = pending.spec;
@@ -3014,8 +3023,6 @@ async function processMessage(msg: ToClock) {
         try {
           const g = incoming;
           await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true);
-          // T-1827: only once the restored game is in its slot does the deleted entry go
-          if (g.undelete && activeLease && unwritten !== activeSlot && await finishUndelete(g.undelete, activeSlot)) await publishSlots();
           return;
         } catch (err) {
           send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
@@ -3076,6 +3083,8 @@ async function processMessage(msg: ToClock) {
   if (!api) return;
   if (modelDown) return failAnswer(msg);
   if (isPreview(msg) && stale(msg.seq)) return sendStale(msg.seq);
+  const changes = !isPreview(msg) && msg.kind !== "query";
+  if (changes) todayGen++;
   try {
     if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
@@ -3085,6 +3094,7 @@ async function processMessage(msg: ToClock) {
     else send({ kind: "error", message: String(err) });
     failAnswer(msg);
   } finally {
+    if (changes) todayGen++;
     if (msg.kind === "edit" || (msg.kind === "saveSlot" && msg.action !== "save") || msg.kind === "import" || msg.kind === "newGame") trackVersion++;
   }
 };
@@ -3273,7 +3283,7 @@ async function handle(msg: ToClock) {
       sendMoney();
     }
   } else if (msg.kind === "guide") {
-    if (guide && mode !== "sandbox") {
+    if (mode !== "sandbox") { // T-1835: Settings can start the guide in a game saved without one
       guide = msg.guide;
       dirty = true;
       sendMoney();

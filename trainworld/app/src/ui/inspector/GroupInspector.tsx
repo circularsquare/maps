@@ -184,7 +184,7 @@ export function GroupInspector({ group }: { group: number }) {
   return (
     <>
       <div class="title" data-group-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, bullet and colour (double click also opens it)" aria-label="Edit the name, bullet and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, bullet and color (double click also opens it)" aria-label="Edit the name, bullet and colour"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
         <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>
           <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(ls.flatMap((l) => l.stops))}>
@@ -196,7 +196,7 @@ export function GroupInspector({ group }: { group: number }) {
         <div class="line-identity" data-group-edit>
           <label>Bullet <input aria-label="Group bullet" value={symbol ?? look.symbol} placeholder={groupLabel(name)}
             onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (e.key === "Enter") commitSymbol(); }} />
-            {look.colour && <button class="btn icon mini" data-tip="Back to the lines' colour" aria-label="Back to the lines' colour" onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
+            {look.colour && <button class="btn icon mini" data-tip="Back to the lines' color" aria-label="Back to the lines' color" onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
           </label>
           <ColourPicker value={preview ?? groupBullet(byNum, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
         </div>

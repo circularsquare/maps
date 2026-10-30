@@ -144,8 +144,18 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   (every shared edge's line segments are cut 30 m from each end for it, `F_EASE`). A station's box
   or dot stays as wide as for one line (T-1821); through the box (T-236) the bands take the Line
   view's slots, narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
-  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). Not yet: the
-  Elevation and Speed views and a four-track trunk's two pairs (their ribbons lie over each other)
+  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). **Corridors**
+  (stage 3, `map/corridors.ts`): edges that run side by side within 20 m along at least 60% of each
+  one's length, in the same direction or not (a four-track trunk is two double tracks 8 m apart,
+  T-1305; player-built double tracks beside each other count too), with an end of one within about
+  60 m of an end of the other (only those pairs are tested), are one ribbon: the lines of the
+  corridor's left edge on the left, each edge's own order kept inside it, the whole ribbon centred on
+  the corridor's middle in both views (the Traffic view's `trafficBands` takes `NetworkBuffers.corridor`).
+  Edges pass the relation on, so any number of edges in a row along the track are one ribbon; a
+  corridor whose outer edges are over 30 m apart (a throat or yard, `SPAN_M`) is left as it was. Each edge's centre line is a few metres off the
+  ribbon's middle, which is turned into line widths at a fixed 0.05 a metre (`BAND_LW_PER_M`) so the
+  bands of the two edges touch; that is exact near zoom 14.5, 1.4 px of overlap at 13, 0.9 px of
+  gap at 15 and a few px of gap by 16 (a metre is fixed on the ground, a line width is not). Not yet: the Elevation and Speed views
   are drawn as below; `?perfOff=bands` turns the bands off.
 - **Lines sharing track drawn over each other** [T-190, T-533] where they are not side by side
   (zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet

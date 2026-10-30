@@ -241,7 +241,7 @@ export function StationsTab() {
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "riders", label: "Riders", tip: `Sort by ${ridersWhat}`, first: -1, cls: "w-num" },
-        { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
+        { key: "near", label: "Near", tip: "Sort by distance from the center of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class={"rows pick stations" + (drag?.on ? " dragging" : "")}>
         {st.slice(0, limit).map((r) => (

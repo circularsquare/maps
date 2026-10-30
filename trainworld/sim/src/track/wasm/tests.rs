@@ -41,8 +41,9 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     let after = a.blueprint_cost();
     assert!((after - (3.0 * 112.5 + 3.0 * 99.0)).abs() < 1e-6, "{after}");
     let rows = a.blueprint_cost_items();
-    let extra: f64 = rows.chunks_exact(7).filter(|r| r[0] == 6.0).map(|r| r[6]).sum();
-    assert!((extra - 3.0 * 67.5).abs() < 1e-6 && rows.chunks_exact(7).any(|r| r[0] == 6.0 && r[1] == 3.0), "{rows:?}");
+    // T-1839: track rows carry the terrain class in the fifth field, the ground's part is no row
+    let hilly: f64 = rows.chunks_exact(7).filter(|r| r[0] == 0.0 && r[4] == 3.0).map(|r| r[6]).sum();
+    assert!((hilly - 3.0 * 112.5).abs() < 1e-6 && !rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
     // the tool's preview prices the same and says how much ground it crosses in each class
     let more: Vec<f64> = free(0.0, -1000.0).iter().chain(free(2000.0, -1000.0).iter()).copied().collect();

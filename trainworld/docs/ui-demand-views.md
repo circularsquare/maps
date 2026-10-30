@@ -46,8 +46,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101]; starting a new game turns Destinations on, a start on the world map included [T-801, T-1441], and opening a saved game leaves the setting as it is. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical, attractions). Before the buttons, joined to them, the row's icon [T-1137]: a selected
-  demand bubble, filled with the default Train share ramp's middle purple
-  (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline; a click folds the row (Folding, below).
+  demand bubble, filled with the default Train share ramp's middle purple mixed 38% toward white
+  (`.hint-cell .bubble`), no outline [T-1835]; a click folds the row (Folding, below).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
   same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track")
   after the track icon; no key for the height or speed colours (T-1499), the track hover says.
@@ -188,13 +188,13 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   bubble is 1.34 times the radius of a destination bubble of the same legs; times the Bubble size
   setting (0.5-2x width). No minimum size; nobody
   means no bubble.
-- **Colour** by the **Colours** setting: **Train share** (default since T-833; a stored Mode mix
+- **Colour** by the **Colors** setting: **2-color** (the old Train share) (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour
   at 0% (default #ff4d4d) to an end colour at 100% (default #4d4dff; Anita, T-1138, lighter than
   the mode colours so the middling purples are not dark; a stored end still at the old default
   #e61e1e or #1e3ce6 is dropped once, settings version 9, and any other stays), blended in OKLab and
   skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
-  the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **Mode mix**
+  the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **3-color** (the old Mode mix)
   blends the mode colours by share. Either colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity

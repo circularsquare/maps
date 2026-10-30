@@ -409,7 +409,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   return (
     <>
       {closed ? known && (
-        <p class="muted small" data-tip="Straight line between the two places' centres">{roughDistance(1000 * t.km)} apart</p>
+        <p class="muted small" data-tip="Straight line between the two places' centers">{roughDistance(1000 * t.km)} apart</p>
       ) : (
         <p class="muted small" data-tip={others ? totalTip : longerTip}>
           {trips} {day}{known && `, ${roughDistance(1000 * t.km)} apart`}
@@ -466,7 +466,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
         <>
           <div class="h">By car</div>
           {Number.isFinite(t.carPerceived)
-            ? <CarRows total={t.carPerceived} parts={carParts} where={closed || m.unbuilt ? "Between the two places' centres" : "Averaged over the 6 km areas at the two ends, by their trips"} />
+            ? <CarRows total={t.carPerceived} parts={carParts} where={closed || m.unbuilt ? "Between the two places' centers" : "Averaged over the 6 km areas at the two ends, by their trips"} />
             : <ul class="rows"><li><span class="grow muted">No road joins the two ends.</span></li></ul>}
         </>
       )}

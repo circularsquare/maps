@@ -517,81 +517,16 @@ export async function deleteSlot(key: string): Promise<void> {
   syncSeen.delete(key);
 }
 
-// T-1827: recently deleted games. A slot deleted by the player (or by a deletion from the account)
-// moves to `deleted:<ms>-<id>` with its backups under `backup:deleted:<ms>-<id>:<tier>`, for 30 days
-// from <ms>, the time it was deleted; its account tie and demand cache go. A deleted slot's own key
-// can be used again (the original game's "autosave"), so an entry never keeps it.
-const DELETED_PREFIX = "deleted:";
-export const DELETED_MS = 30 * 86400_000;
-export interface DeletedGame extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; deletedAt: number }
-const deletedAtOf = (key: string) => Number(key.slice(DELETED_PREFIX.length).split("-")[0]);
-export const isDeletedKey = (key: string) => key.startsWith(DELETED_PREFIX) && !key.includes(":", DELETED_PREFIX.length);
-
-/** Slot `key` moved to the recently deleted (the caller holds its lock), in one transaction; its key
- * there, or null when the slot was not there (its leftovers go all the same). */
-export async function trashSlot(key: string, now = Date.now()): Promise<string | null> {
-  const s = await store("readwrite");
-  const done = committed(s.transaction);
-  const old = (await req(s.get(key))) as StoredSave | undefined;
-  const to = old ? `${DELETED_PREFIX}${now}-${crypto.randomUUID()}` : null;
-  if (to) s.put({ ...old, name: slotName(key, old) }, to);
-  s.delete(key);
-  s.delete(SYNC_PREFIX + key);
-  s.delete(AHEAD_PREFIX + key);
-  for (const k of await req(s.getAllKeys())) {
-    if (typeof k !== "string") continue;
-    if (k.startsWith(`${DEMAND_PREFIX}${key}:`)) s.delete(k);
-    else if (k.startsWith(`${BACKUP_PREFIX}${key}:`)) {
-      const b = await req(s.get(k));
-      if (to && b) s.put(b, `${BACKUP_PREFIX}${to}:${k.slice(`${BACKUP_PREFIX}${key}:`.length)}`);
-      s.delete(k);
-    }
-  }
-  await done;
-  syncSeen.delete(key);
-  return to;
-}
-
-/** The recently deleted, newest deletion first; entries 30 days old go first (with their backups). */
-export async function listDeleted(now = Date.now()): Promise<DeletedGame[]> {
-  const s = await store("readwrite");
-  const done = committed(s.transaction);
-  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string");
-  const out: DeletedGame[] = [];
-  for (const key of keys.filter(isDeletedKey)) {
-    const deletedAt = deletedAtOf(key);
-    if (!(now - deletedAt < DELETED_MS)) {
-      s.delete(key);
-      for (const k of keys) if (isBackupOf(k, key)) s.delete(k);
-      continue;
-    }
-    const g = (await req(s.get(key))) as StoredSave | undefined;
-    if (g) out.push({ key, name: g.name || "Saved game", at: g.at, day: g.day, deletedAt, thumb: g.thumb, panels: g.panels, shade: g.shade, cities: g.cities, lines: g.lines, stations: g.stations, cash: g.cash, mode: g.mode });
-  }
-  await done;
-  return out.sort((a, b) => b.deletedAt - a.deletedAt);
-}
-
-/** A recently deleted game restored into slot `slot`, already written with its save (the caller holds
- * its lock): its backups become the slot's, replacing the one the slot's first write made (the same
- * save), and the entry goes. Nothing happens unless the slot is there. */
-export async function finishUndelete(entry: string, slot: string): Promise<boolean> {
+// T-1827 kept deleted slots 30 days under `deleted:<ms>-<id>` (backups `backup:deleted:...`); Anita
+// removed it the same day (a deleted game should be gone for good). Anything it left is swept at start.
+const DELETED_PREFIX = "deleted:", DELETED_BACKUP = "backup:deleted:";
+export async function sweepDeleted(): Promise<void> {
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
-    if (!isDeletedKey(entry) || !(await req(s.get(slot)))) { await done; return false; }
-    for (const k of await req(s.getAllKeys())) {
-      if (typeof k !== "string" || !isBackupOf(k, entry)) continue;
-      const b = await req(s.get(k));
-      if (b) s.put(b, `${BACKUP_PREFIX}${slot}:${k.slice(`${BACKUP_PREFIX}${entry}:`.length)}`);
-      s.delete(k);
-    }
-    s.delete(entry);
+    for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(DELETED_PREFIX) || k.startsWith(DELETED_BACKUP))) s.delete(k);
     await done;
-    return true;
-  } catch {
-    return false;
-  }
+  } catch { /* storage unavailable */ }
 }
 
 /** The first "Game N" no slot is called (T-677, T-743). */
@@ -769,8 +704,6 @@ export async function readDemandAhead<T>(save: string): Promise<T | null> {
 export type PendingLoad =
   | { kind: "import"; bytes: Uint8Array; name: string; from: string }
   | { kind: "restore"; key: string; from: string }
-  /** T-1827: a recently deleted game (`deleted:` key) */
-  | { kind: "undelete"; key: string; from: string }
   | { kind: "new"; spec: NewGameSpec; name?: string };
 const PENDING = "pending-load";
 export async function writePending(p: PendingLoad): Promise<boolean> {

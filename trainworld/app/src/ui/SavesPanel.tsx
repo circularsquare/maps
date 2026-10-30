@@ -13,7 +13,7 @@ import { SHADES } from "../game/shades";
 import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
 import { exportGame, exportSlot, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
-import { DELETED_MS, type DeletedGame, type SaveSlot, type SlotBackup } from "../workers/saveFile";
+import type { SaveSlot, SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
 import { accountBackups, accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
 import { tiedTo, type AccountBackup, type CloudContext } from "../workers/cloud";
@@ -27,8 +27,6 @@ import { NewGameSheet } from "./NewGame";
 export const savesOpen = signal(false);
 /** The playing game's earlier versions are listed (kept for the visit). */
 const versionsOpen = signal(false);
-/** T-1827: the recently deleted are listed (kept for the visit). */
-const deletedOpen = signal(false);
 
 /** "Saved just now", "Saved 4 min ago", "Saved today at 14:05", "Saved Oct 12 at 14:05". */
 function savedWhen(at: number, now: number): string {
@@ -326,25 +324,8 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
           </li>;
         })}
       </ul>
-      {saves.deleted.length > 0 && <Deleted games={saves.deleted} now={t} />}
     </>
   );
-}
-
-/** T-1827: games deleted from this browser in the last 30 days, each opened as a new slot. */
-function Deleted({ games, now }: { games: DeletedGame[]; now: number }) {
-  const open = deletedOpen.value;
-  return <div class="save-deleted">
-    <button class={"btn text save-deleted-head" + (open ? " on" : "")} aria-expanded={open} data-tip="Deleted games stay here for 30 days"
-      onClick={() => (deletedOpen.value = !deletedOpen.peek())}>Recently deleted ({games.length})</button>
-    {open && <div class="save-backups">{games.map((g) => {
-      const age = ageText(g.deletedAt, now);
-      return <div class="save-backup small" data-deleted={g.key}>
-        <span><strong>{g.name}</strong>{" "}<span class="muted num" data-tip={`Deleted ${fullDate(g.deletedAt)}, gone after ${fullDate(g.deletedAt + DELETED_MS)}. Last saved on game day ${g.day}.`}>deleted {age === "Just now" ? "just now" : age} · Day {g.day}</span></span>
-        <button class="btn text" data-tip="Open this game as a new saved game. The game you are playing is saved first." onClick={() => { manageSaveSlot("undelete", g.key); savesOpen.value = false; }}>Open as a copy</button>
-      </div>;
-    })}</div>}
-  </div>;
 }
 
 /** T-988: a game on the account and not in this browser; Open downloads it into a new slot. */

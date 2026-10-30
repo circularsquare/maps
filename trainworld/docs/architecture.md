@@ -454,19 +454,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`.
   Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. The saves panel
   lists the playing slot's under its card's Earlier versions with the account's [T-1395], each with
-  Open as a copy. Deleting a slot moves them with it (below). `?backupMs=` sets the 10-minute step
-  for checks, the others scaled with it.
-- **Recently deleted** [T-1827]: a slot the player deletes (saves panel or start menu, `removeSlot`)
-  or that a deletion from the account takes off an unchanged copy (`settleSlot`) moves, in one
-  transaction (`trashSlot`), to `deleted:<ms>-<uuid>` (<ms> the time of deletion) with its backups
-  under `backup:deleted:<ms>-<uuid>:<tier>`; its sync record and demand cache go. The entry never
-  keeps the slot's key, since `autosave` can be used again. `listDeleted` (each `publishSlots`, so at
-  every start) drops entries 30 days old with their backups. Open as a copy is a `pending-load` of
-  kind `undelete`: the new page loads the game into a new slot under its own name, and only once
-  that slot is written does `finishUndelete` move the backups onto it (replacing the copy its first
-  write made) and drop the entry; a failure on the way leaves the entry. The restored game is a
-  new game: signed in, it goes to the account as one. Removal at sign-out still deletes outright
-  (those games are on the account).
+  Open as a copy. Deleting a slot deletes them. `?backupMs=` sets the 10-minute step for checks,
+  the others scaled with it.
+- **Deleting is for good** [T-1827 removed]: deleting a slot (saves panel, start menu, or a
+  deletion from the account taking off an unchanged copy, `settleSlot`) deletes it, its backups,
+  sync record and demand cache. T-1827 had kept deleted slots 30 days under `deleted:<ms>-<id>`;
+  Anita removed it the same day, and `sweepDeleted` clears any such keys at every start.
 - **Storage full or cleared while open** [T-1829]: a connection the browser closes (site data
   cleared, the database deleted from another page: `close` and `versionchange`) is forgotten, and
   every call that fails to open a transaction drops the connection and tries once more, so the

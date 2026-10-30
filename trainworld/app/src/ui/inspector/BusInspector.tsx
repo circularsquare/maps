@@ -257,7 +257,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
           <span class="val">{count(d.riders)}</span>
         </li>
         {changing !== null && (
-          <li data-tip="Riders a day who change between this bus and a train">
+          <li data-tip="Riders per day who change between this bus and a train">
             <span class="grow">Changing to trains</span>
             <span class="val">{count(changing)}</span>
           </li>
@@ -364,7 +364,7 @@ export function BusInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title" data-line-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and colour (double click also opens it)" aria-label="Edit the name, symbol and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and color (double click also opens it)" aria-label="Edit the name, symbol and colour"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
           control={{ open: editing, set: setEditing }}>

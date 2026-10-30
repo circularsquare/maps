@@ -59,7 +59,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
           </li>
           <li>
             <span class="grow">Profit</span>
-            <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? `${money(net(f.d) * 1e6)} a day` : "–"}</span>
+            <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? `${money(net(f.d) * 1e6)}/day` : "–"}</span>
           </li>
           <li>
             <span class="grow">Goals reached</span>

@@ -52,17 +52,17 @@ export function DemandSelector() {
 }
 
 const TRACK_OPTIONS = [
-  ["line", "Line", "Lines in their own colours"],
-  ["traffic", "Traffic", "Line colours, thickness by traffic"],
-  ["height", "Elevation", "Track coloured by its height"],
-  ["speed", "Speed", "Track coloured by the speed its trains reach, or by its speed limit where none run"],
+  ["line", "Line", "Lines in their own colors"],
+  ["traffic", "Traffic", "Line colors, thickness by traffic"],
+  ["height", "Elevation", "Track colored by its height"],
+  ["speed", "Speed", "Track colored by the speed its trains reach, or by its speed limit where none run"],
 ] as const;
 
 /** The row's icon, a button folding the row down to it and opening it again (T-1448). */
 const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   bubbles: { icon: Icon.bubble, what: "demand bubble" },
   stations: { icon: Icon.interchange, what: "station ridership" },
-  track: { icon: Icon.track, what: "track colour" },
+  track: { icon: Icon.track, what: "track color" },
 };
 const folded = (row: MapRow) => display.value.foldedRows.includes(row);
 function FoldCell({ row }: { row: MapRow }) {

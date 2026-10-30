@@ -89,7 +89,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   inspector shows again on the other three. At that width the Build tab's tools show their icons only,
   its button rows share the width, and the Lines list drops its Near column. The width handle is gone
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
-  (landscape) screen. On a touch screen the buttons show no key hints, and a press held on a control
+  (landscape) screen. Every key hint is one peach (`--key`; the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835].
+  On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
   `ui/tip.ts`]. The Select tool's selection bar leaves the top of the map for its bottom edge
   [T-1263, [ui-building.md](ui-building.md) "The Select tool"].
@@ -310,38 +311,12 @@ sixth, a line "Your first line is open." and a Done button (closes the card for 
   clock worker on a new game and updated by the page's `guide` message. A reload picks up where it
   was.
 - **Hidden and back**: the x hides it in this game; Game in Settings has a row "Getting started" with
-  Show while it is hidden and not closed.
+  Start again in every normal game: it clears the ticks and the hidden and closed marks and shows the
+  card, whether it was hidden, finished or never there (a game saved before the card) [T-1835]; steps
+  the world already meets tick at once.
 - **Out of the way**: it hides while a confirmation or the saved games panel is open, and with F2.
 - **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
   hand; a tap on the heading opens all six.
-
-## Saved in this browser only card
-
-[T-1832, notes/T-1823.md fix 9; `ui/KeepCard.tsx`, `game/keepNudge.ts`, `game/keepState.ts`] The same
-post-it as the Getting started card, same place and size, with its own class `keep-card`. Heading
-"Saved in this browser only", an x (hover "Close"), then 12 px text and buttons.
-
-- **When**: after an hour of real play in a game kept only here: the clock running, the tab visible,
-  a saved slot this tab writes (a `?new=1` page has none, so never there). Counted in 5 s steps and
-  kept per slot in localStorage `anitabuilder-keep` as `{ms, closed, downloaded}`; nothing goes in the
-  save file. `?keepMs=<ms>` shortens the hour for a check. The count stops once the card is closed or
-  the game downloaded. Entries of deleted slots are dropped.
-- **Kept only here**: the slot is not tied to the signed-in account (`tiedTo`) and is not an
-  `account:` game. Signing in and adding the game, at the sign-in question or from the saved games
-  panel, ends it.
-- **Words**: "Clearing your browser data deletes this game." then, signed out with accounts on, "Sign in
-  to keep it on your account, or download a copy." (buttons Sign in, Download); signed in but not yet
-  on the account, "Add it to your account, or download a copy." (Add to account, Download); no accounts
-  (dev without a server), "Download a copy to keep it." (Download).
-- **Buttons**: Sign in opens the account panel; Add to account is the saved games panel's; Download is
-  the saved games panel's (`exportGame`), and marks the game downloaded.
-- **Once per game**: the x is kept for the slot and so is a download, so it stays gone after a reload.
-  It comes back only if the player does neither and reloads (nothing was dealt with). A copy of the
-  game in a new slot counts its own hour.
-- **Out of the way**: it waits while the Getting started card is up, and hides under a confirmation,
-  the saved games panel, the account panel and F2.
-- **Check**: `checks/t1832-keep.mjs` (own server, `?keepMs=3000`); screenshots in
-  `artifacts/trainworld/t1832/`.
 
 ### The ripple
 
@@ -363,6 +338,35 @@ out, held 1.5 s.
 - **Out of view**: a target whose tab is closed ripples the tab icon (Build for 1-3, Lines for 4-6);
   steps 5 and 6 with no line picked ripple the first row of the Lines list when that tab is open. A
   target scrolled out of its pane is scrolled into view (instantly) first, then ripples.
+
+## Saved only in this browser dot
+
+[T-1832, notes/T-1823.md fix 9; `ui/KeepDot.tsx`, `game/keepNudge.ts`, `game/keepState.ts`] A 10 px
+yellow dot (`#f2c200`, a thin ring in the text colour) in a 20 px click area just left of the map's
+search glass, level with it; where the glass sits at the map's left edge (middle widths) the dot is
+right of it. Hidden while the search box is open. Its hover is the game's own tip, two lines:
+"Saved only in this browser!" and "If your browser data is cleared, this game will be lost. You can
+make an account to save it online, or download a copy locally." A click opens the account panel
+(Sign in, or the account if signed in). No x, no buttons. Where accounts are off (no account server:
+localhost until `?acct=live` or `?acct=local` is set, or the server cannot be reached) the second line
+is "If your browser data is cleared, this game will be lost. You can download a copy to keep it." and a
+click downloads the game, as the saved games panel's Download does.
+
+- **When**: after an hour of real play in a game kept only here: the clock running, the tab visible,
+  a saved slot this tab writes (a `?new=1` page has none, so never there). Counted in 5 s steps and
+  kept per slot in localStorage `anitabuilder-keep` as
+  `{ms, downloaded}`; nothing goes in the save file. `?keepMs=<ms>` shortens the hour for a check.
+  The count stops once the game is downloaded. Entries of deleted slots are dropped.
+- **Kept only here**: the slot is not an `account:` game, was never uploaded to an account (`cloud.acct`
+  set and `rev` above 0, even if that account cannot be reached now) and is not tied to the signed-in
+  one (`tiedTo`). Adding the game to the account (at the sign-in question or from the saved games
+  panel) ends the dot.
+- **Goes away**: when the game is on the account, or after any download of it (the saved games
+  panel's Download or the file in Settings; `markDownloaded` in `downloadSave`). Never otherwise:
+  there is no way to close it, and it is back after a reload while neither has happened.
+- **Out of the way**: hidden with F2 and while the start menu is up.
+- **Check**: `checks/t1832-keep.mjs` (own server, `?keepMs=3000`); screenshots in
+  `artifacts/trainworld/t1832/`.
 
 ## Search
 
@@ -449,9 +453,9 @@ panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with lig
 "Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, three sliders: Size
 (0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
 commuter and longer-trip bubbles, not station discs; ignored while bubbles are selected, T-936, but not while a whole zone is, T-1726) and Detail (4 steps from coarser to finer,
-the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
-choice (Mode mix by default [T-1724], or Train share [T-833], which shows two colour pickers labelled 0% train and
-100% train; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
+the third by default; its hover reads "How many bubbles are aggregated together"; [T-795, T-1838]), the Colors
+choice (3-color by default [T-1724], the old Mode mix, or 2-color [T-833], the old Train share, which shows two colour pickers labelled 0% train and
+100% train; no hovers on any of it [T-804, T-1838]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names [off by default, T-1729], capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
@@ -487,9 +491,9 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
 hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
-[architecture.md](architecture.md) "A hidden page") [T-826]. "Lighter map" (Auto, On, Off; Auto by
-default) draws the basemap with fewer layers at a lower resolution; Auto turns it on when frames run
-slow while the map moves, and its hover then adds "On now" ([architecture.md](architecture.md)
+[architecture.md](architecture.md) "A hidden page") [T-826]. "Map detail" (Auto, Low, High; Auto by
+default; Low is the old lighter map's On and High its Off, the saved `lighterMap` values unchanged; hover "Show fewer roads and other details" [T-1838]) draws the basemap with fewer layers at a lower resolution when Low; Auto picks Low when frames run
+slow while the map moves ([architecture.md](architecture.md)
 "While the camera moves") [T-1207].
 
 **Game** [T-728], last before Explore a trip: the game's mode, "Normal" or "Sandbox" (hover: what
@@ -497,8 +501,9 @@ it means). A normal game has "Switch to sandbox mode", which asks first ("Confir
 "Money cannot be turned back on in this game.", with Stay in normal mode
 and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
-not the browser's. While a normal game's [Getting started card](#getting-started-card) is hidden, a
-row "Getting started" with a Show button sits under the mode [T-1822].
+not the browser's. In a normal game a
+row "Getting started" with a Start again button (restarts the [Getting started card](#getting-started-card))
+sits under the mode [T-1822, T-1835].
 
 ## Finances tab (the Money tab until T-1819; id `money`)
 
@@ -506,7 +511,7 @@ Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash l
 T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
 [T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, interest
 while a loan is out or was paid yesterday (the network's only, never a region's), new trains,
-construction, net (Upkeep's hover gives the rule and the network's track, stations and upkeep a day, T-867), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
+construction, net (Upkeep's hover is three lines: $30k per km of track per day, $50k per station per day, High speed rail 1.5x; Running trains' hover reads "Trains cost $4 per km, plus $2 per train car"; T-867, T-1838), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
 nothing in it shows $0. Money figures
@@ -709,13 +714,6 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   after their age (their Open as a copy downloads it and opens it as Open a file does, a new game
   on the account; a failed download says "This backup could not be downloaded."). With none yet
   the list says "No earlier versions yet".
-- **Recently deleted** [T-1827; architecture.md "Recently deleted"]: under the cards, while any game
-  deleted from this browser in the last 30 days is kept, a text button "Recently deleted (2)"
-  (hover "Deleted games stay here for 30 days") opens a list, newest deletion first (open or shut
-  kept for the visit): each row the game's name, "deleted 3 days ago · Day 12" (hover: when it was
-  deleted and when it goes) and Open as a copy, which closes the panel and opens the game in a new
-  slot under its own name, its backups with it, and takes it off the list. The start menu does not
-  list them.
 - **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
   top bar and the callout say "This game was saved by a newer version. Reload the page to
   update."; Save refuses with the same words (its hover too). Download's hover is "Download as a

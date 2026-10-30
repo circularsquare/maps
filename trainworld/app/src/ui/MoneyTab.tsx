@@ -1,6 +1,6 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { busesText, busRouteRule, busRunRule, busUpkeepRule, money, runCostRule, shortDistance, upkeepText } from "../game/format";
+import { busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
 import { borrow, repay, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
@@ -24,11 +24,7 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.i
 
 /** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
 function upkeepTip(m: MoneyState): string {
-  const u = m.upkeep;
-  return `${upkeepText(m, "Upkeep")}\n`
-    + `The network has ${shortDistance(u.km * 1000)} of track and ${u.count.toLocaleString("en-US")} stations: ${money((u.track + u.stations) * 1e6)} a day.`
-    // T-1464
-    + (u.busKm > 0 ? `\nBus routes cost ${busUpkeepRule(m)}. The network has ${shortDistance(u.busKm * 1000)} of them: ${money(u.buses * 1e6)} a day.` : "");
+  return upkeepLines(m); // T-1838: Anita's three lines, nothing else
 }
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
@@ -151,10 +147,10 @@ function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: num
   const count = (v: number) => (Math.round(v / 1e4) * 1e4).toLocaleString("en-US");
   return (
     <ul class="rows">
-      <Row label="Riders a day">
+      <Row label="Riders per day">
         <span data-tip={`About ${count(e.riders)} at these fares, ${count(e.ridersNow)} now. A guess until demand catches up.`}>{pct > 0 ? "+" : pct < 0 ? "−" : ""}{Math.abs(pct)}%</span>
       </Row>
-      <Row label="Fares a day">
+      <Row label="Fares per day">
         <span data-tip={`About ${money(e.fares)} at these fares, ${money(e.faresNow)} now. A guess until demand catches up.`}>{df > 0 ? "+" : ""}<Money dollars={df} /></span>
       </Row>
     </ul>
@@ -200,7 +196,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={`Running costs ${runCostRule(m)}` + (m.fleetBus > 0 || m.busesNeeded > 0 ? `. Buses cost ${busRunRule(m)}` : "")}>Running trains</td>
+          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? `\nBuses cost ${busRunRule(m)}` : "")}>Running trains</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
@@ -211,7 +207,7 @@ export function MoneyTab() {
         </tr>
         {zone === null && (m.loan > 0 || (prev?.interest ?? 0) > 0) && (
           <tr>
-            <td data-tip={`Interest on the loan: ${LOAN_RATE * 100}% of it a game day`}>Interest</td>
+            <td data-tip={`Interest on the loan: ${LOAN_RATE * 100}% of it per game day`}>Interest</td>
             {cell(prev, (d) => -(d.interest ?? 0))}
             <TodayCell zone={zone} v={(d) => -(d.interest ?? 0)} />
           </tr>
@@ -288,7 +284,7 @@ export function MoneyTab() {
 /** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out; the loan,
  * its interest a day and Repay while one is. */
 function LoanRows({ loan }: { loan: number }) {
-  const rule = `Interest is ${LOAN_RATE * 100}% of the loan a game day. One loan at a time.`;
+  const rule = `Interest is ${LOAN_RATE * 100}% of the loan per game day. One loan at a time.`;
   if (loan <= 0) {
     return (
       <>
@@ -311,7 +307,7 @@ function LoanRows({ loan }: { loan: number }) {
       <div class="h">Loan</div>
       <ul class="rows">
         <Row label="Borrowed"><Money dollars={loan * 1e6} /></Row>
-        <Row label="Interest a day"><span data-tip={rule}><Money dollars={loan * LOAN_RATE * 1e6} /></span></Row>
+        <Row label="Interest per day"><span data-tip={rule}><Money dollars={loan * LOAN_RATE * 1e6} /></span></Row>
         <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? `Pay back ${money(loan * 1e6)} from the cash` : `Needs ${money(loan * 1e6)} in cash`} onClick={() => void repay()}>Repay</button>} />
       </ul>
     </>

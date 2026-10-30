@@ -16,7 +16,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `notes/handoff.md` | The orchestrator's live state, kept current so a new one can take over any time (`/takeover`, `/handoff`; maps/CLAUDE.md) | orchestrator |
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
-| `TODO.md` | Anita's own list, where her playtest notes land: read it and file new items as tasks | Anita only; agents never edit it |
+| `TODO.md` | Anita's own list, where her playtest notes land: read it and file new items as tasks. Its short-term section is a batch of prompts (Anita, 2026-10-29): copy each item's text verbatim into the brief, examples and all, rather than paraphrasing it (a paraphrase lost her formula tooltip, T-1839). Don't file the long-term section unless she asks | Anita only; agents never edit it |
 | `docs/demand-plain.md` | How demand works in plain words, one page, for Anita | any agent that changes a demand rule it mentions |
 
 ## Doc rules
@@ -116,7 +116,16 @@ Briefs carry only the task; these hold for every agent.
   (short names, older copies deleted) and gives her that single full path (Anita, 2026-10-27).
 - **Player-facing text** follows the "User-facing text" section of Anita's global CLAUDE.md. It says "trips"
   for what people want to take (demand, trips between places) and "rides" or "riders" only for what
-  happens on the player's system (Anita, 2026-10-26).
+  happens on the player's system (Anita, 2026-10-26). **Anita reads every player-facing string
+  before it lands** (2026-10-29, after "grey fills a platform as riders wait ... from street zooms"
+  got through): an agent's report lists each string it added or changed, old -> new, exactly as shown;
+  the orchestrator shows them to her in the conversation. Landing and deploying need no wait for
+  her approval (2026-10-29): check the style rules, land, and make sure she sees the strings; she
+  answers "text acknowledged" or names the lines to change (any she doesn't mention are fine).
+  Agents propose wording; never ask her to write it from scratch. A string no one has listed has
+  not been reviewed. Watch hardest for an object or colour as the
+  subject ("grey fills", "red when"), telegraphic phrases with words dropped ("from street zooms"),
+  and hovers that describe what the player can already see.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,

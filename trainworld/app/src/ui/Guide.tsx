@@ -30,8 +30,8 @@ function Guide() {
   return (
     <div class={"guide" + (opened.value ? " open" : "")}>
       <div class="guide-head">
-        <button class="guide-title" aria-expanded={opened.value} onClick={() => (opened.value = !opened.peek())}>Getting started</button>
-        <button class="btn icon guide-x" data-tip="Hide the guide" aria-label="Hide the guide" onClick={() => saveGuide({ ...g, hidden: true })}>
+        <button class="guide-title" aria-expanded={opened.value} onClick={() => (opened.value = !opened.peek())}>Tutorial</button>
+        <button class="btn icon guide-x" aria-label="Hide the tutorial" onClick={() => saveGuide({ ...g, hidden: true })}>
           <Icon.cross />
         </button>
       </div>
@@ -40,14 +40,13 @@ function Guide() {
           <li key={i} class={done[i] ? "done" : i === now ? "now" : "later"} onClick={() => ripple(i)}>
             <span class="guide-box">{done[i] && <Icon.check />}</span>
             <span class="guide-words">{s.words}</span>
-            {s.count && <span class="guide-count" data-tip={s.count.tip}>{counter(s.count)}</span>}
+            {s.count && <span class="guide-count">{counter(s.count)}</span>}
           </li>
         ))}
       </ol>
       {finished && (
         <div class="guide-end">
-          <span>Your first line is open.</span>
-          <button class="btn text" onClick={() => saveGuide({ ...g, closed: true })}>Done</button>
+          <button class="btn text" onClick={() => saveGuide({ ...g, closed: true })}>Done!</button>
         </div>
       )}
     </div>

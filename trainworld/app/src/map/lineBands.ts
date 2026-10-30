@@ -8,6 +8,7 @@
 // id line's own direction, whichever way each edge was drawn. One parting decides
 // every edge of a stretch they share, so bands cross only at a node where their routes make them.
 
+import { findCorridors } from "./corridors";
 import { kAtY } from "./geo";
 
 /** T-1821: the Line view's line width as a multiple of the width the Traffic view's scale is set
@@ -15,6 +16,11 @@ import { kAtY } from "./geo";
 export const LINE_VIEW_WIDTH = 1.3;
 /** a band's width as a share of a line's (Anita, 2026-10-29) */
 export const BAND_SHARE = 0.8;
+/** line widths a metre across is drawn as, for the gap between the centre lines of the edges of a
+ * corridor (8 m between a four-track trunk's pairs): 0.4 of a line width for 8 m, which is exact near
+ * zoom 14.5, 1.4 px of overlap at zoom 13 and 0.9 px of gap at 15, a few px of gap by 16 (a metre is
+ * fixed on the ground, a line width is not; notes/T-1799.md, stage 3) */
+export const BAND_LW_PER_M = 0.05;
 /** where a line's slot changes at a node, its shift eases over this much of the edge, m */
 export const BAND_RAMP_M = 30;
 /** a band's shift is stored as a share of this many line widths (`Strokes.band`, Int16 normalised) */
@@ -33,7 +39,13 @@ export interface LineBands {
   order: Map<number, number[]>;
   /** the pairwise rule on an edge between two of its lines (checks/t1799-bands.mjs): < 0 the first on the left in a to b */
   rule: (edge: number, x: number, y: number) => number;
+  /** per edge in a corridor, CORRIDOR_STRIDE numbers: the edge, its corridor, how far its centre line is
+   * from the corridor's middle (line widths, left of the corridor's direction), and that direction (local x, y) */
+  corridor: Float32Array;
 }
+
+export const CORRIDOR_STRIDE = 5;
+
 
 /** how far along an edge its leaving direction is measured, m, so a short first segment does not decide it */
 const BEARING_M = 60;
@@ -115,7 +127,6 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     return 0;
   };
   const order = new Map<number, number[]>();
-  const slot = new Map<number, Map<number, number>>();
   /** < 0: `x` left of `y` in the edge's a to b direction. Looked at first ahead in the lower-id
    * line's own direction, so every edge of a stretch the two share asks the same parting node
    * whatever way each edge was drawn; a walk towards a sees left of travel as right of a to b. */
@@ -142,7 +153,35 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     const idx = v.map((_, i) => i).sort((i, j) => wins[j] - wins[i] || c[i * m + j] || v[i].line.id - v[j].line.id);
     const sorted = idx.map((i) => v[i]);
     order.set(edge, sorted.map((s) => s.line.id));
-    slot.set(edge, new Map(sorted.map((s, i) => [s.line.id, i])));
+  }
+  // each line's shift on each edge it is on, line widths left of the edge's a to b direction
+  const pos = new Map<number, Map<number, number>>();
+  const cnt = new Map<number, number>();
+  const cor = on.size > 1 ? findCorridors([...on.keys()], pts) : null;
+  for (const [edge, o] of order) {
+    if (cor?.of.has(edge)) continue;
+    pos.set(edge, new Map(o.map((id, i) => [id, ((o.length - 1) / 2 - i) * BAND_SHARE])));
+    cnt.set(edge, o.length);
+  }
+  const corr: number[] = [];
+  for (const [cid, members] of cor?.members ?? []) {
+    // side by side (T-1799 stage 3): the left edge's lines on the left, one ribbon centred on the
+    // corridor's middle; an edge's centre line is off the middle by `y` m, which `BAND_LW_PER_M` turns
+    // into line widths so the bands of neighbouring edges touch
+    const seq: [number, number][] = [];
+    for (const e of members) {
+      const ids = order.get(e) ?? on.get(e)!.map((x) => x.line.id);
+      for (const id of cor!.of.get(e)!.s > 0 ? ids : [...ids].reverse()) seq.push([e, id]);
+    }
+    const K = seq.length, dir = cor!.dir.get(cid)!;
+    seq.forEach(([e, id], g) => {
+      const c = cor!.of.get(e)!;
+      let m = pos.get(e);
+      if (!m) pos.set(e, (m = new Map()));
+      m.set(id, c.s * (((K - 1) / 2 - g) * BAND_SHARE - c.y * BAND_LW_PER_M));
+      cnt.set(e, K);
+    });
+    for (const e of members) corr.push(e, cid, cor!.of.get(e)!.y * BAND_LW_PER_M, dir[0], dir[1]);
   }
   const of = new Map<number, Float32Array>();
   for (const l of rail) {
@@ -151,11 +190,11 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     const mid = new Float32Array(n), q = new Float32Array(n), count = new Int32Array(n);
     let any = false;
     for (let k = 0; k < n; k++) {
-      const e = l.path[k] >> 1, sl = slot.get(e);
-      count[k] = on.get(e)?.length ?? 1;
+      const e = l.path[k] >> 1, sl = pos.get(e);
+      count[k] = cnt.get(e) ?? on.get(e)?.length ?? 1;
       if (!sl) continue;
       any = true;
-      const s = ((count[k] - 1) / 2 - sl.get(l.id)!) * BAND_SHARE;
+      const s = sl.get(l.id)!;
       mid[k] = (l.path[k] & 1) === 1 ? -s : s;
       q[k] = 1 - BAND_SHARE;
     }
@@ -179,7 +218,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     const v = on.get(edge), a = v?.find((s) => s.line.id === x), b = v?.find((s) => s.line.id === y);
     return a && b ? compare(edge, a, b) : 0;
   };
-  return { of, order, rule };
+  return { of, order, rule, corridor: new Float32Array(corr) };
 }
 
 /** `TrafficBands.pick` holds a shift as a share of this many times BAND_RANGE line widths, since a
@@ -203,9 +242,10 @@ interface TrafficStrokes { seg: Float32Array; colour: Uint32Array; edge: Uint32A
  * their sum; eased at nodes as the Line view's (`lineBands`' rule on which side of a node the ease
  * sits, over BAND_RAMP_M, network.ts `bandPoints` cutting the segments there). The order is read back
  * from the Line view's shifts in `L.band`. `perM`: local units per metre at a y. `samples` and
- * `sampleStroke` as `NetworkBuffers`'. Null when no edge is shared.
+ * `sampleStroke` and `corridor` as `NetworkBuffers`'. A corridor's edges are one ribbon (stage 3).
+ * Null when no edge is shared.
  */
-export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: number) => number, samples: Float32Array, sampleStroke: Int32Array | undefined): TrafficBands | null {
+export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: number) => number, samples: Float32Array, sampleStroke: Int32Array | undefined, corridor?: Float32Array): TrafficBands | null {
   const n = L.count, B = L.band, seg = L.seg;
   if (!B || B.length < n * 4) return null;
   const S = BAND_RANGE / 32767;
@@ -221,7 +261,11 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
   start.push(n);
   const runOf = new Int32Array(n);
   const len = new Float64Array(R), mid = new Float64Array(R), sgn = new Int8Array(R).fill(1), count = new Int32Array(R).fill(1);
-  const T = new Float64Array(R);
+  const T = new Float64Array(R), off = new Float64Array(R);
+  const cor = new Map<number, { id: number; off: number; dx: number; dy: number }>();
+  for (let i = 0; corridor && i + CORRIDOR_STRIDE <= corridor.length; i += CORRIDOR_STRIDE) {
+    cor.set(corridor[i], { id: corridor[i + 1], off: corridor[i + 2], dx: corridor[i + 3], dy: corridor[i + 4] });
+  }
   const byEdge = new Map<number, number[]>();
   let any = false;
   for (let r = 0; r < R; r++) {
@@ -244,27 +288,34 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
     }
     if (!shared) continue;
     any = true;
-    const e = L.edge[i0];
+    // a corridor's edges are one ribbon (negative keys), any other edge its own
+    const c = cor.get(L.edge[i0]);
+    const e = c ? -1 - c.id : L.edge[i0];
     let v = byEdge.get(e);
     if (!v) byEdge.set(e, (v = []));
     v.push(r);
   }
   if (!any) return null;
   for (const v of byEdge.values()) {
-    // each run's direction against the first's, by their chords: the shifts in one frame
+    // each run's direction against the first's (a corridor's: against its direction), by their
+    // chords: the shifts in one frame
     const chord = (r: number) => {
       const a = start[r], b = start[r + 1] - 1;
       return [seg[b * 4 + 2] - seg[a * 4], seg[b * 4 + 3] - seg[a * 4 + 1]];
     };
-    const [rx, ry] = chord(v[0]);
+    const c0 = cor.get(L.edge[start[v[0]]]);
+    const [rx, ry] = c0 ? [c0.dx, c0.dy] : chord(v[0]);
     const first = new Map<number, number>();
     for (const r of v) {
       const [x, y] = chord(r);
       sgn[r] = x * rx + y * ry >= 0 ? 1 : -1;
+      // where the edge's centre line lies from the ribbon's middle, in the same frame
+      off[r] = cor.get(L.edge[start[r]])?.off ?? 0;
       if (!first.has(L.colour[start[r]])) first.set(L.colour[start[r]], r);
     }
     if (first.size < 2) continue;
-    const lines = [...first.values()].sort((a, b) => mid[b] * sgn[b] - mid[a] * sgn[a]);
+    const at = (r: number) => mid[r] * sgn[r] + off[r];
+    const lines = [...first.values()].sort((a, b) => at(b) - at(a));
     let total = 0;
     for (const r of lines) total += width[start[r]];
     const own = new Map<number, number>();
@@ -275,7 +326,7 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
       left += w;
     }
     for (const r of v) {
-      T[r] = own.get(L.colour[start[r]])! * sgn[r];
+      T[r] = (own.get(L.colour[start[r]])! - off[r]) * sgn[r];
       count[r] = first.size;
     }
   }

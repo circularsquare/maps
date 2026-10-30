@@ -373,7 +373,7 @@ export function LinesTab() {
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
         { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares minus running costs and upkeep", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
-        { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
+        { key: "near", label: "Near", tip: "Sort by distance from the center of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class={"rows pick" + (drag?.on ? " dragging" : "")}>
         {items.map((it) => (it.g ? groupRows(it) : lineRow(it.ls[0], false)))}

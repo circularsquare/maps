@@ -156,9 +156,17 @@ const perUnitText = (perKm: number) => {
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
 }
-/** T-867: "$30k a km of track and $50k a station a day", at the game's economy, in the shown unit. */
+/** T-867: "$30k per km of track per day and $50k per station per day", at the game's economy, in the shown unit. */
 export function upkeepRule(m: { upkeepTrackKm: number; upkeepStation: number; economy: number }): string {
-  return `${money(perDistance(m.upkeepTrackKm * m.economy))} a ${distUnit()} of track and ${money(m.upkeepStation * m.economy)} a station a day`;
+  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of track per day and ${money(m.upkeepStation * m.economy)} per station per day`;
+}
+/** T-1838: the Upkeep row's hover, three lines: "$30k per km of track per day", "$50k per station per day", "High speed rail 1.5x". */
+export function upkeepLines(m: { upkeepTrackKm: number; upkeepStation: number; economy: number; upkeepHsr: number }): string {
+  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of track per day\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
+}
+/** T-1838: the Running trains row's hover: "Trains cost $4 per km, plus $2 per train car". */
+export function runCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
+  return `Trains cost ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per train car`;
 }
 /** The upkeep rule as a sentence; `lead` is "Upkeep" or "Once constructed, upkeep". */
 export function upkeepText(m: { upkeepTrackKm: number; upkeepStation: number; economy: number; upkeepHsr: number; upkeepSingle: number }, lead: string): string {
@@ -180,7 +188,7 @@ export const busesText = (n: number) => plural(n, "bus", "buses");
 /** T-1464: "$3 a bus-km", in the shown unit. */
 export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runCostBusKm)} a bus-${distUnit()}`;
 /** T-1464: a route's upkeep, "$3k a km of route a day", at the game's economy. */
-export const busUpkeepRule = (m: { upkeepBusKm: number; economy: number }) => `${money(perDistance(m.upkeepBusKm * m.economy))} a ${distUnit()} of route a day`;
+export const busUpkeepRule = (m: { upkeepBusKm: number; economy: number }) => `${money(perDistance(m.upkeepBusKm * m.economy))} per ${distUnit()} of route per day`;
 /** T-1464: a route's price on Construct, "$1M a km of route". */
 export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} a ${distUnit()} of route`;
 

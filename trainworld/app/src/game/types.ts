@@ -214,7 +214,8 @@ export interface BlueprintItem {
   level: Level;
   tracks: number;
   wet: boolean;
-  ramp: boolean;
+  /** a track row's terrain class (T-1839: ramps are not told apart), 0 for the rest */
+  ground: number;
   quantity: number;
   cost: number;
 }

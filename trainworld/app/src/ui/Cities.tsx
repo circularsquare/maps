@@ -52,7 +52,7 @@ export function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday:
 export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
   const { d } = f;
   const rows = [
-    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)} a day, fares minus running trains and upkeep`,
+    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)}/day, fares minus running trains and upkeep`,
     `Fares ${money(d.fares * 1e6)}`,
     `Running trains ${money(-d.running * 1e6)}`,
     `Upkeep ${money(-(d.upkeep ?? 0) * 1e6)}`,
@@ -170,7 +170,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "train", label: "Train", tip: "Sort by the train share of trips", first: -1, cls: "w-citybar c-cities" },
         { key: "rides", label: "Trips", tip: "Sort by train trips per day", first: -1, cls: "w-riders c-cities" },
-        { key: "money", label: "Profit", tip: "Sort by profit a day, fares minus running trains and upkeep", first: -1, cls: "w-money c-cities c-money" },
+        { key: "money", label: "Profit", tip: "Sort by profit per day, fares minus running trains and upkeep", first: -1, cls: "w-money c-cities c-money" },
         { key: "points", label: "Points", tip: "Sort by points in the past 24 hours", first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">

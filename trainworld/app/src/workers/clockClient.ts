@@ -35,15 +35,17 @@ import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "
 import { addTerrainGrid } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
-export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; deleted: import("./saveFile").DeletedGame[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [], deleted: [] });
+export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
 export const savedByHand = signal<number | null>(null);
-export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore" | "undelete", key?: string, name?: string) {
+
+/** T-1815: the panels' account reads, held while track previews are asked */
+const PANEL_READS = new Set(["today", "linesPeriods", "linePeriods", "lineAccount"]);
+const PANEL_HOLD_MS = 250;
+export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
-  // T-1827: a recently deleted game, opened as a new slot
-  if (action === "undelete") { if (key) void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "undelete", key, from: saveSlotsState.peek().active })); return; }
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -844,12 +846,12 @@ export class ClockClient {
         break;
       case "exported": {
         const { slots, active } = saveSlotsState.value;
-        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day, this.testPage ? undefined : active);
+        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
         break;
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, deleted: msg.deleted, newer: msg.newer };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, newer: msg.newer };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
@@ -939,7 +941,33 @@ export class ClockClient {
   }
 
   private queries = new Map<number, (d: Float64Array) => void>();
+  /** T-1815: panel reads (`PANEL_READS`) asked while track previews are being asked wait until
+   * previews stop for `PANEL_HOLD_MS`, the same ones asked once: each takes 15-50 ms in the clock
+   * worker on a big network, and a preview behind it waits that long */
+  private lastPreviewAt = -Infinity;
+  private heldReads = new Map<string, { q: Extract<ToClock, { kind: "query" }>["q"]; res: ((d: Float64Array) => void)[] }>();
+  private heldTimer = 0;
+  private releaseHeld() {
+    this.heldTimer = 0;
+    const wait = this.lastPreviewAt + PANEL_HOLD_MS - performance.now();
+    if (wait > 0) {
+      this.heldTimer = setTimeout(() => this.releaseHeld(), wait) as unknown as number;
+      return;
+    }
+    const held = [...this.heldReads.values()];
+    this.heldReads.clear();
+    for (const h of held) void this.query(h.q).then((d) => h.res.forEach((r, k) => r(k ? d.slice() : d)));
+  }
   query(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array> {
+    if (PANEL_READS.has(q.what) && (performance.now() - this.lastPreviewAt < PANEL_HOLD_MS || this.heldReads.size)) {
+      const key = JSON.stringify(q);
+      return new Promise((res) => {
+        const h = this.heldReads.get(key);
+        if (h) h.res.push(res);
+        else this.heldReads.set(key, { q, res: [res] });
+        if (!this.heldTimer) this.releaseHeld();
+      });
+    }
     const seq = ++this.seq;
     this.post({ kind: "query", seq, q });
     return new Promise((res) => this.queries.set(seq, res));
@@ -975,6 +1003,7 @@ export class ClockClient {
    * back, `cost` (US$M) what it would add to the blueprint. One request in flight; a newer one
    * replaces a waiting one. */
   checkStation(at: StationAt, platform: number, cb: (ok: boolean, issues: string[], cost: number) => void) {
+    this.lastPreviewAt = performance.now();
     if (this.stationBusy) {
       this.stationNext = { at, platform, cb };
       return;
@@ -1013,6 +1042,7 @@ export class ClockClient {
   }
 
   private ask(msg: (seq: number) => ToClock, cb: (a: PreviewAnswer) => void) {
+    this.lastPreviewAt = performance.now();
     if (this.previewBusy) {
       this.previewNext = { msg, cb };
       // not yet started, or waiting for masks, it is dropped for this one (T-1039)

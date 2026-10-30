@@ -14,19 +14,19 @@ import type { GuideSave } from "../workers/saveFile";
 export interface GuideStep {
   words: string;
   /** a counter: what there is now, the goal, and its hover; none for a step with nothing to count */
-  count?: { have: number; goal: number; km?: true; tip?: string };
+  count?: { have: number; goal: number; km?: true };
   met: boolean;
 }
 
 /** track to lay, m, and its stations apart from each other, m (step 1, 2) */
 export const GUIDE_TRACK_M = 5000, GUIDE_STATIONS = 3, GUIDE_APART_M = 500;
 const WORDS = [
-  "Lay 5 km of track where the bubbles are big",
-  "Put stations along it, about one a km",
+  "Place 5km of track",
+  "Place stations on the track (space them ~1km apart)",
   "Construct your blueprints",
-  "Make a new line",
-  "Click your stations to make them stops",
-  "Give the line a train",
+  "Create a line",
+  "Assign stops for the line",
+  "Add trains to the line",
 ];
 
 /** How many stations stand at least GUIDE_APART_M from each other (taken in order, a station within
@@ -54,11 +54,11 @@ export function guideSteps(w: WorldView, trains: (line: string) => readonly numb
   const anyTrain = lines.some((l) => Math.max(0, ...(trains(l.id) ?? [])) >= 1);
   const km = (m: number) => Math.min(m, GUIDE_TRACK_M) / 1000;
   return [
-    { words: WORDS[0], count: { have: km(laid), goal: GUIDE_TRACK_M / 1000, km: true, tip: "Track laid" }, met: laid >= GUIDE_TRACK_M },
-    { words: WORDS[1], count: { have: Math.min(stationsOn, GUIDE_STATIONS), goal: GUIDE_STATIONS, tip: "Stations on the track, at least 500 m apart" }, met: stationsOn >= GUIDE_STATIONS },
+    { words: WORDS[0], count: { have: km(laid), goal: GUIDE_TRACK_M / 1000, km: true }, met: laid >= GUIDE_TRACK_M },
+    { words: WORDS[1], count: { have: Math.min(stationsOn, GUIDE_STATIONS), goal: GUIDE_STATIONS }, met: stationsOn >= GUIDE_STATIONS },
     { words: WORDS[2], met: built >= GUIDE_TRACK_M && builtCount >= GUIDE_STATIONS },
     { words: WORDS[3], met: lines.length > 0 },
-    { words: WORDS[4], count: { have: Math.min(mostStops, stopGoal), goal: stopGoal, tip: "Stops on the line" }, met: mostStops >= stopGoal },
+    { words: WORDS[4], count: { have: Math.min(mostStops, stopGoal), goal: stopGoal }, met: mostStops >= stopGoal },
     { words: WORDS[5], count: { have: anyTrain ? 1 : 0, goal: 1 }, met: anyTrain },
   ];
 }

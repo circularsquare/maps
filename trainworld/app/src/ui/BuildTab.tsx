@@ -62,8 +62,9 @@ export function BuildTab() {
         <div class="h">Track</div>
         <div class="build-track-row">
           <Segmented<TrackType> options={[[2, "Double"], [4, "Quad"], ["hsr", "High speed"]]} value={trackType.value} onChange={setTrackType} />
+          <span class="build-toggles">
           <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label="Keep placing track" aria-pressed={keepPlacing.value}
-            data-tip="Keep placing track (Caps Lock). Double click or press Esc to stop."
+            data-tip="Keep placing track after a click (Caps Lock). Double click or press Esc to stop."
             onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
           <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label="Snap to the real network" aria-pressed={snapReal.value}
             data-tip="Snap track to the real network"
@@ -71,6 +72,7 @@ export function BuildTab() {
           <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label="Snap beside track" aria-pressed={snapBeside.value}
             data-tip={"Snap beside track\nHover over the blue region to draw track parallel to another track"}
             onClick={() => (snapBeside.value = !snapBeside.peek())}><Icon.snapBeside /></button>
+          </span>
         </div>
         <ul class="rows build-rows">
           <li>

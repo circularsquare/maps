@@ -1832,25 +1832,24 @@ impl Network {
     /// water and ramp. Seven numbers per row: those five keys, metres/count, US$M. Kind 6 is what
     /// the terrain adds to track (T-1270), its level field holding the terrain class.
     pub fn blueprint_cost_items(&self) -> Vec<f64> {
-        let mut rows = std::collections::BTreeMap::<(u8, i8, u8, bool, bool), (f64, f64)>::new();
-        let mut add = |kind, level, tracks, wet, ramp, qty, cost| {
-            let r = rows.entry((kind, level, tracks, wet, ramp)).or_default();
+        // the fifth key field is a track row's terrain class (T-1839; a ramp is no price factor, it is
+        // charged at its dearer end, so ramps are not told apart), 0 for every other kind
+        let mut rows = std::collections::BTreeMap::<(u8, i8, u8, bool, u8), (f64, f64)>::new();
+        let mut add = |kind, level, tracks, wet, class: u8, qty, cost| {
+            let r = rows.entry((kind, level, tracks, wet, class)).or_default();
             r.0 += qty;
             r.1 += cost;
         };
         for e in 0..self.edge_count() {
             if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] && self.edge_crossover[e] {
                 let a = self.edge_a[e] as usize;
-                add(2, self.node_level[a], 0, !self.edge_water(e as u32).is_empty(), false, 1.0, self.edge_cost[e]);
+                add(2, self.node_level[a], 0, !self.edge_water(e as u32).is_empty(), 0, 1.0, self.edge_cost[e]);
             } else if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
                 let (tracks, hsr) = (self.edge_tracks[e], self.edge_hsr[e]);
-                cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, hsr, |level, wet, ramp, class, m, c| {
-                    // T-1270: what the ground adds is its own row (kind 6), keyed by class
-                    let flat = c / cost::terrain_factor(level, class);
-                    add(0, level, if hsr { HSR_ROW } else { tracks }, wet, ramp, m, flat);
-                    if c - flat > 1e-12 {
-                        add(6, class as i8, 0, false, false, m, c - flat);
-                    }
+                cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, hsr, |level, wet, _ramp, class, m, c| {
+                    // T-1839: the whole price, keyed by terrain class (1 where it does not count)
+                    let class = if cost::terrain_factor(level, class) == 1.0 { 0 } else { class };
+                    add(0, level, if hsr { HSR_ROW } else { tracks }, wet, class, m, c);
                 });
             }
         }
@@ -1861,10 +1860,10 @@ impl Network {
             let level = self.node_level[n];
             if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
-                add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
+                add(1, level, tracks, wet, 0, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
                 let ups = self.node_upgrades[n];
                 if ups != 0 {
-                    add(8, level, 0, wet, false, ups.count_ones() as f64, super::upgrades::cost(ups, level, wet));
+                    add(8, level, 0, wet, 0, ups.count_ones() as f64, super::upgrades::cost(ups, level, wet));
                 }
             }
             let nn = n as u32;
@@ -1874,9 +1873,9 @@ impl Network {
             {
                 let wet = is_wet();
                 let base = cost::junction_cost(level, false, wet);
-                add(2, level, 0, wet, false, 1.0, base);
+                add(2, level, 0, wet, 0, 1.0, base);
                 if self.node_flying[n] {
-                    add(3, level, 0, wet, false, 1.0, cost::junction_cost(level, true, wet) - base);
+                    add(3, level, 0, wet, 0, 1.0, cost::junction_cost(level, true, wet) - base);
                 }
             }
         }
@@ -1885,7 +1884,7 @@ impl Network {
                 let (e1, e2) = (x.e1 as usize, x.e2 as usize);
                 if (!self.edge_built[e1] || !self.edge_built[e2]) && !self.edge_off[e1] && !self.edge_off[e2] && self.priced_crossing(x) {
                     let wet = self.water_mask.is_water(x.x, x.y);
-                    add(4, level, 0, wet, false, 1.0, cost::crossing_cost(level, wet));
+                    add(4, level, 0, wet, 0, 1.0, cost::crossing_cost(level, wet));
                 }
             }
         }
@@ -1894,14 +1893,14 @@ impl Network {
             let (a, b) = (a as usize, b as usize);
             let ready = |n: usize| self.node_built[n] || !self.node_off[n];
             if !(self.node_built[a] && self.node_built[b]) && ready(a) && ready(b) {
-                add(9, 0, 0, false, false, 1.0, price);
+                add(9, 0, 0, false, 0, 1.0, price);
             }
         }
         // bus routes still to be constructed (T-1464): road metres
         for l in self.bus_lines() {
             if self.line_bus[l as usize].as_ref().is_some_and(|r| !r.built) {
                 let m = self.bus_road_m(l);
-                add(10, 0, 0, false, false, m, m / 1000.0 * BUS_ROUTE_COST_PER_KM);
+                add(10, 0, 0, false, 0, m, m / 1000.0 * BUS_ROUTE_COST_PER_KM);
             }
         }
         rows.into_iter().flat_map(|((kind, level, tracks, wet, ramp), (qty, cost))|

@@ -1,24 +1,21 @@
-// T-1827, T-1829: save safety. (1) A deleted slot moves to the recently deleted with its backups;
-// after a reload the saves panel lists it and Open as a copy gives the same network in a new slot,
-// its backups with it, and the entry goes. A deletion from the account (a tombstone) moves a slot
-// there too. Entries 30 days old are gone when a page starts; younger ones stay. (2) Storage full
-// (slot writes in the clock worker refused with QuotaExceededError until a demand cache goes): a save
-// drops the demand caches and goes through; full with no room to make, it says so, and saves once
-// there is room. The
-// database cleared under a running game (site data cleared; deleted from another page): the next save
-// writes the game into a new database under its name and account tie, and no notice is left.
-//   node trainworld/checks/t1827-saves.mjs [url]     (from the maps root; default localhost:6197)
+// T-1829: storage full or cleared while the game is open. (1) Storage full (slot writes in the clock
+// worker refused with QuotaExceededError until a demand cache goes): a save drops the demand caches
+// and goes through; full with no room to make, it says so, and saves once there is room. (2) The
+// database cleared under a running game (site data cleared; deleted from another page): the next
+// save writes the game into a new database under its name and account tie, and no notice is left.
+// Also (T-1827 removed): deleting a slot, or a tombstone from the account, deletes it and its backups
+// for good, and `deleted:` keys T-1827 left are swept when a page starts.
+//   node trainworld/checks/t1829-storage.mjs [url]     (from the maps root; default localhost:6199)
 // Prints PASS or FAIL lines and exits 1 on a failure. About three minutes.
 import { launchChrome, collectErrors, acrossLine, ANGLE } from './lib.mjs';
 
-const BASE = process.argv[2] ?? 'http://localhost:6197/';
+const BASE = process.argv[2] ?? 'http://localhost:6199/';
 const ORIGIN = new URL(BASE).origin;
-const DAY = 86400_000;
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
-const { ctx, close } = await launchChrome({ prefix: 'tw-t1827-', size: [1300, 900], args: ANGLE });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t1829-', size: [1300, 900], args: ANGLE });
 const errors = [];
 try {
   const ready = (page) => page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
@@ -32,7 +29,7 @@ try {
   };
   const state = (page) => page.evaluate(async () => {
     const s = (await import('/src/workers/clockClient.ts')).saveSlotsState.value;
-    return { active: s.active, writable: s.writable, reason: s.reason ?? '', error: s.error ?? '', deleted: s.deleted.map((d) => d.key), slots: s.slots.map((x) => x.key) };
+    return { active: s.active, writable: s.writable, reason: s.reason ?? '', error: s.error ?? '', slots: s.slots.map((x) => x.key) };
   });
   const sf = (page, f, arg) => page.evaluate(async ([src, arg]) => {
     const sf = await import('/src/workers/saveFile.ts');
@@ -60,71 +57,40 @@ try {
     await page.waitForTimeout(1500);
   };
 
-  // ---- 1. delete, reload, restore
+  // ---- 0. deleting is for good (T-1827 removed)
   const a = await open();
   const line = await acrossLine(a, [-73.985, 40.758], 2);
-  await post(a, 'rename', (await state(a)).active, 'Delete check');
   for (const end = Date.now() + 4000; Date.now() < end;) { await post(a, 'save'); await a.waitForTimeout(250); }
   await a.waitForTimeout(1000);
   const home = (await state(a)).active;
-  const before = await facts(a, home);
   const homeBackups = await sf(a, (sf, k) => sf.listBackups(k), home);
   await post(a, 'create', undefined, 'Other game');
   await a.waitForTimeout(3000);
   await post(a, 'delete', home);
   await a.waitForTimeout(2000);
-  const st1 = await state(a);
-  const entry = st1.deleted[0];
-  const moved = entry ? await sf(a, (sf, k) => sf.listBackups(k), entry) : [];
-  const leftover = (await keys(a)).filter((k) => k.includes(home));
-  report('a deleted slot moves to the recently deleted with its backups', line !== null && st1.deleted.length === 1 && !st1.slots.includes(home) && (await facts(a, entry))?.track === before.track
-    && homeBackups.length > 0 && moved.length === homeBackups.length && leftover.length === 0,
-    `(line ${line}; deleted ${st1.deleted.length}; backups ${homeBackups.length} -> ${moved.length}; keys left with the old slot ${JSON.stringify(leftover)})`);
-  await a.close();
-
-  const b = await open();
-  await b.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true; });
-  await b.waitForSelector('.save-deleted-head');
-  const head = await b.locator('.save-deleted-head').textContent();
-  await b.click('.save-deleted-head');
-  const row = await b.locator('.save-deleted [data-deleted] span').first().textContent();
-  await Promise.all([b.waitForNavigation({ timeout: 120000 }), b.click('.save-deleted [data-deleted] button')]);
-  await ready(b);
-  await b.waitForTimeout(4000);
-  const st2 = await state(b);
-  const after = await facts(b, st2.active);
-  const restoredBackups = await sf(b, (sf, k) => sf.listBackups(k), st2.active);
-  const oldAts = new Set(homeBackups.map((x) => x.at));
-  report('Open as a copy after a reload gives the same game in a new slot', head === 'Recently deleted (1)' && /^Delete check deleted/.test(row) && st2.active !== home && after?.track === before.track
-    && after.name === 'Delete check' && st2.deleted.length === 0 && restoredBackups.filter((x) => oldAts.has(x.at)).length === homeBackups.filter((x) => /:t\d$/.test(x.key) || x.pull).length,
-    `(head "${head}"; row "${row}"; same network ${after?.track === before.track}; name ${after?.name}; deleted left ${st2.deleted.length}; old backups on it ${restoredBackups.filter((x) => oldAts.has(x.at)).length} of ${homeBackups.length})`);
-
-  // a deletion from the account moves an unchanged copy here too
-  const tomb = await b.evaluate(async () => {
+  const left = (await keys(a)).filter((k) => k.includes(home) || k.startsWith('deleted:') || k.startsWith('backup:deleted:'));
+  report('deleting a slot deletes it and its backups for good', line !== null && homeBackups.length > 0 && !(await state(a)).slots.includes(home) && left.length === 0,
+    `(line ${line}; backups before ${homeBackups.length}; keys left ${JSON.stringify(left)})`);
+  const tomb = await a.evaluate(async () => {
     const sf = await import('/src/workers/saveFile.ts'), cloud = await import('/src/workers/cloud.ts');
-    const key = 'slot-t1827-tomb', at = 5000;
+    const key = 'slot-t1829-tomb', at = 5000;
     const bytes = (await sf.readStored((await import('/src/workers/clockClient.ts')).saveSlotsState.value.active)).bytes;
     await sf.writeSlot(key, { bytes, at, day: 3, name: 'Tombstone check' });
     await sf.writeSync(key, { id: 'g-tomb', acct: 'acct-check', rev: 2, syncedAt: at });
     const c = { base: '', token: '', acct: 'acct-check', device: 'd', on: false };
     const wrote = await cloud.settleSlot(c, key, { games: [], tombstones: [{ id: 'g-tomb', at: 1 }], used: 0, limit: 0, maxGames: 0 });
-    const list = await sf.listDeleted();
-    return { wrote, gone: !await sf.readStored(key), sync: await sf.readSync(key), names: list.map((d) => d.name) };
+    return { wrote, gone: !await sf.readStored(key), sync: await sf.readSync(key) };
   });
-  report('a tombstone from the account moves the slot to the recently deleted', tomb.wrote && tomb.gone && !tomb.sync && tomb.names.includes('Tombstone check'), `(${JSON.stringify(tomb)})`);
+  const tombLeft = (await keys(a)).filter((k) => k.includes('t1829-tomb') || k.startsWith('deleted:'));
+  report('a tombstone from the account deletes the slot for good', tomb.wrote && tomb.gone && !tomb.sync && tombLeft.length === 0, `(${JSON.stringify(tomb)}; keys left ${JSON.stringify(tombLeft)})`);
 
-  // entries 30 days old go at start, younger ones stay
-  const now = Date.now();
-  const oldKey = `deleted:${now - 31 * DAY}-old`, youngKey = `deleted:${now - 29 * DAY}-young`;
-  await sf(b, async (sf, [oldKey, youngKey]) => {
-    const r = { bytes: new Uint8Array([1]), at: 1, day: 1, name: 'Old' };
-    for (const k of [oldKey, youngKey]) { await sf.writeStored(k, r); await sf.writeStored(`backup:${k}:t0`, r); }
-  }, [oldKey, youngKey]);
-  await b.close();
+  // what T-1827 left in a browser is swept at start
+  const stale = [`deleted:${Date.now() - 86400_000}-x`, `backup:deleted:${Date.now() - 86400_000}-x:t0`];
+  await sf(a, async (sf, stale) => { for (const k of stale) await sf.writeStored(k, { bytes: new Uint8Array([1]), at: 1, day: 1, name: 'Old' }); }, stale);
+  await a.close();
   const c = await open();
   const ks = await keys(c);
-  report('entries over 30 days old are gone at start, with their backups', !ks.includes(oldKey) && !ks.includes(`backup:${oldKey}:t0`) && ks.includes(youngKey) && ks.includes(`backup:${youngKey}:t0`),
-    `(old ${ks.includes(oldKey)}, its backup ${ks.includes(`backup:${oldKey}:t0`)}, young ${ks.includes(youngKey)})`);
+  report('T-1827 leftovers are swept at start', stale.every((k) => !ks.includes(k)), `(left ${JSON.stringify(stale.filter((k) => ks.includes(k)))})`);
 
   // ---- 2a. storage full: the demand caches go and the save goes through
   let demand = [];

@@ -4,7 +4,7 @@ import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
-import { busesText, distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
+import { distUnit, distance, levelLabel, levelName, money, moneyCash, perDistance, plural, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
@@ -22,15 +22,80 @@ const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
-function description(r: BlueprintItem) {
-  if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
-  // T-1464: a bus route's quantity is its road metres, buses' the buses bought
-  if (r.kind === 10) return `${distance(r.quantity)} of road`;
-  if (r.kind === 11) return `${busesText(r.quantity)}, after spare buses`;
-  // T-1270: what the ground adds to track, its class in the level field
-  if (r.kind === 6) return `${distance(r.quantity)} of track, ${TERRAIN_FACTORS[r.level as number] ?? 1}x the price`;
-  const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : r.kind === 8 ? "upgrade" : r.kind === 9 ? "passage" : "item");
-  return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : r.tracks === HSR_ROW ? "high-speed track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
+const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "", "station upgrade", "passage", "route", "bus"];
+const levelWords = (r: BlueprintItem) => `${levelName(r.level).toLowerCase()} (${levelLabel(r.level)})`;
+
+/** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
+function rowName(r: BlueprintItem) {
+  if (r.kind === 5) return plural(r.quantity, "new car");
+  if (r.kind === 10) return distance(r.quantity);
+  if (r.kind === 11) return plural(r.quantity, "new bus", "new buses");
+  if (r.kind === 9) return plural(r.quantity, "passage");
+  if (r.kind === 0) return `${distance(r.quantity)} ${levelWords(r)}`;
+  return `${plural(r.quantity, NOUN[r.kind] || "item")}, ${levelWords(r)}`;
+}
+
+// A display copy of the price list (sim/src/track/params.rs and cost.rs own the real one), so a row's
+// hover can show its price as the sum it is.
+const BASE_M_PER_KM = 90;
+const MULT: Record<Level, number> = { 3: 1.8, 2: 1.3, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.1, [-3]: 1.2 };
+const STATION_M: Record<Level, number> = { 3: 70, 2: 55, 1: 40, 0: 25, [-1]: 75, [-2]: 100, [-3]: 125 };
+const STATION_FIXED_M = 50;
+const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2, BUS_ROUTE_M_PER_KM = 1;
+/** the level a flying junction's flyover sits at (sim `junction_cost`) */
+const awayLevel = (l: Level): Level => (l === 3 ? 2 : l === -3 ? -2 : l >= 0 ? l + 1 : l - 1) as Level;
+const num = (v: number) => String(Number(v.toFixed(2)));
+/** a price in US$M as the Build tab quotes it: "$90M", "$1.5M" */
+const mil = (v: number) => `$${Number(v.toFixed(1))}M`;
+
+/** T-1839: a row's hover is its price worked out: the base price, one line per factor that is not 1,
+ * then the total, as in the trip inspector's "label × weight" lines. */
+function rowTip(r: BlueprintItem) {
+  const level = r.level as Level, n = r.quantity;
+  const factors: [string, string, number][] = []; // [name, shown amount, multiplier]
+  const lenKm = (km: number) => [`${num(km / perDistance(1))} ${unitShort()}`, km / perDistance(1)] as const;
+  let base: string;
+  const water = r.wet ? WATER : 1;
+  const wet = () => { if (r.wet) factors.push(["Over water", "", WATER]); };
+  const lvl = (l: Level) => { if (MULT[l] !== 1) factors.push([levelName(l), "", MULT[l]]); };
+  if (r.kind === 0) {
+    const [shown] = lenKm(n / 1000);
+    base = `Base cost ${mil(perDistance(BASE_M_PER_KM))} per ${distUnit()}`;
+    factors.push(["Length", shown, 1]);
+    lvl(level);
+    if (r.tracks === 1) factors.push(["Single track", "", SINGLE_TRACK]);
+    if (r.tracks === HSR_ROW) factors.push(["High-speed track", "", HSR_TRACK]);
+    wet();
+    if (r.ground > 0) factors.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", "", TERRAIN_FACTORS[r.ground] ?? 1]);
+  } else if (r.kind === 1) {
+    const b = STATION_FIXED_M + STATION_M[level];
+    base = `Base cost ${mil(b)} per station at ${levelName(level).toLowerCase()}`;
+    if (n !== 1) factors.push(["Stations", String(n), 1]);
+    const fixed = n * b * (r.tracks === 1 ? SINGLE_STATION : 1) * water;
+    const p = r.cost / 1e6 / fixed;
+    if (Math.abs(p - 1) > 0.005) factors.push(["Platform length", "", p]);
+    if (r.tracks === 1) factors.push(["Single track", "", SINGLE_STATION]);
+    wet();
+  } else if (r.kind === 2 || r.kind === 3 || r.kind === 4) {
+    const km = r.kind === 2 ? 0.25 : r.kind === 3 ? 0.6 : 0.1;
+    const l = r.kind === 3 ? awayLevel(level) : level;
+    base = `Base cost ${mil(perDistance(BASE_M_PER_KM))} per ${distUnit()}`;
+    factors.push([r.kind === 2 ? "Junction track" : r.kind === 3 ? "Flyover track" : "Crossing track", `${num(n * km / perDistance(1))} ${unitShort()}`, 1]);
+    lvl(l);
+    wet();
+    const product = BASE_M_PER_KM * n * km * MULT[l] * water;
+    if (Math.abs(r.cost / 1e6 / product - 1) > 0.005) factors.push(["Crossover track", "", r.cost / 1e6 / product]);
+  } else if (r.kind === 10) {
+    base = `Base cost ${mil(perDistance(BUS_ROUTE_M_PER_KM))} per ${distUnit()}`;
+    factors.push(["Length", `${num(n / 1000 / perDistance(1))} ${unitShort()}`, 1]);
+  } else {
+    // cars, buses, upgrades and passages: the average price of one, times how many
+    base = `Base cost ${money(r.cost / Math.max(1, n))} per ${NOUN[r.kind] || "item"}`;
+    if (n !== 1) factors.push([plural(n, NOUN[r.kind] || "item").replace(/^\S+ /, "").replace(/^./, (c) => c.toUpperCase()), String(n), 1]);
+  }
+  const lines = [base, ...factors.map(([name, shown, m]) => (shown && m === 1 ? `${name} × ${shown}` : `${name} × ${num(m)}`))];
+  lines.push(`= ${money(r.cost)}`);
+  return lines.join("\n");
 }
 
 /** Build's quote and undo controls. Every item is priced by the clock worker's track model. */
@@ -79,7 +144,7 @@ function OffCost({ items }: { items: BlueprintItem[] }) {
   const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
-  return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
+  return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyCash(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
 }
 
 /** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the
@@ -179,11 +244,8 @@ export function BlueprintBreakdown() {
                 <ul class="rows blueprint-items">
                   {rows.map((r) => (
                     <li>
-                      <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : r.kind === 10 ? "Route" : r.kind === 11 ? "New buses" : r.kind === 6 ? TERRAIN_NAMES[r.level as number] ?? "Rough ground" : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
-                        <span class="small muted">{description(r)}</span>
-                      </span>
-                      <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>
+                      <span class="what" data-tip={rowTip(r)}>{rowName(r)}</span>
+                      <span class="val" data-tip={rowTip(r)}>{money(r.cost)}</span>
                     </li>
                   ))}
                 </ul>

@@ -322,7 +322,7 @@ function StationDetails({ s, lines, props }: {
         </li>
         {s.built && m && (
           <Row label="Upkeep">
-            <span data-tip={`Each built station costs ${money(stationUpkeep(m))} a day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains a day.`}>{money(stationUpkeep(m))} a day</span>
+            <span data-tip={`Each built station costs ${money(stationUpkeep(m))}/day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains per day.`}>{money(stationUpkeep(m))}/day</span>
           </Row>
         )}
       </ul>

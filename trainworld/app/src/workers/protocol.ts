@@ -10,7 +10,7 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
-import type { DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup, DeletedGame } from "./saveFile";
+import type { DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
 
@@ -225,7 +225,7 @@ export type ToClock =
   /** T-1813: the Lines (0) or Stations (1) tab's hand order, ids first first; empty for none */
   | { kind: "listOrder"; list: 0 | 1; ids: number[] }
   /** `restore`: `key` is a backup's (T-744) */
-  | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore" | "undelete"; key?: string; name?: string }
+  | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
    * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
@@ -601,7 +601,7 @@ export type FromClock =
   | { kind: "unsaved"; on: boolean }
   /** `backups`: the active slot's (T-744), newest first; `newer`: a newer build saved the game in
    * hand, which is not written here (T-1826) */
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; /** T-1827 */ deleted: DeletedGame[]; newer?: boolean }
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean }
   | { kind: "error"; message: string }
   /** T-988: the server refused the session's token (the main thread signs out) */
   | { kind: "accountGone" }

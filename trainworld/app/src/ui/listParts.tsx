@@ -29,9 +29,9 @@ export function ScopeToggle({ tip }: { tip?: string }) {
   );
 }
 
-/** T-332: a row's distance from the centre of the screen. */
+/** T-332: a row's distance from the center of the screen. */
 export function Near({ m }: { m: number | undefined }) {
-  return <span class="val muted w-near" data-tip={m !== undefined ? `${shortDistance(m)} from the centre of the screen` : undefined}>{m !== undefined ? shortDistance(m) : ""}</span>;
+  return <span class="val muted w-near" data-tip={m !== undefined ? `${shortDistance(m)} from the center of the screen` : undefined}>{m !== undefined ? shortDistance(m) : ""}</span>;
 }
 
 /** Rows with no distance (a line with no stops) sort last whichever way the column runs. */

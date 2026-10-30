@@ -228,14 +228,14 @@ function Speed() {
   );
 }
 
-/** The world's bar hover: the train trips a day in the cities (T-1440), the share of the world's
+/** The world's bar hover: the train trips/day in the cities (T-1440), the share of the world's
  * fixed trips a day and how that is reached (T-1301), then the cities' own split. */
 function worldShareTip(t: ReturnType<typeof worldTotals>, where: string, note: string): string {
-  const world = `${WORLD_RIDES / 1e9} billion trips a day in the world (${WORLD_PEOPLE / 1e9} billion people, about ${RIDES_PER_PERSON} trips each)`;
+  const world = `${WORLD_RIDES / 1e9} billion trips/day in the world (${WORLD_PEOPLE / 1e9} billion people, about ${RIDES_PER_PERSON} trips each)`;
   if (!t.split || !t.rides) return `Train share of the ${world}${note}`;
   const cities = `${t.cities} ${t.cities === 1 ? "city" : "cities"}`;
   return [
-    `${exact(t.rides.train)} train trips a day in ${cities}${note}`,
+    `${exact(t.rides.train)} train trips/day in ${cities}${note}`,
     `Train ${smallPct(t.split.train)} of the ${world}`,
     splitTip(where.replace(" in the world", ` in the ${cities} with stations`), t.citySplit, t.rides, ""),
   ].join("\n");
@@ -261,7 +261,7 @@ export function TopBar() {
   // T-318: no name over dead space (the focus stays on the last zone, which is not where the view is)
   const city = !far && viewedZone.value ? cityById(activeCity.value) : null;
   // T-172: no figures until the city has opened (the game is playable while it loads)
-  // T-1440: zoomed out, the train trips a day in place of the world's share
+  // T-1440: zoomed out, the train trips/day in place of the world's share
   const pct = (v: number) => (!known ? "–" : far ? `${pointsShort(total?.rides?.train ?? 0)} trips/day` : v.toFixed(1) + "%");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = total ? total.rides : modeRides.value;

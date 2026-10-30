@@ -1,14 +1,14 @@
 // T-1832 (notes/T-1823.md fix 9): what this browser remembers about each game that is kept only here,
-// for the "saved in this browser only" card (game/keepNudge.ts): real play time so far, whether the
-// player closed the card, whether the game was ever downloaded. Per slot, in localStorage; nothing
+// for the "saved only in this browser" dot (game/keepNudge.ts): real play time so far, whether the
+// game was ever downloaded. Per slot, in localStorage; nothing
 // goes in the save file. A leaf module, so workers/clockClient.ts can mark a download without a cycle.
 
 import { signal } from "@preact/signals";
 
-export interface KeepEntry { ms: number; closed?: true; downloaded?: true }
+export interface KeepEntry { ms: number; downloaded?: true }
 const KEY = "anitabuilder-keep";
 
-/** what this page last wrote, for when storage is unavailable (the card then works for this page only) */
+/** what this page last wrote, for when storage is unavailable (the dot then works for this page only) */
 let memory: Record<string, KeepEntry> = {};
 
 export function readKeep(): Record<string, KeepEntry> {
@@ -34,7 +34,7 @@ export function updateKeep(slot: string, f: (e: KeepEntry) => void) {
 /** the playing game's entry, null when it has no stored slot */
 export const keepEntry = signal<{ slot: string; e: KeepEntry } | null>(null);
 
-/** A game was downloaded as a file: the card has nothing more to say about it. */
+/** A game was downloaded as a file: the dot has nothing more to say about it. */
 export function markDownloaded(slot: string | undefined) {
   if (!slot) return;
   updateKeep(slot, (e) => { e.downloaded = true; });

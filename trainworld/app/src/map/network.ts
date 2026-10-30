@@ -123,6 +123,8 @@ export interface NetworkBuffers {
   /** per sample of `samples` (T-1799): its line's band's shift there, line widths left of run 0's
    * direction (`lineBands`); absent: 0 */
   sampleBand?: Float32Array;
+  /** the edges that run side by side as one ribbon (T-1799 stage 3): `CORRIDOR_STRIDE` numbers each (`LineBands.corridor`) */
+  corridor?: Float32Array;
   /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`) */
   turnbacks?: Strokes;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
@@ -1113,6 +1115,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     sampleStroke,
     sampleLane,
     sampleBand,
+    corridor: bands.corridor,
     sampleStretch,
     turnbacks,
     edgePts,

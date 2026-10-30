@@ -94,8 +94,8 @@ export function TrackInspector({ edge }: { edge: number }) {
         <Row label="Cost to construct">{money(cost)}</Row>
         {!e.crossover && m && (
           <Row label="Upkeep">
-            <span data-tip={`${upkeepText(m, e.built ? "Upkeep" : "Once constructed, upkeep")} The lines here share it by their trains a day.`}>
-              {money(edgeUpkeep({ ...e, built: true }, m))} a day
+            <span data-tip={`${upkeepText(m, e.built ? "Upkeep" : "Once constructed, upkeep")} The lines here share it by their trains per day.`}>
+              {money(edgeUpkeep({ ...e, built: true }, m))}/day
             </span>
           </Row>
         )}

@@ -15,6 +15,10 @@
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
 :root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --good: #3f8a3a; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
 :root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; --good: #7cc576; }
+/* T-1835: every hotkey hint (key letters on buttons, bracketed keys in hovers, the Help panel's keys) is one peach */
+:root { --key: #c8664c; }
+:root[data-shade="dark"] { --key: #f0a58a; }
+.key, .key.muted, .tip-key, .help-panel dt { color: var(--key); }
 /* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
 :root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
 :root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }
@@ -732,10 +736,11 @@ rect.now { fill-opacity: .45; }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn, .demand-selector .hint-cell + .btn { margin-left: -1px; }
 /* T-1137: a hint of what each row is for, an icon cell before its buttons: a selected demand bubble
-   (the default ramp's middle purple, the map ink's 2 px outline) and the track */
+   (the default ramp's middle purple, lightened) and the track */
 .demand-selector .hint-cell { flex: none; display: grid; place-items: center; width: 28px; height: 28px;
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
-.hint-cell .bubble { fill: color-mix(in oklab, #ff4d4d, #4d4dff); stroke: var(--map-ink); stroke-width: 2; }
+/* T-1835: no outline, a lighter purple */
+.hint-cell .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
 /* T-1448: the icon cell is a button folding its row down to it */
 .demand-selector button.hint-cell { padding: 0; font: inherit; cursor: pointer; }
 .demand-selector button.hint-cell:hover { background: var(--shade); }
@@ -882,6 +887,8 @@ button.save-add:hover { color: var(--text); }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 114px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
 .build-track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
+/* T-1837: the three toggles after the track type share one line, wrapping together */
+.build-toggles { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums;
           background: color-mix(in srgb, var(--lc) 30%, var(--bg)); border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); }
@@ -1250,10 +1257,6 @@ button.save-add:hover { color: var(--text); }
 /* T-744, T-1395: the playing slot's earlier versions, under its card */
 .save-backups { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
-/* T-1827: recently deleted games, under the cards, folded until opened */
-.save-deleted { margin: 4px 0 0; }
-.save-deleted .save-backups { margin-top: 6px; }
-.save-deleted .save-backup { padding: 4px 8px; border: 1px solid var(--rule); }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }
@@ -1321,13 +1324,14 @@ button.save-add:hover { color: var(--text); }
 .search-mark { width: 10px; height: 10px; margin: 0 3px; flex: none; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .search-mark.city { border-radius: 0; background: var(--muted); border-color: var(--muted); }
 .search-mark.place { background: none; border-color: var(--muted); }
-/* T-1822: the Getting started card, a flat post-it turned 2 degrees under the search button. Under the
-   search results (z-index 4) when they open. */
+/* T-1822: the tutorial card, a flat post-it under the search button. Under the search results (z-index 4)
+   when they open. */
 .guide { position: absolute; right: 10px; top: 46px; z-index: 3; width: 240px; max-width: calc(100% - 20px);
   padding: 8px 10px 10px; background: color-mix(in srgb, var(--yellow) 24%, var(--bg)); color: var(--text);
-  transform: rotate(-2deg); transform-origin: 100% 0; zoom: var(--ui, 1); }
+  zoom: var(--ui, 1); }
 :root[data-shade="dark"] .guide { background: color-mix(in srgb, var(--yellow) 14%, var(--bg)); }
-.choosing .guide { visibility: hidden; }.guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.choosing .guide { visibility: hidden; }
+.guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .guide-title { padding: 0; border: 0; background: none; font-size: 14px; font-weight: 700; text-align: left; cursor: default; }
 .guide-x { width: 22px; min-width: 22px; height: 22px; margin: -2px -4px 0 0; border-color: transparent; background: none; }
 .guide-x:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
@@ -1338,24 +1342,22 @@ button.save-add:hover { color: var(--text); }
 .guide-box { width: 12px; height: 12px; margin-top: 1px; border: 1px solid currentColor; }
 .guide-box svg { width: 10px; height: 10px; margin: -0.5px; stroke-width: 2.2; }
 .guide-count { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.guide-end { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
+.guide-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; font-size: 12px; }
 .guide-end .btn { height: 24px; background: none; border-color: currentColor; }
 .guide-end .btn:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
-/* T-1832: the "Saved in this browser only" card, the Getting started card's post-it where that card is
-   not showing; a little warmer in light and dark */
-.keep-card { position: absolute; right: 10px; top: 46px; z-index: 3; width: 240px; max-width: calc(100% - 20px);
-  padding: 8px 10px 10px; background: color-mix(in srgb, var(--yellow) 24%, var(--bg)); color: var(--text);
-  transform: rotate(-2deg); transform-origin: 100% 0; zoom: var(--ui, 1); font-size: 12px; line-height: 1.35; }
-:root[data-shade="dark"] .keep-card { background: color-mix(in srgb, var(--yellow) 14%, var(--bg)); }
-.choosing .keep-card { visibility: hidden; }
-.keep-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
-.keep-x { width: 22px; min-width: 22px; height: 22px; margin: -2px -4px 0 0; border-color: transparent; background: none; }
-.keep-x:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
-.keep-x svg { width: 12px; height: 12px; }
-.keep-card p { margin: 6px 0 0; }
-.keep-buttons { display: flex; gap: 6px; margin-top: 8px; }
-.keep-buttons .btn { height: 24px; background: none; border-color: currentColor; }
-.keep-buttons .btn:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+/* T-1832: the "Saved only in this browser" dot, 10 px yellow in a 20 px hit area just left of the search
+   glass (28 px at right 10, top 10); hidden while the search box is open over its place. In the middle
+   width the glass sits at the left edge, so the dot goes to its right. */
+.keep-dot { position: absolute; right: 42px; top: 14px; z-index: 3; width: 20px; height: 20px; padding: 0; border: 0;
+  background: none; cursor: pointer; zoom: var(--ui, 1); }
+.keep-dot::before { content: ""; position: absolute; left: 5px; top: 5px; width: 10px; height: 10px; border-radius: 50%;
+  background: #f2c200; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent); }
+.keep-dot:hover::before { box-shadow: 0 0 0 2px color-mix(in srgb, var(--text) 55%, transparent); }
+:is(#map, .maplibregl-map):has(.map-search:not(.closed)) .keep-dot { display: none; }
+.choosing .keep-dot { visibility: hidden; }
+@container map-column (min-width: 521px) and (max-width: 680px) {
+  .keep-dot { left: 44px; right: auto; top: 84px; }
+}
 /* a phone held upright (T-951): the heading and the step in hand, all six after a tap on the heading */
 @media (max-width: 600px) and (min-height: 560px) {
   .guide { width: 184px; }
@@ -1454,7 +1456,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-card, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

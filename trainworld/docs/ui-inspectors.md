@@ -147,8 +147,9 @@ purpose filter the purpose drawn is ringed in the bar.
   stays). Its colour is the one most of the group's lines share, the busiest line's (riders in the
   past 24 hours, then the oldest) breaking a tie; drawn, it is kept legible on the page (T-1817,
   `legibleOn`): a colour lighter than 0.45 relative luminance is mixed toward black on the light
-  shade until it reaches it, one darker than 0.14 toward white on the dark. The text's ink box is
-  centred in the pill as a line bullet's symbol is (`inkShift`, ui/bullet.ts). Both can be set by hand in the group view's
+  shade until it reaches it, one darker than 0.14 toward white on the dark. The text's capital height (its ink box in other scripts)
+  is centred in the pill, the baseline placed from a measure of the rendered pill because the zoomed dock rounds the
+  line box (`inkBox` in ui/bullet.ts, `GroupPill`) [T-1835]. Both can be set by hand in the group view's
   title; set ones are kept on every line of the group, so they join, copy and undo with it, and a
   line leaving loses them. It is the group's mark in the Lines tab's group row, the line panel's
   group row and the group view's title.

@@ -27,7 +27,7 @@ export const AVERAGE_DAY = 6;
 /** How a figure for the day shown ends: "12,400 trip legs per day". The Day choice names the day. */
 export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per holiday day", "per going-out day", "per coming-back day", "per day"] as const;
 /** "points on a weekday": the same, as the points hovers end */
-export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "on a going-out day", "on a coming-back day", "a day"] as const;
+export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "on a going-out day", "on a coming-back day", "per day"] as const;
 /** The ordinary kind a superholiday's day stands in for while none is near (T-1373): a day away and a
  * coming-back day a Sunday, a going-out day a weekday. */
 export const PLAIN_KIND: DayKind[] = [0, 1, 2, 2, 0, 2];

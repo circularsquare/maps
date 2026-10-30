@@ -16,6 +16,20 @@ import { hoverHeld, isModifierKey } from "./blurHold";
 const BULLET = /\u0002([^|\u0003]*)\|([^\u0003]*)\u0003/;
 export const tipBullet = (letter: string, colour: string) => `\u0002${letter.replace(/[\u0002\u0003|]/g, "")}|${colour}\u0003`;
 
+/** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
+ * "Keep placing (Caps Lock)", is lettered in the one hotkey colour (`--key`). */
+const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
+function appendWithKeys(d: HTMLElement, text: string) {
+  const parts = text.split(KEY_HINT);
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) { if (parts[i]) d.append(parts[i]); continue; }
+    const k = document.createElement("span");
+    k.className = "tip-key";
+    k.textContent = parts[i];
+    d.append("(", k, ")");
+  }
+}
+
 export function startTips() {
   const tag = document.createElement("div");
   tag.className = "tool-tag ui-tag";
@@ -57,7 +71,7 @@ export function startTips() {
         const d = document.createElement("div");
         const parts = line.split(BULLET);
         for (let i = 0; i < parts.length; i += 3) {
-          if (parts[i]) d.append(parts[i]);
+          if (parts[i]) appendWithKeys(d, parts[i]);
           if (i + 2 >= parts.length) break;
           const s = document.createElement("span");
           s.className = "chip sm tip-chip";

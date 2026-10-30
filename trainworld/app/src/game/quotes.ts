@@ -32,7 +32,7 @@ export function blueprintQuote(v: number, now = false): Promise<BlueprintItem[] 
       v,
       p: (now ? ask() : settled(v, ask)).then((d) => d && Array.from({ length: d.length / 7 }, (_, i) => {
         const r = d.subarray(i * 7, i * 7 + 7);
-        return { kind: r[0], level: r[1] as BlueprintItem["level"], tracks: r[2], wet: !!r[3], ramp: !!r[4], quantity: r[5], cost: r[6] * 1e6 };
+        return { kind: r[0], level: r[1] as BlueprintItem["level"], tracks: r[2], wet: !!r[3], ground: r[4], quantity: r[5], cost: r[6] * 1e6 };
       })),
     };
   }
