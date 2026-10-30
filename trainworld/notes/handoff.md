@@ -26,12 +26,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## In flight (overnight 2026-10-30; core cap raised to 15, lower to 12 when Anita is back)
 - T-925 licence rebuild of 9 EU zones on geoBoundaries (agent t925, Opus, detached run; notes/T-924.md has batch/log/restart).
   Nothing else writes data/packs meanwhile.
-- T-1407 + T-1780 + T-1788 + T-1794 + setTrainCount lag after edits (agent t1407, Opus, tree .tw-trees/t1407, Vite 6183):
-  land with agent-tree.mjs land, then remove the tree; rebuild main-tree WASM if sim changed.
-- T-751 + T-1844 expand platforms under a refused train length, shake + refusal sound on silent refusals (agent t751,
-  Sonnet, main tree, Vite 6193).
-- Doc tidy (agent tidy1030, Sonnet): stale TASKS lines, closes T-1822/T-676/T-264/T-1831 (Anita), "Where things stand",
-  ui-panels tutorial words.
+- T-1407/T-1780/T-1788 landed 4f316064 (tree removed; typecheck + smoke on master pass). Next ghost after an edit 9-16 ms
+  (was 65-237); train count ~50 ms from 150 ms on. Left: T-1794 settle (proposal in notes/T-1407.md "Left"). Anita to look
+  at the stand-in ghost drawn for a frame or two after a click.
+- T-751 + T-1844 committed c1de8f66; doc tidy committed 4cb42430. 8800 NOT rebuilt yet: the snapshot build copies packs,
+  so wait until t925's run stops writing data/packs, then rebuild at master and smoke both shades.
 - Anita 2026-10-30: Vietnam is already built (my overview was wrong); Southeast Asia next = Cambodia, Malaysia.
   T-1840 text review in the morning with her.
 - T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
