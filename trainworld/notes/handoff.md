@@ -19,7 +19,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
 - Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1852.
+- Next free task id: T-1856.
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
@@ -31,6 +31,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - T-1851 applying Anita's 66 answers (notes/T-1840-answers.md, verbatim) incl. tag/cap, red negatives, slider %, icons,
   a feature disabled (44), a button removed (62) (agent t1851, Sonnet, Vite 6193). Then: propose codified text rules
   (drafted in my reply 2026-10-30; she decides where they go).
+- Anita's TODO batch 2026-10-30 saved verbatim in notes/todo-2026-10-30.md: T-1855 line groups lost on her Japan save
+  (agent t1855, Opus, Vite 6189); T-1854 terrain resolution/hex cells written answer (agent t1854, Sonnet); T-1852 small UI
+  items and T-1853 top bar (Opus for layout) start after T-1851 lands (same ui files).
 - T-1840 text review doc ready (notes/T-1840-text-review.md, 66 items, committed); waiting on Anita's answers, then an agent
   applies them by [file:line]. Possible factual bugs inside: items 64 (Ctrl+F vs Ctrl K), 65 (stale "single or double"), 28.
   The sweep skipped short labels and helper-built hovers (SkyBanner periodTip, map/ hover builders): second pass if wanted.
