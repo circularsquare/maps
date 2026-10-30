@@ -9,8 +9,12 @@ export const TERRAIN_FACTORS = [1, 1.25, 1.6, 2.5] as const;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 
 /** A zone's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world
- * lattice of `perDeg` cells a degree, row-major from the south-west cell at `col0`, `row0`. */
+ * lattice of `perDeg` cells a degree, row-major from the south-west cell at `col0`, `row0`, two bits a
+ * cell, the first in the low bits (`classAt`). */
 export interface ClassGrid { perDeg: number; col0: number; row0: number; w: number; h: number; cls: Uint8Array }
+
+/** The class of cell `i` (row-major) of a grid. */
+export const classAt = (g: ClassGrid, i: number) => (g.cls[i >> 2] >> ((i & 3) << 1)) & 3;
 
 /** The grids the clock worker has put in the track model, by zone (its "terrain" message), so the
  * map's tint shows what the price reads. Kept across games: the lattice is the world's. */
@@ -34,8 +38,8 @@ export function decodeClassGrid(b: Uint8Array): ClassGrid | null {
   const w = v.getUint32(4, true), h = v.getUint32(8, true);
   const col0 = v.getInt32(12, true), row0 = v.getInt32(16, true), perDeg = v.getUint32(20, true);
   const n = w * h;
-  if (perDeg <= 0 || n === 0 || n > 64 << 20) return null;
-  const cls = new Uint8Array(n);
+  if (perDeg <= 0 || n === 0 || n > 256 << 20) return null;
+  const cls = new Uint8Array((n + 3) >> 2);
   let i = 24, k = 0;
   while (i < b.length && k < n) {
     const c = Math.min(3, b[i++]);
@@ -49,7 +53,14 @@ export function decodeClassGrid(b: Uint8Array): ClassGrid | null {
       if (shift > 35) return null;
     }
     const end = Math.min(n, k + run);
-    if (c) cls.fill(c, k, end);
+    if (c) {
+      // whole bytes of a run at once: a big zone is tens of millions of cells
+      let j = k;
+      const whole = end & ~3;
+      for (; j < end && j & 3; j++) cls[j >> 2] |= c << ((j & 3) << 1);
+      if (j < whole) cls.fill(c * 0x55, j >> 2, whole >> 2), j = whole;
+      for (; j < end; j++) cls[j >> 2] |= c << ((j & 3) << 1);
+    }
     k = end;
   }
   return k === n ? { perDeg, col0, row0, w, h, cls } : null;

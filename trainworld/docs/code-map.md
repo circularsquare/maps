@@ -349,7 +349,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
   `t1177-cross-everyday.mjs` (Node, the real demand worker: Boston and Providence with made-up everyday pairs across their zone line written into Boston's market pack in memory (`t1177-data.mjs`), and a line joining the zones; the per-purpose parts, nothing counted twice, loads under their own purposes, a selection's blocks by purpose and far zone with a Saturday's own factors, the trip explorer's legs, rail and walking, and the weekend scaling (`workers/marketParts.ts`); `IDS=gua,fos` runs the market-pack checks on registered neighbours whose packs carry the pairs; about 40 s) and `old/t1177-cross-everyday-page.mjs` (the same pairs in a new game on `BASE` through a Playwright route: the page's selection, explorer figures and panel with its walking row, the walking column, the far-end labels under each purpose filter, and the days; about 3 minutes; screenshots in `artifacts/trainworld/t1177/`),
-  `t1270-terrain.mjs` (a new game: track on flat ground in Brooklyn at 45 US$M a km, on mountain ground above Innsbruck at 112.5 and a bored tunnel there at 99, spots found in the zones' terrain files; Construct charges the quote; the hillshade in both themes and the track tool's terrain chip, screenshots in `artifacts/trainworld/t1270/`; about a minute, port 6184 by default),
+  `t1854-valley.mjs <label> [url] [spots]` (the terrain tint over Wuppertal, Innsbruck and the centres of Tokyo, Nagoya and Shanghai, screenshots to `artifacts/trainworld/t1854/`), `t1270-terrain.mjs` (a new game: track on flat ground in Brooklyn at 45 US$M a km, on mountain ground above Innsbruck at 112.5 and a bored tunnel there at 99, spots found in the zones' terrain files; Construct charges the quote; the hillshade in both themes and the track tool's terrain chip, screenshots in `artifacts/trainworld/t1270/`; about a minute, port 6184 by default),
   `old/t1161-copy-delete.mjs` (a new game: a copied line starts with no trains, removing the piece past a station or between two keeps each station in place with track to its platform's end, and auto elevation draws on from +2 track at +2 by real clicks; about a minute, port 6125 by default),
   `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `old/t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
@@ -630,11 +630,17 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   outing rates by purpose, T-509 stage 4; table `SURVEYS`, worldwide median otherwise; the
   distance scales are the sim's one worldwide set, `everyday::DECAY`, T-637) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
   header. `show` prints the table.
-- `zone_terrain.py` (T-1270): each registered zone's terrain classes from GEDTM30 at 240 m (the
-  10 GB GeoTIFF in `data/raw/gedtm30/`, read by tiles), written to `data/terrain/<id>.terrain`
-  (never `data/packs`, so joins do not see them); `build [ids]` skips files already made, `probe
-  lon lat km` prints slopes and class shares round a point. About 33 minutes for every zone; a tile
-  the local file lacks (a download under way) comes from Zenodo by a range request.
+- `terrain_fine.py` (T-1854): the fine terrain intermediate, built once on AWS (`--kind terrain`):
+  per one-degree block, the mean slope of GEDTM30's 30 m pixels per 1/960 degree cell and the mean
+  elevation per 1/240 cell, read by HTTP range from OpenGeoHub's 432 GB file, only the tiles under the
+  zone boxes, the plan's unbuilt metros and `NEXT_BOXES` (format in its docstring). Kept at home as
+  `data/work/terrain-fine/part*.tar` and `manifest.json` (3.1 GB, never unpacked); `blocks`,
+  `run`, `check` (a block against rasterio's read).
+- `zone_terrain.py` (T-1270, T-1854): each registered zone's terrain classes from that intermediate
+  (thresholds, filter and cap in its docstring), written gzip to `data/terrain/<id>.terrain` (never
+  `data/packs`, so joins do not see them); `build [ids] [--force] [--jobs n]` skips files already made
+  (about 25 minutes on one core for every zone), `mix` the class shares over the files, `probe lon
+  lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py`.
 - `world_water.py` (T-1285): the world's coarse water mask, `data/terrain/world.water` (served and
   published as `packs/world.water`), from the OSM coastline polygons and Natural Earth's 1:10m lakes
   at 1/60 degree; `build` takes about 6 minutes on one core. The sim reads it as `cost::WorldWater`
@@ -698,12 +704,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   ends with `freeze.py`.
 - `tools/aws/` (T-1064, rules and flow in docs/aws.md): long builds on a rented spot machine in a
   friend's AWS account. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
-  `userdata/<kind>.sh`), `bucket.py` (our bucket only), `status.py` (what of ours exists; `cost
+  `userdata/<kind>.sh`; `--az` when the cheapest zone has no spot capacity), `bucket.py` (our bucket
+  only; `get` fetches objects over 100 MB with curl from a presigned URL, resuming), `status.py` (what of ours exists; `cost
   <run>`), `teardown.py` (terminate and sweep by our tags, then list), `guard.py` (a PreToolUse hook
   refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks. A wave (T-1065):
   `bundle.py` (the code tar), `userdata/wave.sh` (check row, go, `world_run.py run --build-only` by
   runner region) with `wavepack.py` (a region's result tar on the machine), `land.py` (results into
-  data/ under the plan lock, rows "built").
+  data/ under the plan lock, rows "built"). The fine terrain (T-1854): `userdata/terrain.sh` runs
+  `pipeline/terrain_fine.py run` over a block list and puts its part tars as they fill.
 - `freeze.py [--label L] | list | check [stamp] | build [stamp] [--tree] [--out]` (T-928): the data a
   production build copies, frozen in `data/frozen/<stamp>/` as hard links to data/packs plus copies
   of the four game data files, with a size and time manifest; `build` makes a publishable build of a

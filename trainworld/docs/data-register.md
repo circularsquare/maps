@@ -294,6 +294,7 @@ adding-a-city.md 1). Downloads in `data/raw/worldplan/`, fetched when missing.
 | Time zones | U timezonefinder 6.6 (offline, timezone-boundary-builder) | MIT; data ODbL |
 | Outline of a planned city | U OSM `boundary=administrative` relations from the row's Geofabrik extracts, matched to the plan's units (`osm_units.py`, T-537) | ODbL |
 | Informal work (jobs blend) | U ILO modelled vulnerable employment, World Bank SL.EMP.VULN.ZS (T-537); - informal employment SL.ISV.IFRM.ZS, archived by the World Bank | CC BY 4.0 |
+| Terrain classes (track prices) | U GEDTM30 v1.2 at 30 m (OpenGeoHub, `s3.opengeohub.org/global/dtm/v1.2/`), read once on AWS into `data/work/terrain-fine/` (`terrain_fine.py`, T-1854); bare earth, but towers and raised roads remain (capped, track-and-service.md 6.4); the 240 m file for `market_drives.py` | CC BY 4.0; the class files ship outside the ODbL packs |
 | Water between zones | U the world's coarse water mask (`pipeline/world_water.py`, T-1285): OSM coastline water polygons (osmdata.openstreetmap.de, the same file as the packs' sea) and Natural Earth 1:10m lakes, at 1/60 degree | ODbL (OSM); Natural Earth public domain |
 
 ## Archetypes

@@ -8,7 +8,7 @@ import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { computed, effect } from "@preact/signals";
 import { display, isBuildTool, shade, tool } from "../game/ui";
-import { terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
+import { classAt, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 
@@ -106,7 +106,7 @@ export function startTerrainTint(map: MlMap): () => void {
         for (const { g, cols: cc, base } of rows) {
           const c = cc[x];
           if (c < 0) continue;
-          const k = g.cls[base + c];
+          const k = classAt(g, base + c);
           if (k) {
             const i = (y * W + x) * 4;
             px[i] = wash.rgb[0], px[i + 1] = wash.rgb[1], px[i + 2] = wash.rgb[2], px[i + 3] = Math.round(wash.alpha[k] * 255);

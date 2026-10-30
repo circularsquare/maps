@@ -7,6 +7,8 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 
 ## 2026-10-30
 
+- Terrain classes at 115 m from GEDTM30's 30 m bare earth, recalibrated to the old mix (T-1854; notes/T-1854.md 6-7): rolling from a mean 30 m slope of 2.5 degrees, hilly 5.5, mountain 11 (were 2 / 5 / 10 on 240 m slopes), then a 3 x 3 majority at 115 m (drops one-cell specks, keeps a 230 m valley floor; the old 3 x 3 at 460 m erased 1.4 km), then capped at the class of the ground round it (slope between 1/240 degree mean elevations, 1.25 / 2.5 / 5 degrees). World mix by area on the zones that had classes: flat / rolling / hilly / mountain 58.9 / 16.2 / 10.8 / 14.1% before, 59.8 / 14.3 / 10.7 / 15.1% after. The cap exists because 30 m bare earth keeps towers and raised roads (central Tokyo came out 47% hills without it); its lie: a narrow steep feature in gentle ground is priced at the gentle ground's class.
+- What the AWS run kept is a compact intermediate, not the DEM (T-1854, Anita: "don't have to redownload"): mean slope per 1/960 degree cell and mean elevation per 1/240 cell, 3.1 GB for 7,484 one-degree blocks, covering the registry, the plan's unbuilt metros and Australia, Korea, Turkey, Vietnam, Mexico and southern Canada; slope maximum and relief planes were dropped since they doubled the size on a disk with 16 GB free.
 - **Australia's plan set by hand where the rule cut cities** (T-1857): Adelaide one zone of 1.47M over the 1.5M-cap split
   (Salisbury and Onkaparinga), its rural north a Port Pirie zone; Sydney takes Central Coast, Campbelltown, Camden and
   Wollondilly (Greater Sydney; GHS-FUA gave Campbelltown its own area); Whyalla (24,000 alone) and geoBoundaries'

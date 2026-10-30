@@ -553,8 +553,8 @@ is known without its files (T-302, T-400):
   it is. It decides wherever no installed pack mask covers the point (inside a pack's raster the pack
   decides, land or water). Fetched once at start; previews, edits and loads wait for it as for a
   zone's mask. Without it (a 404) the sea outside the zones is land.
-- **Terrain classes** (clock worker, T-1270): a zone's `packs/terrain/<id>.terrain` (published with the packs, a
-  median of 13 KB, at most 1.9 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
+- **Terrain classes** (clock worker, T-1270, T-1854): a zone's `packs/terrain/<id>.terrain` (published with the
+  packs, gzip, unzipped by the worker; a median of 43 KB, at most 5.3 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
   Construct: track priced before it lands is priced again when it does (track-and-service.md 6.4).
   A zone without a file (a 404) prices its track on flat ground.
 - **Street speeds** (clock worker, T-1577): for a bus's speed, a zone's own pack is asked for ranges of its `.bin`

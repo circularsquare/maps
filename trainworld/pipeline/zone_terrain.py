@@ -1,35 +1,39 @@
-"""T-1270: each zone's terrain classes, the ground factor on track prices (docs/track-and-service.md 6.4).
+"""T-1270, T-1854: each zone's terrain classes, the ground factor on track prices (docs/track-and-service.md 6.4).
 
-Source: GEDTM30 at 240 m (OpenGeoHub, v1.2, CC BY 4.0, Zenodo record 18887460), a bare-earth terrain
-model, so city towers do not read as hills. One 10 GB cloud-optimised GeoTIFF in EPSG:4326, 1/450
-degree pixels, float32 metres, read here tile by tile. Download it to `data/raw/gedtm30/`:
+Source: the fine terrain intermediate (`terrain_fine.py`, `data/work/terrain-fine/`): the mean slope of
+GEDTM30's 30 m bare-earth pixels over each cell of the world lattice of PER_DEG cells a degree (about
+115 m north-south). Per zone box (registry.json, widened by PAD_DEG): a class by THRESH_Q (0 flat,
+1 rolling, 2 hilly, 3 mountain; no data counts flat), then a 3 x 3 majority filter (ties keep the
+cell's own class), which drops single-cell specks of the 30 m noise so a route's price does not flicker
+cell to cell but keeps a valley floor two cells (about 230 m) wide, then capped by the coarse ground
+round it (COARSE_THRESH_DEG, against towers and raised roads). THRESH_Q was set so the world's mix
+of classes over the zones stayed what the 460 m classes had (notes/T-1854.md). Every zone's grid sits
+on the one lattice, so where boxes overlap the grids agree.
 
-    curl -L -o data/raw/gedtm30/gedtm_rf_m_240m_v1.2.tif https://zenodo.org/api/records/18887460/files/gedtm_rf_m_240m_s_20060101_20151231_go_epsg.4326.3855_v1.2.tif/content
-
-Per zone box (registry.json, widened by PAD_DEG): slope in degrees at each source pixel (central
-differences in metres at the pixel's latitude), the mean slope over each cell of a world lattice of
-PER_DEG cells a degree (about 460 m north-south), a class by THRESH_DEG (0 flat, 1 rolling, 2 hilly,
-3 mountain), then a 3 x 3 majority filter so the classes come in patches and a route's price does not
-flicker. Every zone's grid sits on the one lattice, so where boxes overlap the grids agree.
-
-Out: `data/terrain/<id>.terrain`, the format `sim/src/track/cost.rs` `ClassGrid::decode` reads: `TWT1`,
-u32 w, h, i32 col0, row0 (lattice cell of the south-west corner from 180 W, 90 S), u32 PER_DEG, then
-(class u8, run length LEB128) runs over the grid row-major from the south.
+Out: `data/terrain/<id>.terrain`, gzip of the format `sim/src/track/cost.rs` `ClassGrid::decode` reads:
+`TWT1`, u32 w, h, i32 col0, row0 (lattice cell of the south-west corner from 180 W, 90 S), u32 PER_DEG,
+then (class u8, run length LEB128) runs over the grid row-major from the south. The clock worker unzips.
 
     zone_terrain.py build [id ...]        every registry zone, or those named; skips files already made
-    zone_terrain.py build --force [id ...]
-    zone_terrain.py probe lon lat [km]    mean slope and class shares round a point (calibration)
+    zone_terrain.py build --force [id ...] [--jobs n] [--out dir]   (--out: somewhere else than data/terrain)
+    zone_terrain.py mix [dir]             the class shares over every zone file (calibration)
+    zone_terrain.py calibrate [every]     a first guess at THRESH_Q for TARGET_MIX (the filter and cap move it)
+    zone_terrain.py probe lon lat [km]    mean slope and class shares round a point
+
+`Dem` reads GEDTM30 at 240 m (data/raw/gedtm30/, see T-1270.md) for market_drives.py.
 """
 import os
 
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
+import gzip
 import json
 import logging
 import math
 import struct
 import subprocess
 import sys
+import tarfile
 import time
 from collections import OrderedDict
 from pathlib import Path
@@ -42,11 +46,23 @@ HERE = Path(__file__).resolve().parent
 TW = HERE.parent
 SRC = TW / "data" / "raw" / "gedtm30" / "gedtm_rf_m_240m_v1.2.tif"
 SRC_URL = "https://zenodo.org/api/records/18887460/files/gedtm_rf_m_240m_s_20060101_20151231_go_epsg.4326.3855_v1.2.tif/content"
+FINE = TW / "data" / "work" / "terrain-fine"
 OUT = TW / "data" / "terrain"
 REGISTRY = TW / "app" / "src" / "game" / "registry.json"
 
-PER_DEG = 240
-THRESH_DEG = (2.0, 5.0, 10.0)
+PER_DEG = 960
+# class bounds on the fine cells' mean 30 m slope, in quarter degrees (the intermediate's unit):
+# rolling from 2.5 degrees, hilly from 5.5, mountain from 11 (notes/T-1854.md)
+THRESH_Q = (10, 22, 44)
+# the shares of flat, rolling, hilly and mountain ground (by area) with the 460 m classes (T-1270), over
+# the 1,243 zones that had them and are zones still, which the thresholds keep (Anita, 2026-10-30)
+TARGET_MIX = (0.5888, 0.1617, 0.1081, 0.1414)
+# a fine cell's class is at most the class of the ground round it at 1/240 degree (the slope between
+# neighbouring mean elevations, about 920 m apart, by COARSE_THRESH_DEG): 30 m bare earth still carries
+# towers and raised roads, which read as hills in dense centres (uncapped, 47% of central Tokyo was
+# rolling or hilly); set as low as keeps Tokyo, Nagoya and Shanghai's centres flat (notes/T-1854.md)
+COARSE_PER_DEG = 240
+COARSE_THRESH_DEG = (1.25, 2.5, 5.0)
 PAD_DEG = 0.03
 M_PER_DEG_LAT = 110_574.0
 M_PER_DEG_LON = 111_320.0
@@ -56,7 +72,7 @@ logging.getLogger("tifffile").setLevel(logging.ERROR)
 
 
 class Dem:
-    """The source raster's full-resolution level, read by tiles with a small cache."""
+    """The 240 m source raster's full-resolution level, read by tiles with a small cache."""
 
     def __init__(self, path: Path):
         self.tif = tifffile.TiffFile(str(path))
@@ -113,6 +129,80 @@ class Dem:
         return out
 
 
+class Fine:
+    """The intermediate's mean-slope planes, by one-degree block, read from its part tars."""
+
+    def __init__(self, root: Path = FINE, cache: int = 300):
+        from terrain_fine import decode_block
+        self.decode = decode_block
+        self.index = {}
+        for p in sorted(root.glob("part*.tar")):
+            with tarfile.open(p) as tf:
+                for m in tf.getmembers():
+                    self.index[m.name] = (p, m.offset_data, m.size)
+        if not self.index:
+            raise SystemExit(f"no part*.tar in {root}: the intermediate is missing (terrain_fine.py)")
+        self.cache: "OrderedDict[tuple[int, int], np.ndarray | None]" = OrderedDict()
+        self.size = cache
+
+    def block(self, la: int, lo: int):
+        key = (la, lo)
+        if key in self.cache:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        hit = self.index.get(f"{la}_{lo}.twf")
+        plane = None
+        if hit:
+            p, off, n = hit
+            with open(p, "rb") as f:
+                f.seek(off)
+                plane = self.decode(f.read(n))[2]
+        self.cache[key] = plane
+        if len(self.cache) > self.size:
+            self.cache.popitem(last=False)
+        return plane
+
+    def slopes(self, c0: int, r0: int, cw: int, ch: int) -> np.ndarray:
+        """Mean slope in quarter degrees (255 no data) over lattice cells c0.., r0.. (rows from the south)."""
+        return self._plane(0, PER_DEG, 255, np.uint8, c0, r0, cw, ch)
+
+    def elev(self, c0: int, r0: int, cw: int, ch: int) -> np.ndarray:
+        """Mean elevation in metres (-32768 no data) over cells of the 1/240 degree lattice."""
+        return self._plane(1, COARSE_PER_DEG, -32768, np.int16, c0, r0, cw, ch)
+
+    def _plane(self, k, per, fill, dtype, c0, r0, cw, ch):
+        out = np.full((ch, cw), fill, dtype=dtype)
+        for la in range(math.floor(r0 / per) - 90, math.floor((r0 + ch - 1) / per) - 90 + 1):
+            for lo in range(math.floor(c0 / per) - 180, math.floor((c0 + cw - 1) / per) - 180 + 1):
+                b = self.block(la, lo)
+                if b is None:
+                    continue
+                b = b[k]
+                br, bc = (la + 90) * per, (lo + 180) * per
+                a0, a1 = max(r0, br), min(r0 + ch, br + per)
+                b0, b1 = max(c0, bc), min(c0 + cw, bc + per)
+                out[a0 - r0:a1 - r0, b0 - c0:b1 - c0] = b[a0 - br:a1 - br, b0 - bc:b1 - bc]
+        return out
+
+    def coarse(self, c0: int, r0: int, cw: int, ch: int, thresh=None) -> np.ndarray:
+        """Classes by COARSE_THRESH_DEG of the slope between 1/240 degree mean elevations, on the fine
+        cells c0.., r0.. (each coarse cell covers 4 x 4 of them)."""
+        f = PER_DEG // COARSE_PER_DEG
+        k0, j0 = c0 // f - 1, r0 // f - 1
+        k1, j1 = (c0 + cw - 1) // f + 2, (r0 + ch - 1) // f + 2
+        e = self.elev(k0, j0, k1 - k0, j1 - j0).astype(np.float32)
+        e[e == -32768] = np.nan
+        lat = (j0 + np.arange(j1 - j0) + 0.5) / COARSE_PER_DEG - 90
+        dy = M_PER_DEG_LAT / COARSE_PER_DEG
+        dx = (M_PER_DEG_LON / COARSE_PER_DEG * np.cos(np.radians(lat)))[:, None]
+        gy, gx = np.gradient(e)
+        s = np.degrees(np.arctan(np.hypot(gx / dx, gy / dy)))
+        cls = np.digitize(np.nan_to_num(s, nan=0.0), thresh or COARSE_THRESH_DEG).astype(np.uint8)
+        rows = (r0 + np.arange(ch)) // f - j0
+        cols = (c0 + np.arange(cw)) // f - k0
+        return cls[rows[:, None], cols[None, :]]
+
+
 def lattice_box(w: float, s: float, e: float, n: float) -> tuple[int, int, int, int]:
     """Lattice columns and rows (from 180 W, 90 S) covering a box: col0, row0, width, height."""
     c0 = math.floor((w + 180.0) * PER_DEG)
@@ -122,46 +212,19 @@ def lattice_box(w: float, s: float, e: float, n: float) -> tuple[int, int, int, 
     return c0, r0, c1 - c0, r1 - r0
 
 
-def mean_slopes(dem: Dem, c0: int, r0: int, cw: int, ch: int) -> np.ndarray:
-    """Mean slope in degrees over each lattice cell of the box, rows from the south; NaN where the
-    source has nothing (the sea, beyond 85 N or 65 S)."""
-    w = c0 / PER_DEG - 180.0
-    s = r0 / PER_DEG - 90.0
-    e = (c0 + cw) / PER_DEG - 180.0
-    n = (r0 + ch) / PER_DEG - 90.0
-    px = dem.px
-    # source pixels whose centres fall in the box, plus one each way for the differences
-    pc0 = math.floor((w - dem.lon0) / px) - 1
-    pc1 = math.ceil((e - dem.lon0) / px) + 1
-    pr0 = math.floor((dem.lat0 - n) / px) - 1
-    pr1 = math.ceil((dem.lat0 - s) / px) + 1
-    z = dem.window(pr0, pr1, pc0, pc1)
-    lats = dem.lat0 - (np.arange(pr0, pr1) + 0.5) * px
-    lons = dem.lon0 + (np.arange(pc0, pc1) + 0.5) * px
-    dy = px * M_PER_DEG_LAT
-    dx = px * M_PER_DEG_LON * np.cos(np.radians(lats))[:, None]
-    gy, gx = np.gradient(z)
-    slope = np.degrees(np.arctan(np.hypot(gx / dx, gy / dy)))
-    slope = slope[1:-1, 1:-1]
-    lats, lons = lats[1:-1], lons[1:-1]
-    rows = np.floor((lats + 90.0) * PER_DEG).astype(np.int64) - r0
-    cols = np.floor((lons + 180.0) * PER_DEG).astype(np.int64) - c0
-    ok = np.isfinite(slope) & ((rows >= 0) & (rows < ch))[:, None] & ((cols >= 0) & (cols < cw))[None, :]
-    idx = (rows[:, None] * cw + cols[None, :])[ok]
-    total = np.bincount(idx, weights=slope[ok], minlength=cw * ch)
-    count = np.bincount(idx, minlength=cw * ch)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        mean = total / count
-    return mean.reshape(ch, cw)
-
-
-def classes_of(mean: np.ndarray) -> np.ndarray:
-    """Classes by THRESH_DEG, then a 3 x 3 majority filter (ties keep the cell's own class)."""
-    m = np.nan_to_num(mean, nan=0.0)
-    cls = np.digitize(m, THRESH_DEG).astype(np.uint8)
-    counts = np.stack([uniform_filter((cls == k).astype(np.float32), size=3, mode="nearest") * 9 for k in range(4)])
-    counts += 0.5 * np.stack([cls == k for k in range(4)])
-    return counts.argmax(axis=0).astype(np.uint8)
+def classes_of(q: np.ndarray, cap: np.ndarray, thresh=THRESH_Q) -> np.ndarray:
+    """Classes by `thresh` (no data flat), then a 3 x 3 majority filter (ties keep the cell's own
+    class), then at most `cap` (`Fine.coarse`)."""
+    cls = np.digitize(np.where(q == 255, 0, q), thresh).astype(np.uint8)
+    best = np.zeros(cls.shape, np.float32)
+    out = np.zeros(cls.shape, np.uint8)
+    for k in range(4):
+        m = cls == k
+        c = uniform_filter(m.astype(np.float32), size=3, mode="nearest") * 9 + 0.5 * m
+        take = c > best
+        out[take] = k
+        best[take] = c[take]
+    return np.minimum(out, cap)
 
 
 def encode(cls: np.ndarray, c0: int, r0: int) -> bytes:
@@ -171,10 +234,10 @@ def encode(cls: np.ndarray, c0: int, r0: int) -> bytes:
     flat = cls.reshape(-1)
     change = np.flatnonzero(np.diff(flat)) + 1
     starts = np.concatenate(([0], change))
-    ends = np.concatenate((change, [flat.size]))
-    for a, b in zip(starts.tolist(), ends.tolist()):
-        out.append(int(flat[a]))
-        n = b - a
+    runs = np.diff(np.concatenate((starts, [flat.size])))
+    vals = flat[starts]
+    for v, n in zip(vals.tolist(), runs.tolist()):
+        out.append(v)
         while True:
             x = n & 0x7F
             n >>= 7
@@ -183,7 +246,30 @@ def encode(cls: np.ndarray, c0: int, r0: int) -> bytes:
             else:
                 out.append(x)
                 break
-    return bytes(out)
+    return gzip.compress(bytes(out), compresslevel=9, mtime=0)
+
+
+def decode(b: bytes) -> tuple[np.ndarray, int, int, int]:
+    """A `.terrain` file (gzip or not): classes (rows from the south), col0, row0, per_deg."""
+    if b[:2] == b"\x1f\x8b":
+        b = gzip.decompress(b)
+    w, h, c0, r0, per = struct.unpack("<IIiiI", b[4:24])
+    out = np.zeros(w * h, np.uint8)
+    i, k = 24, 0
+    while i < len(b) and k < w * h:
+        c = b[i]
+        i += 1
+        run = shift = 0
+        while True:
+            x = b[i]
+            i += 1
+            run |= (x & 0x7F) << shift
+            if not x & 0x80:
+                break
+            shift += 7
+        out[k:k + run] = c
+        k += run
+    return out.reshape(h, w), c0, r0, per
 
 
 def zones() -> list[dict]:
@@ -191,58 +277,130 @@ def zones() -> list[dict]:
     return [c for c in reg["cities"] if c.get("box")]
 
 
-def build(ids: list[str], force: bool) -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    dem = Dem(SRC)
+def zone_box(z: dict) -> tuple[int, int, int, int]:
+    w, s, e, n = z["box"]
+    return lattice_box(w - PAD_DEG, s - PAD_DEG, e + PAD_DEG, n + PAD_DEG)
+
+
+def build_one(args) -> tuple[str, int, list[int], int]:
+    zid, box, out_dir, thresh = args
+    fine = _fine()
+    c0, r0, cw, ch = box
+    cls = classes_of(fine.slopes(c0, r0, cw, ch), fine.coarse(c0, r0, cw, ch), thresh)
+    data = encode(cls, c0, r0)
+    path = Path(out_dir) / f"{zid}.terrain"
+    tmp = path.with_suffix(".tmp")
+    tmp.write_bytes(data)
+    os.replace(tmp, path)
+    return zid, len(data), np.bincount(cls.reshape(-1), minlength=4).tolist(), cw * ch
+
+
+_FINE = None
+
+
+def _fine() -> Fine:
+    global _FINE
+    if _FINE is None:
+        _FINE = Fine()
+    return _FINE
+
+
+def build(ids: list[str], force: bool, jobs: int, out_dir: Path = OUT, thresh=THRESH_Q) -> None:
+    from concurrent.futures import ProcessPoolExecutor
+    out_dir.mkdir(parents=True, exist_ok=True)
     todo = [z for z in zones() if not ids or z["id"] in ids]
-    # neighbouring boxes one after another, so the tile cache serves them
+    todo = [z for z in todo if force or not (out_dir / f"{z['id']}.terrain").exists()]
+    # neighbouring boxes together, so a worker's block cache serves them
     todo.sort(key=lambda z: (round(z["box"][3] / 4), z["box"][0]))
     t0 = time.time()
-    made = 0
-    size = 0
-    shares = np.zeros(4)
-    for k, z in enumerate(todo):
-        path = OUT / f"{z['id']}.terrain"
-        if path.exists() and not force:
-            continue
-        w, s, e, n = z["box"]
-        c0, r0, cw, ch = lattice_box(w - PAD_DEG, s - PAD_DEG, e + PAD_DEG, n + PAD_DEG)
-        cls = classes_of(mean_slopes(dem, c0, r0, cw, ch))
-        data = encode(cls, c0, r0)
-        tmp = path.with_suffix(".tmp")
-        tmp.write_bytes(data)
-        os.replace(tmp, path)
-        made += 1
-        size += len(data)
-        shares += np.bincount(cls.reshape(-1), minlength=4)
-        if made % 50 == 0 or k == len(todo) - 1:
-            print(f"{k + 1}/{len(todo)} {z['id']} {len(data) / 1024:.1f} KB, {time.time() - t0:.0f} s", flush=True)
-    if made:
+    size, shares, biggest = 0, np.zeros(4), ("", 0, 0)
+    args = [(z["id"], zone_box(z), str(out_dir), thresh) for z in todo]
+    with ProcessPoolExecutor(max_workers=jobs) as ex:
+        for k, (zid, n, counts, cells) in enumerate(ex.map(build_one, args, chunksize=4)):
+            size += n
+            shares += counts
+            if cells > biggest[2]:
+                biggest = (zid, n, cells)
+            if (k + 1) % 100 == 0 or k == len(args) - 1:
+                print(f"{k + 1}/{len(args)} {zid} {n / 1024:.1f} KB, {time.time() - t0:.0f} s", flush=True)
+    if args:
         sh = shares / shares.sum()
-        print(f"made {made} files, {size / 1e6:.1f} MB, {time.time() - t0:.0f} s; cells flat {sh[0]:.1%} rolling {sh[1]:.1%} hilly {sh[2]:.1%} mountain {sh[3]:.1%}")
+        print(f"made {len(args)} files, {size / 1e6:.1f} MB, {time.time() - t0:.0f} s; biggest grid {biggest[0]} "
+              f"{biggest[2] / 1e6:.1f}M cells, {biggest[1] / 1e6:.2f} MB; cells flat {sh[0]:.1%} rolling {sh[1]:.1%} "
+              f"hilly {sh[2]:.1%} mountain {sh[3]:.1%}")
     else:
         print("nothing to make")
 
 
+def mix(path: Path) -> None:
+    """Class shares over every zone file in `path`, cells weighted by area (cos latitude)."""
+    tot = np.zeros(4)
+    files = sorted(path.glob("*.terrain"))
+    for f in files:
+        cls, c0, r0, per = decode(f.read_bytes())
+        lat = (r0 + np.arange(cls.shape[0]) + 0.5) / per - 90
+        wgt = np.cos(np.radians(lat)) / per / per
+        for k in range(4):
+            tot[k] += ((cls == k).sum(axis=1) * wgt).sum()
+    sh = tot / tot.sum()
+    print(f"{len(files)} files: flat {sh[0]:.2%} rolling {sh[1]:.2%} hilly {sh[2]:.2%} mountain {sh[3]:.2%}")
+
+
+def hist_one(args) -> np.ndarray:
+    box = args
+    c0, r0, cw, ch = box
+    q = _fine().slopes(c0, r0, cw, ch)
+    lat = (r0 + np.arange(ch) + 0.5) / PER_DEG - 90
+    w = np.repeat(np.cos(np.radians(lat)), cw)
+    return np.bincount(np.where(q == 255, 0, q).reshape(-1), weights=w, minlength=256)
+
+
+def calibrate(every: int, jobs: int) -> None:
+    """Thresholds whose shares of unsmoothed fine cells match TARGET_MIX, then the shares after the
+    majority filter on every `every`-th zone, to correct by hand."""
+    from concurrent.futures import ProcessPoolExecutor
+    old = TW / "data" / "work" / "pre-T1854" / "terrain"
+    zs = [z for z in zones() if (old / f"{z['id']}.terrain").exists()]  # the zones TARGET_MIX was measured on
+    with ProcessPoolExecutor(max_workers=jobs) as ex:
+        h = sum(ex.map(hist_one, [zone_box(z) for z in zs], chunksize=4))
+    cum = np.cumsum(h) / h.sum()
+    goal = np.cumsum(TARGET_MIX)[:3]
+    th = [int(np.searchsorted(cum, g) + 1) for g in goal]
+    print("slope shares (quarter degrees, cumulative):", {q: round(float(cum[q]), 4) for q in range(0, 120, 4)})
+    print("thresholds for the target before smoothing:", th, [t / 4 for t in th])
+    tmp = FINE / "calib"
+    tmp.mkdir(exist_ok=True)
+    sample = [z["id"] for z in zs[::every]]
+    for f in tmp.glob("*.terrain"):
+        f.unlink()
+    build(sample, True, jobs, tmp, tuple(th))
+    mix(tmp)
+
+
 def probe(lon: float, lat: float, km: float) -> None:
-    dem = Dem(SRC)
     dlat = km / 110.574
     dlon = dlat / math.cos(math.radians(lat))
     c0, r0, cw, ch = lattice_box(lon - dlon, lat - dlat, lon + dlon, lat + dlat)
-    mean = mean_slopes(dem, c0, r0, cw, ch)
-    cls = classes_of(mean)
-    m = mean[np.isfinite(mean)]
-    q = np.percentile(m, [10, 50, 90]) if m.size else [math.nan] * 3
+    q = _fine().slopes(c0, r0, cw, ch)
+    cls = classes_of(q, _fine().coarse(c0, r0, cw, ch))
+    m = q[q != 255] / 4
+    p = np.percentile(m, [10, 50, 90]) if m.size else [math.nan] * 3
     sh = np.bincount(cls.reshape(-1), minlength=4) / cls.size
-    print(f"{lon:.3f},{lat:.3f} r {km:g} km: slope p10 {q[0]:.1f} p50 {q[1]:.1f} p90 {q[2]:.1f}; flat {sh[0]:.0%} rolling {sh[1]:.0%} hilly {sh[2]:.0%} mountain {sh[3]:.0%}")
+    print(f"{lon:.3f},{lat:.3f} r {km:g} km: slope p10 {p[0]:.1f} p50 {p[1]:.1f} p90 {p[2]:.1f}; flat {sh[0]:.0%} rolling {sh[1]:.0%} hilly {sh[2]:.0%} mountain {sh[3]:.0%}")
 
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if args and args[0] == "build":
-        force = "--force" in args
-        build([a for a in args[1:] if a != "--force"], force)
-    elif args and args[0] == "probe":
-        probe(float(args[1]), float(args[2]), float(args[3]) if len(args) > 3 else 5.0)
+    jobs = int(args[args.index("--jobs") + 1]) if "--jobs" in args else 3
+    out = Path(args[args.index("--out") + 1]) if "--out" in args else OUT
+    rest = [a for i, a in enumerate(args) if a not in ("--jobs", "--out") and (i == 0 or args[i - 1] not in ("--jobs", "--out"))]
+    if rest and rest[0] == "build":
+        build([a for a in rest[1:] if a != "--force"], "--force" in rest, jobs, out)
+    elif rest and rest[0] == "mix":
+        mix(Path(rest[1]) if len(rest) > 1 else OUT)
+    elif rest and rest[0] == "calibrate":
+        calibrate(int(rest[1]) if len(rest) > 1 else 5, jobs)
+    elif rest and rest[0] == "probe":
+        probe(float(rest[1]), float(rest[2]), float(rest[3]) if len(rest) > 3 else 5.0)
     else:
         print(__doc__)

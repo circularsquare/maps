@@ -1,10 +1,11 @@
 """T-1064: launch one spot machine for a run. docs/aws.md. The only way an instance is made.
 
     launch.py <run> --kind proof|wave --type m7a.8xlarge --hours 4 [--disk 200] [--max-price 0.6]
-              [--file name=localpath ...] [--put name ...] [--dry]
+              [--az us-east-2a] [--file name=localpath ...] [--put name ...] [--dry]
 
 - <run>: a new name (letters, digits, dashes); its keys in the bucket are <run>/<name>.
 - --kind: the user data template, userdata/<kind>.sh.
+- --az: this zone instead of the cheapest (when the cheapest has no spot capacity, T-1854).
 - --hours: the hard timer, at most awslib.MAX_HOURS. The machine shuts itself down then, and a
   shutdown terminates it (instance-initiated shutdown behaviour = terminate), disk included.
 - --file name=path: uploaded to <run>/<name>; the machine gets a presigned GET URL as $GET_<name>.
@@ -30,7 +31,7 @@ AMI_PARAM = "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm
 
 
 def args(argv):
-    o = {"files": {}, "puts": ["log", "heartbeat"], "gets": [], "disk": 30, "max_price": None, "dry": False}
+    o = {"files": {}, "puts": ["log", "heartbeat"], "gets": [], "disk": 30, "max_price": None, "dry": False, "az": None}
     if not argv or argv[0].startswith("-"):
         raise SystemExit(__doc__)
     o["run"] = argv[0]
@@ -39,7 +40,7 @@ def args(argv):
         a = argv[i]
         if a == "--dry":
             o["dry"] = True
-        elif a in ("--kind", "--type", "--hours", "--disk", "--max-price", "--file", "--put", "--get"):
+        elif a in ("--kind", "--type", "--hours", "--disk", "--max-price", "--file", "--put", "--get", "--az"):
             v = argv[i + 1]
             i += 1
             if a == "--file":
@@ -87,7 +88,7 @@ def checks(o):
         raise A.Refused(f"run {run} was launched before ({A.record_path(run)}); take a new name")
 
 
-def cheapest_az(itype):
+def cheapest_az(itype, want=None):
     out = A.aws("ec2", "describe-spot-price-history", "--instance-types", itype,
                 "--product-descriptions", "Linux/UNIX", "--start-time", A.iso(A.now()))
     by = {}
@@ -95,7 +96,9 @@ def cheapest_az(itype):
         by.setdefault(p["AvailabilityZone"], float(p["SpotPrice"]))
     if not by:
         raise SystemExit(f"no spot price for {itype} in {A.REGION}")
-    az = min(by, key=by.get)
+    if want and want not in by:
+        raise SystemExit(f"no spot price for {itype} in {want}: {by}")
+    az = want or min(by, key=by.get)
     return az, by[az], by
 
 
@@ -158,7 +161,7 @@ def launch(o):
                         "teardown.py it if its run is over")
     if not A.bucket_is_ours():
         raise A.Refused(f"bucket {A.BUCKET} missing: bucket.py ensure first")
-    az, price, by = cheapest_az(o["type"])
+    az, price, by = cheapest_az(o["type"], o["az"])
     bid = float(o["max_price"]) if o["max_price"] else round(max(price * 2, price + 0.05), 4)
     if bid > A.MAX_PRICE_CAP:
         raise A.Refused(f"bid ${bid}/h over the cap ${A.MAX_PRICE_CAP}/h")

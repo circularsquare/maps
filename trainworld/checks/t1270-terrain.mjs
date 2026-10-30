@@ -8,6 +8,7 @@
 
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { ARTIFACTS, collectErrors, launchChrome } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6184/';
@@ -17,9 +18,10 @@ mkdirSync(OUT, { recursive: true });
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) failed++; };
 
-/** A zone's terrain file (sim `cost::ClassGrid`). */
+/** A zone's terrain file (sim `cost::ClassGrid`; gzip since T-1854). */
 function grid(id) {
-  const b = readFileSync(new URL(`../data/terrain/${id}.terrain`, import.meta.url));
+  let b = readFileSync(new URL(`../data/terrain/${id}.terrain`, import.meta.url));
+  if (b[0] === 0x1f && b[1] === 0x8b) b = gunzipSync(b);
   if (b.toString('latin1', 0, 4) !== 'TWT1') throw new Error(`${id}.terrain is not a terrain file`);
   const [w, h] = [b.readUInt32LE(4), b.readUInt32LE(8)], [c0, r0] = [b.readInt32LE(12), b.readInt32LE(16)], per = b.readUInt32LE(20);
   const cls = new Uint8Array(w * h);

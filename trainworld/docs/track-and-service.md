@@ -749,17 +749,23 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 
   | Class | Flat | Hills (low) | Hills (high) | Mountains |
   |---|---|---|---|---|
-  | Mean slope | under 2° | 2-5° | 5-10° | 10° and over |
+  | Mean 30 m slope over a cell | under 2.5° | 2.5-5.5° | 5.5-11° | 11° and over |
+  | Ground round it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
   | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
 
-  The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 240 m, CC BY 4.0) by
-  `pipeline/zone_terrain.py`: the mean slope over each cell of a world lattice of 1/240 degree
-  (about 460 m north-south), then a 3 x 3 majority filter, one file per zone
-  (`data/terrain/<id>.terrain`, a median of 13 KB, 56 MB for all 1,770 zones; `cost::ClassGrid`). The clock worker fetches a zone's
+  The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 30 m, CC BY 4.0, T-1854)
+  by `pipeline/zone_terrain.py` from the intermediate in `data/work/terrain-fine/`
+  (`terrain_fine.py`): the mean slope of the 30 m pixels over each cell of a world lattice of 1/960
+  degree (about 115 m north-south), classed, a 3 x 3 majority filter (drops single-cell specks, keeps
+  a valley floor two cells wide), then capped at the class of the ground round it: the slope between
+  the 1/240 degree mean elevations, about 920 m apart (second row), since 30 m bare earth still
+  carries towers and raised roads that would read as hills in dense centres. One gzip file per zone
+  (`data/terrain/<id>.terrain`, a median of 43 KB, 299 MB for all 1,988 zones, the largest 5.3 MB;
+  `cost::ClassGrid`, two bits a cell in memory, at most about 23 MB). The clock worker fetches a zone's
   file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it
   lands is priced on flat ground and priced again when it lands, the blueprint quote following;
   Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
-  its spans of rough ground (`Network::edge_terrain`, sampled every 100 m, `TERRAIN_STEP`); a file
+  its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
   segment crosses ("Mountains 2.5x", T-1394), its multiplier includes the factor, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.

@@ -77,7 +77,20 @@ def get(key, big=False):
     run, name = key.split("/", 1)
     dest = A.INBOX / run / name
     dest.parent.mkdir(parents=True, exist_ok=True)
-    A.aws("s3", "cp", f"s3://{A.BUCKET}/{key}", str(dest), "--only-show-errors", text=True)
+    if size < 100e6:
+        A.aws("s3", "cp", f"s3://{A.BUCKET}/{key}", str(dest), "--only-show-errors", text=True)
+    else:
+        # T-1854: over a slow line `s3 cp` timed out a GB object twice; curl resumes a part-file instead
+        import subprocess
+        part = dest.with_name(dest.name + ".part")
+        url = A.presign("GET", key, 2)
+        for _ in range(20):
+            subprocess.run(["curl", "-sS", "-f", "-C", "-", "--retry", "5", "--speed-time", "120", "-o", str(part), url])
+            if part.exists() and part.stat().st_size == size:
+                break
+        if not part.exists() or part.stat().st_size != size:
+            raise SystemExit(f"{key}: got {part.stat().st_size if part.exists() else 0} of {size} bytes; run again to resume")
+        os.replace(part, dest)
     rec = A.load_record(run)
     if rec is not None:
         rec.setdefault("fetched", {})[key] = size

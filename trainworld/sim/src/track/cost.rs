@@ -294,7 +294,8 @@ pub fn water_spans(len: f64, at: impl Fn(f64) -> (f64, f64), mask: &dyn WaterMas
 
 /// Terrain classes on a grid of whole fractions of a degree (T-1270, `pipeline/zone_terrain.py`):
 /// 0 flat, 1 rolling, 2 hilly, 3 mountain, row after row from the south-west corner. Every zone's
-/// grid sits on one world lattice, so overlapping grids agree cell for cell.
+/// grid sits on one world lattice, so overlapping grids agree cell for cell. Two bits a cell (T-1854:
+/// the largest zone is about 60 M cells at 960 a degree).
 pub struct ClassGrid {
     /// lattice cells a degree
     pub per_deg: f64,
@@ -303,6 +304,7 @@ pub struct ClassGrid {
     pub row0: i64,
     pub w: u32,
     pub h: u32,
+    /// four cells a byte, the first in the low bits
     pub cls: Vec<u8>,
 }
 
@@ -320,12 +322,12 @@ impl ClassGrid {
         let (col0, row0) = (u(12) as i32 as i64, u(16) as i32 as i64);
         let per_deg = u(20) as f64;
         let n = w as usize * h as usize;
-        if per_deg <= 0.0 || n == 0 || n > 64 << 20 {
+        if per_deg <= 0.0 || n == 0 || n > 256 << 20 {
             return None;
         }
-        let mut cls = Vec::with_capacity(n);
-        let mut i = 24;
-        while i < b.len() && cls.len() < n {
+        let mut cls = vec![0u8; n.div_ceil(4)];
+        let (mut i, mut k) = (24, 0usize);
+        while i < b.len() && k < n {
             let c = b[i].min(3);
             i += 1;
             let (mut run, mut shift) = (0usize, 0);
@@ -337,9 +339,27 @@ impl ClassGrid {
                 shift += 7;
                 if shift > 35 { return None; }
             }
-            cls.extend(std::iter::repeat(c).take(run.min(n - cls.len())));
+            let end = k + run.min(n - k);
+            if c > 0 {
+                // whole bytes of a run at once: a big zone is tens of millions of cells
+                let mut j = k;
+                while j < end && j & 3 != 0 {
+                    cls[j >> 2] |= c << ((j & 3) * 2);
+                    j += 1;
+                }
+                let whole = end & !3;
+                if j < whole {
+                    cls[j >> 2..whole >> 2].fill(c * 0x55);
+                    j = whole;
+                }
+                while j < end {
+                    cls[j >> 2] |= c << ((j & 3) * 2);
+                    j += 1;
+                }
+            }
+            k = end;
         }
-        (cls.len() == n).then_some(ClassGrid { per_deg, col0, row0, w, h, cls })
+        (k == n).then_some(ClassGrid { per_deg, col0, row0, w, h, cls })
     }
 
     /// `[west, south, east, north]` in degrees.
@@ -356,7 +376,8 @@ impl ClassGrid {
         if c < 0 || r < 0 || c >= self.w as i64 || r >= self.h as i64 {
             return None;
         }
-        Some(self.cls[r as usize * self.w as usize + c as usize])
+        let j = r as usize * self.w as usize + c as usize;
+        Some((self.cls[j >> 2] >> ((j & 3) * 2)) & 3)
     }
 }
 

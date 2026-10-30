@@ -99,8 +99,8 @@ pub const WATER_STEP: f64 = 12.5;
 pub const TERRAIN_FACTOR: [f64; 4] = [1.0, 1.25, 1.6, 2.5];
 /// The lowest level the terrain factor applies to: bored tunnels (-2, -3) cost the same anywhere.
 pub const TERRAIN_MIN_LEVEL: i8 = -1;
-/// Terrain sampling step along track, m: under a quarter of the class grid's ~460 m cell.
-pub const TERRAIN_STEP: f64 = 100.0;
+/// Terrain sampling step along track, m: under a quarter of the class grid's ~115 m cell (T-1854).
+pub const TERRAIN_STEP: f64 = 25.0;
 /// Price of one 20 m car, US$M (T-028; a New York R211 car is about 2.6). Trains are bought when
 /// the running lines need more cars than the network owns; spare cars are kept, never sold.
 pub const CAR_PRICE: f64 = 2.5;
