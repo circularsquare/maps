@@ -2,6 +2,17 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1831 [P3] Unreadable saves listed as a card with Download and Delete (T-1823 fix 8). Abandoned 2026-10-30 (Anita): a save this build cannot read would never be usable, so no card.
+- T-1822 [P2] Tutorial: a post-it with checked steps and a ripple highlight. Done 2026-10-30: stages 1-2 landed 2026-10-29 (0a2a52d0, 95d0809e), Anita's wording and style notes applied (card "Tutorial", end button "Done!", no tilt).
+  Words are `WORDS` in `game/guide.ts`; docs/ui-panels.md matches. notes/T-1822.md.
+- T-676 [P2] A cuter base map. Done 2026-10-30 (Anita): the palette looks fine. The ground tinted by density was never built and had no id of its own: abandoned. Day and night tint stays as T-678.
+- T-264 [P2] Superholidays as long-distance days with a direction. Done 2026-10-30 (Anita): T-1372, T-1373 and T-1374 landed (runs and Away days with a calendar icon, going-out and coming-back trips, touristy places). Nothing open of its own; T-1503 and T-1504 stand apart. notes/T-264.md.
+- T-1824 [P2] Legal check before release. Done 2026-10-29 (fab5c4dc): research/release-legal.md; its fixes were T-1825 and T-1833, and Google Analytics comes off the trainsworld page only.
+- T-1823 [P2] Save safety review before release. Done 2026-10-29 (dc6f9c41): nine fixes, built as T-1826 to T-1830 and T-1832 (T-1827 and T-1828 later removed); fix 8 (T-1831) dropped. notes/T-1823.md.
+- T-1799 [P2] Interlined lines drawn side by side, Line and Traffic views. Done 2026-10-29: stages 1-4 landed (d2e83c6b, 2ae23d3a, b6ff3eff, 11344f44): bands, four-track trunks as one ribbon, lines ease out of their offset at splits and merges. Mitred joins not needed. notes/T-1799.md.
+- T-1791 stages 1-3 [P2] Line groups. Done 2026-10-29 (a8d08f74): drag a line onto another to group them, a copy joins its source's group, a group view with one diagram where a click removes a stop and a ghost adds one. Stage 4 (boardings in the view) stays open as a P3. notes/T-1791.md.
+- T-1782 [P2] Trips that ride a train mostly on foot. Done 2026-10-29 (beea3af0): a train slower than walking gets no riders, one a little quicker loses share to full at 30% quicker; real save 12,758,872 to 11,388,675 rail trips. notes/T-1782.md.
+
 - T-1843 [P1] Settings text and the Explore a trip button. Done 2026-10-29 (agent t1843): Capacity markers is "Track at capacity" and Full stretches "Trains at capacity" with new hovers, Terrain and Drives hovers shortened, the hovers on Flat junctions and crossings, Faces and Sound dropped, and the Explore a trip button removed from Settings (T key and tapping two bubbles still open the trip tool).
   Docs ui-panels.md and ui-inspectors.md updated; no check matched the old labels. Smoke passes; screenshot artifacts/trainworld/t1843/settings-show.png.
 - T-1836 [P2] Client side of T-1830. Done 2026-10-29 (maps-da): `fetchBackup` tries account backups 0-3, so the day and week copies open from Earlier versions; server 5719c6f deployed by Anita.

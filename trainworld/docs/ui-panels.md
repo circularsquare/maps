@@ -62,7 +62,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 ## The dock
 
 **Fixed layout, no floating windows** (the saved games panel, confirmations and the
-[Getting started card](#getting-started-card) are the exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
+[tutorial card](#tutorial-card) are the exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 - A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Finances** (a bill and a coin) [T-1819], **Cities** (a skyline) [T-749], sharing the row's width
@@ -281,27 +281,28 @@ the button is gone.
   them; the past 24 hours' counts are asked once a game hour and when riders are worked out again
   (`accountVersion`), not the panels' four times a second.
 
-## Getting started card
+## Tutorial card
 
-[T-1822; `ui/Guide.tsx`, `game/guide.ts`] A flat post-it at the map's upper right under the search
-button, 240 px wide, turned 2 degrees anticlockwise: a pale yellow (`--yellow` at 24% over the
-background; 14% in the dark theme), no shadow. Heading "Getting started" (14 px, bold) and an x
-(hover "Hide the guide"), then six rows of 12 px type: a 12 px tick box, the step, its counter right
-in tabular figures. Done steps carry a tick; the step in hand (the first not done) is in the text
-colour, steps after it muted. Ticks show at once. The search results open over it.
+[T-1822; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` in `game/guide.ts`] A flat
+post-it at the map's upper right under the search button, 240 px wide, not tilted: a pale yellow
+(`--yellow` at 24% over the background; 14% in the dark theme), no shadow. Heading "Tutorial" (14 px,
+bold) and an x (no hover; screen readers get "Hide the tutorial"), then six rows of 12 px type: a
+12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
+carry a tick; the step in hand (the first not done) is in the text colour, steps after it muted. Ticks
+show at once. The search results open over it.
 
 | # | Step | Counter | Counts |
 |---|---|---|---|
-| 1 | Lay 5 km of track where the bubbles are big | 2.3/5.0 km (hover "Track laid") | any track, blueprint or built, not switched off; the words steer, nothing checks the bubbles |
-| 2 | Put stations along it, about one a km | 1/3 (hover "Stations on the track, at least 500 m apart") | stations, blueprint or built, at least 500 m apart |
+| 1 | Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off |
+| 2 | Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart |
 | 3 | Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart |
-| 4 | Make a new line | none | any line |
-| 5 | Click your stations to make them stops | 1/3 (hover "Stops on the line") | stops of the line with most, goal the lesser of 3 and the built stations |
-| 6 | Give the line a train | 0/1 | any line with a train at any demand level |
+| 4 | Create a line | none | any line |
+| 5 | Assign stops for the line | 1/3 | stops of the line with most, goal the lesser of 3 and the built stations |
+| 6 | Add trains to the line | 0/1 | any line with a train at any demand level |
 
 A step ticks the first time its check holds and stays ticked (undo never unticks it); counters keep
 following the world and cap at their goal. A later step can tick before an earlier one. After the
-sixth, a line "Your first line is open." and a Done button (closes the card for good in this game).
+sixth, a Done! button appears under the steps (closes the card for good in this game).
 
 - **Who sees it**: a new Normal game in a browser that has not finished the guide once; not a
   sandbox, a real-network start or a `?new=1` page, and not a save made before it existed. Finishing
@@ -310,7 +311,7 @@ sixth, a line "Your first line is open." and a Done button (closes the card for 
 - **Kept in the save**: the header's `guide` (ticked steps as bits, `hidden`, `closed`), set by the
   clock worker on a new game and updated by the page's `guide` message. A reload picks up where it
   was.
-- **Hidden and back**: the x hides it in this game; Game in Settings has a row "Getting started" with
+- **Hidden and back**: the x hides it in this game; Game in Settings has a row "Tutorial" with
   Start again in every normal game: it clears the ticks and the hidden and closed marks and shows the
   card, whether it was hidden, finished or never there (a game saved before the card) [T-1835]; steps
   the world already meets tick at once.
@@ -502,7 +503,7 @@ it means). A normal game has "Switch to sandbox mode", which asks first ("Confir
 and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
 not the browser's. In a normal game a
-row "Getting started" with a Start again button (restarts the [Getting started card](#getting-started-card))
+row "Tutorial" with a Start again button (restarts the [tutorial card](#tutorial-card))
 sits under the mode [T-1822, T-1835].
 
 ## Finances tab (the Money tab until T-1819; id `money`)

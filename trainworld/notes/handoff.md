@@ -6,7 +6,8 @@ Updated: 2026-10-29 night
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master ee24a0c5 (T-1843 after the night batch b6ff3eff). 8800 at ee24a0c5, smoke 20/20 both shades.
+- master d50331da (Track at capacity hover; T-1799 stage 4 11344f44 before it). 8800 at d50331da, smoke 20/20 both shades.
+- Anita to bed 2026-10-29 night: T-1840 review doc tomorrow; overview of open work given, she picks the order after it.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
 - shonei-server 5719c6f deployed by Anita 2026-10-29 (day/week backups; deleting is for good), not pushed. The auto-mode
@@ -18,11 +19,21 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
 - Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1844.
+- Next free task id: T-1845.
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
-## In flight
+## In flight (overnight 2026-10-30; core cap raised to 15, lower to 12 when Anita is back)
+- T-925 licence rebuild of 9 EU zones on geoBoundaries (agent t925, Opus, detached run; notes/T-924.md has batch/log/restart).
+  Nothing else writes data/packs meanwhile.
+- T-1407 + T-1780 + T-1788 + T-1794 + setTrainCount lag after edits (agent t1407, Opus, tree .tw-trees/t1407, Vite 6183):
+  land with agent-tree.mjs land, then remove the tree; rebuild main-tree WASM if sim changed.
+- T-751 + T-1844 expand platforms under a refused train length, shake + refusal sound on silent refusals (agent t751,
+  Sonnet, main tree, Vite 6193).
+- Doc tidy (agent tidy1030, Sonnet): stale TASKS lines, closes T-1822/T-676/T-264/T-1831 (Anita), "Where things stand",
+  ui-panels tutorial words.
+- Anita 2026-10-30: Vietnam is already built (my overview was wrong); Southeast Asia next = Cambodia, Malaysia.
+  T-1840 text review in the morning with her.
 - T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
   screenshot in maps-da scratchpad images/2.png): done by t1799c and committed; awaiting Anita's look (a small notch
   remains where the blue meets the station box at West Sunrise Highway).

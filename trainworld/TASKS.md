@@ -10,15 +10,14 @@ tasks that nothing open or current cites live in `notes/archive/t0001-0499/`, `t
 
 **Orchestrator handoff: start with `notes/handoff.md`** (live; history in notes/handoff-2026-10-26.md).
 
-**Where things stand (2026-10-26).** The whole world is the goal, demand simple on purpose
+**Where things stand (2026-10-30).** The whole world is the goal, demand simple on purpose
 (CLAUDE.md "Working here"; plain account in docs/demand-plain.md). Covered whole: Japan, Europe
-except Russia, Belarus and Ukraine (held), China with Hong Kong, Macau and Taiwan (countryside
-replanned into compact zones on the 2020 census, T-1185), the US with Puerto Rico, and Korea (built
-2026-10-25 but Daegu and Tongyeong, being rebuilt in T-1262); about 1,750 zones. Version 2026-10-25b
-is published. Under way: the res-9 walk repair (T-1261), which must come before Canada (T-1239)
-and any other non-Chinese join. After it: Canada, then
-Mexico, Turkey and Vietnam; the replan of the US and Europe waits for Anita (T-1189). Performance on
-big networks is the other open front (Performance below).
+except Russia, Belarus and Ukraine (held), China with Hong Kong, Macau and Taiwan, the US with
+Puerto Rico, Korea, Canada, Vietnam, Thailand and Singapore; 1,897 zones shipped. Version 2026-10-28g
+is published. Under way: release prep (the save review and legal fixes are in; text review, T-1840,
+and Anita's playtest), and performance on big networks (Performance below). Southeast Asia is next,
+with Cambodia and Malaysia (T-1738), then Mexico and Turkey; the replan of the US and Europe waits
+for Anita (T-1189).
 
 ## World and countries
 Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline: notes/T-535.md "Stages".
@@ -41,9 +40,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-941 [P3] The published page's expected 404s: the real-rail layer asks `../noritetsu/regions.json` before R2 (404 on anita.garden every load), and the two Canadian syllabics glyph ranges glyphs.py leaves out; smoke against the live page counts both as console errors. Try R2 first when the page has a tw-data meta, and make smoke's glyph filter match there too. Open.
 
 ## Demand
-- T-1782 [P2] Trips that ride a train mostly on foot: a Hodogaya errand with 54 minutes of walking gets train 7% against walk 3% though the train is slower than walking (Anita 2026-10-29). Anita 2026-10-29: no train when slower than walking, a soft cut just above. Built in tree t1782 (walk_fade 0.3; real save 12,758,872 to 11,388,675 rail trips), tests, wasm, check and smoke pass; waits on landing. notes/T-1782.md. Taking, 2026-10-29 (agent t1782).
 - T-1753 [P3] Rapid and express patterns for Tokyo's long suburban lines in the real save (about +2%); needs an open timetable source (ODPT needs an account). notes/T-1750.md. Open.
-- T-264 [P2] (Anita 2026-10-24: a priority, with holidays' own demand effects, trips to touristy POIs, and telling the player what to expect) Superholidays (Chinese New Year, Golden Week, Obon, Chuseok, Thanksgiving) as long-distance days with a direction. Design written 2026-10-26 (notes/T-264.md); Anita 2026-10-26: go ahead; home trips by population, but with a boost toward rural areas, small towns and smaller cities (no birthplace tables); going-out trips lean to touristy places (T-1374); the heads-up as a calendar icon, not a top-bar line. Stages T-1372 and T-1373 (done 2026-10-26), T-1374 (done 2026-10-28).
 - T-1503 [P3] Superholiday rush days on networks past about 8,000 stations take the longer trips unleaned (the lean's S x S table over 256 MB, `LEAN_OD_BYTES`, T-1373): a sparse or per-destination table if a network that big plays. notes/T-264.md Since T-1545 the table is gone (the lean is a column per station in the pass's window), so lifting the gate costs only time: a walk a destination a pass.
 - T-1504 [P2] The China network's longer trips barely ride rail: about 3,300 line boardings a weekday for the market's longer trips on ten high-speed lines between China's 24 biggest metros (t1156-all-china.save, 39 million rail trips in all), found measuring T-1373. Analysis written 2026-10-26: fares weigh too much on long trips (T-1431's root, x4 alone), the save's "HSR" runs at 160 km/h with 6/3/2 trains and its stations are not linked to the metros, which a zone's 8-station access list then never reaches; sampling is not a cause. Proposal and Anita's questions in notes/T-1504.md; follow-ups T-1506 to T-1508.
 - T-1599 [P3] T-1508's option 2, deferred: after T-1603, look at a built Beijing - Shanghai high-speed line at player scale (riders a day, does it feel too empty to a player?). Done when (no refit): the line carries at least about 50,000 riders a day both ways with good service, the busiest of its kind on the map, so a player sees it working; only if it falls short, the tail's existing constants refitted (`pipeline/longhaul_fit.py`) against all-mode targets with rail counted (NHTS, MLIT, China's rail and air, the big pairs), and every country's market data rebuilt. Waits on Anita. notes/T-1508.md.
@@ -72,11 +69,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
 - T-1840 [P1] Every player-facing string in one review document for Anita, with the ones likely to read as machine-written flagged and a plain rewrite proposed (Anita 2026-10-29). After T-1838 lands. Open.
-- T-1831 [P3] Unreadable saves listed as a card with Download and Delete (T-1823 fix 8). Open; notes/T-1823.md
-- T-1823 [P2] Save safety review before release (Anita's TODO 2026-10-29). taking (agent t1823); notes/T-1823.md
-- T-1822 [P2] Tutorial: an askew post-it with checked steps and a ripple highlight (Anita's TODO 2026-10-29). Designed, Anita answered (DECISIONS 2026-10-29). Stage 1 (card, checks, +1 default) landed 2026-10-29 (agent t1822b). Stage 2 (ripple, data-guide targets) landed 2026-10-29 (agent t1822r). Stage 3: Anita's style notes on the card (coming), and polish after her playtest. notes/T-1822.md
-- T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Designed; Anita's calls 2026-10-29 in the note; stages 1 (Line view bands) and 2 (Traffic view bands) landed 2026-10-29 (2ae23d3a); stage 3 (corridors, four-track trunks as one ribbon) built 2026-10-29 (agent t1799c, `map/corridors.ts`), waiting on landing; stage 4 (joins, not needed so far) open; notes/T-1799.md
-- T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
+- T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. taking, 2026-10-30 (agent t1407, Opus, tree t1407, with T-1780, T-1788, T-1794); notes/T-1394.md.
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
 - T-1481 [P3] Marey diagrams (Anita: nothing built yet makes them interesting, but might be nice). Idea. Open.
 Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted: riders before you pay ("people can just build it and find out"), growth near good stations (confusing), flights or freight you run.
@@ -107,11 +100,10 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 - T-1447 [P3] Copy and paste blueprints between saves (Anita: yes). Open.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1270 [P3] Terrain, stage 4 (stages 1-3 built, ARCHIVE): optional, not recommended first, a 120 km/h cap on mountain-class track at -1 and up. Open; notes/T-1270.md.
-- T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
-- T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
+- T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Anita 2026-10-30: offered under a refused train length. taking, 2026-10-30 (agent t751, Sonnet, with T-1844)
+- T-1844 [P2] A refused train length shakes and plays the refusal sound like a refused headway; the same wherever else a refusal is silent (Anita 2026-10-30). taking, 2026-10-30 (agent t751)
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
-- T-1791 [P2] Line groups (Anita's TODO 2026-10-29): drop a line on another in the Lines tab to group them, a copy joins its source's group, a group view with one combined diagram where clicking a line's dot removes the stop and a ghost adds one. Design written and decided by Anita 2026-10-29; stages 1 and 2 built in tree t1791, to land (agent t1791s1, 2026-10-29); stages 3-4 open; notes/T-1791.md.
-- T-1824 [P2] Legal check before release (Anita's TODO 2026-10-29). taking (agent t1824); research/release-legal.md
+- T-1791 [P3] Line groups, stage 4 only (stages 1-3 landed, ARCHIVE): boardings in the group view; left out of stage 2 as a later stage if wanted. Open; notes/T-1791.md.
 
 ## Track and trains
 - T-1794 [P3] T-1787 leftovers: on shared-track New York a headway edit on its busiest line still takes 150-400 ms (two or three settles of ~15 rounds), and Paris placements p95 237 ms (about 9 holds a run and level, 2-3 ms a profile); options in notes/T-1779.md "T-1787" (a held line's fill want from its fleet alone, a cheaper crawl bisection in run_with). Open.
@@ -139,7 +131,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 Tasks that land only when a pack or country is rebuilt, grouped by that rebuild, so whoever runs it knows what rides along (2026-10-26). The two replan groups are also in notes/T-1189.md "What rides along".
 
 ### Europe replan (T-1189's Europe part)
-- T-925 [P2] Rebuild the 9 European zones whose outline takes a NUTS polygon where OSM leaves a gap (boe ceu het aan lis les obe osk pot) with geoBoundaries as the fill: NUTS geometry is non-commercial and non-transferable, which clashes with ODbL share-alike on the published packs (T-547). The outline is the pack footprint, so each needs a pack rebuild (cells, water, market, outlines.json); after the Europe batch. Open; notes/T-924.md "Licences".
+- T-925 [P2] Rebuild the 9 European zones whose outline takes a NUTS polygon where OSM leaves a gap (boe ceu het aan lis les obe osk pot) with geoBoundaries as the fill: NUTS geometry is non-commercial and non-transferable, which clashes with ODbL share-alike on the published packs (T-547). The outline is the pack footprint, so each needs a pack rebuild (cells, water, market, outlines.json); after the Europe batch. Anita 2026-10-30: overnight. taking, 2026-10-30 (agent t925, Opus); notes/T-924.md "Licences".
 - T-892 [P3] Portugal's three parked rows (lez, meo, doo); maybe with T-1189. notes/someday.md
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching. notes/someday.md
 - T-772 [P3] Dead-space units holding cities (Valladolid, Agder...); Anita: low priority. notes/someday.md
