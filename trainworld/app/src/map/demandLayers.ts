@@ -15,7 +15,6 @@ import type { PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
 import type { NetworkBuffers } from "./network";
 import type { NetworkLayers } from "./renderer";
-import { anchor, kAtY } from "./geo";
 import { LINE_VIEW_WIDTH, trafficBands } from "./lineBands";
 
 export interface LayerSwitches {
@@ -144,8 +143,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
     }
   }
   // lines sharing track side by side, each band its riders' width (T-1799 stage 2)
-  const anc = net.anchor ?? anchor();
-  const bands = on.lineLoad ? trafficBands(L, lineWidth, (y) => kAtY(y, anc), net.samples, net.sampleStroke, net.corridor) : null;
+  const bands = on.lineLoad ? trafficBands(L, lineWidth, net.samples, net.sampleStroke, net.corridor) : null;
 
   // the trains: gauges per sample; PENDING for a running line demand has no figures for yet
   // (T-324: drawn striped, never like a full train)

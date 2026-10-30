@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1848 [P2] Corridors back on, decided per place along each line. Done 2026-10-30 (agent t1848): sharp sideways moves Tokyo 20 (off 73), Kanda's trunk one ribbon; Forest Hills' yellow band still outside its box; rebuild +100-260 ms. notes/T-1799.md "T-1848", artifacts/trainworld/t1848/.
+
 - T-1862 [P2] A cluster moved only by settle noise keeps its result (T-1850 stage 1). Done 2026-10-30 (agent t1862): Tokyo kept after a Ceuta line, `demandUpdating` clear in 2.2 s (10.4 s when the trains land as a second edit; was 158 s), Tokyo's lines to the bit; `?perfOff=noise`; checks/t1862-noise-keep.mjs. notes/T-1850.md.
 - T-1865 [P1] Anita's afternoon top bar batch. Done 2026-10-30 (agent t1865): cash after the train share in a fixed 4.7em box (bar width stays put), one medium (500) weight for name, share, cash and time, calendar icon gone (its hover and click on the pink dot), World/city switch at zoom 7 (was 5), station ridership icon's blue circle big and centred on the crossing, a faint divider after the Cities tab's World row. artifacts/trainworld/t1865/.
 - T-1859 [P2] Complexes on the whole station box, and passages drawn between close members. Done 2026-10-30 (agent t1859): drawn platform lines from the worker (`workers/platformLines.ts`) join the straight rule; untouching members get a free drawn passage. Real save 855 to 854 complexes, 30 drawn passages. artifacts/trainworld/t1859/.

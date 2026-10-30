@@ -133,35 +133,43 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   number on the left of that line's travel; an edge's order is by how many of the others each line
   is left of, which is the pairwise order wherever that is one. So bands cross only at a node where
   the two routes part or meet, or where three or more lines' partings go round in a circle (some
-  pair has to cross). Where a line's place changes at a node it eases over 30 m (`BAND_RAMP_M`;
-  half a short edge at most), on the side with fewer lines: lines part leaving side by side and close
-  up as they curve out, and merge the other way (T-1799 stage 4); a line alone keeps its full width. Zoomed out the bands fold into one stroke as a line narrows from
+  pair has to cross). **Tracks side by side** (corridors, T-1799 stage 3, T-1848; `map/corridors.ts`)
+  are one ribbon too, decided per place, not per edge: every edge with lines is sampled every 25 m
+  (`SAMPLE_M`), and a sample records the other edges running the same way (within about 25 degrees)
+  within 20 m (`CORRIDOR_M`; a four-track trunk is two double tracks 8 m apart, T-1305;
+  player-built double tracks beside each other count too), out to 30 m once within 20 m along the
+  way (`HOLD`), and not the next stretch of its own track where the two meet at a node; each
+  record is mirrored, so both tracks see each other at the same places. The ribbon at a place is
+  every track linked there, track to track (a line in it once), unless it is over 70 m across (a
+  throat or yard, `SPAN_M`) or over 32 tracks, when each track is left as it is. Its tracks are in
+  their order on the ground, from each pair's offset averaged over all the places the two are side by
+  side, left to right of the travel of its lowest numbered line; tracks within 6 m of each other
+  (`COINCIDE_M`: single tracks, or the real New York save's lines each on its own edge) by line
+  number; each edge's own lines in its order. The ribbon is centred on its tracks' middle at that
+  place; each track's centre line is a few metres off it, turned into line widths at a fixed 0.05 a
+  metre (`BAND_LW_PER_M`) so the bands of two tracks touch: exact near zoom 14.5, 1.4 px of overlap at
+  13, 0.9 px of gap at 15 and a few px of gap by 16 (a metre is fixed on the ground, a line width is
+  not; more on wide bundles). **Along each line** the ribbon it is in changes only where the lines
+  beside it change for at least 200 m (`CORRIDOR_MIN_M`, a platform's length: a neighbour splaying
+  round a platform or touching at a junction is smoothed over), unless a line on the line's own
+  edge would go missing from the ribbon (lines on one edge are always side by side). A change along
+  the track eases over 80 m centred on it (`CORRIDOR_EASE_M`); a change at a node over 30 m
+  (`BAND_RAMP_M`, half a short stretch at most) on the side with fewer lines: lines part leaving side
+  by side and close up as they curve out, and merge the other way (T-1799 stage 4); between equal
+  counts half way. A line alone keeps its full width; a line's band is drawn by knots (`BandProfile`,
+  `bandPoints` cutting the line's segments at each). Zoomed out the bands fold into one stroke as a line narrows from
   1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
   centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
-  drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same order,
-  each band as wide as its own line's riders (`trafficBands` in `map/lineBands.ts`, from
-  `buildLayers`), so a trunk is the sum of its lines; its shifts ease at nodes as the Line view's
-  (every shared edge's line segments are cut 30 m from each end for it, `F_EASE`). A station's box
+  drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same ribbons,
+  order and knots, each band as wide as its own line's riders (`trafficBands` in `map/lineBands.ts`,
+  from `buildLayers`, with each knot's ribbon from `NetworkBuffers.corridor`), so a trunk is the sum
+  of its lines (segments between knots that differ are `F_EASE`). A station's box
   or dot stays as wide as for one line (T-1821); through the box (T-236) the bands take the Line
-  view's slots, narrowed to fit. A click or hover takes the band under the pointer, else the nearest within the slop; trains
-  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). **Corridors are
-  off** since T-1846 (`CORRIDORS` in `map/lineBands.ts`): two tracks side by side are cut into edges
-  at different places, so edges fell in and out of a corridor one after another and a line's band
-  stepped sideways at each (Anita's Tokyo trunk in pieces, 2026-10-30); off, only lines on the same
-  edge are side by side and parallel tracks draw over each other as before stage 3. What stage 3 did,
-  kept behind the flag (`lineBands(..., { corridors: true })`): **corridors**
-  (stage 3, `map/corridors.ts`): edges that run side by side within 20 m along at least 60% of each
-  one's length, in the same direction or not (a four-track trunk is two double tracks 8 m apart,
-  T-1305; player-built double tracks beside each other count too), with an end of one within about
-  60 m of an end of the other (only those pairs are tested), are one ribbon: the lines of the
-  corridor's left edge on the left, each edge's own order kept inside it, the whole ribbon centred on
-  the corridor's middle in both views (the Traffic view's `trafficBands` takes `NetworkBuffers.corridor`).
-  Edges pass the relation on, so any number of edges in a row along the track are one ribbon; a
-  corridor whose outer edges are over 30 m apart (a throat or yard, `SPAN_M`) is left as it was. Each edge's centre line is a few metres off the
-  ribbon's middle, which is turned into line widths at a fixed 0.05 a metre (`BAND_LW_PER_M`) so the
-  bands of the two edges touch; that is exact near zoom 14.5, 1.4 px of overlap at 13, 0.9 px of
-  gap at 15 and a few px of gap by 16 (a metre is fixed on the ground, a line width is not). Not yet: the Elevation and Speed views
-  are drawn as below; `?perfOff=bands` turns the bands off.
+  view's slots, narrowed to fit; a ribbon of many tracks runs past a box on one of them as it is (a
+  box holds only the middle bands). A click or hover takes the band under the pointer, else the nearest within the slop; trains
+  run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). `CORRIDORS` in
+  `map/lineBands.ts` turns tracks side by side off (only lines on one edge then). Not yet: the
+  Elevation and Speed views are drawn as below; `?perfOff=bands` turns the bands off.
 - **Lines sharing track drawn over each other** [T-190, T-533] where they are not side by side
   (zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet
   zero) goes under every line that runs trains; within each group the shorter route (end to end,

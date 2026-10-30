@@ -1,233 +1,353 @@
-// Corridors (T-1799 stage 3, notes/T-1799.md): edges that run side by side along their whole length
-// within CORRIDOR_M of each other, such as the two double tracks of a four-track trunk (8 m apart,
-// T-1305), are drawn as one ribbon of bands. This finds them: which edges, which way each runs against
-// the corridor's direction, and how far each lies from its middle.
+// Edges side by side (T-1799 stage 3, T-1848; notes/T-1799.md): every edge that carries lines is sampled
+// every SAMPLE_M, and each sample records the other edges running beside it there, within CORRIDOR_M
+// and about the same direction. The record is symmetric (a sample that sees an edge is put in that
+// edge's sample at the same place), so both tracks see each other at the same places. `lineBands`
+// makes the ribbon at each place from it and smooths it along each line.
 
 import { kAtY } from "./geo";
 
-/** edges this close (m, centre line to centre line) side by side are one corridor */
+/** edges this close (m, centre line to centre line) run side by side */
 export const CORRIDOR_M = 20;
-/** the share of each edge's length that must lie alongside the other's, for both edges */
-const COVER = 0.6;
+/** an edge is sampled about this often, m */
+export const SAMPLE_M = 25;
 /** two edges run the same way when their directions agree to within about 25 degrees */
 const COS_MIN = 0.9;
-/** along an edge, a sample every so many metres */
-const SAMPLE_M = 25;
-/** a corridor wider than this (m, outermost centre lines) is a throat or yard, not a trunk, and is left
- * as it was: a four-track trunk is 8 m across a pair of edges, a pair of pairs 24 m, the Penn throat's
- * six edges 43 m; any number of edges may chain along a corridor's length, as Queens Boulevard's nine
- * lines on nine edges over 2 m do (Anita) */
-const SPAN_M = 30;
-/** two edges are only tested when an end of one is within this of an end of the other, m */
-const END_M = 60;
+/** a track once beside stays beside out to this many times CORRIDOR_M */
+const HOLD = 1.5;
+/** a sample with nothing beside (shared, never written to) */
+const NONE: number[] = [];
 
-export interface CorridorEdge {
-  /** the corridor's id */
+export interface EdgeSamples {
+  /** samples, at (i + 0.5) / n of the edge's length a to b */
+  n: number;
+  /** the edge's length, m */
+  len: number;
+  /** per sample i, its neighbours from first[i] to first[i + 1] */
+  first: Int32Array;
+  /** per neighbour: the edge */
+  edge: Int32Array;
+  /** metres from this edge's centre line to the neighbour's, left of this edge's a to b */
+  off: Float32Array;
+  /** the neighbour's own sample at this place */
+  at: Int32Array;
+  /** +1 when the neighbour's a to b runs this edge's way, -1 against it */
+  rel: Int8Array;
+}
+
+export interface Beside {
+  edges: Map<number, EdgeSamples>;
+  /** per edge, per edge beside it anywhere: [its offset averaged over every sample where they are
+   * side by side (m, left of the first's a to b), rel, samples] */
+  pair: Map<number, Map<number, [number, number, number]>>;
+}
+
+interface Prep {
   id: number;
-  /** metres from the corridor's middle to this edge's centre line, left of the corridor's direction */
-  y: number;
-  /** +1 when the edge's a to b runs the corridor's way, -1 against it */
-  s: number;
+  p: Float32Array;
+  /** local units per metre */
+  k: number;
+  /** arc length to each point, local units */
+  cum: Float64Array;
+  n: number;
+  box: [number, number, number, number];
+  /** its end nodes, and the unit direction it leaves each in (local units, over CONT_M) */
+  a: number;
+  b: number;
+  da: [number, number];
+  db: [number, number];
 }
 
-export interface Corridors {
-  of: Map<number, CorridorEdge>;
-  /** per corridor id: its edges left to right */
-  members: Map<number, number[]>;
-  /** per corridor id: its direction in local units (x east, y south), unit */
-  dir: Map<number, [number, number]>;
-}
+/** how far along an edge the direction it leaves a node in is measured, m */
+const CONT_M = 30;
 
-interface Prep { id: number; p: Float32Array; k: number; len: number; x0: number; y0: number; x1: number; y1: number; fp: number }
-interface Pair { cover: number[]; off: number; rel: number }
+/** one edge's raw record: per sample, [edge, off, at, rel] fours, before the mirror ones are added */
+interface Raw { prep: Prep; rec: number[][] }
 
-/** pairs tested last time, keyed by the two edges; kept while both geometries are as they were */
-let pairCache = new Map<number, { fa: number; fb: number; res: Pair | null }>();
-/** the `within` those pairs were tested at */
-let lastWithin = 0;
+/** the last call's records by edge, kept while an edge and everything near it is as it was */
+let cache = new Map<number, Raw>();
+let cacheWithin = 0;
+/** what the last call gave, handed back while nothing has changed */
+let lastOut: Beside | null = null;
 
-/** each edge's measures, kept while its points array is the same one (the cache hands the same arrays back) */
-const prepCache = new WeakMap<Float32Array, Prep | null>();
-
-const prep = (id: number, p: Float32Array): Prep | null => {
-  const old = prepCache.get(p);
-  if (old && old.id === id && old.fp === fingerprint(p)) return old;
-  if (old === null && p.length < 6) return old;
-  const r = measure(id, p);
-  prepCache.set(p, r);
-  return r;
-};
-
-const measure = (id: number, p: Float32Array): Prep | null => {
-  const n = p.length / 3;
-  if (n < 2) return null;
-  let len = 0, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (let i = 0; i < n; i++) {
+function prepOf(id: number, p: Float32Array, a: number, b: number): Prep | null {
+  const m = p.length / 3;
+  if (m < 2) return null;
+  const cum = new Float64Array(m);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < m; i++) {
     const x = p[i * 3], y = p[i * 3 + 1];
     if (x < x0) x0 = x;
     if (x > x1) x1 = x;
     if (y < y0) y0 = y;
     if (y > y1) y1 = y;
-    if (i) len += Math.hypot(x - p[i * 3 - 3], y - p[i * 3 - 2]);
+    if (i) cum[i] = cum[i - 1] + Math.hypot(x - p[i * 3 - 3], y - p[i * 3 - 2]);
   }
   const k = kAtY((y0 + y1) / 2);
-  return { id, p, k, len, x0, y0, x1, y1, fp: fingerprint(p) };
-};
+  const len = cum[m - 1] / k;
+  if (!(len > 0)) return null;
+  const leave = (fromA: boolean): [number, number] => {
+    const at = (i: number) => (fromA ? i : m - 1 - i), x0 = p[at(0) * 3], y0 = p[at(0) * 3 + 1];
+    let i = 1;
+    while (i < m - 1 && Math.abs(cum[at(i)] - cum[at(0)]) < CONT_M * k) i++;
+    const dx = p[at(i) * 3] - x0, dy = p[at(i) * 3 + 1] - y0, d = Math.hypot(dx, dy) || 1;
+    return [dx / d, dy / d];
+  };
+  return { id, p, k, cum, n: Math.max(1, Math.round(len / SAMPLE_M)), box: [x0, y0, x1, y1], a, b, da: leave(true), db: leave(false) };
+}
 
-/** a number that changes when an edge's points move or are replaced (first, middle and last point) */
-const fingerprint = (p: Float32Array) => {
-  const n = p.length / 3;
-  return n + p[0] * 1.3 + p[1] * 1.7 + p[n * 3 - 3] * 2.9 + p[n * 3 - 2] * 3.1 + p[(n >> 1) * 3] * 0.7 + p[(n >> 1) * 3 + 1] * 0.3;
-};
-
-/** how many of `a`'s samples have a parallel stretch of `b` within CORRIDOR_M, and (summed) the lateral
- * offset of that stretch left of `a`'s direction (m) and the sign of its direction against a's */
-function against(a: Prep, b: Prep, within: number): { hits: number; n: number; off: number; dot: number } {
-  const n = Math.max(3, Math.min(80, Math.ceil(a.len / a.k / SAMPLE_M)));
-  const P = a.p, Q = b.p, nq = Q.length / 3, reach = within * a.k;
-  let hits = 0, off = 0, dot = 0, seg = 0, at = 0, segLen = Math.hypot(P[3] - P[0], P[4] - P[1]);
-  const maxMiss = Math.floor((1 - COVER) * n);
-  let miss = 0;
-  for (let i = 0; i < n; i++) {
-    const want = ((i + 0.5) / n) * a.len;
-    while (at + segLen < want && seg < P.length / 3 - 2) {
-      at += segLen;
-      seg++;
-      segLen = Math.hypot(P[seg * 3 + 3] - P[seg * 3], P[seg * 3 + 4] - P[seg * 3 + 1]);
-    }
-    const f = segLen > 0 ? (want - at) / segLen : 0;
-    const dx = P[seg * 3 + 3] - P[seg * 3], dy = P[seg * 3 + 4] - P[seg * 3 + 1];
-    const px = P[seg * 3] + dx * f, py = P[seg * 3 + 1] + dy * f, dl = Math.hypot(dx, dy) || 1;
-    const tx = dx / dl, ty = dy / dl;
-    // the nearest point on b
-    let best = Infinity, qx = 0, qy = 0, ux = 0, uy = 0;
-    for (let j = 0; j + 1 < nq; j++) {
-      const ax = Q[j * 3], ay = Q[j * 3 + 1], bx = Q[j * 3 + 3], by = Q[j * 3 + 4];
-      const ex = bx - ax, ey = by - ay, l2 = ex * ex + ey * ey;
-      const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
-      const cx = ax + ex * t, cy = ay + ey * t, d = (cx - px) ** 2 + (cy - py) ** 2;
-      if (d < best) {
-        best = d;
-        qx = cx;
-        qy = cy;
-        const el = Math.sqrt(l2) || 1;
-        ux = ex / el;
-        uy = ey / el;
-      }
-    }
-    const c = tx * ux + ty * uy;
-    if (best <= reach * reach && Math.abs(c) >= COS_MIN) {
-      hits++;
-      // left of a's direction, in local units (x east, y south) is (ty, -tx)
-      off += ((qx - px) * ty - (qy - py) * tx) / a.k;
-      dot += c > 0 ? 1 : -1;
-    } else if (++miss > maxMiss) break;
+/** whether `f` carries on from `e` through a node they share (the next stretch of the same track,
+ * which is beside `e` only where they meet), rather than leaving it side by side */
+function carriesOn(e: Prep, f: Prep): boolean {
+  for (const [n, d] of [[e.a, e.da], [e.b, e.db]] as const) {
+    const g = f.a === n ? f.da : f.b === n ? f.db : null;
+    // arriving along e is the reverse of leaving along it
+    if (g && -(d[0] * g[0] + d[1] * g[1]) > 0.5) return true;
   }
-  return { hits, n, off: hits ? off / hits : 0, dot };
+  return false;
 }
 
-function pairOf(a: Prep, b: Prep, within: number): Pair | null {
-  const x = against(a, b, within);
-  if (x.hits < COVER * x.n) return null;
-  const y = against(b, a, within);
-  if (y.hits < COVER * y.n) return null;
-  return { cover: [x.hits / x.n, y.hits / y.n], off: x.off, rel: x.dot >= 0 ? 1 : -1 };
-}
+const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad < b[0] || b[2] + pad < a[0] || a[3] + pad < b[1] || b[3] + pad < a[1]);
 
 /**
- * The corridors among `ids` (edges that carry lines). `pts`: each edge's local polyline (x, y, z
- * triples, a to b). Two edges are side by side when each has at least COVER of its length within
- * CORRIDOR_M of the other, running the same way or the opposite; side by side is passed on, so a
- * third track 8 m further out joins the corridor. `within`: that distance, m.
+ * Per edge of `ids` (edges that carry lines), its samples and what runs beside each. `pts`: each
+ * edge's local polyline (x, y, z triples, a to b); `ends` its nodes. `within`: CORRIDOR_M unless a
+ * check asks otherwise.
  */
-export function findCorridors(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, within = CORRIDOR_M): Corridors {
-  if (within !== lastWithin) pairCache = new Map();
-  lastWithin = within;
-  const out: Corridors = { of: new Map(), members: new Map(), dir: new Map() };
+export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M): Beside {
+  if (within !== cacheWithin) (cache = new Map()), (lastOut = null);
+  cacheWithin = within;
   const list: Prep[] = [];
+  const raw = new Map<number, Raw>();
+  const changed: Prep["box"][] = [];
+  const seen = new Set<number>();
   let kMax = 1;
   for (const id of ids) {
-    const p = pts.get(id), e = p && prep(id, p);
-    if (e) {
-      list.push(e);
-      if (e.k > kMax) kMax = e.k;
+    const p = pts.get(id), ed = ends.get(id);
+    if (!p || !ed) continue;
+    seen.add(id);
+    const old = cache.get(id);
+    if (old && old.prep.p === p && old.prep.a === ed.a && old.prep.b === ed.b) {
+      list.push(old.prep);
+      raw.set(id, old);
+      if (old.prep.k > kMax) kMax = old.prep.k;
+      continue;
     }
+    if (old) changed.push(old.prep.box);
+    const e = prepOf(id, p, ed.a, ed.b);
+    if (!e) continue;
+    list.push(e);
+    changed.push(e.box);
+    if (e.k > kMax) kMax = e.k;
   }
-  if (list.length < 2) return out;
-  // side by side edges end near each other (a four-track trunk's two pairs meet the same stations and
-  // junctions), so the pairs to test are the ones with an end within END_M of each other: a grid of
-  // the edges' two ends, each in the cells within END_M of it
-  const cell = 3 * END_M * kMax, pad = END_M * kMax, grid = new Map<number, Prep[]>();
-  const key = (ix: number, iy: number) => (ix + 1048576) * 2097152 + (iy + 1048576);
+  for (const [id, old] of cache) if (!seen.has(id)) changed.push(old.prep.box);
+  const reach = HOLD * within * kMax;
+  // edges to work out again: new or moved ones, and any near where something changed
+  const redo: Prep[] = [];
+  const many = changed.length > 64;
   for (const e of list) {
-    const P = e.p, ends = [P[0], P[1], P[P.length - 3], P[P.length - 2]];
-    const mine = new Set<number>();
-    for (let q = 0; q < 4; q += 2) for (const dx of [-pad, pad]) for (const dy of [-pad, pad]) mine.add(key(Math.floor((ends[q] + dx) / cell), Math.floor((ends[q + 1] + dy) / cell)));
-    for (const c of mine) {
-      const v = grid.get(c);
-      if (v) v.push(e);
-      else grid.set(c, [e]);
+    const r = raw.get(e.id);
+    if (!r || many || (changed.length && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e);
+  }
+  if (!redo.length && !changed.length && lastOut && raw.size === cache.size) return lastOut;
+  if (redo.length) {
+    let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+    for (const e of redo) {
+      bx0 = Math.min(bx0, e.box[0]);
+      by0 = Math.min(by0, e.box[1]);
+      bx1 = Math.max(bx1, e.box[2]);
+      by1 = Math.max(by1, e.box[3]);
+    }
+    const area: Prep["box"] = [bx0, by0, bx1, by1];
+    // a grid of the segments of every edge near those, cells several reaches wide
+    const near = redo.length === list.length ? list : list.filter((e) => overlaps(e.box, area, reach));
+    const cell = 3 * reach;
+    const grid = new Map<number, number[]>();
+    // (a small integer, wrapping every 32768 cells: cells that share one are only looked at twice)
+    const key = (ix: number, iy: number) => ((ix & 32767) << 15) | (iy & 32767);
+    near.forEach((e, ei) => {
+      const P = e.p;
+      for (let j = 0; j + 1 < P.length / 3; j++) {
+        const ax = P[j * 3], ay = P[j * 3 + 1], bx = P[j * 3 + 3], by = P[j * 3 + 4];
+        const cx0 = Math.floor(Math.min(ax, bx) / cell), cx1 = Math.floor(Math.max(ax, bx) / cell);
+        const cy0 = Math.floor(Math.min(ay, by) / cell), cy1 = Math.floor(Math.max(ay, by) / cell);
+        for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) {
+          const c = key(cx, cy);
+          const v = grid.get(c);
+          if (v) v.push(ei * 1048576 + j);
+          else grid.set(c, [ei * 1048576 + j]);
+        }
+      }
+    });
+    const bestD = new Float64Array(near.length).fill(Infinity), bestJ = new Int32Array(near.length), bestT = new Float64Array(near.length);
+    const touched: number[] = [];
+    const index = new Map(near.map((e, i) => [e.id, i]));
+    for (const e of redo) {
+      const me = index.get(e.id)!, P = e.p, m = P.length / 3, total = e.cum[m - 1];
+      const rec: number[][] = [];
+      const carry = new Map<number, boolean>();
+      // the other edges in or next to its cells: none (most track in the country) and every sample
+      // is empty; else a sample is only looked at near one of their boxes
+      const cells = new Set<number>(), cand = new Set<number>();
+      for (let j = 0; j + 1 < m; j++) {
+        const cx0 = Math.floor(Math.min(P[j * 3], P[j * 3 + 3]) / cell) - 1, cx1 = Math.floor(Math.max(P[j * 3], P[j * 3 + 3]) / cell) + 1;
+        const cy0 = Math.floor(Math.min(P[j * 3 + 1], P[j * 3 + 4]) / cell) - 1, cy1 = Math.floor(Math.max(P[j * 3 + 1], P[j * 3 + 4]) / cell) + 1;
+        for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) cells.add(key(cx, cy));
+      }
+      for (const c of cells) for (const code of grid.get(c) ?? []) {
+        const fi = Math.floor(code / 1048576);
+        if (fi !== me) cand.add(fi);
+      }
+      const boxes: Prep["box"][] = [];
+      for (const fi of cand) if (!carriesOn(e, near[fi]) && overlaps(e.box, near[fi].box, reach)) boxes.push(near[fi].box);
+      if (!boxes.length) {
+        for (let i = 0; i < e.n; i++) rec.push(NONE);
+        raw.set(e.id, { prep: e, rec });
+        continue;
+      }
+      let seg = 0;
+      for (let i = 0; i < e.n; i++) {
+        const want = ((i + 0.5) / e.n) * total;
+        while (seg < m - 2 && e.cum[seg + 1] < want) seg++;
+        const sl = e.cum[seg + 1] - e.cum[seg], f = sl > 0 ? (want - e.cum[seg]) / sl : 0;
+        const dx = P[seg * 3 + 3] - P[seg * 3], dy = P[seg * 3 + 4] - P[seg * 3 + 1], dl = Math.hypot(dx, dy) || 1;
+        const px = P[seg * 3] + dx * f, py = P[seg * 3 + 1] + dy * f, tx = dx / dl, ty = dy / dl;
+        const r = HOLD * within * e.k;
+        let inBox = false;
+        for (let q = 0; q < boxes.length && !inBox; q++) {
+          const b = boxes[q];
+          inBox = px > b[0] - r && px < b[2] + r && py > b[1] - r && py < b[3] + r;
+        }
+        if (!inBox) {
+          rec.push(NONE);
+          continue;
+        }
+        const found: number[] = [];
+        for (let cx = Math.floor((px - r) / cell); cx <= Math.floor((px + r) / cell); cx++) for (let cy = Math.floor((py - r) / cell); cy <= Math.floor((py + r) / cell); cy++) {
+          const v = grid.get(key(cx, cy));
+          if (!v) continue;
+          for (const code of v) {
+            const fi = Math.floor(code / 1048576);
+            if (fi === me) continue;
+            let on = carry.get(fi);
+            if (on === undefined) carry.set(fi, (on = carriesOn(e, near[fi])));
+            if (on) continue;
+            const j = code - fi * 1048576, Q = near[fi].p;
+            const ax = Q[j * 3], ay = Q[j * 3 + 1], ex = Q[j * 3 + 3] - ax, ey = Q[j * 3 + 4] - ay, l2 = ex * ex + ey * ey;
+            const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
+            const d = (ax + ex * t - px) ** 2 + (ay + ey * t - py) ** 2;
+            if (d > r * r) continue;
+            if (bestD[fi] === Infinity) touched.push(fi);
+            if (d < bestD[fi]) {
+              bestD[fi] = d;
+              bestJ[fi] = j;
+              bestT[fi] = t;
+            }
+          }
+        }
+        for (const fi of touched) {
+          const F = near[fi], Q = F.p, j = bestJ[fi], t = bestT[fi];
+          const ex = Q[j * 3 + 3] - Q[j * 3], ey = Q[j * 3 + 4] - Q[j * 3 + 1], el = Math.hypot(ex, ey) || 1;
+          const c = (tx * ex + ty * ey) / el;
+          if (Math.abs(c) >= COS_MIN) {
+            const qx = Q[j * 3] + ex * t, qy = Q[j * 3 + 1] + ey * t;
+            // left of the direction (tx, ty), local y pointing south, is (ty, -tx)
+            const off = ((qx - px) * ty - (qy - py) * tx) / e.k;
+            const u = (F.cum[j] + t * el) / F.cum[F.cum.length - 1];
+            found.push(F.id, off, Math.min(F.n - 1, Math.floor(u * F.n)), c > 0 ? 1 : -1);
+          }
+          bestD[fi] = Infinity;
+        }
+        touched.length = 0;
+        rec.push(found);
+      }
+      // past `within` (up to HOLD times it) a neighbour stays beside only along from where it was
+      // within, so a track at about `within` does not come and go
+      const held = new Map<number, Uint8Array>();
+      rec.forEach((v, i) => {
+        for (let q = 0; q < v.length; q += 4) {
+          let h = held.get(v[q]);
+          if (!h) held.set(v[q], (h = new Uint8Array(e.n)));
+          h[i] = Math.abs(v[q + 1]) <= within ? 2 : 1;
+        }
+      });
+      for (const h of held.values()) {
+        for (let i = 1; i < h.length; i++) if (h[i] === 1 && h[i - 1] === 2) h[i] = 2;
+        for (let i = h.length - 2; i >= 0; i--) if (h[i] === 1 && h[i + 1] === 2) h[i] = 2;
+      }
+      rec.forEach((v, i) => {
+        if (!v.length) return;
+        const keep: number[] = [];
+        for (let q = 0; q < v.length; q += 4) if (held.get(v[q])![i] === 2) keep.push(v[q], v[q + 1], v[q + 2], v[q + 3]);
+        rec[i] = keep;
+      });
+      raw.set(e.id, { prep: e, rec });
     }
   }
-  const reach = within * kMax;
-  const seen = new Set<number>(), cache = new Map<number, { fa: number; fb: number; res: Pair | null }>();
-  const nbr = new Map<number, { to: number; off: number; rel: number }[]>();
-  for (const v of grid.values()) {
-    for (let i = 0; i < v.length; i++) for (let j = i + 1; j < v.length; j++) {
-      let a = v[i], b = v[j];
-      if (a.id > b.id) {
-        const t = a;
-        a = b;
-        b = t;
+  cache = raw;
+  // the mirror of each record, where the other edge's sample there did not see this one itself
+  // (a sample's list is copied before the first mirror is added to it: the cache keeps the raw ones)
+  const rec = new Map<number, number[][]>(), copied = new Map<number, Set<number>>();
+  for (const [id, r] of raw) rec.set(id, r.rec.slice());
+  for (const [id, r] of raw) {
+    r.rec.forEach((v, i) => {
+      for (let q = 0; q < v.length; q += 4) {
+        const other = rec.get(v[q]);
+        if (!other) continue;
+        let w = other[v[q + 2]];
+        let has = false;
+        for (let s = 0; s < w.length && !has; s += 4) has = w[s] === id;
+        if (has) continue;
+        let c = copied.get(v[q]);
+        if (!c) copied.set(v[q], (c = new Set()));
+        if (!c.has(v[q + 2])) {
+          c.add(v[q + 2]);
+          other[v[q + 2]] = w = w.slice();
+        }
+        w.push(id, -v[q + 1] * v[q + 3], i, v[q + 3]);
       }
-      if (a.x1 + reach < b.x0 || b.x1 + reach < a.x0 || a.y1 + reach < b.y0 || b.y1 + reach < a.y0) continue;
-      // a very different length cannot have both covered
-      if (a.len > 4 * b.len || b.len > 4 * a.len) continue;
-      const pk = a.id * 33554432 + b.id;
-      if (seen.has(pk)) continue;
-      seen.add(pk);
-      const old = pairCache.get(pk);
-      let hit = old && old.fa === a.fp && old.fb === b.fp ? old : null;
-      if (!hit) hit = { fa: a.fp, fb: b.fp, res: pairOf(a, b, within) };
-      cache.set(pk, hit);
-      const r = hit.res;
-      if (!r) continue;
-      for (const [from, to, off, rel] of [[a.id, b.id, r.off, r.rel], [b.id, a.id, -r.off * r.rel, r.rel]] as const) {
-        let u = nbr.get(from);
-        if (!u) nbr.set(from, (u = []));
-        u.push({ to, off, rel });
-      }
+    });
+  }
+  const out: Beside = { edges: new Map(), pair: new Map() };
+  // each pair's offset over all the places it is side by side, from the lower id edge
+  const sums = new Map<number, Map<number, [number, number, number]>>();
+  for (const [id, v] of rec) {
+    for (const s of v) for (let q = 0; q < s.length; q += 4) {
+      if (s[q] < id) continue;
+      let m = sums.get(id);
+      if (!m) sums.set(id, (m = new Map()));
+      const old = m.get(s[q]);
+      if (old) {
+        old[0] += s[q + 1];
+        old[2]++;
+      } else m.set(s[q], [s[q + 1], s[q + 3], 1]);
     }
   }
-  pairCache = cache;
-  const byId = new Map(list.map((e) => [e.id, e]));
-  const done = new Set<number>();
-  let next = 0;
-  for (const start of [...nbr.keys()].sort((a, b) => a - b)) {
-    if (done.has(start)) continue;
-    // walk the component: each edge's place and direction against the first's
-    const place = new Map<number, { y: number; s: number }>([[start, { y: 0, s: 1 }]]);
-    const queue = [start];
-    done.add(start);
-    for (let q = 0; q < queue.length; q++) {
-      const me = place.get(queue[q])!;
-      for (const n of nbr.get(queue[q]) ?? []) {
-        if (place.has(n.to)) continue;
-        place.set(n.to, { y: me.y + me.s * n.off, s: me.s * n.rel });
-        done.add(n.to);
-        queue.push(n.to);
-      }
-    }
-    const ys = [...place.values()].map((v) => v.y);
-    const lo = Math.min(...ys), hi = Math.max(...ys);
-    if (hi - lo > SPAN_M || place.size < 2) continue;
-    const mid = (lo + hi) / 2, id = next++;
-    const e0 = byId.get(start)!, p = e0.p, n = p.length / 3;
-    const dx = p[n * 3 - 3] - p[0], dy = p[n * 3 - 2] - p[1], dl = Math.hypot(dx, dy) || 1;
-    out.dir.set(id, [dx / dl, dy / dl]);
-    const members = [...place.keys()].sort((a, b) => place.get(b)!.y - place.get(a)!.y || a - b);
-    out.members.set(id, members);
-    for (const e of members) out.of.set(e, { id, y: place.get(e)!.y - mid, s: place.get(e)!.s });
+  const side = (a: number, b: number, x: [number, number, number]) => {
+    let m = out.pair.get(a);
+    if (!m) out.pair.set(a, (m = new Map()));
+    m.set(b, x);
+  };
+  for (const [id, m] of sums) for (const [f, [sum, rel, n]] of m) {
+    side(id, f, [sum / n, rel, n]);
+    side(f, id, [(-sum / n) * rel, rel, n]);
   }
-  return out;
+  for (const [id, v] of rec) {
+    const r = raw.get(id)!;
+    let total = 0;
+    for (const s of v) total += s.length / 4;
+    const first = new Int32Array(v.length + 1), edge = new Int32Array(total), off = new Float32Array(total), at = new Int32Array(total), rel = new Int8Array(total);
+    let o = 0;
+    v.forEach((s, i) => {
+      first[i] = o;
+      for (let q = 0; q < s.length; q += 4, o++) {
+        edge[o] = s[q];
+        off[o] = s[q + 1];
+        at[o] = s[q + 2];
+        rel[o] = s[q + 3];
+      }
+    });
+    first[v.length] = o;
+    out.edges.set(id, { n: r.prep.n, len: r.prep.cum[r.prep.cum.length - 1] / r.prep.k, first, edge, off, at, rel });
+  }
+  return (lastOut = out);
 }

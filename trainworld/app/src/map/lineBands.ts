@@ -7,8 +7,13 @@
 // they never part ahead, the same looking back; same route both ways, by line id. "Ahead" is the lower
 // id line's own direction, whichever way each edge was drawn. One parting decides
 // every edge of a stretch they share, so bands cross only at a node where their routes make them.
+//
+// Side by side is decided per place, not per edge (T-1848): each edge is sampled (corridors.ts), the
+// ribbon at a sample is every line on the edges beside it there, and along each line a ribbon that
+// lasts less than CORRIDOR_MIN_M is smoothed away, so edges cut at different places on two tracks do
+// not make a line step sideways.
 
-import { findCorridors } from "./corridors";
+import { besideSamples, type Beside } from "./corridors";
 import { kAtY } from "./geo";
 
 /** T-1821: the Line view's line width as a multiple of the width the Traffic view's scale is set
@@ -16,49 +21,84 @@ import { kAtY } from "./geo";
 export const LINE_VIEW_WIDTH = 1.3;
 /** a band's width as a share of a line's (Anita, 2026-10-29) */
 export const BAND_SHARE = 0.8;
-/** line widths a metre across is drawn as, for the gap between the centre lines of the edges of a
- * corridor (8 m between a four-track trunk's pairs): 0.4 of a line width for 8 m, which is exact near
+/** line widths a metre across is drawn as, for the gap between the centre lines of tracks side by
+ * side (8 m between a four-track trunk's pairs): 0.4 of a line width for 8 m, which is exact near
  * zoom 14.5, 1.4 px of overlap at zoom 13 and 0.9 px of gap at 15, a few px of gap by 16 (a metre is
  * fixed on the ground, a line width is not; notes/T-1799.md, stage 3) */
 export const BAND_LW_PER_M = 0.05;
 /** where a line's slot changes at a node, its shift eases over this much of the edge, m */
 export const BAND_RAMP_M = 30;
+/** where the ribbon changes along a track (a track comes beside or leaves), the shift eases over this, m */
+export const CORRIDOR_EASE_M = 80;
+/** a ribbon that lasts less than this along a line is smoothed over, m: a neighbour track splaying
+ * round a platform (up to about 200 m long) or touching at a junction */
+export const CORRIDOR_MIN_M = 200;
+/** a ribbon wider than this (m, outermost centre lines) is a throat or yard, not a trunk: its tracks
+ * are left as they are (a four-track trunk is 8 m across; the Long Island Rail Road's main line with
+ * the Port Washington branch beside it at Woodside, seventeen lines on the real New York save, 58 m) */
+const SPAN_M = 70;
+/** at most this many tracks side by side in one ribbon, against runaway work (the Long Island Rail
+ * Road's main line on the real New York save is thirteen branches' edges on top of each other, and
+ * with the Port Washington branch beside seventeen); SPAN_M is what keeps yards out */
+const MAX_TRACKS = 32;
+/** edges whose centre lines are closer than this (m, averaged along) are one bundle of single
+ * tracks or lie on top of each other (the real New York save's lines each on their own edge, 4 m
+ * apart or less, swapping sides at interlockings), not the double-track edges of a four-track trunk
+ * (8 m apart): their order on the ground is not kept */
+const COINCIDE_M = 6;
 /** a band's shift is stored as a share of this many line widths (`Strokes.band`, Int16 normalised) */
 export const BAND_RANGE = 16;
-/** per path entry in `LineBands.of`: shift at its start, along it and at its end (line widths, left of
- * travel), and the same three of `1 - width share` */
-export const BAND_STRIDE = 6;
+/** numbers per knot of a band profile: where along the path entry (0-1, its travel direction), the
+ * shift there (line widths, left of travel), `1 - width share`, and which recipe (-1 between two) */
+export const KNOT = 4;
+/** shifts closer than this (line widths) along one ribbon are one value (a track's spacing wandering) */
+const SHIFT_TOL = 0.05;
+
+/** T-1799 stage 3's corridors: tracks side by side drawn as one ribbon. */
+export const CORRIDORS = true;
 
 interface BandLine { id: number; ok: boolean; path: number[]; bus?: unknown }
 interface BandEdge { id: number; a: number; b: number }
 
+/**
+ * A line's bands along its path: `[n, start of each path entry's knots (n + 1), knots...]`, KNOT
+ * numbers a knot, linear between knots. Each entry has a knot at 0 and at 1.
+ */
+export type BandProfile = Float32Array;
+
 export interface LineBands {
-  /** per line id: BAND_STRIDE numbers per path entry; absent for a line on no shared track */
-  of: Map<number, Float32Array>;
+  /** per line id: its profile; absent for a line on no shared track */
+  of: Map<number, BandProfile>;
   /** per edge with two or more lines: their ids left to right in its a to b direction */
   order: Map<number, number[]>;
   /** the pairwise rule on an edge between two of its lines (checks/t1799-bands.mjs): < 0 the first on the left in a to b */
   rule: (edge: number, x: number, y: number) => number;
-  /** per edge in a corridor, CORRIDOR_STRIDE numbers: the edge, its corridor, how far its centre line is
-   * from the corridor's middle (line widths, left of the corridor's direction), and that direction (local x, y) */
+  /** the Traffic view's recipe for every knot (`trafficBands`), made into one array to post */
   corridor: Float32Array;
 }
-
-export const CORRIDOR_STRIDE = 5;
-
-/** T-1799 stage 3's corridors (edges side by side drawn as one ribbon), off since T-1846: on real and
- * player-built tracks the two sides are cut into edges at different places, so edges fell in and out
- * of a corridor one after another and a line's band stepped sideways at each (Anita, 2026-10-30, a
- * Tokyo trunk in pieces). Off, each edge's lines are a ribbon of their own (stage 2's look). The way to
- * turn it back on is in notes/T-1799.md, "T-1846". */
-export const CORRIDORS = false;
-
 
 /** how far along an edge its leaving direction is measured, m, so a short first segment does not decide it */
 const BEARING_M = 60;
 
+/** The ribbon at a place, seen from one of its tracks. */
+interface Ribbon {
+  /** the lines left to right, left of that track's a to b, and the edge each is on */
+  lines: number[];
+  edges: number[];
+  /** its lines in order left to right of that track's a to b; `back` right to left, as seen
+   * travelling b to a */
+  key: string;
+  back: string;
+  /** metres from this track's centre line to the ribbon's middle, left of its a to b */
+  mid: number;
+  /** the tracks and lines in order, shared by every place they are side by side alike; `flip` when
+   * this track sees them right to left */
+  shape: { rid: [number, number] };
+  flip: boolean;
+}
+
 /** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). */
-export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number }): LineBands {
+export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown> }): LineBands {
   const ends = new Map(edges.map((e) => [e.id, e]));
   /** per edge: the lines on it, each with its first entry in its path */
   const on = new Map<number, { line: BandLine; k: number }[]>();
@@ -71,6 +111,20 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
       if (!v.some((x) => x.line === l)) v.push({ line: l, k });
     });
   }
+  // the same paths over the same edges as last time (a rebuild for trains or a timetable): the same bands
+  let sig = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""};`;
+  for (const l of rail) sig += `${l.id}:${l.path.join(",")};`;
+  const used = [...on.keys()].map((e) => [pts.get(e), ends.get(e)?.a, ends.get(e)?.b] as const);
+  if (!opts?.debug && last && last.sig === sig && last.used.length === used.length && used.every((u, i) => u[0] === last!.used[i][0] && u[1] === last!.used[i][1] && u[2] === last!.used[i][2])) return { ...last.out, corridor: last.corridor.slice() };
+  const out = bands(rail, on, ends, pts, opts);
+  // (a copy: the clock worker transfers the array it posts)
+  last = { sig, used, out, corridor: out.corridor.slice() };
+  return out;
+}
+
+let last: { sig: string; used: (readonly [Float32Array | undefined, number | undefined, number | undefined])[]; out: LineBands; corridor: Float32Array } | null = null;
+
+function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]>, ends: Map<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown> }): LineBands {
   // the unit direction an edge leaves a node in, y up (local y points south)
   const leave = new Map<number, [number, number]>();
   const dirAt = (edge: number, node: number): [number, number] => {
@@ -158,75 +212,409 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
       else if (r > 0) wins[j]++;
     }
     const idx = v.map((_, i) => i).sort((i, j) => wins[j] - wins[i] || c[i * m + j] || v[i].line.id - v[j].line.id);
-    const sorted = idx.map((i) => v[i]);
-    order.set(edge, sorted.map((s) => s.line.id));
-  }
-  // each line's shift on each edge it is on, line widths left of the edge's a to b direction
-  const pos = new Map<number, Map<number, number>>();
-  const cnt = new Map<number, number>();
-  const cor = (opts?.corridors ?? CORRIDORS) && on.size > 1 ? findCorridors([...on.keys()], pts, opts?.within) : null;
-  for (const [edge, o] of order) {
-    if (cor?.of.has(edge)) continue;
-    pos.set(edge, new Map(o.map((id, i) => [id, ((o.length - 1) / 2 - i) * BAND_SHARE])));
-    cnt.set(edge, o.length);
-  }
-  const corr: number[] = [];
-  for (const [cid, members] of cor?.members ?? []) {
-    // side by side (T-1799 stage 3): the left edge's lines on the left, one ribbon centred on the
-    // corridor's middle; an edge's centre line is off the middle by `y` m, which `BAND_LW_PER_M` turns
-    // into line widths so the bands of neighbouring edges touch
-    const seq: [number, number][] = [];
-    for (const e of members) {
-      const ids = order.get(e) ?? on.get(e)!.map((x) => x.line.id);
-      for (const id of cor!.of.get(e)!.s > 0 ? ids : [...ids].reverse()) seq.push([e, id]);
-    }
-    const K = seq.length, dir = cor!.dir.get(cid)!;
-    seq.forEach(([e, id], g) => {
-      const c = cor!.of.get(e)!;
-      let m = pos.get(e);
-      if (!m) pos.set(e, (m = new Map()));
-      m.set(id, c.s * (((K - 1) / 2 - g) * BAND_SHARE - c.y * BAND_LW_PER_M));
-      cnt.set(e, K);
-    });
-    for (const e of members) corr.push(e, cid, cor!.of.get(e)!.y * BAND_LW_PER_M, dir[0], dir[1]);
-  }
-  const of = new Map<number, Float32Array>();
-  for (const l of rail) {
-    const n = l.path.length;
-    // per entry: its shift along the edge, left of this line's travel, its width share, lines there
-    const mid = new Float32Array(n), q = new Float32Array(n), count = new Int32Array(n);
-    let any = false;
-    for (let k = 0; k < n; k++) {
-      const e = l.path[k] >> 1, sl = pos.get(e);
-      count[k] = cnt.get(e) ?? on.get(e)?.length ?? 1;
-      if (!sl) continue;
-      any = true;
-      const s = sl.get(l.id)!;
-      mid[k] = (l.path[k] & 1) === 1 ? -s : s;
-      q[k] = 1 - BAND_SHARE;
-    }
-    if (!any) continue;
-    const out = new Float32Array(n * BAND_STRIDE);
-    for (let k = 0; k < n; k++) {
-      // at a node the line keeps the bigger bundle's place into the edge with fewer lines and eases
-      // to its own there (T-1799 stage 4: where lines part they leave side by side and close up as
-      // they curve out, not snap together first); between equal ones, half way
-      const atNode = (j: number): [number, number] => {
-        if (j < 0 || j >= n) return [mid[k], q[k]];
-        if (count[j] > count[k]) return [mid[j], q[j]];
-        if (count[j] < count[k]) return [mid[k], q[k]];
-        return [(mid[j] + mid[k]) / 2, (q[j] + q[k]) / 2];
-      };
-      const [s0, q0] = atNode(k - 1), [s1, q1] = atNode(k + 1);
-      out.set([s0, mid[k], s1, q0, q[k], q1], k * BAND_STRIDE);
-    }
-    of.set(l.id, out);
+    order.set(edge, idx.map((i) => v[i].line.id));
   }
   const rule = (edge: number, x: number, y: number) => {
     const v = on.get(edge), a = v?.find((s) => s.line.id === x), b = v?.find((s) => s.line.id === y);
     return a && b ? compare(edge, a, b) : 0;
   };
-  return { of, order, rule, corridor: new Float32Array(corr) };
+  const linesOf = (e: number) => order.get(e) ?? on.get(e)!.map((x) => x.line.id);
+
+  // ---- the ribbon at each place
+  const useCorridors = (opts?.corridors ?? CORRIDORS) && on.size > 1;
+  const beside: Beside = useCorridors ? besideSamples([...on.keys()], pts, ends, opts?.within) : { edges: new Map(), pair: new Map() };
+  const samples = beside.edges;
+  const lenOf = new Map<number, number>();
+  const edgeLen = (e: number) => {
+    let v = lenOf.get(e);
+    if (v !== undefined) return v;
+    const s = samples.get(e);
+    if (s) v = s.len;
+    else {
+      const p = pts.get(e);
+      v = 0;
+      if (p) for (let i = 3; i < p.length; i += 3) v += Math.hypot(p[i] - p[i - 3], p[i + 1] - p[i - 2]);
+      v = p && p.length >= 6 ? v / kAtY(p[1]) : 0;
+    }
+    lenOf.set(e, v);
+    return v;
+  };
+  const keysOf = (ids: readonly number[]) => ({ key: ids.join(","), back: [...ids].reverse().join(",") });
+  const own = new Map<number, Ribbon>();
+  const ownRibbon = (e: number): Ribbon => {
+    let r = own.get(e);
+    if (!r) {
+      const ids = linesOf(e), edges = ids.map(() => e), { key, back } = keysOf(ids);
+      const shape: Shape = { ids, edges, rids: [...ids].reverse(), redges: edges, key, back, rid: [-1, -1] };
+      own.set(e, (r = { shape, flip: false, lines: ids, edges, key, back, mid: 0 }));
+    }
+    return r;
+  };
+  const ribbons = new Map<number, (Ribbon | undefined)[]>();
+  /** keep ribbon r for sample i of edge e unless it has one */
+  const put = (e: number, i: number, r: Ribbon) => {
+    let memo = ribbons.get(e);
+    if (!memo) ribbons.set(e, (memo = new Array(samples.get(e)?.n ?? 1)));
+    if (!memo[i]) memo[i] = r;
+  };
+  /** the ribbon at sample i of edge e: the tracks side by side there, passed on from track to track */
+  const ribbonAt = (e: number, i: number): Ribbon => {
+    const S = samples.get(e);
+    if (!S || S.first[i] === S.first[i + 1]) return ownRibbon(e);
+    let memo = ribbons.get(e);
+    if (!memo) ribbons.set(e, (memo = new Array(S.n)));
+    const old = memo[i];
+    if (old) return old;
+    const all = [{ e, i, off: 0, rel: 1 }];
+    const seen = new Set([e]);
+    let big = false;
+    for (let q = 0; q < all.length && !big; q++) {
+      const M = all[q], T = samples.get(M.e)!;
+      for (let j = T.first[M.i]; j < T.first[M.i + 1]; j++) {
+        const f = T.edge[j];
+        if (seen.has(f) || !on.has(f)) continue;
+        seen.add(f);
+        all.push({ e: f, i: T.at[j], off: M.off + M.rel * T.off[j], rel: M.rel * T.rel[j] });
+        if (all.length > 2 * MAX_TRACKS) big = true;
+      }
+    }
+    // a line is in a ribbon once: of two edges with a line in common (two stretches of one track
+    // meeting at a node here) the lower id is in, whichever track the ribbon is seen from
+    const has = new Set<number>();
+    const mem = [...all].sort((a, b) => a.e - b.e).filter((m) => {
+      const v = linesOf(m.e);
+      if (v.some((id) => has.has(id))) return false;
+      for (const id of v) has.add(id);
+      return true;
+    });
+    let lo = Infinity, hi = -Infinity;
+    for (const m of mem) {
+      lo = Math.min(lo, m.off);
+      hi = Math.max(hi, m.off);
+    }
+    if (big || mem.length > MAX_TRACKS || hi - lo > SPAN_M || mem.length < 2 || !mem.some((m) => m.e === e)) {
+      // the same for each track of it at this place, which need not work it out again
+      for (const m of all) put(m.e, m.i, ownRibbon(m.e));
+      return (memo[i] = ownRibbon(e));
+    }
+    // worked out in the travel direction of the ribbon's lowest id line, the same from whichever
+    // track and along the line from one edge to the next
+    let c = mem[0], low = Infinity;
+    for (const m of mem) {
+      const x = lowest(m.e);
+      if (x < low) (low = x), (c = m);
+    }
+    const lead = on.get(c.e)!.find((x) => x.line.id === low)!;
+    const cw = c.rel * ((lead.line.path[lead.k] & 1) === 1 ? -1 : 1);
+    let sig = "";
+    for (const m of mem) sig += `${m.e}${m.rel * cw > 0 ? "+" : "-"}`;
+    let sh = shapes.get(sig);
+    if (!sh) shapes.set(sig, (sh = shapeOf(mem.map((m) => [m.e, m.rel * cw]))));
+    const mid = (cw * (lo + hi)) / 2;
+    // the ribbon seen from each of its tracks there, in that track's frame
+    for (const m of mem) {
+      const fwd = m.rel * cw > 0, mm = mid - cw * m.off;
+      const v: Ribbon = fwd
+        ? { shape: sh, flip: false, lines: sh.ids, edges: sh.edges, key: sh.key, back: sh.back, mid: mm }
+        : { shape: sh, flip: true, lines: sh.rids, edges: sh.redges, key: sh.back, back: sh.key, mid: -mm };
+      if (m.e === e) memo[i] = v;
+      else put(m.e, m.i, v);
+    }
+    return memo[i]!;
+  };
+  interface Shape { ids: number[]; edges: number[]; rids: number[]; redges: number[]; key: string; back: string; rid: [number, number] }
+  const shapes = new Map<string, Shape>();
+  const lowest = (e: number) => Math.min(...linesOf(e));
+  /** a ribbon's tracks (edge, direction against the frame) in order left to right of the frame (the
+   * travel of its lowest id line): each track's place from every pair's offset averaged over all the
+   * places the two are side by side, so the order holds along the ribbon. Tracks within COINCIDE_M
+   * of each other (as on the real New York save, where each line has its own edge) have no order on
+   * the ground worth keeping: by line id. */
+  const shapeOf = (mem: [number, number][]): Shape => {
+    const pos = new Map<number, number>([[mem[0][0], 0]]), way = new Map<number, number>([[mem[0][0], 1]]);
+    const queue = [mem[0][0]], inMem = new Set(mem.map((m) => m[0]));
+    for (let q = 0; q < queue.length; q++) {
+      const a = queue[q], pa = pos.get(a)!, ra = way.get(a)!;
+      const nb = beside.pair.get(a);
+      if (!nb) continue;
+      for (const f of [...inMem].sort((x, y) => x - y)) {
+        const x = nb.get(f);
+        if (!x || pos.has(f)) continue;
+        pos.set(f, pa + ra * x[0]);
+        way.set(f, ra * x[1]);
+        queue.push(f);
+      }
+    }
+    // left to right of the first's a to b, then of the frame `mem` is in (its directions are against that)
+    const order = [...mem].sort((a, b) => (pos.get(b[0]) ?? 0) - (pos.get(a[0]) ?? 0) || lowest(a[0]) - lowest(b[0]));
+    if (mem[0][1] < 0) order.reverse();
+    for (let c0 = 0; c0 < order.length; ) {
+      let c1 = c0 + 1;
+      while (c1 < order.length && Math.abs((pos.get(order[c1 - 1][0]) ?? 0) - (pos.get(order[c1][0]) ?? 0)) < COINCIDE_M) c1++;
+      // by line id, left to right of the lowest id line's travel: a new track joining the bundle
+      // leaves the others' order as it was
+      if (c1 - c0 > 1) order.splice(c0, c1 - c0, ...order.slice(c0, c1).sort((a, b) => lowest(a[0]) - lowest(b[0])));
+      c0 = c1;
+    }
+    const ids: number[] = [], edges: number[] = [];
+    for (const [f, rel] of order) for (const id of rel > 0 ? linesOf(f) : [...linesOf(f)].reverse()) {
+      ids.push(id);
+      edges.push(f);
+    }
+    const { key, back } = keysOf(ids);
+    return { ids, edges, rids: [...ids].reverse(), redges: [...edges].reverse(), key, back, rid: [-1, -1] };
+  };
+  /** a line's shift left of e's a to b in ribbon r, line widths: its slot, the ribbon centred on its
+   * middle, from the line's own track */
+  const shiftIn = (r: Ribbon, slot: number) => BAND_SHARE * ((r.lines.length - 1) / 2 - slot) + r.mid * BAND_LW_PER_M;
+
+  // ---- the Traffic view's table: ribbons, recipes, and per line and edge its knots' recipes
+  const tRibbons: number[] = [];
+  let nRibbons = 0;
+  const ridOf = (r: Ribbon) => {
+    const f = r.flip ? 1 : 0;
+    if (r.shape.rid[f] < 0) {
+      r.shape.rid[f] = nRibbons++;
+      tRibbons.push(r.lines.length);
+      r.lines.forEach((id, s) => tRibbons.push(id, r.edges[s]));
+    }
+    return r.shape.rid[f];
+  };
+  const tRecipes: number[] = [];
+  const recipeOf = (r: Ribbon, slot: number, sgn: number) => {
+    tRecipes.push(ridOf(r), slot, sgn, r.mid * BAND_LW_PER_M);
+    return tRecipes.length / RECIPE - 1;
+  };
+  const tRecords: number[] = [];
+  let nRecords = 0;
+
+  // ---- along each line
+  const of = new Map<number, BandProfile>();
+  for (const l of rail) {
+    const n = l.path.length;
+    // its samples in travel order: metres along its path, half their spacing, entry, ribbon, slot
+    const M: number[] = [], H: number[] = [], K: number[] = [], R: Ribbon[] = [], S: number[] = [], dbgF: number[] = [];
+    const start = new Float64Array(n + 1);
+    let any = false;
+    for (let k = 0; k < n; k++) {
+      const p = l.path[k], e = p >> 1, rev = (p & 1) === 1, len = edgeLen(e);
+      start[k + 1] = start[k] + len;
+      if (!on.has(e)) continue;
+      const T = samples.get(e), ns = T?.n ?? 1;
+      let alone = -1;
+      for (let s = 0; s < ns; s++) {
+        const i = rev ? ns - 1 - s : s;
+        // samples with nothing beside, one after another, are one (long edges in open country)
+        if (T && T.first[i] === T.first[i + 1] && alone >= 0 && !opts?.debug) {
+          const m1 = start[k] + ((s + 1) / ns) * len, m0 = M[alone] - H[alone];
+          M[alone] = (m0 + m1) / 2;
+          H[alone] = (m1 - m0) / 2;
+          continue;
+        }
+        const r = ribbonAt(e, i);
+        let slot = -1;
+        for (let q = 0; q < r.lines.length && slot < 0; q++) if (r.lines[q] === l.id && r.edges[q] === e) slot = q;
+        if (slot < 0) continue;
+        if (r.lines.length > 1) any = true;
+        if (opts?.debug) dbgF.push((i + 0.5) / ns);
+        alone = T && T.first[i] === T.first[i + 1] ? M.length : -1;
+        M.push(start[k] + ((s + 0.5) / ns) * len);
+        H.push(len / ns / 2);
+        K.push(k);
+        R.push(r);
+        S.push(slot);
+      }
+    }
+    if (!any) continue;
+    const N = M.length, sgnAt = (j: number) => ((l.path[K[j]] & 1) === 1 ? -1 : 1);
+    const V = new Float64Array(N), KEY: string[] = new Array(N);
+    for (let j = 0; j < N; j++) {
+      const sg = sgnAt(j);
+      V[j] = sg * shiftIn(R[j], S[j]);
+      // its lines in order left to right of travel
+      KEY[j] = sg > 0 ? R[j].key : R[j].back;
+    }
+    const val = (j: number) => V[j];
+    // runs of one ribbon along the path
+    type Run = { key: string; s0: number; s1: number; r: Ribbon };
+    const runs: Run[] = [];
+    for (let j = 0; j < N; j++) {
+      const last = runs[runs.length - 1];
+      if (last && last.key === KEY[j]) last.s1 = j;
+      else runs.push({ key: KEY[j], s0: j, s1: j, r: R[j] });
+    }
+    const dropped = new Uint8Array(N);
+    const lenRun = (u: Run) => M[u.s1] + H[u.s1] - (M[u.s0] - H[u.s0]);
+    /** whether every line on the line's own tracks along run u is in the ribbon of run x */
+    const keeps = (u: Run, x: Run | undefined) => {
+      if (!x) return true;
+      for (let j = u.s0; j <= u.s1; j++) for (const id of linesOf(R[j].edges[S[j]])) if (!x.r.lines.includes(id)) return false;
+      return true;
+    };
+    // a short ribbon goes, its stretch then eased across from the ribbons each side, unless a line
+    // on the line's own track there would go missing from them (lines on one edge always side by side)
+    for (;;) {
+      let best = -1;
+      for (let u = 0; u < runs.length && runs.length > 1; u++) {
+        if (lenRun(runs[u]) >= CORRIDOR_MIN_M || (best >= 0 && lenRun(runs[u]) >= lenRun(runs[best]))) continue;
+        if (keeps(runs[u], runs[u - 1]) && keeps(runs[u], runs[u + 1])) best = u;
+      }
+      if (best < 0) break;
+      const u = runs[best];
+      for (let j = u.s0; j <= u.s1; j++) dropped[j] = 1;
+      const a = runs[best - 1], b = runs[best + 1];
+      if (a && b && a.key === b.key) {
+        a.s1 = b.s1;
+        runs.splice(best, 2);
+      } else runs.splice(best, 1);
+    }
+    opts?.debug?.set(l.id, { M, f: dbgF, key: KEY, v: [...V], entry: K, dropped: [...dropped], runs: runs.map((u) => [u.key, u.s0, u.s1]) });
+    // knots in path metres: per run its value, eased into the next over CORRIDOR_EASE_M, or at a
+    // node between different lines over BAND_RAMP_M on the side with fewer (T-1799 stage 4)
+    const km: number[] = [], kv: number[] = [], kq: number[] = [], kr: number[] = [];
+    const push = (m: number, j: number) => {
+      if (km.length && m <= km[km.length - 1] + 1e-3) m = km[km.length - 1] + 1e-3;
+      km.push(m);
+      kv.push(val(j));
+      kq.push(R[j].lines.length > 1 ? 1 - BAND_SHARE : 0);
+      kr.push(recipeOf(R[j], S[j], sgnAt(j)));
+    };
+    const ease: [number, number][] = runs.map(() => [0, start[n]]);
+    for (let u = 0; u + 1 < runs.length; u++) {
+      const a = runs[u], b = runs[u + 1];
+      // the last sample of a and first of b not smoothed away
+      let ja = a.s1, jb = b.s0;
+      while (ja > a.s0 && dropped[ja]) ja--;
+      while (jb < b.s1 && dropped[jb]) jb++;
+      const g0 = M[ja] + H[ja], g1 = M[jb] - H[jb];
+      const la = lenRun(a), lb = lenRun(b);
+      if (g1 - g0 < 0.5 && K[ja] !== K[jb]) {
+        const ra = Math.min(BAND_RAMP_M, la / 2), rb = Math.min(BAND_RAMP_M, lb / 2);
+        ease[u][1] = a.r.lines.length > b.r.lines.length ? g0 : g0 - ra;
+        ease[u + 1][0] = b.r.lines.length > a.r.lines.length ? g1 : g1 + rb;
+      } else {
+        const c = (g0 + g1) / 2, half = Math.max(CORRIDOR_EASE_M, g1 - g0) / 2;
+        ease[u][1] = Math.max(c - half, M[a.s0] - H[a.s0] + la / 2);
+        ease[u + 1][0] = Math.min(c + half, M[b.s1] + H[b.s1] - lb / 2);
+      }
+    }
+    runs.forEach((u, ui) => {
+      const [t0, t1] = ease[ui];
+      // each sample stands for the median of the five around it on its edge, so one sample where a
+      // track is just coming beside (the middle not yet settled) is no bump
+      const kept: number[] = [];
+      for (let j = u.s0; j <= u.s1; j++) if (!dropped[j]) kept.push(j);
+      const medOf = (x: number) => {
+        const j = kept[x], a = kept[x - 1], b = kept[x + 1];
+        // (only where it stands out from a neighbour)
+        if ((a === undefined || Math.abs(V[a] - V[j]) <= SHIFT_TOL) && (b === undefined || Math.abs(V[b] - V[j]) <= SHIFT_TOL)) return j;
+        const w: number[] = [];
+        for (let y = Math.max(0, x - 2); y <= Math.min(kept.length - 1, x + 2); y++) if (K[kept[y]] === K[j]) w.push(kept[y]);
+        w.sort((p, q) => V[p] - V[q]);
+        return w[w.length >> 1];
+      };
+      // its own samples in pieces of one value: [first, last sample, the samples whose values they take]
+      const pieces: [number, number, number, number][] = [];
+      for (let x = 0; x < kept.length; x++) {
+        const j0 = kept[x], j = medOf(x);
+        // (a new piece at each node too, where the Traffic view's widths may change)
+        const p = pieces[pieces.length - 1];
+        if (p && Math.abs(val(j) - val(p[2])) <= SHIFT_TOL && K[j0] === K[p[0]]) (p[1] = j0), (p[3] = j);
+        else pieces.push([j0, j0, j, j]);
+      }
+      if (!pieces.length) return;
+      let first = pieces.findIndex((p) => M[p[1]] >= t0);
+      if (first < 0) first = pieces.length - 1;
+      let last = pieces.length - 1;
+      while (last > first && M[pieces[last][0]] > t1) last--;
+      push(t0, pieces[first][2]);
+      for (let q = first; q < last; q++) {
+        const ma = M[pieces[q][1]], mb = M[pieces[q + 1][0]];
+        if (ma > t0 && ma < t1) push(ma, pieces[q][3]);
+        if (mb > t0 && mb < t1) push(mb, pieces[q + 1][2]);
+      }
+      push(Math.max(t1, km[km.length - 1] + 1e-3), pieces[last][3]);
+    });
+    // per path entry: its knots, with one at each end where it lies between two
+    const knots: number[] = [];
+    const starts: number[] = [];
+    const recMark = tRecords.length, recCount = nRecords;
+    let q = 0, ki = 0, nonzero = false;
+    const at = (m: number): [number, number, number, number, number] => {
+      while (q + 1 < km.length && km[q + 1] < m) q++;
+      if (m <= km[0]) return [kv[0], kq[0], kr[0], kr[0], 0];
+      if (q + 1 >= km.length || m >= km[km.length - 1]) return [kv[km.length - 1], kq[km.length - 1], kr[km.length - 1], kr[km.length - 1], 0];
+      const t = (m - km[q]) / (km[q + 1] - km[q]);
+      return [kv[q] + (kv[q + 1] - kv[q]) * t, kq[q] + (kq[q + 1] - kq[q]) * t, kr[q], kr[q + 1], t];
+    };
+    for (let k = 0; k < n; k++) {
+      starts.push(knots.length / KNOT);
+      const m0 = start[k], m1 = start[k + 1], len = m1 - m0;
+      const p = l.path[k], e = p >> 1;
+      const ed = ends.get(e), P = pts.get(e);
+      const rs: number[] = [];
+      const add = (f: number, v: number, w: number, ra: number, rb: number, t: number) => {
+        knots.push(f, v, w, t === 0 || ra === rb ? ra : -1);
+        rs.push(f, ra, rb, t);
+        if (Math.abs(v) > 1e-6 || w > 0) nonzero = true;
+      };
+      const [v0, w0, a0, b0, t0] = at(m0);
+      add(0, v0, w0, a0, b0, t0);
+      while (ki < km.length && km[ki] <= m0 + 1e-3) ki++;
+      for (; ki < km.length && km[ki] < m1 - 1e-3; ki++) add(len > 0 ? (km[ki] - m0) / len : 0, kv[ki], kq[ki], kr[ki], kr[ki], 0);
+      const [v1, w1, a1, b1, t1] = at(m1);
+      add(1, v1, w1, a1, b1, t1);
+      if (ed && P && P.length >= 6) {
+        tRecords.push(l.id, e, p & 1, P[0], P[1], rs.length / 4);
+        for (const x of rs) tRecords.push(x);
+        nRecords++;
+      }
+    }
+    if (!nonzero) {
+      tRecords.length = recMark;
+      nRecords = recCount;
+      continue;
+    }
+    starts.push(knots.length / KNOT);
+    const out = new Float32Array(1 + starts.length + knots.length);
+    out[0] = n;
+    out.set(starts, 1);
+    out.set(knots, 1 + starts.length);
+    of.set(l.id, out);
+  }
+  const corridor = new Float32Array(3 + tRibbons.length + tRecipes.length + tRecords.length);
+  corridor[0] = nRibbons;
+  corridor.set(tRibbons, 1);
+  corridor[1 + tRibbons.length] = tRecipes.length / RECIPE;
+  corridor.set(tRecipes, 2 + tRibbons.length);
+  corridor[2 + tRibbons.length + tRecipes.length] = nRecords;
+  corridor.set(tRecords, 3 + tRibbons.length + tRecipes.length);
+  return { of, order, rule, corridor };
+}
+
+/** numbers per recipe in `LineBands.corridor`: ribbon, slot, sign (+1 a to b), the ribbon middle from the line's track (line widths, left of a to b) */
+const RECIPE = 4;
+
+/** Path entry `k`'s knots in profile `b`: the offset of its first and how many. */
+export function bandKnots(b: BandProfile, k: number): [number, number] {
+  const n = b[0], o = 2 + n;
+  return [o + b[1 + k] * KNOT, b[2 + k] - b[1 + k]];
+}
+
+/** Path entry `k`'s band at `f` (0-1 along it, in its travel direction): [shift, 1 - width share]. */
+export function profileAt(b: BandProfile, k: number, f: number): [number, number] {
+  const [o, c] = bandKnots(b, k);
+  if (c <= 0) return [0, 0];
+  if (f <= b[o]) return [b[o + 1], b[o + 2]];
+  for (let i = 1; i < c; i++) {
+    const x = o + i * KNOT;
+    if (f <= b[x]) {
+      const p = x - KNOT, d = b[x] - b[p], t = d > 0 ? (f - b[p]) / d : 1;
+      return [b[p + 1] + (b[x + 1] - b[p + 1]) * t, b[p + 2] + (b[x + 2] - b[p + 2]) * t];
+    }
+  }
+  const x = o + (c - 1) * KNOT;
+  return [b[x + 1], b[x + 2]];
 }
 
 /** `TrafficBands.pick` holds a shift as a share of this many times BAND_RANGE line widths, since a
@@ -245,19 +633,36 @@ export interface TrafficBands {
 interface TrafficStrokes { seg: Float32Array; colour: Uint32Array; edge: Uint32Array; band?: Int16Array; count: number }
 
 /**
- * The Traffic view's bands (T-1799 stage 2): on an edge the Line view draws side by side, the same
- * order, each band as wide as its line's riders (`width`, per segment, line widths), so the ribbon is
- * their sum; eased at nodes as the Line view's (`lineBands`' rule on which side of a node the ease
- * sits, over BAND_RAMP_M, network.ts `bandPoints` cutting the segments there). The order is read back
- * from the Line view's shifts in `L.band`. `perM`: local units per metre at a y. `samples` and
- * `sampleStroke` and `corridor` as `NetworkBuffers`'. A corridor's edges are one ribbon (stage 3).
- * Null when no edge is shared.
+ * The Traffic view's bands (T-1799 stage 2): the Line view's ribbons and eases (`lineBands`, whose
+ * recipes `table` holds), each band as wide as its line's riders (`width`, per segment, line widths),
+ * so a ribbon is their sum. `samples` and `sampleStroke` as `NetworkBuffers`'. Null when no line
+ * has a band.
  */
-export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: number) => number, samples: Float32Array, sampleStroke: Int32Array | undefined, corridor?: Float32Array): TrafficBands | null {
-  const n = L.count, B = L.band, seg = L.seg;
-  if (!B || B.length < n * 4) return null;
-  const S = BAND_RANGE / 32767;
-  // runs: one line's consecutive segments on one edge, one path entry each, a line's in path order
+export function trafficBands(L: TrafficStrokes, width: Float32Array, samples: Float32Array, sampleStroke: Int32Array | undefined, table?: Float32Array): TrafficBands | null {
+  const n = L.count, seg = L.seg;
+  if (!table || table.length < 3 || !L.band || L.band.length < n * 4) return null;
+  // the table: ribbons, recipes, then per line and edge its knots' recipes
+  let o = 0;
+  const nRib = table[o++], ribAt = new Int32Array(nRib);
+  for (let r = 0; r < nRib; r++) {
+    ribAt[r] = o;
+    o += 1 + 2 * table[o];
+  }
+  const nRec = table[o++], recAt = o;
+  o += nRec * RECIPE;
+  const nLin = table[o++];
+  const recs = new Map<number, Map<number, number[]>>();
+  for (let r = 0; r < nLin; r++) {
+    const line = table[o], edge = table[o + 1];
+    let m = recs.get(line);
+    if (!m) recs.set(line, (m = new Map()));
+    let v = m.get(edge);
+    if (!v) m.set(edge, (v = []));
+    v.push(o);
+    o += 6 + 4 * table[o + 5];
+  }
+  if (!nLin) return null;
+  // runs: one line's consecutive segments on one edge
   const start: number[] = [];
   for (let i = 0; i < n; ) {
     let j = i + 1;
@@ -268,100 +673,76 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
   const R = start.length;
   start.push(n);
   const runOf = new Int32Array(n);
-  const len = new Float64Array(R), mid = new Float64Array(R), sgn = new Int8Array(R).fill(1), count = new Int32Array(R).fill(1);
-  const T = new Float64Array(R), off = new Float64Array(R);
-  const cor = new Map<number, { id: number; off: number; dx: number; dy: number }>();
-  for (let i = 0; corridor && i + CORRIDOR_STRIDE <= corridor.length; i += CORRIDOR_STRIDE) {
-    cor.set(corridor[i], { id: corridor[i + 1], off: corridor[i + 2], dx: corridor[i + 3], dy: corridor[i + 4] });
-  }
-  const byEdge = new Map<number, number[]>();
-  let any = false;
+  const widthOf = new Map<number, number>();
   for (let r = 0; r < R; r++) {
-    const i0 = start[r], i1 = start[r + 1];
-    let at = 0;
-    for (let i = i0; i < i1; i++) {
-      runOf[i] = r;
-      at += Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
-    }
-    len[r] = at;
-    // the Line view's shift at the end point nearest the middle, which lies between the eases
-    let best = Infinity, shared = false;
-    at = 0;
-    for (let i = i0; i < i1; i++) {
-      for (const e of [0, 1]) {
-        const d = Math.abs(at - len[r] / 2);
-        if (d < best) (best = d), (mid[r] = B[i * 4 + e] * S), (shared = B[i * 4 + 2 + e] > 0);
-        if (e === 0) at += Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
-      }
-    }
-    if (!shared) continue;
-    any = true;
-    // a corridor's edges are one ribbon (negative keys), any other edge its own
-    const c = cor.get(L.edge[i0]);
-    const e = c ? -1 - c.id : L.edge[i0];
-    let v = byEdge.get(e);
-    if (!v) byEdge.set(e, (v = []));
-    v.push(r);
+    for (let i = start[r]; i < start[r + 1]; i++) runOf[i] = r;
+    const key = L.colour[start[r]] * 67108864 + L.edge[start[r]];
+    if (!widthOf.has(key)) widthOf.set(key, width[start[r]]);
   }
-  if (!any) return null;
-  for (const v of byEdge.values()) {
-    // each run's direction against the first's (a corridor's: against its direction), by their
-    // chords: the shifts in one frame
-    const chord = (r: number) => {
-      const a = start[r], b = start[r + 1] - 1;
-      return [seg[b * 4 + 2] - seg[a * 4], seg[b * 4 + 3] - seg[a * 4 + 1]];
-    };
-    const c0 = cor.get(L.edge[start[v[0]]]);
-    const [rx, ry] = c0 ? [c0.dx, c0.dy] : chord(v[0]);
-    const first = new Map<number, number>();
-    for (const r of v) {
-      const [x, y] = chord(r);
-      sgn[r] = x * rx + y * ry >= 0 ? 1 : -1;
-      // where the edge's centre line lies from the ribbon's middle, in the same frame
-      off[r] = cor.get(L.edge[start[r]])?.off ?? 0;
-      if (!first.has(L.colour[start[r]])) first.set(L.colour[start[r]], r);
-    }
-    if (first.size < 2) continue;
-    const at = (r: number) => mid[r] * sgn[r] + off[r];
-    const lines = [...first.values()].sort((a, b) => at(b) - at(a));
-    let total = 0;
-    for (const r of lines) total += width[start[r]];
-    const own = new Map<number, number>();
-    let left = 0;
-    for (const r of lines) {
-      const w = width[start[r]];
-      own.set(L.colour[start[r]], total / 2 - left - w / 2);
-      left += w;
-    }
-    for (const r of v) {
-      T[r] = (own.get(L.colour[start[r]])! - off[r]) * sgn[r];
-      count[r] = first.size;
-    }
-  }
+  // a ribbon's slots' places with these widths: per ribbon, its slots' middles from its middle and
+  // the left edge of each slot (cumulative), lazily
+  const placed = new Map<number, Float64Array>();
+  const placesOf = (rid: number) => {
+    let v = placed.get(rid);
+    if (v) return v;
+    const b = ribAt[rid], K = table[b];
+    // v[s]: slot s's left side from the ribbon's left edge; v[K]: the ribbon's width
+    v = new Float64Array(K + 1);
+    for (let s = 0; s < K; s++) v[s + 1] = v[s] + (widthOf.get(table[b + 1 + 2 * s] * 67108864 + table[b + 2 + 2 * s]) ?? 0);
+    placed.set(rid, v);
+    return v;
+  };
+  const valueOf = (rc: number) => {
+    const x = recAt + rc * RECIPE;
+    const v = placesOf(table[x]), slot = table[x + 1], W = v[v.length - 1];
+    return table[x + 2] * (W / 2 - (v[slot] + v[slot + 1]) / 2 + table[x + 3]);
+  };
   const out = new Float32Array(n * 2), pick = new Int16Array(n * 4);
   const P = 32767 / (BAND_RANGE * TRAFFIC_PICK_DIV);
-  const ease = new Float64Array(BAND_STRIDE);
+  let any = false;
+  const fs: number[] = [], vs: number[] = [];
   for (let r = 0; r < R; r++) {
     const i0 = start[r], i1 = start[r + 1];
-    const same = (q: number) => q >= 0 && q < R && L.colour[start[q]] === L.colour[i0];
-    if (!T[r] && !(same(r - 1) && T[r - 1]) && !(same(r + 1) && T[r + 1])) continue;
-    // as lineBands' `atNode`: the edge with fewer lines takes the bigger one's place at the node, half way between equals
-    const atNode = (q: number) => (!same(q) ? T[r] : count[q] > count[r] ? T[q] : count[q] < count[r] ? T[r] : (T[q] + T[r]) / 2);
-    ease[0] = atNode(r - 1);
-    ease[1] = T[r];
-    ease[2] = atNode(r + 1);
-    const k = perM(seg[i0 * 4 + 1]), lm = len[r] / k;
+    const list = recs.get(L.colour[i0])?.get(L.edge[i0]);
+    if (!list) continue;
+    // which way the run goes: its first point nearer the edge's a end than its last
+    const ax0 = seg[i0 * 4], ay0 = seg[i0 * 4 + 1], ax1 = seg[(i1 - 1) * 4 + 2], ay1 = seg[(i1 - 1) * 4 + 3];
+    let rec = list[0];
+    for (const x of list) {
+      const dir = table[x + 2], ax = table[x + 3], ay = table[x + 4];
+      const fromA = Math.hypot(ax0 - ax, ay0 - ay) <= Math.hypot(ax1 - ax, ay1 - ay);
+      if ((dir === 0) === fromA) rec = x;
+    }
+    const c = table[rec + 5];
+    fs.length = vs.length = 0;
+    for (let k = 0; k < c; k++) {
+      const y = rec + 6 + k * 4, ra = table[y + 1], rb = table[y + 2], t = table[y + 3];
+      fs.push(table[y]);
+      vs.push(t === 0 || ra === rb ? valueOf(ra) : valueOf(ra) * (1 - t) + valueOf(rb) * t);
+    }
+    let len = 0;
+    for (let i = i0; i < i1; i++) len += Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
+    const value = (f: number) => {
+      if (f <= fs[0]) return vs[0];
+      for (let k = 1; k < fs.length; k++) if (f <= fs[k]) {
+        const d = fs[k] - fs[k - 1];
+        return d > 0 ? vs[k - 1] + (vs[k] - vs[k - 1]) * ((f - fs[k - 1]) / d) : vs[k];
+      }
+      return vs[vs.length - 1];
+    };
     let at = 0;
     for (let i = i0; i < i1; i++) {
       const l = Math.hypot(seg[i * 4 + 2] - seg[i * 4], seg[i * 4 + 3] - seg[i * 4 + 1]);
-      const s0 = bandAlong(ease, 0, at / k, lm)[0], s1 = bandAlong(ease, 0, (at + l) / k, lm)[0];
+      const s0 = value(len > 0 ? at / len : 0), s1 = value(len > 0 ? (at + l) / len : 1);
       at += l;
       out[i * 2] = s0;
       out[i * 2 + 1] = s1;
       pick[i * 4] = Math.round(s0 * P);
       pick[i * 4 + 1] = Math.round(s1 * P);
+      if (s0 || s1) any = true;
     }
   }
+  if (!any) return null;
   // a train sample's run is its stroke's (the first segment of its path entry); where it is along
   // the run, by walking the run's segments forwards with the line's samples
   const ns = samples.length / 2, sample = new Float32Array(ns);
@@ -371,7 +752,6 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
     if (f < 0 || f >= n) continue;
     const r = runOf[f], i1 = start[r + 1];
     if (r !== lastRun) (lastRun = r), (s = start[r]);
-    if (out[start[r] * 2] === 0 && out[(i1 - 1) * 2 + 1] === 0 && T[r] === 0) continue;
     const x = samples[q * 2], y = samples[q * 2 + 1];
     for (;;) {
       const ax = seg[s * 4], ay = seg[s * 4 + 1], dx = seg[s * 4 + 2] - ax, dy = seg[s * 4 + 3] - ay, l2 = dx * dx + dy * dy;
@@ -386,19 +766,4 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
     }
   }
   return { seg: out, sample, pick };
-}
-
-/** A path entry's band at `t` metres from its start (its travel direction) on an edge `len` m long:
- * [shift, 1 - width share]. `b`: its BAND_STRIDE numbers at `o`. */
-export function bandAlong(b: ArrayLike<number>, o: number, t: number, len: number): [number, number] {
-  const r = Math.min(BAND_RAMP_M, len / 2);
-  if (r > 0 && t < r) {
-    const f = Math.max(0, t / r);
-    return [b[o] + (b[o + 1] - b[o]) * f, b[o + 3] + (b[o + 4] - b[o + 3]) * f];
-  }
-  if (r > 0 && t > len - r) {
-    const f = Math.min(1, (t - (len - r)) / r);
-    return [b[o + 1] + (b[o + 2] - b[o + 1]) * f, b[o + 4] + (b[o + 5] - b[o + 4]) * f];
-  }
-  return [b[o + 1], b[o + 4]];
 }

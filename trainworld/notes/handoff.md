@@ -31,7 +31,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1868.
+- Next free task id: T-1875.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
 
 ## In flight
@@ -43,11 +43,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - T-1858 dropped to P3 (Anita: after the first city the rest load fast, "that's fine"); agent stopped.
 - T-1859/T-1860 landed in 8df66c28. Question for Anita: keep the old straight-segment rule beside the drawn-line one
   (dropping it splits Grand Central, Penn, Atlantic Terminal, Times Sq, Franklin Av)? T-1861 filed (P3).
+- (maps-18) Evening batch, all verbatim in notes/todo-2026-10-30.md: T-1868 top bar follow-up (agent t1865 resumed,
+  Sonnet), T-1869 dragging curve middles / station ends / multi-select speeds (t1869, Opus), T-1870 station placement
+  snapping + two refusal texts (t1870, Opus), T-1871 ramp triangles (t1871, Sonnet), T-1872 small batch: delete
+  highlight, headway rounding, clone names, start on biggest city (t1872, Sonnet). T-1873 (muting worm) after T-1848.
+  tools.ts is shared by t1869/t1870/t1872: stage by hunk when landing.
 - T-1865 landed (top bar: cash after the share in a 4.7em box, weight 500, calendar icon onto the pink dot; zoom 7
   world/city; station display icon; World divider). Shown to Anita: one hover moved, no new strings.
 - (maps-18) T-1866 answered (notes/T-1866.md); fix 1 drawing-only = T-1867 (Rust, own tree, after Australia);
   fix 2 (school sampling rule) asked of Anita.
-- (maps-18) T-1848 corridors along each line (agent t1848, Opus, main tree, owns map/lineBands.ts).
+- T-1848 corridors landed (sharp moves Tokyo 73 -> 20; Forest Hills' yellow band still outside its box, a recorded
+  trade-off; rebuild +100-260 ms). T-1873 (muting worm) can start now.
+- (maps-18) T-1874 uneven sample homes, Anita's pick for T-1866 (agent t1874, Opus, sim/src/demand). T-1867 on hold.
+  Anita confirmed T-1859's straight rule stays.
 - (maps-18) T-1850 design done (archived): the Tokyo re-solve is settle noise, not recomposition. Stage 1 T-1862
   landed (Ceuta edit in Tokyo: demand final in 2.2 s, 10.4 s as two edits, was 158 s). Not yet run: a browser load with
   `?demandWorkers=3` (cores were short); do it once Australia frees cores. T-1863 (sim/src/track, after t1854b), T-1864 (P3).
