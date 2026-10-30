@@ -1,13 +1,14 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session f537e44c-15c4-40d9-bcb8-a6d7cafc4ace, name maps-da, since 2026-10-29 night
-Updated: 2026-10-29 night
+Updated: 2026-10-30 early morning
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master d50331da (Track at capacity hover; T-1799 stage 4 11344f44 before it). 8800 at d50331da, smoke 20/20 both shades.
-- Anita to bed 2026-10-29 night: T-1840 review doc tomorrow; overview of open work given, she picks the order after it.
+- master b2ab0d86 (overnight: T-925 licence rebuild, T-1407/1780/1788 lag, T-751/1844 expand platforms + shake, doc
+  tidy). 8800 at b2ab0d86, smoke 20/20 both shades. Core cap back to 12. Nothing running.
+- Anita back in the morning: T-1840 text review with her first.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
 - shonei-server 5719c6f deployed by Anita 2026-10-29 (day/week backups; deleting is for good), not pushed. The auto-mode
@@ -23,17 +24,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
-## In flight (overnight 2026-10-30; core cap raised to 15, lower to 12 when Anita is back)
-- T-925 licence rebuild of 9 EU zones on geoBoundaries (agent t925, Opus, detached run; notes/T-924.md has batch/log/restart).
-  Nothing else writes data/packs meanwhile.
+## In flight
+- Nothing. Overnight notes for the morning report:
+- T-925 done: 9 rebuilt and shipped + 9 neighbours recut; ceu checks relaxed (whole municipality ~80k); unheld land:
+  Bodensee water, Oinousses islets (~800 people), slivers by lis/lez. Credits line changed (Spain's IGN).
 - T-1407/T-1780/T-1788 landed 4f316064 (tree removed; typecheck + smoke on master pass). Next ghost after an edit 9-16 ms
   (was 65-237); train count ~50 ms from 150 ms on. Left: T-1794 settle (proposal in notes/T-1407.md "Left"). Anita to look
   at the stand-in ghost drawn for a frame or two after a click. The T-925 gate hang predates 4f316064 (filed T-1845);
   t1407 closed two gaps where an edit answer could wait (4338e0fb).
-- T-925 run 2: 8 of 9 shipped; ceu parked (outline now the whole municipality, ~80k vs plan 43k), relaxed and rerun
-  (python 41592, log artifacts/trainworld/t925-run-ceu.log, notes/T-925.md).
-- T-751 + T-1844 committed c1de8f66; doc tidy committed 4cb42430. 8800 NOT rebuilt yet: the snapshot build copies packs,
-  so wait until t925's run stops writing data/packs, then rebuild at master and smoke both shades.
+- T-751 + T-1844 committed c1de8f66 (hover wording rewritten by maps-da); doc tidy 4cb42430.
 - Anita 2026-10-30: Vietnam is already built (my overview was wrong); Southeast Asia next = Cambodia, Malaysia.
   T-1840 text review in the morning with her.
 - T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
