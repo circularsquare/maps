@@ -25,7 +25,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1859.
+- Next free task id: T-1862.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
 
 ## In flight
@@ -34,8 +34,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - T-1854 finer terrain (agent t1854b, Opus): AWS run for a compact 115 m slope intermediate (stops for Anita if > ~$15),
   then 115 m bare-earth classes, recalibrated thresholds, sim/app change; waits for t1857's run before writing data/packs.
   Anita: 60 MB memory and a few hundred MB on R2 fine; asked about offline play (answer once known). T-1856 hexes after.
-- T-1858 why all-Japan load takes minutes before the viewed city shows (agent tjapan, Sonnet, read-only; notes/T-1858.md).
-  My read: all of Japan is one cluster, so "viewed zone first" can't finish before the country on a load.
+- T-1858 dropped to P3 (Anita: after the first city the rest load fast, "that's fine"); agent stopped.
+- T-1859 station merge on the whole box + auto passage drawing, T-1860 related-lines icon (agent t1859, Opus, Vite 6191).
+  T-1861 filed (track placement on all-Japan, P3).
 
 ## Next
 1. Deploy (above). Then T-1858's recommendation to Anita.
