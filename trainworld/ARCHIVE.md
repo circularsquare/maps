@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1847 [P2] Ceuta's first-line demand time. Answered 2026-10-30 (agent t1847): fresh game 4.1-4.6 s, any small zone alike, 2.6-3.1 s of it the per-worker corridor table (T-1849); in a big save the viewed zone is final in seconds but every cluster re-solves (T-1850). notes/T-1847.md.
 - T-1846 [P1] Interlined lines turn as disjoint pieces where ribbons change. Done 2026-10-30 (agent t1846) as the fallback: the cause was stage 3's corridors, whose per-edge membership flickered along side-by-side tracks cut at different places (446 sideways steps on the Tokyo shared save, 94 off; 449 on the real save, 0 off), and two fixes tried did not cut it; `CORRIDORS = false` in `map/lineBands.ts`, so parallel tracks draw as before stage 3 and stage 4 stays. The proper fix is written up in notes/T-1799.md ("T-1846"); pictures artifacts/trainworld/t1846/.
 
 - T-925 [P2] The 9 NUTS-filled outlines from geoBoundaries. Done 2026-10-30 (agent t925): `osm_units` fills a NUTS-3 unit's gap from open-licence geoBoundaries units; the 9 and 9 neighbours (slivers) rebuilt and shipped, no NUTS polygon left in any pack. notes/T-925.md.

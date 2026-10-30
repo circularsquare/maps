@@ -6,8 +6,7 @@ Updated: 2026-10-30 early morning
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master b2ab0d86 (overnight: T-925 licence rebuild, T-1407/1780/1788 lag, T-751/1844 expand platforms + shake, doc
-  tidy). 8800 at b2ab0d86, smoke 20/20 both shades. Core cap back to 12. Nothing running.
+- master 878f2d8e (corridors off, T-1846; overnight work before it). 8800 at 878f2d8e, smoke 20/20 both shades. Cap 12.
 - Anita back in the morning: T-1840 text review with her first.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
@@ -20,14 +19,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
 - Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1849.
+- Next free task id: T-1851.
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
 ## In flight
 - T-1846 done: corridors (stage 3) switched off (`CORRIDORS = false`), back to the stage-2 look with stage 4 kept; per-edge
   corridor membership caused the steps. Proper fix filed T-1848 (Opus; asked Anita whether P1).
-- T-1847 Ceuta first-line demand slow (agent t1847, Sonnet, Vite 6189): written answer, small fix if obvious.
+- T-1847 answered (notes/T-1847.md): T-1849 corridor table speedup, T-1850 don't re-solve unconnected clusters;
+  asked Anita whether the 4x cap/"Updating demand" should drop once the viewed zone is final.
 - T-1840 text review doc ready (notes/T-1840-text-review.md, 66 items, committed); waiting on Anita's answers, then an agent
   applies them by [file:line]. Possible factual bugs inside: items 64 (Ctrl+F vs Ctrl K), 65 (stale "single or double"), 28.
   The sweep skipped short labels and helper-built hovers (SkyBanner periodTip, map/ hover builders): second pass if wanted.
