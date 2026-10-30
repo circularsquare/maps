@@ -454,8 +454,28 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`.
   Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. The saves panel
   lists the playing slot's under its card's Earlier versions with the account's [T-1395], each with
-  Open as a copy. Deleting a slot deletes them. `?backupMs=` sets the 10-minute step for checks,
-  the others scaled with it.
+  Open as a copy. Deleting a slot moves them with it (below). `?backupMs=` sets the 10-minute step
+  for checks, the others scaled with it.
+- **Recently deleted** [T-1827]: a slot the player deletes (saves panel or start menu, `removeSlot`)
+  or that a deletion from the account takes off an unchanged copy (`settleSlot`) moves, in one
+  transaction (`trashSlot`), to `deleted:<ms>-<uuid>` (<ms> the time of deletion) with its backups
+  under `backup:deleted:<ms>-<uuid>:<tier>`; its sync record and demand cache go. The entry never
+  keeps the slot's key, since `autosave` can be used again. `listDeleted` (each `publishSlots`, so at
+  every start) drops entries 30 days old with their backups. Open as a copy is a `pending-load` of
+  kind `undelete`: the new page loads the game into a new slot under its own name, and only once
+  that slot is written does `finishUndelete` move the backups onto it (replacing the copy its first
+  write made) and drop the entry; a failure on the way leaves the entry. The restored game is a
+  new game: signed in, it goes to the account as one. Removal at sign-out still deletes outright
+  (those games are on the account).
+- **Storage full or cleared while open** [T-1829]: a connection the browser closes (site data
+  cleared, the database deleted from another page: `close` and `versionchange`) is forgotten, and
+  every call that fails to open a transaction drops the connection and tries once more, so the
+  database is opened again, made afresh if it went. A failed autosave write calls `makeRoom`
+  (drops the connection; on `QuotaExceededError` or `UnknownError` also every `demand:` and
+  `ahead:` key) and tries once more. A slot this page had written found gone at the next write is
+  written whole under the name last listed (`writeSlot`'s `lastName`) and its sync record put back
+  from the last one seen (`lastSync`), so it stays the same account game; backups and other slots
+  in a cleared database are gone.
 - **Leave page?** [T-1826]: while the player has changed the game (an edit, a list order, sandbox;
   not the clock's own money) and nothing can write it (autosave off for any reason above, or a
   failed write), the clock worker tells the page (`unsaved`) and the page holds a `beforeunload`

@@ -1250,6 +1250,10 @@ button.save-add:hover { color: var(--text); }
 /* T-744, T-1395: the playing slot's earlier versions, under its card */
 .save-backups { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+/* T-1827: recently deleted games, under the cards, folded until opened */
+.save-deleted { margin: 4px 0 0; }
+.save-deleted .save-backups { margin-top: 6px; }
+.save-deleted .save-backup { padding: 4px 8px; border: 1px solid var(--rule); }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }
@@ -1323,8 +1327,7 @@ button.save-add:hover { color: var(--text); }
   padding: 8px 10px 10px; background: color-mix(in srgb, var(--yellow) 24%, var(--bg)); color: var(--text);
   transform: rotate(-2deg); transform-origin: 100% 0; zoom: var(--ui, 1); }
 :root[data-shade="dark"] .guide { background: color-mix(in srgb, var(--yellow) 14%, var(--bg)); }
-.choosing .guide { visibility: hidden; }
-.guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.choosing .guide { visibility: hidden; }.guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .guide-title { padding: 0; border: 0; background: none; font-size: 14px; font-weight: 700; text-align: left; cursor: default; }
 .guide-x { width: 22px; min-width: 22px; height: 22px; margin: -2px -4px 0 0; border-color: transparent; background: none; }
 .guide-x:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
@@ -1338,6 +1341,21 @@ button.save-add:hover { color: var(--text); }
 .guide-end { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
 .guide-end .btn { height: 24px; background: none; border-color: currentColor; }
 .guide-end .btn:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+/* T-1832: the "Saved in this browser only" card, the Getting started card's post-it where that card is
+   not showing; a little warmer in light and dark */
+.keep-card { position: absolute; right: 10px; top: 46px; z-index: 3; width: 240px; max-width: calc(100% - 20px);
+  padding: 8px 10px 10px; background: color-mix(in srgb, var(--yellow) 24%, var(--bg)); color: var(--text);
+  transform: rotate(-2deg); transform-origin: 100% 0; zoom: var(--ui, 1); font-size: 12px; line-height: 1.35; }
+:root[data-shade="dark"] .keep-card { background: color-mix(in srgb, var(--yellow) 14%, var(--bg)); }
+.choosing .keep-card { visibility: hidden; }
+.keep-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.keep-x { width: 22px; min-width: 22px; height: 22px; margin: -2px -4px 0 0; border-color: transparent; background: none; }
+.keep-x:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.keep-x svg { width: 12px; height: 12px; }
+.keep-card p { margin: 6px 0 0; }
+.keep-buttons { display: flex; gap: 6px; margin-top: 8px; }
+.keep-buttons .btn { height: 24px; background: none; border-color: currentColor; }
+.keep-buttons .btn:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
 /* a phone held upright (T-951): the heading and the step in hand, all six after a tap on the heading */
 @media (max-width: 600px) and (min-height: 560px) {
   .guide { width: 184px; }
@@ -1436,7 +1454,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-card, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

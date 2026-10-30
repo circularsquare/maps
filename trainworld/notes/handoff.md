@@ -11,7 +11,7 @@ deploy.py now writes the trainsworld page without the GA include: untested, chec
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master fbec5c91 (logo t restored, favicon flipped; maps-45 for Anita). 8800 at fbec5c91, smoke 20/20 both shades.
+- master 95d0809e (keys back to 1-4, tutorial ripple). 8800 at 95d0809e, smoke 20/20 both shades.
 - 8800 rebuild script now also in maps-da's scratchpad: C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f537e44c-15c4-40d9-bcb8-a6d7cafc4ace\scratchpad\snapbuild.cmd Anita OK'd a945e323 ("looks good").
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed.
   Anita 2026-10-29: "no need to deploy yet". Deploy only on her word (she has said pushing is allowed).
@@ -32,7 +32,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Website repo: T-1833's GA-off change not committed or pushed (goes with the next deploy, on her word).
 
 ## In flight
-- Nothing. T-1834 (keys back to 1-4) and T-1822 stage 2 (ripple) committed together; Anita has card style notes coming.
+- None. T-1827, T-1829, T-1832 landed together (see git log). Left of T-1823's fixes: T-1831 (unreadable saves card, P3); server-side T-1828/T-1830 (shonei-server) not started: ask Anita about a server deploy first.
+- Anita has card style notes coming (T-1822 stage 3).
 
 ## Next
 1. Card style notes from Anita (T-1822 stage 3) when she sends them.

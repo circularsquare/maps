@@ -6,7 +6,7 @@
 // write and claims the game it opens (clock.worker.ts); the main thread settles every slot on the
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
-import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, leaseSlot, trashSlot, listSlots, readCloudDeletes, readStored, readSync, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 
 /** What a page needs to reach the account: the server, the session and this browser's device id.
  * `on`: the server keeps games (`/noritetsu/config`'s `trainworldGames`); records are still tied
@@ -165,10 +165,11 @@ export async function forgetSlot(key: string) {
   if (!list.some((d) => d.id === rec.id)) await writeCloudDeletes([...list, { id: rec.id, acct: rec.acct }]);
 }
 /** A slot deleted from this browser (T-1612: the clock worker's and the start menu's delete), its
- * account game with it. The caller holds the slot's lock. */
+ * account game with it; the slot is kept 30 days with the recently deleted (T-1827). The caller
+ * holds the slot's lock. */
 export async function removeSlot(key: string) {
   await forgetSlot(key);
-  await deleteSlot(key);
+  await trashSlot(key); // T-1827: kept in this browser 30 days
 }
 /** Send the deletions this browser owes the account. */
 export async function sendDeletes(ctx: CloudContext) {
@@ -287,7 +288,7 @@ export async function settleSlot(ctx: CloudContext, key: string, list: AccountLi
   const g = list.games.find((x) => x.id === rec.id);
   const changed = changedHere(stored, rec) && !rec.gaveWay;
   if (!g && list.tombstones.some((t) => t.id === rec.id)) {
-    if (!changed) { await deleteSlot(key); return true; }
+    if (!changed) { await trashSlot(key); return true; } // T-1827: kept here 30 days
     await writeSync(key, { ...rec, id: newGameId(), rev: 0, syncedAt: 0 });
     return await upload(ctx, key) === "ok";
   }

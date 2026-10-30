@@ -315,6 +315,34 @@ sixth, a line "Your first line is open." and a Done button (closes the card for 
 - **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
   hand; a tap on the heading opens all six.
 
+## Saved in this browser only card
+
+[T-1832, notes/T-1823.md fix 9; `ui/KeepCard.tsx`, `game/keepNudge.ts`, `game/keepState.ts`] The same
+post-it as the Getting started card, same place and size, with its own class `keep-card`. Heading
+"Saved in this browser only", an x (hover "Close"), then 12 px text and buttons.
+
+- **When**: after an hour of real play in a game kept only here: the clock running, the tab visible,
+  a saved slot this tab writes (a `?new=1` page has none, so never there). Counted in 5 s steps and
+  kept per slot in localStorage `anitabuilder-keep` as `{ms, closed, downloaded}`; nothing goes in the
+  save file. `?keepMs=<ms>` shortens the hour for a check. The count stops once the card is closed or
+  the game downloaded. Entries of deleted slots are dropped.
+- **Kept only here**: the slot is not tied to the signed-in account (`tiedTo`) and is not an
+  `account:` game. Signing in and adding the game, at the sign-in question or from the saved games
+  panel, ends it.
+- **Words**: "Clearing your browser data deletes this game." then, signed out with accounts on, "Sign in
+  to keep it on your account, or download a copy." (buttons Sign in, Download); signed in but not yet
+  on the account, "Add it to your account, or download a copy." (Add to account, Download); no accounts
+  (dev without a server), "Download a copy to keep it." (Download).
+- **Buttons**: Sign in opens the account panel; Add to account is the saved games panel's; Download is
+  the saved games panel's (`exportGame`), and marks the game downloaded.
+- **Once per game**: the x is kept for the slot and so is a download, so it stays gone after a reload.
+  It comes back only if the player does neither and reloads (nothing was dealt with). A copy of the
+  game in a new slot counts its own hour.
+- **Out of the way**: it waits while the Getting started card is up, and hides under a confirmation,
+  the saved games panel, the account panel and F2.
+- **Check**: `checks/t1832-keep.mjs` (own server, `?keepMs=3000`); screenshots in
+  `artifacts/trainworld/t1832/`.
+
 ### The ripple
 
 [T-1822 stage 2; `ui/ripple.ts`] A rectangle round the control the step in hand uses: 2 px in the
@@ -681,6 +709,13 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   after their age (their Open as a copy downloads it and opens it as Open a file does, a new game
   on the account; a failed download says "This backup could not be downloaded."). With none yet
   the list says "No earlier versions yet".
+- **Recently deleted** [T-1827; architecture.md "Recently deleted"]: under the cards, while any game
+  deleted from this browser in the last 30 days is kept, a text button "Recently deleted (2)"
+  (hover "Deleted games stay here for 30 days") opens a list, newest deletion first (open or shut
+  kept for the visit): each row the game's name, "deleted 3 days ago · Day 12" (hover: when it was
+  deleted and when it goes) and Open as a copy, which closes the panel and opens the game in a new
+  slot under its own name, its backups with it, and takes it off the list. The start menu does not
+  list them.
 - **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
   top bar and the callout say "This game was saved by a newer version. Reload the page to
   update."; Save refuses with the same words (its hover too). Download's hover is "Download as a

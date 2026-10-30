@@ -28,19 +28,22 @@ import { decodeSave, readStored, writePending, type GuideSave, type NewGameSpec,
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
+import { markDownloaded } from "../game/keepState";
 import { saveRefusal } from "../game/memoryCheck";
 import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
-export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
+export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; deleted: import("./saveFile").DeletedGame[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [], deleted: [] });
 /** When the game was last saved by hand in this page (T-1251). */
 export const savedByHand = signal<number | null>(null);
-export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
+export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore" | "undelete", key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
+  // T-1827: a recently deleted game, opened as a new slot
+  if (action === "undelete") { if (key) void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "undelete", key, from: saveSlotsState.peek().active })); return; }
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -235,7 +238,8 @@ export function exportGame() {
   current?.post({ kind: "export" });
 }
 /** A save's bytes downloaded as "trainsworld-<name>-day-<day>.save". */
-function downloadSave(bytes: Uint8Array, name: string, day: number) {
+function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: string) {
+  markDownloaded(slot); // T-1832: the "saved in this browser only" card has nothing more to say
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
   const named = name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
@@ -249,7 +253,7 @@ function downloadSave(bytes: Uint8Array, name: string, day: number) {
 export async function exportSlot(slot: SaveSlot): Promise<boolean> {
   const stored = await readStored(slot.key).catch(() => null);
   if (!stored) return false;
-  downloadSave(stored.bytes, slot.name, stored.day);
+  downloadSave(stored.bytes, slot.name, stored.day, slot.key);
   return true;
 }
 /** Load a save file the player picked, into a new slot named after the file (T-743). */
@@ -840,12 +844,12 @@ export class ClockClient {
         break;
       case "exported": {
         const { slots, active } = saveSlotsState.value;
-        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day);
+        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day, this.testPage ? undefined : active);
         break;
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, newer: msg.newer };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, deleted: msg.deleted, newer: msg.newer };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)

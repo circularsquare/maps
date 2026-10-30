@@ -71,12 +71,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
-- T-1827 [P2] Recently deleted games in the browser: a deleted slot kept 30 days with its backups, Open as a copy (T-1823 fix 4). Open; notes/T-1823.md
 - T-1828 [P2] Recently deleted games on the account: DELETE keeps the save 30 days, a restore route, privacy page wording (T-1823 fix 5, shonei-server). Open: Anita's call is in DECISIONS 2026-10-29 (30 days); notes/T-1823.md
-- T-1829 [P2] Storage full or cleared while open: drop demand caches and retry, reopen a closed database (T-1823 fix 6). Open; notes/T-1823.md
 - T-1830 [P2] Account backups at 1 day and 1 week beside the two 30-minute ones (T-1823 fix 7, shonei-server). Open; notes/T-1823.md
 - T-1831 [P3] Unreadable saves listed as a card with Download and Delete (T-1823 fix 8). Open; notes/T-1823.md
-- T-1832 [P2] A nudge for games kept only in this browser after an hour of play (T-1823 fix 9). Open: Anita's call is in DECISIONS 2026-10-29 (a card warning that leads to sign in or download); notes/T-1823.md
 - T-1823 [P2] Save safety review before release (Anita's TODO 2026-10-29). taking (agent t1823); notes/T-1823.md
 - T-1822 [P2] Tutorial: an askew post-it with checked steps and a ripple highlight (Anita's TODO 2026-10-29). Designed, Anita answered (DECISIONS 2026-10-29). Stage 1 (card, checks, +1 default) landed 2026-10-29 (agent t1822b). Stage 2 (ripple, data-guide targets) landed 2026-10-29 (agent t1822r). Stage 3: Anita's style notes on the card (coming), and polish after her playtest. notes/T-1822.md
 - T-1799 [P2] Interlined lines drawn side by side on the map, Line and Traffic views (Anita's TODO 2026-10-29). Designed; Anita's calls 2026-10-29 in the note; stage 1 (Line view bands) built 2026-10-29 by agent t1799s1 in tree t1799, waiting to land; stage 2 (Traffic view bands at each line's rider width) built 2026-10-29 by agent t1799s2 in tree t1799b, waiting to land; stages 3 (corridors, four-track trunks) and 4 (joins, not needed so far) open; notes/T-1799.md

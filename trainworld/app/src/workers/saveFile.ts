@@ -324,19 +324,59 @@ export const ORIGINAL_SLOT = "autosave";
 export const ORIGINAL_NAME = "Original game";
 export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); }
 
+/** T-1829: a connection the browser closes (site data cleared, the database deleted in another tab)
+ * is forgotten, so the next call opens the database again, made afresh if it went. */
 function open(): Promise<IDBDatabase> {
-  return new Promise((res, rej) => {
+  const p: Promise<IDBDatabase> = new Promise((res, rej) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-    r.onsuccess = () => res(r.result);
+    r.onsuccess = () => {
+      const d = r.result;
+      d.onclose = () => { if (db === p) db = null; };
+      d.onversionchange = () => { d.close(); if (db === p) db = null; };
+      res(d);
+    };
     r.onerror = () => rej(r.error);
   });
+  return p;
 }
 
 let db: Promise<IDBDatabase> | null = null;
-function store(mode: IDBTransactionMode): Promise<IDBObjectStore> {
-  db ??= open();
-  return db.then((d) => d.transaction(STORE, mode).objectStore(STORE));
+/** A store in a new transaction; a connection that fails (closed, or never opened) is dropped and
+ * opened once more (T-1829). */
+async function store(mode: IDBTransactionMode): Promise<IDBObjectStore> {
+  for (let tries = 0; ; tries++) {
+    const p = (db ??= open());
+    try {
+      return (await p).transaction(STORE, mode).objectStore(STORE);
+    } catch (err) {
+      if (db === p) db = null;
+      if (tries) throw err;
+    }
+  }
+}
+
+/** T-1829: after a write failed, the connection is dropped (the next opens it again) and, when the
+ * browser said it is out of room, every demand cache goes (rebuilt by the next solve); true if the
+ * write is worth one more try. */
+export async function makeRoom(err: unknown): Promise<boolean> {
+  db = null;
+  const name = (err as { name?: string } | null)?.name;
+  if (name === "QuotaExceededError" || name === "UnknownError") await dropDemandCaches();
+  return true;
+}
+
+/** T-1829: every slot's demand cache and its pointer (T-328, T-1539), which the next solve rebuilds. */
+export async function dropDemandCaches(): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(DEMAND_PREFIX) || k.startsWith(AHEAD_PREFIX))) s.delete(k);
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function req<T>(r: IDBRequest<T>): Promise<T> {
@@ -388,25 +428,33 @@ export async function listSlots(): Promise<SaveSlot[]> {
   return keys.flatMap((key, i) => {
     const s = saves[i];
     if (!s) return [];
+    if (syncs[i]) seeSync(key, syncs[i]);
     return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, cloud: syncs[i] }];
   }).sort((a, b) => b.at - a.at);
 }
 
-/** Save while preserving a slot's latest name (it may have been renamed elsewhere); true if the slot
- * was not there before. */
-export async function writeSlot(key: string, v: StoredSave): Promise<boolean> {
+/** Save while preserving a slot's latest name (it may have been renamed elsewhere; `lastName`, the
+ * name last seen, where the slot has gone, T-1829); true if the slot was not there before. */
+export async function writeSlot(key: string, v: StoredSave, lastName?: string): Promise<boolean> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   const old = await req<StoredSave | undefined>(s.get(key));
-  await req(s.put({ ...v, name: v.name ?? old?.name ?? slotName(key) }, key));
+  await req(s.put({ ...v, name: v.name ?? old?.name ?? lastName ?? slotName(key) }, key));
   await done;
   return !old;
 }
 
 const SYNC_PREFIX = "sync:";
+/** T-1829: each slot's sync record as last read or written here, to put back if the database is
+ * cleared under a running game. */
+const syncSeen = new Map<string, SyncRecord>();
+const seeSync = (key: string, v: SyncRecord | null | undefined) => { if (v) syncSeen.set(key, v); else syncSeen.delete(key); };
+export function lastSync(key: string): SyncRecord | null { return syncSeen.get(key) ?? null; }
 export async function readSync(key: string): Promise<SyncRecord | null> {
   try {
-    return ((await req((await store("readonly")).get(SYNC_PREFIX + key))) as SyncRecord | undefined) ?? null;
+    const v = ((await req((await store("readonly")).get(SYNC_PREFIX + key))) as SyncRecord | undefined) ?? null;
+    if (v) seeSync(key, v); // one found missing may have been cleared: the last seen is kept
+    return v;
   } catch {
     return null;
   }
@@ -418,6 +466,7 @@ export async function writeSync(key: string, v: SyncRecord | null): Promise<bool
     if (v) await req(s.put(v, SYNC_PREFIX + key));
     else await req(s.delete(SYNC_PREFIX + key));
     await done;
+    seeSync(key, v);
     return true;
   } catch {
     return false;
@@ -465,6 +514,84 @@ export async function deleteSlot(key: string): Promise<void> {
   // and its demand cache (T-328) and backups (T-744)
   for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`))) s.delete(k);
   await done;
+  syncSeen.delete(key);
+}
+
+// T-1827: recently deleted games. A slot deleted by the player (or by a deletion from the account)
+// moves to `deleted:<ms>-<id>` with its backups under `backup:deleted:<ms>-<id>:<tier>`, for 30 days
+// from <ms>, the time it was deleted; its account tie and demand cache go. A deleted slot's own key
+// can be used again (the original game's "autosave"), so an entry never keeps it.
+const DELETED_PREFIX = "deleted:";
+export const DELETED_MS = 30 * 86400_000;
+export interface DeletedGame extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; deletedAt: number }
+const deletedAtOf = (key: string) => Number(key.slice(DELETED_PREFIX.length).split("-")[0]);
+export const isDeletedKey = (key: string) => key.startsWith(DELETED_PREFIX) && !key.includes(":", DELETED_PREFIX.length);
+
+/** Slot `key` moved to the recently deleted (the caller holds its lock), in one transaction; its key
+ * there, or null when the slot was not there (its leftovers go all the same). */
+export async function trashSlot(key: string, now = Date.now()): Promise<string | null> {
+  const s = await store("readwrite");
+  const done = committed(s.transaction);
+  const old = (await req(s.get(key))) as StoredSave | undefined;
+  const to = old ? `${DELETED_PREFIX}${now}-${crypto.randomUUID()}` : null;
+  if (to) s.put({ ...old, name: slotName(key, old) }, to);
+  s.delete(key);
+  s.delete(SYNC_PREFIX + key);
+  s.delete(AHEAD_PREFIX + key);
+  for (const k of await req(s.getAllKeys())) {
+    if (typeof k !== "string") continue;
+    if (k.startsWith(`${DEMAND_PREFIX}${key}:`)) s.delete(k);
+    else if (k.startsWith(`${BACKUP_PREFIX}${key}:`)) {
+      const b = await req(s.get(k));
+      if (to && b) s.put(b, `${BACKUP_PREFIX}${to}:${k.slice(`${BACKUP_PREFIX}${key}:`.length)}`);
+      s.delete(k);
+    }
+  }
+  await done;
+  syncSeen.delete(key);
+  return to;
+}
+
+/** The recently deleted, newest deletion first; entries 30 days old go first (with their backups). */
+export async function listDeleted(now = Date.now()): Promise<DeletedGame[]> {
+  const s = await store("readwrite");
+  const done = committed(s.transaction);
+  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string");
+  const out: DeletedGame[] = [];
+  for (const key of keys.filter(isDeletedKey)) {
+    const deletedAt = deletedAtOf(key);
+    if (!(now - deletedAt < DELETED_MS)) {
+      s.delete(key);
+      for (const k of keys) if (isBackupOf(k, key)) s.delete(k);
+      continue;
+    }
+    const g = (await req(s.get(key))) as StoredSave | undefined;
+    if (g) out.push({ key, name: g.name || "Saved game", at: g.at, day: g.day, deletedAt, thumb: g.thumb, panels: g.panels, shade: g.shade, cities: g.cities, lines: g.lines, stations: g.stations, cash: g.cash, mode: g.mode });
+  }
+  await done;
+  return out.sort((a, b) => b.deletedAt - a.deletedAt);
+}
+
+/** A recently deleted game restored into slot `slot`, already written with its save (the caller holds
+ * its lock): its backups become the slot's, replacing the one the slot's first write made (the same
+ * save), and the entry goes. Nothing happens unless the slot is there. */
+export async function finishUndelete(entry: string, slot: string): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    if (!isDeletedKey(entry) || !(await req(s.get(slot)))) { await done; return false; }
+    for (const k of await req(s.getAllKeys())) {
+      if (typeof k !== "string" || !isBackupOf(k, entry)) continue;
+      const b = await req(s.get(k));
+      if (b) s.put(b, `${BACKUP_PREFIX}${slot}:${k.slice(`${BACKUP_PREFIX}${entry}:`.length)}`);
+      s.delete(k);
+    }
+    s.delete(entry);
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** The first "Game N" no slot is called (T-677, T-743). */
@@ -642,6 +769,8 @@ export async function readDemandAhead<T>(save: string): Promise<T | null> {
 export type PendingLoad =
   | { kind: "import"; bytes: Uint8Array; name: string; from: string }
   | { kind: "restore"; key: string; from: string }
+  /** T-1827: a recently deleted game (`deleted:` key) */
+  | { kind: "undelete"; key: string; from: string }
   | { kind: "new"; spec: NewGameSpec; name?: string };
 const PENDING = "pending-load";
 export async function writePending(p: PendingLoad): Promise<boolean> {

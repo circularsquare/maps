@@ -28,7 +28,7 @@ import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, listDeleted, finishUndelete, isDeletedKey, makeRoom, lastSync, type DeletedGame, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
@@ -300,10 +300,14 @@ function noteUnsaved() {
 async function publishSlots(error?: string) {
   let slots: Awaited<ReturnType<typeof listSlots>> = [];
   let backups: SlotBackup[] = [];
+  let deleted: DeletedGame[] = [];
   try {
     slots = await listSlots(); storageReady = true;
     if (activeSlot) backups = await listBackups(activeSlot);
   } catch { storageReady = false; }
+  if (storageReady) deleted = await listDeleted().catch(() => []);
+  const mine = slots.find((s) => s.key === activeSlot);
+  if (mine) activeName = { key: mine.key, name: mine.name };
   const taken = !!activeSlot && cloudTaken === activeSlot;
   const writable = writableNow();
   noteUnsaved();
@@ -313,8 +317,10 @@ async function publishSlots(error?: string) {
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Make a copy, or close the other tab and reload."
       : "This browser cannot protect save slots. Download this game as a file to keep it." : undefined);
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}) });
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, deleted, ...(newer ? { newer } : {}) });
 }
+/** T-1829: the playing slot's name as last listed, kept should the database be cleared under it */
+let activeName: { key: string; name: string } | null = null;
 
 async function flushBeforeSwitch() {
   // T-1826: a newer game's slot is left as it was; only a change made here would be lost
@@ -527,8 +533,13 @@ async function openOnAccount(ctx: CloudContext) {
 
 /** T-1196: a pending file or backup's bytes and the name of the slot it goes into; null if the backup
  * has gone */
-async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string } | null> {
+async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string; undelete?: string } | null> {
   if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game" };
+  if (p.kind === "undelete") {
+    // T-1827: under its own name; the entry goes once the new slot is written
+    const g = isDeletedKey(p.key) ? await readStored(p.key) : null;
+    return g ? { bytes: g.bytes, name: g.name || "Saved game", undelete: p.key } : null;
+  }
   if (!isBackupOf(p.key, p.from)) return null;
   const backup = await readStored(p.key), slot = await readStored(p.from);
   if (!backup) return null;
@@ -1883,11 +1894,20 @@ function autosave(): Promise<boolean> {
       const summary = await summaryP;
       const at = Date.now();
       const name = newSlotName?.key === key ? newSlotName.name : undefined;
-      const fresh = await writeSlot(key, { bytes, at, day, city, ...summary, name });
+      const record: StoredSave = { bytes, at, day, city, ...summary, name };
+      const lastName = activeName?.key === key ? activeName.name : undefined;
+      // T-1829: a failed write tries once more, on a connection opened again and, when the browser
+      // is out of room, with the demand caches dropped
+      const fresh = await writeSlot(key, record, lastName).catch(async (err) => { if (!await makeRoom(err)) throw err; return writeSlot(key, record, lastName); });
+      // T-1829: a slot this game had written found gone (the browser's storage cleared under it):
+      // the game is written again above, and its tie to the account put back
+      const first = fresh && unwritten === key;
+      const rec = fresh && !first ? lastSync(key) : null;
+      if (rec) await writeSync(key, rec);
       if (name) newSlotName = null;
       if (unwritten === key) unwritten = null;
       await writeBackup(key, { bytes, at, day, city, ...summary }, backupSteps);
-      void cloudAfterWrite(key, force, fresh); // T-988
+      void cloudAfterWrite(key, force, first); // T-988
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -2967,7 +2987,7 @@ async function processMessage(msg: ToClock) {
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from kept to fall back on
       const pending = msg.pending ? await takePending() : null;
-      let incoming: { bytes: Uint8Array; name: string } | null = null;
+      let incoming: { bytes: Uint8Array; name: string; undelete?: string } | null = null;
       if (pending?.kind === "new") {
         msg.newSlot = pending.name || newGameName(await listSlots().catch(() => []), pending.spec);
         msg.game = pending.spec;
@@ -2994,6 +3014,8 @@ async function processMessage(msg: ToClock) {
         try {
           const g = incoming;
           await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true);
+          // T-1827: only once the restored game is in its slot does the deleted entry go
+          if (g.undelete && activeLease && unwritten !== activeSlot && await finishUndelete(g.undelete, activeSlot)) await publishSlots();
           return;
         } catch (err) {
           send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
