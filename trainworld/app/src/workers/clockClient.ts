@@ -74,6 +74,8 @@ export interface EditAnswer {
   node?: number;
   /** pieces an edgesLevel left out (T-815) */
   skipped?: number;
+  /** T-1407: answered before the edit's state, which `world` does not hold yet */
+  early?: boolean;
 }
 
 export interface PreviewAnswer {
@@ -448,7 +450,7 @@ export class ClockClient {
 
   constructor(cityId = HOME_CITY) {
     this.cityId = cityId;
-    setEditSink((op) => this.edit(op));
+    setEditSink((op, early) => this.edit(op, early));
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
     setDemandFineSink((zones) => this.post({ kind: "demandFine", zones }));
     setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
@@ -704,6 +706,17 @@ export class ClockClient {
         });
         return;
       }
+      // T-1407: an early-answered edit's state (tens of ms here) after the next paint, so the
+      // ghost the track tool asked on the answer shows first
+      if (st.ghostFirst) {
+        this.deferred = [msg];
+        afterPaint(() => {
+          const q = this.deferred ?? [];
+          this.deferred = null;
+          for (const m of q) this.receive(m);
+        });
+        return;
+      }
     }
     this.receive(msg);
   }
@@ -712,6 +725,9 @@ export class ClockClient {
   private stateKind(st: ClockState): StateKind {
     return !world.peek() ? "load" : st.anchor && this.anchorOf(st.anchor) !== anchor() ? "redraw" : st.net ? "network" : "state";
   }
+
+  /** T-1407: a paying edit answered ahead of its state, whose money's split is read off that state */
+  private earlyShares: { seq: number; line?: number } | null = null;
 
   private takeState(msg: Extract<FromClock, { kind: "state" }>) {
     const st = msg.state, sb = this.stateBusy;
@@ -734,6 +750,9 @@ export class ClockClient {
     setMoneyState(msg.state.money);
     this.worldBefore = world.value;
     world.value = toWorld(msg.state, this.city);
+    const es = this.earlyShares;
+    this.earlyShares = null;
+    if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line) });
     this.onState(msg.state);
     if (moved) {
       anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
@@ -782,7 +801,7 @@ export class ClockClient {
           break;
         }
         const a = st.anchor ? this.anchorOf(st.anchor) : anchor();
-        if (a === anchor() && world.peek()) {
+        if (a === anchor() && world.peek() && !st.noTrips) {
           this.held = msg;
           this.holdTimer = window.setTimeout(() => this.release(), HOLD_MS);
         } else this.takeState(msg);
@@ -896,8 +915,10 @@ export class ClockClient {
         this.editLog.push({ worker: msg.ms, stateMs: this.lastStateMs });
         if (this.editLog.length > 40) this.editLog.shift();
         // T-531: the world before and after this edit's state say where its money went
-        if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
-        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped });
+        // (an early answer's world comes with its state, T-1407)
+        if (msg.ok && msg.charge > 0 && msg.early) this.earlyShares = { seq: msg.seq, line: msg.line };
+        else if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
+        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early });
         break;
       }
       case "preview": {
@@ -974,9 +995,9 @@ export class ClockClient {
   }
 
   /** Send an edit; the promise resolves with the worker's answer. */
-  edit(op: EditOp): Promise<EditAnswer> {
+  edit(op: EditOp, early = false): Promise<EditAnswer> {
     const seq = ++this.seq;
-    this.post({ kind: "edit", seq, op });
+    this.post(early ? { kind: "edit", seq, op, early } : { kind: "edit", seq, op });
     return new Promise((res) => this.pending.set(seq, res));
   }
 

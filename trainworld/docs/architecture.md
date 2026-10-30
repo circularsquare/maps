@@ -85,7 +85,16 @@ Web first, so it can be shared as a link.
 - **A state and its trips land together** [T-648]: the clock worker posts each state, then its
   trips, before anything else. The client holds the state until those trips (at most 250 ms), so
   the world, the network and the trips are taken in one task and no frame draws old trips on new run
-  profiles; a state built at another draw anchor is taken at once. A state carries only the edges,
+  profiles; a state built at another draw anchor, or one with no trips to wait for (`noTrips`), is
+  taken at once. **Previews go before an edit's follow-up** [T-1407]: after applying an edit the
+  worker answers the track previews and station checks asked meanwhile, then builds and posts its
+  state, trips and boarding hour and answers it (`later` in the clock worker; any other message, or
+  trips sent from a timer, runs the follow-up first, so nothing else sees the model ahead of its
+  state). The track tool's blueprint segment that changes no line for demand asks `early`: it is
+  answered before its state (the worker waits up to 30 ms for the next ghost's ask), the tool asks
+  that ghost from the answer's node, the ghost just placed is drawn as the stand-in for the new
+  blueprint until the next network is set (`Renderer.keepPreviewAsPlaced`), and the client takes
+  that state after the next paint (`ghostFirst`). A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last

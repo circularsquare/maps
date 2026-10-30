@@ -142,6 +142,8 @@ export class Tools {
   private chain: Placed[] = [];
   /** a segment's edit in flight: clicks wait for it */
   private placing = false;
+  /** T-1407: the end node of a segment answered before its state, until `world` has it (-1: none) */
+  private earlyNode = -1;
   /** a double click's second click came while the segment was still being placed (T-445) */
   private endRun = false;
   private hover: Snap | null = null;
@@ -757,10 +759,16 @@ export class Tools {
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
       // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
       if (p?.ok !== false) playBuild("snap");
-      a = await edit({ op: "route", ...req }, false, true);
+      // T-1407: answered before its state, so the next ghost is asked at once
+      a = await edit({ op: "route", ...req }, false, true, true);
     } finally {
       this.placing = false;
       this.place();
+    }
+    // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
+    if (a.ok && a.early) {
+      if (p) this.overlay.renderer.keepPreviewAsPlaced();
+      if (a.node !== undefined) this.earlyNode = a.node;
     }
     if (!a.ok || this.start !== from) return;
     say(p ?`Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
@@ -817,7 +825,10 @@ export class Tools {
   private requestPreview() {
     if (!this.start || this.real.active) return;
     const se = this.start.end;
-    if (se.kind === "node" && !world.peek()?.nodes.has(se.node)) return this.reset(); // undone meanwhile
+    const nodes = world.peek()?.nodes;
+    if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
+    // undone meanwhile; a segment's end answered ahead of its state (T-1407) is not in yet
+    if (se.kind === "node" && se.node !== this.earlyNode && !nodes?.has(se.node)) return this.reset();
     const h = this.hover;
     if (!h) return;
     // Nothing to show while the pointer is on the start.

@@ -146,7 +146,9 @@ export type ToClock =
   | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }
   /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
   | { kind: "shade"; shade: "light" | "dark" }
-  | { kind: "edit"; seq: number; op: EditOp }
+  /** `early` (T-1407, the track tool's blueprint segments): a route edit that changes no line for
+   * demand is answered before its state is built, so the next ghost is not kept waiting */
+  | { kind: "edit"; seq: number; op: EditOp; early?: boolean }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
@@ -508,6 +510,11 @@ export interface ClockState {
   /** T-1071: the game time a train count or headway edit takes effect, a moment ahead of the
    * clock; the renderer draws this state and its trips from then, not before */
   effectiveAt?: number;
+  /** T-1407: no trips follow it (blueprint track), so it is taken as it comes, not held for them */
+  noTrips?: boolean;
+  /** T-1407: the state of an edit answered ahead of it (`early`): taken after the next paint, so
+   * the ghost asked meanwhile is drawn first */
+  ghostFirst?: boolean;
   /** the draw anchor its local units are relative to (T-307, map/geo.ts) */
   anchor?: { lng: number; lat: number; version: number };
 }
@@ -516,7 +523,7 @@ export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
   /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number> }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean }
   | {
       kind: "preview";
       seq: number;

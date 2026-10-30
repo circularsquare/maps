@@ -212,7 +212,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 
 `realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
 and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
-the network: `TrackApi`, notes/T-025.md; money and autosave too; `slotSummary`, a save's picture
+the network: `TrackApi`, notes/T-025.md; money and autosave too; an edit's follow-up (state, trips, boarding hour, answer) waits behind the previews asked meanwhile, `later`, T-1407; `slotSummary`, a save's picture
 with a panel per city, T-894), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `saveFile.ts` (the save format
@@ -354,6 +354,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   moves it, a click still places track; port 6112 by default),
   `t1779-branch-ghost.mjs [url] [save]` (branches off a line on a real save, the shared-track New York by default: each preview's ms, how far the ghost is behind when the pointer stops, click to placed and to the next ghost, the clock worker's ms per step; about 3 minutes, port 6199 by default; T-1779, T-1780),
   `t1805-placement.mjs [url] [save | fresh]` (runs of three blueprint segments off constructed track mid-edge, then off that blueprint: each click to the next ghost, the clock worker's ms, whether demand was sent a network; `TIMELINE=1`, `PROFILE=1`; T-1805),
+  `t1407-edit-ghost.mjs [url] [save]` (train count and headway edits on the busiest line with the ghost moved every frame: the first ghost's wait, the worst, the worst asked from 150 ms on, the boarding lines redone; `ROUNDS`, `CITY`; about a minute a round; T-1407),
   `old/t1155-branch.mjs` (track drawn from a station, through the track tool's clicks, on the real save
   and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
   platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),

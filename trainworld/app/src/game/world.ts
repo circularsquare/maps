@@ -18,9 +18,9 @@ export const world = signal<WorldView | null>(null);
 /** A short message for the player: why an edit was refused, what a construct cost. */
 export const notice = signal<{ text: string; bad: boolean; at: number } | null>(null);
 
-let sink: ((op: EditOp) => Promise<EditAnswer>) | null = null;
+let sink: ((op: EditOp, early?: boolean) => Promise<EditAnswer>) | null = null;
 /** workers/clockClient.ts hands over its edit function. */
-export function setEditSink(f: (op: EditOp) => Promise<EditAnswer>) {
+export function setEditSink(f: (op: EditOp, early?: boolean) => Promise<EditAnswer>) {
   sink = f;
 }
 
@@ -67,12 +67,13 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
-export async function edit(op: EditOp, quiet = false, silent = false): Promise<EditAnswer> {
+export async function edit(op: EditOp, quiet = false, silent = false, early = false): Promise<EditAnswer> {
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
   noteEdit(op, world.peek());
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
-  const a = await sink(op);
+  // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`)
+  const a = await sink(op, early);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;

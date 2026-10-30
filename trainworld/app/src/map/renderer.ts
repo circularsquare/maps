@@ -994,6 +994,7 @@ export class NetworkRenderer {
   /** Replace everything drawn but the trips (an edit). */
   setNetwork(n: NetworkBuffers) {
     const gl = this.gl;
+    this.dropPlaced(); // T-1407: the network drawn now has the segment its stand-in showed
     // T-1028: an edit's network posted as changes to the one drawn keeps the strokes' unchanged runs
     // on the GPU and the textures whose data is the same; anything else is uploaded whole
     const was = this.net, p = n.patch;
@@ -1147,6 +1148,25 @@ export class NetworkRenderer {
     this.marks.setPreview(s?.marks);
   }
 
+  /** T-1407: the ghost becomes the stand-in for the blueprint segment it was placed as, drawn
+   * until the next network (the one with that segment) is set; the tool's next ghost goes in its place. */
+  keepPreviewAsPlaced() {
+    this.dropPlaced();
+    this.placed = this.preview;
+    this.placedRes = this.previewRes;
+    this.preview = null;
+    this.previewRes = [];
+    this.previewSrc = null;
+    this.marks.setPreview(undefined);
+  }
+  private dropPlaced() {
+    for (const r of this.placedRes) r.del();
+    this.placedRes = [];
+    this.placed = null;
+  }
+  private placed: StrokeVao | null = null;
+  private placedRes: { del: () => void }[] = [];
+
   /** The blueprint track picked by a drag selection (T-333), drawn as an ink band under the track, or null. */
   setHighlight(s: Strokes | null) {
     this.highlightSrc = s;
@@ -1169,6 +1189,8 @@ export class NetworkRenderer {
     this.track = this.lines = null;
     this.lodOf.clear();
     this.previewRes = [];
+    this.placedRes = []; // the stand-in goes with the old context; its state is on its way
+    this.placed = null;
     this.highlightRes = [];
     this.connRes = [];
     this.connVao = this.connFlagBuf = null;
@@ -1508,19 +1530,21 @@ export class NetworkRenderer {
     // where lines turn back, over their tracks (T-658d)
     if (lanes.t > 0) stroke(this.turnback, 0, wTrack, false);
     gl.uniform1i(u.u_ghost, 1);
-    stroke(this.preview, 2, wLine, false);
-    if (this.preview?.count) {
+    // the ghost, and a placed segment's stand-in until its network is drawn (T-1407)
+    for (const g of [this.placed, this.preview]) {
+      stroke(g, 2, wLine, false);
+      if (!g?.count) continue;
       // the ghost: blueprint's outline, rails and middle, each over the last (T-1054)
       gl.uniform1f(u.u_casing, 0);
       gl.uniform1f(u.u_cap, 0);
       gl.uniform1i(u.u_only_sel, 0);
-      gl.bindVertexArray(this.preview.vao);
+      gl.bindVertexArray(g.vao);
       for (let layer = 0; layer < 3; layer++) {
         gl.uniform1i(u.u_ghost_layer, layer);
         for (const mode of modes) {
           if (mode === 1) continue;
           gl.uniform1i(u.u_lane_mode, mode);
-          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.preview.count);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, g.count);
         }
       }
       gl.uniform1i(u.u_ghost_layer, -1);

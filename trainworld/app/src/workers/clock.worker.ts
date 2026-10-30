@@ -657,6 +657,7 @@ async function rebuildModel(fromKept: boolean) {
 /** Rebuild the track model after a panic and tell the main thread. `at`: when the error was raised. */
 async function recover(err: unknown, what: string, notice: string, at: number, fromKept = false) {
   if (modelDown || at <= recoveredAt) return;
+  dropFollowUp();
   const now = Date.now();
   panicTimes.push(now);
   while (panicTimes[0] < now - 60_000) panicTimes.shift();
@@ -961,6 +962,59 @@ type PreviewMsg = Extract<ToClock, { kind: "preview" | "previewEdge" | "previewN
 const isPreview = (m: ToClock): m is PreviewMsg => m.kind === "preview" || m.kind === "previewEdge" || m.kind === "previewNode" || m.kind === "previewNodes";
 function sendStale(seq: number) {
   send({ kind: "preview", seq, stale: true, ok: false, cost: 0, lengthM: 0, mult: 0, issues: [], verts: new Float64Array(0), pts: new Float32Array(0) });
+}
+
+// ---------------------------------------------------------------- an edit's follow-up (T-1407)
+//
+// An edit's state, trips and boarding hour (and, unless it was answered `early`, its answer) wait
+// until the previews asked while it was applied are answered, so the ghost waits for the model's
+// change only. Any other message, and any trips sent meanwhile, run it first: nothing but the
+// previews sees the model ahead of its state.
+
+/** messages answered ahead of an edit's follow-up: they read the model and change nothing */
+const jumpsAhead = (m: ToClock) => isPreview(m) || m.kind === "previewStation" || m.kind === "previewCrossover";
+/** how long an `early` edit's state waits for the ghost the track tool asks on its answer, ms */
+const EARLY_WAIT_MS = 30;
+/** `step`: work that can go ahead of `run` a few ms a task (the boarding account's lines), true
+ * while more is left; previews asked meanwhile are answered between the steps */
+let followUp: { run: () => void; fail: () => void; step?: () => boolean } | null = null;
+let followTimer = 0;
+function later(run: () => void, fail: () => void, waitMs: number, step?: () => boolean) {
+  runFollowUp();
+  const f = (followUp = { run, fail, step });
+  const go = () => {
+    if (followUp !== f) return;
+    try {
+      if (f.step?.()) { followTimer = setTimeout(go, 0) as unknown as number; return; }
+    } catch (err) {
+      // a panic in a step: the follow-up's own run meets it again and answers the edit
+      if (!isPanic(err)) throw err;
+    }
+    f.step = undefined;
+    messages = messages.then(guardedFollowUp);
+  };
+  followTimer = setTimeout(go, Math.max(1, waitMs)) as unknown as number;
+}
+/** the waiting follow-up, now; one that throws answers its edit as failed */
+function runFollowUp() {
+  clearTimeout(followTimer);
+  const f = followUp;
+  followUp = null;
+  if (!f) return;
+  try { f.run(); } catch (err) { f.fail(); throw err; }
+}
+async function guardedFollowUp() {
+  try { runFollowUp(); } catch (err) {
+    if (isPanic(err)) await recover(err, "an edit's state", MODEL_RESTORED, performance.now());
+    else send({ kind: "error", message: String(err) });
+  }
+}
+/** a model rebuilt: the follow-up is dropped (the rebuild posts its own state), its edit answered as failed */
+function dropFollowUp() {
+  clearTimeout(followTimer);
+  const f = followUp;
+  followUp = null;
+  f?.fail();
 }
 
 /** whether the last `withMasks` ended with every mask its geometry meets in */
@@ -2192,11 +2246,14 @@ const SHIFT_REACH = 2 ** 22;
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
-function sendState(service = false, effectiveAt?: number, trips = true) {
+/** `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
+function sendState(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
   if (effectiveAt !== undefined) s.effectiveAt = effectiveAt;
+  if (!trips) s.noTrips = true;
+  if (ghostFirst) s.ghostFirst = true;
   moneyLag = runLag(s.lines.filter((l) => l.ok && l.running).map((l) => ({ tph: l.tph[1], lengthM: l.lengthM, cars: l.cars, oneWayS: l.roundTrip[1] / 2 - l.turnaround })));
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
@@ -2213,7 +2270,7 @@ function sendState(service = false, effectiveAt?: number, trips = true) {
     keepPosted("meta", r.meta);
     postState(s, [s.render.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
     timing.post = performance.now() - t1;
-    sendTrips();
+    sendTrips(split);
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
@@ -2241,7 +2298,7 @@ function sendState(service = false, effectiveAt?: number, trips = true) {
   if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
   timing.post = performance.now() - t2;
-  if (trips) sendTrips();
+  if (trips) sendTrips(split);
 }
 
 // ---------------------------------------------------------------- posting only what changed (T-1029)
@@ -2488,6 +2545,8 @@ let nextHourTimer = 0;
  * a task later, so a preview asked meanwhile waits for one hour's slice only (~20 ms on shared New
  * York); dropped if the trips are sent again or riders come before it. */
 function sendTrips(split = false, hours?: number[]) {
+  // T-1407: never trips of the model ahead of the state they are drawn on
+  if (followUp) runFollowUp();
   clearTimeout(nextHourTimer);
   if (!api || !Number.isFinite(epoch)) return;
   todayGen++;
@@ -3079,6 +3138,7 @@ async function processMessage(msg: ToClock) {
     return;
   }
   await ready;
+  if (followUp && !jumpsAhead(msg)) await guardedFollowUp();
   if (msg.kind === "leave") return await leave(msg);
   if (!api) return;
   if (modelDown) return failAnswer(msg);
@@ -3089,6 +3149,9 @@ async function processMessage(msg: ToClock) {
     if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
     await handle(msg);
+    // T-1407: an edit's follow-up after the previews asked so far
+    // (one still stepping goes on in its own tasks)
+    if (followUp && !followUp.step && jumpsAhead(msg)) messages = messages.then(guardedFollowUp);
   } catch (err) {
     if (isPanic(err)) await recover(err, msg.kind, msg.kind === "edit" ? EDIT_UNDONE : MODEL_RESTORED, performance.now(), msg.kind === "edit");
     else send({ kind: "error", message: String(err) });
@@ -3239,24 +3302,37 @@ async function handle(msg: ToClock) {
     const tB = performance.now();
     timing = {};
     const charge = r === 0 ? api.last_charge() : 0;
-    // The new state first, so the world is up to date when the edit's answer arrives.
-    if (r === 0) {
-      dirty = edited = true;
-      if (charge > 0) bookCharge(msg.seq, charge, api.last_train_charge());
-      forget();
-      const demand = api.dirty_demand_lines();
-      // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
-      // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
-      // junction it pays for when it branches off constructed track
-      const trips = !(msg.op.op === "route" && !demand.length);
-      sendState(service, service ? api.edit_time() : undefined, trips);
+    const op = msg.op, seq = msg.seq;
+    const answer = (early?: boolean) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early });
+    if (r !== 0) return answer();
+    dirty = edited = true;
+    if (charge > 0) bookCharge(seq, charge, api.last_train_charge());
+    forget();
+    const demand = api.dirty_demand_lines();
+    // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
+    // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
+    // junction it pays for when it branches off constructed track
+    const trips = !(op.op === "route" && !demand.length);
+    const effectiveAt = service ? api.edit_time() : undefined;
+    // T-1407: the track tool's free segment is answered now (its next ghost needs only the model),
+    // its state a moment later (a junction it pays for has its money's split read off that state)
+    const early = !!msg.early && !trips;
+    if (early) answer(true);
+    // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
+    // date when it arrives) after the previews asked meanwhile
+    later(() => {
+      timing = {};
+      sendState(service, effectiveAt, trips, early, true);
       if (service) serviceEditMs = performance.now() - tA;
-      if (demand.length || msg.op.op === "undo" || msg.op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
-    }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
-    if (r === 0) keep();
-    // Paid for something: keep it (T-029, autosave on construct).
-    if (charge > 0) void autosave();
+      if (demand.length || op.op === "undo" || op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
+      if (!early) answer();
+      keep();
+      // Paid for something: keep it (T-029, autosave on construct).
+      if (charge > 0) void autosave();
+    }, () => { if (!early) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,
+    // the boarding account's lines the edit moved (~1.5 ms a line; a train count on New York's
+    // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step
+    trips && api.has_riders() ? () => (todayGen++, api!.boarding_step(BOARDING_STEP_LINES)) : undefined);
   } else if (msg.kind === "clock") {
     if (msg.game === game) clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
