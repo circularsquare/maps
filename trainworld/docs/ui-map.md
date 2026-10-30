@@ -134,8 +134,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   is left of, which is the pairwise order wherever that is one. So bands cross only at a node where
   the two routes part or meet, or where three or more lines' partings go round in a circle (some
   pair has to cross). Where a line's place changes at a node it eases over 30 m (`BAND_RAMP_M`;
-  half a short edge at most), on the side with more lines, so a bundle opens out after the node; a
-  line alone keeps its full width. Zoomed out the bands fold into one stroke as a line narrows from
+  half a short edge at most), on the side with fewer lines: lines part leaving side by side and close
+  up as they curve out, and merge the other way (T-1799 stage 4); a line alone keeps its full width. Zoomed out the bands fold into one stroke as a line narrows from
   1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
   centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
   drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same order,

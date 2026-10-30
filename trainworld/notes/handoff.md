@@ -6,7 +6,7 @@ Updated: 2026-10-29 night
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master b6ff3eff (the 2026-10-29 night batch). 8800 at b6ff3eff, smoke 20/20 both shades. Anita: blueprint text OK.
+- master ee24a0c5 (T-1843 after the night batch b6ff3eff). 8800 at ee24a0c5, smoke 20/20 both shades.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
 - shonei-server 5719c6f deployed by Anita 2026-10-29 (day/week backups; deleting is for good), not pushed. The auto-mode
@@ -24,8 +24,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## In flight
 - T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
-  screenshot in maps-da scratchpad images/2.png): agent t1799c (Sonnet) resumed on the clean tree.
-- T-1843 Settings tooltip/label edits + remove Explore a trip button (agent t1843, Sonnet, Vite 6193).
+  screenshot in maps-da scratchpad images/2.png): done by t1799c and committed; awaiting Anita's look (a small notch
+  remains where the blue meets the station box at West Sunrise Highway).
 
 ## Next
 1. T-1840: every player-facing string in one review doc with flagged lines and proposed rewrites (also fix

@@ -596,9 +596,11 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: ArrayLike<number>, o: n
   }
   // per segment, a to b: whether it lies in either end's ease
   const ease = new Uint8Array(Math.max(0, ms.length - 1));
-  if (shared) for (let k = 0; k < ease.length; k++) {
+  // (an edge with fewer lines than its neighbour eases at that end, so it is not only shared track)
+  for (let k = 0; k < ease.length; k++) {
     const m = (ms[k] + ms[k + 1]) / 2;
-    ease[k] = m < r || m > len - r ? 1 : 0;
+    const first = reverse ? m > len - r : m < r, last = reverse ? m < r : m > len - r;
+    ease[k] = (eases0 && first) || (eases1 && last) ? 1 : 0;
   }
   return { pts: out.length === p.length ? p : new Float32Array(out), lane: typeof dr.lane === "number" && out.length === p.length ? dr.lane : Uint8Array.from(lane), band: new Float32Array(band), ease };
 }

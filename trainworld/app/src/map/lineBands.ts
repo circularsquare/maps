@@ -201,12 +201,13 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     if (!any) continue;
     const out = new Float32Array(n * BAND_STRIDE);
     for (let k = 0; k < n; k++) {
-      // at a node the line takes the side with fewer lines' value, so the bigger bundle opens out
-      // after the node; between equal ones, half way
+      // at a node the line keeps the bigger bundle's place into the edge with fewer lines and eases
+      // to its own there (T-1799 stage 4: where lines part they leave side by side and close up as
+      // they curve out, not snap together first); between equal ones, half way
       const atNode = (j: number): [number, number] => {
         if (j < 0 || j >= n) return [mid[k], q[k]];
-        if (count[j] < count[k]) return [mid[j], q[j]];
-        if (count[j] > count[k]) return [mid[k], q[k]];
+        if (count[j] > count[k]) return [mid[j], q[j]];
+        if (count[j] < count[k]) return [mid[k], q[k]];
         return [(mid[j] + mid[k]) / 2, (q[j] + q[k]) / 2];
       };
       const [s0, q0] = atNode(k - 1), [s1, q1] = atNode(k + 1);
@@ -337,8 +338,8 @@ export function trafficBands(L: TrafficStrokes, width: Float32Array, perM: (y: n
     const i0 = start[r], i1 = start[r + 1];
     const same = (q: number) => q >= 0 && q < R && L.colour[start[q]] === L.colour[i0];
     if (!T[r] && !(same(r - 1) && T[r - 1]) && !(same(r + 1) && T[r + 1])) continue;
-    // as lineBands' `atNode`: the side with fewer lines' value, half way between equals
-    const atNode = (q: number) => (!same(q) ? T[r] : count[q] < count[r] ? T[q] : count[q] > count[r] ? T[r] : (T[q] + T[r]) / 2);
+    // as lineBands' `atNode`: the edge with fewer lines takes the bigger one's place at the node, half way between equals
+    const atNode = (q: number) => (!same(q) ? T[r] : count[q] > count[r] ? T[q] : count[q] < count[r] ? T[r] : (T[q] + T[r]) / 2);
     ease[0] = atNode(r - 1);
     ease[1] = T[r];
     ease[2] = atNode(r + 1);
