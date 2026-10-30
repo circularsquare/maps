@@ -345,6 +345,8 @@ export interface ClockNode {
   name: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
+  /** a station's platform line (T-1859, `StationInput.line`, workers/platformLines.ts) */
+  line?: Float32Array;
   /** T-1464: a bus stop that is no station (`ClockBus.stops`), listed so a line's stops all have a
    * row; no track, no platform, never picked or snapped to */
   bus?: true;

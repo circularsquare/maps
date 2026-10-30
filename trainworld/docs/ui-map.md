@@ -320,16 +320,22 @@ number) and shows n as its symbol.
 - **A player link's bridge** [T-197]: a straight white band 3 px wide at zoom 15 (fixed on the
   ground) with the 2 px rim along both sides, between the nearest points of the two platforms'
   centre lines, at least 6 px inside each platform's ends; overlapping platforms get one inside
-  both. Members of a complex that do not touch stay separate shapes.
+  both. **Members of a complex whose boxes do not touch** (centre lines more than 16 m apart,
+  `BOX_TOUCH_M`) get the same bridge whether or not a passage was built [T-1859, network.ts
+  `complexPassages`]: the shortest joins between platforms that connect the complex, with touching
+  boxes and built passages counting as joined, so none is drawn twice. A drawn-only bridge costs
+  nothing and walks at the plain change pace (a built passage is still faster, T-1281).
 - **Selected** [T-163, T-189]: the station keeps its size and gets a 2 px dark outline and a soft
   dark glow 6 px beyond, round the union of the selected shapes and bridges, drawn under them;
   selected stations are drawn after the others and the demand bubbles are cut away over them. In
   complex view every member, bridge and connector is drawn selected. A click on a station picks it
   even over bubbles [T-1515].
 
-**Station complexes** [T-146, `game/complexes.ts`]: stations whose platforms come within 50 m (the
-straight segment of the platform's length along the track heading), or whose centres are within
-100 m (demand's merge distance), are linked, whatever their levels; a complex is everything linked
+**Station complexes** [T-146, T-1859, `game/complexes.ts`]: stations whose platforms come within
+50 m, centre line to centre line, are linked: the drawn box's line (along the track, curved, from
+the node at a dead end; `workers/platformLines.ts`) or the straight segment of the platform's length
+through the node along the track heading (the older rule, kept so no complex splits). Stations whose
+centres are within 100 m (demand's merge distance) are linked too, whatever their levels; a complex is everything linked
 directly or through others, plus the player's links [T-197]. Worked out whenever stations or links
 change; only links are saved. Riders change between any two stations of a complex on foot
 [T-161, [demand-kernel.md](demand-kernel.md) 4.4].

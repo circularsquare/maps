@@ -33,9 +33,19 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   const key = merc ? 'merc' : 'flat';
   // stations scattered in a few clusters so that many are within 100 m or platform reach of others
   let nextId = 1;
+  // T-1859: half the stations carry a drawn platform line, curved, some from the node (a dead end)
+  const lined = (s) => {
+    if (rnd() < 0.5) return s;
+    const k = kAt(s.y), L = s.length * k, bend = (rnd() - 0.5) * 0.006, from = rnd() < 0.3 ? 0 : -L / 2, line = [];
+    for (let i = 0; i < 7; i++) {
+      const t = from + (L * i) / 6, a = s.heading + bend * t;
+      line.push(Math.cos(a) * t, Math.sin(a) * t);
+    }
+    return { ...s, line: Float32Array.from(line) };
+  };
   const make = () => {
     const cl = Math.floor(rnd() * 12);
-    return { id: String(nextId++), x: cl * 3000 + (rnd() - 0.5) * 700, y: (cl % 4) * 2500 + (rnd() - 0.5) * 700, heading: rnd() * Math.PI * 2, length: 60 + 20 * Math.floor(rnd() * 18) };
+    return lined({ id: String(nextId++), x: cl * 3000 + (rnd() - 0.5) * 700, y: (cl % 4) * 2500 + (rnd() - 0.5) * 700, heading: rnd() * Math.PI * 2, length: 60 + 20 * Math.floor(rnd() * 18) });
   };
   let st = Array.from({ length: 150 + Math.floor(rnd() * 400) }, make);
   let links = [];
@@ -51,7 +61,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
       else if (q < 0.4 && st.length > 20) { const i = Math.floor(rnd() * st.length); st = st.filter((_, j) => j !== i); }
       else if (q < 0.55) { const i = Math.floor(rnd() * st.length); st = st.map((s, j) => j === i ? { ...s, x: s.x + (rnd() - 0.5) * 120, y: s.y + (rnd() - 0.5) * 120 } : s); }
       else if (q < 0.62) { const i = Math.floor(rnd() * st.length); st = st.map((s, j) => j === i ? { ...s, x: rnd() * 36000, y: rnd() * 10000 } : s); }
-      else if (q < 0.7) { const i = Math.floor(rnd() * st.length); st = st.map((s, j) => j === i ? { ...s, length: 60 + 20 * Math.floor(rnd() * 18), heading: rnd() * Math.PI * 2 } : s); }
+      else if (q < 0.7) { const i = Math.floor(rnd() * st.length); st = st.map((s, j) => j === i ? lined({ ...s, line: undefined, length: 60 + 20 * Math.floor(rnd() * 18), heading: rnd() * Math.PI * 2 }) : s); }
       else if (q < 0.8 && st.length > 2) { const a = st[Math.floor(rnd() * st.length)].id, c = st[Math.floor(rnd() * st.length)].id; if (a !== c) links = [...links, [a, c]]; }
       else if (q < 0.86 && links.length) links = links.filter((_, j) => j !== Math.floor(rnd() * links.length));
       else if (q < 0.9) { /* nothing changes */ }

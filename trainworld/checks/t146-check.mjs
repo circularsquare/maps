@@ -40,6 +40,14 @@ assert.deepEqual(groups(buildComplexes([S('1',-1,-1),S('2',1,30)])),['1,2']);
 // many stations: each pair of a parallel row is linked, rows are far apart
 const many=[];for(let k=0;k<300;k++){many.push(S(`a${k}`,k*1000,0),S(`b${k}`,k*1000,35));}
 const mc=buildComplexes(many);assert.equal(mc.members.length,300);assert.ok(mc.members.every(m=>m.length===2));
+// T-1859: a drawn platform line counts, not the straight segment centred on the node: a dead end's
+// platform runs back from its node (130-330 m: 30 m from 1's end), a curved one bends towards 1
+const dead=[...Array(7)].map((_,i)=>[-200*i/6,0]).flat();
+assert.deepEqual(groups(buildComplexes([S('1',0,0),{...S('2',330,0),line:dead}])),['1,2'],'dead end from its node');
+assert.deepEqual(groups(buildComplexes([S('1',0,0),S('2',330,0)])),['1','2'],'the same, straight and centred');
+const bent=[...Array(7)].map((_,i)=>{const t=-100+200*i/6;return [t,t<0?0.8*t:0];}).flat();
+assert.deepEqual(groups(buildComplexes([S('1',0,0),{...S('2',150,90),line:bent}])),['1,2'],'bends towards 1');
+assert.deepEqual(groups(buildComplexes([S('1',0,0),S('2',150,90)])),['1','2'],'the same, straight');
 // T-197: the player's links join complexes whatever the distance; a link naming a station not in
 // the list is ignored; a link inside a complex changes nothing
 const far=[S('1',0,0),S('2',0,40),S('3',400,0,Math.PI/2),S('4',3000,0)];

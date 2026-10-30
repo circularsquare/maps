@@ -11,9 +11,10 @@
 // (workers/demandClient.ts). Demand lets riders change between any two stations of a complex
 // (T-161): the clock worker sends each constructed station's complex with the network snapshot.
 //
-// A platform is the straight segment of its length through the station along the track heading
-// (curved platforms are taken as straight); levels are ignored, so lines crossing over or under
-// each other form a complex too.
+// A platform is the centre line of its drawn box (`StationInput.line`: along its track, curved as
+// the track is, from the node at a dead end; T-1859), and also the straight segment of its length
+// through the station along the track heading (the rule before T-1859, kept so no complex splits);
+// levels are ignored, so lines crossing over or under each other form a complex too.
 //
 // Pure geometry, no signals (checks/t146-check.mjs runs it in node); the world's complexes and the
 // complex view are in game/complexView.ts. `buildComplexes` builds from nothing and is the reference;
@@ -27,6 +28,58 @@ export const PLATFORM_GAP_M = 50;
 export const DEMAND_MERGE_M = 100;
 /** The player can link stations whose centres are at most this far apart, m (T-197). */
 export const LINK_MAX_M = 1000;
+/** Platforms (centre lines) this close have boxes that touch or overlap, m: a box is about 16 m
+ * wide on the ground (stationGeometry.ts BOX_WIDTH_ZOOM). Members of a complex further apart are
+ * drawn joined by a passage (T-1859). */
+export const BOX_TOUCH_M = 16;
+
+type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length" | "line">;
+
+/** A station's platform as offsets from its node (x, y pairs, world units): its `line`, or the
+ * straight segment of its length along its heading. */
+export function platformOffsets(s: Geo, k: number, straight?: ArrayLike<number>): ArrayLike<number> {
+  return s.line && s.line.length >= 4 ? s.line : straight ?? straightOffsets(s, k);
+}
+
+/** The straight segment of a station's platform length through its node along its heading, as
+ * offsets: the rule before T-1859, kept beside the drawn line so no complex it made splits (at a
+ * terminal it reaches past the buffers, where the concourse is). */
+export function straightOffsets(s: Geo, k: number): number[] {
+  const h = Math.max(0, s.length) / 2 * k, dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
+  return [-dx, -dy, dx, dy];
+}
+
+/** Whether two stations are linked by distance: centres within DEMAND_MERGE_M, or platforms within
+ * PLATFORM_GAP_M, drawn (`pa`, `pb`, from `platformOffsets`) or straight (`sa`, `sb`). `kk`: world
+ * units per ground metre. */
+export function nearEnough(a: { x: number; y: number }, pa: ArrayLike<number>, sa: ArrayLike<number>, b: { x: number; y: number }, pb: ArrayLike<number>, sb: ArrayLike<number>, kk: number): boolean {
+  return Math.hypot(a.x - b.x, a.y - b.y) <= DEMAND_MERGE_M * kk ||
+    polylineGap(a.x, a.y, pa, b.x, b.y, pb) <= PLATFORM_GAP_M * kk ||
+    ((pa !== sa || pb !== sb) && polylineGap(a.x, a.y, sa, b.x, b.y, sb) <= PLATFORM_GAP_M * kk);
+}
+
+/** The farthest a platform's offsets reach from its node. */
+export function offsetsReach(p: ArrayLike<number>): number {
+  let r = 0;
+  for (let i = 0; i + 1 < p.length; i += 2) r = Math.max(r, Math.hypot(p[i], p[i + 1]));
+  return r;
+}
+
+/** Shortest distance between two polylines given as offsets (x, y pairs) from (ax, ay) and (bx, by). */
+export function polylineGap(ax: number, ay: number, a: ArrayLike<number>, bx: number, by: number, b: ArrayLike<number>): number {
+  const na = Math.max(1, a.length / 2 - 1), nb = Math.max(1, b.length / 2 - 1);
+  let best = Infinity;
+  for (let i = 0; i < na; i++) {
+    const i1 = a.length > 2 ? i + 1 : i;
+    const p0x = ax + a[i * 2], p0y = ay + a[i * 2 + 1], p1x = ax + a[i1 * 2], p1y = ay + a[i1 * 2 + 1];
+    for (let j = 0; j < nb; j++) {
+      const j1 = b.length > 2 ? j + 1 : j;
+      const d = segmentGap(p0x, p0y, p1x, p1y, bx + b[j * 2], by + b[j * 2 + 1], bx + b[j1 * 2], by + b[j1 * 2 + 1]);
+      if (d < best) best = d;
+    }
+  }
+  return best;
+}
 
 export interface Complexes {
   /** station id -> complex index */
@@ -57,20 +110,19 @@ export function segmentGap(p0x: number, p0y: number, p1x: number, p1y: number, q
  * the list is ignored). `kAt` is the world frame's metres per ground metre at a world y
  * (`groundScale` in game/coords.ts; 1 outside the Mercator frame, T-306): platform lengths and
  * the distances above are ground metres. */
-export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" | "y" | "heading" | "length">[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1): Complexes {
+export function buildComplexes(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1): Complexes {
   const n = stations.length;
   const parent = Array.from({ length: n }, (_, i) => i);
   const find = (i: number) => {
     while (parent[i] !== i) i = parent[i] = parent[parent[i]];
     return i;
   };
-  const ends = new Float64Array(n * 4);
   const k = stations.map((s) => kAt(s.y));
+  const seg = stations.map((s, i) => straightOffsets(s, k[i]));
+  const pts = stations.map((s, i) => platformOffsets(s, k[i], seg[i]));
   let reach = DEMAND_MERGE_M * k.reduce((m, v) => Math.max(m, v), 1);
-  stations.forEach((s, i) => {
-    const h = Math.max(0, s.length) / 2 * k[i], dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
-    ends.set([s.x - dx, s.y - dy, s.x + dx, s.y + dy], i * 4);
-    reach = Math.max(reach, 2 * h + PLATFORM_GAP_M * k[i]);
+  stations.forEach((_, i) => {
+    reach = Math.max(reach, 2 * Math.max(offsetsReach(pts[i]), offsetsReach(seg[i])) + PLATFORM_GAP_M * k[i]);
   });
   // a grid as wide as the farthest two linked centres can be: candidates in the 3 x 3 block
   const key = (i: number) => `${Math.floor(stations[i].x / reach)},${Math.floor(stations[i].y / reach)}`;
@@ -89,9 +141,7 @@ export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" 
           if (j <= i) continue;
           const a = stations[i], b = stations[j];
           const kk = (k[i] + k[j]) / 2;
-          const linked = Math.hypot(a.x - b.x, a.y - b.y) <= DEMAND_MERGE_M * kk ||
-            segmentGap(ends[i * 4], ends[i * 4 + 1], ends[i * 4 + 2], ends[i * 4 + 3], ends[j * 4], ends[j * 4 + 1], ends[j * 4 + 2], ends[j * 4 + 3]) <= PLATFORM_GAP_M * kk;
-          if (!linked) continue;
+          if (!nearEnough(a, pts[i], seg[i], b, pts[j], seg[j], kk)) continue;
           const ra = find(i), rb = find(j);
           if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
         }

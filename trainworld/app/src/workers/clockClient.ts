@@ -160,7 +160,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     .map((n) => {
       let v = stationViews.get(n);
       if (!v) stationViews.set(n, v = {
-        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading,
+        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.line ? { line: n.line } : {}),
       });
       return v;
     });

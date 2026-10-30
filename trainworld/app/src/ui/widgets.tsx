@@ -54,9 +54,9 @@ export const Icon = {
   help: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M6.2 6.3a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.6" /><circle class="solid" cx="8" cy="11.6" r=".5" /></svg>,
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
-  // the line panel's related lines (T-1168), as its diagram looks (T-1802): two lines side by side, a station oval across them, the right one curving away at the bottom
+  // the line panel's related lines (T-1168), as its diagram looks (T-1860, Anita's sketch): two lines side by side, a station pill across both, the right one curving away at the bottom
   allStops: () => <svg viewBox="0 0 16 16"><path d="M8 1.5v13M5 3.5h6M5 6.5h6M5 9.5h6M5 12.5h6" /></svg>,
-  related: () => <svg viewBox="0 0 16 16"><path d="M2 1.5v13M11 1.5v5.5c0 3.5 3.5 3.5 3.5 8" /><ellipse class="solid" stroke="none" cx="6.5" cy="6" rx="2.6" ry="1.9" /></svg>,
+  related: () => <svg viewBox="0 0 16 16"><path d="M6 1.5v13M10 1.5v8c0 1.8 1 3 3 5" /><rect x="3.5" y="4.5" width="9" height="3.5" rx="1.75" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
   bus: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>,

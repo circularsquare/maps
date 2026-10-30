@@ -24,7 +24,7 @@ let wholeKey = "";
 let whole: Complexes = { of: new Map(), members: [] };
 let nearWholeKey = "";
 let nearWhole: Complexes = { of: new Map(), members: [] };
-const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
+const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}:${s.line ? Array.from(s.line).join(";") : ""}`).join("|");
 
 /** The world's complexes; the same object while no station moved, appeared or changed length and
  * no link (T-197) was made or undone. */

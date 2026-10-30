@@ -27,6 +27,8 @@ export interface RowEnv {
   levelHours: Float64Array;
   /** a bus line's row, and the nodes for its stops that are no station (`nodes` is the list so far) */
   busRow(a: TrackApi, id: number, nodes: ClockNode[]): NonNullable<ClockLine["bus"]>;
+  /** a station's platform line, the same array while unchanged (T-1859, workers/platformLines.ts) */
+  platformLine?(a: TrackApi, id: number, x: number, y: number, platform: number): Float32Array | undefined;
 }
 
 /** What a line row holds that costs several model calls and changes only when the line's service or
@@ -218,11 +220,12 @@ export class StateRows {
       const platform = ni[i + 7];
       const stationBuilt = ni[i + 8] === 1, stationOff = offStations.has(id), upgrades = ups.get(id) ?? 0, flying = ni[i + 6] === 1;
       const name = platform > 0 ? this.name(a, id) : "";
+      const line = platform > 0 ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || r.platform !== platform
-        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !Object.is(r.heading, ni[i + 9])) {
+        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !Object.is(r.heading, ni[i + 9]) || r.line !== line) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9] };
+        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(line ? { line } : {}) };
         kept.set(id, r);
       }
       seen.add(id);

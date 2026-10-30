@@ -5,10 +5,10 @@
 // those of the stations at the ends of a changed link. Single linkage means no other complex can gain
 // or lose a member. `?patch=check` (checks/t1380-complexes.mjs) compares it with a full build.
 
-import { DEMAND_MERGE_M, PLATFORM_GAP_M, buildComplexes, segmentGap, type Complexes } from "./complexes";
+import { DEMAND_MERGE_M, PLATFORM_GAP_M, buildComplexes, nearEnough, offsetsReach, platformOffsets, straightOffsets, type Complexes } from "./complexes";
 import type { StationId, StationInput } from "./types";
 
-type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length">;
+type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length" | "line">;
 
 interface Comp {
   members: Rec[];
@@ -26,11 +26,11 @@ interface Rec {
   length: number;
   /** metres per ground metre at its y */
   k: number;
-  /** its platform's two ends */
-  ax: number;
-  ay: number;
-  bx: number;
-  by: number;
+  line: ArrayLike<number> | undefined;
+  /** its platform as offsets from x, y, drawn (`platformOffsets`) and straight, and how far they reach */
+  pts: ArrayLike<number>;
+  seg: ArrayLike<number>;
+  ext: number;
   /** its position in the last input, and a number it keeps */
   idx: number;
   uid: number;
@@ -97,7 +97,7 @@ export class ComplexBuilder {
         survivors++;
         if (r.idx <= prevIdx) reordered = true;
         prevIdx = r.idx;
-        if (r.x !== s.x || r.y !== s.y || r.heading !== s.heading || r.length !== s.length) { changed.push(r); changedTo.push(s); }
+        if (r.x !== s.x || r.y !== s.y || r.heading !== s.heading || r.length !== s.length || r.line !== s.line) { changed.push(r); changedTo.push(s); }
       }
       r.seen = call;
       list[i] = r;
@@ -222,7 +222,7 @@ export class ComplexBuilder {
   }
 
   private make(s: Geo, kAt: (y: number) => number): Rec {
-    const r = { id: s.id, x: 0, y: 0, heading: 0, length: 0, k: 1, ax: 0, ay: 0, bx: 0, by: 0, idx: -1, uid: ++this.uids, seen: 0, mark: 0, comp: null, cell: 0, gone: false } as unknown as Rec;
+    const r = { id: s.id, x: 0, y: 0, heading: 0, length: 0, k: 1, line: undefined, pts: [], seg: [], ext: 0, idx: -1, uid: ++this.uids, seen: 0, mark: 0, comp: null, cell: 0, gone: false } as unknown as Rec;
     r.parent = r;
     this.fill(r, s, kAt);
     return r;
@@ -234,17 +234,15 @@ export class ComplexBuilder {
     r.heading = s.heading;
     r.length = s.length;
     r.k = kAt(s.y);
-    const h = Math.max(0, s.length) / 2 * r.k, dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
-    r.ax = s.x - dx;
-    r.ay = s.y - dy;
-    r.bx = s.x + dx;
-    r.by = s.y + dy;
+    r.line = s.line;
+    r.seg = straightOffsets(s, r.k);
+    r.pts = platformOffsets(s, r.k, r.seg);
+    r.ext = Math.max(offsetsReach(r.pts), offsetsReach(r.seg));
   }
 
   /** The farthest a station can be linked to another, m. */
   private reachOf(r: Rec): number {
-    const h = Math.max(0, r.length) / 2 * r.k;
-    return Math.max(DEMAND_MERGE_M * Math.max(1, r.k), 2 * h + PLATFORM_GAP_M * r.k);
+    return Math.max(DEMAND_MERGE_M * Math.max(1, r.k), 2 * r.ext + PLATFORM_GAP_M * r.k);
   }
 
   /** Put the recs in the grid, which is made larger first if one of them needs it. */
@@ -305,7 +303,5 @@ function key(gx: number, gy: number): number {
 /** Whether `a` and `b` are one complex's: `a` is the earlier in the list, as in `buildComplexes`
  * (the platform gap is not bit-for-bit symmetric). */
 function linked(a: Rec, b: Rec): boolean {
-  const kk = (a.k + b.k) / 2;
-  return Math.hypot(a.x - b.x, a.y - b.y) <= DEMAND_MERGE_M * kk ||
-    segmentGap(a.ax, a.ay, a.bx, a.by, b.ax, b.ay, b.bx, b.by) <= PLATFORM_GAP_M * kk;
+  return nearEnough(a, a.pts, a.seg, b, b.pts, b.seg, (a.k + b.k) / 2);
 }

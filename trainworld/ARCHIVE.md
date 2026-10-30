@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1859 [P2] Complexes on the whole station box, and passages drawn between close members. Done 2026-10-30 (agent t1859): drawn platform lines from the worker (`workers/platformLines.ts`) join the straight rule; untouching members get a free drawn passage. Real save 855 to 854 complexes, 30 drawn passages. artifacts/trainworld/t1859/.
+- T-1860 [P2] The related-lines icon as a station pill across two lines, to Anita's sketch. Done 2026-10-30 (agent t1859). artifacts/trainworld/t1859/icon_old_new.png.
+- T-1850 [P2] A far first line (Ceuta in a Tokyo save) re-solves all of Tokyo. Design done 2026-10-30 (agent t1850): the cause is settle noise in Tokyo's lines, not the market recomposing; built as T-1862 to T-1864. notes/T-1850.md.
 - T-1853 [P1] A more compact top bar to Anita's sketch. Done 2026-10-30 (agent t1853): order name, cash, split, clock (calendar, sky, then time and date right of it), speed; name, cash, train share and time all 16 px; cash at its own width right after the name (no fixed box); wide bar 54 to 44 px; under 700 px of map column two rows, row one name, cash and clock, row two the colour bar running under them with the share and speed buttons, 66-69 to about 61 px. Typecheck and smoke pass; pictures artifacts/trainworld/t1853/ beside her sketch (sketch_wanted.png). docs/ui-panels.md.
 - T-1852 [P1] Anita's small UI items. Done 2026-10-30 (agent t1852): hair and long-hair faces, bridge ramp text, bubbles x0.75 (`BUBBLE_BASE`), fares hover dropped, Remove station at the panel's bottom in red, phone inspector always beside the tab, the playing save deletable (reloads to the start menu), save previews recoloured to the current theme and 15% smaller, key hints in the accent. Typecheck and smoke pass; pictures artifacts/trainworld/t1852/.
 

@@ -1,7 +1,10 @@
 ﻿# Orchestrator handoff, trainworld
 
-Orchestrator: session f537e44c-15c4-40d9-bcb8-a6d7cafc4ace, name maps-da, since 2026-10-29 night
-Updated: 2026-10-30 midday (past 500k: cycle when convenient)
+Orchestrator: session c9a4388f-3ba1-4290-bb0a-d9ad50756061, name maps-18, since 2026-10-30 11:22
+Previous: session f537e44c-15c4-40d9-bcb8-a6d7cafc4ace, name maps-da, handed over 2026-10-30 11:22, finishing in-flight work
+Updated: 2026-10-30 11:30
+maps-da (11:25): maps-18 does all landings, 8800 rebuilds and the deploy from now. t1857, t1854b and t1859 still report
+to maps-da, which relays each outcome to maps-18 to land, and messages when the last has reported.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -25,7 +28,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1862.
+- Next free task id: T-1865.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
 
 ## In flight
@@ -37,10 +40,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - T-1858 dropped to P3 (Anita: after the first city the rest load fast, "that's fine"); agent stopped.
 - T-1859 station merge on the whole box + auto passage drawing, T-1860 related-lines icon (agent t1859, Opus, Vite 6191).
   T-1861 filed (track placement on all-Japan, P3).
+- (maps-18) T-1848 corridors along each line (agent t1848, Opus, main tree, owns map/lineBands.ts).
+- (maps-18) T-1850 design done (archived): the Tokyo re-solve is settle noise, not recomposition. Stage 1 T-1862
+  (agent t1862, Opus, demand worker TS, 3-core claim); T-1863 (sim/src/track, after t1854b) and T-1864 (P3) open.
+- Australia run checked 11:22: pid 35444 alive, region 1 (NSW/Qld/Vic extracts read), then join.cmd.
 
 ## Next
 1. Deploy (above). Then T-1858's recommendation to Anita.
-2. T-1848 corridors proper fix (Opus; normal priority per Anita). T-1849 / T-1850 (demand speedups from T-1847).
+2. T-1849 (Rust, own tree) once Australia's run frees its cores. T-1863 once t1854b is out of sim/src/track.
 3. T-1794 train-count settle (proposal in notes/T-1407.md "Left"). T-1845 only if a gate hangs again.
 4. Southeast Asia next: Cambodia, Malaysia (T-1738), when cores are spare.
 5. Waiting on Anita: bus design (T-1445). Line groups stage 4 (T-1791) kept as P3.

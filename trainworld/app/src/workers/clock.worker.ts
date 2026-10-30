@@ -30,6 +30,7 @@ import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
+import { PlatformLines } from "./platformLines";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
@@ -1187,10 +1188,11 @@ function forget(all = false) {
     lineMerc.clear();
     shiftFrom = null;
     stateRows.reset();
+    platformLines.clear();
     postWhole();
     return;
   }
-  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); }
+  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); platformLines.forgetEdge(e); }
   for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); }
 }
 
@@ -1205,8 +1207,11 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
   return out;
 }
 
+/** T-1859: each station's platform line, for the complexes */
+const platformLines = new PlatformLines();
+const platformLineOf = (a: TrackApi, id: number, x: number, y: number, platform: number) => platformLines.of(a, id, x, y, platform, groundK(y));
 /** what `StateRows` needs of the worker */
-const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow };
+const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow, platformLine: platformLineOf };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */
 const stateRows = new StateRows();
@@ -1244,10 +1249,12 @@ function buildState(): ClockState {
   const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ups = upgradesOf(a);
+  platformLines.sync(edges);
   const nodes = stateRows.nodes(a, rowEnv, ups);
   const stationCount = nodes.length;
   const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
   const lines = stateRows.lines(a, rowEnv, nodes);
+  platformLines.setLines(lines);
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
   if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
   // a bus line's stops that are no station were added to the nodes by its row
@@ -2315,8 +2322,9 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   runningLines = running;
-  // T-1528: complexes only where a waiting room or car park is drawn once for one
-  const complexOf = s.nodes.some((x) => ((x.upgrades ?? 0) & (UPGRADE.parkRide | UPGRADE.waitingRoom)) !== 0) ? complexOfNodes() : undefined;
+  // the complexes: a waiting room or car park is drawn once for one (T-1528), and members whose boxes
+  // do not touch are drawn joined (T-1859)
+  const complexOf = complexOfNodes();
   const shifted = !!shiftFrom;
   if (shiftFrom) {
     shiftNetCache(netCache, shiftWas, edgeDrawn, ...anchorShift(shiftFrom, anchor()));
@@ -2646,7 +2654,12 @@ function bookCharge(seq: number, charge: number, trains: number) {
 const snapshotComplexes = new ComplexBuilder();
 const nodeComplexes = new ComplexBuilder();
 const groundK = (y: number) => (frame.kind === "merc" ? mercK(y) : 1);
-function complexesOf(builder: ComplexBuilder, geo: { id: string; x: number; y: number; heading: number; length: number }[], links: [string, string][]): Complexes {
+type StationGeo = { id: string; x: number; y: number; heading: number; length: number; line?: Float32Array };
+function stationGeo(a: TrackApi, ni: ArrayLike<number>, i: number): StationGeo {
+  const line = platformLineOf(a, ni[i], ni[i + 1], ni[i + 2], ni[i + 7]);
+  return { id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7], ...(line ? { line } : {}) };
+}
+function complexesOf(builder: ComplexBuilder, geo: StationGeo[], links: [string, string][]): Complexes {
   if (patchMode === "0") return buildComplexes(geo, links, groundK);
   const cx = builder.update(geo, links, groundK, frame.kind);
   if (patchMode === "check") {
@@ -2662,13 +2675,13 @@ function buildSnapshot(): NetworkSnapshot {
   const a = api!;
   const ni = a.nodes_info();
   const stations: NetworkSnapshot["stations"] = [];
-  const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  const geo: StationGeo[] = [];
   const ups = upgradesOf(a);
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
       const u = ups.get(ni[i]);
       stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
-      geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
+      geo.push(stationGeo(a, ni, i));
     }
   }
   // T-161: each constructed station's complex, among constructed stations only (a blueprint
@@ -2808,11 +2821,11 @@ let complexNodes: { version: number; of: Uint32Array } | null = null;
 function complexOfNodes(): Uint32Array {
   if (complexNodes?.version === version) return complexNodes.of;
   const a = api!, ni = a.nodes_info();
-  const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  const geo: StationGeo[] = [];
   let top = 0;
   for (let i = 0; i < ni.length; i += 10) {
     top = Math.max(top, ni[i]);
-    if (ni[i + 7] > 0) geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
+    if (ni[i + 7] > 0) geo.push(stationGeo(a, ni, i));
   }
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);

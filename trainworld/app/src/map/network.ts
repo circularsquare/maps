@@ -13,6 +13,7 @@ import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
 import { BAND_RAMP_M, BAND_RANGE, BAND_STRIDE, bandAlong, lineBands } from "./lineBands";
+import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
@@ -263,6 +264,48 @@ export const runsTrains = (l: { trains: ArrayLike<number> }) => l.trains[0] + l.
  */
 export function lineDrawOrder<L extends { id: number; lengthM: number; trains: ArrayLike<number> }>(lines: readonly L[]): L[] {
   return [...lines].sort((a, b) => Number(runsTrains(a)) - Number(runsTrains(b)) || b.lengthM - a.lengthM || a.id - b.id);
+}
+
+/** The passages drawn without being built (T-1859): a complex's members whose boxes do not touch
+ * are joined like the player's passages (T-217), by the shortest joins between platforms that
+ * connect the complex, with boxes that touch and the player's own passages (`links`, station index
+ * pairs) counting as joined already. Station index pairs. */
+function complexPassages(st: readonly { id: number; lat: number }[], stations: Float32Array, stationLine: Float32Array, complexOf: ArrayLike<number>, links: readonly number[]): number[] {
+  const groups = new Map<number, number[]>();
+  st.forEach((n, i) => {
+    const c = complexOf[n.id];
+    if (c === undefined || c === 0xffffffff) return;
+    const g = groups.get(c);
+    if (g) g.push(i);
+    else groups.set(c, [i]);
+  });
+  const parent = Int32Array.from({ length: st.length }, (_, i) => i);
+  const find = (i: number) => {
+    while (parent[i] !== i) i = parent[i] = parent[parent[i]];
+    return i;
+  };
+  const union = (i: number, j: number) => { parent[find(i)] = find(j); };
+  for (let k = 0; k + 1 < links.length; k += 2) union(links[k], links[k + 1]);
+  const line = (i: number) => stationLine.subarray(i * 2 * PLATFORM_POINTS, (i + 1) * 2 * PLATFORM_POINTS);
+  const out: number[] = [];
+  for (const m of groups.values()) {
+    if (m.length < 2) continue;
+    const reach = m.map((i) => offsetsReach(line(i)));
+    const joins: [number, number, number][] = [];
+    for (let a = 0; a < m.length; a++)
+      for (let b = a + 1; b < m.length; b++) {
+        const i = m[a], j = m[b], perM = 1 / Math.cos(st[i].lat * Math.PI / 180);
+        const ix = stations[i * 3], iy = stations[i * 3 + 1], jx = stations[j * 3], jy = stations[j * 3 + 1];
+        // every pair the complex rule links is nearer than this
+        if (Math.hypot(ix - jx, iy - jy) > reach[a] + reach[b] + DEMAND_MERGE_M * perM) continue;
+        const gap = polylineGap(ix, iy, line(i), jx, jy, line(j));
+        if (gap <= BOX_TOUCH_M * perM) union(i, j);
+        else joins.push([gap, i, j]);
+      }
+    joins.sort((p, q) => p[0] - q[0] || p[1] - q[1] || p[2] - q[2]);
+    for (const [, i, j] of joins) if (find(i) !== find(j)) { union(i, j); out.push(i, j); }
+  }
+  return out;
 }
 
 /** The lines on each edge, by id. */
@@ -1071,6 +1114,14 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     if (i === undefined || j === undefined) continue;
     linkIdx.push(i, j);
     linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
+  }
+  if (s.complexOf) {
+    const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx);
+    for (let k = 0; k + 1 < auto.length; k += 2) {
+      const i = auto[k], j = auto[k + 1];
+      linkIdx.push(i, j);
+      linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
+    }
   }
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);

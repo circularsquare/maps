@@ -49,6 +49,9 @@ export interface StationInput {
   upgrades?: number;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
+  /** its platform's centre line along its track, as drawn: x, y offsets from x, y in world units
+   * (T-1859, workers/platformLines.ts); absent: straight along `heading` */
+  line?: ArrayLike<number>;
 }
 
 export interface LineInput {
