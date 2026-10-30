@@ -153,6 +153,8 @@ export type ToDemand =
       noLocal?: boolean;
       /** T-1735 `?perfOff=window`: an edit's local solve leaves the whole market frozen */
       noWindow?: boolean;
+      /** T-1862 `?perfOff=noise`: a cluster keeps its result only on exactly the network it solved */
+      exactKeep?: boolean;
       /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
        * can carry what it holds solved over to the next network's route nodes */
       ids?: { lines: string[]; stations: string[] } }

@@ -9,7 +9,8 @@ to maps-da, which relays each outcome to maps-18 to land, and messages when the 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 8df66c28 (T-1859/T-1860 landed). 8800 at 8df66c28, smoke 20/20 both shades.
+- master: T-1862 landed after T-1865 and T-1859/T-1860; 8800 rebuilt at each landing (hash in git log).
+  t1848 has DECISIONS and code-map lines written but has not reported; left out of commits until it does.
   network.ts and code-map.md were staged partially (t1848's and t1854b's hunks left out) by
   maps-18 scratchpad stage_t1859.py; do the same for any file two agents share.
 - LIVE site still 2026-10-28g (= 1550be70). **Anita approved a deploy (2026-10-30)**: do it as soon as t1857's Australia
@@ -48,7 +49,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   fix 2 (school sampling rule) asked of Anita.
 - (maps-18) T-1848 corridors along each line (agent t1848, Opus, main tree, owns map/lineBands.ts).
 - (maps-18) T-1850 design done (archived): the Tokyo re-solve is settle noise, not recomposition. Stage 1 T-1862
-  (agent t1862, Opus, demand worker TS, 3-core claim); T-1863 (sim/src/track, after t1854b) and T-1864 (P3) open.
+  landed (Ceuta edit in Tokyo: demand final in 2.2 s, 10.4 s as two edits, was 158 s). Not yet run: a browser load with
+  `?demandWorkers=3` (cores were short); do it once Australia frees cores. T-1863 (sim/src/track, after t1854b), T-1864 (P3).
 - Australia run checked 11:22: pid 35444 alive, region 1 (NSW/Qld/Vic extracts read), then join.cmd.
 
 ## Next

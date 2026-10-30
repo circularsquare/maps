@@ -181,6 +181,22 @@ function keepCapRatio(sig: string, q: number, before: Float32Array, after: Float
   capRatio.set(sig, list);
   while (capRatio.size > 32) capRatio.delete(capRatio.keys().next().value!);
 }
+/** T-1862: per population, the cluster it holds whole-solved (`sig` and `psig` as `held` and `heldQ`
+ * hold them, re-keyed by a keep within noise), its `shape`, and the network it was solved on */
+const heldOn = new WeakMap<Population, { sig: string; psig: string[]; shape: string; net: DemandNetwork }>();
+/** T-1862: the settle moves lines no edit touched by float noise (0.12 s and 0.08% seen, T-1850);
+ * one train on a line of under 500 an hour is past 0.2%. Span is compared exactly */
+const NOISE_RUN_S = 0.5;
+const NOISE_TRAINS = 0.002;
+/** T-1862: run times and trains an hour of `now` within noise of `was` (same shape), span the same */
+function withinNoise(was: DemandNetwork, now: DemandNetwork): boolean {
+  const s0 = was.span ?? new Float32Array(0), s1 = now.span ?? new Float32Array(0);
+  if (was.times.length !== now.times.length || was.tph.length !== now.tph.length || s0.length !== s1.length) return false;
+  for (let k = 0; k < s0.length; k++) if (s0[k] !== s1[k]) return false;
+  for (let k = 0; k < was.times.length; k++) if (!(Math.abs(was.times[k] - now.times[k]) <= NOISE_RUN_S)) return false;
+  for (let k = 0; k < was.tph.length; k++) if (!(Math.abs(was.tph[k] - now.tph[k]) <= NOISE_TRAINS * Math.abs(was.tph[k]))) return false;
+  return true;
+}
 const VIEW_TOLERANCE = 0.01;
 /** T-1733: trains an hour (and the share of riders with a train due, which follows them) move by a
  * few percent on far lines when a line is built (all of Japan: 2.7% on an Osaka line for a Tokyo
@@ -358,6 +374,7 @@ function remapKept(next: NonNullable<typeof lastNet> | null) {
 /** T-1733: a population set on a network again no longer holds what it solved */
 function disturbed(p: Population) {
   cityOn.delete(p);
+  heldOn.delete(p);
   trail.delete(p);
   if (p instanceof IntercityApi) { marketOn.delete(p); sharedMkt.delete(p); sharedTrail.delete(p); marketNet.delete(p); }
 }
@@ -1499,6 +1516,38 @@ async function run() {
         }
         if (c.part) c.views.set(c.part, whole);
       }
+      // T-1862: a cluster whose populations hold it whole-solved on the same shape, its run times and
+      // trains an hour within noise of those it was solved on, is re-keyed to this network unsolved
+      // (one last solved sharing stays dirty below, kept apart by T-1733's path with nothing fresh)
+      let noiseKept = 0;
+      if (!job.exactKeep && !job.fresh && !job.freshParts && !sharing && !only && mine.length) {
+        const all = maskOf(mine), near = new Map<DemandNetwork, boolean>();
+        for (const c of jobClusters) {
+          const was = c.pops.length ? held.get(c.pops[0]) : undefined;
+          if (was === undefined || was === c.sig) continue;
+          const sh = c.part ? sharedMkt.get(c.part) : undefined;
+          const keep = c.pops.every((p) => {
+            const on = heldOn.get(p), h = heldQ.get(p), m = p.solved_mask();
+            if (!on || held.get(p) !== was || on.sig !== was || on.shape !== c.shape) return false;
+            if (!mine.every((q) => h?.[q] === on.psig[q])) return false;
+            if (p === c.part ? !mine.every((q) => m & (1 << q) || sh?.[q]) : (m & all) !== all) return false;
+            if (!near.has(on.net)) near.set(on.net, withinNoise(on.net, c.net));
+            return near.get(on.net)!;
+          });
+          if (!keep) continue;
+          for (const p of c.pops) {
+            held.set(p, c.sig);
+            const h = heldQ.get(p)!, on = heldOn.get(p)!;
+            for (const q of units) h[q] = c.psig[q];
+            on.sig = c.sig;
+            on.psig = c.psig;
+          }
+          const r = capRatio.get(was);
+          if (r) { capRatio.delete(was); capRatio.set(c.sig, r); }
+          noiseKept++;
+        }
+        if (import.meta.env.DEV && noiseKept) console.info(`T1862 v${job.version}: ${noiseKept} clusters kept within noise of the network they solved on`);
+      }
       // (sharing, every market cluster is solved, since both sides of a period must step it; and
       // not sharing, every one last solved sharing, whose shared periods are held apart)
       const dirty = jobClusters.filter((c) => (!!c.part && (sharing || sharedParts.has(c.part))) || c.pops.some((p) => held.get(p) !== c.sig));
@@ -1671,6 +1720,7 @@ async function run() {
           held.set(p, c.sig);
           const h = heldQ.get(p)!;
           for (const q of units) h[q] = c.psig[q];
+          heldOn.set(p, { sig: c.sig, psig: c.psig, shape: c.shape, net: c.net });
           if (p instanceof IntercityApi) { marketOn.set(p, viewOf(c, p).nodeGlobal); const net = lastNet as NetIds | null; if (net) marketNet.set(p, net); }
           else cityOn.set(p, viewOf(c, p));
         }

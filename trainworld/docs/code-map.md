@@ -296,6 +296,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   startup, edits per cluster, memory, London's longer trips by place), `t409-worker-check` (two networks with no track between
   them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
   (packs and the market closed and reopened, also mid-solve and bare: figures to the bit),
+  `t1862-noise-keep` (Boston's line moved by settle noise beside a Philadelphia edit keeps its
+  figures to the bit; noise adding up past 0.2% trains or 0.5 s, +1% trains, +1 s, a span step, a car
+  and a moved stop each re-solve it to a fresh worker's figures to the bit; `exactKeep`; about 30 s),
   `t761-plain-net <label> <out.json>` (a `t756-reach.mjs capture` as plain JSON arrays for the native
   `t761_market_bench`, sim/src/demand/intercity/tests.rs).
 - Python: `token_usage.py <transcript.jsonl> ...` (an agent's token use from its transcript,

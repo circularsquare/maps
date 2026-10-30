@@ -226,8 +226,17 @@ there, since no other population puts a rider on its lines; so the figures are t
 solve of everything. A worker keeps what each population last solved, and a cluster whose
 sub-network, populations and rounds are unchanged since keeps its result untouched: after an edit
 only the clusters it touched are solved, and the others' figures are read from their populations
-as they stand. Every worker splits the same way from the same inputs. `?perfOff=clusters` solves
-everything as one cluster, as before T-326.
+as they stand. A cluster whose lines moved only by noise keeps its result too (T-1862): the
+same `shape` (the cluster's stations, complexes, upgrades, passages, bus stretches, fare multipliers,
+stops, cars and hop km, its cities, market key, rounds, fares and frame), the same population
+objects each holding this worker's periods from a whole solve (none from a local refine), every run
+time within 0.5 s and trains an hour within 0.2% of the network the cluster was last solved on (not
+the network before, so drift cannot add up), and its span exactly that network's. The settle moves
+lines no edit touched by about that much (T-1850); one train more on a line is past 0.2%. Such a
+cluster is re-keyed to the new network unsolved (`held`, `heldQ` and its capacity-fit ratios under
+the new `sig`); one last solved with its market apart (T-1607) is re-keyed and then kept apart as
+below. `?perfOff=noise` keeps a cluster only on exactly the network it solved. Every worker splits
+the same way from the same inputs. `?perfOff=clusters` solves everything as one cluster, as before T-326.
 
 **Each population on its reach** (T-756, `reachView` in `workers/demandClusters.ts`). Within a
 cluster a city's commutes and everyday layer are set on their own network: the stations within

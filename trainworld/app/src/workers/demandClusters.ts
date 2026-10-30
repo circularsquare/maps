@@ -54,6 +54,8 @@ export interface Cluster {
   nodeLocal: Int32Array;
   /** everything its result depends on, so an unchanged cluster can keep its result */
   sig: string;
+  /** T-1862: `sig` less the service values (run times, trains an hour, span) */
+  shape: string;
   /** T-124: per period, everything that period's result depends on: `sig` less the other demand
    * levels' run times and trains an hour */
   psig: string[];
@@ -391,6 +393,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
   const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
+  const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
     let a = 0;
@@ -405,5 +408,5 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   // T-842: a period's own span, where there is one
   const nr = 2 * nStops;
   const psig = PERIODS.map((p, q) => span.length ? hashOf([levelSig[LEVEL[p.demand]], span.subarray(q * nr, (q + 1) * nr)]) : levelSig[LEVEL[p.demand]]);
-  return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, psig };
+  return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, shape, psig };
 }
