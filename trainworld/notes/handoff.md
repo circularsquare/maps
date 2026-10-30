@@ -31,8 +31,28 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1875.
+- Next free task id: T-1876.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
+
+Anita away from ~evening 2026-10-30: cores cap raised to 15 (`cores.py cap 15`); lower to 10 when she's back.
+T-1868 done too (uncommitted; TopBar.tsx MapSky, style.css, DemandSelector.tsx, Search.tsx, KeepDot.tsx, main.ts,
+checks/t1832-keep.mjs not run: run it at landing). Land with T-1872 in the batch.
+T-1871 done too (markData.ts, gradeMarks.ts, ui-map.md, code-map.md). String for Anita: "Tunnel portal down to -2" ->
+"Ramp down to -2". Her call: drop triangles point downhill (toward their colour's level), ask if she wants uphill.
+T-1869 done too (dragHandles.ts new, nodeDrag.ts, endMarkers.ts, blueprintBox.ts, one style.css rule, docs, check
+t1869-drag.mjs). Ask Anita: a platform-end drag moves the whole station; pivot/stretch needs a WASM change.
+T-1874 done too (sim/src/demand lod.rs, everyday.rs, drives.rs, tests; docs demand-sources/runtime/worldwide (only
+its "Everyday samples" entry: the rest of demand-worldwide.md is t1857's); notes/T-1874.md). Columbia 16 -> 93 cells
+of uneven size, network rail trips -0.005%, worst line -2.2%. WASM rebuilt; main tree already runs it.
+T-1870 done too; the whole evening batch (T-1868 to T-1872, T-1874) landed in one commit by maps-18.
+T-1875 filed (t671-ghost-hover near track ends, not from T-1870). New string to show Anita: "The track here is too
+short for this platform." (t1870's own wording). Still waiting: maps-da's t1857 (Australia) and t1854b (terrain).
+T-1872's cloneName changed by maps-18 per Anita ("X clone 1" -> "X clone 2"); typecheck at landing.
+**Anita 2026-10-30 evening: at 94% of the week's usage. No new tasks; land what is in flight, then deploy.**
+Held until next week: T-1873, T-1867, T-1849, T-1863, T-1864. T-1872 is done (uncommitted; tools.ts, DECISIONS,
+code-map, ui-panels shared with running agents): land it with the rest in one batch once those agents report.
+Her hills question (Tokyo, Nagoya, Shanghai centres look hilly) relayed to t1854b via maps-da: likely buildings in the
+surface model; bare earth should fix it; check it in T-1854's report.
 
 ## In flight
 - T-1857 Australia (agent t1857, Opus): world run detached, 9 cores, notes/T-1857.md (batch, log, restart). Credits line

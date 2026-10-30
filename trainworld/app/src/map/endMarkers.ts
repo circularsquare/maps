@@ -3,7 +3,8 @@
 // line is continued or a station goes at the end of one. With the select tool, a square marker at
 // every blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions.
 // The track tool has both (T-1811): the squares, a blueprint loose end's in the accent, and the
-// rings near the pointer at built loose ends.
+// rings near the pointer at built loose ends. With either, a round mark at the middle of every
+// blueprint curve and a square at both ends of a blueprint platform (T-1869, map/dragHandles.ts).
 // They take no presses; the tools and the node drag work on the nodes underneath as before.
 
 import type { Map as MlMap } from "maplibre-gl";
@@ -14,14 +15,15 @@ import { effect } from "@preact/signals";
 import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
+import { MARKS_ZOOM, onCurveHandles, stationEnds, visibleCurves } from "./dragHandles";
 import type { Overlay } from "./overlay";
 import { onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag" | "track";
-type Cls = "end-mark" | "pi-mark" | "pi-mark loose";
+type Cls = "end-mark" | "pi-mark" | "pi-mark loose" | "pi-mark curve";
 
 /** below this zoom the markers would only crowd the map */
-const MIN_ZOOM = 9;
+const MIN_ZOOM = MARKS_ZOOM;
 const MAX_MARKS = 400;
 /** a point's reach for a click, px: nodeDrag's, so a press that drags and one that clicks agree */
 const HIT_PX = 9;
@@ -78,6 +80,15 @@ export class EndMarkers {
       world.value;
       this.place();
     });
+    onCurveHandles(() => this.place());
+  }
+
+  /** The curves' middles and the platforms' ends, px (T-1869). */
+  private handles(): { x: number; y: number; cls: Cls }[] {
+    return [
+      ...visibleCurves(this.overlay).map((c) => ({ x: c.x, y: c.y, cls: "pi-mark curve" as Cls })),
+      ...stationEnds(this.overlay).map((e) => ({ x: e.x, y: e.y, cls: "pi-mark" as Cls })),
+    ];
   }
 
   private wanted(): Kind | null {
@@ -142,7 +153,7 @@ export class EndMarkers {
       const [x, y] = this.overlay.toScreen(p.lx, p.ly);
       if ((x - px) ** 2 + (y - py) ** 2 < HIT_PX * HIT_PX) return true;
     }
-    return false;
+    return this.handles().some((h) => (h.x - px) ** 2 + (h.y - py) ** 2 < HIT_PX * HIT_PX);
   }
 
   private shown(): boolean {
@@ -183,17 +194,26 @@ export class EndMarkers {
         if (!ring && this.badged(p.lx, p.ly)) continue;
         if (p.stub && !this.visible(p.stub)) continue;
         if (k >= MAX_MARKS) break;
-        let m = this.marks[k];
-        if (!m) {
-          m = this.marks[k] = document.createElement("div");
-          this.box.appendChild(m);
-        }
-        if (m.className !== p.cls) m.className = p.cls;
-        m.style.display = "";
-        placeAt(m, x, y);
-        k++;
+        this.mark(k++, p.cls, x, y);
       }
+      if (kind !== "loose")
+        for (const p of this.handles()) {
+          if (!onScreen(p.x, p.y, w, h, 8)) continue;
+          if (k >= MAX_MARKS) break;
+          this.mark(k++, p.cls, p.x, p.y);
+        }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
+  }
+
+  private mark(k: number, cls: Cls, x: number, y: number) {
+    let m = this.marks[k];
+    if (!m) {
+      m = this.marks[k] = document.createElement("div");
+      this.box.appendChild(m);
+    }
+    if (m.className !== cls) m.className = cls;
+    m.style.display = "";
+    placeAt(m, x, y);
   }
 }

@@ -140,10 +140,14 @@ tail; the density weight sends the tail into dense centres, where high-order sho
 cluster, instead of spreading it evenly. Within the zone the cell is drawn by attraction, as for
 the local part, and the two parts share the cell's stratified samples (the central part last).
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
-per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; in a zone opened
+per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; a school's or
+university's home samples one per 30 trips, rounded down, 2 to 100, T-1874; in a zone opened
 coarse one per 64, 1 to 8, T-1222; none for a cell
 with no budget for that purpose),
-then choose an actual destination cell by attraction weight. This is an approximation to
+then choose an actual destination cell by attraction weight. A cell's samples are not equal
+shares: each takes a factor uniform in 0.5-1.5, seeded from the cell's H3 index, the purpose and
+the sample's place, and the drawn samples are scaled together so the cell's total is what equal
+shares gave (T-1874). This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.
 **The draw runs over the home's own pack**; the part of it that would land in a neighbouring pack
 (the same rule over both packs' zones, worked out offline) travels in the regional layer instead,
@@ -185,7 +189,7 @@ under-fives, approximating ages 3–4, spread by block land area across all the 
 Missing shares use full-state county FIPS fallbacks, or the pack's age share for Connecticut gaps.
 Each destination cell generates
 0.9 attendance outings per enrolled pupil on a typical school day. This attendance factor is
-provisional. Deterministic home samples per school cell (one per 8 attendance trips, 2 to 16) use child weights and a 1.4 km
+provisional. Deterministic home samples per school cell (one per 30 attendance trips, 2 to 100, T-1874) use child weights and a 1.4 km
 distance-decay scale (T-637). Unlike customer trips, school demand is destination-constrained by
 enrollment. The same 150 m exclusion, local-distance taper and directional assignment apply.
 

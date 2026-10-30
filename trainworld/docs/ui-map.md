@@ -246,7 +246,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   colours of the lines near where it starts (its first stop, else the middle of the map): those
   with a stop within 15 km, topped up with the next nearest to six, ties at random
   (`nextFreeColour` in `game/lineActions.ts`, T-1278).
-- **Marks on the track** [T-629, T-655; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
+- **Marks on the track** [T-629, T-655, T-1871; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):
   - A **flat crossing** (an X) and a **flat junction** (a fork, a node with three or more track ends
@@ -259,13 +259,16 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     Elevation colour of the level the meeting is on [T-673]. A junction is built once three of its ends are, a crossing
     once both tracks are. A crossing the model refuses (under one elevation step apart, or on a
     ramp) is a red X.
-  - A **ramp** (a wedge) where track climbs from level 0 and a **tunnel portal** (a half disc) where it
-    drops from level 0, at the ramp's level 0 end, pointing along the track, filled in the Elevation
-    colour of the level it reaches, from zoom 11 at 3.5 px radius, 5 at 13, 7 at 15. A ramp that
-    starts below ground or above level 1 (1 to 2, -1 to -2) has none.
+  - A **ramp** (a triangle) for every change of level along track, 0 to +3, 0 to -3, 1 to 2, -1 to -2
+    and the rest. One mark per ramp (a stretch where the height keeps rising or keeps falling), at its
+    middle, pointing along the track toward the end that is farther from the ground, filled in the
+    Elevation colour of that level (+1 teal, +2 blue, +3 indigo, -1 yellow, -2 orange, -3 red-orange),
+    from zoom 11 at 3.5 px radius, 5 at 13, 7 at 15. A ramp that crosses the ground (-1 to +1) gets
+    one mark on each side. The hover says "Ramp up to +2" or "Ramp down to -2" (the level the colour
+    shows), then "Blueprint" on blueprint track.
   The fill is the casing's. The Settings checkbox "Flat junctions and crossings" (on by default,
-  saved with the display settings) hides the crossings and junctions and their hover; ramps,
-  portals and refused crossings stay [T-673].
+  saved with the display settings) hides the crossings and junctions and their hover; ramps
+  and refused crossings stay [T-673].
 
 ## Bus lines
 

@@ -188,8 +188,11 @@ purpose filter the purpose drawn is ringed in the bar.
   there for touch, where dragging rows is not; a bus line's panel has the same row. The row
   starts 6 px below the title, which covers that much of whatever follows it.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key O), Copy line (duplicates route and settings with no trains, T-1161;
-  the copy keeps the symbol its line shows, T-1475, joins its source's group, making one of the
-  two when the source had none, and the group view opens, T-1791), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  the copy joins its source's group, making one of the
+  two when the source had none, and the group view opens, T-1791; its name and symbol are the next
+  letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
+  "<name> clone N" (a copy of "X clone 1" is "X clone 2") with the old symbol's first letter and N (t or tm gives t1, then t2), N the lowest
+  not taken, T-1872, `game/cloneNames.ts`), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
@@ -203,9 +206,10 @@ purpose filter the purpose drawn is ringed in the bar.
   length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
   counts rounded up to even; paste is off until something is copied, its hover naming the line
   copied from; a Trains / Headway switch in the heading
-  chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
-  under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
-  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
+  chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
+  the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 120
+  minutes; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872,
+  `nextHeadway`]; a click on the number types it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
 headway or count is still on its way to the worker (an edit takes seconds on a big network), the other
 cell shows what it gives (the headway's count by `autoTrainsFor` with the level's limit, a count's
 headway over the round trip), and the muted running headway waits for the edit, so stepping fast never

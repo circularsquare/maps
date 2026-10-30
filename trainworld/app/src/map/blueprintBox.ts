@@ -25,6 +25,11 @@ import { previewStrokes, setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
 import { topSeg } from "./pick";
 import { STATIONS_ZOOM } from "./stationGeometry";
+import { packToLngLat } from "../game/coords";
+import type { PreviewAnswer } from "../workers/clockClient";
+import { MARKS_ZOOM } from "./dragHandles";
+import { onScreen, placeAt } from "./screenPlace";
+import { curveLabels, setCurveLabel } from "./tools";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
@@ -33,6 +38,8 @@ const NODE_PX = 9;
 /** T-1260: a finger held this long without moving more than HOLD_SLOP_PX draws a box (ms) */
 const HOLD_MS = 450;
 const HOLD_SLOP_PX = 8;
+/** at most this many squares on the pick's nodes, as map/endMarkers.ts */
+const MAX_SQUARES = 400;
 
 type Rect = [number, number, number, number];
 
@@ -59,14 +66,29 @@ export class BlueprintBox {
   private box: HTMLDivElement;
   private drag: { x0: number; y0: number; x: number; y: number; add: boolean; base: BpPicked; pan: boolean; moved: boolean } | null = null;
   private frame = 0;
-  /** T-475: a press on a picked node or picked track moves every movable node of the pick */
-  private move: { x0: number; y0: number; nodes: number[]; at: { x: number; y: number }; dx: number; dy: number; moved: boolean; ok: boolean; issues: string[] } | null = null;
+  /** T-475: a press on a picked node or picked track moves every movable node of the pick; `px, py`
+   * the pointer, `preview` the last answer (T-1869: its curve speeds and why not are shown) */
+  private move: { x0: number; y0: number; nodes: number[]; at: { x: number; y: number }; dx: number; dy: number; moved: boolean; ok: boolean; issues: string[]; px?: number; py?: number; preview?: PreviewAnswer } | null = null;
+  /** T-1869: a square on every movable node of the pick, following a drag; the curves' speeds and
+   * why it cannot be moved while dragging */
+  private marks: HTMLDivElement;
+  private squares: HTMLDivElement[] = [];
+  private labels: HTMLDivElement[] = [];
+  private tag: HTMLDivElement;
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     this.box = document.createElement("div");
     this.box.className = "bp-box";
     this.box.style.display = "none";
     map.getContainer().appendChild(this.box);
+    this.marks = document.createElement("div");
+    this.marks.className = "tool-marks";
+    this.tag = document.createElement("div");
+    this.tag.className = "tool-tag bad";
+    this.tag.style.display = "none";
+    this.marks.appendChild(this.tag);
+    map.getContainer().appendChild(this.marks);
+    overlay.afterMapFrame.push(() => this.place());
     const host = map.getCanvasContainer();
     host.addEventListener("pointerdown", (e) => this.onDown(e as PointerEvent));
     host.addEventListener("dblclick", (e) => this.onDblClick(e));
@@ -89,37 +111,92 @@ export class BlueprintBox {
       bpPicked.value;
       selection.value;
       world.value;
+      tool.value;
       this.refreshHighlight();
+      this.place();
     });
+  }
+
+  /** The pick's squares, moved with a drag, and while dragging each curve's speed and why not. */
+  place() {
+    const w = world.peek();
+    const nodes = w && tool.peek() === "blueprint" && this.map.getZoom() >= MARKS_ZOOM ? this.movable() : [];
+    const m = this.move?.moved ? this.move : null;
+    const cw = this.overlay.cssW, ch = this.overlay.cssH;
+    let k = 0;
+    for (const id of nodes) {
+      const n = w!.nodes.get(id);
+      if (!n) continue;
+      const [x, y] = this.overlay.toScreen(...(m ? toLocal(...packToLngLat(n.x + m.dx, n.y + m.dy)) : toLocal(n.lng, n.lat)));
+      if (!onScreen(x, y, cw, ch, 8)) continue;
+      if (k >= MAX_SQUARES) break;
+      placeAt(this.el(this.squares, k++, "pi-mark"), x, y);
+    }
+    for (let i = k; i < this.squares.length; i++) this.squares[i].style.display = "none";
+    const pv = m?.preview;
+    const labels = pv ? curveLabels(pv.verts) : [];
+    labels.forEach((c, i) => {
+      const l = this.el(this.labels, i, "pi-label");
+      setCurveLabel(l, c.kmh);
+      placeAt(l, ...this.overlay.toScreen(c.x, c.y), 8, 6);
+    });
+    for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
+    if (m && pv && !pv.ok && m.px !== undefined) {
+      this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
+      this.tag.style.display = "";
+      placeAt(this.tag, m.px, m.py!, 14, -30);
+    } else this.tag.style.display = "none";
+  }
+
+  private el(list: HTMLDivElement[], i: number, cls: string): HTMLDivElement {
+    let e = list[i];
+    if (!e) {
+      e = list[i] = document.createElement("div");
+      e.className = cls;
+      this.marks.appendChild(e);
+    }
+    e.style.display = "";
+    return e;
   }
 
   get dragging() {
     return (this.drag !== null && !this.drag.pan) || this.move !== null;
   }
 
-  /** The pick's nodes that can move (every edge there blueprint, no crossover, station not
-   * constructed), when a press at (x, y) px is on one of them or on picked track; else null. */
-  private grabAt(x: number, y: number): number[] | null {
+  private movableOf: { pick: BpPicked | null; version: number; nodes: number[] } = { pick: null, version: -1, nodes: [] };
+  /** The pick's nodes that can move: every edge there blueprint, no crossover, station not
+   * constructed (the ends of picked track and picked stations). */
+  private movable(): number[] {
     const w = world.peek(), p = bpPicked.peek();
-    if (!w || (!p.edges.length && !p.stations.length)) return null;
+    if (!w || (!p.edges.length && !p.stations.length)) return [];
+    const was = this.movableOf;
+    if (was.pick === p && was.version === w.version) return was.nodes;
     const ids = new Set(p.stations);
     for (const e of w.edges) if (p.edges.includes(e.id)) ids.add(e.a), ids.add(e.b);
     const fixed = new Set<number>();
     for (const e of w.edges) if (e.crossover) fixed.add(e.a), fixed.add(e.b);
     const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
     const nodes: number[] = [];
-    let near = false;
     for (const id of ids) {
       const n = w.nodes.get(id);
       if (!n || n.builtPorts > 0 || fixed.has(id) || built.has(id)) continue;
       nodes.push(id);
-      const [sx, sy] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
-      if ((sx - x) ** 2 + (sy - y) ** 2 < NODE_PX * NODE_PX) near = true;
     }
-    if (!nodes.length) return null;
-    if (near) return nodes;
+    this.movableOf = { pick: p, version: w.version, nodes };
+    return nodes;
+  }
+
+  /** The pick's movable nodes, when a press at (x, y) px is on one of them or on picked track; else null. */
+  private grabAt(x: number, y: number): number[] | null {
+    const w = world.peek(), nodes = this.movable();
+    if (!w || !nodes.length) return null;
+    for (const id of nodes) {
+      const n = w.nodes.get(id)!;
+      const [sx, sy] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
+      if ((sx - x) ** 2 + (sy - y) ** 2 < NODE_PX * NODE_PX) return nodes;
+    }
     const under = this.under(x, y).edges[0];
-    return under !== undefined && p.edges.includes(under) ? nodes : null;
+    return under !== undefined && bpPicked.peek().edges.includes(under) ? nodes : null;
   }
 
   /** Esc while dragging the pick: it goes back, nothing changes. */
@@ -135,6 +212,7 @@ export class BlueprintBox {
     setGrabbing(false);
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
+    this.place();
   }
 
   /** Esc while dragging a box: the box goes away and the pick goes back. */
@@ -288,13 +366,18 @@ export class BlueprintBox {
     const p = lngLatToPack(ll.lng, ll.lat);
     m.dx = p.x - m.at.x;
     m.dy = p.y - m.at.y;
+    m.px = x;
+    m.py = y;
     this.client.previewNodes(m.nodes, m.dx, m.dy, (a) => {
       if (this.move !== m) return;
       m.ok = a.ok;
       m.issues = a.issues;
+      m.preview = a;
       this.overlay.renderer.setPreview(previewStrokes(a));
       this.overlay.invalidate();
+      this.place();
     });
+    this.place();
   }
 
   private async onUp(e: PointerEvent) {

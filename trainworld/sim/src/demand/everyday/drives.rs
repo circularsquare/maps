@@ -54,7 +54,7 @@ impl EverydayApi {
             if pi == NONE {
                 continue;
             }
-            let Some((kind, c, d, per)) = self.ends(k) else { continue };
+            let Some((kind, c, d, share)) = self.ends(k) else { continue };
             let (sc, sd) = (sq.of_zone[z.cell_zone[c] as usize], sq.of_zone[z.cell_zone[d] as usize]);
             if sc == sd {
                 continue;
@@ -67,7 +67,7 @@ impl EverydayApi {
             }
             // the sample's weight only where rail takes some of it (the weight is the dear part)
             if chance > 0.0 {
-                let (w, pw) = self.weight(kind, per, c, d, self.distance(c, d));
+                let (w, pw) = self.weight(kind, share, c, d, self.distance(c, d));
                 r[sq.pair(sc, sd)] += w * chance * (1.0 - pw);
             }
         }

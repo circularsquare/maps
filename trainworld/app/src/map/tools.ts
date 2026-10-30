@@ -49,7 +49,7 @@ import type { Overlay } from "./overlay";
 import { placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import { chip, costTint, elevationFact, factRow, speedFact, terrainFact } from "./trackTagRows";
-import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
+import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapBeside, snapping } from "../game/ui";
@@ -61,7 +61,7 @@ import { playBuild } from "./buildSound";
 const TOUCH_GAP_PX = 44;
 type LngLatish = { lng: number; lat: number };
 
-// T-1820: 1.5 times the earlier 12 and 10, for the station tool and the track tool alike
+// T-1820: 1.5 times the earlier 12 and 10; the station tool snaps to track only (T-1870)
 const SNAP_NODE_PX = 18;
 const SNAP_EDGE_PX = 15;
 const NOT_ON_TRACK = "Place stations on track";
@@ -85,7 +85,7 @@ interface Verdict { key: string; spot: Spot | null; ok: boolean; why: string; he
 const HOLD_AT = 7;
 /** the worker's answer for a track tried this close to the pointer's spot stands for it (T-695) */
 const KNOWN_PX = 16;
-const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformJoint", "PlatformCrossing", "StationPorts"]);
+const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformStation", "PlatformJunction", "PlatformJoint", "PlatformCrossing", "StationPorts", "StationJunction"]);
 /** the express pair's spacing (sim `QUAD_SPACING`) */
 const QUAD_SPACING_M = 8;
 
@@ -201,7 +201,8 @@ export class Tools {
     // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was (a run's segment stays)
     map.getContainer().addEventListener("mouseleave", () => {
       if (touchInput.peek() || (!this.hover && !this.hoverBeside && !this.delHover)) return;
-      this.hover = this.hoverBeside = this.delHover = null;
+      this.hover = this.hoverBeside = null;
+      this.clearDelHover();
       this.place();
     });
     effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
@@ -241,6 +242,7 @@ export class Tools {
       touchInput.value;
       this.touchAt = null;
       this.ghostSpent = false;
+      if (tool.value !== "delete") this.clearDelHover();
       this.place();
     });
     // T-1039: a run ends with the track tool however it is left (a game loaded sets the tool directly)
@@ -287,9 +289,11 @@ export class Tools {
     if (station) this.alts = [];
     if (!w || !n) return { kind: "free", lx: fx, ly: fy };
     let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
-    const nodeHits: { d: number; hit: Spot }[] = [];
     // only what is near the pointer (T-724); everything with the map pitched
     const at = pointerLocal(this.overlay, px, py);
+    // T-1870: a station goes on the track at the pointer, never pulled to a node within the radius
+    // (zoomed out that was a long stretch of track); `roomSnap` moves it where the platform needs room
+    nodes &&= !station;
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], SNAP_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], SNAP_EDGE_PX * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
@@ -297,13 +301,12 @@ export class Tools {
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
-      if (d < SNAP_NODE_PX * SNAP_NODE_PX && station) nodeHits.push({ d, hit: { kind: "node", node: node.id, lx, ly } });
       if (d < best) {
         best = d;
         hit = { kind: "node", node: node.id, lx, ly };
       }
     }
-    if (hit && !station) return hit;
+    if (hit) return hit;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
@@ -321,16 +324,15 @@ export class Tools {
       }
       if (eh) near.push({ d: Math.sqrt(eb), hit: eh });
     }
-    if (!near.length && !nodeHits.length) return { kind: "free", lx: fx, ly: fy };
+    if (!near.length) return { kind: "free", lx: fx, ly: fy };
     near.sort((a, b) => a.d - b.d);
     if (!station) return near[0].hit;
-    // T-469, T-671: what a click can place, in the order it is tried: the nodes in reach, then the
-    // tracks within 4 px of the nearest in orderOverlapping's order, then the rest by distance
-    nodeHits.sort((a, b) => a.d - b.d);
+    // T-469, T-671: what a click can place, in the order it is tried: the tracks within 4 px of the
+    // nearest in orderOverlapping's order, then the rest by distance
     const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
     const spots = close.map((c) => { const h = c.hit as Extract<Snap, { kind: "edge" }>; return { edge: h.edge, frac: fractionAlong(n.edgePts.get(h.edge)!, h.lx, h.ly) }; });
     const order = close.length > 1 ? orderOverlapping(spots, buildPlatform.peek(), w.edges, w.nodes, this.lastStationTrack(), this.layout(w)) : close.map((_, i) => i);
-    this.alts = [...nodeHits.slice(0, 3).map((c) => c.hit), ...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
+    this.alts = [...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
     return this.alts[0];
   }
 
@@ -923,7 +925,7 @@ export class Tools {
     const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
     const platform = buildPlatform.peek();
     const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform, name });
-    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => (p.kind === "edge" ? this.endSnap(p) : null), () => false);
+    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(`${name} added as a blueprint station.`);
@@ -1045,6 +1047,14 @@ export class Tools {
     return null;
   }
 
+  /** T-1872: the red stretch is the shared preview, so it goes with the hover whichever way the pointer or tool leaves. */
+  private clearDelHover() {
+    if (!this.delHover) return;
+    this.delHover = null;
+    this.overlay.renderer.setPreview(null);
+    this.overlay.invalidate();
+  }
+
   private deleteHover(px: number, py: number) {
     const h = this.deletePick(px, py);
     const same = (a: Removable | null, b: Removable | null) => JSON.stringify(a && { ...a, lx: 0, ly: 0 }) === JSON.stringify(b && { ...b, lx: 0, ly: 0 });
@@ -1075,7 +1085,7 @@ export class Tools {
     const h = this.deletePick(e.point.x, e.point.y);
     if (!h) return;
     // on touch nothing is shown until the next tap (T-1260)
-    void removeThing(h).then(() => touchInput.peek() ? this.touchStop() : this.deleteHover(e.point.x, e.point.y));
+    void removeThing(h).then(() => touchInput.peek() ? this.touchStop() : tool.peek() === "delete" && this.deleteHover(e.point.x, e.point.y));
   }
 
   // ---------------------------------------------------------------- lines
@@ -1308,8 +1318,8 @@ export class Tools {
       return Math.hypot(ax-bx,ay-by)<=KNOWN_PX ? r.issues : undefined;
     };
     const cand=(s:Spot):Candidate=>s.kind==="node"?{kind:"node",node:s.node}:{kind:"edge",edge:s.edge,frac:fractionAlong(n.edgePts.get(s.edge)??[],s.lx,s.ly)};
-    const endOf=(s:Spot)=>s.kind==="edge"?this.endSnap(s):null;
-    const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),endOf);
+    const roomOf=(s:Spot)=>this.roomSnap(s);
+    const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),roomOf);
     let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||"Cannot be placed here."};
     if (spots.length>=HOLD_AT && !(g.spot?known(g.spot)===null:spots.every((s)=>known(s)))) {
       // a bundle of tracks where the worker has not yet confirmed the guess: there it is often
@@ -1330,13 +1340,15 @@ export class Tools {
     const trial=(s:Spot)=>{
       const k=known(s);
       return k ? Promise.resolve(k) : new Promise<string[]|null>((res)=>this.client.checkStation(atOf(s),platform,(ok,issues)=>{
-        // refusals the layout explains depend on the spot; the layout finds those itself
-        if (ok || !issues.every((i)=>LAYOUT_ISSUES.has(i))) tried.set(id(s),{issues:ok?null:issues,lx:s.lx,ly:s.ly});
+        // refusals the layout explains depend on the spot; the layout finds those itself, and a split
+        // refused where the layout finds no room is by a node, not on a ramp (T-1870)
+        const byNode=issues.includes("SplitPoint") && layoutIssues(cand(s),platform,lay).length>0;
+        if (ok || !issues.every((i)=>LAYOUT_ISSUES.has(i) || (i==="SplitPoint" && byNode))) tried.set(id(s),{issues:ok?null:issues,lx:s.lx,ly:s.ly});
         else tried.delete(id(s));
         res(ok?null:issues);
       }));
     };
-    void firstAccepted(spots,trial,endOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
+    void firstAccepted(spots,trial,roomOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
       if (key!==this.guess?.key) return; // a newer spot is already asked
       const why=spot?"":describeIssues(issues)||"Cannot be placed here.";
       this.answer={key,spot:spot??(guess.held?spots[0]:guess.spot),ok:!!spot,why};
@@ -1398,15 +1410,22 @@ export class Tools {
     return v ? v.spot : h;
   }
 
-  /** The node at the nearer end of the track under an edge spot (T-671). */
-  private endSnap(h: Extract<Snap,{kind:"edge"}>): Extract<Snap,{kind:"node"}> | null {
-    const w=world.peek(), pts=this.overlay.renderer.net?.edgePts.get(h.edge);
-    const e=w?.edges.find((x)=>x.id===h.edge);
-    if (!w || !e || !pts || pts.length<6) return null;
-    const id=fractionAlong(pts,h.lx,h.ly)<0.5?e.a:e.b, node=w.nodes.get(id);
-    if (!node) return null;
-    const [lx,ly]=toLocal(node.lng,node.lat);
-    return {kind:"node",node:id,lx,ly};
+  /** The spots near an edge spot where the platform may have room (`roomNear`, T-671, T-1870). */
+  private roomSnap(h: Spot): Spot[] {
+    const w=world.peek(), net=this.overlay.renderer.net, pts=h.kind==="edge"?net?.edgePts.get(h.edge):null;
+    if (!w || !net || !pts || pts.length<6 || h.kind!=="edge") return [];
+    return roomNear({edge:h.edge,frac:fractionAlong(pts,h.lx,h.ly)},buildPlatform.peek(),this.layout(w)).flatMap((c):Spot[]=>{
+      if (c.kind==="node") {
+        const node=w.nodes.get(c.node);
+        if (!node) return [];
+        const [lx,ly]=toLocal(node.lng,node.lat);
+        return [{kind:"node",node:c.node,lx,ly}];
+      }
+      const to=net.edgePts.get(c.edge);
+      if (!to) return [];
+      const [lx,ly]=pointAlong(to,c.frac);
+      return [{kind:"edge",edge:c.edge,lx,ly}];
+    });
   }
 
   /** The faint circle the segment being placed curves along (T-418), red when it is refused. */

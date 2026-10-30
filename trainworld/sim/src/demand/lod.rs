@@ -16,17 +16,23 @@ pub struct Sampling {
     pub min: usize,
     pub max: usize,
     pub max_few: usize,
+    /// Site-anchored purposes (school, university), where set: one sample home per this many
+    /// trips a day, rounded down, from `min` to this many (T-1874).
+    pub site: Option<(f64, usize)>,
     /// Mixed into every sample's seed: 0 in the game, other draws for the bias test.
     pub salt: u32,
 }
 
 impl Sampling {
-    /// T-397's rule.
-    pub const FINE: Sampling = Sampling { per: 8.0, min: 2, max: 16, max_few: 2, salt: 0 };
+    /// T-397's rule; a campus's homes T-1874's (Anita, 2026-10-30: at most 100, at least 30 trips each).
+    pub const FINE: Sampling = Sampling { per: 8.0, min: 2, max: 16, max_few: 2, site: Some((30.0, 100)), salt: 0 };
     /// T-1222's: a dense cell keeps up to 8, since 4 leaned a metro's rail up by about 0.5%
     /// (fewer samples to a subzone pair lean its rail up, free flow included); notes/T-1206.md.
-    pub const COARSE: Sampling = Sampling { per: 64.0, min: 1, max: 8, max_few: 1, salt: 0 };
-    pub fn count(&self, few: bool, trips: f32) -> usize {
+    pub const COARSE: Sampling = Sampling { per: 64.0, min: 1, max: 8, max_few: 1, site: None, salt: 0 };
+    pub fn count(&self, few: bool, site: bool, trips: f32) -> usize {
+        if let (true, Some((per, most))) = (site, self.site) {
+            return ((trips as f64 / per).floor() as usize).clamp(self.min.min(most), most);
+        }
         let most = if few { self.max_few } else { self.max };
         ((trips as f64 / self.per).ceil() as usize).clamp(self.min.min(most), most)
     }

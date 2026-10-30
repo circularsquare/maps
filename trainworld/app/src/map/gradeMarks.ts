@@ -4,8 +4,9 @@
 //     and while drawing (the preview); small and quiet on built track. Both are in the Elevation
 //     colour of the level they are on. A built one follows the square root of the map's scale,
 //     like the ridership circles (T-1772).
-//   - a ramp (a wedge) where track climbs from level 0 and a tunnel portal (a half disc) where it
-//     drops from level 0, at the level 0 end, along the track, in the level's Elevation colour.
+//   - a ramp (a triangle) for every change of level along track, at the middle of the ramp,
+//     pointing along the track toward the level farther from the ground, in that level's
+//     Elevation colour (T-1871).
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
 
 import { levelLabel } from "../game/format";
@@ -103,10 +104,10 @@ void main() {
   float r = v_r;
   vec3 ink = blueprint ? u_bp : u_ink;
   if (shape == ${M_RAMP} || shape == ${M_PORTAL}) {
-    // along the track: u along the ramp from its foot, v across it
+    // along the track: u along the ramp toward its far level, v across it
     vec2 dir = vec2(cos(v_m.w), sin(v_m.w));
     vec2 q = vec2(dot(v_p, dir), dot(v_p, vec2(-dir.y, dir.x)));
-    float d = shape == ${M_RAMP} ? tri(q, vec2(0.0, -r), vec2(0.0, r), vec2(1.3 * r, 0.0)) : max(length(q) - r, -q.x);
+    float d = tri(q, vec2(-0.65 * r, -r), vec2(-0.65 * r, r), vec2(0.65 * r, 0.0));
     float rim = max(1.0, 1.1 * u_dpr);
     float halo = 1.4 * u_dpr;
     vec3 lc = u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
@@ -254,7 +255,7 @@ export function markTip(marks: Float32Array, i: number): TipLine[] {
   const shape = marks[i + 2], level = marks[i + 5], blueprint = marks[i + 4] > 0.5;
   const out: TipLine[] = [];
   if (shape === M_RAMP) out.push(`Ramp up to ${levelLabel(level)}`);
-  else if (shape === M_PORTAL) out.push(`Tunnel portal down to ${levelLabel(level)}`);
+  else if (shape === M_PORTAL) out.push(`Ramp down to ${levelLabel(level)}`);
   else if (shape === M_BAD) out.push("Tracks cross less than one elevation step apart");
   else {
     out.push(shape === M_JUNCTION ? "Flat junction" : "Flat crossing");

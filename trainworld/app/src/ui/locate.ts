@@ -9,7 +9,7 @@ import { fitView } from "../game/loading";
 import { openedZones } from "../game/openedZones";
 import { display } from "../game/ui";
 import { stopsById, world } from "../game/world";
-import { zoneAt } from "../game/zones";
+import { placeAt, zoneAt } from "../game/zones";
 import { live } from "../map/live";
 import { STATION_BOX_ZOOM } from "../map/stationGeometry";
 
@@ -49,9 +49,10 @@ export function viewStart(start?: string) {
 /** Furthest in a saved game opens: a district, so a lone station is not shown at street level (T-895). */
 const OPEN_MAX_ZOOM = 12;
 
-/** T-895: a game the player opened (start menu, saves panel, imported file) has its built stations all
- * in view (every station, if none is built); with no stations, the zone it was started in, else the
- * world map. Runs when the game's first state arrives (`fitView`), which is before its demand. */
+/** T-895, T-1872: a game the player opened (start menu, saves panel, imported file) opens on the city
+ * view of the zone with the most built stations (most of all stations, if none is built); with no
+ * stations, the zone it was started in, else the world map. Runs when the game's first state arrives
+ * (`fitView`), which is before its demand. */
 export function startOpenFit() {
   // T-977: untracked, since the camera move runs the map's listeners in this effect (zoomed out, the
   // city view's tags read the bubble scheme), and anything they read would make the fit run again
@@ -66,7 +67,7 @@ function fitOpened() {
   const built = all.filter((s) => s.built);
   const at = built.length ? built : all;
   if (!at.length) return viewStart([...(openedZones.peek() ?? [])][0]);
-  fitAll(at.map((s) => s.lng), at.map((s) => s.lat));
+  openAt(at.map((s) => s.lng), at.map((s) => s.lat));
 }
 
 /** T-1539: the same fit from a loading save's built stations (`stationsAhead`, x, y in `frame`), as
@@ -78,7 +79,23 @@ export function fitAhead(frame: FrameSpec, xy: Float64Array) {
     lng.push(x);
     lat.push(y);
   }
-  if (lng.length) fitAll(lng, lat);
+  if (lng.length) openAt(lng, lat);
+}
+
+/** The city view (as the Cities tab's pick) of the zone most of the points are in; all of them in view when none is in a zone. */
+function openAt(lng: number[], lat: number[]) {
+  const count = new Map<string, number>();
+  for (let i = 0; i < lng.length; i++) {
+    const z = placeAt(lng[i], lat[i]);
+    if (z) count.set(z, (count.get(z) ?? 0) + 1);
+  }
+  let best: string | null = null, most = 0;
+  for (const [z, n] of count) if (n > most) [best, most] = [z, n];
+  const c = best ? CITIES.find((x) => x.id === best) : undefined;
+  if (!c) return fitAll(lng, lat);
+  activeCity.value = c.id;
+  viewedZone.value = c.id;
+  live.map?.jumpTo({ center: c.center, zoom: c.zoom });
 }
 
 function fitAll(lng: number[], lat: number[]) {

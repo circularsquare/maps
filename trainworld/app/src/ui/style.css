@@ -686,7 +686,7 @@ rect.now { fill-opacity: .45; }
 .status-tag { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 8px;
   max-width: 360px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
   font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); }
-.map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
+.map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
 .bar { display: flex; width: 100%; height: 10px; border: 1px solid var(--rule); background: var(--bg); }
@@ -701,16 +701,19 @@ rect.now { fill-opacity: .45; }
    (4.7em: the widest it writes, "−$893.6M", the usual 7 characters leaving a little room) so the bar
    before it does not change width as it changes. After the train share, before the clock. */
 .cash { flex: none; width: 4.7em; font-variant-numeric: tabular-nums; }
-/* T-832, T-861, T-1853: the clock sits right of the cash and left of the speed buttons: the sky
-   (ui/SkyBanner.tsx) with its demand band, then the time and date on one line right of
-   it (Anita's sketch). The box is a fixed width, the sky taking what the date leaves, so nothing else
-   moves day to day. */
-.clock { flex: none; display: flex; font-variant-numeric: tabular-nums; }
-.clock-box { flex: none; width: 230px; display: flex; align-items: center; gap: 10px; }
-.clock-box .sky { flex: 1; min-width: 0; }
-.clock-text { flex: none; display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
+/* T-832, T-861, T-1853, T-1868: the clock (the time and date on one line) sits right of the cash, behind a
+   thin divider, and left of the speed buttons, in a box of fixed width (the widest date, "Wed May 28", fits)
+   so nothing else moves day to day. The day and night picture is on the map (.map-sky). */
+.clock { flex: none; display: flex; align-items: center; height: 24px; padding-left: 14px; border-left: 1px solid var(--rule);
+  font-variant-numeric: tabular-nums; }
+.clock-text { flex: none; width: 132px; display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
 .sky { position: relative; height: 21px; }
+/* T-1868: the day and night picture at the map's top right, under the bar. Its width is --sky-w: 250 px,
+   shrinking to 150 px as the left-hand controls take the room (the purpose filter goes below 460 px of map
+   column, the width then going back up to 250 px). The sums assume the default UI scale, 0.9. */
+#map { --sky-w: clamp(150px, calc(100cqw / var(--ui, 1) - 357px), 250px); }
+.map-sky { position: absolute; right: 10px; top: 10px; z-index: 4; width: var(--sky-w); }
 .sky-canvas { display: block; width: 100%; height: 21px; }
 .sky-hit, .band-hit { position: absolute; left: 0; right: 0; }
 .sky-hit { top: 0; height: 18px; }
@@ -732,6 +735,9 @@ rect.now { fill-opacity: .45; }
 .map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
+/* T-1868: the top row leaves the day and night picture's corner free */
+.map-top-row { max-width: calc(100cqw / var(--ui, 1) - var(--sky-w) - 30px); }
+.map-find { display: flex; align-items: center; gap: 6px; max-width: 100%; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
 .demand-stopped { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
 .demand-stopped, .demand-stopped:hover { cursor: default; background: var(--bg); }
@@ -822,7 +828,7 @@ button.save-add:hover { color: var(--text); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
 .choosing #dock-root, .choosing #topbar-root, .choosing #tools-root { display: none; }
-.choosing .map-top-left, .choosing .map-search, .choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
+.choosing .map-top-left, .choosing .map-sky, .choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
 /* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
 .load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
 .load-fill { display: block; height: 100%; background: var(--accent); }
@@ -886,12 +892,12 @@ button.save-add:hover { color: var(--text); }
 .blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 6px 8px;
   padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
   /* T-841: 260 px kept clear each side (the tool panel, the debug panel); a narrower map wraps the bar's groups onto more rows */
-  flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 520px)); }
+  flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 600px)); }
 .blueprint-bar .count { min-width: 58px; }
 .blueprint-bar .btn.lv { min-width: 27px; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
 @container map-column (max-width: 1000px) { .blueprint-bar { top: 80px; } }
-@container map-column (max-width: 680px) { .blueprint-bar { top: 114px; } }
+@container map-column (max-width: 680px) { .blueprint-bar { top: 148px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
 .build-track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
 /* T-1837: the three toggles after the track type share one line, wrapping together */
@@ -929,6 +935,8 @@ button.save-add:hover { color: var(--text); }
 .end-mark { width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid var(--accent); border-radius: 50%; z-index: 1; }
 /* T-1811: the track tool's square at a blueprint loose end, in the ring's colour */
 .pi-mark.loose { border-color: var(--accent); }
+/* T-1869: the middle of a blueprint curve, round so it never reads as a corner or a node */
+.pi-mark.curve { border-radius: 50%; }
 .pi-label, .tool-tag { font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; padding: 3px 6px; }
@@ -1127,32 +1135,22 @@ button.save-add:hover { color: var(--text); }
 @container map-column (max-width: 760px) {
   .city { max-width: 96px; }
 }
-/* T-1109, T-1853: a wide column gives the sky more room */
-@container map-column (min-width: 940px) {
-  .clock-box { width: 300px; }
-}
-/* T-349, T-1853, T-1865 (Anita's sketch): below 700 px the bar takes two rows. The first has the name and
-   the clock (sky, then the time and date at the row's end); the second the mode bar with the train share,
-   then the cash, then the speed buttons. The sky takes up to 200 px; on a short row the sky (to 36 px) and
-   the name (onto two lines) give way, the empty third column taking whatever room is left. */
+/* T-349, T-1853, T-1865, T-1868 (Anita's sketch): below 700 px the bar takes two rows. The first has the name
+   and the time and date at the row's end; the second the mode bar with the train share, then the cash, then
+   the speed buttons (no divider: the cash and the clock are on different rows). The first row sits 4 px
+   lower and the space under it is 4 px less (the 1 px margins make up what the 0 px row gap cannot); the
+   name and the bar are 2 px further from the left edge. */
 @container map-column (max-width: 700px) {
-  #topbar { height: auto; padding: 4px 10px;
+  #topbar { height: auto; padding: 8px 10px 4px 12px;
     display: grid; grid-template-columns: minmax(min-content, max-content) auto 1fr auto auto;
-    grid-template-areas: "city city . clock clock" "split split split cash speed"; gap: 3px 10px; }
-  #topbar .city { grid-area: city; width: auto; max-width: 150px; min-width: 0; overflow-wrap: break-word; }
+    grid-template-areas: "city city . clock clock" "split split split cash speed"; gap: 0 10px; }
+  #topbar .city { grid-area: city; width: auto; max-width: 150px; min-width: 0; overflow-wrap: break-word; margin-bottom: -1px; }
   #topbar .cash { grid-area: cash; }
-  #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; }
-  .clock-box { width: auto; flex: 1; }
-  .clock-box .sky { flex: 0 1 200px; min-width: 36px; }
+  #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; height: auto; padding-left: 0; border-left: 0; margin-bottom: -1px; }
   #topbar .split { grid-area: split; }
   #topbar .speed { grid-area: speed; justify-self: end; }
 }
-/* below 360 px the time and date stand over the sky; below 300 px the clock takes a row of its own */
-@container map-column (max-width: 359px) {
-  .clock-box { flex-direction: column; align-items: stretch; gap: 2px; }
-  .clock-box .sky { flex: none; width: 100%; }
-  .clock-text { order: -1; }
-}
+/* below 300 px the clock takes a row of its own */
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "city city" "split cash" "clock speed"; }
@@ -1304,14 +1302,15 @@ button.save-add:hover { color: var(--text); }
 .station-ghost.ok path { fill: #2f6fe0a6; stroke: #1c4fb8; }
 .station-ghost.bad path { fill: #e03c3ca6; stroke: #b91f1f; }
 
-/* T-148: the search box at the map's upper right, under the demand selector on narrow maps */
-.map-search { position: absolute; right: 10px; top: 10px; z-index: 4; width: 280px; max-width: calc(100% - 20px); }
+/* T-148, T-1868: the search box under the station ridership row at the map's upper left (in .map-top-left, so
+   zoomed with it); its results open over the map below it */
+.map-search { position: relative; width: 250px; max-width: 100%; }
 .map-search input { display: block; width: 100%; height: 28px; padding: 0 8px; border: 1px solid var(--rule);
   border-radius: 0; background: var(--bg); font-size: 12px; outline: none; }
 .map-search input:focus { border-color: var(--accent); }
 /* T-211: collapsed to a magnifying glass at the box's right end */
 .map-search.closed { width: auto; }
-.map-search-results { list-style: none; margin: -1px 0 0; padding: 0; border: 1px solid var(--rule); background: var(--bg); }
+.map-search-results { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; list-style: none; margin: -1px 0 0; padding: 0; border: 1px solid var(--rule); background: var(--bg); }
 .map-search-results li { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 2px 8px; cursor: pointer; }
 .map-search-results li.on { background: var(--tint); }
 .map-search-results li.none { cursor: default; }
@@ -1340,19 +1339,14 @@ button.save-add:hover { color: var(--text); }
 .guide-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; font-size: 12px; }
 .guide-end .btn { height: 24px; background: none; border-color: currentColor; }
 .guide-end .btn:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
-/* T-1832: the "Saved only in this browser" dot, 10 px yellow in a 20 px hit area just left of the search
-   glass (28 px at right 10, top 10); hidden while the search box is open over its place. In the middle
-   width the glass sits at the left edge, so the dot goes to its right. */
-.keep-dot { position: absolute; right: 42px; top: 14px; z-index: 3; width: 20px; height: 20px; padding: 0; border: 0;
-  background: none; cursor: pointer; zoom: var(--ui, 1); }
+/* T-1832, T-1868: the "Saved only in this browser" dot, 10 px yellow in a 20 px hit area just right of the
+   search glass; hidden while the search box is open. */
+.keep-dot { position: relative; flex: none; width: 20px; height: 20px; padding: 0; border: 0; background: none; cursor: pointer; }
 .keep-dot::before { content: ""; position: absolute; left: 5px; top: 5px; width: 10px; height: 10px; border-radius: 50%;
   background: #f2c200; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent); }
 .keep-dot:hover::before { box-shadow: 0 0 0 2px color-mix(in srgb, var(--text) 55%, transparent); }
-:is(#map, .maplibregl-map):has(.map-search:not(.closed)) .keep-dot { display: none; }
+.map-find:has(.map-search:not(.closed)) .keep-dot { display: none; }
 .choosing .keep-dot { visibility: hidden; }
-@container map-column (min-width: 521px) and (max-width: 680px) {
-  .keep-dot { left: 44px; right: auto; top: 84px; }
-}
 /* a phone held upright (T-951): the heading and the step in hand, all six after a tap on the heading */
 @media (max-width: 600px) and (min-height: 560px) {
   .guide { width: 184px; }
@@ -1391,22 +1385,18 @@ button.save-add:hover { color: var(--text); }
   background: #f2b705; color: #1a1a1a; }
 .trouble-rev svg { width: 13px; height: 13px; stroke-width: 2; }
 .trouble-chips { display: inline-flex; gap: 2px; }
-@container map-column (max-width: 680px) {
-  .map-search { left: 10px; right: auto; top: 80px; }
-  /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
-  .demand-stopped { margin-left: 36px; }
-}
-/* T-349, T-1704: this narrow, the status tag floats under the demand buttons over the rows below, so no
-   row is kept for it; the search glass takes the top right corner, which the rows leave free
-   (the stack stops 46 px short of it), and the Select bar sits under the rows */
+/* T-349, T-1704, T-1868: this narrow, the status tag floats under the demand buttons over the rows below, so no
+   row is kept for it, and the Select bar sits under the rows (the find button's row included) */
 @container map-column (max-width: 520px) {
-  .map-top-left { max-width: calc(100% - 56px); }
   .map-top-row { position: relative; }
   .map-top-row .status-tag { position: absolute; left: 0; top: 100%; margin-top: 3px; z-index: 1; }
   .map-top-row .status-tag ~ .busy-tag { top: calc(100% + 30px); }
-  .map-search { left: auto; right: 10px; top: 10px; }
-  .demand-stopped { margin-left: 0; }
-  .blueprint-bar { top: 144px; }
+  .blueprint-bar { top: 178px; }
+}
+/* T-1868: with no room for the picture beside the demand row, the purpose filter goes first */
+@container map-column (max-width: 460px) {
+  #map { --sky-w: clamp(100px, calc(100cqw / var(--ui, 1) - 250px), 250px); }
+  .demand-selector .purpose-filter { display: none; }
 }
 /* T-1263: on a phone the Select tool's bar sits on the map's bottom edge in one row that fits a 390 px
    screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is
@@ -1444,7 +1434,7 @@ button.save-add:hover { color: var(--text); }
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
-#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-sky, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 

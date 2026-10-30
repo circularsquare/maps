@@ -17,9 +17,12 @@ const TEXT: Record<string, string | (() => string)> = {
   NodeHeading: "Track has to leave a junction along the existing track.",
   NodeOneSided: "Track has to run through a station.",
   TooManyPorts: "Too many tracks meet here.",
-  StationPorts: "A station has to be on plain track, and there is one here already.",
+  StationPorts: "There is already a station here.",
+  StationJunction: "A station cannot be on a junction.",
   PlatformLength: () => `Platforms are ${length(60)} to ${length(400)} long.`,
-  PlatformTooLong: "The platform would reach a junction, the end of the track or another station. Move it or shorten the platform.",
+  PlatformTooLong: "The track here is too short for this platform.",
+  PlatformStation: "There is already a station here.",
+  PlatformJunction: "A station cannot be on a junction.",
   PlatformJoint: "The platform would reach the end of a piece of track. Move it or shorten the platform.",
   PlatformNotLevel: "The platform would be on a ramp.",
   PlatformCrossing: "Another track crosses here on the same level. Move the platform or put one of the tracks on another level.",
@@ -63,6 +66,10 @@ export function describeIssue(kind: string, buys?: Buys): string {
   return typeof t === "function" ? t() : t ?? "That cannot be placed here.";
 }
 
+/** a platform short of room at both ends says only the first of these it meets (T-1870) */
+const ROOM = ["PlatformStation", "PlatformJunction", "PlatformJoint", "PlatformTooLong"];
+
 export function describeIssues(kinds: string[], buys?: Buys): string {
-  return [...new Set(kinds.map((k) => describeIssue(k, buys)))].join(" ");
+  const room = ROOM.find((k) => kinds.includes(k));
+  return [...new Set(kinds.filter((k) => !ROOM.includes(k) || k === room).map((k) => describeIssue(k, buys)))].join(" ");
 }

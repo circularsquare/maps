@@ -240,13 +240,17 @@ export function headwayShown(id: LineId): [number, number, number] | null {
   return world.value?.lineStats[id]?.autoS ?? null;
 }
 
-/** The headway limits (0 is no service) and the step from one headway to the next: 30 s under 5
- * minutes, 1 minute under 15, 5 minutes above; from no service the first step is 15 minutes. */
+/** The headway limits (0 is no service) and the step from one headway to the next (T-1872): to the
+ * whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4. From no service,
+ * plus gives 15 minutes and minus 5; minus at the 1-minute limit gives no service. */
 export const HEADWAY_MIN_S = 60;
 export const HEADWAY_MAX_S = 7200;
 export function nextHeadway(s: number, dir: number): number {
-  if (dir > 0) return s <= 0 ? 900 :Math.min(HEADWAY_MAX_S, s + (s < 300 ? 30 : s < 900 ? 60 : 300));
-  return s <= HEADWAY_MIN_S ? 0 : Math.max(HEADWAY_MIN_S, s - (s <= 300 ? 30 : s <= 900 ? 60 : 300));
+  if (s <= 0) return dir > 0 ? 900 : 300;
+  const m = s / 60, near = Math.round(m), whole = Math.abs(m - near) < 1e-6;
+  if (dir > 0) return Math.min(HEADWAY_MAX_S, (whole ? near + 1 : Math.ceil(m)) * 60);
+  if (s <= HEADWAY_MIN_S) return 0;
+  return Math.max(HEADWAY_MIN_S, (whole ? near - 1 : Math.floor(m)) * 60);
 }
 /** The fewest trains that keep a headway over a round trip, as the sim works it out; with the
  * line's shortest headway `limitS`, no more than fit when the headway is at that limit (T-679,

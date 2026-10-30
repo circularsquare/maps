@@ -192,7 +192,7 @@ try {
         const g = ghostState();
         if (prev && g) { const a = nums(prev.t), b = nums(g.t); if (g.c !== prev.c || Math.hypot(b[0] - a[0], b[1] - a[1]) > 3) slideJumps++; }
       }
-      return { slideJumps, alts, firstSpot, finalSpot: spotOf(), first, fin, moved: changes > 0, spotMoved: firstSpot !== spotOf(), colour: !!first && first.c !== fin?.c, changedAt, appearedAt };
+      return { why: tools.verdict()?.why ?? '', slideJumps, alts, firstSpot, finalSpot: spotOf(), first, fin, moved: changes > 0, spotMoved: firstSpot !== spotOf(), colour: !!first && first.c !== fin?.c, changedAt, appearedAt };
     }, t);
     results.push({ ...t, ...h });
   }

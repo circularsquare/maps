@@ -1,6 +1,6 @@
 // Top bar: city (or the world, zoomed far out), the mode split (the goal number: the bar and the
-// train share), cash, the sky and demand band with the time and date on one line right of it (T-1853),
-// speed and pause. The clock is its own component so a game minute re-renders only it.
+// train share), cash, the time and date on one line (T-1853), speed and pause. The clock is its own
+// component so a game minute re-renders only it. The sky and demand band are `MapSky`, on the map.
 
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
@@ -124,8 +124,7 @@ function HolidayDot({ today }: { today: boolean }) {
   return <button class={"holiday-dot btn-dot" + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click} />;
 }
 
-/** T-861, T-1853: the time and date on one line right of the sky banner (ui/SkyBanner.tsx) and its demand
- * band (over it in a map column under 360 px). */
+/** T-861, T-1853: the time and date on one line. */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
   // T-309: the local time and day where the player is looking
@@ -134,21 +133,27 @@ function Clock() {
   const held = clock.held.value;
   const day = dayOf(minute), { month, date } = dateOf(day);
   useEffect(loadHolidays, []);
-  const near = holidaysNear.value, rush = rushNear.value;
-  const hols = [...holidayLines(minute, near, true), ...rushLines(minute, rush, near, true)];
+  const near = holidaysNear.value;
   const todayHols = holidayLines(minute, near, false).filter((l) => l.startsWith("Today: "));
   const dateTip = `${WEEKDAY_LONG[weekdayOf(day)]}, ${MONTH_LONG[month]} ${date}, day ${day}`;
   return (
     <div class="clock">
-      <div class="clock-box">
-        <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
-        <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
-          <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
-          <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
-        </div>
+      <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
+        <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
+        <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
       </div>
     </div>
   );
+}
+
+/** T-1868: the day and night picture with its demand band, at the map's top right under the bar (it was
+ * in the bar). Its hover lists the holidays in view; the band's gives the demand level. Mounted in the
+ * map's container by main.ts. */
+export function MapSky() {
+  const minute = NO_CLOCK ? clock.local.peek() : clock.local.value;
+  const near = holidaysNear.value, rush = rushNear.value;
+  const hols = [...holidayLines(minute, near, true), ...rushLines(minute, rush, near, true)];
+  return <div class="map-sky"><SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} /></div>;
 }
 
 /** T-284: its own component, re-rendered as fares land (several times a wall second while the clock

@@ -72,7 +72,7 @@ const FEW: [bool; KIND_COUNT] = [false, false, false, false, true, true, true];
 /// 5% of sixteen with 31% of the slots).
 #[cfg(test)]
 fn sample_count(kind: usize, trips: f32) -> usize {
-    super::lod::Sampling::FINE.count(FEW[kind], trips)
+    super::lod::Sampling::FINE.count(FEW[kind], site_anchored(kind), trips)
 }
 /// No airport trip ends this close to a terminal (its own jobs are not its passengers' ends).
 const AIRPORT_CLEAR_M: f32 = 1500.0;
@@ -94,6 +94,19 @@ fn unit(mut x: u32) -> f64 {
     x = x.wrapping_mul(0x846ca68b);
     x ^= x >> 16;
     (x as f64 + 0.5) / 4294967296.0
+}
+
+/// A fixed cell's seed for one purpose's samples, from its H3 index: the same in every worker
+/// and every load.
+fn cell_seed(h3: u64, kind: usize, salt: u32) -> u32 {
+    (h3 ^ (h3 >> 32)) as u32 ^ (kind as u32).wrapping_mul(0x9e3779b9) ^ salt.wrapping_mul(0x27d4eb2f)
+}
+
+/// T-1874: sample `slot`'s size before its cell's samples are scaled back to their total
+/// (`EverydayApi::norm`), uniform 0.5-1.5, so a site's homes or a home's outings are not all
+/// one size.
+fn spread(seed: u32, slot: usize) -> f32 {
+    0.5 + unit(seed ^ 0x5bd1_e995 ^ (slot as u32 + 1).wrapping_mul(0x68e3_1da4)) as f32
 }
 
 /// What one purpose's destination sampling reads (T-172: the constructor's loops moved out of
@@ -129,7 +142,7 @@ impl Sampler<'_> {
             }
             let at = self.first[row as usize] as usize - self.base;
             let n_k = self.first[row as usize + 1] as usize - self.base - at;
-            let seed = (self.h3[c] ^ (self.h3[c] >> 32)) as u32 ^ (self.kind as u32).wrapping_mul(0x9e3779b9) ^ self.salt.wrapping_mul(0x27d4eb2f);
+            let seed = cell_seed(self.h3[c], self.kind, self.salt);
             let offset = unit(seed);
             for k in 0..n_k {
                 let target = (k as f64 + offset) / n_k as f64 * total;
@@ -780,6 +793,9 @@ pub struct EverydayApi {
     /// Per purpose, where each `live` cell's samples start in `destinations`, and one more entry
     /// (`Sampling::count` of them, T-397).
     first: Vec<Vec<u32>>,
+    /// Per purpose and `live` cell, its drawn samples' count over their `spread` sum: the cell's
+    /// samples keep the total equal shares gave them (T-1874).
+    norm: Vec<Vec<f32>>,
     /// The last `owner` answer: the sample loops go in order, so the next is that one or close.
     at: std::cell::Cell<(usize, usize)>,
     /// `Params::everyday_rate` as at opening: the samples and totals were drawn with it.
@@ -880,9 +896,9 @@ impl EverydayApi {
     #[inline(never)]
     fn add_totals(&mut self, r: std::ops::Range<usize>) {
         for k in r {
-            let Some((kind, c, d, per)) = self.ends(k) else { continue };
+            let Some((kind, c, d, share)) = self.ends(k) else { continue };
             let distance = self.distance(c, d);
-            let (w, walk) = self.weight(kind, per, c, d, distance);
+            let (w, walk) = self.weight(kind, share, c, d, distance);
             self.totals[kind] += w as f64;
             self.walks[kind] += (w * walk) as f64;
             self.km[kind] += distance as f64 * w as f64 / 1000.0;
@@ -938,7 +954,7 @@ impl EverydayApi {
     #[inline(never)]
     fn index_edges(&mut self, r: std::ops::Range<usize>, index: &mut PairIndex) {
         for k in r {
-            let Some((kind, c, d, per)) = self.ends(k) else {
+            let Some((kind, c, d, share)) = self.ends(k) else {
                 continue;
             };
             let Some(sz) = &self.engine.sz else { return };
@@ -949,7 +965,7 @@ impl EverydayApi {
                 continue;
             }
             let distance = self.distance(c, d);
-            let (w, pw) = self.weight(kind, per, c, d, distance);
+            let (w, pw) = self.weight(kind, share, c, d, distance);
             // a pair of weightless samples (a zone keeping none of a purpose, T-1257) would average
             // its distance and walking share as 0/0, NaN in every load it touches
             if !(w > 0.0) {
@@ -970,16 +986,20 @@ impl EverydayApi {
         let city = &self.engine.city;
         ((city.x[c] - city.x[d]).powi(2) + (city.y[c] - city.y[d]).powi(2)).sqrt()
     }
-    /// Destination sample `k`'s purpose, home cell, activity cell and its cell's sample count.
-    fn ends(&self, k: usize) -> Option<(usize, usize, usize, usize)> {
+    /// Destination sample `k`'s purpose, home cell, activity cell and its share of its fixed
+    /// cell's trips.
+    fn ends(&self, k: usize) -> Option<(usize, usize, usize, f32)> {
         let d = self.destinations[k];
         if d == NONE {
             return None;
         }
         let (kind, i) = self.owner(k);
         let fixed = self.live[kind][i] as usize;
-        let per = (self.first[kind][i + 1] - self.first[kind][i]) as usize;
-        Some(if site_anchored(kind) { (kind, d as usize, fixed, per) } else { (kind, fixed, d as usize, per) })
+        let at = self.first[kind][i] as usize;
+        let per = self.first[kind][i + 1] as usize - at;
+        let seed = cell_seed(self.engine.city.h3[fixed], kind, self.engine.lod.sampling.salt);
+        let share = spread(seed, k - at) * self.norm[kind][i] / per as f32;
+        Some(if site_anchored(kind) { (kind, d as usize, fixed, share) } else { (kind, fixed, d as usize, share) })
     }
     /// Sample `k`'s purpose and its fixed cell's index in `live`.
     fn owner(&self, k: usize) -> (usize, usize) {
@@ -1002,8 +1022,8 @@ impl EverydayApi {
         (kind, i)
     }
     /// A sample's trips and walking share with no rail, from its ends, their distance and its
-    /// cell's samples.
-    fn weight(&self, kind: usize, per: usize, c: usize, d: usize, distance: f32) -> (f32, f32) {
+    /// share of its fixed cell's trips (`ends`).
+    fn weight(&self, kind: usize, share: f32, c: usize, d: usize, distance: f32) -> (f32, f32) {
         let budget = match kind {
             2 => self.school_enrollment[d],
             3 => self.university_enrollment[d],
@@ -1012,12 +1032,12 @@ impl EverydayApi {
             _ => self.engine.pop()[c],
         };
         let kept = self.kept.get(kind).filter(|k| !k.is_empty()).map_or(1.0, |k| k[self.engine.z.cell_zone[if site_anchored(kind) { d } else { c }] as usize]);
-        let weight = budget * self.rate[kind] / per as f32 * local_share(distance) * kept;
+        let weight = budget * self.rate[kind] * share * local_share(distance) * kept;
         (weight, self.no_rail(c, d, distance))
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
-        let (kind, c, d, per) = self.ends(k)?;
-        let (w, pw) = self.weight(kind, per, c, d, self.distance(c, d));
+        let (kind, c, d, share) = self.ends(k)?;
+        let (w, pw) = self.weight(kind, share, c, d, self.distance(c, d));
         Some((kind, c, d, w, pw))
     }
     /// Also returns the transfers, every purpose together, laid out by `ix` (T-176).
@@ -1414,7 +1434,7 @@ impl EverydayApi {
             let mut at = start[kind];
             f.push(at as u32);
             for &c in &live[kind] {
-                at += sampling.count(FEW[kind], budget[c as usize] * rate[kind]);
+                at += sampling.count(FEW[kind], site_anchored(kind), budget[c as usize] * rate[kind]);
                 f.push(at as u32);
             }
             first.push(f);
@@ -1486,6 +1506,24 @@ impl EverydayApi {
                 }
             }
         }
+        let norm: Vec<Vec<f32>> = (0..kinds)
+            .map(|kind| {
+                (0..live[kind].len())
+                    .map(|i| {
+                        let at = first[kind][i] as usize;
+                        let seed = cell_seed(engine.city.h3[live[kind][i] as usize], kind, sampling.salt);
+                        let (mut n, mut sum) = (0.0f64, 0.0f64);
+                        for k in at..first[kind][i + 1] as usize {
+                            if destinations[k] != NONE {
+                                n += 1.0;
+                                sum += spread(seed, k - at) as f64;
+                            }
+                        }
+                        if sum > 0.0 { (n / sum) as f32 } else { 1.0 }
+                    })
+                    .collect()
+            })
+            .collect();
         let kept = (0..kinds)
             .map(|k| pack::zone_shares(header, bin, &format!("everyday_kept_{}", KINDS[k]), nz).map(Option::unwrap_or_default))
             .collect::<Result<Vec<_>, _>>()?;
@@ -1515,6 +1553,7 @@ impl EverydayApi {
             start,
             live,
             first,
+            norm,
             at: std::cell::Cell::new((0, 0)),
             rate,
             kept,

@@ -14,6 +14,7 @@ import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame
 import { PERIODS } from "../game/periods";
 import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
 import { letterOf } from "../game/lineLetter";
+import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
 import { FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
@@ -2926,20 +2927,25 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     }
     case "copyLine": {
       const id = a.new_line_id();
-      const existing = new Set<string>();
+      const existing = new Set<string>(), symbols = new Set<string>();
       const info = a.lines_info();
       let colour = 0;
       for (let i = 0; i < info.length; i += 22) {
-        existing.add(a.line_name(info[i]));
+        const nm = a.line_name(info[i]);
+        existing.add(nm);
+        symbols.add((a.line_symbol(info[i]) || letterOf(nm)).toLowerCase());
         if (info[i] === op.line) colour = info[i + 1];
       }
-      const base = op.name?.trim() || `${a.line_name(op.line)} copy`;
-      let name = base, n = 2;
-      while (existing.has(name)) name = `${base} ${n++}`;
+      const from = a.line_name(op.line);
+      let name = cloneName(from, existing);
+      if (op.name?.trim()) {
+        const base = op.name.trim();
+        name = base;
+        for (let n = 2; existing.has(name); n++) name = `${base} ${n}`;
+      }
       const r = a.copy_line(op.line, id, name);
-      // T-1475: a line with no symbol of its own shows its name's, which a copy's name would change:
-      // the copy gets the symbol its line shows
-      if (r === 0 && !a.line_symbol(op.line)) a.set_line_badge(id, name, colour, letterOf(a.line_name(op.line)));
+      // T-1872: the copy always has a symbol of its own (the source's, or the one it shows, stepped on)
+      if (r === 0) a.set_line_badge(id, name, colour, cloneSymbol(a.line_symbol(op.line) || letterOf(from), symbols));
       return { r, line: id };
     }
     case "setStops":

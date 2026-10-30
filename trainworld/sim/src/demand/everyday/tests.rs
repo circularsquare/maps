@@ -178,13 +178,19 @@ fn school_enrollment_sets_budget_and_only_child_cells_supply_homes() {
         "attendance budget follows enrollment, not resident totals"
     );
     let mut school_edges = 0;
+    let mut w = vec![];
     for k in a.start[2]..a.destinations.len() {
-        if let Some((kind, home, school, _, _)) = a.edge(k) {
+        if let Some((kind, home, school, wk, _)) = a.edge(k) {
             assert_eq!((kind, home, school), (2, 0, 1));
             school_edges += 1;
+            w.push(wk);
         }
     }
     assert_eq!(school_edges, sample_count(2, 90.0));
+    // T-1874: one home per 30 trips, of uneven sizes adding up to the site's trips
+    assert_eq!(school_edges, 3);
+    assert!((w.iter().sum::<f32>() - 90.0).abs() < 1e-3 && w.iter().any(|&x| (x - w[0]).abs() > 1.0), "{w:?}");
+    assert_eq!((sample_count(2, 59.0), sample_count(3, 450.0), sample_count(3, 40000.0), sample_count(0, 400.0)), (2, 15, 100, 16));
     network(&mut a, 4000.0, [12.0; 3]);
     for q in 0..5 {
         assert!(a.solve(q));
@@ -921,10 +927,10 @@ fn airport_medical_before_after() {
         let input = pack::cell_weights(&h, &b, "airport_trips", n).unwrap().unwrap();
         let mut got = vec![0.0f64; n];
         for k in new.start[AIRPORT]..new.start[AIRPORT + 1] {
-            if let Some((_, c, d, _, _)) = new.edge(k) {
+            if let Some((_, c, d, share)) = new.ends(k) {
                 // before the 40-80 km taper, as the input is (samples under 150 m or past
                 // 80 km are gone already)
-                got[d] += new.airport_origin[c] as f64 * new.airport_scale[new.engine.z.cell_zone[c] as usize] / Sampling::FINE.max_few as f64;
+                got[d] += new.airport_origin[c] as f64 * new.airport_scale[new.engine.z.cell_zone[c] as usize] * share as f64;
             }
         }
         // terminals of one airport (within 5 km of each other) together

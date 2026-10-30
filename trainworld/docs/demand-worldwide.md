@@ -663,6 +663,11 @@ notes/T-420.md has the tables.
   with weak centres gets its tail spread over many small ones. Check: a country's survey share of
   everyday trips over 5 km, and which zones take the most central trips (`top_zone` in the T-1092
   measure) for a lump that is not a real centre.
+- **Everyday samples** (T-397, T-1874; demand-sources.md 4.1). A cell's everyday trips go to a
+  few sampled cells: one per 8 trips, 2 to 16, and a school's or university's homes one per 30,
+  2 to 100, each sample's share varied by a seeded factor (uniform 0.5-1.5) and the cell's total
+  kept. A method with no data of its own, so it carries over as it is. Why it may not: a site far
+  bigger than New York's largest campuses still has 100 homes, each standing for a wider area.
 - **Social destinations** are population, leisure jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look

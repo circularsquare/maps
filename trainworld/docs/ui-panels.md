@@ -98,8 +98,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 ## The top bar
 
 `ui/TopBar.tsx`, left to right, 44 px high, **every part centred on one line** [T-349, T-1853]: the
-name, the split (the bar, then the train share), cash, the clock (sky, then the time and date), speed
-buttons. **The name, train share, cash and time are one size, 16 px, and one weight, medium (500)**
+name, the split (the bar, then the train share), cash, the clock (the time and date), speed
+buttons; the day and night picture is on the map, not in the bar [T-1868]. **The name, train share, cash and time are one size, 16 px, and one weight, medium (500)**
 (Anita: equally important numbers, T-1853; one font style, T-1865); the date is 14 px regular and the
 status small (12 px, regular, muted). **The clock and speed buttons have fixed widths**
 [T-341, T-1136] and sit together at the right, so nothing moves them. The cash follows the train
@@ -109,10 +109,9 @@ so the mode bar (at least 60 px), which widens into the rest, does not change wi
 of map column), on two lines at most with an ellipsis (the whole name on hover, with the city's
 points and points a day, T-684, T-694) [T-1108]. The train share is in tabular figures in a box of
 fixed width, and the split bar is centred in the bar with nothing under it: the status is a tag
-over the map (Status, below). The time and date are one line ("06:50 Mon May 5") right of the sky
-and band [T-1136, T-1853, Anita's sketch], in a box 300 px wide from 940 px of map column and 230 px
-below, the sky taking what the date leaves (so a longer date narrows the sky by a few pixels and
-moves nothing else) [T-1109, T-861].
+over the map (Status, below). The time and date are one line ("06:50 Mon May 5") [T-1136,
+T-1853, Anita's sketch] behind a thin divider (the faint rule colour) after the cash, in a box 132 px
+wide so a longer date moves nothing [T-1868].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
@@ -144,9 +143,9 @@ moves nothing else) [T-1109, T-861].
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
   text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
-  below, taking no row of its own [T-1704]; the rows stop 46 px short of the right edge, where the
-  search glass sits at the top right, and the demand stopped alert and the selection bar are under
-  the rows. **"Trips being recomputed…"** shows whenever the trips of the zone in view are rough,
+  below, taking no row of its own [T-1704]; the demand row stops short of the day and night picture
+  at the top right [T-1868], and the demand stopped alert and the selection bar are under the rows
+  (the find button's row included). **"Trips being recomputed…"** shows whenever the trips of the zone in view are rough,
   early, from before an edit or from the last session's cache, or while its detailed solve is on the
   way [T-1851, T-1223, T-328, T-421]; it goes once the zone in view's figures are final, though other
   zones still solve [T-392]. The clock cap (below) follows the same rule, so the cap lifts at that
@@ -167,15 +166,19 @@ moves nothing else) [T-1109, T-861].
   learnt from its last runs in this page, so a fast desktop rarely sees it and a phone often. Not
   while the loading card is up.
 - **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
-  running costs drain [T-284, T-722], in tabular figures right after the name, so a changing digit
-  moves nothing; a figure that gains or loses a character moves the mode bar's left end by that much
-  [T-305, T-310, T-1853]. In a sandbox the box says
+  running costs drain [T-284, T-722], in tabular figures in a box of fixed width after the train share,
+  so nothing beside it moves as it changes [T-305, T-310, T-1865]. In a sandbox the box says
   "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
   (figure style) and the date without the year (normal style) on one line 6 px apart, "13:24 Mon Feb
-  24" (hover "Monday, February 24, day 29"), right of an 18 px scene and a 2 px demand band (over
-  them below 360 px of map column).
+  24" (hover "Monday, February 24, day 29"), [T-1868]. The day and night picture
+  and its 2 px demand band are not in the bar: they sit at the top right of the map under the bar
+  (`MapSky` in `ui/TopBar.tsx`, right 10 px and top 10 px of the map), right-aligned under the time
+  and speed controls, on the wide bar and the two-row one. It is 250 px wide, shrinking to 150 px as
+  the left-hand controls take the room (`--sky-w` in style.css; the sums assume the default UI scale,
+  0.9), and below 460 px of map column the purpose filter ("All purposes") is hidden first, the picture
+  going back to 250 px and shrinking again to 135 px at 360 px.
   The calendar is in [world.md](world.md) "Calendar". The scene
   (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 12 back and 12 ahead, now being its middle
   [T-896]. Its sky takes flat colours by the sun's height at the view's centre on that date
@@ -229,12 +232,11 @@ moves nothing else) [T-1109, T-861].
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
-- **Narrow maps** [T-1853, Anita's sketch]: two rows below 700 px of map column, about 61 px high
-  (was 66-69). Row one has the name, then the clock at the row's end (sky up to
-  200 px, then the time and date, standing over the speed buttons); row two has the mode bar running
-  under them, the train share, the cash (the same box), then the speed buttons. On a short row the sky (down to 36 px) and the
-  name (onto two lines, whole words) give way. Below 360 px the time and date stack over the sky
-  again, and below 300 px the bar takes three rows (the name; the split and cash; the clock and speed),
+- **Narrow maps** [T-1853, T-1868, Anita's sketch]: two rows below 700 px of map column, 55 px high.
+  Row one has the name, then the time and date at the row's end, standing over the speed buttons; row two has the mode bar running
+  under them, the train share, the cash (the same box; no divider, as the clock is on the row above), then the speed buttons. The first row sits 4 px lower than it
+  did and the space under it is 4 px less; the name and the bar are 12 px from the left edge. On a short row the name
+  gives way (onto two lines, whole words). Below 300 px the bar takes three rows (the name; the split and cash; the clock and speed),
   with cash, time, train share and all speed controls kept. Hovering the split or the time gives
   what was dropped [T-106, T-1775].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
@@ -276,7 +278,7 @@ the button is gone.
 ## Tutorial card
 
 [T-1822; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` in `game/guide.ts`] A flat
-post-it at the map's upper right under the search button, 240 px wide, not tilted: a pale yellow
+post-it at the map's upper right under the day and night picture, 240 px wide, not tilted: a pale yellow
 (`--yellow` at 24% over the background; 14% in the dark theme), no shadow. Heading "Tutorial" (14 px,
 bold) and an x (no hover; screen readers get "Hide the tutorial"), then six rows of 12 px type: a
 12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
@@ -335,9 +337,8 @@ out, held 1.5 s.
 ## Saved only in this browser dot
 
 [T-1832, notes/T-1823.md fix 9; `ui/KeepDot.tsx`, `game/keepNudge.ts`, `game/keepState.ts`] A 10 px
-yellow dot (`#f2c200`, a thin ring in the text colour) in a 20 px click area just left of the map's
-search glass, level with it; where the glass sits at the map's left edge (middle widths) the dot is
-right of it. Hidden while the search box is open. Its hover is the game's own tip, two lines:
+yellow dot (`#f2c200`, a thin ring in the text colour) in a 20 px click area just right of the map's
+search glass, level with it [T-1868]. Hidden while the search box is open. Its hover is the game's own tip, two lines:
 "Saved only in this browser!" and "If your browser data is cleared, this game will be lost. You can
 make an account to save it online, or download a copy locally." A click opens the account panel
 (Sign in, or the account if signed in). No x, no buttons. Where accounts are off (no account server:
@@ -365,8 +366,9 @@ click downloads the game, as the saved games panel's Download does.
 
 [T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
 
-- A square button with a magnifying glass at the map's upper right (under the demand selector
-  when the map is narrower than 680 px). A click, `/`, Ctrl+K or Ctrl+F, from anywhere but a text
+- A square button with a magnifying glass at the map's upper left, under the station ridership row
+  (the last of the controls stacked there, in `.map-top-left`; the top right is the day and night
+  picture) [T-1868]. The open box is 250 px wide and its results drop over the map below it. A click, `/`, Ctrl+K or Ctrl+F, from anywhere but a text
   field or the confirmation dialog, opens the input in its place, focused. Ctrl+F is kept from the
   browser only then. Up and down move through results, Enter or a click picks, Escape clears and
   closes it, as does leaving it empty; left with text, it stays open.
@@ -853,10 +855,11 @@ registry centre and zoom, or over New York with none [T-310].
   new slot named after the file and opens with its stations in view, as Open a file does in the saves
   panel; one that is not a save, or too big for the device (T-1197), says why over the cards and nothing
   opens.
-- A saved game opens with its built stations all in view (every station if none is built), as soon
-  as the clock worker has read them from the save (`stationsAhead`, T-1539), and again at its first
-  state (the same view), before its demand: padding 70 px, no closer than zoom 12 so one
-  station is not shown at street level. A save with no stations opens on the zone it started in, else
+- A saved game opens on the city view (its registry centre and zoom, as picking it in the Cities
+  tab) of the zone with the most built stations (of all stations if none is built; the stations'
+  zones by `placeAt`), as soon as the clock worker has read them from the save (`stationsAhead`,
+  T-1539), and again at its first state (the same view), before its demand [T-1872]; stations in no
+  zone are fitted in view instead (padding 70 px, no closer than zoom 12). A save with no stations opens on the zone it started in, else
   the world map. The view is not saved. A pick from this menu, a slot opened in the saves panel and
   an imported file fit; `?continue=1` and a raw `import` message (checks) keep the camera
   [T-895; `startOpenFit` in `ui/locate.ts`, `fitNextGame` in `workers/clockClient.ts`].

@@ -72,7 +72,7 @@ try {
   await inGame();
   report('?new=1: no dot', !await dotIn(14000), '(14 s)');
 
-  // 2. saved into a slot: the dot comes, with its tip, left of the search glass
+  // 2. saved into a slot: the dot comes, with its tip, right of the search glass
   await p.evaluate(async () => (await import('/src/workers/clockClient.ts')).manageSaveSlot('create', undefined, 'Keep check'));
   const slot = await until(async () => { const a = await active(); return a.startsWith('slot-') ? a : null; }, 30000, 500);
   const shown = await dotIn(20000);
@@ -80,16 +80,16 @@ try {
   const tip = await dot().getAttribute('data-tip').catch(() => null);
   report('tip words', tip === TIP, JSON.stringify(tip));
   const [db, sb] = await Promise.all([dot().boundingBox(), p.locator('.search-open').boundingBox()]);
-  report('dot sits just left of the search glass', !!db && !!sb && db.x + db.width <= sb.x && sb.x - (db.x + db.width) < 16 && Math.abs((db.y + db.height / 2) - (sb.y + sb.height / 2)) < 3,
+  report('dot sits just right of the search glass (T-1868)', !!db && !!sb && sb.x + sb.width <= db.x && db.x - (sb.x + sb.width) < 16 && Math.abs((db.y + db.height / 2) - (sb.y + sb.height / 2)) < 3,
     JSON.stringify({ dot: db, glass: sb }));
   for (const sh of ['light', 'dark']) {
     await theme(sh);
     await p.mouse.move(5, 500);
     await p.waitForTimeout(300);
-    await p.screenshot({ path: join(OUT, `dot-${sh}.png`), clip: { x: 900, y: 0, width: 400, height: 90 } });
+    await p.screenshot({ path: join(OUT, `dot-${sh}.png`), clip: { x: 250, y: 40, width: 400, height: 300 } });
     await p.mouse.move(db.x + db.width / 2, db.y + db.height / 2);
     await p.waitForTimeout(900);
-    await p.screenshot({ path: join(OUT, `dot-hover-${sh}.png`), clip: { x: 750, y: 0, width: 550, height: 200 } });
+    await p.screenshot({ path: join(OUT, `dot-hover-${sh}.png`), clip: { x: 250, y: 40, width: 550, height: 340 } });
   }
   await theme('light');
   await p.mouse.move(5, 500);

@@ -176,9 +176,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   no station) within 160 px of the pointer, and only where the track is visibly drawn: built track
   and active blueprints, not a switched-off blueprint, and not a piece under 4 px long on screen at
   the current zoom (a screen with no hovering pointer shows them all). None show while the pointer is off
-  the map, which includes over the view tabs or any other control laid on it. A track click on one starts or continues the route from it; the
-  station tool's pointer snaps to it, so the station goes at the line's end, its platform running
-  back along the track through the joints of a drawn route as a platform on a piece does [T-860].
+  the map, which includes over the view tabs or any other control laid on it. A track click on one starts or continues the route from it; with the
+  station tool a spot within half a platform of one puts the station at the line's end, its platform running
+  back along the track through the joints of a drawn route as a platform on a piece does [T-860, T-1870].
   The markers take no presses, and show from zoom 9. The track tool also shows the select tool's
   squares at every draggable blueprint point ([below](#reshaping-blueprint)); a blueprint loose end
   has its square in the accent colour in place of the ring, which stays for built loose ends [T-1811].
@@ -319,7 +319,7 @@ switch on, the track tool follows the real network the layer draws.
   run's segment stays) [T-1777].
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
-  and shows that: a node with a station or a junction is refused; a spot is refused when the
+  and shows that: a spot is refused when the
   platform (half its length each way, all of it from a dead end node) and a station's reach beyond
   come within 1 m of the next station, junction or track end, a drawn route's plain joints within
   reach joined through when the pieces match (built or blueprint, tracks, not a crossover), as the
@@ -333,20 +333,29 @@ switch on, the track tool follows the real network the layer draws.
   the list. Where 7 or more candidates are under the pointer (a bundle of overlapping tracks) and
   the worker has not yet confirmed the guess, the ghost stays as it was if it was within 10 px, else shows nothing, until the answer. The click
   tries the ghost's spot first, so the ghost and the click cannot disagree.
-- **What is under the pointer** [T-469, T-671]: the ghost and the click take the first spot the
-  track model would accept (the same trial edit as above), tried in this order: the nodes within
-  18 px (nearest first, at most 3), then the tracks within 4 px of the nearest, then the rest within
-  15 px (at most 5 tracks) [T-1820: 1.5 times the earlier 12 and 10; the track tool's snap onto a
-  node or track uses the same two radii (`SNAP_NODE_PX`, `SNAP_EDGE_PX` in `map/tools.ts`)]. Among the near tracks the order is: one where the station would not meet
+- **What is under the pointer** [T-469, T-671, T-1870]: the ghost and the click take the first spot the
+  track model would accept (the same trial edit as above), each at the point on its track nearest
+  the pointer, tried in this order: the tracks within 4 px of the nearest, then the rest within
+  15 px (at most 5 tracks) [T-1820: 1.5 times the earlier 10; `SNAP_EDGE_PX` in `map/tools.ts`].
+  The station tool never snaps to a node: the track tool's 18 px node radius (`SNAP_NODE_PX`) covered
+  a long stretch of track zoomed out, pulling stations onto joints [T-1870]. Among the near tracks the order is: one where the station would not meet
   a station (none within the two platforms' reaches along the track, up to a junction), blueprint
   over built, the track the last station of the session went on (from its node along the track to
   the next junctions), then the nearest (`map/stationSnap.ts`). A spot that would be refused never
   wins over one that would be accepted; when none is accepted the ghost shows the first one's
   reason.
-- **The end of the track** [T-671]: a spot refused only because the platform would run off the end
-  of its track (`PlatformTooLong`, `PlatformJoint`) is tried again at the node at the nearer end of
-  that track, as when the pointer is on the end node. Any other refusal (water, a crossing, a
-  station) stays and says why.
+- **Room along the track** [T-671, T-1870; `roomNear` in `map/stationSnap.ts`]: a spot refused only
+  for room (the platform would reach a loose end, `PlatformTooLong`; another station's platform,
+  `PlatformStation`; a junction, `PlatformJunction`; a joint that is not joined, `PlatformJoint`; or
+  the split would be within 5 m of a node, `SplitPoint`) on one side only is tried again at the
+  nearest spot with room: at a loose end, the end node (an end station); otherwise the spot moved
+  away along the track, through plain joints, until the platform is 2 m clear (the track model asks
+  1 m), or for a joint that is not joined, onto the joint itself when that is nearer (each tried in
+  turn, nearest first). It moves at most half the platform and 2 m, so a pointer on another station's platform
+  stays refused ("There is already a station here."), while one anywhere off it, or at a junction,
+  gets the nearest place that fits. Short of room at both ends, or any other refusal (water, a
+  crossing), stays and says why; of the room refusals the tag names one, in the order station,
+  junction, joint, track end (`describeIssues`).
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips there are within 1 km
@@ -375,7 +384,9 @@ other track (below). The clock worker's `previewCrossover` and `crossover` edit 
 
 [T-096, T-244, T-338; `game/remove.ts`] Hovering shows what a click removes: a stretch of track
 drawn red (one piece of a drawn route, or "the crossover", both diagonals drawn red since it goes whole), a station or a
-flyover ringed, its name by the cursor. A piece beside a through station is drawn red, and named by its
+flyover ringed, its name by the cursor. The red goes with the pointer leaving the map or the tool
+changing by any route, and a delete's late reply does not draw it again under another tool [T-1872;
+`clearDelHover` in `map/tools.ts`]. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
@@ -411,6 +422,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   track and picked stations; not a crossover's ends) by the same offset, previewed as a node drag
   is. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
   drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
+  While the tool has a pick, every movable node of it has the white square of a draggable point
+  (from zoom 9), and the squares move with a drag [T-1869]; the drag shows each curve's speed
+  label on the previewed track and, where it cannot be moved, why, as a node drag does.
 - **Left drag** elsewhere draws a box. It picks the track it touches and the stations inside it
   (stations only from zoom 9, where they are drawn; a junction goes with its track, never on its
   own), blueprint if the box holds any, else constructed; the pick follows the box live.
@@ -490,6 +504,15 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
+- **Curve middles and platform ends** [T-1869; `map/dragHandles.ts`, `map/nodeDrag.ts`]: with the
+  select or track tool, from zoom 9, the middle of every blueprint curve has a round white mark
+  (left out within 14 px of its piece's ends, where their squares are), and from zoom 14, where
+  platforms are drawn, both ends of a blueprint station's platform have a square. Dragging a
+  curve's middle bends the curve so that it runs through the pointer, its ends and other corners
+  staying put ([track-and-service.md](track-and-service.md) 6.1); dragging a platform's end moves
+  the station as dragging its node does, by the pointer's move, so the end stays near the pointer
+  (the platform then follows its track). Both preview, commit and cancel as a node drag does, and
+  take a press over a demand bubble [T-486]. A node within reach comes before either.
 - **With the track tool** [T-734, T-1811] the same node drag works, its squares shown: a press on a
   blueprint node that moves 3 px or more drags it under the select tool's rules, and a press that
   moves less is the click that places or branches track as always (no hold time). Constructed nodes

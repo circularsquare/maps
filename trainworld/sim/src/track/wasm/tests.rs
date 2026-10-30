@@ -3086,3 +3086,29 @@ fn group_looks_and_hand_order_save() {
     assert!(!a.save().windows(4).any(|w| w == b"LOR1"));
     assert!(a.list_order(0).is_empty());
 }
+
+/// A station refused for room names what its platform would reach (T-1870): a loose end, a
+/// junction or another station; a station on a junction node is refused as such.
+#[test]
+fn platform_room_refusals_name_what_is_reached() {
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+    let e = a.edges_info()[0];
+    let ends = [2.0, e, 3000.0, 5.0, 0.0, 0.0, 0.0, 5000.0, 2500.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let j = a.nodes_info().chunks(10).find(|c| c[4] == 3.0).unwrap()[0] as u32;
+    let e = edge_under(&a, 60.0, 0.0);
+    assert_ne!(a.add_station(2, e, 60.0, 0.0, 200, "End".into()), 0);
+    assert_eq!(a.issue_kinds(), "PlatformTooLong");
+    let e = edge_under(&a, 3050.0, 0.0);
+    assert_ne!(a.add_station(2, e, 3050.0, 0.0, 200, "Junction".into()), 0);
+    assert_eq!(a.issue_kinds(), "PlatformJunction");
+    assert_ne!(a.add_station(1, j, 0.0, 0.0, 200, "On it".into()), 0);
+    assert_eq!(a.issue_kinds(), "StationJunction");
+    let e = edge_under(&a, 1500.0, 0.0);
+    assert_eq!(a.add_station(2, e, 1500.0, 0.0, 200, "First".into()), 0, "{}", a.issues());
+    let e = edge_under(&a, 1650.0, 0.0);
+    assert_ne!(a.add_station(2, e, 1650.0, 0.0, 200, "Second".into()), 0);
+    assert_eq!(a.issue_kinds(), "PlatformStation");
+}

@@ -1,4 +1,4 @@
-// The search box at the map's upper right (T-148): stations, lines, cities, towns and
+// The search box at the map's upper left, under the station ridership row (T-148, T-1868): stations, lines, cities, towns and
 // neighbourhoods by name (game/search.ts; the view's zones' place lists load on first focus, T-177,
 // T-400). Most of the time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or
 // Ctrl+F opens the box
@@ -7,7 +7,6 @@
 // every other state change) and, with no build tool on, selects the station or line; with a tool
 // on it only moves the camera, so a half-drawn route or a line being edited carries on there.
 
-import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
@@ -215,11 +214,4 @@ function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => vo
  * its room. */
 function chips(lines: LineInput[]): LineInput[] {
   return [...new Map(lines.map((l) => [l.letter + l.colour, l])).values()].slice(0, 4);
-}
-
-/** Mount the search box in the map's container. */
-export function startSearch(container: HTMLElement) {
-  const root = document.createElement("div");
-  container.appendChild(root);
-  render(h(Search, null), root);
 }

@@ -10,9 +10,12 @@ import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
 import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
+import { Search } from "./Search";
+import { KeepDot } from "./KeepDot";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
- * them the track display, the station ridership (T-1448, T-1477) and the demand alert. */
+ * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
+ * "Saved only in this browser" dot beside it) and the demand alert. */
 export function MapTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
@@ -22,6 +25,10 @@ export function MapTopLeft() {
     </div>
     <TrackDisplay />
     <StationRidership />
+    <div class="map-find">
+      <Search />
+      <KeepDot />
+    </div>
     <DemandStopped />
   </div>;
 }

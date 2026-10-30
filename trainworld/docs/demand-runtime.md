@@ -46,7 +46,8 @@ world's corridor figures (34 MB, worked out at the worker's first composition an
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),
-and a cell holds one sample per 8 of its trips (T-397). A zone opened coarse (`DemandApi::at_level`,
+and a cell holds one sample per 8 of its trips (T-397), a school or university one per 30, at most
+100 (T-1874). A zone opened coarse (`DemandApi::at_level`,
 T-1222, notes/T-1206.md) holds one per 64, 1 to 8 (airports, medical and attractions 1), and deals
 its commute pairs under 1 trip a period in chunks; the same model at a lower sample density, its
 rail on average its fine figure's. Which zones are fine is "Levels of detail" below. A sample's

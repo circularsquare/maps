@@ -73,10 +73,9 @@ import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
-import { TopBar } from "./ui/TopBar";
+import { MapSky, TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
-import { startSearch } from "./ui/Search";
 import { startTroubleList } from "./ui/TroubleList";
 import { startRidesNotes } from "./ui/RidesNotes";
 import { mountGuide } from "./ui/Guide";
@@ -149,11 +148,13 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
-startSearch(map.getContainer()); // T-148: the search box at the map's upper right
+const skyRoot = document.createElement("div");
+map.getContainer().appendChild(skyRoot);
+render(h(MapSky, null), skyRoot); // T-1868: the day and night picture at the map's top right
 startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
 startRidesNotes(map.getContainer()); // T-1499: "+N daily rides" at the top centre after a line's stops change
-mountGuide(map.getContainer()); // T-1822: the Getting started card under the search button
-mountKeepDot(map.getContainer()); // T-1832: the yellow dot beside the search glass after an hour of play in a browser-only game
+mountGuide(map.getContainer()); // T-1822: the Getting started card under the day and night picture
+mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();
 renderer.checkPatch = params.get("patch") === "check"; // T-1029
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */

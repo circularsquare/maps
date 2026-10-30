@@ -250,10 +250,17 @@ pub enum Issue {
     NodeLevel { node: u32 },
     /// Removing a node that still has edges or a station.
     NodeInUse { node: u32 },
+    /// A station on a node that has one already.
     StationPorts { node: u32 },
+    /// A station on a node where more than two pieces of track meet.
+    StationJunction { node: u32 },
     PlatformLength { node: u32 },
-    /// The platform reaches another node or another platform.
+    /// The platform reaches a loose end.
     PlatformTooLong { node: u32 },
+    /// The platform reaches another station's platform.
+    PlatformStation { node: u32 },
+    /// The platform reaches a junction.
+    PlatformJunction { node: u32 },
     /// The platform reaches the end of its piece of track at a plain joint that could not be
     /// merged away (T-622: constructed track, a different track count or built state beside).
     PlatformJoint { node: u32 },
@@ -1703,7 +1710,7 @@ impl Network {
         let p = self.node_ports[i];
         // A station whose track was removed waits for new track (its lines are broken).
         if p.n > 2 {
-            out.push(Issue::StationPorts { node: n });
+            out.push(Issue::StationJunction { node: n });
             return;
         }
         let reach = self.platform_reach(n);
@@ -1713,8 +1720,16 @@ impl Network {
             let other = self.end_node(e, 1 - which);
             let other_reach = if self.node_platform[other as usize] > 0 { self.platform_reach(other) } else { 0.0 };
             if reach + other_reach > len - 1.0 {
-                let joint = self.node_platform[other as usize] == 0 && self.node_ports[other as usize].n == 2;
-                out.push(if joint { Issue::PlatformJoint { node: n } } else { Issue::PlatformTooLong { node: n } });
+                let ports = self.node_ports[other as usize].n;
+                out.push(if other_reach > 0.0 {
+                    Issue::PlatformStation { node: n }
+                } else if ports == 2 {
+                    Issue::PlatformJoint { node: n }
+                } else if ports > 2 {
+                    Issue::PlatformJunction { node: n }
+                } else {
+                    Issue::PlatformTooLong { node: n }
+                });
             }
             let (a, b) = if which == 0 { (0.0, reach) } else { (len - reach, len) };
             if geom::on_ramp(self.edge_vert(e), a, b) {
