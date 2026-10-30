@@ -3094,20 +3094,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-005232",
+    "run_batch": "20261030-002157",
     "steps": {
-     "build": 96.2,
-     "places": 3.8,
-     "routes": 20.0,
-     "merge": 0.6,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "build": 64.3,
+     "stations": 0.8,
+     "places": 11.3,
+     "routes": 41.1,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-17T01:15:18",
+    "built": "2026-10-30T00:36:08",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-17T01:20:25"
+    "shipped": "2026-10-30T04:55:50"
    }
   },
   {
@@ -4374,20 +4375,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-005232",
+    "run_batch": "20261030-002157",
     "steps": {
-     "build": 69.3,
-     "places": 3.4,
-     "routes": 25.9,
+     "build": 53.9,
+     "stations": 0.7,
+     "places": 5.3,
+     "routes": 55.4,
      "merge": 0.6,
-     "nocar": 1.0,
+     "nocar": 1.1,
      "everyday": 0.8
     },
-    "built": "2026-10-17T01:16:59",
+    "built": "2026-10-30T00:36:06",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-17T01:20:25"
+    "shipped": "2026-10-30T04:55:50"
    }
   },
   {
@@ -36263,33 +36265,36 @@
      "Ceuta"
     ]
    },
-   "run": {
-    "run_batch": "20261020-002803",
-    "steps": {
-     "build": 23.2,
-     "places": 0.8,
-     "routes": 1.1,
-     "merge": 0.4,
-     "nocar": 0.8,
-     "everyday": 0.7
-    },
-    "built": "2026-10-20T00:28:39",
-    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
-    "parked": "2026-10-20T04:42:46",
-    "gate": {
-     "warn": [
-      "pop_vs_plan 1.318701026487117",
-      "pop_vs_ghsl 1.3187158931348058",
-      "top_zone_jobs_share 0.33846523381903193",
-      "mean_commute_km 1.8689227695933994",
-      "fleet_range 3"
-     ]
-    },
-    "shipped": "2026-10-20T05:07:38"
-   },
    "gate_relax": {
     "top_zone_jobs_share": "a town of under 20 km2 has only a handful of 2 km zones, so one holds a third of its jobs (T-723)",
-    "mean_commute_km": "a town of under 20 km2: its commutes are short because the town is (T-723)"
+    "mean_commute_km": "a town of under 20 km2: its commutes are short because the town is (T-723)",
+    "pop_vs_plan": "Ceuta whole from geoBoundaries (T-925): about 80,000 people, as INE's 83,517 (2021); the plan's 43,000 and GHSL 2025's 57,000 undercount a town of under 20 km2 on the 1 km grid",
+    "pop_vs_ghsl": "Ceuta whole from geoBoundaries (T-925): about 80,000 people, as INE's 83,517 (2021); the plan's 43,000 and GHSL 2025's 57,000 undercount a town of under 20 km2 on the 1 km grid"
+   },
+   "run": {
+    "run_batch": "20261030-022810",
+    "steps": {
+     "build": 5.8,
+     "stations": 0.6,
+     "places": 0.9,
+     "routes": 1.5,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-30T02:35:52",
+    "reason": "gate: pop_vs_plan 1.85160028469884; pop_vs_ghsl 1.4046327112724022 GHSL 2025 57,094",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.85160028469884",
+      "pop_vs_ghsl 1.4046327112724022",
+      "top_zone_jobs_share 0.28786959378809807",
+      "mean_commute_km 2.1275900695160987",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-10-30T02:39:44",
+    "shipped": "2026-10-30T05:47:51"
    }
   },
   {
@@ -47189,24 +47194,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 74.5,
+     "build": 39.6,
      "stations": 0.8,
-     "places": 3.1,
-     "routes": 40.2,
-     "merge": 0.7,
-     "nocar": 1.1,
+     "places": 2.5,
+     "routes": 40.8,
+     "merge": 0.6,
+     "nocar": 1.0,
      "everyday": 0.7
     },
-    "built": "2026-10-20T16:33:55",
+    "built": "2026-10-30T06:11:37",
     "gate": {
-     "warn": [
-      "pop_vs_plan 1.2567172678863119"
-     ]
+     "warn": []
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:08"
    }
   },
   {
@@ -47311,22 +47313,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 71.4,
-     "stations": 0.8,
-     "places": 2.8,
-     "routes": 25.8,
+     "build": 20.2,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 40.7,
      "merge": 0.6,
      "nocar": 1.1,
-     "everyday": 0.9
+     "everyday": 0.8
     },
-    "built": "2026-10-20T16:35:38",
+    "built": "2026-10-30T06:11:17",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:08"
    }
   },
   {
@@ -47370,24 +47371,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 53.1,
-     "stations": 0.8,
-     "places": 1.7,
-     "routes": 14.3,
-     "merge": 0.5,
-     "nocar": 1.0,
-     "everyday": 0.7
+     "build": 20.1,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 26.6,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-20T16:35:53",
+    "built": "2026-10-30T06:11:03",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.17299287435926614"
+      "top_zone_jobs_share 0.16010796263396515"
      ]
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:08"
    }
   },
   {
@@ -47431,22 +47431,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 44.6,
-     "stations": 0.8,
-     "places": 1.4,
-     "routes": 18.7,
+     "build": 20.5,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 33.0,
      "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.7
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-20T16:36:46",
+    "built": "2026-10-30T06:11:11",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:08"
    }
   },
   {
@@ -47490,22 +47489,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 53.4,
-     "stations": 0.7,
-     "places": 1.6,
-     "routes": 14.5,
-     "merge": 0.5,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "build": 24.2,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 26.9,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-20T16:37:06",
+    "built": "2026-10-30T06:11:08",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:09"
    }
   },
   {
@@ -47676,25 +47674,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 41.1,
-     "stations": 0.8,
-     "places": 1.5,
-     "routes": 30.6,
+     "build": 19.0,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 36.7,
      "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-20T16:39:14",
+    "built": "2026-10-30T06:11:13",
     "gate": {
      "warn": [
-      "pop_vs_plan 1.3417008486847",
-      "top_zone_jobs_share 0.13139745464838645"
+      "top_zone_jobs_share 0.13488640405450436"
      ]
     },
-    "gated": "2026-10-20T17:17:26",
-    "shipped": "2026-10-20T17:33:58"
+    "shipped": "2026-10-30T07:50:09"
    }
   },
   {
@@ -48918,24 +48914,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-162938-26912",
+    "run_batch": "20261030-022810",
     "steps": {
-     "build": 125.7,
-     "stations": 1.1,
-     "places": 1.6,
-     "routes": 9.0,
-     "merge": 0.7,
+     "build": 48.0,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 10.1,
+     "merge": 0.6,
      "nocar": 1.0,
      "everyday": 0.8
     },
-    "built": "2026-10-20T16:42:07",
+    "built": "2026-10-30T02:47:01",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1425960792614993"
+      "top_zone_jobs_share 0.14254281055757126"
      ]
     },
-    "gated": "2026-10-20T17:16:13",
-    "shipped": "2026-10-20T17:33:59"
+    "shipped": "2026-10-30T04:55:51"
    }
   },
   {
@@ -55440,22 +55435,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-181848",
+    "run_batch": "20261030-022810",
     "steps": {
-     "build": 68.6,
-     "stations": 0.7,
-     "places": 2.9,
-     "routes": 20.8,
+     "build": 53.2,
+     "stations": 0.6,
+     "places": 2.8,
+     "routes": 23.6,
      "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-20T21:34:10",
+    "built": "2026-10-30T02:59:07",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T22:02:14",
-    "shipped": "2026-10-21T00:15:36"
+    "shipped": "2026-10-30T04:55:51"
    }
   },
   {
@@ -56909,22 +56903,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-181848",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 51.5,
+     "build": 26.7,
      "stations": 0.7,
-     "places": 2.1,
-     "routes": 15.0,
+     "places": 2.0,
+     "routes": 18.8,
      "merge": 0.6,
      "nocar": 1.0,
      "everyday": 0.7
     },
-    "built": "2026-10-20T21:35:50",
+    "built": "2026-10-30T06:24:20",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T22:02:14",
-    "shipped": "2026-10-21T00:15:38"
+    "shipped": "2026-10-30T07:50:09"
    }
   },
   {
@@ -59103,24 +59096,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-181848",
+    "run_batch": "20261030-022810",
     "steps": {
-     "build": 46.3,
-     "stations": 1.0,
-     "places": 1.8,
-     "routes": 7.6,
-     "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 1.0
+     "build": 20.1,
+     "stations": 0.7,
+     "places": 1.6,
+     "routes": 8.4,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-20T22:02:04",
+    "built": "2026-10-30T03:14:43",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10099520312122201"
+      "top_zone_jobs_share 0.10283792149721256"
      ]
     },
-    "gated": "2026-10-20T22:15:44",
-    "shipped": "2026-10-21T00:15:42"
+    "shipped": "2026-10-30T04:55:51"
    }
   },
   {
@@ -60675,26 +60667,25 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-181849-24004",
+    "run_batch": "20261030-022810",
     "steps": {
-     "build": 67.1,
-     "stations": 0.8,
-     "places": 1.4,
-     "routes": 5.7,
+     "build": 42.3,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 6.7,
      "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-20T18:33:51",
+    "built": "2026-10-30T03:26:10",
     "gate": {
      "warn": [
       "university_rate 0.0",
-      "top_zone_jobs_share 0.1897832032126011",
+      "top_zone_jobs_share 0.1899280052981812",
       "fleet_range 2"
      ]
     },
-    "gated": "2026-10-20T19:56:00",
-    "shipped": "2026-10-21T00:15:45"
+    "shipped": "2026-10-30T04:55:51"
    }
   },
   {
@@ -61769,22 +61760,21 @@
     ]
    },
    "run": {
-    "run_batch": "20261020-223217",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 57.5,
-     "stations": 0.9,
-     "places": 2.5,
-     "routes": 15.1,
-     "merge": 0.7,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 25.8,
+     "stations": 0.7,
+     "places": 1.9,
+     "routes": 20.2,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-20T23:08:11",
+    "built": "2026-10-30T06:37:13",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-20T23:17:34",
-    "shipped": "2026-10-21T00:15:46"
+    "shipped": "2026-10-30T07:50:09"
    }
   },
   {
@@ -62931,29 +62921,27 @@
      "Außerfern"
     ]
    },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
+   },
    "run": {
-    "run_batch": "20261021-085714",
+    "run_batch": "20261030-060247",
     "steps": {
-     "build": 112.0,
-     "stations": 0.8,
-     "places": 4.4,
-     "routes": 29.4,
-     "merge": 1.5,
+     "build": 72.8,
+     "stations": 0.7,
+     "places": 3.6,
+     "routes": 28.9,
+     "merge": 1.1,
      "nocar": 1.2,
-     "everyday": 0.9
+     "everyday": 0.7
     },
-    "built": "2026-10-21T10:05:48",
+    "built": "2026-10-30T06:56:05",
     "gate": {
      "warn": [
       "drive_factor_median 2.218596968679145"
      ]
     },
-    "parked": "2026-10-21T10:22:47",
-    "gated": "2026-10-21T13:22:32",
-    "shipped": "2026-10-21T13:56:35"
-   },
-   "gate_relax": {
-    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
+    "shipped": "2026-10-30T07:50:10"
    }
   },
   {
@@ -72042,30 +72030,28 @@
      "Åland"
     ]
    },
+   "gate_relax": {
+    "top_zone_jobs_share": "Aland alone (30k, an island with no neighbour), Mariehamn holds a quarter of its jobs; a town alone, as Ceuta, Goražde"
+   },
    "run": {
-    "run_batch": "20261021-190410",
+    "run_batch": "20261030-022810",
     "steps": {
-     "build": 1343.1,
-     "stations": 1.4,
-     "places": 2.5,
-     "routes": 4.3,
-     "merge": 0.7,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 212.4,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 5.1,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.8
     },
-    "built": "2026-10-21T19:56:15",
+    "built": "2026-10-30T03:42:36",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.25987387178845334",
+      "top_zone_jobs_share 0.2587693868793987",
       "fleet_range 3"
      ]
     },
-    "parked": "2026-10-21T21:28:34",
-    "gated": "2026-10-21T23:55:05",
-    "shipped": "2026-10-22T00:18:35"
-   },
-   "gate_relax": {
-    "top_zone_jobs_share": "Aland alone (30k, an island with no neighbour), Mariehamn holds a quarter of its jobs; a town alone, as Ceuta, Goražde"
+    "shipped": "2026-10-30T04:55:52"
    }
   },
   {

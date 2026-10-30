@@ -256,7 +256,7 @@ async function openPage() {
   return { page, errors };
 }
 
-async function checkZone(page, errors, id, C, out, result) {
+async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
   errors.length = 0;
   const check = (name, ok, detail) => { result.checks.push({ name, ok: !!ok, detail }); console.log(ok ? 'ok  ' : 'FAIL', multi ? `${id}:` : '', name, JSON.stringify(detail ?? '')); };
 
@@ -346,8 +346,9 @@ async function checkZone(page, errors, id, C, out, result) {
   await page.screenshot({ path: out + 'line.png' });
   result.errors = [...errors];
   check('no page errors', errors.length === 0, result.errors);
-  // T-928: the line goes, so the next zone's solve does not carry it (its track and stations stay, unserved)
-  if (multi) {
+  // T-928: the line goes, so the next zone's solve does not carry it (its track and stations stay,
+  // unserved); not after a page's last zone (T-925: that removal's solve hung a gate for 90 minutes)
+  if (clearAfter) {
     const v = await page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; });
     // the solve without it, before the next zone counts versions
     await page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 });
@@ -368,7 +369,7 @@ for (const z of zones) {
         onPage = 0;
       }
       onPage++;
-      await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result);
+      await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result, multi && z !== zones[zones.length - 1] && onPage < ZONES_PER_PAGE);
       break;
     } catch (e) {
       // the page may be half way through an edit: the next try or zone gets a fresh one

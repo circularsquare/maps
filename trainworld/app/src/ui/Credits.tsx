@@ -6,7 +6,7 @@ const LINES = [
   <>Basemap © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>, served by <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>. Rail lines from OpenStreetMap and national rail registers.</>,
   <>© EuroGeographics for the administrative boundaries.</>,
   <>Population and built-up areas from GHSL, © European Union 1995-2025, and Kontur Population (CC BY 4.0).</>,
-  <>Boundaries from <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries</a>, Natural Earth and the Office for National Statistics. Contains OS data © Crown copyright and database right 2025.</>,
+  <>Boundaries from <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries</a> (Spain's from the Instituto Geográfico Nacional, CC BY 4.0), Natural Earth and the Office for National Statistics. Contains OS data © Crown copyright and database right 2025.</>,
   <>Contains public sector information licensed under the Open Government Licence v3.0 (ONS, Nomis, Department for Education, National Records of Scotland, NISRA) and the Open Government Licence (Ontario).</>,
   <>Powered by TfL Open Data. Contains Network Rail Infrastructure Limited data, used under the Open Government Licence v3.0.</>,
   <>Adapted from Statistics Canada, 2021 Census. This does not constitute an endorsement by Statistics Canada of this product.</>,

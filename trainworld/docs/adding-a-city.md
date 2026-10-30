@@ -265,7 +265,9 @@ sources. Each field comes from the row or a rule:
   Natural Earth's 1:10m outline, which misses reclaimed land and islets) a quarter inside is enough
   (T-1144). Whatever of a unit no relation covers keeps
   the unit's own polygon when that is at least a tenth of it, and the build prints each such unit
-  (T-610). Units are clipped to the OSM coastline, holes filled, the outline cut along every
+  (T-610); a NUTS-3 unit's polygon may not ship (non-commercial terms), so its gap takes the
+  geoBoundaries units lying mostly inside it instead, at the finest level with an open licence
+  (T-925, data-register.md). Units are clipped to the OSM coastline, holes filled, the outline cut along every
   existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped. Units with
   their OSM names go to `data/work/<id>.units.geojson`, the outline to `.outline.geojson`;
   `osm_units.py <id>` writes them and prints each unit's match.

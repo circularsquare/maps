@@ -5,7 +5,8 @@ Each of the world plan row's units (geoBoundaries, NUTS-3 or ITL3, as the plan c
 boundary=administrative relation, at any admin level, that overlaps it best, or the several relations
 (level 8 or coarser, mostly inside it) that overlap it better together, when that overlap is
 at least MATCH of the two areas' union, both taken on land less inland water; any part of a unit
-the relations leave uncovered keeps the unit's own polygon when that is at least REST_MIN of it. Units are
+the relations leave uncovered keeps the unit's own polygon when that is at least REST_MIN of it (a
+NUTS-3 unit's, whose geometry may not ship, geoBoundaries' units mostly inside it instead: T-925). Units are
 clipped to land by the OSM coastline, holes filled (but for other plan rows' units in them), cut
 along every existing pack, and pieces
 under MIN_PART_KM2 or with nobody in them (GHSL 100 m) dropped. OSM's names are kept per unit.
@@ -109,6 +110,60 @@ def plan_units(row, sources):
             raise SystemExit(f"{row['id']}: plan units {sorted(missing)[:5]} not in {src['kind']} for {iso}")
         out += got
     return out
+
+
+# T-925: geoBoundaries licences that can sit in the ODbL packs (attribution or none; no NC, ND or SA
+# but ODbL itself). NUTS geometry is non-commercial and non-transferable, so a NUTS-3 unit's uncovered
+# part is filled from geoBoundaries instead.
+FILL_LICENCES = ("CC0", "Public Domain", "Open Database License", "Data license Germany - Attribution",
+                 "Open Government Licence")
+FILL_PART_KM2 = 1.0
+_gb_ll = {}
+
+
+def fill_licence_ok(lic):
+    if any(k in lic for k in FILL_LICENCES):
+        return True
+    return "Creative Commons Attribution" in lic and not any(k in lic for k in ("NonCommercial", "NoDerivatives", "ShareAlike", "-NC", "-ND", "-SA"))
+
+
+def gb_ll(iso, adm):
+    """[lon/lat geometry] of a geoBoundaries level's units, read raw (no de facto cut or gap fill)."""
+    import world_plan as wp
+    if (iso, adm) not in _gb_ll:
+        r = wp.gb_level(wp.europe_isos()[1], iso, adm)
+        path = wp.fetch(f"{iso}_{adm}.geojson", r["simplifiedGeometryGeoJSON"], "geoboundaries")
+        gj = json.loads(path.read_text(encoding="utf-8"))
+        _gb_ll[iso, adm] = [wp.polygonal(shape(f["geometry"])) for f in gj["features"] if f["geometry"]]
+    return _gb_ll[iso, adm]
+
+
+def gb_fill(iso, g, lat0):
+    """(lon/lat polygon, source label) for a NUTS-3 unit g: the units of the finest geoBoundaries level
+    with a FILL_LICENCES licence that has the most of g covered by units lying mostly inside g. Empty
+    when no level has any."""
+    import world_plan as wp
+    meta = wp.europe_isos()[1]
+    levels = sorted({r["boundaryType"] for r in meta if r["boundaryISO"] == iso and r["boundaryType"] != "ADM0"
+                     and fill_licence_ok(r["boundaryLicense"])}, reverse=True)
+    gl = _local(g, lat0)
+    best = (0.0, shapely.Polygon(), "")
+    for adm in levels:
+        units = gb_ll(iso, adm)
+        tree = STRtree(units)
+        pick = []
+        for i in tree.query(g, predicate="intersects"):
+            u = units[int(i)]
+            if _local(u, lat0).intersection(gl).area >= 0.5 * _local(u, lat0).area:
+                pick.append(u)
+        if not pick:
+            continue
+        fill = make_valid(union_all(pick))
+        cov = _local(fill, lat0).intersection(gl).area / gl.area
+        if cov > best[0] + 0.01:
+            r = wp.gb_level(meta, iso, adm)
+            best = (cov, fill, f"geoBoundaries {iso} {adm} ({r['boundaryLicense']})")
+    return best[1], best[2]
 
 
 def _local(g, lat0):
@@ -300,13 +355,26 @@ def build(cid, row, sources):
     # matching) keeps the plan's own polygon there, when it is a real part of the unit (T-610: a
     # unit left out silently halved Cardiff)
     have = union_all(geoms) if geoms else shapely.Polygon()
+    iso_of = {u: iso for iso, ids in row["units"].items() for u in ids}
     for (uid, gname, g, kind), (idx, iou) in zip(units, picks):
         rest = make_valid(g.difference(have))
         share = _local(rest, lat0).area / _local(g, lat0).area
-        if share >= REST_MIN:
+        src, fill_it = kind, share >= REST_MIN
+        if fill_it and kind == "NUTS3":
+            # the NUTS unit says a fill is needed; geoBoundaries' pieces of FILL_PART_KM2 or more make
+            # it (smaller ones are slivers along OSM's lines; T-925: Heidenheim's 13 km2 hole was 9.9%)
+            fill, src = gb_fill(iso_of[uid], g, lat0)
+            rest = make_valid(landed(fill).difference(have)) if not fill.is_empty else fill
+            parts = [p for p in shapely.get_parts(rest) if p.geom_type == "Polygon" and km2(p, lat0) >= FILL_PART_KM2]
+            rest = union_all(parts) if parts else shapely.Polygon()
+            share = _local(rest, lat0).area / _local(g, lat0).area if parts else 0.0
+            fill_it = bool(parts)
+            if not parts:
+                print(f"  {cid}: {uid} {gname}: geoBoundaries leaves no piece of {FILL_PART_KM2} km2 uncovered by OSM; no fill", flush=True)
+        if fill_it:
             geoms.append(rest)
-            feats.append({"name": gname, "local": "", "plan_unit": uid, "source": kind, "match": round(iou, 3)})
-            print(f"  {cid}: {uid} {gname}: {share:.0%} of its land from the plan's polygon "
+            feats.append({"name": gname, "local": "", "plan_unit": uid, "source": src, "match": round(iou, 3)})
+            print(f"  {cid}: {uid} {gname}: {share:.0%} of its land from {src} "
                   f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
     out_units = [{"type": "Feature", "properties": props, "geometry": mapping(g)} for props, g in zip(feats, geoms)]
     whole = union_all([shape(f["geometry"]) for f in out_units]).buffer(0)

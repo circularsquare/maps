@@ -5,6 +5,11 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+## 2026-10-30
+
+- An edit's follow-up waits behind the previews, and a placed segment shows as its ghost for a frame or two (agent's call, T-1407; notes/T-1407.md): the clock worker answers previews and station checks asked during an edit before it builds and posts the edit's state, trips and boarding hour and answers it, and works the boarding lines the edit moved three a task with previews between. The edit's answer still follows its state, so every caller finds `world` up to date, except the track tool's free blueprint segments, which ask `early`: answered right after apply, the next ghost asked from the answer's node, the ghost just placed drawn as the blueprint's stand-in (the same outline, rails and middle) until the network with it is set, that state taken after the ghost paints. The lie: for one or two frames the new blueprint is the ghost's drawing, not the network's. Not done: answering a train count before its settle (the settle is the change), or a ghost asked during it going first (it would show the network before the count).
+- NUTS stays for grouping and names, geoBoundaries fills its gaps (agent's call, T-925; notes/T-925.md): no NUTS polygon ships in a pack (GISCO's terms are non-commercial and non-transferable, the packs ODbL), but replanning Europe's zones off NUTS was out of scope, and units and names are attributes. The fill takes the finest geoBoundaries level with an open licence (Spain's ADM2 under INE's own licence left out). The EuroGeographics notice stays, since NUTS still decides the zones and their names.
+
 ## 2026-10-29
 
 - Panel reads wait for track previews (agent's call, T-1815; notes/T-1815.md): the past-24-hours and crowding reads the panels make (`today`, `linesPeriods`, `linePeriods`, `lineAccount`) are held in the client while previews or station checks were asked in the last 250 ms, so the Lines tab, trouble list and inspector counts can lag a quarter second behind the ghost; a preview waiting 40-60 ms behind each read during a solve was the felt cost. The clock worker also hands the same `today` answer again while nothing it reads has changed.

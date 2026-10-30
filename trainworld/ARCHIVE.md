@@ -2,6 +2,12 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-925 [P2] The 9 NUTS-filled outlines from geoBoundaries. Done 2026-10-30 (agent t925): `osm_units` fills a NUTS-3 unit's gap from open-licence geoBoundaries units; the 9 and 9 neighbours (slivers) rebuilt and shipped, no NUTS polygon left in any pack. notes/T-925.md.
+
+- T-1407 [P2] The ghost stalls after an edit. Done 2026-10-30 (agent t1407, tree t1407): the clock worker answers the previews asked during an edit before the edit's state, trips, boarding hour and answer (`later`); the boarding lines an edit moved are worked out three a task with previews between, and the trips' next hour a task later. Real save, first ghost after a headway edit 59 -> 11 ms (worst in the next 1.5 s 50); after a train count 328 -> 106 ms (the settle itself; one asked from 150 ms on 52). notes/T-1407.md; checks/t1407-edit-ghost.mjs.
+- T-1780 [P2] A blueprint segment takes ~150 ms to the next ghost. Done 2026-10-30 (agent t1407, with T-1788): stage 1 (T-1779) plus the track tool's segments answered `early`, before their state; the ghost just placed stands in for the blueprint until the network lands, and the client takes that state after the ghost paints. Real save, click to next ghost 87-158 ms mean (237 max) -> 9-13 ms (16 max). notes/T-1407.md.
+- T-1788 [P3] The rest of T-1780 (the state build and its handling before the next ghost). Done 2026-10-30 with T-1780 (agent t1407).
+
 - T-751 [P3] "Expand all platforms on this line". Done 2026-10-30 (agent t751): a + on train length refused for short platforms offers a row "N stations are too short for M-car trains." with "Expand all for $X"; the button lengthens those platforms (one station edit each, final for built stations) and then the trains, and refuses first when the cash cannot cover platforms and cars. New query `platformCost` (`TrackApi::platform_cost`). docs/ui-inspectors.md; checks/t751-expand.mjs.
 - T-1844 [P2] A refused step shakes and knocks. Done 2026-10-30 (agent t751): `Stepper.onStep` returns false for a refusal (a promise of false: an edit refused by the worker, knock already played). Train length (limits and cash for the cars), train count at 0, headway at its limits, station and Build tab platform length, Build target max speed and the panel size stepper now shake and knock; the fare steppers stay silent (their clamps are inside typed-value helpers). docs/ui-inspectors.md.
 
