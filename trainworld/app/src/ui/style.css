@@ -179,6 +179,10 @@ body.resizing, body.resizing * { user-select: none; }
 .rows > li:has(:where(.stepper, .btn:not(.mini), input, select, textarea)) { min-height: 28px; }
 .rows .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rows .val { font-variant-numeric: tabular-nums; text-align: right; }
+/* T-751: the sentence under a refused train length, its button on the line below at the right */
+.rows > li.offer { flex-wrap: wrap; row-gap: 4px; padding: 2px 0 4px; }
+.rows > li.offer .grow { flex: 1 1 100%; overflow: visible; white-space: normal; }
+.rows > li.offer .btn { margin-left: auto; }
 .rows.pick > li { cursor: pointer; padding: 0 6px; margin: 0 -6px; user-select: none; }
 .rows.pick > li:hover { background: var(--shade); }
 .rows.pick > li.on { background: var(--tint); }
@@ -433,6 +437,7 @@ table.sched .bad { color: var(--bad); }
 table.sched .hw-real { color: var(--muted); margin-right: 6px; }
 .shake { display: inline-block; animation: shake 300ms linear !important; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+.stepper.shake { display: inline-flex; }
 @media (prefers-reduced-motion: reduce) { .shake { animation: none !important; } }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
 .crowd-warn { color: var(--warn); }

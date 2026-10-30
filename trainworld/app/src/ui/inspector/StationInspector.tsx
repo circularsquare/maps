@@ -196,7 +196,7 @@ export function StationInspector({ id }: { id: string }) {
   const members = complexOf(id);
   const asComplex = members.length > 1 && inComplexView(id);
   const lines = linesAt(id);
-  const props = (platform: number, name = s.name) => void edit({ op: "stationProps", node: s.num, platform, name });
+  const props = (platform: number, name = s.name) => edit({ op: "stationProps", node: s.num, platform, name }).then((a) => a.ok);
   // T-534: the next of the station's suggested names, worked out now from where it stands
   const cycle = async () => {
     if (cycling || !live.map) return;
@@ -304,7 +304,7 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
 /** The station view's own rows and actions. */
 function StationDetails({ s, lines, props }: {
   s: StationInput; lines: LineInput[];
-  props: (platform: number) => void;
+  props: (platform: number) => Promise<boolean>;
 }) {
   // T-446: each line's boardings here in the past 24 hours (re-rendered as they move: a small part of the panel)
   const t = today.value;
@@ -318,7 +318,11 @@ function StationDetails({ s, lines, props }: {
       <ul class="rows">
         <li>
           <span class="grow">Platforms</span>
-          <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => props(stepPlatform(s.length, d))} />
+          <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => {
+            const to = stepPlatform(s.length, d);
+            if (to === s.length) return false;
+            return props(to);
+          }} />
         </li>
         {s.built && m && (
           <Row label="Upkeep">

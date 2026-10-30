@@ -389,6 +389,22 @@ impl TrackApi {
         }
     }
 
+    /// T-751: what lengthening these stations' platforms to `platform` m would charge now, US$M,
+    /// the sum of each constructed one's own `set_station_props` charge (a blueprint station's is
+    /// free). Nothing changes.
+    pub fn platform_cost(&mut self, nodes: &[u32], platform: u16) -> f64 {
+        let mut sum = 0.0;
+        for &node in nodes {
+            let Some(old) = self.w.net.station_data(node) else { continue };
+            if !old.built || old.platform >= platform {
+                continue;
+            }
+            let op = Op::Station { node, data: Some(StationData { platform, ..old.clone() }) };
+            sum += self.w.trial(op).map_or(0.0, |r| r.charge);
+        }
+        sum
+    }
+
     /// Remove a station (and its node if no track is left there), as `delete_pieces` does.
     /// Constructed: final, no refund. Its links (T-197) go with it, and undoing the removal does
     /// not bring them back.

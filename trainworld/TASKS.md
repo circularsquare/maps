@@ -100,8 +100,6 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 - T-1447 [P3] Copy and paste blueprints between saves (Anita: yes). Open.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1270 [P3] Terrain, stage 4 (stages 1-3 built, ARCHIVE): optional, not recommended first, a 120 km/h cap on mountain-class track at -1 and up. Open; notes/T-1270.md.
-- T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Anita 2026-10-30: offered under a refused train length. taking, 2026-10-30 (agent t751, Sonnet, with T-1844)
-- T-1844 [P2] A refused train length shakes and plays the refusal sound like a refused headway; the same wherever else a refusal is silent (Anita 2026-10-30). taking, 2026-10-30 (agent t751)
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
 - T-1791 [P3] Line groups, stage 4 only (stages 1-3 landed, ARCHIVE): boardings in the group view; left out of stage 2 as a later stage if wanted. Open; notes/T-1791.md.
 

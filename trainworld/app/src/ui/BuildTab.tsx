@@ -79,12 +79,18 @@ export function BuildTab() {
             <span class="grow" data-tip="Long track pieces are laid out straight enough for this speed">Target max speed</span>
             <Stepper value={speed(designSpeed.value, 5)} wide label="target max speed" onStep={(s) => {
               const i = DESIGN_SPEEDS.indexOf(designSpeed.value) + s;
-              designSpeed.value = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
+              const to = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
+              if (to === designSpeed.value) return false;
+              designSpeed.value = to;
             }} />
           </li>
           <li>
             <span class="grow" data-tip="Platform length for new stations">Platform length</span>
-            <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => (buildPlatform.value = stepPlatform(buildPlatform.value, s))} />
+            <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => {
+              const to = stepPlatform(buildPlatform.value, s);
+              if (to === buildPlatform.value) return false;
+              buildPlatform.value = to;
+            }} />
           </li>
         </ul>
         <BlueprintPick />

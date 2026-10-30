@@ -30,6 +30,11 @@ export function setRefuseHook(f: () => void) {
   onRefuse = f;
 }
 
+/** The refusal knock alone (T-1844): a step the controls refused for a limit, with nothing to explain. */
+export function knock() {
+  onRefuse?.();
+}
+
 export function say(text: string, bad = false) {
   if (bad) onRefuse?.();
   notice.value = { text, bad, at: performance.now() };
@@ -94,21 +99,24 @@ export function trainsShown(id: LineId): [number, number, number] | null {
 /** Step a line's trains for one demand level, `by` from what it shows now (T-229). Clicks while an
  * edit is in flight are folded into one edit sent when it lands, so fast clicking never queues a
  * recompute per click. */
-export function stepTrainCount(id: LineId, demand: Demand, by: number) {
-  changeTrains(id, demand, (now, k) => Math.max(0, Math.round(now / k + by) * k));
+export function stepTrainCount(id: LineId, demand: Demand, by: number): boolean {
+  return changeTrains(id, demand, (now, k) => Math.max(0, Math.round(now / k + by) * k));
 }
 
 export function setTrainCount(id: LineId, demand: Demand, trains: number) {
   changeTrains(id, demand, (_, k) => Math.max(0, Math.ceil(Math.round(trains) / k) * k));
 }
 
-function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number) => number) {
+/** False when the count could not move (none to take away): the stepper shakes (T-1844). */
+function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number) => number): boolean {
   const base = trainsShown(id);
-  if (!base) return;
+  if (!base) return true;
   const t: [number, number, number] = [...base] as [number, number, number];
   const k = trainStep(id);
   t[DEMAND_INDEX[demand]] = to(t[DEMAND_INDEX[demand]], k);
+  if (t[DEMAND_INDEX[demand]] === base[DEMAND_INDEX[demand]]) return false;
   setTrainCounts(id, t);
+  return true;
 }
 
 /** The step of a line's train count: 2 on a loop, whose trains are half each way (T-798). */
@@ -173,6 +181,12 @@ export function setTrainBuyCheck(f: typeof trainBuyCheck) {
   trainBuyCheck = f;
 }
 
+/** T-1844: the same for cars a longer train needs: the cash short for `more` cars on line `id`, or null. */
+let carBuyCheck: ((id: LineId, more: number) => { need: number; have: number } | null) | null = null;
+export function setCarBuyCheck(f: typeof carBuyCheck) {
+  carBuyCheck = f;
+}
+
 /** Each click is heard as it is made, however the edits behind it are folded. A count the cash
  * cannot cover is refused here, with the knock alone and nothing sent. */
 const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
@@ -197,13 +211,21 @@ const sendCars = folded(pendingCars, async (id, v) => {
 });
 
 /** Step a line's train length by `by` cars from what it shows now, within 1 to `cap`; `shown` is the
- * length the world gives it. */
-export function stepLineCars(id: LineId, shown: number, cap: number, by: number) {
+ * length the world gives it. False when it could not move, at 1 car or at `cap`; a promise of false
+ * when the cash is short for the cars (nothing sent, the notice says so), as for a train count (T-1844). */
+export function stepLineCars(id: LineId, shown: number, cap: number, by: number, checkCash = true): boolean | Promise<boolean> {
   const now = pendingCars.peek().get(id)?.to ?? shown;
   const to = Math.max(1, Math.min(cap, now + by));
-  if (to === now) return;
+  if (to === now) return false;
+  const st = world.peek()?.lineStats[id];
+  const short = checkCash && st && to > st.cars ? carBuyCheck?.(id, (to - st.cars) * Math.max(...st.trainsNeeded)) : null;
+  if (short) {
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+    return Promise.resolve(false);
+  }
   clickSound({ op: "lineCars" });
   sendCars(id, { to, cap });
+  return true;
 }
 
 /** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
@@ -297,9 +319,14 @@ const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
   sendHeadway(id, secs);
 };
 
-export function stepHeadway(id: LineId, demand: Demand, dir: number) {
+/** False when the headway is at its limit already (T-1844): the stepper shakes. */
+export function stepHeadway(id: LineId, demand: Demand, dir: number): boolean {
   const base = headwayShown(id);
-  if (base) setHeadway(id, demand, nextHeadway(base[DEMAND_INDEX[demand]], dir));
+  if (!base) return true;
+  const now = base[DEMAND_INDEX[demand]], to = nextHeadway(now, dir);
+  if (to === now) return false;
+  setHeadway(id, demand, to);
+  return true;
 }
 
 /** Switch a line between counting its trains by hand and keeping a headway: it starts with the

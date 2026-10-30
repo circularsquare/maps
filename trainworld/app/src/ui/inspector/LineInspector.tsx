@@ -10,7 +10,8 @@ import { andList, clockTime, count, distance, duration, forecast, headway, lengt
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
-import { accountVersion, CAR_M, CRUSH_PER_CAR } from "../../game/boarding";
+import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M } from "../../game/boarding";
+import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
@@ -26,7 +27,7 @@ import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
 import { AUTO_SLACK, autoTrainsFor, noteHeadwayLimits, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
-import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
+import { Alert, Chip, Icon, Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
@@ -423,6 +424,7 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
 /** Train length (T-733): 1 car up to what the line's shortest platform fits. At the cap the line
  * stores 0, the most that fits, so it follows the platforms as a new line does. */
 function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
+  const [want, setWant] = useState<{ line: string; cars: number } | null>(null);
   const stations = world.value ? stationsById(world.value) : new Map<string, StationInput>();
   const plats = l.stops.map((s) => stations.get(s)).filter((s) => s !== undefined);
   if (!plats.length || !st.cars) return null;
@@ -440,14 +442,74 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     }
     return t + "\n" + capText;
   };
-  const step = (d: number) => stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
+  // T-751: a + at the cap offers to lengthen the platforms that stop it
+  const step = (d: number) => {
+    const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
+    if (r === true) setWant(null);
+    else if (d > 0 && r === false && cap < PLATFORM_MAX_M / CAR_M) setWant({ line: l.id, cars: cap + 1 });
+    return r;
+  };
+  const offer = want && want.line === l.id && want.cars > cap ? want.cars : 0;
   return (
     <ul class="rows">
       <li>
         <span class="grow" data-tip={capText}>Train length</span>
         <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipDown={cars > 1 ? tip(cars - 1) : capText} tipUp={cars < cap ? tip(cars + 1) : capText} />
       </li>
+      {offer > 0 && <LongerPlatforms l={l} st={st} stations={plats} cars={cars} to={offer} onDone={() => setWant(null)} />}
     </ul>
+  );
+}
+
+/** T-751: under a train length refused for short platforms, the stops that cannot take `to` cars and
+ * one button that lengthens their platforms (each a station edit, paid at once for a built station)
+ * and then the trains. Refused for want of cash before anything is changed. */
+function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; st: LineStats; stations: StationInput[]; cars: number; to: number; onDone: () => void }) {
+  const metres = to * CAR_M;
+  const short = [...new Map(stations.filter((s) => s.length < metres).map((s) => [s.id, s])).values()];
+  const key = short.map((s) => s.num).join(",");
+  const cost = useClockQuery(short.length ? { what: "platformCost", nodes: short.map((s) => s.num), platform: metres } : null, [key, metres], (d) => d[0]);
+  const btn = useRef<HTMLButtonElement>(null);
+  const busy = useRef(false);
+  const m = moneyState.value;
+  const k = m && trainKind(m, st.fast);
+  const trains = Math.max(...st.trainsNeeded);
+  const carsPrice = k && st.status === "running" ? Math.max(0, (to - cars) * trains - k.spare) * k.carPrice : 0;
+  if (!short.length) return null;
+  const n = short.length;
+  const price = cost === null ? null : cost;
+  const names = short.length > 4 ? short.slice(0, 3).map((s) => s.name).join(", ") + ` and ${short.length - 3} more` : andList(short.map((s) => s.name));
+  const go = async () => {
+    if (busy.current) return;
+    const have = liveMoney.value.cash, need = (price ?? 0) + carsPrice;
+    if (m && m.mode !== "sandbox" && need > 1e-9 && need > have + 1e-6) {
+      say(describeIssues([`Money:${need.toFixed(1)}:${have.toFixed(1)}`]), true);
+      shakeEl(btn.current);
+      return;
+    }
+    busy.current = true;
+    try {
+      for (let i = 0; i < short.length; i++) {
+        const s = short[i];
+        const a = await edit({ op: "stationProps", node: s.num, platform: Math.max(s.length, metres), name: s.name }, false, i > 0);
+        if (!a.ok) return;
+      }
+      // the cash was checked above, and the platform edits may have bought the cars already
+      stepLineCars(l.id, cars, to, 1, false);
+      onDone();
+    } finally {
+      busy.current = false;
+    }
+  };
+  const label = price === null ? "Expand all" : price > 1e-9 ? `${n === 1 ? "Expand it" : "Expand all"} for ${money(price * 1e6)}` : n === 1 ? "Expand it" : "Expand all";
+  const tip = `Platform${n === 1 ? "" : "s"} at ${names} to ${length(metres)}, then trains to ${carsText(to)}`
+    + (price !== null && price <= 1e-9 ? "\nFree while still in the blueprint" : "")
+    + (carsPrice > 0 ? `\nExtra cars cost ${money(carsPrice * 1e6)}` : "");
+  return (
+    <li class="offer">
+      <span class="grow">{n === 1 ? "1 station is" : `${n} stations are`} too short for {to}-car trains.</span>
+      <button ref={btn} class="btn text" data-tip={tip} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>{label}</button>
+    </li>
   );
 }
 

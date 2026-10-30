@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-751 [P3] "Expand all platforms on this line". Done 2026-10-30 (agent t751): a + on train length refused for short platforms offers a row "N stations are too short for M-car trains." with "Expand all for $X"; the button lengthens those platforms (one station edit each, final for built stations) and then the trains, and refuses first when the cash cannot cover platforms and cars. New query `platformCost` (`TrackApi::platform_cost`). docs/ui-inspectors.md; checks/t751-expand.mjs.
+- T-1844 [P2] A refused step shakes and knocks. Done 2026-10-30 (agent t751): `Stepper.onStep` returns false for a refusal (a promise of false: an edit refused by the worker, knock already played). Train length (limits and cash for the cars), train count at 0, headway at its limits, station and Build tab platform length, Build target max speed and the panel size stepper now shake and knock; the fare steppers stay silent (their clamps are inside typed-value helpers). docs/ui-inspectors.md.
+
 - T-1831 [P3] Unreadable saves listed as a card with Download and Delete (T-1823 fix 8). Abandoned 2026-10-30 (Anita): a save this build cannot read would never be usable, so no card.
 - T-1822 [P2] Tutorial: a post-it with checked steps and a ripple highlight. Done 2026-10-30: stages 1-2 landed 2026-10-29 (0a2a52d0, 95d0809e), Anita's wording and style notes applied (card "Tutorial", end button "Done!", no tilt).
   Words are `WORDS` in `game/guide.ts`; docs/ui-panels.md matches. notes/T-1822.md.

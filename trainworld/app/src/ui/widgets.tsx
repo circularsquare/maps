@@ -9,6 +9,7 @@ import { PLANE_PATH } from "../map/glyphs";
 import { bulletEpoch, bulletRadius, bulletTextSoon, isBusLine } from "./bullet";
 import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
+import { knock } from "../game/world";
 import type { Signal } from "@preact/signals";
 
 export const Icon = {
@@ -151,21 +152,42 @@ function useCssZoom() {
   return { ref, value };
 }
 
+/** Shake a control once more, from the start if it is shaking already (style.css `.shake`; the
+ * control clears the class on `animationend`). */
+export function shakeEl(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
+}
+
 /** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so.
  * `type` (T-626): a click on the value opens a box for typing it; Enter or leaving the box applies
  * `set` with the number typed (anything else is dropped), Escape cancels. `text` is what the box
- * starts with, `tip` the value's hover. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => void; wide?: boolean; label: string; jump?: boolean; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
+ * starts with, `tip` the value's hover. `onStep` returns false for a step refused (T-1844): the
+ * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
   const jump = p.jump ? "Shift-click for 5, Ctrl-click for 20" : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
+  const box = useRef<HTMLSpanElement>(null);
+  // T-1844: a step that returns false was refused (a limit, or no money): the stepper shakes and the
+  // refusal knock plays, as for a refused edit
+  const shake = () => shakeEl(box.current);
+  // false: refused here for a limit, so the knock plays too. A promise of false: an edit the worker
+  // refused, whose notice has played the knock already.
+  const step = (d: number) => {
+    const r = p.onStep(d);
+    if (r === false) { knock(); shake(); }
+    else if (r instanceof Promise) void r.then((ok) => { if (ok === false) shake(); });
+  };
   return (
-    <span class={"stepper" + (p.wide ? " wide" : "")}>
-      <button class="btn" aria-label={"Less " + p.label} data-tip={tip(p.tipDown)} onClick={(e) => p.onStep(-by(e))}>
+    <span ref={box} class={"stepper" + (p.wide ? " wide" : "")} onAnimationEnd={() => box.current?.classList.remove("shake")}>
+      <button class="btn" aria-label={"Less " + p.label} data-tip={tip(p.tipDown)} onClick={(e) => step(-by(e))}>
         <Icon.minus />
       </button>
       {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v">{p.value}</span>}
-      <button class="btn" aria-label={"More " + p.label} data-tip={tip(p.tipUp)} onClick={(e) => p.onStep(by(e))}>
+      <button class="btn" aria-label={"More " + p.label} data-tip={tip(p.tipUp)} onClick={(e) => step(by(e))}>
         <Icon.plus />
       </button>
     </span>

@@ -26,7 +26,7 @@ import { roundedDefault } from "./fareDefault";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { setTrainBuyCheck, stopsById, world } from "./world";
+import { setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
@@ -48,16 +48,23 @@ export function setMoneyState(m: MoneyState) {
  * the cars its busiest level needs beyond the cars the network owns, and the edit is refused when
  * that comes to more than the cash. A sandbox is never refused. */
 export function trainShortfall(id: LineId, trains: readonly number[]): { need: number; have: number } | null {
-  const m = moneyState.peek(), st = world.peek()?.lineStats[id];
-  if (!m || !st || st.status !== "running" || m.mode === "sandbox") return null;
+  const st = world.peek()?.lineStats[id];
+  if (!st) return null;
   const more = Math.max(...trains) - Math.max(...st.trainsNeeded);
-  if (!(more > 0)) return null;
+  return more > 0 ? carShortfall(id, more * (st.bus ? 1 : st.cars)) : null;
+}
+/** The same rule for `more` cars (buses on a bus line) a running line would need beyond the ones in
+ * use, whether from more trains or longer ones (T-1844). */
+export function carShortfall(id: LineId, more: number): { need: number; have: number } | null {
+  const m = moneyState.peek(), st = world.peek()?.lineStats[id];
+  if (!m || !st || st.status !== "running" || m.mode === "sandbox" || !(more > 0)) return null;
   const [owned, needed, price] = st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
     : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
-  const need = Math.max(0, needed + more * (st.bus ? 1 : st.cars) - owned) * price, have = liveMoney.peek().cash;
+  const need = Math.max(0, needed + more - owned) * price, have = liveMoney.peek().cash;
   return need > 1e-9 && need > have + 1e-6 ? { need, have } : null;
 }
 setTrainBuyCheck(trainShortfall);
+setCarBuyCheck(carShortfall);
 /** When the last autosave was written (Date.now()), null before the first. */
 export const lastSaved = signal<number | null>(null);
 

@@ -243,7 +243,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   buys or takes from the depot on a running line, and the cap ("The 160 m platform at East fits
   8 cars"), which the label's hover also gives (the schedule's rows, Trains, Average speed and
   Train length are one run of rows with no rules between, their controls 4 px apart [T-1159]); stepping up to the cap stores the default (the most
-  that fits, `cars` 0), so the trains follow the platforms again; when full track holds trains back, an alert under the table names it ("Platform at
+  that fits, `cars` 0), so the trains follow the platforms again; a + at the cap (under 400 m, 20 cars) refuses (the stepper shakes and the refusal knock plays) and adds a row under
+  it, "2 stations are too short for 7-car trains." with a button "Expand all for US$15.0M" (`LongerPlatforms`; "Expand it" for one station, no price when they are still blueprint): it lengthens each short stop's platform to the wanted cars x 20 m with
+  `stationProps` (final for a built station, so it clears the undo history; blueprint ones are free and each its own undo step), then steps the trains up. The price is the worker's `platformCost` query
+  (`TrackApi::platform_cost`, each built station's own charge by trial); if the cash falls short of the platforms plus the cars the longer trains buy, the button shakes and knocks and nothing changes [T-751]. Any stepper refuses the same way when its `onStep` returns false (a limit: 1 car, 0 trains, headway ends,
+  platform 60-400 m, Build's target speed, panel size) or a promise of false (a worker refusal, whose notice knocked already); a train length or count the cash cannot cover is refused before it is sent [T-1844]; when full track holds trains back, an alert under the table names it ("Platform at
   Akabane is full", the station name a link that moves the camera there and selects the station [T-669, T-1393]) with the trains
   held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
   full place. Alerts are a plain list, each with a red (bad) or yellow (warning) circled
