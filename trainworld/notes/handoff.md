@@ -6,8 +6,7 @@ Updated: 2026-10-29 night
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master: the 2026-10-29 night batch (T-1799 st3, T-1815, T-1827 removed, T-1829, T-1832 dot, T-1835-T-1839, tutorial
-  wording, privacy wording); 8800 rebuilt and smoked at it (see git log for the hash).
+- master b6ff3eff (the 2026-10-29 night batch). 8800 at b6ff3eff, smoke 20/20 both shades. Anita: blueprint text OK.
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed. Deploy only on Anita's word.
   Website repo: T-1833's GA-off change not committed or pushed; deploy.py writes the page without GA: check after deploy.
 - shonei-server 5719c6f deployed by Anita 2026-10-29 (day/week backups; deleting is for good), not pushed. The auto-mode
@@ -19,13 +18,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - World: 1,897 shipped, 18 held, 5 parked (nic lez meo doo lel), 329 planned; registry 1,960.
 - Cores: 12 at most while Anita is up (she asked to keep 4 free, 2026-10-29 night).
 - Uncommitted: Anita's TODO.md (never commit).
-- Next free task id: T-1843.
+- Next free task id: T-1844.
 - Old tree .tw-trees/t1734 kept for later thought (Anita).
 - Localhost has no account server until `?acct=live` is opened once per browser (account.ts, deliberate).
 
 ## In flight
 - T-1799 stage 4 (lines ease out of their side-by-side offset at splits/merges and ribbon ends; Anita's words and
-  screenshot in maps-da scratchpad images/2.png): to resume agent t1799c (Sonnet) after the batch commit.
+  screenshot in maps-da scratchpad images/2.png): agent t1799c (Sonnet) resumed on the clean tree.
+- T-1843 Settings tooltip/label edits + remove Explore a trip button (agent t1843, Sonnet, Vite 6193).
 
 ## Next
 1. T-1840: every player-facing string in one review doc with flagged lines and proposed rewrites (also fix

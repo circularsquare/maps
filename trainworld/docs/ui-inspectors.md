@@ -589,7 +589,7 @@ The trips between two places as the view it was opened from counts them, homes a
 destinations at the end, and how the demand model's people would make one of them. The panel's
 title is "Trip" with no line under it naming the ends: the map marks them [T-1253].
 
-- **Starting it**: the T key from any tab [T-444], or Explore a trip at the bottom of Settings, turns on the trip
+- **Starting it**: the T key from any tab [T-444] (the Settings button was removed, T-1843; tapping two demand bubbles also opens it), turns on the trip
   tool (a crosshair; a second press or Esc leaves it). Clicks alternate between start and end, a
   third starting a new trip; the hint at the bottom left says which is next.
 - **Stations as ends** [T-221]: a click on a station (a hand cursor over one) takes the station's

@@ -56,7 +56,7 @@ export function BuildTab() {
             data-tip="Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps don't fit, the crossing is flat."
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
-            data-tip="Show terrain. Track costs more on slopes, hills and mountains."
+            data-tip="Show terrain. Construction is more expensive in steep terrain."
             onClick={() => setDisplay("hillshade", !display.peek().hillshade)}><Icon.terrain /></button>
         </div>
         <div class="h">Track</div>

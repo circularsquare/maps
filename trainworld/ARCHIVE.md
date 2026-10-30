@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1843 [P1] Settings text and the Explore a trip button. Done 2026-10-29 (agent t1843): Capacity markers is "Track at capacity" and Full stretches "Trains at capacity" with new hovers, Terrain and Drives hovers shortened, the hovers on Flat junctions and crossings, Faces and Sound dropped, and the Explore a trip button removed from Settings (T key and tapping two bubbles still open the trip tool).
+  Docs ui-panels.md and ui-inspectors.md updated; no check matched the old labels. Smoke passes; screenshot artifacts/trainworld/t1843/settings-show.png.
 - T-1836 [P2] Client side of T-1830. Done 2026-10-29 (maps-da): `fetchBackup` tries account backups 0-3, so the day and week copies open from Earlier versions; server 5719c6f deployed by Anita.
 - T-1815 [P2] Preview waits during a demand solve. Done 2026-10-29 (agent t1815): the panels' `today` (`past_day`, 35-60 ms) and `linesPeriods` (11-17 ms) reads after each account change queued ahead of previews; the client now holds panel reads until previews stop for 250 ms, the worker reuses an unchanged `today` answer, and `Boarding::tally` works each `cum` out once (bit-equal; WASM rebuilt). Worst wait in a solve: NYC 101-226 -> 45-54 ms, T-007 49-52, Tokyo 250-558 -> 45-57; slice hashes and smoke's 11,388,675 unchanged.
   The edit itself (320-570 ms) still delays the first preview after it. notes/T-1815.md.

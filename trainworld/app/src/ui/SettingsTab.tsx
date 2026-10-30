@@ -3,12 +3,11 @@
 
 import type { ComponentChildren } from "preact";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
-import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
-import { pickTool, TRIP_KEY } from "./toolKeys";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
@@ -91,16 +90,16 @@ export function SettingsTab() {
           Station names
         </Check>
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>
-          Capacity markers
+          <span data-tip="Marks where track cannot smoothly handle scheduled train frequencies">Track at capacity</span>
         </Check>
         <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
-          <span data-tip="Red edges in the Traffic view where track is at capacity or riders wait for a train with room. The longer the wait, the stronger the red.">Full stretches</span>
+          <span data-tip="Marks where trains are full and passengers cannot board">Trains at capacity</span>
         </Check>
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
-          <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>
+          Flat junctions and crossings
         </Check>
         <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
-          <span data-tip="Arcs for the car trips a train would speed up most. Wider for more car trips per day, stronger for more minutes saved.">Drives</span>
+          <span data-tip="Show arcs for common driving trips">Drives</span>
         </Check>
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
@@ -109,7 +108,7 @@ export function SettingsTab() {
           <span data-tip="Draw real-world railways on the base map">Real network</span>
         </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
-          <span data-tip="Shade hills and mountains on the base map. Track on hills costs 1.25 or 1.6 times as much, the steeper the more, and on mountains 2.5, except in bored tunnels (elevation -2 and -3).">Terrain</span>
+          <span data-tip="Construction is more expensive in steep terrain">Terrain</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>
@@ -124,10 +123,10 @@ export function SettingsTab() {
       <div class="h">Stations up close</div>
       <div class="checks">
         <Check checked={d.faces} onChange={(v) => setDisplay("faces", v)}>
-          <span data-tip="A small face rises from the platform for every 20 or so riders who get off. Tired where riders have waited 10 minutes on average, sad where the last train left 20 or more behind. From street zooms.">Faces</span>
+          Faces
         </Check>
         <Check checked={d.sound} onChange={(v) => setDisplay("sound", v)}>
-          <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Small sounds as you place and construct blueprint. Starts after your first click.">Sound</span>
+          Sound
         </Check>
       </div>
       {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`All sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
@@ -162,7 +161,6 @@ export function SettingsTab() {
       </div>
       <GameMode />
       <AccountSection />
-      <TripStart />
       <FeedbackButton />
       <FeedbackPanel />
       <Credits />
@@ -216,17 +214,5 @@ function UiScale() {
       <div class="h">Panel and text size</div>
       <Stepper wide label="panel and text size" value={<span data-tip={`Panels and text at ${pct}% of their usual size`}>{pct}%</span>} onStep={step} />
     </>
-  );
-}
-
-/** The trip explorer's button (the T key from anywhere). */
-function TripStart() {
-  const on = tool.value === "trip";
-  return (
-    <div class="pane-foot trip-start">
-      <button class={"btn text" + (on ? " on" : "")} data-tip={`Click two places or stations on the map to see how people would travel between them (${TRIP_KEY.toUpperCase()})`} onClick={() => pickTool("trip")}>
-        Explore a trip<span class="key muted">{TRIP_KEY.toUpperCase()}</span>
-      </button>
-    </div>
   );
 }

@@ -1441,8 +1441,6 @@ button.save-add:hover { color: var(--text); }
 .rows.pick > li.rest { cursor: default; }
 .rows.pick > li.rest:hover { background: none; }
 .trip-hbar { width: 60px; flex: none; display: flex; align-items: center; }
-/* T-220: Explore a trip at the bottom of Settings */
-.trip-start .key { margin-left: 6px; }
 /* T-924: the data sources at the foot of Settings */
 .credits > summary { cursor: pointer; display: list-item; }
 .credits p { margin: 0 0 6px; color: var(--muted, inherit); }
