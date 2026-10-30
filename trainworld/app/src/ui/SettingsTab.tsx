@@ -90,7 +90,7 @@ export function SettingsTab() {
           Station names
         </Check>
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>
-          <span data-tip="Marks where track cannot smoothly handle scheduled train frequencies">Track at capacity</span>
+          <span data-tip="Marks where stations or track cannot smoothly handle scheduled train frequencies">Track at capacity</span>
         </Check>
         <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
           <span data-tip="Marks where trains are full and passengers cannot board">Trains at capacity</span>
