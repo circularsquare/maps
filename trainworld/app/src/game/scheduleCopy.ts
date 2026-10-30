@@ -88,5 +88,5 @@ export async function pasteSchedule(l: LineInput, st: LineStats) {
     const trains = c.trains.map((n) => Math.ceil(n / k) * k) as Levels;
     if (!(await edit({ op: "setTrainCount", line: l.num, trains }, false, true)).ok) return;
   }
-  if (fit && cars < c.cars) say(`Trains of ${plural(cars, "car")} on ${l.name}: the platform at ${fit.name} fits no more.`);
+  if (fit && cars < c.cars) say(`The platform at ${fit.name} is too short for ${plural(c.cars, "car")}. ${l.name}'s trains stay at ${plural(cars, "car")}.`);
 }

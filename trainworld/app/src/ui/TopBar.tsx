@@ -5,7 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandView, modeRides, modeSplit, refiningZone, viewFinal, viewUpdating } from "../game/demand";
+import { demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
 import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway } from "../game/days";
@@ -199,7 +199,7 @@ function Speed() {
   }, [open]);
   const chosen = clock.chosenRate.value / SPEEDS[0];
   const held = capped && chosen > DEMAND_CAP;
-  const heldTip = (title: string) => (held ? `${title}\nHeld at ${times(DEMAND_CAP)} while demand updates, then ${times(chosen)}` : title);
+  const heldTip = (title: string) => (held ? `${times(chosen)} (capped at ${times(DEMAND_CAP)} while updating demand)` : title);
   const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
     const on = running && (custom !== null ? 2 : speed) === i;
     return (
@@ -219,7 +219,7 @@ function Speed() {
       {btn(2, <Icon.play3 />, `${times(custom ?? SPEEDS[2] / SPEEDS[0])} speed\nDouble-click to pick a speed`, { onDblClick: () => setOpen((o) => !o) })}
       {open && (
         <div class="slider speed-pop">
-          <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label="Clock speed" data-tip={`Clock speed, ${times(SLIDER_STOPS[0])} to ${times(SLIDER_STOPS[SLIDER_STOPS.length - 1])}`}
+          <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label="Clock speed"
             onInput={(e) => clock.setMultiple(SLIDER_STOPS[Number((e.target as HTMLInputElement).value)])} />
           <span class="num">{times(chosen)}</span>
         </div>
@@ -236,7 +236,7 @@ function worldShareTip(t: ReturnType<typeof worldTotals>, where: string, note: s
   const cities = `${t.cities} ${t.cities === 1 ? "city" : "cities"}`;
   return [
     `${exact(t.rides.train)} train trips/day in ${cities}${note}`,
-    `Train ${smallPct(t.split.train)} of the ${world}`,
+    `Trains carry ${smallPct(t.split.train)} of ${world}`,
     splitTip(where.replace(" in the world", ` in the ${cities} with stations`), t.citySplit, t.rides, ""),
   ].join("\n");
 }
@@ -267,8 +267,8 @@ export function TopBar() {
   const rides = total ? total.rides : modeRides.value;
   const where = [far ? " in the world" : city ? " in " + city.name : "", (shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value)].join("");
   // T-1223: the zone in view shown rough while it is worked out in detail
-  const refining = !far && city && refiningZone.value === city.id;
-  const note = refining ? ` (rough while ${city.name} is worked out in detail)` : demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
+  // T-1851: one note for every case where the trips are being recomputed
+  const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? " (trips being recomputed…)" : "";
   const worldTip = total ? `World\n${total.cities} ${total.cities === 1 ? "city" : "cities"}, ${total.stations} ${total.stations === 1 ? "station" : "stations"}` : undefined;
   return (
     <><header id="topbar">

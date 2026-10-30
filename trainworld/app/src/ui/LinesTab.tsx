@@ -20,7 +20,7 @@ import { crowdClass, crowdLevel, crowding, PERIOD_STRIDE, runningToday, today, t
 import { demandView, lineFiguresIn } from "../game/demand";
 import { useClockQuery } from "./useClockQuery";
 import { Chip, Icon, SortHead } from "./widgets";
-import { Money } from "./MoneyText";
+import { lineMoneyTip, Money } from "./MoneyText";
 import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { linesPending } from "../game/lineFigures";
@@ -45,7 +45,7 @@ function RidersToday({ line }: { line: string }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
-  if (linesPending.value.has(line)) return <span class="val w-riders muted" data-tip="Riders are being worked out for the change">constructing...</span>;
+  if (linesPending.value.has(line)) return <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{text}</span>;
@@ -58,7 +58,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={[`${money(net)} net in the past 24 hours`, `Fares ${money(d.fares)}`, `Running ${st.bus ? "buses" : "trains"} ${money(-run)}`, `Upkeep ${money(-st.upkeep)}`].join("\n")}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, !!st.bus)}>
       <Money dollars={net} />
     </span>
   );
@@ -92,7 +92,7 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
-      {pending ? <span class="val w-riders muted" data-tip="Riders are being worked out for the change">constructing...</span>
+      {pending ? <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>
         : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in the past 24 hours, each line's added up\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
       {any ? <span class="val w-linemoney" data-tip={`${money(net)} net in the past 24 hours\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>
@@ -243,8 +243,9 @@ export function LinesTab() {
     const i = anchor ? order.indexOf(anchor) + (gap.after ? 1 : 0) : order.length;
     order = [...order.slice(0, i), ...moved, ...order.slice(i)];
     const same = order.join() === fullOrder().join();
+    // a group's row only moves the group (T-1855: it once sent a leave for "g:N", which became line 0)
     const g = grp ? 0 : gap.g;
-    const out: { order?: string[]; join?: number; leave?: boolean } = { order: same ? undefined : order, ...(g !== from ? (g ? { join: g } : { leave: true }) : {}) };
+    const out: { order?: string[]; join?: number; leave?: boolean } = { order: same ? undefined : order, ...(!grp && g !== from ? (g ? { join: g } : { leave: true }) : {}) };
     return out.order || out.join || out.leave ? out : null;
   };
   const dropLine = (d: Drag) => {
@@ -252,6 +253,7 @@ export function LinesTab() {
     if (!p) return;
     const num = Number(d.id);
     if (p.order) setHandOrder("lines", p.order);
+    if (!Number.isInteger(num)) return; // a group's row: no line to group or ungroup
     if (p.join === "new") void edit({ op: "lineGroup", lines: [Number(p.with), num], group: "new" });
     else if (p.join) void edit({ op: "lineGroup", lines: [num], group: p.join });
     else if (p.leave) void edit({ op: "lineGroup", lines: [num], group: 0 });

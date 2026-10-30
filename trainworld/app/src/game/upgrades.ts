@@ -15,11 +15,11 @@ export interface UpgradeText {
 }
 
 export const UPGRADE_TEXT: UpgradeText[] = [
-  { bit: UPGRADE.terminal, name: "Terminal", does: "Trains turn in two sidings past the platform, up to 30 an hour, and the platforms stay free for other trains." },
-  { bit: UPGRADE.parkRide, name: "Park and ride", does: "A car park, bus bays and bike racks. Riding to this station costs 10 perceived minutes less.",
-    doesAll: "One car park, bus bays and bike racks for the complex. Riding to any of its stations costs 10 perceived minutes less." },
-  { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waits here count at 0.8 of their minutes when people choose how to travel.",
-    doesAll: "One waiting room for the complex. Waits at any of its stations count at 0.8 of their minutes when people choose how to travel." },
+  { bit: UPGRADE.terminal, name: "Terminal", does: "Upgrade turning capacity from 15 trains per hour to 30 trains per hour." },
+  { bit: UPGRADE.parkRide, name: "Parking lot", does: "Traveling to this station from far away feels 10 minutes shorter.",
+    doesAll: "Traveling to any station in this complex from far away feels 10 minutes shorter." },
+  { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waiting here for a train feels 20% shorter.",
+    doesAll: "Waiting at any station in this complex for a train feels 20% shorter." },
 ];
 
 /** A passage's price (sim `upgrades::passage_price`), US$M: a base plus a rate a km of the straight line. */

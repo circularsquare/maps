@@ -10,7 +10,7 @@
 //   busiest station's, and says so (T-217).
 // - A ridership circle away from any station: the same count, for the circle's complex.
 
-import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, SEATS_PER_CAR, tripLoad } from "../game/boarding";
+import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
@@ -77,12 +77,11 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   while (seg + 1 < n - 1 && stopS[seg + 1] <= at.s + 1) seg++;
   const atEnd = at.s >= (stopS[n - 1] ?? Infinity) - 1;
   const own = r.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
-  const seats = SEATS_PER_CAR * st.cars, crush = CRUSH_PER_CAR * st.cars;
-  const cap = `${exact(seats)} seats, ${exact(crush)} full`;
+  const crush = CRUSH_PER_CAR * st.cars;
   // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
   const est = dv.lines.get(l.id)?.estimate ? " (estimate)" : "";
-  if (own !== null) return [name, `${exact(atEnd ? 0 : own)} riders aboard${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`, cap];
+  if (own !== null) return [name, `${exact(atEnd ? 0 : own)}/${exact(crush)} riders on board${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`];
   // no account for this train yet (its line's stops just changed): no gauge either, and no
   // forecast average in its place (T-230, Anita)
   return [name, "Calculating demand"];

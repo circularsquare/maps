@@ -37,7 +37,7 @@ const TEXT: Record<string, string | (() => string)> = {
   NoSuchLine: "That line is not there any more.",
   EdgeLoop: "Track cannot start and end at the same place.",
   NodeLevel: "Elevation goes from −3 to +3.",
-  Tracks: "Track can only be single or double.",
+  Tracks: "Track has to be double or quad.",
   OutsideWorld: "Track cannot go within 5 degrees of a pole or across the 180th meridian.",
   Crossover: "A crossover cannot be reshaped.",
   Alongside: "This track has a pair beside it already.",

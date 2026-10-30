@@ -215,6 +215,11 @@ export const viewFinal = computed(() => {
   return !!v && (v.final || (!viewUpdating.value && cityDemandViews.value.has(activeCity.value)));
 });
 
+/** T-1851: the trips shown for the zone in view are being recomputed (rough, early, from before an
+ * edit, or its detailed solve on the way). It drives the status tag and the clock's cap together, and
+ * is false once the zone in view is final while other zones still solve. */
+export const viewRecomputing = computed(() => !!refiningZone.value || !viewFinal.value || viewUpdating.value);
+
 /** The mode-split bar's numbers: the viewed zone's own figures (a solve's, or the bare pass's for a
  * zone no station reaches), null until it has them and over dead space (T-318). */
 export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value)?.split ?? null);

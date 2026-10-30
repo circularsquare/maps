@@ -127,7 +127,7 @@ export function CityInspector({ id }: { id: string }) {
               ))}
             </ul>
           )}
-          {!places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modelled here yet.</p>}
+          {!places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modeled here yet.</p>}
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}

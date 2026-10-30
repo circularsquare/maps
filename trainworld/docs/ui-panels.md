@@ -146,24 +146,16 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
   below, taking no row of its own [T-1704]; the rows stop 46 px short of the right edge, where the
   search glass sits at the top right, and the demand stopped alert and the selection bar are under
-  the rows. **Whenever the clock is capped (below) a status shows**, as does any solve while it runs; while the clock is capped its
-  hover ends "The clock runs at 4x at most until it's done." [T-1790, T-1803]. While a solve runs after an edit, "Updating demand
-  1/2…" while the trips the edit touches are solved (the local solve), "Updating demand 2/2…" from
-  when those are shown until the whole solve's final (the 8 s wait for a further edit included,
-  docs/demand-runtime.md); with no local solve (none possible, or it is off) "Updating demand…"
-  with no count. Each step's hover says what it is working out. While the edit changes the zone in
-  view's figures the split is faded, the figures held [T-232]; a zone the edit does not touch, or
-  whose cluster is already done, keeps its split unfaded and its hover says its figures are done and
-  demand elsewhere is still being worked out [T-392, T-1790]; and the same while a reload shows the cached
-  figures from the last time the game was open, with a hover saying so [T-328]; during startup's
-  refinement "Estimate, refining 2/4…", which goes once the zone in view's own cluster has its final,
-  though other clusters still solve, and the split's hover then stops saying "an early estimate"
-  [T-421]; a city loading later "Loading data" with a thin bar after it
-  (Loading, below); while the zone in view shows rough figures and its detailed ones are on their
-  way, "Working out Wuhan in detail" (hover: "These figures are rough until Wuhan is worked out in
-  detail."), and the split's hover ends "(rough while Wuhan is worked out in detail)"; the figures
-  change in one step when the detailed solve lands [T-1223, docs/demand-runtime.md "Levels of
-  detail"]. No grey and no bar: those stay for a zone with no figures. A rough zone's city view,
+  the rows. **"Trips being recomputed…"** shows whenever the trips of the zone in view are rough,
+  early, from before an edit or from the last session's cache, or while its detailed solve is on the
+  way [T-1851, T-1223, T-328, T-421]; it goes once the zone in view's figures are final, though other
+  zones still solve [T-392]. The clock cap (below) follows the same rule, so the cap lifts at that
+  moment too. While capped, the tag's hover says "Clock capped at 4x while updating demand". While the
+  edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
+  does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
+  "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar
+  after it (Loading, below). The figures change in one step when a detailed solve lands
+  [T-1223, docs/demand-runtime.md "Levels of detail"]. No grey and no bar: those stay for a zone with no figures. A rough zone's city view,
   opened from elsewhere, and the Cities list mark nothing: rough figures are close enough (Anita,
   T-1206, 2026-10-28).
 - **Busy** [T-1200, `ui/BusyTag.tsx`, `game/busy.ts`]: when the page is about to freeze for a
@@ -232,8 +224,8 @@ else); from 360 to 700 px (the bar in two rows, below) it stands beside the sky 
   `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
   less than half of what it was (counted from before the edits since demand last settled, in trains
   for a count and trains an hour for a headway; from or to 0 is never small), or a stop edit on a line
-  with no trains at any level. The status still shows "Updating demand…" meanwhile, its hover without
-  the clock sentence. One edit that would cap holds the clock until demand settles; every other edit
+  with no trains at any level. The status still shows "Trips being recomputed…" meanwhile, its hover without
+  the clock line. One edit that would cap holds the clock until demand settles; every other edit
   (track, stations, new lines, train length or type, fares, undo) caps as before. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
@@ -756,7 +748,7 @@ registry centre and zoom, or over New York with none [T-310].
   is picked: the game starts on the world map with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
-- **Real network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,
+- **Real world network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
@@ -787,14 +779,9 @@ registry centre and zoom, or over New York with none [T-310].
   Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
   noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
   account).
-- **Signing out** [T-988 stage 3] with games of this account in the browser (and a server that keeps
-  games) asks "Remove your games from this browser?" with Keep games (lit; signs out, the games stay
-  tied and sync again at the next sign-in) and Remove games. Remove goes to the start menu first when
-  a game is open (saved first, as leaving any game; the hover says the game closes), uploads what has
-  not gone up, then deletes from this browser every slot of the account whose latest version is on
-  it, keeping its leaderboard figures, and signs out. A slot with changes the server could not take,
-  or open in another tab, stays. Closing the panel instead leaves the player signed in. Without such
-  games Sign out signs out at once.
+- **Signing out** [T-988 stage 3, T-1851] signs out at once; the account's games stay in the browser,
+  tied to it, and sync again at the next sign-in. The "Remove games" choice (`signOutRemoving` in
+  `game/accountGames.ts`) is no longer offered (Anita, 2026-10-30).
 - **The sign-in question** [T-988]: signing in, or a load already signed in, with slots tied to no
   account (made signed out, never answered) opens the account panel on "Add the 3 games in this
   browser to your account?" ("Add Tokyo to your account?" for one) with Add (lit) and Don't add;
@@ -948,8 +935,7 @@ registry centre and zoom, or over New York with none [T-310].
   too. Under 5 s "A few seconds left", under 55 s "About 40 s left" in tens of seconds, under 90 s
   "About 1 min left", then whole minutes.
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
-  refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
-  are an early estimate) until the zone in view's cluster has its final [T-421].
+  refine it with the clock running; the status says "Trips being recomputed…" until the zone in view's cluster has its final [T-421].
 - **After an edit** nothing changes until a final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
   demand 1/2…" (Status, above), then each changes in one step [T-232]: the zones the local solve

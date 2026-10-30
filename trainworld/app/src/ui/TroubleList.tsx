@@ -95,7 +95,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     if (spots.has(key)) continue;
     const cls = over ? "over" : "near";
     const tip = [`${k.name} at ${Math.round(m.rho * 100)}% of capacity`];
-    if (m.held) tip.push("The line's extra trains are held out of service at its ends");
+    if (m.held) tip.push("Some trains wait at the ends of the line because the track is full.");
     if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND_WORD[level] ?? "this"} demand`);
     spots.set(key, { key, tier: over ? 2 : 4, size: d + m.rho, lead: <i class={"trouble-mark " + cls}><Icon.alert /></i>,
       label: place ? `${k.name} ${k.prep} ${place}` : k.name,

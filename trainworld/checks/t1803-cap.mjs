@@ -67,8 +67,8 @@ try {
     if (!sawUpd) console.log('  world after the edit:', JSON.stringify(await page.evaluate(([id]) => ({ trains: window.tw.world.value.lineStats[id]?.trainsNeeded, tph: window.tw.world.value.save.lines.find((l) => l.id === id)?.tph, key: window.twDemand.client.waiting ? 'waiting' : 'none' }), [arg?.[0] ?? arg])));
     const ok = sawUpd && sawCap === expectCap;
     check(ok, `${label}: ${sawUpd ? (sawCap ? 'capped' : 'not capped') : 'no update seen'} (expected ${expectCap ? 'capped' : 'not capped'})`);
-    if (ok && !expectCap) check(!/clock runs/.test(tipQuiet ?? ''), `${label}: status hover says nothing of the clock`);
-    if (ok && expectCap) check(/clock runs at 4x/.test(tipCap ?? ''), `${label}: status hover names the cap`);
+    if (ok && !expectCap) check(!/capped at/.test(tipQuiet ?? ''), `${label}: status hover says nothing of the clock`);
+    if (ok && expectCap) check(/capped at 4x/.test(tipCap ?? ''),`${label}: status hover names the cap`);
     return { sawUpd, sawCap };
   };
   const countFn = async ([id, dem, to]) => (await import('/src/game/world.ts')).setTrainCount(id, dem, to);

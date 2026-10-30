@@ -49,7 +49,7 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
         const Ic = ICONS[u.bit];
         return (
           <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-            data-tip={`${u.name}. ${u.does} ${money(price * 1e6)}.\n${act}`}
+            data-tip={`${u.name}\n${u.does}\nCosts ${money(price * 1e6)}\n${act}`}
             onClick={() => void toggle(u.bit, u.name, !on)}>
             <Ic />
           </button>
@@ -84,7 +84,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const Ic = ICONS[u.bit];
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
-      data-tip={`${u.name}. ${u.doesAll} ${money(cost * 1e6)}.\n${act}`} onClick={() => void click()}>
+      data-tip={`${u.name}\n${u.doesAll}\nCosts ${money(cost * 1e6)}\n${act}`} onClick={() => void click()}>
       <Ic />
     </button>
   );
@@ -97,7 +97,7 @@ function PassageButton({ s }: { s: StationInput }) {
   const pairs = linksAmong([s.id]);
   const built = pairs.some(([a, b]) => byId.get(a)?.built && byId.get(b)?.built);
   const state = picking ? " on" : built ? " on" : pairs.length ? " planned" : "";
-  const tip = `Passage. Two stations up to ${roughDistance(LINK_MAX_M)} apart joined by one are a complex, and riders change along the straight line on moving walkways. ${money(PASSAGE_BASE * 1e6)} plus ${money(PASSAGE_PER_KM * 1e6)} a km, paid once both stations are built.\n`
+  const tip = `Passage\nJoins two stations up to ${roughDistance(LINK_MAX_M)} apart into one complex so that people can transfer.\nCosts $${PASSAGE_BASE}-${Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)}M depending on length\n`
     + (picking ? "Click another station on the map, or here to stop." : "Click, then click the other station on the map.");
   return (
     <button class={"btn icon upgrade" + state} aria-label="Passage" aria-pressed={picking} data-tip={tip}

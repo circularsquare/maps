@@ -110,7 +110,7 @@ function useGamesOn(): CloudContext | null {
 function CloudMark({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
   const ctx = useGamesOn();
   if (!ctx) return null;
-  if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip={panel ? "On your account. Open downloads it here." : "On your account"}><Icon.cloud /></span>;
+  if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip={panel ? "Only saved online. Opening will download locally." : "On your account"}><Icon.cloud /></span>;
   const noAccount = !slot.cloud?.acct;
   if (tiedTo(slot.cloud, ctx)) return null;
   if (panel && noAccount) return <button class="save-cloud save-add" data-tip="Only in this browser. Click to add it to your account." aria-label={`Add ${slot.name} to your account`}
@@ -184,7 +184,7 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
         {msg && <div class="small bad">{msg}</div>}
         <div class="save-actions">
           {playing ? <>
-            <button class="btn icon save-copy" data-tip={newer ? "Make a copy to play on here. The copy leaves out what only the newer version can read." : "Make a copy"} aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
+            <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
             <button class="btn icon save-download" data-tip={newer ? "Download as a file, as the newer version saved it" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
             <button class={"btn icon save-versions" + (versionsOpen.value ? " on" : "")} data-tip="Earlier versions" aria-label="Earlier versions" aria-pressed={versionsOpen.value}
               onClick={() => (versionsOpen.value = !versionsOpen.peek())}><Icon.history /></button>

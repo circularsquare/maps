@@ -18,7 +18,7 @@ export function ScopeToggle({ tip }: { tip?: string }) {
   const here = listScope.value === "here" && !!zone && !empty;
   return (
     <div class="group scope">
-      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? (empty ? `No lines in ${name} yet, so the whole world is shown` : `Only ${name}` + (tip ? "\n" + tip : "")) : "Nothing modelled here"}
+      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? (empty ? `No lines in ${name} yet, so the whole world is shown` : `Only ${name}` + (tip ? "\n" + tip : "")) : "Nothing modeled here"}
         onClick={() => (listScope.value = "here")}>
         <Icon.pin />{name}
       </button>

@@ -106,7 +106,7 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   return (
     <>
       <div class="h">
-        <span data-tip="One rider picked from the riders aboard: where they got on and where they get off from the train's boardings, why they ride from this stretch's riders. Minutes are the trip explorer's effective times.">One rider</span>
+        <span data-tip="One random rider on this train">Random rider</span>
         <span class="one-rider-acts">
           <button class="btn icon mini" aria-label="Pick another rider" data-tip="Pick another rider" onClick={another}><Icon.cycle /></button>
           <button class="btn icon mini" aria-label="Open this trip in the trip explorer" data-tip="Open this trip in the trip explorer" onClick={open}><Icon.route /></button>

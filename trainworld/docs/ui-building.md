@@ -36,7 +36,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool, and the game
   adds none: the player draws crossing track [T-733, T-1688, [track-and-service.md](track-and-service.md) 6.1].
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
-  Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
+  Beside keep placing, the **snap switch** (a magnet, "Snap to real world network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
   Then the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue

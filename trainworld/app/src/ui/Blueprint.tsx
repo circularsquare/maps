@@ -211,12 +211,12 @@ export function BlueprintBar() {
         )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip="Disable the selection so it will not be constructed (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
+          <button class="btn text" data-tip="Leave these out when constructing (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
           <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
         </div>
       )}
       <PickDoubleUp />
-      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
+      <button class="btn text" data-tip="Remove the selection (Delete)" onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
       <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">Clear</span></button>
       </div>
       {canLevel && levels && (

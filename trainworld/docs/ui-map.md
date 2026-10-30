@@ -24,7 +24,7 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real network**, on by default: faint lines (15% opaque in the light theme, T-727;
+Settings > Show > **Real world network**, on by default: faint lines (15% opaque in the light theme, T-727;
 30% in the dark one, in lighter colours, T-1291) where railways run in the real world, for
 reference, view only, whatever the Base map slider says [T-1291]; 40% (T-697) while the track tool snaps to them (the
 Build tab's snap switch, [ui-building.md](ui-building.md)), which also shows them with the setting off (`map/realNetwork.ts`, T-682). They sit above the basemap's

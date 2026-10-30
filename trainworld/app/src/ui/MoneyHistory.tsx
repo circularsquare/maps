@@ -108,15 +108,15 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         <span class="right">
           <Segmented<"day" | "hour">
             options={[
-              ["day", <span data-tip="Each game day, up to the past 30">Days</span>],
-              ["hour", <span data-tip="Each game hour, up to the past 48">Hours</span>],
+              ["day", <span data-tip="The last 30 game days">Days</span>],
+              ["hour", <span data-tip="The last 48 game hours">Hours</span>],
             ]}
             value={span.value}
             onChange={(v) => { span.value = v; }}
           />
         </span>
       </div>
-      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span></span><span class="right muted" data-tip={`The chart's top is ${usd(top)}`}>{usd(top)}</span></div>
+      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span></span><span class="right muted">{usd(top)}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
@@ -136,7 +136,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         {list.map((e, i) => <circle class="hist-fares dot" cx={cx(i)} cy={y1(e.fares)} r={1.6} />)}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
       </svg>
-      <div class="hist-title small"><span>Net</span><span class="right muted" data-tip={`The chart runs from ${usd(lo)} to ${usd(hi)}`}>{usd(hi)}{lo < 0 ? <> to <Money dollars={lo * 1e6} /></> : ""}</span></div>
+      <div class="hist-title small"><span>Net</span><span class="right muted">{usd(hi)}{lo < 0 ? <> to <Money dollars={lo * 1e6} /></> : ""}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={zero} y2={zero} />
         {list.map((e, i) => {
@@ -145,7 +145,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\nNet ${usd(net(e))}`} />)}
       </svg>
-      <div class="hist-title small"><span>Train rides</span><span class="right muted" data-tip={`The chart's top is ${exact(rideTop)} train rides`}>{count(rideTop)}</span></div>
+      <div class="hist-title small"><span>Train rides</span><span class="right muted">{count(rideTop)}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {

@@ -138,15 +138,15 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
     display.value = { ...display.peek(), commuters: true, commuterEnd: "work" };
     onStart(spec);
   };
-  const modeBtn = (m: GameMode, label: string, tip: string, ref?: typeof first) => (
+  const modeBtn = (m: GameMode, label: string, tip: string | undefined, ref?: typeof first) => (
     <button ref={ref} class={"btn" + (mode === m ? " on" : "")} aria-pressed={mode === m} data-mode={m} data-tip={tip} onClick={() => setMode(m)}>{label}</button>
   );
   return (
     <div class="new-game">
       {heading && <h2 class="new-game-title">New game</h2>}
       <div class="group new-game-mode">
-        {modeBtn("normal", "Normal", "Construction costs money, and an edit is refused when the cash runs short", first)}
-        {modeBtn("sandbox", "Sandbox", "Infinite money, and the cash is hidden. Fares and running costs are still counted.")}
+        {modeBtn("normal", "Normal", undefined, first)}
+        {modeBtn("sandbox", "Sandbox", "Unlimited money")}
       </div>
       <div class="new-game-where">
         <span class="start-head">Start in</span>
@@ -177,9 +177,9 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         <span class="new-game-or muted small">or</span>
         <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>Choose on map</button>
       </div>
-      {realOffered && <label class="check new-game-real" data-tip={`Start with ${city!.name}'s rail lines as they run today, built and running`}>
+      {realOffered && <label class="check new-game-real" data-tip={`Start with ${city!.name}'s real rail lines already built.`}>
         <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />
-        <span>Real network</span>
+        <span>Real world network</span>
       </label>}
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">

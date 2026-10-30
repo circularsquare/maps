@@ -86,8 +86,8 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     rows.push({
       name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
       tip: `${name} at ${names.join(" and ")}` + (ends.length ? `\nTo ${ends.join(", ")}` : ""),
-      waitTip: waiting === null ? "Nobody waiting: no train calls here this hour"
-        : `${count(waiting)} riders waiting for ${name} now` + (full ? "\nA platform is full, or the last train left riders behind" : ""),
+      waitTip: waiting === null ? "No train stops here this hour."
+        : `${count(waiting)} riders waiting for ${name}` + (full ? "\nSome were left behind by the last train." : ""),
     });
   }
   rows.sort((a, b) => b.boardings - a.boardings || a.name.localeCompare(b.name));
@@ -248,7 +248,7 @@ export function StationInspector({ id }: { id: string }) {
         </div>
       )}
       {linking.value === id && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
-      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Nothing is refunded" : ""} />}
+      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip="" />}
       <div class="h">Station upgrades</div>
       <StationUpgrades s={s} members={asComplex ? members : undefined} />
       {asComplex ? (
@@ -326,7 +326,7 @@ function StationDetails({ s, lines, props }: {
         </li>
         {s.built && m && (
           <Row label="Upkeep">
-            <span data-tip={`Each built station costs ${money(stationUpkeep(m))}/day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains per day.`}>{money(stationUpkeep(m))}/day</span>
+            <span data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>
           </Row>
         )}
       </ul>

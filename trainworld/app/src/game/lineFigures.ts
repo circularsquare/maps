@@ -6,7 +6,7 @@
 import { effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { editStamp, quietEdits, resetEdits } from "./editCap";
-import { demandUpdating, refiningZone } from "./demand";
+import { demandUpdating, refiningZone, viewRecomputing } from "./demand";
 import { demandStopped, loadProgress } from "./loading";
 import { world } from "./world";
 
@@ -31,7 +31,8 @@ export function startLineFigures() {
   effect(() => {
     // T-1790: demand that stopped will finish nothing, so it holds nothing back
     // T-1803: an update that only quiet edits started (game/editCap.ts) caps nothing
-    clock.setCapped(!demandStopped.value && ((demandUpdating.value && !quietEdits.value) || !!loadProgress.value || !!refiningZone.value));
+    // T-1851: the same rule as the status tag: lifted once the zone in view is final, other zones still solving
+    clock.setCapped(!demandStopped.value && ((demandUpdating.value && !quietEdits.value && viewRecomputing.value) || !!loadProgress.value || !!refiningZone.value));
   });
   // edits that came to nothing (refused, or no solve followed) are forgotten after a while
   effect(() => {

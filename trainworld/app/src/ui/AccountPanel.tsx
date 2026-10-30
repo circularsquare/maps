@@ -9,9 +9,8 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
-import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, signOutRemoving, tiedHere, watchMerge } from "../game/accountGames";
+import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
 import { plural } from "../game/format";
-import { clockRunning } from "../workers/clockClient";
 import { Leaderboard } from "./Leaderboard";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -94,7 +93,7 @@ function SignInForms() {
 }
 
 function SignedIn({ a }: { a: AccountView }) {
-  const [panel, setPanel] = useState<"" | "password" | "delete" | "signout">("");
+  const [panel, setPanel] = useState<"" | "password" | "delete">("");
   const open = accountOpen.value;
   useEffect(() => { if (!open) setPanel(""); }, [open]);
   const [msg, setMsg] = useState("");
@@ -127,22 +126,14 @@ function SignedIn({ a }: { a: AccountView }) {
       </div>
     </form>}
     <div class="acct-btns acct-sec">
-      <button class={"btn text" + (panel === "signout" ? " on" : "")} data-tip="Signs out of trainsworld and noritetsu in this browser" onClick={async () => {
-        // T-988: with this account's games in this browser, whether they stay is asked first
-        if (gamesOn() && await tiedHere()) { setPanel("signout"); return; }
+      <button class="btn text" data-tip="Signs out of trainsworld and noritetsu in this browser" onClick={() => {
+        // T-1851: the games stay tied to the account and sync again at the next sign-in (the "remove
+        // games" choice, `signOutRemoving` in game/accountGames.ts, is no longer offered)
         signOut();
         accountOpen.value = false;
       }}>Sign out</button>
       <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
     </div>
-    {panel === "signout" && <div class="callout acct-signout">
-      <p>Remove your games from this browser?</p>
-      <div class="acct-btns">
-        <button class="btn text acct-go" data-tip="Your games stay in this browser and sync again when you sign in" onClick={() => { signOut(); accountOpen.value = false; }}>Keep games</button>
-        <button class="btn text" data-tip={`Games saved to your account leave this browser. A game with changes not on your account yet stays.${clockRunning() ? " The game you are playing closes." : ""}`}
-          onClick={() => { setPanel(""); accountOpen.value = false; signOutRemoving(); }}>Remove games</button>
-      </div>
-    </div>}
     {panel === "delete" && <div class="callout bad">
       <p>Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>
       <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>Delete account</button><button class="btn text" onClick={() => setPanel("")}>Keep it</button></div>

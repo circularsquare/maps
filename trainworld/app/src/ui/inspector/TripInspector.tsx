@@ -219,7 +219,7 @@ function CrowdRows({ r }: { r: TripRoute }) {
   return (
     <>
       {crowding >= 0.05 && (
-        <li data-tip={`Once a train is past 70% of its crush load, riders count each minute on board as more than one, 3 at crush and 5.4 at 120%. On this route that adds ${num1(crowding)} min`}>
+        <li data-tip={`Once a train is 70% full, riders count each minute on board as more than one, 3 when full and 5.4 at 120%. On this route that adds ${num1(crowding)} min`}>
           <span class="grow">Crowding</span>
           <span class="val">{minText(crowding)}</span>
         </li>
@@ -333,7 +333,7 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
           );
         })}
         {rest >= 0.005 && (
-          <li class="muted rest" data-tip={spreadTip(t)}>
+          <li class="muted rest">
             <span class="grow">Smaller routes</span>
             <span class="val w-num">{pctShare(rest)}</span>
           </li>
@@ -349,13 +349,6 @@ function mainShare(t: TripPeriod): number {
   const main = t.routes[0];
   const label = routeLabel(stationNames(world.value!)), k = label(main);
   return main.share + t.routes.slice(1).filter((r) => label(r) === k).reduce((s, r) => s + r.share, 0);
-}
-
-/** Why no route carries most of them (T-709): the model spreads the train users over the station
- * pairs near the two ends and the useful trains at each station; routes under 0.5% are not kept. */
-function spreadTip(t: TripPeriod): string {
-  const top = t.pairs.reduce((m, p) => Math.max(m, p.share), 0);
-  return `The model spreads this trip's train users over ${t.pairs.length} ${t.pairs.length === 1 ? "pair" : "pairs"} of stations near the two ends, the busiest pair taking ${pctShare(top)}, and over the useful trains at each station. Routes under 0.5% of them are not listed.`;
 }
 
 /** How much of the trip's train riders the main route carries. */
@@ -485,7 +478,7 @@ export function TripInspector() {
             </li>
           </ul>
           {t.walkFade < 1 && <BarelyQuicker t={t} />}
-          <p class="muted small" data-tip={spreadTip(t)}>{mainNote(t, riders)}</p>
+          <p class="muted small">{mainNote(t, riders)}</p>
           <OtherRoutes t={t} riders={riders} />
         </>
       ) : <p class="muted">No route.</p>}

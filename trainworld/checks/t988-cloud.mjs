@@ -262,8 +262,7 @@ try {
   await a.waitForTimeout(1500);
   await accountPanel(a);
   await a.click('dialog.acct-panel button:has-text("Sign out")');
-  // stage 3: the account's games are in this browser, so whether they stay is asked first
-  await a.click('dialog.acct-panel .acct-signout button:has-text("Keep games")');
+  // T-1851: signing out is direct, the games stay in this browser
   await panel(a);
   // T-1395: Make a copy makes "<game> copy" at once, the slot played, with its name open for typing
   const preCopy = await state(a);
@@ -336,30 +335,12 @@ try {
   const restoredUp = await until(async () => { const l = await account(); return l.games.length === before3 + 1 && l.games.some((g) => g.name === restored?.name) ? l : null; }, 30000);
   report('account backup restored as a copy', !!restored && !!restoredUp, `(playing "${restored?.name}", account ${JSON.stringify(restoredUp?.games.map((g) => g.name))})`);
 
-  // 12. the account panel counts the account's games and the room they take; Sign out asks
+  // 12. the account panel counts the account's games and the room they take (T-1851: the sign-out
+  // question and "Remove games" are gone)
   await a.waitForTimeout(1500);
   await accountPanel(a);
   const usage = await until(() => a.locator('dialog.acct-panel .acct-games').textContent(), 15000);
-  await a.click('dialog.acct-panel button:has-text("Sign out")');
-  const outQ = await until(() => a.locator('dialog.acct-panel .acct-signout p').textContent(), 10000);
-  await shots('signout');
-  report('account panel: games and room; the sign-out question', /^\d+ games on your account · [\d.]+ MB of 64 MB$/.test(usage ?? '') && outQ === 'Remove your games from this browser?', `("${usage}", "${outQ}")`);
-
-  // 13. Remove: the page goes to the start menu, the account's games leave this browser (none is
-  // deleted from the account) and the page is signed out
-  const onAccount = (await account()).games.length;
-  await a.click('dialog.acct-panel .acct-signout button:has-text("Remove games")');
-  await a.waitForURL((u) => !/paused=1/.test(u.search) && !/slot=|load=/.test(u.search), { timeout: 60000 }).catch(() => {});
-  await a.waitForSelector('.start-menu', { timeout: 60000 });
-  const removed = await until(async () => {
-    const r = await a.evaluate(async () => ({
-      slots: (await (await import('/src/workers/saveFile.ts')).listSlots()).map((s) => ({ name: s.name, acct: s.cloud?.acct ?? null })),
-      signedIn: !!(await import('/src/game/account.ts')).session.value,
-    }));
-    return !r.signedIn && !r.slots.some((s) => s.acct) ? r : null;
-  }, 60000, 600);
-  const kept3 = (await account()).games.length;
-  report('Remove at sign-out', !!removed && kept3 === onAccount, `(slots left ${JSON.stringify(removed?.slots)}, account ${kept3} of ${onAccount})`);
+  report('account panel: games and room', /^\d+ games on your account · [\d.]+ MB of 64 MB$/.test(usage ?? ''), `("${usage}")`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 4).join(' | '));
 } catch (err) {

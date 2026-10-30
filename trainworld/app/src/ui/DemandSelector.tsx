@@ -33,7 +33,7 @@ export function DemandSelector() {
   const ready = zoomedOut.value || (!!viewedZone.value && cityDemandViews.value.has(activeCity.value));
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
-  const pending = !viewedZone.value ? "Nothing modelled here" // T-318: dead space
+  const pending = !viewedZone.value ? "Nothing modeled here" // T-318: dead space
     : load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
   const selected = d.commuters ? d.commuterEnd : "none";
   if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label="Demand on the map"><FoldCell row="bubbles" /></div>;
@@ -52,17 +52,17 @@ export function DemandSelector() {
 }
 
 const TRACK_OPTIONS = [
-  ["line", "Line", "Lines in their own colors"],
-  ["traffic", "Traffic", "Line colors, thickness by traffic"],
-  ["height", "Elevation", "Track colored by its height"],
-  ["speed", "Speed", "Track colored by the speed its trains reach, or by its speed limit where none run"],
+  ["line", "Line", "Show line colors"],
+  ["traffic", "Traffic", "Show line colors, thickness by traffic"],
+  ["height", "Elevation", "Show track elevation colors"],
+  ["speed", "Speed", "Show track speed"],
 ] as const;
 
 /** The row's icon, a button folding the row down to it and opening it again (T-1448). */
 const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   bubbles: { icon: Icon.bubble, what: "demand bubble" },
-  stations: { icon: Icon.interchange, what: "station ridership" },
-  track: { icon: Icon.track, what: "track color" },
+  stations: { icon: Icon.stationDisplay, what: "station ridership" },
+  track: { icon: Icon.trackDisplay, what: "track color" },
 };
 const folded = (row: MapRow) => display.value.foldedRows.includes(row);
 function FoldCell({ row }: { row: MapRow }) {
@@ -76,9 +76,9 @@ function FoldCell({ row }: { row: MapRow }) {
 
 const STATION_OPTIONS = [
   ["none", "None", undefined],
-  ["origins", "Origins", "Riders starting a trip at each station"],
-  ["transfers", "Transfers", "Riders changing lines at each station"],
-  ["total", "Total", "Riders at each station, blue where they start a trip and green where they change lines"],
+  ["origins", "Origins", "Show riders starting a trip at each station"],
+  ["transfers", "Transfers", "Show transfers at each station"],
+  ["total", "Total", "Show riders at each station"],
 ] as const;
 
 /** Station ridership (T-482, on the map since T-1448): circles by the riders a day boarding at each

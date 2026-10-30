@@ -1,20 +1,16 @@
-// T-349: the demand status ("Updating demand 2/4…", "Loading data", "Estimate, refining 2/4…") as a
+// T-349: the demand status ("Trips being recomputed…", "Loading data") as a
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandStep, demandUpdating, demandView, refiningZone, viewFinal, viewUpdating } from "../game/demand";
+import { demandView, viewRecomputing } from "../game/demand";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
-import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting } from "../map/commuterView";
 
 export function StatusTag() {
-  const step = demandStep.value;
-  // T-1790: a step count only where the steps are really several
-  const count = step.of > 1 ? ` ${Math.min(step.done + 1, step.of)}/${step.of}` : "";
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
   // far it has got
   const load = loadProgress.value;
@@ -32,27 +28,15 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? "Loading data…"
-    // T-1223: the zone in view shows rough figures while it is worked out in detail
-    : refiningZone.value ? `Working out ${cityById(refiningZone.value).name} in detail`
-    // T-232: figures before a solve's final round are shown only where nothing final is, and say so
-    // T-421: and the zone in view counts as final once its own cluster is, whatever else still solves
-    : !viewFinal.value ? `Estimate, refining${count}…`
-    // T-1790: any solve still running says so, the zone in view's own figures done or not, since it caps the clock
-    : demandUpdating.value ? `Updating demand${count}…` : null;
+    // T-1851: every case where the trips in view are rough, early, from before an edit or on their way
+    // say one thing; once the zone in view is final, other zones still solving show nothing
+    : viewRecomputing.value ? "Trips being recomputed…" : null;
   if (!busy) return null;
-  const tip = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
+  const base = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
-    : refiningZone.value ? `These figures are rough until ${cityById(refiningZone.value).name} is worked out in detail.`
-    : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
-    // T-328: the figures kept from the last time this game was open, while it is worked out again
-    : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
-    // T-1790: an edit's two steps, the trips it touches (local solve) and then everything (whole solve)
-    : step.of === 2 && step.done === 0 ? "Working out the trips your change touches first, then longer trips and the rest of the network."
-    : step.of === 2 && !viewUpdating.value ? "The trips your change touches are done. Now longer trips and the rest of the network."
-    : viewUpdating.value ? "These figures are for the network before your last change. They change once the new forecast is finished."
-    : "These figures are done. Demand elsewhere is still being worked out.")
-    + (clock.capped.value ? ` The clock runs at ${DEMAND_CAP}x at most until it's done.` : "");
+    : "");
+  const tip = [base, clock.capped.value ? `Clock capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
   return <div class="status-tag" role="status" data-tip={tip}>
     {!loadFailure.value && !zoneFailure && <BunnyTrain small />}
     <span class="demand-busy">{busy}</span>

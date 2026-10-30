@@ -151,7 +151,7 @@ export function Search() {
   if (!expanded)
     return (
       <div class="map-search closed">
-        <button class="btn icon search-open" aria-label="Search stations, lines and places" data-tip="Find a station, line or place (/ or Ctrl+F)"
+        <button class="btn icon search-open" aria-label="Find a place" data-tip="Find a place (/ or Ctrl+F)"
           onClick={expand}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <circle cx="5.75" cy="5.75" r="4.25" />
@@ -162,7 +162,7 @@ export function Search() {
     );
   return (
     <div class="map-search">
-      <input ref={input} type="text" value={query} placeholder="Find a station, line or place" aria-label="Search stations, lines and places"
+      <input ref={input} type="text" value={query} placeholder="Find a place" aria-label="Find a place"
         autocomplete="off" spellcheck={false} role="combobox" aria-expanded={open && !!query.trim()}
         aria-controls="map-search-results" aria-activedescendant={hits.length ? `map-search-${cur}` : undefined}
         onInput={(e) => { setQuery(e.currentTarget.value); setOpen(true); setAt(0); }}

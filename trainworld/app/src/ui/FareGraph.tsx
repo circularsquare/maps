@@ -141,7 +141,7 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
       <li>
         <span class="fr-what">Base fare</span>
         <Stepper value={usd(base)} wide label="base fare" onStep={(s) => setBase(cents(base + s * 0.25))}
-          type={{ text: base.toFixed(2), set: setBase, tip: "The fare for the shortest trip. Click to type an amount." }} />
+          type={{ text: base.toFixed(2), set: setBase, tip: "The fare for the shortest trip." }} />
         <span />
       </li>
       {stretches.map(([km, rate], j) => {
@@ -172,9 +172,9 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
             {last
               ? <span class="fr-what">Past {fromText} {unit}</span>
               : <span class="fr-what">{`${fromText} -`}<TypedValue label={`end of stretch ${i}`}
-                  type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }}>{distText(u)}</TypedValue>{unit}</span>}
+                  type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, in ${unit}` }}>{distText(u)}</TypedValue>{unit}</span>}
             <Stepper value={`+${rateText(rateU)}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
-              type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />
+              type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}.` }} />
             <span>per {unit}</span>
           </li>
         );

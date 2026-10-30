@@ -96,8 +96,8 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
   if (!(trains > 0)) return null;
   const avg = weight > 0 ? wait / weight : 0;
   const mins = avg >= 1 ? `~${Math.round(avg)} min` : waitText(avg);
-  const phrase = avg >= 0.05 ? `riders wait ${mins} for a train with room` : "riders get on the first train with room";
-  const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Riders get on the first train with room")
+  const phrase = avg >= 0.05 ? `riders wait ${mins} for a train with room` : "trains are not at capacity";
+  const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Trains are not at capacity")
     + lines.map((s) => `\n${s}`).join("");
   return { wait: avg, tip, phrase };
 }

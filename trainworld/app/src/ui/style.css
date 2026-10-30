@@ -327,6 +327,7 @@ body.resizing, body.resizing * { user-select: none; }
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .slider span { min-width: 3.6em; }
+.slider .slider-pct { flex: none; width: 4ch; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .slider input { flex: 1; min-width: 0; appearance: none; height: calc(15 * var(--px)); background: transparent; margin: 0; }
 .slider input::-webkit-slider-runnable-track { height: calc(3 * var(--px)); background: var(--rule); }
 .slider input::-moz-range-track { height: calc(3 * var(--px)); background: var(--rule); }
@@ -746,6 +747,11 @@ rect.now { fill-opacity: .45; }
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
 /* T-1835: no outline, a lighter purple */
 .hint-cell .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
+/* T-1851: the track row's icon has a yellow line along its lower right; the station row's has a small
+   blue station circle on top (the entries blue of map/stationCircles.ts) */
+.hint-cell .yline { stroke: var(--yellow); stroke-width: 1.8; }
+.hint-cell .udot { fill: color-mix(in oklab, #2456e0 45%, transparent); stroke: #2456e0; stroke-width: 1.2; }
+:root[data-shade="dark"] .hint-cell .udot { fill: color-mix(in oklab, #8aa6ff 45%, transparent); stroke: #8aa6ff; }
 /* T-1448: the icon cell is a button folding its row down to it */
 .demand-selector button.hint-cell { padding: 0; font: inherit; cursor: pointer; }
 .demand-selector button.hint-cell:hover { background: var(--shade); }

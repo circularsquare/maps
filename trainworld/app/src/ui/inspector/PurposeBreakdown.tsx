@@ -75,7 +75,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const all = rows?.reduce((a,p) => a+p.total,0) ?? 0;
   /** what a purpose covers */
   const coverage = (name: string): string | undefined =>
-    /^(school|university)/i.test(name) ? "Matched public schools and degree-granting colleges across the metro area. Private schools and exclusively online or nondegree students are not included. Homes, campus locations and typical-day attendance are estimated."
+    /^(school|university)/i.test(name) ? "Colleges and public schools. Home locations are estimates."
     : /^airport/i.test(name) ? "Air passengers to and from the metro area's commercial airports, not connecting passengers or airport staff. For an arriving passenger, the trip from the airport counts as the return. Homes and hotels at the other end are estimated."
     : /^medical/i.test(name) ? "Patients and visitors at hospitals, clinics, doctors and dentists mapped in OpenStreetMap. Each place's share of visits is estimated from its size."
     : /^attraction/i.test(name) ? "Visitors to museums, zoos, theme parks, temples, castles and other attractions in Wikidata. Visitors a year are Wikidata's figure, or estimated from how many Wikipedia languages write about the place. Homes and hotels at the other end are estimated."
@@ -86,7 +86,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const airport = purposes?.some(p => /^airport/i.test(p.name));
   const medical = purposes?.some(p => /^medical/i.test(p.name));
   const missing = [!school && "school attendance", !university && "university attendance", !airport && "airport passengers", !medical && "medical visits"].filter((s): s is string => !!s);
-  const missingText = missing.length ? `${andList(missing)} ${missing.length > 1 ? "are" : "is"} not modelled here.` : "";
+  const missingText = missing.length ? `${andList(missing)} ${missing.length > 1 ? "are" : "is"} not modeled here.` : "";
   const unit = railOnly ? "train trip legs" : "trip legs";
   return <>
     <div class="h"><span data-tip={missingText ? capitalise(missingText) : undefined}>Trip purposes</span></div>

@@ -429,7 +429,7 @@ the Build tab's quote has rows for bus routes and new buses.
   alighting share at that stop in the period it arrives in, as the account lets them off; everyone
   at the end of the line. The row's hover: "61 of the 1,440 riders aboard get off at Grand St, and
   40 get on". The list moves on at each stop and the minutes each game minute.
-- **One rider** [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
+- **Random rider** (heading; "One rider" until T-1851) [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
   riders are aboard, one rider drawn from them, with two icon buttons in its heading (Pick another
   rider, Open this trip in the trip explorer). The account holds no per-rider data, so the draw
   follows how it lets people on and off: where the rider got on is a stop at or behind the train,
@@ -522,7 +522,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   header, above all rows and lists. A station has, in station view, Construct station (a blueprint
   only) and Remove station in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
-  icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
+  icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof) and
   passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
   passage, the first two for every station of the complex at once [T-1528]: built at all of them or
   none, a complex where only some have it shows as not built and a click builds it at the rest,

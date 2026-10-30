@@ -182,11 +182,11 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     const rows = at.get(s.id) ?? [];
     if (!rows.length) return `${text}\nNo line stops here`;
     for (const r of rows) {
-      text += `\n${r.line.name}` + (r.known ? `: ${count(r.boardings)} boardings, ${count(r.riders)} riders on its trains here per day` : "");
+      text += `\n${r.line.name}` + (r.known ? `\n${count(r.boardings)} boardings per day\n${count(r.riders)} riders on its trains here per day` : "");
       const m = partners.get(strokeKey(s.id, r.line.id));
       if (m) {
         const top = [...m].sort((x, y) => y[1] - x[1]);
-        text += `, ${count(top.reduce((a, [, v]) => a + v, 0))} change to or from other lines, most with ` +
+        text += `\n${count(top.reduce((a, [, v]) => a + v, 0))} change lines, most to ` +
           top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ");
       }
     }

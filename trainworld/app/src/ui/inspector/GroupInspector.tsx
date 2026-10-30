@@ -184,7 +184,7 @@ export function GroupInspector({ group }: { group: number }) {
   return (
     <>
       <div class="title" data-group-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, bullet and color (double click also opens it)" aria-label="Edit the name, bullet and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
         <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>
           <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(ls.flatMap((l) => l.stops))}>

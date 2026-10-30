@@ -73,7 +73,7 @@ function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineI
   if (!demandView.value || own === null || !loads || loads.length !== 2 * (n - 1) || trains <= 0)
     return (
       <ul class="rows">
-        <Row label="Riders aboard">
+        <Row label="Riders on board">
           {/* the train is drawn striped while the riders are being worked out */}
           <span class="muted">{loadFailure.value ? "Not available" : "Calculating"}</span>
         </Row>
@@ -100,18 +100,17 @@ function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineI
         <span data-tip={`Counted ${bus ? "bus" : "train"} by ${bus ? "bus" : "train"} from the demand forecast: riders board at the forecast's rate until the ${bus ? "bus" : "train"} is full`}>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
       </div>
       <ul class="rows">
-        <Row label="Riders aboard" bold>{exact(aboard)}</Row>
+        <Row label="Riders on board" bold>{exact(aboard)}</Row>
         <Row label="Typical train this hour">{exact(average)}</Row>
         <li>
           <span class="grow">
-            <span class="board-bar" data-tip={`${exact(aboard)} riders aboard. The bar is full at ${exact(crush)} riders, and the tick marks the ${exact(seats)} seats.`}>
+            <span class="board-bar" data-tip={`${exact(aboard)}/${exact(crush)} riders on board`}>
               <i class="fill" style={{ width: Math.min(100, (aboard / crush) * 100) + "%" }} />
               <i class="seats" style={{ left: (seats / crush) * 100 + "%" }} />
             </span>
           </span>
           <span class="val">{state}</span>
         </li>
-        <Row label="Seats">{exact(seats)}</Row>
         <Row label="Full at">{exact(crush)}</Row>
       </ul>
       {!atEnd && dm && <TrainStops line={line} dm={dm} board={b} trip={i} run={run} seg={seg} stopS={stopS} profile={profile} dep={dep} />}

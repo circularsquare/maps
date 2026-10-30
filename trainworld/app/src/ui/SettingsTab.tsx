@@ -3,7 +3,7 @@
 
 import type { ComponentChildren } from "preact";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
-import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { ask, display, DRIVES_FEATURE, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
@@ -46,11 +46,11 @@ export function SettingsTab() {
         {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>
       <div class="h">Demand bubbles</div>
-      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.bubbleSize} tip={`Bubbles at ${Math.round(d.bubbleSize * 100)}% of their usual size`} set={(v) => setDisplay("bubbleSize", v)} />
-      <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} tip={`Bubbles at ${Math.round(d.bubbleOpacity * 100)}% of their full opacity`} set={(v) => setDisplay("bubbleOpacity", v)} />
+      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.bubbleSize} percent set={(v) => setDisplay("bubbleSize", v)} />
+      <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} percent set={(v) => setDisplay("bubbleOpacity", v)} />
       {/* finer bubbles are more and smaller ones, at the same area per trip */}
       <Slider label="Detail" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step={1} value={d.bubbleDetail}
-        tip="How many bubbles are aggregated together" set={(v) => setDisplay("bubbleDetail", v)} />
+        tip="How many nearby bubbles merge into one" set={(v) => setDisplay("bubbleDetail", v)} />
       {/* the bubbles' colours; bars and swatches by mode keep the mode colours */}
       <div class="slider">
         <span>Colors</span>
@@ -69,7 +69,7 @@ export function SettingsTab() {
         </div>
       )}
       <div class="h">Station circles</div>
-      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} set={(v) => setDisplay("stationCircleSize", v)} />
+      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} percent set={(v) => setDisplay("stationCircleSize", v)} />
       {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
       <div class="slider" data-tip="Which day demand figures are shown for">
         <span>Day</span>
@@ -90,25 +90,25 @@ export function SettingsTab() {
           Station names
         </Check>
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>
-          <span data-tip="Marks where stations or track cannot smoothly handle scheduled train frequencies">Track at capacity</span>
+          <span data-tip="Places where track or stations can't fit the trains scheduled">Track at capacity</span>
         </Check>
         <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
-          <span data-tip="Marks where trains are full and passengers cannot board">Trains at capacity</span>
+          <span data-tip="Places where trains are full and riders can't board">Trains at capacity</span>
         </Check>
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           Flat junctions and crossings
         </Check>
-        <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
-          <span data-tip="Show arcs for common driving trips">Drives</span>
-        </Check>
+        {DRIVES_FEATURE && <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
+          Drives
+        </Check>}
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
         </Check>
         <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
-          <span data-tip="Draw real-world railways on the base map">Real network</span>
+          Real world network
         </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
-          <span data-tip="Construction is more expensive in steep terrain">Terrain</span>
+          <span data-tip="Steep ground costs more to build on.">Terrain</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>
@@ -129,13 +129,13 @@ export function SettingsTab() {
           Sound
         </Check>
       </div>
-      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`All sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
+      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} percent set={(v) => setDisplay("soundVolume", v)} />}
       <div class="h">Map</div>
       <div class="stack">
         <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />
       </div>
-      <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} set={(v) => setDisplay("lineWidth", v)} />
-      <Slider label="Base map" min={0} max={1} step={0.05} value={d.basemapContrast}
+      <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} percent set={(v) => setDisplay("lineWidth", v)} />
+      <Slider label="Base map" min={0} max={1} step={0.05} value={d.basemapContrast} percent
         tip="Base map contrast" set={(v) => setDisplay("basemapContrast", v)} />
       <div class="h">Theme</div>
       <div class="stack">
@@ -146,13 +146,13 @@ export function SettingsTab() {
       <div class="h">Units and performance</div>
       <div class="checks">
         <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>
-          <span data-tip="Miles, mph and feet. Off shows kilometers, km/h and meters.">US units</span>
+          US units
         </Check>
         <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
-          <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Takes effect after a reload.">Use more cores</span>
+          <span data-tip="Runs up to 5 demand workers, each using about 400 MB of memory. Reload to apply.">Use more cores</span>
         </Check>
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
-          <span data-tip="The clock, fares and running costs carry on at the chosen speed while this tab is hidden. Off, the game pauses until the tab is shown again.">Run in background</span>
+          Run in background
         </Check>
       </div>
       <div class="slider" data-tip="Show fewer roads and other details">
@@ -169,11 +169,13 @@ export function SettingsTab() {
 }
 
 /** A labelled range input. */
-function Slider({ label, min, max, step, value, tip, set }: { label: string; min: number; max: number; step: number; value: number; tip?: string; set: (v: number) => void }) {
+function Slider({ label, min, max, step, value, tip, percent, set }: { label: string; min: number; max: number; step: number; value: number; tip?: string; percent?: boolean; set: (v: number) => void }) {
   return (
     <label class="slider">
       <span>{label}</span>
       <input type="range" min={min} max={max} step={step} value={value} data-tip={tip} onInput={(e) => set(Number((e.target as HTMLInputElement).value))} />
+      {/* T-1851: the value in a fixed-width tabular figure, so the bar never changes length while dragging */}
+      <span class="slider-pct">{percent ? `${Math.round(value * 100)}%` : ""}</span>
     </label>
   );
 }
@@ -187,7 +189,7 @@ function GameMode() {
     <>
       <div class="h">Game</div>
       <div class="game-mode">
-        <span data-tip={sandbox ? "Infinite money, and the cash is hidden" : "Construction costs money, and an edit is refused when the cash runs short"}>{sandbox ? "Sandbox" : "Normal"}</span>
+        <span data-tip={sandbox ? "Unlimited money" : undefined}>{sandbox ? "Sandbox" : "Normal"}</span>
         {!sandbox && <button class="btn text" data-mode-switch onClick={() => (ask.value = {
           text: "Money cannot be turned back on in this game.",
           yes: "Switch to sandbox mode", no: "Stay in normal mode", run: makeSandbox,
@@ -216,7 +218,7 @@ function UiScale() {
   return (
     <>
       <div class="h">Panel and text size</div>
-      <Stepper wide label="panel and text size" value={<span data-tip={`Panels and text at ${pct}% of their usual size`}>{pct}%</span>} onStep={step} />
+      <Stepper wide label="panel and text size" value={<span>{pct}%</span>} onStep={step} />
     </>
   );
 }

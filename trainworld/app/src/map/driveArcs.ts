@@ -13,7 +13,9 @@ import { ARC, trainGain, corridorDriveMin, type DriveLevel } from "../game/drive
 import { forecast } from "../game/format";
 import { EARTH_R, M_PER_DEG, M_PER_DEG_LAT } from "../game/frame";
 import { loadPlacesAt, places } from "../game/placeList";
-import { display, shade, shownDay, shownDayPhrase, stopEditing } from "../game/ui";
+import { display, DRIVES_FEATURE, shade, shownDay, shownDayPhrase, stopEditing } from "../game/ui";
+
+const drivesOn = () => DRIVES_FEATURE && display.value.drives;
 import { addFinder } from "./demandHover";
 import { kAtLat, pxPerUnitAt, toLocal } from "./geo";
 import { sizeCanvasLike } from "./gl";
@@ -126,7 +128,7 @@ export class DriveArcs {
     // the place lists name the arcs' ends; loaded for the view when it is on
     map.on("moveend", () => this.loadNames());
     effect(() => {
-      const on = display.value.drives;
+      const on = drivesOn();
       const dv = demandView.value;
       const city = activeCity.value;
       shownDay.value;
@@ -148,7 +150,7 @@ export class DriveArcs {
     });
     effect(() => {
       const r = intercityDemand.value;
-      this.corridors = display.value.drives && r ? corridorArcs(r.corridors) : null;
+      this.corridors = drivesOn() && r ? corridorArcs(r.corridors) : null;
       this.invalidate();
     });
     effect(() => {
@@ -167,7 +169,7 @@ export class DriveArcs {
   }
 
   private loadNames() {
-    if (!display.peek().drives || this.map.getZoom() <= OVERVIEW_ZOOM) return;
+    if (!drivesOn() || this.map.getZoom() <= OVERVIEW_ZOOM) return;
     const c = this.map.getCenter();
     void loadPlacesAt(c.lng, c.lat).catch(() => undefined);
   }
@@ -199,7 +201,7 @@ export class DriveArcs {
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.placed = [];
     const zoom = this.map.getZoom();
-    if (!display.peek().drives || stopEditing.peek() || zoom < CITY_MARKS_MIN_ZOOM || !this.overlay.cam) return;
+    if (!drivesOn() || stopEditing.peek() || zoom < CITY_MARKS_MIN_ZOOM || !this.overlay.cam) return;
     let arcs: Float64Array | null = null, pl: Int32Array | null = null, gap = CORRIDOR_GAP_PX;
     if (zoom <= OVERVIEW_ZOOM) {
       arcs = this.corridors?.arcs ?? null;

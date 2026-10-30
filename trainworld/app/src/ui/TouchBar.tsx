@@ -17,7 +17,7 @@ export function TouchBar() {
         {ctl.confirm !== null && (
           <button class="btn icon tb ok" disabled={!ctl.confirm} data-tip={ctl.confirmTip} aria-label={ctl.confirmTip} onClick={() => touchActions.confirm()}><Icon.check /></button>
         )}
-        {ctl.back && <button class="btn icon tb back" data-tip="Take back the last point" aria-label="Take back the last point" onClick={() => touchActions.back()}><Icon.undo /></button>}
+        {ctl.back && <button class="btn icon tb back" data-tip="Undo the last point" aria-label="Undo the last point" onClick={() => touchActions.back()}><Icon.undo /></button>}
         <button class="btn icon tb stop" data-tip={ctl.stopTip} aria-label={ctl.stopTip} onClick={() => touchActions.stop()}><Icon.cross /></button>
       </div>
     </div>

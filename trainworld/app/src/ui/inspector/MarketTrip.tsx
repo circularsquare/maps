@@ -287,14 +287,14 @@ function Legs({ t, r }: { t: MarketPeriod; r: TripRoute }) {
   return (
     <ul class="rows trip-legs">
       {pair && first && (
-        <li data-tip={`On foot or by car, felt as ${num1(pair.accessPerceived)} min on average over the homes at this end`}>
+        <li data-tip={`On foot or by car, effective time ${num1(pair.accessPerceived)} min on average over the homes at this end`}>
           <span class="grow">To {name(first.from)}</span>
           <span class="val muted">{minText(pair.accessPerceived)}</span>
         </li>
       )}
       {legRows(r, name, ln, (l) => { const v = w.lineStats[l.line]?.bus ? "bus" : "train"; return `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful ${v}s), then ${l.min.toFixed(1)} min on the ${v} over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`; })}
       {pair && last && (
-        <li data-tip={`On foot or dropped off, felt as ${num1(pair.egressPerceived)} min on average over the places at this end`}>
+        <li data-tip={`On foot or dropped off, effective time ${num1(pair.egressPerceived)} min on average over the places at this end`}>
           <span class="grow">From {name(last.to)}</span>
           <span class="val muted">{minText(pair.egressPerceived)}</span>
         </li>
@@ -326,7 +326,7 @@ function OtherRoutes({ t, shown, riders }: { t: MarketPeriod; shown: number[]; r
           );
         })}
         {rest >= 0.005 && (
-          <li class="muted" data-tip={`The train trips spread over ${t.pairs.length} pairs of stations near the two ends. Routes under 0.5% of them are not listed.`}>
+          <li class="muted">
             <span class="grow">Smaller routes</span>
             <span class="val w-num">{pctShare(rest)}</span>
           </li>

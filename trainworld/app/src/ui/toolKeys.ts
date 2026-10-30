@@ -12,7 +12,7 @@ export const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
   ["track", "Track", Icon.track, "1", "Draw track"],
   ["station", "Station", Icon.station, "2", "Place stations"],
   ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
-  ["blueprint", "Select", Icon.marquee, "4", "Drag a box round track and stations to select several\nDouble click track to select it out to the junctions\nShift+click track to add the track on the way there"],
+  ["blueprint", "Select", Icon.marquee, "4", "Drag to select track and stations.\nDouble click track to select out to the nearest junctions.\nShift+click to add to selection."],
 ];
 
 /** The tool each number key picks (T-096). */

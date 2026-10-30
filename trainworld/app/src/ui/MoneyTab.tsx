@@ -97,7 +97,7 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
     <li>
       <span class="fr-what" data-tip={`Set fare multiplier for ${name}`}>{`${name} fares`}</span>
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}. Click to type one.` }} />
+        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}.` }} />
       {own
         ? <button class="btn icon" aria-label="Back to the income's scale" data-tip={`Back to ${text(income)}, the scale by income`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
         : <span />}
@@ -112,9 +112,9 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
-      <span class="fr-what" data-tip={`Rides on high-speed lines pay ${text(mul)} the fare above the base fare. A trip that changes lines pays it only on its high-speed km.`}>High speed</span>
+      <span class="fr-what" data-tip="Fare multiple for rides on high speed lines.">High speed</span>
       <Stepper value={text(mul)} wide label="high-speed fare" onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
-        type={{ text: mul.toFixed(2), set, tip: "Fares on high-speed lines as a multiple of the others. Click to type one." }} />
+        type={{ text: mul.toFixed(2), set, tip: "Fare multiple for rides on high speed lines." }} />
       {own
         ? <button class="btn icon" aria-label="Back to the usual multiple" data-tip={`Back to ${text(HSR_FARE)}`} onClick={() => set(HSR_FARE)}><Icon.undo /></button>
         : <span />}
@@ -131,7 +131,7 @@ function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
     <li>
       <span class="fr-what">Transfer fare</span>
       <Stepper value={`$${shown.toFixed(2)}`} wide label="transfer fare" onStep={(d) => set(Math.round(shown * 100) / 100 + d * 0.25)}
-        type={{ text: shown.toFixed(2), set, tip: "Paid each time a trip changes lines. Click to type an amount." }} />
+        type={{ text: shown.toFixed(2), set, tip: "Paid each time a trip changes lines." }} />
       <span />
     </li>
   );
@@ -144,14 +144,13 @@ function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: num
   if (!e) return null;
   const dr = e.riders / e.ridersNow - 1, df = e.fares - e.faresNow;
   const pct = Math.round(100 * dr);
-  const count = (v: number) => (Math.round(v / 1e4) * 1e4).toLocaleString("en-US");
   return (
     <ul class="rows">
       <Row label="Riders per day">
-        <span data-tip={`About ${count(e.riders)} at these fares, ${count(e.ridersNow)} now. A guess until demand catches up.`}>{pct > 0 ? "+" : pct < 0 ? "−" : ""}{Math.abs(pct)}%</span>
+        <span data-tip="Estimated impact of fare change">{pct > 0 ? "+" : pct < 0 ? "−" : ""}{Math.abs(pct)}%</span>
       </Row>
       <Row label="Fares per day">
-        <span data-tip={`About ${money(e.fares)} at these fares, ${money(e.faresNow)} now. A guess until demand catches up.`}>{df > 0 ? "+" : ""}<Money dollars={df} /></span>
+        <span data-tip="Estimated impact of fare change">{df > 0 ? "+" : ""}<Money dollars={df} /></span>
       </Row>
     </ul>
   );
@@ -240,14 +239,14 @@ export function MoneyTab() {
       <MoneyHistory zone={zone} />
       <div class="h">Trains</div>
       <ul class="rows">
-        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>
+        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}.`}>Cars owned</span>}>
           <span data-tip={`${m.fleet.toLocaleString("en-US")} cars bought at ${money(m.carPrice * 1e6)} each, ${money(m.fleet * m.carPrice * 1e6)} in all`}>{m.fleet}</span>
         </Row>
         <Row label="Cars the lines need">
-          <span data-tip="Cars on the running lines at the demand level that needs most">{m.carsNeeded}</span>
+          {m.carsNeeded}
         </Row>
         <Row label="Spare cars">
-          <span data-tip="Cars kept in the depot after a line shrank. A line that grows uses them before any are bought.">{Math.max(0, m.fleet - m.carsNeeded)}</span>
+          {Math.max(0, m.fleet - m.carsNeeded)}
         </Row>
         {(m.fleetFast > 0 || m.carsNeededFast > 0) && (
           <>
@@ -255,20 +254,20 @@ export function MoneyTab() {
               <span data-tip={`${m.carsNeededFast.toLocaleString("en-US")} on the running lines`}>{m.fleetFast}</span>
             </Row>
             <Row label="Spare high-speed cars">
-              <span data-tip="High-speed cars kept in the depot. A line with high-speed trains uses them before any are bought.">{Math.max(0, m.fleetFast - m.carsNeededFast)}</span>
+              {Math.max(0, m.fleetFast - m.carsNeededFast)}
             </Row>
           </>
         )}
         {(m.fleetBus > 0 || m.busesNeeded > 0) && (
           <>
-            <Row label={<span data-tip={`A bus costs ${money(m.busPrice * 1e6)}. Running costs ${busRunRule(m)}. A route costs ${busRouteRule(m)} to construct. Buses are bought when a line needs more than the spare ones.`}>Buses owned</span>}>
+            <Row label={<span data-tip={`A bus costs ${money(m.busPrice * 1e6)}. Running costs ${busRunRule(m)}. A route costs ${busRouteRule(m)} to construct.`}>Buses owned</span>}>
               <span data-tip={`${busesText(m.fleetBus)} bought at ${money(m.busPrice * 1e6)} each, ${money(m.fleetBus * m.busPrice * 1e6)} in all`}>{m.fleetBus}</span>
             </Row>
             <Row label="Buses the lines need">
-              <span data-tip="Buses on the running lines at the demand level that needs most">{m.busesNeeded}</span>
+              {m.busesNeeded}
             </Row>
             <Row label="Spare buses">
-              <span data-tip="Buses kept in the depot after a line shrank. A line that grows uses them before any are bought.">{Math.max(0, m.fleetBus - m.busesNeeded)}</span>
+              {Math.max(0, m.fleetBus - m.busesNeeded)}
             </Row>
           </>
         )}

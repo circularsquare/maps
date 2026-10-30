@@ -80,7 +80,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         {distance(e.lengthM)}, {lv}
       </div>
       <ConstructRemove built={e.built} construct={construct} constructLabel={`Construct for ${money(cost)}`} remove={remove}
-        removeLabel={e.crossover ? "Remove crossover" : e.built ? "Remove track" : "Remove blueprint"} removeTip={e.built ? "Nothing is refunded" : ""} />
+        removeLabel={e.crossover ? "Remove crossover" : e.built ? "Remove track" : "Remove blueprint"} removeTip="" />
       <Built built={e.built} />
       {!e.built && e.off && <p class="muted" data-tip="Will not be constructed unless enabled">Disabled</p>}
       <ul class="rows">

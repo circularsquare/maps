@@ -19,10 +19,23 @@ export const tipBullet = (letter: string, colour: string) => `\u0002${letter.rep
 /** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
  * "Keep placing (Caps Lock)", is lettered in the one hotkey colour (`--key`). */
 const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
+/** T-1851: a negative amount of money in a hover ("−$1.2M", the minus `money()` writes) is red, as in the panels. */
+const NEG_MONEY = /(−\$[\d.,]+[KMBT]?)/;
+function appendText(d: HTMLElement, text: string) {
+  const parts = text.split(NEG_MONEY);
+  for (let i = 0; i < parts.length; i++) {
+    if (!parts[i]) continue;
+    if (i % 2 === 0) { d.append(parts[i]); continue; }
+    const s = document.createElement("span");
+    s.className = "money-neg";
+    s.textContent = parts[i];
+    d.append(s);
+  }
+}
 function appendWithKeys(d: HTMLElement, text: string) {
   const parts = text.split(KEY_HINT);
   for (let i = 0; i < parts.length; i++) {
-    if (i % 2 === 0) { if (parts[i]) d.append(parts[i]); continue; }
+    if (i % 2 === 0) { appendText(d, parts[i]); continue; }
     const k = document.createElement("span");
     k.className = "tip-key";
     k.textContent = parts[i];

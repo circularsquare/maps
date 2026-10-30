@@ -90,7 +90,7 @@ function startWatchdog() {
     if (now - Math.max(from, lastAlive()) < limit) return;
     const m = Math.round(limit / 60_000), mins = m >= 1 ? `${m} minute${m === 1 ? "" : "s"}` : `${Math.round(limit / 1000)} seconds`;
     const started = !!world.peek();
-    loadCannotFinish(started ? `No demand figures arrived in ${mins}.` : `No answer came from the train simulation in ${mins}.`, !started);
+    loadCannotFinish(started ? `Demand figures did not load after ${mins}.` : `The train simulation did not answer after ${mins}.`, !started);
   }, WATCH_MS);
   window.addEventListener("error", (e) => {
     if (!setupFinished) loadCannotFinish(`The page stopped while starting (${e.error instanceof Error ? e.error.message : e.message}).`, true);

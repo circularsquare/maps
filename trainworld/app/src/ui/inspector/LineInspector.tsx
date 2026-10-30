@@ -5,8 +5,8 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { Money } from "../MoneyText";
-import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
+import { lineMoneyTip, Money } from "../MoneyText";
+import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainKind, trainRunCost } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
@@ -213,35 +213,32 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
     return (
       <>
         <div class="h divided"><span>Past 24 hours</span></div>
-        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Riders are being worked out for the change">constructing...</span></Row></ul>
+        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">constructing...</span></Row></ul>
       </>
     );
   }
   const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
-  const m = moneyState.value;
-  const k = m && trainKind(m, st.fast);
-  const rule = k ? `\nRunning costs ${runCostRule(k)}: ${trainRunCost(k, st.cars)} for this line's ${carsText(st.cars)}` : "";
   return (
     <>
       <div class="h divided">
-        <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 hours</span>
+        <span>Past 24 hours</span>
       </div>
       <ul class="rows">
-        <Row label="Riders">{pending ? <span class="muted" data-tip="Riders are being worked out for the change">constructing...</span> : count(d.riders)}</Row>
+        <Row label="Riders">{pending ? <span class="muted" data-tip="Calculating riders after your change">constructing...</span> : count(d.riders)}</Row>
         {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
-        <li data-tip={`Profit in the past 24 hours: ${money(d.fares - run - st.upkeep)}, fares minus running trains and upkeep\nFares ${money(d.fares)}\nRunning trains ${money(-run)}\nUpkeep ${money(-st.upkeep)}${rule}\nUpkeep of track and stations several lines use is shared by their trains per day.`}>
+        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, false)}>
           <span class="grow">Profit</span>
           <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
         </li>
         {load !== null && (
-          <li data-tip={`Riders aboard on average, as a share of the ${(st.cars * CRUSH_PER_CAR).toLocaleString("en-US")} a train holds at crush, over every trip on a ${DAY_KIND_NAME[kind].toLowerCase()}. Each trip counts for as long as it runs.`}>
+          <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase()} load over the entire line`}>
             <span class="grow">Average load</span>
             <span class="val">{Math.round(load * 100)}%</span>
           </li>
         )}
-        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-        <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left at the platform by a full one`}>
+        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        <li data-tip={`${count(d.leftBehind)}/${count(d.riders + d.leftBehind)} riders were left behind.`}>
           <span class="grow">Riders left at platform</span>
           <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
         </li>
@@ -621,7 +618,7 @@ const NO_LIMITS: (Limit | null)[] = [null, null, null];
 function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
   const c = scheduleCopy.value;
   const fit = carsCap(l);
-  const cut = c && fit && c.cars > fit.cap ? `\nTrains of ${carsText(fit.cap)} here: the platform at ${fit.name} fits no more` : "";
+  const cut = c && fit && c.cars > fit.cap ? `\nThe platform at ${fit.name} is too short for ${carsText(c.cars)}. Trains here stay at ${carsText(fit.cap)}.` : "";
   return (
     <span class="sched-copy">
       <button class="btn icon mini" aria-label="Copy the schedule" data-tip={`Copy the schedule: ${scheduleText(scheduleOf(l, st))}`}
@@ -892,7 +889,7 @@ function RailLineInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title" data-line-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and color (double click also opens it)" aria-label="Edit the name, symbol and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
           control={{ open: editing, set: setEditing }}>
@@ -935,8 +932,8 @@ function RailLineInspector({ id }: { id: string }) {
           <span class="right">
             <Segmented<boolean>
               options={[
-                [false, <span data-tip="Set the number of trains on the line for each demand level">Trains</span>],
-                [true, <span data-tip="Set the headway for each demand level. The line runs the fewest trains that keep it over the round trip, and works them out again when the line or its track changes.">Headway</span>],
+                [false, "Trains"],
+                [true, "Headway"],
               ]}
               value={auto !== null}
               onChange={(v) => setAutoTrains(l.id, v)}
@@ -952,7 +949,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

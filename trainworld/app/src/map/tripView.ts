@@ -582,11 +582,11 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     // T-865: an averaged trip's pair walks from its own cells
     const start = pair?.from ? packLocal(pair.from) : from, end = pair?.to ? packLocal(pair.to) : to;
     if (a && pair) out.parts.push({ pts: [start, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [`To ${name(first.from)}`, `On foot or by car, felt as ${minutes(pair.accessPerceived)} on average over the area`]
+      ? [`To ${name(first.from)}`, `On foot or by car, effective time ${minutes(pair.accessPerceived)} on average over the area`]
       : [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, pair.accessRide ? "Straight-line distance from the homes near here" : "Straight-line distance from this home"] });
     for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track, !!w.lineStats[l.line]?.bus));
     if (b && pair) out.parts.push({ pts: [b, end], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [`From ${name(last.to)}`, `On foot or dropped off, felt as ${minutes(pair.egressPerceived)} on average over the area`]
+      ? [`From ${name(last.to)}`, `On foot or dropped off, effective time ${minutes(pair.egressPerceived)} on average over the area`]
       : [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance to this place"] });
     if (main) {
       for (const l of legs) {
@@ -615,7 +615,7 @@ function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Ma
     pts, colour: line?.colour ?? NET_INK, width, dash: false, alpha,
     tip: [
       `${line?.name ?? "A line"} from ${name(l.from)} to ${name(l.to)}`,
-      `${count(l.stops)} ${l.stops === 1 ? "stop" : "stops"}, ${minutes(l.min)} on the ${bus ? "bus" : "train"} after a ${minutes(l.waitMin)} wait${crowd >= 0.5 ? `; crowding makes it feel ${minutes(l.perceived)}` : ""}`,
+      `${count(l.stops)} ${l.stops === 1 ? "stop" : "stops"}, ${minutes(l.min)} on the ${bus ? "bus" : "train"} after a ${minutes(l.waitMin)} wait${crowd >= 0.5 ? `; effective time ${minutes(l.perceived)} with crowding` : ""}`,
       share,
     ],
   };

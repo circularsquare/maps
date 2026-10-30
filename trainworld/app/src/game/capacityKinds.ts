@@ -60,4 +60,4 @@ export function fullTip(kind: number, most: number): string {
 export const heldText = (wait: number) => (Math.round(wait) > 1 ? `${count(Math.round(wait))} trains` : "1 train") + " held out of service";
 
 /** What holding them means, for the hover. */
-export const heldTip = "These trains wait at the ends of the line instead of running, because no more trains an hour fit through the full spot.";
+export const heldTip = "Some trains wait at the ends of the line because the track is full.";

@@ -7,7 +7,8 @@ import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { busesText, busRunRule, count, distance, headway, money, plural, speed } from "../../game/format";
+import { lineMoneyTip } from "../MoneyText";
+import { busesText, count, distance, headway, money, plural, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { runningToday, today, useToday } from "../../game/today";
@@ -169,7 +170,7 @@ function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand
       </>
     );
   }
-  const typeTip = "Click to type a headway in minutes. 0 is no service.";
+  const typeTip = "Headway in minutes. 0 is no service.";
   return (
     <>
       <td>
@@ -244,8 +245,6 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
   if (!d) return null;
   const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
-  const m = moneyState.value;
-  const rule = m ? `\nRunning costs ${busRunRule(m)}` : "";
   return (
     <>
       <div class="h divided">
@@ -262,17 +261,17 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
             <span class="val">{count(changing)}</span>
           </li>
         )}
-        <li data-tip={`Fares ${money(d.fares)} minus running cost ${money(run)} for the buses and upkeep of its route ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}`}>
+        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, true)}>
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
         {load !== null && (
-          <li data-tip={`Riders aboard on average, as a share of the ${BUS_CRUSH} a bus holds at crush, over every trip on a ${["weekday", "Saturday", "Sunday", "holiday"][kind] ?? "day"}`}>
+          <li data-tip={`Average ${["weekday", "Saturday", "Sunday", "holiday"][kind] ?? "day"} load over the entire line`}>
             <span class="grow">Average load</span>
             <span class="val">{Math.round(load * 100)}%</span>
           </li>
         )}
-        {d.fullTrains > 0 && <Row label="Buses leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} buses left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        {d.fullTrains > 0 && <Row label="Buses leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} buses departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
       </ul>
     </>
   );
@@ -364,7 +363,7 @@ export function BusInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title" data-line-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and color (double click also opens it)" aria-label="Edit the name, symbol and colour"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
           control={{ open: editing, set: setEditing }}>
@@ -401,8 +400,8 @@ export function BusInspector({ id }: { id: string }) {
         <span class="right">
           <Segmented<boolean>
             options={[
-              [false, <span data-tip="Set the number of buses on the line for each demand level">Buses</span>],
-              [true, <span data-tip="Set the headway for each demand level. The line runs the fewest buses that keep it over the round trip.">Headway</span>],
+              [false, "Buses"],
+              [true, "Headway"],
             ]}
             value={auto !== null}
             onChange={(v) => setAutoTrains(l.id, v)}
@@ -417,7 +416,7 @@ export function BusInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && demandPending.value && <Spinner class="row-dot" tip="Figures appear when demand has loaded" />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} />
           </tr>
         ))}

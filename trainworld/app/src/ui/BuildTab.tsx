@@ -53,10 +53,10 @@ export function BuildTab() {
             ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
           </p>
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
-            data-tip="Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps don't fit, the crossing is flat."
+            data-tip="Automatically try to ramp over crossed tracks at the same elevation."
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
-            data-tip="Show terrain. Construction is more expensive in steep terrain."
+            data-tip="Steep ground costs more to build on."
             onClick={() => setDisplay("hillshade", !display.peek().hillshade)}><Icon.terrain /></button>
         </div>
         <div class="h">Track</div>
@@ -66,8 +66,8 @@ export function BuildTab() {
           <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label="Keep placing track" aria-pressed={keepPlacing.value}
             data-tip="Keep placing track after a click (Caps Lock). Double click or press Esc to stop."
             onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
-          <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label="Snap to the real network" aria-pressed={snapReal.value}
-            data-tip="Snap track to the real network"
+          <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label="Snap to real world network" aria-pressed={snapReal.value}
+            data-tip="Snap to real world network"
             onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
           <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label="Snap beside track" aria-pressed={snapBeside.value}
             data-tip={"Snap beside track\nHover over the blue region to draw track parallel to another track"}
@@ -76,7 +76,7 @@ export function BuildTab() {
         </div>
         <ul class="rows build-rows">
           <li>
-            <span class="grow" data-tip="Long track pieces are laid out straight enough for this speed">Target max speed</span>
+            <span class="grow" data-tip="Attempt to draw track straight enough to reach this speed.">Target max speed</span>
             <Stepper value={speed(designSpeed.value, 5)} wide label="target max speed" onStep={(s) => {
               const i = DESIGN_SPEEDS.indexOf(designSpeed.value) + s;
               const to = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
@@ -85,7 +85,7 @@ export function BuildTab() {
             }} />
           </li>
           <li>
-            <span class="grow" data-tip="Platform length for new stations">Platform length</span>
+            <span class="grow">Platform length</span>
             <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => {
               const to = stepPlatform(buildPlatform.value, s);
               if (to === buildPlatform.value) return false;
