@@ -223,7 +223,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   items) are set apart by spacing alone; a divider line goes only between sections about different
   things.
 - **Every drawn quantity has a tooltip** (2026-10-12): anything encoding a number on the map or in
-  a panel gets a hover stating it, always the game's own tag, never a browser `title`.
+  a panel gets a hover stating it, always the game's own tag, never a browser `title`. A label,
+  button or number already written out needs none (Anita, 2026-10-30: "a hover earns its place",
+  global CLAUDE.md "User-facing text").
+- **Negative money is red** (Anita, 2026-10-30), wherever money is listed.
 - **Panels show what can change** (2026-10-13): labels, numbers and states; no explanatory or
   one-time text (put such facts in a hover if anywhere); icons with hovers over word labels.
 - **Saves are Anita's only** (2026-10-12): keeping old saves loading is a nicety; no real effort
