@@ -1,6 +1,6 @@
-// Top bar: city (or the world, zoomed far out), cash, the mode split (the goal number: the bar and the
-// train share), the sky and demand band with the time and date on one line right of it (T-1853), speed
-// and pause. The clock is its own component so a game minute re-renders only it.
+// Top bar: city (or the world, zoomed far out), the mode split (the goal number: the bar and the
+// train share), cash, the sky and demand band with the time and date on one line right of it (T-1853),
+// speed and pause. The clock is its own component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
@@ -87,20 +87,20 @@ const DAY_SHOWN_ON: Record<string, string> = { average: "the average day", weekd
 /** the Day choice before the calendar icon set it to a day away, to go back to */
 let dayBefore = "average";
 
-/** How many days ahead of a superholiday's going-out day the calendar icon appears (T-1476). */
+/** How many days ahead of a superholiday's going-out day the pink dot is a button (T-1476). */
 const CAL_AHEAD = 2;
 
-/** T-264, T-1476, T-1373: the calendar icon by the clock, a bare calendar with a pink dot, there only
- * while a superholiday where the player has built is under way or goes out within `CAL_AHEAD` days.
- * Its hover has each run's days within 21 days, and a click shows demand on its next going-out day
- * (the Day choice's own option; once those are past, a coming-back day, then a day away) or back to
- * the day shown before. */
-function Calendar() {
+/** T-264, T-1476, T-1373, T-1865: the pink dot by the date. It shows while a holiday is today (`today`),
+ * and is a button while a superholiday where the player has built is under way or goes out within
+ * `CAL_AHEAD` days (the calendar icon it replaced). Its hover has each run's days within 21 days, and a
+ * click shows demand on its next going-out day (the Day choice's own option; once those are past, a
+ * coming-back day, then a day away) or back to the day shown before. */
+function HolidayDot({ today }: { today: boolean }) {
   const runs = supersNear.value;
   void superDays.value; // a day turning, for `runToday` below
   const away = awayNear.value, rush = rushRun.value;
   const d = display.value;
-  if (!runs.some((r) => r.out - runToday(r) <= CAL_AHEAD)) return null;
+  if (!runs.some((r) => r.out - runToday(r) <= CAL_AHEAD)) return today ? <i class="holiday-dot" /> : null;
   // the day a click shows: the first run's next rush day still to come
   const first = runs.find((r) => runToday(r) < r.end);
   const t = first ? runToday(first) : 0;
@@ -121,12 +121,7 @@ function Calendar() {
     if (showing) setDisplay("dayShown", (DAY_SHOWN_ON[dayBefore] ? dayBefore : "average") as typeof d.dayShown);
     else if (target) { dayBefore = d.dayShown; setDisplay("dayShown", target.key); }
   };
-  return (
-    <button class={"cal" + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click}>
-      <Icon.calendar />
-      <i class="cal-dot" />
-    </button>
-  );
+  return <button class={"holiday-dot btn-dot" + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click} />;
 }
 
 /** T-861, T-1853: the time and date on one line right of the sky banner (ui/SkyBanner.tsx) and its demand
@@ -145,12 +140,11 @@ function Clock() {
   const dateTip = `${WEEKDAY_LONG[weekdayOf(day)]}, ${MONTH_LONG[month]} ${date}, day ${day}`;
   return (
     <div class="clock">
-      <Calendar />
       <div class="clock-box">
         <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
         <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
           <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
-          <span class="date">{todayHols.length > 0 && <i class="holiday-dot" />}{dateName(day)}</span>
+          <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
         </div>
       </div>
     </div>
@@ -165,7 +159,7 @@ function Cash() {
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}, upkeep ${money(-(today.upkeep ?? 0) * 1e6)}` : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Infinite money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
-  // T-1853: right after the name, its own width (no box held open for a longer figure)
+  // T-1865: after the split, in a box of fixed width (style.css .cash), so nothing beside it moves
   const shown = m ? moneyCash(live.cash * 1e6) : "";
   return <div class={"cash num" + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? tip : undefined}>{shown}</div>;
 }
@@ -275,7 +269,6 @@ export function TopBar() {
     <><header id="topbar">
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name="World" tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
-      <Cash />
       <div class="split">
         <div data-tip={total ? worldShareTip(total, where, note) : splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
@@ -288,6 +281,7 @@ export function TopBar() {
           <b class={"lg pct" + (far ? " trips" : "")}>{pct(s.train)}</b>
         </div>
       </div>
+      <Cash />
       <Clock />
       <Speed />
     </header><SaveNotice /></>

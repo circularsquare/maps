@@ -52,8 +52,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track")
   after the track icon; no key for the height or speed colours (T-1499), the track hover says.
 - **Station ridership** [T-1448, T-1477, `ui/DemandSelector.tsx`]: below the track display, in the same style, None, Origins, Transfers and Total ("Station ridership circles" below; hovers "Show riders starting a trip at each station", "Show transfers at each station",
-  "Show riders at each station"), after the interchange icon (two station boxes crossing, one outline) with a small blue station
-  circle on it [T-1851]. The track display's hovers read "Show line colors", "Show line colors, thickness by traffic",
+  "Show riders at each station"), after the interchange icon (two station boxes crossing, one outline) with a big blue station
+  circle centred on the boxes' crossing [T-1851, T-1865]. The track display's hovers read "Show line colors", "Show line colors, thickness by traffic",
   "Show track elevation colors", "Show track speed", and its icon has a short yellow line along its lower right.
 - **Where people drive** [T-1435, T-1477] is switched off (T-1851, Anita prefers clicking the demand
   bubbles): `DRIVES_FEATURE = false` in `game/ui.ts` hides the Settings > Show check and draws no arcs;

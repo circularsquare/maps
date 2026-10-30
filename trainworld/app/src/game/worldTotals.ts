@@ -10,8 +10,9 @@ import { world } from "./world";
 import type { ModeSplit } from "./types";
 import type { SplitRides } from "./splitTip";
 
-/** Below this map zoom (a few countries on screen) the top bar names the world, not a city. */
-export const WORLD_ZOOM = 5;
+/** Below this map zoom (a country or a few regions on screen) the top bar names the world, not a city
+ * (T-1865: Anita, 4x the scale further in than before). */
+export const WORLD_ZOOM = 7;
 
 /** The map is zoomed out past `WORLD_ZOOM`; set by map/zoneFocus.ts. */
 export const worldView = signal((() => { const v = hashView(); return !!v && v.zoom < WORLD_ZOOM; })());

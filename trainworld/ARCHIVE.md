@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1865 [P1] Anita's afternoon top bar batch. Done 2026-10-30 (agent t1865): cash after the train share in a fixed 4.7em box (bar width stays put), one medium (500) weight for name, share, cash and time, calendar icon gone (its hover and click on the pink dot), World/city switch at zoom 7 (was 5), station ridership icon's blue circle big and centred on the crossing, a faint divider after the Cities tab's World row. artifacts/trainworld/t1865/.
 - T-1859 [P2] Complexes on the whole station box, and passages drawn between close members. Done 2026-10-30 (agent t1859): drawn platform lines from the worker (`workers/platformLines.ts`) join the straight rule; untouching members get a free drawn passage. Real save 855 to 854 complexes, 30 drawn passages. artifacts/trainworld/t1859/.
 - T-1860 [P2] The related-lines icon as a station pill across two lines, to Anita's sketch. Done 2026-10-30 (agent t1859). artifacts/trainworld/t1859/icon_old_new.png.
 - T-1850 [P2] A far first line (Ceuta in a Tokyo save) re-solves all of Tokyo. Design done 2026-10-30 (agent t1850): the cause is settle noise in Tokyo's lines, not the market recomposing; built as T-1862 to T-1864. notes/T-1850.md.

@@ -1,8 +1,7 @@
 /* trainworld UI. Three colour tokens per colour theme and light or dark (--bg, --text, --accent),
    two for warnings (--bad, --warn); everything else in the UI is mixed from them. The map's own
    light and dark colours (--map-land, --map-ink) are set from game/shades.ts. Line, mode and level
-   colours never change (game/palette.ts). Nunito, Zen Maru Gothic for kana and kanji; sizes 12, 14, 18 px (16 for the top bar's figures); weights 400 and
-   700. No transitions. */
+   colours never change (game/palette.ts). Nunito, Zen Maru Gothic for kana and kanji; sizes 12, 14, 18 px (16 for the top bar's figures); weights 400, 700 and 500 (the top bar's figures). No transitions. */
 
 :root,
 :root[data-theme="pink"]  { --bg: #fbf7f0; --text: #4b403a; --accent: #d9788e; }
@@ -299,7 +298,7 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 215px) { .cities-box .w-points { display: none; } }
 @container cities (max-width: 167px) { .cities-box .w-citybar, .cities-box .city-bar { display: none; } }
 .rows.cities .bar { height: 10px; }
-.rows.pick.cities > li.total { cursor: default; margin-bottom: 10px; }
+.rows.pick.cities > li.total { cursor: default; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--rule); }
 .rows.pick.cities > li.total:hover { background: none; }
 .rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -647,11 +646,11 @@ rect.now { fill-opacity: .45; }
   flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 14px; line-height: 1.2;
   padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
 }
-/* T-349, T-1853: the name, cash, train share and time are one size (16 px), the time and share bold;
+/* T-349, T-1853, T-1865: the name, train share, cash and time are one size (16 px) and one weight (500);
    the date 14 px; .sm is the small muted style (12 px, 400, muted). Every part is centred on the bar's
    middle. */
-#topbar .lg { font-size: 16px; font-weight: 700; }
-#topbar .city, #topbar .cash { font-size: 16px; }
+#topbar .lg { font-size: 16px; font-weight: 500; }
+#topbar .city, #topbar .cash { font-size: 16px; font-weight: 500; }
 #topbar .sm { font-size: 12px; font-weight: 400; color: var(--muted); }
 /* T-341, T-1108, T-1853: left to right the name, the cash, the mode bar and its train share, the clock
    and the speed buttons. The clock and speed buttons have fixed widths and the bar takes the rest. The
@@ -698,11 +697,12 @@ rect.now { fill-opacity: .45; }
 .seg-walk { background: var(--mode-walk); }
 .seg-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
-/* T-305, T-1853: the cash moves as fares land, in tabular figures; it sits right after the name with the
-   bar's usual gap, no box held open for a longer figure (Anita: too much space before the bar) */
-.cash { flex: none; font-variant-numeric: tabular-nums; }
-/* T-832, T-861, T-1853: the clock sits right of the train share and left of the speed buttons: the
-   calendar, the sky (ui/SkyBanner.tsx) with its demand band, then the time and date on one line right of
+/* T-305, T-1865: the cash moves as fares land, in tabular figures, in a box of fixed width
+   (4.7em: the widest it writes, "−$893.6M", the usual 7 characters leaving a little room) so the bar
+   before it does not change width as it changes. After the train share, before the clock. */
+.cash { flex: none; width: 4.7em; font-variant-numeric: tabular-nums; }
+/* T-832, T-861, T-1853: the clock sits right of the cash and left of the speed buttons: the sky
+   (ui/SkyBanner.tsx) with its demand band, then the time and date on one line right of
    it (Anita's sketch). The box is a fixed width, the sky taking what the date leaves, so nothing else
    moves day to day. */
 .clock { flex: none; display: flex; font-variant-numeric: tabular-nums; }
@@ -716,14 +716,12 @@ rect.now { fill-opacity: .45; }
 .sky-hit { top: 0; height: 18px; }
 .band-hit { top: 18px; height: 6px; }
 /* T-862: today is a holiday in a country with the player's stations; SkyBanner.tsx HOLIDAY_COLOUR */
-/* T-1476: the calendar icon left of the time, a bare calendar (no button box) with a pink dot in its
-   body; shown only near a long holiday. The dot sits in the body below the header line (y 6.5-15 of 16). */
-.clock .cal { position: relative; align-self: center; margin-right: 8px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--text); cursor: pointer; }
-.cal svg { width: 22px; height: 22px; }
-.cal.on svg rect { fill: var(--tint); stroke: var(--accent); }
-.cal-dot { position: absolute; left: 50%; top: 67%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #ff5fa2; }
 .day-away { display: inline-flex; vertical-align: middle; }
 .holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
+/* T-1476, T-1865: near a long holiday the dot is a button (the calendar icon's job), its hit area wider than the dot */
+.holiday-dot.btn-dot { position: relative; padding: 0; border: 0; cursor: pointer; }
+.holiday-dot.btn-dot::before { content: ""; position: absolute; inset: -7px; }
+.holiday-dot.btn-dot.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent); }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
   background: var(--tint); display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .save-notice span { flex: 1; min-width: 0; }
@@ -1133,15 +1131,14 @@ button.save-add:hover { color: var(--text); }
 @container map-column (min-width: 940px) {
   .clock-box { width: 300px; }
 }
-/* T-349, T-1853 (Anita's sketch): below 700 px the bar takes two rows. The first has the name, the cash
-   and the clock (calendar, sky, then the time and date at the row's end, over the speed buttons); the
-   second the mode bar running under them with the train share, then the speed buttons. The sky takes up
-   to 200 px; on a short row the sky (to 36 px) and the name (onto two lines) give way, the empty third
-   column taking whatever room is left. */
+/* T-349, T-1853, T-1865 (Anita's sketch): below 700 px the bar takes two rows. The first has the name and
+   the clock (sky, then the time and date at the row's end); the second the mode bar with the train share,
+   then the cash, then the speed buttons. The sky takes up to 200 px; on a short row the sky (to 36 px) and
+   the name (onto two lines) give way, the empty third column taking whatever room is left. */
 @container map-column (max-width: 700px) {
   #topbar { height: auto; padding: 4px 10px;
     display: grid; grid-template-columns: minmax(min-content, max-content) auto 1fr auto auto;
-    grid-template-areas: "city cash . clock clock" "split split split split speed"; gap: 3px 10px; }
+    grid-template-areas: "city city . clock clock" "split split split cash speed"; gap: 3px 10px; }
   #topbar .city { grid-area: city; width: auto; max-width: 150px; min-width: 0; overflow-wrap: break-word; }
   #topbar .cash { grid-area: cash; }
   #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; }
@@ -1158,7 +1155,7 @@ button.save-add:hover { color: var(--text); }
 }
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "city cash" "split split" "clock speed"; }
+    grid-template-areas: "city city" "split cash" "clock speed"; }
   #topbar .clock { justify-self: start; }
 }
 

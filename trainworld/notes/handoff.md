@@ -9,7 +9,9 @@ to maps-da, which relays each outcome to maps-18 to land, and messages when the 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master d80e079f (T-1852 small UI batch + T-1853 top bar). 8800 at d80e079f, smoke 20/20 both shades.
+- master 8df66c28 (T-1859/T-1860 landed). 8800 at 8df66c28, smoke 20/20 both shades.
+  network.ts and code-map.md were staged partially (t1848's and t1854b's hunks left out) by
+  maps-18 scratchpad stage_t1859.py; do the same for any file two agents share.
 - LIVE site still 2026-10-28g (= 1550be70). **Anita approved a deploy (2026-10-30)**: do it as soon as t1857's Australia
   run has ended (its join may rewrite market packs mid-run). Include Australia only if shipped and smoked; otherwise the
   committed state. After deploying, check the trainsworld page has no Google Analytics (deploy.py writes it without; the
@@ -18,7 +20,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Deploy recipe: deploy.py --version <v> --smoked; website add trainsworld/ trainworld/, commit "trainsworld",
   push; gh run watch; deploy.py --verify --page --version <v>; rclone purge the old R2 prefix.
 - shonei-server 5719c6f deployed by Anita (day/week backups; deleting is for good), not pushed.
-- 8800 rebuild: `cmd /c C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f537e44c-15c4-40d9-bcb8-a6d7cafc4ace\scratchpad\snapbuild.cmd <explicit master hash>`
+- 8800 rebuild: `cmd /c C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\c9a4388f-3ba1-4290-bb0a-d9ad50756061\scratchpad\snapbuild.cmd <explicit master hash>`
   (log to a file; the script is 8 lines: checkout --detach in .tw-snap, CARGO_TARGET_DIR=.tw-snap-target,
   CARGO_BUILD_JOBS=2, cargo on PATH, npm run build in .tw-snap/trainworld/app), then smoke on
   http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Never pass HEAD.
@@ -28,7 +30,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_plan.*) and t1854b's (terrain.ts, terrainTint.ts, cost.rs, params.rs, zone_terrain.py, terrain_fine.py,
   tools/aws/launch.py + userdata/terrain.sh, checks/t1270-terrain.mjs, t1854-valley.mjs, notes/T-1854.md). Commit each
   only when its agent reports. Anita's TODO.md: never commit.
-- Next free task id: T-1865.
+- Next free task id: T-1868.
 - Old tree .tw-trees/t1734 kept for later thought (Anita). Localhost needs `?acct=live` once per browser for accounts.
 
 ## In flight
@@ -38,8 +40,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   then 115 m bare-earth classes, recalibrated thresholds, sim/app change; waits for t1857's run before writing data/packs.
   Anita: 60 MB memory and a few hundred MB on R2 fine; asked about offline play (answer once known). T-1856 hexes after.
 - T-1858 dropped to P3 (Anita: after the first city the rest load fast, "that's fine"); agent stopped.
-- T-1859 station merge on the whole box + auto passage drawing, T-1860 related-lines icon (agent t1859, Opus, Vite 6191).
-  T-1861 filed (track placement on all-Japan, P3).
+- T-1859/T-1860 landed in 8df66c28. Question for Anita: keep the old straight-segment rule beside the drawn-line one
+  (dropping it splits Grand Central, Penn, Atlantic Terminal, Times Sq, Franklin Av)? T-1861 filed (P3).
+- T-1865 landed (top bar: cash after the share in a 4.7em box, weight 500, calendar icon onto the pink dot; zoom 7
+  world/city; station display icon; World divider). Shown to Anita: one hover moved, no new strings.
+- (maps-18) T-1866 answered (notes/T-1866.md); fix 1 drawing-only = T-1867 (Rust, own tree, after Australia);
+  fix 2 (school sampling rule) asked of Anita.
 - (maps-18) T-1848 corridors along each line (agent t1848, Opus, main tree, owns map/lineBands.ts).
 - (maps-18) T-1850 design done (archived): the Tokyo re-solve is settle noise, not recomposition. Stage 1 T-1862
   (agent t1862, Opus, demand worker TS, 3-core claim); T-1863 (sim/src/track, after t1854b) and T-1864 (P3) open.

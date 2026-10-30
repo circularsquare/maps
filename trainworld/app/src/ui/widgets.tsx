@@ -30,9 +30,9 @@ export const Icon = {
   // an interchange (T-1448): two station boxes crossing, one shape with one outline
   interchange: () => <svg viewBox="0 0 16 16"><path d="M4.5 1.5h3v7h7v3h-7v3h-3v-3h-3v-3h3z" /></svg>,
   // T-1851: the map's track display row and station ridership row icons: the track with a yellow line
-  // along its lower right, the interchange under a small blue station circle (colors in style.css)
+  // along its lower right, the interchange under a big blue station circle centred on its crossing (colors in style.css)
   trackDisplay: () => <svg viewBox="0 0 16 16"><path d="M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4" /><path class="yline" d="M8 15l7-7" /></svg>,
-  stationDisplay: () => <svg viewBox="0 0 16 16"><path d="M4.5 1.5h3v7h7v3h-7v3h-3v-3h-3v-3h3z" /><circle class="udot" cx="11.5" cy="4.5" r="3" /></svg>,
+  stationDisplay: () => <svg viewBox="0 0 16 16"><path d="M4.5 1.5h3v7h7v3h-7v3h-3v-3h-3v-3h3z" /><circle class="udot" cx="6" cy="10" r="4.6" /></svg>,
   // a selected demand bubble (T-1137): the ramp's middle purple in the map ink's outline (style.css)
   bubble: () => <svg viewBox="0 0 16 16"><circle class="bubble" cx="8" cy="8" r="5.5" /></svg>,
   // a run of segments, each starting where the last ended

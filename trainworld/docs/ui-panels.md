@@ -98,13 +98,14 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 ## The top bar
 
 `ui/TopBar.tsx`, left to right, 44 px high, **every part centred on one line** [T-349, T-1853]: the
-name, cash, the split (the bar, then the train share), the clock (calendar, sky, then the time and
-date), speed buttons. **The name, cash, train share and time are one size, 16 px** (Anita: equally
-important numbers, T-1853), the train share and time bold, the name and cash regular; the date is 14
-px and the status small (12 px, regular, muted). **The clock and speed buttons have fixed widths**
-[T-341, T-1136] and sit together at the right, so nothing moves them. The cash sits right after the
-name at the usual gap, at its own width [T-1853: no box held open before the bar], and the mode bar
-(at least 60 px) widens into the rest. The name takes what it needs up to 120 px (96 px under 760 px
+name, the split (the bar, then the train share), cash, the clock (sky, then the time and date), speed
+buttons. **The name, train share, cash and time are one size, 16 px, and one weight, medium (500)**
+(Anita: equally important numbers, T-1853; one font style, T-1865); the date is 14 px regular and the
+status small (12 px, regular, muted). **The clock and speed buttons have fixed widths**
+[T-341, T-1136] and sit together at the right, so nothing moves them. The cash follows the train
+share (after the name it would read as the city's, T-1865) in a box of fixed width, 4.7em (75 px, tabular
+figures: it holds the widest figure written, "−$893.6M", and the usual 7 characters leave a little room),
+so the mode bar (at least 60 px), which widens into the rest, does not change width as the money changes. The name takes what it needs up to 120 px (96 px under 760 px
 of map column), on two lines at most with an ellipsis (the whole name on hover, with the city's
 points and points a day, T-684, T-694) [T-1108]. The train share is in tabular figures in a box of
 fixed width, and the split bar is centred in the bar with nothing under it: the status is a tag
@@ -130,7 +131,7 @@ moves nothing else) [T-1109, T-861].
   when ("Goal: 20% train share, reached on Monday, day 71, at 14:08", the zone's local time). A
   goal is reached the first time the zone's train share on the average day reaches it in a final
   result, and kept from then (the save's `stars` for 10%, `goals` for the rest).
-  **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
+  **Zoomed out below zoom 7** (a country or a few regions on screen) [T-1865] the bar names "World" instead [T-1110]:
   the train rides summed over every city with a built station and a demand view, as the Cities
   tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
   whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
@@ -193,7 +194,7 @@ moves nothing else) [T-1109, T-861].
   the player has built track or stations in (blueprint not counted) [T-862, T-1098] is a pink ribbon along the sky's top over its day (its
   country's local day), with a tick where it starts; the sky's hover lists those in view, and is the sky's only hover ("Tomorrow:
   Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
-  time), and on the day itself a pink dot sits before the date, whose hover names it. A holiday
+  time), and on the day itself a pink dot sits before the date (its hover is the date's, which names the holiday). A holiday
   several of those countries keep on the same local date is one line [T-1098, `groupHolidays`]:
   the same name, or names `SAME` in `game/holidays.ts` counts as one (Labor Day, International
   Workers' Day, May Day and the like; Christmas; Boxing Day and Saint Stephen's Day; New Year's
@@ -204,10 +205,9 @@ moves nothing else) [T-1109, T-861].
   each, right for out, left for back; its days away a pink ribbon. The sky's hover adds
   "Tomorrow: Golden Week, Apr 29-30, China", "Today: Golden Week, May 6-7, China" (the name and
   the dates of that part of the run, `RushSpan.dates` [T-1697]), and the same on a day away that is
-  no holiday. **The calendar icon** left of the sky
-  [T-264, T-1476]: a bare calendar (no button box) with a pink dot in its body, there only while a
-  superholiday where the player has built is under way or goes out within 2 game days, and not
-  there otherwise. Its hover gives each run within 21 days with the dates of its days
+  no holiday. **The pink dot** before the date [T-264, T-1476, T-1865] is a button while a
+  superholiday where the player has built is under way or goes out within 2 game days (otherwise
+  it is a plain dot, there only on a holiday's day; there is no calendar icon). Its hover gives each run within 21 days with the dates of its days
   away ("Golden Week, Oct 1-6, China: in 5 days") [T-1697]. A click sets the Day choice (Settings) to the run's
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
@@ -230,11 +230,11 @@ moves nothing else) [T-1109, T-861].
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
 - **Narrow maps** [T-1853, Anita's sketch]: two rows below 700 px of map column, about 61 px high
-  (was 66-69). Row one has the name, the cash, then the clock at the row's end (calendar, sky up to
+  (was 66-69). Row one has the name, then the clock at the row's end (sky up to
   200 px, then the time and date, standing over the speed buttons); row two has the mode bar running
-  under them, the train share, then the speed buttons. On a short row the sky (down to 36 px) and the
+  under them, the train share, the cash (the same box), then the speed buttons. On a short row the sky (down to 36 px) and the
   name (onto two lines, whole words) give way. Below 360 px the time and date stack over the sky
-  again, and below 300 px the bar takes three rows (name and cash; the split; the clock and speed),
+  again, and below 300 px the bar takes three rows (the name; the split and cash; the clock and speed),
   with cash, time, train share and all speed controls kept. Hovering the split or the time gives
   what was dropped [T-106, T-1775].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
@@ -602,7 +602,7 @@ changes the curve or that country's scale [T-1662, `game/fareDefault.ts`]. Rules
 ## Cities tab
 
 [T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
-row "World" that sums them [T-857, T-1110] (a trophy after its name opens the leaderboards when accounts
+row "World" that sums them, a faint divider after it [T-857, T-1110, T-1865] (a trophy after its name opens the leaderboards when accounts
 are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
