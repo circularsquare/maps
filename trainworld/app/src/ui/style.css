@@ -298,7 +298,8 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 215px) { .cities-box .w-points { display: none; } }
 @container cities (max-width: 167px) { .cities-box .w-citybar, .cities-box .city-bar { display: none; } }
 .rows.cities .bar { height: 10px; }
-.rows.pick.cities > li.total { cursor: default; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--rule); }
+/* the World row and its divider evenly spaced: as far from the head's rule, the divider and the first city */
+.rows.pick.cities > li.total { cursor: default; margin: 6px -6px 2px; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
 .rows.pick.cities > li.total:hover { background: none; }
 .rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
