@@ -29,7 +29,7 @@ export function BuildTab() {
       <div class="build-options">
         <div class="group tool-pick">
           {TOOLS.map(([id, label, I, key, title]) => (
-            <button class={"btn text" + (t === id ? " on" : "")} data-tip={title.replace(/\n|$/, ` (${key})$&`)} onClick={() => pickTool(id)}>
+            <button class={"btn text" + (t === id ? " on" : "")} data-guide={id === "track" ? "1" : id === "station" ? "2" : undefined} data-tip={title.replace(/\n|$/, ` (${key})$&`)} onClick={() => pickTool(id)}>
               <I />
               <span class="tool-label">{label}</span>
               <span class="key muted">{key}</span>

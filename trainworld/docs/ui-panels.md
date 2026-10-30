@@ -315,6 +315,27 @@ sixth, a line "Your first line is open." and a Done button (closes the card for 
 - **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
   hand; a tap on the heading opens all six.
 
+### The ripple
+
+[T-1822 stage 2; `ui/ripple.ts`] A rectangle round the control the step in hand uses: 2 px in the
+accent colour, starting on the control's edge and growing 16 px out over 0.7 s while it fades; three
+rings 0.25 s apart make a pulse. One fixed canvas over everything with no pointer events, drawn by its
+own `requestAnimationFrame` loop (no CSS transition) and placed from `getBoundingClientRect()` every
+frame, so a scrolling dock keeps it on target. With reduced motion asked for: one still outline 8 px
+out, held 1.5 s.
+
+- **Targets** carry `data-guide="<step 1-6>"`: 1 the Track tool and 2 the Station tool (Build tab),
+  3 Construct blueprints, 4 New line (Lines tab), 5 Edit stops (the line panel; the attribute is off
+  while the stops are being edited), 6 the stepper in the first demand row of the Schedule (the trains
+  count or the headway, whichever the line's schedule uses). The tab icons carry `data-guide-tab`.
+- **When**: 0.35 s after a step becomes the step in hand; after 20 s without a click, key or wheel
+  while it is open (at most 3 times per step); on a click on any row of the card (the step's own
+  control, so a done or later step can be pointed at too). Never while the pointer is held (a drag)
+  or the stop editor is open on step 5; a pulse that is due then waits for it to end.
+- **Out of view**: a target whose tab is closed ripples the tab icon (Build for 1-3, Lines for 4-6);
+  steps 5 and 6 with no line picked ripple the first row of the Lines list when that tab is open. A
+  target scrolled out of its pane is scrolled into view (instantly) first, then ripples.
+
 ## Search
 
 [T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
@@ -351,14 +372,14 @@ keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a lette
 the game. A select picked with the mouse gives up focus at once, so the next Space pauses; one
 reached with Tab keeps it. Buttons show the browser's focus ring for keyboard focus only [T-169].
 
-The key map [T-1819; tables in `ui/toolKeys.ts`; letters read lowercase, so Caps Lock does not matter; none fires
-with Ctrl, Meta or Alt held, and the numbers not with Shift]. Each button's or tab's hover shows its key.
+The key map [T-1819, numbers and letters of the tools back by T-1834; tables in `ui/toolKeys.ts`; letters read lowercase, so Caps Lock does not matter; none fires
+with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 
 | Key | Does | From |
 |---|---|---|
-| 1 to 7 | draw at elevation +3 down to -3 (4 is ground level) | any tab |
+| 1, 2, 3, 4 | tool: draw track, place stations, delete, select; opens Build (`TOOLS`) | any tab |
+| Shift+1 to Shift+7 | draw at elevation +3 down to -3 (Shift+4 is ground level); by key code, digit row only | any tab |
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
-| R, P, X, M | tool: draw track, place stations, delete, select; opens Build (`TOOLS`) | any tab |
 | U | start a new bus line (`BUS_KEY`) | any tab |
 | T | explore a trip; the tab stays | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
@@ -366,7 +387,7 @@ with Ctrl, Meta or Alt held, and the numbers not with Shift]. Each button's or t
 | Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
 
 C stays Construct's, so Cities has Y; A opens Stations and S is Edit stops (Anita's pick); add-passed-stations
-has G (gaps); T is the trip explorer's, so the track tool has R.
+has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on Shift+1 to 7 again.
 
 ## Controls
 

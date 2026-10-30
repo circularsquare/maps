@@ -63,6 +63,13 @@ export function guideSteps(w: WorldView, trains: (line: string) => readonly numb
   ];
 }
 
+/** Which steps are ticked (met now, or ticked before), and the step in hand: the first unticked, -1
+ * once all are. */
+export function guideTicks(steps: readonly GuideStep[], g: GuideSave): { done: boolean[]; now: number } {
+  const done = steps.map((s, i) => s.met || (g.done & (1 << i)) !== 0);
+  return { done, now: done.indexOf(false) };
+}
+
 /** Whether the card is on show for the game in hand: it has progress, is not a sandbox, and was not
  * closed with the x or finished with Done. */
 export function guideShown(g: GuideSave | undefined, sandbox: boolean): boolean {

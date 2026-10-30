@@ -5,11 +5,12 @@
 
 import { signal } from "@preact/signals";
 import { h, render } from "preact";
-import { guideShown, guideSteps, startGuide, type GuideStep } from "../game/guide";
+import { guideShown, guideSteps, guideTicks, startGuide, type GuideStep } from "../game/guide";
 import { moneyState } from "../game/money";
 import { ask } from "../game/ui";
 import { world } from "../game/world";
 import { saveGuide } from "../workers/clockClient";
+import { ripple, startRipple } from "./ripple";
 import { savesOpen } from "./SavesPanel";
 import { Icon } from "./widgets";
 
@@ -24,8 +25,7 @@ function Guide() {
   const m = moneyState.value, w = world.value, g = m?.guide;
   if (!m || !w || !g || !guideShown(g, m.mode === "sandbox") || ask.value || savesOpen.value) return null;
   const steps = guideSteps(w);
-  const done = steps.map((s, i) => s.met || (g.done & (1 << i)) !== 0);
-  const now = done.indexOf(false);
+  const { done, now } = guideTicks(steps, g);
   const finished = now < 0;
   return (
     <div class={"guide" + (opened.value ? " open" : "")}>
@@ -37,7 +37,7 @@ function Guide() {
       </div>
       <ol class="guide-steps">
         {steps.map((s, i) => (
-          <li key={i} class={done[i] ? "done" : i === now ? "now" : "later"}>
+          <li key={i} class={done[i] ? "done" : i === now ? "now" : "later"} onClick={() => ripple(i)}>
             <span class="guide-box">{done[i] && <Icon.check />}</span>
             <span class="guide-words">{s.words}</span>
             {s.count && <span class="guide-count" data-tip={s.count.tip}>{counter(s.count)}</span>}
@@ -60,4 +60,5 @@ export function mountGuide(container: HTMLElement) {
   container.appendChild(root);
   render(h(Guide, null), root);
   startGuide();
+  startRipple();
 }

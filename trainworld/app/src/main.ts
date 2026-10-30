@@ -465,7 +465,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  // R, P, X, M: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
+  // 1, 2, 3, 4: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
   // key of the tool already on does nothing (Esc is the way out), so a half-drawn route survives.
   // T: the trip explorer (T-195, T-444), from any tab; the tab stays (the inspector shows the trip)
   if (e.key.toLowerCase() === TRIP_KEY &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
@@ -487,8 +487,8 @@ window.addEventListener("keydown", (e) => {
     else void constructBlueprints();
     return;
   }
-  // 1 to 7: the drawing elevation (T-1701, T-1819), from any tab
-  const lvKey = !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
+  // Shift+1 to Shift+7: the drawing elevation (T-1701), from any tab
+  const lvKey = e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
   if (lvKey !== null) {
     e.preventDefault();
     if (!e.repeat) buildLevel.value = lvKey;

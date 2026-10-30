@@ -11,7 +11,8 @@ deploy.py now writes the trainsworld page without the GA include: untested, chec
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master a945e323. 8800 at a945e323, smoke 20/20 both shades (maps-da). Anita: "looks good".
+- master fbec5c91 (logo t restored, favicon flipped; maps-45 for Anita). 8800 at fbec5c91, smoke 20/20 both shades.
+- 8800 rebuild script now also in maps-da's scratchpad: C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\f537e44c-15c4-40d9-bcb8-a6d7cafc4ace\scratchpad\snapbuild.cmd Anita OK'd a945e323 ("looks good").
 - LIVE site still 2026-10-28g (= 1550be70); nothing since is deployed.
   Anita 2026-10-29: "no need to deploy yet". Deploy only on her word (she has said pushing is allowed).
 - shonei-server f74bfad deployed and pushed: /trainworld/ping + /trainworld/stats live; stats stay empty until the
@@ -31,11 +32,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Website repo: T-1833's GA-off change not committed or pushed (goes with the next deploy, on her word).
 
 ## In flight
-- Nothing. T-1822 stage 1 (agent t1822b, done) committed; see git log.
+- Nothing. T-1834 (keys back to 1-4) and T-1822 stage 2 (ripple) committed together; Anita has card style notes coming.
 
 ## Next
-1. Rebuild 8800 at the T-1822 commit if not done, smoke both shades.
-2. T-1822 stage 2 (ripple, Opus) after stage 1. T-1827..T-1832 save fixes 4-9 (fix 5 = 30 days on the account,
+1. Card style notes from Anita (T-1822 stage 3) when she sends them.
+2. T-1827..T-1832 save fixes 4-9 (fix 5 = 30 days on the account,
    fix 9 = hour-of-play warning, both yes from Anita).
 3. T-1799 stage 3 (four-track trunks as one ribbon); T-1815 (preview waits during solves); T-1808 (calib areas file).
 4. Smaller open: T-1794, T-1788, T-1806, T-1793, T-1778, T-1773, T-1776, T-1765's remaining zones.

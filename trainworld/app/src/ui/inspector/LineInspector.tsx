@@ -514,7 +514,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   const refused = r && r.id === l.id && r.levs[lev] ? r : null;
   const broke = refused !== null && liveMoney.value.cash < refused.need;
   const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
-  const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined}>{child}</span>;
+  const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined} data-guide={d === DEMANDS[0] ? "6" : undefined}>{child}</span>;
   const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
   // T-798: a loop's trains are half each way, so its count steps by two
   const k = st.loop ? 2 : 1;
@@ -860,7 +860,7 @@ function RailLineInspector({ id }: { id: string }) {
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
+        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "5"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>

@@ -8,7 +8,7 @@ import { ACTION_KEYS, BUS_KEY, HIDE_UI_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from
 export const helpOpen = signal(false);
 
 const keyOf = (act: string) => Object.keys(ACTION_KEYS).find((k) => ACTION_KEYS[k] === act)!.toUpperCase();
-const toolKeys = Object.keys(TOOL_KEYS).map((k) => k.toUpperCase()).join(", ");
+const toolKeys = Object.keys(TOOL_KEYS).join(", ");
 const tabKeys = Object.keys(TAB_KEYS).map((k) => k.toUpperCase()).join(", ");
 
 const SECTIONS: [string, [string, string][]][] = [
@@ -30,7 +30,7 @@ const SECTIONS: [string, [string, string][]][] = [
     ["D, E, Delete", "Disable, enable or remove the picked blueprints"],
   ]],
   ["Keys", [
-    ["1 to 7", "Draw at elevation +3 down to -3"],
+    ["Shift 1 to 7", "Draw at elevation +3 down to -3"],
     [tabKeys, "Build, Lines, Stations, Finances and Cities tabs"],
     [toolKeys, "Track, stations, delete and select tools"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],

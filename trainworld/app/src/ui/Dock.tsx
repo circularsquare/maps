@@ -128,7 +128,7 @@ export function Dock() {
     <aside id="dock" class={inspecting ? "inspecting" : undefined} ref={ref} style={style}>
       <nav class="tabs">
         {TABS.map(([id, label, Glyph]) => (
-          <button class={"tab" + (t === id ? " on" : "")} data-tip={`${label} (${tabKeyName(id)})`} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
+          <button class={"tab" + (t === id ? " on" : "")} data-guide-tab={id} data-tip={`${label} (${tabKeyName(id)})`} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
             <Glyph />
           </button>
         ))}

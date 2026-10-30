@@ -1,6 +1,6 @@
-// T-1819: the key map. Presses each key in a new game and reads which dock tab, tool and elevation
-// button is on: 1 to 7 elevation, B L A F Y tabs, S edit stops, G add passed, R P X M U tools, nothing while typing in a text
-// box, Shift+digit not an elevation, hovers showing the keys. From the maps root:
+// T-1819, T-1834: the key map. Presses each key in a new game and reads which dock tab, tool and elevation
+// button is on: Shift+1 to Shift+7 elevation, 1 2 3 4 tools, B L A F Y tabs, S edit stops, G add passed, U bus, nothing
+// while typing in a text box, a bare digit not an elevation, hovers showing the keys. From the maps root:
 //   node trainworld/checks/t1819-keys.mjs [url]   (about 30 seconds)
 import { launchChrome, collectErrors, GL } from './lib.mjs';
 
@@ -42,31 +42,32 @@ try {
   // elevation, from the Build tab and from another tab
   await press('b');
   for (let n = 1; n <= 7; n++) {
-    await press(String(n));
+    await press(`Shift+${n}`);
     const i = await levelOn();
-    check(i === n - 1, `key ${n} sets elevation button ${n} (on: ${i + 1})`);
+    check(i === n - 1, `key Shift+${n} sets elevation button ${n} (on: ${i + 1})`);
   }
-  await press('Shift+3');
-  check(await levelOn() === 6, 'Shift+3 leaves the elevation alone');
+  await press('3');
+  check(await levelOn() === 6, 'a bare 3 leaves the elevation alone');
+  await press('Escape');
   await press('l');
-  await press('2');
+  await press('Shift+2');
   await press('b');
-  check(await levelOn() === 1, 'a digit sets the elevation from the Lines tab');
+  check(await levelOn() === 1, 'Shift+digit sets the elevation from the Lines tab');
   const lvTips = await page.evaluate(() => [...document.querySelectorAll('.levels button')].map((b) => b.getAttribute('data-tip')));
   console.log('elevation hovers', JSON.stringify(lvTips));
-  check(lvTips.every((t, i) => t.endsWith(`(${i + 1})`)), 'elevation hovers end in the number key');
+  check(lvTips.every((t, i) => t.endsWith(`(Shift+${i + 1})`)), 'elevation hovers end in Shift+number');
 
   // tools, from another tab; the Build tab opens
-  for (const [k, name] of [['r', 'Track'], ['p', 'Station'], ['x', 'Delete'], ['m', 'Select']]) {
+  for (const [k, name] of [['1', 'Track'], ['2', 'Station'], ['3', 'Delete'], ['4', 'Select']]) {
     await press('l');
     await press(k);
     const t = await tabOn(), got = await toolOn();
-    check(t === 'Build' && got === name, `key ${k.toUpperCase()} picks ${name} and opens Build (tab ${t}, tool ${got})`);
+    check(t === 'Build' && got === name, `key ${k} picks ${name} and opens Build (tab ${t}, tool ${got})`);
     await press('Escape');
   }
   const toolTips = await page.evaluate(() => [...document.querySelectorAll('.tool-pick button')].map((b) => [b.getAttribute('data-tip'), b.querySelector('.key')?.textContent]));
   console.log('tool hovers', JSON.stringify(toolTips));
-  check(['R', 'P', 'X', 'M', 'U'].every((k, i) => toolTips[i][1] === k && toolTips[i][0].includes(`(${k})`)), 'tool buttons show their letters in label and hover');
+  check(['1', '2', '3', '4', 'U'].every((k, i) => toolTips[i][1] === k && toolTips[i][0].includes(`(${k})`)), 'tool buttons show their keys in label and hover');
 
   // the bus tool
   await press('Escape');
@@ -77,9 +78,9 @@ try {
   await press('Escape');
   check(await page.evaluate(() => !document.querySelector('.tool-bus')?.classList.contains('on')), 'Esc leaves the bus tool');
 
-  // the old number tool keys and the old letters
-  await press('3');
-  check(await toolOn() === null, 'key 3 no longer picks a tool');
+  // the T-1819 tool letters are gone
+  for (const k of ['r', 'p', 'x', 'm']) await press(k);
+  check(await toolOn() === null, 'R P X M no longer pick a tool');
 
   // S and G are line actions, not tabs: with no line selected they change nothing
   await press('b');
@@ -98,10 +99,10 @@ try {
     i.focus();
   });
   const before = { tab: await tabOn(), lv: await levelOn() };
-  await page.keyboard.type('lafy5r', { delay: 30 });
+  await page.keyboard.type('lafy5r1', { delay: 30 });
   const val = await page.evaluate(() => document.getElementById('t1819-box').value);
   const after = { tab: await tabOn(), lv: await levelOn(), tool: await toolOn() };
-  check(val === 'lafy5r' && after.tab === before.tab && after.lv === before.lv && after.tool === null, `typing in a text box changes nothing (typed ${val}, ${JSON.stringify(after)})`);
+  check(val === 'lafy5r1' && after.tab === before.tab && after.lv === before.lv && after.tool === null, `typing in a text box changes nothing (typed ${val}, ${JSON.stringify(after)})`);
 
   check(errors.length === 0, 'no console errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));
 } finally {

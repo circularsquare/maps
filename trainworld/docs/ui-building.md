@@ -10,12 +10,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key R), station (P), delete (X), select (M, [below](#the-select-tool)), in a
-  2 by 2 grid [T-1128, letters T-1819], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
+- **Tools**: draw track (key 1), station (2), delete (3), select (4, [below](#the-select-tool)), in a
+  2 by 2 grid [T-1128], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  (hover "Ground level (4)" and so on: the number keys 1 to 7 pick the drawing
-  elevation from any tab, by key code, 4 being 0, and not with Shift held [T-1701, T-1819]; the draw-at-the-elevation-of-the-track-you-extend
+  (hover "Ground level (Shift+4)" and so on: Shift+1 to Shift+7 pick the drawing
+  elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
   (below), then the **ramp switch** (track humping over a line seen side on;
