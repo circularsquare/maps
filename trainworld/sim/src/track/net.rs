@@ -1862,8 +1862,8 @@ impl Network {
             } else if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
                 let (tracks, hsr) = (self.edge_tracks[e], self.edge_hsr[e]);
                 cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, hsr, |level, wet, _ramp, class, m, c| {
-                    // T-1839: the whole price, keyed by terrain class (1 where it does not count)
-                    let class = if cost::terrain_factor(level, class) == 1.0 { 0 } else { class };
+                    // T-1839: the whole price, keyed by terrain class (0 where it does not count)
+                    let class = if cost::terrain_surcharge(level, class) == 0.0 { 0 } else { class };
                     add(0, level, if hsr { HSR_ROW } else { tracks }, wet, class, m, c);
                 });
             }

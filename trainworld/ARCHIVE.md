@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1890 [P1] Terrain and water added, not multiplied. Done 2026-10-31 (agent t1887): level + terrain (+0.4, +1.0, +2.5; none in bored tunnels) + water (+2, any level); mountains 3.0x at grade, 3.5x viaduct, 1.1x tunnel; tags "Mountains +2.5x", "Water +2x". [notes/T-1887.md](notes/T-1887.md).
+
 - T-1887 [P1] Water tag, dearer mountains at grade, Ctrl draws without snapping. Done 2026-10-31 (agent t1887): "Water 2x" in the track tag; ground-level factor 6 in mountains (270 a km against viaduct 225, tunnel 99); Ctrl or Cmd held snaps to nothing. [notes/T-1887.md](notes/T-1887.md).
 
 - T-1886 [P1] Side by side as a setting, diagram dots, unopened city dots. Done 2026-10-31 (agent t1886): Settings "Lines side by side", off by default; the line diagram's dots centred on the bar (12/14 px, as the related view), Traffic stretches round-ended; unopened zone dots 1.25x radius. Pictures artifacts/trainworld/t1886/.

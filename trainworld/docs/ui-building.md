@@ -188,13 +188,13 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it starts, a bridge's top or a dip's bottom, where it ends, each once [T-707]),
   `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
   on yellow above 1x, deeper up to 2.5x, plain at 1x and below. It is the level's multiplier
-  (6.4: 0.5x at ground, 1.0x at +1) and water's, averaged over the track priced, both pairs on
-  quad, whose price is two double tracks' [T-711]. Where the segment could not be
+  (6.4: 0.5x at ground, 1.0x at +1) plus terrain's and water's surcharges, averaged over the track
+  priced, both pairs on quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
-  it is on existing track. A third line names the roughest terrain class charged with its factor
-  ("Mountains 2.5x", "Mountains 6x" where any of it is at ground level) and "Water 2x" when the
-  segment crosses water, each with an icon [T-1394, T-1887].
+  it is on existing track. A third line names the roughest terrain class charged with its
+  surcharge ("Mountains +2.5x", "Hills +1.0x", "Hills +0.4x") and "Water +2x" when the segment
+  crosses water, each with an icon [T-1394, T-1887, T-1890].
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
   In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
 - **Ctrl** (Cmd on a Mac, where Ctrl+click is a right click) [T-1887]: held with the track tool,

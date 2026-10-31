@@ -1,16 +1,14 @@
-// T-1270: the terrain classes the track price multiplies by (sim `TERRAIN_FACTOR`, params.rs), with
+// T-1270: the terrain classes the track price adds for (sim `TERRAIN_SURCHARGE`, params.rs), with
 // their names and the colour the track tool's tag and the blueprint breakdown give them.
 
 import { signal } from "@preact/signals";
 
-// T-1547: classes 1 and 2 are both "Hills"; the multiplier shown beside the name tells them apart
+// T-1547: classes 1 and 2 are both "Hills"; the surcharge shown beside the name tells them apart
 export const TERRAIN_NAMES = ["Flat", "Hills", "Hills", "Mountains"] as const;
-export const TERRAIN_FACTORS = [1, 1.25, 1.6, 2.5] as const;
-/** at ground level (sim `TERRAIN_FACTOR_GROUND`, T-1887) */
-export const TERRAIN_GROUND_FACTORS = [1, 1.25, 1.6, 6] as const;
-/** A class's price factor at a level (sim `cost::terrain_factor`): none for bored tunnels. */
-export const terrainFactor = (level: number, cls: number) =>
-  level === 0 ? TERRAIN_GROUND_FACTORS[cls] ?? 1 : level >= -1 ? TERRAIN_FACTORS[cls] ?? 1 : 1;
+/** what each class adds to the level's multiplier (sim `TERRAIN_SURCHARGE`, T-1890) */
+export const TERRAIN_SURCHARGES = [0, 0.4, 1, 2.5] as const;
+/** what water adds to track's multiplier at any level (sim `WATER_SURCHARGE`) */
+export const WATER_SURCHARGE = 2;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 
 /** A zone's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world

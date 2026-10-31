@@ -51,8 +51,8 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     assert_eq!(out[0], 1.0);
     assert!((out[1] - 2.0 * 270.0).abs() < 1e-6 && (out[4] - 3.0).abs() < 1e-9, "{:?}", &out[..5]);
     let g = a.preview_ground();
-    // T-1887: then the same at ground level only, then over water
-    assert!(g[3] > 1999.0 && g[7] > 1999.0 && g[0] < 1.0 && g[8] == 0.0, "{g:?}");
+    // T-1887: then over water
+    assert!(g[3] > 1999.0 && g[0] < 1.0 && g[4] == 0.0, "{g:?}");
     // a loaded network keeps the terrain in force
     let saved = a.save();
     assert!(a.load(&saved));

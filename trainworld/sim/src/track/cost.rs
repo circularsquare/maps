@@ -425,10 +425,9 @@ pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out:
     }
 }
 
-/// The terrain factor at a level: the ground's own at level 0, none for bored tunnels.
-pub fn terrain_factor(level: i8, class: u8) -> f64 {
-    let c = class.min(3) as usize;
-    if level == 0 { TERRAIN_FACTOR_GROUND[c] } else if level >= TERRAIN_MIN_LEVEL { TERRAIN_FACTOR[c] } else { 1.0 }
+/// What the terrain adds to a level's multiplier: nothing for bored tunnels.
+pub fn terrain_surcharge(level: i8, class: u8) -> f64 {
+    if level >= TERRAIN_MIN_LEVEL { TERRAIN_SURCHARGE[class.min(3) as usize] } else { 0.0 }
 }
 
 /// Level of a height, rounded.
@@ -442,8 +441,8 @@ pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, h
 }
 
 /// Cost of one edge's track, US$M: per sub-interval, the level's multiplier (a ramp at the dearer
-/// of its two levels), 2x over water, the terrain's factor (`terrain_factor`), `track_factor` for
-/// the track type.
+/// of its two levels) plus the terrain's surcharge (`terrain_surcharge`) or water's, times
+/// `track_factor` for the track type.
 pub fn track_cost_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terrain: &[[f64; 3]], tracks: u8, hsr: bool) -> f64 {
     let mut c = 0.0;
     track_cost_parts_t(len, vert, water, terrain, tracks, hsr, |_, _, _, _, _, cost| c += cost);
@@ -485,9 +484,9 @@ pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terra
         }
         let m = 0.5 * (u + v);
         let wet = water.iter().any(|s| m >= s[0] && m < s[1]);
-        // over water the water's 2x stands for the crossing; the ground's class does not add to it
+        // over water the water's surcharge stands for the crossing; the ground's class adds nothing
         let class = if wet { 0 } else { terrain.iter().find(|s| m >= s[0] && m < s[1]).map_or(0, |s| s[2] as u8) };
-        let dear = |l: i8| level_mult(l) * terrain_factor(l, class);
+        let dear = |l: i8| level_mult(l) + terrain_surcharge(l, class);
         let i = vert.partition_point(|p| p[0] <= m).clamp(1, vert.len().max(2) - 1);
         let (level, ramp) = if vert.len() < 2 {
             (level_of(vert.first().map_or(0.0, |p| p[1])), false)
@@ -496,7 +495,7 @@ pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terra
             let b = level_of(vert[i][1]);
             (if dear(a) >= dear(b) { a } else { b }, (vert[i - 1][1] - vert[i][1]).abs() > 1e-9)
         };
-        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * dear(level) * if wet { WATER_COST } else { 1.0 } * track_f;
+        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * (dear(level) + if wet { WATER_SURCHARGE } else { 0.0 }) * track_f;
         part(level, wet, ramp, class, v - u, c);
     }
 }
@@ -571,9 +570,9 @@ mod tests {
         let flat0 = [[0.0, 0.0], [1000.0, 0.0]];
         assert!((track_cost(1000.0, &flat0, &[], 2, false) - 45.0).abs() < 1e-9);
         assert!((track_cost(1000.0, &flat0, &[], 1, false) - 27.0).abs() < 1e-9);
-        // +1 viaduct over 500 m of water: 90 x 0.5 + 180 x 0.5
+        // +1 viaduct over 500 m of water: 90 x 0.5 + 90 x (1 + 2) x 0.5 (T-1890)
         let v1 = [[0.0, 8.0], [1000.0, 8.0]];
-        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, false) - 135.0).abs() < 1e-9);
+        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, false) - 180.0).abs() < 1e-9);
         // 0 -> -2 ramp over 400 m in a 1000 m edge: 300 m at 0.5, 400 m at 1.1 (dearer), 300 m at 1.1.
         let ramp = [[0.0, 0.0], [300.0, 0.0], [700.0, -16.0], [1000.0, -16.0]];
         let want = 90.0 * (0.3 * 0.5 + 0.4 * 1.1 + 0.3 * 1.1);
@@ -589,7 +588,7 @@ mod tests {
         let flat0 = [[0.0, 0.0], [1000.0, 0.0]];
         assert!((track_cost(1000.0, &flat0, &[], 2, true) - 67.5).abs() < 1e-9);
         let v1 = [[0.0, 8.0], [1000.0, 8.0]];
-        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, true) - 202.5).abs() < 1e-9);
+        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, true) - 270.0).abs() < 1e-9);
         // single track has no high-speed form: the flag is ignored there
         assert!((track_cost(1000.0, &flat0, &[], 1, true) - 27.0).abs() < 1e-9);
     }
@@ -617,7 +616,7 @@ mod tests {
         assert_eq!(rows.iter().filter(|r| r.1).map(|r| r.3).sum::<f64>(), 400.0);
         assert_eq!(rows.iter().filter(|r| r.2).map(|r| r.3).sum::<f64>(), 400.0);
         assert!(rows.iter().filter(|r| r.2).all(|r| r.0 == -2));
-        assert!((rows.iter().map(|r| r.4).sum::<f64>() - 73.44).abs() < 1e-9);
+        assert!((rows.iter().map(|r| r.4).sum::<f64>() - 92.88).abs() < 1e-9);
     }
 
     /// A terrain file of `w` x `h` cells at 240 a degree from its south-west lattice cell, by runs.
@@ -659,22 +658,21 @@ mod tests {
 
     #[test]
     fn terrain_prices_surface_track_not_bored_tunnels() {
-        // T-1270: 1 km at each level in the mountain class (2.5x, 6x at ground, T-1887), the tunnels
-        // at their flat price: ground dearer than a viaduct, a viaduct dearer than a tunnel
+        // T-1270, T-1890: 1 km at each level in the mountain class (+2.5), the tunnels at their flat
+        // price
         let mtn = [[0.0, 1000.0, 3.0]];
         let at = |l: f64| [[0.0, l * 8.0], [1000.0, l * 8.0]];
         assert!((track_cost_t(1000.0, &at(0.0), &[], &mtn, 2, false) - 270.0).abs() < 1e-9);
-        assert!((track_cost_t(1000.0, &at(1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
-        assert!((track_cost_t(1000.0, &at(-1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(1.0), &[], &mtn, 2, false) - 315.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(-1.0), &[], &mtn, 2, false) - 315.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(-2.0), &[], &mtn, 2, false) - 99.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(-3.0), &[], &mtn, 2, false) - 108.0).abs() < 1e-9);
-        // in hilly ground the surface is still the cheapest
         let hilly = [[0.0, 1000.0, 2.0]];
-        assert!((track_cost_t(1000.0, &at(0.0), &[], &hilly, 2, false) - 72.0).abs() < 1e-9);
-        // half the edge rolling, over water nothing on top of the water's 2x
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &hilly, 2, false) - 135.0).abs() < 1e-9);
+        // half the edge low hills; over water only the water's +2
         let half = [[500.0, 1000.0, 1.0]];
-        assert!((track_cost_t(1000.0, &at(0.0), &[], &half, 2, false) - (22.5 + 22.5 * 1.25)).abs() < 1e-9);
-        assert!((track_cost_t(1000.0, &at(1.0), &[[0.0, 1000.0]], &mtn, 2, false) - 180.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &half, 2, false) - (22.5 + 40.5)).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(1.0), &[[0.0, 1000.0]], &mtn, 2, false) - 270.0).abs() < 1e-9);
         // a ramp from ground down to -2 in mountains is charged at the dearer end: the ground's
         let ramp = [[0.0, 0.0], [400.0, -16.0]];
         assert!((track_cost_t(400.0, &ramp, &[], &mtn, 2, false) - 0.4 * 270.0).abs() < 1e-9);

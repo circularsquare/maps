@@ -15,7 +15,7 @@ import { world } from "../game/world";
 import { useBlueprintQuote } from "../game/quotes";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
-import { TERRAIN_NAMES, terrainFactor } from "../game/terrain";
+import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 
 // 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's, 10 and 11 T-1464's bus routes and buses
 const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages", "Bus routes", "Buses"];
@@ -62,11 +62,17 @@ function rowTip(r: BlueprintItem) {
     const [shown] = lenKm(n / 1000);
     base = `Base cost ${mil(perDistance(BASE_M_PER_KM))} per ${distUnit()}`;
     factors.push(["Length", shown, 1]);
-    lvl(level);
+    // T-1890: terrain and water add to the level's multiplier: "Ground level 0.5", "Mountains + 2.5",
+    // "Cost factor × 3"
+    const adds: [string, number][] = [];
+    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", TERRAIN_SURCHARGES[r.ground] ?? 0]);
+    if (r.wet) adds.push(["Over water", WATER_SURCHARGE]);
+    if (adds.length) {
+      factors.push([levelName(level), "=", MULT[level]], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
+      factors.push(["Cost factor", "", adds.reduce((s, [, m]) => s + m, MULT[level])]);
+    } else lvl(level);
     if (r.tracks === 1) factors.push(["Single track", "", SINGLE_TRACK]);
     if (r.tracks === HSR_ROW) factors.push(["High-speed track", "", HSR_TRACK]);
-    wet();
-    if (r.ground > 0) factors.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", "", terrainFactor(level, r.ground)]);
   } else if (r.kind === 1) {
     const b = STATION_FIXED_M + STATION_M[level];
     base = `Base cost ${mil(b)} per station at ${levelName(level).toLowerCase()}`;
@@ -93,7 +99,7 @@ function rowTip(r: BlueprintItem) {
     base = `Base cost ${money(r.cost / Math.max(1, n))} per ${NOUN[r.kind] || "item"}`;
     if (n !== 1) factors.push([plural(n, NOUN[r.kind] || "item").replace(/^\S+ /, "").replace(/^./, (c) => c.toUpperCase()), String(n), 1]);
   }
-  const lines = [base, ...factors.map(([name, shown, m]) => (shown && m === 1 ? `${name} × ${shown}` : `${name} × ${num(m)}`))];
+  const lines = [base, ...factors.map(([name, shown, m]) => (shown === "+" ? `${name} + ${num(m)}` : shown === "=" ? `${name} ${num(m)}` : shown && m === 1 ? `${name} × ${shown}` : `${name} × ${num(m)}`))];
   lines.push(`= ${money(r.cost)}`);
   return lines.join("\n");
 }
