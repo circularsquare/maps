@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1887 [P1] Water tag, dearer mountains at grade, Ctrl draws without snapping. Done 2026-10-31 (agent t1887): "Water 2x" in the track tag; ground-level factor 6 in mountains (270 a km against viaduct 225, tunnel 99); Ctrl or Cmd held snaps to nothing. [notes/T-1887.md](notes/T-1887.md).
+
+- T-1886 [P1] Side by side as a setting, diagram dots, unopened city dots. Done 2026-10-31 (agent t1886): Settings "Lines side by side", off by default; the line diagram's dots centred on the bar (12/14 px, as the related view), Traffic stretches round-ended; unopened zone dots 1.25x radius. Pictures artifacts/trainworld/t1886/.
+- T-1888 [P1] Holiday dot hover and headway steps. Done 2026-10-31 (agent t1888): the second range was the coming-back days (the dates after the holiday), now named "a coming-back day after Seollal, Feb 17-18"; the dot is yellow until a run is under way, then pink; headway steppers take Shift-click for 5 min and Ctrl-click for 20. Pictures artifacts/trainworld/t1888/.
 - T-1885 [P1] Phone: inspector hidden on the cash tab. Done 2026-10-30 (agent t1884): Dock.tsx put it beside only four tabs on purpose; now beside on every tab, the Money ledger and fare rows stack name over figures in the narrow column. Pictures artifacts/trainworld/t1884/.
 - T-1884 [P1] Phone: drag the bottom panel's height. Done 2026-10-30 (agent t1884): a strip above the tabs, touch and mouse, 120 px to 58% of the screen, remembered per browser like the desktop width.
 

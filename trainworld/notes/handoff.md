@@ -1,12 +1,12 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session c9a4388f-3ba1-4290-bb0a-d9ad50756061, name maps-18, since 2026-10-30 11:22
-Updated: 2026-10-30 evening (maps-da wound down; nothing in flight)
+Updated: 2026-10-31 (three agents on Anita's 10-31 batch)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 5f232d9b (T-1883, Cities spacing, after T-1854 finer terrain). 8800 at 5f232d9b, smoke 20/20 both shades, 1,988 terrain files in its dist,
+- master c5a11543 (T-1884/T-1885 phone dock, after T-1883 and T-1854). 8800 at c5a11543, smoke 20/20 both shades, 1,988 terrain files in its dist,
   real save 11,392,296 rail trips a day (same as before T-1854).
 - **LIVE: 2026-10-30b** (pushed by Anita 2026-10-30 ~18:00; verify --page all PASS after Pages finished; her first
   verify ran before the Pages build ended). R2 still holds 2026-10-28g and 2026-10-30: her purge printed rclone's
@@ -34,9 +34,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Cores: cap raised to 15 while Anita was out (2026-10-30 evening); set back to 10 when she is at the machine.
 - data/work/pre-T1854/terrain (58 MB) backup: delete once T-1854 is seen clean in play. data/work/terrain-fine/
   (3.1 GB) is T-1854's intermediate, kept for later threshold tweaks.
-- Next free task id: T-1886. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
+- Next free task id: T-1890. 2026-10-31 batch (T-1886 to T-1888) landed; T-1889 filed (riverbanks as hills). Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
 
 ## In flight
+- 2026-10-31 batch (notes/todo-2026-10-31.md): T-1886 side-by-side setting default off, city dots, line diagram
+  (t1886, Opus) DONE uncommitted (label "Lines side by side", noun like its neighbours; ask Anita); T-1887 water tag + mountain price rule (t1887, Opus, sim/src/track); T-1888 holiday hover + yellow
+  dot + shift-click headways (t1888, Sonnet) DONE, uncommitted; maps-18 shortened its click lines to "a going-out
+  day, Feb 12-13" / "a coming-back day, Feb 17-18" (the holiday name is on the line above; the long form wrapped mid-range). Land all, rebuild 8800, look at the pictures; deploy with T-1884/5 on
+  her word (website-only if no data changed: deploy.py --skip-data --version 2026-10-30b).
 - T-1884/T-1885 landed (phone dock grab strip, height kept per browser, 58% max; the inspector beside every tab on a
   phone, Settings too). On 8800, not deployed: deploy only on Anita's word (data unchanged, so
   `deploy.py --skip-data --version 2026-10-30b` then a website commit/push by her).

@@ -125,8 +125,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   stroke widens from 3 to 5 px (`HSR_STRIPE_PX`), so far out they are a solid stroke a little
   heavier than ordinary track [T-1097]. Once the two tracks part, the line runs between them in the
   track's or the line's own colour.
-- **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], in the
-  Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
+- **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], only
+  with the Settings checkbox "Lines side by side" on (off by default, T-1886; `display.lineBands`,
+  set on `renderer.lineBands` in main.ts, redrawn at once). In the Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
   colour, the bands touching, one casing round them all (every casing is drawn before any colour).
   Order on each edge, left to right: of two lines, the one turning more to the left where they
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
@@ -169,9 +170,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   box holds only the middle bands). A click or hover takes the band under the pointer, else the nearest within the slop; trains
   run on their line's band (`sampleBand`, or the Traffic view's; `tripAt`'s `bandM`). `CORRIDORS` in
   `map/lineBands.ts` turns tracks side by side off (only lines on one edge then). Not yet: the
-  Elevation and Speed views are drawn as below; `?perfOff=bands` turns the bands off.
+  Elevation and Speed views are drawn as below; `?perfOff=bands` turns the bands off whatever Settings says.
 - **Lines sharing track drawn over each other** [T-190, T-533] where they are not side by side
-  (zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet
+  (the setting off, zoomed out, close in, the other views): one order for all lines: a line with no trains (fleet
   zero) goes under every line that runs trains; within each group the shorter route (end to end,
   one direction) is on top, ties to the higher id. The line on top wins a click. It is rebuilt when
   lines or fleets change.

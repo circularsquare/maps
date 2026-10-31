@@ -241,16 +241,17 @@ export function headwayShown(id: LineId): [number, number, number] | null {
 }
 
 /** The headway limits (0 is no service) and the step from one headway to the next (T-1872): to the
- * whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4. From no service,
+ * whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; with `minutes` 5
+ * (shift-click, T-1888) to the multiple of 5, so 7 goes to 5 or 10 and 5 to 10 or the 1-minute limit. From no service,
  * plus gives 15 minutes and minus 5; minus at the 1-minute limit gives no service. */
 export const HEADWAY_MIN_S = 60;
 export const HEADWAY_MAX_S = 7200;
-export function nextHeadway(s: number, dir: number): number {
+export function nextHeadway(s: number, dir: number, minutes = 1): number {
   if (s <= 0) return dir > 0 ? 900 : 300;
-  const m = s / 60, near = Math.round(m), whole = Math.abs(m - near) < 1e-6;
-  if (dir > 0) return Math.min(HEADWAY_MAX_S, (whole ? near + 1 : Math.ceil(m)) * 60);
+  const k = Math.max(1, minutes), m = s / 60 / k, near = Math.round(m), whole = Math.abs(m - near) < 1e-6;
+  if (dir > 0) return Math.min(HEADWAY_MAX_S, (whole ? near + 1 : Math.ceil(m)) * k * 60);
   if (s <= HEADWAY_MIN_S) return 0;
-  return Math.max(HEADWAY_MIN_S, (whole ? near - 1 : Math.floor(m)) * 60);
+  return Math.max(HEADWAY_MIN_S, (whole ? near - 1 : Math.floor(m)) * k * 60);
 }
 /** The fewest trains that keep a headway over a round trip, as the sim works it out; with the
  * line's shortest headway `limitS`, no more than fit when the headway is at that limit (T-679,
@@ -324,11 +325,12 @@ const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
   sendHeadway(id, secs);
 };
 
-/** False when the headway is at its limit already (T-1844): the stepper shakes. */
+/** False when the headway is at its limit already (T-1844): the stepper shakes. `dir`'s size is the
+ * step in minutes (the stepper's 1, 5 or 20), its sign the direction. */
 export function stepHeadway(id: LineId, demand: Demand, dir: number): boolean {
   const base = headwayShown(id);
   if (!base) return true;
-  const now = base[DEMAND_INDEX[demand]], to = nextHeadway(now, dir);
+  const now = base[DEMAND_INDEX[demand]], to = nextHeadway(now, Math.sign(dir), Math.abs(dir));
   if (to === now) return false;
   setHeadway(id, demand, to);
   return true;

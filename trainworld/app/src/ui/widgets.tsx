@@ -165,14 +165,16 @@ export function shakeEl(el: HTMLElement | null) {
   el.classList.add("shake");
 }
 
-/** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so.
+/** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so, with
+ * `jumpUnit` after the numbers ("min", the headway's, T-1888).
  * `type` (T-626): a click on the value opens a box for typing it; Enter or leaving the box applies
  * `set` with the number typed (anything else is dropped), Escape cancels. `text` is what the box
  * starts with, `tip` the value's hover. `onStep` returns false for a step refused (T-1844): the
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
-  const jump = p.jump ? "Shift-click for 5, Ctrl-click for 20" : undefined;
+  const u = p.jumpUnit ? " " + p.jumpUnit : "";
+  const jump = p.jump ? `Shift-click for 5${u}, Ctrl-click for 20${u}` : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
   const box = useRef<HTMLSpanElement>(null);
   // T-1844: a step that returns false was refused (a limit, or no money): the stepper shakes and the

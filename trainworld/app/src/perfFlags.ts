@@ -59,7 +59,7 @@
 //   strokeCull every stroke chunk drawn, also those off the view (before T-1639; `renderer.strokeCull`)
 //   strokeLod the full stroke sets drawn at every zoom, not simplified copies (before T-1639; `renderer.strokeLod`)
 //   strokeGather the visible strokes drawn range by range, not gathered into one buffer (before T-1644; `renderer.strokeGather`)
-//   bands    lines sharing track drawn over each other, not side by side (before T-1799; `renderer.lineBands`)
+//   bands    lines sharing track drawn over each other, not side by side (before T-1799; `renderer.lineBands`), whatever Settings says (T-1886)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer

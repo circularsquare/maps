@@ -97,6 +97,9 @@ pub const WATER_STEP: f64 = 12.5;
 /// Price factor per terrain class (T-1270, Anita 2026-10-25): flat, rolling, hilly, mountain. Set so
 /// ground track stays cheaper than a bored tunnel until the mountain class.
 pub const TERRAIN_FACTOR: [f64; 4] = [1.0, 1.25, 1.6, 2.5];
+/// The factor for track at ground level (T-1887, Anita 2026-10-31): mountains cost the base plus
+/// 200% at grade (6 x the ground's 0.5), dearer than a viaduct or a bored tunnel there.
+pub const TERRAIN_FACTOR_GROUND: [f64; 4] = [1.0, 1.25, 1.6, 6.0];
 /// The lowest level the terrain factor applies to: bored tunnels (-2, -3) cost the same anywhere.
 pub const TERRAIN_MIN_LEVEL: i8 = -1;
 /// Terrain sampling step along track, m: under a quarter of the class grid's ~115 m cell (T-1854).

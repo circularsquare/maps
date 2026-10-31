@@ -5,7 +5,9 @@ import { levelLabel, speed } from "../game/format";
 import { bulletNode, isBusLine } from "../ui/bullet";
 import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
-import { TERRAIN_COLOURS, TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
+import { TERRAIN_COLOURS, TERRAIN_FACTORS, TERRAIN_GROUND_FACTORS, TERRAIN_NAMES } from "../game/terrain";
+
+const WATER_FACTOR = 2, WATER_COLOUR = "#7fb3e0";
 import type { Level, LineInput } from "../game/types";
 
 /** An up and down arrow: elevation. */
@@ -85,15 +87,31 @@ export function trainSpeedFact(kmh: number): HTMLSpanElement {
 /** A mountain: the ground's terrain class (T-1270). */
 const TERRAIN_PATH = "M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z";
 
+/** Two waves: water. */
+const WATER_PATH = "M1.5 6.5q1.6-1.6 3.25 0t3.25 0 3.25 0 3.25 0M1.5 10.5q1.6-1.6 3.25 0t3.25 0 3.25 0 3.25 0";
+
 /** The icon and a chip for the roughest terrain class a route crosses where it is charged (T-1394),
- * from the preview's metres per class (flat to mountains); null on flat ground only. */
+ * from the preview's metres (`TrackApi.preview_ground`: per class flat to mountains, then per class
+ * at ground level); null on flat ground only. The ground's factor where any of that class is at
+ * ground level (T-1887). */
 export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
   if (!ground) return null;
   const k = [3, 2, 1].find((c) => (ground[c] ?? 0) >= 1);
   if (k === undefined) return null;
+  const f = (ground[4 + k] ?? 0) >= 1 ? TERRAIN_GROUND_FACTORS[k] : TERRAIN_FACTORS[k];
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(TERRAIN_PATH, "Terrain"), chip(`${TERRAIN_NAMES[k]} ${TERRAIN_FACTORS[k]}x`, TERRAIN_COLOURS[k], 0.6));
+  s.append(icon(TERRAIN_PATH, "Terrain"), chip(`${TERRAIN_NAMES[k]} ${f}x`, TERRAIN_COLOURS[k], 0.6));
+  return s;
+}
+
+/** The icon and the water's factor (sim `WATER_COST`, any level) where a route crosses water
+ * (T-1887, the preview's ninth figure); null on land only. */
+export function waterFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+  if (!ground || (ground[8] ?? 0) < 1) return null;
+  const s = document.createElement("span");
+  s.className = "tag-fact";
+  s.append(icon(WATER_PATH, "Water"), chip(`Water ${WATER_FACTOR}x`, WATER_COLOUR, 0.6));
   return s;
 }
 

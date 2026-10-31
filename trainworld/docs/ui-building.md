@@ -192,9 +192,17 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
-  it is on existing track.
+  it is on existing track. A third line names the roughest terrain class charged with its factor
+  ("Mountains 2.5x", "Mountains 6x" where any of it is at ground level) and "Water 2x" when the
+  segment crosses water, each with an icon [T-1394, T-1887].
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
   In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
+- **Ctrl** (Cmd on a Mac, where Ctrl+click is a right click) [T-1887]: held with the track tool,
+  the ghost and clicks snap to no track, node, station or spot beside track: the start and end go
+  where the pointer is, as on open ground, so nothing joins or branches; crossing track is then
+  what it is for any free segment (a crossing at the same level, or refused). The real-line ring
+  [T-727d] still applies. Pressing or letting go of the key redraws the ghost at once. Ctrl had no
+  meaning in the track tool before (only Ctrl+Z, Y, S, K and F, and no node drag starts with Ctrl held).
 - **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
   outline outside the rails (black; the map's ink, near white, in the dark theme; `ghost` in
   `game/shadeTable.ts`) [T-1054]. The middle is coloured

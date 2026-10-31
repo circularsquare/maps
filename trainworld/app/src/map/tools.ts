@@ -48,7 +48,7 @@ import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, wa
 import type { Overlay } from "./overlay";
 import { placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
-import { chip, costTint, elevationFact, factRow, speedFact, terrainFact } from "./trackTagRows";
+import { chip, costTint, elevationFact, factRow, speedFact, terrainFact, waterFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -183,6 +183,8 @@ export class Tools {
   private touchKey = "";
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
+    for (const k of ["keydown", "keyup"] as const) window.addEventListener(k, (e) => this.noSnapFrom(e));
+    window.addEventListener("blur", () => this.noSnapFrom({ ctrlKey: false, metaKey: false }));
     this.box = document.createElement("div");
     this.box.className = "tool-marks";
     map.getContainer().appendChild(this.box);
@@ -276,6 +278,18 @@ export class Tools {
 
   // ---------------------------------------------------------------- snapping
 
+  /** T-1887: Ctrl (Cmd on a Mac) held: the track tool snaps to no track, node or beside spot. */
+  private noSnap = false;
+
+  /** Follow Ctrl or Cmd from a pointer or key event; a change redraws the ghost where the pointer is. */
+  noSnapFrom(e: { ctrlKey: boolean; metaKey: boolean }) {
+    const on = e.ctrlKey || e.metaKey;
+    if (on === this.noSnap) return;
+    this.noSnap = on;
+    const p = this.pointer;
+    if (tool.peek() === "track" && p) this.move({ point: { x: p.px, y: p.py }, lngLat: { lng: p.lng, lat: p.lat }, originalEvent: e } as unknown as MapMouseEvent);
+  }
+
   private screen(lx: number, ly: number) {
     return this.overlay.toScreen(lx, ly);
   }
@@ -287,7 +301,7 @@ export class Tools {
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
     const station = tool.peek() === "station";
     if (station) this.alts = [];
-    if (!w || !n) return { kind: "free", lx: fx, ly: fy };
+    if (!w || !n || (this.noSnap && tool.peek() === "track")) return { kind: "free", lx: fx, ly: fy };
     let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
     // only what is near the pointer (T-724); everything with the map pitched
     const at = pointerLocal(this.overlay, px, py);
@@ -341,7 +355,7 @@ export class Tools {
   private besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
     const n = this.overlay.renderer.net;
     const at = pointerLocal(this.overlay, px, py);
-    if (!snapBeside.peek() || !n || !at) return null;
+    if (!snapBeside.peek() || !n || !at || this.noSnap) return null;
     let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
     for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
@@ -419,6 +433,7 @@ export class Tools {
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "bus") return this.bus.move(e);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
+    if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
@@ -432,8 +447,10 @@ export class Tools {
 
   click(e: MapMouseEvent) {
     const t = tool.peek();
-    if (t === "track") this.trackClick(e);
-    else if (t === "station") void this.stationClick(e);
+    if (t === "track") {
+      this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+      this.trackClick(e);
+    } else if (t === "station") void this.stationClick(e);
     else if (t === "line") this.lineClick(e);
     else if (t === "delete") this.deleteClick(e);
     else if (t === "bus") this.bus.click(e);
@@ -1730,8 +1747,8 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = terrainFact(pv.ground);
-  if (ground) out.push(factRow(ground));
+  const ground = [terrainFact(pv.ground), waterFact(pv.ground)].filter((f) => f !== null);
+  if (ground.length) out.push(factRow(...ground));
   return out;
 }
 

@@ -27,7 +27,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   shows the segment with its curve's radius and speed limit, the curve's whole circle faintly, and
   the cursor the segment's length, average cost multiplier (level, water and terrain over its length),
   price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), the
-  roughest terrain class it crosses where it is charged (T-1270, T-1394), or why it
+  roughest terrain class it crosses where it is charged (T-1270, T-1394) and water's 2x where it
+  crosses water (T-1887), or why it
   cannot be built; a click on a refused segment does nothing.
 - **The segment's shape**: from a track end, a node or track to open ground it is **one circular
   arc through the click, leaving along the track's heading** (a tangent arc; from a node or track,
@@ -741,9 +742,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
   pack (T-030), and outside every pack's mask from the world's coarse mask (T-1285).
 - **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md): each zone's ground is in four
-  classes, and track at elevation -1 to +3 costs the class's factor more; bored tunnels (-2, -3)
-  cost the same anywhere, so in the mountain class a -2 tunnel (US$99M a km) is cheaper than track
-  at ground level (US$112.5M) or a viaduct (US$225M). Over water the water's 2x stands alone. A ramp
+  classes, and track at elevation -1 to +3 costs the class's factor more, track at ground level in
+  mountains its own, larger factor (T-1887: the base plus 200%); bored tunnels (-2, -3) cost the
+  same anywhere. So in mountains ground track is the dearest way through, then a viaduct, then a
+  tunnel; in hills ground track stays the cheapest. Over water the water's 2x stands alone. A ramp
   is charged at the dearer of its two levels with the factor counted. Stations, junctions,
   crossings and upkeep take no factor; nothing is refused for steep ground; grades do not slow trains.
 
@@ -751,7 +753,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   |---|---|---|---|---|
   | Mean 30 m slope over a cell | under 2.5° | 2.5-5.5° | 5.5-11° | 11° and over |
   | Ground round it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
-  | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
+  | Factor at -1 to +3 (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
+  | Factor at ground level (`TERRAIN_FACTOR_GROUND`) | 1 | 1.25 | 1.6 | 6 |
+  | US$M a km at ground level | 45 | 56.25 | 72 | 270 |
+  | US$M a km on a +1 viaduct | 90 | 112.5 | 144 | 225 |
+  | US$M a km in a -2 tunnel | 99 | 99 | 99 | 99 |
 
   The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 30 m, CC BY 4.0, T-1854)
   by `pipeline/zone_terrain.py` from the intermediate in `data/work/terrain-fine/`
@@ -767,7 +773,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
-  segment crosses ("Mountains 2.5x", T-1394), its multiplier includes the factor, and the blueprint breakdown has a
+  segment crosses with the factor where it is charged ("Mountains 2.5x", "Mountains 6x" where any of
+  it is at ground level, T-1394), and "Water 2x" when it crosses water (T-1887); its multiplier includes the factor, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.

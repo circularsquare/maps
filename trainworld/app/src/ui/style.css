@@ -555,9 +555,11 @@ rect.now { fill-opacity: .45; }
 .stops li::before { content: ""; position: absolute; left: 7px; width: 6px; top: 0; bottom: 0; background: var(--c); }
 .stops li:first-child::before { top: 50%; }
 .stops li:last-child::before { bottom: 50%; }
-.stops li::after { content: ""; position: absolute; left: 4px; top: 50%; margin-top: -6px;
+/* T-1886: the dot centred on the bar's middle (10px) by a transform, since a scaled border is
+   floored to whole pixels and an offset worked out from its width lands left of the bar */
+.stops li::after { content: ""; position: absolute; left: 10px; top: 50%; transform: translate(-50%, -50%); box-sizing: content-box;
                    width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
-.stops li.xfer::after { left: 3px; margin-top: -7px; width: 10px; height: 10px; }
+.stops li.xfer::after { width: 10px; height: 10px; }
 /* T-646: the stations a line passes, offered as stops (no dot), and those about to be added (faint dot) */
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
@@ -629,6 +631,9 @@ rect.now { fill-opacity: .45; }
 .stops .stretch.down { top: 50%; bottom: 0; }
 .stops .stretch.up { top: 0; bottom: 50%; }
 .stops .stretch::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2); width: var(--w); background: var(--c); }
+/* T-1886: round ends under each stop's dot, like a round line cap */
+.stops .stretch.down::before { top: calc(var(--w) / -2); border-radius: calc(var(--w) / 2) calc(var(--w) / 2) 0 0; }
+.stops .stretch.up::before { bottom: calc(var(--w) / -2); border-radius: 0 0 calc(var(--w) / 2) calc(var(--w) / 2); }
 .stops .stretch.full::before {
   background: color-mix(in srgb, var(--c), #000 calc(var(--f) * 14%));
 }
@@ -725,6 +730,7 @@ rect.now { fill-opacity: .45; }
 .day-away { display: inline-flex; vertical-align: middle; }
 .holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
 /* T-1476, T-1865: near a long holiday the dot is a button (the calendar icon's job), its hit area wider than the dot */
+.holiday-dot.coming { background: var(--yellow); }
 .holiday-dot.btn-dot { position: relative; padding: 0; border: 0; cursor: pointer; }
 .holiday-dot.btn-dot::before { content: ""; position: absolute; inset: -7px; }
 .holiday-dot.btn-dot.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent); }

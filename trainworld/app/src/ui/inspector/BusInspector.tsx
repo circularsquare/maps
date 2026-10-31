@@ -177,7 +177,7 @@ function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand
         <span class={"num" + (broke ? " bad" : "")} data-tip={`${busesText(counts[lev])} on the line keep the headway over its round trip`}>{counts[lev]}</span>
       </td>
       <td>
-        {wrap(<Stepper wide label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
+        {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
           tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), 0, false), st)}
           tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), 0, false), st)}
           type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: typeTip }} />)}

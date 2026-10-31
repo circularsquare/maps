@@ -1,6 +1,6 @@
 // T-1270 in a new game through the edit API: track priced by the ground's terrain class. A
 // kilometre or so at ground level on flat ground in Brooklyn costs 45 US$M a km, the same at
-// ground level on mountain ground above Innsbruck 2.5x that, and a bored tunnel (-2) there its flat
+// ground level on mountain ground above Innsbruck 6x that (T-1887), and a bored tunnel (-2) there its flat
 // 99; Construct charges the quote. The spots come from the zones' terrain files (a run of cells of
 // one class). Then screenshots: the hillshade (Settings, Terrain) at Innsbruck in both themes, and
 // the track tool's tag over a mountain segment. About a minute.
@@ -109,7 +109,7 @@ try {
   const plain = await segment(flatA, flatB, 0);
   check(!plain.error && Math.abs(plain.perKm - 45) < 0.5, `flat ground at 0: ${plain.perKm?.toFixed(2) ?? plain.error} US$M a km (45)`);
   const ground = await segment(mtn.a, mtn.b, 0);
-  check(!ground.error && Math.abs(ground.perKm - 112.5) < 2, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (112.5)`);
+  check(!ground.error && Math.abs(ground.perKm - 270) < 4, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (270, T-1887)`);
   check(ground.rows?.some(([cls]) => cls === 3), `the blueprint breakdown has a mountain row (${JSON.stringify(ground.rows)})`);
   const dy = 0.004; // a parallel run 450 m south, for the tunnel
   const tunnel = await segment([mtn.a[0], mtn.a[1] - dy], [mtn.b[0], mtn.b[1] - dy], -2);
@@ -151,7 +151,7 @@ try {
   await page.mouse.move(x1 + 1, y1, { steps: 1 });
   await page.waitForTimeout(1200);
   const tag = await page.evaluate(() => [...document.querySelectorAll('.tool-tag')].map((t) => t.textContent).join(' | '));
-  check(/Mountains 2\.5x|Hills 1\.6x|Hills 1\.25x/.test(tag), `the track tool's tag names the ground (${tag})`);
+  check(/Mountains (6|2\.5)x|Hills 1\.6x|Hills 1\.25x/.test(tag), `the track tool's tag names the ground (${tag})`);
   await page.screenshot({ path: join(OUT, 'mountain-tag.png') });
   await page.keyboard.press('Escape');
 

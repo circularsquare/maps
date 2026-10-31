@@ -784,19 +784,26 @@ impl TrackWorld {
         ground
     }
 
-    /// Metres of a fitted alignment in each terrain class where the class is charged (T-1270: off
-    /// water, at elevation -1 and above), for the track tool's tag.
-    pub fn ground_metres(&self, f: &super::geom::Fit) -> [f64; 4] {
-        let mut out = [0.0; 4];
+    /// Metres of a fitted alignment for the track tool's tag: in each terrain class where the class
+    /// is charged (T-1270: off water, at elevation -1 and above), the same at ground level only
+    /// (T-1887, its own factor), then over water at any level.
+    pub fn ground_metres(&self, f: &super::geom::Fit) -> [f64; 9] {
+        let mut out = [0.0; 9];
         let ground = self.ground_of(f);
-        if ground.is_empty() {
-            return out;
-        }
         let mut wet = vec![];
         super::cost::water_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); (x, y) }, self.net.water_mask.as_ref(), &mut wet);
-        super::cost::track_cost_parts_t(f.len, &f.vert, &wet, &ground, 2, false, |level, _, _, class, m, _| {
-            if level >= TERRAIN_MIN_LEVEL {
-                out[class.min(3) as usize] += m;
+        if ground.is_empty() && wet.is_empty() {
+            return out;
+        }
+        super::cost::track_cost_parts_t(f.len, &f.vert, &wet, &ground, 2, false, |level, w, _, class, m, _| {
+            let c = class.min(3) as usize;
+            if w {
+                out[8] += m;
+            } else if level >= TERRAIN_MIN_LEVEL {
+                out[c] += m;
+                if level == 0 {
+                    out[4 + c] += m;
+                }
             }
         });
         out

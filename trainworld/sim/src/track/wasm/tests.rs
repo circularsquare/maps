@@ -39,19 +39,20 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     assert!(!a.add_terrain(b"TWT1"));
     assert!(a.add_terrain(&terrain_round(ll[0], ll[1], 120, 3)));
     let after = a.blueprint_cost();
-    assert!((after - (3.0 * 112.5 + 3.0 * 99.0)).abs() < 1e-6, "{after}");
+    assert!((after - (3.0 * 270.0 + 3.0 * 99.0)).abs() < 1e-6, "{after}");
     let rows = a.blueprint_cost_items();
     // T-1839: track rows carry the terrain class in the fifth field, the ground's part is no row
     let hilly: f64 = rows.chunks_exact(7).filter(|r| r[0] == 0.0 && r[4] == 3.0).map(|r| r[6]).sum();
-    assert!((hilly - 3.0 * 112.5).abs() < 1e-6 && !rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
+    assert!((hilly - 3.0 * 270.0).abs() < 1e-6 && !rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
     // the tool's preview prices the same and says how much ground it crosses in each class
     let more: Vec<f64> = free(0.0, -1000.0).iter().chain(free(2000.0, -1000.0).iter()).copied().collect();
     let out = a.preview_route(&more, &[], 2, false);
     assert_eq!(out[0], 1.0);
-    assert!((out[1] - 2.0 * 112.5).abs() < 1e-6 && (out[4] - 1.25).abs() < 1e-9, "{:?}", &out[..5]);
+    assert!((out[1] - 2.0 * 270.0).abs() < 1e-6 && (out[4] - 3.0).abs() < 1e-9, "{:?}", &out[..5]);
     let g = a.preview_ground();
-    assert!(g[3] > 1999.0 && g[0] < 1.0, "{g:?}");
+    // T-1887: then the same at ground level only, then over water
+    assert!(g[3] > 1999.0 && g[7] > 1999.0 && g[0] < 1.0 && g[8] == 0.0, "{g:?}");
     // a loaded network keeps the terrain in force
     let saved = a.save();
     assert!(a.load(&saved));

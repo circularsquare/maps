@@ -425,9 +425,10 @@ pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out:
     }
 }
 
-/// The terrain factor at a level: none for bored tunnels.
+/// The terrain factor at a level: the ground's own at level 0, none for bored tunnels.
 pub fn terrain_factor(level: i8, class: u8) -> f64 {
-    if level >= TERRAIN_MIN_LEVEL { TERRAIN_FACTOR[class.min(3) as usize] } else { 1.0 }
+    let c = class.min(3) as usize;
+    if level == 0 { TERRAIN_FACTOR_GROUND[c] } else if level >= TERRAIN_MIN_LEVEL { TERRAIN_FACTOR[c] } else { 1.0 }
 }
 
 /// Level of a height, rounded.
@@ -658,24 +659,25 @@ mod tests {
 
     #[test]
     fn terrain_prices_surface_track_not_bored_tunnels() {
-        // T-1270: 1 km at each level in the mountain class (2.5x), the tunnels at their flat price
+        // T-1270: 1 km at each level in the mountain class (2.5x, 6x at ground, T-1887), the tunnels
+        // at their flat price: ground dearer than a viaduct, a viaduct dearer than a tunnel
         let mtn = [[0.0, 1000.0, 3.0]];
         let at = |l: f64| [[0.0, l * 8.0], [1000.0, l * 8.0]];
-        assert!((track_cost_t(1000.0, &at(0.0), &[], &mtn, 2, false) - 112.5).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &mtn, 2, false) - 270.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(-1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(-2.0), &[], &mtn, 2, false) - 99.0).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(-3.0), &[], &mtn, 2, false) - 108.0).abs() < 1e-9);
-        // so in mountains the tunnel is the cheaper way, in hilly ground the surface still is
+        // in hilly ground the surface is still the cheapest
         let hilly = [[0.0, 1000.0, 2.0]];
         assert!((track_cost_t(1000.0, &at(0.0), &[], &hilly, 2, false) - 72.0).abs() < 1e-9);
         // half the edge rolling, over water nothing on top of the water's 2x
         let half = [[500.0, 1000.0, 1.0]];
         assert!((track_cost_t(1000.0, &at(0.0), &[], &half, 2, false) - (22.5 + 22.5 * 1.25)).abs() < 1e-9);
         assert!((track_cost_t(1000.0, &at(1.0), &[[0.0, 1000.0]], &mtn, 2, false) - 180.0).abs() < 1e-9);
-        // a ramp from ground down to -2 in mountains is charged at the dearer end: ground's 2.5x
+        // a ramp from ground down to -2 in mountains is charged at the dearer end: the ground's
         let ramp = [[0.0, 0.0], [400.0, -16.0]];
-        assert!((track_cost_t(400.0, &ramp, &[], &mtn, 2, false) - 0.4 * 112.5).abs() < 1e-9);
+        assert!((track_cost_t(400.0, &ramp, &[], &mtn, 2, false) - 0.4 * 270.0).abs() < 1e-9);
         let mut classes = vec![];
         track_cost_parts_t(1000.0, &at(0.0), &[], &half, 2, false, |_, _, _, c, m, _| classes.push((c, m)));
         assert_eq!(classes, vec![(0, 500.0), (1, 500.0)]);

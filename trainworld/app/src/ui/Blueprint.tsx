@@ -15,7 +15,7 @@ import { world } from "../game/world";
 import { useBlueprintQuote } from "../game/quotes";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
-import { TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
+import { TERRAIN_NAMES, terrainFactor } from "../game/terrain";
 
 // 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's, 10 and 11 T-1464's bus routes and buses
 const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages", "Bus routes", "Buses"];
@@ -66,7 +66,7 @@ function rowTip(r: BlueprintItem) {
     if (r.tracks === 1) factors.push(["Single track", "", SINGLE_TRACK]);
     if (r.tracks === HSR_ROW) factors.push(["High-speed track", "", HSR_TRACK]);
     wet();
-    if (r.ground > 0) factors.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", "", TERRAIN_FACTORS[r.ground] ?? 1]);
+    if (r.ground > 0) factors.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", "", terrainFactor(level, r.ground)]);
   } else if (r.kind === 1) {
     const b = STATION_FIXED_M + STATION_M[level];
     base = `Base cost ${mil(b)} per station at ${levelName(level).toLowerCase()}`;

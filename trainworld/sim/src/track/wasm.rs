@@ -87,8 +87,8 @@ pub struct TrackApi {
     rasters: Vec<PackWater>,
     /// The world's coarse water (`add_world_water`, T-1285), deciding where no pack raster does.
     world_water: Option<Arc<RunMask>>,
-    /// Metres of the last preview in each terrain class (`preview_ground`).
-    preview_ground: [f64; 4],
+    /// Metres of the last preview by terrain class and over water (`preview_ground`, `ground_metres`).
+    preview_ground: [f64; 9],
     /// The boarding account (T-164): demand's riders per period, and each train's load and each
     /// platform's crowd worked out from them. Never saved.
     boarding: Boarding,
@@ -270,7 +270,7 @@ impl TrackApi {
             station_cost: 0.0,
             rasters: vec![],
             world_water: None,
-            preview_ground: [0.0; 4],
+            preview_ground: [0.0; 9],
             boarding: Boarding::default(),
             spans: vec![],
             now: f64::NAN,

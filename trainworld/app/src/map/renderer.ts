@@ -566,8 +566,8 @@ export class NetworkRenderer {
   private lodOf = new Map<StrokeVao, StrokeLodState>();
   /** T-1644: off with `?perfOff=strokeGather` */
   strokeGather = !perfOff("strokeGather");
-  /** T-1799: off with `?perfOff=bands` */
-  lineBands = !perfOff("bands");
+  /** T-1799: lines sharing track side by side; T-1886: the Settings switch, off by default (main.ts) */
+  lineBands = false;
   private trafficWidths = false;
   private gathers = new Map<StrokeVao, StrokeGather>();
   private speedShown = new WeakMap<Strokes, Float32Array>();

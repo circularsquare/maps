@@ -98,6 +98,9 @@ export function SettingsTab() {
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           Flat junctions and crossings
         </Check>
+        <Check checked={d.lineBands} onChange={(v) => setDisplay("lineBands", v)}>
+          Lines side by side
+        </Check>
         {DRIVES_FEATURE && <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
           Drives
         </Check>}

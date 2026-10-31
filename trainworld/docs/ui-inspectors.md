@@ -209,7 +209,9 @@ purpose filter the purpose drawn is ringed in the bar.
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 120
   minutes; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872,
-  `nextHeadway`]; a click on the number types it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
+  `nextHeadway`]; Shift-click steps to the multiple of 5 minutes (7 goes to 5 or 10, 5 to 10 or the
+  1-minute limit) and Ctrl-click to the multiple of 20, the hover saying "Shift-click for 5 min,
+  Ctrl-click for 20 min" [T-1888]; a click on the number types it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
 headway or count is still on its way to the worker (an edit takes seconds on a big network), the other
 cell shows what it gives (the headway's count by `autoTrainsFor` with the level's limit, a count's
 headway over the round trip), and the muted running headway waits for the edit, so stepping fast never
@@ -278,7 +280,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; a **loop**
   shows each station once, its bar going on past the first and last stops and curving round to
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
-  "Open the loop") [T-1391]; **flat junctions and
+  "Open the loop") [T-1391]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
+  a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
@@ -289,7 +292,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   complex, 0 for a new stop's stretch, blank when under half the stops remain, `carryLoads`
   [T-1419], as on the map's line widths and hover), from 2 px
   for none to 14 px for the line's own busiest stretch (`STRETCH_MIN_PX`, `STRETCH_MAX_PX`), so a quiet
-  line varies as much as a busy one; a stretch the map marks as crowded (`Renderer.fullStretch`,
+  line varies as much as a busy one, with round ends under its stops' dots [T-1886]; a stretch the map marks as crowded (`Renderer.fullStretch`,
   read every half second) has its darkening and red edges 2 px each side, 1 px of the panel's colour
   between them and the stretch (T-1284), the edges from half
   strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's

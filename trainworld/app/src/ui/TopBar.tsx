@@ -94,7 +94,8 @@ const CAL_AHEAD = 2;
  * and is a button while a superholiday where the player has built is under way or goes out within
  * `CAL_AHEAD` days (the calendar icon it replaced). Its hover has each run's days within 21 days, and a
  * click shows demand on its next going-out day (the Day choice's own option; once those are past, a
- * coming-back day, then a day away) or back to the day shown before. */
+ * coming-back day, then a day away) or back to the day shown before. The dot is yellow until a run
+ * is under way (T-1888), then pink. */
 function HolidayDot({ today }: { today: boolean }) {
   const runs = supersNear.value;
   void superDays.value; // a day turning, for `runToday` below
@@ -105,8 +106,8 @@ function HolidayDot({ today }: { today: boolean }) {
   const first = runs.find((r) => runToday(r) < r.end);
   const t = first ? runToday(first) : 0;
   const target: { key: "out" | "back" | "away"; what: string } | null = !first ? null
-    : rush && first.out < first.away && t < first.away ? { key: "out", what: `a day of ${first.name}, ${dateRange(first.out, first.away)}` }
-    : rush && first.back < first.end ? { key: "back", what: `a day of ${first.name}, ${dateRange(first.back, first.end)}` }
+    : rush && first.out < first.away && t < first.away ? { key: "out", what: `a going-out day, ${dateRange(first.out, first.away)}` }
+    : rush && first.back < first.end ? { key: "back", what: `a coming-back day, ${dateRange(first.back, first.end)}` }
     : away ? { key: "away", what: `a day of ${whenAway.value ?? away}` } : null;
   const showing = (d.dayShown === "out" || d.dayShown === "back") ? rush !== null : d.dayShown === "away" && away !== null;
   const lines: string[] = [];
@@ -121,7 +122,9 @@ function HolidayDot({ today }: { today: boolean }) {
     if (showing) setDisplay("dayShown", (DAY_SHOWN_ON[dayBefore] ? dayBefore : "average") as typeof d.dayShown);
     else if (target) { dayBefore = d.dayShown; setDisplay("dayShown", target.key); }
   };
-  return <button class={"holiday-dot btn-dot" + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click} />;
+  // yellow until a run is under way (every hover line says "in N days" or "tomorrow"), pink after
+  const coming = !today && runs.every((r) => r.out > runToday(r));
+  return <button class={"holiday-dot btn-dot" + (coming ? " coming" : "") + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click} />;
 }
 
 /** T-861, T-1853: the time and date on one line. */

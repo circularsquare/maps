@@ -33,6 +33,8 @@ export interface DisplaySettings {
   fullMarks: boolean;
   /** T-673: the marks on flat crossings and junctions (ramps, portals and refused crossings stay) */
   flatMarks: boolean;
+  /** T-1886: lines sharing track drawn side by side (T-1799, T-1848), not over each other; off by default */
+  lineBands: boolean;
   basemapLabels: boolean;
   /** T-682: faint real-world rail lines from noritetsu's tiles, under the network (map/realNetwork.ts) */
   realNetwork: boolean;
@@ -111,6 +113,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   capacity: true,
   fullMarks: true,
   flatMarks: true,
+  lineBands: false,
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: true,

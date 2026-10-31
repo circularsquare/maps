@@ -201,6 +201,10 @@ onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens
 groupHover.subscribe(() => overlay.invalidate());
 live.map = map;
 live.overlay = overlay;
+effect(() => {
+  renderer.lineBands = display.value.lineBands && !perfOff("bands"); // T-1886
+  overlay.invalidate();
+});
 if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`
 // Panning follows the zone under the view, except while a bubble, station or trip selection holds
 // the focus; the zones beside it on screen show their bubbles too (T-276, map/zoneFocus.ts).
