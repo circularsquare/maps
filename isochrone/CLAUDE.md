@@ -19,6 +19,7 @@ with an orchestrator session running agents from `TASKS.md` (since 2026-10-26).
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
 | `notes/T-###.md` | Working notes for a task too big for one line; analysis scripts a note cites | the task's agent |
 | `notes/for-anita.md` | Open questions for Anita that outlive a session | orchestrator |
+| `notes/handoff.md` | The orchestrator's live state, kept current so a new one can take over any time (`/takeover`, `/handoff`; maps/CLAUDE.md) | orchestrator |
 | `checks/` | Standing checks, `smoke.mjs` first | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
 | `TODO.md` | Anita's own list: read it and file new items as tasks | Anita only; agents never edit it |

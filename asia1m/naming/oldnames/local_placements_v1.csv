@@ -1,0 +1,810 @@
+key,zh,x,y,w,h,layout,placed_inside,dist,anchor,source
+#2065d8,静安,7751,3589,23,11,line,partly,0.7,interior,oldnames high
+#ee7709,重庆,6479,3944,23,11,line,partly,0.7,interior,picks
+#dac900,郑州,7044,3301,11,23,column,partly,4.5,interior,picks
+#f04e2f,武侯,6256,3839,23,11,line,partly,0.7,interior,picks
+#f12101,海珠,7160,4594,23,11,line,partly,4.5,interior,oldnames high
+#12bced,兰州,6205,3245,23,11,line,partly,0.7,interior,picks
+#f06969,汉口,7142,3758,23,11,line,partly,1.6,interior,picks
+#dee200,西安,6644,3408,23,11,line,partly,0.7,interior,picks
+#d67558,包河,7385,3585,23,11,line,partly,0.7,interior,picks
+#ff9130,海口,6915,4967,23,11,line,partly,16.3,english label,oldnames high
+#a69460,太原,6903,2984,23,11,line,partly,0.7,interior,picks
+#e24adb,朝晖,7657,3717,23,11,line,partly,0.7,interior,oldnames high
+#eb9cc9,上海,7876,3626,23,11,line,partly,0.7,interior,oldnames high
+#f15740,金牛,6254,3824,23,11,line,partly,5.5,interior,picks
+#db567f,福永,7214,4628,23,11,line,partly,0.7,interior,oldnames high
+#eb5f4a,五山,7170,4579,23,11,line,partly,6.0,interior,oldnames high
+#6546ed,长沙,7066,4033,23,11,line,partly,0.7,interior,picks
+#cbdf6f,裕华,7063,2949,23,11,line,partly,0.7,interior,oldnames high
+#57e48d,万泉,7723,2428,23,11,line,partly,15.7,interior,oldnames high
+#f99090,江岸,7147,3743,23,11,line,partly,9.5,interior,picks
+#f37b59,天府,6251,3854,23,11,line,partly,12.5,interior,picks
+#f0a263,九龙坡,6471,3959,35,11,line,partly,8.5,interior,picks
+#e45e5e,南城,7209,4595,23,11,line,partly,0.7,interior,oldnames high
+#84ed3f,历下,7288,3066,23,11,line,partly,0.7,interior,oldnames high
+#b19d76,小店,6905,2999,23,11,line,partly,3.5,interior,picks
+#e09a83,合肥,7380,3570,23,11,line,partly,7.5,interior,picks
+#f2df2f,五华,6166,4449,11,23,column,partly,9.6,interior,oldnames high
+#d7e859,长安,6641,3423,23,11,line,partly,3.5,interior,picks
+#91da51,银川,6393,2972,23,11,line,partly,22.0,english label,picks
+#f07b20,湖里,7599,4372,23,11,line,partly,15.7,interior,oldnames high
+#77e942,云岩,6542,4258,11,23,column,partly,6.5,interior,oldnames high
+#73a3cf,吉林,7897,2172,23,11,line,partly,15.0,english label,oldnames high
+#eb8471,南充,6432,3809,23,11,line,partly,0.7,interior,picks
+#b4b486,赛罕,6808,2681,23,11,line,partly,21.5,english label,oldnames high
+#826aee,雨花,7072,4048,23,11,line,partly,7.5,interior,picks
+#5a6adf,青浦,7740,3604,23,11,line,partly,5.5,interior,oldnames high
+#f4a065,南阳,6962,3505,23,11,line,partly,21.0,english label,picks
+#f39381,洪山,7152,3773,11,23,column,partly,8.9,interior,picks
+#e67ed7,滨江,7663,3732,23,11,line,partly,9.5,interior,oldnames high
+#5471e6,嘉定,7743,3574,23,11,line,partly,7.5,interior,oldnames high
+#eea151,晋江,7625,4345,11,23,column,partly,17.6,interior,oldnames high
+#298bf1,水磨沟,4902,2405,11,35,column,partly,0.7,interior,picks
+#d6eb77,安阳,7082,3152,11,23,column,partly,4.0,english label,oldnames high
+#7e6feb,甬江,7798,3731,11,23,column,partly,0.7,interior,oldnames high
+#aa6af3,岳麓,7045,4048,23,11,line,partly,17.3,interior,picks
+#a0f06b,泺口,7284,3051,23,11,line,partly,8.5,interior,oldnames high
+#f5a134,泉州,7637,4327,23,11,line,partly,17.6,interior,oldnames high
+#5fec66,兴顺,7688,2434,11,23,column,partly,9.5,interior,oldnames high
+#ee9750,嘉陵江,6473,3929,35,11,line,partly,3.5,interior,picks
+#f6a589,青山,7172,3758,23,11,line,partly,17.1,interior,picks
+#e5f060,咸阳,6629,3396,11,23,column,partly,3.8,interior,picks
+#f0a987,达州,6556,3745,11,23,column,partly,0.7,interior,picks
+#ea8e74,华阳,6278,3854,11,23,column,partly,13.7,interior,picks
+#6aea83,淄博,7372,3034,11,23,column,partly,5.5,english label,oldnames high
+#f2eb2f,盘龙,6184,4456,23,11,line,partly,10.1,interior,oldnames high
+#eea37a,东湖,7173,3773,23,11,line,partly,17.7,interior,picks
+#ea9696,汉阳,7125,3773,23,11,line,partly,16.3,interior,picks
+#e46b62,建邺,7522,3556,11,23,column,partly,16.5,interior,oldnames high
+#7ce9d1,青岛,7579,3064,11,23,column,partly,59.8,english label,oldnames high
+#f3835a,湛江,6917,4824,11,23,column,partly,5.5,interior,oldnames high
+#fc9d52,集美,7574,4351,11,23,column,partly,12.7,interior,oldnames high
+#7beab5,临邑,7423,3213,11,23,column,partly,4.5,english label,oldnames high
+#de73eb,常州,7597,3556,23,11,line,partly,12.6,interior,oldnames high
+#dde761,石家庄,7053,2934,35,11,line,partly,9.9,interior,oldnames high
+#ed8e4c,晋安,7664,4191,23,11,line,partly,30.9,english label,oldnames high
+#dc9c90,宜昌,6896,3768,11,23,column,partly,2.9,interior,picks
+#e47084,南山,7241,4628,11,23,column,partly,7.5,interior,oldnames high
+#6bbbf4,沙依巴克,4887,2392,11,47,column,partly,9.5,interior,picks
+#e98282,增城,7216,4580,23,11,line,partly,8.5,interior,oldnames high
+#8a72e7,青秀,6715,4674,23,11,line,partly,1.6,interior,oldnames high
+#9c75f4,天心,7067,4063,23,11,line,partly,13.5,interior,picks
+#edae95,瑶海,7407,3570,23,11,line,partly,16.8,interior,picks
+#f37276,绵阳,6309,3745,23,11,line,partly,0.7,interior,picks
+#eaa790,樊城,6950,3607,11,23,column,partly,22.2,english label,picks
+#c5f45f,秦皇岛,7443,2682,35,11,line,partly,25.5,english label,oldnames high
+#fca152,琼山,6942,4964,23,11,line,partly,18.1,english label,oldnames high
+#69bded,绿园,7798,2189,23,11,line,partly,3.5,interior,oldnames high
+#c887a6,扬,7565,3497,11,11,line,partly,2.5,interior,oldnames medium
+#d88a7d,大朗,7236,4598,11,23,column,partly,4.7,interior,oldnames high
+#8fb0d8,淮安,7521,3372,11,23,column,partly,20.3,english label,oldnames high
+#eea3a3,硚口,7127,3746,11,23,column,partly,12.7,interior,picks
+#e5c854,贾鲁河,7026,3302,11,35,column,partly,1.6,interior,picks
+#faf06b,建章,6645,3393,23,11,line,partly,2.5,interior,picks
+#81a5f4,南通,7672,3513,23,11,line,partly,13.5,interior,oldnames high
+#f0957a,双流,6229,3839,23,11,line,partly,15.2,interior,picks
+#95ee6c,观山湖,6507,4252,11,35,column,partly,10.5,interior,oldnames high
+#63e2e2,西宁,6028,3192,23,11,line,partly,1.6,interior,picks
+#f3c637,莆田,7657,4251,11,23,column,partly,13.9,english label,oldnames high
+#f5799e,南昆,6799,4482,11,23,column,partly,2.9,interior,oldnames high
+#5de36d,鞍山,7693,2508,11,23,column,partly,3.6,english label,oldnames high
+#c3bf88,大同,6941,2733,11,23,column,partly,10.1,english label,oldnames high
+#c371e1,半山,7668,3690,11,23,column,partly,2.5,interior,oldnames high
+#c8b484,万柏林,6888,2974,11,35,column,partly,10.5,interior,picks
+#f3b889,阜阳,7242,3489,23,11,line,partly,0.7,interior,picks
+#f3cb4b,博罗,7272,4570,11,23,column,partly,0.7,interior,oldnames high
+#dca492,上派,7386,3600,11,23,column,partly,7.9,interior,picks
+#ebe059,金水,7059,3295,11,23,column,partly,12.5,interior,picks
+#58d16f,浑南,7708,2448,23,11,line,partly,16.0,interior,oldnames high
+#dcc66d,惠济,7017,3287,23,11,line,partly,13.5,interior,picks
+#c5c087,包头,6668,2707,11,23,column,partly,35.5,english label,oldnames high
+#9ded96,济宁,7279,3201,11,23,column,partly,10.2,english label,oldnames high
+#d87e71,天河,7160,4564,23,11,line,partly,8.5,interior,oldnames high
+#eb7e57,清,7142,4528,11,11,line,partly,0.7,interior,oldnames medium
+#f0b885,洛阳,6931,3331,11,23,column,partly,4.3,interior,picks
+#f68989,新都,6281,3812,11,23,column,partly,8.6,interior,picks
+#eaa28c,温江,6227,3824,23,11,line,partly,13.5,interior,picks
+#e7c07d,平顶山,7026,3412,11,35,column,partly,1.6,interior,picks
+#e67cad,龙湾,7760,3969,11,23,column,partly,35.5,english label,oldnames high
+#e4626b,栖霞,7539,3526,11,23,column,partly,16.5,interior,oldnames high
+#84f6cc,烟台,7629,2918,23,11,line,partly,20.9,english label,oldnames high
+#93ed9a,历城,7315,3051,11,23,column,partly,8.5,interior,oldnames high
+#f0a860,海沧,7567,4385,23,11,line,partly,14.5,interior,oldnames high
+#ec8188,万江,7209,4613,23,11,line,partly,19.1,interior,oldnames high
+#9eee6a,大连湾,7625,2745,11,35,column,partly,33.4,english label,oldnames high
+#a87fdf,滨湖,7662,3576,23,11,line,partly,0.7,interior,oldnames high
+#ff9b87,鹤山,7148,4650,23,11,line,partly,4.3,interior,oldnames high
+#6d7edf,太仓,7728,3564,11,23,column,partly,18.5,interior,oldnames high
+#c9ea90,邢台,7071,3052,23,11,line,partly,8.6,english label,oldnames high
+#f0aa9d,荆州,6974,3810,23,11,line,partly,4.7,interior,picks
+#ea988c,郫县,6237,3809,23,11,line,partly,8.5,interior,picks
+#df8680,老山,7501,3517,23,11,line,partly,8.5,interior,oldnames high
+#e7c65c,二七,7041,3328,23,11,line,partly,7.1,interior,picks
+"#e4ea85@115.7,34.4",商丘,7214,3318,11,23,column,partly,0.5,english label,picks
+#e9bf6c,揭阳,7439,4501,23,11,line,partly,9.5,interior,oldnames high
+#80ed84,南昌,7311,3948,11,23,column,partly,0.7,interior,oldnames high
+#a49af1,株洲,7097,4067,11,23,column,partly,17.1,english label,picks
+#7fe152,花溪,6522,4287,11,23,column,partly,14.8,interior,oldnames high
+#ff80ba,瑞安,7775,3970,11,23,column,partly,12.8,english label,oldnames high
+#d7c49e,长治,6974,3160,11,23,column,partly,30.7,english label,picks
+#e4d55b,开封,7091,3296,23,11,line,partly,9.5,english label,picks
+#eda56b,璧山,6452,3944,23,11,line,partly,10.1,interior,picks
+#eab876,龙门,6946,3335,11,23,column,partly,2.5,interior,picks
+#b59af1,湘潭,7065,4078,23,11,line,partly,8.7,english label,picks
+#d5eb81,菏泽,7185,3235,11,23,column,partly,7.0,english label,oldnames high
+#f3cabb,十堰,6822,3565,11,23,column,partly,26.2,english label,picks
+#eda695,龙泉驿,6283,3839,35,11,line,partly,9.8,interior,picks
+#af7bd0,惠山,7659,3561,23,11,line,partly,1.6,interior,oldnames high
+#dbf4a1,德州,7223,2989,11,23,column,partly,10.0,english label,oldnames high
+#e6eb56,呈贡,6193,4490,11,23,column,partly,17.5,interior,oldnames high
+#e4de6c,新乡,7048,3249,11,23,column,partly,7.5,english label,picks
+#e9b76c,普宁,7413,4530,23,11,line,partly,16.7,interior,oldnames high
+#f09092,德阳,6288,3775,11,23,column,partly,1.6,interior,picks
+#8a7ce4,海虞,7697,3549,23,11,line,partly,1.6,interior,oldnames high
+#fac752,庵埠,7474,4488,11,23,column,partly,17.1,interior,oldnames high
+#b4ee96,聊城,7208,3099,11,23,column,partly,7.1,english label,oldnames high
+#f0bb74,宜宾,6322,4041,11,23,column,partly,4.3,interior,picks
+#d0be8c,尖草坪,6903,2969,35,11,line,partly,11.4,interior,picks
+#88f0bb,城阳,7558,3075,11,23,column,partly,19.0,interior,oldnames high
+#bd8ae2,义乌,7682,3809,11,23,column,partly,3.2,english label,oldnames high
+#eeb877,泸州,6397,4012,11,23,column,partly,1.6,interior,picks
+#eace93,临汾,6850,3173,11,23,column,partly,18.5,english label,picks
+#e3f085,丰镐,6626,3423,11,23,column,partly,12.7,interior,picks
+#a99bee,慈溪,7751,3708,23,11,line,partly,0.5,english label,oldnames high
+#7684d0,吴中,7711,3594,23,11,line,partly,6.5,interior,oldnames high
+#f88ff4,台州,7808,3894,23,11,line,partly,33.0,english label,oldnames high
+#f0dd6b,临潼,6672,3392,11,23,column,partly,1.1,english label,picks
+#eed092,周口,7137,3429,23,11,line,partly,9.6,english label,picks
+#9fbaf8,金沙,7709,3500,11,23,column,partly,18.6,interior,oldnames high
+#d8ee83,滨海,7281,2812,11,23,column,partly,56.3,english label,oldnames high
+#e2b983,紫帽,7604,4329,11,23,column,partly,8.5,interior,oldnames high
+#f8c590,石狮,7645,4342,11,23,column,partly,10.5,interior,oldnames high
+#c3eb9f,西夏,6378,2966,11,23,column,partly,24.0,english label,picks
+#e5c585,许昌,7056,3387,23,11,line,yes,5.5,english label,picks
+#7adaf1,西固,6172,3236,23,11,line,partly,1.6,interior,picks
+#f6b47f,渝北,6487,3914,23,11,line,partly,9.2,interior,picks
+#eacf9a,漯河,7084,3435,23,11,line,partly,2.5,interior,picks
+#e7bbaf,六安,7327,3606,11,23,column,partly,2.0,english label,picks
+#ebab78,同安,7589,4330,11,23,column,partly,15.6,interior,oldnames high
+#eacb9d,黄石,7217,3778,11,23,column,yes,9.2,english label,picks
+#f18d9e,苍南,7738,4001,11,23,column,partly,44.6,english label,oldnames high
+#e7d075,新郑,7050,3343,23,11,line,partly,7.1,english label,picks
+#c894e1,横山,7643,3544,11,23,column,partly,15.0,interior,oldnames medium
+#bc89ee,鄞州,7788,3765,23,11,line,partly,14.0,english label,oldnames high
+#ce9ae9,稠江,7674,3836,11,23,column,partly,7.4,english label,oldnames high
+#cabe9e,榆次,6932,2989,11,23,column,partly,4.0,english label,picks
+#e6777e,江宁,7538,3556,23,11,line,partly,15.0,interior,oldnames high
+#eebc65,巴南,6484,3974,23,11,line,partly,12.5,interior,picks
+#c6e8d4,宿迁,7432,3345,23,11,line,partly,4.5,english label,oldnames high
+#94e5d4,李沧,7599,3061,11,23,column,partly,8.5,interior,oldnames high
+#ec9074,白云,7160,4549,23,11,line,partly,5.1,interior,oldnames high
+#f3ce8b,万州,6646,3781,11,23,column,partly,3.8,interior,picks
+#b7f199,济南,7271,3081,23,11,line,partly,2.5,interior,oldnames high
+#e490b7,瓯海,7730,3957,23,11,line,partly,3.4,english label,oldnames high
+#dfe497,淮北,7310,3362,23,11,line,yes,6.3,english label,oldnames high
+#ebb285,北碚,6472,3902,11,23,column,partly,23.5,interior,picks
+#cac398,宣化,7055,2653,23,11,line,yes,52.8,english label,oldnames high
+#f3836d,中山,7193,4701,23,11,line,partly,9.5,interior,oldnames high
+#e5bd93,驻马店,7095,3475,11,35,column,partly,8.2,english label,picks
+#eec975,潮州,7454,4474,11,23,column,partly,22.2,interior,oldnames high
+#96eaa8,滕州,7324,3226,11,23,column,partly,9.2,english label,oldnames high
+#c6dc72,古冶,7340,2726,23,11,line,partly,1.8,english label,oldnames high
+#8bf2d0,日照,7516,3155,11,23,column,partly,28.5,english label,oldnames high
+#f3ba64,澄海,7495,4507,23,11,line,partly,16.5,interior,oldnames high
+#eb9be7,黄,7793,3880,11,11,line,yes,0.0,english label,oldnames medium
+#f9a0a2,广汉,6296,3802,11,23,column,partly,12.3,interior,picks
+#f0b6c0,常德,6950,3953,11,23,column,yes,28.8,english label,picks
+#eebc78,江津,6457,3975,23,11,line,partly,9.6,interior,picks
+#c390df,桐乡,7690,3669,23,11,line,partly,3.8,english label,oldnames high
+#edd08c,孟津,6946,3318,23,11,line,yes,8.5,english label,picks
+#dcf3a1,沧州,7253,2896,23,11,line,yes,10.7,english label,oldnames high
+#d7d982,焦作,7002,3261,23,11,line,yes,0.0,english label,picks
+"#e4ea85@114.1,35.4",卫辉,7072,3228,11,23,column,partly,7.2,english label,picks
+#9cf8bb,黄岛,7549,3102,23,11,line,partly,31.4,english label,oldnames high
+#ad8ef3,望城,7051,4021,11,23,column,partly,14.7,english label,picks
+#97a6da,泰州,7624,3484,23,11,line,partly,23.3,english label,oldnames high
+#96f19d,青山湖,7327,3954,35,11,line,partly,4.9,interior,oldnames high
+#eeb281,自贡,6340,3973,23,11,line,partly,3.5,interior,picks
+#ddc372,紫金,7293,4489,11,23,column,partly,48.8,english label,oldnames high
+#ba9bee,余姚,7753,3725,11,23,column,partly,9.5,english label,oldnames high
+#e4de96,九江,7321,3835,11,23,column,partly,7.0,english label,oldnames high
+#edb7a7,淮南,7362,3503,11,23,column,yes,8.6,english label,oldnames high
+#a7eed8,罗庄,7418,3240,11,23,column,yes,11.2,english label,oldnames high
+#e89d9d,彭州,6264,3797,11,23,column,partly,9.5,interior,picks
+#d0acde,牡丹江,8097,2048,35,11,line,partly,25.8,english label,oldnames high
+#ebb2a4,鄂州,7202,3758,11,23,column,yes,1.6,interior,picks
+#a0eaa3,昌乐,7442,3041,23,11,line,yes,9.2,english label,oldnames high
+#e7da75,中牟,7074,3292,11,23,column,partly,9.7,english label,picks
+#f1907c,阳江,7057,4746,11,23,column,partly,40.7,english label,oldnames high
+#d791e6,金华,7647,3845,23,11,line,yes,0.5,english label,oldnames high
+#96f498,营口,7657,2574,11,23,column,partly,39.5,english label,oldnames high
+#f9f3ab,清苑,7127,2863,23,11,line,partly,1.8,english label,oldnames high
+#f1b9b9,盘龙城,7112,3730,11,35,column,partly,36.6,interior,picks
+#cceea6,衡水,7161,2968,11,23,column,yes,3.8,english label,oldnames high
+#ab8fe8,江阴,7670,3546,23,11,line,partly,10.7,interior,oldnames high
+#7997e8,金山,7746,3636,23,11,line,yes,1.6,interior,oldnames high
+#ebe6a4,徐水,7122,2828,23,11,line,yes,0.5,english label,oldnames high
+#f0ac8c,乐山,6229,3949,23,11,line,yes,2.5,interior,picks
+#989beb,镇海,7771,3728,23,11,line,partly,6.5,english label,oldnames high
+#a8f1ab,梅岭,7299,3933,23,11,line,yes,3.0,english label,oldnames high
+#e3ebab,宿州,7340,3385,11,23,column,yes,0.0,english label,oldnames high
+#ebc99a,临泉,7189,3485,23,11,line,yes,0.5,english label,picks
+#f8a08f,南沙,7187,4671,23,11,line,partly,4.3,interior,oldnames high
+#9fdfb2,萍乡,7156,4073,11,23,column,yes,3.5,english label,oldnames high
+#f0af91,内江,6354,3949,23,11,line,yes,1.6,interior,picks
+#8c96da,嘉善,7716,3634,23,11,line,yes,0.7,interior,oldnames high
+#8990df,常熟,7713,3564,11,23,column,partly,12.7,interior,oldnames high
+#acf0ba,临淄,7387,3025,23,11,line,partly,4.7,english label,oldnames high
+#ff87e6,柳市,7773,3935,11,23,column,partly,4.0,english label,oldnames high
+#ab93e8,盛泽,7685,3642,23,11,line,yes,1.8,english label,oldnames high
+#e6ed96,滹沱,7066,2905,11,23,column,yes,1.6,interior,oldnames medium
+#ebf389,兴平,6597,3410,23,11,line,yes,10.1,interior,picks
+#dff1a6,邯郸,7092,3099,11,23,column,partly,5.8,english label,oldnames high
+#acedd0,邳州,7415,3280,11,23,column,yes,2.0,english label,oldnames high
+#abf1d8,临沭,7448,3227,23,11,line,yes,4.5,english label,oldnames high
+#c197e9,海宁,7708,3687,23,11,line,yes,0.5,english label,oldnames high
+#ab9fe1,平湖,7727,3661,23,11,line,partly,4.7,english label,oldnames high
+#e69acd,丹阳,7570,3553,23,11,line,partly,16.2,english label,oldnames high
+#f1b6a6,崇州,6221,3854,23,11,line,partly,7.6,interior,picks
+#d5f1a6,永年,7086,3082,23,11,line,partly,4.6,english label,oldnames high
+#c3f1bf,邹城,7305,3202,11,23,column,yes,2.0,english label,oldnames high
+#8ce297,海城,7678,2508,11,23,column,partly,26.9,english label,oldnames high
+#b4ade8,上饶,7497,3944,23,11,line,yes,0.0,english label,oldnames high
+#ebc1c3,孝感,7117,3715,23,11,line,partly,6.5,english label,picks
+#e2ee84,宝鸡,6490,3417,23,11,line,yes,0.5,english label,picks
+#ead89d,禹州,7027,3379,23,11,line,yes,1.1,english label,picks
+#dde8a9,赵县,7083,2970,23,11,line,yes,0.0,english label,oldnames high
+#f4dc98,项城,7164,3436,11,23,column,yes,3.5,english label,picks
+#e6eaa3,鹤壁,7076,3209,23,11,line,yes,0.5,english label,picks
+#ffaefc,温岭,7808,3913,11,23,column,partly,49.9,english label,oldnames high
+#a9e7ae,章丘,7330,3057,11,23,column,partly,1.0,english label,oldnames high
+#a0e8ad,抚州,7365,4010,23,11,line,yes,0.0,english label,oldnames high
+#c1f47d,大连,7593,2772,23,11,line,partly,48.0,english label,oldnames high
+#ebda88,三原,6660,3368,23,11,line,yes,0.0,english label,picks
+#f0a3a6,江油,6312,3728,23,11,line,yes,2.9,interior,picks
+#ecf0a4,定州,7097,2899,23,11,line,yes,1.0,english label,oldnames high
+#a6eba0,曲阜,7308,3166,11,23,column,yes,7.5,english label,oldnames high
+#f4d398,沈丘,7188,3452,11,23,column,yes,0.5,english label,picks
+"#edc3b7@116.8,32.7",八公山,7338,3485,11,35,column,partly,8.4,english label,oldnames high
+#e8f1b2,无极,7092,2924,23,11,line,yes,8.2,english label,oldnames high
+#e0ee9d,藁城,7095,2949,23,11,line,yes,0.7,english label,oldnames high
+#edec9a,霸州,7182,2822,23,11,line,yes,0.0,english label,oldnames high
+#eeb4a9,遂宁,6399,3841,23,11,line,yes,0.7,interior,picks
+#7fc5f5,奉贤,7792,3617,23,11,line,yes,0.7,interior,oldnames high
+#b6a9f6,观海卫,7749,3693,35,11,line,partly,23.9,english label,oldnames high
+#d6f1b4,平乡,7101,3047,23,11,line,yes,0.7,english label,oldnames high
+#f1dba8,巩义,6969,3333,23,11,line,yes,0.5,english label,picks
+#ddee9e,肥乡,7094,3126,23,11,line,yes,6.4,english label,oldnames high
+#ddd893,怀庆,6974,3276,23,11,line,yes,0.0,english label,picks
+#eef0aa,任丘,7183,2860,23,11,line,yes,0.5,english label,oldnames high
+#ead696,长葛,7065,3365,23,11,line,yes,0.0,english label,picks
+#ede7a1,亳州,7230,3389,23,11,line,yes,0.0,english label,oldnames high
+"#f1eea6@115.3,34.4",宁陵,7173,3332,23,11,line,yes,1.0,english label,picks
+#f0eda8,长垣,7126,3244,11,23,column,yes,0.5,english label,picks
+#c2f4bb,沛县,7308,3281,23,11,line,yes,0.5,english label,oldnames high
+#e8d792,新密,7023,3344,23,11,line,yes,0.0,english label,picks
+#f1eca3,白洋淀,7160,2824,11,35,column,yes,1.0,english label,oldnames medium
+#ebcfa4,界首,7208,3465,23,11,line,yes,4.0,english label,picks
+#f6a6e6,虹桥,7782,3905,11,23,column,yes,1.4,english label,oldnames high
+#dbeb9e,魏县,7118,3141,23,11,line,yes,1.0,english label,oldnames high
+#edd9ba,上蔡,7088,3460,23,11,line,yes,0.0,english label,picks
+#eee59f,涿州,7157,2768,23,11,line,yes,1.0,english label,oldnames high
+#f1b9a6,新津,6247,3869,23,11,line,yes,5.1,interior,picks
+#9ee0c0,沂水,7427,3151,23,11,line,yes,0.7,english label,oldnames high
+#edb69c,广安,6491,3845,23,11,line,yes,0.7,interior,picks
+#c9f1a9,临清,7177,3068,23,11,line,yes,0.5,english label,oldnames high
+#e4ebb0,磁州,7056,3128,23,11,line,yes,0.0,english label,oldnames high
+#f8c684,汕尾,7377,4593,11,23,column,partly,24.0,english label,oldnames high
+#fad4c0,汉中,6489,3558,23,11,line,yes,0.0,english label,picks
+#b8eec8,青州,7408,3045,23,11,line,yes,0.0,english label,oldnames high
+#c6f0b4,嘉祥,7252,3218,23,11,line,yes,2.5,english label,oldnames high
+#cff9b7,滨州,7349,2969,23,11,line,yes,0.0,english label,oldnames high
+#ebe09c,运城,6802,3306,11,23,column,yes,0.5,english label,picks
+#ebcaaf,阜南,7222,3507,23,11,line,yes,0.5,english label,picks
+#eec996,永川,6425,3982,23,11,line,yes,2.9,interior,picks
+#a0e5ae,新泰,7343,3144,23,11,line,yes,0.7,english label,oldnames high
+#f6cfaf,颍泉,7270,3477,11,23,column,partly,11.2,english label,picks
+#ebe6a5,武陟,6978,3298,23,11,line,yes,2.2,english label,picks
+#ebd0a3,宝丰,7011,3399,11,23,column,yes,0.5,english label,picks
+#e7b2a3,滁州,7474,3517,23,11,line,yes,3.0,english label,oldnames high
+#c6b1f6,渌口,7079,4094,23,11,line,yes,5.7,english label,picks
+#e6ed9a,文安,7216,2829,23,11,line,yes,0.0,english label,oldnames high
+#dde8aa,汤阴,7080,3180,23,11,line,yes,0.7,english label,oldnames high
+#f0e6a8,太康,7158,3360,23,11,line,yes,0.5,english label,picks
+#c48cd8,杭州,7643,3690,11,23,column,yes,0.7,interior,oldnames high
+#eaf0bd,安国,7127,2898,23,11,line,yes,0.5,english label,oldnames high
+#d7edac,大名,7148,3131,23,11,line,yes,1.8,english label,oldnames high
+#f0d6aa,太和,7228,3443,23,11,line,yes,0.0,english label,picks
+#ebea9c,柘城,7193,3352,23,11,line,yes,0.7,english label,picks
+#adf4b0,寿光,7427,3013,23,11,line,yes,0.5,english label,oldnames high
+#f1c3a6,眉山,6237,3893,23,11,line,yes,0.7,interior,picks
+#f0edab,兰考,7148,3282,23,11,line,yes,0.0,english label,picks
+#cea7d6,诸暨,7679,3765,23,11,line,yes,4.0,english label,oldnames high
+#eddf9a,荥阳,6999,3316,23,11,line,yes,1.0,english label,picks
+#e8e084,原阳,7044,3279,23,11,line,yes,0.5,english label,picks
+#f4e1ac,淮阳,7154,3397,23,11,line,yes,0.5,english label,picks
+#e0eeab,鄄城,7180,3217,23,11,line,yes,0.7,english label,oldnames high
+#e8f0aa,高阳,7151,2880,23,11,line,yes,0.0,english label,oldnames high
+#edb7c5,汉川,7084,3772,23,11,line,yes,0.5,english label,picks
+#f4d5aa,安庆,7376,3729,23,11,line,yes,2.5,english label,picks
+#edb7ba,蔡甸,7119,3788,23,11,line,yes,8.0,english label,picks
+#f6eeb1,杞县,7134,3326,23,11,line,yes,0.5,english label,picks
+#e0e8a3,虞城,7229,3313,23,11,line,yes,1.1,english label,picks
+#eaf0ab,曹,7194,3279,11,11,line,yes,0.5,english label,oldnames medium
+"#edc3b7@114.6,30.8",新洲,7178,3732,23,11,line,yes,2.2,english label,picks
+#e9f69c,武清,7241,2763,23,11,line,yes,0.7,english label,oldnames high
+#cbedae,郓城,7197,3193,23,11,line,yes,2.7,english label,oldnames high
+#cfedae,巨野,7224,3234,23,11,line,yes,0.0,english label,oldnames high
+#e4f1b1,清丰,7132,3167,23,11,line,yes,0.0,english label,oldnames high
+#c3e8ad,阳谷,7200,3143,23,11,line,yes,0.0,english label,oldnames high
+#d9e79f,丰润,7312,2718,23,11,line,yes,0.5,english label,oldnames high
+#d9eac9,睢宁,7405,3353,23,11,line,yes,1.5,english label,oldnames high
+#beeeaf,汶上,7269,3165,23,11,line,yes,1.1,english label,oldnames high
+#d4ebb9,莘县,7178,3142,11,23,column,yes,2.0,english label,oldnames high
+#e7edbc,永城,7274,3368,23,11,line,yes,0.7,english label,oldnames high
+"#f1eea6@114.5,35.4",滑县,7096,3234,23,11,line,yes,0.0,english label,picks
+#edd79b,郸城,7185,3412,23,11,line,yes,0.5,english label,picks
+#f4be9c,荣昌,6386,3960,23,11,line,yes,0.7,interior,picks
+#e5d19a,临颍,7083,3401,23,11,line,yes,0.5,english label,picks
+#e7e6ae,鹿邑,7212,3375,11,23,column,yes,5.7,english label,picks
+#d9edae,范县,7156,3195,23,11,line,yes,0.0,english label,oldnames high
+#c1edae,南旺,7235,3187,23,11,line,yes,0.5,english label,oldnames high
+#c1aaf3,宁乡,7024,4023,23,11,line,yes,1.5,english label,picks
+#f9c697,大足,6407,3935,23,11,line,yes,0.7,interior,picks
+#e8cab5,信阳,7102,3610,23,11,line,yes,0.5,english label,picks
+#a8eaa7,肥城,7272,3134,23,11,line,yes,0.5,english label,oldnames high
+#f7ed78,三亚,6867,5157,23,11,line,yes,0.0,english label,oldnames high
+#d1eebd,丰县,7280,3285,23,11,line,yes,0.5,english label,oldnames high
+#abf1e4,郯城,7439,3247,23,11,line,yes,0.7,english label,oldnames high
+#bcfbbd,东营,7416,2970,23,11,line,yes,0.5,english label,oldnames high
+#b7eddc,兰陵,7391,3254,23,11,line,yes,2.8,english label,oldnames high
+#f0c8a3,合川,6472,3879,23,11,line,yes,0.7,interior,picks
+#edf29d,宝坻,7254,2736,23,11,line,yes,0.5,english label,oldnames high
+#cab3fd,益阳,7029,3989,23,11,line,yes,0.5,english label,picks
+#e4abd7,富春,7649,3749,23,11,line,yes,2.5,english label,oldnames high
+#e6eeb4,萧县,7314,3335,23,11,line,yes,0.0,english label,oldnames high
+#e5b3a2,铜陵,7457,3673,11,23,column,yes,0.7,english label,oldnames high
+#e8d7b4,襄城,7051,3416,23,11,line,yes,1.6,english label,picks
+#e0eda6,殷都,7097,3148,11,23,column,partly,9.7,english label,oldnames high
+#e6f0bb,单县,7244,3285,23,11,line,yes,0.0,english label,oldnames high
+#d5edbe,贾汪,7343,3307,23,11,line,yes,0.5,english label,oldnames high
+#ead4ae,利辛,7262,3455,23,11,line,yes,0.5,english label,oldnames high
+#b6dada,泗阳,7464,3348,23,11,line,yes,0.5,english label,oldnames high
+#f3b09a,资阳,6333,3890,23,11,line,yes,0.7,interior,picks
+#ebdbbf,汝州,6977,3388,23,11,line,yes,0.5,english label,picks
+#eef1b4,东明,7154,3249,23,11,line,yes,0.0,english label,oldnames high
+#a4ebb3,泗河,7338,3179,23,11,line,yes,0.5,english label,oldnames high
+#d3da91,平谷,7224,2693,23,11,line,yes,0.5,english label,oldnames high
+#eeafa9,射洪,6366,3814,23,11,line,yes,0.7,interior,picks
+#f1c2ce,仙桃,7066,3800,23,11,line,yes,0.0,english label,picks
+#e6eb9b,永清,7218,2792,23,11,line,yes,0.5,english label,oldnames high
+#f0ea99,泾阳,6625,3376,23,11,line,yes,3.0,english label,picks
+#eed2b1,新蔡,7179,3513,23,11,line,yes,0.5,english label,picks
+#e3f4be,宁晋,7108,2990,23,11,line,yes,0.7,english label,oldnames high
+#f1d3ac,叶县,7041,3446,23,11,line,yes,0.5,english label,picks
+#d8f3b6,清河,7153,3046,23,11,line,yes,0.5,english label,oldnames high
+#d2eeae,冠县,7169,3098,23,11,line,yes,0.5,english label,oldnames high
+#eee299,渭南,6698,3378,11,23,column,yes,0.5,english label,picks
+#ebf3c0,泊头,7220,2903,23,11,line,yes,0.5,english label,oldnames high
+#eecbaf,颍上,7266,3515,23,11,line,yes,0.5,english label,picks
+#eedab1,平舆,7148,3484,23,11,line,yes,0.5,english label,picks
+#e7f0c2,砀山,7276,3315,23,11,line,yes,0.0,english label,oldnames high
+#d2f4bb,金乡,7265,3249,23,11,line,yes,0.0,english label,oldnames high
+#f1d1ba,邓州,6933,3557,23,11,line,yes,0.5,english label,picks
+#edb0e1,茅山,7567,3579,23,11,line,partly,15.0,english label,oldnames high
+#9a9efc,舟山,7835,3709,23,11,line,partly,30.1,english label,oldnames high
+#c4eeaf,东平,7228,3163,23,11,line,yes,2.1,english label,oldnames high
+#ead89f,尉氏,7077,3331,23,11,line,yes,1.5,english label,picks
+#f0d1b1,社旗,6997,3504,23,11,line,yes,0.5,english label,picks
+#d6ebb2,巨鹿,7103,3022,23,11,line,yes,0.5,english label,oldnames high
+#e4ee9f,蓟州,7271,2709,23,11,line,yes,1.1,english label,oldnames high
+#f0ccb5,新野,6967,3548,11,23,column,yes,0.5,english label,picks
+#f1d1b4,镇平,6935,3514,23,11,line,yes,1.0,english label,picks
+#eed9b3,商水,7123,3452,23,11,line,yes,0.7,english label,picks
+#e5edac,夏邑,7253,3344,23,11,line,yes,0.0,english label,oldnames high
+#f0e4ab,通许,7105,3326,23,11,line,yes,1.5,english label,picks
+#e1a1e4,东阳,7702,3822,23,11,line,yes,0.5,english label,oldnames high
+#e6ebb2,民权,7171,3305,23,11,line,yes,0.5,english label,picks
+#e0d3ac,阳泉,6995,2973,23,11,line,yes,0.7,english label,oldnames high
+#a6e0bd,莱芜,7338,3102,23,11,line,yes,0.0,english label,oldnames high
+#e8ddbe,大冶,7196,3810,23,11,line,yes,0.0,english label,picks
+#dcd9b3,桑干,6933,2765,23,11,line,yes,0.0,english label,oldnames medium
+#f1e0af,西华,7120,3408,23,11,line,yes,0.5,english label,picks
+#d9aae9,临海,7783,3857,23,11,line,yes,0.5,english label,oldnames high
+#eaddb2,嵩山,6983,3358,23,11,line,yes,0.0,english label,picks
+#f0eeb4,封丘,7086,3273,23,11,line,yes,0.0,english label,picks
+#c1b4fc,湘阴,7066,4014,23,11,line,yes,0.5,english label,picks
+#d5b1ee,曹娥,7726,3748,23,11,line,yes,0.5,english label,oldnames high
+#e7c297,富顺,6341,3998,23,11,line,yes,0.7,interior,picks
+#aeeee9,东海,7460,3273,23,11,line,yes,0.5,english label,oldnames low
+#e0f0bd,辛集,7139,2944,23,11,line,yes,0.0,english label,oldnames high
+#cda6fc,涟源,6949,4108,23,11,line,yes,0.0,english label,picks
+#b6e7bf,邹平,7367,3070,23,11,line,yes,0.0,english label,oldnames medium
+#b9a5f5,北仑,7822,3735,11,23,column,partly,2.0,english label,oldnames high
+#f0b597,宁德,7674,4096,23,11,line,yes,3.5,english label,oldnames high
+#ecf7ba,河间,7180,2899,23,11,line,yes,0.5,english label,oldnames high
+#f9b4bd,阆中,6407,3746,23,11,line,yes,0.7,interior,picks
+#edcaae,黄梅,7300,3795,23,11,line,yes,0.5,english label,picks
+#dcf3be,乐陵,7265,2957,23,11,line,yes,0.5,english label,oldnames high
+#e8beb5,巴中,6469,3703,23,11,line,yes,0.7,interior,picks
+#e29dd7,永康,7656,3876,23,11,line,yes,0.7,english label,oldnames high
+#dcf490,迁安,7373,2689,23,11,line,yes,0.5,english label,oldnames high
+#eed8b5,蒙城,7302,3447,23,11,line,yes,0.7,english label,oldnames high
+#e8c7d3,澧州,6929,3880,23,11,line,yes,0.0,english label,picks
+#b0eab8,岱岳,7310,3136,23,11,line,yes,0.5,english label,oldnames high
+#b1e7b6,宜春,7185,4081,23,11,line,yes,0.0,english label,oldnames high
+#e7f1b1,濮阳,7118,3189,23,11,line,yes,0.0,english label,oldnames high
+#d4f490,山海关,7415,2674,11,35,column,yes,7.0,english label,oldnames high
+#b0e4d9,莒州,7457,3157,23,11,line,yes,2.0,english label,oldnames high
+#f0eeb3,唐县,7088,2863,23,11,line,yes,0.7,english label,oldnames high
+#ccf0ba,茌平,7214,3084,23,11,line,yes,0.5,english label,oldnames high
+#d8f3b5,曲周,7128,3080,23,11,line,yes,0.5,english label,oldnames high
+#eab3a3,简阳,6293,3868,23,11,line,yes,0.7,interior,picks
+#cdb1f5,双峰,6993,4125,23,11,line,yes,0.5,english label,picks
+#bfedcd,台儿庄,7366,3287,35,11,line,yes,0.5,english label,oldnames high
+#e7dfb2,扶沟,7118,3367,23,11,line,yes,0.5,english label,picks
+#f0fac6,青县,7230,2860,23,11,line,yes,0.0,english label,oldnames high
+#eac7cc,云梦,7085,3732,23,11,line,yes,0.5,english label,picks
+#f1b7a9,岳池,6462,3833,23,11,line,yes,0.7,interior,picks
+#eabea3,仁寿,6278,3914,23,11,line,yes,0.7,interior,picks
+#e4f89c,静海,7252,2823,11,23,column,yes,28.2,english label,oldnames high
+#f0c4c9,天门,7035,3767,23,11,line,yes,0.0,english label,picks
+#e2f6c4,盐山,7267,2921,23,11,line,yes,0.0,english label,oldnames high
+#e7f7c3,临邑,7250,2995,23,11,line,yes,0.5,english label,oldnames high
+#dcf3ba,故城,7196,3015,23,11,line,yes,0.5,english label,oldnames high
+#dceec8,徐州,7371,3334,23,11,line,yes,0.0,english label,oldnames high
+#d1f6c7,广饶,7386,2996,23,11,line,yes,0.0,english label,oldnames high
+#c1b4f1,桃江,6992,4014,23,11,line,yes,0.5,english label,picks
+#f0d5c4,凤台,7301,3502,23,11,line,yes,3.2,english label,picks
+#daeea6,滦州,7364,2741,23,11,line,yes,1.0,english label,oldnames high
+#f1d4ba,淮滨,7222,3543,23,11,line,yes,0.0,english label,picks
+#e2e4a0,辉县,7034,3230,23,11,line,yes,0.0,english label,oldnames high
+#e9edc3,泗县,7400,3393,23,11,line,yes,0.0,english label,oldnames high
+#edce8d,长宁,6344,4054,23,11,line,yes,0.7,interior,picks
+#f1bfb8,金堂,6322,3834,11,23,column,yes,19.1,interior,picks
+#d3f3be,济阳,7291,3031,23,11,line,yes,0.5,english label,oldnames high
+#dfceae,太谷,6908,3019,23,11,line,yes,0.0,english label,picks
+#f4d69f,长寿,6549,3874,23,11,line,yes,0.7,interior,picks
+#f3ca9a,泸县,6389,3991,23,11,line,yes,0.7,interior,picks
+#ebe3a1,昭通,6245,4198,23,11,line,yes,0.7,interior,picks
+#f3bda4,资中,6330,3923,23,11,line,yes,0.7,interior,picks
+#dbf0ac,毕节,6404,4164,23,11,line,yes,0.7,interior,picks
+#eec7b4,渠县,6506,3781,23,11,line,yes,0.7,interior,picks
+#eec2bb,无为,7446,3637,23,11,line,yes,0.5,english label,oldnames high
+#e7cb97,涪陵,6565,3916,23,11,line,yes,0.7,interior,picks
+#f7cdc1,庐江,7390,3631,23,11,line,yes,0.0,english label,oldnames high
+#bac0e8,广丰,7518,3966,23,11,line,yes,0.5,english label,oldnames high
+#edf3c0,芒部,6358,4175,23,11,line,yes,0.7,interior,picks
+#eed6b5,伊川,6946,3380,11,23,column,yes,0.7,english label,picks
+#dab1e2,浦江,7672,3791,23,11,line,yes,0.5,english label,oldnames high
+#f6d4b4,开州,6627,3729,23,11,line,yes,0.7,interior,picks
+#bce7b1,新余,7230,4056,23,11,line,yes,2.1,english label,oldnames high
+#f3c9d0,安陆,7099,3690,23,11,line,yes,0.5,english label,picks
+#b7e4c4,鹰潭,7420,3975,23,11,line,yes,0.5,english label,oldnames high
+#eaf0b0,礼泉,6588,3379,23,11,line,yes,0.0,english label,picks
+#c3a5e2,衢州,7590,3869,23,11,line,yes,0.5,english label,oldnames high
+#f4bebc,绵竹,6257,3765,23,11,line,yes,0.7,interior,picks
+#edc8a6,铜梁,6437,3922,23,11,line,yes,0.7,interior,picks
+#d1f3ba,高唐,7207,3045,23,11,line,yes,0.5,english label,oldnames high
+#f0e7b3,济源,6927,3289,23,11,line,yes,0.5,english label,picks
+#cdeeb4,齐河,7252,3052,23,11,line,yes,0.5,english label,oldnames high
+#a6f1b7,临夏,6139,3299,23,11,line,yes,0.7,interior,picks
+#f7bfbf,潜江,7017,3802,23,11,line,yes,0.5,english label,picks
+#e0edc3,吴桥,7221,2955,23,11,line,yes,0.5,english label,oldnames high
+#ebd1b5,汝南,7121,3509,23,11,line,yes,1.0,english label,picks
+#eebc9d,荣县,6308,3960,23,11,line,yes,0.7,interior,picks
+#edc0b8,高坪,6425,3794,23,11,line,yes,13.5,interior,picks
+#f1cbb0,唐河,6994,3554,23,11,line,yes,0.7,english label,picks
+#f4c6b3,武胜,6439,3866,23,11,line,yes,0.7,interior,picks
+#ebc5b9,襄阳,6967,3650,23,11,line,yes,0.5,english label,picks
+#eae7be,瑞昌,7273,3845,23,11,line,yes,0.5,english label,oldnames high
+#eed5c1,蚌埠,7366,3455,23,11,line,yes,4.5,english label,oldnames high
+#eed3cd,江夏,7162,3800,11,23,column,yes,10.3,english label,picks
+#f9c2c0,蓬安,6463,3774,23,11,line,yes,0.7,interior,picks
+#c2afdc,高邮,7566,3424,11,23,column,yes,20.1,english label,oldnames high
+#f3b0ba,三台,6329,3769,23,11,line,yes,0.7,interior,picks
+#eae7ae,濉溪,7290,3392,23,11,line,yes,0.0,english label,oldnames high
+#b8f0cc,乐平,7424,3924,23,11,line,yes,0.0,english label,oldnames high
+#f5afac,福鼎,7729,4034,23,11,line,yes,2.0,english label,oldnames high
+#eecfbc,潢川,7194,3589,23,11,line,yes,0.7,english label,picks
+#baf3c4,进贤,7348,3979,23,11,line,yes,0.0,english label,oldnames high
+#f1c7bf,安居,6404,3874,23,11,line,yes,0.7,interior,picks
+#d7a5e2,兰溪,7624,3850,11,23,column,yes,0.0,english label,oldnames high
+#f3bdad,巢湖,7438,3592,23,11,line,yes,0.5,english label,oldnames high
+#f3cdc4,浠水,7223,3748,23,11,line,yes,0.0,english label,picks
+#c6eece,咸宁,7166,3845,23,11,line,yes,0.0,english label,oldnames high
+#d8f3be,惠民,7305,2984,23,11,line,yes,0.0,english label,oldnames high
+#eebec6,监利,7040,3851,23,11,line,yes,0.5,english label,picks
+#f1b8b8,中江,6311,3787,11,23,column,yes,0.7,interior,picks
+#bfeec9,山亭,7340,3217,23,11,line,yes,0.0,english label,oldnames high
+#dadfb5,林州,7038,3179,23,11,line,yes,0.0,english label,oldnames high
+#f4c5bc,都江堰,6231,3770,11,35,column,yes,2.5,interior,picks
+#f4bcbe,安州,6277,3728,23,11,line,yes,0.7,interior,picks
+#ebf0aa,周至,6612,3450,23,11,line,yes,8.0,english label,picks
+#e8dead,蒲城,6687,3329,23,11,line,yes,0.5,english label,picks
+#bfe7da,天水,6366,3406,23,11,line,yes,0.7,interior,picks
+#dbf3c2,枣强,7150,3005,23,11,line,yes,0.5,english label,oldnames high
+#e4e0a5,西昌,6113,4171,23,11,line,yes,0.7,interior,picks
+#d4ccb2,晋城,6959,3248,23,11,line,yes,0.0,english label,picks
+#e7c1ba,荆门,6955,3764,23,11,line,yes,0.7,english label,picks
+#cdade0,嵊州,7729,3789,23,11,line,yes,0.5,english label,oldnames high
+#e5f4c4,武强,7182,2940,23,11,line,yes,0.7,english label,oldnames high
+#e2d5bd,平遥,6892,3064,23,11,line,yes,0.5,english label,picks
+#f0cbad,大竹,6542,3801,23,11,line,yes,0.7,interior,picks
+#ede2c3,五河,7389,3434,23,11,line,yes,0.0,english label,oldnames high
+#dee5c5,赞皇,7056,3003,23,11,line,yes,0.0,english label,oldnames high
+#d8f29f,宁河,7287,2772,23,11,line,yes,0.5,english label,oldnames high
+#f4cdba,邛崃,6196,3871,23,11,line,yes,0.7,interior,picks
+#e9edce,汴河,7361,3370,23,11,line,yes,0.5,english label,oldnames medium
+#bdeec5,丰城,7326,4010,23,11,line,yes,0.5,english label,oldnames high
+#e7beb7,当阳,6921,3784,23,11,line,yes,0.5,english label,picks
+#d6ebba,播州,6548,4164,23,11,line,yes,0.7,interior,picks
+#e5d097,合江,6398,4047,23,11,line,yes,0.7,interior,picks
+#ebb6b1,南陵,7493,3668,23,11,line,yes,0.0,english label,oldnames high
+#eddcb3,渑池,6900,3329,23,11,line,yes,0.5,english label,picks
+#f0cbdf,华容,7012,3890,23,11,line,yes,0.5,english label,picks
+#f1d9c2,固始,7248,3572,23,11,line,yes,0.5,english label,picks
+#b3f9cc,鄱阳,7387,3897,23,11,line,yes,0.0,english label,oldnames high
+#b6eec1,安丘,7462,3067,23,11,line,yes,0.5,english label,oldnames high
+#f1e9b9,蒲州,6771,3298,23,11,line,yes,0.0,english label,picks
+#ede696,蓝田,6675,3427,23,11,line,yes,0.5,english label,picks
+#d5b3df,安吉,7608,3676,23,11,line,yes,0.5,english label,oldnames high
+#f6dfb4,梁平,6583,3796,23,11,line,yes,0.7,interior,picks
+#d8e790,昌黎,7400,2738,23,11,line,yes,0.7,english label,oldnames low
+#e0dccf,泗洪,7445,3398,23,11,line,yes,0.5,english label,oldnames high
+#c5c1ea,捞刀河,7103,4020,11,35,column,yes,5.5,english label,picks
+#f7ceb8,桐城,7357,3697,23,11,line,yes,0.7,english label,picks
+#f3d4c4,蕲春,7263,3778,23,11,line,yes,0.0,english label,picks
+#f7d79b,綦江,6500,4007,23,11,line,yes,0.7,interior,picks
+#f6d1c4,武当,6876,3591,23,11,line,yes,0.0,english label,picks
+#f1e0be,翼城,6854,3242,23,11,line,yes,0.0,english label,picks
+#f0cdc3,长丰,7366,3555,23,11,line,yes,0.7,english label,oldnames high
+#b8e4cc,沂源,7386,3112,23,11,line,yes,0.5,english label,oldnames high
+#ebcdcd,随州,7050,3654,23,11,line,yes,0.0,english label,picks
+#e8e4ad,铜川,6635,3327,23,11,line,yes,0.7,english label,picks
+#f3edbb,华山,6727,3357,23,11,line,yes,0.5,english label,picks
+#c6edb9,高安,7261,4007,23,11,line,yes,0.0,english label,oldnames high
+#ddfacc,无棣,7321,2927,23,11,line,yes,0.5,english label,oldnames high
+#c6ebb0,吉安,7256,4110,23,11,line,yes,0.5,english label,oldnames high
+#f4bba0,安岳,6376,3909,23,11,line,yes,0.7,interior,picks
+#deedc4,沙河,7044,3063,23,11,line,yes,2.0,english label,oldnames high
+#f0c7ca,公安,6988,3827,23,11,line,yes,2.1,english label,picks
+#d7c3f4,韶山,7026,4063,23,11,line,yes,6.0,english label,picks
+#f9c0c2,仪陇,6448,3736,23,11,line,yes,0.7,interior,picks
+#edcab9,达川,6579,3765,23,11,line,yes,0.7,interior,picks
+#b8ebe6,景德镇,7379,3848,35,11,line,yes,2.5,english label,oldnames high
+#cbf4cc,庐山,7311,3902,23,11,line,yes,1.1,english label,oldnames medium
+#c8ebb5,长清,7280,3096,23,11,line,yes,9.0,english label,oldnames high
+#eba9e2,温州,7744,3936,23,11,line,yes,0.0,english label,oldnames high
+#dac0f5,宁海,7772,3788,23,11,line,yes,0.5,english label,oldnames high
+#e4b3dc,缙云,7693,3873,23,11,line,yes,0.0,english label,oldnames high
+#ead9ba,鲁山,6997,3436,23,11,line,yes,0.5,english label,picks
+#bde7c8,赤峰,7349,2444,23,11,line,yes,0.5,english label,oldnames high
+#c3eed0,临朐,7416,3084,23,11,line,yes,0.0,english label,oldnames high
+#e5f1d0,阳新,7231,3836,23,11,line,yes,0.5,english label,picks
+#c8fcd4,余干,7381,3937,23,11,line,yes,0.5,english label,oldnames high
+#f3cda1,邻水,6521,3856,23,11,line,yes,0.7,interior,picks
+#bad7e8,汨罗,7082,3941,23,11,line,yes,0.0,english label,oldnames high
+#d8affa,梅山,6910,4089,23,11,line,yes,0.5,english label,picks
+#f3d1b9,枞阳,7411,3679,23,11,line,yes,0.5,english label,picks
+#eedcc7,息县,7158,3551,23,11,line,yes,0.0,english label,picks
+#f3cab7,青衣,6203,3922,23,11,line,yes,0.7,interior,picks
+#adf0f0,湟中,5988,3201,23,11,line,yes,0.7,interior,picks
+#dae5ab,凤翔,6510,3386,23,11,line,yes,0.7,english label,picks
+#eedab0,南广,6329,4117,23,11,line,yes,0.7,interior,picks
+#f0d8db,松滋,6934,3842,23,11,line,yes,0.5,english label,picks
+#edd5c8,淠河,7291,3592,23,11,line,yes,0.7,interior,picks
+#f1dcb1,三门峡,6827,3339,35,11,line,yes,0.0,english label,picks
+#e4d1cf,广水,7100,3650,23,11,line,yes,0.5,english label,picks
+#f1caab,犍为,6264,3982,23,11,line,yes,0.7,interior,picks
+#e8eeb5,周原,6549,3400,23,11,line,yes,0.0,english label,picks
+#cee8bd,织金,6441,4287,23,11,line,yes,12.0,english label,oldnames high
+#ddf3c0,纳雍,6385,4253,23,11,line,yes,0.7,interior,picks
+#f0dab3,忠县,6604,3828,23,11,line,yes,0.7,interior,picks
+#ddee99,曹妃甸,7330,2766,35,11,line,yes,3.0,english label,oldnames high
+#f6c9bc,全椒,7427,3555,23,11,line,yes,1.1,english label,oldnames high
+#d2b7f8,湘乡,7051,4109,23,11,line,yes,0.7,english label,picks
+#dad8b1,呼和浩特,6755,2686,47,11,line,yes,6.0,english label,oldnames high
+#f0cbd9,安乡,6937,3913,23,11,line,yes,0.5,english label,picks
+#eed1c6,平昌,6501,3727,23,11,line,yes,0.7,interior,picks
+#c8edc6,万载,7191,4031,23,11,line,yes,0.5,english label,oldnames high
+#eddcb7,陶寺,6826,3206,23,11,line,yes,0.0,english label,picks
+#eacbc8,红安,7151,3684,23,11,line,yes,0.0,english label,picks
+#c4ead5,浏阳,7140,4028,23,11,line,yes,0.5,english label,oldnames medium
+#eec6d9,汉寿,6967,3958,23,11,line,yes,0.5,english label,picks
+#d4a8d6,天台,7746,3845,23,11,line,yes,2.5,english label,oldnames high
+#edc4bf,广元,6395,3637,23,11,line,yes,0.7,interior,picks
+#eed6da,洪湖,7092,3827,23,11,line,yes,0.0,english label,picks
+#ebb9fc,宁海,7814,3787,23,11,line,yes,2.5,interior,oldnames high
+#e9afd8,丽水,7688,3936,23,11,line,yes,0.5,english label,oldnames high
+#eacbc3,麻城,7199,3684,23,11,line,yes,0.5,english label,picks
+#c0f3cc,东乡,6177,3324,23,11,line,yes,0.7,interior,picks
+#eed5a7,四面山,6446,4004,35,11,line,yes,0.7,interior,picks
+#ebd5d1,凤阳,7416,3476,23,11,line,yes,0.5,english label,oldnames high
+#f4e2c2,望江,7333,3766,23,11,line,yes,0.5,english label,picks
+#edd4bd,桐柏,7049,3547,23,11,line,yes,0.0,english label,picks
+#f0d8b9,嵖岈山,7037,3486,35,11,line,yes,0.7,english label,picks
+#e4a9bf,郎川,7575,3653,23,11,line,yes,0.0,english label,oldnames medium
+#eab8c6,宣城,7544,3697,23,11,line,yes,0.5,english label,oldnames high
+#ddebb9,茅台,6517,4140,23,11,line,yes,2.0,english label,picks
+#edcbbe,襄州,6936,3592,23,11,line,yes,8.2,english label,picks
+#b8b5e7,怀玉,7528,3919,23,11,line,yes,0.5,english label,oldnames high
+#cbeed8,岳阳,7085,3899,23,11,line,yes,0.0,english label,oldnames high
+#d4eecf,都昌,7341,3851,23,11,line,yes,0.5,english label,oldnames high
+#f7eec4,风陵渡,6773,3365,35,11,line,yes,0.5,english label,picks
+#e4e0bf,东胜,6679,2820,23,11,line,yes,0.5,english label,oldnames high
+#d2edb8,黔西,6471,4219,23,11,line,yes,0.7,interior,picks
+#f7c3cc,盐亭,6390,3782,23,11,line,yes,0.7,interior,picks
+#ddeec3,大方,6434,4189,23,11,line,yes,0.7,interior,picks
+#e8f3c0,赫章,6343,4223,23,11,line,yes,0.7,interior,picks
+#f3fcd1,渤海,7285,2876,23,11,line,yes,0.5,english label,oldnames medium
+#f3d7c8,内乡,6898,3517,23,11,line,yes,0.5,english label,picks
+#f3ddd1,霍邱,7324,3534,23,11,line,yes,2.1,english label,oldnames high
+#e4dabc,汾州,6854,3037,23,11,line,yes,0.5,english label,picks
+#fadece,安康,6652,3573,23,11,line,yes,0.5,english label,picks
+#ddd7bf,忻州,6919,2926,23,11,line,yes,0.5,english label,oldnames high
+#edd0cb,钟祥,6982,3747,23,11,line,yes,0.7,english label,picks
+#bdedb5,樟树,7284,4056,23,11,line,yes,0.5,english label,oldnames high
+#ebd7c4,南召,6959,3468,23,11,line,yes,1.0,english label,picks
+#e7ddbc,灵石,6837,3099,23,11,line,yes,0.5,english label,picks
+#f3e0b5,云阳,6668,3769,23,11,line,yes,0.7,interior,picks
+#eeceb6,宣汉,6584,3724,23,11,line,yes,0.7,interior,picks
+#edd0f4,洞庭,7018,3950,23,11,line,yes,0.0,english label,picks
+#fadccc,天柱山,7307,3730,35,11,line,yes,0.5,english label,picks
+#ede4b9,夔州,6725,3772,23,11,line,yes,0.7,interior,picks
+#bce7cf,平江,7128,3967,23,11,line,yes,0.0,english label,oldnames high
+#bee5ba,恩施,6730,3863,23,11,line,yes,0.5,english label,picks
+#f0e5c4,韩城,6734,3279,23,11,line,yes,0.5,english label,picks
+#f0efc4,平山,7016,2911,23,11,line,yes,0.5,english label,oldnames high
+#eedfc7,确山,7094,3553,23,11,line,yes,0.0,english label,picks
+#f4d7d0,大别山,7245,3712,35,11,line,yes,0.5,english label,picks
+#eee5c2,兴文,6387,4095,23,11,line,yes,0.7,interior,picks
+#f1f0c4,曲阳,7036,2863,23,11,line,yes,0.0,english label,oldnames high
+#e9b2c0,飞云,7698,4004,23,11,line,yes,0.0,english label,oldnames high
+#eeeebf,庆阳,6536,3281,23,11,line,yes,0.7,interior,picks
+#f7dfb2,金佛山,6522,3958,35,11,line,yes,0.7,interior,picks
+#f1e8ac,桐梓,6490,4074,23,11,line,yes,0.7,interior,picks
+#c4ebcf,金溪,7380,4037,23,11,line,yes,0.0,english label,oldnames high
+#ebe4b9,中条,6843,3285,23,11,line,yes,0.7,interior,picks
+#d9b2da,天目,7596,3746,23,11,line,yes,0.0,english label,oldnames medium
+#dfe5ce,池,7419,3737,11,11,line,yes,0.0,english label,oldnames medium
+#cbf4db,通山,7165,3880,23,11,line,yes,0.5,english label,oldnames high
+#cee3a1,承德,7295,2596,23,11,line,yes,0.5,english label,oldnames high
+#d8e2af,遵化,7283,2664,23,11,line,yes,0.0,english label,oldnames high
+#cce8d9,六盘山,6367,3316,35,11,line,yes,0.7,interior,picks
+#f1eabe,彝良,6316,4164,23,11,line,yes,0.7,interior,picks
+#bcb5e7,钱塘,7537,3880,23,11,line,yes,0.0,english label,oldnames medium
+#c9e8d8,凤凰,6761,4098,23,11,line,yes,0.5,english label,picks
+#c9e8de,铜仁,6706,4126,23,11,line,yes,0.7,interior,picks
+#f0d7c6,罗山,7159,3620,23,11,line,yes,0.5,english label,picks
+#b9e2f0,徽州,7513,3797,23,11,line,yes,0.5,english label,oldnames high
+#ebcdcb,定远,7424,3512,23,11,line,yes,0.5,english label,oldnames high
+#d9eecb,泰和,7255,4167,23,11,line,yes,0.0,english label,oldnames high
+#d0eee8,甘谷,6322,3371,23,11,line,yes,0.7,interior,picks
+#f0f1be,草海,6284,4237,23,11,line,yes,0.7,interior,picks
+#dfdbbe,八达岭,7099,2694,35,11,line,yes,0.0,english label,oldnames high
+#c7e0ce,德江,6650,4063,23,11,line,yes,0.7,interior,picks
+#cecdd9,莽山,7130,4385,11,23,column,yes,7.3,english label,oldnames high
+#f0cfac,叙州,6266,4036,23,11,line,yes,0.7,interior,picks
+#c8e5c5,石柱,6659,3845,23,11,line,yes,0.5,english label,picks
+#c6e2d7,信江,7470,3980,23,11,line,yes,0.0,english label,oldnames medium
+#f0d1cd,枣阳,7019,3607,23,11,line,yes,0.0,english label,picks
+#d7eec7,湄潭,6588,4173,23,11,line,yes,0.7,interior,picks
+#e5dcca,壶关,6989,3178,23,11,line,yes,1.6,english label,picks
+#ebddb5,丰都,6592,3953,23,11,line,yes,0.7,interior,picks
+#f1d6c4,伏牛,6892,3417,23,11,line,yes,0.0,english label,picks
+#e2d8c5,襄垣,6944,3121,23,11,line,yes,0.7,english label,picks
+#ceede3,沅陵,6816,4056,23,11,line,yes,0.0,english label,picks
+#d0eec2,吴忠,6389,3016,23,11,line,yes,0.0,english label,picks
+#c4e4c7,秀山,6698,4032,23,11,line,yes,0.7,interior,picks
+#eed7d1,舒城,7300,3672,23,11,line,yes,0.5,english label,picks
+#f0e7b4,古蔺,6440,4109,23,11,line,yes,0.7,interior,picks
+#c7e0d7,思南,6642,4144,23,11,line,yes,0.7,interior,picks
+#d1c8f1,安化,6928,4035,23,11,line,yes,0.0,english label,picks
+#dbeecb,贺兰山,6387,2929,35,11,line,yes,0.5,english label,picks
+#ebeec8,邠州,6574,3329,23,11,line,yes,0.5,english label,picks
+#f7c2b4,霞浦,7678,4057,23,11,line,yes,0.5,english label,oldnames high
+#f3ded2,金寨,7250,3635,23,11,line,yes,0.0,english label,picks
+#e0dbca,榆林,6659,2981,23,11,line,yes,0.0,english label,picks
+#e7e4c4,朔州,6903,2813,23,11,line,yes,0.0,english label,oldnames high
+#c7e1da,洪江,6799,4169,23,11,line,yes,11.0,english label,oldnames high
+#f0e3b9,鲁甸,6204,4223,23,11,line,yes,0.7,interior,picks
+#d2e791,青龙,7370,2649,23,11,line,yes,0.0,english label,oldnames high
+#ebe1bf,横江,6276,4138,23,11,line,yes,0.7,interior,picks
+#f0dccf,熊耳,6856,3381,23,11,line,yes,0.0,english label,picks
+#d6f0d5,张家界,6814,3934,35,11,line,yes,0.5,english label,picks
+#bfeede,临洮,6204,3268,23,11,line,yes,0.7,interior,picks
+#ede2cc,河津,6777,3200,23,11,line,yes,0.5,english label,picks
+#c9e8ce,井冈,7185,4146,23,11,line,yes,0.5,english label,oldnames medium
+#f1e4c6,商洛,6750,3428,23,11,line,yes,0.0,english label,picks
+#e4d8c0,高平,6941,3214,23,11,line,yes,0.5,english label,picks
+#d2facc,黄河口,7380,2929,35,11,line,yes,0.5,english label,oldnames high
+#ead7d4,京山,7030,3715,23,11,line,yes,0.5,english label,picks
+#d5eedc,酉水,6735,3951,23,11,line,yes,0.5,english label,picks
+#ebe8c1,巴彦淖尔,6449,2695,47,11,line,yes,0.5,english label,oldnames high
+#dde5a8,密云,7215,2643,23,11,line,yes,0.5,english label,oldnames high
+#f3d3c8,丹江,6844,3479,23,11,line,yes,0.5,english label,picks
+#deedd0,清江,6861,3817,23,11,line,yes,0.0,english label,picks
+#e4eed5,平凉,6460,3301,23,11,line,yes,0.7,interior,picks
+#c3cfea,新定,7597,3802,23,11,line,yes,0.5,english label,oldnames high
+#e2dbe2,桃源,6889,3995,23,11,line,yes,0.5,english label,picks
+#d7e9a1,平泉,7366,2586,23,11,line,yes,0.5,english label,oldnames high
+#dfd9cc,吕梁,6771,3090,23,11,line,yes,0.5,english label,picks
+#f0d8d1,米仓山,6460,3637,35,11,line,yes,0.7,interior,picks
+#eec7cc,剑门,6358,3700,23,11,line,yes,0.7,interior,picks
+#c8e8cb,武陵山,6667,3919,35,11,line,yes,0.7,interior,picks
+#daf0e9,陇西,6261,3370,23,11,line,yes,0.7,interior,picks
+#dbf0e5,永顺,6785,4006,23,11,line,yes,0.0,english label,picks
+#eeecb6,芙蓉江,6542,4048,35,11,line,yes,0.7,interior,picks
+#fceae1,西乡,6574,3567,23,11,line,yes,0.0,english label,picks
+#dcead3,建始,6777,3803,23,11,line,yes,0.0,english label,picks
+#f1e7d1,霍州,6884,3157,23,11,line,yes,0.0,english label,picks
+#d0f0d1,九岭,7205,3982,23,11,line,yes,0.5,english label,oldnames medium
+#d1f0cc,恩江,7330,4104,23,11,line,yes,0.5,english label,oldnames high
+#c9eaee,婺源,7461,3863,23,11,line,yes,0.0,english label,oldnames high
+#d5e5cf,彭水,6599,4009,23,11,line,yes,0.7,interior,picks
+#daf3e0,修水,7219,3908,23,11,line,yes,0.0,english label,oldnames high
+#e4c3cf,连州,7069,4451,23,11,line,yes,10.0,english label,oldnames high
+#cbf1cb,固原,6396,3259,23,11,line,yes,0.0,english label,picks
+#e8e4c9,蔚县,7006,2783,23,11,line,yes,0.5,english label,oldnames high
+#e5e1d2,雁门,6927,2866,23,11,line,yes,0.0,english label,oldnames high
+#cfebc9,德宏,5745,4538,23,11,line,yes,13.0,english label,oldnames high
+#e7e5c7,凉山,6177,4153,23,11,line,yes,0.7,interior,picks
+#f7dcd3,郧阳,6816,3543,23,11,line,yes,0.0,english label,picks
+#edd6cb,大渡,6118,3982,23,11,line,yes,0.7,interior,picks
+#ccf3e7,河湟,6081,3233,23,11,line,yes,0.7,interior,picks
+#d4e5ce,陇县,6446,3374,23,11,line,yes,0.7,interior,picks
+#def0d5,慈利,6861,3880,23,11,line,yes,0.0,english label,picks
+#e2dbc4,湫水河,6766,2987,35,11,line,yes,0.7,interior,picks
+#ccf6c4,中卫,6322,3098,23,11,line,yes,0.5,english label,picks
+#ede9ce,易县,7103,2773,23,11,line,yes,0.0,english label,oldnames high
+#d0faf8,凉州,6094,3070,23,11,line,yes,0.7,interior,picks
+#f0dcd0,荆山,6892,3663,23,11,line,yes,0.5,english label,picks
+#c7e7bd,宁城,7368,2509,23,11,line,yes,0.0,english label,oldnames high
+#e8e4d7,无定河,6696,3077,35,11,line,yes,0.5,english label,picks
+#f0ddd1,通江,6548,3647,23,11,line,yes,0.7,interior,picks
+#f3d8cb,雅安,6143,3913,23,11,line,yes,0.7,interior,picks
+#f1e0c9,大巴山,6670,3707,35,11,line,yes,0.7,interior,picks
+#dddcc6,阳高,6980,2719,23,11,line,yes,0.0,english label,oldnames high
+#d2e9c2,盱江,7414,4105,23,11,line,yes,12.0,english label,oldnames high
+#e4ebe5,礼县,6280,3459,23,11,line,yes,0.7,interior,picks
+#f7e4d6,旬阳,6675,3624,23,11,line,yes,0.0,english label,picks
+#dfbde0,龙泉,7625,3971,23,11,line,yes,0.5,english label,oldnames high
+#ead9d2,三峡,6887,3753,23,11,line,yes,9.0,english label,picks
+#d1f1eb,会宁,6277,3268,23,11,line,yes,0.7,interior,picks
+#f4e3d6,竹山,6779,3633,23,11,line,yes,0.0,english label,picks
+#e7ddc7,越西,6190,4042,23,11,line,yes,0.7,interior,picks
+#ebe5d2,延安,6685,3154,23,11,line,yes,0.0,english label,picks
+#dcd9c2,张家口,7037,2671,35,11,line,yes,1.0,english label,oldnames high
+#d5f4f6,酒泉,5833,2881,23,11,line,yes,0.7,interior,picks
+#e5e8e3,成县,6418,3459,23,11,line,yes,0.7,interior,picks
+#eae4d3,太行,6971,3051,23,11,line,yes,0.0,english label,oldnames medium
+#d1f1f7,永登,6149,3188,23,11,line,yes,0.7,interior,picks
+#c6f3ed,大通,6028,3137,23,11,line,yes,0.7,interior,picks
+#e8e3d1,神木,6706,2915,23,11,line,yes,0.0,english label,picks
+#c9f3f1,白银,6257,3160,23,11,line,yes,0.7,interior,picks
+#f7e7d6,山阳,6709,3494,23,11,line,yes,0.0,english label,picks
+#f7e5dc,勉县,6426,3560,23,11,line,yes,0.0,english label,picks
+#e8e5c4,东河,6688,2711,23,11,line,yes,0.0,english label,oldnames high
+#f9e7dc,洋县,6539,3495,23,11,line,yes,0.5,english label,picks
+#e2d8c0,管涔山,6834,2915,35,11,line,yes,0.5,english label,picks
+#cfe3f6,石河子,4729,2390,35,11,line,yes,0.7,interior,picks
+#e9eed0,环县,6503,3192,23,11,line,yes,0.7,interior,picks
+#e8e6d7,靖边,6563,3075,23,11,line,yes,0.0,english label,picks
+#e4e5d6,乌兰察布,6851,2661,47,11,line,yes,0.5,english label,oldnames high
+#f3edda,洛川,6645,3223,23,11,line,yes,0.0,english label,picks
+#dff3d5,海原,6377,3176,23,11,line,yes,0.5,english label,picks
+#f1ebe7,白龙江,6309,3601,35,11,line,yes,0.7,interior,picks
+#cbe6f9,昌吉,4814,2306,23,11,line,yes,0.7,interior,picks
+#eae8d6,准格尔,6757,2788,35,11,line,yes,0.5,english label,oldnames high
+#ddfaf9,祁连,5941,3002,23,11,line,yes,0.7,interior,picks
+#e8e8d1,雅砻江,6039,4117,35,11,line,yes,0.7,interior,picks
+#d6e4f4,博尔塔拉,4607,2335,47,11,line,yes,0.7,interior,picks
+#d1e4f1,博格达,5005,2362,35,11,line,yes,0.7,interior,picks
+#dfedda,锡林郭勒,7045,2492,47,11,line,yes,0.7,english label,oldnames high
+#f1efde,鄂尔多斯,6522,2874,47,11,line,yes,0.7,english label,oldnames high
+#e1e7ee,呼伦贝尔,7293,1777,47,11,line,yes,0.7,english label,oldnames high
+#e9f4f6,敦煌,5469,2801,23,11,line,yes,0.7,interior,picks
+#e4e4f6,焉耆,4626,2565,23,11,line,yes,0.7,interior,picks
+#f4f5ef,柴达木,5876,3501,35,11,line,yes,0.7,interior,picks

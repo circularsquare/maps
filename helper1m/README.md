@@ -130,8 +130,9 @@ and share one palette, `scripts/language_colors.csv`.
   by their 2011 census share. The census's 99999 rows (17.4M people in towns
   outside any block, West Bengal, Tripura and Karnataka) go to the
   sub-districts their towns stand in, not pro rata over the district.
-  Level 4 is level 3 with 26 of the 30 sub-districts over 2 million (2026) split
-  into 142 parts from the Census 2011 town, village and ward abstract (PCA TV):
+  Level 4 is level 3 with 252 of the 265 sub-districts over 750,000 (2026) split
+  into 776 parts from the Census 2011 town, village and ward abstract (PCA TV,
+  downloaded by `scripts/india/fetch_pca_tv.py`):
   Mumbai by BMC admin ward, Bangalore by assembly constituency, Chennai by zone,
   Kolkata, Lucknow, Jaipur and Delhi's Saraswati Vihar by groups of census wards
   placed on DataMeet ward maps checked against the 2011 wards, and the other

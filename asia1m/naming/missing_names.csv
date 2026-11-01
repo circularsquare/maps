@@ -1,0 +1,233 @@
+﻿key,country,lat,lon,people,holds
+#a0eae5,Bangladesh,24.8157,92.1009,1578084,Golapganj  27%; Beanibazar  22%; Baralekha  19%
+#97e8e0,Bangladesh,23.5945,90.8301,1562285,Daudkandi  28%; Muradnagar  23%; Titas  16%
+#97e5e8,Bangladesh,23.5935,91.075,1278535,Debidwar  34%; Burichang  30%; Brahmanpara  15%
+#dfe8e4,Bangladesh,22.665,92.2861,1244373,Rangamati Sadar  14%; Dighinala  10%; Khagrachhari Sadar  9%
+#b3e8d1,Bangladesh,21.7913,92.2609,1129752,Lohagara  28%; Satkania  22%; Alikadam  12%
+#a6eed3,Bangladesh,21.2463,92.1563,1119929,Ramu  30%; Ukhia  23%; Teknaf  20%
+#e8e6ee,China,51.1945,123.3006,1402011,Nenjiang 嫩江县 28%; Oroqin 鄂伦春自治旗 18%; Jiagedaqi 加格达奇区 11%
+#aea2e7,China,46.6628,125.2414,1602,Longfeng 龙凤区 73%; Anda 安达市 27%
+"#6a5c85@126.6,45.8",China,45.7513,126.6045,51488,Daoli 道里区 50%; Nangang 南岗区 50%
+#998cd5,China,44.8894,127.6315,50,Wuchang 五常市 100%
+"#6b798e@111.1,43.4",China,43.3747,111.1312,0,Siziwang 四子王旗 50%
+#d8baee,China,42.4789,130.5695,437,Hunchun 珲春市 71%
+#ada760,China,40.6724,109.8333,1023330,Kundoulun 昆都仑区 62%; Qingshan 青山区 38%
+#dac281,China,40.1093,116.3509,834498,Changping 昌平区 96%; Haidian 海淀区 4%; Shunyi 顺义区 1%
+#e0da70,China,40.0493,116.1996,1579024,Haidian 海淀区 99%; Changping 昌平区 1%; Mentougou 门头沟区 0%
+#e2d27d,China,40.0433,116.3934,985831,Zhaoyang 朝阳区 45%; Haidian 海淀区 30%; Changping 昌平区 25%
+#e5ed71,China,39.9915,116.5439,1158336,Zhaoyang 朝阳区 97%; Tongzhou 通州区 3%; Shunyi 顺义区 0%
+#e5cf74,China,39.9445,116.1279,1213670,Shijingshan 石景山区 60%; Mentougou 门头沟区 22%; Haidian 海淀区 15%
+#f2f04e,China,39.8993,116.6554,406967,Tongzhou 通州区 100%
+#e7ca4f,China,39.8944,116.2917,1109815,Fengtai 丰台区 48%; Haidian 海淀区 46%; Xicheng 西城区 5%
+#e9d47c,China,39.8335,116.2008,1147153,Fengtai 丰台区 96%; Daxing 大兴区 2%; Fangshan 房山区 1%
+#e9dd58,China,39.7316,116.3304,714952,Daxing 大兴区 97%; Fengtai 丰台区 3%
+#e7e0d0,China,39.3408,115.4475,2857,Yi 易县 100%
+#f1efde,China,39.2827,108.1057,1353087,Haibowan 海勃湾区 25%; Otog 鄂托克旗 20%; Hainan 海南区 14%
+#c5fbbc,China,37.6553,119.0236,0,Kenli 垦利县 100%
+#53586e,China,37.0416,122.1448,1984,Wendeng 文登区 100%
+#b3ebdf,China,35.2172,118.8337,992193,Junan 莒南县 86%; Hedong 河东区 13%; Ganyu 赣榆区 0%
+"#6a5c85@119.6,33.3",China,33.3213,119.6199,1457,Baoying 宝应县 50%; Jianhu 建湖县 50%
+#c2afdc,China,32.852,119.5636,1225821,Gaoyou 高邮市 74%; Jiangdu 江都区 14%; Baoying 宝应县 11%
+#48735f,China,32.7152,120.0925,3095,Xinghua 兴化市 100%
+#d3d7bb,China,32.1977,118.9082,9128,Luhe 六合区 100%
+#e69adf,China,32.0902,119.8338,19698,Danyang 丹阳市 100%
+#ed96ea,China,31.9511,119.844,295695,Xinbei 新北区 72%; Wujin 武进区 22%; Yangzhong 扬中市 3%
+#f29786,China,31.8243,118.6847,672622,Jiangning 江宁区 72%; Yuhuatai 雨花台区 28%; Huashan 花山区 1%
+#e97963,China,31.6767,118.5411,1047476,Yushan 雨山区 49%; Huashan 花山区 46%; Dangtu 当涂县 3%
+#5481e6,China,31.353,121.4773,1093069,Baoshan 宝山区 71%; Yangpu 杨浦区 25%; Zhabei 闸北区 2%
+#5471e6,China,31.347,121.3928,1356048,Baoshan 宝山区 84%; Putuo 普陀区 8%; Zhabei 闸北区 7%
+#5e72df,China,31.3277,121.2433,916998,Jiading 嘉定区 98%; Baoshan 宝山区 2%; Minhang 闵行区 1%
+#42a1eb,China,31.2434,121.5515,1561914,Pudong 浦东新区 97%; Hongkou 虹口区 3%
+#60aaf7,China,31.2413,121.6577,1181156,Pudong 浦东新区 99%
+#5a6adf,China,31.1925,121.3061,997024,Minhang 闵行区 56%; Qingpu 青浦区 17%; Zhangning 长宁区 16%
+#55ace6,China,31.1671,121.5529,1187653,Pudong 浦东新区 100%
+#448edd,China,31.1454,121.4706,1111648,Pudong 浦东新区 58%; Xuhui 徐汇区 40%; Minhang 闵行区 2%
+#517cdd,China,31.1074,121.3873,1205085,Minhang 闵行区 96%; Songjiang 松江区 2%; Xuhui 徐汇区 2%
+#6d77dd,China,31.1039,121.2271,1204388,Songjiang 松江区 75%; Qingpu 青浦区 22%; Minhang 闵行区 4%
+#79b7e8,China,31.0889,121.6536,922673,Pudong 浦东新区 99%; Fengxian 奉贤区 0%; Minhang 闵行区 0%
+#6d9bdc,China,31.0474,121.4608,1068492,Minhang 闵行区 93%; Pudong 浦东新区 4%; Fengxian 奉贤区 2%
+#7a82dd,China,31.017,121.1957,969898,Songjiang 松江区 99%; Minhang 闵行区 0%; Qingpu 青浦区 0%
+#eb9cc9,China,30.7038,122.704,10594,Shengsi 嵊泗县 33%
+#c3d1ea,China,29.5247,118.8953,737,Chun'an 淳安县 100%
+#4ee10a,China,26.5544,106.7022,626349,Nanming 南明区 93%; Huaxi 花溪区 4%; Yunyan 云岩区 3%
+#f07a67,China,23.4134,113.173,704507,Huadou 花都区 96%; Baiyun 白云区 4%
+#f3ac43,China,23.318,116.381,1043429,Chaonan 潮南区 50%; Chaoyang 潮阳区 48%; Puning 普宁市 2%
+#f7c563,China,23.3048,116.6028,1078842,Chaoyang 潮阳区 73%; Haojiang 濠江区 25%; Chaonan 潮南区 0%
+#ec5e48,China,23.2728,113.2089,765821,Baiyun 白云区 100%; Huadou 花都区 0%; Nanhai 南海区 0%
+#f5b659,China,23.199,116.4477,1164619,Chaonan 潮南区 69%; Chaoyang 潮阳区 31%; Huilai 惠来县 0%
+#eb736a,China,23.1709,113.4974,592346,Huangpu 黄埔区 85%; Zengcheng 增城区 14%; Dongguan 东莞市 1%
+#f06d53,China,23.1299,113.428,503501,Huangpu 黄埔区 55%; Tianhe 天河区 45%
+#eb5f3d,China,23.1177,113.1361,760845,Nanhai 南海区 91%; Baiyun 白云区 5%; Liwan 荔湾区 3%
+#f3653a,China,23.0815,113.3446,874819,Haizhu 海珠区 90%; Panyu 番禺区 8%; Huangpu 黄埔区 1%
+#e7602f,China,23.0607,113.1922,1339120,Liwan 荔湾区 62%; Nanhai 南海区 38%
+#e99682,China,23.0484,114.022,672243,Dongguan 东莞市 100%; Huicheng 惠城区 0%; Boluo 博罗县 0%
+#ca331c,China,23.0155,113.1087,406657,Chancheng 禅城区 92%; Nanhai 南海区 6%; Shunde 顺德区 2%
+#ec6b57,China,23.0103,113.2995,520999,Panyu 番禺区 99%; Nanhai 南海区 1%
+#eb896c,China,22.9918,113.4566,709498,Panyu 番禺区 91%; Huangpu 黄埔区 8%; Dongguan 东莞市 1%
+#da4a34,China,22.9604,113.2068,603496,Shunde 顺德区 72%; Nanhai 南海区 23%; Panyu 番禺区 4%
+#e9704c,China,22.9345,113.3511,639824,Panyu 番禺区 98%; Nansha 南沙区 2%
+#ce5643,China,22.9301,113.0666,552494,Shunde 顺德区 74%; Chancheng 禅城区 25%; Nanhai 南海区 1%
+#e78677,China,22.9007,114.1063,634422,Dongguan 东莞市 99%; Huiyang 惠阳区 0%; Longgang 龙岗区 0%
+#dd6c5a,China,22.8472,113.2244,638178,Shunde 顺德区 99%; Nansha 南沙区 0%; Panyu 番禺区 0%
+#e26b73,China,22.8203,113.701,529875,Dongguan 东莞市 99%; Nansha 南沙区 0%
+#db8086,China,22.796,114.0939,853695,Dongguan 东莞市 96%; Bao'an 宝安区 4%; Longgang 龙岗区 0%
+#db857c,China,22.7604,113.1685,547049,Shunde 顺德区 96%; Zhongshan 中山市 2%; Pengjiang 蓬江区 1%
+#ee8975,China,22.7506,114.2802,621806,Longgang 龙岗区 99%; Huiyang 惠阳区 1%; Dongguan 东莞市 0%
+#f16c79,China,22.7195,114.0405,543337,Bao'an 宝安区 94%; Longgang 龙岗区 5%; Dongguan 东莞市 1%
+#df6f79,China,22.6938,114.1524,683469,Longgang 龙岗区 59%; Dongguan 东莞市 40%; Bao'an 宝安区 1%
+#e47084,China,22.6604,113.9217,617944,Bao'an 宝安区 80%; Nanshan 南山区 20%
+#e4445f,China,22.6525,114.0183,460016,Bao'an 宝安区 93%; Longgang 龙岗区 4%; Nanshan 南山区 3%
+#f57878,China,22.6508,114.2172,419088,Longgang 龙岗区 86%; Luohu 罗湖区 11%; Yantian 盐田区 2%
+#dd525b,China,22.6265,114.0587,404902,Longgang 龙岗区 73%; Bao'an 宝安区 19%; Luohu 罗湖区 5%
+#dd527b,China,22.6249,114.1204,789201,Longgang 龙岗区 97%; Luohu 罗湖区 3%
+#ee5377,China,22.5785,114.1286,764751,Luohu 罗湖区 82%; Futian 福田区 8%; Longgang 龙岗区 8%
+#ff5386,China,22.569,113.9654,550316,Nanshan 南山区 93%; Futian 福田区 5%; Bao'an 宝安区 1%
+#ee2f5c,China,22.55,114.0883,585446,Futian 福田区 69%; Luohu 罗湖区 26%
+#ff5079,China,22.5496,114.027,822515,Futian 福田区 100%
+#fabbab,China,21.533,108.1857,6712,Dongxing 东兴市 31%; Fangcheng 防城区 19%
+#f35247,Hong Kong,22.4169,113.9831,767663,Yuen Long  51%; Tuen Mun  30%
+#e95632,Hong Kong,22.4077,114.2643,1209018,Sha Tin  69%; Sai Kung  9%; Tai Po  8%
+#df3c14,Hong Kong,22.3329,114.21,773167,Kwun Tong  44%; Kowloon City  36%; Wong Tai Sin District  18%
+#ff4b0b,Hong Kong,22.3289,114.1604,850895,Kowloon City  22%; Sham Shui Po  14%; Kwai Tsing  13%
+#ff643e,Hong Kong,22.2998,113.9898,1050741,Tsuen Wan  42%; Kwai Tsing  16%; Tuen Mun  6%
+#ff431e,Hong Kong,22.2982,114.268,493747,Sai Kung  43%; Kwun Tong  8%; Siu Ma Shan  6%
+#e1da71,India,31.0848,74.876,111538,Zira  80%; Firozpur  11%; Patti  9%
+#e1b271,India,30.2755,75.4191,126219,Tapa  86%; Rampura Phul  7%; Barnala  5%
+#e18a71,India,29.1374,76.5779,210432,Gohana  94%; Julana  3%; Rohtak  2%
+#e17187,India,28.0208,78.6015,171331,Sahaswan  36%; Kasganj  33%; Atrauli  28%
+#faedd4,India,27.5373,88.453,1521310,Darjeeling Pulbazar  37%; Gangtok  16%; Jorebunglow Sukiapokhri  11%
+#e171af,India,27.1822,80.1374,203411,Bilgram  63%; Hardoi  37%
+#a5d7e4,India,26.6569,91.7479,982051,Tamulpur  30%; Harisinga  24%; Goreswar (Pt)  18%
+#abd0e6,India,26.6076,91.2203,1057890,Barnagar (Pt)  15%; Bajali (Pt)  13%; Baska  12%
+#abcce6,India,26.447,90.5809,970484,Bijni (Pt)  30%; Bongaigaon (Pt)  13%; Boitamari  12%
+#90c9e2,India,26.3516,91.0933,982459,Barpeta  43%; Sarthebari  22%; Chenga  17%
+#a4d1e2,India,26.3424,91.4593,1216951,Barkhetri  20%; Nalbari  17%; Rangia (Pt)  15%
+#a6d1e4,India,26.3003,90.8406,1142211,Baghbor  28%; Kalgachia  26%; Srijangram  15%
+#e171d3,India,26.2994,82.0878,490004,Sultanpur  79%; Jaisinghpur  12%; Lambhua  8%
+#96d6e8,India,26.2178,91.8457,1211367,Sipajhar  17%; Kamalpur  17%; Sonapur  16%
+#a6cde4,India,26.0586,90.6433,938826,Balijana  35%; Matia  34%; Lakhipur  13%
+#9ad4e1,India,25.9965,91.2645,961030,Palasbari  24%; Goroimari  20%; Chhaygaon  12%
+#aa71e1,India,25.4832,84.2546,407129,Nawanagar  29%; Dumraon  28%; Barhampur  18%
+#8271e1,India,24.645,86.2827,184030,Sono  86%; Chakai  9%; Deori  5%
+#6c99dd,India,23.4721,88.5508,455476,Krishnagar-I  36%; Chapra  32%; Krishnagar-II  18%
+#6c80dd,India,23.2924,87.727,86685,Galsi-II  90%; Burdwan-I  6%; Khandaghosh  5%
+#9e5c4f,India,18.9502,72.7845,329959,Area Not Under Any Sub-District  27%
+#ebd1a3,India,11.3047,92.953,403331,Port Blair  27%; Ferrargunj  15%; Diglipur  8%
+#d9ecec,Indonesia,2.7559,116.5128,1246703,Tawau  10%; Tarakan Tengah  8%; Sambaliung  5%
+#94b5f1,Indonesia,0.705,103.0808,9628,Rangsang  22%; Kuala Kampar  17%
+#f3dcb8,Indonesia,-0.3129,98.4447,13885,Hibala  32%; Tanah Masa  18%; Pulau-Pulau Batu  5%
+#e8cbcc,Indonesia,-3.3675,121.6262,1088953,Towuti  4%; Malili  4%; Pomalaa  3%
+#e9c0c2,Indonesia,-3.6197,121.755,2093,Bungku Selatan  25%; Danau  2%; Towuti  1%
+#e9b2b5,Indonesia,-4.5455,122.7134,4556,Towea  22%
+#ffbac3,Indonesia,-5.3335,124.3388,256,Tomia  18%
+#edff91,Indonesia,-5.9778,105.4833,3034,Rajabasa  37%; Pulau  0%
+#589cbf,Indonesia,-6.1306,106.9273,858393,Cilincing  39%; Kelapa Gading  27%; Koja  13%
+#408ab5,Indonesia,-6.191,106.9297,818560,Cakung  75%; Pulo Gadung  23%; Bekasi Barat  2%
+"#f3efe5@107.6,-6.5",Indonesia,-6.4934,107.5704,955,Cipeundeuy  100%
+#f3d3aa,Indonesia,-7.1114,111.2361,824415,Pulokulon  12%; Wirosari  10%; Randublatung  8%
+#b79f80,Indonesia,-7.1395,111.2365,23674,Gabus  47%; Jati  23%; Kradenan  11%
+#f0a398,Indonesia,-8.3041,116.709,1334,Sambelia  17%
+#f59bea,Indonesia,-8.6784,115.4584,6145,Nusapenida  44%
+#fcf0c3,Indonesia,-9.2866,119.9351,2,Haharu  57%
+#faf2c1,Indonesia,-10.6194,121.5789,7622,Raijua  50%
+#9e7ad7,Japan,35.9035,139.6531,893778,Minuma-ku 見沼区 20%; Midori-ku 緑区 17%; Kita-ku 北区 12%
+#7c79e7,Japan,35.8719,139.8694,1136246,Matsudo City 松戸市 20%; Koshigaya City 越谷市 15%; Misato City 三郷市 14%
+#9767e3,Japan,35.8446,139.7662,951538,Kawaguchi City 川口市 48%; Soka City 草加市 23%; Koshigaya City 越谷市 17%
+#967cd7,Japan,35.8244,139.5967,993651,Asaka City 朝霞市 17%; Niiza City 新座市 16%; Toda City 戸田市 13%
+#565de7,Japan,35.7319,139.9428,1057064,Ichikawa City 市川市 41%; Matsudo City 松戸市 22%; Funabashi City 船橋市 10%
+#7083eb,Japan,35.7286,140.0548,854789,Funabashi City 船橋市 53%; Ychiyo City 八千代市 22%; Narashino City 習志野市 16%
+#6f56e7,Japan,35.7145,139.8705,962182,Edogawa-ku 江戸川区 56%; Katsushika-ku 葛飾区 32%; Ichikawa City 市川市 8%
+#ee6cd9,Japan,35.5767,139.7244,923149,Ota-ku 大田区 67%; Meguro-ku 目黒区 13%; Shinagawa-ku 品川区 6%
+#df7fbf,Japan,35.537,139.5877,1094707,Kohoku-ku 港北区 26%; Tsuzuki-ku 都筑区 24%; Aoba-ku 青葉区 22%
+#d57fc6,Japan,35.4744,139.4988,1045087,Asahi-ku 旭区 27%; Izumi-ku 泉区 20%; Yamato City 大和市 16%
+#f37dcf,Japan,35.4533,139.6065,821021,Kanagawa-ku 神奈川区 21%; Hodogaya-ku 保土ケ谷 19%; Totsuka-ku 戸塚区 12%
+#eb8cdb,Japan,35.3483,139.509,1041437,Fujisawa City 藤沢市 35%; Kamakura City 鎌倉市 17%; Totsuka-ku 戸塚区 15%
+#6ec8e2,Japan,34.8889,135.7863,906506,Fushimi-ku 伏見区 30%; Uji City 宇治市 16%; Yamashina-ku 山科区 12%
+#75b8e5,Japan,34.8591,135.6132,1050953,Takatsuki City 高槻市 33%; Ibaraki City 茨木市 24%; Hirakata City 枚方市 17%
+#59a1ed,Japan,34.8099,135.4825,859536,Toyonaka City 豊中市 34%; Suita City 吹田市 34%; Minoh City 箕面市 15%
+#508ee5,Japan,34.7694,135.3837,967748,Amagasaki City 尼崎市 30%; Nishinomiya City 西宮市 26%; Itami City 伊丹市 21%
+#75a8e7,Japan,34.7286,134.952,1061829,Nishi-ku 西区 38%; Akashi City 明石市 18%; Kakogawa City 加古川市 17%
+#6b91e9,Japan,34.7025,135.207,682662,Higashinada-ku 東灘区 15%; Suma-ku 須磨区 12%; Chuo-ku 中央区 11%
+#f9b7be,Japan,32.5879,129.7696,1682,Nagasaki City 長崎市 40%
+#faecf7,Kazakhstan,50.0388,78.3239,1034939,Semey  35%; Ust-Kamenogorsk  23%; Ulan District  10%
+#fcf1f8,Kazakhstan,46.4115,74.5057,1012742,Taldykorgan  11%; Eskeldi District  8%; Urzhar District  8%
+#ffe4ee,Kazakhstan,43.6523,75.707,925003,Karasay District  37%; Ile District  23%; Korday District  17%
+#f3d4e0,Kazakhstan,43.4121,77.4532,933331,Enbekshikazakh District  32%; Talgar District  27%; Medeu District  14%
+#fce9f2,Kazakhstan,43.322,71.8966,621437,Shu District  16%; Merki District  15%; Taraz  13%
+#f3adc8,Kazakhstan,43.2878,76.871,740544,Alatau District  38%; Turksib District  27%; Jetysu District  13%
+#ed70a0,Kazakhstan,43.2506,76.9263,388386,Bostandyk District  28%; Medeu District  25%; Almaly District  23%
+#ee8ec3,Kyrgyzstan,42.8566,74.6001,769040,Alamudun Аламудунский 1%; Sokuluk Сокулукский 0%
+#f3c6de,Kyrgyzstan,42.7498,74.2945,1066602,Alamudun Аламудунский 24%; Sokuluk Сокулукский 20%; Ysyk-Ata Ысык-Атинский 16%
+#fae2ef,Kyrgyzstan,41.914,72.0863,1282196,Nooken Ноокенский 17%; Aksy Аксыйский 13%; Toktogul Токтогульский 11%
+#f6e4f0,Kyrgyzstan,41.7865,76.501,983944,Tup Тюпский 14%; Jeti-Oguz Жети-Огузский 10%; Ton Тонский 9%
+#f6cce3,Kyrgyzstan,41.1529,73.5266,812112,Suzak Сузакский 45%; Uzgen Узгенский 22%; Bazar-Korgon Базар-Коргонский 13%
+#f4bcdb,Kyrgyzstan,40.5232,72.9749,985704,Kara-Suu Кара-Сууский 59%; Uzgen Узгенский 10%; Nookat Ноокатский 8%
+#f4e1eb,Kyrgyzstan,39.9489,72.2282,1458878,Kadamjai Кадамжайский 17%; Leilek Лейлекский 14%; Nookat Ноокатский 14%
+#cfe5eb,Malaysia,2.2533,112.9718,1265463,Sibu  20%; Bintulu  17%; Sri Aman  7%
+#eff0e0,Mongolia,51.0842,102.1678,0,Khovsgol Хөвсгөл 50%
+#e4f1d2,Mongolia,48.7967,106.3836,1456550,Ulaanbaatar Улаанбаатар 73%; Darkhan-Uul Дархан-Уул 7%; Selenge Сэлэнгэ 7%
+"#6b798e@119.4,47.4",Mongolia,47.3839,119.4048,16,Dornod Дорнод 37%; Xinbarag Left  26%
+#f3f4ed,Mongolia,46.6028,98.9193,859241,Khovsgol Хөвсгөл 14%; Ovorkhangai Өвөрхангай 12%; Omnogovi Өмнөговь 10%
+#a5e2b2,Nepal,27.7827,84.9663,77050,Dhading  94%; Nuwakot  6%; Makwanpur  0%
+#e9d148,Philippines,14.7603,121.0472,600217,Caloocan City  88%; Quezon City  12%
+#f8de48,Philippines,14.7568,120.9844,739767,City of Meycauayan  32%; City of Valenzuela  28%; Marilao  26%
+#cdcc69,Philippines,14.7339,121.1489,1068239,Rodriguez (Montalban)  42%; San Mateo  30%; City of Marikina  16%
+#dfde51,Philippines,14.7198,121.0737,802754,Quezon City  99%; San Mateo  1%
+#fced39,Philippines,14.6955,120.968,1136216,City of Valenzuela  50%; City of Malabon  25%; Obando  6%
+#d8cb35,Philippines,14.682,121.0607,966146,Quezon City  95%; City of Marikina  5%
+#dcd764,Philippines,14.5972,121.1528,1432012,City of Antipolo  45%; Taytay  31%; Cainta  21%
+#e6e389,Philippines,14.5447,121.228,801320,Angono  16%; Binangonan  16%; City of Antipolo  14%
+#d6e451,Philippines,14.5193,121.065,743813,Taguig City  60%; Taytay  6%; City of Makati  2%
+#f0fa5a,Philippines,14.4946,121.0111,1083611,City of Parañaque  66%; Pasay City  14%; City of Las Piñas  2%
+#cddc48,Philippines,14.438,120.9816,1049065,City of Las Piñas  49%; Bacoor City  42%; City of Muntinlupa  4%
+#e4e369,Philippines,14.4037,121.0384,959307,City of Muntinlupa  44%; City of San Pedro  15%; City of Parañaque  6%
+#d4dc86,Philippines,14.3247,120.9707,799965,City of Dasmariñas  69%; Bacoor City  18%; City of Muntinlupa  4%
+#dae25f,Philippines,14.3144,121.0503,693598,City of Biñan  37%; Carmona  24%; City of San Pedro  16%
+#e4e074,Philippines,14.2329,121.0989,1128490,Cabuyao City  35%; City of Santa Rosa  24%; City of Calamba  20%
+#c5fac9,Philippines,13.7852,124.2267,316794,Virac (Capital)  16%; Caramoran  9%; San Andres (Calolbon)  8%
+"#f1f1f1@112.7,71.2",Russia,71.2419,112.7428,0,Krasnoyarsk  60%; Sakha  40%
+"#f1f1f1@145.8,63.9",Russia,63.9488,145.7733,0,Sakha  80%; Maga Buryatdan  20%
+#edf6f7,Russia,63.3935,124.0148,917531,Sakha  100%; Amur  0%; Khabarovsk  0%
+#f3fcfc,Russia,63.2431,97.0065,1053984,Krasnoyarsk  63%; Irkutsk  37%; Sakha  0%
+"#e8f3f4@112.4,59.0",Russia,59.0043,112.4269,0,Sakha  100%
+#e4eef4,Russia,56.6525,140.8125,651157,Sakhalin  54%; Khabarovsk  16%; Maga Buryatdan  14%
+"#e8f3f4@131.7,56.5",Russia,56.4983,131.6628,0,Sakha  89%; Khabarovsk  11%
+#e4f6f9,Russia,53.8445,103.7568,1442945,Irkutsk  66%; Buryat  34%; Tuva  0%
+#e7eff6,Russia,53.649,123.1498,1133838,Amur  59%; Zabaykal'ye  38%; Heihe  2%
+#f4e9e9,Russia,51.5789,91.7265,1001387,Tuva  31%; Khakass  27%; Gorno-Altay  21%
+#dfeaf3,Russia,50.1059,133.5975,999903,Khabarovsk  76%; Yevrey  16%; Amur  7%
+#dceef3,Russia,46.3958,135.515,1196971,Primor'ye  69%; Khabarovsk  30%; Mishan 密山市 0%
+#454c56,Russia,29.2631,86.746,562523,Arkhangel'sk  7%; Sakha  0%; Bula  0%
+#6e5be9,South Korea,37.5516,126.8337,854188,Gangseo-gu 강서구 68%; Yangcheon-gu 양천구 25%; Bucheonsiojeonggu 부천시오정구 7%
+#5671e0,South Korea,37.5002,126.8899,1118890,Guro-gu 구로구 40%; Yeongdeungpo-gu 영등포구 28%; Gwanak-gu 관악구 15%
+#7e71ee,South Korea,37.4934,126.5539,1029855,Seo-gu 서구 38%; Bupyeong-gu 부평구 37%; Jung-gu 중구 8%
+#378fe0,South Korea,37.4886,127.071,897365,Gangnam-gu 강남구 46%; Songpa-gu 송파구 36%; Seocho-gu 서초구 15%
+#3281e0,South Korea,37.4803,126.972,757558,Gwanak-gu 관악구 39%; Seocho-gu 서초구 30%; Dongjak-gu 동작구 27%
+#6269ed,South Korea,37.4217,126.6702,888504,Nam-gu 남구 35%; Yeonsu-gu 연수구 34%; Namdong-gu 남동구 26%
+#718ef0,South Korea,37.3749,126.7763,1147927,Siheung-si 시흥시 45%; Ansansidanwongu 안산시단원구 25%; Namdong-gu 남동구 23%
+#f3cfd9,Taiwan,22.1857,121.5393,3536,Taitung 台東縣 49%
+#4371d3,Thailand,13.8756,100.511,1466886,Mueang Nonthaburi เมืองนนทบุรี 43%; Pak Kret ปากเกร็ด 26%; Bang Sue บางซื่อ 11%
+#3378da,Thailand,13.8502,100.5963,1091962,Chatuchak จตุจักร 34%; Bang Khen บางเขน 26%; Lat Phrao ลาดพร้าว 19%
+#e68383,Vietnam,21.3094,105.5769,847352,Vĩnh Tường Vinh Tuong 20%; Yên Lạc Yen Lac 16%; Bình Xuyên Binh Xuyen 15%
+#f7ad8e,Vietnam,21.2059,107.4643,17040,Yên Hưng Yen Hung 32%; Móng Cái Mong Cai 23%; Hạ Long Ha Long 2%
+#e48471,Vietnam,21.2012,105.8034,1058035,Đông Anh Dong Anh 43%; Sóc Sơn Soc Son 27%; Mê Linh Me Linh 12%
+#eb7963,Vietnam,21.1345,106.0178,701205,Tiên Du Tien Du 27%; Yên Phong Yen Phong 24%; Từ Sơn Tu Son 20%
+#e98e78,Vietnam,20.7927,106.0717,1085778,Khoái Châu Khoai Chau 19%; Kim Động Kim Dong 14%; Yên Mỹ Yen My 13%
+#f19479,Vietnam,20.792,105.7602,905875,Chương Mỹ Chuong My 30%; Phú Xuyên Phu Xuyen 21%; Ứng Hoà Ung Hoa 17%
+#e69a88,Vietnam,20.5658,105.9344,1019964,Lý Nhân Ly Nhan 19%; Duy Tiên Duy Tien 16%; Bình Lục Binh Luc 14%
+#f3ae79,Vietnam,20.4256,106.4025,1028212,Vũ Thư Vu Thu 28%; Kiến Xương Kien Xuong 23%; Tiền Hải Tien Hai 20%
+#e6a188,Vietnam,20.3714,105.9764,818265,Ý Yên Y Yen 26%; Vụ Bản Vu Ban 18%; Nam Định Nam Dinh 15%
+#f56c4a,Vietnam,10.9747,106.6831,633107,Thuận An Thuan An 55%; Thủ Dầu Một Thu Dau Mot 34%; Di An  6%
+#f3695f,Vietnam,10.9515,106.8527,712658,Bien Hoa  87%; Long Thành Long Thanh 5%; Vĩnh Cửu Vinh Cuu 4%
+#f14c2b,Vietnam,10.8958,106.7625,476372,Di An  57%; Thủ Đức Thu Duc 35%; Thuận An Thuan An 8%
+#ec5443,Vietnam,10.862,106.631,738667,Quận 12 12 63%; Hóc Môn Hoc Mon 25%; Gò Vấp Go Vap 6%
+#ec593c,Vietnam,10.8164,106.7921,916974,Quận 9 9 33%; Quận 2 2 29%; Thủ Đức Thu Duc 24%
+#f07179,Vietnam,10.7204,106.5886,732034,Bình Chánh Binh Chanh 85%; Binh Tan  10%; Quận 8 8 3%
+#f5c793,Vietnam,10.2667,103.9897,98067,Phú Quốc Phu Quoc 75%
+#fc9da3,Vietnam,9.8972,106.4987,24885,Châu Thành Chau Thanh 63%; Thạnh Phú Thanh Phu 8%
+#f09c9f,Vietnam,9.6396,106.526,26300,Duyên Hải Duyen Hai 82%
+#f39999,Vietnam,8.714,106.6021,7335,Côn Đảo Con Dao 69%
+#d8f8bb,,43.5171,139.5092,0,
+#b8e171,,31.8207,74.1631,345672,
+#a09997,,16.0207,115.9192,0,
+"#f3efe5@98.0,2.0",,1.9637,97.9752,0,

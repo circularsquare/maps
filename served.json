@@ -58,5 +58,10 @@
     "name": "statemetros",
     "folder": "statemetros",
     "about": "biggest metro area in each state, 1900-2020"
+  },
+  {
+    "name": "liveddensity",
+    "folder": "C:/Users/anita/projects/maps/liveddensity",
+    "about": "population-weighted population density by country"
   }
 ]

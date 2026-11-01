@@ -1,14 +1,15 @@
-"""India level 4: the level-3 sub-districts, with the ones over 2 million split.
+"""India level 4: the level-3 sub-districts, with the ones over 750,000 split.
 
 Called by fetch.py (level4.build(level-3 rows)); also runs standalone for a look
 without rewriting population.csv. Writes
   data/india/level4.gpkg       one polygon per level-4 unit (code, name, parent, group)
   data/india/level4_parts.csv  every census ward, town and village behind each part
+  data/india/level3.gpkg       the level-3 outlines, SHRUG's with subdistricts()'s fixes
 and returns the level-4 population rows.
 
 Units and codes
   Every level-3 unit is carried as itself (code = level-3 code + "00") except the
-  ones over 2,000,000 in 2026, which are replaced by parts (code + "01", "02", ...).
+  ones over 750,000 in 2026 (2,000,000 until 2026-10-25, her call), which are replaced by parts (code + "01", "02", ...).
   parent = the level-3 code. A part's population is its share of the unit's 2011
   census total times the unit's level-3 figure for each year, the same method as
   level 3, apportioned by largest remainder so parts add up to their unit exactly
@@ -17,10 +18,16 @@ Units and codes
 Sources (downloads under maps/data/asia1m/india/wards/)
   pca_tv/pca_tv_<pc11_d_id>.xlsx  Census 2011 PCA TV ("Primary census abstract at
       town, village and ward level"), one workbook per district, from
-      censusindia.gov.in/nada (catalog search "PCA TV"). Every census ward, town
+      censusindia.gov.in/nada, downloaded by fetch_pca_tv.py. Every census ward, town
       and village with TOT_P. Per unit, the WARD rows plus the VILLAGE rows add up
-      to the SUB-DISTRICT row exactly in all 30 units (checked at every build: a
+      to the SUB-DISTRICT row exactly in all 265 units (checked at every build: a
       mismatch is logged).
+  Result (2026-10-25 build): 252 of the 265 units split into 776 parts, median
+      0.37M. The 13 carried whole are one town each with no 2011 ward map
+      (Ahmadabad, Surat, Nagpur, Bhubaneswar, Visakhapatnam, Vijayawada, ...),
+      plus Pune City (KEEP_WHOLE). Big towns inside a split unit stay one part,
+      so 72 level-4 units are still over 0.75M, among them Kanpur, Ghaziabad,
+      Agra, Meerut, Allahabad and Varanasi.
   datameet/  DataMeet Municipal_Spatial_Data (github.com/datameet, CC BY-SA 2.5 IN):
       ward maps, used only where they match the 2011 census wards (below).
   religiondots/data/geo/in/shrug-village-pc11.parquet (read only): SHRUG village and
@@ -37,7 +44,7 @@ Method
   rough gist of where the people are, not legal boundaries.
   Grouping: the ward-split town by a named grouping where there is one (Mumbai
   admin wards, Bangalore assembly constituencies, Chennai zones), else by recursive
-  bisection at the population median until each group is under 0.8M (2026). Other
+  bisection at the population median until each group is under 0.5M (2026). Other
   towns over 0.2M (2026) are parts of their own. The rest (villages and smaller
   towns) is bisected the same way. A part under 0.1M joins its nearest neighbour.
   Barrackpur-II also takes the 99999-row towns of North 24 Parganas that fetch.py's
@@ -97,10 +104,13 @@ Left whole or only partly split, and why
       Varanasi 1.42M, Moradabad, Bareilly, Aligarh, Mira-Bhayandar (about 1.1M).
 
 Approximate shapes to know about
-  Bangalore: SHRUG's outline for the 99999 unit is 507 km2 of BBMP's 713, missing
-      most of the south, so constituencies there (Bangalore South, Jaya Nagar,
-      Padmanaba Nagar, B.T.M. Layout) are slivers on the unit's edge; their people
-      are right, their shapes are not.
+  Bangalore: SHRUG's outline for the 99999 unit is 504 km2 of the ward map's 708,
+      missing most of the south, which SHRUG gives to Bangalore South taluk (186
+      km2 of city), so the south's constituencies were slivers and the taluk's 0.28M
+      were spread over the southern city. Since 2026-10-31 (she spotted it) the unit
+      is redrawn as the ward map and that area is taken out of the four taluks
+      (CITIES outline=True, subdistricts()); level 3 gets the same outlines through
+      level3.gpkg. Chennai and Kolkata match their maps within a few km2, so left.
   Haveli: SHRUG's Pimpri Chinchwad polygon is about half the corporation, so the
       "villages west" part is drawn over some of PCMC.
   Village parts take the gaps between SHRUG polygons, so they can look larger
@@ -134,11 +144,12 @@ DM = WARDS / "datameet"           # DataMeet Municipal_Spatial_Data ward maps
 SUBDIST_SHP = REPO / "data" / "asia1m" / "india" / "subdistrict.shp"
 VILLAGES = REPO / "religiondots" / "data" / "geo" / "in" / "shrug-village-pc11.parquet"
 OUT_GPKG = HELPER / "data" / "india" / "level4.gpkg"
+OUT_L3 = HELPER / "data" / "india" / "level3.gpkg"
 OUT_PARTS = HELPER / "data" / "india" / "level4_parts.csv"
 
-SPLIT_OVER = 2_000_000     # a level-3 unit over this in SPLIT_YEAR is split
+SPLIT_OVER = 750_000       # a level-3 unit over this in SPLIT_YEAR is split
 SPLIT_YEAR = 2026
-PART_MAX = 800_000         # split a group again while it is over this (SPLIT_YEAR)
+PART_MAX = 500_000         # split a group again while it is over this (SPLIT_YEAR)
 TOWN_PART = 200_000        # a town this big (SPLIT_YEAR) is a part of its own
 MERGE_UNDER = 100_000      # a part smaller than this joins its nearest neighbour
 CRS = 7755                 # WGS 84 / India NSF LCC, metres
@@ -148,11 +159,13 @@ CRS = 7755                 # WGS 84 / India NSF LCC, metres
 #   map   - DataMeet file under DM; num - its ward-number column
 #   group - map column that groups wards into parts (else recursive bisection)
 #   label - how a part is named
+#   outline - redraw the unit as the ward map (see subdistricts())
 CITIES = {
     "51899999": dict(town="802794", map="Mumbai__BMC_Wards.geojson", mumbai=True),
     "51999999": dict(town="802794", map="Mumbai__BMC_Wards.geojson", mumbai=True),
     "57299999": dict(town="803162", map="Bangalore__BBMP_oldWards.geojson", num="WARD_NO",
-                     group="ASS_CONST1", label="BBMP wards in {g} constituency"),
+                     group="ASS_CONST1", label="BBMP wards in {g} constituency",
+                     outline=True),
     "60399999": dict(town="803339", map="Chennai__Wards-2008.geojson", num="ward",
                      group="zone", label="Chennai zone {g}"),
     "34299999": dict(town="801742", map="Kolkata__kolkata.geojson", num="WARD"),
@@ -236,6 +249,36 @@ def shrug(districts):
     g = gpd.GeoDataFrame(t.drop(columns="geometry"),
                          geometry=shapely.from_wkb(t["geometry"].values), crs=4326)
     return g.to_crs(CRS)
+
+
+def subdistricts():
+    """SHRUG's sub-district outlines (CRS, indexed by code), with each CITIES unit
+    marked outline=True redrawn as its ward map, clipped to its district, and that
+    area taken out of the district's other sub-districts."""
+    sd = gpd.read_file(SUBDIST_SHP).to_crs(CRS)
+    sd["code"] = sd.pc11_d_id + sd.pc11_sd_id
+    sd = sd.set_index("code")
+    sd["geometry"] = shapely.make_valid(sd.geometry.values)
+    for code, cfg in CITIES.items():
+        if not cfg.get("outline"):
+            continue
+        sib = sd.pc11_d_id == code[:3]
+        old = sd.loc[code].geometry.area
+        city = shapely.union_all(ward_map(cfg, None).geometry.values)
+        city = city.intersection(shapely.union_all(sd.loc[sib].geometry.values))
+        moved = []
+        for c in sd.index[sib]:
+            if c == code:
+                continue
+            g = sd.loc[c].geometry
+            lost = g.intersection(city).area
+            if lost > 1e6:
+                moved.append(f"{sd.loc[c].sd_name} {lost / 1e6:.0f}")
+            sd.loc[c, "geometry"] = g.difference(city)
+        sd.loc[code, "geometry"] = city
+        log(f"{code} outline from {cfg['map']}: {old / 1e6:.0f} -> {city.area / 1e6:.0f} km2, "
+            f"taken from {', '.join(moved) or 'nothing'} (km2)")
+    return sd
 
 
 def ward_map(cfg, unit_poly):
@@ -387,7 +430,7 @@ def split_unit(code, unit_poly, sd_name, pops, vil):
     missing = []
     if cfg:
         wm = ward_map(cfg, unit_poly)
-        tpoly = poly_of.get(split_town)
+        tpoly = None if cfg.get("outline") else poly_of.get(split_town)
         tpoly = unit_poly if tpoly is None else tpoly.intersection(unit_poly)
         w = wards[wards["Town/Village"] == split_town]
         if cfg.get("mumbai"):
@@ -521,6 +564,15 @@ def apportion(shares, total):
     return out
 
 
+def write_gpkg(g, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".part.gpkg")
+    if tmp.exists():
+        tmp.unlink()
+    g.to_file(tmp, driver="GPKG")
+    os.replace(tmp, path)
+
+
 def build(l3_rows):
     """l3_rows: [(code, 3, year, pop)] from fetch.py. Writes OUT_GPKG and
     OUT_PARTS; returns level-4 rows [(code, 4, year, pop)]."""
@@ -531,9 +583,9 @@ def build(l3_rows):
     for code, _, year, pop in l3_rows:
         pops.setdefault(code, {})[year] = pop
     big = sorted(c for c, p in pops.items() if p.get(SPLIT_YEAR, 0) > SPLIT_OVER)
-    sd = gpd.read_file(SUBDIST_SHP).to_crs(CRS)
-    sd["code"] = sd.pc11_d_id + sd.pc11_sd_id
-    sd = sd.set_index("code")
+    sd = subdistricts()
+    l3 = sd.reset_index()[["pc11_s_id", "pc11_d_id", "pc11_sd_id", "sd_name", "geometry"]]
+    write_gpkg(gpd.GeoDataFrame(l3, geometry="geometry", crs=CRS).to_crs(4326), OUT_L3)
     vil = shrug({c[:3] for c in big})
     recs, rows, lines = [], [], []
     split = {}
@@ -574,13 +626,7 @@ def build(l3_rows):
     empty = out[out.geometry.isna() | out.geometry.is_empty]
     if len(empty):
         log(f"WARNING {len(empty)} level-4 units with no geometry: {list(empty.code)}")
-    out = out.to_crs(4326)
-    OUT_GPKG.parent.mkdir(parents=True, exist_ok=True)
-    tmp = OUT_GPKG.with_suffix(".part.gpkg")
-    if tmp.exists():
-        tmp.unlink()
-    out.to_file(tmp, driver="GPKG")
-    os.replace(tmp, OUT_GPKG)
+    write_gpkg(out.to_crs(4326), OUT_GPKG)
     pd.DataFrame(lines).to_csv(OUT_PARTS, index=False, encoding="utf-8")
     log(f"{len(out)} units ({len(split)} sub-districts split) -> {OUT_GPKG.name}")
     return rows

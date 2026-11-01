@@ -1,0 +1,1590 @@
+[
+ {
+  "lat": 0,
+  "lon": 21,
+  "label": "Congo",
+  "kind": "forest",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n00e021",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.01084055650341483,
+    "relP90": 0.06819804176916028,
+    "bandDiff": 0.03743011056610875,
+    "onlyOne": 0,
+    "ratio": 0.9807350371870699,
+    "msPerSolvePair": 1667
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.08667367781213668,
+    "relP90": 0.12378566543060905,
+    "bandDiff": 0.11429692496907885,
+    "onlyOne": 0,
+    "ratio": 1.079629831678026,
+    "msPerSolvePair": 1746
+   }
+  },
+  "land": 0.9999673611111111
+ },
+ {
+  "lat": 6,
+  "lon": 3,
+  "label": "Lagos",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n06e003",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 3,
+    "relMedian": 0.12916840975483457,
+    "relP90": 0.4583196701218406,
+    "bandDiff": 0.31115183684539655,
+    "onlyOne": 0.00006886340942740075,
+    "ratio": 0.882733927027162,
+    "msPerSolvePair": 863
+   },
+   "l1_our/f_glo": {
+    "starts": 3,
+    "relMedian": 0.08338307962859978,
+    "relP90": 0.44405748448040727,
+    "bandDiff": 0.2504964245951127,
+    "onlyOne": 0.00006886340942740075,
+    "ratio": 0.9336846086244274,
+    "msPerSolvePair": 746
+   }
+  },
+  "land": 0.5484256944444444
+ },
+ {
+  "lat": 8,
+  "lon": 30,
+  "label": "Sudd",
+  "kind": "wetland",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n08e030",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.09440838318553499,
+    "relP90": 0.14278184870895133,
+    "bandDiff": 0.1496008315950455,
+    "onlyOne": 0,
+    "ratio": 0.9061436380325735,
+    "msPerSolvePair": 1518
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.09347482729954265,
+    "relP90": 0.14190340953536973,
+    "bandDiff": 0.14768201230415562,
+    "onlyOne": 0,
+    "ratio": 0.9073119088618294,
+    "msPerSolvePair": 1479
+   }
+  },
+  "land": 0.9982611111111112
+ },
+ {
+  "lat": 10,
+  "lon": 105,
+  "label": "Mekong delta",
+  "kind": "delta",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n10e105",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.199428567137507,
+    "relP90": 0.3014238174482074,
+    "bandDiff": 0.29025586377328694,
+    "onlyOne": 0.6852354133749117,
+    "ratio": 0.8558698818031267,
+    "msPerSolvePair": 392
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.18134689992934386,
+    "relP90": 0.280949488416664,
+    "bandDiff": 0.26578310984704473,
+    "onlyOne": 0.6852354133749117,
+    "ratio": 0.8868059929751763,
+    "msPerSolvePair": 424
+   }
+  },
+  "land": 0.9714701388888889
+ },
+ {
+  "lat": 13,
+  "lon": 2,
+  "label": "Sahel",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n13e002",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.07704832620114986,
+    "relP90": 0.11415247391541625,
+    "bandDiff": 0.11705643691370976,
+    "onlyOne": 0.0000027827403313687184,
+    "ratio": 0.9221181408572429,
+    "msPerSolvePair": 1453
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.06241217841037738,
+    "relP90": 0.10057807827395707,
+    "bandDiff": 0.09516970589135595,
+    "onlyOne": 0.0000027827403313687184,
+    "ratio": 0.9365682798802261,
+    "msPerSolvePair": 1275
+   }
+  },
+  "land": 0.9982527777777778
+ },
+ {
+  "lat": 19,
+  "lon": 72,
+  "label": "Mumbai",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n19e072",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 2,
+    "relMedian": 0.11151949936205582,
+    "relP90": 0.23075374335257037,
+    "bandDiff": 0.1936915387256873,
+    "onlyOne": 0.5010207548606677,
+    "ratio": 0.9593707643036236,
+    "msPerSolvePair": 135
+   },
+   "l1_our/f_glo": {
+    "starts": 2,
+    "relMedian": 0.09260068253986231,
+    "relP90": 0.29161182421014825,
+    "bandDiff": 0.17791304807215372,
+    "onlyOne": 0.5010207548606677,
+    "ratio": 1.0618297065923459,
+    "msPerSolvePair": 138
+   }
+  },
+  "land": 0.24039791666666666
+ },
+ {
+  "lat": 22,
+  "lon": 47,
+  "label": "Rub al Khali",
+  "kind": "desert",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n22e047",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.00836254293591959,
+    "relP90": 0.02611205365441404,
+    "bandDiff": 0.01756486111111111,
+    "onlyOne": 0,
+    "ratio": 0.9986823453933447,
+    "msPerSolvePair": 1295
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.010814246178097496,
+    "relP90": 0.02900087000613126,
+    "bandDiff": 0.020760277777777777,
+    "onlyOne": 0,
+    "ratio": 1.0071189907767586,
+    "msPerSolvePair": 1584
+   }
+  },
+  "land": 1
+ },
+ {
+  "lat": 23,
+  "lon": 90,
+  "label": "Bangladesh",
+  "kind": "delta",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n23e090",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.1984785679751411,
+    "relP90": 0.25957310803537165,
+    "bandDiff": 0.29576993992109196,
+    "onlyOne": 0.47218351065576925,
+    "ratio": 0.8119412774413379,
+    "msPerSolvePair": 357
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.1548197750157398,
+    "relP90": 0.22179110114359177,
+    "bandDiff": 0.22665208107007664,
+    "onlyOne": 0.47218351065576925,
+    "ratio": 0.8543417290593749,
+    "msPerSolvePair": 352
+   }
+  },
+  "land": 0.9259229166666667
+ },
+ {
+  "lat": 24,
+  "lon": 10,
+  "label": "Sahara",
+  "kind": "desert",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n24e010",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.010084442742908326,
+    "relP90": 0.02942127193816253,
+    "bandDiff": 0.021350277777777777,
+    "onlyOne": 0,
+    "ratio": 0.9923855994375174,
+    "msPerSolvePair": 1755
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.11183419088238868,
+    "relP90": 0.26517963389295174,
+    "bandDiff": 0.199905,
+    "onlyOne": 0,
+    "ratio": 1.1279425505040315,
+    "msPerSolvePair": 1482
+   }
+  },
+  "land": 1
+ },
+ {
+  "lat": 27,
+  "lon": 86,
+  "label": "Everest",
+  "kind": "mountain",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n27e086",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.19162472875978828,
+    "relP90": 0.2327906709618849,
+    "bandDiff": 0.3123589080377808,
+    "onlyOne": 0,
+    "ratio": 0.8170654041270141,
+    "msPerSolvePair": 1871
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.48238540765281246,
+    "relP90": 0.7578194155496942,
+    "bandDiff": 0.5832418402322448,
+    "onlyOne": 0,
+    "ratio": 1.5091537763294949,
+    "msPerSolvePair": 2702
+   }
+  },
+  "land": 0.99834375
+ },
+ {
+  "lat": 30,
+  "lon": 31,
+  "label": "Cairo",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n30e031",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.14139642599428193,
+    "relP90": 0.18832048643286226,
+    "bandDiff": 0.19986250590305205,
+    "onlyOne": 0.000005572171461288036,
+    "ratio": 0.8529040870168324,
+    "msPerSolvePair": 1818
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.11617607889318506,
+    "relP90": 0.1620809171661228,
+    "bandDiff": 0.16079969464330243,
+    "onlyOne": 0.000005572171461288036,
+    "ratio": 0.8784797370700609,
+    "msPerSolvePair": 3597
+   }
+  },
+  "land": 0.9971666666666666
+ },
+ {
+  "lat": 30,
+  "lon": 75,
+  "label": "Punjab",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n30e075",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.07157537053231412,
+    "relP90": 0.09792127007176459,
+    "bandDiff": 0.10453759780443073,
+    "onlyOne": 0,
+    "ratio": 0.9276555131532531,
+    "msPerSolvePair": 1272
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.06164372326408468,
+    "relP90": 0.08657831054187902,
+    "bandDiff": 0.09014584118928522,
+    "onlyOne": 0,
+    "ratio": 0.937945563953394,
+    "msPerSolvePair": 1415
+   }
+  },
+  "land": 0.99999375
+ },
+ {
+  "lat": 35,
+  "lon": 139,
+  "label": "Tokyo",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n35e139",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.0359416567919194,
+    "relP90": 0.07569820130606436,
+    "bandDiff": 0.05972724986056278,
+    "onlyOne": 0.0016715415412464612,
+    "ratio": 0.9658617086672157,
+    "msPerSolvePair": 2649
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.06985907077858608,
+    "relP90": 0.2459404497565335,
+    "bandDiff": 0.1344373844858321,
+    "onlyOne": 0.0016715415412464612,
+    "ratio": 1.1065429860907856,
+    "msPerSolvePair": 1615
+   }
+  },
+  "land": 0.7057305555555555
+ },
+ {
+  "lat": 37,
+  "lon": 25,
+  "label": "Cyclades",
+  "kind": "coast",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n37e025",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 1,
+    "relMedian": null,
+    "relP90": null,
+    "bandDiff": 0,
+    "onlyOne": 0,
+    "ratio": 2.9914230559827386,
+    "msPerSolvePair": 10
+   },
+   "l1_our/f_glo": {
+    "starts": 1,
+    "relMedian": null,
+    "relP90": null,
+    "bandDiff": 0.08196721311475409,
+    "onlyOne": 0,
+    "ratio": 6.911200135618327,
+    "msPerSolvePair": 6
+   }
+  },
+  "land": 0.08746944444444445
+ },
+ {
+  "lat": 38,
+  "lon": 83,
+  "label": "Taklamakan",
+  "kind": "desert",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n38e083",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.00906978833874969,
+    "relP90": 0.02719399502421616,
+    "bandDiff": 0.020527104909168814,
+    "onlyOne": 0,
+    "ratio": 0.9961676811073366,
+    "msPerSolvePair": 1953
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.05071689083363435,
+    "relP90": 0.08244765128121187,
+    "bandDiff": 0.07791710851338804,
+    "onlyOne": 0,
+    "ratio": 1.0497482027175018,
+    "msPerSolvePair": 1495
+   }
+  },
+  "land": 0.9999854166666666
+ },
+ {
+  "lat": 39,
+  "lon": -107,
+  "label": "Rockies",
+  "kind": "mountain",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n39w107",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.08574650200833482,
+    "relP90": 0.11450960558657008,
+    "bandDiff": 0.13274798387519124,
+    "onlyOne": 0.000006284530000949662,
+    "ratio": 0.912564718730273,
+    "msPerSolvePair": 1368
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.1475912091279087,
+    "relP90": 0.3194282597376838,
+    "bandDiff": 0.22478731969395543,
+    "onlyOne": 0.000006284530000949662,
+    "ratio": 1.1448505594058394,
+    "msPerSolvePair": 2270
+   }
+  },
+  "land": 0.9951791666666666
+ },
+ {
+  "lat": 40,
+  "lon": -74,
+  "label": "New York",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n40w074",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 2,
+    "relMedian": 0.026969213957139946,
+    "relP90": 0.07341269776885483,
+    "bandDiff": 0.05079548900315486,
+    "onlyOne": 0.1571446050109436,
+    "ratio": 0.9740725920591543,
+    "msPerSolvePair": 402
+   },
+   "l1_our/f_glo": {
+    "starts": 2,
+    "relMedian": 0.019314650772839424,
+    "relP90": 0.06521269870710118,
+    "bandDiff": 0.03790185743133827,
+    "onlyOne": 0.1571446050109436,
+    "ratio": 1.013866419713062,
+    "msPerSolvePair": 244
+   },
+   "l1_map/f_road": {
+    "starts": 3,
+    "relMedian": 0.022900739640603955,
+    "relP90": 0.31667873709606564,
+    "bandDiff": 0.11649461480205141,
+    "onlyOne": 0.023370447404083373,
+    "ratio": 1.0925866960167103,
+    "msPerSolvePair": 366
+   },
+   "l1_map/f_road_glo": {
+    "starts": 3,
+    "relMedian": 0.055504020953302445,
+    "relP90": 0.3745184214030013,
+    "bandDiff": 0.165641640786881,
+    "onlyOne": 0.023370447404083373,
+    "ratio": 1.135945248275567,
+    "msPerSolvePair": 225
+   }
+  },
+  "land": 0.2835666666666667
+ },
+ {
+  "lat": 40,
+  "lon": -75,
+  "label": "Trenton",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n40w075",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.0685337104989466,
+    "relP90": 0.10690091261563472,
+    "bandDiff": 0.10977426850486527,
+    "onlyOne": 0.016399982699968233,
+    "ratio": 0.9351171052260017,
+    "msPerSolvePair": 894
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.02802750025224761,
+    "relP90": 0.07301768564233985,
+    "bandDiff": 0.05436660614308079,
+    "onlyOne": 0.016399982699968233,
+    "ratio": 1.0273712717047585,
+    "msPerSolvePair": 2738
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.04708857160127095,
+    "relP90": 0.11728820863621602,
+    "bandDiff": 0.0827430955014065,
+    "onlyOne": 0.0036811685084833998,
+    "ratio": 1.054179851165106,
+    "msPerSolvePair": 1376
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.14176159141464512,
+    "relP90": 0.24394470869989576,
+    "bandDiff": 0.20986677156704842,
+    "onlyOne": 0.0036811685084833998,
+    "ratio": 1.1510221111923427,
+    "msPerSolvePair": 1687
+   }
+  },
+  "land": 0.9390965277777777
+ },
+ {
+  "lat": 41,
+  "lon": 28,
+  "label": "Istanbul",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n41e028",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 3,
+    "relMedian": 0.08078133415384736,
+    "relP90": 0.12689642983600063,
+    "bandDiff": 0.12250396933243696,
+    "onlyOne": 0,
+    "ratio": 0.9149045866702948,
+    "msPerSolvePair": 535
+   },
+   "l1_our/f_glo": {
+    "starts": 3,
+    "relMedian": 0.09628225793964221,
+    "relP90": 0.17907019610609207,
+    "bandDiff": 0.13832587146514855,
+    "onlyOne": 0,
+    "ratio": 1.0904367678604872,
+    "msPerSolvePair": 538
+   }
+  },
+  "land": 0.39598125
+ },
+ {
+  "lat": 41,
+  "lon": -74,
+  "label": "Hudson Valley",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n41w074",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.047059819819692754,
+    "relP90": 0.07680911234994714,
+    "bandDiff": 0.07820273163577317,
+    "onlyOne": 0.04599453909032207,
+    "ratio": 0.9555393941238318,
+    "msPerSolvePair": 3329
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.12040089171113963,
+    "relP90": 0.20151852771927486,
+    "bandDiff": 0.17597100092320384,
+    "onlyOne": 0.04599453909032207,
+    "ratio": 1.1174026645236774,
+    "msPerSolvePair": 2062
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.16851754925718415,
+    "relP90": 0.2785470060622544,
+    "bandDiff": 0.2516514721963311,
+    "onlyOne": 0.00027078067076018766,
+    "ratio": 1.1826982714942158,
+    "msPerSolvePair": 1404
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.33644625997621647,
+    "relP90": 0.4815208266880209,
+    "bandDiff": 0.4592287102149215,
+    "onlyOne": 0.00027078067076018766,
+    "ratio": 1.34788700513305,
+    "msPerSolvePair": 2291
+   }
+  },
+  "land": 0.8956513888888888
+ },
+ {
+  "lat": 41,
+  "lon": -75,
+  "label": "Poconos",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n41w075",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.06178806931505858,
+    "relP90": 0.08565816628068147,
+    "bandDiff": 0.09390323860610292,
+    "onlyOne": 0.000022632739247503855,
+    "ratio": 0.9380118220588205,
+    "msPerSolvePair": 1986
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.07743362575126005,
+    "relP90": 0.14742784474774587,
+    "bandDiff": 0.11365513573231653,
+    "onlyOne": 0.000022632739247503855,
+    "ratio": 1.075879271346346,
+    "msPerSolvePair": 1421
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.22274412116868567,
+    "relP90": 0.31585686108220323,
+    "bandDiff": 0.2919359165887699,
+    "onlyOne": 0.00004447685685582509,
+    "ratio": 1.2198094394595929,
+    "msPerSolvePair": 1642
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.3765585977066036,
+    "relP90": 0.48667637900467653,
+    "bandDiff": 0.47344006371063624,
+    "onlyOne": 0.00004447685685582509,
+    "ratio": 1.3701201253373705,
+    "msPerSolvePair": 1251
+   }
+  },
+  "land": 0.9841951388888889
+ },
+ {
+  "lat": 41,
+  "lon": -94,
+  "label": "Iowa",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n41w094",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.1451725133166364,
+    "relP90": 0.17928566618282232,
+    "bandDiff": 0.21343169437317683,
+    "onlyOne": 0.0000021087362835491156,
+    "ratio": 0.855600039838758,
+    "msPerSolvePair": 1677
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.06418864093320571,
+    "relP90": 0.09656626058461354,
+    "bandDiff": 0.0884848697852599,
+    "onlyOne": 0.0000021087362835491156,
+    "ratio": 0.9349396224386471,
+    "msPerSolvePair": 1610
+   }
+  },
+  "land": 0.9894013888888888
+ },
+ {
+  "lat": 46,
+  "lon": 7,
+  "label": "Alps",
+  "kind": "mountain",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n46e007",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.10517626380399966,
+    "relP90": 0.14955218738147272,
+    "bandDiff": 0.15642687800630375,
+    "onlyOne": 7.062226691827027e-7,
+    "ratio": 0.8951881994476772,
+    "msPerSolvePair": 1672
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.148370390621252,
+    "relP90": 0.37219333018998124,
+    "bandDiff": 0.2342761177217523,
+    "onlyOne": 7.062226691827027e-7,
+    "ratio": 1.1440996255494713,
+    "msPerSolvePair": 1690
+   }
+  },
+  "land": 0.9849986111111111
+ },
+ {
+  "lat": 46,
+  "lon": 23,
+  "label": "Cluj",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n46e023",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.11407647896276916,
+    "relP90": 0.1568717471103841,
+    "bandDiff": 0.16808944022001338,
+    "onlyOne": 0,
+    "ratio": 0.8855365300551228,
+    "msPerSolvePair": 1660
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.16092644756671232,
+    "relP90": 0.3793531153348546,
+    "bandDiff": 0.2492887522611018,
+    "onlyOne": 0,
+    "ratio": 1.1615200146650946,
+    "msPerSolvePair": 1803
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.38882210549161356,
+    "relP90": 0.610231445366177,
+    "bandDiff": 0.473443227396051,
+    "onlyOne": 0,
+    "ratio": 1.3978467931663363,
+    "msPerSolvePair": 1248
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.5639692020423003,
+    "relP90": 0.8447972758746433,
+    "bandDiff": 0.637040894543333,
+    "onlyOne": 0,
+    "ratio": 1.5657241908250652,
+    "msPerSolvePair": 4366
+   }
+  },
+  "land": 0.99899375
+ },
+ {
+  "lat": 46,
+  "lon": 24,
+  "label": "Mures",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n46e024",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.1473894777553023,
+    "relP90": 0.18855380551413634,
+    "bandDiff": 0.2194685982275481,
+    "onlyOne": 6.954059397402937e-7,
+    "ratio": 0.8538349002018473,
+    "msPerSolvePair": 1384
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.07397803226716691,
+    "relP90": 0.16087659529675818,
+    "bandDiff": 0.11220897241183637,
+    "onlyOne": 6.954059397402937e-7,
+    "ratio": 1.0493202354933344,
+    "msPerSolvePair": 1311
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.2049041558126667,
+    "relP90": 0.25939816274693933,
+    "bandDiff": 0.2638431100978476,
+    "onlyOne": 6.95285546821224e-7,
+    "ratio": 1.2025442585805322,
+    "msPerSolvePair": 1296
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.37861610330146683,
+    "relP90": 0.48095105253052056,
+    "bandDiff": 0.45555043361513275,
+    "onlyOne": 6.95285546821224e-7,
+    "ratio": 1.360425810197132,
+    "msPerSolvePair": 1472
+   }
+  },
+  "land": 0.9987888888888888
+ },
+ {
+  "lat": 47,
+  "lon": 23,
+  "label": "Maramures",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n47e023",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.10395362679122885,
+    "relP90": 0.14666766335811823,
+    "bandDiff": 0.1631571447339793,
+    "onlyOne": 0,
+    "ratio": 0.8929658722815008,
+    "msPerSolvePair": 1406
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.09258483113556924,
+    "relP90": 0.22238912121987994,
+    "bandDiff": 0.14022136938156848,
+    "onlyOne": 0,
+    "ratio": 1.0721160725329004,
+    "msPerSolvePair": 1184
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.23499265717459666,
+    "relP90": 0.3731005742171611,
+    "bandDiff": 0.30543813177212104,
+    "onlyOne": 0.0000020851955287847344,
+    "ratio": 1.241435645058817,
+    "msPerSolvePair": 1070
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.3719784548413577,
+    "relP90": 0.5501416241131349,
+    "bandDiff": 0.45587126253987076,
+    "onlyOne": 0.0000020851955287847344,
+    "ratio": 1.3648704802150644,
+    "msPerSolvePair": 1200
+   }
+  },
+  "land": 0.9991055555555556
+ },
+ {
+  "lat": 47,
+  "lon": 24,
+  "label": "Bistrita",
+  "kind": "built",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo",
+   "f_road",
+   "f_road_glo"
+  ],
+  "name": "n47e024",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.09439572416263724,
+    "relP90": 0.12714821102875118,
+    "bandDiff": 0.1549305108835948,
+    "onlyOne": 0,
+    "ratio": 0.9047673094227142,
+    "msPerSolvePair": 1065
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.20429291399933963,
+    "relP90": 0.38565594823773597,
+    "bandDiff": 0.2890229009118406,
+    "onlyOne": 0,
+    "ratio": 1.211242426174804,
+    "msPerSolvePair": 1137
+   },
+   "l1_map/f_road": {
+    "starts": 5,
+    "relMedian": 0.5023273828118056,
+    "relP90": 0.7811018687623263,
+    "bandDiff": 0.5715332404025023,
+    "onlyOne": 0,
+    "ratio": 1.5178722044136173,
+    "msPerSolvePair": 1312
+   },
+   "l1_map/f_road_glo": {
+    "starts": 5,
+    "relMedian": 0.6403129173260124,
+    "relP90": 0.8910164446230977,
+    "bandDiff": 0.6919884390891294,
+    "onlyOne": 0,
+    "ratio": 1.6373684267482018,
+    "msPerSolvePair": 1325
+   }
+  },
+  "land": 0.9996604166666667
+ },
+ {
+  "lat": 48,
+  "lon": 1,
+  "label": "Beauce",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n48e001",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.10105869075578695,
+    "relP90": 0.1459241335585478,
+    "bandDiff": 0.14534148966645066,
+    "onlyOne": 0,
+    "ratio": 0.8968650929949386,
+    "msPerSolvePair": 1097
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.03432055446869316,
+    "relP90": 0.07206641079573872,
+    "bandDiff": 0.05388046957784162,
+    "onlyOne": 0,
+    "ratio": 0.965113419182181,
+    "msPerSolvePair": 1118
+   }
+  },
+  "land": 0.9988298611111112
+ },
+ {
+  "lat": 49,
+  "lon": 33,
+  "label": "Ukraine",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n49e033",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.14634772316471525,
+    "relP90": 0.18965779004430172,
+    "bandDiff": 0.21407802611174367,
+    "onlyOne": 0.0004340504484329675,
+    "ratio": 0.8533658118628533,
+    "msPerSolvePair": 1132
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.10091313127620678,
+    "relP90": 0.14887413362437554,
+    "bandDiff": 0.14080867064743552,
+    "onlyOne": 0.0004340504484329675,
+    "ratio": 0.8984200229816317,
+    "msPerSolvePair": 914
+   }
+  },
+  "land": 0.9574048611111111
+ },
+ {
+  "lat": 51,
+  "lon": -1,
+  "label": "London",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n51w001",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.09741401779534573,
+    "relP90": 0.14332734723684207,
+    "bandDiff": 0.14341100362917267,
+    "onlyOne": 0.000013257713197983712,
+    "ratio": 0.9033091047020861,
+    "msPerSolvePair": 1007
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.029149622084360522,
+    "relP90": 0.07779725970589413,
+    "bandDiff": 0.05261553726897256,
+    "onlyOne": 0.000013257713197983712,
+    "ratio": 0.9703913212967674,
+    "msPerSolvePair": 1143
+   }
+  },
+  "land": 0.9957722222222222
+ },
+ {
+  "lat": 56,
+  "lon": -72,
+  "label": "Quebec lakes",
+  "kind": "lakes",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n56w072",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.03540466212922163,
+    "relP90": 0.06489384254714103,
+    "bandDiff": 0.054058759287550544,
+    "onlyOne": 0.0004078415980031094,
+    "ratio": 0.9652620201764933,
+    "msPerSolvePair": 961
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.05247055444500177,
+    "relP90": 0.09230844270231615,
+    "bandDiff": 0.07199991410357881,
+    "onlyOne": 0.0004078415980031094,
+    "ratio": 1.0504420892188988,
+    "msPerSolvePair": 897
+   }
+  },
+  "land": 0.9184111111111111
+ },
+ {
+  "lat": 59,
+  "lon": 18,
+  "label": "Stockholm archipelago",
+  "kind": "coast",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n59e018",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.07855844202396345,
+    "relP90": 0.11100128463608608,
+    "bandDiff": 0.10471251991758213,
+    "onlyOne": 0.025353363737357457,
+    "ratio": 0.9273735455812812,
+    "msPerSolvePair": 297
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.06899651233880717,
+    "relP90": 0.15865006633366527,
+    "bandDiff": 0.09682206483107239,
+    "onlyOne": 0.025353363737357457,
+    "ratio": 1.0763357326953238,
+    "msPerSolvePair": 304
+   }
+  },
+  "land": 0.6445069444444445
+ },
+ {
+  "lat": 60,
+  "lon": 100,
+  "label": "Siberian taiga",
+  "kind": "forest",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n60e100",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.03109055677708332,
+    "relP90": 0.07204790364172743,
+    "bandDiff": 0.049383862243484726,
+    "onlyOne": 0,
+    "ratio": 0.9692217877625354,
+    "msPerSolvePair": 985
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.0410539770041665,
+    "relP90": 0.08962996161713668,
+    "bandDiff": 0.06048895712438424,
+    "onlyOne": 0,
+    "ratio": 1.0340155889222666,
+    "msPerSolvePair": 1040
+   }
+  },
+  "land": 0.9978152777777778
+ },
+ {
+  "lat": 61,
+  "lon": 6,
+  "label": "Norway fjords",
+  "kind": "mountain",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n61e006",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.10354312180196366,
+    "relP90": 0.16578946432334996,
+    "bandDiff": 0.1840645070127218,
+    "onlyOne": 0.00010391513961545929,
+    "ratio": 0.9157099199576705,
+    "msPerSolvePair": 665
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.20637189009647983,
+    "relP90": 0.42283729334606746,
+    "bandDiff": 0.32691253355941785,
+    "onlyOne": 0.00010391513961545929,
+    "ratio": 1.2024237314297441,
+    "msPerSolvePair": 1066
+   }
+  },
+  "land": 0.8805631944444444
+ },
+ {
+  "lat": 64,
+  "lon": -100,
+  "label": "Nunavut",
+  "kind": "tundra",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n64w100",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.018508674171274372,
+    "relP90": 0.09119130610260952,
+    "bandDiff": 0.05348125107935104,
+    "onlyOne": 0.6041408660735582,
+    "ratio": 1.0511451926918447,
+    "msPerSolvePair": 253
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.038179982058271014,
+    "relP90": 0.12031491894936983,
+    "bandDiff": 0.08447926412455378,
+    "onlyOne": 0.6041408660735582,
+    "ratio": 1.0846085221644814,
+    "msPerSolvePair": 227
+   }
+  },
+  "land": 0.7674034722222223
+ },
+ {
+  "lat": 68,
+  "lon": 70,
+  "label": "Yamal",
+  "kind": "tundra",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n68e070",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.05977509164736825,
+    "relP90": 0.11156640200655149,
+    "bandDiff": 0.10094711050484545,
+    "onlyOne": 0.000010505381583742841,
+    "ratio": 0.9391168728524157,
+    "msPerSolvePair": 920
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.021485857635497537,
+    "relP90": 0.0741263115754766,
+    "bandDiff": 0.04552773126628351,
+    "onlyOne": 0.000010505381583742841,
+    "ratio": 0.9874957096740294,
+    "msPerSolvePair": 808
+   }
+  },
+  "land": 0.8729659722222223
+ },
+ {
+  "lat": 70,
+  "lon": -45,
+  "label": "Greenland",
+  "kind": "ice",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "n70w045",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.010374720906633713,
+    "relP90": 0.03305036714377455,
+    "bandDiff": 0.024018611111111112,
+    "onlyOne": 0,
+    "ratio": 0.9980815437908257,
+    "msPerSolvePair": 929
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.010869441245333334,
+    "relP90": 0.03446300392841394,
+    "bandDiff": 0.024968888888888888,
+    "onlyOne": 0,
+    "ratio": 1.0008158987281468,
+    "msPerSolvePair": 958
+   }
+  },
+  "land": 1
+ },
+ {
+  "lat": -4,
+  "lon": -62,
+  "label": "Amazon",
+  "kind": "forest",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "s04w062",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.0537236751536739,
+    "relP90": 0.16899492861383927,
+    "bandDiff": 0.10631432657544442,
+    "onlyOne": 0.027338921819648556,
+    "ratio": 0.9350515423954294,
+    "msPerSolvePair": 553
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.04053954465583728,
+    "relP90": 0.1207035697534274,
+    "bandDiff": 0.08136054951630285,
+    "onlyOne": 0.027338921819648556,
+    "ratio": 1.0202863860670515,
+    "msPerSolvePair": 606
+   }
+  },
+  "land": 0.9329972222222223
+ },
+ {
+  "lat": -14,
+  "lon": -72,
+  "label": "Cusco",
+  "kind": "mountain",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "s14w072",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.0595336547222969,
+    "relP90": 0.09421403136817331,
+    "bandDiff": 0.08871583004632398,
+    "onlyOne": 0,
+    "ratio": 0.9379224749945377,
+    "msPerSolvePair": 1131
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.46107583919549916,
+    "relP90": 0.7057134576586942,
+    "bandDiff": 0.546902210279751,
+    "onlyOne": 0,
+    "ratio": 1.4770682646488904,
+    "msPerSolvePair": 1305
+   }
+  },
+  "land": 0.9957916666666666
+ },
+ {
+  "lat": -24,
+  "lon": -47,
+  "label": "Sao Paulo",
+  "kind": "city",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "s24w047",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.12828120032178394,
+    "relP90": 0.20808724924996602,
+    "bandDiff": 0.1869933647180932,
+    "onlyOne": 0.005101175276559524,
+    "ratio": 0.8677976578906353,
+    "msPerSolvePair": 1327
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.08911334626079497,
+    "relP90": 0.17701820629912174,
+    "bandDiff": 0.13130844793713162,
+    "onlyOne": 0.005101175276559524,
+    "ratio": 1.083267246140674,
+    "msPerSolvePair": 1540
+   }
+  },
+  "land": 0.9463645833333333
+ },
+ {
+  "lat": -25,
+  "lon": 130,
+  "label": "Central Australia",
+  "kind": "desert",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "s25e130",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.021118391408509334,
+    "relP90": 0.045000924631912846,
+    "bandDiff": 0.03738088243362718,
+    "onlyOne": 0,
+    "ratio": 0.9784150643749816,
+    "msPerSolvePair": 1068
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.021152331045923504,
+    "relP90": 0.04641555056486454,
+    "bandDiff": 0.03644717989747607,
+    "onlyOne": 0,
+    "ratio": 1.0190112176089967,
+    "msPerSolvePair": 1227
+   }
+  },
+  "land": 0.9999020833333333
+ },
+ {
+  "lat": -35,
+  "lon": -62,
+  "label": "Pampa",
+  "kind": "farm",
+  "have": [
+   "l1_our",
+   "l1_map",
+   "f_plain",
+   "f_glo"
+  ],
+  "name": "s35w062",
+  "pairs": {
+   "l1_our/f_plain": {
+    "starts": 5,
+    "relMedian": 0.1755326467093024,
+    "relP90": 0.2236745568632395,
+    "bandDiff": 0.2502822322504855,
+    "onlyOne": 0.00002069684123381721,
+    "ratio": 0.8273497146266215,
+    "msPerSolvePair": 1421
+   },
+   "l1_our/f_glo": {
+    "starts": 5,
+    "relMedian": 0.1661992203180283,
+    "relP90": 0.216378431445784,
+    "bandDiff": 0.23702113476705935,
+    "onlyOne": 0.00002069684123381721,
+    "ratio": 0.8362040822024857,
+    "msPerSolvePair": 1369
+   }
+  },
+  "land": 0.9771069444444445
+ }
+]

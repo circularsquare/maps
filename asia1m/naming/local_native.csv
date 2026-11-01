@@ -1,0 +1,46 @@
+key,name,lang,native,source
+#f4f5ef,Qaidam,tibetan,ཚྭ་འདམ་,"Wikidata bo label ཚྭ་འདམ་གཤོང་ of Qaidam Basin (zh 柴达木盆地) with the basin word གཤོང་ dropped; replaces the Mongol/zh entry (Tibetans largest, 47%)"
+#ebf3e6,Amdo,tibetan,ཨ་མདོ་,Tibetan Wikipedia (bo) title ཨ་མདོ; same as Wikidata bo label of Amdo
+#f7f9ee,Qamdo,tibetan,ཆབ་མདོ་,Tibetan Wikipedia (bo) title ཆབ་མདོ། (Chamdo); Wikidata bo label ཆབ་མདོ་ས་ཁུལ། minus the region word
+#edf4e9,Ngawa,tibetan,རྔ་བ་,first two syllables of the Wikidata bo label / bo Wikipedia title of Ngawa Tibetan and Qiang Autonomous Prefecture (རྔ་བ་བོད་རིགས་...)
+#f0f4e6,Kham,tibetan,ཁམས་,Wikidata bo label / bo Wikipedia sitelink of Kham; bo Wikipedia Amdo article lists ཁམས་ beside དབུས་གཙང་ and ཨ་མདོ
+#f4eef6,Altay,kazakh,التاي,"zh Wikipedia lead, Kazakh (Arabic) form in zh Wikipedia 阿勒泰市 (التاي قالاسى) and 阿勒泰地区 (التاي ايماعى)"
+#e2edf9,Tarbagatay,kazakh,تارباعاتاي,"zh Wikipedia lead, Kazakh (Arabic) form in zh Wikipedia 塔城地区 (تارباعاتاي ايماعى)"
+#d6e4f4,Bortala,mongolian (zh used),博尔塔拉,Mongol name; Chinese characters by Anita's rule
+#d1e4f1,Bogda,mongolian (zh used),博格达,"Mongol name (bogd, holy); Chinese characters by Anita's rule"
+#e4c4fa,Ghulja,uyghur,غۇلجا,Uyghur Wikipedia (ug) title غۇلجا شەھىرى (Yining); zh Wikipedia 伊宁市 gives غۇلجا with the type word dropped
+#f9eaf5,Ili,uyghur,ئىلى,Uyghur Wikipedia (ug) title ئىلى دەرياسى (Ili River) and ئىلى قازاق ئاپتونوم ئوبلاستى with the type word dropped
+#498eed,Ürümqi,uyghur,ئۈرۈمچى,Uyghur Wikipedia (ug) title ئۈرۈمچى شەھىرى with the type word dropped
+#d3ddf4,Turpan,uyghur,تۇرپان,Uyghur Wikipedia (ug) title تۇرپان شەھىرى with the type word dropped
+#ece5fa,Tekes,kazakh,تەكەس,"zh Wikipedia lead, Kazakh (Arabic) form in zh Wikipedia 特克斯河 (تەكەس وزەنى); Uyghur form is تېكەس if Uyghur is wanted (ug title تېكەس ناھىيىسى)"
+#e5f0f9,Hami,uyghur,قۇمۇل,"Uyghur Wikipedia (ug) title قۇمۇل شەھىرى; Hami is the Chinese rendering, Uyghur name is Qumul with the type word dropped"
+#e6ccf9,Aksu,uyghur,ئاقسۇ,Uyghur Wikipedia (ug) title ئاقسۇ شەھىرى with the type word dropped
+#d4d7f1,Korla,uyghur,كورلا,Uyghur Wikipedia (ug) title كورلا شەھىرى with the type word dropped
+#e8d5f6,Kucha,uyghur,كۇچا,Uyghur Wikipedia (ug) title zh Wikipedia 库车市 (维吾尔语：كۇچا شەھىرى) with شەھىرى dropped with the type word dropped
+#edddf9,Tarim,uyghur,تارىم,Uyghur Wikipedia (ug) title تارىم دەرياسى (Tarim River) with the type word dropped
+#d2a7f3,Kashgar,uyghur,قەشقەر,Uyghur Wikipedia (ug) title قەشقەر شەھىرى with the type word dropped
+#dfc6f3,Payzawat,uyghur,پەيزاۋات,Uyghur Wikipedia (ug) title پەيزاۋات ناھىيىسى with the type word dropped
+#f2d9fc,Maralbexi,uyghur,مارالبېشى,Uyghur Wikipedia (ug) title مارالبېشى ناھىيىسى with the type word dropped
+#f1ecf7,Taklamakan,uyghur,تەكلىماكان,Uyghur Wikipedia (ug) title تەكلىماكان قۇملۇقى with the type word dropped
+#f7e8f4,Kizilsu,uyghur,قىزىلسۇ,Uyghur Wikipedia (ug) title قىزىلسۇ قىرغىز ئاپتونوم ئوبلاستى (Kizilsu Kirghiz Autonomous Prefecture) with the type words dropped; replaces the Kirghiz form (region is 79% Uyghur)
+#e9d5f9,Yarkand,uyghur,يەكەن,Uyghur Wikipedia (ug) title يەكەن ناھىيىسى (Yarkant County) with the type word dropped
+#ceadeb,Hotan,uyghur,خوتەن,Uyghur Wikipedia (ug) title خوتەن شەھىرى with the type word dropped
+#f9faf6,Tsang,tibetan,གཙང་,second element of the Wikidata bo label / bo Wikipedia title དབུས་གཙང་ (Ü-Tsang); no bo article for Tsang alone
+#f9f8ee,Nagqu,tibetan,ནག་ཆུ་,bo Wikipedia title ནག་ཆུ (Nagqu County) and ནག་ཆུ་ས་ཁུལ། (prefecture)
+#f3f4e3,Lhasa,tibetan,ལྷ་ས་,bo Wikipedia title ལྷ་ས།
+#e4e4f6,Yanqi,uyghur,قاراشەھەر,"Uyghur Wikipedia (ug) article قاراشەھەر ناھىيىسى (Yanqi Hui Autonomous County, a.k.a. Qarasheher) and قاراشەھەر بازىرى (the town) with the type word dropped; the ug Wikidata label is the official Chinese rendering يەنجى"
+#efe2f9,Karakash,uyghur,قاراقاش,"Uyghur Wikipedia (ug) title قاراقاش دەرياسى (Karakash River, zh 喀拉喀什河) with the river word dropped; ug also has قاراقاش ناھىيىسى (Moyu County)"
+#e7e5c7,Liangshan,yi,ꆃꎭ,Yi Wikipedia (ii) title ꆃꎭ and Wikidata ii label of Liangshan Yi Autonomous Prefecture (the alias ꆃꎭꆈꌠꊨꏦꏱꅉꍏ is the full prefecture name)
+#e7ddc7,Yuexi,yi,ꃺꄧꑤ,"Wikidata ii label of Yuexi County, Sichuan"
+#a8aaf1,Jingxi,zhuang,Cingsih,Zhuang Wikipedia (za) / Wikidata za label of Jingxi (label 'Cingsih Si') with the type word dropped
+#d3b6df,Chongzuo,zhuang,Cungzcoj,Zhuang Wikipedia (za) title Cungzcoj (Chongzuo)
+#c0b0e8,Hongshui,zhuang,Dah Raemxhoengz,Zhuang Wikipedia (za) title Dah Raemxhoengz (Hongshui River; dah = river)
+#b4a2e7,Wuming,zhuang,Vujmingz,Zhuang Wikipedia (za) title Vujmingz (Wuming); Wikidata label 'Vujmingz Gih'
+#beb9e8,Hechi,zhuang,Hozciz,Zhuang Wikipedia (za) title Hozciz (Hechi)
+#c3c5da,Du'an,zhuang,Duhnganh,Zhuang Wikipedia (za) title Duhnganh (Du'an Yao Autonomous County)
+#daa2e7,Laibin,zhuang,Leizbingz,Zhuang Wikipedia (za) title Leizbingz (Laibin)
+#9891e9,Long'an,zhuang,Lungzanh,Zhuang Wikipedia (za) / Wikidata za label of Long'an County (label 'Lungzanh Yen') with the type word dropped
+#adacdf,Baise,zhuang,Baksaek,Zhuang Wikipedia (za) title Baksaek (Baise); alias 'Baksaek Si'
+#b8bce1,Fengshan,zhuang,Fonghsan,Zhuang Wikipedia (za) title Fonghsan (Fengshan County)
+#f6aacc,Luzhai,zhuang,Luzcai,Zhuang Wikipedia (za) / Wikidata za label of Luzhai County (label 'Luzcai Yen') with the type word dropped
+#cea5e6,Yongning,zhuang,Yunghningz,"Zhuang Wikipedia (za) / Wikidata za label of Yongning District (label 'Yunghningz Gih', alias 'Yunghningz') with the type word dropped"

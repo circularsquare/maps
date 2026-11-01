@@ -1,0 +1,2769 @@
+x,y,w,h,colour,colour_region,colour_region_name,data_zh,reads_as_region,reads_as,kind
+8519,858,175,35,#abb3b7,#e4eef4,Sakhalin,,,,no data
+7516,1161,92,32,#a5aeb6,,,,,,no region's colour
+8195,1463,159,27,#a8b0b7,#dfeaf3,Khabarovsk,,,,no data
+7494,1484,69,33,#aeadb3,#e8e6ee,Nenjiang,,,,no data
+7890,1645,46,22,#a8a5b3,#e0dcee,Heihe,黑河,,,"unread, right length"
+8306,1705,30,15,#a9a1b7,#e1d6f4,Fujin,,,,no data
+8106,1746,23,11,#a59faf,#dbd4e9,Hegang,鹤岗,,,"unread, right length"
+7791,1761,35,11,#9695b1,#c7c6eb,Baiquan,,,,no data
+7293,1777,47,11,#a9aeb3,#e1e7ee,Hulunbuir,呼伦贝尔,#e1e7ee,呼伦贝尔,right
+7690,1778,23,11,#959bb1,#c6ceeb,Nehe,讷河,#c6ceeb,讷河,right
+7573,1798,35,11,#a3aab3,#d9e2ee,Jalantun,扎兰屯,#d9e2ee,扎兰屯,right
+8232,1812,35,11,#9c8daf,#cfbce9,Shuangyashan,双鸭山,#cfbce9,双鸭山,right
+7952,1821,30,16,#9f93af,#d4c3e9,Hulan,呼兰,#d4c3e9,呼兰,right
+8460,1831,105,24,#a5b3b7,#dceef3,Primor'ye,,,,no data
+8132,1837,35,11,#998cab,#ccbae3,Jiamusi,佳木斯,#ccbae3,佳木斯,right
+9178,1845,31,16,#aeb594,#e7f1c5,Kushiro City,,,,no data
+7854,1858,23,11,#9b90b4,#cebff0,Suihua,绥化,#cebff0,绥化,right
+7636,1868,29,24,#7a86ae,#a2b2e7,Qiqihar,齐齐哈尔,,,different characters
+8234,1881,35,11,#aa99b1,#e2cbeb,Qitaihe,七台河,#e2cbeb,七台河,right
+7796,1896,23,11,#9690b4,#c7bff0,Qinggang,青冈,#c7bff0,青冈,right
+7506,1904,47,16,#a3aeb3,#d9e8ee,Jialaid,扎赉特,#d9e8ee,扎赉特,right
+7700,1911,11,23,#9193af,#c1c3e9,Zhalong,扎龙,#c1c3e9,扎龙,right
+7930,1912,22,11,#9381ac,#c4abe5,Bayan,巴彦,#c4abe5,巴彦,right
+9093,1917,23,11,#aeb78d,#e7f4bb,Asahikawa City,,,,no data
+7728,1921,23,11,#7e75af,#a89be9,Daqing,大庆,#a89be9,大庆,right
+9010,1936,23,11,#87b456,#b4ef72,Kita-ku,,,,no data
+7918,1937,46,11,#5a2ab1,#7738eb,Harbin,哈尔滨,#7738eb,哈尔滨,right
+8024,1941,23,11,#9590ac,#c6c0e5,Songhua,松花,#c6c0e5,松花,right
+7919,1949,33,11,#634eae,#8368e7,Daoli,道里,#8368e7,道里,right
+9058,1949,23,11,#93b456,#c4ef72,Shiroishi-ku,,,,no data
+7854,1952,23,11,#7a6cae,#a290e7,Songbei,松北,#a290e7,松北,right
+8209,1952,23,11,#a890af,#e0c0e9,Jiguan,鸡冠,#e0c0e9,鸡冠,right
+7785,1961,23,11,#8f87b3,#beb4ee,Anda,安达,#beb4ee,安达,right
+7919,1961,33,11,#574ba8,#7464e0,Xiangfang,香坊,#7464e0,香坊,right
+7919,1973,33,11,#7548b1,#9b60eb,Daowai,,,,no data
+7869,1976,5,5,#5a2ab1,#7738eb,Harbin,哈尔滨,,,key or mark
+7889,1982,5,7,#7548b1,#9b60eb,Daowai,,,,key or mark
+7879,1985,4,5,#574ba8,#7464e0,Xiangfang,香坊,,,key or mark
+7862,1991,5,7,#634eae,#8368e7,Daoli,道里,,,key or mark
+7898,1996,23,11,#8870a8,#b595e0,Acheng,阿城,#b595e0,阿城,right
+7686,2007,23,13,#9aa0b1,#cdd5eb,Zhaozhou,肇州,,,"unread, right length"
+8093,2024,35,11,#9c81a7,#d0acde,Mudanjiang,牡丹江,#d0acde,牡丹江,right
+7429,2030,62,16,#a6b2b3,#ddedee,Ulanhot,乌兰浩特,#ddedee,乌兰浩特,right
+9008,2046,23,11,#a2b587,#d8f1b3,Hakodate City,,,,no data
+7814,2048,23,11,#8b8eb3,#b9bdee,Shuangcheng,双城,#b9bdee,双城,right
+7954,2051,23,11,#8788ab,#b4b5e3,Wuchang,五常,#b4b5e3,五常,right
+8163,2053,31,16,#aa9daf,#e2d1e9,Ningguta,宁古塔昂邦章京辖,,,different characters
+7738,2075,11,23,#879ab1,#b4cdeb,Songyuan,松原,#b4cdeb,松原,right
+7602,2080,22,11,#9aa9b1,#cde1eb,Baicheng,白城,#cde1eb,白城,right
+7906,2099,24,17,#8694ac,#b2c5e5,Yushu,榆树,,,different characters
+7853,2118,11,23,#8493b3,#afc4ee,Dehui,德惠,#afc4ee,德惠,right
+7779,2133,23,11,#879eb7,#b3d2f4,Nong'an,农安,#b3d2f4,农安,right
+8373,2133,65,8,#96aab1,#c7e2eb,Primor'ye,,,,key or mark
+7887,2156,23,11,#7890a8,#a0c0e0,Fengman,丰满,#a0c0e0,丰满,right
+7689,2169,23,11,#96abb3,#c7e4ee,Changling,长岭,#c7e4ee,长岭,right
+7809,2171,23,11,#799cb4,#a1d0f0,Kuancheng,宽城,#a1d0f0,宽城,right
+7897,2185,23,11,#577b9c,#73a3cf,Jilin,吉林,#73a3cf,吉林,right
+7773,2190,23,11,#4f8eb2,#69bded,Luyuan,绿园,#69bded,绿园,right
+8207,2191,23,11,#918cac,#c1bae5,Yanbian,延边,#c1bae5,延边,right
+7823,2201,22,11,#437fa2,#59a9d7,Jingyue,净月,#59a9d7,净月,right
+8063,2201,31,16,#999cae,#ccd0e7,Dunhua,敦化,#ccd0e7,敦化,right
+9075,2205,23,11,#99b489,#cbf0b6,Aomori City,,,,no data
+7790,2206,23,11,#2784aa,#34afe2,Changchun,长春,#34afe2,长春,right
+7749,2207,35,11,#79a3b4,#a1d9f0,Gongzhuling,公主岭,#a1d9f0,公主岭,right
+7585,2213,35,11,#9cb1ae,#d0ebe7,Horqin,科尔沁左翼后,,,different characters
+7860,2217,23,11,#8298a8,#adcae0,Shuangyang,双阳,#adcae0,双阳,right
+7408,2220,31,16,#a2b2b1,#d8edeb,Kailu,开鲁,#d8edeb,开鲁,right
+7929,2249,23,11,#8895a8,#b5c6e0,Huadian,桦甸,#b5c6e0,桦甸,right
+7743,2256,23,11,#7eb1b3,#a7ecee,Siping,四平,#a7ecee,四平,right
+7553,2270,23,11,#8eafae,#bde9e7,Ke'erqin,,,,no data
+8192,2276,23,11,#b78a9e,#f4b8d2,Rason City,,,,no data
+7826,2282,23,11,#82a3a8,#add9df,Liaoyuan,辽源,#add9df,辽源,right
+9149,2289,23,11,#98bd8d,#cafbbb,Morioka City,,,,no data
+4814,2306,23,11,#99adbb,#cbe6f9,Changji,昌吉,#cbe6f9,昌吉,right
+9071,2309,23,11,#9bb690,#cef2c0,Akita City,,,,no data
+7746,2320,23,11,#8db3ab,#bceee4,Changtu,昌图,#bceee4,昌图,right
+4607,2335,47,11,#a1abb7,#d6e4f4,Bortala,博尔塔拉,#d6e4f4,博尔塔拉,right
+7992,2339,22,11,#8e99aa,#bdcce2,Baishan,白山,#bdcce2,白山,right
+5005,2362,35,11,#9dabb5,#d1e4f1,Bogda,博格达,#d1e4f1,博格达,right
+7679,2369,11,23,#8cb199,#baebcb,Faku,法库,#baebcb,法库,right
+7535,2370,23,11,#9cafa7,#cfe9de,Liuhe,柳河,#cfe9de,柳河,right
+7811,2372,23,11,#8aaba8,#b7e3e0,Huifa,辉发,#b7e3e0,辉发,right
+8174,2376,22,11,#b28599,#edb1cb,Chongjin City,,,,no data
+7720,2378,23,11,#80b49c,#aaf0cf,Tieling,铁岭,#aaf0cf,铁岭,right
+4729,2390,35,11,#9cabb9,#cfe3f6,Shihezi,石河子,#cfe3f6,石河子,right
+4887,2392,11,47,#518db7,#6bbbf4,Shayibake,沙依巴克,#6bbbf4,沙依巴克,right
+9155,2403,23,11,#90bd8d,#bffbbb,Osaki City,,,,no data
+4902,2405,11,35,#1f69b5,#298bf1,Shuimogou,水磨沟,#298bf1,水磨沟,right
+7707,2410,23,11,#6eb489,#92f0b6,Shenbei,沈北,#92f0b6,沈北,right
+7893,2410,23,11,#8ca2ab,#bad8e3,Tonghua,通化,#bad8e3,通化,right
+7741,2414,23,11,#69a47e,#8cdaa7,Fushun,抚顺,#8cdaa7,抚顺,right
+7774,2423,33,11,#27af3c,#33e950,Shenyang,沈阳,#33e950,沈阳,right
+7704,2430,3,5,#44ba5b,#5af879,Yuhong,于洪,,,key or mark
+7712,2432,3,5,#42b56e,#57f192,Huanggu,皇姑,,,key or mark
+7718,2434,3,5,#42ab6a,#57e48d,Wanquan,万泉,,,key or mark
+7774,2435,33,11,#42b56e,#57f192,Huanggu,皇姑,#57f192,皇姑,right
+7712,2440,3,5,#2cb141,,,,,,key or mark
+7724,2441,3,5,#429d54,#58d16f,Hunnan,浑南,,,key or mark
+7565,2442,23,11,#86ab8a,#b2e3b8,Fuxin,阜新,#b2e3b8,阜新,right
+7351,2445,23,11,#8eae96,#bde7c8,Chifeng,赤峰,#bde7c8,赤峰,right
+7462,2445,23,11,#9caf9f,#cfe9d3,Aohan,敖汉,#cfe9d3,敖汉,right
+7701,2445,3,5,#48b14d,#5fec66,Xingshun,兴顺,,,key or mark
+7658,2446,23,11,#87b387,#b3eeb4,Xinmin,新民,#b3eeb4,新民,right
+7774,2447,33,11,#42ab6a,#57e48d,Wanquan,万泉,#57e48d,万泉,right
+9084,2447,23,11,#91b490,#c1f0c0,Yamagata City,,,,no data
+8150,2450,22,11,#b78a99,#f4b7cb,Tanchon City,,,,no data
+8055,2452,23,11,#b38e8e,#eebdbd,Hyesan City,,,,no data
+9179,2455,23,11,#6ab765,#8df486,Aoba-ku,,,,no data
+7774,2459,33,11,#429d54,#58d16f,Hunnan,浑南,#58d16f,浑南,right
+7706,2465,23,11,#7bac84,#a4e5b0,Dengta,灯塔,#a4e5b0,灯塔,right
+7595,2470,23,11,#8cae84,#bae7b0,Beizhen,北镇,#bae7b0,北镇,right
+7774,2471,33,11,#48b14d,#5fec66,Xingshun,兴顺,#5fec66,兴顺,right
+8414,2474,200,28,#6a7d9b,,,,,,no region's colour
+8638,2474,80,28,#6a7d9b,,,,,,no region's colour
+7774,2483,33,11,#44ba5b,#5af879,Yuhong,于洪,#5af879,于洪,right
+7045,2492,47,11,#a8b2a4,#dfedda,Xilingol,锡林郭勒,#dfedda,锡林郭勒,right
+7686,2495,23,11,#68af70,#8ae995,Liaoyang,辽阳,#8ae995,辽阳,right
+7733,2499,23,11,#7aaa84,#a2e2af,Benxi,本溪,,,"unread, right length"
+7822,2501,23,11,#90a79b,#bfdece,Xingjing,兴京,,,"unread, right length"
+7956,2507,22,11,#ae8d86,#e7bcb2,Kanggye City,,,,no data
+7368,2509,23,11,#96ae8e,#c7e7bd,Ningcheng,宁城,#c7e7bd,宁城,right
+7494,2509,23,11,#93ab89,#c4e3b6,Chaoyang,朝阳,#c4e3b6,朝阳,right
+8410,2511,105,21,#6a7d9b,,,,,,no region's colour
+8533,2511,57,21,#6a7d9b,,,,,,no region's colour
+8608,2511,111,27,#6a7d9b,,,,,,no region's colour
+9146,2511,35,11,#8ab68f,#b7f2be,Fukushima City,,,,no data
+7713,2514,23,11,#46ab52,#5de36d,Anshan,鞍山,#5de36d,鞍山,right
+9052,2522,23,11,#82b38a,#adeeb7,Kounan-ku,,,,no data
+7610,2524,13,23,#8fb669,#bef28b,Panjin,盘锦,,,"unread, right length"
+8081,2527,22,11,#b68087,#f2aab3,Pukchong,,,,no data
+7572,2532,23,11,#93b77c,#c4f4a5,Liaohe,大辽河,,,different characters
+7679,2533,23,11,#68af70,#8ae995,Liaoyang,辽阳,#8ce297,海城,another region's name
+7220,2541,23,11,#a3b395,#d9eec6,Weichangmanzumengguzu,,,,no data
+7541,2541,14,23,#87b75e,#b4f47d,Jinzhou,金州,,,"unread, right length"
+8404,2541,30,21,#6a7d9b,,,,,,no region's colour
+8521,2541,93,21,#6a7d9b,,,,,,no region's colour
+8632,2541,96,27,#6a7d9b,,,,,,no region's colour
+8452,2547,51,15,#6a7d9b,,,,,,no region's colour
+7663,2556,35,11,#7eb481,#a7f0ab,Dashiqiao,大石桥,#a7f0ab,大石桥,right
+7443,2560,23,11,#a2ae8c,#d7e7ba,Jianchang,,,,no data
+4626,2565,23,11,#ababb9,#e4e4f6,Yanqi,焉耆,#e4e4f6,焉耆,right
+7506,2566,35,11,#93b66b,#c4f28e,Huludao,葫芦岛,#c4f28e,葫芦岛,right
+8494,2572,95,79,#6a7d9b,,,,,,no region's colour
+7928,2578,22,11,#af8d84,#e9bbb0,Pakchon,,,,no data
+8086,2581,23,11,#b3666f,#ee8793,Hamhung City,,,,no data
+9164,2581,23,11,#8daba3,#bbe3d9,Iwaki City,,,,no data
+9060,2585,23,11,#94af9f,#c5e9d4,Nagaoka City,,,,no data
+7366,2586,23,11,#a2af79,#d7e9a1,Pingquan,平泉,#d7e9a1,平泉,right
+7621,2587,22,11,#71b772,#96f498,Yingkou,营口,#96f498,营口,right
+7751,2589,23,11,#8fa892,#bee0c2,Xiuyan,岫岩,#bee0c2,岫岩,right
+8420,2592,62,14,#6a7d9b,,,,,,no region's colour
+8614,2592,102,18,#6a7d9b,,,,,,no region's colour
+7295,2596,23,11,#9bab79,#cee3a1,Chengde,承德,#cee3a1,承德,right
+8558,2596,44,10,#6a7d9b,,,,,,no region's colour
+7832,2599,11,23,#ae7e74,#e7a89a,Sinuiju City,,,,no data
+7808,2605,12,23,#789c73,#a0cf99,Dandong,丹东,,,"unread, right length"
+7867,2611,23,11,#b3877d,#eeb3a6,Jongju City,,,,no data
+8557,2613,50,34,#6a7d9b,,,,,,no region's colour
+8600,2613,24,14,#6a7d9b,,,,,,no region's colour
+7648,2616,35,11,#87b984,#b4f6af,Bayuquan,鲅鱼圈,#b4f6af,鲅鱼圈,right
+8564,2619,2,8,#6a7d9b,,,,,,key or mark
+8004,2621,22,11,#ab8285,#e3adb1,Tokchon City,,,,no data
+7476,2626,23,11,#9db775,#d1f49b,Ningyuan,宁远,#d1f49b,宁远,right
+8051,2626,23,11,#b27e84,#eda7af,Wonsan City,,,,no data
+9110,2633,35,11,#86a7ac,#b2dee5,Utsunomiya City,,,,no data
+7956,2635,22,11,#a77571,#de9b96,Kaechon City,,,,no data
+7104,2636,23,11,#a5a392,#dcd9c2,Xuanhua,宣化,#dcd9c2,宣化,right
+9184,2638,11,22,#899faf,#b6d4e9,Mito City,,,,no data
+7215,2643,23,11,#a6ac7e,#dde5a8,Miyun,密云,#dde5a8,密云,right
+7702,2647,23,11,#83aa82,#aee2ad,Zhuanghe,庄河,#aee2ad,庄河,right
+7370,2649,23,11,#9eae6d,#d2e791,Qinglong,青龙,#d2e791,青龙,right
+7927,2654,11,23,#b27169,#ed968b,Mundok,,,,no data
+6851,2661,47,11,#abaca1,#e4e5d6,Ulanqab,乌兰察布,#e4e5d6,乌兰察布,right
+7283,2664,23,11,#a2aa84,#d8e2af,Zunhua,遵化,#d8e2af,遵化,right
+7427,2668,22,35,#9fb76c,#d4f490,Shanhaiguan,山海关,,,different characters
+7659,2668,11,35,#8db184,#bcebb0,Pulandian,普兰店,#bcebb0,普兰店,right
+9063,2670,23,11,#87a8ac,#b4e0e5,Maebashi City,,,,no data
+7043,2672,34,11,#989372,#cac398,Zhangjiakou,张家口,#cac398,张家口,right
+7608,2674,35,11,#8fb984,#bef6af,Wafangdian,瓦房店,#bef6af,瓦房店,right
+7968,2675,22,11,#af6357,#e98473,Pyongsong City,,,,no data
+8942,2677,23,11,#8db1ad,#bcebe6,Toyama City,,,,no data
+9139,2677,23,11,#7d8fab,#a6bee3,Tochigi City,,,,no data
+6808,2681,23,11,#878765,#b4b486,Saihan,赛罕,#b4b486,赛罕,right
+9116,2681,11,23,#7d88ab,#a6b5e3,Ota City,,,,no data
+9175,2684,11,23,#7896b1,#9fc7eb,Tsukuba City,,,,no data
+6755,2686,47,11,#a4a285,#dad8b1,Huimin,,#a29b6f,呼和浩特,another region's colour
+7374,2686,23,11,#a5b76c,#dcf490,Qian'an,迁安,#dcf490,迁安,right
+7869,2688,33,11,#b32d1d,#ee3c26,Pyongyang,,,,no data
+7945,2689,5,7,#b2482f,#ed5f3e,Pyongyang,,,,key or mark
+7453,2691,35,11,#94b748,#c5f45f,Qinhuangdao,秦皇岛,#c5f45f,秦皇岛,right
+7098,2692,35,11,#a8a58f,#dfdbbe,Badaling,八达岭,#dfdbbe,八达岭,right
+8101,2692,23,11,#b18b96,#ebb9c7,Kosan,,,,no data
+7224,2693,23,11,#9fa46d,#d3da91,Pinggu,平谷,#d3da91,平谷,right
+8985,2693,23,11,#89a8a5,#b6e0db,Nagano City,,,,no data
+6450,2695,46,11,#b1ae91,#ebe8c1,Bayannur,巴彦淖尔,#ebe8c1,巴彦淖尔,right
+7957,2695,5,5,#b32d1d,#ee3c26,Pyongyang,,,,key or mark
+7870,2701,31,11,#b2482f,#ed5f3e,Pyongyang,,,,no data
+7949,2702,23,11,#af5a5a,#e97777,Pyongyang,,,,no data
+8891,2702,11,23,#87a6af,#b3dde9,Kanazawa City,,,,no data
+6668,2707,11,23,#949066,#c5c087,Donghe,东河,,包头,old characters
+7271,2709,23,11,#abb378,#e4ee9f,Jizhou,蓟州,#e4ee9f,蓟州,right
+9159,2709,23,19,#6277a5,#829edc,Kashiwa City,,,,no data
+6688,2711,23,11,#aeac93,#e8e5c4,Urad,乌拉特前,#c5c087,东河,another region's name
+7917,2711,23,11,#b67070,#f29595,Kangso,,,,no data
+8017,2713,22,11,#ae7c7c,#e7a5a5,Phyongsan,,,,no data
+7312,2718,23,11,#a3ae78,#d9e79f,Fengrun,丰润,#d9e79f,丰润,right
+9036,2721,23,11,#82a0ac,#add5e5,Takasaki City,,,,no data
+9201,2724,23,11,#7587b1,#9cb4eb,Sakura City,,,,no data
+6981,2725,23,11,#a6a595,#dddcc6,Yanggao,阳高,#dddcc6,阳高,right
+7340,2726,23,11,#95a556,#c6dc72,Guye,古冶,#c6dc72,古冶,right
+7633,2728,23,11,#87b472,#b4f098,Jinzhou,金州,#b4f098,金州,right
+7966,2728,11,35,#af6f76,#e9949d,Sariwon City,,,,no data
+7370,2729,11,23,#a4b37d,#daeea6,Luanzhou,滦州,,,"unread, right length"
+6916,2731,23,11,#939066,#c3bf88,Datong,大同,#c3bf88,大同,right
+9093,2731,22,11,#848fab,#b0bee3,Kumagaya City,,,,no data
+7405,2733,11,23,#a2ae6c,#d8e790,Hangli,昌黎,#d8e790,昌黎,right
+7254,2736,23,11,#b2b676,#edf29d,Baodi,宝坻,#edf29d,宝坻,right
+7585,2741,35,11,#77b350,#9eee6a,Dalianwan,大连湾,,,"unread, right length"
+9100,2751,23,12,#9c7fa4,#d0a9da,Tokorozawa City,,,,no data
+7919,2762,22,11,#b37e84,#eea7af,Sinchon,,,,no data
+7241,2763,23,11,#afb975,#e9f69c,Wuqing,武清,#e9f69c,武清,right
+7329,2764,35,13,#a6b373,#ddee99,Caofeidian,曹妃甸,,,"unread, right length"
+6933,2765,23,11,#a5a387,#dcd9b3,Sanggan,桑干,#dcd9b3,桑干,right
+8175,2767,23,11,#789eb3,#9fd2ee,Chuncheon-si,,,,no data
+7157,2768,23,11,#b3ac78,#eee59f,Zhuozhou,涿州,#eee59f,涿州,right
+7638,2770,23,11,#6fb429,#93f036,Dalian,大连,#93f036,大连,right
+7287,2772,23,11,#a2b678,#d8f29f,Ninghe,宁河,#d8f29f,宁河,right
+7593,2772,23,11,#91b75e,#c1f47d,Ganjingzi,,#93f036,大连,another region's colour
+7103,2773,23,11,#b2af9b,#ede9ce,Yixian,易县,#ede9ce,易县,right
+9037,2774,23,11,#909ea2,#bfd2d8,Kofu City,,,,no data
+9193,2779,23,11,#7293b1,#98c4eb,Ichihara City,,,,no data
+7621,2782,23,11,#85b350,#b1ee6a,Shahekou,,,,no data
+7006,2783,23,11,#aeab97,#e8e4c9,Yuxian,蔚县,#e8e4c9,蔚县,right
+8018,2783,22,11,#b78393,#f4aec3,Kaesong City,,,,no data
+8072,2783,22,11,#6977af,#8b9ee9,Paju-si,,,,no data
+6757,2788,35,11,#b0aea1,#eae8d6,Jungar,准格尔,#eae8d6,准格尔,right
+7185,2788,11,23,#b7b47b,#f3efa3,Baigou,白沟,#f3efa3,白沟,right
+7948,2788,23,11,#b7838d,#f4aebb,Haeju City,,,,no data
+8866,2788,23,11,#879aaf,#b3cde9,Fukui City,,,,no data
+7218,2794,23,11,#adb175,#e6eb9b,Yongqing,永清,#e6eb9b,永清,right
+7143,2797,35,11,#b0a770,#eade95,Gaobeidian,高碑店,#eade95,高碑店,right
+9092,2798,23,11,#9f9299,#d3c2cc,Odawara City,,,,no data
+7590,2799,23,11,#91b75e,#c1f47d,Ganjingzi,,,,no data
+7326,2803,23,11,#97ba5e,#c9f87d,Binhai,滨海,#c9f87d,滨海,right
+8955,2806,22,11,#95a8a7,#c6e0de,Seki City,,,,no data
+6900,2811,23,11,#aeab93,#e7e4c4,Shuozhou,朔州,,,"unread, right length"
+8037,2818,23,11,#6d69af,#918be9,Gimpo-si,,,,no data
+6679,2820,23,11,#aba890,#e4e0bf,Dongsheng,东胜,#e4e0bf,东胜,right
+5534,2822,23,11,#afb7b9,#e9f4f6,Dunhuang,敦煌,#e9f4f6,敦煌,right
+7182,2822,23,11,#b2b174,#edec9a,Bazhou,霸州,#edec9a,霸州,right
+7160,2824,11,35,#b5b17b,#f1eca3,Baiyangdian,白洋淀,#f1eca3,白洋淀,right
+8122,2826,23,11,#6f90ac,#94bfe5,Gwangju,,,,no data
+7122,2828,23,11,#b1ad7b,#ebe6a4,Xushui,徐水,#ebe6a4,徐水,right
+7215,2828,23,11,#adb274,#e6ed9a,Wen'an,文安,#e6ed9a,文安,right
+8922,2831,23,11,#919a66,#c1cd87,Gifu City,,,,no data
+9057,2836,23,11,#a89c87,#dfcfb4,Shimizu-ku,,,,no data
+7270,2837,23,11,#abba75,#e4f89c,Jinghai,静海,#e4f89c,静海,right
+8948,2859,4,5,#9b9c62,#ced082,Kasugai City,,,,key or mark
+7183,2860,23,11,#b3b480,#eef0aa,Renqiu,任丘,#eef0aa,任丘,right
+7230,2860,23,11,#b4bc95,#f0fac6,Qingxian,青县,#f0fac6,青县,right
+7036,2861,23,11,#b5b493,#f1f0c4,Quyang,曲阳,#f1f0c4,曲阳,right
+6931,2862,23,11,#aca99e,#e5e1d2,Yanmen,雁门,#e5e1d2,雁门,right
+7088,2863,23,11,#b4b387,#f0eeb3,Tangxian,唐县,#f0eeb3,唐县,right
+7127,2863,23,11,#bbb781,#f9f3ab,Qingyuan,清苑,#f9f3ab,清苑,right
+8162,2864,23,11,#719fac,#96d4e5,Wonju-si,,,,no data
+8872,2864,22,11,#ade3e0,,,,,,no region's colour
+8875,2864,19,13,#d9f6ff,,,,,,no region's colour
+8866,2865,35,11,#82aba8,#ade3e0,Otsu City,,,,no data
+7918,2866,46,22,#2c60d7,,,,,,no region's colour
+8958,2869,5,7,#a29a57,#d8cd73,Midori-ku,,,,key or mark
+8968,2869,14,23,#a69f76,#ddd39d,Toyota City,,,,no data
+8919,2872,11,23,#95a079,#c6d5a1,Yokkaichi City,,,,no data
+8941,2872,5,7,#9b9c56,#ced072,Nakagawa-ku,,,,key or mark
+8949,2872,5,5,#9e9938,#d2cc4a,Chikusa-ku,,,,key or mark
+6522,2874,47,11,#b5b4a7,#f1efde,Haibowan,,,,no data
+8082,2874,22,11,#6f94b6,#94c5f2,Hwaseongsi,,,,no data
+7285,2876,23,11,#b7bd9d,#f3fcd1,Bohai,渤海,#f3fcd1,渤海,right
+8246,2877,22,11,#84a7ab,#afdee3,Buk-gu,,,,no data
+9044,2878,23,11,#a9996f,#e1cc94,Fujieda City,,,,no data
+7151,2880,23,11,#aeb480,#e8f0aa,Gaoyang,高阳,#e8f0aa,高阳,right
+9010,2886,23,11,#aaa170,#e2d695,Iwata City,,,,no data
+8115,2888,11,23,#6fa5b3,#94dbee,Cheonansiseobukgu,,,,no data
+8771,2890,23,11,#8e98ae,#bdcae7,Tottori City,,,,no data
+5845,2891,23,11,#a0b7b9,#d5f4f6,Jiuquan,酒泉,#d5f4f6,酒泉,right
+8956,2893,5,5,#a6a35b,#ddd979,Kariya City,,,,key or mark
+8995,2894,14,25,#e4d88e,,,,,,no region's colour
+8996,2895,12,23,#aba26b,#e4d88e,Toyohashi City,,,,no data
+7253,2896,23,11,#a5b779,#dcf3a1,Cangzhou,沧州,#dcf3a1,沧州,right
+7127,2898,23,11,#b0b48e,#eaf0bd,Anguo,安国,#eaf0bd,安国,right
+7902,2898,22,11,#6977af,#8b9ee9,Paju-si,,,,no data
+7097,2899,23,11,#b1b47b,#ecf0a4,Dingzhou,定州,#ecf0a4,定州,right
+7182,2901,23,11,#b1ba8c,#ecf7ba,Hejian,河间,#ecf7ba,河间,right
+7220,2903,23,11,#b1b790,#ebf3c0,Botou,泊头,#ebf3c0,泊头,right
+7066,2905,11,23,#adb271,#e6ed96,Zhengding,正定,,,"unread, right length"
+7629,2905,33,24,#63b999,#84f6cc,Yantai,烟台,,,different characters
+7588,2909,23,11,#7eb693,#a8f2c4,Penglai,蓬莱,#a8f2c4,蓬莱,right
+7016,2911,23,11,#b4b493,#f0efc4,Pingshan,平山,#f0efc4,平山,right
+7944,2914,5,7,#4765aa,#5e86e2,Uijeongbu-si,,,,key or mark
+6706,2915,23,11,#aeab9d,#e8e3d1,Shenmu,神木,#e8e3d1,神木,right
+6834,2915,35,11,#aaa290,#e2d8c0,Guancen,管涔山,#e2d8c0,管涔山,right
+7966,2917,23,11,#5683a7,#72aede,Namyangju-si,,,,no data
+8846,2917,11,11,#7092a5,#95c2dc,Nishikyo-ku,,,,no data
+8077,2919,23,11,#75b2b4,#9bedf0,Asan-si,,,,no data
+7553,2920,22,11,#7eb68b,#a8f2b9,Longkou,龙口,#a8f2b9,龙口,right
+7680,2920,23,11,#78b4a5,#a0f0dc,Weihai,威海,#a0f0dc,威海,right
+7267,2921,23,11,#aab993,#e2f6c4,Yanshan,盐山,#e2f6c4,盐山,right
+8155,2922,23,11,#75a7ab,#9bdee3,Cheongjusiheungdeokgu,,,,no data
+7092,2924,23,11,#aeb586,#e8f1b2,Wuji,无极,#e8f1b2,无极,right
+6919,2926,23,11,#a6a290,#ddd7bf,Xinzhou,忻州,#ddd7bf,忻州,right
+7321,2927,23,11,#a6bc99,#ddfacc,Wudi,无棣,#ddfacc,无棣,right
+6387,2929,35,11,#a5b399,#dbeecb,Helan,贺兰山,#dbeecb,贺兰山,right
+7380,2929,34,11,#9ebc99,#d2facc,Huanghekou,黄河口,#d2facc,黄河口,right
+7901,2930,23,11,#5c60b1,#7a7feb,Goyangsideogyanggu,,,,no data
+8102,2930,23,11,#66afac,#87e9e5,Yuseong-gu,,,,no data
+8886,2930,23,11,#8dafa0,#bce9d5,Nara City,,,,no data
+8983,2932,45,11,#9e9938,#d2cc4a,Chikusa-ku,,,,no data
+7053,2934,35,11,#a6ae49,#dde761,Shijiazhuang,石家庄,#dde761,石家庄,right
+7953,2935,5,7,#336ca8,#4490e0,Jungnang-gu,,,,key or mark
+7940,2937,5,7,#2148a2,#2c60d7,Seongbuk-gu,,,,key or mark
+8803,2937,23,11,#7088a5,#95b5dc,Kita-ku,,,,no data
+7706,2938,23,11,#80b3af,#aaeee9,Rongcheng,荣成,#aaeee9,荣成,right
+7641,2940,23,11,#81b19f,#acebd4,Muping,牟平,#acebd4,牟平,right
+7862,2940,23,11,#6d69af,#918be9,Gimpo-si,,,,no data
+7183,2942,23,11,#acb793,#e5f4c4,Wuqiang,武强,#e5f4c4,武强,right
+8107,2943,22,11,#39ab8e,#4ce3bd,Seo-gu,,,,no data
+7139,2944,23,11,#a8b48e,#e0f0bd,Xinji,辛集,#e0f0bd,辛集,right
+8983,2944,33,11,#9b9c56,#ced072,Nakagawa-ku,,,,no data
+7929,2945,5,7,#3c42ac,#5057e5,Mapo-gu,,,,key or mark
+7228,2946,11,23,#a8b293,#e0edc3,Wuqiao,吴桥,#e0edc3,吴桥,right
+7973,2948,5,7,#3376ab,#439de3,Gangdong-gu,,,,key or mark
+7063,2949,23,11,#99a854,#cbdf6f,Yuhua,裕华,#cbdf6f,裕华,right
+7095,2949,23,11,#a8b376,#e0ee9d,Gaocheng,藁城,#e0ee9d,藁城,right
+8750,2949,23,11,#758eae,#9bbde7,Himeji City,,,,no data
+7572,2951,23,11,#8fb197,#beebc9,Qixia,栖霞,#beebc9,栖霞,right
+7942,2951,5,7,#1b51a8,#236be0,Seongdong-gu,,,,key or mark
+7911,2953,11,7,#5345af,#6e5be9,Gangseo-gu,,,,key or mark
+6156,2954,23,11,#a7aa00,#dee200,Xi'an,西安,#dee200,西安,off its region
+8871,2954,13,23,#5cafaf,#7ae9e9,Nara City,,,,no data
+8932,2955,23,11,#9cae91,#cfe7c1,Tsu City,,,,no data
+8983,2956,45,11,#9b9c62,#ced082,Kasugai City,,,,no data
+7265,2957,23,11,#a5b78f,#dcf3be,Leling,乐陵,#dcf3be,乐陵,right
+7355,2957,11,23,#9cbb8a,#cff9b7,Binzhou,滨州,#cff9b7,滨州,right
+7956,2958,5,7,#2a6ca8,#378fe0,Gangnam-gu,,,,key or mark
+6226,2960,23,11,#b4b073,#f0ea99,Jingyang,泾阳,#f0ea99,泾阳,right
+6407,2960,11,23,#6da43d,#91da51,Yinchuan,银川,#91da51,银川,right
+8264,2960,23,11,#58a874,#75e09a,Suseong-gu,,,,no data
+6380,2961,11,23,#93b178,#c3eb9f,Xixia,西夏,#c3eb9f,西夏,right
+7034,2961,23,11,#b2b493,#edf0c4,Jingxing,井陉,#edf0c4,井陉,right
+7929,2961,5,7,#4155a8,#5671e0,Guro-gu,,,,key or mark
+7993,2962,23,11,#6f90ac,#94bfe5,Gwangju,,,,no data
+9190,2963,46,22,#8833b7,#b543f4,Bunkyo-ku,,,,no data
+7663,2964,23,11,#8bb3a5,#b9eedb,Kunyu,昆嵛,,,"unread, right length"
+7942,2964,5,7,#2661a8,#3281e0,Gwanak-gu,,,,key or mark
+7908,2967,11,7,#6049a8,#7f61e0,Bucheonsiwonmigu,,,,key or mark
+8296,2967,34,11,#7baf9a,#a3e9cd,Ulju-gun,,,,no data
+6292,2968,11,23,#b4a651,#f0dd6b,Lintong,临潼,#f0dd6b,临潼,right
+7161,2968,12,23,#99b37d,#cceea6,Hengshui,衡水,,,"unread, right length"
+8983,2968,33,11,#a29a57,#d8cd73,Midori-ku,,,,no data
+6903,2969,35,11,#9c8f69,#d0be8c,Jiancaoping,尖草坪,#d0be8c,尖草坪,right
+7083,2970,23,11,#a6ae7f,#dde8a9,Zhaoxian,赵县,#dde8a9,赵县,right
+7416,2970,23,11,#8dbd8e,#bcfbbd,Dongying,东营,#bcfbbd,东营,right
+7887,2970,11,7,#5f55b3,#7e71ee,Seo-gu,,,,key or mark
+7963,2971,11,23,#477aaa,#5ea2e2,Seongnamsibundanggu,,,,no data
+9204,2972,4,8,#d9f6ff,,,,,,key or mark
+6995,2973,23,11,#a89f81,#e0d3ac,Yangquan,阳泉,#e0d3ac,阳泉,right
+8222,2973,22,11,#58a882,#75e0ad,Dalseo-gu,,,,no data
+6888,2974,11,35,#968763,#c8b484,Wanbailin,万柏林,#c8b484,万柏林,right
+7928,2978,11,7,#3968a0,#4b8ad5,Gwangmyeong-si,,,,key or mark
+8983,2980,33,11,#a6a35b,#ddd979,Kariya City,,,,no data
+6659,2981,23,11,#a8a598,#e0dbca,Yulin,榆林,#e0dbca,榆林,right
+6903,2984,23,11,#7d6f48,#a69460,Taiyuan,太原,#a69460,太原,right
+7305,2984,23,11,#a2b78f,#d8f3be,Huimin,惠民,#d8f3be,惠民,right
+7891,2984,11,7,#4a4fb2,#6269ed,Nam-gu,,,,key or mark
+8715,2985,23,11,#6585ac,#86b1e5,Kita-ku,,,,no data
+7911,2986,11,23,#556bb4,#718ef0,Siheung-si,,,,no data
+6766,2987,35,11,#aaa593,#e2dbc4,Qiushui,湫水河,#e2dbc4,湫水河,right
+8108,2988,11,23,#61b3a2,#81eed7,Jeonjusiwansangu,,,,no data
+8259,2988,23,11,#70a88d,#95e0bc,Gyeongsan-si,,,,no data
+6932,2989,11,23,#988f77,#cabe9e,Yuci,榆次,#cabe9e,榆次,right
+8337,2989,23,11,#6cb49d,#90f0d1,Nam-gu,,,,no data
+8583,2989,23,11,#908eae,#bfbde7,Matsue City,,,,no data
+7108,2990,23,11,#abb78f,#e3f4be,Ningjin,宁晋,#e3f4be,宁晋,right
+7507,2990,23,11,#8fb190,#beebbf,Laizhou,莱州,#beebbf,莱州,right
+7609,2991,23,11,#8bb3a8,#b9eee0,Haiyang,海阳,#b9eee0,海阳,right
+8656,2993,23,11,#8490aa,#afc0e2,Fukuyama City,,,,no data
+7386,2994,23,11,#9db996,#d1f6c7,Guangrao,广饶,#d1f6c7,广饶,right
+7250,2995,23,11,#aeba93,#e7f7c3,Linyi,临邑,#e7f7c3,临邑,right
+7934,2995,11,7,#426ca7,#578fde,Ansansisangnokgu,,,,key or mark
+6905,2999,23,11,#857659,#b19d76,Xiaodian,小店,#b19d76,小店,right
+7209,3000,11,23,#a5b779,#dbf4a1,Dezhou,德州,#dbf4a1,德州,right
+5948,3003,23,11,#a6bcbb,#ddfaf9,Qilian,祁连,#ddfaf9,祁连,right
+7056,3003,23,11,#a7ac94,#dee5c5,Zanhuang,赞皇,#dee5c5,赞皇,right
+7951,3004,11,7,#3d7ba5,#51a4dc,Suwonsigwonseongu,,,,key or mark
+7991,3004,11,23,#5784a2,#74afd7,Yonginsigiheunggu,,,,no data
+7150,3005,23,11,#a5b792,#dbf3c2,Zaoqiang,枣强,#dbf3c2,枣强,right
+7194,3005,11,23,#a5b78c,#dcf3ba,Gucheng,故城,#dcf3ba,故城,right
+8181,3006,22,11,#82af9f,#ade9d3,Gumi-si,,,,no data
+7570,3007,23,11,#89b1a0,#b6ebd5,Wulong,五龙,#b6ebd5,五龙,right
+7468,3009,23,11,#87b48f,#b4f0be,Weihe,潍河,#b4f0be,潍河,right
+9173,3010,23,11,#7d8fab,#a6bee3,Tochigi City,,,,no data
+7427,3013,23,11,#82b784,#adf4b0,Shouguang,寿光,#adf4b0,寿光,right
+6387,3014,23,11,#9cb392,#d0eec2,Wuzhong,吴忠,#d0eec2,吴忠,right
+8281,3014,22,11,#72b388,#97eeb5,Gimhae-si,,,,no data
+6231,3016,11,23,#abb464,#e3f085,Fenghao,丰镐,#e3f085,丰镐,right
+6908,3019,23,11,#a89b83,#dfceae,Taigu,太谷,#dfceae,太谷,right
+8105,3020,23,11,#7ab7aa,#a2f4e2,Gunsan-si,,,,no data
+6302,3021,11,23,#b2ad71,#ede696,Lantian,蓝田,#ede696,蓝田,right
+6980,3021,12,23,#b0ab9f,#eae4d3,Taihang,太行,,,"unread, right length"
+7104,3021,23,11,#a1b186,#d6ebb2,Julu,巨鹿,#d6ebb2,巨鹿,right
+8874,3022,23,11,#98af9d,#cae9d1,Wakayama City,,,,no data
+7969,3023,11,7,#3b7e9f,#4ea7d3,Hwaseongsi,,,,key or mark
+9243,3024,23,11,#7896b1,#9fc7eb,Tsukuba City,,,,no data
+7387,3025,23,11,#81b48c,#acf0ba,Linzi,临淄,#acf0ba,临淄,right
+7922,3027,23,11,#6f94b6,#94c5f2,Hwaseongsi,,,,no data
+9018,3028,45,11,#8833b7,#b543f4,Bunkyo-ku,,,,no data
+8604,3029,23,11,#8484aa,#afb0e2,Asakita-ku,,,,no data
+7537,3030,23,11,#89b196,#b6ebc8,Dagu,大沽,#b6ebc8,大沽,right
+8272,3030,11,23,#61b171,#81eb96,Uichanggu,,,,no data
+7291,3031,23,11,#9fb78f,#d3f3be,Jiyang,济阳,#d3f3be,济阳,right
+9120,3033,23,11,#7d88ab,#a6b5e3,Ota City,,,,no data
+6272,3034,23,11,#a2ae43,#d7e859,Chang'an,长安,#d7e859,长安,right
+7372,3034,11,23,#50b063,#6aea83,Zibo,淄博,#6aea83,淄博,right
+8328,3034,22,11,#64b458,#85f075,Haeundae-gu,,,,no data
+6854,3037,23,11,#aba48d,#e4dabc,Fenzhou,汾州,#e4dabc,汾州,right
+8722,3039,23,11,#72a2b3,#97d8ee,Takamatsu City,,,,no data
+9018,3040,45,11,#a148b2,#d65fed,Shinagawa-ku,,,,no data
+7056,3041,23,11,#97b06c,#c9ea90,Xingtai,邢台,#c9ea90,邢台,right
+7442,3041,23,11,#78b07b,#a0eaa3,Changle,昌乐,#a0eaa3,昌乐,right
+8762,3043,23,11,#87b4b4,#b3f0f0,Tokushima City,,,,no data
+7212,3044,23,11,#9db78c,#d1f3ba,Gaotang,高唐,#d1f3ba,高唐,right
+7408,3045,23,11,#8ab396,#b8eec8,Qingzhou,青州,#b8eec8,青州,right
+7578,3045,23,11,#77b7a9,#9ef4e1,Jimo,即墨,,,"unread, right length"
+8322,3046,23,11,#60af3b,#7fe94e,Busanjin-gu,,,,no data
+7151,3047,23,11,#a2b789,#d8f3b6,Qinghe,清河,#d8f3b6,清河,right
+7860,3047,31,11,#2148a2,#2c60d7,Seongbuk-gu,,,,no data
+7917,3047,32,11,#2a6ca8,#378fe0,Gangnam-gu,,,,no data
+7968,3047,51,11,#426ca7,#578fde,Ansansisangnokgu,,,,no data
+7103,3049,23,11,#a1b587,#d6f1b4,Pingxiang,平乡,#d6f1b4,平乡,right
+8237,3049,23,11,#75b290,#9cedc0,Jinju-si,,,,no data
+8580,3050,23,11,#6f68af,#938ae9,Higashi-ku,,,,no data
+7284,3051,22,11,#78b451,#a0f06b,Luokou,泺口,#a0f06b,泺口,right
+7315,3051,11,23,#6fb274,#93ed9a,Licheng,历城,#93ed9a,历城,right
+7252,3052,23,11,#9ab387,#cdeeb4,Qihe,齐河,#cdeeb4,齐河,right
+9019,3052,32,11,#7d42a2,#a657d8,Suginami-ku,,,,no data
+7041,3056,23,11,#a7b293,#deedc4,Shahe,沙河,#deedc4,沙河,right
+7330,3057,11,23,#7fae83,#a9e7ae,Zhangqiu,章丘,#a9e7ae,章丘,right
+7617,3058,34,11,#2db488,#3cf0b5,Qingdao,青岛,#3cf0b5,青岛,right
+8311,3058,23,11,#5ab157,#77eb74,Saha-gu,,,,no data
+7860,3059,32,11,#3c42ac,#5057e5,Mapo-gu,,,,no data
+7917,3059,32,11,#2661a8,#3281e0,Gwanak-gu,,,,no data
+7968,3059,38,11,#3d7ba5,#51a4dc,Suwonsigwonseongu,,,,no data
+7593,3061,17,23,#6fac9f,#94e5d4,Licang,李沧,#94e5d4,李沧,right
+6892,3064,23,11,#aaa08e,#e2d5bd,Pingyao,平遥,,,"unread, right length"
+7509,3064,23,11,#89b399,#b6eecb,Gaomi,高密,#b6eecb,高密,right
+7542,3064,11,23,#80b393,#aaeec4,Jiaozhou,胶州,#aaeec4,胶州,right
+7579,3064,16,32,#5daf9d,#7ce9d1,Fushan,浮山,,,"unread, right length"
+9018,3064,33,11,#873cb1,#b450eb,Itabashi-ku,,,,no data
+7288,3066,23,11,#63b230,#84ed3f,Lixia,历下,#84ed3f,历下,right
+7558,3066,13,32,#66b48d,#88f0bb,Chengyang,城阳,,,"unread, right length"
+7462,3067,23,11,#89b391,#b6eec1,Anqiu,安丘,#b6eec1,安丘,right
+9216,3067,23,11,#6277a5,#829edc,Kashiwa City,,,,no data
+7177,3068,23,11,#97b57f,#c9f1a9,Linqing,临清,#c9f1a9,临清,right
+7367,3070,23,11,#89ae90,#b6e7bf,Zouping,邹平,#b6e7bf,邹平,right
+7618,3070,33,11,#5daf9d,#7ce9d1,Fushan,浮山,#7ce9d1,浮山,right
+8141,3070,23,11,#5bb389,#79eeb6,Buk-gu,,,,no data
+7860,3071,32,11,#1b51a8,#236be0,Seongdong-gu,,,,no data
+7917,3071,44,11,#4155a8,#5671e0,Guro-gu,,,,no data
+7968,3071,38,11,#3b7e9f,#4ea7d3,Hwaseongsi,,,,no data
+9157,3072,35,11,#7678a0,#9da0d5,Iwatsuki-ku,,,,no data
+6563,3075,23,11,#aeada2,#e8e6d7,Jingbian,靖边,#e8e6d7,靖边,right
+6113,3076,23,11,#9cbcba,#d0faf8,Liangzhou,凉州,#d0faf8,凉州,right
+9018,3076,33,11,#6c3cac,#9050e5,Adachi-ku,,,,no data
+6696,3077,35,11,#aeaba2,#e8e4d7,Wudinghe,无定河,#e8e4d7,无定河,right
+8176,3078,22,11,#7fb199,#a9ebcb,Suncheon-si,,,,no data
+7226,3079,11,23,#99b48c,#ccf0ba,Chiping,茌平,#ccf0ba,茌平,right
+7128,3080,23,11,#a2b788,#d8f3b5,Quzhou,曲周,#d8f3b5,曲周,right
+7271,3081,23,11,#8ab573,#b7f199,Zhangqing,长清,#80eb58,济南,another region's name
+7086,3082,23,11,#a0b57d,#d5f1a6,Yongnian,永年,#d5f1a6,永年,right
+7618,3082,33,11,#6fac9f,#94e5d4,Licang,李沧,#94e5d4,李沧,right
+7860,3083,32,11,#336ca8,#4490e0,Jungnang-gu,,,,no data
+7911,3083,37,11,#5345af,#6e5be9,Gangseo-gu,,,,no data
+7968,3083,51,11,#4a4fb2,#6269ed,Nam-gu,,,,no data
+7416,3084,23,11,#93b39c,#c3eed0,Linqu,临朐,#c3eed0,临朐,right
+9019,3088,32,11,#6333ab,#8443e3,Koto-ku,,,,no data
+6772,3090,22,11,#a8a399,#dfd9cc,Lüliang,吕梁,,,"unread, right length"
+9209,3090,15,22,#5d5bae,#7c79e7,Matsudo City,,,,no data
+9082,3091,22,11,#848fab,#b0bee3,Kumagaya City,,,,no data
+7582,3094,5,5,#46b277,,,,,,key or mark
+7618,3094,33,11,#66b48d,#88f0bb,Chengyang,城阳,#88f0bb,城阳,right
+7860,3095,44,11,#4765aa,#5e86e2,Uijeongbu-si,,,,no data
+7911,3095,37,11,#6049a8,#7f61e0,Bucheonsiwonmigu,,,,no data
+7968,3095,38,11,#5f55b3,#7e71ee,Seo-gu,,,,no data
+8659,3095,23,11,#82b2ad,#adede6,Matsuyama City,,,,no data
+7280,3096,23,11,#96b188,#c8ebb5,Taishan,泰山,#b7f199,长清,another region's name
+9295,3096,23,11,#7587b1,#9cb4eb,Sakura City,,,,no data
+6322,3098,23,11,#99b993,#ccf6c4,Zhongwei,中卫,#ccf6c4,中卫,right
+7169,3098,23,11,#9eb383,#d2eeae,Guanxian,冠县,#d2eeae,冠县,right
+6837,3099,23,11,#aea68d,#e7ddbc,Lingshi,灵石,#e7ddbc,灵石,right
+7092,3099,11,23,#a8b57d,#dff1a6,Fu?yang,滏阳,#ccea6f,邯郸,another region's name
+7207,3099,11,23,#87b371,#b4ee96,Liaocheng,聊城,#b4ee96,聊城,right
+9018,3100,45,12,#5441ae,#6f56e7,Edogawa-ku,,,,no data
+9177,3101,5,7,#775ca2,#9e7ad7,Minuma-ku,,,,key or mark
+7338,3102,23,11,#7da88e,#a6e0bd,Laiwu,莱芜,#a6e0bd,莱芜,right
+7549,3102,48,17,#75ba8d,#9cf8bb,Huangdao,黄岛,,,different characters
+7493,3103,23,11,#81b299,#acedcb,Zhucheng,诸城,#acedcb,诸城,right
+8863,3103,31,16,#146cb1,#1a8feb,Chuo-ku,,,,no data
+9136,3103,23,11,#7e76a0,#a79dd5,Kawagoe City,,,,no data
+8106,3105,23,11,#7ab7a1,#a2f4d6,Gwangsan-gu,,,,no data
+8527,3105,22,11,#9584aa,#c6afe2,Shinomoseki City,,,,no data
+9197,3105,5,7,#724eab,#9767e3,Kawaguchi City,,,,key or mark
+7860,3107,31,11,#3376ab,#439de3,Gangdong-gu,,,,no data
+7911,3107,38,11,#3968a0,#4b8ad5,Gwangmyeong-si,,,,no data
+9243,3108,18,23,#5463b1,#7083eb,Funabashi City,,,,no data
+8702,3109,23,11,#8db1a6,#bcebdd,Kochi City,,,,no data
+6950,3111,11,23,#aaa294,#e2d8c5,Xiangyuan,襄垣,#e2d8c5,襄垣,right
+7386,3112,23,11,#8aab99,#b8e4cc,Yiyuan,沂源,#b8e4cc,沂源,right
+9018,3112,33,11,#b351a3,#ee6cd9,Ota-ku,,,,no data
+7535,3115,11,23,#7ab99f,#a2f6d4,Jiaonan,胶南,#a2f6d4,胶南,right
+9231,3118,5,5,#4146ae,#565de7,Ichikawa City,,,,key or mark
+9173,3121,5,5,#715da2,#967cd7,Asaka City,,,,key or mark
+9206,3122,5,5,#6c3cac,#9050e5,Adachi-ku,,,,key or mark
+9020,3124,43,11,#9d4ea5,#d168dc,Setagaya-ku,,,,no data
+7094,3126,23,11,#a6b377,#ddee9e,Feixiang,肥乡,#ddee9e,肥乡,right
+8448,3127,35,11,#b16678,#eb87a0,Yahatanishi-ku,,,,no data
+9194,3127,5,7,#873cb1,#b450eb,Itabashi-ku,,,,key or mark
+7056,3128,23,11,#abb184,#e4ebb0,Cizhou,磁州,#e4ebb0,磁州,right
+9184,3129,3,9,#724ca4,#9765da,Nerima-ku,,,,no data
+8884,3130,11,11,#7092a5,#95c2dc,Nishikyo-ku,,,,no data
+9224,3130,5,7,#5441ae,#6f56e7,Edogawa-ku,,,,key or mark
+7148,3131,23,11,#a2b281,#d7edac,Daming,大名,#d7edac,大名,right
+8918,3131,11,23,#5396aa,#6ec8e2,Fushimi-ku,,,,no data
+7272,3134,23,11,#7eb07e,#a8eaa7,Feicheng,肥城,#a8eaa7,肥城,right
+9271,3135,23,11,#5474b1,#709aeb,Wakaba-ku,,,,no data
+7310,3136,23,11,#84b08a,#b0eab8,Daiyue,岱岳,#b0eab8,岱岳,right
+9019,3136,32,12,#724ca4,#9765da,Nerima-ku,,,,no data
+6028,3137,23,11,#95b7b2,#c6f3ed,Datong,大通,#c6f3ed,大通,right
+9205,3138,5,5,#8833b7,#b543f4,Bunkyo-ku,,,,key or mark
+9217,3138,4,7,#6333ab,#8443e3,Koto-ku,,,,key or mark
+7118,3141,23,11,#a5b177,#dbeb9e,Weixian,魏县,#dbeb9e,魏县,right
+6960,3142,11,23,#a29377,#d7c49e,Changzhi,长治,#d7c49e,长治,right
+7178,3142,11,23,#9fb18b,#d4ebb9,Shenxian,莘县,#d4ebb9,莘县,right
+8124,3142,31,11,#83b693,#aef2c3,Seogwipo-si,,,,no data
+8364,3142,30,11,#b7848a,#f4b0b7,Saga City,,,,no data
+6397,3143,11,23,#a8b7a0,#dff3d5,Haiyuan,海原,#dff3d5,海原,right
+7200,3143,23,11,#93ae82,#c3e8ad,Yanggu,阳谷,#c3e8ad,阳谷,right
+9188,3143,4,5,#7d42a2,#a657d8,Suginami-ku,,,,key or mark
+7343,3144,23,11,#78ac83,#a0e5ae,Xintai,新泰,#a0e5ae,新泰,right
+9108,3144,23,11,#9c7fa4,#d0a9da,Tokorozawa City,,,,no data
+9158,3146,5,5,#8358ac,#ae75e5,Kodaira City,,,,key or mark
+7097,3148,11,23,#a8b27d,#e0eda6,Yindu,殷都,#e0eda6,殷都,right
+9019,3148,32,11,#ac5093,#e56ac4,Kawasaki-ku,,,,no data
+6891,3149,11,23,#b5ae9d,#f1e7d1,Huozhou,霍州,#f1e7d1,霍州,right
+9204,3149,5,7,#a148b2,#d65fed,Shinagawa-ku,,,,key or mark
+7427,3151,23,11,#77a890,#9ee0c0,Yishui,沂水,#9ee0c0,沂水,right
+7082,3152,11,23,#a1b15a,#d6eb77,Anyang,安阳,#d6eb77,安阳,right
+6688,3153,23,12,#b1ac9e,#ebe5d2,Yan'an,延安,,,"unread, right length"
+8945,3153,11,23,#8dafa0,#bce9d5,Nara City,,,,no data
+7003,3154,11,23,#aca598,#e5dcca,Huguan,壶关,#e5dcca,壶关,right
+9170,3154,7,5,#9051a0,#bf6bd5,Fuchu City,,,,key or mark
+7516,3155,39,25,#69b69c,#8bf2d0,Rizhao,日照,,,different characters
+9190,3155,2,7,#9d4ea5,#d168dc,Setagaya-ku,,,,key or mark
+7487,3156,23,11,#8eb3a7,#bdeede,Wulian,五莲,#bdeede,五莲,right
+7457,3157,23,11,#84aba3,#b0e4d9,Juzhou,莒州,#b0e4d9,莒州,right
+8890,3157,23,11,#588aac,#75b8e5,Takatsuki City,,,,no data
+6258,3160,22,11,#97b7b5,#c9f3f1,Baiyin,白银,#c9f3f1,白银,right
+9020,3160,31,11,#935d96,#c37cc8,Tama-ku,,,,no data
+8436,3162,23,11,#ae4554,#e75c70,Hakata-ku,,,,no data
+7228,3163,23,11,#93b384,#c4eeaf,Dongping,东平,#c4eeaf,东平,right
+7269,3165,23,11,#8fb384,#beeeaf,Wenshang,汶上,#beeeaf,汶上,right
+9121,3165,35,11,#98659f,#ca86d3,Hachioji City,,,,no data
+9209,3165,5,7,#b351a3,#ee6cd9,Ota-ku,,,,key or mark
+7308,3166,11,23,#7db178,#a6eba0,Qufu,曲阜,#a6eba0,曲阜,right
+7132,3167,23,11,#abb585,#e4f1b1,Qingfeng,清丰,#e4f1b1,清丰,right
+9174,3167,2,7,#935d96,#c37cc8,Tama-ku,,,,key or mark
+8482,3168,23,11,#b17880,#eb9faa,Iizuka City,,,,no data
+8817,3170,23,11,#7088a5,#95b5dc,Kita-ku,,,,no data
+8873,3171,18,22,#4379b2,#59a1ed,Toyonaka City,,,,no data
+9017,3172,46,11,#9051a0,#bf6bd5,Fuchu City,,,,no data
+6868,3173,11,23,#b09b6f,#eace93,Linfen,临汾,#eace93,临汾,right
+8906,3174,11,23,#537ba7,#6ea4de,Neyagawa City,,,,no data
+8416,3178,23,11,#ae5d5d,#e77b7b,Nishi-ku,,,,no data
+7038,3179,23,11,#a4a888,#dadfb5,Linzhou,林州,#dadfb5,林州,right
+7338,3179,23,11,#7bb187,#a4ebb3,Sihe,泗河,#a4ebb3,泗河,right
+7080,3180,23,11,#a6ae80,#dde8aa,Tangyin,汤阴,#dde8aa,汤阴,right
+9193,3180,5,5,#a86090,#df7fbf,Kohoku-ku,,,,key or mark
+9225,3180,4,7,#ac5093,#e56ac4,Kawasaki-ku,,,,key or mark
+9126,3182,35,15,#9a6f98,#cd94ca,Machida City,,,,no data
+6045,3183,23,11,#4baaaa,#63e2e2,Xining,西宁,#63e2e2,西宁,right
+6154,3184,23,11,#9db5ba,#d1f1f7,Yongdeng,永登,#d1f1f7,永登,right
+9018,3184,33,11,#8358ac,#ae75e5,Kodaira City,,,,no data
+8862,3185,12,22,#3c6bac,#508ee5,Amagasaki City,,,,no data
+6786,3187,11,23,#b2aa99,#ede2cc,Hejin,河津,#ede2cc,河津,right
+7235,3187,23,11,#91b283,#c1edae,Nanwang,南旺,#c1edae,南旺,right
+7118,3189,23,11,#aeb585,#e7f1b1,Daokou,道口,#d2ea79,濮阳,another region's name
+6503,3192,23,11,#afb39c,#e9eed0,Huanxian,环县,#e9eed0,环县,right
+7197,3193,23,11,#99b283,#cbedae,Yuncheng,郓城,#cbedae,郓城,right
+9142,3194,8,1,#d7a3d0,,,,,,key or mark
+7156,3195,23,11,#a3b283,#d9edae,Fanxian,范县,#d9edae,范县,right
+8484,3195,23,11,#b17878,#eb9f9f,Kurume City,,,,no data
+8822,3196,23,13,#516daf,#6b91e9,Higashinada-ku,,,,no data
+9018,3196,33,11,#715da2,#967cd7,Asaka City,,,,no data
+9196,3197,5,5,#b75e9c,#f37dcf,Kanagawa-ku,,,,key or mark
+8882,3198,5,7,#2f7bae,#3ea3e7,Higashiyodogawa-ku,,,,key or mark
+9179,3199,5,5,#a06095,#d57fc6,Asahi-ku,,,,key or mark
+8546,3200,23,11,#b17e78,#eba79f,Oita City,,,,no data
+9280,3200,23,11,#7293b1,#98c4eb,Ichihara City,,,,no data
+6828,3201,11,22,#b2a58a,#eddcb7,Taosi,陶寺,,,"unread, right length"
+7279,3201,11,23,#76b271,#9ded96,Jining,济宁,#9ded96,济宁,right
+7305,3202,11,23,#93b590,#c3f1bf,Zoucheng,邹城,#c3f1bf,邹城,right
+5998,3203,23,11,#82b4b4,#adf0f0,Huangzhong,湟中,#adf0f0,湟中,right
+8934,3204,13,23,#5cafaf,#7ae9e9,Nara City,,,,no data
+8893,3205,5,7,#146cb1,#1a8feb,Chuo-ku,,,,key or mark
+8909,3206,14,23,#5096a7,#6ac8de,Higashiosaka City,,,,no data
+9018,3208,33,12,#775ca2,#9e7ad7,Minuma-ku,,,,no data
+7076,3209,23,11,#adb07b,#e6eaa3,Hebi,鹤壁,#e6eaa3,鹤壁,right
+7423,3213,11,23,#5db088,#7beab5,Linyi,临邑,#7beab5,临邑,right
+8806,3213,11,23,#587eae,#75a8e7,Nishi-ku,,,,no data
+6941,3214,23,11,#aba290,#e4d8c0,Gaoping,高平,#e4d8c0,高平,right
+7180,3217,23,11,#a8b381,#e0eeab,Juancheng,鄄城,#e0eeab,鄄城,right
+7340,3217,23,11,#90b397,#bfeec9,Shanting,山亭,#bfeec9,山亭,right
+8886,3217,5,7,#388baf,#4ab9e9,Hirano-ku,,,,key or mark
+7252,3218,23,11,#95b487,#c6f0b4,Jiaxiang,嘉祥,#c6f0b4,嘉祥,right
+8430,3218,23,11,#b7848a,#f4b0b7,Saga City,,,,no data
+9018,3220,32,12,#724eab,#9767e3,Kawaguchi City,,,,no data
+6164,3221,23,11,#5ca4b5,#7adaf1,Xigu,西固,#7adaf1,西固,right
+9180,3221,23,11,#b169a5,#eb8cdb,Fujisawa City,,,,no data
+9143,3222,23,11,#a27b9c,#d7a3d0,Atsugi City,,,,no data
+6645,3223,23,11,#b7b2a4,#f3edda,Luochuan,洛川,#f3edda,洛川,right
+7324,3226,11,23,#71b07e,#96eaa8,Tengzhou,滕州,,,"unread, right length"
+7448,3227,23,11,#81b5a2,#abf1d8,Linshu,临沭,#abf1d8,临沭,right
+7072,3228,11,23,#abb064,"#e4ea85@114.1,35.4",Weihui,卫辉,"#e4ea85@114.1,35.4",卫辉,right
+7034,3230,23,11,#aaab78,#e2e4a0,Huixian,辉县,#e2e4a0,辉县,right
+9019,3232,32,11,#4146ae,#565de7,Ichikawa City,,,,no data
+7480,3233,23,11,#81b2a9,#acede1,Ganyu,赣榆,#acede1,赣榆,right
+8890,3233,23,11,#519eaf,#6bd2e9,Sakai-ku,,,,no data
+7096,3234,23,11,#b5b37d,"#f1eea6@114.5,35.4",Huaxian,滑县,"#f1eea6@114.5,35.4",滑县,right
+7224,3234,23,11,#9cb283,#cfedae,Juye,巨野,#cfedae,巨野,right
+9086,3234,23,11,#9f9299,#d3c2cc,Odawara City,,,,no data
+7185,3235,11,23,#a0b161,#d5eb81,Heze,菏泽,#d5eb81,菏泽,right
+6085,3240,23,11,#99b7ae,#ccf3e7,Hehuang,河湟,#ccf3e7,河湟,right
+6855,3240,23,11,#b5a88f,#f1e0be,Yicheng,翼城,#f1e0be,翼城,right
+7418,3240,11,23,#7eb3a2,#a7eed8,Luozhuang,罗庄,#a7eed8,罗庄,right
+8823,3242,33,11,#146cb1,#1a8feb,Chuo-ku,,,,no data
+7126,3244,11,23,#b4b27e,#f0eda8,Changyuan,长垣,#f0eda8,长垣,right
+9018,3244,33,11,#a86090,#df7fbf,Kohoku-ku,,,,no data
+6234,3247,23,11,#0e8db2,#12bced,Lanzhou,兰州,#12bced,兰州,right
+7439,3247,23,11,#81b5ab,#abf1e4,Tancheng,郯城,#abf1e4,郯城,right
+6959,3248,23,11,#9f9986,#d4ccb2,Jincheng,晋城,#d4ccb2,晋城,right
+8447,3248,11,23,#be8a99,#fdb8cc,Nagasaki City,,,,no data
+7048,3249,11,23,#aba751,#e4de6c,Xinxiang,新乡,#e4de6c,新乡,right
+7154,3249,23,11,#b3b587,#eef1b4,Dongming,东明,#eef1b4,东明,right
+7265,3249,23,11,#9eb78d,#d2f4bb,Jinxiang,金乡,#d2f4bb,金乡,right
+8497,3249,21,12,#f0a395,,,,,,no region's colour
+8494,3250,23,11,#b47b70,#f0a395,Minami-ku,,,,no data
+7391,3254,23,11,#8ab2a5,#b7eddc,Lanling,兰陵,#b7eddc,兰陵,right
+8823,3254,33,11,#388baf,#4ab9e9,Hirano-ku,,,,no data
+9194,3254,23,11,#b36d99,#ee91cc,Yokosuka City,,,,no data
+9019,3256,32,11,#b75e9c,#f37dcf,Kanagawa-ku,,,,no data
+6396,3259,23,11,#99b599,#cbf1cb,Guyuan,固原,#cbf1cb,固原,right
+8891,3260,23,11,#65afaf,#86e9e9,Izumi City,,,,no data
+7002,3261,23,11,#a2a362,#d7d982,Jiaozuo,焦作,#d7d982,焦作,right
+7496,3265,23,11,#6db1b3,#91ecee,Haizhou,海州,#91ecee,海州,right
+6282,3266,23,11,#9db5b1,#d1f1eb,Huining,会宁,#d1f1eb,会宁,right
+8823,3266,33,11,#2f7bae,#3ea3e7,Higashiyodogawa-ku,,,,no data
+8935,3266,23,11,#98af9d,#cae9d1,Wakayama City,,,,no data
+6203,3267,23,13,#90b3a7,#bfeede,Lintao,临洮,,,"unread, right length"
+9018,3268,33,11,#a06095,#d57fc6,Asahi-ku,,,,no data
+7086,3273,23,11,#b4b387,#f0eeb4,Fengqiu,封丘,#f0eeb4,封丘,right
+7460,3273,23,11,#83b3af,#aeeee9,Donghai,东海,#aeeee9,东海,right
+8138,3275,23,11,#83b693,#aef2c3,Seogwipo-si,,,,no data
+6974,3276,23,11,#a6a26f,#ddd893,Huaiqing,怀庆,#ddd893,怀庆,right
+7526,3276,23,11,#8cb6b7,#baf2f4,Lianyun,连云,#baf2f4,连云,right
+6734,3279,23,11,#b4ac93,#f0e5c4,Hancheng,韩城,#f0e5c4,韩城,right
+7044,3279,23,11,#aea863,#e8e084,Yuanyang,原阳,#e8e084,原阳,right
+7194,3279,11,11,#b0b481,#eaf0ab,Cao,曹,#eaf0ab,曹,right
+6540,3280,23,11,#b3b390,#eeeebf,Qingyang,庆阳,#eeeebf,庆阳,right
+7415,3280,11,23,#81b29c,#acedd0,Pizhou,邳州,#acedd0,邳州,right
+8513,3280,23,11,#b68a80,#f2b7aa,Yatsushiro City,,,,no data
+7308,3281,23,11,#92b78d,#c2f4bb,Peixian,沛县,#c2f4bb,沛县,right
+7148,3282,23,11,#b4b281,#f0edab,Lankao,兰考,#f0edab,兰考,right
+6843,3285,23,11,#b1ab8b,#ebe4b9,Zhongtiao,中条,#ebe4b9,中条,right
+7244,3285,23,11,#adb48d,#e6f0bb,Shanxian,单县,#e6f0bb,单县,right
+7280,3285,23,11,#9db38e,#d1eebd,Fengxian,丰县,#d1eebd,丰县,right
+7017,3287,23,11,#a59552,#dcc66d,Huiji,惠济,#dcc66d,惠济,right
+7366,3287,35,11,#90b29a,#bfedcd,Taierzhuang,台儿庄,#bfedcd,台儿庄,right
+6927,3289,23,11,#b4ae87,#f0e7b3,Jiyuan,济源,#f0e7b3,济源,right
+7074,3292,11,23,#aea458,#e7da75,Zhongmu,中牟,#e7da75,中牟,right
+7059,3295,11,23,#b1a843,#ebe059,Jinshui,金水,#ebe059,金水,right
+7091,3296,23,11,#aba045,#e4d55b,Kaifeng,开封,#e4d55b,开封,right
+6982,3297,23,13,#b1ad7c,#ebe6a5,Wuzhi,武陟,,,"unread, right length"
+6141,3298,23,11,#7db58a,#a6f1b7,Linxia,临夏,#a6f1b7,临夏,right
+6771,3298,23,11,#b5af8b,#f1e9b9,Puzhou,蒲州,#f1e9b9,蒲州,right
+7557,3298,23,11,#8cb3b7,#baeef4,Xiangshui,响水,#baeef4,响水,right
+7044,3301,11,23,#a49700,#dac900,Zhengzhou,郑州,#dac900,郑州,right
+8565,3301,22,11,#b29680,#edc7aa,Miyazaki City,,,,no data
+7026,3302,11,35,#ac963f,#e5c854,Jialu,贾鲁河,#e5c854,贾鲁河,right
+6808,3303,11,23,#b1a875,#ebe09c,Yuncheng,运城,#ebe09c,运城,right
+6189,3305,11,23,#90b799,#c0f3cc,Dongxiang,东乡,#c0f3cc,东乡,right
+7171,3305,23,11,#adb186,#e6ebb2,Minquan,民权,#e6ebb2,民权,right
+6371,3306,11,35,#99aea3,#cce8d9,Liupan,六盘山,#cce8d9,六盘山,right
+7343,3307,23,11,#a0b28f,#d5edbe,Jiawang,贾汪,#d5edbe,贾汪,right
+6476,3308,23,11,#abb3a0,#e4eed5,Pingliang,平凉,#e4eed5,平凉,right
+7502,3312,23,11,#86acac,#b2e5e5,Guanhe,关河,,,"unread, right length"
+7230,3313,22,11,#a8ae7b,#e0e8a3,Yucheng,虞城,,,"unread, right length"
+7276,3315,23,11,#aeb492,#e7f0c2,Dangshan,砀山,#e7f0c2,砀山,right
+6999,3316,23,11,#b2a874,#eddf9a,Xingyang,荥阳,#eddf9a,荥阳,right
+7468,3317,23,11,#75afaf,#9be9e9,Shuyang,沭阳,#9be9e9,沭阳,right
+7214,3318,11,23,#abb064,"#e4ea85@115.7,34.4",Shangqiu,商丘,"#e4ea85@115.7,34.4",商丘,right
+6920,3319,11,23,#b48a64,#f0b885,Luoyang,洛阳,#f0b885,洛阳,right
+6944,3319,23,11,#b29c69,#edd08c,Mengjin,孟津,#edd08c,孟津,right
+7112,3319,11,23,#b4ab81,#f0e4ab,Tongxu,通许,#f0e4ab,通许,right
+6890,3320,23,11,#b2a587,#eddcb3,Mianchi,渑池,#eddcb3,渑池,right
+7084,3326,11,23,#b0a278,#ead89f,Weishi,尉氏,#ead89f,尉氏,right
+7134,3326,23,11,#b9b385,#f6eeb1,Qixian,杞县,#f6eeb1,杞县,right
+6635,3327,23,11,#aeab82,#e8e4ad,Tongchuan,铜川,#e8e4ad,铜川,right
+7041,3328,23,11,#ae9545,#e7c65c,Erqi,二七,#e7c65c,二七,right
+6574,3329,23,11,#b1b396,#ebeec8,Binzhou,邠州,#ebeec8,邠州,right
+6687,3329,23,11,#aea782,#e8dead,Pucheng,蒲城,#e8dead,蒲城,right
+7173,3332,23,11,#b5b37d,"#f1eea6@115.3,34.4",Ningling,宁陵,"#f1eea6@115.3,34.4",宁陵,right
+6969,3333,23,11,#b5a57e,#f1dba8,Gongyi,巩义,#f1dba8,巩义,right
+7371,3334,23,11,#a5b396,#dceec8,Gupi,古邳,#d3e56e,徐州,another region's name
+7314,3335,23,11,#adb387,#e6eeb4,Xiao,萧,,萧县,old characters
+7600,3337,23,11,#8cafb7,#bae9f4,Sheyang,射阳,#bae9f4,射阳,right
+6825,3338,35,11,#b5a585,#f1dcb1,Sanmenxia,三门峡,#f1dcb1,三门峡,right
+7523,3339,23,11,#87a2b3,#b4d7ee,Lianshui,涟水,#b4d7ee,涟水,right
+7050,3343,23,11,#ae9c58,#e7d075,Xinzheng,新郑,#e7d075,新郑,right
+7023,3344,23,11,#aea26e,#e8d792,Xinmi,新密,#e8d792,新密,right
+7253,3344,23,11,#acb281,#e5edac,Xiayi,夏邑,#e5edac,夏邑,right
+7432,3345,23,11,#95ae9f,#c6e8d4,Suqian,宿迁,#c6e8d4,宿迁,right
+7560,3346,23,11,#879caf,#b3cfe9,Funing,阜宁,#b3cfe9,阜宁,right
+7464,3348,23,11,#89a4a4,#b6dada,Siyang,泗阳,#b6dada,泗阳,right
+6327,3351,11,23,#9cb3ae,#d0eee8,Gangu,甘谷,#d0eee8,甘谷,right
+7193,3352,23,11,#b1b075,#ebea9c,Zhecheng,柘城,#ebea9c,柘城,right
+6954,3353,11,23,#b08a59,#eab876,Longmen,龙门,#eab876,龙门,right
+7405,3353,23,11,#a3b097,#d9eac9,Suining,睢宁,#d9eac9,睢宁,right
+8093,3353,46,22,#0065bf,#0086ff,Huangpu,黄浦,,,"unread, right length"
+6727,3357,23,11,#b7b28d,#f3edbb,Huashan,华山,#f3edbb,华山,right
+6983,3358,23,11,#b0a686,#eaddb2,Songshan,嵩山,#eaddb2,嵩山,right
+7496,3358,23,11,#8999a4,#b6ccda,Huaiyin,淮阴,#b6ccda,淮阴,right
+7709,3358,34,11,#a2251c,#d73125,Nanjing,南京,#d73125,南京,right
+7158,3360,23,11,#b4ad7e,#f0e6a8,Taikang,太康,#f0e6a8,太康,right
+6630,3362,13,23,#b4b073,#f0ea99,Jingyang,泾阳,,,"unread, right length"
+7310,3362,23,11,#a8ab72,#dfe497,Huaibei,淮北,#dfe497,淮北,right
+6773,3365,35,11,#bab393,#f7eec4,Fenglingdu,风陵渡,#f7eec4,风陵渡,right
+7065,3365,23,11,#b0a171,#ead696,Changge,长葛,#ead696,长葛,right
+7118,3367,23,11,#aea886,#e7dfb2,Fugou,扶沟,#e7dfb2,扶沟,right
+7274,3368,23,11,#aeb28d,#e7edbc,Yongcheng,永城,#e7edbc,永城,right
+6661,3369,23,11,#b1a466,#ebda88,Sanyuan,三原,#ebda88,三原,right
+8501,3369,23,11,#b69372,#f2c498,Kagoshima City,,,,no data
+7361,3370,23,11,#afb29b,#e9edce,Bianhe,汴河,#e9edce,汴河,right
+7709,3370,34,11,#a83e36,#df5248,Xuanwu,玄武,#df5248,玄武,right
+6259,3371,23,11,#a4b4af,#daf0e9,Longxi,陇西,#daf0e9,陇西,right
+6440,3374,23,11,#9fac9b,#d4e5ce,Longxian,陇县,#d4e5ce,陇县,right
+7212,3375,11,23,#aead83,#e7e6ae,Luyi,鹿邑,#e7e6ae,鹿邑,right
+7600,3376,23,11,#7796ae,#9ec7e7,Yancheng,盐城,#9ec7e7,盐城,right
+6698,3378,11,23,#b3aa73,#eee299,Weinan,渭南,#eee299,渭南,right
+6588,3379,23,11,#b0b484,#eaf0b0,Liquan,礼泉,#eaf0b0,礼泉,right
+7027,3379,23,11,#b0a276,#ead89d,Yuzhou,禹州,#ead89d,禹州,right
+6946,3380,11,23,#b3a188,#eed6b5,Yichuan,伊川,#eed6b5,伊川,right
+6519,3381,11,23,#a4ac81,#dae5ab,Fengxiang,凤翔,,,"unread, right length"
+6856,3381,23,11,#b4a59c,#f0dccf,Xiong'er,熊耳,#f0dccf,熊耳,right
+7496,3381,23,11,#6c84a2,#8fb0d8,Huaian,淮安,#8fb0d8,淮安,right
+7710,3382,33,11,#ab514a,#e46b62,Jianye,建邺,#e46b62,建邺,right
+8292,3383,33,11,#0065bf,#0086ff,Huangpu,黄浦,#0086ff,黄浦,right
+7340,3385,11,23,#abb181,#e3ebab,Suzhou,宿州,#e3ebab,宿州,right
+7572,3386,23,11,#8d96a8,#bcc8e0,Jianhu,建湖,#bcc8e0,建湖,right
+7056,3387,23,11,#ac9464,#e5c585,Xuchang,许昌,#e5c585,许昌,right
+6977,3388,23,11,#b1a590,#ebdbbf,Ruzhou,汝州,#ebdbbf,汝州,right
+7230,3389,23,11,#b2ae79,#ede7a1,Bozhou,亳州,#ede7a1,亳州,right
+7974,3389,23,11,#8a6cae,#b88fe8,Zhangjiagang,,,,no data
+6556,3390,11,23,#aeb388,#e8eeb5,Xian,周原,#e8eeb5,周原,right
+7290,3392,23,11,#b0ae83,#eae7ae,Suixi,濉溪,,,"unread, right length"
+7400,3393,23,11,#afb293,#e9edc3,Sixian,泗县,#e9edc3,泗县,right
+7709,3394,33,11,#aa6b6b,,,,#df8680,老山,another region's colour
+8292,3395,33,11,#274ea8,#3468df,Xuhui,徐汇,#3468df,徐汇,right
+7154,3397,23,11,#b7a981,#f4e1ac,Huaiyang,淮阳,#f4e1ac,淮阳,right
+7445,3398,23,11,#a8a59c,#e0dccf,Sihong,泗洪,#e0dccf,泗洪,right
+7011,3399,11,23,#b19c7b,#ebd0a3,Baofeng,宝丰,#ebd0a3,宝丰,right
+7635,3399,23,11,#8aaeba,#b8e7f8,Dafeng,大丰,#b8e7f8,大丰,right
+7535,3400,23,11,#8e8ea2,#bdbdd8,Hongze,洪泽,#bdbdd8,洪泽,right
+7083,3401,23,11,#ac9d74,#e5d19a,Linying,临颍,,,"unread, right length"
+8013,3403,23,11,#816cae,#ab8fe8,Haiyu,海虞,,,"unread, right length"
+6366,3406,23,11,#90aea4,#bfe7da,Tianshui,天水,#bfe7da,天水,right
+7941,3406,23,11,#9366af,#c387e9,Jiangyin,江阴,#c387e9,江阴,right
+7709,3407,33,11,#ab4a51,#e4626b,Qixia,栖霞,#e4626b,栖霞,right
+8293,3407,32,11,#314ba2,#4164d8,Putuo,普陀,#4164d8,普陀,right
+7120,3408,23,11,#b5a884,#f1e0af,Xihua,西华,#f1e0af,西华,right
+6597,3410,23,12,#b1b767,#ebf389,Xingping,兴平,,,"unread, right length"
+7185,3412,23,11,#b2a275,#edd79b,Dancheng,郸城,#edd79b,郸城,right
+7052,3414,23,11,#aea287,#e8d7b4,Xiangcheng,襄城,#e8d7b4,襄城,right
+8183,3416,23,11,#638ebc,#83bdfa,Chongming,崇明,#83bdfa,崇明,right
+6490,3417,23,11,#aab363,#e2ee84,Baoji,宝鸡,#e2ee84,宝鸡,right
+6892,3417,23,11,#b5a193,#f1d6c4,Funiu,伏牛,#f1d6c4,伏牛,right
+7709,3419,33,11,#ad5a5f,#e6777e,Jiangning,江宁,#e6777e,江宁,right
+8292,3419,33,11,#184ca2,#2065d8,Jing'an,静安,#2065d8,静安,right
+8054,3420,23,11,#685dab,#8a7ce4,Changshu,常熟,#8a7ce4,常熟,right
+7566,3424,11,23,#9284a5,#c2afdc,Gaoyou,,#c6b4e7,高邮,another region's colour
+7594,3426,23,11,#8b93ae,#b9c3e7,Xinghua,兴化,#b9c3e7,兴化,right
+6675,3427,23,11,#b2ad71,#ede696,Lantian,蓝田,#ede696,蓝田,right
+6750,3428,23,11,#b5ab95,#f1e4c6,Shangzhou,商洛,#f1e4c6,商洛,right
+7137,3429,22,11,#b39c6e,#eed092,Zhoukou,周口,#eed092,周口,right
+6991,3431,36,16,#ae905e,#e7c07d,Pingdingshan,平顶山,,,different characters
+8292,3431,32,11,#205aad,#2a78e6,Hongkou,虹口,#2a78e6,虹口,right
+7709,3432,45,11,#b67265,#f29786,Jiangning,,,,no data
+7978,3432,23,11,#845d9c,#af7bd0,Xishan,锡山,#af7bd0,锡山,right
+6958,3433,23,11,#b0a38c,#ead9ba,Lushan,鲁山,#ead9ba,鲁山,right
+7082,3434,23,11,#b09c74,#eacf9a,Luohe,漯河,#eacf9a,漯河,right
+7389,3434,23,11,#b2aa93,#ede2c3,Wuhe,五河,#ede2c3,五河,right
+7763,3435,33,11,#a757b1,#de73eb,Changzhou,常州,#de73eb,常州,right
+7164,3436,11,23,#b7a572,#f4dc98,Xiang9 Cheng,项城,#f4dc98,项城,right
+7647,3441,23,11,#8da6b4,#bcddf0,Dongtai,东台,#bcddf0,东台,right
+7939,3442,23,11,#8960a2,#b67fd8,Huishan,惠山,#b67fd8,惠山,right
+7228,3443,23,11,#b4a180,#f0d6aa,Taihe,太和,#f0d6aa,太和,right
+8096,3443,23,11,#676ca8,#8990df,Taicang,太仓,#7684d0,千灯,another region's name
+8293,3443,31,11,#2d6cad,#3c8fe6,Yangpu,杨浦,#3c8fe6,杨浦,right
+7709,3444,45,11,#af5b4b,#e97963,Yushan,,,,no data
+7041,3446,23,11,#b59f81,#f1d3ac,Yexian,叶县,#f1d3ac,叶县,right
+7302,3447,23,11,#b3a288,#eed8b5,Mengcheng,蒙城,#eed8b5,蒙城,right
+7764,3447,32,11,#9a68a0,#cd8ad5,Wujin,武进,#cd8ad5,武进,right
+8576,3447,55,11,#b7a277,#f4d79e,Uruma City,,,,no data
+7972,3448,23,11,#793d9f,#a151d3,Wuxi,无锡,#a151d3,无锡,right
+7489,3449,23,11,#9f909c,#d3c0cf,Xuyi,盱眙,#d3c0cf,盱眙,right
+7567,3449,23,11,#9587ae,#c6b4e7,Gaoyou,高邮,#c6b4e7,高邮,right
+6612,3450,23,11,#b1b480,#ebf0aa,Zhouzhi,周至,#ebf0aa,周至,right
+7123,3452,23,11,#b3a387,#eed9b3,Shangshui,商水,#eed9b3,商水,right
+7188,3452,11,23,#b79f72,#f4d398,Shenqiu,沈丘,#f4d398,沈丘,right
+7262,3455,23,11,#b09f83,#ead4ae,Lixin,利辛,#ead4ae,利辛,right
+8027,3455,23,11,#75629f,#9c82d3,Yangcheng,阳澄湖,,,different characters
+8292,3455,33,12,#3279b1,#42a1eb,Pudong,,,,no data
+6280,3459,23,11,#abb1ac,#e4ebe5,Lixian,礼县,#e4ebe5,礼县,right
+7088,3459,23,12,#b2a38c,#edd9ba,Shangcai,上蔡,,,"unread, right length"
+7762,3459,34,11,#966fa9,#c894e1,Hengshan,横山,#c894e1,横山,right
+6404,3464,23,11,#acaeab,#e5e8e3,Chengxian,成县,#e5e8e3,成县,right
+7208,3465,23,11,#b19c7b,#ebcfa4,Jieshou,界首,#ebcfa4,界首,right
+7606,3465,16,23,#767bb3,,,,,,no region's colour
+7633,3467,23,11,#7a95b2,#a2c6ed,Hai'an,海安,#a2c6ed,海安,right
+8292,3467,33,11,#4081ad,#55ace6,Pudong,,,,no data
+6959,3468,23,11,#b1a293,#ebd7c4,Nanzhao,南召,#ebd7c4,南召,right
+8127,3471,23,11,#525fa8,#6d7edf,Jiading,嘉定,#6d7edf,嘉定,right
+7763,3472,34,11,#617cb7,#81a5f4,Nantong,南通,#81a5f4,南通,right
+7984,3472,23,11,#7e60a8,#a87fdf,Binhu,,,,no data
+8066,3474,23,11,#5c6095,#7a80c6,Kunshan,昆山,#7a80c6,昆山,right
+7416,3476,23,11,#b1a09d,#ebd5d1,Fengyang,凤阳,#ebd5d1,凤阳,right
+7696,3476,23,11,#8aa5ba,#b8dcf8,Juegang,掘港,#b8dcf8,掘港,right
+7270,3477,11,23,#b99c84,#f6cfaf,Yingquan,颍泉,,,"unread, right length"
+7077,3478,12,35,#ac8e6f,#e5bd93,Zhumadian,驻马店,,,"unread, right length"
+7960,3478,11,23,#8b58ab,#b975e4,Binhu,滨湖,#b975e4,滨湖,right
+6844,3479,23,11,#b79f96,#f3d3c8,Danjiang,丹江,#f3d3c8,丹江,right
+8294,3479,31,11,#336ba6,#448edd,Pudong,,,,no data
+8173,3482,5,5,#3f61ad,#5481e6,Baoshan,,,,key or mark
+7331,3483,20,34,#b2938a,"#edc3b7@116.8,32.7",Bagongshan,八公山,,,different characters
+7148,3484,23,11,#b3a485,#eedab1,Pingyu,平舆,#eedab1,平舆,right
+7546,3484,30,24,#96667d,#c887a6,Yangzhou,扬州,,,different characters
+7624,3484,23,11,#727da4,#97a6da,Taizhou,泰州,#97a6da,泰州,right
+7763,3484,34,11,#788cba,#9fbaf8,Jinsha,金沙,#9fbaf8,金沙,right
+7033,3485,35,11,#b4a28b,#f0d8b9,Chayashan,嵖岈山,#f0d8b9,嵖岈山,right
+7189,3485,23,11,#b19774,#ebc99a,Linquan,临泉,#ebc99a,临泉,right
+8157,3487,7,5,#3f55ad,#5471e6,Baoshan,,,,key or mark
+7242,3489,23,11,#b78a67,#f3b889,Fuyang,阜阳,#f3b889,阜阳,right
+7305,3489,12,23,#b4a093,#f0d5c4,Fengtai,凤台,,,"unread, right length"
+7580,3490,23,11,#927797,#c29ec9,Jiangdu,江都,#c29ec9,江都,right
+8006,3490,23,11,#735daa,#997ce2,Xiangcheng,相城,#997ce2,相城,right
+8293,3491,32,12,#3d5da6,#517cdd,Minhang,,,,no data
+7508,3492,23,11,#ae8b90,#e7b9bf,Tianchang,天长,#e7b9bf,天长,right
+8186,3492,4,7,#2d6cad,#3c8fe6,Yangpu,杨浦,,,key or mark
+7654,3493,23,11,#7a8ab2,#a2b8ed,Rugao,如皋,#a2b8ed,如皋,right
+6709,3494,23,11,#baaea1,#f7e7d6,Shanyang,山阳,#f7e7d6,山阳,right
+8146,3494,2,7,#4756a8,#5e72df,Jiading,,,,key or mark
+8176,3494,5,5,#205aad,#2a78e6,Hongkou,虹口,,,key or mark
+8203,3494,23,11,#4880ba,#60aaf7,Pudong,,,,no data
+6539,3495,23,11,#bbaea5,#f9e7dc,Yangxian,洋县,#f9e7dc,洋县,right
+7684,3499,23,11,#828dbb,#adbcf9,Shigang,石港,#adbcf9,石港,right
+7620,3500,23,11,#8e7fae,#bda9e7,Taixing,泰兴,#bda9e7,泰兴,right
+7709,3500,11,30,#788cba,#9fbaf8,Jinsha,金沙,,,"unread, right length"
+5876,3501,35,11,#b7b8b4,#f4f5ef,Qaidam,柴达木,#f4f5ef,柴达木,right
+8172,3501,5,7,#184ca2,#2065d8,Jing'an,静安,,,key or mark
+7362,3503,11,23,#b28a7e,#edb7a7,Huainan,淮南,#edb7a7,淮南,right
+8191,3503,5,7,#3279b1,#42a1eb,Pudong,,,,key or mark
+8292,3503,33,11,#4450a8,#5a6adf,Minhang,,,,no data
+6997,3504,23,11,#b49d85,#f0d1b1,Sheqi,社旗,#f0d1b1,社旗,right
+7538,3504,23,11,#a97e8d,#e1a7bb,Yizheng,仪征,#e1a7bb,仪征,right
+6962,3505,23,11,#b7784c,#f4a065,Nanyang,南阳,#f4a065,南阳,right
+8163,3505,4,5,#314ba2,#4164d8,Putuo,普陀,,,key or mark
+7222,3507,23,11,#b19884,#ebcaaf,Funan,阜南,#ebcaaf,阜南,right
+7121,3509,23,11,#b19d88,#ebd1b5,Runan,汝南,#ebd1b5,汝南,right
+8087,3510,11,23,#59639c,#7684d0,Qiandeng,千灯,#7684d0,千灯,right
+8113,3510,23,11,#515da2,#6b7cd7,Qingpu,青浦,#6b7cd7,青浦,right
+8024,3511,23,11,#5c3cab,#7a4fe4,Suzhou,苏州,#7a4fe4,苏州,right
+8032,3511,3,10,#7a4fe4,,,,,,no region's colour
+8178,3511,5,5,#0065bf,#0086ff,Huangpu,黄浦,,,key or mark
+7424,3512,23,11,#b19a99,#ebcdcb,Dingyuan,定远,#ebcdcb,定远,right
+8050,3512,23,11,#635a9f,#8478d3,Gusu,,,,no data
+7179,3513,23,11,#b39e85,#eed2b1,Xincai,新蔡,#eed2b1,新蔡,right
+7672,3513,30,12,#617cb7,#81a5f4,Nantong,南通,,,"unread, right length"
+6935,3514,23,11,#b59d87,#f1d1b4,Zhenping,镇平,#f1d1b4,镇平,right
+7266,3515,23,11,#b39984,#eecbaf,Yingshang,颍上,,,"unread, right length"
+7590,3515,22,11,#a96982,#e18cad,Jingkou,京口,#e18cad,京口,right
+8170,3515,5,7,#274ea8,#3468df,Xuhui,徐汇,,,key or mark
+8294,3515,31,11,#4756a8,#5e72df,Jiading,,,,no data
+7723,3516,23,11,#7890ba,#9fc0f8,Haimen,海门,#9fc0f8,海门,right
+8193,3516,5,7,#4081ad,#55ace6,Pudong,,,,key or mark
+6898,3517,23,11,#b7a296,#f3d7c8,Neixiang,内乡,#f3d7c8,内乡,right
+7474,3517,23,11,#ae867b,#e7b2a3,Chuzhou,滁州,,,"unread, right length"
+8034,3517,11,6,#8478d3,,,,,,key or mark
+8152,3519,4,7,#4450a8,#5a6adf,Minhang,,,,key or mark
+7759,3520,23,11,#7d98bf,#a6caff,Qidong,启东,#a6caff,启东,right
+7626,3523,24,11,#8283bb,#adaef9,Jingjiang,靖江,#adaef9,靖江,right
+8182,3523,2,7,#336ba6,#448edd,Pudong,,,,key or mark
+8213,3524,11,23,#5b8aae,#79b7e8,Pudong,,,,no data
+7997,3525,23,11,#6c50b1,#8f6aeb,Mudu,木渎,#8f6aeb,木渎,right
+8290,3527,35,11,#3f55ad,#5471e6,Baoshan,,,,no data
+7510,3530,5,7,#aa6b6b,,,,,,key or mark
+7553,3530,11,23,#b46c75,#f08f9c,Zhenjiang,镇江,#f08f9c,镇江,right
+7608,3534,19,20,#ab71b2,#e496ed,Xinbei,新北,,,different characters
+8170,3535,3,9,#3d5da6,#517cdd,Minhang,,,,no data
+7527,3536,5,5,#ab4a51,#e4626b,Qixia,栖霞,,,key or mark
+8135,3537,23,11,#525aa6,#6d77dd,Songjiang,,,,no data
+8292,3539,33,11,#3f61ad,#5481e6,Baoshan,,,,no data
+7578,3540,23,11,#ad74a8,#e69adf,Danyang,,#e69acd,丹阳,another region's colour
+7515,3542,5,5,#9d436e,,,,,,key or mark
+6816,3543,23,11,#baa59f,#f7dcd3,Yunyang,郧阳,#f7dcd3,郧阳,right
+7222,3543,23,11,#b59f8c,#f1d4ba,Huaibin,淮滨,#f1d4ba,淮滨,right
+7632,3544,22,23,#966fa9,#c894e1,Hengshan,横山,#c894e1,横山,right
+8188,3544,5,5,#5275a5,#6d9bdc,Minhang,,,,key or mark
+7321,3545,11,23,#b7a69d,#f3ddd1,Huoqiu,霍邱,#f3ddd1,霍邱,right
+7524,3545,5,7,#a83e36,#df5248,Xuanwu,玄武,,,key or mark
+7670,3546,23,11,#816cae,#ab8fe8,Haiyu,海虞,#c387e9,江阴,another region's name
+7049,3547,23,11,#b29f8e,#edd4bd,Tongbai,桐柏,#edd4bd,桐柏,right
+6500,3548,12,23,#bc9f90,#fad4c0,Hanzhong,汉中,,,"unread, right length"
+6967,3548,11,23,#b49988,#f0ccb5,Xinye,新野,#f0ccb5,新野,right
+7760,3548,23,11,#638ebc,#83bdfa,Chongming,崇明,#83bdfa,崇明,right
+7697,3549,23,11,#685dab,#8a7ce4,Changshu,常熟,,,"unread, right length"
+8009,3550,13,23,#725ba9,#9779e1,Wuzhong,吴中,,,"unread, right length"
+7158,3551,23,11,#b3a596,#eedcc7,Xixian,息县,#eedcc7,息县,right
+7366,3551,23,11,#b49a93,#f0cdc3,Changfeng,长丰,#f0cdc3,长丰,right
+7534,3551,4,7,#ad5a5f,#e6777e,Jiangning,江宁,,,key or mark
+8243,3551,23,11,#6094b8,#7fc5f5,Nanhui,南汇,#7fc5f5,南汇,right
+8302,3551,23,11,#638ebc,#83bdfa,Chongming,崇明,#83bdfa,崇明,off its region
+7516,3552,4,5,#ab514a,#e46b62,Jianye,建邺,,,key or mark
+8048,3552,23,11,#6260a5,#827fdc,Wujiang,,,,no data
+7094,3553,23,11,#b3a896,#eedfc7,Queshan,确山,#eedfc7,确山,right
+7570,3553,23,11,#ad749a,#e69acd,Danyang,丹阳,#e69acd,丹阳,right
+6994,3554,23,11,#b59984,#f1cbb0,Tanghe,唐河,#f1cbb0,唐河,right
+7427,3555,23,11,#b9978d,#f6c9bc,Quanjiao,全椒,#f6c9bc,全椒,right
+7597,3556,29,11,#a757b1,#de73eb,Changzhou,常州,,,"unread, right length"
+8292,3556,7,5,#5275a5,#6d9bdc,Minhang,,,,key or mark
+6933,3557,23,11,#b59d8c,#f1d1ba,Dengzhou,邓州,#f1d1ba,邓州,right
+6426,3560,23,11,#baaca5,#f7e5dc,Mianxian,勉县,#f7e5dc,勉县,right
+6657,3560,11,23,#bca79b,#fadece,Ankang,安康,#fadece,安康,right
+7659,3561,23,11,#845d9c,#af7bd0,Xishan,锡山,#b67fd8,惠山,another region's name
+8128,3561,23,11,#5c62a6,#7a82dd,Songjiang,,,,no data
+7713,3564,11,23,#676ca8,#8990df,Taicang,太仓,#8a7ce4,常熟,another region's name
+7728,3564,11,23,#525fa8,#6d7edf,Jiading,嘉定,#8990df,太仓,another region's name
+7575,3566,23,11,#b284ae,,,,#edb0e1,茅山,another region's colour
+6574,3567,23,11,#bdb0a9,#fceae1,Xixiang,西乡,#fceae1,西乡,right
+8198,3568,23,11,#5b84ae,#79afe8,Fengxian,奉贤,#79afe8,奉贤,right
+7624,3569,2,7,#9a68a0,#cd8ad5,Wujin,武进,,,key or mark
+7380,3570,23,11,#a87463,#e09a83,Chefei,合肥,#e09a83,合肥,right
+7407,3570,23,11,#b28370,#edae95,Yaohai,瑶海,,,"unread, right length"
+7476,3571,22,11,#b28c84,#edbaaf,Pukou,浦口,#edbaaf,浦口,right
+7514,3571,5,7,#b67265,#f29786,Jiangning,,,,key or mark
+7248,3572,23,11,#b5a392,#f1d9c2,Gushi,固始,#f1d9c2,固始,right
+7743,3574,23,11,#3f55ad,#5471e6,Baoshan,,#6d7edf,嘉定,another region's colour
+7662,3576,23,11,#7e60a8,#a87fdf,Binhu,,#b975e4,滨湖,another region's colour
+7567,3579,23,11,#b284a9,#edb0e1,Maoshan,茅山,#edb0e1,茅山,right
+7201,3584,11,23,#b39c8d,#eecfbc,Huangchuan,潢川,#eecfbc,潢川,right
+7385,3585,23,11,#a15842,#d67558,Baohe,包河,#d67558,包河,right
+8089,3588,23,11,#6971a4,#8c96da,Jiashan,嘉善,#8c96da,嘉善,right
+7505,3589,5,7,#af5b4b,#e97963,Yushan,,,,key or mark
+7751,3589,23,11,#184ca2,#2065d8,Jing'an,静安,#2065d8,静安,right
+6815,3591,23,11,#b7988d,#f3cabb,Shiyan,十堰,#f3cabb,十堰,right
+6876,3591,22,11,#b99d93,#f6d1c4,Wudang,武当,#f6d1c4,武当,right
+6313,3592,22,11,#b5b1ae,#f1ebe7,Bailong,白龙江,,,different characters
+7438,3592,23,11,#b78e82,#f3bdad,Chaohu,巢湖,#f3bdad,巢湖,right
+7292,3593,23,11,#b2a096,#edd5c8,Pihe,淠河,#edd5c8,淠河,right
+7711,3594,23,11,#59639c,#7684d0,Qiandeng,千灯,#9779e1,吴中,another region's name
+8157,3594,23,11,#5b72ae,#7997e8,Jinshan,金山,#7997e8,金山,right
+7554,3595,11,23,#ad7e94,#e6a7c5,Gaochun,高淳,#e6a7c5,高淳,right
+8031,3598,23,11,#816fae,#ab93e8,Shengze,盛泽,#ab93e8,盛泽,right
+7386,3600,11,23,#a57b6e,#dca492,Shangpai,上派,#dca492,上派,right
+7617,3600,11,23,#a781ad,#deabe6,Yixing,宜兴,#deabe6,宜兴,right
+6936,3603,11,23,#b07e6c,#eaa790,Fancheng,樊城,#eaa790,樊城,right
+6966,3603,23,11,#b2998f,#edcbbe,Xiangzhou,襄州,#edcbbe,襄州,right
+7740,3604,23,11,#4450a8,#5a6adf,Minhang,,#6b7cd7,青浦,another region's colour
+7579,3605,23,11,#af7ca0,#e9a5d5,Liyang,溧阳,#e9a5d5,溧阳,right
+7507,3606,22,11,#ab736d,#e49991,Dangtu,当涂,#e49991,当涂,right
+7022,3607,11,23,#b49d9a,#f0d1cd,Zaoyang,枣阳,#f0d1cd,枣阳,right
+7305,3608,11,23,#ae8d84,#e7bbaf,Luan,六安,#e7bbaf,六安,right
+7102,3610,23,11,#ae9888,#e8cab5,Xinyang,信阳,#e8cab5,信阳,right
+7158,3616,23,14,#b4a295,#f0d7c6,Luoshan,罗山,,,"unread, right length"
+7948,3616,23,11,#906faf,#bf94e9,Huzhou,湖州,#bf94e9,湖州,right
+7792,3617,23,11,#6094b8,#7fc5f5,Nanhui,南汇,#79afe8,奉贤,another region's name
+6675,3624,23,11,#baaba1,#f7e4d6,Xunyang,旬阳,#f7e4d6,旬阳,right
+7470,3624,23,11,#b35b3d,#ee7951,Wuhu,芜湖,#ee7951,芜湖,right
+8071,3626,23,11,#7660a2,#9d7fd8,Jiaxing,嘉兴,#9d7fd8,嘉兴,right
+7390,3631,23,11,#ba9a91,#f7cdc1,Lujiang,庐江,#f7cdc1,庐江,right
+8121,3631,23,11,#8178a9,#ab9fe1,Pinghu,平湖,#ab9fe1,平湖,right
+6779,3633,23,11,#b7aba1,#f4e3d6,Zhushan,竹山,#f4e3d6,竹山,right
+7716,3634,23,11,#6971a4,#8c96da,Jiashan,嘉善,#8c96da,嘉善,right
+7250,3635,23,11,#b7a79e,#f3ded2,Jinzhai,金寨,#f3ded2,金寨,right
+7746,3636,23,11,#5b72ae,#7997e8,Jinshan,金山,#7997e8,金山,right
+7446,3637,23,11,#b3928d,#eec2bb,Wuwei,无为,#eec2bb,无为,right
+7505,3638,23,11,#b26b60,#ed8e80,Wanzhi,湾沚,#ed8e80,湾沚,right
+6463,3642,23,11,#b4a29d,#f0d8d1,Micang,米仓山,,,different characters
+7685,3642,23,11,#816fae,#ab93e8,Shengze,盛泽,#ab93e8,盛泽,right
+7058,3648,11,23,#b19a9a,#ebcdcd,Suizhou,随州,#ebcdcd,随州,right
+6407,3649,12,23,#b29390,#edc4bf,Guangyuan,广元,,,"unread, right length"
+6553,3649,23,11,#b4a69d,#f0ddd1,Tongjiang,通江,#f0ddd1,通江,right
+6967,3650,23,11,#b1948b,#ebc5b9,Xiangyang,襄阳,#ebc5b9,襄阳,right
+7101,3651,23,11,#ab9d9c,#e4d1cf,Guangshui,广水,#e4d1cf,广水,right
+7575,3653,23,11,#ab7f90,#e4a9bf,Langchuan,郎川,,,"unread, right length"
+7964,3655,23,11,#927eae,#c2a8e8,Nanxun,南浔,#c2a8e8,南浔,right
+7727,3661,49,19,#8178a9,#ab9fe1,Pinghu,平湖,,,different characters
+6892,3663,23,11,#b4a59c,#f0dcd0,Jingshan,荆山,#f0dcd0,荆山,right
+7317,3665,23,11,#b3a29d,#eed7d1,Shucheng,舒城,#eed7d1,舒城,right
+7493,3668,23,11,#b18985,#ebb6b1,Nanling,南陵,#ebb6b1,南陵,right
+7617,3669,12,23,#a087a8,#d5b3df,Anji,安吉,,,"unread, right length"
+7651,3669,23,11,#927eae,#c2a8e8,Nanxun,南浔,#c2a8e8,南浔,right
+7690,3669,23,11,#936ca8,#c390df,Tongxiang,桐乡,#c390df,桐乡,right
+7458,3675,11,23,#ac877a,#e5b3a2,Tongling,铜陵,#e5b3a2,铜陵,right
+7157,3679,11,23,#b09996,#eacbc8,Hongan,红安,#eacbc8,红安,right
+7411,3679,23,11,#b79d8b,#f3d1b9,Zongyang,枞阳,,,"unread, right length"
+6133,3682,23,11,#b98760,#f6b47f,Yubei,渝北,#f6b47f,渝北,right
+7199,3684,23,11,#b09993,#eacbc3,Macheng,麻城,#eacbc3,麻城,right
+6098,3686,12,23,#b18664,#ebb285,Beibei,北碚,,,"unread, right length"
+7708,3687,23,11,#9172af,#c197e9,Haining,海宁,#c197e9,海宁,right
+7551,3688,11,23,#b08a95,#eab8c6,Xuancheng,宣城,#eab8c6,宣城,right
+7100,3689,23,11,#b7979c,#f3c9d0,Anlu,安陆,#f3c9d0,安陆,right
+7642,3693,11,23,#9369a2,#c48cd8,Mogan,莫干,#e24adb,杭州,another region's name
+7749,3693,35,11,#897fb9,#b6a9f6,Guanhaiwei,观海卫,#b6a9f6,观海卫,right
+6204,3696,35,11,#b3723c,#ee9750,Jialing,嘉陵江,#ee9750,嘉陵江,off its region
+7357,3697,23,11,#ba9b8a,#f7ceb8,Tongcheng,桐城,#f7ceb8,桐城,right
+6358,3700,23,11,#b39699,#eec7cc,Jianmen,剑门,#eec7cc,剑门,right
+6475,3700,22,11,#ae8f88,#e8beb5,Bazhou,巴中,#e8beb5,巴中,right
+8013,3702,23,11,#9b63ae,#ce84e8,Yunhe,运河,#ce84e8,运河,right
+7986,3707,11,23,#9355a9,#c371e1,Banshan,半山,#c371e1,半山,right
+7751,3708,23,11,#7f75b3,#a99bee,Cixi,慈溪,,,"unread, right length"
+7835,3709,23,11,#7477bd,#9a9efc,Zhoushan,舟山,#9a9efc,舟山,right
+6690,3710,35,11,#b5a897,#f1e0c9,Daba,大巴山,#f1e0c9,大巴山,right
+6210,3711,23,11,#b35a07,#ee7709,Chongqing,重庆,#ee7709,重庆,off its region
+7245,3712,35,11,#b7a29c,#f4d7d0,Dabie,大别山,#f4d7d0,大别山,right
+6515,3713,13,23,#b39d95,#eed1c6,Pingchang,平昌,,,"unread, right length"
+7030,3715,23,11,#b0a29f,#ead7d4,Jingshan,京山,#ead7d4,京山,right
+7117,3715,23,11,#b19193,#ebc1c3,Xiaogan,孝感,#ebc1c3,孝感,right
+6317,3718,14,23,#b47b7d,#f0a3a6,Jiangyou,江油,,,"unread, right length"
+7747,3721,18,22,#8c75b3,#ba9bee,Yuyao,余姚,,,different characters
+6584,3724,23,11,#b39b89,#eeceb6,Xuanhan,宣汉,#eeceb6,宣汉,right
+6202,3726,35,11,#b47a4b,#f0a263,Jiulongpo,九龙坡,#f0a263,九龙坡,off its region
+7771,3728,23,11,#7275b1,#989beb,Zhenhai,镇海,#989beb,镇海,right
+6085,3729,23,11,#b27c51,#eda56b,Bishan,璧山,#eda56b,璧山,right
+7375,3729,23,13,#b7a080,#f4d5aa,Anqing,安庆,,,"unread, right length"
+7089,3730,11,23,#b09699,#eac7cc,Yunmeng,云梦,#eac7cc,云梦,right
+7112,3730,11,35,#b58b8b,#f1b9b9,Panlong,盘龙城,#f1b9b9,盘龙城,right
+7307,3730,35,11,#bca599,#fadccc,Tianzhushan,天柱山,#fadccc,天柱山,right
+6280,3731,23,11,#b78d8f,#f4bcbe,Anzhou,安州,#f4bcbe,安州,right
+6858,3732,23,11,#b0a39e,#ead9d2,Sanxia,三峡,#ead9d2,三峡,right
+7178,3732,23,11,#b2938a,"#edc3b7@114.6,30.8",Xinzhou,新洲,"#edc3b7@114.6,30.8",新洲,right
+6629,3733,12,24,#b99f87,#f6d4b4,Kaizhou,开州,,,"unread, right length"
+7417,3735,12,23,#a8ac9b,#dfe5ce,Chihou,池州,,,"unread, right length"
+7822,3735,11,23,#8b7cb8,#b9a5f5,Beilun,北仑,#b9a5f5,北仑,right
+8005,3735,23,11,#a15cae,#d67ae8,Qiantang,钱塘,#d67ae8,钱塘,right
+6448,3736,23,11,#bb9092,#f9c0c2,Yilong,仪陇,#f9c0c2,仪陇,right
+7731,3736,11,23,#a085b3,#d5b1ee,Cao'e,曹娥,#d5b1ee,曹娥,right
+8164,3737,23,11,#7f75b3,#a99bee,Cixi,慈溪,,,"unread, right length"
+6417,3738,11,23,#bb878e,#f9b4bd,Langzhong,阆中,#f9b4bd,阆中,right
+7978,3740,23,11,#9734a8,#c945e0,Zhaohui,朝晖,#c945e0,朝晖,right
+8045,3741,23,11,#b175b0,#eb9cea,Guali,瓜沥,#eb9cea,瓜沥,right
+8203,3741,35,11,#897fb9,#b6a9f6,Guanhaiwei,观海卫,#b6a9f6,观海卫,right
+7147,3743,23,11,#bb6c6c,#f99090,Jiang'an,江岸,#f99090,江岸,right
+6545,3744,11,23,#b47f66,#f0a987,Dazhou,达州,#f0a987,达州,right
+7127,3746,11,22,#b37b7b,#eea3a3,Jiaokou,硚口,#eea3a3,硚口,right
+7596,3746,22,11,#a386a4,#d9b2da,Tianmu,天目,#d9b2da,天目,right
+6982,3747,23,11,#b29c99,#edd0cb,Zhongxiang,钟祥,#edd0cb,钟祥,right
+7223,3748,23,11,#b79a93,#f3cdc4,Xishui,浠水,#f3cdc4,浠水,right
+6259,3749,13,23,#b78f8d,#f4bebc,Mianzhu,绵竹,,,"unread, right length"
+7653,3749,11,23,#ab81a2,#e4abd7,Fuchun,富春,#e4abd7,富春,right
+7679,3751,14,23,#9b7ea1,#cea7d6,Zhuji,诸暨,,,"unread, right length"
+6300,3752,23,16,#b75659,#f37276,Mianyang,绵阳,,,different characters
+7477,3753,23,11,#9aaaaf,#cde2e9,Huangshan,黄山,#cde2e9,黄山,right
+7959,3753,11,23,#944d9f,#c566d3,Xixi,西溪,,,"unread, right length"
+7773,3754,12,23,#8d67b3,#bc89ee,Yinzhou,鄞州,,,"unread, right length"
+6132,3755,22,11,#b38d4c,#eebc65,Banan,巴南,#eebc65,巴南,right
+7974,3755,23,11,#aa38a5,#e24adb,Hangzhou,杭州,#e24adb,杭州,right
+7142,3758,22,11,#b44f4f,#f06969,Hankou,汉口,#f06969,汉口,right
+7172,3758,23,11,#b97c67,#f6a589,Qingshan,青山,#f6a589,青山,right
+7202,3758,11,23,#b1867b,#ebb2a4,Ezhou,鄂州,#ebb2a4,鄂州,right
+6882,3760,23,11,#a5756c,#dc9c90,Yichang,宜昌,#dc9c90,宜昌,right
+8148,3762,18,22,#8c75b3,#ba9bee,Yuyao,余姚,,,different characters
+6955,3764,23,11,#ae918c,#e7c1ba,Jingmen,荆门,#e7c1ba,荆门,right
+6579,3765,23,11,#b2988b,#edcab9,Dachuan,达川,#edcab9,达川,right
+7336,3766,23,11,#b7aa92,#f4e2c2,Wangjiang,望江,#f4e2c2,望江,right
+6091,3767,23,11,#b38d5a,#eebc78,Jiangjin,江津,#eebc78,江津,right
+7035,3767,23,11,#b49397,#f0c4c9,Tianmen,天门,#f0c4c9,天门,right
+8010,3768,11,23,#a865a8,#df86df,Xiaoshan,萧山,#df86df,萧山,right
+6231,3770,11,35,#b7948d,#f4c5bc,Dujiangyan,都江堰,#f4c5bc,都江堰,right
+7983,3770,23,11,#ad5fa2,#e67ed7,Binjiang,滨江,#e67ed7,滨江,right
+6271,3772,11,23,#b46c6e,#f09092,Deyang,德阳,#f09092,德阳,right
+6334,3772,22,22,#b7848c,#f3b0ba,Santai,三台,,,different characters
+6725,3772,23,11,#b2ab8b,#ede4b9,Kuizhou,夔州,#ede4b9,夔州,right
+7084,3772,23,11,#b28a94,#edb7c5,Hanchuan,汉川,#edb7c5,汉川,right
+7125,3773,23,11,#b07171,#ea9696,Hanyang,汉阳,#ea9696,汉阳,right
+7152,3773,11,23,#b76f61,#f39381,Hongshan,洪山,#f39381,洪山,right
+7173,3773,23,11,#b37b5c,#eea37a,East Lake,东湖,#eea37a,东湖,right
+6463,3774,23,11,#bb9290,#f9c2c0,Pengan,蓬安,#f9c2c0,蓬安,right
+6929,3774,11,23,#ae8f8a,#e7beb7,Zhijiang,当阳,#e7beb7,当阳,right
+8203,3774,23,11,#7275b1,#989beb,Zhenhai,镇海,#989beb,镇海,right
+6674,3776,11,23,#b7a888,#f3e0b5,Yunyang,云阳,#f3e0b5,云阳,right
+7217,3778,11,23,#b09976,#eacb9d,Huangshi,黄石,#eacb9d,黄石,right
+7263,3778,23,11,#b79f93,#f3d4c4,Qichun,蕲春,#f3d4c4,蕲春,right
+6388,3780,23,11,#ba9399,#f7c3cc,Yanting,盐亭,#f7c3cc,盐亭,right
+6506,3781,23,11,#b39687,#eec7b4,Quxian,渠县,#eec7b4,渠县,right
+6643,3784,11,23,#b79b69,#f3ce8b,Wanzhou,万州,#f3ce8b,万州,right
+7814,3787,23,11,#b18bbd,#ebb9fc,Sanmen,三门,#dac0f5,宁海,another region's name
+7119,3788,23,11,#b28a8c,#edb7ba,Caidian,蔡甸,#edb7ba,蔡甸,right
+7772,3788,23,11,#a490b8,#dac0f5,Ninghai,宁海,#dac0f5,宁海,right
+7729,3789,23,11,#9a82a8,#cdade0,Shengzhou,嵊州,,,"unread, right length"
+8248,3789,11,23,#5f54b1,#7e6feb,Yongjiang,甬江,#7e6feb,甬江,right
+8032,3790,23,11,#9866a2,#ca87d8,Keqiao,柯桥,#ca87d8,柯桥,right
+7672,3791,23,11,#a485aa,#dab1e2,Pujiang,浦江,#dab1e2,浦江,right
+8065,3793,23,11,#a271b3,#d896ee,Shaoxing,绍兴,#d896ee,绍兴,right
+6787,3795,11,23,#a5b09f,#dcead3,Jianshi,建始,#dcead3,建始,right
+6432,3796,23,11,#b16355,#eb8471,Nanchong,南充,#eb8471,南充,right
+7306,3797,11,23,#b29883,#edcaae,Huangmei,黄梅,#edcaae,黄梅,right
+7513,3797,23,11,#8baab4,#b9e2f0,Huizhou,徽州,,,"unread, right length"
+8226,3797,11,23,#6f54b1,#936feb,Ningbo,宁波,#936feb,宁波,right
+7162,3800,11,23,#b39f9a,#eed3cd,Jiangxia,江夏,#eed3cd,江夏,right
+6320,3801,21,22,#b58a8a,#f1b8b8,Zhongjiang,中江,,,different characters
+6542,3801,23,11,#b49982,#f0cbad,Dazhu,大竹,#f0cbad,大竹,right
+6581,3801,14,24,#b9a887,#f6dfb4,Liangping,梁平,,,"unread, right length"
+7063,3801,23,11,#b5929b,#f1c2ce,Xiantao,仙桃,#f1c2ce,仙桃,right
+7597,3802,23,11,#939cb0,#c3cfea,Xin'an,新定,#c3cfea,新定,right
+7016,3803,23,11,#ba9090,#f7bfbf,Qianjiang,潜江,#f7bfbf,潜江,right
+6251,3804,23,11,#ae7676,#e89d9d,Pengzhou,彭州,#e89d9d,彭州,right
+6642,3804,14,4,#f3ce8b,,,,,,key or mark
+6644,3805,9,4,#f0dab3,,,,,,key or mark
+7682,3809,11,23,#8e68aa,#bd8ae2,Yiwu,义乌,#bd8ae2,义乌,right
+7196,3810,23,11,#aea68f,#e8ddbe,Daye,大冶,#e8ddbe,大冶,right
+6858,3813,23,11,#a7b29c,#deedd0,Qingjiang,清江,#deedd0,清江,right
+6371,3819,11,23,#b3847f,#eeafa9,Shehong,射洪,#eeafa9,射洪,right
+6613,3821,11,23,#b4a487,#f0dab3,Zhongxian,忠县,#f0dab3,忠县,right
+8240,3821,23,11,#8d67b3,#bc89ee,Yinzhou,鄞州,#bc89ee,鄞州,right
+7702,3822,23,11,#a979ab,#e1a1e4,Dongyang,东阳,#e1a1e4,东阳,right
+6425,3823,23,11,#b2908a,#edc0b8,Gaoping,高坪,#edc0b8,高坪,right
+7092,3826,23,11,#b3a1a4,#eed6da,Honghu,洪湖,#eed6da,洪湖,right
+7394,3826,13,35,#8ab1ad,#b8ebe6,Jingdezhen,景德镇,,,"unread, right length"
+6980,3828,23,11,#b48076,#f0aa9d,Jingzhou,荆州,#f0aa9d,荆州,right
+7669,3830,16,23,#9b74af,#ce9ae9,Choujiang,稠江,,,different characters
+6407,3833,11,23,#b3877f,#eeb4a9,Suining,遂宁,#eeb4a9,遂宁,right
+6462,3833,23,11,#b58a7f,#f1b7a9,Yuechi,岳池,#f1b7a9,岳池,right
+6321,3834,13,23,#b5908a,#f1bfb8,Jintang,金堂,,,"unread, right length"
+7321,3834,12,23,#aba771,#e4de96,Jiujiang,九江,,,"unread, right length"
+7231,3836,23,11,#acb59c,#e5f1d0,Yangxin,阳新,#e5f1d0,阳新,right
+7349,3841,11,23,#9fb39c,#d4eecf,Duchang,都昌,#d4eecf,都昌,right
+6934,3842,23,11,#b4a2a5,#f0d8db,Songzi,松滋,#f0d8db,松滋,right
+6656,3844,23,11,#96ac94,#c8e5c5,Shizhu,石柱,#c8e5c5,石柱,right
+6220,3845,23,11,#b5897d,#f1b6a6,Chongzhou,崇州,#f1b6a6,崇州,right
+6491,3845,23,11,#b28975,#edb69c,Guangan,广安,#edb69c,广安,right
+7166,3845,23,11,#95b39b,#c6eece,Xianning,咸宁,#c6eece,咸宁,right
+7749,3845,12,23,#9f7ea1,#d4a8d6,Tiantai,天台,,,"unread, right length"
+7276,3846,23,11,#b0ae8f,#eae7be,Ruichang,瑞昌,#eae7be,瑞昌,right
+7646,3846,23,11,#a26dad,#d791e6,Jinhua,金华,#d791e6,金华,right
+7040,3849,23,11,#b38f95,#eebec6,Jianli,监利,#eebec6,监利,right
+7625,3849,12,23,#a27caa,#d7a5e2,Lanxi,兰溪,,,"unread, right length"
+6987,3851,23,11,#b49698,#f0c7ca,Gong,公安,#f0c7ca,公安,right
+7779,3856,23,11,#a380af,#d9aae9,Linhai,临海,#d9aae9,临海,right
+6445,3859,11,23,#b79587,#f4c6b3,Wusheng,武胜,#f4c6b3,武胜,right
+6730,3863,23,11,#8fac8c,#bee5ba,Enshi,恩施,,,"unread, right length"
+7461,3863,23,11,#97b0b3,#c9eaee,Wuyuan,婺源,#c9eaee,婺源,right
+6519,3864,13,23,#b79a79,#f3cda1,Linshui,邻水,,,"unread, right length"
+6251,3867,23,14,#b58b7d,#f1b9a6,Xinjin,新津,,,"unread, right length"
+7700,3868,11,23,#ab87a5,#e4b3dc,Jinyun,缙云,#e4b3dc,缙云,right
+6392,3869,23,13,#b59690,#f1c7bf,Anju,安居,,,"unread, right length"
+7590,3869,23,11,#937caa,#c3a5e2,Quzhou,衢州,#c3a5e2,衢州,right
+6292,3871,23,11,#b0877b,#eab3a3,Jianyang,简阳,#eab3a3,简阳,right
+7830,3874,23,11,#ad5da8,#e67ce0,Taizhou,台州,#e67ce0,台州,right
+6202,3875,23,11,#b79a8c,#f4cdba,Qionglai,邛崃,,,"unread, right length"
+6475,3876,11,23,#b4967b,#f0c8a3,Hechuan,合川,#f0c8a3,合川,right
+7539,3876,23,13,#8d88ae,#bcb5e7,Qiantang,钱塘,,,"unread, right length"
+7656,3876,23,11,#aa76a2,#e29dd7,Yongkang,永康,#e29dd7,永康,right
+6549,3877,11,23,#b7a178,#f4d69f,Changshou,长寿,#f4d69f,长寿,right
+6863,3878,23,11,#a7b4a0,#def0d5,Cili,慈利,,,"unread, right length"
+6929,3880,23,11,#ae969f,#e8c7d3,Lizhou,澧州,#e8c7d3,澧州,right
+7165,3880,23,11,#99b7a5,#cbf4db,Tongshan,通山,#cbf4db,通山,right
+7782,3882,23,11,#b175ae,#eb9be7,Huang,黄,,,different characters
+6333,3890,23,11,#b78474,#f3b09a,Ziyang,资阳,#f3b09a,资阳,right
+7012,3890,23,11,#b499a8,#f0cbdf,Huarong,华容,#f0cbdf,华容,right
+7836,3891,23,11,#ba6cb7,#f88ff4,Wenling,温岭,#f88ff4,温岭,right
+6240,3896,23,11,#b5937d,#f1c3a6,Meishan,眉山,#f1c3a6,眉山,right
+7085,3899,23,11,#99b3a2,#cbeed8,Linxiang,临湘,#a7dad9,岳阳,another region's name
+7311,3900,23,13,#99b799,#cbf4cc,Lushan,庐山,#cbf4cc,庐山,right
+7386,3901,23,11,#87bb99,#b3f9cc,Poyang,鄱阳,#b3f9cc,鄱阳,right
+6510,3904,11,23,#b98760,#f6b47f,Yubei,渝北,#f6b47f,渝北,right
+7781,3905,13,23,#b97dad,#f6a6e6,Hongqiao,虹桥,,,"unread, right length"
+6376,3909,23,11,#b78d78,#f4bba0,Anyue,安岳,#f4bba0,安岳,right
+7216,3909,23,11,#a4b7a8,#daf3e0,Xiushui,修水,#daf3e0,修水,right
+6286,3910,11,23,#b08f7b,#eabea3,Renshou,仁寿,#eabea3,仁寿,right
+6143,3913,23,11,#b7a299,#f3d8cb,Ya'an,雅安,#f3d8cb,雅安,right
+6437,3913,11,23,#b2967d,#edc8a6,Tongliang,铜梁,,,"unread, right length"
+6607,3914,11,23,#b1a688,#ebddb5,Fengdu,丰都,#ebddb5,丰都,right
+6942,3914,23,11,#b499a3,#f0cbd9,Anxiang,安乡,#f0cbd9,安乡,right
+6451,3916,23,11,#b18664,#ebb285,Beibei,北碚,#ebb285,北碚,right
+6565,3916,23,11,#ae9972,#e7cb97,Fuling,涪陵,#e7cb97,涪陵,right
+7738,3916,23,11,#b17faa,#eba9e2,Yongjia,永嘉,#eba9e2,永嘉,right
+7528,3918,23,12,#8a88ae,#b8b5e7,Huaiyu,怀玉,,,"unread, right length"
+6330,3923,23,11,#b78e7b,#f3bda4,Zizhong,资中,#f3bda4,资中,right
+7823,3923,11,23,#c083bd,#ffaefc,Yuhuan,玉环,#ffaefc,玉环,right
+6223,3924,23,11,#b7988a,#f3cab7,Qingyi,青衣,#f3cab7,青衣,right
+7424,3924,23,11,#8ab499,#b8f0cc,Leping,乐平,#b8f0cc,乐平,right
+6684,3925,11,23,#96ae99,#c8e8cb,Wuling,武陵山,,,different characters
+6815,3928,35,17,#a1b4a0,#d6f0d5,Zhangjiajie,张家界,,,different characters
+6473,3929,35,11,#b3723c,#ee9750,Jialing,嘉陵江,#ee9750,嘉陵江,right
+7292,3933,30,11,#7eb581,#a8f1ab,Meiling,梅岭,#a8f1ab,梅岭,right
+7244,3934,34,11,#27aa2b,#34e239,Nanchang,南昌,#34e239,南昌,right
+7753,3934,11,23,#b14577,#ec5c9e,Wenzhou,温州,#ec5c9e,温州,right
+7690,3935,23,11,#af84a2,#e9afd8,Lishui,丽水,#e9afd8,丽水,right
+7384,3936,19,23,#96bd9f,#c8fcd4,Yugan,余干,,,different characters
+6417,3938,14,23,#bb9572,#f9c697,Dazu,大足,,,"unread, right length"
+7336,3940,5,7,#48b450,#60f06a,Qingshanhu,青山湖,,,key or mark
+7082,3941,23,11,#8ca2ae,#bad7e8,Miluo,汨罗,#bad7e8,汨罗,right
+7497,3941,23,11,#8782ae,#b4ade8,Shangrao,上饶,#b4ade8,上饶,right
+6742,3943,11,23,#a0b3a5,#d5eedc,Youshui,酉水,#d5eedc,酉水,right
+6452,3944,23,11,#b27c51,#eda56b,Bishan,璧山,#eda56b,璧山,right
+6479,3944,23,11,#b35a07,#ee7709,Chongqing,重庆,#ee7709,重庆,right
+7244,3946,46,11,#48b450,#60f06a,Qingshanhu,青山湖,#60f06a,青山湖,right
+7320,3946,5,5,#27aa2b,#34e239,Nanchang,南昌,,,key or mark
+6228,3947,23,17,#b48169,#f0ac8c,Leshan,乐山,,,different characters
+7020,3947,23,11,#b29cb7,#edd0f4,Dongting,洞庭,#edd0f4,洞庭,right
+6948,3951,11,23,#b48990,#f0b6c0,Changde,常德,#f0b6c0,常德,right
+6353,3953,23,11,#b4846d,#f0af91,Neijiang,内江,#f0af91,内江,right
+6315,3956,11,23,#b38d76,#eebc9d,Rongxian,荣县,#eebc9d,荣县,right
+7342,3956,5,7,#71b576,#96f19d,Liantang,莲塘,,,key or mark
+7313,3957,4,5,#60b263,#80ed84,Xinjian,,,,key or mark
+7705,3957,23,11,#ab6c8a,#e490b7,Ouhai,瓯海,#e490b7,瓯海,right
+7807,3957,23,11,#c066ad,#ff87e6,Liushi,柳市,#ff87e6,柳市,right
+6522,3958,35,11,#baa886,#f7dfb2,Jinfo,金佛山,#f7dfb2,金佛山,right
+7245,3958,45,11,#60b263,#80ed84,Xinjian,,,,no data
+6471,3959,35,11,#b47a4b,#f0a263,Jiulongpo,九龙坡,#f0a263,九龙坡,right
+6974,3960,11,23,#b395a3,#eec6d9,Hanshou,汉寿,#eec6d9,汉寿,right
+6388,3964,23,11,#b78f75,#f4be9c,Rongchang,荣昌,#f4be9c,荣昌,right
+7520,3965,23,11,#8c90ae,#bac0e8,Guangfeng,广丰,#bac0e8,广丰,right
+7127,3966,23,11,#8dae9c,#bce7cf,Pingjiang,平江,#bce7cf,平江,right
+6435,3968,15,23,#b39771,#eec996,Yongchuan,永川,,,different characters
+7428,3968,11,23,#8aab93,#b7e4c4,Yingtan,鹰潭,#b7e4c4,鹰潭,right
+7473,3969,11,23,#95aaa2,#c6e2d7,Xinjiang,信江,#c6e2d7,信江,right
+7244,3970,34,11,#71b576,#96f19d,Liantang,莲塘,#96f19d,莲塘,right
+7625,3971,23,11,#a88ea8,#dfbde0,Longquan,龙泉,#dfbde0,龙泉,right
+6341,3974,22,11,#b38661,#eeb281,Zigong,自贡,#eeb281,自贡,right
+6485,3974,22,11,#b38d4c,#eebc65,Banan,巴南,#eebc65,巴南,right
+6457,3975,23,11,#b38d5a,#eebc78,Jiangjin,江津,#eebc78,江津,right
+7781,3977,23,11,#c0608c,#ff80ba,Longwan,龙湾,#ff80ba,龙湾,right
+7349,3980,23,11,#8cb793,#baf3c4,Jinxian,进贤,#baf3c4,进贤,right
+6264,3982,23,11,#b59881,#f1caab,Qianwei,犍为,#f1caab,犍为,right
+7205,3982,23,11,#9cb49d,#d0f0d1,Jiuling,九岭,#d0f0d1,九岭,right
+8459,3983,63,11,#b7a277,#f4d79e,Uruma City,,,,no data
+6123,3984,23,11,#b2a199,#edd6cb,Dadu,大渡,#edd6cb,大渡,right
+7029,3988,23,11,#9887be,#cab3fd,Yiyang,益阳,#cab3fd,益阳,right
+7775,3989,23,11,#ad5d82,#e67cad,Rui'an,瑞安,#e67cad,瑞安,right
+6791,3991,11,23,#a5b4ac,#dbf0e5,Yongshun,永顺,#dbf0e5,永顺,right
+6393,3994,23,11,#b79874,#f3ca9a,Luxian,泸县,#f3ca9a,泸县,right
+6889,3995,23,11,#aaa5aa,#e2dbe2,Taoyuan,桃源,#e2dbe2,桃源,right
+6347,3996,23,11,#ae9272,#e7c297,Fushun,富顺,#e7c297,富顺,right
+6611,4001,13,23,#a0ac9c,#d5e5cf,Pengshui,彭水,,,"unread, right length"
+7696,4001,11,23,#af8690,#e9b2c0,Feiyun,飞云,#e9b2c0,飞云,right
+7719,4001,14,23,#b56a77,#f18d9e,Cangnan,苍南,,,"unread, right length"
+7769,4001,23,11,#b47b96,#f0a3c7,Aojiang,鳌江,,,"unread, right length"
+7372,4004,11,23,#78ae82,#a0e8ad,Fuzhou,抚州,#a0e8ad,抚州,right
+6997,4005,11,24,#9187b5,#c1b4f1,Taojiang,桃江,,,"unread, right length"
+7260,4005,23,12,#95b28b,#c6edb9,Gao'an,高安,,,"unread, right length"
+6500,4007,23,11,#baa275,#f7d79b,Qijiang,綦江,#f7d79b,綦江,right
+6443,4008,35,11,#b3a07e,#eed5a7,Simian,四面山,#eed5a7,四面山,right
+7328,4008,11,23,#8eb394,#bdeec5,Fengcheng,丰城,#bdeec5,丰城,right
+7066,4014,23,11,#9187bd,#c1b4fc,Xiangyin,湘阴,#c1b4fc,湘阴,right
+6381,4015,11,23,#b38a5a,#eeb877,Luzhou,泸州,#eeb877,泸州,right
+7029,4018,11,23,#9180b7,#c1aaf3,Ningxiang,宁乡,#c1aaf3,宁乡,right
+8388,4018,23,11,#b19437,#ebc549,Naha City,,,,no data
+7103,4020,11,35,#9491b0,#c5c1ea,Laodao,捞刀河,#c5c1ea,捞刀河,right
+7051,4021,11,23,#826bb7,#ad8ef3,Wangcheng,望城,#ad8ef3,望城,right
+7145,4021,12,23,#93b0a0,#c4ead5,Liuyang,浏阳,,,"unread, right length"
+6689,4023,23,13,#93ab96,#c4e4c7,Xiushan,秀山,#c4e4c7,秀山,right
+6311,4026,11,23,#b48d57,#f0bb74,Yibin,宜宾,#f0bb74,宜宾,right
+7191,4031,23,11,#96b295,#c8edc6,Wanzai,万载,#c8edc6,万载,right
+7066,4033,23,11,#4c35b2,#6546ed,Changsha,长沙,#6546ed,长沙,right
+7733,4033,23,11,#b88481,#f5afac,Fuding,福鼎,#f5afac,福鼎,right
+6270,4034,23,11,#b49c81,#f0cfac,Xuzhou,叙州,#f0cfac,叙州,right
+6928,4035,23,11,#9d96b5,#d1c8f1,Anhua,安化,#d1c8f1,安化,right
+7380,4037,23,11,#93b19c,#c4ebcf,Jinxi,金溪,,,"unread, right length"
+6397,4048,23,11,#ac9c72,#e5d097,Hejiang,合江,#e5d097,合江,right
+7045,4048,23,11,#8050b7,#aa6af3,Yuelu,岳麓,,,"unread, right length"
+7072,4048,23,11,#6250b3,#826aee,Yuhua,雨花,#826aee,雨花,right
+7290,4048,11,23,#8eb288,#bdedb5,Zhangshu,樟树,#bdedb5,樟树,right
+6186,4050,23,11,#aea696,#e7ddc7,Yuexi,越西,#e7ddc7,越西,right
+6564,4052,11,35,#b3b189,#eeecb6,Furongjiang,芙蓉江,#eeecb6,芙蓉江,right
+7573,4055,23,11,#a59385,#dcc3b1,Jianyang,建阳,#dcc3b1,建阳,right
+6346,4056,23,11,#b29b6a,#edce8d,Changning,长宁,#edce8d,长宁,right
+6816,4056,23,11,#9bb2ab,#ceede3,Yuanling,沅陵,#ceede3,沅陵,right
+7230,4056,23,11,#8dae85,#bce7b1,Xinyu,新余,#bce7b1,新余,right
+7678,4057,23,11,#ba9287,#f7c2b4,Xiapu,霞浦,#f7c2b4,霞浦,right
+7005,4060,23,11,#a293b7,#d7c3f4,Shaoshan,韶山,#d7c3f4,韶山,right
+7067,4063,23,11,#7558b7,#9c75f4,Tianxin,天心,#9c75f4,天心,right
+6650,4069,23,11,#96a89b,#c7e0ce,Dejiang,德江,#c7e0ce,德江,right
+7043,4070,23,11,#8874b5,#b59af1,Xiangtan,湘潭,#b59af1,湘潭,right
+7154,4071,15,23,#78a886,#9fdfb2,Pingxiang,萍乡,,,different characters
+6490,4074,23,11,#b5ae81,#f1e8ac,Tongzi,桐梓,#f1e8ac,桐梓,right
+7112,4077,23,11,#7b74b5,#a49af1,Zhuzhou,株洲,#a49af1,株洲,right
+7185,4079,23,11,#85ae89,#b1e7b6,Yichun,宜春,#b1e7b6,宜春,right
+7476,4079,35,11,#a89682,#dfc8ad,Wuyishan,武夷山,#dfc8ad,武夷山,right
+6910,4089,23,11,#a284bc,#d8affa,Meishan,梅山,#d8affa,梅山,right
+7120,4091,23,11,#84a68f,#b0ddbe,Liling,醴陵,#b0ddbe,醴陵,right
+7680,4091,12,23,#b48872,#f0b597,Ningde,宁德,#f0b597,宁德,right
+7080,4092,22,11,#9585b9,#c6b1f6,Lukou,渌口,#c6b1f6,渌口,right
+6865,4093,11,23,#9f8db6,#d3bcf2,Xupu,溆浦,,,"unread, right length"
+6761,4096,23,13,#97aea2,#c9e8d8,Fenghuang,凤凰,,,"unread, right length"
+6985,4097,23,11,#9273b7,#c299f3,Loudi,娄底,#c299f3,娄底,right
+6386,4099,23,11,#b3ac92,#eee5c2,Xingwen,兴文,#eee5c2,兴文,right
+6334,4101,11,23,#b3a484,#eedab0,Nanguang,南广,#eedab0,南广,right
+7423,4101,11,23,#9eaf92,#d2e9c2,Xujiang,盱江,#d2e9c2,盱江,right
+7329,4104,23,11,#9db499,#d1f0cc,Enjiang,恩江,#d1f0cc,恩江,right
+6949,4108,23,11,#9a7dbd,#cda6fc,Lianyuan,涟源,#cda6fc,涟源,right
+6440,4109,23,11,#b4ae87,#f0e7b4,Gulin,古蔺,#f0e7b4,古蔺,right
+7051,4109,23,11,#9e8aba,#d2b7f8,Xiangxiang,湘乡,#d2b7f8,湘乡,right
+6284,4110,11,23,#b1a990,#ebe1bf,Hengjiang,横江,#ebe1bf,横江,right
+7256,4110,23,11,#95b184,#c6ebb0,Ji'an,吉安,#c6ebb0,吉安,right
+6048,4122,35,11,#aeae9d,#e8e8d1,Yalong,雅砻江,#e8e8d1,雅砻江,right
+6993,4125,23,11,#9a85b8,#cdb1f5,Shuangfeng,双峰,#cdb1f5,双峰,right
+6712,4126,23,11,#97aea7,#c9e8de,Tongren,铜仁,#c9e8de,铜仁,right
+6527,4128,11,23,#95ac58,#c6e575,Zunyi,遵义,#c6e575,遵义,right
+5543,4129,52,18,#bab2a3,,,,,,no region's colour
+6822,4129,23,11,#9081ae,#bface8,Huaihua,怀化,#bface8,怀化,right
+7653,4130,23,17,#b79081,#f3c0ac,Lianjiang,连江,,,different characters
+7129,4134,11,23,#88ad8a,#b5e6b8,Youshui,攸水,#b5e6b8,攸水,right
+7574,4135,23,11,#a89178,#dfc19f,Yanping,延平,#dfc19f,延平,right
+7977,4142,46,22,#b3530c,#ee6e10,Taipei City,,,,no data
+6642,4144,23,11,#96a8a2,#c7e0d7,Sinan,思南,#c7e0d7,思南,right
+6495,4145,23,11,#a6b18b,#ddebb9,Maotai,茅台,#ddebb9,茅台,right
+6906,4146,11,23,#9187b8,#c1b4f5,Longhui,隆回,#c1b4f5,隆回,right
+7185,4146,23,11,#97ae9b,#c9e8ce,Jinggang,井冈,#c9e8ce,井冈,right
+6985,4153,11,23,#9b85bd,#ceb1fc,Shaoshui,砂石,,,"unread, right length"
+7065,4154,23,11,#927fbf,#c2a9ff,Hengshan,衡山,#c2a9ff,衡山,right
+6175,4156,23,11,#aeac96,#e7e5c7,Liangshan,凉山,#e7e5c7,凉山,right
+6966,4156,10,11,#b891ff,,,,,,no region's colour
+6952,4157,23,11,#8a6dbf,#b891ff,Shaoyang,邵阳,#b891ff,邵阳,right
+7665,4158,11,23,#b26b39,#ed8e4c,Jin'an,晋安,#ed8e4c,晋安,right
+6318,4162,23,12,#b5b08f,#f1eabe,Yiliang,彝良,,,"unread, right length"
+6404,4164,23,11,#a5b481,#dbf0ac,Bijie,毕节,#dbf0ac,毕节,right
+6542,4167,23,11,#a1b18c,#d6ebba,Bozhou,播州,#d6ebba,播州,right
+7255,4167,23,11,#a3b399,#d9eecb,Taihe,泰和,#d9eecb,泰和,right
+6593,4169,11,23,#a2b396,#d7eec7,Meitan,湄潭,#d7eec7,湄潭,right
+7021,4169,23,11,#907aba,#c0a2f7,Hengyang,,,,no data
+7915,4171,33,11,#b3530c,#ee6e10,Taipei City,,,,no data
+6358,4175,23,11,#b2b790,#edf3c0,Mangbu,芒部,#edf3c0,芒部,right
+6120,4177,11,23,#aba87c,#e4e0a5,Xichang,西昌,#e4e0a5,西昌,right
+6800,4181,23,11,#96a9a4,#c7e1da,Hongjiang,洪江,#c7e1da,洪江,right
+6939,4182,23,11,#9584bd,#c6affc,Baoqing,宝庆,#c6affc,宝庆,right
+7371,4183,11,23,#aeb683,#e8f2ae,Ningdu,宁都,#e8f2ae,宁都,right
+7639,4183,23,11,#b65715,#f2741c,Fuzhou,福州,#f2741c,福州,right
+7687,4183,15,23,#b8845f,#f5af7e,Changle,长乐,,,different characters
+7915,4183,33,11,#ab512d,#e46b3b,New Taipei City,,,,no data
+5293,4187,92,14,#b5b29f,,,,,,no region's colour
+6434,4189,23,11,#a6b393,#ddeec3,Dafang,大方,#ddeec3,大方,right
+8022,4192,23,15,#bc9056,#fabf72,New Taipei City,,,,no data
+6254,4194,13,23,#b1ab79,#ebe3a1,Zhaotong,昭通,,,"unread, right length"
+6880,4194,22,11,#938ab2,#c3b8ed,Dongkou,洞口,#c3b8ed,洞口,right
+7069,4194,23,11,#875ebf,#b47dff,Hengyang,衡阳,#b47dff,衡阳,right
+7638,4195,23,11,#b27639,#ed9d4c,Cangshan,仓山,#ed9d4c,仓山,right
+7916,4195,32,11,#bc572e,#fa733d,New Taipei City,,,,no data
+6744,4198,11,23,#93a7ad,#c3dee6,Wuyang,舞阳,,,"unread, right length"
+6990,4200,23,12,#9c87bc,#cfb3fa,Qidong,,,,no data
+7619,4202,12,22,#b3917a,#eec1a2,Houguan,侯官,,,"unread, right length"
+8004,4204,22,17,#ba703a,#f7954d,Taipei City,,,,no data
+7505,4205,13,24,#a4916d,#dac191,Sanming,三明,,,"unread, right length"
+5521,4207,29,9,#8aaeb3,#b8e8ee,Doom Dooma,,,,no data
+7649,4207,35,11,#b48966,#f0b688,Minhou,,,,no data
+7915,4207,33,11,#ab6d4b,#e49164,New Taipei City,,,,no data
+7144,4208,23,11,#8ea692,#bdddc2,Chaling,茶陵,#bdddc2,茶陵,right
+7059,4210,23,11,#8d81b7,#bcacf3,Qingquan,清泉,#bcacf3,清泉,right
+7983,4210,14,23,#b88355,#f5ae71,New Taipei City,,,,no data
+7315,4211,23,11,#b1b37b,#ebeea4,Xingguo,兴国,#ebeea4,兴国,right
+5493,4216,25,15,#8aabb3,#b8e3ee,Tinsukia,,,,no data
+6471,4219,23,11,#9eb28a,#d2edb8,Qianxi,黔西,#d2edb8,黔西,right
+7915,4219,33,11,#af6345,#e9845c,Taoyuan,,,,no data
+5039,4222,72,18,#bab39c,#f7eed0,Kalchini,,,,no data
+7439,4222,12,23,#b2b188,#edebb5,Tingzhou,汀州,,,"unread, right length"
+6343,4223,23,11,#aeb790,#e8f3c0,Hezhang,赫章,#e8f3c0,赫章,right
+8003,4223,5,18,#bc572e,#fa733d,New Taipei City,,,,no data
+6208,4225,23,11,#b4ab8b,#f0e3b9,Ludian,鲁甸,#f0e3b9,鲁甸,right
+6531,4226,23,11,#9bb28a,#ceedb8,Xiuwen,修文,#ceedb8,修文,right
+6668,4226,23,11,#959fa2,#c6d4d8,Zhenyuan,镇远,#c6d4d8,镇远,right
+7236,4226,23,11,#a9b38e,#e1eebd,Suichuan,遂川,#e1eebd,遂川,right
+6958,4227,35,11,#a283bf,#d8aeff,Lengshuitan,冷水滩,#d8aeff,冷水滩,right
+8012,4227,5,5,#ae5020,,,,,,key or mark
+5452,4230,30,17,#87a8ab,#b4dfe4,Dibrugarh East,,,,no data
+7556,4230,23,11,#a9946c,#e1c58f,Daiyun,戴云,#e1c58f,戴云,right
+6903,4231,11,23,#9c8db6,#d0bbf2,Wugang,武冈,#d0bbf2,武冈,right
+7078,4239,23,11,#819aa0,#accdd5,Leiyang,耒阳,#accdd5,耒阳,right
+7659,4239,23,11,#b69167,#f2c189,Fuqing,福清,#f2c189,福清,right
+7968,4242,5,5,#af6345,#e9845c,Taoyuan,,,,key or mark
+8010,4242,5,7,#ab6d4b,#e49164,New Taipei City,,,,key or mark
+7908,4243,23,11,#bc9056,#fabf72,New Taipei City,,,,no data
+5412,4247,24,17,#87abab,#b4e4e3,Majuli,,,,no data
+6288,4247,23,11,#b4b58f,#f0f1be,Caohai,草海,#f0f1be,草海,right
+6589,4249,23,11,#95ae9e,#c6e8d2,Fuquan,福泉,#c6e8d2,福泉,right
+7978,4249,14,23,#b16f55,#eb9471,New Taipei City,,,,no data
+7025,4252,23,11,#9c7bb7,#cfa4f3,Changning,常宁,#cfa4f3,常宁,right
+6385,4253,23,11,#a6b790,#ddf3c0,Nayong,纳雍,,,"unread, right length"
+7639,4256,11,23,#b7952a,#f3c637,Putian,莆田,#f3c637,莆田,right
+7730,4256,11,23,#bd8563,#fcb184,Haitan,平潭,,,"unread, right length"
+5355,4257,47,9,#82a5a5,#addcdb,Bihpuria,,,,no data
+5372,4258,3,7,#addcdb,,,,,,key or mark
+7621,4258,11,23,#b69e67,#f2d289,Xianyou,仙游,#f2d289,仙游,right
+5467,4259,36,15,#75a8ae,#9cdfe8,Sonari,,,,no data
+6821,4259,23,11,#96a9a7,#c8e1de,Jingzhou,靖州,#c8e1de,靖州,right
+7959,4259,11,23,#b38674,#eeb29a,Taoyuan,,,,no data
+6526,4261,5,5,#81b150,,,,,,key or mark
+7119,4261,23,11,#88a89c,#b5dfd0,Beishui,波水,,,"unread, right length"
+7289,4261,23,11,#a1a543,#d6dc59,Ganzhou,赣州,#d6dc59,赣州,right
+6557,4262,32,11,#66ae39,,,,#77e942,云岩,another region's colour
+6095,4267,12,35,#b6a07f,#f2d5a9,Panzhihua,攀枝花,,,"unread, right length"
+8015,4267,23,11,#b7a29c,#f3d7cf,Yilan,,,,no data
+6535,4270,5,5,#66ae39,,,,,,key or mark
+6520,4271,5,7,#75b150,,,,,,key or mark
+6494,4273,11,23,#92b283,#c2edae,Nanming,南明,,,"unread, right length"
+6345,4274,23,11,#9aba80,#cdf8aa,Shuicheng,水城,#cdf8aa,水城,right
+6557,4274,32,11,#60a93e,#7fe152,Huaxi,花溪,,,"unread, right length"
+7824,4275,23,11,#b38674,#eeb29a,Taoyuan,,,,no data
+6441,4276,23,11,#9bae8e,#cee8bd,Zhijin,织金,#cee8bd,织金,right
+6526,4280,4,5,#50a91b,,,,,,key or mark
+7262,4280,11,23,#a8aa63,#dfe284,Nankang,南康,#dfe284,南康,right
+7364,4280,11,23,#b8b778,#f5f3a0,Ruijin,瑞金,#f5f3a0,瑞金,right
+6016,4281,11,23,#aaa090,#e2d5c0,Chenghai,程海,#e2d5c0,程海,right
+6638,4281,23,11,#8e999c,#bdccd0,Kaili,凯里,#bdccd0,凯里,right
+6967,4281,23,11,#a285b6,#d8b1f2,Lingling,零陵,#d8b1f2,零陵,right
+7307,4282,23,11,#aeb177,#e8eb9e,Yudu,于都,#e8eb9e,于都,right
+6148,4286,23,11,#ada290,#e6d7c0,Huili,会理,#e6d7c0,会理,right
+6558,4286,31,11,#50a91b,,,,#c2edae,南明,another region's colour
+6535,4287,5,7,#60a93e,#7fe152,Huaxi,花溪,,,key or mark
+8165,4287,63,11,#b7a277,#f4d79e,Uruma City,,,,no data
+5271,4292,31,16,#80a2ad,#aad7e6,Tezpur,,,,no data
+7818,4292,23,11,#b28d69,#edbc8c,Hsinchu,,,,no data
+7595,4293,23,11,#b69a75,#f2cd9c,Yongchun,永春,#f2cd9c,永春,right
+5217,4294,40,9,#7c9cab,#a5cfe4,Dhekiajuli (Pt),,,,no data
+5405,4294,31,9,#75aea8,#9ce8df,Jorhat West,,,,no data
+5934,4294,13,23,#afa890,#e9e0c0,Lijiang,丽江,,,"unread, right length"
+7682,4294,23,11,#baa35a,#f8d978,Xiuyu,秀屿,#f8d978,秀屿,right
+5842,4296,11,23,#b1a497,#ebdac9,Nujiang,怒江,#ebdac9,怒江,right
+7189,4297,23,11,#a9ae93,#e1e8c3,Zhuguang,诸广,#e1e8c3,诸广,right
+6555,4298,44,11,#75b150,,,,#95ee6c,观山湖,another region's colour
+7042,4298,23,11,#9d87b8,#d1b3f5,Guiyang,桂阳,#d1b3f5,桂阳,right
+7641,4298,15,23,#b69967,#f2cb89,Huian,惠安,,,different characters
+7110,4299,11,23,#8c9ea2,#bad2d7,Chenzhou,郴州,#bad2d7,郴州,right
+7493,4299,23,11,#a98f6c,#e1be8f,Longyan,龙岩,#e1be8f,龙岩,right
+5325,4301,48,9,#84a5ab,#b0dbe4,Biswanath,,,,no data
+6228,4302,23,11,#b8b287,#f5edb4,Huize,会泽,#f5edb4,会泽,right
+6382,4311,23,11,#9fb393,#d4eec3,Liuzhi,六枝,#d4eec3,六枝,right
+6570,4311,31,11,#81b150,,,,#abee6c,白云,another region's colour
+6461,4312,23,11,#96b781,#c8f3ab,Anshun,安顺,#c8f3ab,安顺,right
+7555,4313,23,11,#af936f,#e9c493,Anxi,安溪,,,"unread, right length"
+5201,4314,39,9,#7199ae,#96cce8,Dalgaon (Pt),,,,no data
+6920,4314,11,23,#a48ab7,#dab8f3,Quanzhou,全州,#dab8f3,全州,right
+7614,4314,23,11,#b79160,#f3c180,Nan'an,南安,#f3c180,南安,right
+6290,4316,23,11,#a5b382,#dbeead,Xuanwei,宣威,#dbeead,宣威,right
+6718,4318,23,11,#8da3ae,#bcd9e8,Liping,黎平,#bcd9e8,黎平,right
+7422,4321,23,11,#b1ad81,#ebe6ac,Shanghang,上杭,#ebe6ac,上杭,right
+7667,4323,33,11,#b87927,#f5a134,Quanzhou,泉州,#f5a134,泉州,right
+7286,4326,23,11,#aba875,#e4e09b,Taojiang,桃江,#e4e09b,桃江,right
+5270,4327,31,9,#72a6a9,#98dde1,Samaguri,,,,no data
+5376,4327,29,16,#7eaba3,#a8e4d9,Golaghat,,,,no data
+5430,4329,46,9,#b7a397,#f3d9c9,Ongpangkong,,,,no data
+7631,4329,3,5,#b87927,#f5a134,Quanzhou,泉州,,,key or mark
+5656,4332,88,18,#b3aea0,,,,,,no region's colour
+5247,4334,23,14,#729fa9,#98d4e1,Dhing,,,,no data
+7667,4335,33,11,#b3793d,#eea151,Jinjiang,晋江,#eea151,晋江,right
+7632,4338,3,5,#b3793d,#eea151,Jinjiang,晋江,,,key or mark
+7617,4339,5,7,#aa8b63,#e2b983,Zimao,紫帽,,,key or mark
+7832,4341,11,23,#b39e6f,#eed294,Taichung City,,,,no data
+7638,4342,18,23,#ba946c,#f8c590,Shishi,石狮,#f8c590,石狮,right
+6985,4344,23,11,#9c7eaf,#d0a8e9,Jiuyi,九疑亭,,,different characters
+5217,4347,27,16,#7aa8aa,#a2e0e2,Mayong,,,,no data
+7667,4347,33,11,#ba946c,#f8c590,Shishi,石狮,#f8c590,石狮,right
+7047,4349,23,11,#a88ab4,#e0b8f0,Lanshan,蓝山,#e0b8f0,蓝山,right
+6634,4355,11,23,#8897a6,#b5c9dd,Dushan,独山,#b5c9dd,独山,right
+7592,4355,5,7,#b1815a,#ebab78,Tong'an,同安,,,key or mark
+7613,4357,5,7,#ba855c,#f8b17a,Anhai,安海,,,key or mark
+5191,4358,25,13,#4599af,#5bcbe9,Dispur,,,,no data
+6546,4358,23,11,#8e9fa9,#bdd3e1,Huishui,惠水,#bdd3e1,惠水,right
+7566,4358,5,7,#b39977,#eecc9e,Jiulong,九龙,,,key or mark
+7667,4359,33,12,#aa8b63,#e2b983,Zimao,紫帽,,,"unread, right length"
+6837,4360,23,11,#aa8ba0,#e2b9d5,Lingui,,,,no data
+6463,4361,23,11,#88a0a5,#b5d5dc,Zhenning,镇宁,#b5d5dc,镇宁,right
+5263,4363,25,9,#78aba4,#a0e4da,Hojai,,,,no data
+5323,4364,24,7,#9c96aa,#cfc8e2,Lanka,,,,key or mark
+7770,4368,33,11,#ae7d46,#e8a65d,Taichung City,,,,no data
+7587,4369,5,7,#bd763e,#fc9d52,Jimei,集美,,,key or mark
+7194,4370,23,11,#b0b181,#eaebab,Danxia,丹霞,#eaebab,丹霞,right
+6351,4372,11,23,#a4b490,#daf0bf,Panzhou,盘州,#daf0bf,盘州,right
+7646,4373,33,11,#ba855c,#f8b17a,Anhai,安海,#f8b17a,安海,right
+7831,4373,5,7,#ad8342,#e6ae58,Taichung City,,,,key or mark
+7117,4376,11,23,#a592a2,,,,#cecdd9,莽山,another region's colour
+7579,4376,5,7,#b47e48,#f0a860,Haicang,海沧,,,key or mark
+6186,4377,23,11,#b3ab86,#eee3b2,Dongchuan,东川,#eee3b2,东川,right
+6283,4377,23,11,#a5b17e,#dceba8,Fuyuan,,,,no data
+6076,4378,23,11,#a8a18d,#dfd6bb,Yuanmou,元谋,#dfd6bb,元谋,right
+7594,4378,3,5,#b45d18,#f07b20,Huli,湖里,,,key or mark
+5957,4380,13,23,#a6a072,#ddd598,Dali,大理,,,"unread, right length"
+7770,4380,33,11,#ad8342,#e6ae58,Taichung City,,,,no data
+7279,4381,23,11,#aaa57a,#e2dba2,Longnan,龙南,#e2dba2,龙南,right
+7516,4381,23,11,#ad8c60,#e6ba80,Zhangzhou,漳州,#e6ba80,漳州,right
+6854,4382,11,23,#ae646b,#e8858e,Guilin,桂林,#e8858e,桂林,right
+6766,4384,23,11,#969fae,#c7d4e8,Rongshui,融水,#c7d4e8,融水,right
+7832,4384,5,5,#ae7d46,#e8a65d,Taichung City,,,,key or mark
+7130,4385,11,23,#9b9aa3,#cecdd9,Mangshan,莽山,#cecdd9,莽山,right
+7593,4385,7,5,#b45716,#f0741d,Xiamen,厦门,,,key or mark
+7819,4385,4,5,#bc9466,#fac588,Changhua,,,,key or mark
+6396,4386,23,11,#93ada8,#c3e6df,Pu'an,普安,#c3e6df,普安,right
+7373,4386,11,23,#b8ae78,#f5e8a0,Pingyuan,平远,#f5e8a0,平远,right
+7646,4386,33,11,#b1815a,#ebab78,Tong'an,同安,#ebab78,同安,right
+6888,4387,11,23,#b47e99,#f0a8cc,Yangshuo,阳朔,,,"unread, right length"
+7621,4391,6,10,#baa267,#f8d889,Yunlin,,,,no data
+7771,4392,32,11,#bc9466,#fac588,Changhua,,,,no data
+7646,4398,33,11,#bd763e,#fc9d52,Jimei,集美,#fc9d52,集美,right
+5415,4399,33,7,#b79e97,#f3d2c9,Sechu-Zubza,,,,key or mark
+7821,4400,23,12,#be9f6f,#fdd494,Changhua,,,,no data
+6975,4402,23,11,#a295a0,#d7c6d5,Jianghua,江华,#d7c6d5,江华,right
+6279,4404,11,23,#9cb363,#cfee83,Qujing,曲靖,#cfee83,曲靖,right
+7510,4404,11,23,#ad997a,#e6cba2,Pinghe,平和,#e6cba2,平和,right
+7885,4406,23,11,#b7a29c,#f3d7cf,Yilan,,,,no data
+7606,4408,33,11,#b47e48,#f0a860,Haicang,海沧,#f0a860,海沧,right
+7443,4416,11,23,#b6ae84,#f2e8af,Dabu,大埔,#f2e8af,大埔,right
+7162,4418,23,11,#a9a66c,#e1dd8f,Shaoguan,韶关,#e1dd8f,韶关,right
+7550,4419,23,11,#b89c6c,#f5d090,Zhangpu,漳浦,#f5d090,漳浦,right
+7606,4422,33,11,#b45d18,#f07b20,Huli,湖里,#f07b20,湖里,right
+5118,4423,25,7,#b19cb7,#ebd0f4,Umling,,,,key or mark
+5222,4428,32,9,#a997b3,#e1c9ee,Donka,,,,no data
+7814,4428,23,11,#baa267,#f8d889,Yunlin,,,,no data
+5040,4431,22,7,#b699b7,#f2cbf4,Selsella,,,,key or mark
+7322,4432,23,11,#ada883,#e6e0ae,Longchuan,龙川,#e6e0ae,龙川,right
+7391,4433,17,23,#b2a558,#eddb75,Meizhou,梅州,,,different characters
+7600,4434,39,11,#b45716,#f0741d,Xiamen,厦门,#f0741d,厦门,right
+7068,4438,23,11,#a68484,,,,#e4c3cf,连州,another region's colour
+6454,4439,23,11,#909fab,#bfd3e4,Anlong,安龙,#bfd3e4,安龙,right
+7725,4439,33,11,#baa267,#f8d889,Yunlin,,,,no data
+6179,4440,23,11,#b3aa58,#eee275,Songming,嵩明,#eee275,嵩明,right
+6724,4441,35,11,#9395ab,#c3c6e4,Liucheng,,,,no data
+5171,4442,38,9,#a68eb4,#ddbdf0,Mylliem,,,,no data
+5303,4442,34,7,#b093a5,#eac4dc,Chumukedima,,,,key or mark
+6293,4445,23,11,#aab880,#e2f5aa,Luoping,罗平,#e2f5aa,罗平,right
+6166,4449,16,23,#b6a824,#f2df2f,Wuhua,五华,,,different characters
+5957,4450,23,11,#b4b493,#f0f0c4,Xiangyun,祥云,#f0f0c4,祥云,right
+7069,4451,23,11,#ab939c,#e4c3cf,Lianzhou,连州,#e4c3cf,连州,right
+6077,4452,23,11,#afa48a,#e9dab7,Chuxiong,楚雄,#e9dab7,楚雄,right
+6377,4452,11,23,#8daa9c,#bce2d0,Xingyi,兴义,#bce2d0,兴义,right
+6902,4455,23,11,#b3839c,#eeaecf,Lipu,荔浦,#eeaecf,荔浦,right
+5857,4456,23,11,#b7bd87,#f4fcb3,Baoshan,保山,#f4fcb3,保山,right
+6184,4456,23,18,#b6b124,#f2eb2f,Panlong,盘龙,,,different characters
+5390,4459,28,7,#b7a49f,#f4dad3,Mao-Maram,,,,key or mark
+7710,4460,9,7,#baa267,#f8d889,Yunlin,,,,key or mark
+6997,4461,23,11,#ae7b87,#e7a3b3,Hezhou,贺州,#e7a3b3,贺州,right
+7514,4462,23,11,#b79a69,#f3cd8c,Zhao'an,诏安,#f3cd8c,诏安,right
+6593,4463,11,23,#8a8da9,#b8bce1,Fengshan,凤山,#b8bce1,凤山,right
+7809,4464,23,11,#baa873,#f7df99,Chiayi,,,,no data
+7255,4465,23,11,#a8a384,#dfd9b0,Xinfeng,新丰,#dfd9b0,新丰,right
+7473,4468,23,11,#b6996f,#f2cc93,Raoping,饶平,#f2cc93,饶平,right
+6183,4470,3,5,#bfb800,#fff500,Kunming,昆明,,,key or mark
+6174,4474,3,5,#afba10,#e9f815,Dianchi,滇池,,,key or mark
+7151,4474,23,11,#ae9e72,#e7d298,Yingde,英德,#e7d298,英德,right
+6237,4475,23,11,#b1b47d,#ebf0a6,Luliang,陆良,#ebf0a6,陆良,right
+6690,4481,23,11,#8f8bae,#beb9e8,Hechi,河池,#beb9e8,河池,right
+6799,4482,34,34,#b85b77,#f5799e,Liuzhou,柳州,,,different characters
+6152,4483,23,11,#b7b460,#f3ef80,Xishan,西山,#f3ef80,西山,right
+6193,4483,11,30,#adb141,#e6eb56,Chenggong,呈贡,,,"unread, right length"
+5801,4485,11,23,#adba93,#e6f7c3,Tengchong,腾冲,#e6f7c3,腾冲,right
+7371,4487,23,11,#b2a975,#ede19c,Wuhua,五华,#ede19c,五华,right
+7418,4488,23,11,#af9c66,#e9cf88,Fengshun,丰顺,#e9cf88,丰顺,right
+5248,4489,33,7,#7da5ae,#a6dbe8,Katigora,,,,key or mark
+7293,4489,33,36,#a69356,#ddc372,Heyuan,河源,,,different characters
+6825,4491,23,11,#b98099,#f6aacc,Luzhai,鹿寨,#f6aacc,鹿寨,right
+7467,4491,5,7,#b39758,#eec975,Chaozhou,潮州,,,key or mark
+7815,4495,23,11,#b79b69,#f3ce8c,Kaohsiung City,,,,no data
+6109,4499,33,11,#bfb800,#fff500,Kunming,昆明,,,"unread, right length"
+6301,4501,23,11,#a9b483,#e1f0ae,Luxi,,,,no data
+5223,4505,32,15,#7caeb0,#a5e7ea,Zakiganj,,,,no data
+5226,4506,6,15,#a3ebde,,,,,,no region's colour
+5365,4509,20,17,#b77d6c,#f3a68f,Porompat,,,,no data
+6767,4509,23,11,#b6698e,#f28cbd,Liujiang,柳江,#f28cbd,柳江,right
+6903,4510,35,11,#ad838d,#e6aebb,Zhaoping,,,,no data
+6109,4511,33,11,#afba10,#e9f815,Dianchi,滇池,#e9f815,滇池,right
+7035,4511,23,11,#b5837b,#f1aea4,Huaiji,怀集,#f1aea4,怀集,right
+7488,4512,5,7,#b78c4b,#f3ba64,Chenghai,澄海,,,key or mark
+7119,4513,23,11,#ad8261,#e6ad81,Qing,,,,no data
+7472,4513,4,5,#bc963e,#fac752,Anbu,庵埠,,,key or mark
+7448,4514,5,5,#af9051,#e9bf6c,Jieyang,揭阳,,,key or mark
+7779,4514,23,11,#ba914a,#f7c162,Tainan City,,,,no data
+6440,4515,23,11,#928dab,#c2bce4,Longlin Various Nationalities,,,,no data
+7403,4517,23,11,#b49b62,#f0ce82,Hepo,河婆,#f0ce82,河婆,right
+5488,4518,33,14,#abb3a5,,,,,,no region's colour
+7519,4519,33,11,#bd870a,#fcb30d,Shantou,汕头,#fcb30d,汕头,right
+6165,4520,13,23,#b7ba61,#f3f781,Yuxi,玉溪,,,"unread, right length"
+5280,4522,27,7,#899bae,#b6cee7,Lakhipur,,,,key or mark
+5858,4523,23,11,#aebc8d,#e8fabb,Shidian,施甸,,,"unread, right length"
+6109,4523,33,11,#b6a824,#f2df2f,Wuhua,五华,#f2df2f,五华,right
+7482,4524,5,5,#bd870a,#fcb30d,Shantou,汕头,,,key or mark
+7841,4525,11,23,#b28e6f,#edbd94,Pingtung,,,,no data
+7217,4527,23,11,#ae9575,#e7c69b,Conghua,,,,no data
+5252,4530,29,15,#84a2af,#afd8e9,Silchar,,,,no data
+7438,4530,4,7,#af8a51,#e9b76c,Puning,普宁,,,key or mark
+5272,4531,3,15,#a5dfd9,,,,,,no region's colour
+7519,4531,33,11,#b78c4b,#f3ba64,Chenghai,澄海,#f3ba64,澄海,right
+5273,4532,3,11,#afe9d7,,,,,,no region's colour
+6109,4535,33,11,#b6b124,#f2eb2f,Panlong,盘龙,#f2eb2f,盘龙,right
+7475,4535,5,7,#ba944b,#f7c563,Chaoyang,,,,key or mark
+7453,4536,5,7,#b78133,#f3ac43,Chaonan,,,,key or mark
+5366,4538,28,17,#b48d82,#f0bcad,Thoubal,,,,no data
+5745,4538,23,11,#9cb197,#cfebc9,Dehong,德宏,#cfebc9,德宏,right
+7311,4538,23,12,#aea075,#e7d59c,Zijin,紫金,,,"unread, right length"
+6657,4542,23,11,#9394a4,#c3c5da,Du'an,都安,#c3c5da,都安,right
+7092,4543,11,23,#aa7870,#e29f95,Sihui,四会,#e29f95,四会,right
+7520,4543,32,11,#bc963e,#fac752,Anbu,庵埠,,,"unread, right length"
+6759,4544,23,11,#9084ae,#c0b0e8,Hongshui,红水,#c0b0e8,红水,right
+6205,4545,13,23,#acae7d,#e5e8a6,Fuxian,抚仙,,,"unread, right length"
+6109,4547,33,11,#adb141,#e6eb56,Chenggong,呈贡,#e6eb56,呈贡,right
+7464,4548,2,7,#b88943,#f5b659,Chaonan,,,,key or mark
+7798,4548,23,11,#b37a2f,#eea23e,Kaohsiung City,,,,no data
+5218,4549,38,16,#84abaf,#afe3e9,Ramkrishna Nagar,,,,no data
+7412,4549,23,11,#b39169,#eec18c,Kuitan,葵潭,#eec18c,葵潭,right
+5746,4551,23,11,#90a890,,,,#cfebc9,德宏,another region's colour
+7481,4551,33,11,#af9051,#e9bf6c,Jieyang,揭阳,#e9bf6c,揭阳,right
+7383,4552,13,23,#af9169,#e9c18c,Luohe,螺河,,,"unread, right length"
+6968,4554,23,11,#af7c78,#e9a5a0,Wuzhou,梧州,#e9a5a0,梧州,right
+7519,4555,33,11,#b39758,#eec975,Chaozhou,潮州,#eec975,潮州,right
+6895,4560,11,23,#ba7577,#f79b9e,Gongzhou,龚州,,,"unread, right length"
+5656,4561,29,14,#9dad98,,,,,,no region's colour
+7196,4561,23,11,#b1866d,#ebb291,Zengcheng,增城,#ebb291,增城,right
+6537,4562,23,11,#8281a8,#adacdf,Baise,百色,#adacdf,百色,right
+7807,4562,23,11,#ba8a49,#f8b761,Kaohsiung City,,,,no data
+7139,4563,11,23,#ad6a60,#e68d80,Lishui,里水,#e68d80,里水,right
+7482,4563,32,11,#af8a51,#e9b76c,Puning,普宁,#e9b76c,普宁,right
+5917,4564,23,11,#b7bc93,#f3fac4,Fengqing,凤庆,#f3fac4,凤庆,right
+6263,4564,23,11,#999c9f,#cbcfd3,Mile,弥勒,#cbcfd3,弥勒,right
+7446,4564,23,11,#ba8c58,#f7ba75,Huilai,惠来,#f7ba75,惠来,right
+6093,4567,23,11,#aeaa8d,#e8e2bc,Shuangbai,双柏,#e8e2bc,双柏,right
+7240,4570,23,11,#ae966c,#e7c78f,Boluo,博罗,#e7c78f,博罗,right
+7481,4575,33,12,#b78133,#f3ac43,Chaonan,,,,no data
+6808,4582,23,11,#a47aae,#daa2e7,Laibin,来宾,#daa2e7,来宾,right
+7310,4582,11,23,#b5a65d,#f1dd7c,Xizhi,西枝,#f1dd7c,西枝,right
+7024,4583,11,23,#af8181,#e9acac,Guangxin,广信,#e9acac,广信,right
+7350,4584,23,14,#b89f6c,#f5d390,Haifeng,海丰,,,"unread, right length"
+7481,4587,33,11,#ba944b,#f7c563,Chaoyang,,,,no data
+8775,4587,11,11,#7aaa84,,,,,,no region's colour
+7092,4588,23,12,#ac7575,#e59b9b,Dinghu,鼎湖,,,"unread, right length"
+8753,4590,15,8,#b47d7e,,,,,,key or mark
+6862,4592,11,23,#ba7580,#f79baa,Xunzhou,浔州,#f79baa,浔州,right
+7367,4593,23,39,#ba9563,#f8c684,Shanwei,汕尾,,,different characters
+6425,4594,23,11,#8b8ba6,#b9b9dd,Funing,富宁,#b9b9dd,富宁,right
+6943,4596,24,11,#b5777d,#f19ea6,Tengzhou,藤州,,,"unread, right length"
+7484,4599,30,11,#b88943,#f5b659,Chaonan,,,,no data
+6611,4601,23,11,#787cb3,#a0a5ee,Tianzhou,田州,#a0a5ee,田州,right
+5194,4607,25,5,#a79db4,#ded1f0,Gournagar,,,,key or mark
+5144,4610,33,7,#8893b0,#b5c3ea,Jirania,,,,key or mark
+7098,4610,23,13,#a56056,#db8072,Zhaoqing,肇庆,,,"unread, right length"
+6182,4615,23,11,#a9aa94,#e1e2c5,Jianshui,建水,#e1e2c5,建水,right
+6745,4617,23,11,#987aae,#caa2e7,Binyang,宾阳,#caa2e7,宾阳,right
+6319,4618,23,11,#8d899e,#bbb6d2,Wenshan,文山,#bbb6d2,文山,right
+6697,4618,23,11,#877aae,#b4a2e7,Wuming,武鸣,#b4a2e7,武鸣,right
+5562,4623,22,5,#a8b193,#dfecc4,Katha,,,,key or mark
+6816,4629,23,11,#b572a0,#f198d5,Guigang,贵港,#f198d5,贵港,right
+7064,4631,11,23,#a87b75,#dfa49c,Yunfu,云浮,#dfa49c,云浮,right
+6895,4632,23,11,#b87a8a,#f5a2b7,Rongzhou,容州,#f5a2b7,容州,right
+7118,4632,23,11,#af7972,#e9a197,Heshan,鹤山,#e9a197,鹤山,right
+5891,4638,23,11,#aeac8f,#e8e5be,Lincang,临沧,#e8e5be,临沧,right
+6247,4641,22,11,#949582,#c5c6ad,Mengzi,蒙自,#c5c6ad,蒙自,right
+5128,4645,22,13,#8093ae,#aac3e8,Mohanpur,,,,no data
+6520,4646,23,11,#7e80b5,#a8aaf1,Jingxi,靖西,#a8aaf1,靖西,right
+6725,4646,23,11,#605aa8,#8078e0,Xixiangtang,,,,no data
+6660,4651,23,11,#726daf,#9891e9,Long'an,隆安,#9891e9,隆安,right
+5261,4652,41,7,#b7a3aa,#f3d9e2,Tlangnuam (Part),,,,key or mark
+6947,4652,22,11,#b47d7e,#f0a6a8,Cenxi,岑溪,,,"unread, right length"
+7004,4657,23,11,#a57777,#db9e9e,Luoding,罗定,#db9e9e,罗定,right
+6846,4661,23,11,#b57286,#f198b2,Xingye,,,,no data
+5751,4664,25,11,#91ae9f,#c1e8d4,Lashio,,,,no data
+6003,4665,23,11,#afaf99,#e9e9cc,Pu'er,普洱,#e9e9cc,普洱,right
+6352,4665,23,11,#8984a2,#b6afd8,Maguan,马关,#b6afd8,马关,right
+6687,4666,23,11,#4539a6,#5c4cdd,Nanning,南宁,#5c4cdd,南宁,right
+6885,4666,11,23,#b15d6a,#ec7b8d,Yulin,玉林,#ec7b8d,玉林,right
+5150,4667,33,9,#9196b1,#c1c7eb,Rajnagar,,,,no data
+7106,4669,23,11,#ba8a81,#f8b8ab,Kaiping,开平,#f8b8ab,开平,right
+7150,4672,23,11,#bf8175,#ffac9c,Xinhui,新会,#ffac9c,新会,right
+6783,4673,23,11,#b17d9c,#eba6cf,Hengzhou,横州,#eba6cf,横州,right
+6113,4677,23,11,#a9a99c,#e1e1cf,Yuanjiang,元江,#e1e1cf,元江,right
+6740,4677,23,11,#6856ae,#8a72e7,Qingxiu,青秀,#8a72e7,青秀,right
+6917,4685,11,23,#a87475,#e09a9c,Beiliu,北流,#e09a9c,北流,right
+7178,4688,13,24,#bf877c,#ffb3a5,Doumen,斗门,,,"unread, right length"
+6242,4691,23,11,#9ca297,#d0d7c9,Ailao,哀牢,#d0d7c9,哀牢,right
+6619,4691,23,11,#837eb5,#aea8f1,Fusui,,,,no data
+6969,4693,23,11,#b18484,#ecafaf,Xinyi,信宜,#ecafaf,信宜,right
+5518,4697,36,16,#a1aa8c,#d6e2ba,Kanbalu,,,,no data
+6711,4698,23,11,#7a64ab,#a285e4,Jiangnan,,,,no data
+6876,4698,23,11,#b1726d,#ec9791,Luchuan,陆川,#ec9791,陆川,right
+7121,4707,23,11,#bf978f,#ffc9be,Taishan,台山,#ffc9be,台山,right
+7067,4712,23,11,#af847c,#e9b0a5,Yangdong,阳东,#e9b0a5,阳东,right
+6478,4713,45,13,#918ab3,#c1b7ee,Hoà An,,,,no data
+6723,4717,24,11,#9b7cad,#cea5e6,Yongning,邕宁,,,"unread, right length"
+6778,4720,23,11,#ba6c81,#f88fab,Lingshan,灵山,#f88fab,灵山,right
+6393,4726,43,10,#877faf,#b4a9e9,Chiêm Hoá,,,,no data
+5833,4729,39,13,#a59c90,#dccfbf,Cangyuan Va,,,,no data
+6813,4732,23,11,#b18384,#ecaeb0,Pubei,,,,no data
+6969,4735,23,11,#ab7871,#e4a096,Jianjiang,鉴江,,,"unread, right length"
+7025,4736,11,23,#bc897e,#fab6a8,Yangchun,阳春,#fab6a8,阳春,right
+6857,4738,22,11,#b77b77,#f3a49e,Bobai,博白,#f3a49e,博白,right
+6919,4742,23,11,#af7f78,#e9a9a0,Gaozhou,高州,#e9a9a0,高州,right
+5505,4745,21,15,#a5ac87,#dce5b3,Shwebo,,,,no data
+7057,4746,11,23,#b56c5d,#f1907c,Yangjiang,阳江,#f1907c,阳江,right
+7409,4748,118,22,#b51901,#f12101,Guangzhou,广州,,,different characters
+5415,4751,27,5,#a6b198,#ddecca,Kale,,,,key or mark
+6752,4755,11,23,#ba7b6c,#f8a48f,Qinzhou,钦州,#f8a48f,钦州,right
+6322,4763,40,18,#9481b3,#c5acee,Văn Yên,,,,no data
+5926,4764,24,11,#a5a493,#dcdac4,Lancang,澜沧,,,"unread, right length"
+6637,4769,23,11,#9f89a8,#d3b6df,Chongzuo,崇左,#d3b6df,崇左,right
+6932,4770,11,23,#af7c69,#e9a58c,Huazhou,化州,#e9a58c,化州,right
+6999,4770,11,23,#ba7f74,#f7a99a,Diancheng,电城,#f7a99a,电城,right
+6975,4772,2,13,#f7a99a,,,,,,no region's colour
+6960,4773,23,11,#b16350,#ec846a,Maoming,茂名,#ec846a,茂名,right
+6973,4777,2,7,#ec846a,,,,,,key or mark
+7611,4777,11,23,#a69356,#ddc372,Heyuan,河源,#ddc372,河源,right
+7069,4780,23,11,#b56c5d,#f1907c,Yangjiang,阳江,#f1907c,阳江,right
+6874,4781,23,11,#b18162,#ebab82,Hedi,鹤地,#ebab82,鹤地,right
+5643,4782,26,13,#97b3aa,#c9eee2,Kyaukme,,,,no data
+6802,4783,23,11,#b88480,#f5afaa,Hepu,合浦,#f5afaa,合浦,right
+7319,4785,23,11,#b15f42,#eb7e57,Qingyuan,清远,#eb7e57,清远,right
+7475,4785,23,11,#ae9575,#e7c69b,Conghua,,,,no data
+6703,4792,23,11,#b18184,#ecacaf,Fangcheng,防城,#ecacaf,防城,right
+6960,4796,22,11,#ba7d6e,#f7a692,Dianbai,电白,#f7a692,电白,right
+6910,4798,11,23,#b58469,#f1b08b,Lianjiang,廉江,#f1b08b,廉江,right
+5573,4799,29,15,#a7ae81,#dee7ab,Patheingyi,,,,no data
+6217,4799,31,18,#848eaf,#b0bde9,Điện Biên,,,,no data
+6545,4799,43,9,#9a8ab3,#cdb7ee,Langson,Langson,,,different characters
+6429,4803,23,18,#af869f,#e9b2d3,Yên Sơn,,,,no data
+6817,4805,23,13,#b47066,#f09587,Beihai,北海,,,"unread, right length"
+6938,4809,12,23,#ba8b7a,#f8b9a2,Wuchuan,吴川,,,"unread, right length"
+6477,4812,35,19,#ae7d82,#e7a6ad,Thái Nguyên,,,,no data
+7330,4812,23,11,#ad8261,#e6ad81,Qing,,,,no data
+7662,4813,39,11,#af6262,#e98282,Shilong,石龙,#e98282,石龙,right
+5565,4815,29,11,#9cad32,#d0e642,Chanmyathazi,,,,no data
+5509,4816,15,12,#b0b485,#eaf0b1,Monywa,,,,no data
+7615,4821,23,12,#aea075,#e7d59c,Zijin,紫金,,,"unread, right length"
+6917,4824,11,23,#b76344,#f3835a,Zhanjiang,湛江,#f3835a,湛江,right
+6058,4825,47,11,#98a8aa,#cae0e2,Jinghong,,,,no data
+7662,4825,39,11,#ab4747,#e45e5e,Dongguan,东莞,#e45e5e,东莞,right
+6887,4832,23,11,#b18a6b,#ecb78e,Huguang,湖光,#ecb78e,湖光,right
+6418,4836,18,20,#b17e85,#eca8b1,Lâm Thao,,,,no data
+5303,4837,38,14,#b5abab,#f1e4e3,Churachandpur,,,,no data
+7662,4837,39,11,#b55252,#f16d6d,Nancheng,南城,#f16d6d,南城,right
+7378,4838,23,11,#b16c57,#ec9074,Huadou,,,,no data
+5450,4839,32,14,#b1b485,#ecf0b1,Myaing,,,,no data
+7224,4840,33,11,#b51901,#f12101,Guangzhou,广州,#f12101,广州,right
+6950,4844,23,11,#b75c44,,,,#f3835a,湛江,another region's colour
+7275,4847,11,23,#aa7870,#e29f95,Sihui,四会,#e29f95,四会,right
+7662,4849,39,23,#aa5157,#e26b73,Dongguan,,,,no data
+6511,4852,2,7,#ae726b,#e7978e,Hiệp Hòa,,,,key or mark
+7224,4852,33,11,#b12f0e,#eb3e12,Liwan,,,,no data
+7447,4852,23,11,#b1866d,#ebb291,Zengcheng,增城,#ebb291,增城,right
+5587,4853,34,10,#9fab75,#d3e49b,Amarapura,,,,no data
+7351,4855,23,11,#b45c4e,#f07a67,Huadou,,,,no data
+6550,4856,38,9,#a87881,#df9fab,Lục Ngạn,,,,no data
+6297,4859,31,7,#8082ae,#aaade7,Thuận Châu,,,,key or mark
+6618,4861,20,18,#ba8a75,#f7b79c,Hạ Long,,,,no data
+7224,4864,33,11,#a83624,#e0472f,Baiyun,白云,#e0472f,白云,right
+7662,4864,13,7,#a55763,#db7384,Dongguan,,,,key or mark
+6472,4867,5,7,#ad6363,#e68383,Vĩnh Tường,,,,key or mark
+7531,4868,23,11,#ae966c,#e7c78f,Boluo,博罗,#e7c78f,博罗,right
+5535,4869,23,14,#afb87f,#e9f5a9,Myingyan,,,,no data
+6878,4871,23,11,#b1936b,#ecc38e,Leizhou,雷州,#ecc38e,雷州,right
+7319,4872,23,11,#ad6a60,#e68d80,Lishui,里水,#e68d80,里水,right
+7381,4875,23,11,#a25f55,#d87e71,Taihe,太和,#d87e71,太和,right
+7224,4876,33,11,#b14838,#eb5f4a,Wushan,五山,#eb5f4a,五山,right
+7591,4876,11,23,#b79939,#f3cb4b,Huizhou,惠州,#f3cb4b,惠州,right
+6497,4877,5,7,#ab6355,#e48471,Đông Anh,,,,key or mark
+7666,4877,33,11,#a54160,#db567f,Shajing,沙井,#db567f,沙井,right
+6365,4880,46,10,#9c85aa,#d0b1e2,Mộc Châu,,,,no data
+6443,4880,22,14,#b17575,#eb9c9c,Ba Vi,,,,no data
+6517,4880,2,7,#b15b4b,#eb7963,Tiên Du,,,,key or mark
+6535,4880,7,5,#b16f5a,#ec9378,Quế Võ,,,,key or mark
+7367,4884,5,7,#b14736,#ec5e48,Baiyun,,,,key or mark
+6565,4886,5,5,#ae7969,#e7a18b,Đông Triều,,,,key or mark
+7224,4888,33,11,#ba2d17,#f73b1e,Tianhe,天河,#f73b1e,天河,right
+7421,4888,11,23,#b15750,#eb736a,Huangpu,,,,no data
+6480,4889,4,7,#b45846,#f0755d,Hoài Đức,,,,key or mark
+7666,4889,32,11,#984961,#ca6181,Songgang,松岗,#ca6181,松岗,right
+7449,4890,23,11,#ba6e66,#f79287,Xintang,新塘,#f79287,新塘,right
+6486,4892,4,5,#b54124,#f1562f,Từ Liêm,,,,key or mark
+6506,4892,5,5,#b72906,#f33607,Đống Đa,,,,key or mark
+6513,4896,5,7,#b46346,#f0845d,Long Biên,,,,key or mark
+7396,4899,5,7,#b14838,#eb5f4a,Wushan,五山,,,key or mark
+7224,4900,33,11,#bc3216,#fa421d,Haizhu,海珠,#fa421d,海珠,right
+7382,4900,5,7,#a83624,#e0472f,Baiyun,白云,,,key or mark
+7667,4901,32,11,#ab5463,#e47084,Bao'an,,,,no data
+7636,4902,11,23,#b5a65d,#f1dd7c,Xizhi,西枝,#f1dd7c,西枝,right
+6497,4903,5,7,#b7401d,#f35526,Hoàng Mai,,,,key or mark
+7564,4903,23,11,#ad9754,#e6c970,Huicheng,,,,no data
+6573,4905,5,7,#b7705b,#f39579,Thủy Nguyên,,,,key or mark
+7489,4907,11,7,#af6262,#e98282,Shilong,石龙,,,key or mark
+5729,4909,25,16,#93ada4,#c4e6da,Tangyan,,,,no data
+6503,4910,5,5,#b45f46,#f07e5d,Thanh Trì,,,,key or mark
+7269,4910,23,11,#ac7575,#e59b9b,Dinghu,鼎湖,#e59b9b,鼎湖,right
+7367,4910,5,7,#b12f0e,#eb3e12,Liwan,,,,key or mark
+7410,4910,5,7,#b4523f,#f06d53,Huangpu,,,,key or mark
+7392,4911,5,7,#ba2d17,#f73b1e,Tianhe,天河,,,key or mark
+7516,4911,23,11,#af7162,#e99682,Dongguan,,,,no data
+7224,4912,33,11,#b74c2c,#f3653a,Haizhu,,,,no data
+7332,4912,13,23,#a84233,#df5844,Shishan,狮山,,,"unread, right length"
+7383,4912,5,7,#b51901,#f12101,Guangzhou,广州,,,key or mark
+6908,4913,23,11,#b89b75,#f5ce9c,Xuwen,徐闻,#f5ce9c,徐闻,right
+7666,4913,33,11,#ba4e6e,#f86792,Fuyong,福永,#f86792,福永,right
+6542,4915,5,5,#af765a,#e99d78,Gia Lộc,,,,key or mark
+6523,4916,3,9,#af6b5a,#e98e78,Khoái Châu,,,,no data
+7355,4919,11,7,#b1482e,#eb5f3d,Nanhai,,,,key or mark
+6593,4920,29,20,#ba5c3f,#f77a54,Kiến Thụy,,,,no data
+7398,4921,5,7,#b74c2c,#f3653a,Haizhu,,,,key or mark
+7476,4921,11,7,#ab4747,#e45e5e,Dongguan,东莞,,,key or mark
+7384,4922,5,7,#bc3216,#fa421d,Haizhu,海珠,,,key or mark
+6497,4923,4,7,#b56f5b,#f19479,Chương Mỹ,,,,key or mark
+7224,4924,33,23,#b4523f,#f06d53,Huangpu,,,,no data
+7448,4924,16,23,#b16166,#ec8188,Wanjiang,万江,,,different characters
+5417,4925,26,10,#b0b387,#eaeeb4,Pakokku,,,,no data
+6680,4925,55,12,#ae726b,#e7978e,Hiệp Hòa,,,,no data
+7666,4925,33,11,#bf2e68,#ff3d8a,Bao'an,宝安,#ff3d8a,宝安,right
+7371,4927,11,7,#ae4824,#e7602f,Liwan,,,,key or mark
+5878,4929,42,15,#8dada4,#bce6da,Kengtung,,,,no data
+7418,4931,14,23,#b16751,#eb896c,Panyu,,,,no data
+7511,4931,11,23,#a2685e,#d88a7d,Dalang,大朗,#d88a7d,大朗,right
+7490,4933,11,23,#a55757,#db7373,Songshan,松山湖,,,different characters
+6439,4934,43,8,#a17c76,#d6a59d,Lạc Sơn,,,,key or mark
+6559,4934,5,7,#b7795b,#f3a179,Thái Thụy,,,,key or mark
+6677,4936,82,12,#b16f5a,#ec9378,Quế Võ,,,,no data
+7452,4937,6,12,#ec8188,,,,,,no region's colour
+7667,4937,32,11,#bf3f76,#ff539d,Nanshan,南山,#ff539d,南山,right
+5489,4938,11,11,#b5b971,#f1f696,Kyaukpadaung,,,,no data
+7388,4938,11,7,#b15142,#ec6b57,Panyu,,,,key or mark
+7224,4939,7,7,#b15750,#eb736a,Huangpu,,,,key or mark
+7533,4940,23,11,#ae655a,#e78677,Dongguan,,,,no data
+7599,4940,23,11,#b49052,#f0bf6d,Danshui,淡水,#f0bf6d,淡水,right
+7353,4941,11,7,#982715,#ca331c,Chancheng,,,,key or mark
+7318,4943,13,23,#9f574c,#d37465,Xiqiao,西樵,,,"unread, right length"
+7372,4943,11,23,#a43827,#da4a34,Shunde,,,,no data
+6514,4945,5,5,#ad7466,#e69a88,Lý Nhân,,,,key or mark
+7467,4947,11,7,#b55252,#f16d6d,Nancheng,南城,,,key or mark
+6678,4948,47,11,#ae7969,#e7a18b,Đông Triều,,,,no data
+7218,4948,39,11,#b1482e,#eb5f3d,Nanhai,,,,no data
+6604,4949,44,10,#b72906,#f33607,Đống Đa,,,,no data
+7268,4949,11,23,#a56056,#db8072,Zhaoqing,肇庆,#db8072,肇庆,right
+7666,4949,33,12,#bf3f65,#ff5386,Nanshan,,,,no data
+6935,4950,25,16,#bd793e,#fca152,Qiongshan,琼山,,,different characters
+5603,4954,29,5,#97ad83,#c9e6ae,Kalaw,,,,key or mark
+6909,4954,22,11,#bf6d24,#ff9130,Haikou,海口,#ff9130,海口,right
+7400,4954,11,7,#af5439,#e9704c,Panyu,,,,key or mark
+7351,4955,11,23,#9b4133,#ce5643,Shunde,,,,no data
+6559,4956,4,5,#b7835b,#f3ae79,Vũ Thư,,,,key or mark
+6679,4959,62,11,#af765a,#e99d78,Gia Lộc,,,,no data
+6604,4960,64,10,#b7401d,#f35526,Hoàng Mai,,,,no data
+7218,4960,39,11,#982715,#ca331c,Chancheng,,,,no data
+7666,4961,33,11,#bf3c5b,#ff5079,Futian,,,,no data
+6528,4964,4,7,#ad7966,#e6a188,Ý Yên,,,,key or mark
+7534,4964,23,11,#a56065,#db8086,Dongguan,,,,no data
+7513,4965,12,23,#9c5c64,#d07a85,Guangming,光明,,,"unread, right length"
+7467,4968,11,7,#aa5157,#e26b73,Dongguan,,,,key or mark
+7570,4969,22,11,#b36758,#ee8975,Longgang,,,,no data
+6541,4971,17,20,#ba8160,#f8ac80,Hải Hậu,,,,no data
+6605,4971,47,8,#b54124,#f1562f,Từ Liêm,,,,key or mark
+6679,4971,49,9,#b7705b,#f39579,Thủy Nguyên,,,,no data
+7597,4971,23,11,#b37058,#ee9575,Pingshan,坪山,#ee9575,坪山,right
+7218,4972,39,11,#ae4824,#e7602f,Liwan,,,,no data
+7372,4973,23,11,#a65144,#dd6c5a,Shunde,,,,no data
+7669,4973,30,11,#b32445,#ee2f5c,Futian,,,,no data
+5255,4977,27,14,#93b4a5,#c3f0dc,Ponnagyun,,,,no data
+5557,4977,30,15,#aab184,#e2ecaf,Meiktila,,,,no data
+7416,4977,23,11,#b17267,#eb9789,Nansha,南沙,#eb9789,南沙,right
+7479,4978,11,7,#a55763,#db7384,Dongguan,,,,key or mark
+6604,4980,49,11,#b46346,#f0845d,Long Biên,,,,no data
+6057,4981,52,16,#9eb1a5,#d2ebdc,Xay,,,,no data
+6679,4981,60,10,#b7795b,#f3a179,Thái Thụy,,,,no data
+6919,4981,23,11,#bc9760,#fac980,Xiuying,秀英,#fac980,秀英,right
+6509,4983,22,17,#b57d69,#f1a68b,Kim Sơn,,,,no data
+6979,4984,11,23,#bf9a79,#ffcda1,Wenchang,文昌,#ffcda1,文昌,right
+7218,4984,39,11,#b15142,#ec6b57,Panyu,,,,no data
+7501,4984,5,7,#984961,#ca6181,Songgang,松岗,,,key or mark
+7668,4985,31,23,#b33f5a,#ee5377,Luohu,,,,no data
+7537,4986,5,5,#b5515b,#f16c79,Bao'an,,,,key or mark
+7557,4989,5,5,#a8545b,#df6f79,Longgang,,,,key or mark
+5664,4990,39,14,#7da88b,#a6dfb9,Taunggyi,,,,no data
+7490,4990,5,5,#a54160,#db567f,Shajing,沙井,,,key or mark
+6604,4991,53,10,#b45f46,#f07e5d,Thanh Trì,,,,no data
+6680,4992,57,8,#b7835b,#f3ae79,Vũ Thư,,,,key or mark
+7297,4993,23,11,#af7972,#e9a197,Heshan,鹤山,#e9a197,鹤山,right
+7363,4995,23,11,#a5645d,#db857c,Shunde,,,,no data
+5302,4996,35,14,#99b18e,#cbebbd,Mrauk-U,,,,no data
+6869,4996,23,11,#b5a26c,#f1d790,Lingao,临高,#f1d790,临高,right
+7218,4996,39,11,#af5439,#e9704c,Panyu,,,,no data
+7573,4996,5,7,#b85a5a,#f57878,Longgang,,,,key or mark
+6490,4998,17,15,#b97f76,#f6a99d,Thọ Xuân,,,,no data
+7362,4998,10,6,#db857c,,,,,,key or mark
+7667,5000,6,7,#a63e5d,#dd527b,Longgang,,,,key or mark
+7533,5001,7,5,#ab3348,#e4445f,Bao'an,,,,key or mark
+6605,5002,54,8,#b45846,#f0755d,Hoài Đức,,,,key or mark
+6679,5002,49,8,#ad7466,#e69a88,Lý Nhân,,,,key or mark
+7516,5002,5,7,#ab5463,#e47084,Bao'an,,,,key or mark
+7545,5004,2,7,#a63e45,#dd525b,Longgang,,,,key or mark
+7555,5004,4,7,#a63e5d,#dd527b,Longgang,,,,key or mark
+7498,5008,4,5,#ba4e6e,#f86792,Fuyong,福永,,,key or mark
+7669,5009,30,11,#a63e45,#dd525b,Longgang,,,,no data
+6604,5012,61,10,#ad6363,#e68383,Vĩnh Tường,,,,no data
+6680,5013,57,7,#ad7966,#e6a188,Ý Yên,,,,key or mark
+7418,5013,23,11,#bf8074,#ffaa9a,Huangpu,黄圃,#ffaa9a,黄圃,right
+7560,5013,3,9,#b33f5a,#ee5377,Luohu,,,,no data
+6250,5014,84,20,#96b1ac,#c8ece5,Pek,,,,no data
+7389,5019,11,23,#b8786c,#f5a08f,Xiaolan,小榄,#f5a08f,小榄,right
+7538,5021,5,7,#bf3c5b,#ff5079,Futian,,,,key or mark
+7549,5021,2,7,#b32445,#ee2f5c,Futian,,,,key or mark
+7664,5021,35,11,#ab3348,#e4445f,Bao'an,,,,no data
+7511,5022,5,5,#bf2e68,#ff3d8a,Bao'an,宝安,,,key or mark
+7526,5022,5,7,#bf3f65,#ff5386,Nanshan,,,,key or mark
+6911,5024,23,11,#b19b6c,#ebce8f,Nandu,南渡,#ebce8f,南渡,right
+6524,5026,28,16,#bf7266,#ff9787,Hoằng Hóa,,,,no data
+7558,5026,23,11,#ba5b48,#f87960,North District,,,,no data
+7351,5029,23,11,#bf7566,#ff9b87,Jiangmen,江门,#ff9b87,江门,right
+8040,5029,40,7,#ae9781,#e7c9ac,Solana,,,,key or mark
+6824,5032,23,11,#b1b37b,#eceea4,Danzhou,儋州,#eceea4,儋州,right
+7666,5033,33,11,#b5515b,#f16c79,Bao'an,,,,no data
+7517,5035,4,7,#bf3f76,#ff539d,Nanshan,南山,,,key or mark
+7939,5039,28,7,#b89879,#f5caa1,Laoag City (Capital),,,,key or mark
+5558,5040,49,14,#b1b56f,#ecf193,Pyinmana,,,,no data
+5508,5041,23,10,#baba74,#f8f89a,Taungdwingyi,,,,no data
+6422,5041,26,21,#9f8cab,#d3bae4,Ngọc Lạc,,,,no data
+7412,5043,23,11,#ba6554,#f88670,Zhongshan,中山,#f88670,中山,right
+5941,5044,38,11,#7ca8ad,#a5dfe6,Mueang Chiang Rai,,,,no data
+7666,5046,33,11,#a8545b,#df6f79,Longgang,,,,no data
+6469,5051,39,10,#ba7d74,#f8a69a,Tĩnh Gia,,,,no data
+7534,5052,5,7,#b73e36,#f35247,Yuen Long,,,,key or mark
+7577,5053,5,5,#af4126,#e95632,Sha Tin,,,,key or mark
+7279,5055,23,11,#ba8a81,#f8b8ab,Kaiping,开平,#f8b8ab,开平,right
+7562,5058,4,5,#bf4b2f,#ff643e,Tsuen Wan,,,,key or mark
+7666,5058,33,12,#b85a5a,#f57878,Longgang,,,,no data
+5441,5063,25,15,#b1b18a,#ececb8,Padaung,,,,no data
+7578,5066,5,5,#a82d0f,#df3c14,Kwun Tong,,,,key or mark
+7591,5069,5,5,#bf3317,#ff431e,Sai Kung,,,,key or mark
+7666,5070,33,23,#b73e36,#f35247,Yuen Long,,,,no data
+7421,5073,35,11,#ba786c,#f8a08f,Wuguishan,五桂山,#f8a08f,五桂山,right
+7562,5073,4,7,#bf3909,#ff4b0b,Kowloon City,,,,key or mark
+7353,5075,23,11,#bf8175,#ffac9c,Xinhui,新会,#ffac9c,新会,right
+6942,5077,11,23,#ba9e7a,#f8d2a2,Wanning,万宁,#f8d2a2,万宁,right
+6479,5087,25,20,#bc847b,#fab0a4,Quỳnh Lưu,,,,no data
+6869,5087,35,11,#a4af88,#dae9b5,Wuzhishan,五指山,#dae9b5,五指山,right
+7469,5087,23,11,#b76352,#f3836d,Zhuhai,珠海,#f3836d,珠海,right
+7667,5087,6,5,#bf4b2f,#ff643e,Tsuen Wan,,,,key or mark
+7666,5094,33,11,#af4126,#e95632,Sha Tin,,,,no data
+8061,5100,57,9,#ae9981,#e7cbac,Ilagan City (Capital),,,,no data
+7571,5104,23,11,#b51e00,#f12800,Southern District,,,,no data
+7667,5106,32,11,#bf3909,#ff4b0b,Kowloon City,,,,no data
+5830,5108,34,10,#80a7ab,#aadee4,Fang,,,,no data
+7472,5109,23,11,#b87818,#f5a020,Xiangzhou,,,,no data
+5383,5114,44,14,#a5b19b,#dbecce,Toungup,,,,no data
+7666,5118,45,11,#a82d0f,#df3c14,Kwun Tong,,,,no data
+6814,5120,23,11,#b3af7b,#eee9a4,Jianfeng,尖峰,#eee9a4,尖峰,right
+7398,5121,23,11,#bf877c,#ffb3a5,Doumen,斗门,#ffb3a5,斗门,right
+6450,5123,23,18,#b9877d,#f6b3a6,Thanh Chương,,,,no data
+7666,5130,45,11,#bf3317,#ff431e,Sai Kung,,,,no data
+7297,5133,23,11,#bf978f,#ffc9be,Taishan,台山,#ffc9be,台山,right
+7995,5133,47,7,#a4997e,#dacca7,City of Tabuk (Capital),,,,key or mark
+7944,5134,31,17,#b89a79,#f5cda1,City of San Fernando (Capital),,,,no data
+6488,5146,20,7,#bc726a,#fa988d,Nghi Lộc,,,,key or mark
+5579,5153,31,15,#b0b37d,#eaeea6,Taungoo,,,,no data
+5521,5158,17,14,#b7b46c,#f3f090,Aunglan,,,,no data
+6119,5162,59,10,#93b4a8,#c3f0e0,Luangprabang,,,,no data
+6341,5162,64,28,#99b8a5,#cbf5dc,Bolikhanh,,,,no data
+5845,5166,40,11,#66a2b1,#88d8ec,Mueang Chiang Mai,,,,no data
+8066,5168,40,7,#ae9d81,#e7d1ac,City of Santiago,,,,key or mark
+6021,5169,21,10,#81a2ae,#abd8e7,Mueang Uttaradit,,,,no data
+6850,5173,23,11,#bab25a,#f7ed78,Sanya,三亚,#f7ed78,三亚,right
+6476,5183,46,12,#bd8784,#fcb4af,Thạch Hà,,,,no data
+5692,5193,56,28,#87a889,#b4dfb6,Hlaingbwe,,,,no data
+5928,5227,31,10,#779fad,#9ed4e6,Mueang Lampang,,,,no data
+7955,5228,32,9,#b49069,#f0c08b,Baguio City,,,,no data
+6211,5231,32,13,#78b598,#a0f1ca,Xaythany,,,,no data
+8024,5233,45,7,#afa383,#e9d9ae,Umingan,,,,key or mark
+6542,5237,29,17,#be8e8b,#fdbdb9,Quảng Trạch,,,,no data
+7731,5245,62,14,#bab807,#f7f509,City of Manila,,,,no data
+7929,5250,29,17,#b79356,#f3c372,Dagupan City,,,,no data
+5598,5254,55,14,#b3b27d,#eeeda6,Kyauktaga,,,,no data
+6248,5259,46,6,#84b0b3,#b0eaee,Mueang Nong Khai,,,,key or mark
+7683,5268,33,9,#b4b170,#f0ec95,Concepcion,,,,no data
+7962,5271,27,8,#e7ce93,,,,,,key or mark
+7962,5271,45,7,#ae9b6f,#e7ce93,Malasiqui,,,,key or mark
+5533,5274,42,10,#beb76f,#fdf393,Taikkyi,,,,no data
+5479,5279,33,13,#b8b176,#f5ec9d,Hinthada,,,,no data
+7916,5281,35,7,#b59f72,#f1d398,San Carlos City,,,,key or mark
+7643,5282,39,8,#f0ef81,,,,,,key or mark
+7644,5282,38,9,#b2b151,#edeb6c,Angeles City,,,,no data
+6362,5292,41,6,#85b7b8,#b1f4f5,Mueang Nakhon Phanom,,,,key or mark
+7999,5292,47,7,#b2a967,#ede189,San Jose City,,,,key or mark
+5839,5294,11,10,#82a5ae,#addbe7,Mae Sot,,,,no data
+7660,5302,62,31,#b4b461,#f0ef81,City of San Fernando (Capital),,,,no data
+7737,5304,28,9,#aa9f5f,#e2d37e,San Miguel,,,,no data
+6187,5309,38,14,#7dadb3,#a6e6ee,Mueang Udon Thani,,,,no data
+7968,5312,29,7,#b4a870,#f0df95,City of Tarlac (Capital),,,,key or mark
+8015,5317,34,15,#a69f65,#ddd486,Cabanatuan City,,,,no data
+6112,5319,15,6,#81a8af,#abe0e9,Chum Phae,,,,key or mark
+5633,5327,13,14,#b1b06c,#ebea90,Bago,,,,no data
+7520,5329,16,21,#d9f6ff,,,,,,no region's colour
+7561,5329,50,9,#bcba38,#faf84a,City of Manila,,,,no data
+7826,5332,28,7,#aeae8e,#e7e7bd,Rodriguez (Montalban),,,,key or mark
+7985,5338,33,9,#b4b170,#f0ec95,Concepcion,,,,no data
+7561,5339,41,7,#bab807,#f7f509,City of Manila,,,,key or mark
+6616,5342,47,11,#bd8e8e,#fcbdbd,Lệ Thủy,,,,no data
+6336,5344,27,9,#84afae,#b0e9e8,Mueang Sakon Nakhon,,,,no data
+7708,5344,37,7,#b8a551,#f5dc6b,City of Malolos (Capital),,,,key or mark
+7749,5344,34,7,#b39c48,#eecf60,City of San Jose del Monte,,,,key or mark
+7710,5345,4,7,#f0e781,,,,,,key or mark
+7947,5348,26,14,#b3a47b,#eedaa4,Olongapo City,,,,no data
+7562,5349,54,7,#b3a703,#eede04,Caloocan City,,,,key or mark
+5492,5354,39,14,#b5ab57,#f1e474,Pantanaw,,,,no data
+5574,5356,25,15,#b4ae62,#f0e782,Hlegu,,,,no data
+7765,5356,3,9,#af9d36,#e9d148,Caloocan City,,,,no data
+7561,5359,41,7,#a5a837,#dbdf49,Quezon City,,,,key or mark
+7755,5361,2,7,#baa736,#f8de48,City of Meycauayan,,,,key or mark
+7776,5364,4,7,#a8a73d,#dfde51,Quezon City,,,,key or mark
+7790,5364,2,7,#9a994f,#cdcc69,Rodriguez (Montalban),,,,key or mark
+6260,5367,32,10,#84b1b4,#afebf0,Nam Phong,,,,no data
+5994,5368,43,13,#7b97ad,#a4c9e6,Mueang Phitsanulok,,,,no data
+7561,5369,39,9,#a8a338,#dfd94a,City of Pasig,,,,no data
+8029,5369,28,9,#aa9f5f,#e2d37e,San Miguel,,,,no data
+5903,5370,32,13,#7799b4,#9ecbf0,Mueang Sukhothai,,,,no data
+8052,5371,3,6,#e7e7bd,,,,,,key or mark
+7774,5373,5,7,#a29928,#d8cb35,Quezon City,,,,key or mark
+7754,5375,5,7,#bdb22b,#fced39,City of Valenzuela,,,,key or mark
+8066,5376,28,7,#aeae8e,#e7e7bd,Rodriguez (Montalban),,,,key or mark
+7562,5379,44,7,#b7bf49,#f4ff61,City of Makati,,,,key or mark
+5586,5383,3,5,#b4a230,#f0d740,Mingaladon,,,,key or mark
+7762,5383,4,5,#b3a703,#eede04,Caloocan City,,,,key or mark
+7771,5385,5,7,#a5a837,#dbdf49,Quezon City,,,,key or mark
+5599,5387,3,5,#b1a842,#ebe057,Dagon Myothit (South),,,,key or mark
+7561,5389,53,9,#bdb22b,#fced39,City of Valenzuela,,,,no data
+7793,5389,7,5,#a5a24b,#dcd764,City of Antipolo,,,,key or mark
+5590,5390,3,5,#b7a512,#f3dc18,Mayangone,,,,key or mark
+5614,5391,33,15,#b1aa59,#ebe276,Thanlyin,,,,no data
+6708,5391,17,11,#bc7b7b,#faa4a4,Huế,,,,no data
+7750,5393,5,7,#bab807,#f7f509,City of Manila,,,,key or mark
+5703,5394,20,26,#b4a572,#f0dc97,Thaton,,,,no data
+7780,5396,5,5,#a8a338,#dfd94a,City of Pasig,,,,key or mark
+5579,5397,3,5,#baaf1f,#f8e929,Hlaingtharya (East),,,,key or mark
+5591,5397,3,5,#b5af01,#f1e901,Thaketa,,,,key or mark
+6776,5398,40,13,#bc575d,#fa737c,Hải Châu,,,,no data
+7762,5398,5,5,#bcba38,#faf84a,City of Manila,,,,key or mark
+5433,5399,21,15,#bcb16a,#faeb8d,Pathein,,,,no data
+7561,5399,48,9,#a29928,#d8cb35,Quezon City,,,,no data
+7771,5400,4,7,#b7bf49,#f4ff61,City of Makati,,,,key or mark
+7645,5403,34,7,#b3ae75,#eee89b,Hermosa,,,,key or mark
+7808,5403,5,5,#adab67,#e6e389,Angono,,,,key or mark
+7564,5409,70,9,#baa736,#f8de48,City of Meycauayan,,,,no data
+7779,5409,5,5,#a1ab3d,#d6e451,Taguig City,,,,key or mark
+7768,5414,5,7,#b4bc44,#f0fa5a,City of Parañaque,,,,key or mark
+6468,5418,68,11,#8eb7a3,#bdf3d9,Champhone,,,,no data
+7563,5419,49,9,#af9d36,#e9d148,Caloocan City,,,,no data
+5569,5422,27,12,#b8b14f,#f5eb69,Twantay,,,,no data
+7950,5426,34,7,#b3ae75,#eee89b,Hermosa,,,,key or mark
+5458,5429,33,14,#bcb46a,#faef8d,Myaungmya,,,,no data
+7562,5429,64,7,#a8a73d,#dfde51,Quezon City,,,,key or mark
+7714,5429,30,7,#abb740,#e4f355,Imus City,,,,key or mark
+7765,5430,5,7,#9aa536,#cddc48,City of Las Piñas,,,,key or mark
+6757,5432,19,18,#ba686e,#f88a92,Điện Bàn,,,,no data
+6395,5434,45,9,#80b2b3,#aaedee,Mueang Mukdahan,,,,no data
+6218,5437,21,18,#6ea8b7,#92dff3,Mueang Khon Kaen,,,,no data
+6598,5438,39,11,#95b1a2,#c6ebd8,Saravane,,,,no data
+7564,5439,61,7,#9a994f,#cdcc69,Rodriguez (Montalban),,,,key or mark
+7778,5439,4,5,#abab4f,#e4e369,City of Muntinlupa,,,,key or mark
+8092,5442,32,9,#abaa7f,#e4e2a9,Santa Cruz (Capital),,,,no data
+7697,5444,40,7,#a6b757,#ddf373,City of General Trias,,,,key or mark
+8207,5445,50,7,#a6b788,#ddf3b5,Libmanan,,,,key or mark
+7560,5449,55,9,#a5a24b,#dcd764,City of Antipolo,,,,no data
+5591,5453,38,15,#b5af01,#f1e901,Thaketa,,,,no data
+7768,5453,5,5,#9fa565,#d4dc86,City of Dasmariñas,,,,key or mark
+7784,5454,4,7,#a4aa48,#dae25f,City of Biñan,,,,key or mark
+6049,5456,43,13,#7592ad,#9bc2e6,Mueang Phetchabun,,,,no data
+5518,5457,17,11,#bcb66a,#faf28d,Mawlamyinegyun,,,,no data
+7858,5457,17,9,#abaa7f,#e4e2a9,Santa Cruz (Capital),,,,no data
+6324,5458,34,10,#76aeb9,#9de7f6,Mueang Roi Et,,,,no data
+5906,5461,55,10,#6e8fb1,#92beec,Mueang Kamphaeng Phet,,,,no data
+7561,5461,49,7,#adab67,#e6e389,Angono,,,,key or mark
+8323,5465,38,9,#90bc93,#bffac4,Iriga City,,,,no data
+8096,5466,32,15,#b0b26f,#eaed94,Lucena City (Capital),,,,no data
+5591,5468,58,18,#b7a512,#f3dc18,Mayangone,,,,no data
+7561,5469,44,9,#a1ab3d,#d6e451,Taguig City,,,,no data
+6135,5471,28,13,#789bae,#9fcee7,Mueang Chaiyaphum,,,,no data
+6727,5472,54,11,#b8878a,#f5b4b8,Thăng Bình,,,,no data
+8167,5472,43,9,#b7b782,#f3f3ad,Lopez,,,,no data
+7796,5473,5,5,#aba857,#e4e074,Cabuyao City,,,,key or mark
+8025,5474,26,16,#9faf6a,#d3e98d,Nasugbu,,,,no data
+6269,5475,37,8,#78aab4,#9fe2f0,Mueang Maha Sarakham,,,,key or mark
+5825,5476,21,12,#84a681,#afddab,Hpa-An,,,,no data
+7561,5479,65,10,#b4bc44,#f0fa5a,City of Parañaque,,,,no data
+7820,5482,29,17,#a8a56c,#dfdc90,San Pablo City,,,,no data
+5591,5485,40,14,#b4a230,#f0d740,Mingaladon,,,,no data
+7727,5488,45,9,#a3af6a,#d9e98d,Silang,,,,no data
+7561,5490,47,9,#9aa536,#cddc48,City of Las Piñas,,,,no data
+8066,5494,46,9,#abb26f,#e4ed94,Batangas City (Capital),,,,no data
+8105,5495,4,7,#e4ed94,,,,,,key or mark
+6435,5500,34,11,#85b9ba,#b1f6f7,Trakan Phuet Phon,,,,no data
+7562,5500,66,9,#abab4f,#e4e369,City of Muntinlupa,,,,no data
+5591,5503,22,12,#b1a842,#ebe057,Dagon Myothit (South),,,,no data
+8264,5505,22,7,#83b87c,#aef5a5,Naga City,,,,key or mark
+5988,5507,49,10,#6c8aad,#8fb7e6,Mueang Nakhon Sawan,,,,no data
+7561,5510,70,8,#9fa565,#d4dc86,City of Dasmariñas,,,,key or mark
+8314,5511,31,7,#84ba8f,#aff8be,Legazpi City (Capital),,,,key or mark
+7810,5514,17,9,#a2a86c,#d7df90,Lipa City,,,,no data
+5591,5517,54,15,#baaf1f,#f8e929,Hlaingtharya (East),,,,no data
+6801,5518,42,8,#be7f7e,#fda9a7,Sơn Tịnh,,,,key or mark
+7562,5520,38,8,#a4aa48,#dae25f,City of Biñan,,,,key or mark
+7840,5526,40,9,#b0b26f,#eaed94,Lucena City (Capital),,,,no data
+6234,5528,26,10,#78a7b5,#a0def1,Phimai,,,,no data
+7730,5530,38,9,#9faf6a,#d3e98d,Nasugbu,,,,no data
+7561,5531,53,9,#aba857,#e4e074,Cabuyao City,,,,no data
+8329,5533,29,7,#90baa2,#bff7d7,City of Sorsogon (Capital),,,,key or mark
+7822,5560,46,9,#abb26f,#e4ed94,Batangas City (Capital),,,,no data
+5935,5561,34,10,#667eaf,#88a7e9,Takhli,,,,no data
+6181,5582,32,9,#72a6b4,#97ddf0,Mueang Nakhon Ratchasima,,,,no data
+6845,5582,25,17,#bd908f,#fcc0be,Hoài Nhơn,,,,no data
+6389,5583,43,11,#7eafb1,#a7e9ec,Kantharalak,,,,no data
+8492,5584,32,7,#93b1b3,#c3ecee,Catarman (Capital),,,,key or mark
+6476,5590,19,9,#84b1ab,#afebe4,Mueang Ubon Ratchathani,,,,no data
+6321,5591,31,13,#78a6b3,#9fddee,Mueang Surin,,,,no data
+8140,5592,37,9,#a5b874,#dcf59a,Naujan,,,,no data
+6587,5594,74,24,#9cad9c,#d0e6d0,Phonthong,,,,no data
+6055,5595,26,14,#6384b1,#83afeb,Mueang Lop Buri,,,,no data
+6741,5601,40,7,#af9d81,#e9d1ac,Kon Tum,,,,key or mark
+5765,5609,30,9,#a8b484,#dff0b0,Ye,,,,no data
+6121,5610,53,14,#749aaf,#9acde9,Pak Chong,,,,no data
+6244,5610,30,14,#759eab,#9bd2e4,Mueang Buri Ram,,,,no data
+8318,5611,42,7,#97bcb1,#c9faeb,Aroroy,,,,key or mark
+8485,5627,30,5,#8eb4b1,#bdf0eb,Calbayog City,,,,key or mark
+6033,5646,30,10,#5b77aa,#799ee2,Mueang Saraburi,,,,no data
+8016,5646,39,7,#a2b88c,#d8f5ba,San Jose,,,,key or mark
+6864,5647,23,16,#bc7f78,#faa9a0,Qui Nhơn,,,,no data
+5977,5648,45,14,#5b6faa,#7994e2,Mueang Suphan Buri,,,,no data
+5887,5662,48,15,#7988ab,#a1b5e4,Mueang Kanchanaburi,,,,no data
+6792,5672,31,9,#af9881,#e9caac,Chư Sê,,,,no data
+6083,5675,44,14,#6884b1,#8ab0ec,Mueang Prachin Buri,,,,no data
+5976,5696,21,20,#5269ad,#6d8ce6,Mueang Nakhon Pathom,,,,no data
+6262,5702,45,28,#a9b380,#e1eeaa,Paoy Paet,,,,no data
+6464,5702,38,13,#abb193,#e4ecc3,Kuleaen,,,,no data
+8480,5703,30,16,#78a2ae,#9fd7e8,Palo,,,,no data
+6160,5716,37,10,#6e8db3,#92bcee,Kabin Buri,,,,no data
+8455,5722,29,5,#7da8b6,#a6e0f2,Ormoc City,,,,key or mark
+6855,5724,39,13,#bc8d84,#fabcaf,Tuy Hoa,,,,no data
+8236,5724,25,7,#7eafb8,#a8e9f5,Kalibo (Capital),,,,key or mark
+8288,5726,29,7,#7ea1b8,#a8d6f5,Roxas City (Capital),,,,key or mark
+6068,5738,51,10,#517bb5,#6ca4f1,Phanat Nikhom,,,,no data
+6361,5741,27,16,#abb57e,#e4f1a7,Siem Reap,,,,no data
+5918,5754,31,14,#677db1,#89a6eb,Mueang Ratchaburi,,,,no data
+6791,5756,40,10,#ae947b,#e7c5a4,Cư M'gar,,,,no data
+5987,5761,52,11,#4f6fbc,#6994fa,Mueang Samut Sakhon,,,,no data
+7158,5763,306,42,#6a7d9b,,,,,,no region's colour
+7500,5763,120,42,#6a7d9b,,,,,,no region's colour
+8257,5766,29,9,#7e99b8,#a8cbf5,Lambunao,,,,no data
+8180,5768,32,7,#89b7ba,#b6f3f7,Tigbauan,,,,key or mark
+8328,5773,37,18,#7893b3,#9fc3ee,Cadiz City,,,,no data
+6044,5775,26,14,#436cb8,#5990f5,Mueang Chon Buri,,,,no data
+8431,5782,29,7,#697bb2,#8ca3ed,Liloan,,,,key or mark
+6881,5785,27,18,#be7869,#fd9f8c,Nha Trang,,,,no data
+6249,5791,48,14,#a0ab79,#d5e4a1,Sala Krau,,,,no data
+8387,5798,30,15,#6c80ad,#90aae6,Cebu City (Capital),,,,no data
+8392,5799,5,15,#90aae6,,,,,,no region's colour
+8317,5802,22,16,#728ab1,#97b7eb,Bacolod City (Capital),,,,no data
+6798,5804,42,20,#ad8771,#e6b396,Buon Ma Thuot,,,,no data
+8435,5806,35,7,#4c69aa,#658be2,Lapu-Lapu City (Opon),,,,key or mark
+6169,5815,33,14,#6b90ba,#8ebff8,Klaeng,,,,no data
+8249,5816,23,7,#6489b6,#85b6f2,Iloilo City (Capital),,,,key or mark
+7179,5817,140,28,#6a7d9b,,,,,,no region's colour
+7343,5817,76,28,#6a7d9b,,,,,,no region's colour
+7443,5817,148,36,#6a7d9b,,,,,,no region's colour
+6683,5819,45,13,#a89f84,#e0d4af,Đăk Mil,,,,no data
+6090,5820,27,6,#5577b4,#719ef0,Mueang Rayong,,,,key or mark
+6473,5820,44,19,#b0b589,#eaf1b6,Stueng Trang,,,,no data
+6485,5822,7,11,#acb183,#e5ebae,Memot,,,,no data
+8420,5824,22,7,#2e46a5,#3d5ddc,Cebu City (Capital),,,,key or mark
+8499,5827,37,9,#6d90b1,#91c0eb,Ubay,,,,no data
+8405,5837,34,9,#5f6da4,#7e91da,City of Talisay,,,,no data
+6396,5843,48,17,#a9b309,#e1ee0b,Mean Chey,,,,no data
+8652,5850,37,9,#869ab2,#b2cded,Surigao City (Capital),,,,no data
+8260,5853,54,7,#8c9cb7,#bacff3,City of Kabankalan,,,,key or mark
+7169,5856,40,28,#6a7d9b,,,,,,no region's colour
+7325,5856,64,28,#6a7d9b,,,,,,no region's colour
+7393,5856,56,28,#6a7d9b,,,,,,no region's colour
+7473,5856,128,36,#6a7d9b,,,,,,no region's colour
+6576,5857,35,16,#acb183,#e5ebae,Memot,,,,no data
+6015,5858,152,18,#044ca8,#0565df,Pathum Wan,,,,no data
+6387,5859,56,25,#a2ad41,#d8e656,Dangkao,,,,no data
+8445,5862,26,7,#7591ab,#9bc1e4,Tagbilaran City (Capital),,,,key or mark
+6874,5863,23,19,#ba837d,#f8aea6,Ninh Phước,,,,no data
+7233,5864,68,20,#6a7d9b,,,,,,no region's colour
+6323,5868,54,14,#a2b18b,#d8ecb9,Bakan,,,,no data
+5934,5877,44,11,#8390ba,#aebff7,Mueang Phetchaburi,,,,no data
+6028,5880,46,14,#5b6faa,#7994e2,Mueang Suphan Buri,,,,no data
+6801,5881,30,10,#aa8d72,#e2bb98,Đà Lạt,,,,no data
+6496,5882,31,27,#a8b170,#e0eb95,Prey Chhor,,,,no data
+5869,5885,36,17,#a8b78e,#dff3bd,Myeik,,,,no data
+8328,5893,28,8,#8693b7,#b2c4f3,San Carlos City,,,,key or mark
+7304,5896,95,79,#6a7d9b,,,,,,no region's colour
+6093,5903,42,14,#4867a4,#6089da,Khlong Luang,,,,no data
+6470,5911,22,16,#a5ad5f,#dce67e,Pur SenChey,,,,no data
+7230,5916,62,14,#6a7d9b,,,,,,no region's colour
+7424,5916,102,18,#6a7d9b,,,,,,no region's colour
+7368,5920,44,10,#6a7d9b,,,,,,no region's colour
+6658,5925,49,12,#aa9074,#e2c09a,Bình Long,,,,no data
+6090,5927,29,17,#3760aa,#497fe2,Lam Luk Ka,,,,no data
+6409,5930,32,14,#a8b380,#dfeeaa,Samraong Tong,,,,no data
+6801,5930,53,13,#be7f7f,#fda9a9,Hàm Thuận Bắc,,,,no data
+6482,5934,5,5,#a9b309,#e1ee0b,Mean Chey,,,,key or mark
+6599,5937,20,18,#ae8d6c,#e7bb90,Châu Thành,,,,no data
+7367,5937,50,34,#6a7d9b,,,,,,no region's colour
+7410,5937,24,14,#6a7d9b,,,,,,no region's colour
+6033,5939,30,19,#4560ad,#5b7fe6,Bang Bua Thong,,,,no data
+8604,5939,34,7,#819fae,#abd3e8,Butuan City (Capital),,,,key or mark
+8344,5940,31,17,#7a8ab4,#a2b7f0,City of Bayawan (Tulong),,,,no data
+6478,5941,5,7,#a2ad41,#d8e656,Dangkao,,,,key or mark
+6524,5941,28,30,#b1b363,#ecee83,Kien Svay,,,,no data
+7374,5943,2,8,#6a7d9b,,,,,,key or mark
+6638,5950,28,20,#ae786a,#e79f8d,Bến Cát,,,,no data
+6073,5952,5,7,#33559f,#4371d3,Mueang Nonthaburi,,,,key or mark
+6170,5953,86,9,#044ca8,#0565df,Pathum Wan,,,,no data
+6730,5953,42,9,#ba7b7b,#f8a3a3,Định Quán,,,,no data
+6122,5954,27,14,#3e69ad,#528be6,Khlong Sam Wa,,,,no data
+6090,5957,5,7,#275aa4,#3378da,Chatuchak,,,,key or mark
+6470,5957,35,15,#aeb55c,#e7f17a,S'ang,,,,no data
+8547,5958,29,16,#8199ae,#abcbe8,Manolo Fortich,,,,no data
+6170,5964,52,7,#1b58a5,#2475db,Huai Khwang,,,,key or mark
+6104,5969,4,7,#2a5a9d,#3878d1,Bang Kapi,,,,key or mark
+6563,5969,44,26,#b1a869,#ebe08c,Svay Chrum,,,,no data
+6636,5971,20,18,#b1695b,#eb8c79,Củ Chi,,,,no data
+6171,5972,35,14,#194bae,#2164e7,Phasi Charoen,,,,no data
+8467,5973,43,15,#728aad,#97b8e6,Cagayan de Oro City (Capital),,,,no data
+6088,5976,5,7,#1b58a5,#2475db,Huai Khwang,,,,key or mark
+6717,5979,28,17,#b36c72,#ee8f98,Xuân Lộc,,,,no data
+6066,5981,4,5,#194bae,#2164e7,Phasi Charoen,,,,key or mark
+6078,5983,5,5,#044ca8,#0565df,Pathum Wan,,,,key or mark
+6170,5984,67,14,#2356ba,#2e72f7,Bang Khun Thian,,,,no data
+6103,5989,5,5,#245aa6,#2f78dd,Prawet,,,,key or mark
+6036,5992,17,14,#325abf,#4278ff,Krathum Baen,,,,no data
+6458,5997,29,13,#abb370,#e3ee95,Tram Kak,,,,no data
+6170,5998,52,9,#245aa6,#2f78dd,Prawet,,,,no data
+6690,5998,23,19,#b16371,#eb8496,Long Thành,,,,no data
+6063,6004,5,7,#2356ba,#2e72f7,Bang Khun Thian,,,,key or mark
+6082,6004,19,20,#1b5cb7,#237af3,Mueang Samut Prakan,,,,no data
+6108,6004,31,11,#3e69ad,#528be6,Khlong Sam Wa,,,,no data
+6383,6004,29,13,#a7ba8a,#def7b7,Chhuk,,,,no data
+7916,6006,80,18,#93ba9f,#c4f7d3,Puerto Princesa City (Capital),,,,no data
+6171,6009,46,10,#2a5a9d,#3878d1,Bang Kapi,,,,no data
+8646,6010,35,7,#8ba2ae,#b9d8e8,Compostela,,,,key or mark
+8736,6012,43,9,#95a8ba,#c6e0f8,City of Mati (Capital),,,,no data
+6616,6013,18,7,#e7ab8d,,,,,,key or mark
+6020,6014,27,19,#4f6fbc,#6994fa,Mueang Samut Sakhon,,,,no data
+6641,6015,10,5,#e7ab8d,,,,,,key or mark
+6715,6015,23,18,#bf5e68,#ff7d8a,Vũng Tàu,,,,no data
+6594,6017,35,9,#ae816a,#e7ab8d,Đức Hòa,,,,no data
+6170,6021,41,13,#275aa4,#3378da,Chatuchak,,,,no data
+6541,6022,44,23,#b37d66,#eea687,Hồng Ngự,,,,no data
+8388,6027,49,9,#89a8b6,#b6dff2,Dipolog City (Capital),,,,no data
+6656,6028,20,9,#bf6a75,#ff8d9c,Cần Giuộc,,,,no data
+8501,6029,23,7,#79a5a6,#a1dcdd,Iligan City,,,,key or mark
+6683,6030,11,5,#bf6a75,#ff8d9c,Cần Giuộc,,,,key or mark
+6494,6031,31,20,#b1886c,#ecb590,Phú Tân,,,,no data
+6170,6032,46,14,#33559f,#4371d3,Mueang Nonthaburi,,,,no data
+8576,6034,43,7,#8499a6,#b0cbdd,City of Valencia,,,,key or mark
+6647,6048,35,10,#bf7279,#ff97a1,Chợ Gạo,,,,no data
+6596,6049,33,10,#b37771,#ee9e96,Cai Lậy,,,,no data
+6813,6057,28,16,#bf0309,#ff040c,Quận 1,,,,no data
+6853,6057,34,20,#bf0309,#ff040c,Quận 1,,,,no data
+6517,6059,32,18,#b5796a,#f1a18d,Long Xuyen Township,,,,no data
+6555,6059,27,13,#af7566,#e99b87,Chợ Mới,,,,no data
+8453,6065,23,16,#85aeae,#b1e7e8,Lala,,,,no data
+6633,6069,35,15,#ba6c72,#f89097,Mỏ Cày,,,,no data
+8523,6070,28,5,#88ab93,#b5e4c3,Talakag,,,,key or mark
+8671,6072,30,9,#7c9fb1,#a5d3eb,City of Tagum (Capital),,,,no data
+6484,6073,29,18,#b88a6f,#f5b793,Hòn Đất,,,,no data
+6597,6078,20,18,#b16c64,#ec8f85,Long Hồ,,,,no data
+8394,6082,26,7,#89aeb2,#b6e7ed,Pagadian City (Capital),,,,key or mark
+6561,6083,19,18,#b16560,#eb867f,Ninh Kiều,,,,no data
+6847,6084,49,12,#aa9074,#e2c09a,Bình Long,,,,no data
+6785,6089,40,10,#ae786a,#e79f8d,Bến Cát,,,,no data
+8318,6089,38,9,#8fb2b6,#beedf2,Siay,,,,no data
+8600,6093,44,9,#6395af,#83c6e9,Davao City,,,,no data
+6956,6099,50,10,#bf0309,#ff040c,Quận 1,,,,no data
+6630,6108,21,16,#bd787b,#fc9fa3,Trà Cú,,,,no data
+6956,6108,47,12,#ba1f0e,#f72912,Gò Vấp,,,,no data
+8604,6114,17,7,#809dab,#aad1e4,Davao City,,,,key or mark
+8541,6116,35,9,#7fab8a,#a9e4b7,Midsayap,,,,no data
+6563,6118,17,21,#b57b6f,#f1a393,Phụng Hiệp,,,,no data
+6957,6121,54,8,#b12d2d,#eb3c3c,Tân Bình,,,,key or mark
+6771,6124,29,9,#b1695b,#eb8c79,Củ Chi,,,,no data
+6827,6132,4,7,#b85138,#f56c4a,Thuận An,,,,key or mark
+6956,6132,49,10,#b72323,#f32e2e,Quận 6,,,,no data
+6861,6133,2,7,#b74f48,#f3695f,Bien Hoa,,,,key or mark
+8442,6133,64,9,#6cab7b,#90e4a4,Cotabato City,,,,no data
+6916,6135,28,17,#b36c72,#ee8f98,Xuân Lộc,,,,no data
+8657,6137,29,7,#3981a6,#4babdd,Davao City,,,,key or mark
+6602,6139,27,19,#b16f6d,#eb9491,Mỹ Xuyên,,,,no data
+6956,6143,47,8,#b52e24,#f13d30,Quận 7,,,,key or mark
+6499,6144,33,7,#b58478,#f1b0a0,Giồng Riềng,,,,key or mark
+6844,6144,3,9,#b53921,#f14c2b,Di An,,,,no data
+6957,6155,54,8,#ba2d3c,#f83c4f,Binh Tan,,,,key or mark
+6813,6157,5,7,#b13f33,#ec5443,Quận 12,,,,key or mark
+6879,6159,23,20,#b16371,#eb8496,Long Thành,,,,no data
+8653,6159,26,9,#759eba,#9cd2f8,City of Digos (Capital),,,,no data
+6828,6162,5,7,#ba1f0e,#f72912,Gò Vấp,,,,key or mark
+6851,6163,2,7,#b1432d,#ec593c,Quận 9,,,,key or mark
+8533,6164,35,9,#88ad9c,#b5e6d0,Esperanza,,,,no data
+6544,6166,39,10,#b77770,#f39e95,Đông Hải,,,,no data
+6956,6166,67,10,#b4555b,#f07179,Bình Chánh,,,,no data
+6819,6170,4,5,#b12d2d,#eb3c3c,Tân Bình,,,,key or mark
+6828,6174,5,5,#bf0309,#ff040c,Quận 1,,,,key or mark
+6777,6177,17,4,#e7ab8d,,,,,,key or mark
+6956,6177,54,8,#b13f33,#ec5443,Quận 12,,,,key or mark
+8323,6177,55,9,#7eb4a8,#a8f0df,Zamboanga City,,,,no data
+5864,6179,26,9,#7a86ba,#a2b2f8,Mueang Surat Thani,,,,no data
+6812,6179,4,7,#ba2d3c,#f83c4f,Binh Tan,,,,key or mark
+6820,6179,5,7,#b72323,#f32e2e,Quận 6,,,,key or mark
+6755,6180,35,9,#ae816a,#e7ab8d,Đức Hòa,,,,no data
+6835,6185,5,5,#b52e24,#f13d30,Quận 7,,,,key or mark
+6959,6187,48,9,#b1432d,#ec593c,Quận 9,,,,no data
+6808,6193,5,7,#b4555b,#f07179,Bình Chánh,,,,key or mark
+8545,6197,48,7,#80aab4,#aae2f0,City of Koronadal (Capital),,,,key or mark
+6503,6199,19,16,#b57878,#f1a0a0,Cà Mau,,,,no data
+6958,6199,36,10,#b53921,#f14c2b,Di An,,,,no data
+6913,6205,23,18,#bf5e68,#ff7d8a,Vũng Tàu,,,,no data
+6957,6208,75,12,#b85138,#f56c4a,Thuận An,,,,no data
+6959,6221,53,8,#b74f48,#f3695f,Bien Hoa,,,,key or mark
+8248,6221,35,7,#7eb494,#a8f0c5,City of Isabela,,,,key or mark
+6805,6223,37,9,#bf6a75,#ff8d9c,Cần Giuộc,,,,no data
+8555,6230,49,9,#8aabb3,#b7e3ee,Polomolok,,,,no data
+6752,6246,15,18,#b37771,#ee9e96,Cai Lậy,,,,no data
+6805,6269,35,10,#bf7279,#ff97a1,Chợ Gạo,,,,no data
+8604,6272,50,9,#7996b2,#a1c8ed,General Santos City (Dadiangas),,,,no data
+5910,6288,20,11,#7e8ab3,#a8b8ee,Thung Song,,,,no data
+5829,6291,24,13,#7389b4,#99b6f0,Mueang Phuket,,,,no data
+5971,6302,51,10,#757fb8,#9ca9f5,Mueang Nakhon Si Thammarat,,,,no data
+8169,6320,18,9,#74b86c,#9af58f,Patikul,,,,no data
+5988,6382,26,13,#8287b7,#adb3f3,Mueang Phatthalung,,,,no data
+5953,6399,16,10,#8294b7,#adc5f3,Mueang Trang,,,,no data
+7647,6415,40,7,#9e85b5,#d2b1f1,Kota Kinabalu,,,,key or mark
+8768,6434,43,8,#74a9a6,#9ae1dd,Mapanget,,,,key or mark
+7904,6442,46,7,#91a1b4,#c1d6f0,Sandakan,,,,key or mark
+6045,6450,31,8,#7c7eb7,#a5a7f3,Hat Yai,,,,key or mark
+7738,6459,58,14,#969cb1,#c8cfec,Keningau,,,,no data
+6106,6469,35,11,#9685b8,#c8b1f5,Mueang Yala,,,,no data
+8012,6501,48,7,#83baa7,#aef7de,Tawau,,,,key or mark
+6231,6503,28,16,#9a6eb7,#cd92f3,Kota Bharu,,,,no data
+6026,6512,28,7,#9c77ba,#cf9ef8,Kota Setar,,,,key or mark
+6147,6524,34,6,#9a87b1,#cdb4ec,Mueang Narathiwat,,,,key or mark
+6068,6560,23,9,#a482b7,#daadf3,Kuala Muda,,,,no data
+6225,6583,42,7,#a081b4,#d5abf0,Besut,,,,key or mark
+6014,6595,25,9,#9d68b3,#d18aee,S.P. Tengah,,,,no data
+5990,6617,35,7,#9952b7,#cc6df3,Timur Laut,,,,key or mark
+5527,6623,22,7,#88b375,#b5ee9b,Indrapuri,,,,key or mark
+7559,6644,62,14,#96a5b1,#c8dbec,Brunei-Muara,,,,no data
+6069,6654,24,7,#a87ab1,#e0a2ec,Larut Dan Matang,,,,key or mark
+6306,6655,57,9,#9c81b4,#d0abf0,Kuala Terengganu,,,,no data
+5616,6659,23,9,#80b375,#aaee9b,Peusangan,,,,no data
+8665,6670,37,7,#74a9a6,#9ae1dd,Mapanget,,,,key or mark
+6164,6673,53,9,#a48aa3,#dab8d9,Batang Padang,,,,no data
+5738,6680,48,9,#73b170,#99eb95,Langsa Baro,,,,no data
+6127,6701,20,9,#9f68ad,#d38ae6,Kinta,,,,no data
+5698,6732,23,7,#8aaa83,#b7e2ae,Lhoksukon,,,,key or mark
+7726,6735,132,27,#a3b1b1,#d9ecec,Tawau,,,,no data
+5889,6739,44,7,#20aea7,#2ae7de,Medan Sunggal,,,,key or mark
+5889,6749,39,7,#23a5b1,#2edcec,Medan Denai,,,,key or mark
+8665,6751,40,7,#80a9ad,#aae1e6,Pineleng,,,,key or mark
+5890,6759,52,9,#51abb3,#6ce4ee,Percut Sei Tuan,,,,no data
+8880,6767,102,14,#ab907b,#e4bfa3,Bacan,,,,no data
+5889,6769,30,7,#51b19f,#6cebd4,Medan Marelan,,,,key or mark
+6762,6776,43,8,#b1b36e,#ecee92,Singkawang Selatan,,,,key or mark
+6316,6777,35,9,#9f87b4,#d4b4f0,Kuantan,,,,no data
+5889,6779,40,9,#63b1a6,#84ecdd,Sunggal,,,,no data
+5801,6790,36,9,#81afa2,#ace9d8,Selesai,,,,no data
+5867,6795,5,7,#51b19f,#6cebd4,Medan Marelan,,,,key or mark
+5922,6801,38,9,#69aab5,#8be2f1,Tebingtinggi,,,,no data
+5884,6803,4,5,#51abb3,#6ce4ee,Percut Sei Tuan,,,,key or mark
+6145,6805,43,9,#ae7ab1,#e8a2ec,Ulu Selangor,,,,no data
+5854,6808,5,5,#63b1a6,#84ecdd,Sunggal,,,,key or mark
+5607,6811,46,7,#a7b496,#def0c7,Darul Makmur,,,,key or mark
+5868,6811,5,5,#20aea7,#2ae7de,Medan Sunggal,,,,key or mark
+5881,6812,5,7,#23a5b1,#2edcec,Medan Denai,,,,key or mark
+8588,6814,38,9,#8ca6ad,#badde6,Kotamobagu Selatan,,,,no data
+9299,6824,74,14,#ad9c8f,#e6cfbe,Kota Waisai,,,,no data
+6210,6829,15,8,#db7ce9,,,,,,key or mark
+6211,6829,15,33,#c0b0e9,,,,,,no region's colour
+7355,6829,96,27,#9cacb1,#cfe5eb,Sibu,,,,no data
+6193,6830,37,7,#a55daf,#db7ce9,Gombak,,,,key or mark
+5972,6835,45,7,#6d99b8,#91cbf5,Sei Dadap,,,,key or mark
+8394,6836,48,9,#91a2ae,#c1d8e8,Wonosari,,,,no data
+6181,6837,5,5,#b253b8,#ed6ef5,Petaling,,,,key or mark
+6195,6840,5,5,#b233ba,#ed44f7,WP. Kuala Lumpur,,,,key or mark
+6130,6846,25,9,#9359ba,#c476f7,Klang,,,,no data
+6197,6849,5,7,#9f33ba,#d444f7,WP. Kuala Lumpur,,,,key or mark
+6255,6852,48,9,#9084af,#c0b0e9,Temerloh,,,,no data
+6188,6854,4,5,#9240aa,#c255e2,Petaling,,,,key or mark
+6207,6854,32,9,#8d53ad,#bb6ee6,Ulu Langat,,,,no data
+5861,6855,21,7,#80aaae,#aae2e7,Sinembah Tanjung Muda Hilir,,,,key or mark
+6179,6856,5,7,#9b4bb3,#ce63ee,Petaling,,,,key or mark
+5919,6860,32,17,#7096aa,#95c7e2,Siantar,,,,no data
+6064,6861,77,9,#b233ba,#ed44f7,WP. Kuala Lumpur,,,,no data
+6064,6871,53,9,#9f33ba,#d444f7,WP. Kuala Lumpur,,,,no data
+6171,6872,33,17,#9275bc,#c29bfa,Sepang,,,,no data
+6522,6875,98,18,#af1932,#e92142,Central,,,,no data
+6065,6881,52,9,#9240aa,#c255e2,Petaling,,,,no data
+6064,6891,67,7,#9b4bb3,#ce63ee,Petaling,,,,key or mark
+6210,6895,35,13,#8876b7,#b59df3,Seremban,,,,no data
+5801,6897,33,9,#a89389,#e0c4b6,Sumbul,,,,no data
+6064,6903,49,7,#b253b8,#ed6ef5,Petaling,,,,key or mark
+5976,6909,35,7,#7d9cb8,#a6d0f5,Kualuh Hulu,,,,key or mark
+6515,6920,23,9,#a863b1,#df84ec,Johor Bahru,,,,no data
+6561,6924,26,9,#b45aa8,#f077df,Johor Bahru,,,,no data
+6252,6926,33,7,#7f76b7,#a99df3,Melaka Tengah,,,,key or mark
+6640,6930,62,9,#af1932,#e92142,Central,,,,no data
+7859,6932,48,14,#9eb8b3,#d2f5ee,Tenggarong Seberang,,,,no data
+6640,6940,70,7,#aa3e4c,#e25265,West,,,,key or mark
+6395,6942,31,9,#9c83ae,#cfaee7,Kluang,,,,no data
+6641,6950,44,9,#b35c70,#ee7a95,West,,,,no data
+7121,6950,36,9,#8dafb5,#bbe9f1,Kuching,,,,no data
+6571,6952,5,7,#b43955,#f04b71,North District,,,,key or mark
+6584,6952,5,5,#ba1d46,#f7265d,North-East,,,,key or mark
+5908,6955,22,7,#a68581,#ddb1ac,Siborongborong,,,,key or mark
+6546,6955,4,5,#b35c70,#ee7a95,West,,,,key or mark
+6322,6957,41,17,#9487b4,#c5b4f0,Batu Pahat,,,,no data
+6600,6958,4,7,#ae3844,#e74a5a,East,,,,key or mark
+6640,6960,68,9,#b43955,#f04b71,North District,,,,no data
+8243,6960,60,14,#b499a2,#f0cbd8,Baolan,,,,no data
+6560,6966,5,7,#aa3e4c,#e25265,West,,,,key or mark
+6577,6970,5,5,#af1932,#e92142,Central,,,,key or mark
+6640,6970,54,9,#ba1d46,#f7265d,North-East,,,,no data
+6398,6979,23,9,#a863b1,#df84ec,Johor Bahru,,,,no data
+6430,6979,26,9,#b45aa8,#f077df,Johor Bahru,,,,no data
+6640,6980,57,9,#ae3844,#e74a5a,East,,,,no data
+6599,6984,30,7,#a551b4,#db6bf0,Sekupang,,,,key or mark
+7001,6993,37,7,#b1b36e,#ecee92,Singkawang Selatan,,,,key or mark
+6092,6994,27,7,#829cb4,#add0f0,Tambusai Utara,,,,key or mark
+5981,7017,42,7,#ae7c75,#e7a59b,Padang Bolak,,,,key or mark
+6464,7024,30,7,#a551b4,#db6bf0,Sekupang,,,,key or mark
+6203,7033,28,7,#7894b5,#a0c5f1,Bathin Solapan,,,,key or mark
+7023,7037,53,9,#a3b173,#d9ec99,Siantan,,,,no data
+8972,7038,87,21,#bfa5a7,#ffdbde,Lolong Guba,,,,no data
+5906,7041,40,9,#b59078,#f1c0a0,Angkola Selatan,,,,no data
+7334,7046,74,18,#9cb3a8,#d0eee0,Nanga Pinoh,,,,no data
+7909,7048,31,14,#67b8a9,#89f5e1,Samarinda Utara,,,,no data
+8389,7048,76,18,#a89595,#dfc6c6,Toili,,,,no data
+7116,7069,82,14,#99b58b,#cbf1b9,Kapuas,,,,no data
+5756,7074,20,7,#b6a284,#f2d8af,Gunung Sitoli,,,,key or mark
+7730,7074,88,14,#9cb3ad,#d0eee6,Loa Kulu,,,,no data
+6508,7091,19,7,#7e75b5,#a89cf1,Teluk Bintan,,,,key or mark
+6088,7095,34,9,#a58483,#dbafae,Tapung,,,,no data
+6186,7096,51,9,#5474ae,#6f9ae7,Tenayan Raya,,,,no data
+7864,7103,29,16,#81baaf,#acf7e9,Balikpapan Utara,,,,no data
+8224,7110,40,18,#ad969e,#e6c8d2,Sigi Biromaru,,,,no data
+6976,7113,48,9,#a7b353,#deee6e,Sungai Kakap,,,,no data
+6273,7116,19,7,#788db4,#9fbcf0,Tualang,,,,key or mark
+5989,7137,43,7,#b38d71,#eebc96,Pasaman,,,,key or mark
+9205,7140,58,10,#bf93a1,#ffc4d6,Sirimau,,,,no data
+7619,7167,60,14,#98b3a9,#caeee1,Dusun Selatan,,,,no data
+6071,7169,36,15,#a67e67,#dda789,Harau,,,,no data
+6154,7175,35,9,#9f898d,#d3b6bc,Tambang,,,,no data
+5872,7187,26,8,#b6a284,#f2d8af,Gunung Sitoli,,,,key or mark
+6016,7191,32,18,#be9272,#fdc297,Kinali,,,,no data
+6315,7197,42,9,#8299b4,#adccf0,Rengat Barat,,,,no data
+7150,7214,90,18,#98baa8,#caf7e0,Sungai Raya,,,,no data
+8401,7237,94,18,#ae9999,#e8cbcc,Towuti,,,,no data
+6094,7239,34,16,#aa8662,#e2b282,Kubung,,,,no data
+8296,7244,22,7,#af888a,#e9b5b8,Sukamaju,,,,key or mark
+7484,7245,80,18,#94b4ad,#c5f0e6,Bukit Batu,,,,no data
+8152,7252,36,7,#b68a99,#f2b7cb,Kalukku,,,,key or mark
+6030,7267,35,9,#b47b50,#f0a46a,Kuranji,,,,no data
+7736,7274,34,7,#7dae96,#a6e7c8,Murung Pudak,,,,key or mark
+6412,7278,59,9,#7e9eaf,#a7d2e9,Muara Bulian,,,,no data
+8220,7285,31,9,#ad8090,#e6aabf,Duampanua,,,,no data
+6309,7293,22,7,#7b99b3,#a3ccee,Rimbo Bujang,,,,key or mark
+7316,7300,128,18,#9ab7b0,#cdf3ea,Arut Selatan,,,,no data
+6128,7302,65,9,#b3936b,#eec48e,Kamang Baru,,,,no data
+8525,7317,36,7,#ab8484,#e4b0b0,Baruga,,,,key or mark
+6427,7323,26,9,#6c99b1,#8fcbeb,Sungai Gelam,,,,no data
+8246,7339,30,9,#ae757d,#e89ba6,Watang Pulu,,,,no data
+7693,7360,52,9,#79afa0,#a1e9d5,Landasan Ulin,,,,no data
+6586,7367,50,9,#75a5b7,#9cdbf3,Sungai Liat,,,,no data
+6794,7372,80,9,#80a1b4,#aad6f0,Toboali,,,,no data
+5917,7374,59,9,#be9272,#fdc297,Kinali,,,,no data
+6240,7380,32,7,#86a8b1,#b2e0ec,Sarolangun,,,,key or mark
+8289,7389,23,7,#aa797b,#e2a1a3,Mario Riwawo,,,,key or mark
+7744,7394,41,7,#8ab5a9,#b7f1e1,Pelaihari,,,,key or mark
+7597,7399,61,9,#5bb199,#79eccc,Banjarmasin Selatan,,,,no data
+6983,7404,49,9,#24517b,#2f6ca3,Gambir,,,,no data
+7069,7404,65,9,#3c638d,#5084bc,Makasar,,,,no data
+6464,7408,22,7,#86acb3,#b2e5ee,Bayung Lencir,,,,key or mark
+6983,7414,76,9,#30527b,#3f6da4,Kebayoran Lama,,,,no data
+7069,7414,55,7,#466283,#5d82ae,Cipayung,,,,key or mark
+6983,7424,54,7,#1f5084,#296ab0,Kebon Jeruk,,,,key or mark
+7069,7424,87,9,#3b5c84,#4e7ab0,Jagakarsa,,,,no data
+7164,7424,67,9,#4e788b,#68a0b9,Tapos,,,,no data
+6556,7427,36,17,#409bb4,#55cef0,Ilir Timur III,,,,no data
+8244,7432,30,5,#b36f71,#ee9396,Biring Kanaya,,,,key or mark
+6983,7434,69,9,#275f8b,#347eb9,Kembangan,,,,no data
+7069,7434,89,9,#486b90,#608ebf,Pesanggrahan,,,,no data
+7164,7434,62,9,#638a9b,#83b7ce,Gunung Putri,,,,no data
+8639,7440,28,7,#b89592,#f5c6c2,Wolio,,,,key or mark
+6983,7444,72,9,#416f93,#5693c4,Penjaringan,,,,no data
+7069,7444,62,9,#397290,#4b98bf,Benda,,,,no data
+7164,7444,50,7,#508696,#6ab2c8,Mustikajaya,,,,key or mark
+8334,7451,51,7,#b27f81,#eda9ab,Gantarang,,,,key or mark
+6983,7454,81,9,#2d6191,#3b81c1,Tanjung Priok,,,,no data
+7069,7454,70,9,#4e8696,#68b2c8,Tangerang,,,,no data
+7164,7454,86,7,#467696,#5d9dc8,Bekasi Utara,,,,key or mark
+8181,7462,47,7,#a83d33,#df5143,Panakkukang,,,,key or mark
+6223,7463,32,9,#b8b181,#f5ebac,Selupu Rejang,,,,no data
+6983,7464,52,9,#427590,#589cbf,Cilincing,,,,no data
+7069,7464,54,9,#4f7c93,#69a5c4,Serpong,,,,no data
+7164,7464,76,9,#4b7e90,#64a7bf,Gunung Sindur,,,,no data
+6579,7465,23,7,#66a5ab,#87dce4,Kertapati,,,,key or mark
+6334,7471,61,9,#8ab3ae,#b8eee8,Megang Sakti,,,,no data
+6983,7474,46,9,#306888,#408ab5,Cakung,,,,no data
+7069,7474,47,9,#4e728b,#6898b9,Sawangan,,,,no data
+7164,7474,47,9,#427c91,#58a5c1,Bogor Utara,,,,no data
+8197,7480,25,7,#aa5850,#e2756a,Biring Kanaya,,,,key or mark
+6603,7488,52,9,#90b1b1,#c0ecec,Sungai Menang,,,,no data
+8240,7493,68,9,#ab6d66,#e49188,Polombangkeng Utara,,,,no data
+6918,7495,72,18,#2f6ca3,,,,,,no region's colour
+6803,7500,34,9,#72b48b,#97f0b9,Kramatwatu,,,,no data
+6482,7507,45,9,#86b3a8,#b2eedf,Gelumbang,,,,no data
+7048,7520,37,7,#7ea890,#a8dfbf,Pebayuran,,,,key or mark
+6901,7531,23,14,#6795a0,#89c6d5,Pasarkemis,,,,no data
+6942,7532,5,7,#416f93,#5693c4,Penjaringan,,,,key or mark
+9215,7532,70,16,#bfa5a7,#ffdbde,Lolong Guba,,,,no data
+6992,7535,5,7,#427590,#589cbf,Cilincing,,,,key or mark
+6976,7539,5,7,#2d6191,#3b81c1,Tanjung Priok,,,,key or mark
+7008,7545,12,18,#94d3dc,,,,,,no region's colour
+6950,7546,5,7,#275f8b,#347eb9,Kembangan,,,,key or mark
+6996,7546,5,7,#306888,#408ab5,Cakung,,,,key or mark
+7008,7546,11,7,#467696,#5d9dc8,Bekasi Utara,,,,key or mark
+6812,7547,34,7,#75b29b,#9bedce,Taktakan,,,,key or mark
+6961,7547,5,7,#1f5084,#296ab0,Kebon Jeruk,,,,key or mark
+6972,7547,5,7,#24517b,#2f6ca3,Gambir,,,,key or mark
+7023,7549,28,16,#6f9fa5,#94d3dc,Tambun Selatan,,,,no data
+6386,7551,43,7,#80aa9f,#aae2d4,Muara Enim,,,,key or mark
+6920,7551,11,7,#4e8696,#68b2c8,Tangerang,,,,key or mark
+6876,7553,27,16,#5e9597,#7dc6c9,Tigaraksa,,,,no data
+6937,7553,11,7,#397290,#4b98bf,Benda,,,,key or mark
+7145,7553,54,9,#8db87e,#bbf5a7,Ciasem,,,,no data
+7097,7557,26,18,#74b473,#9af099,Klari,,,,no data
+6965,7558,5,7,#30527b,#3f6da4,Kebayoran Lama,,,,key or mark
+6989,7559,5,7,#3c638d,#5084bc,Makasar,,,,key or mark
+7057,7559,30,17,#6da699,#91ddcb,Cikarang Selatan,,,,no data
+7008,7563,11,7,#508696,#6ab2c8,Mustikajaya,,,,key or mark
+6321,7566,43,9,#bab577,#f7f19e,Selebar,,,,no data
+6837,7566,35,9,#6fa899,#94dfcb,Cikande,,,,no data
+6508,7568,44,9,#8db5a3,#bbf1d9,Buay Madang Timur,,,,no data
+6905,7572,27,7,#608599,#7fb1cb,Pagedangan,,,,key or mark
+6970,7572,10,8,#4e7ab0,,,,,,key or mark
+6970,7572,11,7,#3b5c84,#4e7ab0,Jagakarsa,,,,key or mark
+6616,7573,74,9,#a5b478,#dbf09f,Tulang Bawang Tengah,,,,no data
+6958,7573,11,7,#486b90,#608ebf,Pesanggrahan,,,,key or mark
+6983,7573,11,7,#466283,#5d82ae,Cipayung,,,,key or mark
+6940,7574,11,7,#4f7c93,#69a5c4,Serpong,,,,key or mark
+6957,7574,14,7,#608ebf,,,,,,key or mark
+6999,7585,11,7,#638a9b,#83b7ce,Gunung Putri,,,,key or mark
+6804,7588,33,9,#7ca495,#a5dac6,Rangkasbitung,,,,no data
+6961,7590,11,7,#4e728b,#6898b9,Sawangan,,,,key or mark
+6980,7590,11,7,#4e788b,#68a0b9,Tapos,,,,key or mark
+6949,7603,11,7,#4b7e90,#64a7bf,Gunung Sindur,,,,key or mark
+7031,7606,36,9,#7ba08e,#a4d5bd,Jonggol,,,,no data
+6550,7611,44,7,#9caf87,#d0e9b3,Mesuji Makmur,,,,key or mark
+6637,7617,37,9,#aeba66,#e8f787,Bandar Mataram,,,,no data
+6982,7617,24,17,#5a8493,#78b0c4,Babakan Madang,,,,no data
+7176,7617,35,9,#93b47d,#c4f0a6,Cipunagara,,,,no data
+7228,7619,60,9,#3e901b,#52bf24,Coblong,,,,no data
+6939,7620,25,17,#5e9397,#7dc3c9,Rumpin,,,,no data
+7091,7620,57,9,#7fae75,#a9e89b,Bungursari,,,,no data
+6896,7622,27,18,#7a9b99,#a2cecc,Parung Panjang,,,,no data
+6477,7623,28,5,#b7ba77,#f4f79e,Buay Pemaca,,,,key or mark
+6967,7624,11,7,#427c91,#58a5c1,Bogor Utara,,,,key or mark
+7228,7629,81,9,#5b9b36,#79ce48,Arcamanik,,,,no data
+7228,7639,49,7,#519c43,#6bd059,Cimahi Utara,,,,key or mark
+7228,7649,79,9,#5d9648,#7bc860,Baleendah,,,,no data
+6976,7651,24,7,#5e9199,#7dc1cb,Cisarua,,,,key or mark
+7027,7652,34,9,#6c9990,#8fcbbf,Cugenang,,,,no data
+6666,7653,36,7,#b4b76f,#f0f394,Sukadana,,,,key or mark
+6568,7654,45,9,#b0b771,#eaf396,Kalirejo,,,,no data
+6832,7654,25,7,#7bb384,#a4eeb0,Malingping,,,,key or mark
+7139,7654,40,9,#6c9f6f,#90d394,Cimenyan,,,,no data
+7194,7661,26,15,#84ae62,#afe882,Cicalengka,,,,no data
+7063,7664,46,9,#78ad7c,#a0e6a5,Cipatat,,,,no data
+9041,7668,14,7,#a2ba82,#d8f8ad,Dili,,,,key or mark
+7145,7671,11,7,#519c43,#6bd059,Cimahi Utara,,,,key or mark
+7160,7675,11,7,#3e901b,#52bf24,Coblong,,,,key or mark
+7175,7676,11,7,#5b9b36,#79ce48,Arcamanik,,,,key or mark
+7159,7677,13,6,#52bf24,,,,,,key or mark
+6998,7681,28,15,#6fad75,#94e69b,Gunungguruh,,,,no data
+6651,7683,5,7,#aebe13,#e8fd19,Sukabumi,,,,key or mark
+6547,7687,54,9,#b8ba62,#f5f882,Pringsewu,,,,no data
+7092,7690,41,9,#81a979,#abe1a1,Kutawaringin,,,,no data
+7160,7690,11,7,#5d9648,#7bc860,Baleendah,,,,key or mark
+6624,7691,5,7,#b1ba53,#ebf86e,Natar,,,,key or mark
+7183,7692,27,18,#72a252,#97d76d,Cileunyi,,,,no data
+6943,7693,36,7,#80b184,#aaebaf,Cikembar,,,,key or mark
+6660,7696,42,16,#adbd5a,#e6fc78,Jati Agung,,,,no data
+6889,7697,41,9,#92b796,#c2f3c7,Surade,,,,no data
+7435,7697,59,9,#ba4e21,#f7682b,Tambaksari,,,,no data
+7510,7697,48,9,#b57154,#f1966f,Sidoarjo,,,,no data
+7435,7707,50,7,#be6e4b,#fd9264,Sukolilo,,,,key or mark
+7511,7707,46,9,#b27d5d,#eda67b,Gempol,,,,no data
+7145,7712,39,7,#7b9b6f,#a3ce94,Pangalengan,,,,key or mark
+7436,7717,67,7,#b6613d,#f28151,Taman,,,,key or mark
+7510,7717,63,9,#ab745c,#e49a7a,Tarik,,,,no data
+7435,7727,47,7,#b17460,#eb9a7f,Lakarsantri,,,,key or mark
+7510,7727,59,9,#b4876c,#f0b490,Prigen,,,,no data
+6606,7731,53,9,#aebe13,#e8fd19,Sukabumi,,,,no data
+7044,7733,47,9,#abb64b,#e4f264,Mundu,,,,no data
+7196,7733,61,37,#ad9064,#e6c085,Dawe,,,,no data
+7272,7733,31,9,#ba9e63,#f8d283,Tahunan,,,,no data
+7675,7733,43,7,#bc7871,#fa9f96,Batuputih,,,,key or mark
+8702,7734,47,7,#bebb81,#fdf9ac,Nubatukan,,,,key or mark
+7108,7736,69,9,#9ba25e,#ced77d,Cilongok,,,,no data
+7002,7739,33,16,#afba68,#e9f88a,Indramayu,,,,no data
+6606,7741,67,9,#b1ba53,#ebf86e,Natar,,,,no data
+7464,7741,32,9,#b87f66,#f5a988,Cerme,,,,no data
+8918,7741,31,7,#b2b682,#edf2ad,Bobonaro,,,,key or mark
+6718,7742,20,16,#72b48b,#97f0b9,Kramatwatu,,,,no data
+7047,7743,44,7,#acb460,#e5f080,Bulakamba,,,,key or mark
+7196,7743,55,9,#b69150,#f2c16a,Mranggen,,,,no data
+7110,7746,68,9,#a5a267,#dcd889,Sumbang,,,,no data
+6904,7748,37,14,#8db87e,#bbf5a7,Ciasem,,,,no data
+7551,7752,26,14,#bc8778,#fab39f,Ketapang,,,,no data
+7046,7753,36,9,#afb25a,#e9ed78,Bumijawa,,,,no data
+7196,7753,43,7,#b6965d,#f2c77c,Wonosalam,,,,key or mark
+7303,7754,19,9,#b89f6a,#f5d38d,Tlogowungu,,,,no data
+7341,7754,42,9,#ba9672,#f8c897,Pamotan,,,,no data
+7105,7756,70,9,#baab5d,#f7e47b,Kajen,,,,no data
+7513,7756,29,16,#bc7b68,#faa38a,Galis,,,,no data
+6954,7757,29,17,#98ba68,#caf88a,Losarang,,,,no data
+7444,7760,24,16,#b8876d,#f5b491,Sugio,,,,no data
+7443,7762,26,13,#f5b491,,,,,,no region's colour
+7026,7764,35,7,#a9b460,#e1f080,Susukan,,,,key or mark
+7401,7764,28,7,#ba8e72,#f8bd97,Semanding,,,,key or mark
+7292,7766,5,7,#ad9064,#e6c085,Dawe,,,,key or mark
+7269,7770,5,7,#b6965d,#f2c77c,Wonosalam,,,,key or mark
+8265,7772,36,7,#bdae87,#fce8b3,Langke Rembong,,,,key or mark
+7121,7773,27,7,#bab25d,#f7ed7b,Petarukan,,,,key or mark
+7029,7774,36,7,#a3b340,#d9ee55,Harjamukti,,,,key or mark
+8474,7774,23,7,#bdb587,#fcf1b3,Kota Komba,,,,key or mark
+7581,7775,54,9,#bc7d71,#faa696,Pegantenan,,,,no data
+7235,7777,5,7,#bf992b,#ffcc39,Pedurungan,,,,key or mark
+6923,7780,23,16,#93b47d,#c4f0a6,Cipunagara,,,,no data
+7085,7780,25,9,#b3b73d,#eef351,Brebes,,,,no data
+7504,7781,5,5,#ba4e21,#f7682b,Tambaksari,,,,key or mark
+7491,7785,5,7,#b17460,#eb9a7f,Lakarsantri,,,,key or mark
+7256,7786,5,7,#b69150,#f2c16a,Mranggen,,,,key or mark
+7413,7786,34,17,#b48a6e,#f0b792,Baureno,,,,no data
+7512,7786,5,7,#be6e4b,#fd9264,Sukolilo,,,,key or mark
+7194,7788,31,7,#bca15f,#fad67e,Ngaliyan,,,,key or mark
+7503,7790,4,5,#b6613d,#f28151,Taman,,,,key or mark
+6992,7792,5,7,#8bae5b,#b9e879,Ligung,,,,key or mark
+7033,7792,5,7,#abb64b,#e4f264,Mundu,,,,key or mark
+7274,7793,30,13,#b7a173,#f3d699,Toroh,,,,no data
+7369,7793,22,7,#b79980,#f3ccaa,Tambakrejo,,,,key or mark
+7069,7794,2,7,#acb460,#e5f080,Bulakamba,,,,key or mark
+6696,7797,20,15,#82b493,#adf0c3,Cikeusik,,,,no data
+7440,7797,3,5,#f0b792,,,,,,key or mark
+7506,7799,5,5,#b57154,#f1966f,Sidoarjo,,,,key or mark
+7159,7800,34,9,#bcab6d,#fae391,Bandar,,,,no data
+7215,7801,40,7,#b49957,#f0cc73,Gunung Pati,,,,key or mark
+7102,7803,25,16,#b6b36b,#f2ee8e,Belik,,,,no data
+7144,7803,7,5,#baab5d,#f7e47b,Kajen,,,,key or mark
+7474,7803,5,7,#ab745c,#e49a7a,Tarik,,,,key or mark
+7440,7804,23,17,#a9816a,#e1ab8d,Diwek,,,,no data
+6948,7807,5,5,#84ae62,#afe882,Cicalengka,,,,key or mark
+7016,7807,25,16,#8dae5b,#bce779,Ciawigebang,,,,no data
+7089,7807,3,9,#afb25a,#e9ed78,Bumijawa,,,,no data
+6979,7808,4,7,#8da869,#bcdf8c,Malangbong,,,,key or mark
+8800,7808,53,8,#bebb81,#fdf9ac,Nubatukan,,,,key or mark
+7507,7811,4,7,#b27d5d,#eda67b,Gempol,,,,key or mark
+7196,7812,36,16,#a99a65,#e1cd86,Kranggan,,,,no data
+7257,7812,53,17,#a98d61,#e1bb81,Suruh,,,,no data
+7634,7817,51,9,#ba8a74,#f7b79a,Arjasa,,,,no data
+7051,7819,31,10,#a3aa60,#d9e27f,Banjarharjo,,,,no data
+7288,7819,34,7,#af8d66,#e9bb87,Karangmalang,,,,key or mark
+7333,7819,28,9,#ad8e6f,#e6bd94,Paron,,,,no data
+7464,7820,32,15,#ad856f,#e6b194,Pungging,,,,no data
+7161,7822,25,13,#aaa169,#e2d68b,Kertek,,,,no data
+7391,7825,29,17,#a98c7c,#e1baa5,Rejoso,,,,no data
+7515,7826,5,7,#b4876c,#f0b490,Prigen,,,,key or mark
+6958,7827,5,7,#81a854,#acdf70,Karangpawitan,,,,key or mark
+7733,7828,41,9,#ba87b1,#f7b3eb,Sukasada,,,,no data
+7530,7830,30,18,#b2846c,#edb08f,Tutur,,,,no data
+6995,7831,30,7,#89a263,#b6d784,Sindangkasih,,,,key or mark
+7116,7831,2,7,#a5a267,#dcd889,Sumbang,,,,key or mark
+8852,7831,34,9,#b6b382,#f2eead,Maulafa,,,,no data
+7415,7832,39,7,#ad9478,#e6c59f,Tanjunganom,,,,key or mark
+7252,7833,23,17,#a99161,#e1c181,Musuk,,,,no data
+7415,7833,40,7,#e6c59f,,,,,,key or mark
+7038,7834,44,15,#9db271,#d1ed96,Gandrungmangu,,,,no data
+7353,7834,34,7,#a68463,#ddb083,Wungu,,,,key or mark
+7568,7834,44,7,#bf8d72,#ffbc98,Tiris,,,,key or mark
+7926,7834,32,9,#b4897e,#f0b6a8,Aikmel,,,,no data
+6893,7835,39,7,#7b9b6f,#a3ce94,Pangalengan,,,,key or mark
+7229,7836,11,7,#a2905a,#d8c077,Candimulyo,,,,key or mark
+7172,7837,48,13,#a59c64,#dcd085,Mertoyudan,,,,no data
+7291,7839,5,7,#ae8d4b,#e8bc63,Grogol,,,,key or mark
+7311,7839,5,7,#af9067,#e9bf89,Gondangrejo,,,,key or mark
+7095,7840,4,7,#9ba25e,#ced77d,Cilongok,,,,key or mark
+7126,7840,34,7,#a8aa6c,#e0e28f,Purwanegara,,,,key or mark
+7675,7840,29,18,#b68c75,#f2ba9c,Kalipuro,,,,no data
+7627,7841,34,9,#b38565,#eeb186,Sumbersari,,,,no data
+7467,7842,46,9,#a48c70,#daba95,Singosari,,,,no data
+7644,7842,4,7,#eeb186,,,,,,key or mark
+6971,7847,5,7,#88a863,#b5df83,Cigalontang,,,,key or mark
+6946,7848,4,5,#79a254,#a1d770,Cisurupan,,,,key or mark
+7433,7848,27,7,#ae9069,#e8c08c,Kepung,,,,key or mark
+8047,7848,45,7,#be938d,#fdc4bc,Pekat,,,,key or mark
+6860,7849,44,18,#91b387,#c1eeb4,Cibinong,,,,no data
+6992,7849,5,5,#84b150,#b0eb6a,Mangkubumi,,,,key or mark
+7821,7849,29,7,#ba7bb3,#f8a4ee,Kintamani,,,,key or mark
+6798,7850,41,9,#92b796,#c2f3c7,Surade,,,,no data
+7246,7852,5,7,#a69659,#ddc876,Ngaglik,,,,key or mark
+7275,7854,5,7,#aa8f58,#e2be75,Bayat,,,,key or mark
+7145,7855,23,15,#b3b05e,#eeea7d,Kebumen,,,,no data
+7353,7855,23,15,#a28e6f,#d8bd93,Kebonsari,,,,no data
+7300,7856,42,9,#a9936d,#e1c491,Weru,,,,no data
+7549,7857,28,18,#b18d77,#ebbb9e,Candipuro,,,,no data
+7106,7860,27,9,#b1b762,#ecf382,Kemranjen,,,,no data
+7174,7860,38,9,#b3ab67,#eee389,Bener,,,,no data
+7071,7861,22,16,#abb762,#e4f382,Kesugihan,,,,no data
+7010,7862,35,13,#aaba7f,#e2f8a9,Pamarican,,,,no data
+7423,7862,23,14,#b79e7d,#f3d2a6,Ponggok,,,,no data
+7496,7862,34,9,#a47051,#da956c,Kedungkandang,,,,no data
+7994,7864,22,18,#b4897e,#f0b6a8,Aikmel,,,,no data
+7859,7865,43,7,#ba7b69,#f8a38b,Lingsar,,,,key or mark
+7241,7866,5,7,#af9a48,#e9cd5f,Depok,,,,key or mark
+7454,7867,27,7,#ba9a7a,#f8cda2,Kanigoro,,,,key or mark
+7606,7868,32,9,#b2937f,#edc3a9,Gumuk Mas,,,,no data
+7423,7869,14,17,#f3d2a6,,,,,,no region's colour
+7423,7870,13,16,#e6c69b,,,,,,no region's colour
+7663,7872,35,17,#b89987,#f5cbb4,Muncar,,,,no data
+6940,7873,40,7,#9fba7f,#d4f8a9,Karangnunggal,,,,key or mark
+7210,7874,28,7,#b3a467,#eeda89,Kasihan,,,,key or mark
+7405,7876,40,16,#ad9575,#e6c69b,Kalidawir,,,,no data
+7479,7879,28,17,#b19372,#ebc497,Bantur,,,,no data
+7514,7879,27,7,#b18b72,#ebb997,Dampit,,,,key or mark
+7908,7880,28,7,#b8886f,#f5b593,Pujut,,,,key or mark
+7368,7881,31,19,#a99c87,#e1cfb4,Dongko,,,,no data
+7243,7882,45,7,#b7a87e,#f3e0a8,Imogiri,,,,key or mark
+7295,7885,61,7,#b7a07e,#f3d5a8,Tulakan,,,,key or mark
+7755,7885,36,9,#ba78a9,#f79fe1,Mengwi,,,,no data
+7947,7890,34,17,#b68165,#f2ab86,Terara,,,,no data
+8348,7894,31,7,#bdb793,#fcf4c3,Kodi Utara,,,,key or mark
+6946,7896,62,9,#84ae62,#afe882,Cicalengka,,,,no data
+7020,7896,72,9,#84b150,#b0eb6a,Mangkubumi,,,,no data
+7211,7904,62,7,#ae8d4b,#e8bc63,Grogol,,,,key or mark
+7781,7904,46,9,#b6599f,#f276d3,Denpasar Selatan,,,,no data
+6946,7906,51,7,#81a854,#acdf70,Karangpawitan,,,,key or mark
+7021,7906,53,9,#8da869,#bcdf8c,Malangbong,,,,no data
+7211,7914,69,9,#af9067,#e9bf89,Gondangrejo,,,,no data
+6947,7916,39,9,#79a254,#a1d770,Cisurupan,,,,no data
+7020,7916,68,9,#8bae5b,#b9e879,Ligung,,,,no data
+7211,7924,43,7,#aa8f58,#e2be75,Bayat,,,,key or mark
+6946,7926,69,9,#88a863,#b5df83,Cigalontang,,,,no data
+8650,7926,37,8,#bdb793,#fcf4c3,Kodi Utara,,,,key or mark
+7211,7934,47,7,#a69659,#ddc876,Ngaglik,,,,key or mark
+7211,7944,69,9,#af9a48,#e9cd5f,Depok,,,,no data
+7205,7954,65,9,#a2905a,#d8c077,Candimulyo,,,,no data

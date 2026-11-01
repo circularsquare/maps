@@ -1,0 +1,52 @@
+FONTLOG for asia1mpixel
+=======================
+
+asia1mpixel is a pixel font for the labels of the asia1m map. It puts several pixel fonts
+on one grid (1 pixel = 160 units, 1920 units per em) so that at 12 px every glyph of every
+script is pixel-exact. Every source glyph was rendered 1-bit at its own native pixel size
+and rebuilt as square-pixel outlines; nothing was resampled or redrawn except where noted.
+
+Sources and credits
+-------------------
+- m5x7 by Daniel Linssen (managore), https://managore.itch.io/m5x7
+  CC0 1.0 ("free to use but attribution appreciated"). Basic Latin, Latin-1, Latin
+  Extended-A, digits and punctuation, and the Cyrillic lowercase а е р с у ё ў ӯ. Native size 16 px per em (1 px = 64 of 1024 units).
+- Ark Pixel Font 12px Monospaced zh_cn by TakWolf, https://github.com/TakWolf/ark-pixel-font
+  SIL OFL 1.1, Reserved Font Name "Ark Pixel" (not used by this font). Chinese characters,
+  CJK punctuation and symbols, fullwidth forms. Native 12 px (1 px = 100 of 1200 units).
+  Hangul, kana and Ark's Latin, Greek and Cyrillic are left out.
+- Fusion Pixel Font 12px Monospaced zh_hans by TakWolf,
+  https://github.com/TakWolf/fusion-pixel-font, SIL OFL 1.1 (no Reserved Font Name).
+  Only for the Chinese characters Ark Pixel's zh_cn build lacks (2,323 code points, e.g. 溪 梁).
+  Same grid and baseline as Ark Pixel. Its own sources (Ark Pixel, Cubic 11, Galmuri) and
+  their licences are in sources/fusion-pixel-licenses/.
+- Pixeloid Sans by GGBotNet, https://ggbot.itch.io/pixeloid-font, SIL OFL 1.1, Reserved
+  Font Name "Pixeloid" (not used by this font). Cyrillic: the Russian alphabet, Mongolian
+  Ө Ү, Kazakh Ә Ғ Қ Ң Ұ Һ І, Kirghiz, Tajik Ғ Ӣ Қ Ҳ Ҷ, Uzbek Ў, Ukrainian/Belarusian Є Ґ Ї
+  and more (174 glyphs). Native 9 px (1 px = 204 of 1836 units), with the same caps (7 px),
+  x-height (5) and descender (2) as m5x7. Copy and licence in sources/.
+- unixel by Mohammad Darvishi / the Rooyin (Unixel) project,
+  https://github.com/MDarvishi5124/unixel, SIL OFL 1.1 (no Reserved Font Name). Arabic
+  script, by way of "unixel Uyghur" (../unixel-Uyghur-Regular.ttf, built by ../build_font.py),
+  which adds the Uyghur, Kazakh and Kirghiz letters and makes ى dotless in all forms.
+  Native 12 px (1 px = 160 of 1920 units). GSUB (init, medi, fina, rlig, calt, ccmp, locl)
+  and GPOS kerning are carried over and extended.
+
+Drawn for asia1mpixel (2026)
+----------------------------
+- Cyrillic lowercase а е р с у ё are copies of m5x7's a e p c y ë, so they match the Latin;
+  ў ӯ are m5x7's y with m5x7's breve and macron.
+- Tajik Ӯ, which Pixeloid Sans lacks: its own У plus the macron it draws on Ӣ.
+  The only Cyrillic not taken straight from a designed font.
+- Latin on the m5x7 grid: Ə ə, pinyin Ǎ ǎ Ǐ ǐ Ǒ ǒ Ǔ ǔ ǖ ǘ ǚ ǜ, Ǵ ǵ, ʻ ʼ ‘ ’ “ ” – — … •.
+- Arabic script on unixel's grid, from unixel's letters plus dots, rings and small marks:
+  Urdu/Punjabi ٹ ہ ۂ and joined forms of ں; Pashto ټ ځ څ ډ ړ ږ ښ ګ ڼ ۍ; Sindhi ٺ ٻ ٽ ٿ
+  ڀ ڃ ڄ ڇ ڊ ڌ ڍ ڎ ڏ ڙ ڦ ڪ ڱ ڳ ڻ; Sorani ڕ ڤ ڵ ێ. Each has all its joining forms, and
+  the teh/noon-based ones get unixel's 1 px contextual shift before tall letters.
+- Three Chinese characters neither Ark Pixel nor Fusion Pixel has, spliced from parts of
+  ones they do have: 颍 (潁 + 颖), 枞 (樅 + 纵), 鳌 (鰲 with 鱼's bottom bar).
+
+Changelog
+---------
+2026-10-23  1.000  First build. Cyrillic switched from hand-drawn letters to Pixeloid Sans,
+                   with а е р с у ё ў ӯ from m5x7.

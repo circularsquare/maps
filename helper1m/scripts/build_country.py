@@ -129,14 +129,16 @@ SHAPEFILES = {
             "group_col": "pc11_s_id",
         },
         3: {
-            "candidates": [REPO_ROOT / "data/asia1m/india/subdistrict.shp"],
+            # level3.gpkg is SHRUG's subdistrict.shp with Bangalore redrawn (level4.py)
+            "candidates": [HELPER / "data/india/level3.gpkg",
+                           REPO_ROOT / "data/asia1m/india/subdistrict.shp"],
             "code_col": ["pc11_d_id", "pc11_sd_id"],  # composite: pc11_d_id is global
             "name_col": "sd_name",
             "parent_col": "pc11_d_id",
             "parent_name_col": None,
             "group_col": "pc11_s_id",
         },
-        # Level 3 with the sub-districts over 2M split (scripts/india/level4.py).
+        # Level 3 with the sub-districts over 750k split (scripts/india/level4.py).
         4: {
             "candidates": [HELPER / "data/india/level4.gpkg"],
             "code_col": "code",

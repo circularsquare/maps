@@ -1,0 +1,2225 @@
+key,country,text_as_read,name,zh,zh_source,confidence,notes,label_x,label_y,label_w,label_h,in_picks
+#f7eed0,Bhutan,drukyul,Drukyul,,,medium,,5039,4222,72,18,
+#e4ecc3,Cambodia,ngr,Ngr,,,medium,,6478,5699,32,18,
+#e1eeaa,Cambodia,serei / saophoan,Serei Saophoan,,unit,high,,6262,5703,47,18,
+#e4f1a7,Cambodia,angkor,Angkor,,unit,high,,6352,5740,33,9,
+#d5e4a1,Cambodia,battambang,Battambang,,unit,high,,6245,5789,59,9,
+#eaf1b6,Cambodia,stung sen,Stung Sen,,fuzzy unit,low,fuzzy match stuengsaen (0.89),6464,5820,51,9,
+#e5ebae,Cambodia,tbong / khmum,Tbong Khmum,,fuzzy unit,low,fuzzy match tboungkhmum (0.95),6582,5854,32,19,
+#d8ecb9,Cambodia,pursat,Pursat,,unit,high,,6336,5861,33,9,
+#e0eb95,Cambodia,kampong / cham,Kampong Cham,,unit,high,,6486,5888,42,19,
+#e1ee0b,Cambodia,phnom penh,Phnom Penh,,city,high,"placed by list entry a, by label colour",6385,5911,73,9,
+#d8e656,Cambodia,pur senchey,Pur Senchey,,unit,high,"from numbered list, key b",6385,5920,75,9,
+#dce67e,Cambodia,oudong,Oudong,,,medium,"from numbered list, key c",6385,5929,47,9,
+#dfeeaa,Cambodia,aural,Aural,,,medium,,6414,5945,25,9,
+#ecee83,Cambodia,prey / veng,Prey Veng,,unit,high,,6527,5948,25,19,
+#e7f17a,Cambodia,bassac,Bassac,,,medium,,6472,5962,34,9,
+#ebe08c,Cambodia,svay / rieng,Svay Rieng,,unit,high,,6563,5965,34,19,
+#e3ee95,Cambodia,takeo,Takeo,,province,high,,6458,6003,27,9,
+#def7b7,Cambodia,kampot,Kampot,,unit,high,,6378,6005,35,9,
+#e0dcee,China,heihe,Heihe,黑河,prefecture,high,,7890,1652,52,18,
+#e1d6f4,China,huntong,Huntong,,none,low,,8276,1707,80,18,
+#dbd4e9,China,hegang,Hegang,鹤岗,unit,high,,8100,1747,35,9,
+#c7c6eb,China,wuyuri,Wuyuri,,none,low,,7792,1763,33,9,
+#e1e7ee,China,hulunbuir,Hulunbuir,呼伦贝尔,prefecture,high,,7271,1774,92,18,
+#c6ceeb,China,nehe,Nehe,讷河,unit,high,,7690,1779,23,9,
+#d9e2ee,China,jalantun,Jalantun,扎兰屯,fuzzy unit,low,fuzzy match zalantun (0.88),7572,1798,41,9,
+#cfbce9,China,shuangyashan,Shuangyashan,双鸭山,prefecture,high,,8215,1814,71,9,
+#d4c3e9,China,hulan,Hulan,呼兰,geonames,medium,GeoNames Hulan He (STM),7945,1822,52,18,
+#ccbae3,China,jiamusi,Jiamusi,佳木斯,prefecture,high,,8131,1840,35,9,
+#cebff0,China,suihua,Suihua,绥化,prefecture,high,,7845,1859,32,9,
+#a2b2e7,China,qiqihar,Qiqihar,齐齐哈尔,prefecture,high,,7641,1871,34,9,
+#e2cbeb,China,qitaihe,Qitaihe,七台河,prefecture,high,,8241,1884,34,9,
+#c1c3e9,China,zhalong,Zhalong,扎龙,neighbour town,medium,name found in neighbour #a2b2e7,7682,1896,38,9,
+#c7bff0,China,qinggang,Qinggang,青冈,unit,high,,7785,1896,44,9,
+#d9e8ee,China,jialaid,Jialaid,扎赉特,fuzzy unit,low,fuzzy match jalaid (0.92),7501,1904,54,18,
+#c4abe5,China,bayan,Bayan,巴彦,unit,high,,7923,1913,29,9,
+#a290e7,China,songbei,Songbei,松北,unit,high,"placed by label colour, text off the region",7834,1934,38,9,
+#a89be9,China,daqing,Daqing,大庆,prefecture,high,"placed by label colour, text off the region",7705,1938,32,9,
+#c6c0e5,China,songhua,Songhua,松花,geonames,medium,GeoNames Songhua Jiang (STM),8018,1939,41,9,
+#7738eb,China,harbin,Harbin,哈尔滨,prefecture,high,"from numbered list, key a",7919,1942,44,9,
+#8368e7,China,daoli,Daoli,道里,unit,high,"from numbered list, key b",7919,1952,36,9,
+#e0c0e9,China,jiguan,Jiguan,鸡冠,unit,high,,8201,1953,30,9,
+#7464e0,China,xiangfang,Xiangfang,香坊,unit,high,"from numbered list, key c",7920,1962,61,9,
+#beb4ee,China,anda,Anda,安达,unit,high,,7784,1963,23,9,
+#9b60eb,China,fujia,Fujia,,none,low,"from numbered list, key d",7919,1972,36,9,
+#f4eef6,China,altay,Altay,阿勒泰,unit,high,matches pick,4786,1980,100,36,yes
+#b595e0,China,acheng,Acheng,阿城,unit,high,,7888,1998,34,9,
+#cdd5eb,China,zhaozhou,Zhaozhou,肇州,unit,high,,7675,2008,47,9,
+#d0acde,China,mudanjiang,Mudanjiang,牡丹江,prefecture,high,"placed by label colour, text off the region",8096,2025,56,9,
+#f2f6e9,China,gobi,Gobi,,none,low,,6685,2032,80,36,
+#ddedee,China,ulanhot,Ulanhot,乌兰浩特,unit,high,,7421,2032,74,18,
+#b4b5e3,China,wuchang,Wuchang,五常,unit,high,,7940,2046,42,9,
+#b9bdee,China,shuangcheng,Shuangcheng,双城,unit,high,,7783,2048,64,9,
+#e2d1e9,China,ningguta,Ningguta,宁古塔昂邦章京辖,chgis,high,also 宁古塔将军辖,8146,2057,86,18,
+#cde1eb,China,baicheng,Baicheng,白城,prefecture,high,,7593,2082,43,9,
+#b4cdeb,China,songyuan,Songyuan,松原,prefecture,high,,7725,2092,47,9,
+#b2c5e5,China,yushu,Yushu,榆树,unit,high,,7897,2099,29,9,
+#b3d2f4,China,nong'an,Nong'an,农安,unit,high,,7777,2117,37,9,
+#afc4ee,China,dehui,Dehui,德惠,unit,high,,7845,2127,26,9,
+#dad098,China,juyong / guan,Juyongguan,,none,low,"placed by label colour, on an inset",6732,2128,33,19,
+#34afe2,China,changchun,Changchun,长春,unit,high,"from numbered list, key a",7760,2133,64,9,
+#59a9d7,China,jingyue,Jingyue,净月,neighbour town,medium,"from numbered list, key b; name found in neighbour #adcae0",7761,2143,48,9,
+#f0dc07,China,dongcheng,Dongcheng,东城,unit,high,"from numbered list, key a",6619,2145,65,9,
+#e0e593,China,shun / yi,Shunyi,顺义,unit,high,"placed by label colour, on an inset",6791,2146,23,18,
+#69bded,China,luyuan,Luyuan,绿园,unit,high,"from numbered list, key c",7761,2153,44,9,
+#f0d407,China,xicheng,Xicheng,西城,unit,high,"from numbered list, key b",6619,2155,50,9,
+#a0c0e0,China,fengman,Fengman,丰满,unit,high,,7880,2160,42,9,
+#eecd43,China,haidian,Haidian,海淀,unit,high,"from numbered list, key c",6620,2165,47,9,
+#dfe987,China,sanhe,Sanhe,三河,unit,high,"placed by label colour, on an inset",6858,2171,29,9,
+#c7e4ee,China,changling,Changling,长岭,unit,high,,7677,2171,46,9,
+#f2e345,China,wangjing,Wangjing,望京,town,high,"from numbered list, key d",6619,2175,57,9,
+#a1d0f0,China,kuancheng,Kuancheng,宽城,unit,high,,7794,2176,51,9,
+#e2edf9,China,tarbagatay,Tarbagatay,塔城,prefecture,high,matches pick,4612,2184,112,18,yes
+#eeed51,China,tonghui,Tonghui,通惠,geonames,medium,"from numbered list, key e; GeoNames Tonghui He (STM)",6619,2186,50,9,
+#73a3cf,China,jilin,Jilin,吉林,unit,high,"placed by label colour, text off the region",7900,2188,18,9,
+#c1bae5,China,yanbian,Yanbian,延边,prefecture,high,,8194,2193,38,9,
+#e3d42b,China,dahongmen,Dahongmen,大红门,town,high,"from numbered list, key f",6620,2196,67,9,
+#ccd0e7,China,dunhua,Dunhua,敦化,unit,high,,8042,2201,70,18,
+#a1d9f0,China,gongzhuling,Gongzhuling,公主岭,unit,high,,7743,2209,59,9,
+#f0ef8a,China,xianghe,Xianghe,香河,unit,high,"placed by label colour, on an inset",6827,2213,38,9,
+#d0ebe7,China,horqin,Horqin,科尔沁左翼后,unit,high,"also 科尔沁右翼中,科尔沁左翼中",7584,2214,31,9,
+#adcae0,China,shuangyang,Shuangyang,双阳,unit,high,,7839,2216,59,9,
+#d8edeb,China,kailu,Kailu,开鲁,unit,high,,7401,2220,44,18,
+#f0d281,China,fang / shan,Fangshan,房山,unit,high,"placed by label colour, on an inset",6726,2243,23,18,
+#eaed6f,China,yizhuang,Yizhuang,亦庄,town,high,"placed by label colour, on an inset",6789,2250,44,9,
+#b5c6e0,China,huadian,Huadian,桦甸,unit,high,,7924,2250,38,9,
+#a7ecee,China,siping,Siping,四平,prefecture,high,,7740,2256,29,9,
+#bde9e7,China,jirim,Jirim,,none,low,,7556,2272,22,9,
+#e5f67e,China,langfang,Langfang,廊坊,prefecture,high,"placed by label colour, on an inset",6809,2281,43,9,
+#add9df,China,liaoyuan,Liaoyuan,辽源,prefecture,high,,7816,2283,41,9,
+#dde992,China,bei / chen,Beichen,北辰,unit,high,"placed by label colour, on an inset",6915,2313,22,17,
+#d6e4f4,China,bortala,Bortala,博尔塔拉蒙古,prefecture,high,matches pick,4510,2320,72,18,yes
+#bceee4,China,changtu,Changtu,昌图,unit,high,,7739,2321,39,9,
+#d3f47d,China,dongli,Dongli,东丽,unit,high,"placed by label colour, on an inset",6949,2337,29,9,
+#bdcce2,China,baishan,Baishan,白山,prefecture,high,,7985,2341,38,9,
+#c9f87d,China,binhai,Binhai,滨海,unit,high,"placed by label colour, on an inset",6992,2356,29,9,
+#d1e4f1,China,bogda,Bogda,博格达,geonames,medium,GeoNames Bogda Feng (PK); matches pick,4977,2359,58,18,yes
+#daede0,China,xar moron,Xar Moron,,none,low,,7248,2359,104,18,
+#e6ed82,China,yang / liuqing,Yangliuqing,杨柳青,town,high,"placed by label colour, on an inset",6896,2360,47,19,
+#cfe9de,China,liuhe,Liuhe,柳河,geonames,medium,GeoNames Liu He (STM),7536,2373,23,9,
+#b7e3e0,China,huifa,Huifa,辉发,geonames,medium,GeoNames Huifa He (STM),7810,2373,25,9,
+#cbe6f9,China,changji,Changji,昌吉,unit,high,matches pick,4821,2379,35,9,yes
+#baebcb,China,faku,Faku,法库,unit,high,,7673,2379,21,9,
+#f9eaf5,China,ili,Ili,伊犁哈萨克自治州[5],prefecture,high,matches pick,4298,2380,16,18,yes
+#aaf0cf,China,tieling,Tieling,铁岭,unit,high,,7715,2380,31,9,
+#cfe3f6,China,shihezi,Shihezi,石河子,unit,high,also 石河子市[1]; matches pick,4730,2381,35,9,yes
+#d8ee83,China,haihe,Haihe,海河,geonames,medium,"placed by label colour, on an inset; GeoNames Hai He (STM)",6955,2383,26,9,
+#e4c4fa,China,ghulja,Ghulja,,city,low,"placed by label colour, text off the region; matches pick",4453,2384,30,9,yes
+#6bbbf4,China,saybagh,Saybagh,,none,low,"placed by label colour, text off the region; pick is Shayibake",4901,2403,41,9,yes
+#92f0b6,China,?ṣhenbei,Shenbei,沈北,unit,high,unread glyph (?); stray ink between letters ignored,7697,2412,41,9,
+#8cdaa7,China,fushun,Fushun,抚顺,unit,high,,7743,2412,32,9,
+#bad8e3,China,tonghua,Tonghua,通化,unit,high,,7883,2412,40,9,
+#298bf1,China,shuimogou,Shuimogou,水磨沟,unit,high,"placed by label colour, text off the region; matches pick",4914,2414,52,9,yes
+#daf431,China,tianjin,Tianjin,天津,prefecture,high,"from numbered list, key p",6899,2415,45,9,
+#e2eb5d,China,nankai,Nankai,南开,unit,high,"from numbered list, key q",6899,2425,44,9,
+#33e950,China,shenyang,Shenyang,沈阳,unit,high,"from numbered list, key 1",7772,2431,60,9,
+#c9ee56,China,hongqiao,Hongqiao,红桥,unit,high,"from numbered list, key r",6900,2435,56,9,
+#ece5fa,China,tekes,Tekes,特克斯,unit,high,matches pick,4514,2439,54,18,yes
+#57f192,China,huanggu,Huanggu,皇姑,unit,high,"from numbered list, key 2",7772,2441,54,9,
+#498eed,China,ürumqi,Ürumqi,乌鲁木齐,unit,high,"placed by label colour, text off the region; matches pick",4894,2442,33,9,yes
+#b2e3b8,China,fuxin,Fuxin,阜新,unit,high,,7563,2443,25,9,
+#d4ee4f,China,dazhigu,Dazhigu,大直沽,town,high,"from numbered list, key s",6900,2445,51,9,
+#bde7c8,China,chifeng,Chifeng,赤峰,prefecture,high,,7343,2445,36,9,
+#b3eeb4,China,xinmin,Xinmin,新民,unit,high,,7655,2446,31,9,
+#cfe9d3,China,aohan,Aohan,敖汉,unit,high,,7458,2447,29,9,
+#57e48d,China,wanquan,Wanquan,万泉,town,high,"from numbered list, key 3",7772,2451,56,9,
+#58d16f,China,hunnan,Hunnan,浑南,unit,high,"from numbered list, key 4",7772,2461,48,9,
+#d3ddf4,China,turpan,Turpan,吐鲁番,prefecture,high,matches pick,4949,2463,33,9,yes
+#a4e5b0,China,dengta,Dengta,灯塔,unit,high,,7698,2467,34,9,
+#bae7b0,China,beizhen,Beizhen,北镇,unit,high,,7588,2471,38,9,
+#5fec66,China,xingshun,Xingshun,兴顺,town,high,"from numbered list, key 5",7772,2471,57,9,
+#5af879,China,yuhong,Yuhong,于洪,unit,high,"from numbered list, key 6",7773,2481,48,9,
+#dfedda,China,xilin gol,Xilingol,锡林郭勒,prefecture,high,,7029,2489,80,18,
+#8ae995,China,liaoyang,Liaoyang,辽阳,unit,high,,7675,2497,41,9,
+#bfdece,China,xingjing,Xingjing,兴京,chgis,high,,7821,2504,39,9,
+#a2e2af,China,benxi,Benxi,本溪,unit,high,,7724,2508,26,9,
+#c7e7bd,China,ningcheng,Ningcheng,宁城,unit,high,,7355,2510,49,9,
+#c4e3b6,China,chaoyang,Chaoyang,朝阳,unit,high,,7486,2510,46,9,
+#5de36d,China,anshan,Anshan,鞍山,prefecture,high,"placed by label colour, text off the region",7684,2513,35,9,
+#e5f0f9,China,hami,Hami,哈密,unit,high,matches pick,5264,2520,88,36,yes
+#c4f4a5,China,liaohe,Liaohe,大辽河,geonames,medium,GeoNames Liao He (STM),7567,2527,29,9,
+#8ce297,China,haicheng,Haicheng,海城,unit,high,,7681,2534,43,9,
+#d9eec6,China,mulan,Mulan,,none,low,,7212,2542,28,9,
+#bef28b,China,pạnjin,Panjin,盘锦,unit,high,"placed by label colour, text off the region",7595,2542,30,9,
+#a7f0ab,China,dashiqiao,Dashiqiao,大石桥,unit,high,,7652,2557,47,9,
+#d7e7ba,China,dalinghe,Dalinghe,,none,low,,7436,2558,41,9,
+#c4f28e,China,hulu / dao,Huludao,葫芦岛,prefecture,high,,7513,2563,20,18,
+#b4f47d,China,jinzhou,Jinzhou,金州,unit,high,"placed by label colour, text off the region; also 锦州",7554,2570,36,9,
+#d7e9a1,China,pingquan,Pingquan,平泉,unit,high,,7356,2587,44,9,
+#96f498,China,yingkou,Yingkou,营口,prefecture,high,"placed by label colour, text off the region",7605,2587,37,9,
+#bee0c2,China,xiuyan,Xiuyan,岫岩,unit,high,,7745,2591,32,9,
+#cee3a1,China,chengde,Chengde,承德,unit,high,,7287,2597,40,9,
+#b4f6af,China,bayuquan,Bayuquan,鲅鱼圈,unit,high,,7646,2617,47,9,
+#e4e5ce,China,bashang,Bashang,,none,low,,6966,2627,41,9,
+#e6ccf9,China,aksu,Aksu,阿克苏,unit,high,matches pick,4318,2631,22,9,yes
+#d1f49b,China,ningyuan,Ningyuan,宁远,chgis,high,,7461,2633,44,9,
+#dcd9c2,China,xuanhua,Xuanhua,宣化,unit,high,,7096,2637,41,9,
+#a0cf99,China,dandong,Dandong,丹东,prefecture,high,"placed by label colour, text off the region",7795,2643,41,9,
+#dde5a8,China,miyun,Miyun,密云,unit,high,,7213,2644,28,9,
+#aee2ad,China,zhuanghe,Zhuanghe,庄河,unit,high,,7690,2649,47,9,
+#d2e791,China,qinglong,Qinglong,青龙,unit,high,,7361,2650,41,9,
+#e4e5d6,China,ulanqab,Ulanqab,乌兰察布,prefecture,high,,6856,2662,38,9,
+#d8e2af,China,zunhua,Zunhua,遵化,unit,high,,7277,2665,35,9,
+#cac398,China,zhangjiakou,Zhangjiakou,张家口,prefecture,high,"placed by label colour, text off the region",7025,2671,59,9,
+#e8d5f6,China,kucha,Kucha,,none,low,matches pick,4501,2673,27,9,yes
+#d4f490,China,shan / hai / guan,Shanhaiguan,山海关,unit,high,,7416,2679,23,24,
+#d4d7f1,China,korla,Korla,,unit,low,matches pick,4791,2681,48,18,yes
+#b4b486,China,saihan,Saihan,赛罕,unit,high,"placed by label colour, text off the region",6825,2681,32,9,
+#a29b6f,China,hohhot,Hohhot,呼和浩特,prefecture,high,"placed by label colour, text off the region",6766,2683,34,9,
+#bef6af,China,wafangdian,Wafangdian,瓦房店,unit,high,"placed by label colour, text off the region",7541,2686,57,9,
+#dcf490,China,qian'an,Qian'an,迁安,unit,high,,7368,2690,34,9,
+#c5f45f,China,qinhuangdao,Qinhuangdao,秦皇岛,prefecture,high,"placed by label colour, text off the region",7454,2690,62,9,
+#bcebb0,China,pulan / dian,Pulandian,普兰店,unit,high,,7649,2693,26,18,
+#d3da91,China,pinggu,Pinggu,平谷,unit,high,,7220,2694,32,9,
+#dfdbbe,China,badaling,Badaling,八达岭,town,high,,7096,2695,41,9,
+#ebe8c1,China,bayannur,Bayannur,巴彦淖尔,prefecture,high,,6450,2696,46,9,
+#e8e5c4,China,urad,Urad,乌拉特前,unit,high,,6596,2698,22,9,
+#dad8b1,China,tumed,Tumed,,none,low,,6757,2698,30,9,
+#edddf9,China,tarim,Tarim,塔里木,geonames,medium,GeoNames Tarim He (STM); matches pick,4217,2704,52,18,yes
+#e4ee9f,China,jizhou,Jizhou,蓟州,chgis,high,,7268,2709,30,9,
+#c5c087,China,donghe,Donghe,东河,unit,high,"placed by label colour, text off the region; other text on region: baotou",6682,2712,35,9,
+#d9e79f,China,feng / run,Fengrun,丰润,unit,high,,7313,2715,22,17,
+#dddcc6,China,yanggao,Yanggao,阳高,unit,high,,6971,2720,41,9,
+#c6dc72,China,gu / ȳe,Guye,古冶,unit,high,,7347,2722,12,17,
+#c3bf88,China,datong,Datong,大同,unit,high,"placed by label colour, text off the region",6928,2730,34,9,
+#d8e790,China,hang / li,Hangli,昌黎,fuzzy unit,low,fuzzy match changli (0.92),7399,2735,26,18,
+#edf29d,China,baodi,Baodi,宝坻,unit,high,,7253,2737,26,9,
+#daeea6,China,luan / zhou,Luanzhou,滦州,town,high,,7364,2737,23,17,
+#b4f098,China,jinzhou,Jinzhou,金州,unit,high,"placed by label colour, text off the region",7665,2743,36,9,
+#bddc48,China,tang / shan,Tangshan,唐山,unit,high,"placed by label colour, text off the region",7310,2745,24,17,
+#e9f69c,China,wu / qing,Wuqing,武清,unit,high,,7243,2760,20,18,
+#dcd9b3,China,sang / gan,Sanggan,桑干,geonames,medium,GeoNames Sanggan He (STM),6933,2762,23,17,
+#9eee6a,China,dalianwan,Dalianwan,大连湾,town,high,"placed by label colour, text off the region",7639,2763,49,9,
+#ddee99,China,caofei / dian,Caofeidian,曹妃甸,unit,high,,7331,2766,32,17,
+#eee59f,China,zhuozhou,Zhuozhou,涿州,unit,high,,7145,2768,47,9,
+#93f036,China,dalian,Dalian,大连,prefecture,high,"placed by label colour, text off the region",7638,2772,29,9,
+#d8f29f,China,ninghe,Ninghe,宁河,unit,high,,7283,2773,32,9,
+#ede9ce,China,yixian,Yixian,易县,unit,high,,7100,2774,29,9,
+#f6f5ea,China,yinshan,Yinshan,,none,low,,6110,2775,152,36,
+#d2a7f3,China,kashgar,Kashgar,喀什,unit,high,"placed by label colour, text off the region; matches pick",3937,2778,39,9,yes
+#b1ee6a,China,xinghai,Xinghai,,none,low,"placed by label colour, text off the region",7623,2780,35,9,
+#e8e4c9,China,yuxian,Yuxian,蔚县,unit,high,,7002,2784,32,9,
+#eae8d6,China,jungar,Jungar,准格尔,unit,high,,6759,2789,32,9,
+#f3efa3,China,bai / gou,Baigou,白沟,town,high,,7182,2792,17,15,
+#e6eb9b,China,yongqing,Yongqing,永清,unit,high,,7208,2793,44,9,
+#c1f47d,China,lüshun,Lüshun,,none,low,"placed by label colour, text off the region",7604,2794,32,9,
+#eade95,China,gaobei / dian,Gaobeidian,高碑店,unit,high,,7144,2798,33,19,
+#e7e4c4,China,shuozhou,Shuozhou,朔州,prefecture,high,,6891,2814,47,9,
+#e4e0bf,China,dong / sheng,Dongsheng,东胜,unit,high,other text on region: ordos,6676,2817,29,18,
+#edec9a,China,ba / zhou,Bazhou,霸州,unit,high,,7182,2819,23,17,
+#dfc6f3,China,payzawat,Payzawat,,none,low,other text on region: maralbexi; matches pick,3980,2827,48,9,yes
+#ebe6a4,China,xushui,Xushui,徐水,unit,high,,7118,2829,32,9,
+#f1eca3,China,bai / yang / dian,Baiyangdian,白洋淀,geonames,medium,GeoNames Baiyang Dian (LK),7154,2830,23,25,
+#e6ed9a,China,wen'an,Wen'an,文安,unit,high,,7211,2830,33,9,
+#e4f89c,China,jinghai,Jinghai,静海,unit,high,also 靖海,7268,2838,33,9,
+#e8df62,China,baoding,Baoding,保定,prefecture,high,"placed by label colour, text off the region",7103,2848,38,9,
+#eef0aa,China,ren / qiu,Renqiu,任丘,unit,high,,7187,2857,16,17,
+#f0eeb3,China,tang / xian,Tangxian,唐县,unit,high,,7089,2860,22,18,
+#f9f3ab,China,qing / yuan,Qingyuan,清苑,unit,high,,7127,2861,26,17,
+#f0fac6,China,qingxian,Qingxian,青县,unit,high,,7221,2861,41,9,
+#f1f0c4,China,quyang,Quyang,曲阳,unit,high,,7030,2864,35,9,
+#e5e1d2,China,yanmen,Yanmen,雁门,chgis,high,,6920,2867,37,9,
+#e8f0aa,China,gao / yang,Gaoyang,高阳,unit,high,also 高阳国,7151,2877,23,17,
+#f3fcd1,China,bohai,Bohai,渤海,neighbour chgis,medium,name found in neighbour #ddfacc,7284,2877,26,9,
+#a8f2c4,China,penglai,Penglai,蓬莱,unit,high,"placed by label colour, text off the region",7584,2885,35,9,
+#ecf0a4,China,ding / zhou,Dingzhou,定州,unit,high,,7096,2895,25,17,
+#dcf3a1,China,cangẓ?hou,Cangzhou,沧州,prefecture,high,unread glyph (?); stray ink between letters ignored,7252,2895,46,9,
+#d5f4f6,China,jiuquan,Jiuquan,酒泉,prefecture,high,matches pick,5846,2896,36,9,yes
+#eaf0bd,China,an / guo,Anguo,安国,unit,high,,7130,2896,17,16,
+#84f6cc,China,yantai,Yantai,烟台,prefecture,high,"placed by label colour, text off the region",7631,2899,31,9,
+#ecf7ba,China,hejian,Hejian,河间,unit,high,also 河间国,7177,2900,30,9,
+#ebf3c0,China,botou,Botou,泊头,unit,high,,7218,2904,28,9,
+#f0efc4,China,pingshan,Pingshan,平山,unit,high,,7006,2912,44,9,
+#e8e3d1,China,shenmu,Shenmu,神木,unit,high,matches pick,6699,2916,37,9,yes
+#e2d8c0,China,guancen,Guancen,管涔,geonames,medium,GeoNames Guancen Shan (MT); matches pick,6832,2916,40,9,yes
+#a8f2b9,China,long / kou,Longkou,龙口,unit,high,,7555,2916,20,17,
+#a0f0dc,China,wei / hai,Weihai,威海,prefecture,high,,7682,2918,18,18,
+#e6ed96,China,zhengding,Zhengding,正定,unit,high,"placed by label colour, text off the region",7047,2920,50,9,
+#e2f6c4,China,yanshan,Yanshan,盐山,unit,high,,7258,2922,41,9,
+#d2facc,China,huanghe / kou,Huanghekou,黄河口,town,high,,7377,2926,41,18,
+#ddd7bf,China,xinzhou,Xinzhou,忻州,prefecture,high,,6912,2927,38,9,
+#ddfacc,China,wudi,Wudi,无棣,unit,high,,7322,2928,22,9,
+#dbeecb,China,helan,Helan,贺兰,unit,high,pick is Helanshan,6392,2930,26,9,yes
+#e8f1b2,China,wuji,Wuji,无极,unit,high,also 毋极,7087,2930,20,9,
+#aaeee9,China,rong / cheng,Rongcheng,荣成,unit,high,,7703,2935,28,18,
+#f1ecf7,China,taklamakan,Taklamakan,,none,low,matches pick,4550,2937,220,36,yes
+#e5f4c4,China,wu / qiang,Wuqiang,武强,unit,high,,7181,2937,26,18,
+#acebd4,China,muping,Muping,牟平,unit,high,,7634,2940,34,9,
+#80eb58,China,jinan,Jinan,济南,unit,high,"placed by list entry 1, by label colour",7452,2943,37,9,
+#e0f0bd,China,xinji,Xinji,辛集,unit,high,,7140,2945,21,9,
+#e0ee9d,China,gao / cheng,Gaocheng,藁城,unit,high,"also 槀城,稾城,藳城",7093,2946,28,18,
+#c3eb9f,China,xixia,Xixia,西夏,unit,high,"placed by label colour, text off the region; matches pick",6379,2950,23,9,yes
+#a69460,China,taiyuan,Taiyuan,太原,prefecture,high,"from numbered list, key e; matches pick",6836,2950,50,9,yes
+#e0edc3,China,wu / qiao,Wuqiao,吴桥,unit,high,,7223,2952,20,17,
+#beebc9,China,qixia,Qixia,栖霞,unit,high,,7571,2952,23,9,
+#84ed3f,China,lixia,Lixia,历下,unit,high,"from numbered list, key 2",7452,2953,33,9,
+#edf0c4,China,jing / xing,Jingxing,井陉,unit,high,,7035,2958,22,18,
+#dcf3be,China,leling,Leling,乐陵,unit,high,,7264,2958,26,9,
+#b19d76,China,xiaodian,Xiaodian,小店,unit,high,"from numbered list, key f; matches pick",6835,2960,53,9,yes
+#e9d5f9,China,yarkand,Yarkand,,none,low,matches pick,4006,2962,39,9,yes
+#dee200,China,xi'an,Xi'an,西安,prefecture,high,"from numbered list, key a; matches pick",6143,2962,35,9,yes
+#a0f06b,China,luokou,Luokou,泺口,town,high,"from numbered list, key 3",7452,2963,44,9,
+#cff9b7,China,bin / zhou,Binzhou,滨州,prefecture,high,,7349,2966,23,17,
+#b9eedb,China,kunyu,Kunyu,昆嵛,geonames,medium,"placed by name match, label drawn in a neighbour's colour; GeoNames Kunyu Shan (MTS)",7660,2966,28,9,
+#dde8a9,China,zhao / xian,Zhaoxian,赵县,unit,high,,7083,2967,23,17,
+#bcfbbd,China,dong / ying,Dongying,东营,unit,high,,7413,2967,29,18,
+#c8b484,China,wanbailin,Wanbailin,,none,low,"from numbered list, key 9; matches pick",6832,2970,59,9,yes
+#e0d3ac,China,yang / quan,Yangquan,阳泉,prefecture,high,,6995,2970,24,18,
+#cce030,China,xiaozhai,Xiaozhai,小寨路,fuzzy town,low,"from numbered list, key b; fuzzy match xiaozhailu (0.89); matches pick",6143,2972,54,9,yes
+#cceea6,China,heng / shui,Hengshui,衡水,prefecture,high,,7158,2972,24,18,
+#91da51,China,yinchuan,Yinchuan,银川,prefecture,high,"placed by label colour, text off the region; matches pick",6405,2973,43,9,yes
+#93ed9a,China,licheng,Licheng,历城,unit,high,"from numbered list, key 4",7452,2973,47,9,
+#d0be8c,China,jiancaoping,Jiancaoping,尖草坪,unit,high,"from numbered list, key h; matches pick",6830,2980,69,9,yes
+#bbe422,China,zaoyuan,Zaoyuan,枣园,town,high,"from numbered list, key c; matches pick",6144,2981,53,9,yes
+#beebbf,China,lai / zhou,Laizhou,莱州,unit,high,,7510,2981,23,17,
+#e0dbca,China,yulin,Yulin,榆林,prefecture,high,matches pick,6659,2982,23,9,yes
+#d8f3be,China,huimin,Huimin,惠民,unit,high,,7301,2985,31,9,
+#e3f4be,China,ning / jin,Ningjin,宁晋,unit,high,,7110,2987,20,18,
+#e2dbc4,China,qiushui,Qiushui,,none,low,matches pick,6769,2990,35,9,yes
+#b9eee0,China,haiyang,Haiyang,海阳,unit,high,,7600,2990,38,9,
+#ebee29,China,weiyang,Weiyang,未央,unit,high,"from numbered list, key d; matches pick",6143,2991,53,9,yes
+#cabe9e,China,yu / ci,Yuci,榆次,unit,high,matches pick,6928,2992,11,18,yes
+#d1f6c7,China,guang / rao,Guangrao,广饶,unit,high,also 广饶侯国,7383,2993,29,17,
+#dbf4a1,China,dezhou,Dezhou,德州,prefecture,high,"placed by label colour, text off the region",7201,2996,35,9,
+#e7f7c3,China,linyi,Linyi,临邑,unit,high,,7252,2996,20,9,
+#dee5c5,China,zan / huang,Zanhuang,赞皇,unit,high,,7053,3000,29,17,
+#ddfaf9,China,qilian,Qilian,祁连,unit,high,matches pick,5941,3001,52,18,yes
+#e8dc43,China,qujiang,Qujiang,曲江,town,high,"from numbered list, key e; matches pick",6143,3001,49,9,yes
+#dbf3c2,China,zao / qiang,Zaoqiang,枣强,unit,high,also 枣强侯国,7149,3002,26,17,
+#dde761,China,shijiazhuang,Shijiazhuang,石家庄,prefecture,high,"from numbered list, key a",6962,3003,76,9,
+#b6ebd5,China,wulong,Wulong,五龙,geonames,medium,GeoNames Wulong He (STM),7565,3009,34,9,
+#bdf0c1,China,zou / ping,Zouping,邹平,unit,high,,7333,3010,20,17,
+#b4f0be,China,weihe,Weihe,潍河,geonames,medium,GeoNames Wei He (STM),7466,3010,28,9,
+#d7e859,China,chang'an,Chang'an,长安,unit,high,"from numbered list, key f; matches pick",6144,3011,54,9,yes
+#adf4b0,China,shou / guang,Shouguang,寿光,unit,high,also 寿光侯国,7424,3011,29,16,
+#d8e720,China,zhongshan,Zhongshan,,none,low,"from numbered list, key b",6964,3013,66,9,
+#dcf3ba,China,gucheng,Gucheng,故城,unit,high,"placed by name match, label drawn in a neighbour's colour",7188,3016,40,9,
+#d0eec2,China,wuzhong,Wuzhong,吴忠,prefecture,high,matches pick,6379,3017,43,9,yes
+#a8ebb5,China,shou / cun,Shoucun,周村,fuzzy unit,low,fuzzy match zhoucun (0.86),7356,3018,23,16,
+#e3f085,China,feng / hao,Fenghao,,none,low,"placed by label colour, on an inset; matches pick",6225,3020,22,18,yes
+#dfceae,China,taigu,Taigu,太谷,unit,high,matches pick,6907,3020,25,9,yes
+#cbdf6f,China,yuhua,Yuhua,裕华,unit,high,"from numbered list, key c",6967,3023,41,9,
+#d6ebb2,China,julu,Julu,巨鹿,unit,high,,7106,3023,18,9,
+#70dd75,China,weifang,Weifang,潍坊,unit,high,"placed by label colour, text off the region",7471,3026,39,9,
+#acf0ba,China,linzi,Linzi,临淄,unit,high,,7386,3030,20,9,
+#b6ebc8,China,dagu,Dagu,大沽,geonames,medium,GeoNames Dagu He (STM),7535,3031,23,9,
+#d3f3be,China,jiyang,Jiyang,济阳,unit,high,,7288,3032,30,9,
+#d1e441,China,hutuo,Hutuo,滹沱,geonames,medium,"from numbered list, key d; GeoNames Hutuo He (STM)",6968,3033,41,9,
+#e4dabc,China,fenzhou,Fenzhou,汾州,chgis,high,matches pick,6846,3038,40,9,yes
+#6aea83,China,zibo,Zibo,淄博,prefecture,high,"placed by label colour, text off the region",7373,3041,20,9,
+#b8eec8,China,qing / zhou,Qingzhou,青州,unit,high,,7408,3041,23,19,
+#d6f1b4,China,ping / xiang,Pingxiang,平乡,unit,high,also 平襄,7100,3044,26,18,
+#a0eaa3,China,changle,Changle,昌乐,unit,high,,7444,3044,37,9,
+#9ef4e1,China,jimo,Jimo,即墨,unit,high,,7580,3044,20,9,
+#d1f3ba,China,gaotang,Gaotang,高唐,unit,high,,7199,3046,40,9,
+#d8f3b6,China,qinghe,Qinghe,清河,unit,high,also 清河国,7149,3047,32,9,
+#eae4d3,China,taihang,Taihang,太行,geonames,medium,GeoNames Taihang Shanmai (MTS),6964,3052,37,9,
+#cdeeb4,China,qihe,Qihe,齐河,unit,high,,7254,3053,20,9,
+#c9ea90,China,xingtai,Xingtai,邢台,unit,high,"placed by label colour, text off the region",7057,3054,34,9,
+#a9e7ae,China,zhang / qiu,Zhangqiu,章丘,unit,high,,7322,3060,29,17,
+#3cf0b5,China,qingdao,Qingdao,青岛,prefecture,high,"placed by list entry a, by label colour",7619,3061,49,9,
+#deedc4,China,shahe,Shahe,沙河,unit,high,,7043,3064,29,9,
+#b6eecb,China,gaomi,Gaomi,高密,unit,high,also 高密侯国,7507,3064,28,9,
+#e2d5bd,China,pingyao,Pingyao,平遥,unit,high,matches pick,6885,3065,38,9,yes
+#b6e7bf,China,zou / ping,Zouping,邹平,neighbour unit,medium,name found in neighbour #a8ebb5,7368,3067,21,17,
+#b6eec1,China,anqiu,Anqiu,安丘,unit,high,also 安丘侯国,7461,3068,26,9,
+#ceadeb,China,hotan,Hotan,和田,prefecture,high,"placed by label colour, text off the region; matches pick",4240,3069,28,9,yes
+#c9f1a9,China,linqing,Linqing,临清,unit,high,,7173,3069,32,9,
+#7ce9d1,China,fushan,Fushan,浮山,geonames,medium,"from numbered list, key b; GeoNames Fushan Wan (BAY)",7619,3071,45,9,
+#e8e4d7,China,wuding / he,Wudinghe,无定河,geonames,medium,GeoNames Wuding He (STM); matches pick,6697,3073,34,19,yes
+#e8e6d7,China,jingbian,Jingbian,靖边,unit,high,matches pick,6555,3076,39,9,yes
+#d8f3b5,China,qu / zhou,Quzhou,曲周,unit,high,,7128,3077,23,18,
+#d0faf8,China,liangzhou,Liangzhou,凉州,unit,high,matches pick,6106,3078,47,9,yes
+#94e5d4,China,licang,Licang,李沧,unit,high,"from numbered list, key c",7620,3081,39,9,
+#d5f1a6,China,yongnian,Yongnian,永年,unit,high,,7071,3084,44,9,
+#b7f199,China,zhang / qing,Zhangqing,长清,unit,high,"placed by label colour, text off the region",7274,3084,35,17,
+#ccf0ba,China,chiping,Chiping,茌平,unit,high,,7209,3085,34,9,
+#c3eed0,China,linqu,Linqu,临朐,unit,high,,7416,3085,23,9,
+#dfd9cc,China,lüliang,Lüliang,吕梁,prefecture,high,matches pick,6767,3091,32,9,yes
+#88f0bb,China,chengyang,Chengyang,城阳,unit,high,"from numbered list, key d",7619,3091,63,9,
+#d2eeae,China,guan / xian,Guanxian,冠县,unit,high,,7169,3095,23,18,
+#ccf6c4,China,zhongwei,Zhongwei,中卫,prefecture,high,matches pick,6311,3099,46,9,yes
+#e7ddbc,China,lingshi,Lingshi,灵石,unit,high,matches pick,6833,3100,32,9,yes
+#b4ee96,China,liao / cheng,Liaocheng,聊城,prefecture,high,,7206,3101,29,17,
+#aaeec4,China,jiaozhou,Jiaozhou,胶州,unit,high,"from numbered list, key e",7619,3101,53,9,
+#dee5c1,China,wuan,Wuan,武安,unit,high,,7025,3103,25,9,
+#ccea6f,China,handan,Handan,邯郸,unit,high,"placed by label colour, text off the region",7085,3103,35,9,
+#8de799,China,tai / an,Taian,泰安,prefecture,high,"placed by label colour, text off the region",7314,3103,15,16,
+#a6e0bd,China,laiwu,Laiwu,莱芜,unit,high,,7337,3103,25,9,
+#acedcb,China,zhucheng,Zhucheng,诸城,unit,high,,7479,3103,46,9,
+#c8ebb5,China,taishan,Taishan,泰山,geonames,medium,GeoNames Taishan (MT),7251,3104,37,9,
+#efe2f9,China,karakash,Karakash,,none,low,,4045,3107,88,18,
+#dff1a6,China,fu?yang,Fu?yang,滏阳,geonames,low,unread glyph (?); GeoNames Fuyang He (STM),7067,3112,34,9,
+#b8e4cc,China,yiyuan,Yiyuan,沂源,unit,high,,7382,3113,32,9,
+#9cf8bb,China,huangdao,Huangdao,黄岛,unit,high,"placed by label colour, text off the region",7566,3115,47,9,
+#e2d8c5,China,xiang / yuan,Xiangyuan,襄垣,unit,high,matches pick,6943,3118,26,18,yes
+#ddee9e,China,fei / xiang,Feixiang,肥乡,unit,high,,7097,3119,26,16,
+#a2f6d4,China,jiao / nan,Jiaonan,胶南,unit,high,,7531,3120,20,18,
+#d7edac,China,da / ming,Daming,大名,unit,high,,7150,3127,22,17,
+#e4ebb0,China,cizhou,Cizhou,磁州,town,high,also 礠州,7052,3129,31,9,
+#a8eaa7,China,fei / cheng,Feicheng,肥城,unit,high,,7270,3131,28,17,
+#b0eab8,China,daiyue,Daiyue,岱岳,unit,high,,7306,3137,32,9,
+#c3e8ad,China,yang / gu,Yanggu,阳谷,unit,high,,7200,3140,23,17,
+#a0e5ae,China,xin / tai,Xintai,新泰,unit,high,,7348,3141,14,18,
+#c6f3ed,China,datong,Datong,大通,unit,high,matches pick,6026,3142,34,9,yes
+#e0eda6,China,yin / du,Yindu,殷都,unit,high,,7088,3143,18,17,
+#dbeb9e,China,weixian,Weixian,魏县,unit,high,,7111,3143,37,9,
+#d4ebb9,China,shen / xian,Shenxian,莘县,unit,high,,7169,3145,25,17,
+#9ee0c0,China,yi / shui,Yishui,沂水,unit,high,,7429,3148,20,18,
+#bdeede,China,wu / lian,Wulian,五莲,unit,high,other text on region: shuhe,7490,3149,17,18,
+#e5dcca,China,hu / guan,Huguan,壶关,unit,high,matches pick,6996,3151,23,16,yes
+#b0e4d9,China,ju / zhou,Juzhou,莒州,chgis,high,,7457,3151,23,19,
+#ebe5d2,China,yan'an,Yan'an,延安,prefecture,high,also 广安; matches pick,6681,3155,31,9,yes
+#c9f3f1,China,baiyin,Baiyin,白银,unit,high,matches pick,6249,3156,29,9,yes
+#f1e7d1,China,huozhou,Huozhou,霍州,unit,high,matches pick,6875,3158,41,9,yes
+#d6eb77,China,any?ang,Anyang,安阳,prefecture,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; also 安阳侯国",7074,3159,35,9,
+#bdedd5,China,meng / shan,Mengshan,,none,low,,7385,3159,35,18,
+#c4eeaf,China,dongping,Dongping,东平,unit,high,also 东平国,7218,3162,44,9,
+#beeeaf,China,wen / shang,Wenshang,汶上,unit,high,,7265,3162,29,16,
+#e4f1b1,China,qingfeng,Qingfeng,清丰,unit,high,,7122,3168,43,9,
+#8bf2d0,China,rizhao,Rizhao,日照,prefecture,high,"placed by label colour, text off the region",7533,3171,31,9,
+#d7c49e,China,chang / zhi,Changzhi,长治,unit,high,"placed by label colour, text off the region; matches pick",6985,3175,28,18,yes
+#eace93,China,lin / fen,Linfen,临汾,prefecture,high,"placed by label colour, text off the region; matches pick",6866,3176,16,17,yes
+#dadfb5,China,lin / zhou,Linzhou,林州,unit,high,,7038,3176,23,17,
+#dff3d5,China,haiyuan,Haiyuan,海原,unit,high,matches pick,6370,3177,38,9,yes
+#dde8aa,China,tang / yin,Tangyin,汤阴,unit,high,,7081,3177,22,18,
+#a6eba0,China,qufu,Qufu,曲阜,unit,high,,7298,3179,22,9,
+#a4ebb3,China,sihe,Sihe,泗河,town,high,,7340,3180,20,9,
+#f4f5ef,China,qinghai,Qinghai,,province,low,pick is Qaidam,5578,3181,140,36,yes
+#63e2e2,China,xining,Xining,西宁,prefecture,high,"placed by label colour, text off the region; matches pick",6043,3185,29,9,yes
+#c1edae,China,nan / wang,Nanwang,南旺,town,high,,7234,3185,25,16,
+#d2ea79,China,pu / yang,Puyang,濮阳,unit,high,"placed by label colour, text off the region",7118,3186,23,17,
+#d1f1f7,China,yongdeng,Yongdeng,永登,unit,high,matches pick,6148,3188,47,9,yes
+#cbedae,China,yun / cheng,Yuncheng,郓城,unit,high,,7197,3188,28,19,
+#d9edae,China,fan / xian,Fanxian,范县,unit,high,,7157,3192,21,17,
+#abebc7,China,beng / he,Benghe,,none,low,,7376,3198,23,17,
+#dac900,China,zhengzhou,Zhengzhou,郑州,prefecture,high,"from numbered list, key 1; matches pick",7549,3198,66,9,yes
+#e9eed0,China,huanxian,Huanxian,环县,unit,high,matches pick,6491,3199,44,9,yes
+#adf0f0,China,huang / zhong,Huangzhong,湟中,unit,high,matches pick,5995,3200,34,19,yes
+#ede2cc,China,hejin,Hejin,河津,unit,high,matches pick,6777,3201,24,9,yes
+#98eabb,China,yimeng,Yimeng,,none,low,,7402,3203,34,9,
+#c3f1bf,China,zou / cheng,Zoucheng,邹城,unit,high,,7298,3205,29,17,
+#e7f1b1,China,dao / kou,Daokou,道口,neighbour town,medium,"name found in neighbour #f1eea6@114.5,35.4",7128,3206,19,17,
+#9ded96,China,jining,Jining,济宁,prefecture,high,"placed by label colour, text off the region",7261,3206,27,9,
+#eddcb7,China,taosi,Taosi,陶寺,town,high,matches pick,6825,3207,25,9,yes
+#d9bb00,China,zhongyuan,Zhongyuan,中原,unit,high,"from numbered list, key 2; matches pick",7549,3208,66,9,yes
+#e6eaa3,China,hebi,Hebi,鹤壁,prefecture,high,matches pick,7078,3210,20,9,yes
+#e0eeab,China,juan / cheng,Juancheng,鄄城,unit,high,,7178,3214,28,18,
+#bfeec9,China,shan / ting,Shanting,山亭,unit,high,,7340,3214,23,17,
+#e4d8c0,China,gaoping,Gaoping,高平,unit,high,matches pick,6934,3215,38,9,yes
+#c6f0b4,China,jia / xiang,Jiaxiang,嘉祥,unit,high,,7253,3215,26,17,
+#d9cd3c,China,guancheng,Guancheng,管城,unit,high,"from numbered list, key 3; matches pick",7549,3218,65,9,yes
+#7beab5,China,linyi,Linyi,临邑,unit,high,"placed by label colour, text off the region; also 临沂",7414,3220,20,9,
+#7adaf1,China,xigu,Xigu,西固,unit,high,"placed by label colour, text off the region; matches pick",6166,3223,20,9,yes
+#f3edda,China,luochuan,Luochuan,洛川,unit,high,matches pick,6635,3224,43,9,yes
+#abf1d8,China,linshu,Linshu,临沭,unit,high,,7441,3226,29,9,
+#bdf0c4,China,wei / shan,Weishan,微山,unit,high,,7288,3227,21,17,
+#ebe059,China,jinshui,Jinshui,金水,unit,high,"from numbered list, key 4; matches pick",7549,3228,46,9,yes
+#5bd7f4,China,jincheng,Jincheng,金城,chgis,high,"placed by label colour, text off the region; matches pick",6201,3230,41,9,yes
+#e2e4a0,China,huixian,Huixian,辉县,unit,high,,7028,3231,35,9,
+"#f1eea6@114.5,35.4",China,hua / xian,Huaxian,滑县,unit,high,matches pick,7096,3231,23,17,yes
+#a7eed8,China,luo / zhuang,Luozhuang,罗庄,unit,high,,7400,3234,35,16,
+#cfedae,China,juye,Juye,巨野,unit,high,,7225,3235,21,9,
+#96eaa8,China,tengzhou,Tengzhou,滕州,unit,high,,7314,3235,49,9,
+#acede1,China,ganyu,Ganyu,赣榆,unit,high,,7476,3235,29,9,
+"#e4ea85@114.1,35.4",China,wei / hui,Weihui,卫辉,unit,high,matches pick,7061,3237,25,17,yes
+#dcc66d,China,huiji,Huiji,惠济,unit,high,"from numbered list, key 5; matches pick",7549,3238,34,9,yes
+#ccf3e7,China,hehuang,Hehuang,,none,low,matches pick,6077,3242,41,9,yes
+#d5eb81,China,heze,Heze,菏泽,prefecture,high,"placed by label colour, text off the region",7186,3242,23,9,
+#f1e0be,China,yicheng,Yicheng,翼城,unit,high,matches pick,6847,3243,37,9,yes
+#abf1e4,China,tan / cheng,Tancheng,郯城,unit,high,,7437,3245,28,16,
+#eef1b4,China,dong / minḡ,Dongming,东明,unit,high,,7154,3246,23,17,
+#12bced,China,lanzhou,Lanzhou,兰州,prefecture,high,"placed by label colour, text off the region; matches pick",6231,3248,38,9,yes
+#f0eda8,China,chang / yuan,Changyuan,长垣,unit,high,matches pick,7117,3248,29,16,yes
+#e5c854,China,jialu,Jialu,贾鲁,geonames,medium,"from numbered list, key 6; GeoNames Jialu He (STM); matches pick",7549,3248,34,9,yes
+#d4ccb2,China,jincheng,Jincheng,晋城,prefecture,high,matches pick,6950,3249,41,9,yes
+#d2f4bb,China,jinxiang,Jinxiang,金乡,unit,high,,7257,3250,39,9,
+#e4de6c,China,x̣in / xiang,Xinxiang,新乡,unit,high,matches pick,7033,3253,26,16,yes
+#b7eddc,China,lan / ling,Lanling,兰陵,unit,high,,7395,3253,19,17,
+#d7d982,China,jiao / zuo,Jiaozuo,焦作,prefecture,high,matches pick,7004,3258,19,17,yes
+#e4f0ab,China,ding / tao,Dingtao,定陶,unit,high,also 定陶国,7198,3258,35,19,
+#cbf1cb,China,guyuan,Guyuan,固原,prefecture,high,also 固原千户; matches pick,6390,3260,35,9,yes
+#91ecee,China,hai / zhou,Haizhou,海州,unit,high,,7496,3262,23,17,
+#d1f1eb,China,huining,Huining,会宁,unit,high,matches pick,6275,3268,35,9,yes
+#9ce8b2,China,zao / zhuang,Zaozhuang,枣庄,prefecture,high,"placed by label colour, text off the region",7353,3268,35,16,
+#bfeede,China,lintao,Lintao,临洮,unit,high,matches pick,6201,3272,28,9,yes
+#ddd893,China,huai / qing,Huaiqing,怀庆,town,high,matches pick,6975,3273,21,17,yes
+#baf2f4,China,lian / yun,Lianyun,连云,unit,high,,7526,3273,17,17,
+#f0eeb4,China,fengqiu,Fengqiu,封丘,unit,high,matches pick,7079,3274,37,9,yes
+#aeeee9,China,oonghai,Donghai,东海,"fuzzy, colour unit",medium,fuzzy match donghai (0.86); read as oonghai,7453,3274,38,9,
+#f0e5c4,China,han / cheng,Hancheng,韩城,unit,high,matches pick,6732,3276,28,17,yes
+#e8e084,China,yuan / ȳang,Yuanyang,原阳,unit,high,matches pick,7044,3276,24,17,yes
+#c2f4bb,China,pei / xian,Peixian,沛县,unit,high,,7308,3277,23,18,
+#eeeebf,China,qingyang,Qingyang,庆阳,prefecture,high,matches pick,6532,3279,44,9,yes
+#eaf0ab,China,cao,Cao,曹,unit,medium,,7192,3280,16,9,
+#ebe4b9,China,zhongtiao,Zhongtiao,,none,low,matches pick,6830,3281,49,9,yes
+#e6f0bb,China,shan / xian,Shanxian,单县,unit,high,,7244,3282,23,17,
+#d1eebd,China,feng / xian,Fengxian,丰县,unit,high,,7278,3282,27,18,
+#acedd0,China,pi / zhou,Pizhou,邳州,unit,high,,7411,3282,23,19,
+#f0edab,China,lankao,Lankao,兰考,unit,high,matches pick,7144,3283,31,9,yes
+#bfedcd,China,taier / zhuang,Taierzhuang,台儿庄,unit,high,,7363,3284,40,17,
+#f0e7b3,China,jiyuan,Jiyuan,济源,unit,high,also 济源市〔1〕; matches pick,6924,3290,30,9,yes
+#f1e9b9,China,pu / zhou,Puzhou,蒲州,chgis,high,matches pick,6771,3294,23,19,yes
+#ebe6a5,China,wu? / ?zhi,Wuzhi,武陟,unit,high,unread glyph (?); stray ink between letters ignored; matches pick,6979,3296,28,10,yes
+#e4d55b,China,kaifeng,Kaifeng,开封,unit,high,"placed by label colour, text off the region; matches pick",7094,3297,36,9,yes
+#a6f1b7,China,linxia,Linxia,临夏,unit,high,matches pick,6139,3299,26,9,yes
+#baeef4,China,xiangshui,Xiangshui,响水,unit,high,,7544,3300,47,9,
+#e7da75,China,zhọ?ng / mu,Zhongmu,中牟,unit,high,unread glyph (?); stray ink between letters ignored; matches pick,7063,3305,29,16,yes
+#e6ebb2,China,minquan,Minquan,民权,unit,high,matches pick,7163,3306,40,9,yes
+#d5edbe,China,jiawang,Jiawang,贾汪,unit,high,,7336,3308,38,9,
+#e0e8a3,China,yu / cheng,Yucheng,虞城,unit,high,matches pick,7227,3309,28,17,yes
+#c0f3cc,China,dong / xiang,Dongxiang,东乡族,unit,high,matches pick,6181,3311,26,18,yes
+#b2e5e5,China,guanhe,Guanhe,关河,geonames,medium,GeoNames Guan He (STMC),7499,3311,35,9,
+#e4eed5,China,pingliang,Pingliang,平凉,prefecture,high,matches pick,6471,3312,44,9,yes
+#bbf0ec,China,luoma,Luoma,,none,low,,7429,3312,28,9,
+#eddf9a,China,xing / yan̄g,Xingyang,荥阳,unit,high,other text on region: yun; matches pick,6999,3313,25,17,yes
+#9be9e9,China,shu / yang,Shuyang,沭阳,unit,high,,7467,3313,23,16,
+#e7f0c2,China,dangshan,Dangshan,砀山,unit,high,,7264,3316,47,9,
+#dceec8,China,gupi,Gupi,古邳,town,high,,7385,3316,20,9,
+#ebe09c,China,cheng,Cheng,,none,low,pick is Yuncheng,6793,3317,28,9,yes
+#eddcb3,China,mianchi,Mianchi,渑池,unit,high,also 黾池; matches pick,6885,3318,36,9,yes
+#edd08c,China,mengjin,Mengjin,孟津,unit,high,matches pick,6930,3319,38,9,yes
+#e7c65c,China,er,Er,,none,low,pick is Erqi,7044,3321,10,9,yes
+#cce8d9,China,liupan,Liupan,,none,low,matches pick,6372,3322,29,9,yes
+#e8e4ad,China,tong / chuan,Tongchuan,铜川,prefecture,high,matches pick,6633,3324,28,18,yes
+"#e4ea85@115.7,34.4",China,shangqiu,Shangqiu,睢阳,unit,high,"placed by label colour, text off the region; also 商丘; matches pick",7198,3325,44,9,yes
+#f0e4ab,China,tong / xu,Tongxu,通许,unit,high,matches pick,7105,3327,20,17,yes
+#f6eeb1,China,qixian,Qixian,杞县,unit,high,also 淇县; matches pick,7130,3327,32,9,yes
+#c8e87f,China,pengcheng,Pengcheng,彭城,town,high,"placed by label colour, text off the region; also 彭城国",7367,3327,52,9,
+#ead89f,China,wei / shi,Weishi,尉氏,unit,high,matches pick,7079,3328,16,17,yes
+"#f1eea6@115.3,34.4",China,ning / ling,Ningling,宁陵,unit,high,matches pick,7173,3329,21,17,yes
+#ebeec8,China,binzhou,Binzhou,邠州,chgis,high,also 豳州; matches pick,6567,3330,38,9,yes
+#e8dead,China,pucheng,Pucheng,蒲城,unit,high,matches pick,6679,3330,40,9,yes
+#f0b885,China,luoyang,Luoyang,洛阳,prefecture,high,"placed by label colour, text off the region; matches pick",6893,3330,38,9,yes
+#e6eeb4,China,xiao,Xiao,萧,unit,medium,,7314,3332,20,9,
+#bae9f4,China,she / yang,Sheyang,射阳,unit,high,,7599,3332,23,16,
+#f1dba8,China,gongyi,Gongyi,巩义,unit,high,matches pick,6965,3334,32,9,yes
+#d3e56e,China,xuzhou,Xuzhou,徐州,prefecture,high,"placed by label colour, text off the region",7365,3335,35,9,
+#f1dcb1,China,sanmen / xia,Sanmenxia,三门峡,prefecture,high,matches pick,6826,3336,37,17,yes
+#e7d075,China,xin / zheng,Xinzheng,新郑,unit,high,matches pick,7053,3339,31,17,yes
+#e8eeb5,China,xian,Xian,西安,prefecture,high,"placed by label colour, text off the region; other text on region: zhou / yuan; pick is Zhouyuan",7317,3340,20,9,yes
+#b4d7ee,China,lianshui,Lianshui,涟水,unit,high,,7513,3340,38,9,
+#c6e8d4,China,su / qian,Suqian,宿迁,unit,high,,7438,3343,20,16,
+#e8d792,China,xinmi,Xinmi,新密,unit,high,matches pick,7022,3345,25,9,yes
+#e5edac,China,xiayi,Xiayi,夏邑,unit,high,also 下邑,7253,3345,23,9,
+#b6dada,China,si / yang,Siyang,泗阳,unit,high,,7464,3346,23,16,
+#b3cfe9,China,funing,Funing,阜宁,unit,high,,7556,3348,31,9,
+#ebea9c,China,zhe / cheng,Zhecheng,柘城,unit,high,matches pick,7190,3350,28,16,yes
+#d9eac9,China,sui / ning,Suining,睢宁,unit,high,,7408,3350,20,17,
+#f3edbb,China,hua / shan,Huashan,华山,town,high,matches pick,6727,3354,23,18,yes
+#f0e6a8,China,tai / kang,Taikang,太康,unit,high,also 泰康; matches pick,7159,3357,22,17,yes
+#b6ccda,China,huai / yin,Huaiyin,淮阴,unit,high,,7497,3357,20,17,
+#eab876,China,long / men,Longmen,龙门,town,high,"placed by label colour, text off the region; matches pick",6940,3358,22,17,yes
+#eaddb2,China,song / shan,Songshan,嵩山,geonames,medium,GeoNames Song Shan (MTS); matches pick,6983,3359,48,13,yes
+#f7eec4,China,fengling / du,Fenglingdu,风陵渡,town,high,matches pick,6771,3361,40,19,yes
+#d0eee8,China,gangu,Gangu,甘谷,unit,high,matches pick,6319,3363,29,9,yes
+#ead696,China,chang? / ge,Changge,长葛,unit,high,unread glyph (?); stray ink between letters ignored; matches pick,7059,3365,41,10,yes
+#e7edbc,China,yong / cheng,Yongcheng,永城,unit,high,,7272,3365,28,18,
+#dfe497,China,huaibei,Huaibei,淮北,prefecture,high,,7310,3365,35,9,
+#e7dfb2,China,fugou,Fugou,扶沟,unit,high,matches pick,7116,3368,28,9,yes
+#ebda88,China,sanyuan,Sanyuan,三原,unit,high,matches pick,6651,3369,41,9,yes
+#d73125,China,nanjing,Nanjing,南京,prefecture,high,"from numbered list, key a",7709,3370,49,9,
+#e9edce,China,bianhe,Bianhe,汴河,neighbour town,medium,name found in neighbour #e3ebab,7357,3371,32,9,
+#f0ea99,China,jing / yang,Jingyang,泾阳,unit,high,matches pick,6627,3373,25,18,yes
+#daf0e9,China,longxi,Longxi,陇西,unit,high,also 陇西国; matches pick,6254,3376,29,9,yes
+#d4e5ce,China,longxian,Longxian,陇县,unit,high,matches pick,6427,3376,41,9,yes
+#ead89d,China,yu / zhou,Yuzhou,禹州,unit,high,matches pick,7026,3376,23,18,yes
+#ebf3e6,China,amdo,Amdo,,none,low,matches pick,6064,3377,50,18,yes
+#9ec7e7,China,yancheng,Yancheng,盐城,prefecture,high,,7600,3377,46,9,
+#e7e6ae,China,luyi,Luyi,鹿邑,unit,high,matches pick,7213,3378,17,9,yes
+#eaf0b0,China,liquan,Liquan,礼泉,unit,high,also 醴泉; matches pick,6585,3380,29,9,yes
+#df5248,China,xuanwu,Xuanwu,玄武,unit,high,"from numbered list, key b",7709,3380,50,9,
+#8fb0d8,China,huai / an,Huaian,淮安,unit,high,"placed by label colour, text off the region",7497,3381,20,16,
+#eee299,China,wei / nan,Weinan,渭南,prefecture,high,matches pick,6694,3382,19,16,yes
+#f0dccf,China,xiong'er,Xiong'er,熊耳,geonames,medium,GeoNames Xiong’er Shan (MTS); matches pick,6848,3382,39,9,yes
+#0086ff,China,huangpu,Huangpu,黄浦,unit,high,"from numbered list, key a; other text on region: shanghai",8291,3382,52,9,
+#dae5ab,China,feng / xiang,Fengxiang,凤翔,unit,high,matches pick,6509,3383,26,18,yes
+#eed6b5,China,yi / chuan,Yichuan,伊川,unit,high,matches pick,6937,3383,28,18,yes
+#ede7a1,China,bo / zhou,Bozhou,亳州,prefecture,high,,7230,3386,23,17,
+#b88fe8,China,sha / zhou,Shazhou,,unit,low,"placed by label colour, on an inset",7973,3386,23,17,
+#e5c585,China,xuchang,Xuchang,许昌,unit,high,matches pick,7053,3388,40,9,yes
+#e3ebab,China,su / zhou,Suzhou,宿州,prefecture,high,,7334,3388,23,17,
+#ebdbbf,China,ruzhou,Ruzhou,汝州,unit,high,matches pick,6972,3389,34,9,yes
+#bcc8e0,China,jianhu,Jianhu,建湖,unit,high,,7571,3389,30,9,
+#e46b62,China,jianye,Jianye,建邺,unit,high,"from numbered list, key c",7710,3389,42,9,
+#3468df,China,xuhui,Xuhui,徐汇,unit,high,"from numbered list, key b",8291,3392,37,9,
+#eae7ae,China,suixi,Suixi,濉溪,unit,high,,7290,3393,23,9,
+#f0dd6b,China,lin / toṇg,Lintong,临潼,unit,high,matches pick,6666,3394,22,17,yes
+#e9edc3,China,sixian,Sixian,泗县,unit,high,,7397,3394,29,9,
+#f4e1ac,China,huai / yang,Huaiyang,淮阳,unit,high,also 淮阳国; matches pick,7154,3395,23,16,yes
+#bdbdd8,China,hongze,Hongze,洪泽,unit,high,,7525,3398,35,9,
+#e0dccf,China,sihong,Sihong,泗洪,unit,high,,7441,3399,32,9,
+#df8680,China,laoshan,Laoshan,老山,town,high,"from numbered list, key d",7709,3399,51,9,
+#b8e7f8,China,dafeng,Dafeng,大丰,unit,high,,7631,3400,34,9,
+#4164d8,China,putuo,Putuo,普陀,unit,high,"from numbered list, key c",8292,3401,38,9,
+#bfe7da,China,tian / shui,Tianshui,天水,prefecture,high,matches pick,6364,3402,26,18,yes
+#ebd0a3,China,bao / feng,Baofeng,宝丰,unit,high,matches pick,7005,3402,24,17,yes
+#e5d19a,China,linying,Linying,临颍,unit,high,matches pick,7079,3402,32,9,yes
+#c387e9,China,jiang / yin,Jiangyin,江阴,unit,high,"placed by label colour, on an inset",7941,3402,24,18,
+#ab8fe8,China,haiyu,Haiyu,海虞,town,high,"placed by label colour, on an inset",8013,3405,26,9,
+#e4626b,China,qixia,Qixia,栖霞,unit,high,"from numbered list, key e",7709,3408,36,9,
+#ebf389,China,xing / ping,Xingping,兴平,unit,high,matches pick,6592,3409,31,15,yes
+#f1e0af,China,xihua,Xihua,西华,unit,high,also 西华侯国; matches pick,7119,3409,26,9,yes
+#edd79b,China,dan / cheng,Dancheng,郸城,unit,high,matches pick,7183,3409,28,17,yes
+#2065d8,China,jing'an,Jing'an,静安,unit,high,"from numbered list, key d",8291,3411,43,9,
+#e8d7b4,China,xiang / cheng,Xiangcheng,项城,unit,high,"also 相城,襄城,襄成侯国; matches pick",7042,3414,42,18,yes
+#8a7ce4,China,chang / shu,Changshu,常熟,unit,high,"placed by label colour, on an inset",8053,3417,28,18,
+#e2ee84,China,baoji,Baoji,宝鸡,unit,high,matches pick,6490,3418,24,9,yes
+#f1d6c4,China,funiu,Funiu,伏牛,geonames,medium,GeoNames Funiu Shan (MTS); matches pick,6891,3418,25,9,yes
+#e6777e,China,jiangning,Jiangning,江宁,unit,high,"from numbered list, key f",7710,3419,57,9,
+#ebe1b5,China,guohe,Guohe,,none,low,,7250,3420,29,9,
+#ede8bf,China,kuaihe,Kuaihe,,none,low,,7325,3420,31,9,
+#2a78e6,China,hongkou,Hongkou,虹口,unit,high,"from numbered list, key e",8291,3421,51,9,
+#b9c3e7,China,xinghua,Xinghua,兴化,unit,high,,7584,3424,38,9,
+#ede696,China,lantian,Lantian,蓝田,unit,high,matches pick,6670,3428,34,9,yes
+#e7c07d,China,ping / ding / shan,Pingdingshan,平顶山,prefecture,high,"placed by label colour, text off the region; matches pick",6993,3428,32,27,yes
+#f1e4c6,China,shangzhou,Shangzhou,商州,unit,high,pick is Shangluo,6735,3429,53,9,yes
+#eed092,China,zhoựkou,Zhoukou,周口,prefecture,high,"placed by label colour, text off the region; matches pick",7138,3431,40,9,yes
+#3c8fe6,China,yangpu,Yangpu,杨浦,unit,high,"from numbered list, key f",8292,3431,45,9,
+#eacf9a,China,luo,Luo,,none,low,pick is Luohe,7091,3434,14,9,yes
+#ede2c3,China,wuhe,Wuhe,五河,unit,high,,7388,3435,25,9,
+#ead9ba,China,lushan,Lushan,鲁山,unit,high,matches pick,6957,3437,32,9,yes
+#b67fd8,China,hui / shan,Huishan,惠山,unit,high,"placed by label colour, on an inset",7939,3440,23,17,
+#af7bd0,China,xishan,Xishan,锡山,unit,high,"placed by label colour, on an inset",7974,3442,32,9,
+#ebf0aa,China,zhouzhi,Zhouzhi,周至,unit,high,other text on region: xian; also 盩厔; matches pick,6605,3443,38,9,yes
+#f4dc98,China,xiang / 9 cheng,Xiang9 Cheng,项城,fuzzy unit,low,fuzzy match xiangcheng (0.95); pick is Xiangcheng,7144,3443,40,17,yes
+#f0d6aa,China,taihe,Taihe,太和,unit,high,also 泰和; matches pick,7227,3444,25,9,yes
+#eed8b5,China,meng / cheng,Mengcheng,蒙城,unit,high,,7300,3444,28,18,
+#bcddf0,China,dongtai,Dongtai,东台,unit,high,,7641,3444,37,9,
+#8990df,China,taicang,Taicang,太仓,unit,high,"placed by label colour, on an inset",8090,3444,36,9,
+#c6b4e7,China,gao / you,Gaoyou,高邮,unit,high,"placed by label colour, text off the region",7568,3446,20,17,
+#f1d3ac,China,yexian,Yexian,叶县,unit,high,matches pick,7037,3447,32,9,yes
+#c887a6,China,yangzhou,Yangzhou,扬州,prefecture,high,"placed by label colour, text off the region",7722,3448,47,9,
+#eed9b3,China,shan? / shui,Shangshui,商水,wildcard unit,medium,unread glyph (?); unread glyph filled from shangshui; matches pick,7120,3449,30,18,yes
+#d3c0cf,China,xuyi,Xuyi,盱眙,unit,high,,7490,3451,20,9,
+#9c82d3,China,yang / cheng,Yangcheng,阳澄湖,fuzzy town,low,"placed by label colour, on an inset; fuzzy match yangchenghu (0.90)",8023,3452,28,19,
+#de73eb,China,changzhou,Changzhou,常州,prefecture,high,"from numbered list, key k",7777,3453,63,9,
+#f4d398,China,shen / qiu,Shenqiu,沈丘,unit,high,matches pick,7181,3455,26,17,yes
+#ead4ae,China,lixin,Lixin,利辛,unit,high,,7264,3456,20,9,
+#e5b496,China,beng / bu,Bengbu,蚌埠,prefecture,high,"placed by label colour, text off the region",7366,3456,23,18,
+#ebcfa4,China,jie / shou,Jieshou,界首,unit,high,matches pick,7208,3457,23,19,yes
+#edd9ba,China,shang / cai,Shangcai,上蔡,unit,high,matches pick,7085,3461,41,17,yes
+#e4ebe5,China,lixian,Lixian,礼县,unit,high,matches pick,6280,3463,26,9,yes
+#cd8ad5,China,wujin,Wujin,武进,unit,high,"from numbered list, key l",7778,3463,36,9,
+#a151d3,China,wụxi,Wuxi,无锡,unit,high,"placed by label colour, on an inset; also 无锡侯国",7959,3463,22,9,
+#eed5c1,China,huai / yuan,Huaiyuan,怀远,unit,high,,7340,3466,26,16,
+#e5e8e3,China,chengxian,Chengxian,成县,unit,high,matches pick,6394,3467,49,9,yes
+#a2c6ed,China,hai'an,Hai'an,海安,unit,high,,7635,3467,28,9,
+#ebd7c4,China,nanzhao,Nanzhao,南召,unit,high,matches pick,6950,3470,41,9,yes
+#6d7edf,China,jiading,Jiading,嘉定,unit,high,"placed by label colour, on an inset",8122,3470,33,9,
+#97a6da,China,tai / zhoư,Taizhou,泰州,unit,high,,7603,3471,23,17,
+#7a80c6,China,kun / shan,Kunshan,昆山,unit,high,"placed by label colour, on an inset",8066,3471,23,17,
+#c894e1,China,hengshan,Hengshan,横山,geonames,medium,"from numbered list, key m; GeoNames Hengshan Dao (ISL)",7775,3473,60,9,
+#a87fdf,China,xinwu,Xinwu,,none,low,"placed by label colour, on an inset",7981,3473,28,9,
+#b8dcf8,China,juegang,Juegang,掘港,town,high,,7690,3476,39,9,
+#ebd5d1,China,fengyang,Fengyang,凤阳,unit,high,,7405,3477,46,9,
+#f6cfaf,China,yingquan,Yingquan,颍泉,unit,high,"placed by label colour, text off the region; matches pick",7261,3479,44,9,yes
+#f3d3c8,China,danjiang,Danjiang,丹江,geonames,medium,GeoNames Dan Jiang (STM); matches pick,6835,3480,42,9,yes
+#b975e4,China,bin / hu,Binhu,滨湖,unit,high,"placed by label colour, on an inset",7960,3480,14,17,
+#e5bd93,China,zhuma / dịan,Zhumadian,驻马店,prefecture,high,"placed by label colour, text off the region; matches pick",7077,3482,31,17,yes
+#f0d8b9,China,chaya / shan,Chayashan,查岈山,town,high,matches pick,7041,3483,28,18,yes
+#ebc99a,China,lin / quan,Linquan,临泉,unit,high,matches pick,7189,3483,23,16,yes
+#81a5f4,China,nantong,Nantong,南通,unit,high,"from numbered list, key n",7777,3483,51,9,
+#eedab1,China,pingyu,Pingyu,平舆,unit,high,matches pick,7144,3485,32,9,yes
+#e7b9bf,China,tian / chang,Tianchang,天长,unit,high,,7504,3485,28,17,
+#c29ec9,China,jiang / du,Jiangdu,江都,unit,high,,7576,3485,24,18,
+#997ce2,China,xiang / cheng,Xiangcheng,相城,unit,high,"placed by label colour, on an inset",7999,3489,33,16,
+#f3b889,China,fuyang,Fuyang,阜阳,unit,high,"placed by label colour, text off the region; matches pick",7249,3490,34,9,yes
+#a2b8ed,China,ru / gao,Rugao,如皋,unit,high,,7656,3490,17,16,
+"#edc3b7@116.8,32.7",China,bagong / shan,Bagongshan,八公山,unit,high,,7318,3491,35,18,
+#9fbaf8,China,jinsha,Jinsha,金沙,town,high,"from numbered list, key o",7777,3493,41,9,
+#f7e7d6,China,shanyang,Shanyang,山阳,unit,high,matches pick,6697,3495,47,9,yes
+#f9e7dc,China,yangxian,Yangxian,洋县,unit,high,matches pick,6529,3496,44,9,yes
+#adbcf9,China,shigang,Shigang,石港,town,high,,7685,3498,38,9,
+#e1a7bb,China,yi / zheng,Yizheng,仪征,unit,high,,7540,3499,29,18,
+#f0d5c4,China,feng / tai,Fengtai,凤台,unit,high,matches pick,7299,3500,22,19,yes
+#bda9e7,China,taixing,Taixing,泰兴,unit,high,,7612,3500,34,9,
+#f0d1b1,China,sheqi,Sheqi,社旗,unit,high,matches pick,6996,3505,26,9,yes
+#8478d3,China,dushu,Dushu,,none,low,"placed by label colour, on an inset",8039,3505,29,9,
+#ebd1b5,China,ru / nan,Runan,汝南,unit,high,matches pick,7125,3506,17,17,yes
+#ebcaaf,China,funan,Funan,阜南,unit,high,matches pick,7220,3508,28,9,yes
+#edb7a7,China,huaiṇan,Huainan,淮南,prefecture,high,,7357,3509,38,9,
+#7684d0,China,qian / deng,Qiandeng,千灯,town,high,"placed by label colour, on an inset",8080,3510,26,18,
+#f1d1b4,China,zhen / ping,Zhenping,镇平,unit,high,matches pick,6936,3511,23,17,yes
+#eecbaf,China,ying / shang,Yingshang,颍上,unit,high,matches pick,7263,3512,29,18,yes
+#ebcdcb,China,dingyuan,Dingyuan,定远,unit,high,,7414,3513,44,9,
+#9fc0f8,China,hai / men,Haimen,海门,unit,high,,7726,3513,19,16,
+#7a4fe4,China,suzhou,Suzhou,苏州,prefecture,high,"placed by label colour, on an inset",8013,3513,35,9,
+#f3d7c8,China,nei / xiang,Neixiang,内乡,unit,high,matches pick,6897,3514,26,17,yes
+#eed2b1,China,xincai,Xincai,新蔡,unit,high,matches pick,7177,3514,28,9,yes
+#e7b2a3,China,chu / zhou,Chuzhou,滁州,prefecture,high,,7477,3514,23,18,
+#6b7cd7,China,qingpu,Qingpu,青浦,unit,high,"placed by label colour, on an inset",8110,3514,32,9,
+#f4a065,China,ṇānyang,Nanyang,南阳,unit,high,"placed by label colour, text off the region; also 南阳国; matches pick",6972,3515,41,9,yes
+#e18cad,China,jingkou,Jingkou,京口,unit,high,,7577,3517,35,9,
+#adaef9,China,jing / jiang,Jingjiang,靖江,unit,high,,7627,3519,26,17,
+#a6caff,China,qidong,Qidong,启东,unit,high,,7754,3522,32,9,
+#8f6aeb,China,mudu,Mudu,木渎,town,high,"placed by label colour, on an inset",7993,3525,25,9,
+#f08f9c,China,zhen / jiang,Zhenjiang,镇江,prefecture,high,,7546,3527,24,17,
+#f3ddd1,China,huoqiu,Huoqiu,霍邱,unit,high,,7320,3537,32,9,
+#e69acd,China,dan / yang,Danyang,丹阳,unit,high,,7579,3537,23,16,
+#e496ed,China,xin / bei,Xinbei,新北,unit,high,"placed by label colour, text off the region",7609,3537,16,17,
+#9779e1,China,wu / zhong,Wuzhong,吴中,unit,high,"placed by label colour, on an inset",8000,3540,32,17,
+#f7dcd3,China,yunyang,Yunyang,郧阳,chgis,high,also 均阳; matches pick,6807,3544,41,9,yes
+#f1d4ba,China,huaibin,Huaibin,淮滨,unit,high,matches pick,7216,3544,35,9,yes
+#83bdfa,China,chong / ming,Chongming,崇明,unit,high,,7745,3544,42,18,
+#edd4bd,China,tongbai,Tongbai,桐柏,unit,high,matches pick,7042,3548,37,9,yes
+#e09a83,China,chefei,Chefei,合肥,fuzzy prefecture,low,"from numbered list, key 1; fuzzy match hefei (0.91); pick is Hefei",7302,3548,40,9,yes
+#eedfc7,China,que / shan,Queshan,确山,unit,high,matches pick,7094,3549,23,19,yes
+#f0ccb5,China,xin / ye,Xinye,新野,unit,high,matches pick,6966,3551,14,17,yes
+#f1cbb0,China,tang / he,Tanghe,唐河,unit,high,matches pick,6995,3551,22,18,yes
+#827fdc,China,songling,Songling,,none,low,"placed by label colour, on an inset",8037,3551,41,9,
+#eedcc7,China,xixian,Xixian,息县,unit,high,pick is Xi,7155,3552,29,9,yes
+#f0cdc3,China,chang / feng,Changfeng,长丰,unit,high,,7364,3552,28,18,
+#f1d1ba,China,deng / zhou,Dengzhou,邓州,unit,high,matches pick,6932,3554,25,18,yes
+#7fc5f5,China,nanhui,Nanhui,南汇,unit,high,"placed by label colour, on an inset",8239,3554,32,9,
+#fad4c0,China,han / zhong,Hanzhong,汉中,prefecture,high,matches pick,6486,3555,29,17,yes
+#d69677,China,2ashushan,2ashushan,蜀山,fuzzy unit,low,"placed by label colour, text off the region; fuzzy match shushan (0.88); pick is Shushan",7303,3557,54,9,yes
+#f6c9bc,China,quanjiao,Quanjiao,全椒,unit,high,also 全椒侯国,7418,3557,42,9,
+#f7f9ee,China,qamdo,Qamdo,昌都,unit,high,matches pick,5534,3558,124,36,yes
+#f7e5dc,China,mianxian,Mianxian,勉县,unit,high,also 沔县; matches pick,6416,3561,43,9,yes
+#f3cabb,China,shiyan,Shiyan,十堰,prefecture,high,"placed by label colour, text off the region; matches pick",6786,3566,32,9,yes
+#d67558,China,baohe,Baohe,包河,unit,high,"from numbered list, key 3; matches pick",7304,3567,42,9,yes
+#fceae1,China,xixiang,Xixiang,西乡,unit,high,matches pick,6568,3568,35,9,yes
+#edb0e1,China,maoshan,Maoshan,茅山,town,high,,7566,3568,43,9,
+#79afe8,China,fengxian,Fengxian,奉贤,unit,high,"placed by label colour, on an inset",8185,3568,43,9,
+#edbaaf,China,pukou,Pukou,浦口,unit,high,,7471,3572,28,9,
+#f1d9c2,China,gushi,Gushi,固始,unit,high,matches pick,7247,3573,26,9,yes
+#fadece,China,ankang,Ankang,安康,prefecture,high,matches pick,6647,3574,34,9,yes
+#eecfbc,China,huang / chuan,Huangchuan,潢川,unit,high,matches pick,7191,3586,30,18,yes
+#8c96da,China,jiashan,Jiashan,嘉善,unit,high,"placed by label colour, on an inset",8083,3591,36,9,
+#f6d1c4,China,wudang,Wudang,武当,geonames,medium,GeoNames Wudang Shan (MTS); matches pick,6869,3592,37,9,yes
+#f1ebe7,China,bailong,Bailong,白龙,geonames,medium,GeoNames Bailong Jiang (STM); matches pick,6308,3593,35,9,yes
+#f3bdad,China,chaohu,Chaohu,巢湖,unit,high,,7433,3593,34,9,
+#7997e8,China,jinshan,Jinshan,金山,unit,high,"placed by label colour, on an inset",8150,3595,36,9,
+#edd5c8,China,pihe,Pihe,,none,low,matches pick,7297,3596,20,9,yes
+#edcbbe,China,xiangzhou,Xiangzhou,襄州,unit,high,matches pick,6929,3598,50,9,yes
+#deabe6,China,yi / xing,Yixing,宜兴,unit,high,also 义兴,7610,3603,20,19,
+#e6a7c5,China,gao / chun,Gaochun,高淳,unit,high,,7545,3604,23,18,
+#e9a5d5,China,liyang,Liyang,溧阳,unit,high,also 溧阳侯国,7577,3605,29,9,
+#edf4e9,China,ngawa,Ngawa,阿坝,prefecture,high,matches pick,6118,3606,62,18,yes
+#e49991,China,dang / tu,Dangtu,当涂,unit,high,,7505,3606,23,18,
+#eaa790,China,fan / cheng,Fancheng,樊城,unit,high,"placed by label colour, text off the region; matches pick",6961,3607,33,17,yes
+#f0d1cd,China,zaoyang,Zaoyang,枣阳,unit,high,matches pick,7010,3608,41,9,yes
+#e8cab5,China,xin / yang,Xinyang,信阳,unit,high,matches pick,7102,3608,23,16,yes
+#e7bbaf,China,lu / an,Luan,六安,prefecture,high,matches pick,7325,3609,11,17,yes
+#bf94e9,China,huzhou,Huzhou,湖州,prefecture,high,"placed by label colour, on an inset",7942,3617,35,9,
+#f0d7c6,China,luoshan,Luoshan,罗山,unit,high,matches pick,7152,3621,38,9,yes
+#f7e4d6,China,xunyang,Xunyang,旬阳,unit,high,"also 洵阳,郇阳; matches pick",6666,3625,41,9,yes
+#ee7951,China,wuhu,Wuhu,芜湖,prefecture,high,"placed by label colour, text off the region",7469,3627,25,9,
+#9d7fd8,China,jiaxing,Jiaxing,嘉兴,unit,high,"placed by label colour, on an inset",8066,3627,33,9,
+#f7cdc1,China,lujiang,Lujiang,庐江,unit,high,,7385,3632,33,9,
+#f4e3d6,China,zhushan,Zhushan,竹山,unit,high,matches pick,6770,3634,41,9,yes
+#edae95,China,yaohai,Yaohai,瑶海,unit,high,"from numbered list, key 4; matches pick",7323,3634,45,9,yes
+#ed8e80,China,wan / zhi,Wanzhi,湾沚,town,high,,7508,3635,19,18,
+#f3ded2,China,jinzhai,Jinzhai,金寨,unit,high,matches pick,7245,3636,33,9,yes
+#eec2bb,China,wuwei,Wuwei,无为,unit,high,,7443,3638,30,9,
+#e24adb,China,hangzhou,Hangzhou,杭州,prefecture,high,"from numbered list, key t",8202,3639,59,9,
+#ab93e8,China,sheng / ze,Shengze,盛泽,town,high,,7681,3641,29,16,
+#edc4bf,China,guang / yuan,Guangyuan,广元,prefecture,high,matches pick,6393,3644,29,18,yes
+#eba792,China,luogang,Luogang,骆岗,town,high,"from numbered list, key 5; pick is Binhu",7321,3644,51,9,yes
+#f0d8d1,China,micang,Micang,米仓,geonames,medium,GeoNames Micang Shan (MTS); matches pick,6458,3646,33,9,yes
+#c945e0,China,zhaohui,Zhaohui,朝晖,neighbour town,medium,"from numbered list, key u; name found in neighbour #e24adb",8201,3649,51,9,
+#ebc5b9,China,xiangyang,Xiangyang,襄阳,unit,high,also 相阳; matches pick,6954,3651,50,9,yes
+#ebcdcd,China,sui / zhou,Suizhou,随州,prefecture,high,also 隋州; matches pick,7050,3651,23,17,yes
+#e4d1cf,China,guangshui,Guangshui,广水,unit,high,matches pick,7087,3651,50,9,yes
+#f0ddd1,China,tongjiang,Tongjiang,通江,unit,high,matches pick,6549,3653,47,9,yes
+#dca492,China,binhu,Binhu,,none,low,"from numbered list, key 6; pick is Shangpai",7319,3654,39,9,yes
+#e4a9bf,China,langchuan,Langchuan,郎川,geonames,medium,GeoNames Langchuan He (STM),7562,3654,49,9,
+#ab9fe1,China,ping / hu,Pinghu,平湖,unit,high,,7733,3656,20,18,
+#e67ed7,China,binjiang,Binjiang,滨江,unit,high,"from numbered list, key v",8201,3659,52,9,
+#f0dcd0,China,jingshan,Jingshan,荆山,chgis,high,matches pick,6883,3664,42,9,yes
+#c390df,China,tong / xiang,Tongxiang,桐乡,unit,high,,7683,3668,30,16,
+#eed7d1,China,shu / cheng,Shucheng,舒城,unit,high,matches pick,7298,3669,28,17,yes
+#ebb6b1,China,nanling,Nanling,南陵,unit,high,,7487,3669,35,9,
+#c2a8e8,China,nanxun,Nanxun,南浔,unit,high,,7644,3669,35,9,
+#c566d3,China,xixi,Xixi,西溪,geonames,medium,"from numbered list, key w; GeoNames Xixi Jiang (STM)",8199,3669,32,9,
+#f3d1b9,China,zong / yanḡ,Zongyang,枞阳,unit,high,matches pick,7411,3676,24,17,yes
+#e5b3a2,China,tong / ling,Tongling,铜陵,unit,high,,7452,3676,22,18,
+#d5b3df,China,anji,Anji,安吉,unit,high,,7611,3677,18,9,
+#c371e1,China,banshan,Banshan,半山,town,high,"from numbered list, key x",8201,3679,54,9,
+#eacbc8,China,hong / an,Hongan,红安,unit,high,matches pick,7151,3681,23,17,yes
+#eacbc3,China,ma / cheng,Macheng,麻城,unit,high,matches pick,7197,3681,28,17,yes
+#c197e9,China,hai / ning,Haining,海宁,unit,high,,7710,3684,20,17,
+#ee7709,China,chongqing,Chongqing,重庆,prefecture,high,"from numbered list, key a; matches pick",6178,3685,62,9,yes
+#d67ae8,China,qiantang,Qiantang,钱塘,geonames,medium,"from numbered list, key y; GeoNames Qiantang Jiang (STM)",8201,3689,56,9,
+#ebb285,China,bei / bei,Beibei,北碚,unit,high,"placed by label colour, on an inset; other text on region: be?bei; matches pick",6096,3690,15,18,yes
+#f3c9d0,China,anlu,Anlu,安陆,unit,high,matches pick,7101,3691,20,9,yes
+#f7ceb8,China,tong / cheng,Tongcheng,桐城,unit,high,matches pick,7355,3694,28,18,yes
+#eab8c6,China,xuan / cheng,Xuancheng,宣城,prefecture,high,,7542,3694,28,17,
+#f38825,China,jiangbei,Jiangbei,江北,unit,high,"from numbered list, key b; matches pick",6178,3695,52,9,yes
+#9a9efc,China,zhou / shan,Zhoushan,舟山,prefecture,high,"placed by label colour, text off the region",7862,3695,25,17,
+#b6a9f6,China,guan / hai / wei,Guanhaiwei,观海卫,town,high,,7775,3699,23,25,
+#e8beb5,China,bazhou,Bazhou,巴州,unit,high,pick is Bazhong,6469,3700,35,9,yes
+#eec7cc,China,jianmen,Jianmen,剑门,chgis,high,other text on region: an; matches pick,6352,3701,38,9,yes
+#c48cd8,China,mogan,Mogan,莫干,geonames,medium,GeoNames Mogan Shan (MTS),7632,3701,31,9,
+#ce84e8,China,yunhe,Yunhe,运河,town,high,"placed by label colour, on an inset",8011,3703,29,9,
+#eea139,China,nan'an,Nan'an,南岸,unit,high,"from numbered list, key c; matches pick",6179,3705,43,9,yes
+#7e6feb,China,yongjiang,Yongjiang,甬江,town,high,"from numbered list, key z",8221,3706,61,9,
+#a99bee,China,cixi,Cixi,慈溪,unit,high,,7755,3709,16,9,
+#f1e0c9,China,daba,Daba,大巴,geonames,medium,GeoNames Daba Shan (MTS); matches pick,6695,3710,23,9,yes
+#f4d7d0,China,dabie,Dabie,大别,geonames,medium,GeoNames Dabie Shan (MTS); matches pick,7250,3713,26,9,yes
+#eed1c6,China,ping / chang,Pingchang,平昌,unit,high,matches pick,6505,3714,28,19,yes
+#f0a263,China,jiulongpo,Jiulongpo,九龙坡,unit,high,"from numbered list, key d; matches pick",6178,3715,58,9,yes
+#ead7d4,China,jingshan,Jingshan,京山,unit,high,matches pick,7021,3716,42,9,yes
+#ebc1c3,China,xiao / gan,Xiaogan,孝感,prefecture,high,matches pick,7119,3719,20,16,yes
+#ba9bee,China,yu / yao,Yuyao,余姚,unit,high,,7745,3719,21,17,
+#f0a3a6,China,jiangyou,Jiangyou,江油,unit,high,"placed by label colour, text off the region; matches pick",6313,3720,42,9,yes
+#eeceb6,China,xuanhan,Xuanhan,宣汉,unit,high,matches pick,6573,3724,41,9,yes
+#ea8b51,China,shapingba,Shapingba,沙坪坝,unit,high,"from numbered list, key e; matches pick",6178,3725,63,9,yes
+#f4d5aa,China,an / qing,Anqing,安庆,prefecture,high,matches pick,7375,3726,20,16,yes
+#fadccc,China,tianzhu / shan,Tianzhushan,天柱山,town,high,matches pick,7306,3727,37,18,yes
+#eac7cc,China,yun / meng,Yunmeng,云梦,unit,high,matches pick,7084,3729,25,18,yes
+#989beb,China,zhenhai,Zhenhai,镇海,unit,high,,7770,3729,38,9,
+#f4bcbe,China,an / zhou,Anzhou,安州,chgis,high,matches pick,6280,3730,23,17,yes
+"#edc3b7@114.6,30.8",China,xin / zhou,Xinzhou,新洲,unit,high,matches pick,7176,3730,23,17,yes
+#ead9d2,China,sanxia,Sanxia,,none,low,matches pick,6854,3733,32,9,yes
+#ee9750,China,jialing,Jialing,嘉陵,geonames,medium,"from numbered list, key f; GeoNames Jialing Jiang (STM); matches pick",6179,3735,42,9,yes
+#f37276,China,mianyang,Mianyang,绵阳,prefecture,high,"placed by label colour, text off the region; matches pick",6315,3735,46,9,yes
+#f9c0c2,China,yilong,Yilong,仪陇,unit,high,"also 仪隆,隆城; matches pick",6449,3738,29,9,yes
+#f6d4b4,China,kai / zhou,Kaizhou,开州,chgis,high,matches pick,6621,3738,23,17,yes
+#dfe5ce,China,chi / hou,Chihou,池州,fuzzy prefecture,low,fuzzy match chizhou (0.92),7414,3738,19,18,
+#b9a5f5,China,bei / lun,Beilun,北仑,unit,high,,7817,3738,17,17,
+#f9b4bd,China,lang / zhong,Langzhong,阆中,unit,high,matches pick,6406,3742,29,18,yes
+#f0a987,China,dazhou,Dazhou,达州,prefecture,high,"placed by label colour, text off the region; matches pick",6563,3742,35,9,yes
+#eb9cea,China,guali,Guali,瓜沥,town,high,"placed by label colour, on an inset",8046,3742,23,9,
+#edd0cb,China,zhong / xiang,Zhongxiang,钟祥,unit,high,matches pick,6979,3744,30,18,yes
+#d9b2da,China,tianmu,Tianmu,天目,geonames,medium,GeoNames Tianmu Shan (MTS),7591,3747,33,9,
+#e4abd7,China,fu / chun,Fuchun,富春,town,high,,7648,3748,22,17,
+#f1b9b9,China,panlong,Panlong,,none,low,matches pick,7101,3749,38,9,yes
+#f3cdc4,China,xishui,Xishui,浠水,unit,high,matches pick,7220,3749,29,9,yes
+#d5b1ee,China,cao'e,Cao'e,曹娥,town,high,,7726,3749,24,9,
+#cde2e9,China,huangshan,Huangshan,黄山,unit,high,,7459,3756,53,9,
+#bc89ee,China,yinzhou,Yinzhou,鄞州,unit,high,"placed by label colour, text off the region",7769,3758,38,9,
+#e7c1ba,China,jing / men,Jingmen,荆门,prefecture,high,matches pick,6957,3761,20,18,yes
+#f4bebc,China,mian / zhu,Mianzhu,绵竹,unit,high,matches pick,6258,3762,22,18,yes
+#cea7d6,China,zhuji,Zhuji,诸暨,unit,high,,7679,3762,24,9,
+#eebc78,China,jiang / jin,Jiangjin,江津,unit,high,"placed by label colour, on an inset; other text on region: jiang; matches pick",6089,3763,24,18,yes
+#dc9c90,China,yichang,Yichang,宜昌,unit,high,"placed by label colour, text off the region; matches pick",6880,3763,37,9,yes
+#f4e2c2,China,wang / jiang,Wangjiang,望江,unit,high,matches pick,7329,3763,32,17,yes
+#f0c4c9,China,tianmen,Tianmen,天门,unit,high,also 天门市[1]; matches pick,7027,3768,39,9,yes
+#ebb2a4,China,zhoư,Zhou,,none,low,pick is Ezhou,7199,3768,23,9,yes
+#ede4b9,China,kuizhou,Kuizhou,夔州,chgis,high,matches pick,6724,3769,37,9,yes
+#edb7c5,China,han / chuan,Hanchuan,汉川,unit,high,matches pick,7082,3769,28,17,yes
+#edcab9,China,dachuan,Dachuan,达川,unit,high,matches pick,6549,3770,40,9,yes
+#df86df,China,xiao / shan,Xiaoshan,萧山,unit,high,"placed by label colour, on an inset",8004,3773,23,17,
+#f3e0b5,China,yun / yang,Yunyang,云阳,unit,high,matches pick,6670,3774,23,18,yes
+#f9c2c0,China,peng / an,Pengan,蓬安,unit,high,matches pick,6466,3776,23,17,yes
+#f3b0ba,China,san / tai,Santai,三台,unit,high,matches pick,6335,3777,21,18,yes
+#f7c3cc,China,yanting,Yanting,盐亭,unit,high,matches pick,6380,3777,37,9,yes
+#edb7ba,China,cai / dian,Caidian,蔡甸,unit,high,matches pick,7121,3777,20,17,yes
+#f3d4c4,China,qichun,Qichun,蕲春,unit,high,also 蕲春侯国; matches pick,7259,3779,31,9,yes
+#f4c5bc,China,du / jiang / yan,Dujiangyan,都江堰,unit,high,matches pick,6223,3781,24,27,yes
+#f09092,China,deyang,Deyang,德阳,prefecture,high,"placed by label colour, text off the region; matches pick",6286,3781,35,9,yes
+#eec7b4,China,qu / xian,Quxian,渠县,unit,high,matches pick,6508,3781,20,19,yes
+#e7beb7,China,zhi / jiang,Zhijiang,枝江,unit,high,pick is Dangyang,6921,3781,24,17,yes
+#eacb9d,China,huang? / shi,Huangshi,黄石,prefecture,high,unread glyph (?); stray ink between letters ignored; matches pick,7216,3784,30,18,yes
+#dac0f5,China,ning / hai,Ninghai,宁海,unit,high,,7774,3784,20,19,
+#cdade0,China,sheng / zhou,Shengzhou,嵊州,unit,high,,7726,3786,29,18,
+#ca87d8,China,ke / qiao,Keqiao,柯桥,unit,high,"placed by label colour, on an inset",8035,3787,20,18,
+#d896ee,China,shao / xing,Shaoxing,绍兴,unit,high,"placed by label colour, on an inset",8064,3790,27,17,
+#edcaae,China,huang / mei,Huangmei,黄梅,unit,high,matches pick,7297,3792,29,18,yes
+#dab1e2,China,pujiang,Pujiang,浦江,unit,high,,7666,3792,36,9,
+#f3ce8b,China,wan?zhou,Wanzhou,万州,unit,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; matches pick",6641,3794,43,9,yes
+#eed3cd,China,jiang / xia,Jiangxia,江夏,unit,high,matches pick,7148,3794,26,19,yes
+#f6dfb4,China,liang / ping,Liangping,梁平,unit,high,matches pick,6581,3797,33,17,yes
+#936feb,China,ning / bo,Ningbo,宁波,prefecture,high,"placed by label colour, on an inset",8222,3797,20,18,
+#edc0b8,China,gaoping,Gaoping,高坪,unit,high,matches pick,6424,3798,38,9,yes
+#f7bfbf,China,qian / jiang,Qianjiang,潜江,unit,high,also 潜江市[1]; matches pick,7017,3798,24,19,yes
+#b9e2f0,China,huizhou,Huizhou,徽州,unit,high,,7506,3798,38,9,
+#e89d9d,China,peng / zhou,Pengzhou,彭州,unit,high,matches pick,6248,3800,28,18,yes
+#f1c2ce,China,xiantao,Xiantao,仙桃,unit,high,also 仙桃市[1]; matches pick,7059,3801,37,9,yes
+#c3cfea,China,xin'an,Xin'an,新定,chgis,high,also 新安,7595,3803,28,9,
+#dcead3,China,jianshi,Jianshi,建始,unit,high,matches pick,6772,3804,33,9,yes
+#f1b8b8,China,zhong / jiang,Zhongjiang,中江,unit,high,matches pick,6310,3806,37,18,yes
+#bd8ae2,China,yi / wu,Yiwu,义乌,unit,high,,7680,3809,13,17,
+#e8ddbe,China,daye,Daye,大冶,unit,high,matches pick,7196,3811,23,9,yes
+#eeafa9,China,she / hong,Shehong,射洪,unit,high,matches pick,6364,3812,23,17,yes
+#f0cbad,China,dazhu,Dazhu,大竹,unit,high,matches pick,6537,3812,29,9,yes
+#eb8471,China,nan / chong,Nanchong,南充,unit,high,"placed by label colour, text off the region; matches pick",6421,3813,30,17,yes
+#deedd0,China,qingjiang,Qingjiang,清江,chgis,high,matches pick,6850,3818,45,9,yes
+#e1a1e4,China,dong / yanḡ,Dongyang,东阳,unit,high,,7702,3819,24,17,
+#f0aa9d,China,jing / zhou,Jingzhou,荆州,unit,high,"placed by label colour, text off the region; matches pick",6986,3822,28,17,yes
+#f0dab3,China,zhong / xian,Zhongxian,忠县,unit,high,matches pick,6606,3824,29,18,yes
+#eed6da,China,honghu,Honghu,洪湖,unit,high,matches pick,7086,3828,35,9,yes
+#f1bfb8,China,jin / tang,Jintang,金堂,unit,high,matches pick,6309,3831,24,19,yes
+#ebb9fc,China,sanmen,Sanmen,三门,unit,high,"placed by label colour, text off the region",7834,3831,37,9,
+#f1b7a9,China,yuechi,Yuechi,岳池,unit,high,matches pick,6458,3833,31,9,yes
+#ce9ae9,China,chọu / jiạng,Choujiang,稠江,town,high,"placed by label colour, text off the region",7671,3834,28,17,
+#eeb4a9,China,sui / ning,Suining,遂宁,prefecture,high,matches pick,6401,3836,20,18,yes
+#e5f1d0,China,yangxin,Yangxin,阳新,unit,high,matches pick,7224,3837,38,9,yes
+#edb69c,China,guang / an,Guangan,广安,unit,high,matches pick,6493,3840,29,17,yes
+#e4de96,China,jiu / jiang,Jiujiang,九江,unit,high,also 九江亭,7308,3840,24,18,
+#eae7be,China,rui / chang,Ruichang,瑞昌,unit,high,,7270,3842,28,17,
+#d791e6,China,jin / hua,Jinhua,金华,unit,high,,7650,3842,17,18,
+#f1b6a6,China,chong / zhou,Chongzhou,崇州,unit,high,matches pick,6214,3843,31,17,yes
+#f0d8db,China,songzi,Songzi,松滋,unit,high,matches pick,6930,3843,32,9,yes
+#f0c7ca,China,gong,Gong,拱,geonames,medium,GeoNames Gongling (LCTY); pick is Gong'an,6989,3844,23,9,yes
+#d4a8d6,China,tian / tai,Tiantai,天台,unit,high,,7748,3844,19,18,
+#c8e5c5,China,shizhu,Shizhu,石柱,unit,high,"also 石柱安抚,石柱宣慰,石柱宣抚; matches pick",6655,3846,32,9,yes
+#c6eece,China,xianning,Xianning,咸宁,prefecture,high,,7157,3846,41,9,
+#b8ebe6,China,jingde / zhen,Jingdezhen,景德镇,prefecture,high,,7381,3846,34,19,
+#d4eecf,China,du / chang,Duchang,都昌,unit,high,,7339,3848,28,17,
+#eebec6,China,jianli,Jianli,监利,unit,high,matches pick,7040,3852,24,9,yes
+#d7a5e2,China,lan / xi,Lanxi,兰溪,unit,high,,7622,3853,15,17,
+#d9aae9,China,linhai,Linhai,临海,unit,high,,7782,3858,26,9,
+#f9a0a2,China,guang / han,Guanghan,广汉,unit,high,"placed by label colour, on an inset; matches pick",5965,3860,31,19,yes
+#f4c6b3,China,wu / sheng,Wusheng,武胜,unit,high,matches pick,6436,3861,29,17,yes
+#bee5ba,China,enshi,Enshi,恩施,unit,high,matches pick,6729,3864,26,9,yes
+#c9eaee,China,wuyuan,Wuyuan,婺源,unit,high,,7454,3864,37,9,
+#f9f8ee,China,nagqu,Nagqu,那曲,prefecture,high,matches pick,5342,3865,116,36,yes
+#c3a5e2,China,qu / zhou,Quzhou,衢州,unit,high,,7590,3866,23,18,
+#eab3a3,China,jian / yang,Jianyang,简阳,unit,high,matches pick,6295,3867,23,18,yes
+#f3cda1,China,lin / shui,Linshui,邻水,unit,high,matches pick,6514,3867,20,18,yes
+#f1b9a6,China,xinjin,Xinjin,新津,unit,high,matches pick,6250,3869,27,9,yes
+#e4b3dc,China,jin / yun,Jinyun,缙云,unit,high,,7696,3870,17,17,
+#f1c7bf,China,anju,Anju,安居,unit,high,matches pick,6392,3871,21,9,yes
+#e29dd7,China,yong / kang,Yongkang,永康,unit,high,,7654,3873,28,18,
+#f4cdba,China,qionglai,Qionglai,邛崃,unit,high,matches pick,6196,3875,38,9,yes
+#e67ce0,China,taizhou,Taizhou,台州,prefecture,high,"placed by label colour, text off the region",7828,3876,37,9,
+#f0c8a3,China,he / chuan,Hechuan,合川,unit,high,matches pick,6468,3877,28,17,yes
+#cbeed8,China,lin / xiang,Linxiang,临湘,unit,high,,7095,3877,26,17,
+#def0d5,China,cili,Cili,慈利,unit,high,matches pick,6866,3881,13,9,yes
+#e8c7d3,China,lizhou,Lizhou,澧州,chgis,high,matches pick,6926,3881,29,9,yes
+#cbf4db,China,tongshan,Tongshan,通山,unit,high,,7154,3881,46,9,
+#bcb5e7,China,qiantang,Qiantang,钱塘,geonames,medium,GeoNames Qiantang Jiang (STM),7527,3881,43,9,
+#eb9be7,China,huang,Huang,黄,geonames,medium,GeoNames Huangshan (MTS),7784,3881,29,9,
+#f4d69f,China,chang / shou,Changshou,长寿,unit,high,matches pick,6540,3882,31,18,yes
+#f03420,China,chengdu,Chengdu,成都,unit,high,"from numbered list, key a; also 成都国; matches pick",6011,3883,53,9,yes
+#ea988c,China,pi / xian,Pixian,郫县,unit,high,"placed by label colour, on an inset; matches pick",5886,3885,23,17,yes
+#f0cbdf,China,hua / rong,Huarong,华容,unit,high,matches pick,7013,3887,22,17,yes
+#f3b09a,China,ziyang,Ziyang,资阳,prefecture,high,matches pick,6333,3889,32,9,yes
+#f68989,China,xin / du,Xindu,新都,unit,high,"placed by label colour, on an inset; matches pick",5942,3892,22,17,yes
+#f04e2f,China,wuhou,Wuhou,武侯,unit,high,"from numbered list, key b; matches pick",6011,3893,44,9,yes
+#f88ff4,China,wenling,Wenling,温岭,unit,high,"placed by label colour, text off the region",7837,3893,37,9,
+#a7dad9,China,yue / yang,Yueyang,岳阳,unit,high,"placed by label colour, text off the region",7084,3896,25,17,
+#b3f9cc,China,poyang,Poyang,鄱阳,unit,high,also 番阳,7381,3898,35,9,
+#f1c3a6,China,meishan,Meishan,眉山,prefecture,high,matches pick,6231,3899,40,9,yes
+#cbf4cc,China,lushan,Lushan,庐山,geonames,medium,GeoNames Lu Shan (MTS),7307,3902,32,9,
+#f15740,China,jinniu,Jinniu,金牛,unit,high,"from numbered list, key c; matches pick",6011,3903,39,9,yes
+#f6a6e6,China,hong / qiao,Hongqiao,虹桥,town,high,,7773,3907,31,17,
+#daf3e0,China,xiushui,Xiushui,修水,unit,high,,7213,3909,35,9,
+#ebddb5,China,feng / du,Fengdu,丰都,unit,high,also 酆都; matches pick,6604,3910,22,18,yes
+#f3d8cb,China,ya'an,Ya'an,雅安,unit,high,matches pick,6150,3911,25,9,yes
+#f4bba0,China,anyue,Anyue,安岳,unit,high,matches pick,6376,3911,29,9,yes
+#eaa28c,China,wen / jiang,Wenjiang,温江,unit,high,"placed by label colour, on an inset; matches pick",5881,3912,24,17,yes
+#f35e5e,China,chenghua,Chenghua,成华,unit,high,"from numbered list, key d; matches pick",6010,3913,59,9,yes
+#eabea3,China,ren / shou,Renshou,仁寿,unit,high,matches pick,6281,3913,23,18,yes
+#f0cbd9,China,anxiang,Anxiang,安乡,unit,high,matches pick,6930,3914,38,9,yes
+#edc8a6,China,tong / liang,Tongliang,铜梁,unit,high,matches pick,6437,3917,23,18,yes
+#eba9e2,China,yongjia,Yongjia,永嘉,unit,high,,7732,3917,36,9,
+#e7cb97,China,fuling,Fuling,涪陵,unit,high,matches pick,6560,3919,28,9,yes
+#b8b5e7,China,huaiyu,Huaiyu,怀玉,town,high,,7524,3920,32,9,
+#ea7958,China,liulichang,Liulichang,,none,low,"from numbered list, key e; matches pick",6010,3923,59,9,yes
+#f3bda4,China,zizhong,Zizhong,资中,unit,high,matches pick,6321,3923,38,9,yes
+#f6b47f,China,yưbei,Yubei,渝北,unit,high,"placed by label colour, text off the region; matches pick",6498,3924,26,9,yes
+#b8f0cc,China,leping,Leping,乐平,unit,high,,7421,3925,29,9,
+#ffaefc,China,yuhuan,Yuhuan,玉环,unit,high,"placed by label colour, text off the region",7822,3925,35,9,
+#f3cab7,China,qingyi,Qingyi,青衣,chgis,high,matches pick,6221,3926,29,9,yes
+#eda695,China,long / quan / yi,Longquanyi,龙泉驿,unit,high,"placed by label colour, on an inset; matches pick",5966,3927,25,27,yes
+#d6f0d5,China,zhang / jiajie,Zhangjiajie,张家界,prefecture,high,matches pick,6814,3930,36,19,yes
+#f37b59,China,tianfu,Tianfu,,none,low,"from numbered list, key f; matches pick",6011,3933,42,9,yes
+#ec5c9e,China,wen / zhou,Wenzhou,温州,unit,high,"placed by label colour, text off the region",7744,3933,23,17,
+#c8fcd4,China,yu / gan,Yugan,余干,unit,high,also 余汗,7384,3934,17,18,
+#a8f1ab,China,meiling,Meiling,梅岭,town,high,,7294,3937,34,9,
+#e9afd8,China,lishui,Lishui,丽水,prefecture,high,,7687,3937,26,9,
+#c8e8cb,China,wuling,Wuling,武陵,geonames,medium,GeoNames Wuling Shan (MTS); matches pick,6674,3938,31,9,yes
+#b4ade8,China,shang / rao,Shangrao,上饶,unit,high,,7494,3941,29,17,
+#bad7e8,China,miluo,Miluo,汨罗,unit,high,,7081,3942,25,9,
+#ff87e6,China,liu / shi,Liushi,柳市,town,high,,7772,3942,14,17,
+#f9c697,China,da / zu,Dazu,大足,unit,high,matches pick,6416,3943,14,17,yes
+#f0ac8c,China,le / shan,Leshan,乐山,prefecture,high,matches pick,6228,3944,23,17,yes
+#eda56b,China,bishan,Bishan,璧山,unit,high,"placed by label colour, text off the region; also 壁山; matches pick",6448,3946,32,9,yes
+#f0af91,China,nei / jiang,Neijiang,内江,prefecture,high,matches pick,6352,3948,24,17,yes
+#edd0f4,China,dongting,Dongting,东洞庭,geonames,medium,GeoNames Dongting Hu (LK); matches pick,7008,3951,43,9,yes
+#96f19d,China,lian / taṇg,Liantang,莲塘,town,high,,7335,3951,22,16,
+#e490b7,China,ou / hai,Ouhai,瓯海,unit,high,,7733,3951,14,17,
+#d5eedc,China,youshui,Youshui,攸水,geonames,medium,GeoNames You Shui (STM); matches pick,6728,3952,38,9,yes
+#34e239,China,nanchang,Nanchang,南昌,unit,high,"from numbered list, key a",7241,3953,59,9,
+#f0b6c0,China,chang / de,Changde,常德,prefecture,high,"placed by label colour, text off the region; matches pick",6965,3955,28,17,yes
+#eebc9d,China,rong / xian,Rongxian,荣县,unit,high,matches pick,6309,3959,22,19,yes
+#f4be9c,China,rong / chang,Rongchang,荣昌,unit,high,matches pick,6385,3960,28,18,yes
+#60f06a,China,qingshanhu,Qingshanhu,青山湖,unit,high,"from numbered list, key b",7237,3962,69,9,
+#f0957a,China,shuangliu,Shuangliu,双流,unit,high,"placed by label colour, text off the region; matches pick",6023,3963,47,9,yes
+#eebc65,China,banan,Banan,巴南,unit,high,"placed by label colour, text off the region; matches pick",6492,3963,29,9,yes
+#bac0e8,China,guang / feng,Guangfeng,广丰,unit,high,,7515,3963,29,18,
+#f3f4e3,China,lhasa,Lhasa,拉萨,prefecture,high,matches pick,5107,3965,52,18,yes
+#f7dfb2,China,jinfo,Jinfo,金佛,geonames,medium,GeoNames Jinfo Shan (MT); matches pick,6532,3965,23,9,yes
+#bce7cf,China,pingjiang,Pingjiang,平江,unit,high,,7117,3968,45,9,
+#eec996,China,yong / chuan,Yongchuan,永川,unit,high,matches pick,6429,3969,33,19,yes
+#80ed84,China,honggutan,Honggutan,,none,low,"from numbered list, key c",7238,3971,64,9,
+#b7e4c4,China,ying / tan,Yingtan,鹰潭,prefecture,high,,7422,3971,20,19,
+#dfbde0,China,longquan,Longquan,龙泉,unit,high,,7615,3972,44,9,
+#ea8e74,China,huayang,Huayang,,none,low,"placed by label colour, text off the region; matches pick",6023,3973,41,9,yes
+#eeb281,China,zigong,Zigong,自贡,prefecture,high,matches pick,6338,3973,32,9,yes
+#ff80ba,China,longwan,Longwan,龙湾,unit,high,"placed by label colour, text off the region",7781,3977,40,9,
+#baf3c4,China,jinxian,Jinxian,进贤,unit,high,,7343,3980,33,9,
+#f1caab,China,qianwei,Qianwei,犍为,unit,high,matches pick,6258,3981,37,9,yes
+#c6e2d7,China,xinjiang,Xinjiang,信江,geonames,medium,GeoNames Xinjiang (STM),7462,3981,39,9,
+#c1b4fc,China,xiang / yin,Xiangyin,湘阴,unit,high,matches pick,7064,3983,26,18,yes
+#d0f0d1,China,jiuling,Jiuling,九岭,geonames,medium,GeoNames Jiuling Xi (STM),7202,3983,30,9,
+#eec6d9,China,hanshou,Hanshou,汉寿,unit,high,matches pick,6951,3984,41,9,yes
+#f06969,China,hankou,Hankou,,none,low,"from numbered list, key a; other text on region: wuhan; matches pick",7981,3984,47,9,yes
+#e67cad,China,rui'an,Rui'an,瑞安,unit,high,"placed by label colour, text off the region",7775,3987,27,9,
+#edd6cb,China,dadu,Dadu,大渡,chgis,high,matches pick,6134,3988,23,9,yes
+#cab3fd,China,yiyang,Yiyang,益阳,unit,high,matches pick,7025,3990,32,9,yes
+#e7744d,China,wuchang,Wuchang,武昌,unit,high,"from numbered list, key b; matches pick",7981,3994,55,9,yes
+#e2dbe2,China,taoyuan,Taoyuan,桃源,unit,high,matches pick,6881,3996,40,9,yes
+#f0a3c7,China,aoiiang,Aojiang,鳌江,"fuzzy, colour town",medium,"placed by label colour, text off the region; fuzzy match aojiang (0.86); read as aoiiang",7770,3996,35,9,
+#e7c297,China,fushun,Fushun,富顺,unit,high,matches pick,6343,3998,34,9,yes
+#f3ca9a,China,luxian,Luxian,泸县,unit,high,matches pick,6391,3998,29,9,yes
+#d5e5cf,China,pengshui,Pengshui,彭水,unit,high,matches pick,6588,4003,44,9,yes
+#f39381,China,hongshan,Hongshan,洪山,unit,high,"from numbered list, key c; matches pick",7982,4004,59,9,yes
+#e9b2c0,China,feiyun,Feiyun,飞云,town,high,,7694,4005,31,9,
+#f18d9e,China,cangnan,Cangnan,苍南,unit,high,"placed by label colour, text off the region",7768,4005,40,9,
+#dbf0e5,China,yongshun,Yongshun,永顺,unit,high,"also 永顺军民安抚,永顺军民宣慰,永顺宣抚; matches pick",6773,4007,47,9,yes
+#bdeec5,China,feng / cheng,Fengcheng,丰城,unit,high,,7323,4007,29,18,
+#a0e8ad,China,fu / zhou,Fuzhou,抚州,prefecture,high,,7365,4007,23,17,
+#c6edb9,China,gao'an,Gao'an,高安,unit,high,,7257,4008,31,9,
+#f7d79b,China,qijiang,Qijiang,綦江,unit,high,matches pick,6500,4010,33,9,yes
+#eed5a7,China,simian,Simian,,none,low,matches pick,6444,4011,31,9,yes
+#c1b4f1,China,tao / jiang,Taojiang,桃江,unit,high,matches pick,6992,4011,24,17,yes
+#6546ed,China,chang / sha,Changsha,长沙,unit,high,"placed by label colour, text off the region; also 长沙国; matches pick",7063,4011,28,17,yes
+#c5c1ea,China,lao / dao,Laodao,,none,low,matches pick,7102,4012,17,17,yes
+#ea9696,China,hanyang,Hanyang,汉阳,unit,high,"from numbered list, key d; matches pick",7981,4014,54,9,yes
+#eeb877,China,lu / zhou,Luzhou,泸州,unit,high,matches pick,6389,4016,23,17,yes
+#c1aaf3,China,ning / xiang,Ningxiang,宁乡,unit,high,matches pick,7024,4020,26,17,yes
+#eea3a3,China,jiaokou,Jiaokou,硚口,fuzzy unit,low,"from numbered list, key e; fuzzy match qiaokou (0.86); pick is Qiaokou",7981,4024,48,9,yes
+#c4e4c7,China,xiushan,Xiushan,秀山,unit,high,matches pick,6682,4025,38,9,yes
+#c4ead5,China,liu / ?ang,Liuyang,浏阳,wildcard unit,medium,unread glyph (?); unread glyph filled from liuyang,7142,4025,20,17,
+#c8edc6,China,wanzai,Wanzai,万载,unit,high,,7186,4032,34,9,
+#6d6aee,China,xingsha,Xingsha,星沙,town,high,"placed by label colour, text off the region; matches pick",7095,4033,38,9,yes
+#f0cfac,China,xuzhou,Xuzhou,叙州,neighbour chgis,medium,name found in neighbour #f0bb74; matches pick,6271,4034,35,9,yes
+#f99090,China,jiang'an,Jiang'an,江岸,unit,high,"from numbered list, key f; matches pick",7982,4034,50,9,yes
+#d1c8f1,China,anhua,Anhua,安化,unit,high,matches pick,6925,4036,29,9,yes
+#f5afac,China,fuding,Fuding,福鼎,unit,high,,7725,4037,31,9,
+#c4ebcf,China,jinxi,Jinxi,金溪,unit,high,,7381,4038,21,9,
+#e5d097,China,he / jiang,Hejiang,合江,unit,high,matches pick,6402,4041,24,17,yes
+#aa6af3,China,yue?lu,Yuelu,岳麓,unit,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; matches pick",7048,4042,26,9,yes
+#826aee,China,yuhua,Yuhua,雨花,unit,high,"placed by label colour, text off the region; matches pick",7095,4044,29,9,yes
+#f0bb74,China,yibin,Yibin,宜宾,unit,high,"placed by label colour, text off the region; matches pick",6338,4047,23,9,yes
+#bdedb5,China,zhang / shu,Zhangshu,樟树,unit,high,,7281,4053,29,18,
+#9c75f4,China,tianx̣?in,Tianxin,天心,unit,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; matches pick",7089,4054,34,9,yes
+#dcc3b1,China,jianyang,Jianyang,建阳,unit,high,,7564,4056,42,9,
+#e7ddc7,China,yuexi,Yuexi,越西,unit,high,"also 越嶲,越巂; matches pick",6186,4057,26,9,yes
+#ceede3,China,yuanling,Yuanling,沅陵,unit,high,also 沅陵侯国; matches pick,6807,4057,41,9,yes
+#ad8ef3,China,wangcheng?,Wangcheng,望城,unit,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; matches pick",7009,4058,58,9,yes
+#f7c2b4,China,xiapu,Xiapu,霞浦,unit,high,,7677,4058,26,9,
+#edce8d,China,chang / ning,Changning,长宁,unit,high,matches pick,6344,4059,28,18,yes
+#bce7b1,China,xinyu,Xinyu,新余,prefecture,high,"also 新喻,新渝",7229,4059,26,9,
+#eeecb6,China,furong / jiang,Furongjiang,芙蓉江,geonames,medium,GeoNames Furong Jiang (STM); matches pick,6553,4064,33,18,yes
+#b59af1,China,xiang / tan,Xiangtan,湘潭,unit,high,matches pick,7060,4067,26,17,yes
+#d7c3f4,China,shaoshan,Shaoshan,韶山,unit,high,matches pick,6995,4068,47,9,yes
+#c7e0ce,China,dejiang,Dejiang,德江,unit,high,matches pick,6644,4073,36,9,yes
+#9fdfb2,China,ping / xiang,Pingxiang,萍乡,prefecture,high,,7146,4073,26,18,
+#a49af1,China,zhuzhou,Zhuzhou,株洲,unit,high,"placed by label colour, text off the region; also 株州; matches pick",7099,4076,41,9,yes
+#dfc8ad,China,wuyishan,Wuyishan,武夷山,unit,high,,7469,4079,46,9,
+#b1e7b6,China,yichun,Yichun,宜春,prefecture,high,also 宜春侯国,7181,4082,31,9,
+#f1e8ac,China,tongzi,Tongzi,桐梓,unit,high,matches pick,6493,4083,31,9,yes
+#d8affa,China,mei / shan,Meishan,维山,fuzzy town,low,fuzzy match weishan (0.86); matches pick,6910,4086,23,18,yes
+#c6b1f6,China,lukou,Lukou,渌口,town,high,matches pick,7074,4091,25,9,yes
+#b0ddbe,China,liling,Liling,醴陵,unit,high,,7120,4092,23,9,
+#d3bcf2,China,xupu,Xupu,溆浦,unit,high,,6853,4094,23,9,
+#f0b597,China,ning / de,Ningde,宁德,prefecture,high,,7676,4096,20,18,
+#c299f3,China,loudi,Loudi,娄底,prefecture,high,matches pick,6986,4098,23,9,yes
+#c9e8d8,China,fenghuang,Fenghuang,凤凰,unit,high,matches pick,6747,4099,52,9,yes
+#eee5c2,China,xingwen,Xingwen,兴文,unit,high,matches pick,6374,4102,40,9,yes
+#cda6fc,China,lian / yuan,Lianyuan,涟源,unit,high,matches pick,6949,4105,23,17,yes
+#d1f0cc,China,enjiang,Enjiang,恩江,town,high,,7324,4105,36,9,
+#eedab0,China,nan / guang,Nanguang,南广,geonames,medium,GeoNames Nanguang He (STM); matches pick,6327,4106,29,17,yes
+#d2b7f8,China,xiang / xiang,Xiangxiang,湘乡,unit,high,also 湘乡侯国; matches pick,7044,4106,38,18,yes
+#f0e7b4,China,gulin,Gulin,古蔺,unit,high,matches pick,6441,4108,23,9,yes
+#c6ebb0,China,ji'an,Ji'an,吉安,unit,high,,7258,4111,20,9,
+#ebe1bf,China,heng / jiang,Hengjiang,横江,town,high,matches pick,6276,4114,25,18,yes
+#d2e9c2,China,xujiang,Xujiang,盱江,town,high,,7408,4118,36,9,
+#cdb1f5,China,shuang / feng,Shuangfeng,双峰,unit,high,matches pick,6987,4122,35,18,yes
+#e8e8d1,China,yalong,Yalong,金,geonames,medium,GeoNames Yalong Jiang (STM); matches pick,6053,4124,32,9,yes
+#c9e8de,China,tongren,Tongren,铜仁,unit,high,also 铜仁长官; matches pick,6709,4130,39,9,yes
+#bface8,China,huaihua,Huaihua,怀化,prefecture,high,,6815,4131,38,9,
+#f3c0ac,China,lian / jiang,Lianjiang,连江,unit,high,,7655,4135,32,18,
+#dfc19f,China,yanping,Yanping,延平,unit,high,,7567,4136,38,9,
+#c6e575,China,zun / yi,Zunyi,遵义,unit,high,"placed by label colour, text off the region",6522,4137,17,17,
+#c7e0d7,China,sinan,Sinan,思南,unit,high,also 思南宣慰; matches pick,6641,4140,26,9,yes
+#b5e6b8,China,youshui,Youshui,攸水,chgis,high,,7116,4144,38,9,
+#c9e8ce,China,jinggang,Jinggang,井冈,geonames,medium,GeoNames Jinggang Shan (MT),7176,4147,42,9,
+#ddebb9,China,maotai,Maotai,茅台,town,high,matches pick,6487,4149,33,9,yes
+#c2a9ff,China,heng / shan,Hengshan,衡山,unit,high,,7063,4150,25,18,
+#c1b4f5,China,long / hui,Longhui,隆回,unit,high,,6898,4151,20,19,
+#b891ff,China,shao / yang,Shaoyang,邵阳,unit,high,,6942,4153,31,16,
+#ceb1fc,China,shao / shui,Shaoshui,砂石,fuzzy town,low,fuzzy match shashi (0.86),6979,4158,23,17,
+#f1eabe,China,yiliang,Yiliang,宜良,unit,high,also 彝良; matches pick,6318,4159,32,9,yes
+#e7e5c7,China,liangshan,Liangshan,凉山,prefecture,high,matches pick,6161,4162,47,9,yes
+#d6ebba,China,bozhou,Bozhou,播州,neighbour chgis,medium,name found in neighbour #c6e575; matches pick,6535,4167,35,9,yes
+#d9eecb,China,taihe,Taihe,泰和,unit,high,also 太和,7254,4168,25,9,
+#c0a2f7,China,zheng / shui,Zhengshui,,none,low,,7017,4169,29,18,
+#e4e0a5,China,xi / chang,Xichang,西昌,unit,high,matches pick,6114,4170,28,17,yes
+#d7eec7,China,meitan,Meitan,湄潭,unit,high,matches pick,6585,4175,33,9,yes
+#ed8e4c,China,jin'an,Jin'an,晋安,unit,high,"placed by label colour, text off the region",7635,4178,26,9,
+#edf3c0,China,mangbu,Mangbu,芒部,town,high,also 茫部; matches pick,6352,4179,37,9,yes
+#c6affc,China,bao / qing,Baoqing,宝庆,neighbour chgis,medium,name found in neighbour #b891ff,6941,4179,20,17,
+#dbf0ac,China,bi / jie,Bijie,毕节,unit,high,matches pick,6402,4180,12,18,yes
+#c7e1da,China,hongjiang,Hongjiang,洪江,unit,high,,6787,4181,48,9,
+#f5af7e,China,changle,Changle,长乐,unit,high,"placed by label colour, text off the region",7708,4183,37,9,
+#f2741c,China,fuzhou,Fuzhou,福州,prefecture,high,"placed by label colour, text off the region",7629,4187,34,9,
+#b47dff,China,heng / yanḡ,Hengyang,衡阳,unit,high,"placed by label colour, text off the region",7071,4191,24,17,
+#c3b8ed,China,dongkou,Dongkou,洞口,unit,high,,6874,4195,40,9,
+#ed9d4c,China,cangshan,Cangshan,仓山,unit,high,"placed by label colour, text off the region",7614,4196,46,9,
+#ddeec3,China,dafang,Dafang,大方,unit,high,matches pick,6429,4197,34,9,yes
+#e8f2ae,China,ningdu,Ningdu,宁都,unit,high,,7370,4198,32,9,
+#c3dee6,China,wuyang,Wuyang,舞阳,neighbour town,medium,name found in neighbour #c6d4d8,6729,4200,37,9,
+#ebe3a1,China,zhao / tong,Zhaotong,昭通,prefecture,high,matches pick,6246,4201,26,18,yes
+#cfb3fa,China,qishan,Qishan,,none,low,,6987,4203,32,9,
+#bdddc2,China,chaling,Chaling,茶陵,unit,high,also 茶陵侯国,7141,4208,34,9,
+#bcacf3,China,qingquan,Qingquan,清泉,neighbour chgis,medium,name found in neighbour #b47dff,7048,4210,44,9,
+#eec1a2,China,houguan,Houguan,侯官,chgis,high,,7615,4210,41,9,
+#ebeea4,China,xingguo,Xingguo,兴国,unit,high,,7306,4212,38,9,
+#f0b688,China,wulong / jiang,Wulongjiang,,none,low,"placed by label colour, text off the region",7710,4213,34,17,
+#d2edb8,China,qianxi,Qianxi,黔西,unit,high,matches pick,6468,4219,29,9,yes
+#edebb5,China,ting / zhou,Tingzhou,汀州,chgis,high,,7433,4220,23,18,
+#e8f3c0,China,hezhang,Hezhang,赫章,unit,high,matches pick,6332,4222,41,9,yes
+#dac191,China,sanming,Sanming,三明,prefecture,high,,7484,4222,40,9,
+#f0e3b9,China,ludian,Ludian,鲁甸,unit,high,matches pick,6205,4227,29,9,yes
+#c6d4d8,China,zhenyuan,Zhenyuan,镇远,unit,high,,6654,4227,47,9,
+#d8aeff,China,lengshui / tan,Lengshuitan,冷水滩,unit,high,,6954,4227,41,19,
+#ceedb8,China,xiuwen,Xiuwen,修文,unit,high,,6526,4228,34,9,
+#e1eebd,China,suichuan,Suichuan,遂川,unit,high,,7227,4228,43,9,
+#d0bbf2,China,wu / gang,Wugang,武冈,unit,high,also 武刚,6895,4231,23,16,
+#e1c58f,China,daiyun,Daiyun,戴云,geonames,medium,GeoNames Daiyun Shan (MT),7552,4234,32,9,
+#f2c189,China,fuqing,Fuqing,福清,unit,high,,7654,4236,31,9,
+#accdd5,China,leiyang,Leiyang,耒阳,unit,high,also 洡阳,7074,4240,35,9,
+#f3c637,China,putian,Putian,莆田,unit,high,"placed by label colour, text off the region",7654,4246,31,9,
+#f0f1be,China,caohai,Caohai,草海,town,high,matches pick,6285,4250,31,9,yes
+#cfa4f3,China,changning,Changning,常宁,unit,high,,7010,4252,49,9,
+#c6e8d2,China,fuquan,Fuquan,福泉,unit,high,,6578,4254,34,9,
+#ddf3c0,China,nayong,Nayong,纳雍,unit,high,matches pick,6382,4255,35,9,yes
+#c8e1de,China,jingzhou,Jingzhou,靖州,unit,high,,6809,4260,42,9,
+#d6dc59,China,gan / zhou,Ganzhou,赣州,prefecture,high,"placed by label colour, text off the region",7288,4261,28,17,
+#f2d289,China,xian / you,Xianyou,仙游,unit,high,,7621,4262,20,16,
+#b5dfd0,China,leishui,Beishui,波水,"fuzzy, colour town",medium,fuzzy match beishui (0.86); read as leishui,7111,4264,32,9,
+#77e942,China,yunyan,Yunyan,云岩,unit,high,"from numbered list, key a",6554,4268,48,9,
+#fcb184,China,haitan,Haitan,平潭,geonames,medium,"placed by label colour, text off the region; GeoNames Haitan Dao (ISL)",7707,4270,31,9,
+#cdf8aa,China,shui / cheng,Shuicheng,水城,unit,high,,6341,4271,28,17,
+#cee8bd,China,zhijin,Zhijin,织金,unit,high,,6439,4276,27,9,
+#f8d978,China,xiu / yu,Xiuyu,秀屿,unit,high,,7660,4276,27,14,
+#7fe152,China,huaxi,Huaxi,花溪,unit,high,"from numbered list, key b",6553,4278,39,9,
+#d8b1f2,China,lingling,Lingling,零陵,unit,high,,6962,4281,35,9,
+#e8eb9e,China,yudu,Yudu,于都,unit,high,also 雩都,7305,4281,23,9,
+#bdccd0,China,kaili,Kaili,凯里,unit,high,,6634,4282,19,9,
+#dfe284,China,nan / kang,Nankang,南康,unit,high,,7260,4282,22,17,
+#f5f3a0,China,ruijin,Ruijin,瑞金,unit,high,,7356,4285,26,9,
+#c2edae,China,nanming,Nanming,南明,unit,high,"from numbered list, key c; other text on region: hong / feng",6553,4287,52,9,
+#e6d7c0,China,huili,Huili,会理,unit,high,,6150,4288,20,9,
+#f2d5a9,China,pan / zhihua,Panzhihua,攀枝花,prefecture,high,,6079,4290,32,18,
+#f2cd9c,China,yong / chun,Yongchun,永春,unit,high,,7594,4290,24,18,
+#95ee6c,China,guanshaṇ?nu?,Guanshan?nu?,观山湖,fuzzy unit,low,"unread glyph (?); from numbered list, key d; fuzzy match guanshanhu (0.90)",6551,4297,74,9,
+#e2d5c0,China,chenghai,Chenghai,程海,town,high,,6004,4298,43,9,
+#e1e8c3,China,zhuguang,Zhuguang,诸广,geonames,medium,GeoNames Zhuguang Shan (MTS),7178,4298,47,9,
+#d1b3f5,China,guiyang,Guiyang,桂阳,unit,high,,7037,4300,38,9,
+#ebdac9,China,nujiang,Nujiang,怒江,prefecture,high,,5831,4301,36,9,
+#e1be8f,China,longyan,Longyan,龙岩,prefecture,high,,7485,4301,38,9,
+#f5edb4,China,huize,Huize,会泽,unit,high,,6228,4303,26,9,
+#f2cb89,China,hui / an,Huian,惠安,unit,high,,7638,4303,16,16,
+#bad2d7,China,chen / zhou,Chenzhou,郴州,unit,high,,7104,4304,23,17,
+#abee6c,China,baiyun,Baiyun,白云,unit,high,"from numbered list, key e",6550,4307,45,9,
+#e9e0c0,China,lijiang,Lijiang,丽江,prefecture,high,,5918,4311,30,9,
+#e9c493,China,anxi,Anxi,安溪,unit,high,,7555,4312,20,9,
+#c8f3ab,China,anshun,Anshun,安顺,prefecture,high,,6456,4314,35,9,
+#d4eec3,China,liuzhi,Liuzhi,六枝,unit,high,,6381,4315,26,9,
+#f3c180,China,nan'an,Nan'an,南安,unit,high,,7610,4317,31,9,
+#bcd9e8,China,liping,Liping,黎平,unit,high,,6712,4319,26,9,
+#dbeead,China,xuanwei,Xuanwei,宣威,unit,high,,6283,4320,40,9,
+#dab8f3,China,quanzhou,Quanzhou,全州,unit,high,,6902,4320,47,9,
+#ebe6ac,China,shanghang,Shanghang,上杭,unit,high,,7407,4324,53,9,
+#e4e09b,China,taojiang,Taojiang,桃江,geonames,medium,GeoNames Tao Jiang (STM),7275,4327,41,9,
+#f5a134,China,quanzhou,Quanzhou,泉州,prefecture,high,"from numbered list, key 1",7657,4334,60,9,
+#eea151,China,jinjiang,Jinjiang,晋江,unit,high,"from numbered list, key 2",7656,4344,50,9,
+#d0a8e9,China,jiuyi,Jiuyi,九疑亭,chgis,high,,6985,4345,21,9,
+#e0b8f0,China,lanshan,Lanshan,蓝山,unit,high,,7041,4351,38,9,
+#f8c590,China,shishi,Shishi,石狮,unit,high,"from numbered list, key 3",7655,4354,42,9,
+#eecc9e,China,jiulong,Jiulong,九龙,geonames,medium,GeoNames Jiulong Jiang (STM),7538,4356,33,9,
+#bdd3e1,China,huishui,Huishui,惠水,unit,high,,6541,4361,35,9,
+#b5d5dc,China,zhenning,Zhenning,镇宁,unit,high,,6456,4363,44,9,
+#b5c9dd,China,dushan,Dushan,独山,unit,high,,6622,4364,35,9,
+#e2b983,China,zimao,Zimao,紫帽,town,high,"from numbered list, key 4",7654,4364,41,9,
+#eaebab,China,danxia,Danxia,丹霞,town,high,,7187,4371,32,9,
+#e2b9d5,China,luoqing,Luoqing,,none,low,,6830,4375,35,9,
+#eee3b2,China,dongchuan,Dongchuan,东川,unit,high,,6172,4378,52,9,
+#dfd6bb,China,yuanmou,Yuanmou,元谋,unit,high,,6064,4379,43,9,
+#e6ba80,China,zhang / zhou,Zhangzhou,漳州,prefecture,high,"placed by label colour, text off the region",7510,4379,30,17,
+#f8b17a,China,anhai,Anhai,安海,town,high,"from numbered list, key 5",7638,4379,39,9,
+#dceba8,China,shengjing,Shengjing,,none,low,,6270,4380,48,9,
+#e2dba2,China,longnan,Longnan,龙南,unit,high,,7279,4381,38,9,
+#f5e8a0,China,ping / yuan,Pingyuan,平远,unit,high,,7368,4381,23,18,
+#f0a8cc,China,yang / shuo,Yangshuo,阳朔,unit,high,,6885,4383,23,18,
+#daf0bf,China,panzhou,Panzhou,盘州,chgis,high,,6333,4385,41,9,
+#c7d4e8,China,rongshui,Rongshui,融水,unit,high,,6756,4385,43,9,
+#ddd598,China,dali,Dali,大理,unit,high,also 大釐赕,5957,4386,17,9,
+#c3e6df,China,pu'an,Pu'an,普安,unit,high,,6396,4387,25,9,
+#ebab78,China,tong'an,Tong'an,同安,unit,high,"from numbered list, key 6",7636,4389,49,9,
+#cecdd9,China,mangshan,Mangshan,莽山,town,high,,7104,4390,49,9,
+#e8858e,China,guilin,Guilin,桂林,prefecture,high,"placed by label colour, text off the region",6840,4394,26,9,
+#fc9d52,China,jimei,Jimei,集美,unit,high,"from numbered list, key 7",7635,4399,36,9,
+#d7c6d5,China,jianghua,Jianghua,江华,unit,high,,6966,4404,42,9,
+#e6cba2,China,pinghe,Pinghe,平和,unit,high,,7500,4404,32,9,
+#cfee83,China,qu / jing,Qujing,曲靖,prefecture,high,,6275,4406,18,18,
+#f0a860,China,haicang,Haicang,海沧,unit,high,"from numbered list, key 8",7634,4409,50,9,
+#f2e8af,China,dabu,Dabu,大埔,unit,high,,7436,4412,23,9,
+#e1dd8f,China,shaoguan,Shaoguan,韶关,prefecture,high,,7152,4417,47,9,
+#f07b20,China,huli,Huli,湖里,unit,high,"from numbered list, key 9",7633,4419,30,9,
+#f5d090,China,zhangpu,Zhangpu,漳浦,unit,high,,7541,4420,41,9,
+#f0741d,China,xiamen,Xiamen,厦门,prefecture,high,"from numbered list, key 10",7626,4429,53,9,
+#e6e0ae,China,longchuan,Longchuan,龙川,unit,high,,7308,4433,49,9,
+#eddb75,China,mei / zhou?,Meizhou,梅州,prefecture,high,unread glyph (?); stray ink between letters ignored,7392,4433,24,17,
+#c3c6e4,China,jiuwanshan,Jiuwanshan,,none,low,,6704,4439,56,9,
+#bfd3e4,China,anlong,Anlong,安龙,unit,high,,6452,4440,32,9,
+#eee275,China,songming,Songming,嵩明,unit,high,,6167,4441,46,9,
+#e4c3cf,China,lianzhou,Lianzhou,连州,unit,high,,7060,4442,41,9,
+#e2f5aa,China,luoping,Luoping,罗平,unit,high,,6284,4445,35,9,
+#f0f0c4,China,xiangyun,Xiangyun,祥云,unit,high,,5948,4451,44,9,
+#e9dab7,China,chuxiong,Chuxiong,楚雄,unit,high,,6066,4454,43,9,
+#eeaecf,China,lipu,Lipu,荔浦,unit,high,,6905,4457,17,9,
+#f4fcb3,China,baoshan,Baoshan,保山,prefecture,high,,5848,4458,41,9,
+#bce2d0,China,xingyi,Xingyi,兴义,unit,high,,6371,4458,29,9,
+#e7a3b3,China,hezhou,Hezhou,贺州,prefecture,high,,6992,4462,35,9,
+#f3cd8c,China,zhao'an,Zhao'an,诏安,unit,high,,7508,4463,37,9,
+#dfd9b0,China,xinfeng,Xinfeng,新丰,unit,high,,7249,4466,37,9,
+#f2cc93,China,raoping,Raoping,饶平,unit,high,,7467,4471,37,9,
+#e7d298,China,yingde,Yingde,英德,unit,high,,7151,4475,32,9,
+#ebf0a6,China,luliang,Luliang,陆良,unit,high,,6233,4477,32,9,
+#e6f7c3,China,teng / chong,Tengchong,腾冲,unit,high,"also 腾充城,腾冲军民指挥",5788,4478,28,18,
+#f3ef80,China,xi / shan,Xishan,西山,unit,high,,6151,4479,23,17,
+#beb9e8,China,hechi,Hechi,河池,prefecture,high,,6685,4481,25,9,
+#b8bce1,China,fengshan,Fengshan,凤山,unit,high,,6576,4483,46,9,
+#e9cf88,China,feng / shun,Fengshun,丰顺,unit,high,,7419,4485,23,18,
+#ede19c,China,wuhua,Wuhua,五华,unit,high,,7367,4488,31,9,
+#f6aacc,China,luzhai,Luzhai,鹿寨,unit,high,,6822,4494,29,9,
+#e6ad81,China,bei / jiang,Beijiang,,none,low,,7106,4502,29,19,
+#fff500,China,kunming,Kunming,昆明,unit,high,"from numbered list, key 1",6082,4503,52,9,
+#e1f0ae,China,alu,Alu,,none,low,,6303,4503,14,9,
+#f5799e,China,liuzhou,Liuzhou,柳州,prefecture,high,"placed by label colour, text off the region",6809,4508,35,9,
+#e6aebb,China,dayaoshan,Dayaoshan,,none,low,,6904,4510,53,9,
+#f1aea4,China,huaiji,Huaiji,怀集,unit,high,,7033,4512,27,9,
+#e9f815,China,dianchi,Dianchi,滇池,geonames,medium,"from numbered list, key 2; GeoNames Dian Chi (LK)",6082,4513,47,9,
+#c2bce4,China,cenwang,Cenwang,,none,low,,6431,4515,42,9,
+#f28cbd,China,liujiang,Liujiang,柳江,unit,high,"placed by label colour, text off the region",6766,4515,36,9,
+#eb7e57,China,qingyuan,Qingyuan,清远,prefecture,high,"placed by label colour, text off the region",7139,4517,44,9,
+#f0ce82,China,hepo,Hepo,河婆,town,high,,7404,4518,23,9,
+#f2df2f,China,wuhua,Wuhua,五华,unit,high,"from numbered list, key 3",6082,4523,44,9,
+#fcb30d,China,shantou,Shantou,汕头,unit,high,"from numbered list, key a; characters from a neighbour's unit",7504,4524,53,9,
+#e8fabb,China,shidian,Shidian,施甸,unit,high,"also 施甸长官,石甸长官",5858,4525,35,9,
+#f3f781,China,yuxi,Yuxi,玉溪,prefecture,high,,6163,4525,20,9,
+#e7c69b,China,nankun,Nankun,,none,low,,7208,4525,34,9,
+#f2eb2f,China,panlong,Panlong,盘龙,unit,high,"from numbered list, key 4",6082,4533,51,9,
+#f3ba64,China,chenghai,Chenghai,澄海,unit,high,"from numbered list, key b",7503,4534,56,9,
+#e7d59c,China,zijin,Zijin,紫金,unit,high,,7311,4539,21,9,
+#e6eb56,China,chenggong,Chenggong,呈贡,unit,high,"from numbered list, key 5; also 呈贡城",6082,4543,65,9,
+#c3c5da,China,du'an,Du'an,都安,unit,high,,6655,4543,25,9,
+#fac752,China,anbu,Anbu,庵埠,town,high,"from numbered list, key c",7503,4544,35,9,
+#c0b0e8,China,hongshui,Hongshui,红水,geonames,medium,GeoNames Hongshui He (STM),6747,4545,44,9,
+#e5e8a6,China,fu / xian,Fuxian,抚仙,geonames,medium,GeoNames Fuxian Hu (LK),6198,4547,20,17,
+#eec18c,China,kuitan,Kuitan,葵潭,town,high,,7410,4550,30,9,
+#cfebc9,China,dehong,Dehong,德宏,prefecture,high,,5739,4552,35,9,
+#eec975,China,chaozhou,Chaozhou,潮州,prefecture,high,"from numbered list, key d",7501,4554,59,9,
+#e9a5a0,China,wuzhou,Wuzhou,梧州,unit,high,,6960,4555,37,9,
+#e29f95,China,sihui,Sihui,四会,unit,high,,7089,4555,23,9,
+#ec9074,China,liuxi,Liuxi,,none,low,,7162,4556,20,9,
+#ebb291,China,zeng / cheng,Zengcheng,增城,unit,high,,7195,4558,28,18,
+#f79b9e,China,gong / zhou,Gongzhou,龚州,chgis,high,,6889,4559,25,18,
+#e8e2bc,China,shuangbai,Shuangbai,双柏,unit,high,,6080,4563,50,9,
+#adacdf,China,baise,Baise,百色,unit,high,,6533,4563,26,9,
+#e9bf6c,China,jieyang,Jieyang,揭阳,prefecture,high,"from numbered list, key e",7500,4564,49,9,
+#f3fac4,China,fengqing,Fengqing,凤庆,unit,high,,5903,4566,43,9,
+#cbcfd3,China,mile,Mile,弥勒,unit,high,,6264,4566,19,9,
+#f7ba75,China,huilai,Huilai,惠来,unit,high,,7443,4567,26,9,
+#e9c18c,China,luohe,Luohe,螺河,geonames,medium,GeoNames Luo He (STM),7385,4568,26,9,
+#e68d80,China,li / shui,Lishui,里水,town,high,,7136,4569,20,17,
+#e7c78f,China,boluo,Boluo,博罗,unit,high,,7236,4573,26,9,
+#e9b76c,China,puning,Puning,普宁,unit,high,"from numbered list, key f",7500,4574,44,9,
+#f5d390,China,hai / feng,Haifeng,海丰,unit,high,,7351,4580,22,17,
+#daa2e7,China,laibin,Laibin,来宾,prefecture,high,,6807,4583,26,9,
+#f1dd7c,China,xizhi,Xizhi,西枝,geonames,medium,GeoNames Xizhi Jiang (STM),7300,4588,23,9,
+#e59b9b,China,dinghu,Dinghu,鼎湖,unit,high,,7089,4590,32,9,
+#e9acac,China,guangxin,Guangxin,广信,neighbour chgis,medium,name found in neighbour #e9a5a0,7011,4591,44,9,
+#f79baa,China,xun / zhou,Xunzhou,浔州,chgis,high,,6855,4595,23,17,
+#b9b9dd,China,funing,Funing,富宁,unit,high,,6421,4596,31,9,
+#f19ea6,China,tengzhou,Tengzhou,藤州,town,high,also 滕州,6935,4598,46,9,
+#a0a5ee,China,tianzhou,Tianzhou,田州,town,high,,6599,4603,43,9,
+#db8072,China,zhao / qing,Zhaoqing,肇庆,prefecture,high,,7096,4609,24,17,
+#e1e2c5,China,jianshui,Jianshui,建水,unit,high,"also 建水千户,建水城",6172,4616,39,9,
+#caa2e7,China,binyang,Binyang,宾阳,unit,high,,6742,4618,38,9,
+#b4a2e7,China,wuming,Wuming,武鸣,unit,high,,6692,4619,36,9,
+#bbb6d2,China,wenshan,Wenshan,文山,unit,high,,6310,4620,43,9,
+#f8c684,China,shan / wei,Shanwei,汕尾,unit,high,"placed by label colour, text off the region",7371,4620,23,17,
+#f198d5,China,guigang,Guigang,贵港,prefecture,high,,6808,4629,38,9,
+#f5a2b7,China,rongzhou,Rongzhou,容州,town,high,,6885,4634,46,9,
+#e9a197,China,heshan,Heshan,鹤山,unit,high,,7106,4635,35,9,
+#e8e5be,China,lincang,Lincang,临沧,prefecture,high,,5884,4639,34,9,
+#c5c6ad,China,mengzi,Mengzi,蒙自,unit,high,,6240,4643,34,9,
+#a8aaf1,China,jingxi,Jingxi,靖西,unit,high,,6518,4645,27,9,
+#dfa49c,China,yunfu,Yunfu,云浮,prefecture,high,,7056,4645,28,9,
+#f0a6a8,China,cenxi,Cenxi,岑溪,unit,high,,6946,4653,25,9,
+#9891e9,China,long'an,Long'an,隆安,unit,high,,6657,4654,34,9,
+#db9e9e,China,luoding,Luoding,罗定,unit,high,,6998,4659,35,9,
+#f198b2,China,kuishan,Kuishan,,none,low,,6838,4662,37,9,
+#b6afd8,China,maguan,Maguan,马关,unit,high,,6347,4664,37,9,
+#ec7b8d,China,yu / lin,Yulin,玉林,prefecture,high,also 郁林,6885,4668,12,19,
+#e9e9cc,China,pu'er,Pu'er,普洱,prefecture,high,,6006,4669,24,9,
+#ffac9c,China,xin / hui,Xinhui,新会,unit,high,,7155,4671,14,17,
+#f8b8ab,China,kaiping,Kaiping,开平,unit,high,,7096,4673,34,9,
+#eba6cf,China,hengzhou,Hengzhou,横州,town,high,,6776,4675,47,9,
+#e1e1cf,China,yuanjiang,Yuanjiang,元江,unit,high,,6100,4678,48,9,
+#aea8f1,China,zuojiang a.,Zuojiang A.,,none,low,,6586,4687,57,9,
+#5c4cdd,China,nanning,Nanning,南宁,prefecture,high,"placed by label colour, text off the region",6648,4687,37,9,
+#e09a9c,China,bei / liu,Beiliu,北流,unit,high,,6914,4688,16,18,
+#d0d7c9,China,ailao,Ailao,哀牢,geonames,medium,GeoNames Ailao Shan (MTS),6240,4693,23,9,
+#ecafaf,China,xinyi,Xinyi,信宜,unit,high,also 信义,6969,4694,23,9,
+#8078e0,China,gaofeng,Gaofeng,,none,low,"from numbered list, key b",6636,4696,53,9,
+#a285e4,China,wuxiang,Wuxiang,,none,low,"placed by label colour, text off the region",6717,4697,40,9,
+#ffb3a5,China,dou / men,Doumen,斗门,unit,high,,7175,4698,20,16,
+#ec9791,China,luchuan,Luchuan,陆川,unit,high,,6868,4702,37,9,
+#8a72e7,China,qingxiu,Qingxiu,青秀,unit,high,"from numbered list, key c",6637,4706,47,9,
+#e9b0a5,China,yang / dong,Yangdong,阳东,unit,high,,7064,4709,27,18,
+#ffc9be,China,taishan,Taishan,台山,unit,high,,7117,4711,37,9,
+#cea5e6,China,yongning,Yongning,邕宁,unit,high,,6714,4715,44,9,
+#f88fab,China,ling / shan,Lingshan,灵山,unit,high,,6778,4715,23,18,
+#ecaeb0,China,wu / huang,Wuhuang,,none,low,,6807,4730,29,17,
+#e4a096,China,jianjiang,Jianjiang,鉴江,geonames,medium,GeoNames Jian Jiang (STMX),6957,4733,43,9,
+#dccfbf,China,wa,Wa,,none,low,,5845,4737,13,9,
+#fab6a8,China,yang / chun,Yangchun,阳春,unit,high,,7018,4737,23,18,
+#f3a49e,China,bobai,Bobai,博白,unit,high,,6856,4739,26,9,
+#e9a9a0,China,gaozhou,Gaozhou,高州,unit,high,,6911,4745,41,9,
+#f8a48f,China,qin / zhou,Qinzhou,钦州,prefecture,high,,6745,4757,23,18,
+#dcdac4,China,lancang,Lancang,澜沧,unit,high,,5921,4766,37,9,
+#d3b6df,China,chongzuo,Chongzuo,崇左,prefecture,high,,6625,4769,46,9,
+#f7a99a,China,dian / cheng,Diancheng,电城,town,high,,6985,4772,32,17,
+#e9a58c,China,hua / zhou,Huazhou,化州,unit,high,,6928,4774,23,17,
+#ddc372,China,he- / yuan,Heyuan,河源,prefecture,high,"placed by label colour, on an inset",7602,4776,23,16,
+#f1907c,China,yangjiang,Yangjiang,阳江,unit,high,"placed by label colour, text off the region",7069,4780,48,9,
+#ebab82,China,hedi,Hedi,鹤地,geonames,medium,GeoNames Hedi Shuiku (RSV),6875,4781,20,9,
+#ec8188,China,wanjiang,Wanjiang,万江,town,high,"from numbered list, key 22",7667,4781,63,9,
+#f5afaa,China,hepu,Hepu,合浦,unit,high,,6807,4784,23,9,
+#e45e5e,China,dongguan,Dongguan,东莞,unit,high,"from numbered list, key 23",7667,4791,66,9,
+#ecacaf,China,fangcheng,Fangcheng,防城,unit,high,,6692,4795,51,9,
+#f7a692,China,dian / bại,Dianbai,电白,unit,high,,6963,4795,20,17,
+#cdb7ee,China,lang sơn,Langson,Langson,unit,high,,6545,4799,43,9,
+#f1b08b,China,lian / jiang,Lianjiang,廉江,unit,high,,6902,4801,24,16,
+#e98282,China,shilong,Shilong,石龙,town,high,"from numbered list, key 24",7667,4801,54,9,
+#f09587,China,beihai,Beihai,北海,prefecture,high,,6815,4808,29,9,
+#f8b9a2,China,wu / chuan,Wuchuan,吴川,unit,high,,6932,4810,28,17,
+#f16d6d,China,nancheng,Nancheng,南城,town,high,"from numbered list, key 25",7667,4811,65,9,
+#db7373,China,songshan,Songshan,松山湖,fuzzy town,low,"from numbered list, key 26; fuzzy match songshanhu (0.89)",7667,4821,66,9,
+#ec846a,China,maoming,Maoming,茂名,prefecture,high,"from numbered list, key a",6967,4823,55,9,
+#cae0e2,China,sipsong panna,Sipsong Panna,,none,low,,6049,4826,73,9,
+#d88a7d,China,dalang,Dalang,大朗,town,high,"from numbered list, key 27",7667,4831,51,9,
+#ecb78e,China,huguang,Huguang,湖光,town,high,,6878,4834,41,9,
+#f3835a,China,zhanjiang,Zhanjiang,湛江,prefecture,high,"from numbered list, key b",6957,4834,61,9,
+#f12101,China,guangzhou,Guangzhou,广州,prefecture,high,"placed by list entry 1, by label colour; other text on region: pearl river delta",7192,4846,66,9,
+#eb3e12,China,xiguan,Xiguan,,none,low,"from numbered list, key 2",7192,4856,45,9,
+#e0472f,China,baiyun,Baiyun,白云,unit,high,"from numbered list, key 3",7192,4866,45,9,
+#ecc38e,China,leizhou,Leizhou,雷州,unit,high,,6872,4873,35,9,
+#eb5f4a,China,wushan,Wushan,五山,town,high,"from numbered list, key 4",7192,4876,50,9,
+#d87e71,China,taihe,Taihe,太和,town,high,"placed by label colour, on an inset",7382,4876,25,9,
+#f3cb4b,China,hui / zhou,Huizhou,惠州,prefecture,high,"placed by label colour, on an inset",7584,4876,23,17,
+#f73b1e,China,tianhe,Tianhe,天河,unit,high,"placed by list entry 5, by label colour; other text on region: i¿ 5",7192,4886,44,9,
+#f79287,China,xintang,Xintang,新塘,town,high,"placed by label colour, on an inset",7446,4891,37,9,
+#fa421d,China,haizhu,Haizhu,海珠,unit,high,"from numbered list, key 6",7192,4896,45,9,
+#db567f,China,shajing,Shajing,沙井,town,high,"from numbered list, key a",7669,4899,49,9,
+#e6c970,China,jinshan,Jinshan,,none,low,"placed by label colour, on an inset",7558,4906,36,9,
+#df5844,China,shi / shan,Shishan,狮山,town,high,"placed by label colour, on an inset",7324,4908,23,17,
+#ca6181,China,songgang,Songgang,松岗,town,high,"from numbered list, key b",7669,4909,60,9,
+#f5ce9c,China,xuwen,Xuwen,徐闻,unit,high,,6903,4914,31,9,
+#d07a85,China,guangming,Guangming,光明,town,high,"from numbered list, key c",7669,4919,64,9,
+#f86792,China,fuyong,Fuyong,福永,town,high,"from numbered list, key d",7669,4929,47,9,
+#ff3d8a,China,bao'an,Bao'an,宝安,unit,high,"from numbered list, key e",7669,4939,44,9,
+#f0bf6d,China,danshui,Danshui,淡水,town,high,"placed by label colour, on an inset",7589,4943,38,9,
+#fca152,China,qiong / shan,Qiongshan,琼山,unit,high,"placed by label colour, text off the region",6933,4944,26,18,
+#d37465,China,xi / qiao,Xiqiao,西樵,town,high,"placed by label colour, on an inset",7317,4948,20,18,
+#ff539d,China,nanshan,Nanshan,南山,unit,high,"from numbered list, key f",7670,4949,53,9,
+#ff9130,China,haikou,Haikou,海口,unit,high,"placed by label colour, text off the region",6900,4956,31,9,
+#ee9575,China,ping / shan,Pingshan,坪山,town,high,"placed by label colour, on an inset",7598,4967,23,19,
+#eb9789,China,nansha,Nansha,南沙,unit,high,"placed by label colour, on an inset",7412,4976,35,9,
+#fac980,China,xiu / ying,Xiuying,秀英,unit,high,,6920,4977,21,17,
+#db7384,China,l,L,,none,low,"placed by list entry 3, by label colour",7480,4978,10,9,
+#ffcda1,China,wen / chang,Wenchang,文昌,unit,high,,6972,4983,28,17,
+#f1d790,China,lingao,Lingao,临高,unit,high,also 临高县[2],6862,5001,29,9,
+#ffaa9a,China,huang / pu,Huangpu,黄圃,town,high,"placed by label colour, on an inset",7409,5008,33,18,
+#f5a08f,China,xiao / lan,Xiaolan,小榄,town,high,"placed by label colour, on an inset",7384,5022,20,17,
+#ebce8f,China,nandu,Nandu,南渡,geonames,medium,GeoNames Nandu Jiang (STM),6910,5024,29,9,
+#ff9b87,China,jiang / men,Jiangmen,江门,prefecture,high,"placed by label colour, on an inset",7351,5026,24,18,
+#eceea4,China,danzhou,Danzhou,儋州,unit,high,,6816,5037,41,9,
+#f88670,China,zhong / shan,Zhongshan,中山,unit,high,"placed by label colour, on an inset",7408,5040,29,18,
+#f8a08f,China,wugui / shan,Wuguishan,五桂山,town,high,"placed by label colour, on an inset",7424,5067,28,18,
+#f8d2a2,China,wan / ning,Wanning,万宁,unit,high,also 万宁市[1],6937,5083,20,17,
+#dae9b5,China,wuzhishan,Wuzhishan,五指山,unit,high,,6856,5084,52,9,
+#f3836d,China,zhuhai,Zhuhai,珠海,prefecture,high,"placed by label colour, on an inset",7468,5088,32,9,
+#f5a020,China,macau,Macau,,unit,low,"placed by label colour, on an inset",7471,5112,30,9,
+#eee9a4,China,jianfeng,Jianfeng,尖峰,town,high,,6805,5120,41,9,
+#f7ed78,China,sanya,Sanya,三亚,unit,high,,6864,5158,29,9,
+#d8f8ad,East Timor,dili,Dili,,unit,high,,9041,7668,14,9,
+#edf2ad,East Timor,wehali,Wehali,,,medium,,8918,7741,31,9,
+#f87960,Hong Kong,da / peng,Dapeng,,,medium,"placed by label colour, on an inset",7598,5010,26,17,
+#f12800,Hong Kong,hong kong,Hong Kong,,neighbour city,medium,"placed by label colour, on an inset; name found in neighbour #ff4b0b",7559,5105,51,9,
+#f7e9d6,India,siang,Siang,,,medium,,5543,4129,52,18,
+#f1ead4,India,subansiri,Subansiri,,unit,high,,5293,4187,92,18,
+#b8e8ee,India,dihing,Dihing,,,medium,,5521,4207,29,9,
+#b8e3ee,India,tin- / sukia,Tinsukia,,unit,high,,5493,4216,25,17,
+#b4dfe4,India,dibru / garh,Dibru Garh,,unit,high,,5452,4230,30,17,
+#b4e4e3,India,dhe- / maji,Dhemaji,,unit,high,,5412,4247,24,17,
+#addcdb,India,lakhimpur,Lakhimpur,,prefecture,high,,5355,4257,47,9,
+#9cdfe8,India,charai- / deo,Charaideo,,,medium,,5467,4259,36,17,
+#aad7e6,India,sonit- / pur,Sonitpur,,prefecture,high,,5271,4292,31,16,
+#a5cfe4,India,udalguri,Udalguri,,unit,high,,5217,4294,40,9,
+#9ce8df,India,jorhat,Jorhat,,unit,high,,5405,4294,31,9,
+#b0dbe4,India,kaziranga,Kaziranga,,,medium,,5325,4301,48,9,
+#96cce8,India,darrang,Darrang,,prefecture,high,,5201,4314,39,9,
+#98dde1,India,kolong,Kolong,,,medium,,5270,4327,31,9,
+#a8e4d9,India,dhan- / siri,Dhansiri,,,medium,,5376,4327,29,18,
+#f3d9c9,India,tuensang,Tuensang,,unit,high,,5430,4329,46,9,
+#98d4e1,India,na? / gaon,Na Gaon,,unit,high,unread glyph (?); stray ink between letters ignored,5247,4332,23,16,
+#a2e0e2,India,mari / ?aon,Mari ?aon,,wildcard unit,medium,unread glyph (?); unread glyph filled from marigaon,5217,4347,27,16,
+#5bcbe9,India,guwa 9? / hati,Guwa 9? Hati,,fuzzy unit,low,"unread glyph (?); placed by label colour, text off the region; fuzzy match guwahati (0.94)",5191,4356,41,17,
+#a0e4da,India,kopili,Kopili,,,medium,,5263,4363,25,9,
+#cfc8e2,India,karbi,Karbi,,prefecture,high,,5323,4364,24,9,
+#f3d2c9,India,kohima,Kohima,,unit,high,,5415,4399,33,9,
+#ebd0f4,India,khasi,Khasi,,,medium,,5118,4423,25,9,
+#e1c9ee,India,jaintia,Jaintia,,prefecture,high,,5222,4428,32,9,
+#f2cbf4,India,garo,Garo,,,medium,,5040,4429,22,9,
+#ddbdf0,India,shillong,Shillong,,city,high,,5171,4442,38,9,
+#eac4dc,India,dimasa,Dimasa,,,medium,,5303,4442,34,9,
+#f4dad3,India,shirui,Shirui,,,medium,,5390,4459,28,9,
+#a6dbe8,India,silchar,Silchar,,unit,high,,5248,4489,33,9,
+#a5e7ea,India,kạrim- / ?ganj,Karimganj,,unit,high,unread glyph (?); stray ink between letters ignored,5223,4505,32,15,
+#f3a68f,India,im- / phal,Imphal,,prefecture,high,,5365,4509,20,17,
+#b6cee7,India,barak,Barak,,,medium,,5280,4522,27,9,
+#afd8e9,India,haila- / kandi,Hailakandi,,unit,high,,5252,4530,29,17,
+#f0bcad,India,lok- / tak,Loktak,,,medium,,5366,4538,28,19,
+#afe3e9,India,dharṃa / nagar,Dharma Nagar,,,medium,,5218,4549,38,16,
+#ded1f0,India,manu,Manu,,unit,high,,5194,4605,25,9,
+#b5c3ea,India,khowai,Khowai,,unit,high,,5144,4610,33,9,
+#aac3e8,India,agar / tala,Agar Tala,,city,high,,5128,4643,22,17,
+#f3d9e2,India,mizoram,Mizoram,,province,high,,5261,4652,41,9,
+#c1c7eb,India,gomati,Gomati,,,medium,,5150,4667,33,9,
+#b5ee9b,Indonesia,aceh,Aceh,,prefecture,high,,5527,6623,22,9,
+#aaee9b,Indonesia,pidie,Pidie,,prefecture,high,,5616,6659,23,9,
+#9ae1dd,Indonesia,manado,Manado,,city,high,"placed by label colour, text off the region; other text on region: (manado) / l?",8665,6670,37,9,
+#99eb95,Indonesia,peureulak,Peureulak,,unit,high,,5738,6680,48,9,
+#b7e2ae,Indonesia,gayo,Gayo,,prefecture,high,,5698,6730,23,9,
+#2ae7de,Indonesia,medan,Medan,,unit,high,"from numbered list, key a",5889,6739,44,9,
+#2edcec,Indonesia,denai,Denai,,,medium,"from numbered list, key b",5889,6749,39,9,
+#aae1e6,Indonesia,tondano,Tondano,,unit,high,,8665,6751,40,9,
+#6ce4ee,Indonesia,serdang,Serdang,,neighbour prefecture,medium,"from numbered list, key c; name found in neighbour #8be2f1",5890,6759,52,9,
+#e4bfa3,Indonesia,halmahera,Halmahera,,prefecture,high,"placed by label colour, text off the region",8880,6767,102,18,
+#6cebd4,Indonesia,deli,Deli,,prefecture,high,"from numbered list, key d",5889,6769,30,9,
+#84ecdd,Indonesia,binjai,Binjai,,unit,high,"from numbered list, key e",5889,6779,40,9,
+#ace9d8,Indonesia,langkat,Langkat,,prefecture,high,,5801,6790,36,9,
+#8be2f1,Indonesia,bedagai,Bedagai,,,medium,"placed by label colour, text off the region",5922,6801,38,9,
+#def0c7,Indonesia,meulaboh,Meulaboh,,,medium,"placed by label colour, text off the region",5607,6811,46,9,
+#badde6,Indonesia,bolaang,Bolaang,,unit,high,,8588,6814,38,9,
+#e6cfbe,Indonesia,doberai,Doberai,,,medium,"placed by label colour, text off the region",9299,6824,74,18,
+#91cbf5,Indonesia,batubara,Batubara,,prefecture,high,"placed by label colour, text off the region",5972,6835,45,9,
+#c1d8e8,Indonesia,gorontalo,Gorontalo,,prefecture,high,,8394,6836,48,9,
+#aae2e7,Indonesia,karo,Karo,,prefecture,high,,5861,6855,21,9,
+#95c7e2,Indonesia,sima- / lungun,Simalungun,,prefecture,high,,5919,6860,32,17,
+#e0c4b6,Indonesia,pakpak,Pakpak,,,medium,,5801,6897,33,9,
+#a6d0f5,Indonesia,asahan,Asahan,,prefecture,high,,5976,6909,35,9,
+#d2f5ee,Indonesia,kutai,Kutai,,prefecture,high,,7859,6932,48,18,
+#ddb1ac,Indonesia,toba,Toba,,prefecture,high,,5908,6955,22,9,
+#f0cbd8,Indonesia,tomini,Tomini,,unit,high,"placed by label colour, text off the region",8243,6960,60,18,
+#ecee92,Indonesia,sambas,Sambas,,unit,high,other text on region: (sambas) / l?,7001,6993,37,9,
+#add0f0,Indonesia,rokan,Rokan,,prefecture,high,,6092,6994,27,9,
+#e7a59b,Indonesia,barumun,Barumun,,unit,high,,5981,7017,42,9,
+#db6bf0,Indonesia,batam,Batam,,unit,high,"placed by label colour, text off the region",6464,7024,30,9,
+#a0c5f1,Indonesia,dumai,Dumai,,unit,high,,6203,7033,28,9,
+#d9ec99,Indonesia,mempawah,Mempawah,,unit,high,,7023,7037,53,9,
+#f1c0a0,Indonesia,tapanuli,Tapanuli,,prefecture,high,,5906,7041,40,9,
+#d0eee0,Indonesia,sintang,Sintang,,unit,high,,7334,7046,74,18,
+#89f5e1,Indonesia,sama- / rinda,Samarinda,,unit,high,,7909,7046,31,18,
+#dfc6c6,Indonesia,banggai,Banggai,,unit,high,,8389,7048,76,18,
+#cbf1b9,Indonesia,sanggau,Sanggau,,prefecture,high,,7116,7065,82,18,
+#f2d8af,Indonesia,nias,Nias,,prefecture,high,other text on region: (nias) / l?,5756,7074,20,9,
+#d0eee6,Indonesia,mahakam,Mahakam,,,medium,,7730,7074,88,18,
+#a89cf1,Indonesia,riau,Riau,,,medium,"placed by label colour, text off the region",6508,7091,19,9,
+#dbafae,Indonesia,tapung,Tapung,,unit,high,,6088,7095,34,9,
+#6f9ae7,Indonesia,pekanbaru,Pekanbaru,,unit,high,"placed by label colour, text off the region",6186,7096,51,9,
+#acf7e9,Indonesia,balik- / papan,Balikpapan,,unit,high,,7864,7103,29,16,
+#e6c8d2,Indonesia,palu,Palu,,unit,high,,8224,7110,40,18,
+#deee6e,Indonesia,pontianak,Pontianak,,unit,high,"placed by label colour, text off the region",6976,7113,48,9,
+#9fbcf0,Indonesia,siak,Siak,,unit,high,,6273,7116,19,9,
+#eebc96,Indonesia,pasaman,Pasaman,,unit,high,,5989,7135,43,9,
+#ffc4d6,Indonesia,ceram,Ceram,,,medium,"placed by label colour, text off the region",9205,7136,58,18,
+#dda789,Indonesia,paya- / kumbuh,Payakumbuh,,unit,high,,6071,7167,36,19,
+#caeee1,Indonesia,barito,Barito,,unit,high,,7619,7167,60,18,
+#d3b6bc,Indonesia,kampar,Kampar,,unit,high,,6154,7175,35,9,
+#fdc297,Indonesia,bukit- / tinggi,Bukittinggi,,city,high,other text on region: (bukittinggi) / l'?,6016,7191,32,18,
+#adccf0,Indonesia,indragiri,Indragiri,,prefecture,high,,6315,7197,42,9,
+#caf7e0,Indonesia,ketapang,Ketapang,,prefecture,high,,7150,7214,90,18,
+#e2b282,Indonesia,paga- / ruyung,Pagaruyung,,,medium,,6094,7237,34,18,
+#e9b5b8,Indonesia,luwu,Luwu,,prefecture,high,"placed by label colour, text off the region",8296,7244,22,9,
+#c5f0e6,Indonesia,kahayan,Kahayan,,unit,high,,7484,7245,80,18,
+#f2b7cb,Indonesia,mandar,Mandar,,,medium,,8152,7252,36,9,
+#f0a46a,Indonesia,padang,Padang,,unit,high,"placed by label colour, text off the region",6030,7267,35,9,
+#a6e7c8,Indonesia,negara,Negara,,,medium,,7736,7272,34,9,
+#a7d2e9,Indonesia,batang hari,Batang Hari,,prefecture,high,,6412,7278,59,9,
+#e6aabf,Indonesia,toraja,Toraja,,prefecture,high,,8220,7285,31,9,
+#a3ccee,Indonesia,tebo,Tebo,,unit,high,,6309,7293,22,9,
+#cdf3ea,Indonesia,kotawaringin,Kotawaringin,,unit,high,,7316,7300,128,18,
+#eec48e,Indonesia,dharmasraya,Dharmasraya,,prefecture,high,,6128,7302,65,9,
+#e4b0b0,Indonesia,konawe,Konawe,,unit,high,,8525,7317,36,9,
+#8fcbeb,Indonesia,jambi,Jambi,,unit,high,,6427,7323,26,9,
+#e89ba6,Indonesia,tempe,Tempe,,unit,high,,8246,7339,30,9,
+#a1e9d5,Indonesia,martapura,Martapura,,unit,high,,7693,7360,52,9,
+#9cdbf3,Indonesia,banyuasin,Banyuasin,,unit,high,"placed by label colour, text off the region",6586,7367,50,9,
+#aad6f0,Indonesia,bangka belitung,Bangka Belitung,,,medium,"placed by label colour, text off the region",6794,7372,80,9,
+#b2e0ec,Indonesia,kerinci,Kerinci,,prefecture,high,,6240,7380,32,9,
+#e2a1a3,Indonesia,bone,Bone,,prefecture,high,,8289,7389,23,9,
+#b7f1e1,Indonesia,meratus,Meratus,,,medium,,7744,7394,41,9,
+#79eccc,Indonesia,banjarmasin,Banjarmasin,,unit,high,"placed by label colour, text off the region",7597,7399,61,9,
+#2f6ca3,Indonesia,jakarta,Jakarta,,city,high,"from numbered list, key 1",6983,7404,49,9,
+#5084bc,Indonesia,jatinegara,Jatinegara,,unit,high,"from numbered list, key g",7069,7404,65,9,
+#b2e5ee,Indonesia,musi,Musi,,prefecture,high,,6464,7408,22,9,
+#3f6da4,Indonesia,tanah abang,Tanah Abang,,unit,high,"from numbered list, key 2",6983,7414,76,9,
+#296ab0,Indonesia,tambora,Tambora,,unit,high,"from numbered list, key 3",6983,7424,54,9,
+#4e7ab0,Indonesia,pasar minggu,Pasar Minggu,,unit,high,"placed by list entry 11, by label colour",7069,7424,87,9,
+#68a0b9,Indonesia,cimanggis,Cimanggis,,unit,high,"from numbered list, key 17",7164,7424,67,9,
+#55cef0,Indonesia,palem- / bang,Palembang,,city,high,"placed by label colour, text off the region",6556,7427,36,17,
+#ee9396,Indonesia,maros,Maros,,unit,high,,8244,7430,30,9,
+#347eb9,Indonesia,cengkareng,Cengkareng,,unit,high,"from numbered list, key 4",6983,7434,69,9,
+#608ebf,Indonesia,pesanggrahan,Pesanggrahan,,unit,high,"placed by list entry 12, by label colour",7069,7434,83,9,
+#83b7ce,Indonesia,jati asih,Jati Asih,,unit,high,"from numbered list, key 18",7157,7434,69,9,
+#f5c6c2,Indonesia,buton,Buton,,prefecture,high,"placed by label colour, text off the region",8639,7440,28,9,
+#5693c4,Indonesia,penjaringan,Penjaringan,,unit,high,"from numbered list, key 5",6983,7444,72,9,
+#4b98bf,Indonesia,cipondoh,Cipondoh,,unit,high,"from numbered list, key 13",7069,7444,62,9,
+#6ab2c8,Indonesia,bekasi,Bekasi,,unit,high,"from numbered list, key 19",7164,7444,50,9,
+#eda9ab,Indonesia,bulukumba,Bulukumba,,prefecture,high,"placed by label colour, text off the region",8334,7451,51,9,
+#3b81c1,Indonesia,tanjung priok,Tanjung Priok,,unit,high,"from numbered list, key 6",6983,7454,83,9,
+#68b2c8,Indonesia,tangerang,Tangerang,,unit,high,"from numbered list, key 14",7071,7454,68,9,
+#5d9dc8,Indonesia,medan satria,Medan Satria,,unit,high,"placed by list entry 20, by label colour",7164,7454,86,9,
+#df5143,Indonesia,makassar,Makassar,,unit,high,"placed by label colour, text off the region",8181,7462,47,9,
+#f5ebac,Indonesia,rejang,Rejang,,prefecture,high,,6223,7463,32,9,
+#87dce4,Indonesia,ogan,Ogan,,prefecture,high,"placed by label colour, text off the region",6579,7463,23,9,
+#69a5c4,Indonesia,ciputat,Ciputat,,unit,high,"placed by list entry 15, by label colour; other text on region: ?5 / i¿",7069,7464,54,9,
+#64a7bf,Indonesia,bojonggede,Bojonggede,,unit,high,"from numbered list, key 21",7164,7464,76,9,
+#b8eee8,Indonesia,lubuklinggau,Lubuklinggau,,city,high,,6334,7471,61,9,
+#6898b9,Indonesia,depok,Depok,,city,high,"from numbered list, key 16",7069,7474,47,9,
+#58a5c1,Indonesia,bogor,Bogor,,unit,high,"placed by list entry 22, by label colour; other text on region: 22",7164,7474,47,9,
+#e2756a,Indonesia,gowa,Gowa,,prefecture,high,"placed by label colour, text off the region",8197,7478,25,9,
+#c0ecec,Indonesia,kayuagung,Kayuagung,,,medium,,6603,7488,52,9,
+#e49188,Indonesia,lompobattang,Lompobattang,,,medium,,8240,7493,68,9,
+#b2eedf,Indonesia,lematang,Lematang,,,medium,,6482,7507,45,9,
+#a8dfbf,Indonesia,citarum,Citarum,,,medium,"placed by label colour, on an inset",7048,7520,37,9,
+#89c6d5,Indonesia,sepa / tan,Sepa Tan,,unit,high,"placed by label colour, on an inset",6901,7529,23,18,
+#ffdbde,Indonesia,lbanda,Lbanda,,,medium,"placed by label colour, text off the region",9215,7534,64,18,
+#9bedce,Indonesia,serang,Serang,,unit,high,"placed by label colour, on an inset",6812,7545,34,9,
+#94d3dc,Indonesia,cika / -rang,Cika -rang,,unit,high,"placed by label colour, on an inset",7023,7549,28,16,
+#aae2d4,Indonesia,besemah,Besemah,,,medium,,6386,7551,43,9,
+#7dc6c9,Indonesia,tiga / raksạ,Tiga Raksa,,unit,high,"placed by label colour, on an inset",6876,7553,27,18,
+#9af099,Indonesia,cikam / -pek,Cikam -pek,,unit,high,"placed by label colour, on an inset",7097,7557,26,18,
+#91ddcb,Indonesia,kara- / wang,Karawang,,unit,high,"placed by label colour, on an inset",7057,7559,30,17,
+#f7f19e,Indonesia,bengkulu,Bengkulu,,prefecture,high,,6321,7566,43,9,
+#94dfcb,Indonesia,ciujung,Ciujung,,,medium,"placed by label colour, on an inset",6837,7566,35,9,
+#bbf1d9,Indonesia,komering,Komering,,,medium,,6508,7568,44,9,
+#7fb1cb,Indonesia,curug,Curug,,unit,high,"placed by label colour, on an inset",6905,7570,27,9,
+#dbf09f,Indonesia,tulang bawang,Tulang Bawang,,prefecture,high,,6616,7573,74,9,
+#5d82ae,Indonesia,? l 10,? L 10,,,low,"unread glyph (?); placed by list entry 12, by label colour; other text on region: cililitan",6958,7573,36,9,
+#a5dac6,Indonesia,karang,Karang,,,medium,"placed by label colour, on an inset",6804,7588,33,9,
+#a4d5bd,Indonesia,jonggol,Jonggol,,unit,high,"placed by label colour, on an inset",7031,7606,36,9,
+#d0e9b3,Indonesia,kotabumi,Kotabumi,,unit,high,,6550,7611,44,9,
+#e8f787,Indonesia,seputih,Seputih,,unit,high,,6637,7617,37,9,
+#78b0c4,Indonesia,cibi / nong,Cibi Nong,,unit,high,"placed by label colour, on an inset",6982,7617,24,16,
+#52bf24,Indonesia,bandung,Bandung,,unit,high,"placed by list entry 23, by label colour",7228,7619,60,9,
+#7dc3c9,Indonesia,dra / maga,Dra Maga,,unit,high,"placed by label colour, on an inset",6939,7620,25,17,
+#a9e89b,Indonesia,purwakarta,Purwakarta,,unit,high,"placed by label colour, on an inset",7091,7620,57,9,
+#f4f79e,Indonesia,ranau,Ranau,,,medium,,6477,7621,28,9,
+#a2cecc,Indonesia,leuwi / liang,Leuwi Liang,,unit,high,"placed by label colour, on an inset",6896,7622,27,18,
+#79ce48,Indonesia,ujungberung,Ujungberung,,unit,high,"from numbered list, key 24",7228,7629,81,9,
+#6bd059,Indonesia,cimahi,Cimahi,,unit,high,"from numbered list, key 25",7228,7639,49,9,
+#7bc860,Indonesia,dayeuhkolot,Dayeuhkolot,,unit,high,"from numbered list, key 26",7228,7649,79,9,
+#7dc1cb,Indonesia,ciawi,Ciawi,,unit,high,"placed by label colour, on an inset",6976,7651,24,9,
+#8fcbbf,Indonesia,cianjur,Cianjur,,unit,high,"placed by label colour, on an inset",7027,7652,34,9,
+#f0f394,Indonesia,kambas,Kambas,,,medium,,6666,7653,36,9,
+#eaf396,Indonesia,kemuning,Kemuning,,,medium,,6568,7654,45,9,
+#a4eeb0,Indonesia,lebak,Lebak,,prefecture,high,"placed by label colour, on an inset",6832,7654,25,9,
+#90d394,Indonesia,lembang,Lembang,,unit,high,"placed by label colour, on an inset",7139,7654,40,9,
+#a0e6a5,Indonesia,ciranjang,Ciranjang,,unit,high,"placed by label colour, on an inset",7063,7664,46,9,
+#94e69b,Indonesia,suka / -bumi,Suka -bumi,,unit,high,"placed by label colour, on an inset",6998,7681,28,17,
+#f5f882,Indonesia,tanggamus,Tanggamus,,prefecture,high,,6547,7687,54,9,
+#abe1a1,Indonesia,saguling,Saguling,,unit,high,"placed by label colour, on an inset",7092,7690,41,9,
+#97d76d,Indonesia,maja / laya,Maja Laya,,unit,high,"placed by label colour, on an inset",7183,7692,27,18,
+#aaebaf,Indonesia,cibadak,Cibadak,,unit,high,"placed by label colour, on an inset",6943,7693,36,9,
+#e6fc78,Indonesia,raja / basa,Raja Basa,,unit,high,,6660,7696,42,18,
+#f7682b,Indonesia,surabaya,Surabaya,,city,high,"from numbered list, key a",7435,7697,59,9,
+#f1966f,Indonesia,sidarjo,Sidarjo,,fuzzy unit,low,"from numbered list, key e; fuzzy match sidoarjo (0.93)",7510,7697,48,9,
+#fd9264,Indonesia,sukolilo,Sukolilo,,unit,high,"from numbered list, key b",7435,7707,50,9,
+#eda67b,Indonesia,porong,Porong,,unit,high,"from numbered list, key f",7511,7707,46,9,
+#f28151,Indonesia,wonokromo,Wonokromo,,unit,high,"from numbered list, key c",7436,7717,67,9,
+#e49a7a,Indonesia,mojokerto,Mojokerto,,prefecture,high,"from numbered list, key g",7510,7717,63,9,
+#eb9a7f,Indonesia,tandes,Tandes,,unit,high,"from numbered list, key d",7435,7727,47,9,
+#f0b490,Indonesia,pasuruan,Pasuruan,,prefecture,high,"from numbered list, key h",7510,7727,59,9,
+#e8fd19,Indonesia,lampung,Lampung,,province,high,"from numbered list, key 1",6606,7731,53,9,
+#fa9f96,Indonesia,sumenep,Sumenep,,prefecture,high,"placed by label colour, text off the region",7675,7731,43,9,
+#e4f264,Indonesia,ciledug,Ciledug,,unit,high,"from numbered list, key h",7044,7733,47,9,
+#ffcc39,Indonesia,semarang,Semarang,,unit,high,"from numbered list, key 1",7196,7733,61,9,
+#f8d283,Indonesia,jepa?a,Jepa?a,,wildcard unit,medium,unread glyph (?); unread glyph filled from jepara,7272,7733,31,9,
+#ced77d,Indonesia,purwokerto,Purwokerto,,unit,high,"from numbered list, key k",7108,7736,69,9,
+#e9f88a,Indonesia,indra / mayu,Indra Mayu,,unit,high,"placed by label colour, text off the region",7002,7739,33,16,
+#ebf86e,Indonesia,pesawaran,Pesawaran,,prefecture,high,"from numbered list, key 2",6606,7741,67,9,
+#f5a988,Indonesia,sidayu,Sidayu,,unit,high,"placed by label colour, text off the region",7464,7741,32,9,
+#97f0b9,Indonesia,cile / gon,Cile Gon,,unit,high,,6718,7742,20,16,
+#e5f080,Indonesia,brebes,Brebes,,unit,high,"from numbered list, key i",7047,7743,44,9,
+#f2c16a,Indonesia,mrangen,Mrangen,,fuzzy unit,low,"from numbered list, key 2; fuzzy match mranggen (0.93)",7196,7743,55,9,
+#bbf5a7,Indonesia,pama- / nukan,Pamanukan,,unit,high,,6904,7746,37,18,
+#dcd889,Indonesia,purbalingga,Purbalingga,,unit,high,"from numbered list, key l",7110,7746,68,9,
+#fab39f,Indonesia,sam? / pang,Sam Pang,,unit,high,unread glyph (?); stray ink between letters ignored,7551,7750,26,16,
+#e9ed78,Indonesia,slawi,Slawi,,unit,high,"from numbered list, key j",7046,7753,36,9,
+#f2c77c,Indonesia,demak,Demak,,unit,high,"from numbered list, key 3",7196,7753,43,9,
+#f5d38d,Indonesia,pati,Pati,,unit,high,,7303,7754,19,9,
+#f8c897,Indonesia,rembang,Rembang,,unit,high,,7341,7754,42,9,
+#f7e47b,Indonesia,pekalongan,Pekalongan,,unit,high,"from numbered list, key m",7105,7756,70,9,
+#faa38a,Indonesia,bang- / kalan,Bangkalan,,unit,high,,7513,7756,29,18,
+#caf88a,Indonesia,haur / geulis,Haur Geulis,,unit,high,,6954,7757,29,17,
+#f5b491,Indonesia,lamo / ṇgan,Lamo Ngan,,unit,high,,7444,7760,24,16,
+#e6c085,Indonesia,kudus,Kudus,,prefecture,high,"from numbered list, key 4",7196,7763,41,9,
+#e1f080,Indonesia,ciremai,Ciremai,,,medium,"placed by label colour, text off the region",7026,7764,35,9,
+#f8bd97,Indonesia,tuban,Tuban,,unit,high,,7401,7764,28,9,
+#fce8b3,Indonesia,komodo,Komodo,,unit,high,"placed by label colour, text off the region",8265,7772,36,9,
+#f7ed7b,Indonesia,comal,Comal,,unit,high,"placed by label colour, text off the region",7121,7773,27,9,
+#d9ee55,Indonesia,cirebon,Cirebon,,prefecture,high,"placed by label colour, text off the region",7029,7774,36,9,
+#fcf1b3,Indonesia,ende,Ende,,unit,high,,8474,7774,23,9,
+#faa696,Indonesia,pamekasan,Pamekasan,,unit,high,"placed by label colour, text off the region",7581,7775,54,9,
+#c4f0a6,Indonesia,su- / bang,Subang,,unit,high,,6923,7778,23,18,
+#eef351,Indonesia,tegal,Tegal,,unit,high,"placed by label colour, text off the region",7085,7780,25,9,
+#f0b792,Indonesia,bojo / negoro,Bojo Negoro,,unit,high,,7413,7786,34,17,
+#fad67e,Indonesia,kendal,Kendal,,prefecture,high,,7194,7788,31,9,
+#f3d699,Indonesia,purwo / -dadi,Purwo -dadi,,unit,high,,7274,7791,30,17,
+#f3ccaa,Indonesia,cepu,Cepu,,unit,high,,7369,7791,22,9,
+#adf0c3,Indonesia,pulo / sari,Pulo Sari,,unit,high,,6696,7797,20,17,
+#f0cc73,Indonesia,ungaran,Ungaran,,unit,high,,7215,7799,40,9,
+#fae391,Indonesia,batang,Batang,,unit,high,,7159,7800,34,9,
+#f2ee8e,Indonesia,pema / lang,Pema Lang,,unit,high,,7102,7801,25,18,
+#e1ab8d,Indonesia,jom / bang,Jom Bang,,unit,high,,7440,7804,23,17,
+#bce779,Indonesia,kuni? / ngan,Kuni Ngan,,unit,high,unread glyph (?); stray ink between letters ignored,7016,7807,25,16,
+#fdf9ac,Indonesia,(larantuka),(larantuka),,unit,high,,8800,7808,53,9,
+#e1cd86,Indonesia,temang / gung,Temang Gung,,unit,high,,7196,7812,36,16,
+#e1bb81,Indonesia,sala- / tiga,Salatiga,,city,high,,7257,7812,26,17,
+#d9e27f,Indonesia,pe / mali,Pe Mali,,,medium,,7051,7817,31,14,
+#e9bb87,Indonesia,sragen,Sragen,,unit,high,,7288,7817,34,9,
+#f7b79a,Indonesia,panarukan,Panarukan,,unit,high,,7634,7817,51,9,
+#e6bd94,Indonesia,ngawi,Ngawi,,unit,high,,7333,7819,28,9,
+#e2d68b,Indonesia,wono / sobo,Wono Sobo,,unit,high,,7161,7820,25,17,
+#e6b194,Indonesia,trow- / ulan,Trowulan,,unit,high,,7464,7820,32,17,
+#e1baa5,Indonesia,ngan- / juk,Nganjuk,,unit,high,,7391,7823,29,19,
+#f7b3eb,Indonesia,buleleng,Buleleng,,unit,high,"placed by label colour, text off the region",7733,7828,41,9,
+#edb08f,Indonesia,probo / -lingo,Probo -lingo,,fuzzy prefecture,low,fuzzy match probolinggo (0.95),7530,7830,30,18,
+#b6d784,Indonesia,ciamis,Ciamis,,unit,high,,6995,7831,30,9,
+#f2eead,Indonesia,kupang,Kupang,,unit,high,,8852,7831,34,9,
+#e6c59f,Indonesia,brantas,Brantas,,,medium,,7415,7832,39,9,
+#e1c181,Indonesia,boyo / lali,Boyo Lali,,unit,high,,7252,7833,23,19,
+#d1ed96,Indonesia,ci- / tanduy,Citanduy,,,medium,,7038,7834,44,15,
+#ddb083,Indonesia,madiuṇ,Madiun,,unit,high,,7353,7834,34,9,
+#ffbc98,Indonesia,kraksaan,Kraksaan,,unit,high,,7568,7834,44,9,
+#a3ce94,Indonesia,malabar,Malabar,,,medium,,6893,7835,39,9,
+#dcd085,Indonesia,boro- / budur,Borobudur,,unit,high,,7172,7837,48,15,
+#e0e28f,Indonesia,serayu,Serayu,,,medium,,7126,7838,34,9,
+#f2ba9c,Indonesia,banyu / wangi,Banyu Wangi,,unit,high,,7675,7840,29,18,
+#eeb186,Indonesia,jemoer,Jemoer,,,medium,"placed by label colour, text off the region",7627,7841,34,9,
+#daba95,Indonesia,singosari,Singosari,,unit,high,,7467,7842,46,9,
+#f8a4ee,Indonesia,agung,Agung,,,medium,,7821,7847,29,9,
+#e8c08c,Indonesia,kediri,Kediri,,prefecture,high,,7433,7848,27,9,
+#fdc4bc,Indonesia,sumbawa,Sumbawa,,unit,high,,8047,7848,45,9,
+#c1eeb4,Indonesia,sindang- / barang,Sindangbarang,,unit,high,,6860,7849,44,18,
+#c2f3c7,Indonesia,jampang,Jampang,,unit,high,,6798,7850,41,9,
+#d8bd93,Indonesia,pono / rogo,Pono Rogo,,unit,high,,7353,7853,23,17,
+#eeea7d,Indonesia,kebu / men,Kebu Men,,unit,high,,7145,7855,23,17,
+#e1c491,Indonesia,wonogiri,Wonogiri,,unit,high,,7300,7856,42,9,
+#ebbb9e,Indonesia,luma- / jang,Lumajang,,unit,high,,7549,7857,28,18,
+#e2f8a9,Indonesia,pangan / daran,Pangan Daran,,unit,high,,7010,7860,35,17,
+#ecf382,Indonesia,kroya,Kroya,,unit,high,,7106,7860,27,9,
+#eee389,Indonesia,bagelen,Bagelen,,unit,high,,7174,7860,38,9,
+#f3d2a6,Indonesia,sre / ngat,Sre Ngat,,unit,high,,7423,7860,23,16,
+#e4f382,Indonesia,cila- / cap,Cilacap,,unit,high,,7071,7861,22,16,
+#da956c,Indonesia,malang,Malang,,prefecture,high,"placed by label colour, text off the region",7496,7862,34,9,
+#f0b6a8,Indonesia,(rin? / jani) / l?,(rin? Jani) L?,,,low,unread glyph (?); other text on region: rinjani,7994,7864,22,18,
+#f8a38b,Indonesia,mataram,Mataram,,unit,high,"placed by label colour, text off the region",7859,7865,43,9,
+#f8cda2,Indonesia,blitar,Blitar,,prefecture,high,,7454,7867,27,9,
+#edc3a9,Indonesia,balung,Balung,,unit,high,,7606,7868,32,9,
+#d4f8a9,Indonesia,sancang,Sancang,,,medium,,6940,7871,40,9,
+#eeda89,Indonesia,progo,Progo,,,medium,,7210,7872,28,9,
+#f5cbb4,Indonesia,blam- / bangan,Blambangan,,,medium,,7663,7872,35,17,
+#e6c69b,Indonesia,tulung- / agung,Tulungagung,,unit,high,,7405,7876,40,16,
+#f5b593,Indonesia,praya,Praya,,unit,high,,7908,7878,28,9,
+#ebc497,Indonesia,kepan / -jen,Kepan -jen,,unit,high,,7479,7879,28,17,
+#ebb997,Indonesia,turen,Turen,,unit,high,,7514,7879,27,9,
+#e1cfb4,Indonesia,tren? / -galek,Tren? -galek,,wildcard unit,medium,unread glyph (?); unread glyph filled from trenggalek,7368,7881,31,19,
+#f3e0a8,Indonesia,wonosari,Wonosari,,unit,high,,7243,7882,45,9,
+#f3d5a8,Indonesia,gunungsewu,Gunungsewu,,,medium,,7295,7883,61,9,
+#f79fe1,Indonesia,mengwi,Mengwi,,unit,high,"placed by label colour, text off the region",7755,7885,36,9,
+#f2ab86,Indonesia,sela- / parang,Selaparang,,,medium,"placed by label colour, text off the region",7947,7890,34,17,
+#fcf4c3,Indonesia,sumba,Sumba,,prefecture,high,other text on region: (sumba) / l?,8348,7894,31,9,
+#afe882,Indonesia,sumedang,Sumedang,,unit,high,"from numbered list, key a",6946,7896,62,9,
+#b0eb6a,Indonesia,tasikmalaya,Tasikmalaya,,prefecture,high,"from numbered list, key e",7020,7896,72,9,
+#e8bc63,Indonesia,surakarta,Surakarta,,city,high,"from numbered list, key 5",7211,7904,62,9,
+#f276d3,Indonesia,denpasar,Denpasar,,unit,high,"placed by label colour, text off the region",7781,7904,46,9,
+#acdf70,Indonesia,cimanuk,Cimanuk,,,medium,"from numbered list, key b",6946,7906,51,9,
+#bcdf8c,Indonesia,jatigede,Jatigede,,unit,high,"from numbered list, key f",7021,7906,53,9,
+#e9bf89,Indonesia,karaganyar,Karaganyar,,fuzzy unit,low,"from numbered list, key 6; fuzzy match karanganyar (0.95)",7211,7914,69,9,
+#a1d770,Indonesia,garut,Garut,,unit,high,"from numbered list, key c",6947,7916,39,9,
+#b9e879,Indonesia,majalengka,Majalengka,,unit,high,"from numbered list, key 9",7020,7916,68,9,
+#e2be75,Indonesia,klaten,Klaten,,unit,high,"from numbered list, key 7",7211,7924,43,9,
+#b5df83,Indonesia,galunggung,Galunggung,,,medium,"from numbered list, key d",6946,7926,69,9,
+#ddc876,Indonesia,sleman,Sleman,,unit,high,"from numbered list, key 8",7211,7934,47,9,
+#e9cd5f,Indonesia,yogyakarta,Yogyakarta,,city,high,"from numbered list, key g",7211,7944,69,9,
+#d8c077,Indonesia,magelang,Magelang,,unit,high,"from numbered list, key 10",7205,7954,65,9,
+#e7f1c5,Japan,kitami,Kitami,,unit,high,,9171,1846,58,18,
+#e7f4bb,Japan,ishikari,Ishikari,,unit,high,,9074,1916,36,9,
+#b4ef72,Japan,sapporo,Sapporo,,city,high,"placed by label colour, text off the region",8993,1938,40,9,
+#c4ef72,Japan,toyohira,Toyohira,,fuzzy unit,low,"placed by label colour, text off the region; fuzzy match toyohiraku (0.89)",9054,1946,42,9,
+#d8f1b3,Japan,oshima,Oshima,,,medium,"placed by label colour, text off the region",9007,2049,34,9,
+#cbf0b6,Japan,aomori,Aomori,,unit,high,,9069,2207,33,9,
+#cafbbb,Japan,iwate,Iwate,,province,high,,9147,2290,27,9,
+#cef2c0,Japan,akita,Akita,,unit,high,,9066,2307,24,9,
+#bffbbb,Japan,rikuzen,Rikuzen,,,medium,,9148,2404,36,9,
+#c1f0c0,Japan,yamagata,Yamagata,,unit,high,,9072,2449,48,9,
+#8df486,Japan,sendai,Sendai,,city,high,"placed by label colour, text off the region",9180,2455,32,9,
+#adeeb7,Japan,niigata,Niigata,,city,high,"placed by label colour, text off the region",9012,2507,34,9,
+#b7f2be,Japan,abukuma,Abukuma,,,medium,,9145,2511,42,9,
+#c5e9d4,Japan,echigo,Echigo,,,medium,,9060,2583,31,9,
+#bbe3d9,Japan,koriyama,Koriyama,,unit,high,,9153,2583,44,9,
+#b2dee5,Japan,utsunomiya,Utsunomiya,,unit,high,,9103,2634,57,9,
+#b6d4e9,Japan,hitachi,Hitachi,,unit,high,,9170,2647,33,9,
+#b4e0e5,Japan,maebashi,Maebashi,,unit,high,,9052,2674,46,9,
+#bcebe6,Japan,toyama,Toyama,,unit,high,,8943,2677,36,9,
+#a6bee3,Japan,tochigi,Tochigi,,unit,high,,9134,2679,33,9,
+#9fc7eb,Japan,tsuchiura,Tsuchiura,,unit,high,"placed by label colour, text off the region",9223,2686,47,9,
+#b6e0db,Japan,nagano,Nagano,,unit,high,,8979,2692,35,9,
+#b3dde9,Japan,ishikawa,Ishikawa,,province,high,"placed by label colour, text off the region",8838,2699,42,9,
+#add5e5,Japan,takasaki,Takasaki,,unit,high,,9025,2722,41,9,
+#9cb4eb,Japan,narita,Narita,,unit,high,,9197,2726,30,9,
+#b0bee3,Japan,arakawa,Arakawa,,,medium,,9078,2736,41,9,
+#bfd2d8,Japan,kai,Kai,,unit,high,,9042,2775,13,9,
+#98c4eb,Japan,bōsō,Bōsō,,,medium,,9194,2783,23,9,
+#b3cde9,Japan,fukui,Fukui,,unit,high,,8865,2789,24,9,
+#d3c2cc,Japan,hakone,Hakone,,,medium,,9087,2800,34,9,
+#c6e0de,Japan,kiso,Kiso,,,medium,,8957,2808,19,9,
+#dfcfb4,Japan,suruga,Suruga,,,medium,,9050,2833,34,9,
+#c1cd87,Japan,gifu,Gifu,,unit,high,,8921,2847,19,9,
+#ade3e0,Japan,biwako,Biwako,,,medium,"placed by label colour, text off the region",8867,2870,33,9,
+#e1cc94,Japan,shizuọka,Shizuoka,,city,high,,9042,2881,43,9,
+#c6d5a1,Japan,kuẉana,Kuwana,,unit,high,,8899,2887,36,9,
+#bdcae7,Japan,san'in,San'in,,,medium,,8783,2891,28,9,
+#e2d695,Japan,hamamatsu,Hamamatsu,,city,high,"placed by label colour, text off the region",9017,2915,56,9,
+#e4d88e,Japan,toyohashi,Toyohashi,,unit,high,"placed by label colour, text off the region",8994,2928,49,9,
+#bce9d5,Japan,iga,Iga,,unit,high,,8889,2930,14,9,
+#95b5dc,Japan,rokkō,Rokkō,,,medium,,8804,2939,26,9,
+#d2cc4a,Japan,nagoya,Nagoya,,neighbour city,medium,"from numbered list, key a; name found in neighbour #ced072",8986,2944,48,9,
+#9bbde7,Japan,himeji,Himeji,,unit,high,,8747,2951,29,9,
+#ced072,Japan,shōnai,Shōnai,,,medium,"from numbered list, key b",8987,2954,45,9,
+#cfe7c1,Japan,ise,Ise,,unit,high,,8937,2955,14,9,
+#7ae9e9,Japan,nar?ạ,Nara,,unit,high,unread glyph (?); stray ink between letters ignored,8870,2962,22,9,
+#ced082,Japan,kasugai,Kasugai,,unit,high,"from numbered list, key c",8987,2964,49,9,
+#bfbde7,Japan,shimane,Shimane,,province,high,"placed by label colour, text off the region",8538,2974,40,9,
+#d8cd73,Japan,aichi,Aichi,,province,high,"from numbered list, key d",8987,2974,35,9,
+#ddd39d,Japan,okazaki,Okazaki,,unit,high,"from numbered list, key e",8987,2984,49,9,
+#86b1e5,Japan,okayama,Okayama,,city,high,,8707,2987,42,9,
+#afc0e2,Japan,bingo,Bingo,,,medium,,8655,2993,26,9,
+#ddd979,Japan,chita,Chita,,unit,high,"from numbered list, key f",8987,2994,36,9,
+#cae9d1,Japan,kii,Kii,,,medium,,8880,3024,10,9,
+#afb0e2,Japan,aki,Aki,,,medium,,8618,3032,13,9,
+#a6b5e3,Japan,ashikaga,Ashikaga,,unit,high,"placed by label colour, on an inset",9104,3034,43,9,
+#97d8ee,Japan,setō,Setō,,,medium,,8725,3035,22,9,
+#b543f4,Japan,chiyoda,Chiyoda,,,medium,"from numbered list, key a; other text on region: tō yō",8997,3041,50,9,
+#b3f0f0,Japan,awa,Awa,,unit,high,,8762,3047,19,9,
+#938ae9,Japan,hiroshima,Hiroshima,,city,high,"placed by label colour, text off the region",8588,3050,48,9,
+#d65fed,Japan,yamanote,Yamanote,,,medium,"from numbered list, key b",8997,3051,61,9,
+#a657d8,Japan,suginami,Suginami,,fuzzy unit,low,"from numbered list, key c; fuzzy match suginamiku (0.89)",8998,3061,55,9,
+#b450eb,Japan,toshima,Toshima,,city,high,"from numbered list, key d",8997,3071,52,9,
+#829edc,Japan,tone,Tone,,,medium,"placed by label colour, on an inset",9219,3071,22,9,
+#9da0d5,Japan,kasukabe,Kasukabe,,unit,high,"placed by label colour, on an inset",9151,3075,45,9,
+#9050e5,Japan,senju,Senju,,,medium,"from numbered list, key e",8997,3081,40,9,
+#8443e3,Japan,sumida,Sumida,,city,high,"from numbered list, key f",8998,3091,46,9,
+#adede6,Japan,iyo,Iyo,,unit,high,,8670,3095,14,9,
+#a79dd5,Japan,kawagoe,Kawagoe,,unit,high,"placed by label colour, on an inset",9123,3102,42,9,
+#bcebdd,Japan,tosa,Tosa,,unit,high,,8696,3115,22,9,
+#c6afe2,Japan,yamaguchi,Yamaguchi,,unit,high,"placed by label colour, text off the region",8535,3121,51,9,
+#d168dc,Japan,setagaya,Setagaya,,city,high,"placed by label colour, text off the region",9010,3122,46,9,
+#eb87a0,Japan,kitakyushu,Kitakyushu,,city,high,"placed by label colour, text off the region",8430,3131,53,9,
+#95c2dc,Japan,katsura,Katsura,,,medium,"placed by label colour, on an inset",8868,3132,38,9,
+#9765da,Japan,nerima,Nerima,,city,high,"from numbered list, key j",8999,3132,44,9,
+#709aeb,Japan,chiba,Chiba,,city,high,"placed by label colour, on an inset",9267,3134,25,9,
+#e56ac4,Japan,kawasaki,Kawasaki,,city,high,"from numbered list, key k",8999,3143,55,9,
+#d0a9da,Japan,sayama,Sayama,,unit,high,"placed by label colour, on an inset",9099,3145,37,9,
+#c37cc8,Japan,tama,Tama,,unit,high,"from numbered list, key l",9000,3153,34,9,
+#1a8feb,Japan,ōsaka,Ōsaka,,city,high,"from numbered list, key 1",8731,3163,41,9,
+#bf6bd5,Japan,musashino,Musashino,,unit,high,"from numbered list, key m",8998,3163,65,9,
+#e75c70,Japan,hakata,Hakata,,,medium,"placed by label colour, text off the region",8426,3167,33,9,
+#ca86d3,Japan,hachiōji,Hachiōji,,unit,high,"placed by label colour, on an inset",9118,3167,38,9,
+#eb9faa,Japan,onga,Onga,,,medium,,8482,3168,23,9,
+#4ab9e9,Japan,sumiyoshi,Sumiyoshi,,fuzzy unit,low,"from numbered list, key 2; fuzzy match sumiyoshiku (0.90)",8731,3173,62,9,
+#ae75e5,Japan,tachikawa,Tachikawa,,unit,high,"from numbered list, key n",8998,3173,61,9,
+#3ea3e7,Japan,yodogawa,Yodogawa,,fuzzy unit,low,"from numbered list, key 3; fuzzy match yodogawaku (0.89)",8731,3183,62,9,
+#cd94ca,Japan,sagamiharạ,Sagamihara,,city,high,"placed by label colour, on an inset",9116,3184,57,9,
+#e77b7b,Japan,fukuoka,Fukuoka,,province,high,"placed by name match, part of label on it",8419,3187,38,9,
+#6ea4de,Japan,ikoma,Ikoma,,neighbour unit,medium,"from numbered list, key 4; name found in neighbour #bce9d5",8731,3193,40,9,
+#eb9f9f,Japan,chikugo,Chikugo,,neighbour unit,medium,name found in neighbour #f2b7aa,8479,3197,36,9,
+#eba79f,Japan,ōita,Ōita,,unit,high,,8544,3201,19,9,
+#6ac8de,Japan,kawachi,Kawachi,,,medium,"from numbered list, key 5",8731,3203,51,9,
+#6bd2e9,Japan,sakai,Sakai,,city,high,"from numbered list, key 6",8731,3213,38,9,
+#f4b0b7,Japan,saga,Saga,,unit,high,other text on region: (saga) / l?,8431,3219,23,9,
+#d7a3d0,Japan,sagami,Sagami,,,medium,"placed by label colour, on an inset",9137,3225,34,9,
+#f0a395,Japan,kumạmoto,Kumamoto,,city,high,"placed by label colour, text off the region",8494,3253,49,9,
+#ee91cc,Japan,miura,Miura,,unit,high,"placed by label colour, text off the region; other text on region: (miura) / l?",9190,3257,27,9,
+#86e9e9,Japan,izumi,Izumi,,unit,high,"placed by label colour, on an inset",8886,3262,25,9,
+#f2b7aa,Japan,higo,Higo,,,medium,,8516,3282,20,9,
+#fdb8cc,Japan,nagasaki,Nagasaki,,unit,high,"placed by label colour, text off the region",8384,3285,43,9,
+#edc7aa,Japan,hyūga,Hyūga,,unit,high,,8562,3303,29,9,
+#f2c498,Japan,satsuma,Satsuma,,,medium,"placed by label colour, text off the region",8463,3399,42,9,
+#ebc549,Japan,naha,Naha,,unit,high,"placed by label colour, text off the region",8387,4018,23,9,
+#f4d79e,Japan,(ryūkyū-ōsumi) / l?,(ryūkyū-ōsumi)l?,,,low,"unread glyph (?); placed by label colour, text off the region; other text on region: ryūkyū-ōsumi; ryūkyū-ōsumi",8085,4324,74,10,
+#d2ebdc,Laos,luang / namtha,Luang Namtha,,fuzzy province,low,fuzzy match louangnamtha (0.96),6063,4982,36,19,
+#c8ece5,Laos,xieng / khouang,Xieng Khouang,,province,high,,6251,5005,80,36,
+#c3f0e0,Laos,luang / prabang,Luang Prabang,,unit,high,,6127,5156,40,18,
+#cbf5dc,Laos,khammuane,Khammuane,,fuzzy province,low,fuzzy match khammouan (0.89),6325,5175,112,18,
+#a0f1ca,Laos,vientiane,Vientiane,,city,high,,6205,5234,46,9,
+#bdf3d9,Laos,savannakhet,Savannakhet,,city,high,,6468,5418,63,9,
+#c6ebd8,Laos,salavan,Salavan,,city,high,,6599,5428,38,9,
+#d0e6d0,Laos,champasak,Champasak,,fuzzy unit,low,fuzzy match champasack (0.95),6571,5598,106,18,
+#d2b1f1,Malaysia,kinabalu,Kinabalu,,,medium,"placed by label colour, text off the region",7647,6415,40,9,
+#c1d6f0,Malaysia,sandakan,Sandakan,,unit,high,,7904,6442,46,9,
+#c8cfec,Malaysia,sabah,Sabah,,province,high,,7738,6459,58,18,
+#aef7de,Malaysia,semporna,Semporna,,unit,high,"placed by label colour, text off the region",8012,6499,48,9,
+#cd92f3,Malaysia,kota / bharu,Kota Bharu,,unit,high,"placed by label colour, text off the region",6231,6503,28,18,
+#cf9ef8,Malaysia,kedah,Kedah,,province,high,,6026,6512,28,9,
+#daadf3,Malaysia,jerai,Jerai,,,medium,,6068,6560,23,9,
+#d5abf0,Malaysia,kelantan,Kelantan,,province,high,,6225,6583,42,9,
+#d18aee,Malaysia,perai,Perai,,,medium,"placed by label colour, text off the region",6014,6595,25,9,
+#cc6df3,Malaysia,penang,Penang,,,medium,"placed by label colour, text off the region",5990,6615,35,9,
+#c8dbec,Malaysia,brunei,Brunei,,province,high,,7559,6644,62,18,
+#e0a2ec,Malaysia,larut,Larut,,unit,high,,6069,6654,24,9,
+#d0abf0,Malaysia,terengganu,Terengganu,,province,high,,6306,6655,57,9,
+#dab8d9,Malaysia,titiwangsa,Titiwangsa,,,medium,,6164,6673,53,9,
+#d38ae6,Malaysia,ipoh,Ipoh,,city,high,,6127,6701,20,9,
+#d4b4f0,Malaysia,pahang,Pahang,,province,high,,6316,6777,35,9,
+#e8a2ec,Malaysia,selangor,Selangor,,province,high,,6145,6805,43,9,
+#db7ce9,Malaysia,ampaṇg,Ampang,,,medium,,6193,6828,37,9,
+#c476f7,Malaysia,klang,Klang,,unit,high,"placed by label colour, text off the region",6130,6846,25,9,
+#c0b0e9,Malaysia,penarikan,Penarikan,,,medium,,6255,6852,48,9,
+#bb6ee6,Malaysia,kajang,Kajang,,city,high,,6207,6854,32,9,
+#ed44f7,Malaysia,kuala lumpur,Kuala Lumpur,,city,high,"from numbered list, key a",6064,6861,77,9,
+#d444f7,Malaysia,seputeh,Seputeh,,,medium,"from numbered list, key b",6064,6871,53,9,
+#c29bfa,Malaysia,putra- / jaya,Putrajaya,,fuzzy unit,low,fuzzy match wpputrajaya (0.90),6171,6872,33,17,
+#c255e2,Malaysia,petaling,Petaling,,unit,high,"from numbered list, key c",6065,6881,52,9,
+#ce63ee,Malaysia,damansara,Damansara,,,medium,"from numbered list, key d",6064,6891,67,9,
+#b59df3,Malaysia,serem? / ban,Serem Ban,,unit,high,unread glyph (?); stray ink between letters ignored,6210,6893,35,17,
+#ed6ef5,Malaysia,rawang,Rawang,,,medium,"from numbered list, key e",6064,6901,49,9,
+#a99df3,Malaysia,melaka,Melaka,,unit,high,,6252,6926,33,9,
+#cfaee7,Malaysia,kluang,Kluang,,unit,high,,6395,6942,31,9,
+#bbe9f1,Malaysia,kuching,Kuching,,unit,high,,7121,6950,36,9,
+#c5b4f0,Malaysia,batu / pahat,Batu Pahat,,unit,high,,6322,6957,41,17,
+#df84ec,Malaysia,pulai,Pulai,,,medium,"placed by label colour, text off the region",6398,6979,23,9,
+#f077df,Malaysia,johor,Johor,,unit,high,"placed by label colour, text off the region",6430,6979,26,9,
+#b1e071,Mongolia,ulaanbatar,Ulaanbatar,,fuzzy unit,low,"placed by label colour, text off the region; fuzzy match ulaanbaatar (0.95)",6317,1958,108,18,
+#f4e9d6,Myanmar,jiinghpaw,Jiinghpaw,,,medium,,5656,4332,88,18,
+#e9f0df,Myanmar,chindwin,Chindwin,,,medium,,5488,4515,42,9,
+#d7e5cf,Myanmar,bhamo,Bhamo,,unit,high,,5652,4559,31,9,
+#dfecc4,Myanmar,katha,Katha,,unit,high,,5563,4617,27,9,
+#c1e8d4,Myanmar,hsenwi,Hsenwi,,fuzzy unit,low,fuzzy match hseni (0.91),5749,4665,34,9,
+#d6e2ba,Myanmar,kanbalu,Kanbalu,,unit,high,,5523,4701,37,9,
+#ddecca,Myanmar,kale,Kale,,unit,high,,5418,4743,19,9,
+#dce5b3,Myanmar,shwebo,Shwebo,,unit,high,,5503,4753,37,9,
+#c9eee2,Myanmar,hsipaw,Hsipaw,,unit,high,,5638,4789,34,9,
+#dee7ab,Myanmar,sagaing,Sagaing,,unit,high,,5564,4804,38,9,
+#eaf0b1,Myanmar,monywa,Monywa,,unit,high,,5503,4811,39,9,
+#d0e642,Myanmar,mandalay,Mandalay,,prefecture,high,"placed by label colour, text off the region",5561,4815,46,9,
+#f1e4e3,Myanmar,chin,Chin,,province,high,,5303,4837,38,18,
+#ecf0b1,Myanmar,yesagyo,Yesagyo,,unit,high,,5447,4847,41,9,
+#d3e49b,Myanmar,amarapura,Amarapura,,unit,high,,5579,4851,53,9,
+#e9f5a9,Myanmar,myingyan,Myingyan,,unit,high,,5525,4873,46,9,
+#c4e6da,Myanmar,loilem,Loilem,,,medium,,5728,4907,28,9,
+#eaeeb4,Myanmar,pakokku,Pakokku,,unit,high,,5412,4915,38,9,
+#bce6da,Myanmar,kengtung,Kengtung,,unit,high,,5884,4930,45,9,
+#f1f696,Myanmar,bagan,Bagan,,,medium,,5481,4941,29,9,
+#c9e6ae,Myanmar,kalaw,Kalaw,,unit,high,,5604,4951,27,9,
+#e2ecaf,Myanmar,meiktila,Meiktila,,unit,high,,5553,4979,38,9,
+#c3f0dc,Myanmar,sittwe,Sittwe,,unit,high,,5253,4980,32,9,
+#a6dfb9,Myanmar,taunggyi,Taunggyi,,unit,high,,5661,4993,43,9,
+#cbebbd,Myanmar,mrauk u,Mrauk U,,unit,high,,5303,4998,40,9,
+#f8f89a,Myanmar,magway,Magway,,unit,high,,5500,5040,39,9,
+#ecf193,Myanmar,naypyi- / daw,Naypyidaw,,fuzzy city,low,fuzzy match naypyitaw (0.89),5568,5046,38,19,
+#ececb8,Myanmar,minbu,Minbu,,unit,high,,5439,5066,28,9,
+#dbecce,Myanmar,kyaukpyu,Kyaukpyu,,unit,high,,5395,5150,45,9,
+#eaeea6,Myanmar,taunggoo,Taunggoo,,fuzzy unit,low,fuzzy match taungoo (0.93),5574,5156,46,9,
+#f3f090,Myanmar,pyay,Pyay,,unit,high,,5520,5164,23,9,
+#b4dfb6,Myanmar,thanlwin,Thanlwin,,,medium,,5698,5202,42,9,
+#eeeda6,Myanmar,nyaunglebin,Nyaunglebin,,unit,high,,5596,5257,59,9,
+#fdf393,Myanmar,thayar- / wady,Thayarwady,,unit,high,,5534,5270,39,19,
+#f5ec9d,Myanmar,hinthada,Hinthada,,unit,high,,5475,5284,43,9,
+#ebea90,Myanmar,bago,Bago,,unit,high,,5627,5328,23,9,
+#f1e474,Myanmar,pantanaw,Pantanaw,,unit,high,,5488,5357,48,9,
+#f0e782,Myanmar,hmawbi,Hmawbi,,unit,high,,5569,5361,36,9,
+#ebe276,Myanmar,thanlyin,Thanlyin,,unit,high,,5610,5394,40,9,
+#faeb8d,Myanmar,pathein,Pathein,,unit,high,,5425,5404,37,9,
+#f0dc97,Myanmar,mawla- / myine,Mawlamyine,,unit,high,"placed by label colour, text off the region",5665,5415,36,17,
+#f5eb69,Myanmar,twantay,Twantay,,unit,high,,5555,5425,41,9,
+#faef8d,Myanmar,myaung- / mya,Myaungmya,,unit,high,,5454,5433,43,18,
+#faf28d,Myanmar,pyapon,Pyapon,,unit,high,,5511,5456,35,9,
+#f1e901,Myanmar,yangon,Yangon,,prefecture,high,"from numbered list, key 1",5595,5459,48,9,
+#afddab,Myanmar,dawna,Dawna,,,medium,,5811,5466,31,9,
+#f3dc18,Myanmar,thingangyun,Thingangyun,,unit,high,"from numbered list, key 2",5595,5469,74,9,
+#f0d740,Myanmar,insein,Insein,,unit,high,"from numbered list, key 3",5595,5479,42,9,
+#ebe057,Myanmar,dagon,Dagon,,unit,high,"from numbered list, key 4",5595,5489,42,9,
+#f8e929,Myanmar,hlaingtharya,Hlaingtharya,,unit,high,"from numbered list, key 5",5595,5499,76,9,
+#dff0b0,Myanmar,dawei,Dawei,,unit,high,,5774,5625,28,9,
+#dff3bd,Myanmar,tanintharyi,Tanintharyi,,unit,high,,5861,5888,56,9,
+#f4b8d2,North Korea,tuman,Tuman,,,medium,,8187,2275,30,9,
+#edb1cb,North Korea,ch'ŏngjin,Ch'ŏngjin,,unit,high,,8165,2378,43,9,
+#f4b7cb,North Korea,sŏngjin,Sŏngjin,,,medium,,8142,2450,36,9,
+#eebdbd,North Korea,paektu,Paektu,,,medium,,8045,2453,33,9,
+#e7bcb2,North Korea,kanggye,Kanggye,,unit,high,,7944,2507,40,9,
+#f2aab3,North Korea,pukch'ŏng,Pukch'ŏng,,unit,high,,8075,2527,47,9,
+#e9bbb0,North Korea,ch'ŏngch'ŏn,Ch'ŏngch'ŏn,,,medium,,7912,2579,55,9,
+#ee8793,North Korea,hamhŭng,Hamhŭng,,unit,high,"placed by label colour, text off the region",8087,2582,43,9,
+#e7a89a,North Korea,ŭiju,Ŭiju,,unit,high,,7829,2601,18,9,
+#eeb3a6,North Korea,chŏngju,Chŏngju,,neighbour city,medium,name found in neighbour #e9bbb0,7861,2612,38,9,
+#e3adb1,North Korea,tŏkch'ŏn,Tŏkch'ŏn,,unit,high,,7992,2622,40,9,
+#de9b96,North Korea,sun / ch'ŏn,Sunch'ŏn,,unit,high,,7955,2631,24,18,
+#eda7af,North Korea,wŏnsan,Wŏnsan,,unit,high,"placed by label colour, text off the region",8086,2635,37,9,
+#ed968b,North Korea,anju,Anju,,unit,high,,7924,2655,21,9,
+#e98473,North Korea,p'yŏng / sŏng,P'yŏngsŏng,,unit,high,,7948,2670,48,18,
+#ee3c26,North Korea,pyŏngyang,Pyŏngyang,,unit,high,"from numbered list, key a",7835,2690,66,9,
+#ebb9c7,North Korea,kŭmgang,Kŭmgang,,unit,high,,8094,2693,42,9,
+#ed5f3e,North Korea,taesŏ̄ng,Taesŏng,,,medium,"from numbered list, key b",7836,2701,52,9,
+#e97777,North Korea,rangrang,Rangrang,,,medium,"from numbered list, key c",7837,2711,56,9,
+#e7a5a5,North Korea,ryesŏng,Ryesŏng,,,medium,,8010,2712,40,9,
+#f29595,North Korea,?namp'o,Namp'o,,unit,high,unread glyph (?); stray ink between letters ignored,7911,2720,34,9,
+#e9949d,North Korea,sari / wŏn,Sariwŏn,,unit,high,,7962,2736,19,18,
+#eea7af,North Korea,kuwŏl,Kuwŏl,,,medium,,7917,2763,27,9,
+#f4aec3,North Korea,kaesŏng,Kaesŏng,,unit,high,,8008,2784,40,9,
+#f4aebb,North Korea,haeju,Haeju,,unit,high,,7944,2789,27,9,
+#e7c9ac,Philippines,cagayan,Cagayan,,prefecture,high,,8040,5027,40,9,
+#f5caa1,Philippines,ilocos,Ilocos,,prefecture,high,,7939,5039,28,9,
+#e7cbac,Philippines,tuguegarao,Tuguegarao,,unit,high,,8061,5100,57,9,
+#dacca7,Philippines,cordillera,Cordillera,,province,high,,7995,5133,47,9,
+#f5cda1,Philippines,ambu- / rayan,Amburayan,,,medium,,7944,5134,31,17,
+#e7d1ac,Philippines,cauayan,Cauayan,,,medium,,8066,5166,40,9,
+#f0c08b,Philippines,baguio,Baguio,,unit,high,,7955,5228,32,9,
+#e9d9ae,Philippines,caraballo,Caraballo,,,medium,,8024,5233,45,9,
+#f3c372,Philippines,dagu- / pan,Dagupan,,unit,high,"placed by label colour, text off the region",7929,5250,29,17,
+#e7ce93,Philippines,urdaneta,Urdaneta,,city,high,"placed by label colour, text off the region",7962,5271,45,9,
+#f1d398,Philippines,bolinao,Bolinao,,unit,high,,7916,5281,35,9,
+#edeb6c,Philippines,angeles,Angeles,,unit,high,"placed by label colour, on an inset",7642,5282,40,9,
+#ede189,Philippines,kabaritan,Kabaritan,,,medium,,7999,5292,47,9,
+#f0ef81,Philippines,pamp- / anga,Pampanga,,prefecture,high,"placed by label colour, on an inset",7691,5300,31,17,
+#f0df95,Philippines,tarlac,Tarlac,,prefecture,high,,7968,5312,29,9,
+#ddd486,Philippines,caban- / atuan,Cabanatuan,,unit,high,,8015,5317,34,17,
+#f0e781,Philippines,maca- / bebe,Macabebe,,unit,high,"placed by name match, label drawn in a neighbour's colour",7660,5318,34,17,
+#faf84a,Philippines,maynila,Maynila,,fuzzy city,low,"from numbered list, key a; fuzzy match manila (0.92)",7561,5329,50,9,
+#f0ec95,Philippines,arayat,Arayat,,unit,high,,7985,5338,33,9,
+#f7f509,Philippines,tondo,Tondo,,city,high,"from numbered list, key b; other text on region: manila",7561,5339,41,9,
+#f5dc6b,Philippines,bulacan,Bulacan,,unit,high,"placed by label colour, on an inset",7708,5344,40,9,
+#eecf60,Philippines,bocaue,Bocaue,,unit,high,"placed by label colour, on an inset",7753,5344,30,9,
+#eedaa4,Philippines,zam- / bales,Zambales,,prefecture,high,,7947,5346,26,18,
+#eede04,Philippines,caloocan,Caloocan,,unit,high,"from numbered list, key c",7562,5349,54,9,
+#dbdf49,Philippines,cubao,Cubao,,,medium,"from numbered list, key d",7561,5359,41,9,
+#dfd94a,Philippines,pasig,Pasig,,city,high,"from numbered list, key e",7561,5369,39,9,
+#e2d37e,Philippines,anga?t,Angat,,unit,high,unread glyph (?); stray ink between letters ignored,8029,5369,28,9,
+#e7e7bd,Philippines,lamon,Lamon,,,medium,,8066,5376,28,9,
+#f4ff61,Philippines,makati,Makati,,city,high,"from numbered list, key f",7562,5379,44,9,
+#eee89b,Philippines,bataan,Bataan,,prefecture,high,"placed by label colour, on an inset",7645,5403,34,9,
+#e4f355,Philippines,cavite,Cavite,,unit,high,"placed by label colour, on an inset",7714,5429,30,9,
+#e4e2a9,Philippines,laguna,Laguna,,prefecture,high,other text on region: bay,8092,5442,32,9,
+#ddf373,Philippines,malabon,Malabon,,,medium,"placed by label colour, on an inset",7697,5444,40,9,
+#ddf3b5,Philippines,camarines,Camarines,,prefecture,high,,8207,5445,50,9,
+#bffac4,Philippines,lagonoy,Lagonoy,,unit,high,"placed by label colour, text off the region",8323,5465,38,9,
+#eaed94,Philippines,taya- / bas,Tayabas,,city,high,,8096,5466,32,17,
+#f3f3ad,Philippines,kalilayan,Kalilayan,,,medium,,8167,5472,43,9,
+#d3e98d,Philippines,bala- / yan,Balayan,,unit,high,,8025,5474,26,16,
+#dfdc90,Philippines,maki- / ling,Makiling,,,medium,"placed by label colour, on an inset",7820,5482,29,17,
+#d9e98d,Philippines,tagaytay,Tagaytay,,unit,high,"placed by label colour, on an inset",7727,5488,45,9,
+#e4ed94,Philippines,batanga?ṣ,Batangas,,unit,high,unread glyph (?); stray ink between letters ignored,8066,5494,46,9,
+#aef5a5,Philippines,bicol,Bicol,,,medium,"placed by label colour, text off the region",8264,5505,22,9,
+#aff8be,Philippines,mayon,Mayon,,,medium,,8314,5509,31,9,
+#d7df90,Philippines,lipa,Lipa,,unit,high,"placed by label colour, on an inset",7810,5514,17,9,
+#bff7d7,Philippines,ibalon,Ibalon,,,medium,,8329,5533,29,9,
+#c3ecee,Philippines,ibabao,Ibabao,,,medium,,8492,5584,32,9,
+#dcf59a,Philippines,calapan,Calapan,,city,high,"placed by label colour, text off the region",8140,5592,37,9,
+#c9faeb,Philippines,masbate,Masbate,,prefecture,high,,8318,5611,42,9,
+#bdf0eb,Philippines,samar,Samar,,prefecture,high,,8485,5625,30,9,
+#d8f5ba,Philippines,mindoro,Mindoro,,,medium,"placed by label colour, text off the region",8016,5646,39,9,
+#9fd7e8,Philippines,taclo- / ban,Tacloban,,unit,high,,8480,5703,30,18,
+#a6e0f2,Philippines,ormoc,Ormoc,,unit,high,,8455,5720,29,9,
+#a8e9f5,Philippines,aklan,Aklan,,prefecture,high,,8236,5724,25,9,
+#a8d6f5,Philippines,panay,Panay,,unit,high,,8288,5724,29,9,
+#a8cbf5,Philippines,jalaur,Jalaur,,,medium,,8257,5766,29,9,
+#b6f3f7,Philippines,hamtic,Hamtic,,unit,high,"placed by label colour, text off the region",8180,5768,32,9,
+#9fc3ee,Philippines,manda- / lagan,Mandalagan,,,medium,,8328,5773,37,18,
+#8ca3ed,Philippines,danao,Danao,,unit,high,"placed by label colour, text off the region",8431,5782,29,9,
+#90aae6,Philippines,hinu / lawan,Hinu Lawan,,,medium,,8387,5798,30,17,
+#97b7eb,Philippines,baco / -lod,Baco -lod,,unit,high,,8317,5802,22,18,
+#658be2,Philippines,mactan,Mactan,,,medium,"placed by label colour, text off the region",8435,5806,35,9,
+#85b6f2,Philippines,iloilo,Iloilo,,unit,high,"placed by label colour, text off the region",8249,5816,23,9,
+#3d5ddc,Philippines,cebu,Cebu,,unit,high,"placed by label colour, text off the region",8420,5824,22,9,
+#91c0eb,Philippines,canigao,Canigao,,,medium,"placed by label colour, text off the region",8499,5827,37,9,
+#7e91da,Philippines,talisay,Talisay,,city,high,"placed by label colour, text off the region",8405,5837,34,9,
+#b2cded,Philippines,surigao,Surigao,,unit,high,"placed by label colour, text off the region",8652,5850,37,9,
+#bacff3,Philippines,kabankalan,Kabankalan,,city,high,"placed by label colour, text off the region",8260,5853,54,9,
+#9bc1e4,Philippines,bohol,Bohol,,prefecture,high,,8445,5862,26,9,
+#b2c4f3,Philippines,tañon,Tanon,,,medium,,8328,5894,28,9,
+#abd3e8,Philippines,butuan,Butuan,,unit,high,,8604,5939,34,9,
+#a2b7f0,Philippines,duma- / guete,Dumaguete,,unit,high,,8344,5940,31,17,
+#abcbe8,Philippines,bala- / tukan,Balatukan,,,medium,,8547,5958,29,18,
+#97b8e6,Philippines,cagayan / de oro,Cagayan De Oro,,city,high,"placed by label colour, text off the region",8467,5971,43,19,
+#c4f7d3,Philippines,palawan,Palawan,,prefecture,high,"placed by label colour, text off the region",7916,6006,80,18,
+#b9d8e8,Philippines,agusan,Agusan,,prefecture,high,,8646,6008,35,9,
+#c6e0f8,Philippines,mandaya,Mandaya,,,medium,"placed by label colour, text off the region",8736,6012,43,9,
+#b6dff2,Philippines,malindang,Malindang,,,medium,,8388,6027,49,9,
+#a1dcdd,Philippines,agus,Agus,,,medium,,8501,6027,23,9,
+#b0cbdd,Philippines,bukidnon,Bukidnon,,prefecture,high,,8576,6034,43,9,
+#b1e7e8,Philippines,pan- / guil,Panguil,,,medium,,8453,6063,23,18,
+#b5e4c3,Philippines,ranao,Ranao,,,medium,,8523,6068,28,9,
+#a5d3eb,Philippines,tagum,Tagum,,city,high,,8671,6072,30,9,
+#b6e7ed,Philippines,illana,Illana,,,medium,,8394,6082,26,9,
+#beedf2,Philippines,sibugay,Sibugay,,,medium,,8318,6089,38,9,
+#83c6e9,Philippines,buhangin,Buhangin,,,medium,"placed by label colour, text off the region",8600,6093,44,9,
+#aad1e4,Philippines,apo,Apo,,,medium,,8604,6112,17,9,
+#a9e4b7,Philippines,pulangi,Pulangi,,,medium,,8541,6116,35,9,
+#90e4a4,Philippines,maguindanao,Maguindanao,,prefecture,high,"placed by label colour, text off the region",8442,6133,64,9,
+#4babdd,Philippines,davao,Davao,,unit,high,"placed by label colour, text off the region",8657,6137,29,9,
+#9cd2f8,Philippines,digos,Digos,,city,high,"placed by label colour, text off the region",8653,6159,26,9,
+#b5e6d0,Philippines,buayan,Buayan,,,medium,,8533,6164,35,9,
+#a8f0df,Philippines,zamboanga,Zamboanga,,unit,high,"placed by label colour, text off the region",8323,6177,55,9,
+#aae2f0,Philippines,koronadal,Koronadal,,city,high,,8545,6197,48,9,
+#a8f0c5,Philippines,basilan,Basilan,,prefecture,high,"placed by label colour, text off the region",8248,6221,35,9,
+#b7e3ee,Philippines,sarangani,Sarangani,,prefecture,high,,8555,6230,49,9,
+#a1c8ed,Philippines,dadiangas,Dadiangas,,,medium,"placed by label colour, text off the region",8604,6272,50,9,
+#9af58f,Philippines,jolo,Jolo,,city,high,"placed by label colour, text off the region",8169,6320,18,9,
+#b9e8f0,Russia,irkutsk,Irkutsk,,unit,high,"placed by label colour, text off the region",6174,1548,68,18,
+#e2f0f3,Russia,dauria,Dauria,,,medium,,6588,1576,124,36,
+#c7e2eb,Russia,vladivostok,Vladivostok,,city,high,,8375,2130,57,9,
+#e92142,Singapore,singapore,Singapore,,neighbour city,medium,"from numbered list, key a; name found in neighbour #e25265",6640,6930,62,9,
+#e25265,Singapore,bukit timah,Bukit Timah,,,medium,"from numbered list, key b",6640,6940,70,9,
+#ee7a95,Singapore,jurong,Jurong,,,medium,"from numbered list, key c",6641,6950,44,9,
+#f04b71,Singapore,ang mo kio,Ang Mo Kio,,,medium,"from numbered list, key d",6640,6960,68,9,
+#f7265d,Singapore,hougang,Hougang,,,medium,"from numbered list, key e",6640,6970,54,9,
+#e74a5a,Singapore,tampines,Tampines,,,medium,"from numbered list, key f",6640,6980,57,9,
+#9fd2ee,South Korea,gangneung,Gangneung,,city,high,,8161,2769,53,9,
+#8b9ee9,South Korea,imjin,Imjin,,,medium,,8071,2784,23,9,
+#918be9,South Korea,gimpo,Gimpo,,city,high,,8030,2817,28,9,
+#94bfe5,South Korea,gyeong / gang,Gyeonggang,,,medium,,8117,2822,35,18,
+#96d4e5,South Korea,chungju,Chungju,,city,high,,8155,2864,38,9,
+#94c5f2,South Korea,hwạseong,Hwaseong,,fuzzy unit,low,other text on region: namyang; tokyo; fuzzy match hwaseongsi (0.89),8059,2874,49,9,
+#afdee3,South Korea,taebaek,Taebaek,,,medium,,8238,2880,39,9,
+#94dbee,South Korea,cheon / an,Cheonan,,fuzzy city,low,fuzzy match chonan (0.92),8105,2892,28,17,
+#72aede,South Korea,wang / suk,Wangsuk,,,medium,"placed by label colour, on an inset",7965,2912,25,18,
+#9bdee3,South Korea,cheong / ju,Cheongju,,city,high,,8142,2916,34,18,
+#9bedf0,South Korea,sapgyo,Sapgyo,,,medium,,8068,2919,35,9,
+#7a7feb,South Korea,go / yang,Goyang,,city,high,"placed by label colour, on an inset",7901,2924,23,17,
+#87e9e5,South Korea,sej?ong,Sejong,,city,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored",8113,2934,33,9,
+#4ce3bd,South Korea,daejeon,Daejeon,,city,high,"placed by label colour, text off the region",8104,2944,39,9,
+#75e09a,South Korea,daegu,Daegu,,city,high,"placed by label colour, text off the region",8260,2962,29,9,
+#a3e9cd,South Korea,seora / beol,Seorabeol,,,medium,,8299,2964,28,18,
+#75e0ad,South Korea,dal / seong,Dalseong,,fuzzy unit,low,"placed by label colour, text off the region; fuzzy match dalseogu (0.88)",8217,2969,29,16,
+#95e0bc,South Korea,gyeongsan,Gyeongsan,,city,high,,8233,2989,53,9,
+#90f0d1,South Korea,ulsan,Ulsan,,city,high,"placed by label colour, text off the region",8338,2991,26,9,
+#81eed7,South Korea,jeơnju,Jeonju,,city,high,"placed by label colour, text off the region",8129,2998,31,9,
+#74afd7,South Korea,yongin,Yongin,,,medium,"placed by label colour, on an inset",7978,3005,32,9,
+#ade9d3,South Korea,sobaek,Sobaek,,,medium,,8175,3007,34,9,
+#a2f4e2,South Korea,geum / gang,Geumgang,,,medium,,8103,3013,25,18,
+#97eeb5,South Korea,gimhae,Gimhae,,,medium,,8276,3015,34,9,
+#81eb96,South Korea,chang / ẉon,Changwon,,city,high,,8257,3036,29,17,
+#85f075,South Korea,dongnae,Dongnae,,,medium,"placed by label colour, text off the region",8327,3038,41,9,
+#7fe94e,South Korea,busan,Busan,,city,high,"placed by label colour, text off the region",8323,3047,29,9,
+#9cedc0,South Korea,jinju,Jinju,,,medium,,8239,3048,22,9,
+#2c60d7,South Korea,hanseong,Hanseong,,,medium,"from numbered list, key 1; other text on region: seoul",7858,3049,59,9,
+#7f61e0,South Korea,bucheon,Bucheon,,city,high,"from numbered list, key 11",7953,3049,58,9,
+#77eb74,South Korea,nakdong,Nakdong,,,medium,"placed by label colour, text off the region",8312,3056,40,9,
+#5057e5,South Korea,seogang,Seogang,,,medium,"from numbered list, key 2",7858,3059,53,9,
+#4b8ad5,South Korea,anyang,Anyang,,neighbour city,medium,"from numbered list, key 12; name found in neighbour #578fde",7953,3059,53,9,
+#79eeb6,South Korea,gwangju,Gwangju,,city,high,"placed by label colour, text off the region",8137,3067,41,9,
+#236be0,South Korea,yongsan,Yongsan,,,medium,"from numbered list, key 3",7858,3069,53,9,
+#5ea2e2,South Korea,seongnam,Seongnam,,fuzzy city,low,"from numbered list, key 13; fuzzy match songnam (0.93)",7953,3069,67,9,
+#4490e0,South Korea,jungnang,Jungnang,,fuzzy unit,low,"from numbered list, key 4; fuzzy match jungnanggu (0.89)",7858,3079,57,9,
+#51a4dc,South Korea,suwon,Suwon,,city,high,"from numbered list, key 14",7953,3079,49,9,
+#a9ebcb,South Korea,seomjin,Seomjin,,,medium,,8169,3081,38,9,
+#5e86e2,South Korea,uijeongbu,Uijeongbu,,city,high,"from numbered list, key 5",7858,3089,60,9,
+#4ea7d3,South Korea,hwaseong,Hwaseong,,fuzzy unit,low,"from numbered list, key 15; fuzzy match hwaseongsi (0.89)",7953,3089,67,9,
+#439de3,South Korea,wirye,Wirye,,,medium,"from numbered list, key 6",7858,3099,39,9,
+#578fde,South Korea,surisan,Surisan,,,medium,"from numbered list, key 16",7953,3099,55,9,
+#a2f4d6,South Korea,mokpo,Mokpo,,city,high,,8103,3103,30,9,
+#aef2c3,South Korea,(jeju),(jeju),,city,high,,8127,3143,25,9,
+#ee6e10,Taiwan,taipei,Taipei,,unit,high,"placed by list entry a, by label colour",7884,4179,41,9,
+#e46b3b,Taiwan,banqiao,Banqiao,,,medium,"placed by list entry b, by label colour",7884,4189,51,9,
+#fa733d,Taiwan,xinzhuang,Xinzhuang,,,medium,"from numbered list, key c",7885,4199,62,9,
+#f7954d,Taiwan,shi / lin,Shilin,,,medium,"placed by label colour, on an inset; other text on region: taipei",8003,4206,22,17,
+#e49164,Taiwan,wenshan,Wenshan,,,medium,"from numbered list, key d",7884,4209,56,9,
+#f5ae71,Taiwan,tam / sui,Tamsui,,,medium,"placed by label colour, on an inset",7980,4215,18,17,
+#e9845c,Taiwan,taoyuan,Taoyuan,,unit,high,"from numbered list, key e",7884,4219,53,9,
+#fabf72,Taiwan,kee / lung,Keelung,,unit,high,"placed by label colour, text off the region",7909,4239,20,16,
+#eb9471,Taiwan,da / han,Dahan,,,medium,"placed by label colour, on an inset",7978,4251,17,17,
+#eeb29a,Taiwan,yang / mei,Yangmei,,city,high,"placed by label colour, text off the region",7825,4271,23,18,
+#edbc8c,Taiwan,hsinchu,Hsinchu,,unit,high,"placed by label colour, text off the region",7804,4294,37,9,
+#eed294,Taiwan,miao / li,Miaoli,,unit,high,,7826,4349,22,18,
+#e8a65d,Taiwan,taichung,Taichung,,unit,high,"from numbered list, key a",7750,4364,55,9,
+#e6ae58,Taiwan,fengyuan,Fengyuan,,,medium,"from numbered list, key b",7749,4374,59,9,
+#fac588,Taiwan,changhua,Changhua,,unit,high,"from numbered list, key c",7747,4384,58,9,
+#fdd494,Taiwan,yuanlin,Yuanlin,,city,high,,7817,4399,35,9,
+#f3d7cf,Taiwan,yushan,Yushan,,,medium,,7878,4406,35,9,
+#f8d889,Taiwan,yunlin,Yunlin,,unit,high,other text on region: (yunlin) / l?,7813,4429,29,9,
+#f7df99,Taiwan,chiayi,Chiayi,,unit,high,,7807,4464,28,9,
+#f7c162,Taiwan,tainan,Tainan,,unit,high,"placed by label colour, text off the region",7776,4517,31,9,
+#edbd94,Taiwan,ping / tung,Pingtung,,unit,high,,7834,4521,25,18,
+#f3ce8c,Taiwan,gangshan,Gangshan,,,medium,"placed by label colour, text off the region",7768,4532,47,9,
+#eea23e,Taiwan,kaohsiung,Kaohsiung,,unit,high,"placed by label colour, text off the region",7772,4548,49,9,
+#f8b761,Taiwan,fengshan,Fengshan,,neighbour chgis,medium,"placed by label colour, text off the region; name found in neighbour #eea23e",7783,4563,46,9,
+#a5dfe6,Thailand,chiang / rai,Chiang Rai,,province,high,,5945,5043,31,18,
+#aadee4,Thailand,lanna,Lanna,,,medium,,5835,5111,26,9,
+#88d8ec,Thailand,chiang / mai,Chiang Mai,,city,high,,5850,5164,31,18,
+#abd8e7,Thailand,nan,Nan,,province,high,,6024,5172,17,9,
+#9ed4e6,Thailand,lampang,Lampang,,province,high,,5924,5229,40,9,
+#b0eaee,Thailand,nong khai,Nong Khai,,province,high,,6247,5257,48,9,
+#b1f4f5,Thailand,nakhon / phanom,Nakhon Phanom,,province,high,,6367,5289,45,18,
+#addbe7,Thailand,ping,Ping,,,medium,,5836,5295,20,9,
+#a6e6ee,Thailand,udon thani,Udon Thani,,city,high,,6180,5312,54,9,
+#abe0e9,Thailand,loei,Loei,,province,high,,6120,5323,17,9,
+#b0e9e8,Thailand,phu / phan,Phu Phan,,unit,high,,6337,5332,23,19,
+#afebf0,Thailand,lam pao,Lam Pao,,,medium,,6257,5369,39,9,
+#a4c9e6,Thailand,phitsanulok,Phitsanulok,,province,high,,5987,5370,57,9,
+#9ecbf0,Thailand,sukhothai,Sukhothai,,province,high,,5896,5373,48,9,
+#aaedee,Thailand,mukdahan,Mukdahan,,province,high,,6393,5432,48,9,
+#92dff3,Thailand,khon / kaen,Khon Kaen,,city,high,,6216,5439,22,18,
+#9bc2e6,Thailand,phetchabun,Phetchabun,,province,high,,6040,5459,57,9,
+#92beec,Thailand,kamphaeng / phet,Kamphaeng Phet,,province,high,,5908,5460,54,19,
+#9de7f6,Thailand,roi et,Roi Et,,province,high,,6328,5461,29,9,
+#9fcee7,Thailand,chaiyaphum,Chaiyaphum,,province,high,,6124,5472,57,9,
+#9fe2f0,Thailand,sarakham,Sarakham,,,medium,,6265,5475,47,9,
+#b1f6f7,Thailand,khemarat,Khemarat,,unit,high,,6432,5500,46,9,
+#8fb7e6,Thailand,nakhon / sawan,Nakhon Sawan,,province,high,,5997,5506,34,17,
+#a0def1,Thailand,phimai,Phimai,,unit,high,,6232,5530,31,9,
+#88a7e9,Thailand,chainat,Chainat,,province,high,,5944,5566,36,9,
+#afebe4,Thailand,ubon,Ubon,,province,high,,6473,5580,23,9,
+#97ddf0,Thailand,korat,Korat,,,medium,,6185,5583,26,9,
+#a7e9ec,Thailand,si saket,Si Saket,,province,high,,6388,5585,41,9,
+#9fddee,Thailand,surin,Surin,,province,high,,6323,5590,25,9,
+#83afeb,Thailand,lopburi,Lopburi,,province,high,,6051,5595,34,9,
+#9acde9,Thailand,dong / phaya yen,Dong Phaya Yen,,,medium,,6119,5603,52,18,
+#9bd2e4,Thailand,buriram,Buriram,,province,high,,6240,5612,38,9,
+#7994e2,Thailand,suphan / buri,Suphan Buri,,province,high,,5981,5639,35,19,
+#799ee2,Thailand,ayut- / thaya,Ayutthaya,,,medium,other text on region: ayutt?ay¿a / l?,6034,5641,29,18,
+#a1b5e4,Thailand,kanchanaburi,Kanchanaburi,,province,high,,5881,5666,65,9,
+#8ab0ec,Thailand,prachinburi,Prachinburi,,province,high,,6075,5675,56,9,
+#6d8ce6,Thailand,nakhon / pathom,Nakhon Pathom,,province,high,,5966,5692,37,17,
+#92bcee,Thailand,sa kaeo,Sa Kaeo,,province,high,,6163,5725,39,9,
+#6ca4f1,Thailand,chachoeng / -sao,Chachoeng -sao,,province,high,,6067,5740,51,17,
+#89a6eb,Thailand,ratchaburi,Ratchaburi,,province,high,,5908,5759,52,9,
+#6994fa,Thailand,samut / sakhon,Samut Sakhon,,province,high,"placed by label colour, text off the region",5986,5760,34,18,
+#5990f5,Thailand,chonburi,Chonburi,,city,high,"placed by label colour, text off the region",6023,5786,42,9,
+#719ef0,Thailand,rayong,Rayong,,province,high,,6085,5818,34,9,
+#8ebff8,Thailand,chantha- / buri,Chanthaburi,,province,high,,6173,5824,45,18,
+#aebff7,Thailand,tanaosi,Tanaosi,,,medium,,5938,5881,37,9,
+#6089da,Thailand,pathum thani,Pathum Thani,,province,high,"placed by label colour, on an inset",6078,5907,67,9,
+#497fe2,Thailand,don / mueang,Don Mueang,,unit,high,"placed by label colour, on an inset",6088,5926,37,16,
+#5b7fe6,Thailand,bang / bua / thong,Bang Bua Thong,,unit,high,"placed by label colour, on an inset",6034,5927,28,27,
+#528be6,Thailand,min / buri,Min Buri,,unit,high,"placed by label colour, on an inset",6126,5955,19,18,
+#0565df,Thailand,bangkok,Bangkok,,province,high,"from numbered list, key a",6171,5955,52,9,
+#2475db,Thailand,khlong toei,Khlong Toei,,unit,high,"from numbered list, key b",6171,5965,69,9,
+#2164e7,Thailand,thonburi,Thonburi,,unit,high,"from numbered list, key c",6172,5975,54,9,
+#2e72f7,Thailand,bang khun thian,Bang Khun Thian,,unit,high,"from numbered list, key d",6171,5985,95,9,
+#4278ff,Thailand,bang / khae,Bang Khae,,unit,high,"placed by label colour, on an inset",6031,5991,28,17,
+#2f78dd,Thailand,phra khanong,Phra Khanong,,unit,high,"from numbered list, key e",6171,5995,81,9,
+#408af1,Thailand,bang / phli,Bang Phli,,unit,high,"placed by label colour, on an inset",6110,6005,26,18,
+#3878d1,Thailand,bang kapi,Bang Kapi,,unit,high,"from numbered list, key f",6172,6005,60,9,
+#237af3,Thailand,pak / nam,Pak Nam,,,medium,"placed by label colour, on an inset",6076,6007,23,18,
+#a2b2f8,Thailand,chaiya,Chaiya,,unit,high,,5861,6180,31,9,
+#a8b8ee,Thailand,tapi,Tapi,,,medium,,5909,6291,19,9,
+#99b6f0,Thailand,phuket,Phuket,,province,high,,5825,6293,33,9,
+#9ca9f5,Thailand,tambra- / linga,Tambralinga,,,medium,,5971,6300,41,18,
+#adb3f3,Thailand,phattha- / lung,Phatthalung,,province,high,,5981,6357,45,18,
+#adc5f3,Thailand,trang,Trang,,province,high,,5948,6401,27,9,
+#a5a7f3,Thailand,songkhla,Songkhla,,province,high,,6040,6451,43,9,
+#c8b1f5,Thailand,pattani,Pattani,,province,high,,6107,6472,36,9,
+#cdb4ec,Thailand,menara,Menara,,,medium,,6151,6525,36,9,
+#c1b7ee,Vietnam,cao bằng,Cao Bằng,,unit,high,,6478,4717,45,9,
+#b4a9e9,Vietnam,hà giang,Hà Giang,,unit,high,,6393,4727,43,9,
+#c5acee,Vietnam,hoàng / liên sơn,Hoàng Liên Sơn,,,medium,,6322,4764,40,19,
+#b0bde9,Vietnam,muờng,Muờng,,unit,high,other text on region: thanh,6217,4800,31,9,
+#e9b2d3,Vietnam,sông / lô,Sông Lô,,,medium,,6429,4804,23,19,
+#e7a6ad,Vietnam,thái / nguyên,Thái Nguyên,,unit,high,,6477,4813,35,18,
+#eca8b1,Vietnam,phú / tho,Phú Tho,,unit,high,,6418,4837,18,19,
+#df9fab,Vietnam,luc nam,Luc Nam,,unit,high,,6550,4856,38,9,
+#aaade7,Vietnam,sơn la,Sơn La,,unit,high,,6297,4859,31,9,
+#f7b79c,Vietnam,ha / long,Ha Long,,unit,high,,6618,4861,20,18,
+#eb9c9c,Vietnam,ba / vi,Ba Vi,,unit,high,,6443,4880,22,16,
+#d0b1e2,Vietnam,môc châu,Môc Châu,,unit,high,,6365,4881,46,9,
+#f0755d,Vietnam,fc,Fc,,,medium,other text on region: hoài dúc,6480,4889,10,9,
+#f77a54,Vietnam,hải / phòng,Hải Phòng,,city,high,"placed by label colour, text off the region",6593,4922,29,18,
+#e7978e,Vietnam,sông cầu,Sông Cầu,,,medium,"from numbered list, key l",6680,4928,55,9,
+#d6a59d,Vietnam,hòa binh,Hòa Binh,,unit,high,,6439,4935,43,9,
+#ec9378,Vietnam,luc dầu giang,Luc Dầu Giang,,,medium,"from numbered list, key m",6677,4939,82,9,
+#f33607,Vietnam,hà nôi,Hà Nôi,,province,high,"from numbered list, key a",6604,4950,44,9,
+#e7a18b,Vietnam,yên tủ,Yên Tủ,,,medium,"from numbered list, key n",6678,4950,46,9,
+#f35526,Vietnam,hoàng mai,Hoàng Mai,,unit,high,"from numbered list, key b",6604,4961,64,9,
+#e99d78,Vietnam,hải duơng,Hải Duơng,,unit,high,"from numbered list, key o",6679,4961,62,9,
+#f39579,Vietnam,kien an,Kien An,,neighbour unit,medium,"from numbered list, key p; name found in neighbour #f77a54",6679,4971,49,9,
+#f1562f,Vietnam,tù liêm,Tù Liêm,,unit,high,"placed by list entry c, by label colour",6605,4972,47,9,
+#f8ac80,Vietnam,hải / hầu,Hải Hầu,,unit,high,,6541,4973,17,18,
+#f0845d,Vietnam,gia? lam,Gia Lam,,unit,high,"unread glyph (?); from numbered list, key d; stray ink between letters ignored",6604,4982,49,9,
+#f3a179,Vietnam,sông luôc,Sông Luôc,,,medium,"from numbered list, key q",6679,4982,60,9,
+#f1a68b,Vietnam,hoa / lu,Hoa Lu,,unit,high,,6509,4983,21,19,
+#f07e5d,Vietnam,hà dông,Hà Dông,,fuzzy unit,low,"from numbered list, key e; fuzzy match haong (0.91)",6604,4992,53,9,
+#f6a99d,Vietnam,lam / sơn,Lam Sơn,,,medium,,6490,4998,17,17,
+#ff9787,Vietnam,thanh / hóa,Thanh Hóa,,city,high,"placed by label colour, text off the region",6524,5026,28,18,
+#d3bae4,Vietnam,pù / luông,Pù Luông,,,medium,,6422,5042,26,20,
+#f8a69a,Vietnam,tinh gia,Tinh Gia,,unit,high,,6469,5052,39,9,
+#fab0a4,Vietnam,diễn / chau,Diễn Chau,,unit,high,,6479,5091,25,18,
+#f6b3a6,Vietnam,sông / lam,Sông Lam,,,medium,,6450,5124,23,19,
+#fa988d,Vietnam,vinh,Vinh,,unit,high,,6488,5146,20,9,
+#fcb4af,Vietnam,hồng linh,Hồng Linh,,unit,high,,6476,5186,46,9,
+#fdbdb9,Vietnam,hoành / sơnh,Hoành Sơnh,,,medium,,6542,5238,29,18,
+#fcbdbd,Vietnam,quảng tri,Quảng Tri,,province,high,,6616,5344,47,9,
+#faa4a4,Vietnam,huế,Huế,,unit,high,,6708,5395,17,9,
+#fa737c,Vietnam,dà nẵng,Dà Nẵng,,fuzzy province,low,"placed by label colour, text off the region; fuzzy match anang (0.91)",6776,5402,40,9,
+#f88a92,Vietnam,thu / bồn,Thu Bồn,,,medium,,6757,5432,19,20,
+#f5b4b8,Vietnam,quảng nam,Quảng Nam,,province,high,,6727,5474,54,9,
+#fda9a7,Vietnam,trà khúc,Trà Khúc,,,medium,,6801,5519,42,9,
+#fcc0be,Vietnam,hoài / nhơn,Hoài Nhơn,,unit,high,,6845,5583,25,18,
+#e9d1ac,Vietnam,kon tum,Kon Tum,,unit,high,,6741,5601,40,9,
+#faa9a0,Vietnam,quy / nhơn,Quy Nhơn,,city,high,,6864,5645,23,20,
+#e9caac,Vietnam,gia lai,Gia Lai,,province,high,,6792,5672,31,9,
+#fabcaf,Vietnam,da rằng,Da Rằng,,,medium,,6855,5728,39,9,
+#e7c5a4,Vietnam,buôn hồ,Buôn Hồ,,city,high,,6791,5759,40,9,
+#fd9f8c,Vietnam,nha / trang,Nha Trang,,unit,high,,6881,5785,27,18,
+#e6b396,Vietnam,buôn ma / thuôt,Buôn Ma Thuôt,,unit,high,,6798,5805,42,19,
+#e0d4af,Vietnam,dắk nông,Dắk Nông,,fuzzy province,low,fuzzy match aknong (0.92),6683,5823,45,9,
+#f8aea6,Vietnam,phan / rang,Phan Rang,,,medium,,6874,5863,23,19,
+#e2bb98,Vietnam,dà lat,Dà Lat,,,medium,,6801,5882,30,9,
+#e2c09a,Vietnam,dồng xoài,Dồng Xoài,,unit,high,,6658,5928,49,9,
+#fda9a9,Vietnam,phan thiết,Phan Thiết,,unit,high,,6801,5934,53,9,
+#e7bb90,Vietnam,tây / ninh,Tây Ninh,,unit,high,,6599,5938,20,19,
+#e79f8d,Vietnam,sông / bé,Sông Bé,,,medium,,6638,5951,28,21,
+#f8a3a3,Vietnam,binh tuy,Binh Tuy,,,medium,,6730,5953,42,9,
+#eb8c79,Vietnam,củ / chi,Củ Chi,,unit,high,,6636,5973,20,18,
+#ee8f98,Vietnam,long / khánh,Long Khánh,,unit,high,,6717,5979,28,19,
+#eb8496,Vietnam,dồng / nai,Dồng Nai,,fuzzy province,low,fuzzy match ongnai (0.92),6690,6001,23,18,
+#ff7d8a,Vietnam,vüng / tàu,Vüng Tàu,,unit,high,,6715,6016,23,19,
+#e7ab8d,Vietnam,vàm co,Vàm Co,,,medium,other text on region: var; co,6594,6019,35,9,
+#eea687,Vietnam,dồng / tháp,Dồng Tháp,,fuzzy province,low,fuzzy match ongthap (0.93),6541,6025,44,20,
+#ff8d9c,Vietnam,long / an,Long An,,province,high,,6656,6028,38,9,
+#ecb590,Vietnam,châu / dốc,Châu Dốc,,unit,high,,6494,6032,31,21,
+#ff97a1,Vietnam,mỹ tho,Mỹ Tho,,unit,high,,6647,6049,35,9,
+#ee9e96,Vietnam,cai lây,Cai Lây,,unit,high,,6596,6050,33,9,
+#e99b87,Vietnam,sa / déc,Sa Déc,,,medium,,6555,6057,27,17,
+#f1a18d,Vietnam,long / xuyên,Long Xuyên,,city,high,,6517,6059,32,18,
+#f5b793,Vietnam,rach / giá,Rach Giá,,unit,high,,6484,6073,29,18,
+#f89097,Vietnam,bến / tre,Bến Tre,,unit,high,,6633,6073,35,13,
+#ec8f85,Vietnam,vinh / long,Vinh Long,,unit,high,,6597,6079,20,17,
+#eb867f,Vietnam,cần / thơ,Cần Thơ,,city,high,,6561,6086,19,17,
+#ff040c,Vietnam,sài gòn,Sài Gòn,,,medium,"from numbered list, key a",6956,6100,50,9,
+#fc9fa3,Vietnam,trà / vinh,Trà Vinh,,unit,high,,6630,6109,21,17,
+#f72912,Vietnam,gò vấp,Gò Vấp,,unit,high,"from numbered list, key b",6956,6111,47,9,
+#f1a393,Vietnam,ngã / bảy,Ngã Bảy,,city,high,,6563,6119,17,20,
+#eb3c3c,Vietnam,tân binh,Tân Binh,,unit,high,"from numbered list, key c",6957,6122,54,9,
+#f32e2e,Vietnam,chơ lớn,Chơ Lớn,,,medium,"from numbered list, key d",6956,6133,49,9,
+#eb9491,Vietnam,sóc / trăng,Sóc Trăng,,city,high,,6602,6140,27,18,
+#f1b0a0,Vietnam,u minh,U Minh,,unit,high,,6499,6144,33,9,
+#f13d30,Vietnam,nhà bè,Nhà Bè,,unit,high,"from numbered list, key e",6956,6144,47,9,
+#f83c4f,Vietnam,binh tân,Binh Tân,,unit,high,"from numbered list, key f",6957,6156,54,9,
+#f39e95,Vietnam,bac liêu,Bac Liêu,,unit,high,,6544,6167,39,9,
+#f1a0a0,Vietnam,cà / mau,Cà Mau,,unit,high,,6503,6200,19,17,

@@ -23,7 +23,7 @@ Writes helper1m/data/india/population.csv  (columns: code, level, year, pop):
   level 2 = district    (code = 3-digit pc11_d_id)
   level 3 = subdistrict - each subdistrict's 2011 population (SHRUG PC11
             subdistrict weights) scaled by its district's projected growth.
-  level 4 = level 3 with the sub-districts over 2M in 2026 split into parts
+  level 4 = level 3 with the sub-districts over 750k in 2026 split into parts
             (code = level-3 code + 2 digits, 00 for a unit carried whole);
             see level4.py.
 """
@@ -296,7 +296,7 @@ def main():
     l3 = subdistrict_rows(district_proj)
     rows += l3
 
-    # Level 4 - level 3 with the sub-districts over 2M split (level4.py); also
+    # Level 4 - level 3 with the sub-districts over 750k split (level4.py); also
     # writes data/india/level4.gpkg, which build_country.py draws.
     import level4
     rows += level4.build(l3)

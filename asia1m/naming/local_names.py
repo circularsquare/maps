@@ -30,6 +30,9 @@ for p in csv.DictReader(open(f"{HERE}/picks.csv", encoding="utf-8")):
     zh = cands.get((p["batch"], int(p["n"]), norm(p["name"])), "")
     if p["key"] in fill and fill[p["key"]].get("zh"): zh = fill[p["key"]]["zh"]
     if zh and len(STEM.sub("", zh)) >= 2: zh = STEM.sub("", zh)
+    # ethnic parts of autonomous names go too (管城回族 -> 管城), as in oldnames
+    bare = re.sub(r"([一-鿿]{1,3}族)+$", "", zh)
+    if len(bare) >= 2: zh = bare
     nv = native.get(p["key"], {})
     rows.append(dict(batch=p["batch"], n=p["n"], key=p["key"], name=p["name"], zh=zh,
                      native=nv.get("native", ""), lang=nv.get("lang", "")))

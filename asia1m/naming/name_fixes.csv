@@ -1,0 +1,6 @@
+key,name,zh,note
+#f0a3c7,Aojiang,鳌江,"reader dropped this label (stacked under rui'an); region is 82% Pingyang, where Aojiang town is"
+#ff80ba,Longwan,龙湾,reader swapped Longwan and Rui'an; this region is 74% Longwan
+#e67cad,Rui'an,瑞安,reader swapped Longwan and Rui'an; this region is 97% Rui'an
+#eba9e2,Yongjia,永嘉,"her wenzhou and yongjia labels both sit on this region (85% Yongjia); reader kept wenzhou, dropped yongjia"
+#ec5c9e,Wenzhou,温州,Lucheng city core; its label sits over the Yongjia region

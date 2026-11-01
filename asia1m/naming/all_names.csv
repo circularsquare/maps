@@ -1,0 +1,2238 @@
+﻿key,country,name,zh,native,lang,source,confidence,notes
+#f7eed0,Bhutan,Drukyul,,,,map,medium,
+#e1eeaa,Cambodia,Serei Saophoan,,,,map,high,
+#e4ecc3,Cambodia,Ngr,,,,map,medium,
+#e4f1a7,Cambodia,Angkor,,,,map,high,
+#d5e4a1,Cambodia,Battambang,,,,map,high,
+#eaf1b6,Cambodia,Stung Sen,,,,map,low,fuzzy match stuengsaen (0.89)
+#d8ecb9,Cambodia,Pursat,,,,map,high,
+#e5ebae,Cambodia,Tbong Khmum,,,,map,low,fuzzy match tboungkhmum (0.95)
+#e0eb95,Cambodia,Kampong Cham,,,,map,high,
+#dce67e,Cambodia,Oudong,,,,map,medium,"from numbered list, key c"
+#dfeeaa,Cambodia,Aural,,,,map,medium,
+#e1ee0b,Cambodia,Phnom Penh,,,,map,high,"placed by list entry a, by label colour"
+#d8e656,Cambodia,Pur Senchey,,,,map,high,"from numbered list, key b"
+#ebe08c,Cambodia,Svay Rieng,,,,map,high,
+#ecee83,Cambodia,Prey Veng,,,,map,high,
+#e7f17a,Cambodia,Bassac,,,,map,medium,
+#def7b7,Cambodia,Kampot,,,,map,high,
+#e3ee95,Cambodia,Takeo,,,,map,high,
+#e0dcee,China,Heihe,黑河,,,map,high,
+#e1e7ee,China,Hulunbuir,呼伦贝尔,,,map,high,
+#d9e2ee,China,Jalantun,扎兰屯,,,map,low,fuzzy match zalantun (0.88)
+#c6ceeb,China,Nehe,讷河,,,map,high,
+#c7c6eb,China,Wuyuri,,,,map,low,
+#f4eef6,China,Altay,阿勒泰,التاي,kazakh,pick,picked,xinjiang-north 1
+#dbd4e9,China,Hegang,鹤岗,,,map,high,
+#e1d6f4,China,Huntong,,,,map,low,
+#a2b2e7,China,Qiqihar,齐齐哈尔,,,map,high,
+#d9e8ee,China,Jialaid,扎赉特,,,map,low,fuzzy match jalaid (0.92)
+#d4c3e9,China,Hulan,呼兰,,,map,medium,GeoNames Hulan He (STM)
+#cebff0,China,Suihua,绥化,,,map,high,
+#c7bff0,China,Qinggang,青冈,,,map,high,
+#c1c3e9,China,Zhalong,扎龙,,,map,medium,name found in neighbour #a2b2e7
+#a89be9,China,Daqing,大庆,,,map,high,"placed by label colour, text off the region"
+#cfbce9,China,Shuangyashan,双鸭山,,,map,high,
+#ccbae3,China,Jiamusi,佳木斯,,,map,high,
+#f2f6e9,China,Gobi,,,,map,low,
+#ddedee,China,Ulanhot,乌兰浩特,,,map,high,
+#c4abe5,China,Bayan,巴彦,,,map,high,
+#e2edf9,China,Tarbagatay,塔尔巴哈台,تارباعاتاي,kazakh,pick,picked,xinjiang-north 2
+#beb4ee,China,Anda,安达,,,map,high,
+#a290e7,China,Songbei,松北,,,map,high,"placed by label colour, text off the region"
+#cdd5eb,China,Zhaozhou,肇州,,,map,high,
+#e2cbeb,China,Qitaihe,七台河,,,map,high,
+#c6c0e5,China,Songhua,松花,,,map,medium,GeoNames Songhua Jiang (STM)
+#7738eb,China,Harbin,哈尔滨,,,map,high,"from numbered list, key a"
+#9b60eb,China,Fujia,,,,map,low,"from numbered list, key d"
+#8368e7,China,Daoli,道里,,,map,high,"from numbered list, key b"
+#7464e0,China,Xiangfang,香坊,,,map,high,"from numbered list, key c"
+#b595e0,China,Acheng,阿城,,,map,high,
+#cde1eb,China,Baicheng,白城,,,map,high,
+#e0c0e9,China,Jiguan,鸡冠,,,map,high,
+#b9bdee,China,Shuangcheng,双城,,,map,high,
+#b4cdeb,China,Songyuan,松原,,,map,high,
+#b4b5e3,China,Wuchang,五常,,,map,high,
+#d6e4f4,China,Bortala,博尔塔拉,博尔塔拉,mongolian (zh used),pick,picked,xinjiang-north 3
+#e2d1e9,China,Ningguta,宁古塔昂邦章京辖,,,map,high,also 宁古塔将军辖
+#d0acde,China,Mudanjiang,牡丹江,,,map,high,"placed by label colour, text off the region"
+#b2c5e5,China,Yushu,榆树,,,map,high,
+#d1e4f1,China,Bogda,博格达,博格达,mongolian (zh used),pick,picked,xinjiang-north 4
+#b3d2f4,China,Nong'an,农安,,,map,high,
+#d8edeb,China,Kailu,开鲁,,,map,high,
+#afc4ee,China,Dehui,德惠,,,map,high,
+#cbe6f9,China,Changji,昌吉,,,pick,picked,xinjiang-north 5
+#c7e4ee,China,Changling,长岭,,,map,high,
+#cfe3f6,China,Shihezi,石河子,,,pick,picked,xinjiang-north 6
+#a1d0f0,China,Kuancheng,宽城,,,map,high,
+#a0c0e0,China,Fengman,丰满,,,map,high,
+#69bded,China,Luyuan,绿园,,,map,high,"from numbered list, key c"
+#e4c4fa,China,Ghulja,伊宁,غۇلجا,uyghur,pick,picked,xinjiang-north 7
+#6bbbf4,China,Shayibake,沙依巴克,,,pick,picked,xinjiang-north 8
+#59a9d7,China,Jingyue,净月,,,map,medium,"from numbered list, key b; name found in neighbour #adcae0"
+#73a3cf,China,Jilin,吉林,,,map,high,"placed by label colour, text off the region"
+#298bf1,China,Shuimogou,水磨沟,,,pick,picked,xinjiang-north 9
+#34afe2,China,Changchun,长春,,,map,high,"from numbered list, key a"
+#a1d9f0,China,Gongzhuling,公主岭,,,map,high,
+#d0ebe7,China,Horqin,科尔沁左翼后,,,map,high,"also 科尔沁右翼中,科尔沁左翼中"
+#f9eaf5,China,Ili,伊犁,ئىلى,uyghur,pick,picked,xinjiang-north 10
+#498eed,China,Ürümqi,乌鲁木齐,ئۈرۈمچى,uyghur,pick,picked,xinjiang-north 11
+#bde9e7,China,Jirim,,,,map,low,
+#adcae0,China,Shuangyang,双阳,,,map,high,
+#a7ecee,China,Siping,四平,,,map,high,
+#d3ddf4,China,Turpan,吐鲁番,تۇرپان,uyghur,pick,picked,xinjiang-north 12
+#daede0,China,Xar Moron,,,,map,low,
+#ece5fa,China,Tekes,特克斯,تەكەس,kazakh,pick,picked,xinjiang-north 13
+#ccd0e7,China,Dunhua,敦化,,,map,high,
+#b5c6e0,China,Huadian,桦甸,,,map,high,
+#add9df,China,Liaoyuan,辽源,,,map,high,
+#e5f0f9,China,Hami,哈密,قۇمۇل,uyghur,pick,picked,xinjiang-north 14
+#c1bae5,China,Yanbian,延边,,,map,high,
+#bceee4,China,Changtu,昌图,,,map,high,
+#cfe9de,China,Liuhe,柳河,,,map,medium,GeoNames Liu He (STM)
+#dfedda,China,Xilingol,锡林郭勒,,,map,high,
+#baebcb,China,Faku,法库,,,map,high,
+#e4e4f6,China,Yanqi,焉耆,قاراشەھەر,uyghur,pick,picked,xinjiang-south 1
+#aaf0cf,China,Tieling,铁岭,,,map,high,
+#bde7c8,China,Chifeng,赤峰,,,map,high,
+#b7e3e0,China,Huifa,辉发,,,map,medium,GeoNames Huifa He (STM)
+#cfe9d3,China,Aohan,敖汉,,,map,high,
+#bdcce2,China,Baishan,白山,,,map,high,
+#92f0b6,China,Shenbei,沈北,,,map,high,unread glyph (?); stray ink between letters ignored
+#b2e3b8,China,Fuxin,阜新,,,map,high,
+#8cdaa7,China,Fushun,抚顺,,,map,high,
+#5af879,China,Yuhong,于洪,,,map,high,"from numbered list, key 6"
+#57f192,China,Huanggu,皇姑,,,map,high,"from numbered list, key 2"
+#57e48d,China,Wanquan,万泉,,,map,high,"from numbered list, key 3"
+#b3eeb4,China,Xinmin,新民,,,map,high,
+#33e950,China,Shenyang,沈阳,,,map,high,"from numbered list, key 1"
+#5fec66,China,Xingshun,兴顺,,,map,high,"from numbered list, key 5"
+#58d16f,China,Hunnan,浑南,,,map,high,"from numbered list, key 4"
+#bae7b0,China,Beizhen,北镇,,,map,high,
+#d9eec6,China,Mulan,,,,map,low,
+#bad8e3,China,Tonghua,通化,,,map,high,
+#c7e7bd,China,Ningcheng,宁城,,,map,high,
+#a4e5b0,China,Dengta,灯塔,,,map,high,
+#e6ccf9,China,Aksu,阿克苏,ئاقسۇ,uyghur,pick,picked,xinjiang-south 2
+#c4e3b6,China,Chaoyang,朝阳,,,map,high,
+#8ae995,China,Liaoyang,辽阳,,,map,high,
+#d4d7f1,China,Korla,库尔勒,كورلا,uyghur,pick,picked,xinjiang-south 3
+#e8d5f6,China,Kucha,库车,كۇچا,uyghur,pick,picked,xinjiang-south 4
+#e4e5ce,China,Bashang,,,,map,low,
+#c4f4a5,China,Liaohe,大辽河,,,map,medium,GeoNames Liao He (STM)
+#bfdece,China,Xingjing,兴京,,,map,high,
+#5de36d,China,Anshan,鞍山,,,map,high,"placed by label colour, text off the region"
+#a2e2af,China,Benxi,本溪,,,map,high,
+#bef28b,China,Panjin,盘锦,,,map,high,"placed by label colour, text off the region"
+#b4f47d,China,Jinzhou,金州,,,map,high,"placed by label colour, text off the region; also 锦州"
+#cee3a1,China,Chengde,承德,,,map,high,
+#d7e7ba,China,Dalinghe,,,,map,low,
+#ebe8c1,China,Bayannur,巴彦淖尔,,,map,high,
+#d7e9a1,China,Pingquan,平泉,,,map,high,
+#8ce297,China,Haicheng,海城,,,map,high,
+#e4e5d6,China,Ulanqab,乌兰察布,,,map,high,
+#c4f28e,China,Huludao,葫芦岛,,,map,high,
+#dcd9c2,China,Xuanhua,宣化,,,map,high,
+#f6f5ea,China,Yinshan,,,,map,low,
+#e8e5c4,China,Urad,乌拉特前,,,map,high,
+#a29b6f,China,Hohhot,呼和浩特,,,map,high,"placed by label colour, text off the region"
+#b4b486,China,Saihan,赛罕,,,map,high,"placed by label colour, text off the region"
+#cac398,China,Zhangjiakou,张家口,,,map,high,"placed by label colour, text off the region"
+#dde5a8,China,Miyun,密云,,,map,high,
+#a7f0ab,China,Dashiqiao,大石桥,,,map,high,
+#dad8b1,China,Tumed,,,,map,low,
+#edddf9,China,Tarim,塔里木,تارىم,uyghur,pick,picked,xinjiang-south 5
+#c5c087,China,Donghe,东河,,,map,high,"placed by label colour, text off the region; other text on region: baotou"
+#96f498,China,Yingkou,营口,,,map,high,"placed by label colour, text off the region"
+#d1f49b,China,Ningyuan,宁远,,,map,high,
+#dfdbbe,China,Badaling,八达岭,,,map,high,
+#d2e791,China,Qinglong,青龙,,,map,high,
+#d8e2af,China,Zunhua,遵化,,,map,high,
+#bee0c2,China,Xiuyan,岫岩,,,map,high,
+#dad098,China,Juyongguan,,,,map,low,"placed by label colour, on an inset"
+#d3da91,China,Pinggu,平谷,,,map,high,
+#b4f6af,China,Bayuquan,鲅鱼圈,,,map,high,
+#dddcc6,China,Yanggao,阳高,,,map,high,
+#e0e593,China,Shunyi,顺义,,,map,high,"placed by label colour, on an inset"
+#e9f4f6,China,Dunhuang,敦煌,,,pick,picked,gansu 1
+#c3bf88,China,Datong,大同,,,map,high,"placed by label colour, text off the region"
+#a0cf99,China,Dandong,丹东,,,map,high,"placed by label colour, text off the region"
+#d4f490,China,Shanhaiguan,山海关,,,map,high,
+#e4ee9f,China,Jizhou,蓟州,,,map,high,
+#dcf490,China,Qian'an,迁安,,,map,high,
+#dfe987,China,Sanhe,三河,,,map,high,"placed by label colour, on an inset"
+#eecd43,China,Haidian,海淀,,,map,high,"from numbered list, key c"
+#f2e345,China,Wangjing,望京,,,map,high,"from numbered list, key d"
+#c5f45f,China,Qinhuangdao,秦皇岛,,,map,high,"placed by label colour, text off the region"
+#eae8d6,China,Jungar,准格尔,,,map,high,
+#f0d407,China,Xicheng,西城,,,map,high,"from numbered list, key b"
+#f0dc07,China,Dongcheng,东城,,,map,high,"from numbered list, key a"
+#eeed51,China,Tonghui,通惠,,,map,medium,"from numbered list, key e; GeoNames Tonghui He (STM)"
+#dcd9b3,China,Sanggan,桑干,,,map,medium,GeoNames Sanggan He (STM)
+#d9e79f,China,Fengrun,丰润,,,map,high,
+#e3d42b,China,Dahongmen,大红门,,,map,high,"from numbered list, key f"
+#aee2ad,China,Zhuanghe,庄河,,,map,high,
+#f0ef8a,China,Xianghe,香河,,,map,high,"placed by label colour, on an inset"
+#edf29d,China,Baodi,宝坻,,,map,high,
+#f0d281,China,Fangshan,房山,,,map,high,"placed by label colour, on an inset"
+#bef6af,China,Wafangdian,瓦房店,,,map,high,"placed by label colour, text off the region"
+#c6dc72,China,Guye,古冶,,,map,high,
+#eaed6f,China,Yizhuang,亦庄,,,map,high,"placed by label colour, on an inset"
+#e8e4c9,China,Yuxian,蔚县,,,map,high,
+#bddc48,China,Tangshan,唐山,,,map,high,"placed by label colour, text off the region"
+#daeea6,China,Luanzhou,滦州,,,map,high,
+#bcebb0,China,Pulandian,普兰店,,,map,high,
+#ede9ce,China,Yixian,易县,,,map,high,
+#e4e0bf,China,Dongsheng,东胜,,,map,high,other text on region: ordos
+#eee59f,China,Zhuozhou,涿州,,,map,high,
+#e9f69c,China,Wuqing,武清,,,map,high,
+#e5f67e,China,Langfang,廊坊,,,map,high,"placed by label colour, on an inset"
+#d2a7f3,China,Kashgar,喀什,قەشقەر,uyghur,pick,picked,xinjiang-south 6
+#d8e790,China,Hangli,昌黎,,,map,low,fuzzy match changli (0.92)
+#e7e4c4,China,Shuozhou,朔州,,,map,high,
+#d5f4f6,China,Jiuquan,酒泉,,,pick,picked,gansu 2
+#d8f29f,China,Ninghe,宁河,,,map,high,
+#ddee99,China,Caofeidian,曹妃甸,,,map,high,
+#dfc6f3,China,Payzawat,伽师,پەيزاۋات,uyghur,pick,picked,xinjiang-south 7
+#f3efa3,China,Baigou,白沟,,,map,high,
+#eade95,China,Gaobeidian,高碑店,,,map,high,
+#dde992,China,Beichen,北辰,,,map,high,"placed by label colour, on an inset"
+#e6eb9b,China,Yongqing,永清,,,map,high,
+#f2d9fc,China,Maralbexi,巴楚,مارالبېشى,uyghur,pick,picked,xinjiang-south 8
+#b4f098,China,Jinzhou,金州,,,map,high,"placed by label colour, text off the region"
+#c9ee56,China,Hongqiao,红桥,,,map,high,"from numbered list, key r"
+#d3f47d,China,Dongli,东丽,,,map,high,"placed by label colour, on an inset"
+#e2eb5d,China,Nankai,南开,,,map,high,"from numbered list, key q"
+#daf431,China,Tianjin,天津,,,map,high,"from numbered list, key p"
+#d4ee4f,China,Dazhigu,大直沽,,,map,high,"from numbered list, key s"
+#e6ed82,China,Yangliuqing,杨柳青,,,map,high,"placed by label colour, on an inset"
+#9eee6a,China,Dalianwan,大连湾,,,map,high,"placed by label colour, text off the region"
+#c9f87d,China,Binhai,滨海,,,map,high,"placed by label colour, on an inset"
+#edec9a,China,Bazhou,霸州,,,map,high,
+#ebe6a4,China,Xushui,徐水,,,map,high,
+#e5e1d2,China,Yanmen,雁门,,,map,high,
+#f1ecf7,China,Taklamakan,塔克拉玛干,تەكلىماكان,uyghur,pick,picked,xinjiang-south 9
+#d8ee83,China,Haihe,海河,,,map,medium,"placed by label colour, on an inset; GeoNames Hai He (STM)"
+#f1eca3,China,Baiyangdian,白洋淀,,,map,medium,GeoNames Baiyang Dian (LK)
+#e6ed9a,China,Wen'an,文安,,,map,high,
+#b1ee6a,China,Xinghai,,,,map,low,"placed by label colour, text off the region"
+#93f036,China,Dalian,大连,,,map,high,"placed by label colour, text off the region"
+#c1f47d,China,Lüshun,,,,map,low,"placed by label colour, text off the region"
+#dbeecb,China,Helanshan,贺兰山,,,pick,picked,ningxia 1
+#e8df62,China,Baoding,保定,,,map,high,"placed by label colour, text off the region"
+#f1f0c4,China,Quyang,曲阳,,,map,high,
+#f0eeb3,China,Tangxian,唐县,,,map,high,
+#e4f89c,China,Jinghai,静海,,,map,high,also 靖海
+#f7e8f4,China,Kizilsu,克孜勒苏,قىزىلسۇ,uyghur,pick,picked,xinjiang-south 10
+#f9f3ab,China,Qingyuan,清苑,,,map,high,
+#e8e3d1,China,Shenmu,神木,,,pick,picked,shaanxi-rest 1
+#eef0aa,China,Renqiu,任丘,,,map,high,
+#f0fac6,China,Qingxian,青县,,,map,high,
+#e2d8c0,China,Guancen,管涔山,,,pick,picked,shanxi-north 7
+#e8f0aa,China,Gaoyang,高阳,,,map,high,also 高阳国
+#c3eb9f,China,Xixia,西夏,,,pick,picked,ningxia 2
+#91da51,China,Yinchuan,银川,,,pick,picked,ningxia 3
+#f0efc4,China,Pingshan,平山,,,map,high,
+#ecf0a4,China,Dingzhou,定州,,,map,high,
+#ddfaf9,China,Qilian,祁连,,,pick,picked,gansu 3
+#eaf0bd,China,Anguo,安国,,,map,high,
+#ddd7bf,China,Xinzhou,忻州,,,map,high,
+#f3fcd1,China,Bohai,渤海,,,map,medium,name found in neighbour #ddfacc
+#ecf7ba,China,Hejian,河间,,,map,high,also 河间国
+#e6ed96,China,Zhengding,正定,,,map,high,"placed by label colour, text off the region"
+#dcf3a1,China,Cangzhou,沧州,,,map,high,unread glyph (?); stray ink between letters ignored
+#ebf3c0,China,Botou,泊头,,,map,high,
+#e8f1b2,China,Wuji,无极,,,map,high,also 毋极
+#e0dbca,China,Yulin,榆林,,,pick,picked,shaanxi-rest 2
+#dde761,China,Shijiazhuang,石家庄,,,map,high,"from numbered list, key a"
+#e9d5f9,China,Yarkand,莎车,يەكەن,uyghur,pick,picked,xinjiang-south 11
+#d1e441,China,Hutuo,滹沱,,,map,medium,"from numbered list, key d; GeoNames Hutuo He (STM)"
+#d0eec2,China,Wuzhong,吴忠,,,pick,picked,ningxia 4
+#e2dbc4,China,Qiushui,湫水河,,,pick,picked,shanxi-north 9
+#d8e720,China,Zhongshan,,,,map,low,"from numbered list, key b"
+#cbdf6f,China,Yuhua,裕华,,,map,high,"from numbered list, key c"
+#e2f6c4,China,Yanshan,盐山,,,map,high,
+#e0f0bd,China,Xinji,辛集,,,map,high,
+#e0ee9d,China,Gaocheng,藁城,,,map,high,"also 槀城,稾城,藳城"
+#e5f4c4,China,Wuqiang,武强,,,map,high,
+#d0be8c,China,Jiancaoping,尖草坪,,,pick,picked,shanxi-north 10
+#edf0c4,China,Jingxing,井陉,,,map,high,
+#e0d3ac,China,Yangquan,阳泉,,,map,high,
+#ddfacc,China,Wudi,无棣,,,map,high,
+#a69460,China,Taiyuan,太原,,,pick,picked,shanxi-north 12
+#c8b484,China,Wanbailin,万柏林,,,pick,picked,shanxi-north 13
+#dde8a9,China,Zhaoxian,赵县,,,map,high,
+#d2facc,China,Huanghekou,黄河口,,,map,high,
+#e0edc3,China,Wuqiao,吴桥,,,map,high,
+#b19d76,China,Xiaodian,小店,,,pick,picked,shanxi-north 14
+#cabe9e,China,Yuci,榆次,,,pick,picked,shanxi-north 15
+#cceea6,China,Hengshui,衡水,,,map,high,
+#dcf3be,China,Leling,乐陵,,,map,high,
+#d0faf8,China,Liangzhou,凉州,,,pick,picked,gansu 4
+#a8f2c4,China,Penglai,蓬莱,,,map,high,"placed by label colour, text off the region"
+#e3f4be,China,Ningjin,宁晋,,,map,high,
+#a8f2b9,China,Longkou,龙口,,,map,high,
+#eae4d3,China,Taihang,太行,,,map,medium,GeoNames Taihang Shanmai (MTS)
+#dfceae,China,Taigu,太谷,,,pick,picked,shanxi-north 17
+#dee5c5,China,Zanhuang,赞皇,,,map,high,
+#cff9b7,China,Binzhou,滨州,,,map,high,
+#84f6cc,China,Yantai,烟台,,,map,high,"placed by label colour, text off the region"
+#e4dabc,China,Fenzhou,汾州,,,pick,picked,shanxi-north 18
+#dbf4a1,China,Dezhou,德州,,,map,high,"placed by label colour, text off the region"
+#dbf3c2,China,Zaoqiang,枣强,,,map,high,also 枣强侯国
+#e8e6d7,China,Jingbian,靖边,,,pick,picked,shaanxi-rest 3
+#a0f0dc,China,Weihai,威海,,,map,high,
+#d8f3be,China,Huimin,惠民,,,map,high,
+#e7f7c3,China,Linyi,临邑,,,map,high,
+#dcf3ba,China,Gucheng,故城,,,map,high,"placed by name match, label drawn in a neighbour's colour"
+#bcfbbd,China,Dongying,东营,,,map,high,
+#ccf6c4,China,Zhongwei,中卫,,,pick,picked,ningxia 5
+#beebc9,China,Qixia,栖霞,,,map,high,
+#e8e4d7,China,Wudinghe,无定河,,,pick,picked,shaanxi-rest 4
+#acebd4,China,Muping,牟平,,,map,high,
+#d6ebb2,China,Julu,巨鹿,,,map,high,
+#c6f3ed,China,Datong,大通,,,pick,picked,qinghai 1
+#d1f6c7,China,Guangrao,广饶,,,map,high,also 广饶侯国
+#e2d5bd,China,Pingyao,平遥,,,pick,picked,shanxi-north 19
+#aaeee9,China,Rongcheng,荣成,,,map,high,
+#ceadeb,China,Hotan,和田,خوتەن,uyghur,pick,picked,xinjiang-south 12
+#dff3d5,China,Haiyuan,海原,,,pick,picked,ningxia 6
+#deedc4,China,Shahe,沙河,,,map,high,
+#beebbf,China,Laizhou,莱州,,,map,high,
+#bdf0c1,China,Zouping,邹平,,,map,high,
+#c9ea90,China,Xingtai,邢台,,,map,high,"placed by label colour, text off the region"
+#d6f1b4,China,Pingxiang,平乡,,,map,high,also 平襄
+#dfd9cc,China,Lüliang,吕梁,,,pick,picked,shanxi-north 20
+#d8f3b6,China,Qinghe,清河,,,map,high,also 清河国
+#b9eedb,China,Kunyu,昆嵛,,,map,medium,"placed by name match, label drawn in a neighbour's colour; GeoNames Kunyu Shan (MTS)"
+#d1f3ba,China,Gaotang,高唐,,,map,high,
+#d3f3be,China,Jiyang,济阳,,,map,high,
+#adf4b0,China,Shouguang,寿光,,,map,high,also 寿光侯国
+#b4f0be,China,Weihe,潍河,,,map,medium,GeoNames Wei He (STM)
+#e7ddbc,China,Lingshi,灵石,,,pick,picked,shanxi-north 21
+#a8ebb5,China,Shoucun,周村,,,map,low,fuzzy match zhoucun (0.86)
+#c9f3f1,China,Baiyin,白银,,,pick,picked,gansu 5
+#b9eee0,China,Haiyang,海阳,,,map,high,
+#cdeeb4,China,Qihe,齐河,,,map,high,
+#acf0ba,China,Linzi,临淄,,,map,high,
+#b6ebd5,China,Wulong,五龙,,,map,medium,GeoNames Wulong He (STM)
+#efe2f9,China,Karakash,,قاراقاش,uyghur,map,low,
+#6aea83,China,Zibo,淄博,,,map,high,"placed by label colour, text off the region"
+#c9f1a9,China,Linqing,临清,,,map,high,
+#d5f1a6,China,Yongnian,永年,,,map,high,
+#d8f3b5,China,Quzhou,曲周,,,map,high,
+#a0f06b,China,Luokou,泺口,,,map,high,"from numbered list, key 3"
+#70dd75,China,Weifang,潍坊,,,map,high,"placed by label colour, text off the region"
+#93ed9a,China,Licheng,历城,,,map,high,"from numbered list, key 4"
+#d1f1f7,China,Yongdeng,永登,,,pick,picked,gansu 6
+#b8eec8,China,Qingzhou,青州,,,map,high,
+#a9e7ae,China,Zhangqiu,章丘,,,map,high,
+#b6ebc8,China,Dagu,大沽,,,map,medium,GeoNames Dagu He (STM)
+#dee5c1,China,Wuan,武安,,,map,high,
+#a0eaa3,China,Changle,昌乐,,,map,high,
+#84ed3f,China,Lixia,历下,,,map,high,"from numbered list, key 2"
+#f4f5ef,China,Qaidam,柴达木,ཚྭ་འདམ་,tibetan,pick,picked,qinghai 2
+#80eb58,China,Jinan,济南,,,map,high,"placed by list entry 1, by label colour"
+#63e2e2,China,Xining,西宁,,,pick,picked,qinghai 3
+#e2d8c5,China,Xiangyuan,襄垣,,,pick,picked,shanxi-south 1
+#ccea6f,China,Handan,邯郸,,,map,high,"placed by label colour, text off the region"
+#b7f199,China,Zhangqing,长清,,,map,high,"placed by label colour, text off the region"
+#dff1a6,China,Fu?yang,滏阳,,,map,low,unread glyph (?); GeoNames Fuyang He (STM)
+#ebe5d2,China,Yan'an,延安,,,pick,picked,shaanxi-rest 5
+#adf0f0,China,Huangzhong,湟中,,,pick,picked,qinghai 4
+#d2eeae,China,Guanxian,冠县,,,map,high,
+#b6e7bf,China,Zouping,邹平,,,map,medium,name found in neighbour #a8ebb5
+#ccf0ba,China,Chiping,茌平,,,map,high,
+#9ef4e1,China,Jimo,即墨,,,map,high,
+#ddee9e,China,Feixiang,肥乡,,,map,high,
+#b4ee96,China,Liaocheng,聊城,,,map,high,
+#e4ebb0,China,Cizhou,磁州,,,map,high,also 礠州
+#b6eec1,China,Anqiu,安丘,,,map,high,also 安丘侯国
+#b6eecb,China,Gaomi,高密,,,map,high,also 高密侯国
+#c8ebb5,China,Taishan,泰山,,,map,medium,GeoNames Taishan (MT)
+#f1e7d1,China,Huozhou,霍州,,,pick,picked,shanxi-south 2
+#e9eed0,China,Huanxian,环县,,,pick,picked,gansu 7
+#a6e0bd,China,Laiwu,莱芜,,,map,high,
+#88f0bb,China,Chengyang,城阳,,,map,high,"from numbered list, key d"
+#c3eed0,China,Linqu,临朐,,,map,high,
+#aaeec4,China,Jiaozhou,胶州,,,map,high,"from numbered list, key e"
+#d7edac,China,Daming,大名,,,map,high,
+#dbeb9e,China,Weixian,魏县,,,map,high,
+#e5dcca,China,Huguan,壶关,,,pick,picked,shanxi-south 3
+#94e5d4,China,Licang,李沧,,,map,high,"from numbered list, key c"
+#8de799,China,Taian,泰安,,,map,high,"placed by label colour, text off the region"
+#eace93,China,Linfen,临汾,,,pick,picked,shanxi-south 4
+#d7c49e,China,Changzhi,长治,,,pick,picked,shanxi-south 5
+#d4ebb9,China,Shenxian,莘县,,,map,high,
+#e0eda6,China,Yindu,殷都,,,map,high,
+#ccf3e7,China,Hehuang,河湟,,,pick,picked,qinghai 5
+#7adaf1,China,Xigu,西固,,,pick,picked,gansu 8
+#7ce9d1,China,Fushan,浮山,,,map,medium,"from numbered list, key b; GeoNames Fushan Wan (BAY)"
+#ede2cc,China,Hejin,河津,,,pick,picked,shanxi-south 6
+#d6eb77,China,Anyang,安阳,,,map,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored; also 安阳侯国"
+#5bd7f4,China,Jincheng,金城,,,pick,picked,gansu 9
+#c3e8ad,China,Yanggu,阳谷,,,map,high,
+#a8eaa7,China,Feicheng,肥城,,,map,high,
+#3cf0b5,China,Qingdao,青岛,,,map,high,"placed by list entry a, by label colour"
+#b0eab8,China,Daiyue,岱岳,,,map,high,
+#b8e4cc,China,Yiyuan,沂源,,,map,high,
+#12bced,China,Lanzhou,兰州,,,pick,picked,gansu 10
+#acedcb,China,Zhucheng,诸城,,,map,high,
+#f3edda,China,Luochuan,洛川,,,pick,picked,shaanxi-rest 6
+#9cf8bb,China,Huangdao,黄岛,,,map,high,"placed by label colour, text off the region"
+#dadfb5,China,Linzhou,林州,,,map,high,
+#eddcb7,China,Taosi,陶寺,,,pick,picked,shanxi-south 7
+#e4f1b1,China,Qingfeng,清丰,,,map,high,
+#c4eeaf,China,Dongping,东平,,,map,high,also 东平国
+#a0e5ae,China,Xintai,新泰,,,map,high,
+#dde8aa,China,Tangyin,汤阴,,,map,high,
+#d1f1eb,China,Huining,会宁,,,pick,picked,gansu 11
+#cbf1cb,China,Guyuan,固原,,,pick,picked,ningxia 7
+#a2f6d4,China,Jiaonan,胶南,,,map,high,
+#beeeaf,China,Wenshang,汶上,,,map,high,
+#d2ea79,China,Puyang,濮阳,,,map,high,"placed by label colour, text off the region"
+#9ee0c0,China,Yishui,沂水,,,map,high,
+#bfeede,China,Lintao,临洮,,,pick,picked,gansu 12
+#d9edae,China,Fanxian,范县,,,map,high,
+#b0e4d9,China,Juzhou,莒州,,,map,high,
+#e4d8c0,China,Gaoping,高平,,,pick,picked,shanxi-south 8
+#bdedd5,China,Mengshan,,,,map,low,
+#a6eba0,China,Qufu,曲阜,,,map,high,
+#e6eaa3,China,Hebi,鹤壁,,,pick,picked,henan-north 8
+#e7f1b1,China,Daokou,道口,,,map,medium,"name found in neighbour #f1eea6@114.5,35.4"
+#c1edae,China,Nanwang,南旺,,,map,high,
+#a6f1b7,China,Linxia,临夏,,,pick,picked,gansu 13
+#f1e0be,China,Yicheng,翼城,,,pick,picked,shanxi-south 9
+#cbedae,China,Yuncheng,郓城,,,map,high,
+#eeeebf,China,Qingyang,庆阳,,,pick,picked,gansu 14
+#a4ebb3,China,Sihe,泗河,,,map,high,
+#bdeede,China,Wulian,五莲,,,map,high,other text on region: shuhe
+#e2e4a0,China,Huixian,辉县,,,map,high,
+#c0f3cc,China,Dongxiang,东乡,,,pick,picked,gansu 15
+#8bf2d0,China,Rizhao,日照,,,map,high,"placed by label colour, text off the region"
+#e0eeab,China,Juancheng,鄄城,,,map,high,
+#d4ccb2,China,Jincheng,晋城,,,pick,picked,shanxi-south 10
+#9ded96,China,Jining,济宁,,,map,high,"placed by label colour, text off the region"
+"#f1eea6@114.5,35.4",China,Huaxian,滑县,,,pick,picked,henan-north 20
+#f0e5c4,China,Hancheng,韩城,,,pick,picked,shaanxi-rest 7
+#c3f1bf,China,Zoucheng,邹城,,,map,high,
+"#e4ea85@114.1,35.4",China,Weihui,卫辉,,,pick,picked,henan-north 21
+#c6f0b4,China,Jiaxiang,嘉祥,,,map,high,
+#e4eed5,China,Pingliang,平凉,,,pick,picked,gansu 16
+#abebc7,China,Benghe,,,,map,low,
+#e4de6c,China,Xinxiang,新乡,,,pick,picked,henan-north 11
+#ebe4b9,China,Zhongtiao,中条,,,pick,picked,shanxi-south 11
+#cce8d9,China,Liupan,六盘山,,,pick,picked,gansu 17
+#d7d982,China,Jiaozuo,焦作,,,pick,picked,henan-north 12
+#d5eb81,China,Heze,菏泽,,,map,high,"placed by label colour, text off the region"
+#cfedae,China,Juye,巨野,,,map,high,
+#98eabb,China,Yimeng,,,,map,low,
+#bfeec9,China,Shanting,山亭,,,map,high,
+#eef1b4,China,Dongming,东明,,,map,high,
+#f0eda8,China,Changyuan,长垣,,,pick,picked,henan-north 13
+#ddd893,China,Huaiqing,怀庆,,,pick,picked,henan-north 14
+#ebeec8,China,Binzhou,邠州,,,pick,picked,shaanxi-xian 1
+#f1e9b9,China,Puzhou,蒲州,,,pick,picked,shanxi-south 12
+#96eaa8,China,Tengzhou,滕州,,,map,high,
+#7beab5,China,Linyi,临邑,,,map,high,"placed by label colour, text off the region; also 临沂"
+#f0eeb4,China,Fengqiu,封丘,,,pick,picked,henan-north 16
+#e8e084,China,Yuanyang,原阳,,,pick,picked,henan-north 17
+#f0e7b3,China,Jiyuan,济源,,,pick,picked,henan-north 18
+#ebe09c,China,Yuncheng,运城,,,pick,picked,shanxi-south 13
+#d2f4bb,China,Jinxiang,金乡,,,map,high,
+#e4f0ab,China,Dingtao,定陶,,,map,high,also 定陶国
+#abf1d8,China,Linshu,临沭,,,map,high,
+#e8e4ad,China,Tongchuan,铜川,,,pick,picked,shaanxi-rest 8
+#bdf0c4,China,Weishan,微山,,,map,high,
+#ebe6a5,China,Wuzhi,武陟,,,pick,picked,henan-north 19
+#d0eee8,China,Gangu,甘谷,,,pick,picked,gansu 18
+#ebf3e6,China,Amdo,安多,ཨ་མདོ་,tibetan,pick,picked,qinghai 6
+#e8dead,China,Pucheng,蒲城,,,pick,picked,shaanxi-rest 9
+#f0edab,China,Lankao,兰考,,,pick,picked,henan-zhengzhou 1
+#a7eed8,China,Luozhuang,罗庄,,,map,high,
+#acede1,China,Ganyu,赣榆,,,map,high,
+#daf0e9,China,Longxi,陇西,,,pick,picked,gansu 19
+#dcc66d,China,Huiji,惠济,,,pick,picked,henan-zhengzhou 2
+#b7eddc,China,Lanling,兰陵,,,map,high,
+#9ce8b2,China,Zaozhuang,枣庄,,,map,high,"placed by label colour, text off the region"
+#ebe059,China,Jinshui,金水,,,pick,picked,henan-zhengzhou 3
+#eddcb3,China,Mianchi,渑池,,,pick,picked,henan-west 1
+#e4d55b,China,Kaifeng,开封,,,pick,picked,henan-zhengzhou 4
+#eaf0ab,China,Cao,曹,,,map,medium,
+#e7da75,China,Zhongmu,中牟,,,pick,picked,henan-zhengzhou 5
+#edd08c,China,Mengjin,孟津,,,pick,picked,henan-west 2
+#eddf9a,China,Xingyang,荥阳,,,pick,picked,henan-zhengzhou 6
+#dac900,China,Zhengzhou,郑州,,,pick,picked,henan-zhengzhou 7
+#d4e5ce,China,Longxian,陇县,,,pick,picked,gansu 20
+#d9bb00,China,Zhongyuan,中原,,,pick,picked,henan-zhengzhou 8
+#e6f0bb,China,Shanxian,单县,,,map,high,
+#d9cd3c,China,Guancheng,管城回族,,,pick,picked,henan-zhengzhou 9
+#e5c854,China,Jialu,贾鲁河,,,pick,picked,henan-zhengzhou 10
+#f1dcb1,China,Sanmenxia,三门峡,,,pick,picked,henan-west 3
+#abf1e4,China,Tancheng,郯城,,,map,high,
+#c2f4bb,China,Peixian,沛县,,,map,high,
+#d1eebd,China,Fengxian,丰县,,,map,high,
+#f3edbb,China,Huashan,华山,,,pick,picked,shaanxi-rest 10
+#e6ebb2,China,Minquan,民权,,,pick,picked,henan-east 2
+#e7c65c,China,Erqi,二七,,,pick,picked,henan-zhengzhou 11
+#bfedcd,China,Taierzhuang,台儿庄,,,map,high,
+#f0b885,China,Luoyang,洛阳,,,pick,picked,henan-west 4
+#f1dba8,China,Gongyi,巩义,,,pick,picked,henan-west 5
+#f0e4ab,China,Tongxu,通许,,,pick,picked,henan-zhengzhou 12
+#f0ea99,China,Jingyang,泾阳,,,pick,picked,shaanxi-xian 2
+#ebda88,China,Sanyuan,三原,,,pick,picked,shaanxi-xian 3
+#eaf0b0,China,Liquan,礼泉,,,pick,picked,shaanxi-xian 4
+#eab876,China,Longmen,龙门,,,pick,picked,henan-west 6
+#dae5ab,China,Fengxiang,凤翔,,,pick,picked,shaanxi-rest 11
+#91ecee,China,Haizhou,海州,,,map,high,
+#aeeee9,China,Donghai,东海,,,map,medium,fuzzy match donghai (0.86); read as oonghai
+#ead89f,China,Weishi,尉氏,,,pick,picked,henan-zhengzhou 13
+#f6eeb1,China,Qixian,杞县,,,pick,picked,henan-zhengzhou 14
+#f7eec4,China,Fenglingdu,风陵渡,,,pick,picked,henan-west 24
+#bfe7da,China,Tianshui,天水,,,pick,picked,gansu 21
+#eee299,China,Weinan,渭南,,,pick,picked,shaanxi-rest 12
+#e7d075,China,Xinzheng,新郑,,,pick,picked,henan-zhengzhou 15
+#e8d792,China,Xinmi,新密,,,pick,picked,henan-zhengzhou 16
+#acedd0,China,Pizhou,邳州,,,map,high,
+#baf2f4,China,Lianyun,连云,,,map,high,
+#d5edbe,China,Jiawang,贾汪,,,map,high,
+"#e4ea85@115.7,34.4",China,Shangqiu,商丘,,,pick,picked,henan-east 16
+#e7f0c2,China,Dangshan,砀山,,,map,high,
+"#f1eea6@115.3,34.4",China,Ningling,宁陵,,,pick,picked,henan-east 17
+#e0e8a3,China,Yucheng,虞城,,,pick,picked,henan-east 3
+#e8eeb5,China,Zhouyuan,周原,,,pick,picked,shaanxi-rest 13
+#f0dd6b,China,Lintong,临潼,,,pick,picked,shaanxi-xian 5
+#faf06b,China,Jianzhang,建章,,,pick,picked,shaanxi-xian 6
+#eaddb2,China,Songshan,嵩山,,,pick,picked,henan-zhengzhou 17
+#e2ee84,China,Baoji,宝鸡,,,pick,picked,shaanxi-rest 14
+#e5f060,China,Xianyang,咸阳,,,pick,picked,shaanxi-xian 7
+#ebee29,China,Weiyang,未央,,,pick,picked,shaanxi-xian 8
+#ebf389,China,Xingping,兴平,,,pick,picked,shaanxi-xian 9
+#c8e87f,China,Pengcheng,彭城,,,map,high,"placed by label colour, text off the region; also 彭城国"
+#f0dccf,China,Xiong'er,熊耳,,,pick,picked,henan-west 7
+#bbe422,China,Zaoyuan,枣园,,,pick,picked,shaanxi-xian 10
+#bbf0ec,China,Luoma,,,,map,low,
+#dee200,China,Xi'an,西安,,,pick,picked,shaanxi-xian 11
+#e8dc43,China,Qujiang,曲江,,,pick,picked,shaanxi-xian 12
+#ead696,China,Changge,长葛,,,pick,picked,henan-zhengzhou 18
+#cce030,China,Xiaozhai,小寨,,,pick,picked,shaanxi-xian 13
+#d3e56e,China,Xuzhou,徐州,,,map,high,"placed by label colour, text off the region"
+#eed6b5,China,Yichuan,伊川,,,pick,picked,henan-west 8
+#dceec8,China,Gupi,古邳,,,map,high,
+#baeef4,China,Xiangshui,响水,,,map,high,
+#e5edac,China,Xiayi,夏邑,,,map,high,also 下邑
+#e3f085,China,Fenghao,丰镐,,,pick,picked,shaanxi-xian 14
+#e6eeb4,China,Xiao,萧,,,map,medium,
+#ebea9c,China,Zhecheng,柘城,,,pick,picked,henan-east 5
+#d7e859,China,Chang'an,长安,,,pick,picked,shaanxi-xian 15
+#9be9e9,China,Shuyang,沭阳,,,map,high,
+#e7dfb2,China,Fugou,扶沟,,,pick,picked,henan-east 6
+#ebdbbf,China,Ruzhou,汝州,,,pick,picked,henan-west 9
+#f0e6a8,China,Taikang,太康,,,pick,picked,henan-east 7
+#b2e5e5,China,Guanhe,关河,,,map,medium,GeoNames Guan He (STMC)
+#e4ebe5,China,Lixian,礼县,,,pick,picked,gansu 22
+#ead89d,China,Yuzhou,禹州,,,pick,picked,henan-zhengzhou 19
+#ede696,China,Lantian,蓝田,,,pick,picked,shaanxi-xian 16
+#e5c585,China,Xuchang,许昌,,,pick,picked,henan-zhengzhou 20
+#f1e4c6,China,Shangluo,商洛,,,pick,picked,shaanxi-rest 15
+#ebf0aa,China,Zhouzhi,周至,,,pick,picked,shaanxi-xian 17
+#e7edbc,China,Yongcheng,永城,,,map,high,
+#f1d6c4,China,Funiu,伏牛,,,pick,picked,henan-west 10
+#dfe497,China,Huaibei,淮北,,,map,high,
+#e5e8e3,China,Chengxian,成县,,,pick,picked,gansu 23
+#e7e6ae,China,Luyi,鹿邑,,,pick,picked,henan-east 9
+#e5d19a,China,Linying,临颍,,,pick,picked,henan-zhengzhou 21
+#ebd0a3,China,Baofeng,宝丰,,,pick,picked,henan-west 11
+#d9eac9,China,Suining,睢宁,,,map,high,
+#c6e8d4,China,Suqian,宿迁,,,map,high,
+#f4e1ac,China,Huaiyang,淮阳,,,pick,picked,henan-east 10
+#b4d7ee,China,Lianshui,涟水,,,map,high,
+#b6dada,China,Siyang,泗阳,,,map,high,
+#ede7a1,China,Bozhou,亳州,,,map,high,
+#e9edce,China,Bianhe,汴河,,,map,medium,name found in neighbour #e3ebab
+#bae9f4,China,Sheyang,射阳,,,map,high,
+#e8d7b4,China,Xiangcheng,襄城,,,pick,picked,henan-zhengzhou 22
+#f1e0af,China,Xihua,西华,,,pick,picked,henan-east 11
+#e7c07d,China,Pingdingshan,平顶山,,,pick,picked,henan-west 12
+#b3cfe9,China,Funing,阜宁,,,map,high,
+#eae7ae,China,Suixi,濉溪,,,map,high,
+#e3ebab,China,Suzhou,宿州,,,map,high,
+#ead9ba,China,Lushan,鲁山,,,pick,picked,henan-west 13
+#edd79b,China,Dancheng,郸城,,,pick,picked,henan-east 12
+#b6ccda,China,Huaiyin,淮阴,,,map,high,
+#f9e7dc,China,Yangxian,洋县,,,pick,picked,shaanxi-rest 16
+#eed092,China,Zhoukou,周口,,,pick,picked,henan-east 13
+#eacf9a,China,Luohe,漯河,,,pick,picked,henan-zhengzhou 23
+#8fb0d8,China,Huaian,淮安,,,map,high,"placed by label colour, text off the region"
+#e9edc3,China,Sixian,泗县,,,map,high,
+#f1d3ac,China,Yexian,叶县,,,pick,picked,henan-west 14
+#ebe1b5,China,Guohe,,,,map,low,
+#f3d3c8,China,Danjiang,丹江,,,pick,picked,henan-west 15
+#e0dccf,China,Sihong,泗洪,,,map,high,
+#f7e7d6,China,Shanyang,山阳,,,pick,picked,shaanxi-rest 17
+#f4dc98,China,Xiangcheng,项城,,,pick,picked,henan-east 14
+#ede8bf,China,Kuaihe,,,,map,low,
+#9ec7e7,China,Yancheng,盐城,,,map,high,
+#ebd7c4,China,Nanzhao,南召,,,pick,picked,henan-west 16
+#eed9b3,China,Shangshui,商水,,,pick,picked,henan-south 1
+#bcc8e0,China,Jianhu,建湖,,,map,high,
+#edd9ba,China,Shangcai,上蔡,,,pick,picked,henan-south 2
+#f0d6aa,China,Taihe,太和,,,pick,picked,anhui-west 1
+#f4d398,China,Shenqiu,沈丘,,,pick,picked,henan-east 15
+#bdbdd8,China,Hongze,洪泽,,,map,high,
+#ebcfa4,China,Jieshou,界首,,,pick,picked,anhui-west 2
+#ede2c3,China,Wuhe,五河,,,map,high,
+#b8e7f8,China,Dafeng,大丰,,,map,high,
+#eed8b5,China,Mengcheng,蒙城,,,map,high,
+#ead4ae,China,Lixin,利辛,,,map,high,
+#f0d8b9,China,Chayashan,嵖岈山,,,pick,picked,henan-south 3
+#f7f9ee,China,Qamdo,昌都,ཆབ་མདོ་,tibetan,pick,picked,qinghai 7
+#f7e5dc,China,Mianxian,勉县,,,pick,picked,shaanxi-rest 18
+#e5bd93,China,Zhumadian,驻马店,,,pick,picked,henan-south 4
+#f3d7c8,China,Neixiang,内乡,,,pick,picked,henan-west 17
+#f9faf6,China,Tsang,藏,གཙང་,tibetan,pick,picked,xizang 1
+#fad4c0,China,Hanzhong,汉中,,,pick,picked,shaanxi-rest 19
+#f1d1b4,China,Zhenping,镇平,,,pick,picked,henan-west 18
+#eedab1,China,Pingyu,平舆,,,pick,picked,henan-south 5
+#f0d1b1,China,Sheqi,社旗,,,pick,picked,henan-west 19
+#f4a065,China,Nanyang,南阳,,,pick,picked,henan-west 20
+#eed5c1,China,Huaiyuan,怀远,,,map,high,
+#ebc99a,China,Linquan,临泉,,,pick,picked,anhui-west 3
+#c6b4e7,China,Gaoyou,高邮,,,map,high,"placed by label colour, text off the region"
+#b9c3e7,China,Xinghua,兴化,,,map,high,
+#f6cfaf,China,Yingquan,颍泉,,,pick,picked,anhui-west 4
+#d3c0cf,China,Xuyi,盱眙,,,map,high,
+#e5b496,China,Bengbu,蚌埠,,,map,high,"placed by label colour, text off the region"
+#f3b889,China,Fuyang,阜阳,,,pick,picked,anhui-west 5
+#fceae1,China,Xixiang,西乡,,,pick,picked,shaanxi-rest 20
+#f7dcd3,China,Yunyang,郧阳,,,pick,picked,hubei-west 1
+#f1ebe7,China,Bailong,白龙江,,,pick,picked,gansu 24
+#ebd1b5,China,Runan,汝南,,,pick,picked,henan-south 6
+#ebd5d1,China,Fengyang,凤阳,,,map,high,
+#fadece,China,Ankang,安康,,,pick,picked,shaanxi-rest 21
+#f0d5c4,China,Fengtai,凤台,,,pick,picked,anhui-west 17
+#ebcaaf,China,Funan,阜南,,,pick,picked,anhui-west 6
+#eed2b1,China,Xincai,新蔡,,,pick,picked,henan-south 7
+#bcddf0,China,Dongtai,东台,,,map,high,
+"#edc3b7@116.8,32.7",China,Bagongshan,八公山,,,map,high,
+#f0ccb5,China,Xinye,新野,,,pick,picked,henan-west 21
+#edd4bd,China,Tongbai,桐柏,,,pick,picked,henan-south 8
+#f1d1ba,China,Dengzhou,邓州,,,pick,picked,henan-west 22
+#eecbaf,China,Yingshang,颍上,,,pick,picked,anhui-west 7
+#f3cabb,China,Shiyan,十堰,,,pick,picked,hubei-west 2
+#f1cbb0,China,Tanghe,唐河,,,pick,picked,henan-west 23
+#edb7a7,China,Huainan,淮南,,,map,high,
+#a2c6ed,China,Hai'an,海安,,,map,high,
+#97a6da,China,Taizhou,泰州,,,map,high,
+#e7b9bf,China,Tianchang,天长,,,map,high,
+#ebcdcb,China,Dingyuan,定远,,,map,high,
+#eedfc7,China,Queshan,确山,,,pick,picked,henan-south 9
+#f1d4ba,China,Huaibin,淮滨,,,pick,picked,henan-south 10
+#eedcc7,China,Xi,息县,,,pick,picked,henan-south 11
+#c29ec9,China,Jiangdu,江都,,,map,high,
+#f7e4d6,China,Xunyang,旬阳,,,pick,picked,shaanxi-rest 22
+#e1a7bb,China,Yizheng,仪征,,,map,high,
+#f6d1c4,China,Wudang,武当,,,pick,picked,hubei-west 3
+#c887a6,China,Yangzhou,扬州,,,map,high,"placed by label colour, text off the region"
+#b8dcf8,China,Juegang,掘港,,,map,high,
+#e7b2a3,China,Chuzhou,滁州,,,map,high,
+#f0d8d1,China,Micang,米仓山,,,pick,picked,sichuan-north 1
+#a2b8ed,China,Rugao,如皋,,,map,high,
+#bda9e7,China,Taixing,泰兴,,,map,high,
+#f3ddd1,China,Huoqiu,霍邱,,,map,high,
+#edf4e9,China,Ngawa,阿坝,རྔ་བ་,tibetan,pick,picked,sichuan-west 1
+#edc4bf,China,Guangyuan,广元,,,pick,picked,sichuan-north 2
+#e18cad,China,Jingkou,京口,,,map,high,
+#df8680,China,Laoshan,老山,,,map,high,"from numbered list, key d"
+#edcbbe,China,Xiangzhou,襄州,,,pick,picked,hubei-west 4
+#f0ddd1,China,Tongjiang,通江,,,pick,picked,sichuan-north 3
+#f1d9c2,China,Gushi,固始,,,pick,picked,henan-south 12
+#adbcf9,China,Shigang,石港,,,map,high,
+#e4626b,China,Qixia,栖霞,,,map,high,"from numbered list, key e"
+#f4e3d6,China,Zhushan,竹山,,,pick,picked,hubei-west 5
+#f0cdc3,China,Changfeng,长丰,,,map,high,
+#eaa790,China,Fancheng,樊城,,,pick,picked,hubei-west 6
+#d73125,China,Nanjing,南京,,,map,high,"from numbered list, key a"
+#adaef9,China,Jingjiang,靖江,,,map,high,
+#f08f9c,China,Zhenjiang,镇江,,,map,high,
+#eecfbc,China,Huangchuan,潢川,,,pick,picked,henan-south 13
+#f6c9bc,China,Quanjiao,全椒,,,map,high,also 全椒侯国
+#df5248,China,Xuanwu,玄武,,,map,high,"from numbered list, key b"
+#f0d1cd,China,Zaoyang,枣阳,,,pick,picked,hubei-west 7
+#81a5f4,China,Nantong,南通,,,map,high,"from numbered list, key n"
+#e8cab5,China,Xinyang,信阳,,,pick,picked,henan-south 14
+#e46b62,China,Jianye,建邺,,,map,high,"from numbered list, key c"
+#e69acd,China,Danyang,丹阳,,,map,high,
+#9fc0f8,China,Haimen,海门,,,map,high,
+#e6777e,China,Jiangning,江宁,,,map,high,"from numbered list, key f"
+#9fbaf8,China,Jinsha,金沙,,,map,high,"from numbered list, key o"
+#e496ed,China,Xinbei,新北,,,map,high,"placed by label colour, text off the region"
+#e09a83,China,Hefei,合肥,,,pick,picked,hefei-core 1
+#edae95,China,Yaohai,瑶海,,,pick,picked,hefei-core 2
+#b88fe8,China,Shazhou,,,,map,low,"placed by label colour, on an inset"
+#a6caff,China,Qidong,启东,,,map,high,
+#f0d7c6,China,Luoshan,罗山,,,pick,picked,henan-south 15
+#c387e9,China,Jiangyin,江阴,,,map,high,"placed by label colour, on an inset"
+#eec7cc,China,Jianmen,剑门,,,pick,picked,sichuan-north 4
+#edbaaf,China,Pukou,浦口,,,map,high,
+#edd5c8,China,Pihe,淠河,,,pick,picked,anhui-west 9
+#d69677,China,Shushan,蜀山,,,pick,picked,hefei-core 3
+#ab8fe8,China,Haiyu,海虞,,,map,high,"placed by label colour, on an inset"
+#d67558,China,Baohe,包河,,,pick,picked,hefei-core 4
+#de73eb,China,Changzhou,常州,,,map,high,"from numbered list, key k"
+#c894e1,China,Hengshan,横山,,,map,medium,"from numbered list, key m; GeoNames Hengshan Dao (ISL)"
+#e8beb5,China,Bazhong,巴中,,,pick,picked,sichuan-north 5
+#ebc5b9,China,Xiangyang,襄阳,,,pick,picked,hubei-west 8
+#f0dcd0,China,Jingshan,荆山,,,pick,picked,hubei-west 9
+#eba792,China,Binhu,滨湖,,,pick,picked,hefei-core 5
+#edb0e1,China,Maoshan,茅山,,,map,high,
+#dca492,China,Shangpai,上派,,,pick,picked,hefei-core 6
+#e7bbaf,China,Lu'an,六安,,,pick,picked,anhui-west 10
+#8a7ce4,China,Changshu,常熟,,,map,high,"placed by label colour, on an inset"
+#f3bdad,China,Chaohu,巢湖,,,map,high,
+#b67fd8,China,Huishan,惠山,,,map,high,"placed by label colour, on an inset"
+#cd8ad5,China,Wujin,武进,,,map,high,"from numbered list, key l"
+#af7bd0,China,Xishan,锡山,,,map,high,"placed by label colour, on an inset"
+#e4d1cf,China,Guangshui,广水,,,pick,picked,hubei-east 1
+#ebcdcd,China,Suizhou,随州,,,pick,picked,hubei-east 2
+#f0a3a6,China,Jiangyou,江油,,,pick,picked,sichuan-north 6
+#a151d3,China,Wuxi,无锡,,,map,high,"placed by label colour, on an inset; also 无锡侯国"
+#f3ded2,China,Jinzhai,金寨,,,pick,picked,henan-south 16
+#eed1c6,China,Pingchang,平昌,,,pick,picked,sichuan-north 7
+#83bdfa,China,Chongming,崇明,,,map,high,
+#e49991,China,Dangtu,当涂,,,map,high,
+#9c82d3,China,Yangcheng,阳澄湖,,,map,low,"placed by label colour, on an inset; fuzzy match yangchenghu (0.90)"
+#8990df,China,Taicang,太仓,,,map,high,"placed by label colour, on an inset"
+#f1e0c9,China,Daba,大巴山,,,pick,picked,chongqing 1
+#f4bcbe,China,Anzhou,安州,,,pick,picked,sichuan-north 8
+#a87fdf,China,Xinwu,,,,map,low,"placed by label colour, on an inset"
+#b975e4,China,Binhu,滨湖,,,map,high,"placed by label colour, on an inset"
+#eeceb6,China,Xuanhan,宣汉,,,pick,picked,sichuan-north 9
+#e6a7c5,China,Gaochun,高淳,,,map,high,
+#f9c0c2,China,Yilong,仪陇,,,pick,picked,sichuan-north 10
+#f37276,China,Mianyang,绵阳,,,pick,picked,sichuan-north 11
+#7a80c6,China,Kunshan,昆山,,,map,high,"placed by label colour, on an inset"
+#6d7edf,China,Jiading,嘉定,,,map,high,"placed by label colour, on an inset"
+#f7cdc1,China,Lujiang,庐江,,,map,high,
+#f9b4bd,China,Langzhong,阆中,,,pick,picked,sichuan-north 12
+#997ce2,China,Xiangcheng,相城,,,map,high,"placed by label colour, on an inset"
+#e9a5d5,China,Liyang,溧阳,,,map,high,also 溧阳侯国
+#ee7951,China,Wuhu,芜湖,,,map,high,"placed by label colour, text off the region"
+#deabe6,China,Yixing,宜兴,,,map,high,also 义兴
+#eed7d1,China,Shucheng,舒城,,,pick,picked,anhui-west 11
+#f4bebc,China,Mianzhu,绵竹,,,pick,picked,sichuan-chengdu 1
+#eec2bb,China,Wuwei,无为,,,map,high,
+#7a4fe4,China,Suzhou,苏州,,,map,high,"placed by label colour, on an inset"
+#8478d3,China,Dushu,,,,map,low,"placed by label colour, on an inset"
+#3c8fe6,China,Yangpu,杨浦,,,map,high,"from numbered list, key f"
+#2a78e6,China,Hongkou,虹口,,,map,high,"from numbered list, key e"
+#f6d4b4,China,Kaizhou,开州,,,pick,picked,chongqing 2
+#eacbc8,China,Hong'an,红安,,,pick,picked,hubei-east 3
+#7684d0,China,Qiandeng,千灯,,,map,high,"placed by label colour, on an inset"
+#2065d8,China,Jing'an,静安,,,map,high,"from numbered list, key d"
+#f3c9d0,China,Anlu,安陆,,,pick,picked,hubei-east 4
+#4164d8,China,Putuo,普陀,,,map,high,"from numbered list, key c"
+#6b7cd7,China,Qingpu,青浦,,,map,high,"placed by label colour, on an inset"
+#8f6aeb,China,Mudu,木渎,,,map,high,"placed by label colour, on an inset"
+#f0a987,China,Dazhou,达州,,,pick,picked,sichuan-north 13
+#0086ff,China,Huangpu,黄浦,,,map,high,"from numbered list, key a; other text on region: shanghai"
+#ead9d2,China,Sanxia,三峡,,,pick,picked,hubei-west 10
+#ead7d4,China,Jingshan,京山,,,pick,picked,hubei-central 1
+#ed8e80,China,Wanzhi,湾沚,,,map,high,
+#3468df,China,Xuhui,徐汇,,,map,high,"from numbered list, key b"
+#eacbc3,China,Macheng,麻城,,,pick,picked,hubei-east 5
+#edcab9,China,Dachuan,达川,,,pick,picked,sichuan-north 14
+#f09092,China,Deyang,德阳,,,pick,picked,sichuan-chengdu 2
+#9779e1,China,Wuzhong,吴中,,,map,high,"placed by label colour, on an inset"
+#f3b0ba,China,Santai,三台,,,pick,picked,sichuan-north 15
+#f7c3cc,China,Yanting,盐亭,,,pick,picked,sichuan-north 16
+#827fdc,China,Songling,,,,map,low,"placed by label colour, on an inset"
+#f9c2c0,China,Peng'an,蓬安,,,pick,picked,sichuan-north 17
+#f4c5bc,China,Dujiangyan,都江堰,,,pick,picked,sichuan-chengdu 3
+#f3d1b9,China,Zongyang,枞阳,,,pick,picked,anhui-west 12
+#7fc5f5,China,Nanhui,南汇,,,map,high,"placed by label colour, on an inset"
+#ebb6b1,China,Nanling,南陵,,,map,high,
+#e4a9bf,China,Langchuan,郎川,,,map,medium,GeoNames Langchuan He (STM)
+#e89d9d,China,Pengzhou,彭州,,,pick,picked,sichuan-chengdu 4
+#eec7b4,China,Quxian,渠县,,,pick,picked,sichuan-north 18
+#ebc1c3,China,Xiaogan,孝感,,,pick,picked,hubei-east 6
+#8c96da,China,Jiashan,嘉善,,,map,high,"placed by label colour, on an inset"
+#79afe8,China,Fengxian,奉贤,,,map,high,"placed by label colour, on an inset"
+#f9a0a2,China,Guanghan,广汉,,,pick,picked,sichuan-chengdu 5
+#ede4b9,China,Kuizhou,夔州,,,pick,picked,chongqing 3
+#ab93e8,China,Shengze,盛泽,,,map,high,
+#edd0cb,China,Zhongxiang,钟祥,,,pick,picked,hubei-central 2
+#bf94e9,China,Huzhou,湖州,,,map,high,"placed by label colour, on an inset"
+#f7ceb8,China,Tongcheng,桐城,,,pick,picked,anhui-west 13
+#f4d7d0,China,Dabie,大别山,,,pick,picked,hubei-east 7
+#f3e0b5,China,Yunyang,云阳,,,pick,picked,chongqing 4
+#eac7cc,China,Yunmeng,云梦,,,pick,picked,hubei-east 8
+#f1b8b8,China,Zhongjiang,中江,,,pick,picked,sichuan-chengdu 6
+#7997e8,China,Jinshan,金山,,,map,high,"placed by label colour, on an inset"
+#ea988c,China,Pixian,郫县,,,pick,picked,sichuan-chengdu 7
+#e5b3a2,China,Tongling,铜陵,,,map,high,
+#f3ce8b,China,Wanzhou,万州,,,pick,picked,chongqing 5
+#edc0b8,China,Gaoping,高坪,,,pick,picked,sichuan-north 19
+#eb8471,China,Nanchong,南充,,,pick,picked,sichuan-north 20
+#f68989,China,Xindu,新都,,,pick,picked,sichuan-chengdu 8
+"#edc3b7@114.6,30.8",China,Xinzhou,新洲,,,pick,picked,hubei-wuhan 1
+#ed7766,China,Xipu,犀浦,,,pick,picked,sichuan-chengdu 9
+#9d7fd8,China,Jiaxing,嘉兴,,,map,high,"placed by label colour, on an inset"
+#d5b3df,China,Anji,安吉,,,map,high,
+#f0cbad,China,Dazhu,大竹,,,pick,picked,sichuan-north 21
+#f1b9b9,China,Panlong,盘龙城,,,pick,picked,hubei-wuhan 2
+#c2a8e8,China,Nanxun,南浔,,,map,high,
+#e7c1ba,China,Jingmen,荆门,,,pick,picked,hubei-central 3
+#eaa28c,China,Wenjiang,温江,,,pick,picked,sichuan-chengdu 10
+#f15740,China,Jinniu,金牛,,,pick,picked,sichuan-chengdu 11
+#f6dfb4,China,Liangping,梁平,,,pick,picked,chongqing 6
+#dc9c90,China,Yichang,宜昌,,,pick,picked,hubei-west 11
+#eeafa9,China,Shehong,射洪,,,pick,picked,sichuan-south 1
+#f35e5e,China,Chenghua,成华,,,pick,picked,sichuan-chengdu 12
+#fadccc,China,Tianzhushan,天柱山,,,pick,picked,anhui-west 14
+#f36d59,China,Qingyang,青羊,,,pick,picked,sichuan-chengdu 13
+#ab9fe1,China,Pinghu,平湖,,,map,high,
+#dcead3,China,Jianshi,建始,,,pick,picked,hubei-west 12
+#e7beb7,China,Dangyang,当阳,,,pick,picked,hubei-west 13
+#f0c4c9,China,Tianmen,天门,,,pick,picked,hubei-central 4
+#f03420,China,Chengdu,成都,,,pick,picked,sichuan-chengdu 14
+#f99090,China,Jiang'an,江岸,,,pick,picked,hubei-wuhan 3
+#eab8c6,China,Xuancheng,宣城,,,map,high,
+#eea3a3,China,Qiaokou,硚口,,,pick,picked,hubei-wuhan 4
+#c390df,China,Tongxiang,桐乡,,,map,high,
+#f04e2f,China,Wuhou,武侯,,,pick,picked,sichuan-chengdu 15
+#f6a589,China,Qingshan,青山,,,pick,picked,hubei-wuhan 5
+#eda695,China,Longquanyi,龙泉驿,,,pick,picked,sichuan-chengdu 16
+#f37b59,China,Tianfu,天府,,,pick,picked,sichuan-chengdu 17
+#f1b6a6,China,Chongzhou,崇州,,,pick,picked,sichuan-chengdu 18
+#ea7958,China,Liulichang,琉璃场,,,pick,picked,sichuan-chengdu 19
+#f06969,China,Hankou,汉口,,,pick,picked,hubei-wuhan 6
+#f1b7a9,China,Yuechi,岳池,,,pick,picked,sichuan-north 22
+#f0957a,China,Shuangliu,双流,,,pick,picked,sichuan-chengdu 20
+#f1bfb8,China,Jintang,金堂,,,pick,picked,sichuan-chengdu 21
+#f3cdc4,China,Xishui,浠水,,,pick,picked,hubei-east 9
+#f4d5aa,China,Anqing,安庆,,,pick,picked,anhui-west 15
+#eeb4a9,China,Suining,遂宁,,,pick,picked,sichuan-south 2
+#edb7c5,China,Hanchuan,汉川,,,pick,picked,hubei-east 10
+#e7744d,China,Wuchang,武昌,,,pick,picked,hubei-wuhan 7
+#ea9696,China,Hanyang,汉阳,,,pick,picked,hubei-wuhan 8
+#ea8e74,China,Huayang,华阳,,,pick,picked,sichuan-chengdu 22
+#eea37a,China,East Lake,东湖,,,pick,picked,hubei-wuhan 9
+#f0dab3,China,Zhongxian,忠县,,,pick,picked,chongqing 7
+#ce84e8,China,Yunhe,运河,,,map,high,"placed by label colour, on an inset"
+#edb69c,China,Guang'an,广安,,,pick,picked,sichuan-north 23
+#ebb2a4,China,Ezhou,鄂州,,,pick,picked,hubei-wuhan 10
+#c48cd8,China,Mogan,莫干,,,map,medium,GeoNames Mogan Shan (MTS)
+#f39381,China,Hongshan,洪山,,,pick,picked,hubei-wuhan 11
+#c197e9,China,Haining,海宁,,,map,high,
+#edb7ba,China,Caidian,蔡甸,,,pick,picked,hubei-wuhan 12
+#c371e1,China,Banshan,半山,,,map,high,"from numbered list, key x"
+#e79e91,China,Tangxun,汤逊湖,,,pick,picked,hubei-wuhan 13
+#f4cdba,China,Qionglai,邛崃,,,pick,picked,sichuan-chengdu 23
+#f9f8ee,China,Nagqu,那曲,ནག་ཆུ་,tibetan,pick,picked,xizang 2
+#deedd0,China,Qingjiang,清江,,,pick,picked,hubei-west 14
+#f1b9a6,China,Xinjin,新津,,,pick,picked,sichuan-chengdu 24
+#dfe5ce,China,Chihou,池州,,,map,low,fuzzy match chizhou (0.92)
+#f7bfbf,China,Qianjiang,潜江,,,pick,picked,hubei-central 5
+#f0aa9d,China,Jingzhou,荆州,,,pick,picked,hubei-central 6
+#eab3a3,China,Jianyang,简阳,,,pick,picked,sichuan-south 3
+#d67ae8,China,Qiantang,钱塘,,,map,medium,"from numbered list, key y; GeoNames Qiantang Jiang (STM)"
+#c945e0,China,Zhaohui,朝晖,,,map,medium,"from numbered list, key u; name found in neighbour #e24adb"
+#f1c2ce,China,Xiantao,仙桃,,,pick,picked,hubei-central 7
+#f4c6b3,China,Wusheng,武胜,,,pick,picked,sichuan-north 24
+#c566d3,China,Xixi,西溪,,,map,medium,"from numbered list, key w; GeoNames Xixi Jiang (STM)"
+#f3d4c4,China,Qichun,蕲春,,,pick,picked,hubei-east 11
+#eacb9d,China,Huangshi,黄石,,,pick,picked,hubei-east 12
+#f1c7bf,China,Anju,安居,,,pick,picked,sichuan-south 4
+#eed3cd,China,Jiangxia,江夏,,,pick,picked,hubei-wuhan 14
+#e24adb,China,Hangzhou,杭州,,,map,high,"from numbered list, key t"
+#eb9cea,China,Guali,瓜沥,,,map,high,"placed by label colour, on an inset"
+#c8e5c5,China,Shizhu,石柱,,,pick,picked,hubei-west 15
+#cde2e9,China,Huangshan,黄山,,,map,high,
+#b6a9f6,China,Guanhaiwei,观海卫,,,map,high,
+#e67ed7,China,Binjiang,滨江,,,map,high,"from numbered list, key v"
+#f4e2c2,China,Wangjiang,望江,,,pick,picked,anhui-west 16
+#a99bee,China,Cixi,慈溪,,,map,high,
+#df86df,China,Xiaoshan,萧山,,,map,high,"placed by label colour, on an inset"
+#f3b09a,China,Ziyang,资阳,,,pick,picked,sichuan-south 5
+#f3d8cb,China,Yaan,雅安,,,pick,picked,sichuan-west 2
+#f1c3a6,China,Meishan,眉山,,,pick,picked,sichuan-south 6
+#d9b2da,China,Tianmu,天目,,,map,medium,GeoNames Tianmu Shan (MTS)
+#bee5ba,China,Enshi,恩施,,,pick,picked,hubei-west 16
+#9a9efc,China,Zhoushan,舟山,,,map,high,"placed by label colour, text off the region"
+#f0c8a3,China,Hechuan,合川,,,pick,picked,chongqing 8
+#f0d8db,China,Songzi,松滋,,,pick,picked,hubei-central 8
+#f3cda1,China,Linshui,邻水,,,pick,picked,sichuan-north 25
+#e8ddbe,China,Daye,大冶,,,pick,picked,hubei-wuhan 15
+#ba9bee,China,Yuyao,余姚,,,map,high,
+#ca87d8,China,Keqiao,柯桥,,,map,high,"placed by label colour, on an inset"
+#f4d69f,China,Changshou,长寿,,,pick,picked,chongqing 9
+#d896ee,China,Shaoxing,绍兴,,,map,high,"placed by label colour, on an inset"
+#edcaae,China,Huangmei,黄梅,,,pick,picked,hubei-east 13
+#f0c7ca,China,Gong'an,公安,,,pick,picked,hubei-central 9
+#989beb,China,Zhenhai,镇海,,,map,high,
+#eed6da,China,Honghu,洪湖,,,pick,picked,hubei-central 10
+#e4abd7,China,Fuchun,富春,,,map,high,
+#d5b1ee,China,Cao'e,曹娥,,,map,high,
+#f4bba0,China,Anyue,安岳,,,pick,picked,sichuan-south 7
+#eabea3,China,Renshou,仁寿,,,pick,picked,sichuan-south 8
+#eebec6,China,Jianli,监利,,,pick,picked,hubei-central 11
+#cea7d6,China,Zhuji,诸暨,,,map,high,
+#7e6feb,China,Yongjiang,甬江,,,map,high,"from numbered list, key z"
+#936feb,China,Ningbo,宁波,,,map,high,"placed by label colour, on an inset"
+#f3cab7,China,Qingyi,青衣,,,pick,picked,sichuan-south 9
+#f3bda4,China,Zizhong,资中,,,pick,picked,sichuan-south 10
+#e5f1d0,China,Yangxin,阳新,,,pick,picked,hubei-wuhan 16
+#b9a5f5,China,Beilun,北仑,,,map,high,
+#c6eece,China,Xianning,咸宁,,,map,high,
+#b9e2f0,China,Huizhou,徽州,,,map,high,
+#edc8a6,China,Tongliang,铜梁,,,pick,picked,chongqing 10
+#ebb285,China,Beibei,北碚,,,pick,picked,chongqing 11
+#e8c7d3,China,Lizhou,澧州,,,pick,picked,hunan-north 1
+#f0f4e6,China,Kham,康区,ཁམས་,tibetan,pick,picked,sichuan-west 3
+#def0d5,China,Cili,慈利,,,pick,picked,hunan-west 1
+#e7cb97,China,Fuling,涪陵,,,pick,picked,chongqing 12
+#eae7be,China,Ruichang,瑞昌,,,map,high,
+#bc89ee,China,Yinzhou,鄞州,,,map,high,"placed by label colour, text off the region"
+#f6b47f,China,Yubei,渝北,,,pick,picked,chongqing 13
+#f3f4e3,China,Lhasa,拉萨,ལྷ་ས་,tibetan,pick,picked,xizang 3
+#ebddb5,China,Fengdu,丰都,,,pick,picked,chongqing 14
+#e4de96,China,Jiujiang,九江,,,map,high,also 九江亭
+#ee9750,China,Jialing,嘉陵江,,,pick,picked,chongqing 15
+#f0ac8c,China,Leshan,乐山,,,pick,picked,sichuan-south 11
+#cbeed8,China,Linxiang,临湘,,,map,high,
+#d4eecf,China,Duchang,都昌,,,map,high,
+#f38825,China,Jiangbei,江北,,,pick,picked,chongqing 16
+#c3cfea,China,Xin'an,新定,,,map,high,also 新安
+#f9c697,China,Dazu,大足,,,pick,picked,chongqing 17
+#c8e8cb,China,Wuling,武陵山,,,pick,picked,chongqing 18
+#dab1e2,China,Pujiang,浦江,,,map,high,
+#f0cbdf,China,Huarong,华容,,,pick,picked,hunan-north 3
+#f0af91,China,Neijiang,内江,,,pick,picked,sichuan-south 12
+#ea8b51,China,Shapingba,沙坪坝,,,pick,picked,chongqing 19
+#cdade0,China,Shengzhou,嵊州,,,map,high,
+#ee7709,China,Chongqing,重庆,,,pick,picked,chongqing 20
+#eda56b,China,Bishan,璧山,,,pick,picked,chongqing 21
+#eea139,China,Nan'an,南岸,,,pick,picked,chongqing 22
+#b8ebe6,China,Jingdezhen,景德镇,,,map,high,
+#dac0f5,China,Ninghai,宁海,,,map,high,
+#eebc9d,China,Rongxian,荣县,,,pick,picked,sichuan-south 13
+#f0a263,China,Jiulongpo,九龙坡,,,pick,picked,chongqing 23
+#cbf4db,China,Tongshan,通山,,,map,high,
+#f0cbd9,China,Anxiang,安乡,,,pick,picked,hunan-north 4
+#f4be9c,China,Rongchang,荣昌,,,pick,picked,chongqing 24
+#edd6cb,China,Dadu,大渡,,,pick,picked,sichuan-south 14
+#eebc65,China,Banan,巴南,,,pick,picked,chongqing 25
+#bd8ae2,China,Yiwu,义乌,,,map,high,
+#d6f0d5,China,Zhangjiajie,张家界,,,pick,picked,hunan-west 2
+#f1caab,China,Qianwei,犍为,,,pick,picked,sichuan-south 15
+#eeb281,China,Zigong,自贡,,,pick,picked,sichuan-south 16
+#f7dfb2,China,Jinfo,金佛山,,,pick,picked,chongqing 26
+#eec996,China,Yongchuan,永川,,,pick,picked,chongqing 27
+#d5eedc,China,Youshui,酉水,,,pick,picked,hunan-west 3
+#eebc78,China,Jiangjin,江津,,,pick,picked,chongqing 28
+#a7dad9,China,Yueyang,岳阳,,,map,high,"placed by label colour, text off the region"
+#c9eaee,China,Wuyuan,婺源,,,map,high,
+#e1a1e4,China,Dongyang,东阳,,,map,high,
+#ebb9fc,China,Sanmen,三门,,,map,high,"placed by label colour, text off the region"
+#ce9ae9,China,Choujiang,稠江,,,map,high,"placed by label colour, text off the region"
+#cbf4cc,China,Lushan,庐山,,,map,medium,GeoNames Lu Shan (MTS)
+#d791e6,China,Jinhua,金华,,,map,high,
+#daf3e0,China,Xiushui,修水,,,map,high,
+#e7c297,China,Fushun,富顺,,,pick,picked,sichuan-south 17
+#edd0f4,China,Dongting,洞庭,,,pick,picked,hunan-north 6
+#b3f9cc,China,Poyang,鄱阳,,,map,high,also 番阳
+#d7a5e2,China,Lanxi,兰溪,,,map,high,
+#bad7e8,China,Miluo,汨罗,,,map,high,
+#f3ca9a,China,Luxian,泸县,,,pick,picked,sichuan-south 18
+#f0b6c0,China,Changde,常德,,,pick,picked,hunan-north 8
+#bcb5e7,China,Qiantang,钱塘,,,map,medium,GeoNames Qiantang Jiang (STM)
+#c3a5e2,China,Quzhou,衢州,,,map,high,
+#d5e5cf,China,Pengshui,彭水,,,pick,picked,guizhou-north 1
+#f7d79b,China,Qijiang,綦江,,,pick,picked,chongqing 29
+#eed5a7,China,Simian,四面山,,,pick,picked,chongqing 30
+#eeb877,China,Luzhou,泸州,,,pick,picked,sichuan-south 19
+#eec6d9,China,Hanshou,汉寿,,,pick,picked,hunan-north 9
+#d4a8d6,China,Tiantai,天台,,,map,high,
+#f0cfac,China,Xuzhou,叙州,,,pick,picked,sichuan-south 20
+#a8f1ab,China,Meiling,梅岭,,,map,high,
+#d9aae9,China,Linhai,临海,,,map,high,
+#e4b3dc,China,Jinyun,缙云,,,map,high,
+#e2dbe2,China,Taoyuan,桃源,,,pick,picked,hunan-north 10
+#b8f0cc,China,Leping,乐平,,,map,high,
+#e29dd7,China,Yongkang,永康,,,map,high,
+#dbf0e5,China,Yongshun,永顺,,,pick,picked,hunan-west 4
+#bce7cf,China,Pingjiang,平江,,,map,high,
+#f0bb74,China,Yibin,宜宾,,,pick,picked,sichuan-south 21
+#c8fcd4,China,Yugan,余干,,,map,high,also 余汗
+#e7ddc7,China,Yuexi,越西,ꃺꄧꑤ,yi,pick,picked,sichuan-west 4
+#e5d097,China,Hejiang,合江,,,pick,picked,sichuan-south 22
+#60f06a,China,Qingshanhu,青山湖,,,map,high,"from numbered list, key b"
+#34e239,China,Nanchang,南昌,,,map,high,"from numbered list, key a"
+#80ed84,China,Honggutan,,,,map,low,"from numbered list, key c"
+#c4e4c7,China,Xiushan,秀山,,,pick,picked,chongqing 31
+#cab3fd,China,Yiyang,益阳,,,pick,picked,hunan-north 12
+#edce8d,China,Changning,长宁,,,pick,picked,sichuan-south 23
+#b8b5e7,China,Huaiyu,怀玉,,,map,high,
+#e67ce0,China,Taizhou,台州,,,map,high,"placed by label colour, text off the region"
+#d0f0d1,China,Jiuling,九岭,,,map,medium,GeoNames Jiuling Xi (STM)
+#96f19d,China,Liantang,莲塘,,,map,high,
+#eb9be7,China,Huang,黄,,,map,medium,GeoNames Huangshan (MTS)
+#c1b4fc,China,Xiangyin,湘阴,,,pick,picked,hunan-north 13
+#c1b4f1,China,Taojiang,桃江,,,pick,picked,hunan-north 14
+#b4ade8,China,Shangrao,上饶,,,map,high,
+#f88ff4,China,Wenling,温岭,,,map,high,"placed by label colour, text off the region"
+#baf3c4,China,Jinxian,进贤,,,map,high,
+#eeecb6,China,Furongjiang,芙蓉江,,,pick,picked,guizhou-north 2
+#eba9e2,China,Yongjia,永嘉,,,fix,fixed,"her wenzhou and yongjia labels both sit on this region (85% Yongjia); reader kept wenzhou, dropped yongjia"
+#c1aaf3,China,Ningxiang,宁乡,,,pick,picked,hunan-changsha 1
+#f6a6e6,China,Hongqiao,虹桥,,,map,high,
+#f1e8ac,China,Tongzi,桐梓,,,pick,picked,guizhou-north 3
+#b7e4c4,China,Yingtan,鹰潭,,,map,high,
+#ceede3,China,Yuanling,沅陵,,,pick,picked,hunan-west 5
+#d1c8f1,China,Anhua,安化,,,pick,picked,hunan-north 15
+#e9afd8,China,Lishui,丽水,,,map,high,
+#c5c1ea,China,Laodao,捞刀河,,,pick,picked,hunan-changsha 2
+#bac0e8,China,Guangfeng,广丰,,,map,high,
+#c7e0ce,China,Dejiang,德江,,,pick,picked,guizhou-north 4
+#ffaefc,China,Yuhuan,玉环,,,map,high,"placed by label colour, text off the region"
+#e8e8d1,China,Yalong,雅砻江,,,pick,picked,sichuan-west 5
+#c6edb9,China,Gao'an,高安,,,map,high,
+#6d6aee,China,Xingsha,星沙,,,pick,picked,hunan-changsha 3
+#ad8ef3,China,Wangcheng,望城,,,pick,picked,hunan-changsha 4
+#c6e2d7,China,Xinjiang,信江,,,map,medium,GeoNames Xinjiang (STM)
+#6546ed,China,Changsha,长沙,,,pick,picked,hunan-changsha 5
+#c4ead5,China,Liuyang,浏阳,,,map,medium,unread glyph (?); unread glyph filled from liuyang
+#eedab0,China,Nanguang,南广,,,pick,picked,sichuan-south 24
+#aa6af3,China,Yuelu,岳麓,,,pick,picked,hunan-changsha 7
+#f0e7b4,China,Gulin,古蔺,,,pick,picked,sichuan-south 25
+#eee5c2,China,Xingwen,兴文,,,pick,picked,sichuan-south 26
+#ebe1bf,China,Hengjiang,横江,,,pick,picked,yunnan-zhaotong 1
+#826aee,China,Yuhua,雨花,,,pick,picked,hunan-changsha 8
+#dfbde0,China,Longquan,龙泉,,,map,high,
+#bdeec5,China,Fengcheng,丰城,,,map,high,
+#c8edc6,China,Wanzai,万载,,,map,high,
+#a0e8ad,China,Fuzhou,抚州,,,map,high,
+#9c75f4,China,Tianxin,天心,,,pick,picked,hunan-changsha 9
+#ff87e6,China,Liushi,柳市,,,map,high,
+#e490b7,China,Ouhai,瓯海,,,map,high,
+#d7c3f4,China,Shaoshan,韶山,,,pick,picked,hunan-changsha 10
+#ec5c9e,China,Wenzhou,温州,,,fix,fixed,Lucheng city core; its label sits over the Yongjia region
+#c9e8d8,China,Fenghuang,凤凰,,,pick,picked,hunan-west 6
+#c4ebcf,China,Jinxi,金溪,,,map,high,
+#ff80ba,China,Longwan,龙湾,,,fix,fixed,reader swapped Longwan and Rui'an; this region is 74% Longwan
+#b59af1,China,Xiangtan,湘潭,,,pick,picked,hunan-changsha 11
+#d8affa,China,Meishan,梅山,,,pick,picked,hunan-north 16
+#a49af1,China,Zhuzhou,株洲,,,pick,picked,hunan-changsha 12
+#d3bcf2,China,Xupu,溆浦,,,map,high,
+#e7e5c7,China,Liangshan,凉山,ꆃꎭ,yi,pick,picked,sichuan-west 6
+#bce7b1,China,Xinyu,新余,,,map,high,"also 新喻,新渝"
+#ddebb9,China,Maotai,茅台,,,pick,picked,guizhou-north 5
+#e67cad,China,Rui'an,瑞安,,,fix,fixed,reader swapped Longwan and Rui'an; this region is 97% Rui'an
+#bdedb5,China,Zhangshu,樟树,,,map,high,
+#c9e8de,China,Tongren,铜仁,,,pick,picked,guizhou-north 6
+#c299f3,China,Loudi,娄底,,,pick,picked,manual 0
+#9fdfb2,China,Pingxiang,萍乡,,,map,high,
+#cda6fc,China,Lianyuan,涟源,,,pick,picked,hunan-north 17
+#c7e0d7,China,Sinan,思南,,,pick,picked,guizhou-north 7
+#c6e575,China,Zunyi,遵义,,,map,high,"placed by label colour, text off the region"
+#c6b1f6,China,Lukou,渌口,,,pick,picked,hunan-changsha 13
+#f1eabe,China,Yiliang,彝良,,,pick,picked,yunnan-zhaotong 2
+#e9b2c0,China,Feiyun,飞云,,,map,high,
+#b0ddbe,China,Liling,醴陵,,,map,high,
+#f0a3c7,China,Aojiang,鳌江,,,fix,fixed,"reader dropped this label (stacked under rui'an); region is 82% Pingyang, where Aojiang town is"
+#b1e7b6,China,Yichun,宜春,,,map,high,also 宜春侯国
+#bface8,China,Huaihua,怀化,,,map,high,
+#d2b7f8,China,Xiangxiang,湘乡,,,pick,picked,hunan-changsha 15
+#e4e0a5,China,Xichang,西昌,,,pick,picked,sichuan-west 7
+#f18d9e,China,Cangnan,苍南,,,map,high,"placed by label colour, text off the region"
+#d6ebba,China,Bozhou,播州,,,pick,picked,guizhou-north 9
+#edf3c0,China,Mangbu,芒部,,,pick,picked,yunnan-zhaotong 3
+#dcc3b1,China,Jianyang,建阳,,,map,high,
+#cdb1f5,China,Shuangfeng,双峰,,,pick,picked,hunan-north 18
+#dbf0ac,China,Bijie,毕节,,,pick,picked,guizhou-north 10
+#d7eec7,China,Meitan,湄潭,,,pick,picked,guizhou-north 11
+#f0e3b9,China,Ludian,鲁甸,,,pick,picked,yunnan-zhaotong 4
+#ebe3a1,China,Zhaotong,昭通,,,pick,picked,yunnan-zhaotong 5
+#c1b4f5,China,Longhui,隆回,,,map,high,
+#ddeec3,China,Dafang,大方,,,pick,picked,guizhou-north 12
+#c6ebb0,China,Ji'an,吉安,,,map,high,
+#dfc8ad,China,Wuyishan,武夷山,,,map,high,
+#f5afac,China,Fuding,福鼎,,,map,high,
+#b891ff,China,Shaoyang,邵阳,,,map,high,
+#d1f0cc,China,Enjiang,恩江,,,map,high,
+#c6affc,China,Baoqing,宝庆,,,map,medium,name found in neighbour #b891ff
+#c7e1da,China,Hongjiang,洪江,,,map,high,
+#b5e6b8,China,Youshui,攸水,,,map,high,
+#ceb1fc,China,Shaoshui,砂石,,,map,low,fuzzy match shashi (0.86)
+#e8f3c0,China,Hezhang,赫章,,,pick,picked,guizhou-north 13
+#c2a9ff,China,Hengshan,衡山,,,map,high,
+#d2edb8,China,Qianxi,黔西,,,pick,picked,guizhou-north 14
+#f7c2b4,China,Xiapu,霞浦,,,map,high,
+#d2e9c2,China,Xujiang,盱江,,,map,high,
+#c9e8ce,China,Jinggang,井冈,,,map,medium,GeoNames Jinggang Shan (MT)
+#c0a2f7,China,Zhengshui,,,,map,low,
+#c3dee6,China,Wuyang,舞阳,,,map,medium,name found in neighbour #c6d4d8
+#c3b8ed,China,Dongkou,洞口,,,map,high,
+#ceedb8,China,Xiuwen,修文,,,map,high,
+#f0f1be,China,Caohai,草海,,,pick,picked,guizhou-north 15
+#c6d4d8,China,Zhenyuan,镇远,,,map,high,
+#b47dff,China,Hengyang,衡阳,,,map,high,"placed by label colour, text off the region"
+#f0b597,China,Ningde,宁德,,,map,high,
+#d9eecb,China,Taihe,泰和,,,map,high,also 太和
+#ddf3c0,China,Nayong,纳雍,,,pick,picked,guizhou-north 16
+#e2d5c0,China,Chenghai,程海,,,map,high,
+#ebdac9,China,Nujiang,怒江,,,map,high,
+#f2d5a9,China,Panzhihua,攀枝花,,,map,high,
+#cfb3fa,China,Qishan,,,,map,low,
+#e9e0c0,China,Lijiang,丽江,,,map,high,
+#e6d7c0,China,Huili,会理,,,map,high,
+#bcacf3,China,Qingquan,清泉,,,map,medium,name found in neighbour #b47dff
+#abee6c,China,Baiyun,白云,,,map,high,"from numbered list, key e"
+#dfc19f,China,Yanping,延平,,,map,high,
+#cdf8aa,China,Shuicheng,水城,,,map,high,
+#f3c0ac,China,Lianjiang,连江,,,map,high,
+#77e942,China,Yunyan,云岩,,,map,high,"from numbered list, key a"
+#cee8bd,China,Zhijin,织金,,,map,high,
+#bdddc2,China,Chaling,茶陵,,,map,high,also 茶陵侯国
+#95ee6c,China,Guanshan?nu?,观山湖,,,map,low,"unread glyph (?); from numbered list, key d; fuzzy match guanshanhu (0.90)"
+#d8aeff,China,Lengshuitan,冷水滩,,,map,high,
+#d0bbf2,China,Wugang,武冈,,,map,high,also 武刚
+#c2edae,China,Nanming,南明,,,map,high,"from numbered list, key c; other text on region: hong / feng"
+#e8f2ae,China,Ningdu,宁都,,,map,high,
+#c8e1de,China,Jingzhou,靖州,,,map,high,
+#c6e8d2,China,Fuquan,福泉,,,map,high,
+#f5edb4,China,Huize,会泽,,,map,high,
+#7fe152,China,Huaxi,花溪,,,map,high,"from numbered list, key b"
+#bdccd0,China,Kaili,凯里,,,map,high,
+#accdd5,China,Leiyang,耒阳,,,map,high,also 洡阳
+#ebeea4,China,Xingguo,兴国,,,map,high,
+#cfa4f3,China,Changning,常宁,,,map,high,
+#e1eebd,China,Suichuan,遂川,,,map,high,
+#dbeead,China,Xuanwei,宣威,,,map,high,
+#d4eec3,China,Liuzhi,六枝,,,map,high,
+#c8f3ab,China,Anshun,安顺,,,map,high,
+#d8b1f2,China,Lingling,零陵,,,map,high,
+#dac191,China,Sanming,三明,,,map,high,
+#b5dfd0,China,Beishui,波水,,,map,medium,fuzzy match beishui (0.86); read as leishui
+#ed8e4c,China,Jin'an,晋安,,,map,high,"placed by label colour, text off the region"
+#edebb5,China,Tingzhou,汀州,,,map,high,
+#f2741c,China,Fuzhou,福州,,,map,high,"placed by label colour, text off the region"
+#eec1a2,China,Houguan,侯官,,,map,high,
+#f5af7e,China,Changle,长乐,,,map,high,"placed by label colour, text off the region"
+#ed9d4c,China,Cangshan,仓山,,,map,high,"placed by label colour, text off the region"
+#bcd9e8,China,Liping,黎平,,,map,high,
+#ddd598,China,Dali,大理,,,map,high,also 大釐赕
+#e1c58f,China,Daiyun,戴云,,,map,medium,GeoNames Daiyun Shan (MT)
+#f0b688,China,Wulongjiang,,,,map,low,"placed by label colour, text off the region"
+#eee3b2,China,Dongchuan,东川,,,map,high,
+#d6dc59,China,Ganzhou,赣州,,,map,high,"placed by label colour, text off the region"
+#dfd6bb,China,Yuanmou,元谋,,,map,high,
+#d1b3f5,China,Guiyang,桂阳,,,map,high,
+#dab8f3,China,Quanzhou,全州,,,map,high,
+#b5d5dc,China,Zhenning,镇宁,,,map,high,
+#e8eb9e,China,Yudu,于都,,,map,high,also 雩都
+#bdd3e1,China,Huishui,惠水,,,map,high,
+#bad2d7,China,Chenzhou,郴州,,,map,high,
+#dceba8,China,Shengjing,,,,map,low,
+#e1e8c3,China,Zhuguang,诸广,,,map,medium,GeoNames Zhuguang Shan (MTS)
+#dfe284,China,Nankang,南康,,,map,high,
+#daf0bf,China,Panzhou,盘州,,,map,high,
+#b5c9dd,China,Dushan,独山,,,map,high,
+#f5f3a0,China,Ruijin,瑞金,,,map,high,
+#c3e6df,China,Pu'an,普安,,,map,high,
+#f2c189,China,Fuqing,福清,,,map,high,
+#fcb184,China,Haitan,平潭,,,map,medium,"placed by label colour, text off the region; GeoNames Haitan Dao (ISL)"
+#d0a8e9,China,Jiuyi,九疑亭,,,map,high,
+#cfee83,China,Qujing,曲靖,,,map,high,
+#f3c637,China,Putian,莆田,,,map,high,"placed by label colour, text off the region"
+#f2d289,China,Xianyou,仙游,,,map,high,
+#e2b9d5,China,Luoqing,,,,map,low,
+#e0b8f0,China,Lanshan,蓝山,,,map,high,
+#c7d4e8,China,Rongshui,融水,,,map,high,
+#e4e09b,China,Taojiang,桃江,,,map,medium,GeoNames Tao Jiang (STM)
+#f0f0c4,China,Xiangyun,祥云,,,map,high,
+#e1be8f,China,Longyan,龙岩,,,map,high,
+#eee275,China,Songming,嵩明,,,map,high,
+#f8d978,China,Xiuyu,秀屿,,,map,high,
+#e8858e,China,Guilin,桂林,,,map,high,"placed by label colour, text off the region"
+#f4fcb3,China,Baoshan,保山,,,map,high,
+#f0a8cc,China,Yangshuo,阳朔,,,map,high,
+#e9dab7,China,Chuxiong,楚雄,,,map,high,
+#f2cd9c,China,Yongchun,永春,,,map,high,
+#ebe6ac,China,Shanghang,上杭,,,map,high,
+#e2f5aa,China,Luoping,罗平,,,map,high,
+#e9c493,China,Anxi,安溪,,,map,high,
+#bfd3e4,China,Anlong,安龙,,,map,high,
+#eaebab,China,Danxia,丹霞,,,map,high,
+#f2cb89,China,Huian,惠安,,,map,high,
+#f2df2f,China,Wuhua,五华,,,map,high,"from numbered list, key 3"
+#cecdd9,China,Mangshan,莽山,,,map,high,
+#f2eb2f,China,Panlong,盘龙,,,map,high,"from numbered list, key 4"
+#e6f7c3,China,Tengchong,腾冲,,,map,high,"also 腾充城,腾冲军民指挥"
+#fff500,China,Kunming,昆明,,,map,high,"from numbered list, key 1"
+#d7c6d5,China,Jianghua,江华,,,map,high,
+#bce2d0,China,Xingyi,兴义,,,map,high,
+#f3c180,China,Nan'an,南安,,,map,high,
+#e9f815,China,Dianchi,滇池,,,map,medium,"from numbered list, key 2; GeoNames Dian Chi (LK)"
+#c3c6e4,China,Jiuwanshan,,,,map,low,
+#ebf0a6,China,Luliang,陆良,,,map,high,
+#f5a134,China,Quanzhou,泉州,,,map,high,"from numbered list, key 1"
+#e6eb56,China,Chenggong,呈贡,,,map,high,"from numbered list, key 5; also 呈贡城"
+#f3ef80,China,Xishan,西山,,,map,high,
+#e2dba2,China,Longnan,龙南,,,map,high,
+#e2b983,China,Zimao,紫帽,,,map,high,"from numbered list, key 4"
+#eea151,China,Jinjiang,晋江,,,map,high,"from numbered list, key 2"
+#eecc9e,China,Jiulong,九龙,,,map,medium,GeoNames Jiulong Jiang (STM)
+#b8bce1,China,Fengshan,凤山,Fonghsan,zhuang,map,high,
+#ebab78,China,Tong'an,同安,,,map,high,"from numbered list, key 6"
+#f5e8a0,China,Pingyuan,平远,,,map,high,
+#e8fabb,China,Shidian,施甸,,,map,high,"also 施甸长官,石甸长官"
+#f8c590,China,Shishi,石狮,,,map,high,"from numbered list, key 3"
+#e1dd8f,China,Shaoguan,韶关,,,map,high,
+#eeaecf,China,Lipu,荔浦,,,map,high,
+#f8b17a,China,Anhai,安海,,,map,high,"from numbered list, key 5"
+#e1f0ae,China,Alu,,,,map,low,
+#e4c3cf,China,Lianzhou,连州,,,map,high,
+#fc9d52,China,Jimei,集美,,,map,high,"from numbered list, key 7"
+#cfebc9,China,Dehong,德宏,,,map,high,
+#e6ba80,China,Zhangzhou,漳州,,,map,high,"placed by label colour, text off the region"
+#f0a860,China,Haicang,海沧,,,map,high,"from numbered list, key 8"
+#beb9e8,China,Hechi,河池,Hozciz,zhuang,map,high,
+#c2bce4,China,Cenwang,,,,map,low,
+#f07b20,China,Huli,湖里,,,map,high,"from numbered list, key 9"
+#f3f781,China,Yuxi,玉溪,,,map,high,
+#e7a3b3,China,Hezhou,贺州,,,map,high,
+#f0741d,China,Xiamen,厦门,,,map,high,"from numbered list, key 10"
+#e8e2bc,China,Shuangbai,双柏,,,map,high,
+#f2e8af,China,Dabu,大埔,,,map,high,
+#e6cba2,China,Pinghe,平和,,,map,high,
+#e5e8a6,China,Fuxian,抚仙,,,map,medium,GeoNames Fuxian Hu (LK)
+#f5799e,China,Liuzhou,柳州,,,map,high,"placed by label colour, text off the region"
+#f28cbd,China,Liujiang,柳江,,,map,high,"placed by label colour, text off the region"
+#e6e0ae,China,Longchuan,龙川,,,map,high,
+#f6aacc,China,Luzhai,鹿寨,Luzcai,zhuang,map,high,
+#f3fac4,China,Fengqing,凤庆,,,map,high,
+#eddb75,China,Meizhou,梅州,,,map,high,unread glyph (?); stray ink between letters ignored
+#e7d298,China,Yingde,英德,,,map,high,
+#dfd9b0,China,Xinfeng,新丰,,,map,high,
+#f5d090,China,Zhangpu,漳浦,,,map,high,
+#e6aebb,China,Dayaoshan,,,,map,low,
+#cbcfd3,China,Mile,弥勒,,,map,high,
+#c3c5da,China,Du'an,都安,Duhnganh,zhuang,map,high,
+#adacdf,China,Baise,百色,Baksaek,zhuang,map,high,
+#f1aea4,China,Huaiji,怀集,,,map,high,
+#c0b0e8,China,Hongshui,红水,Dah Raemxhoengz,zhuang,map,medium,GeoNames Hongshui He (STM)
+#f2cc93,China,Raoping,饶平,,,map,high,
+#ede19c,China,Wuhua,五华,,,map,high,
+#f3cd8c,China,Zhao'an,诏安,,,map,high,
+#e6ad81,China,Beijiang,,,,map,low,
+#b9b9dd,China,Funing,富宁,,,map,high,
+#eb7e57,China,Qingyuan,清远,,,map,high,"placed by label colour, text off the region"
+#e9cf88,China,Fengshun,丰顺,,,map,high,
+#e8e5be,China,Lincang,临沧,,,map,high,
+#e1e2c5,China,Jianshui,建水,,,map,high,"also 建水千户,建水城"
+#e9a5a0,China,Wuzhou,梧州,,,map,high,
+#ddc372,China,Heyuan,河源,,,map,high,"placed by label colour, on an inset"
+#e7c69b,China,Nankun,,,,map,low,
+#eec975,China,Chaozhou,潮州,,,map,high,"from numbered list, key d"
+#f79b9e,China,Gongzhou,龚州,,,map,high,
+#bbb6d2,China,Wenshan,文山,,,map,high,
+#e29f95,China,Sihui,四会,,,map,high,
+#daa2e7,China,Laibin,来宾,Leizbingz,zhuang,map,high,
+#a0a5ee,China,Tianzhou,田州,,,map,high,
+#e9bf6c,China,Jieyang,揭阳,,,map,high,"from numbered list, key e"
+#f0ce82,China,Hepo,河婆,,,map,high,
+#fac752,China,Anbu,庵埠,,,map,high,"from numbered list, key c"
+#e9e9cc,China,Pu'er,普洱,,,map,high,
+#f3ba64,China,Chenghai,澄海,,,map,high,"from numbered list, key b"
+#ec9074,China,Liuxi,,,,map,low,
+#c5c6ad,China,Mengzi,蒙自,,,map,high,
+#b4a2e7,China,Wuming,武鸣,Vujmingz,zhuang,map,high,
+#e7d59c,China,Zijin,紫金,,,map,high,
+#f79baa,China,Xunzhou,浔州,,,map,high,
+#caa2e7,China,Binyang,宾阳,,,map,high,
+#ebb291,China,Zengcheng,增城,,,map,high,
+#fcb30d,China,Shantou,汕头,,,map,high,"from numbered list, key a; characters from a neighbour's unit"
+#f19ea6,China,Tengzhou,藤州,,,map,high,also 滕州
+#e9b76c,China,Puning,普宁,,,map,high,"from numbered list, key f"
+#e68d80,China,Lishui,里水,,,map,high,
+#e9acac,China,Guangxin,广信,,,map,medium,name found in neighbour #e9a5a0
+#d87e71,China,Taihe,太和,,,map,high,"placed by label colour, on an inset"
+#e7c78f,China,Boluo,博罗,,,map,high,
+#a8aaf1,China,Jingxi,靖西,Cingsih,zhuang,map,high,
+#e59b9b,China,Dinghu,鼎湖,,,map,high,
+#eec18c,China,Kuitan,葵潭,,,map,high,
+#e0472f,China,Baiyun,白云,,,map,high,"from numbered list, key 3"
+#eb5f4a,China,Wushan,五山,,,map,high,"from numbered list, key 4"
+#e1e1cf,China,Yuanjiang,元江,,,map,high,
+#b6afd8,China,Maguan,马关,,,map,high,
+#f79287,China,Xintang,新塘,,,map,high,"placed by label colour, on an inset"
+#eb3e12,China,Xiguan,,,,map,low,"from numbered list, key 2"
+#f12101,China,Guangzhou,广州,,,map,high,"placed by list entry 1, by label colour; other text on region: pearl river delta"
+#f198d5,China,Guigang,贵港,,,map,high,
+#f3cb4b,China,Huizhou,惠州,,,map,high,"placed by label colour, on an inset"
+#df5844,China,Shishan,狮山,,,map,high,"placed by label colour, on an inset"
+#f73b1e,China,Tianhe,天河,,,map,high,"placed by list entry 5, by label colour; other text on region: i¿ 5"
+#e9c18c,China,Luohe,螺河,,,map,medium,GeoNames Luo He (STM)
+#fa421d,China,Haizhu,海珠,,,map,high,"from numbered list, key 6"
+#f5a2b7,China,Rongzhou,容州,,,map,high,
+#e98282,China,Shilong,石龙,,,map,high,"from numbered list, key 24"
+#9891e9,China,Long'an,隆安,Lungzanh,zhuang,map,high,
+#e45e5e,China,Dongguan,东莞,,,map,high,"from numbered list, key 23"
+#e6c970,China,Jinshan,,,,map,low,"placed by label colour, on an inset"
+#db8072,China,Zhaoqing,肇庆,,,map,high,
+#f7ba75,China,Huilai,惠来,,,map,high,
+#d37465,China,Xiqiao,西樵,,,map,high,"placed by label colour, on an inset"
+#ec8188,China,Wanjiang,万江,,,map,high,"from numbered list, key 22"
+#d0d7c9,China,Ailao,哀牢,,,map,medium,GeoNames Ailao Shan (MTS)
+#f5d390,China,Haifeng,海丰,,,map,high,
+#f1dd7c,China,Xizhi,西枝,,,map,medium,GeoNames Xizhi Jiang (STM)
+#d88a7d,China,Dalang,大朗,,,map,high,"from numbered list, key 27"
+#db7373,China,Songshan,松山湖,,,map,low,"from numbered list, key 26; fuzzy match songshanhu (0.89)"
+#f16d6d,China,Nancheng,南城,,,map,high,"from numbered list, key 25"
+#8078e0,China,Gaofeng,,,,map,low,"from numbered list, key b"
+#f8c684,China,Shanwei,汕尾,,,map,high,"placed by label colour, text off the region"
+#f0bf6d,China,Danshui,淡水,,,map,high,"placed by label colour, on an inset"
+#5c4cdd,China,Nanning,南宁,,,map,high,"placed by label colour, text off the region"
+#e9a197,China,Heshan,鹤山,,,map,high,
+#f0a6a8,China,Cenxi,岑溪,,,map,high,
+#f198b2,China,Kuishan,,,,map,low,
+#8a72e7,China,Qingxiu,青秀,,,map,high,"from numbered list, key c"
+#eba6cf,China,Hengzhou,横州,,,map,high,
+#db7384,China,L,,,,map,low,"placed by list entry 3, by label colour"
+#dfa49c,China,Yunfu,云浮,,,map,high,
+#eb9789,China,Nansha,南沙,,,map,high,"placed by label colour, on an inset"
+#d07a85,China,Guangming,光明,,,map,high,"from numbered list, key c"
+#dccfbf,China,Wa,,,,map,low,
+#ca6181,China,Songgang,松岗,,,map,high,"from numbered list, key b"
+#a285e4,China,Wuxiang,,,,map,low,"placed by label colour, text off the region"
+#db567f,China,Shajing,沙井,,,map,high,"from numbered list, key a"
+#ee9575,China,Pingshan,坪山,,,map,high,"placed by label colour, on an inset"
+#aea8f1,China,Zuojiang A.,,,,map,low,
+#db9e9e,China,Luoding,罗定,,,map,high,
+#ec7b8d,China,Yulin,玉林,,,map,high,also 郁林
+#ffaa9a,China,Huangpu,黄圃,,,map,high,"placed by label colour, on an inset"
+#f86792,China,Fuyong,福永,,,map,high,"from numbered list, key d"
+#ff9b87,China,Jiangmen,江门,,,map,high,"placed by label colour, on an inset"
+#f5a08f,China,Xiaolan,小榄,,,map,high,"placed by label colour, on an inset"
+#ff3d8a,China,Bao'an,宝安,,,map,high,"from numbered list, key e"
+#cea5e6,China,Yongning,邕宁,Yunghningz,zhuang,map,high,
+#f88670,China,Zhongshan,中山,,,map,high,"placed by label colour, on an inset"
+#ff539d,China,Nanshan,南山,,,map,high,"from numbered list, key f"
+#e09a9c,China,Beiliu,北流,,,map,high,
+#f8b8ab,China,Kaiping,开平,,,map,high,
+#ecafaf,China,Xinyi,信宜,,,map,high,also 信义
+#dcdac4,China,Lancang,澜沧,,,map,high,
+#ec9791,China,Luchuan,陆川,,,map,high,
+#f8a08f,China,Wuguishan,五桂山,,,map,high,"placed by label colour, on an inset"
+#ffac9c,China,Xinhui,新会,,,map,high,
+#f88fab,China,Lingshan,灵山,,,map,high,
+#ecaeb0,China,Wuhuang,,,,map,low,
+#e9b0a5,China,Yangdong,阳东,,,map,high,
+#f5a020,China,Macau,,,,map,low,"placed by label colour, on an inset"
+#f3836d,China,Zhuhai,珠海,,,map,high,"placed by label colour, on an inset"
+#ffb3a5,China,Doumen,斗门,,,map,high,
+#f3a49e,China,Bobai,博白,,,map,high,
+#d3b6df,China,Chongzuo,崇左,Cungzcoj,zhuang,map,high,
+#ffc9be,China,Taishan,台山,,,map,high,
+#e4a096,China,Jianjiang,鉴江,,,map,medium,GeoNames Jian Jiang (STMX)
+#e9a9a0,China,Gaozhou,高州,,,map,high,
+#f8a48f,China,Qinzhou,钦州,,,map,high,
+#fab6a8,China,Yangchun,阳春,,,map,high,
+#cdb7ee,China,Langson,Langson,,,map,high,
+#cae0e2,China,Sipsong Panna,,,,map,low,
+#ecacaf,China,Fangcheng,防城,,,map,high,
+#f1907c,China,Yangjiang,阳江,,,map,high,"placed by label colour, text off the region"
+#f5afaa,China,Hepu,合浦,,,map,high,
+#ebab82,China,Hedi,鹤地,,,map,medium,GeoNames Hedi Shuiku (RSV)
+#e9a58c,China,Huazhou,化州,,,map,high,
+#ec846a,China,Maoming,茂名,,,map,high,"from numbered list, key a"
+#f7a99a,China,Diancheng,电城,,,map,high,
+#f09587,China,Beihai,北海,,,map,high,
+#f7a692,China,Dianbai,电白,,,map,high,
+#f1b08b,China,Lianjiang,廉江,,,map,high,
+#f8b9a2,China,Wuchuan,吴川,,,map,high,
+#f3835a,China,Zhanjiang,湛江,,,map,high,"from numbered list, key b"
+#ecb78e,China,Huguang,湖光,,,map,high,
+#ecc38e,China,Leizhou,雷州,,,map,high,
+#f5ce9c,China,Xuwen,徐闻,,,map,high,
+#fca152,China,Qiongshan,琼山,,,map,high,"placed by label colour, text off the region"
+#ff9130,China,Haikou,海口,,,map,high,"placed by label colour, text off the region"
+#fac980,China,Xiuying,秀英,,,map,high,
+#f1d790,China,Lingao,临高,,,map,high,also 临高县[2]
+#ffcda1,China,Wenchang,文昌,,,map,high,
+#ebce8f,China,Nandu,南渡,,,map,medium,GeoNames Nandu Jiang (STM)
+#eceea4,China,Danzhou,儋州,,,map,high,
+#f8d2a2,China,Wanning,万宁,,,map,high,also 万宁市[1]
+#dae9b5,China,Wuzhishan,五指山,,,map,high,
+#eee9a4,China,Jianfeng,尖峰,,,map,high,
+#f7ed78,China,Sanya,三亚,,,map,high,
+#d8f8ad,East Timor,Dili,,,,map,high,
+#edf2ad,East Timor,Wehali,,,,map,medium,
+#f87960,Hong Kong,Dapeng,,,,map,medium,"placed by label colour, on an inset"
+#f12800,Hong Kong,Hong Kong,,,,map,medium,"placed by label colour, on an inset; name found in neighbour #ff4b0b"
+#f7e9d6,India,Siang,,,,map,medium,
+#f1ead4,India,Subansiri,,,,map,high,
+#b8e8ee,India,Dihing,,,,map,medium,
+#b8e3ee,India,Tinsukia,,,,map,high,
+#b4dfe4,India,Dibru Garh,,,,map,high,
+#b4e4e3,India,Dhemaji,,,,map,high,
+#addcdb,India,Lakhimpur,,,,map,high,
+#9cdfe8,India,Charaideo,,,,map,medium,
+#aad7e6,India,Sonitpur,,,,map,high,
+#9ce8df,India,Jorhat,,,,map,high,
+#a5cfe4,India,Udalguri,,,,map,high,
+#b0dbe4,India,Kaziranga,,,,map,medium,
+#f3d9c9,India,Tuensang,,,,map,high,
+#96cce8,India,Darrang,,,,map,high,
+#98dde1,India,Kolong,,,,map,medium,
+#98d4e1,India,Na Gaon,,,,map,high,unread glyph (?); stray ink between letters ignored
+#a8e4d9,India,Dhansiri,,,,map,medium,
+#a2e0e2,India,Mari ?aon,,,,map,medium,unread glyph (?); unread glyph filled from marigaon
+#cfc8e2,India,Karbi,,,,map,high,
+#5bcbe9,India,Guwa 9? Hati,,,,map,low,"unread glyph (?); placed by label colour, text off the region; fuzzy match guwahati (0.94)"
+#a0e4da,India,Kopili,,,,map,medium,
+#f3d2c9,India,Kohima,,,,map,high,
+#ebd0f4,India,Khasi,,,,map,medium,
+#e1c9ee,India,Jaintia,,,,map,high,
+#f2cbf4,India,Garo,,,,map,medium,
+#eac4dc,India,Dimasa,,,,map,medium,
+#ddbdf0,India,Shillong,,,,map,high,
+#a6dbe8,India,Silchar,,,,map,high,
+#f4dad3,India,Shirui,,,,map,medium,
+#a5e7ea,India,Karimganj,,,,map,high,unread glyph (?); stray ink between letters ignored
+#f3a68f,India,Imphal,,,,map,high,
+#b6cee7,India,Barak,,,,map,medium,
+#f0bcad,India,Loktak,,,,map,medium,
+#afd8e9,India,Hailakandi,,,,map,high,
+#afe3e9,India,Dharma Nagar,,,,map,medium,
+#ded1f0,India,Manu,,,,map,high,
+#b5c3ea,India,Khowai,,,,map,high,
+#aac3e8,India,Agar Tala,,,,map,high,
+#f3d9e2,India,Mizoram,,,,map,high,
+#c1c7eb,India,Gomati,,,,map,medium,
+#b5ee9b,Indonesia,Aceh,,,,map,high,
+#aaee9b,Indonesia,Pidie,,,,map,high,
+#99eb95,Indonesia,Peureulak,,,,map,high,
+#b7e2ae,Indonesia,Gayo,,,,map,high,
+#def0c7,Indonesia,Meulaboh,,,,map,medium,"placed by label colour, text off the region"
+#ace9d8,Indonesia,Langkat,,,,map,high,
+#6cebd4,Indonesia,Deli,,,,map,high,"from numbered list, key d"
+#6ce4ee,Indonesia,Serdang,,,,map,medium,"from numbered list, key c; name found in neighbour #8be2f1"
+#84ecdd,Indonesia,Binjai,,,,map,high,"from numbered list, key e"
+#2ae7de,Indonesia,Medan,,,,map,high,"from numbered list, key a"
+#2edcec,Indonesia,Denai,,,,map,medium,"from numbered list, key b"
+#8be2f1,Indonesia,Bedagai,,,,map,medium,"placed by label colour, text off the region"
+#aae2e7,Indonesia,Karo,,,,map,high,
+#91cbf5,Indonesia,Batubara,,,,map,high,"placed by label colour, text off the region"
+#95c7e2,Indonesia,Simalungun,,,,map,high,
+#9ae1dd,Indonesia,Manado,,,,map,high,"placed by label colour, text off the region; other text on region: (manado) / l?"
+#e0c4b6,Indonesia,Pakpak,,,,map,medium,
+#a6d0f5,Indonesia,Asahan,,,,map,high,
+#ecee92,Indonesia,Sambas,,,,map,high,other text on region: (sambas) / l?
+#ddb1ac,Indonesia,Toba,,,,map,high,
+#add0f0,Indonesia,Rokan,,,,map,high,
+#e7a59b,Indonesia,Barumun,,,,map,high,
+#a0c5f1,Indonesia,Dumai,,,,map,high,
+#f1c0a0,Indonesia,Tapanuli,,,,map,high,
+#aae1e6,Indonesia,Tondano,,,,map,high,
+#db6bf0,Indonesia,Batam,,,,map,high,"placed by label colour, text off the region"
+#e4bfa3,Indonesia,Halmahera,,,,map,high,"placed by label colour, text off the region"
+#f2d8af,Indonesia,Nias,,,,map,high,other text on region: (nias) / l?
+#d9ec99,Indonesia,Mempawah,,,,map,high,
+#c1d8e8,Indonesia,Gorontalo,,,,map,high,
+#dbafae,Indonesia,Tapung,,,,map,high,
+#d2f5ee,Indonesia,Kutai,,,,map,high,
+#badde6,Indonesia,Bolaang,,,,map,high,
+#6f9ae7,Indonesia,Pekanbaru,,,,map,high,"placed by label colour, text off the region"
+#9fbcf0,Indonesia,Siak,,,,map,high,
+#eebc96,Indonesia,Pasaman,,,,map,high,
+#a89cf1,Indonesia,Riau,,,,map,medium,"placed by label colour, text off the region"
+#d0eee0,Indonesia,Sintang,,,,map,high,
+#cbf1b9,Indonesia,Sanggau,,,,map,high,
+#f0cbd8,Indonesia,Tomini,,,,map,high,"placed by label colour, text off the region"
+#dda789,Indonesia,Payakumbuh,,,,map,high,
+#deee6e,Indonesia,Pontianak,,,,map,high,"placed by label colour, text off the region"
+#d3b6bc,Indonesia,Kampar,,,,map,high,
+#d0eee6,Indonesia,Mahakam,,,,map,medium,
+#adccf0,Indonesia,Indragiri,,,,map,high,
+#89f5e1,Indonesia,Samarinda,,,,map,high,
+#e2b282,Indonesia,Pagaruyung,,,,map,medium,
+#f0a46a,Indonesia,Padang,,,,map,high,"placed by label colour, text off the region"
+#e6cfbe,Indonesia,Doberai,,,,map,medium,"placed by label colour, text off the region"
+#caeee1,Indonesia,Barito,,,,map,high,
+#acf7e9,Indonesia,Balikpapan,,,,map,high,
+#a3ccee,Indonesia,Tebo,,,,map,high,
+#eec48e,Indonesia,Dharmasraya,,,,map,high,
+#fdc297,Indonesia,Bukittinggi,,,,map,high,other text on region: (bukittinggi) / l'?
+#dfc6c6,Indonesia,Banggai,,,,map,high,
+#caf7e0,Indonesia,Ketapang,,,,map,high,
+#a7d2e9,Indonesia,Batang Hari,,,,map,high,
+#8fcbeb,Indonesia,Jambi,,,,map,high,
+#e6c8d2,Indonesia,Palu,,,,map,high,
+#c5f0e6,Indonesia,Kahayan,,,,map,high,
+#b2e0ec,Indonesia,Kerinci,,,,map,high,
+#9cdbf3,Indonesia,Banyuasin,,,,map,high,"placed by label colour, text off the region"
+#cdf3ea,Indonesia,Kotawaringin,,,,map,high,
+#a6e7c8,Indonesia,Negara,,,,map,medium,
+#b2e5ee,Indonesia,Musi,,,,map,high,
+#f2b7cb,Indonesia,Mandar,,,,map,medium,
+#aad6f0,Indonesia,Bangka Belitung,,,,map,medium,"placed by label colour, text off the region"
+#f5ebac,Indonesia,Rejang,,,,map,high,
+#e9b5b8,Indonesia,Luwu,,,,map,high,"placed by label colour, text off the region"
+#55cef0,Indonesia,Palembang,,,,map,high,"placed by label colour, text off the region"
+#ffdbde,Indonesia,Lbanda,,,,map,medium,"placed by label colour, text off the region"
+#b8eee8,Indonesia,Lubuklinggau,,,,map,high,
+#87dce4,Indonesia,Ogan,,,,map,high,"placed by label colour, text off the region"
+#ffc4d6,Indonesia,Ceram,,,,map,medium,"placed by label colour, text off the region"
+#a1e9d5,Indonesia,Martapura,,,,map,high,
+#e6aabf,Indonesia,Toraja,,,,map,high,
+#79eccc,Indonesia,Banjarmasin,,,,map,high,"placed by label colour, text off the region"
+#c0ecec,Indonesia,Kayuagung,,,,map,medium,
+#b2eedf,Indonesia,Lematang,,,,map,medium,
+#b7f1e1,Indonesia,Meratus,,,,map,medium,
+#aae2d4,Indonesia,Besemah,,,,map,medium,
+#e89ba6,Indonesia,Tempe,,,,map,high,
+#f7f19e,Indonesia,Bengkulu,,,,map,high,
+#e4b0b0,Indonesia,Konawe,,,,map,high,
+#bbf1d9,Indonesia,Komering,,,,map,medium,
+#dbf09f,Indonesia,Tulang Bawang,,,,map,high,
+#e2a1a3,Indonesia,Bone,,,,map,high,
+#d0e9b3,Indonesia,Kotabumi,,,,map,high,
+#ee9396,Indonesia,Maros,,,,map,high,
+#e8f787,Indonesia,Seputih,,,,map,high,
+#f4f79e,Indonesia,Ranau,,,,map,medium,
+#f5c6c2,Indonesia,Buton,,,,map,high,"placed by label colour, text off the region"
+#eaf396,Indonesia,Kemuning,,,,map,medium,
+#df5143,Indonesia,Makassar,,,,map,high,"placed by label colour, text off the region"
+#f0f394,Indonesia,Kambas,,,,map,medium,
+#e2756a,Indonesia,Gowa,,,,map,high,"placed by label colour, text off the region"
+#e8fd19,Indonesia,Lampung,,,,map,high,"from numbered list, key 1"
+#f5f882,Indonesia,Tanggamus,,,,map,high,
+#e49188,Indonesia,Lompobattang,,,,map,medium,
+#ebf86e,Indonesia,Pesawaran,,,,map,high,"from numbered list, key 2"
+#eda9ab,Indonesia,Bulukumba,,,,map,high,"placed by label colour, text off the region"
+#e6fc78,Indonesia,Raja Basa,,,,map,high,
+#97f0b9,Indonesia,Cile Gon,,,,map,high,
+#89c6d5,Indonesia,Sepa Tan,,,,map,high,"placed by label colour, on an inset"
+#a8dfbf,Indonesia,Citarum,,,,map,medium,"placed by label colour, on an inset"
+#5693c4,Indonesia,Penjaringan,,,,map,high,"from numbered list, key 5"
+#9bedce,Indonesia,Serang,,,,map,high,"placed by label colour, on an inset"
+#3b81c1,Indonesia,Tanjung Priok,,,,map,high,"from numbered list, key 6"
+#94dfcb,Indonesia,Ciujung,,,,map,medium,"placed by label colour, on an inset"
+#347eb9,Indonesia,Cengkareng,,,,map,high,"from numbered list, key 4"
+#296ab0,Indonesia,Tambora,,,,map,high,"from numbered list, key 3"
+#68b2c8,Indonesia,Tangerang,,,,map,high,"from numbered list, key 14"
+#4b98bf,Indonesia,Cipondoh,,,,map,high,"from numbered list, key 13"
+#2f6ca3,Indonesia,Jakarta,,,,map,high,"from numbered list, key 1"
+#94d3dc,Indonesia,Cika -rang,,,,map,high,"placed by label colour, on an inset"
+#7dc6c9,Indonesia,Tiga Raksa,,,,map,high,"placed by label colour, on an inset"
+#5d9dc8,Indonesia,Medan Satria,,,,map,high,"placed by list entry 20, by label colour"
+#3f6da4,Indonesia,Tanah Abang,,,,map,high,"from numbered list, key 2"
+#5084bc,Indonesia,Jatinegara,,,,map,high,"from numbered list, key g"
+#6ab2c8,Indonesia,Bekasi,,,,map,high,"from numbered list, key 19"
+#7fb1cb,Indonesia,Curug,,,,map,high,"placed by label colour, on an inset"
+#9af099,Indonesia,Cikam -pek,,,,map,high,"placed by label colour, on an inset"
+#608ebf,Indonesia,Pesanggrahan,,,,map,high,"placed by list entry 12, by label colour"
+#69a5c4,Indonesia,Ciputat,,,,map,high,"placed by list entry 15, by label colour; other text on region: ?5 / i¿"
+#4e7ab0,Indonesia,Pasar Minggu,,,,map,high,"placed by list entry 11, by label colour"
+#91ddcb,Indonesia,Karawang,,,,map,high,"placed by label colour, on an inset"
+#5d82ae,Indonesia,? L 10,,,,map,low,"unread glyph (?); placed by list entry 12, by label colour; other text on region: cililitan"
+#a5dac6,Indonesia,Karang,,,,map,medium,"placed by label colour, on an inset"
+#bbf5a7,Indonesia,Pamanukan,,,,map,high,
+#83b7ce,Indonesia,Jati Asih,,,,map,high,"from numbered list, key 18"
+#6898b9,Indonesia,Depok,,,,map,high,"from numbered list, key 16"
+#68a0b9,Indonesia,Cimanggis,,,,map,high,"from numbered list, key 17"
+#64a7bf,Indonesia,Bojonggede,,,,map,high,"from numbered list, key 21"
+#e9f88a,Indonesia,Indra Mayu,,,,map,high,"placed by label colour, text off the region"
+#caf88a,Indonesia,Haur Geulis,,,,map,high,
+#a4d5bd,Indonesia,Jonggol,,,,map,high,"placed by label colour, on an inset"
+#f8d283,Indonesia,Jepa?a,,,,map,medium,unread glyph (?); unread glyph filled from jepara
+#7dc3c9,Indonesia,Dra Maga,,,,map,high,"placed by label colour, on an inset"
+#78b0c4,Indonesia,Cibi Nong,,,,map,high,"placed by label colour, on an inset"
+#a2cecc,Indonesia,Leuwi Liang,,,,map,high,"placed by label colour, on an inset"
+#58a5c1,Indonesia,Bogor,,,,map,high,"placed by list entry 22, by label colour; other text on region: 22"
+#a9e89b,Indonesia,Purwakarta,,,,map,high,"placed by label colour, on an inset"
+#c4f0a6,Indonesia,Subang,,,,map,high,
+#adf0c3,Indonesia,Pulo Sari,,,,map,high,
+#a4eeb0,Indonesia,Lebak,,,,map,high,"placed by label colour, on an inset"
+#e1f080,Indonesia,Ciremai,,,,map,medium,"placed by label colour, text off the region"
+#d9ee55,Indonesia,Cirebon,,,,map,high,"placed by label colour, text off the region"
+#7dc1cb,Indonesia,Ciawi,,,,map,high,"placed by label colour, on an inset"
+#f5d38d,Indonesia,Pati,,,,map,high,
+#8fcbbf,Indonesia,Cianjur,,,,map,high,"placed by label colour, on an inset"
+#b9e879,Indonesia,Majalengka,,,,map,high,"from numbered list, key 9"
+#90d394,Indonesia,Lembang,,,,map,high,"placed by label colour, on an inset"
+#f8c897,Indonesia,Rembang,,,,map,high,
+#f5a988,Indonesia,Sidayu,,,,map,high,"placed by label colour, text off the region"
+#e6c085,Indonesia,Kudus,,,,map,high,"from numbered list, key 4"
+#f2c77c,Indonesia,Demak,,,,map,high,"from numbered list, key 3"
+#e4f264,Indonesia,Ciledug,,,,map,high,"from numbered list, key h"
+#a0e6a5,Indonesia,Ciranjang,,,,map,high,"placed by label colour, on an inset"
+#eef351,Indonesia,Tegal,,,,map,high,"placed by label colour, text off the region"
+#bcdf8c,Indonesia,Jatigede,,,,map,high,"from numbered list, key f"
+#6bd059,Indonesia,Cimahi,,,,map,high,"from numbered list, key 25"
+#afe882,Indonesia,Sumedang,,,,map,high,"from numbered list, key a"
+#94e69b,Indonesia,Suka -bumi,,,,map,high,"placed by label colour, on an inset"
+#e5f080,Indonesia,Brebes,,,,map,high,"from numbered list, key i"
+#52bf24,Indonesia,Bandung,,,,map,high,"placed by list entry 23, by label colour"
+#79ce48,Indonesia,Ujungberung,,,,map,high,"from numbered list, key 24"
+#aaebaf,Indonesia,Cibadak,,,,map,high,"placed by label colour, on an inset"
+#fa9f96,Indonesia,Sumenep,,,,map,high,"placed by label colour, text off the region"
+#f8bd97,Indonesia,Tuban,,,,map,high,
+#fad67e,Indonesia,Kendal,,,,map,high,
+#abe1a1,Indonesia,Saguling,,,,map,high,"placed by label colour, on an inset"
+#f7ed7b,Indonesia,Comal,,,,map,high,"placed by label colour, text off the region"
+#ffcc39,Indonesia,Semarang,,,,map,high,"from numbered list, key 1"
+#7bc860,Indonesia,Dayeuhkolot,,,,map,high,"from numbered list, key 26"
+#f2c16a,Indonesia,Mrangen,,,,map,low,"from numbered list, key 2; fuzzy match mranggen (0.93)"
+#bce779,Indonesia,Kuni Ngan,,,,map,high,unread glyph (?); stray ink between letters ignored
+#f7e47b,Indonesia,Pekalongan,,,,map,high,"from numbered list, key m"
+#faa38a,Indonesia,Bangkalan,,,,map,high,
+#97d76d,Indonesia,Maja Laya,,,,map,high,"placed by label colour, on an inset"
+#fab39f,Indonesia,Sam Pang,,,,map,high,unread glyph (?); stray ink between letters ignored
+#fae391,Indonesia,Batang,,,,map,high,
+#f2ee8e,Indonesia,Pema Lang,,,,map,high,
+#faa696,Indonesia,Pamekasan,,,,map,high,"placed by label colour, text off the region"
+#e9ed78,Indonesia,Slawi,,,,map,high,"from numbered list, key j"
+#f5b491,Indonesia,Lamo Ngan,,,,map,high,
+#acdf70,Indonesia,Cimanuk,,,,map,medium,"from numbered list, key b"
+#f3d699,Indonesia,Purwo -dadi,,,,map,high,
+#f0cc73,Indonesia,Ungaran,,,,map,high,
+#d9e27f,Indonesia,Pe Mali,,,,map,medium,
+#a3ce94,Indonesia,Malabar,,,,map,medium,
+#f3ccaa,Indonesia,Cepu,,,,map,high,
+#b6d784,Indonesia,Ciamis,,,,map,high,
+#c2f3c7,Indonesia,Jampang,,,,map,high,
+#f7682b,Indonesia,Surabaya,,,,map,high,"from numbered list, key a"
+#f0b792,Indonesia,Bojo Negoro,,,,map,high,
+#e1cd86,Indonesia,Temang Gung,,,,map,high,
+#eb9a7f,Indonesia,Tandes,,,,map,high,"from numbered list, key d"
+#c1eeb4,Indonesia,Sindangbarang,,,,map,high,
+#dcd889,Indonesia,Purbalingga,,,,map,high,"from numbered list, key l"
+#fd9264,Indonesia,Sukolilo,,,,map,high,"from numbered list, key b"
+#e2d68b,Indonesia,Wono Sobo,,,,map,high,
+#a1d770,Indonesia,Garut,,,,map,high,"from numbered list, key c"
+#f28151,Indonesia,Wonokromo,,,,map,high,"from numbered list, key c"
+#b5df83,Indonesia,Galunggung,,,,map,medium,"from numbered list, key d"
+#e1bb81,Indonesia,Salatiga,,,,map,high,
+#b0eb6a,Indonesia,Tasikmalaya,,,,map,high,"from numbered list, key e"
+#d1ed96,Indonesia,Citanduy,,,,map,medium,
+#e9bb87,Indonesia,Sragen,,,,map,high,
+#e49a7a,Indonesia,Mojokerto,,,,map,high,"from numbered list, key g"
+#f1966f,Indonesia,Sidarjo,,,,map,low,"from numbered list, key e; fuzzy match sidoarjo (0.93)"
+#e0e28f,Indonesia,Serayu,,,,map,medium,
+#ced77d,Indonesia,Purwokerto,,,,map,high,"from numbered list, key k"
+#d8c077,Indonesia,Magelang,,,,map,high,"from numbered list, key 10"
+#e1ab8d,Indonesia,Jom Bang,,,,map,high,
+#e6bd94,Indonesia,Ngawi,,,,map,high,
+#dcd085,Indonesia,Borobudur,,,,map,high,
+#e1c181,Indonesia,Boyo Lali,,,,map,high,
+#eda67b,Indonesia,Porong,,,,map,high,"from numbered list, key f"
+#d4f8a9,Indonesia,Sancang,,,,map,medium,
+#e2f8a9,Indonesia,Pangan Daran,,,,map,high,
+#e1baa5,Indonesia,Nganjuk,,,,map,high,
+#e9bf89,Indonesia,Karaganyar,,,,map,low,"from numbered list, key 6; fuzzy match karanganyar (0.95)"
+#e8bc63,Indonesia,Surakarta,,,,map,high,"from numbered list, key 5"
+#ecf382,Indonesia,Kroya,,,,map,high,
+#e4f382,Indonesia,Cilacap,,,,map,high,
+#ddb083,Indonesia,Madiun,,,,map,high,
+#e6b194,Indonesia,Trowulan,,,,map,high,
+#eeea7d,Indonesia,Kebu Men,,,,map,high,
+#e6c59f,Indonesia,Brantas,,,,map,medium,
+#e2be75,Indonesia,Klaten,,,,map,high,"from numbered list, key 7"
+#ddc876,Indonesia,Sleman,,,,map,high,"from numbered list, key 8"
+#f0b490,Indonesia,Pasuruan,,,,map,high,"from numbered list, key h"
+#eee389,Indonesia,Bagelen,,,,map,high,
+#e1c491,Indonesia,Wonogiri,,,,map,high,
+#e9cd5f,Indonesia,Yogyakarta,,,,map,high,"from numbered list, key g"
+#f7b79a,Indonesia,Panarukan,,,,map,high,
+#edb08f,Indonesia,Probo -lingo,,,,map,low,fuzzy match probolinggo (0.95)
+#eeda89,Indonesia,Progo,,,,map,medium,
+#e8c08c,Indonesia,Kediri,,,,map,high,
+#daba95,Indonesia,Singosari,,,,map,high,
+#d8bd93,Indonesia,Pono Rogo,,,,map,high,
+#ffbc98,Indonesia,Kraksaan,,,,map,high,
+#da956c,Indonesia,Malang,,,,map,high,"placed by label colour, text off the region"
+#f3e0a8,Indonesia,Wonosari,,,,map,high,
+#eeb186,Indonesia,Jemoer,,,,map,medium,"placed by label colour, text off the region"
+#f3d2a6,Indonesia,Sre Ngat,,,,map,high,
+#f3d5a8,Indonesia,Gunungsewu,,,,map,medium,
+#e1cfb4,Indonesia,Tren? -galek,,,,map,medium,unread glyph (?); unread glyph filled from trenggalek
+#f8cda2,Indonesia,Blitar,,,,map,high,
+#e6c69b,Indonesia,Tulungagung,,,,map,high,
+#ebbb9e,Indonesia,Lumajang,,,,map,high,
+#ebb997,Indonesia,Turen,,,,map,high,
+#f2ba9c,Indonesia,Banyu Wangi,,,,map,high,
+#ebc497,Indonesia,Kepan -jen,,,,map,high,
+#edc3a9,Indonesia,Balung,,,,map,high,
+#f7b3eb,Indonesia,Buleleng,,,,map,high,"placed by label colour, text off the region"
+#f8a4ee,Indonesia,Agung,,,,map,medium,
+#f79fe1,Indonesia,Mengwi,,,,map,high,"placed by label colour, text off the region"
+#f5cbb4,Indonesia,Blambangan,,,,map,medium,
+#fce8b3,Indonesia,Komodo,,,,map,high,"placed by label colour, text off the region"
+#f8a38b,Indonesia,Mataram,,,,map,high,"placed by label colour, text off the region"
+#f0b6a8,Indonesia,(rin? Jani) L?,,,,map,low,unread glyph (?); other text on region: rinjani
+#fdc4bc,Indonesia,Sumbawa,,,,map,high,
+#fcf1b3,Indonesia,Ende,,,,map,high,
+#f2ab86,Indonesia,Selaparang,,,,map,medium,"placed by label colour, text off the region"
+#f276d3,Indonesia,Denpasar,,,,map,high,"placed by label colour, text off the region"
+#f5b593,Indonesia,Praya,,,,map,high,
+#fdf9ac,Indonesia,(larantuka),,,,map,high,
+#fcf4c3,Indonesia,Sumba,,,,map,high,other text on region: (sumba) / l?
+#f2eead,Indonesia,Kupang,,,,map,high,
+#e7f1c5,Japan,Kitami,,,,map,high,
+#e7f4bb,Japan,Ishikari,,,,map,high,
+#b4ef72,Japan,Sapporo,,,,map,high,"placed by label colour, text off the region"
+#c4ef72,Japan,Toyohira,,,,map,low,"placed by label colour, text off the region; fuzzy match toyohiraku (0.89)"
+#d8f1b3,Japan,Oshima,,,,map,medium,"placed by label colour, text off the region"
+#cbf0b6,Japan,Aomori,,,,map,high,
+#cef2c0,Japan,Akita,,,,map,high,
+#cafbbb,Japan,Iwate,,,,map,high,
+#bffbbb,Japan,Rikuzen,,,,map,medium,
+#c1f0c0,Japan,Yamagata,,,,map,high,
+#8df486,Japan,Sendai,,,,map,high,"placed by label colour, text off the region"
+#adeeb7,Japan,Niigata,,,,map,high,"placed by label colour, text off the region"
+#b7f2be,Japan,Abukuma,,,,map,medium,
+#c5e9d4,Japan,Echigo,,,,map,medium,
+#bbe3d9,Japan,Koriyama,,,,map,high,
+#b3dde9,Japan,Ishikawa,,,,map,high,"placed by label colour, text off the region"
+#bcebe6,Japan,Toyama,,,,map,high,
+#b2dee5,Japan,Utsunomiya,,,,map,high,
+#b4e0e5,Japan,Maebashi,,,,map,high,
+#b6e0db,Japan,Nagano,,,,map,high,
+#b6d4e9,Japan,Hitachi,,,,map,high,
+#a6bee3,Japan,Tochigi,,,,map,high,
+#a6b5e3,Japan,Ashikaga,,,,map,high,"placed by label colour, on an inset"
+#add5e5,Japan,Takasaki,,,,map,high,
+#b3cde9,Japan,Fukui,,,,map,high,
+#9fc7eb,Japan,Tsuchiura,,,,map,high,"placed by label colour, text off the region"
+#b0bee3,Japan,Arakawa,,,,map,medium,
+#9da0d5,Japan,Kasukabe,,,,map,high,"placed by label colour, on an inset"
+#829edc,Japan,Tone,,,,map,medium,"placed by label colour, on an inset"
+#a79dd5,Japan,Kawagoe,,,,map,high,"placed by label colour, on an inset"
+#d0a9da,Japan,Sayama,,,,map,high,"placed by label colour, on an inset"
+#9050e5,Japan,Senju,,,,map,medium,"from numbered list, key e"
+#9765da,Japan,Nerima,,,,map,high,"from numbered list, key j"
+#b450eb,Japan,Toshima,,,,map,high,"from numbered list, key d"
+#bfd2d8,Japan,Kai,,,,map,high,
+#9cb4eb,Japan,Narita,,,,map,high,
+#ae75e5,Japan,Tachikawa,,,,map,high,"from numbered list, key n"
+#c6e0de,Japan,Kiso,,,,map,medium,
+#a657d8,Japan,Suginami,,,,map,low,"from numbered list, key c; fuzzy match suginamiku (0.89)"
+#b543f4,Japan,Chiyoda,,,,map,medium,"from numbered list, key a; other text on region: tō yō"
+#bf6bd5,Japan,Musashino,,,,map,high,"from numbered list, key m"
+#8443e3,Japan,Sumida,,,,map,high,"from numbered list, key f"
+#ca86d3,Japan,Hachiōji,,,,map,high,"placed by label colour, on an inset"
+#d168dc,Japan,Setagaya,,,,map,high,"placed by label colour, text off the region"
+#d65fed,Japan,Yamanote,,,,map,medium,"from numbered list, key b"
+#c37cc8,Japan,Tama,,,,map,high,"from numbered list, key l"
+#709aeb,Japan,Chiba,,,,map,high,"placed by label colour, on an inset"
+#cd94ca,Japan,Sagamihara,,,,map,high,"placed by label colour, on an inset"
+#e56ac4,Japan,Kawasaki,,,,map,high,"from numbered list, key k"
+#c1cd87,Japan,Gifu,,,,map,high,
+#d3c2cc,Japan,Hakone,,,,map,medium,
+#d7a3d0,Japan,Sagami,,,,map,medium,"placed by label colour, on an inset"
+#bdcae7,Japan,San'in,,,,map,medium,
+#ced082,Japan,Kasugai,,,,map,high,"from numbered list, key c"
+#ade3e0,Japan,Biwako,,,,map,medium,"placed by label colour, text off the region"
+#98c4eb,Japan,Bōsō,,,,map,medium,
+#c6d5a1,Japan,Kuwana,,,,map,high,
+#d8cd73,Japan,Aichi,,,,map,high,"from numbered list, key d"
+#ced072,Japan,Shōnai,,,,map,medium,"from numbered list, key b"
+#d2cc4a,Japan,Nagoya,,,,map,medium,"from numbered list, key a; name found in neighbour #ced072"
+#dfcfb4,Japan,Suruga,,,,map,medium,
+#ddd39d,Japan,Okazaki,,,,map,high,"from numbered list, key e"
+#95c2dc,Japan,Katsura,,,,map,medium,"placed by label colour, on an inset"
+#9bbde7,Japan,Himeji,,,,map,high,
+#95b5dc,Japan,Rokkō,,,,map,medium,
+#ddd979,Japan,Chita,,,,map,high,"from numbered list, key f"
+#bfbde7,Japan,Shimane,,,,map,high,"placed by label colour, text off the region"
+#afc0e2,Japan,Bingo,,,,map,medium,
+#e2d695,Japan,Hamamatsu,,,,map,high,"placed by label colour, text off the region"
+#e1cc94,Japan,Shizuoka,,,,map,high,
+#bce9d5,Japan,Iga,,,,map,high,
+#e4d88e,Japan,Toyohashi,,,,map,high,"placed by label colour, text off the region"
+#6ea4de,Japan,Ikoma,,,,map,medium,"from numbered list, key 4; name found in neighbour #bce9d5"
+#3ea3e7,Japan,Yodogawa,,,,map,low,"from numbered list, key 3; fuzzy match yodogawaku (0.89)"
+#86b1e5,Japan,Okayama,,,,map,high,
+#1a8feb,Japan,Ōsaka,,,,map,high,"from numbered list, key 1"
+#4ab9e9,Japan,Sumiyoshi,,,,map,low,"from numbered list, key 2; fuzzy match sumiyoshiku (0.90)"
+#6ac8de,Japan,Kawachi,,,,map,medium,"from numbered list, key 5"
+#ee91cc,Japan,Miura,,,,map,high,"placed by label colour, text off the region; other text on region: (miura) / l?"
+#7ae9e9,Japan,Nara,,,,map,high,unread glyph (?); stray ink between letters ignored
+#6bd2e9,Japan,Sakai,,,,map,high,"from numbered list, key 6"
+#cfe7c1,Japan,Ise,,,,map,high,
+#afb0e2,Japan,Aki,,,,map,medium,
+#938ae9,Japan,Hiroshima,,,,map,high,"placed by label colour, text off the region"
+#86e9e9,Japan,Izumi,,,,map,high,"placed by label colour, on an inset"
+#97d8ee,Japan,Setō,,,,map,medium,
+#b3f0f0,Japan,Awa,,,,map,high,
+#c6afe2,Japan,Yamaguchi,,,,map,high,"placed by label colour, text off the region"
+#cae9d1,Japan,Kii,,,,map,medium,
+#adede6,Japan,Iyo,,,,map,high,
+#eb87a0,Japan,Kitakyushu,,,,map,high,"placed by label colour, text off the region"
+#eb9faa,Japan,Onga,,,,map,medium,
+#e75c70,Japan,Hakata,,,,map,medium,"placed by label colour, text off the region"
+#e77b7b,Japan,Fukuoka,,,,map,high,"placed by name match, part of label on it"
+#f4b0b7,Japan,Saga,,,,map,high,other text on region: (saga) / l?
+#bcebdd,Japan,Tosa,,,,map,high,
+#eb9f9f,Japan,Chikugo,,,,map,medium,name found in neighbour #f2b7aa
+#eba79f,Japan,Ōita,,,,map,high,
+#fdb8cc,Japan,Nagasaki,,,,map,high,"placed by label colour, text off the region"
+#f0a395,Japan,Kumamoto,,,,map,high,"placed by label colour, text off the region"
+#f2b7aa,Japan,Higo,,,,map,medium,
+#edc7aa,Japan,Hyūga,,,,map,high,
+#f2c498,Japan,Satsuma,,,,map,medium,"placed by label colour, text off the region"
+#f4d79e,Japan,(ryūkyū-ōsumi)l?,,,,map,low,"unread glyph (?); placed by label colour, text off the region; other text on region: ryūkyū-ōsumi; ryūkyū-ōsumi"
+#ebc549,Japan,Naha,,,,map,high,"placed by label colour, text off the region"
+#d2ebdc,Laos,Luang Namtha,,,,map,low,fuzzy match louangnamtha (0.96)
+#c8ece5,Laos,Xieng Khouang,,,,map,high,
+#c3f0e0,Laos,Luang Prabang,,,,map,high,
+#cbf5dc,Laos,Khammuane,,,,map,low,fuzzy match khammouan (0.89)
+#a0f1ca,Laos,Vientiane,,,,map,high,
+#bdf3d9,Laos,Savannakhet,,,,map,high,
+#c6ebd8,Laos,Salavan,,,,map,high,
+#d0e6d0,Laos,Champasak,,,,map,low,fuzzy match champasack (0.95)
+#cf9ef8,Malaysia,Kedah,,,,map,high,
+#cd92f3,Malaysia,Kota Bharu,,,,map,high,"placed by label colour, text off the region"
+#daadf3,Malaysia,Jerai,,,,map,medium,
+#d2b1f1,Malaysia,Kinabalu,,,,map,medium,"placed by label colour, text off the region"
+#d5abf0,Malaysia,Kelantan,,,,map,high,
+#c8cfec,Malaysia,Sabah,,,,map,high,
+#d18aee,Malaysia,Perai,,,,map,medium,"placed by label colour, text off the region"
+#cc6df3,Malaysia,Penang,,,,map,medium,"placed by label colour, text off the region"
+#c1d6f0,Malaysia,Sandakan,,,,map,high,
+#e0a2ec,Malaysia,Larut,,,,map,high,
+#d0abf0,Malaysia,Terengganu,,,,map,high,
+#dab8d9,Malaysia,Titiwangsa,,,,map,medium,
+#aef7de,Malaysia,Semporna,,,,map,high,"placed by label colour, text off the region"
+#d38ae6,Malaysia,Ipoh,,,,map,high,
+#c8dbec,Malaysia,Brunei,,,,map,high,
+#d4b4f0,Malaysia,Pahang,,,,map,high,
+#e8a2ec,Malaysia,Selangor,,,,map,high,
+#ed6ef5,Malaysia,Rawang,,,,map,medium,"from numbered list, key e"
+#db7ce9,Malaysia,Ampang,,,,map,medium,
+#ed44f7,Malaysia,Kuala Lumpur,,,,map,high,"from numbered list, key a"
+#d444f7,Malaysia,Seputeh,,,,map,medium,"from numbered list, key b"
+#ce63ee,Malaysia,Damansara,,,,map,medium,"from numbered list, key d"
+#c0b0e9,Malaysia,Penarikan,,,,map,medium,
+#c255e2,Malaysia,Petaling,,,,map,high,"from numbered list, key c"
+#c476f7,Malaysia,Klang,,,,map,high,"placed by label colour, text off the region"
+#bb6ee6,Malaysia,Kajang,,,,map,high,
+#c29bfa,Malaysia,Putrajaya,,,,map,low,fuzzy match wpputrajaya (0.90)
+#b59df3,Malaysia,Serem Ban,,,,map,high,unread glyph (?); stray ink between letters ignored
+#a99df3,Malaysia,Melaka,,,,map,high,
+#cfaee7,Malaysia,Kluang,,,,map,high,
+#c5b4f0,Malaysia,Batu Pahat,,,,map,high,
+#df84ec,Malaysia,Pulai,,,,map,medium,"placed by label colour, text off the region"
+#f077df,Malaysia,Johor,,,,map,high,"placed by label colour, text off the region"
+#bbe9f1,Malaysia,Kuching,,,,map,high,
+#b1e071,Mongolia,Ulaanbatar,,,,map,low,"placed by label colour, text off the region; fuzzy match ulaanbaatar (0.95)"
+#f4e9d6,Myanmar,Jiinghpaw,,,,map,medium,
+#e9f0df,Myanmar,Chindwin,,,,map,medium,
+#d7e5cf,Myanmar,Bhamo,,,,map,high,
+#dfecc4,Myanmar,Katha,,,,map,high,
+#c1e8d4,Myanmar,Hsenwi,,,,map,low,fuzzy match hseni (0.91)
+#d6e2ba,Myanmar,Kanbalu,,,,map,high,
+#ddecca,Myanmar,Kale,,,,map,high,
+#c9eee2,Myanmar,Hsipaw,,,,map,high,
+#dce5b3,Myanmar,Shwebo,,,,map,high,
+#f1e4e3,Myanmar,Chin,,,,map,high,
+#dee7ab,Myanmar,Sagaing,,,,map,high,
+#eaf0b1,Myanmar,Monywa,,,,map,high,
+#d0e642,Myanmar,Mandalay,,,,map,high,"placed by label colour, text off the region"
+#d3e49b,Myanmar,Amarapura,,,,map,high,
+#ecf0b1,Myanmar,Yesagyo,,,,map,high,
+#e9f5a9,Myanmar,Myingyan,,,,map,high,
+#c4e6da,Myanmar,Loilem,,,,map,medium,
+#eaeeb4,Myanmar,Pakokku,,,,map,high,
+#bce6da,Myanmar,Kengtung,,,,map,high,
+#f1f696,Myanmar,Bagan,,,,map,medium,
+#c3f0dc,Myanmar,Sittwe,,,,map,high,
+#c9e6ae,Myanmar,Kalaw,,,,map,high,
+#e2ecaf,Myanmar,Meiktila,,,,map,high,
+#cbebbd,Myanmar,Mrauk U,,,,map,high,
+#a6dfb9,Myanmar,Taunggyi,,,,map,high,
+#f8f89a,Myanmar,Magway,,,,map,high,
+#ecf193,Myanmar,Naypyidaw,,,,map,low,fuzzy match naypyitaw (0.89)
+#ececb8,Myanmar,Minbu,,,,map,high,
+#dbecce,Myanmar,Kyaukpyu,,,,map,high,
+#eaeea6,Myanmar,Taunggoo,,,,map,low,fuzzy match taungoo (0.93)
+#f3f090,Myanmar,Pyay,,,,map,high,
+#b4dfb6,Myanmar,Thanlwin,,,,map,medium,
+#eeeda6,Myanmar,Nyaunglebin,,,,map,high,
+#fdf393,Myanmar,Thayarwady,,,,map,high,
+#f5ec9d,Myanmar,Hinthada,,,,map,high,
+#ebea90,Myanmar,Bago,,,,map,high,
+#f0e782,Myanmar,Hmawbi,,,,map,high,
+#f1e474,Myanmar,Pantanaw,,,,map,high,
+#f0d740,Myanmar,Insein,,,,map,high,"from numbered list, key 3"
+#ebe057,Myanmar,Dagon,,,,map,high,"from numbered list, key 4"
+#f3dc18,Myanmar,Thingangyun,,,,map,high,"from numbered list, key 2"
+#f0dc97,Myanmar,Mawlamyine,,,,map,high,"placed by label colour, text off the region"
+#f8e929,Myanmar,Hlaingtharya,,,,map,high,"from numbered list, key 5"
+#ebe276,Myanmar,Thanlyin,,,,map,high,
+#faeb8d,Myanmar,Pathein,,,,map,high,
+#f1e901,Myanmar,Yangon,,,,map,high,"from numbered list, key 1"
+#f5eb69,Myanmar,Twantay,,,,map,high,
+#faef8d,Myanmar,Myaungmya,,,,map,high,
+#afddab,Myanmar,Dawna,,,,map,medium,
+#faf28d,Myanmar,Pyapon,,,,map,high,
+#dff0b0,Myanmar,Dawei,,,,map,high,
+#dff3bd,Myanmar,Tanintharyi,,,,map,high,
+#f4b8d2,North Korea,Tuman,,,,map,medium,
+#edb1cb,North Korea,Ch'ŏngjin,,,,map,high,
+#eebdbd,North Korea,Paektu,,,,map,medium,
+#f4b7cb,North Korea,Sŏngjin,,,,map,medium,
+#e7bcb2,North Korea,Kanggye,,,,map,high,
+#f2aab3,North Korea,Pukch'ŏng,,,,map,high,
+#e7a89a,North Korea,Ŭiju,,,,map,high,
+#e9bbb0,North Korea,Ch'ŏngch'ŏn,,,,map,medium,
+#eeb3a6,North Korea,Chŏngju,,,,map,medium,name found in neighbour #e9bbb0
+#ee8793,North Korea,Hamhŭng,,,,map,high,"placed by label colour, text off the region"
+#e3adb1,North Korea,Tŏkch'ŏn,,,,map,high,
+#de9b96,North Korea,Sunch'ŏn,,,,map,high,
+#eda7af,North Korea,Wŏnsan,,,,map,high,"placed by label colour, text off the region"
+#ed968b,North Korea,Anju,,,,map,high,
+#e98473,North Korea,P'yŏngsŏng,,,,map,high,
+#ed5f3e,North Korea,Taesŏng,,,,map,medium,"from numbered list, key b"
+#ee3c26,North Korea,Pyŏngyang,,,,map,high,"from numbered list, key a"
+#e97777,North Korea,Rangrang,,,,map,medium,"from numbered list, key c"
+#f29595,North Korea,Namp'o,,,,map,high,unread glyph (?); stray ink between letters ignored
+#ebb9c7,North Korea,Kŭmgang,,,,map,high,
+#e7a5a5,North Korea,Ryesŏng,,,,map,medium,
+#e9949d,North Korea,Sariwŏn,,,,map,high,
+#eea7af,North Korea,Kuwŏl,,,,map,medium,
+#f4aec3,North Korea,Kaesŏng,,,,map,high,
+#f4aebb,North Korea,Haeju,,,,map,high,
+#e7c9ac,Philippines,Cagayan,,,,map,high,
+#f5caa1,Philippines,Ilocos,,,,map,high,
+#e7cbac,Philippines,Tuguegarao,,,,map,high,
+#f5cda1,Philippines,Amburayan,,,,map,medium,
+#dacca7,Philippines,Cordillera,,,,map,high,
+#e7d1ac,Philippines,Cauayan,,,,map,medium,
+#f0c08b,Philippines,Baguio,,,,map,high,
+#e9d9ae,Philippines,Caraballo,,,,map,medium,
+#f3c372,Philippines,Dagupan,,,,map,high,"placed by label colour, text off the region"
+#f1d398,Philippines,Bolinao,,,,map,high,
+#e7ce93,Philippines,Urdaneta,,,,map,high,"placed by label colour, text off the region"
+#ede189,Philippines,Kabaritan,,,,map,medium,
+#f0df95,Philippines,Tarlac,,,,map,high,
+#ddd486,Philippines,Cabanatuan,,,,map,high,
+#e7e7bd,Philippines,Lamon,,,,map,medium,
+#f0ec95,Philippines,Arayat,,,,map,high,
+#eedaa4,Philippines,Zambales,,,,map,high,
+#edeb6c,Philippines,Angeles,,,,map,high,"placed by label colour, on an inset"
+#e2d37e,Philippines,Angat,,,,map,high,unread glyph (?); stray ink between letters ignored
+#f0ef81,Philippines,Pampanga,,,,map,high,"placed by label colour, on an inset"
+#f0e781,Philippines,Macabebe,,,,map,high,"placed by name match, label drawn in a neighbour's colour"
+#f5dc6b,Philippines,Bulacan,,,,map,high,"placed by label colour, on an inset"
+#eecf60,Philippines,Bocaue,,,,map,high,"placed by label colour, on an inset"
+#eee89b,Philippines,Bataan,,,,map,high,"placed by label colour, on an inset"
+#eede04,Philippines,Caloocan,,,,map,high,"from numbered list, key c"
+#dbdf49,Philippines,Cubao,,,,map,medium,"from numbered list, key d"
+#f7f509,Philippines,Tondo,,,,map,high,"from numbered list, key b; other text on region: manila"
+#faf84a,Philippines,Maynila,,,,map,low,"from numbered list, key a; fuzzy match manila (0.92)"
+#dfd94a,Philippines,Pasig,,,,map,high,"from numbered list, key e"
+#f4ff61,Philippines,Makati,,,,map,high,"from numbered list, key f"
+#e4f355,Philippines,Cavite,,,,map,high,"placed by label colour, on an inset"
+#e4e2a9,Philippines,Laguna,,,,map,high,other text on region: bay
+#ddf373,Philippines,Malabon,,,,map,medium,"placed by label colour, on an inset"
+#d9e98d,Philippines,Tagaytay,,,,map,high,"placed by label colour, on an inset"
+#dfdc90,Philippines,Makiling,,,,map,medium,"placed by label colour, on an inset"
+#d7df90,Philippines,Lipa,,,,map,high,"placed by label colour, on an inset"
+#eaed94,Philippines,Tayabas,,,,map,high,
+#d3e98d,Philippines,Balayan,,,,map,high,
+#ddf3b5,Philippines,Camarines,,,,map,high,
+#e4ed94,Philippines,Batangas,,,,map,high,unread glyph (?); stray ink between letters ignored
+#bffac4,Philippines,Lagonoy,,,,map,high,"placed by label colour, text off the region"
+#f3f3ad,Philippines,Kalilayan,,,,map,medium,
+#aef5a5,Philippines,Bicol,,,,map,medium,"placed by label colour, text off the region"
+#aff8be,Philippines,Mayon,,,,map,medium,
+#bff7d7,Philippines,Ibalon,,,,map,medium,
+#dcf59a,Philippines,Calapan,,,,map,high,"placed by label colour, text off the region"
+#d8f5ba,Philippines,Mindoro,,,,map,medium,"placed by label colour, text off the region"
+#c9faeb,Philippines,Masbate,,,,map,high,
+#c3ecee,Philippines,Ibabao,,,,map,medium,
+#bdf0eb,Philippines,Samar,,,,map,high,
+#a8e9f5,Philippines,Aklan,,,,map,high,
+#a8d6f5,Philippines,Panay,,,,map,high,
+#a6e0f2,Philippines,Ormoc,,,,map,high,
+#9fd7e8,Philippines,Tacloban,,,,map,high,
+#a8cbf5,Philippines,Jalaur,,,,map,medium,
+#b6f3f7,Philippines,Hamtic,,,,map,high,"placed by label colour, text off the region"
+#8ca3ed,Philippines,Danao,,,,map,high,"placed by label colour, text off the region"
+#9fc3ee,Philippines,Mandalagan,,,,map,medium,
+#85b6f2,Philippines,Iloilo,,,,map,high,"placed by label colour, text off the region"
+#97b7eb,Philippines,Baco -lod,,,,map,high,
+#3d5ddc,Philippines,Cebu,,,,map,high,"placed by label colour, text off the region"
+#91c0eb,Philippines,Canigao,,,,map,medium,"placed by label colour, text off the region"
+#658be2,Philippines,Mactan,,,,map,medium,"placed by label colour, text off the region"
+#90aae6,Philippines,Hinu Lawan,,,,map,medium,
+#7e91da,Philippines,Talisay,,,,map,high,"placed by label colour, text off the region"
+#bacff3,Philippines,Kabankalan,,,,map,high,"placed by label colour, text off the region"
+#b2c4f3,Philippines,Tanon,,,,map,medium,
+#9bc1e4,Philippines,Bohol,,,,map,high,
+#c4f7d3,Philippines,Palawan,,,,map,high,"placed by label colour, text off the region"
+#b2cded,Philippines,Surigao,,,,map,high,"placed by label colour, text off the region"
+#a2b7f0,Philippines,Dumaguete,,,,map,high,
+#abd3e8,Philippines,Butuan,,,,map,high,
+#abcbe8,Philippines,Balatukan,,,,map,medium,
+#97b8e6,Philippines,Cagayan De Oro,,,,map,high,"placed by label colour, text off the region"
+#b6dff2,Philippines,Malindang,,,,map,medium,
+#a1dcdd,Philippines,Agus,,,,map,medium,
+#b9d8e8,Philippines,Agusan,,,,map,high,
+#b0cbdd,Philippines,Bukidnon,,,,map,high,
+#b1e7e8,Philippines,Panguil,,,,map,medium,
+#b6e7ed,Philippines,Illana,,,,map,medium,
+#b5e4c3,Philippines,Ranao,,,,map,medium,
+#beedf2,Philippines,Sibugay,,,,map,medium,
+#c6e0f8,Philippines,Mandaya,,,,map,medium,"placed by label colour, text off the region"
+#a5d3eb,Philippines,Tagum,,,,map,high,
+#a8f0df,Philippines,Zamboanga,,,,map,high,"placed by label colour, text off the region"
+#a9e4b7,Philippines,Pulangi,,,,map,medium,
+#aad1e4,Philippines,Apo,,,,map,medium,
+#90e4a4,Philippines,Maguindanao,,,,map,high,"placed by label colour, text off the region"
+#83c6e9,Philippines,Buhangin,,,,map,medium,"placed by label colour, text off the region"
+#4babdd,Philippines,Davao,,,,map,high,"placed by label colour, text off the region"
+#b5e6d0,Philippines,Buayan,,,,map,medium,
+#a8f0c5,Philippines,Basilan,,,,map,high,"placed by label colour, text off the region"
+#aae2f0,Philippines,Koronadal,,,,map,high,
+#9cd2f8,Philippines,Digos,,,,map,high,"placed by label colour, text off the region"
+#b7e3ee,Philippines,Sarangani,,,,map,high,
+#9af58f,Philippines,Jolo,,,,map,high,"placed by label colour, text off the region"
+#a1c8ed,Philippines,Dadiangas,,,,map,medium,"placed by label colour, text off the region"
+#e2f0f3,Russia,Dauria,,,,map,medium,
+#b9e8f0,Russia,Irkutsk,,,,map,high,"placed by label colour, text off the region"
+#c7e2eb,Russia,Vladivostok,,,,map,high,
+#f04b71,Singapore,Ang Mo Kio,,,,map,medium,"from numbered list, key d"
+#f7265d,Singapore,Hougang,,,,map,medium,"from numbered list, key e"
+#e74a5a,Singapore,Tampines,,,,map,medium,"from numbered list, key f"
+#ee7a95,Singapore,Jurong,,,,map,medium,"from numbered list, key c"
+#e25265,Singapore,Bukit Timah,,,,map,medium,"from numbered list, key b"
+#e92142,Singapore,Singapore,,,,map,medium,"from numbered list, key a; name found in neighbour #e25265"
+#8b9ee9,South Korea,Imjin,,,,map,medium,
+#9fd2ee,South Korea,Gangneung,,,,map,high,
+#5e86e2,South Korea,Uijeongbu,,,,map,high,"from numbered list, key 5"
+#918be9,South Korea,Gimpo,,,,map,high,
+#7a7feb,South Korea,Goyang,,,,map,high,"placed by label colour, on an inset"
+#72aede,South Korea,Wangsuk,,,,map,medium,"placed by label colour, on an inset"
+#2c60d7,South Korea,Hanseong,,,,map,medium,"from numbered list, key 1; other text on region: seoul"
+#4490e0,South Korea,Jungnang,,,,map,low,"from numbered list, key 4; fuzzy match jungnanggu (0.89)"
+#5057e5,South Korea,Seogang,,,,map,medium,"from numbered list, key 2"
+#236be0,South Korea,Yongsan,,,,map,medium,"from numbered list, key 3"
+#439de3,South Korea,Wirye,,,,map,medium,"from numbered list, key 6"
+#94bfe5,South Korea,Gyeonggang,,,,map,medium,
+#7f61e0,South Korea,Bucheon,,,,map,high,"from numbered list, key 11"
+#4b8ad5,South Korea,Anyang,,,,map,medium,"from numbered list, key 12; name found in neighbour #578fde"
+#5ea2e2,South Korea,Seongnam,,,,map,low,"from numbered list, key 13; fuzzy match songnam (0.93)"
+#578fde,South Korea,Surisan,,,,map,medium,"from numbered list, key 16"
+#51a4dc,South Korea,Suwon,,,,map,high,"from numbered list, key 14"
+#74afd7,South Korea,Yongin,,,,map,medium,"placed by label colour, on an inset"
+#4ea7d3,South Korea,Hwaseong,,,,map,low,"from numbered list, key 15; fuzzy match hwaseongsi (0.89)"
+#94c5f2,South Korea,Hwaseong,,,,map,low,other text on region: namyang; tokyo; fuzzy match hwaseongsi (0.89)
+#96d4e5,South Korea,Chungju,,,,map,high,
+#94dbee,South Korea,Cheonan,,,,map,low,fuzzy match chonan (0.92)
+#afdee3,South Korea,Taebaek,,,,map,medium,
+#9bedf0,South Korea,Sapgyo,,,,map,medium,
+#9bdee3,South Korea,Cheongju,,,,map,high,
+#87e9e5,South Korea,Sejong,,,,map,high,"unread glyph (?); placed by label colour, text off the region; stray ink between letters ignored"
+#4ce3bd,South Korea,Daejeon,,,,map,high,"placed by label colour, text off the region"
+#75e0ad,South Korea,Dalseong,,,,map,low,"placed by label colour, text off the region; fuzzy match dalseogu (0.88)"
+#81eed7,South Korea,Jeonju,,,,map,high,"placed by label colour, text off the region"
+#95e0bc,South Korea,Gyeongsan,,,,map,high,
+#75e09a,South Korea,Daegu,,,,map,high,"placed by label colour, text off the region"
+#a2f4e2,South Korea,Geumgang,,,,map,medium,
+#ade9d3,South Korea,Sobaek,,,,map,medium,
+#a3e9cd,South Korea,Seorabeol,,,,map,medium,
+#90f0d1,South Korea,Ulsan,,,,map,high,"placed by label colour, text off the region"
+#97eeb5,South Korea,Gimhae,,,,map,medium,
+#81eb96,South Korea,Changwon,,,,map,high,
+#85f075,South Korea,Dongnae,,,,map,medium,"placed by label colour, text off the region"
+#9cedc0,South Korea,Jinju,,,,map,medium,
+#79eeb6,South Korea,Gwangju,,,,map,high,"placed by label colour, text off the region"
+#77eb74,South Korea,Nakdong,,,,map,medium,"placed by label colour, text off the region"
+#7fe94e,South Korea,Busan,,,,map,high,"placed by label colour, text off the region"
+#a9ebcb,South Korea,Seomjin,,,,map,medium,
+#a2f4d6,South Korea,Mokpo,,,,map,high,
+#aef2c3,South Korea,(jeju),,,,map,high,
+#fabf72,Taiwan,Keelung,,,,map,high,"placed by label colour, text off the region"
+#f5ae71,Taiwan,Tamsui,,,,map,medium,"placed by label colour, on an inset"
+#f7954d,Taiwan,Shilin,,,,map,medium,"placed by label colour, on an inset; other text on region: taipei"
+#fa733d,Taiwan,Xinzhuang,,,,map,medium,"from numbered list, key c"
+#ee6e10,Taiwan,Taipei,,,,map,high,"placed by list entry a, by label colour"
+#e46b3b,Taiwan,Banqiao,,,,map,medium,"placed by list entry b, by label colour"
+#e9845c,Taiwan,Taoyuan,,,,map,high,"from numbered list, key e"
+#e49164,Taiwan,Wenshan,,,,map,medium,"from numbered list, key d"
+#eeb29a,Taiwan,Yangmei,,,,map,high,"placed by label colour, text off the region"
+#eb9471,Taiwan,Dahan,,,,map,medium,"placed by label colour, on an inset"
+#edbc8c,Taiwan,Hsinchu,,,,map,high,"placed by label colour, text off the region"
+#eed294,Taiwan,Miaoli,,,,map,high,
+#e6ae58,Taiwan,Fengyuan,,,,map,medium,"from numbered list, key b"
+#fac588,Taiwan,Changhua,,,,map,high,"from numbered list, key c"
+#e8a65d,Taiwan,Taichung,,,,map,high,"from numbered list, key a"
+#fdd494,Taiwan,Yuanlin,,,,map,high,
+#f8d889,Taiwan,Yunlin,,,,map,high,other text on region: (yunlin) / l?
+#f3d7cf,Taiwan,Yushan,,,,map,medium,
+#f7df99,Taiwan,Chiayi,,,,map,high,
+#f7c162,Taiwan,Tainan,,,,map,high,"placed by label colour, text off the region"
+#f3ce8c,Taiwan,Gangshan,,,,map,medium,"placed by label colour, text off the region"
+#edbd94,Taiwan,Pingtung,,,,map,high,
+#eea23e,Taiwan,Kaohsiung,,,,map,high,"placed by label colour, text off the region"
+#f8b761,Taiwan,Fengshan,,,,map,medium,"placed by label colour, text off the region; name found in neighbour #eea23e"
+#a5dfe6,Thailand,Chiang Rai,,,,map,high,
+#aadee4,Thailand,Lanna,,,,map,medium,
+#88d8ec,Thailand,Chiang Mai,,,,map,high,
+#abd8e7,Thailand,Nan,,,,map,high,
+#9ed4e6,Thailand,Lampang,,,,map,high,
+#b0eaee,Thailand,Nong Khai,,,,map,high,
+#addbe7,Thailand,Ping,,,,map,medium,
+#b1f4f5,Thailand,Nakhon Phanom,,,,map,high,
+#a6e6ee,Thailand,Udon Thani,,,,map,high,
+#abe0e9,Thailand,Loei,,,,map,high,
+#9ecbf0,Thailand,Sukhothai,,,,map,high,
+#b0e9e8,Thailand,Phu Phan,,,,map,high,
+#a4c9e6,Thailand,Phitsanulok,,,,map,high,
+#afebf0,Thailand,Lam Pao,,,,map,medium,
+#aaedee,Thailand,Mukdahan,,,,map,high,
+#92dff3,Thailand,Khon Kaen,,,,map,high,
+#9bc2e6,Thailand,Phetchabun,,,,map,high,
+#92beec,Thailand,Kamphaeng Phet,,,,map,high,
+#9fcee7,Thailand,Chaiyaphum,,,,map,high,
+#9de7f6,Thailand,Roi Et,,,,map,high,
+#9fe2f0,Thailand,Sarakham,,,,map,medium,
+#8fb7e6,Thailand,Nakhon Sawan,,,,map,high,
+#b1f6f7,Thailand,Khemarat,,,,map,high,
+#a0def1,Thailand,Phimai,,,,map,high,
+#88a7e9,Thailand,Chainat,,,,map,high,
+#97ddf0,Thailand,Korat,,,,map,medium,
+#83afeb,Thailand,Lopburi,,,,map,high,
+#afebe4,Thailand,Ubon,,,,map,high,
+#a7e9ec,Thailand,Si Saket,,,,map,high,
+#9fddee,Thailand,Surin,,,,map,high,
+#9acde9,Thailand,Dong Phaya Yen,,,,map,medium,
+#9bd2e4,Thailand,Buriram,,,,map,high,
+#a1b5e4,Thailand,Kanchanaburi,,,,map,high,
+#7994e2,Thailand,Suphan Buri,,,,map,high,
+#799ee2,Thailand,Ayutthaya,,,,map,medium,other text on region: ayutt?ay¿a / l?
+#8ab0ec,Thailand,Prachinburi,,,,map,high,
+#6089da,Thailand,Pathum Thani,,,,map,high,"placed by label colour, on an inset"
+#497fe2,Thailand,Don Mueang,,,,map,high,"placed by label colour, on an inset"
+#5b7fe6,Thailand,Bang Bua Thong,,,,map,high,"placed by label colour, on an inset"
+#6d8ce6,Thailand,Nakhon Pathom,,,,map,high,
+#528be6,Thailand,Min Buri,,,,map,high,"placed by label colour, on an inset"
+#3878d1,Thailand,Bang Kapi,,,,map,high,"from numbered list, key f"
+#2475db,Thailand,Khlong Toei,,,,map,high,"from numbered list, key b"
+#2164e7,Thailand,Thonburi,,,,map,high,"from numbered list, key c"
+#0565df,Thailand,Bangkok,,,,map,high,"from numbered list, key a"
+#2f78dd,Thailand,Phra Khanong,,,,map,high,"from numbered list, key e"
+#4278ff,Thailand,Bang Khae,,,,map,high,"placed by label colour, on an inset"
+#92bcee,Thailand,Sa Kaeo,,,,map,high,
+#2e72f7,Thailand,Bang Khun Thian,,,,map,high,"from numbered list, key d"
+#237af3,Thailand,Pak Nam,,,,map,medium,"placed by label colour, on an inset"
+#408af1,Thailand,Bang Phli,,,,map,high,"placed by label colour, on an inset"
+#6994fa,Thailand,Samut Sakhon,,,,map,high,"placed by label colour, text off the region"
+#6ca4f1,Thailand,Chachoeng -sao,,,,map,high,
+#89a6eb,Thailand,Ratchaburi,,,,map,high,
+#5990f5,Thailand,Chonburi,,,,map,high,"placed by label colour, text off the region"
+#719ef0,Thailand,Rayong,,,,map,high,
+#8ebff8,Thailand,Chanthaburi,,,,map,high,
+#aebff7,Thailand,Tanaosi,,,,map,medium,
+#a2b2f8,Thailand,Chaiya,,,,map,high,
+#a8b8ee,Thailand,Tapi,,,,map,medium,
+#9ca9f5,Thailand,Tambralinga,,,,map,medium,
+#99b6f0,Thailand,Phuket,,,,map,high,
+#adb3f3,Thailand,Phatthalung,,,,map,high,
+#adc5f3,Thailand,Trang,,,,map,high,
+#a5a7f3,Thailand,Songkhla,,,,map,high,
+#c8b1f5,Thailand,Pattani,,,,map,high,
+#cdb4ec,Thailand,Menara,,,,map,medium,
+#b4a9e9,Vietnam,Hà Giang,,,,map,high,
+#c1b7ee,Vietnam,Cao Bằng,,,,map,high,
+#c5acee,Vietnam,Hoàng Liên Sơn,,,,map,medium,
+#b0bde9,Vietnam,Muờng,,,,map,high,other text on region: thanh
+#e9b2d3,Vietnam,Sông Lô,,,,map,medium,
+#e7a6ad,Vietnam,Thái Nguyên,,,,map,high,
+#aaade7,Vietnam,Sơn La,,,,map,high,
+#eca8b1,Vietnam,Phú Tho,,,,map,high,
+#e7978e,Vietnam,Sông Cầu,,,,map,medium,"from numbered list, key l"
+#df9fab,Vietnam,Luc Nam,,,,map,high,
+#f7b79c,Vietnam,Ha Long,,,,map,high,
+#d0b1e2,Vietnam,Môc Châu,,,,map,high,
+#eb9c9c,Vietnam,Ba Vi,,,,map,high,
+#ec9378,Vietnam,Luc Dầu Giang,,,,map,medium,"from numbered list, key m"
+#f0755d,Vietnam,Fc,,,,map,medium,other text on region: hoài dúc
+#f1562f,Vietnam,Tù Liêm,,,,map,high,"placed by list entry c, by label colour"
+#f33607,Vietnam,Hà Nôi,,,,map,high,"from numbered list, key a"
+#e7a18b,Vietnam,Yên Tủ,,,,map,medium,"from numbered list, key n"
+#f0845d,Vietnam,Gia Lam,,,,map,high,"unread glyph (?); from numbered list, key d; stray ink between letters ignored"
+#f35526,Vietnam,Hoàng Mai,,,,map,high,"from numbered list, key b"
+#f07e5d,Vietnam,Hà Dông,,,,map,low,"from numbered list, key e; fuzzy match haong (0.91)"
+#f39579,Vietnam,Kien An,,,,map,medium,"from numbered list, key p; name found in neighbour #f77a54"
+#e99d78,Vietnam,Hải Duơng,,,,map,high,"from numbered list, key o"
+#f77a54,Vietnam,Hải Phòng,,,,map,high,"placed by label colour, text off the region"
+#d6a59d,Vietnam,Hòa Binh,,,,map,high,
+#f3a179,Vietnam,Sông Luôc,,,,map,medium,"from numbered list, key q"
+#f8ac80,Vietnam,Hải Hầu,,,,map,high,
+#f1a68b,Vietnam,Hoa Lu,,,,map,high,
+#f6a99d,Vietnam,Lam Sơn,,,,map,medium,
+#ff9787,Vietnam,Thanh Hóa,,,,map,high,"placed by label colour, text off the region"
+#d3bae4,Vietnam,Pù Luông,,,,map,medium,
+#f8a69a,Vietnam,Tinh Gia,,,,map,high,
+#fab0a4,Vietnam,Diễn Chau,,,,map,high,
+#f6b3a6,Vietnam,Sông Lam,,,,map,medium,
+#fa988d,Vietnam,Vinh,,,,map,high,
+#fcb4af,Vietnam,Hồng Linh,,,,map,high,
+#fdbdb9,Vietnam,Hoành Sơnh,,,,map,medium,
+#fcbdbd,Vietnam,Quảng Tri,,,,map,high,
+#faa4a4,Vietnam,Huế,,,,map,high,
+#fa737c,Vietnam,Dà Nẵng,,,,map,low,"placed by label colour, text off the region; fuzzy match anang (0.91)"
+#f88a92,Vietnam,Thu Bồn,,,,map,medium,
+#f5b4b8,Vietnam,Quảng Nam,,,,map,high,
+#fda9a7,Vietnam,Trà Khúc,,,,map,medium,
+#fcc0be,Vietnam,Hoài Nhơn,,,,map,high,
+#e9d1ac,Vietnam,Kon Tum,,,,map,high,
+#faa9a0,Vietnam,Quy Nhơn,,,,map,high,
+#e9caac,Vietnam,Gia Lai,,,,map,high,
+#fabcaf,Vietnam,Da Rằng,,,,map,medium,
+#e7c5a4,Vietnam,Buôn Hồ,,,,map,high,
+#fd9f8c,Vietnam,Nha Trang,,,,map,high,
+#e0d4af,Vietnam,Dắk Nông,,,,map,low,fuzzy match aknong (0.92)
+#e6b396,Vietnam,Buôn Ma Thuôt,,,,map,high,
+#f8aea6,Vietnam,Phan Rang,,,,map,medium,
+#e2bb98,Vietnam,Dà Lat,,,,map,medium,
+#e2c09a,Vietnam,Dồng Xoài,,,,map,high,
+#e7bb90,Vietnam,Tây Ninh,,,,map,high,
+#e79f8d,Vietnam,Sông Bé,,,,map,medium,
+#fda9a9,Vietnam,Phan Thiết,,,,map,high,
+#f8a3a3,Vietnam,Binh Tuy,,,,map,medium,
+#eb8c79,Vietnam,Củ Chi,,,,map,high,
+#ee8f98,Vietnam,Long Khánh,,,,map,high,
+#f72912,Vietnam,Gò Vấp,,,,map,high,"from numbered list, key b"
+#eb3c3c,Vietnam,Tân Binh,,,,map,high,"from numbered list, key c"
+#eb8496,Vietnam,Dồng Nai,,,,map,low,fuzzy match ongnai (0.92)
+#ff040c,Vietnam,Sài Gòn,,,,map,medium,"from numbered list, key a"
+#f83c4f,Vietnam,Binh Tân,,,,map,high,"from numbered list, key f"
+#e7ab8d,Vietnam,Vàm Co,,,,map,medium,other text on region: var; co
+#f32e2e,Vietnam,Chơ Lớn,,,,map,medium,"from numbered list, key d"
+#f13d30,Vietnam,Nhà Bè,,,,map,high,"from numbered list, key e"
+#eea687,Vietnam,Dồng Tháp,,,,map,low,fuzzy match ongthap (0.93)
+#ecb590,Vietnam,Châu Dốc,,,,map,high,
+#ff7d8a,Vietnam,Vüng Tàu,,,,map,high,
+#ff8d9c,Vietnam,Long An,,,,map,high,
+#ee9e96,Vietnam,Cai Lây,,,,map,high,
+#e99b87,Vietnam,Sa Déc,,,,map,medium,
+#ff97a1,Vietnam,Mỹ Tho,,,,map,high,
+#f1a18d,Vietnam,Long Xuyên,,,,map,high,
+#f5b793,Vietnam,Rach Giá,,,,map,high,
+#ec8f85,Vietnam,Vinh Long,,,,map,high,
+#f89097,Vietnam,Bến Tre,,,,map,high,
+#eb867f,Vietnam,Cần Thơ,,,,map,high,
+#fc9fa3,Vietnam,Trà Vinh,,,,map,high,
+#f1a393,Vietnam,Ngã Bảy,,,,map,high,
+#f1b0a0,Vietnam,U Minh,,,,map,high,
+#eb9491,Vietnam,Sóc Trăng,,,,map,high,
+#f39e95,Vietnam,Bac Liêu,,,,map,high,
+#f1a0a0,Vietnam,Cà Mau,,,,map,high,

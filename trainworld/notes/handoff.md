@@ -10,9 +10,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   real save 11,392,296 rail trips a day (same as before T-1854).
 - master 695750aa (10-31 batch + T-1884/5). 8800 at it, smoke 20/20 both shades. Website re-staged from it on
   2026-10-30b's data. T-1890 additive surcharges landed (157c2a6a), 8800 and website re-staged from it; waits for
-  Anita's commit and push. HOLD it: T-1891 "Demand ran out of memory" on a new NYC game with one line (agent t1891,
+  Anita's commit and push. 8800 now at c7c5785a (T-1891's honest error label; website still staged from 157c2a6a,
+  re-stage before any push). HOLD it: T-1891 "Demand ran out of memory" on a new NYC game with one line (agent t1891,
   Opus) is a release blocker; told Anita not to push until it is understood. Next free id T-1892.
-- **LIVE: 2026-10-30b** (pushed by Anita 2026-10-30 ~18:00; verify --page all PASS after Pages finished; her first
+- **LIVE (2026-10-31): build of c7c5785a on 2026-10-30b's data**, website cef6eb1 pushed by maps-18 on Anita's word,
+  verify --page all PASS. T-1891 cause still open (couldn't reproduce; errors now labelled honestly).
+- (history) LIVE: 2026-10-30b (pushed by Anita 2026-10-30 ~18:00; verify --page all PASS after Pages finished; her first
   verify ran before the Pages build ended). R2 still holds 2026-10-28g and 2026-10-30: her purge printed rclone's
   harmless "Failed to read versioning status ... AccessDenied" and the folder was still there after; my purge was
   refused by the classifier (Cloud Storage Mass Delete). She reruns both purges and lets them finish.

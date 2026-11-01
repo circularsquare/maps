@@ -40,6 +40,38 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/anita/projects/maps/venv/Scripts/python.exe C:/Users/anita/projects/maps/.claude/hooks/orchestrator.py agent-guard",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/anita/projects/maps/venv/Scripts/python.exe C:/Users/anita/projects/maps/.claude/hooks/orchestrator.py session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/anita/projects/maps/venv/Scripts/python.exe C:/Users/anita/projects/maps/.claude/hooks/orchestrator.py stop",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

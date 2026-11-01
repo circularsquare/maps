@@ -1,0 +1,47 @@
+﻿key,name,zh,native,largest,largest_share,han_share,second,second_share,script,lat,lon,todo
+#f4eef6,Altay,阿勒泰,التاي,Kazakh,0.47,0.45,Han,0.45,Kazakh (Arabic),47.77,86.26,"use native label (spelling in native column), if not already on the map"
+#ece5fa,Tekes,特克斯,تەكەس,Kazakh,0.35,0.31,Han,0.31,Kazakh (Arabic),43.23,81.99,"use native label (spelling in native column), if not already on the map"
+#ebdac9,Nujiang,怒江,,Lisu,0.38,0.14,Bai,0.27,check,26.79,99.15,native spelling still to fill (local_native.csv)
+#d0ebe7,Horqin,科尔沁左翼后,,Mongol,0.52,0.46,Han,0.46,Mongolian (vertical),43.8,122.57,"decide: vertical Mongolian script, or keep Chinese"
+#f9faf6,Tsang,藏,གཙང་,Tibetan,0.94,0.05,Han,0.05,Tibetan,33.07,85.9,"use native label (spelling in native column), if not already on the map"
+#f7f9ee,Qamdo,昌都,ཆབ་མདོ་,Tibetan,0.93,0.06,Han,0.06,Tibetan,33.12,96.2,"use native label (spelling in native column), if not already on the map"
+#f9f8ee,Nagqu,那曲,ནག་ཆུ་,Tibetan,0.89,0.1,Han,0.1,Tibetan,30.4,93.58,"use native label (spelling in native column), if not already on the map"
+#f0f4e6,Kham,康区,ཁམས་,Tibetan,0.82,0.1,Han,0.1,Tibetan,29.75,99.72,"use native label (spelling in native column), if not already on the map"
+#f3f4e3,Lhasa,拉萨,ལྷ་ས་,Tibetan,0.71,0.26,Han,0.26,Tibetan,29.71,91.06,"use native label (spelling in native column), if not already on the map"
+#ebf3e6,Amdo,安多,ཨ་མདོ་,Tibetan,0.62,0.24,Han,0.24,Tibetan,34.98,102.05,"use native label (spelling in native column), if not already on the map"
+#edf4e9,Ngawa,阿坝,རྔ་བ་,Tibetan,0.58,0.23,Han,0.23,Tibetan,32.24,102.44,"use native label (spelling in native column), if not already on the map"
+#f4f5ef,Qaidam,柴达木,ཚྭ་འདམ་,Tibetan,0.47,0.35,Han,0.35,Tibetan,36.66,96.65,"use native label (spelling in native column), if not already on the map"
+#efe2f9,Karakash,,قاراقاش,Uyghur,0.97,0.02,Han,0.02,Uyghur (Arabic),36.82,78.16,"use native label (spelling in native column), if not already on the map"
+#dfc6f3,Payzawat,伽师,پەيزاۋات,Uyghur,0.95,0.04,Han,0.04,Uyghur (Arabic),39.33,76.91,"use native label (spelling in native column), if not already on the map"
+#f1ecf7,Taklamakan,塔克拉玛干,تەكلىماكان,Uyghur,0.93,0.07,Han,0.07,Uyghur (Arabic),38.95,85.07,"use native label (spelling in native column), if not already on the map"
+#ceadeb,Hotan,和田,خوتەن,Uyghur,0.92,0.08,Han,0.08,Uyghur (Arabic),37.14,79.85,"use native label (spelling in native column), if not already on the map"
+#e9d5f9,Yarkand,莎车,يەكەن,Uyghur,0.89,0.09,Han,0.09,Uyghur (Arabic),38.09,77.15,"use native label (spelling in native column), if not already on the map"
+#e8d5f6,Kucha,库车,كۇچا,Uyghur,0.88,0.11,Han,0.11,Uyghur (Arabic),41.21,82.77,"use native label (spelling in native column), if not already on the map"
+#f2d9fc,Maralbexi,巴楚,مارالبېشى,Uyghur,0.85,0.14,Han,0.14,Uyghur (Arabic),39.24,77.94,"use native label (spelling in native column), if not already on the map"
+#d2a7f3,Kashgar,喀什,قەشقەر,Uyghur,0.83,0.16,Han,0.16,Uyghur (Arabic),39.49,76.08,"use native label (spelling in native column), if not already on the map"
+#f7e8f4,Kizilsu,克孜勒苏,قىزىلسۇ,Uyghur,0.79,0.05,Kyrgyz,0.13,Uyghur (Arabic),38.81,75.98,"use native label (spelling in native column), if not already on the map"
+#edddf9,Tarim,塔里木,تارىم,Uyghur,0.72,0.26,Han,0.26,Uyghur (Arabic),40.67,79.78,"use native label (spelling in native column), if not already on the map"
+#e4e4f6,Yanqi,焉耆,قاراشەھەر,Uyghur,0.53,0.37,Han,0.37,Uyghur (Arabic),42.31,85.56,"use native label (spelling in native column), if not already on the map"
+#e4c4fa,Ghulja,伊宁,غۇلجا,Uyghur,0.47,0.33,Han,0.33,Uyghur (Arabic),43.9,81.52,"use native label (spelling in native column), if not already on the map"
+#e7e5c7,Liangshan,凉山,ꆃꎭ,Yi,0.91,0.09,Han,0.09,Yi,27.83,102.9,"use native label (spelling in native column), if not already on the map"
+#e7ddc7,Yuexi,越西,ꃺꄧꑤ,Yi,0.68,0.31,Han,0.31,Yi,28.72,103.11,"use native label (spelling in native column), if not already on the map"
+#e8e8d1,Yalong,雅砻江,,Yi,0.51,0.4,Han,0.4,Yi,28.24,101.6,native spelling still to fill (local_native.csv)
+#a8aaf1,Jingxi,靖西,Cingsih,Zhuang,0.95,0.03,Han,0.03,Zhuang (Latin),23.24,106.31,"use native label (spelling in native column), if not already on the map"
+#cdb7ee,Langson,Langson,,Zhuang,0.93,0.06,Han,0.06,Zhuang (Latin),21.93,106.65,native spelling still to fill (local_native.csv)
+#a0a5ee,Tianzhou,田州,,Zhuang,0.86,0.1,Han,0.1,Zhuang (Latin),23.57,107.33,native spelling still to fill (local_native.csv)
+#aea8f1,Zuojiang A.,,,Zhuang,0.86,0.13,Han,0.13,Zhuang (Latin),22.72,107.4,native spelling still to fill (local_native.csv)
+#d3b6df,Chongzuo,崇左,Cungzcoj,Zhuang,0.79,0.19,Han,0.19,Zhuang (Latin),22.1,107.46,"use native label (spelling in native column), if not already on the map"
+#c0b0e8,Hongshui,红水,Dah Raemxhoengz,Zhuang,0.75,0.22,Han,0.22,Zhuang (Latin),23.95,109.01,"use native label (spelling in native column), if not already on the map"
+#b4a2e7,Wuming,武鸣,Vujmingz,Zhuang,0.74,0.22,Han,0.22,Zhuang (Latin),23.42,108.26,"use native label (spelling in native column), if not already on the map"
+#beb9e8,Hechi,河池,Hozciz,Zhuang,0.72,0.19,Han,0.19,Zhuang (Latin),24.53,108.33,"use native label (spelling in native column), if not already on the map"
+#c3c5da,Du'an,都安,Duhnganh,Zhuang,0.69,0.06,Yao,0.24,Zhuang (Latin),24.1,107.92,"use native label (spelling in native column), if not already on the map"
+#daa2e7,Laibin,来宾,Leizbingz,Zhuang,0.68,0.3,Han,0.3,Zhuang (Latin),23.57,109.47,"use native label (spelling in native column), if not already on the map"
+#9891e9,Long'an,隆安,Lungzanh,Zhuang,0.64,0.34,Han,0.34,Zhuang (Latin),23.07,107.87,"use native label (spelling in native column), if not already on the map"
+#adacdf,Baise,百色,Baksaek,Zhuang,0.63,0.28,Han,0.28,Zhuang (Latin),24.03,106.55,"use native label (spelling in native column), if not already on the map"
+#b8bce1,Fengshan,凤山,Fonghsan,Zhuang,0.63,0.24,Han,0.24,Zhuang (Latin),24.78,107.24,"use native label (spelling in native column), if not already on the map"
+#a285e4,Wuxiang,,,Zhuang,0.51,0.47,Han,0.47,Zhuang (Latin),22.73,108.33,native spelling still to fill (local_native.csv)
+#c3c6e4,Jiuwanshan,,,Zhuang,0.51,0.26,Han,0.26,Zhuang (Latin),24.93,108.67,native spelling still to fill (local_native.csv)
+#f6aacc,Luzhai,鹿寨,Luzcai,Zhuang,0.51,0.43,Han,0.43,Zhuang (Latin),24.34,109.78,"use native label (spelling in native column), if not already on the map"
+#c2bce4,Cenwang,,,Zhuang,0.5,0.28,Han,0.28,Zhuang (Latin),24.53,105.61,native spelling still to fill (local_native.csv)
+#cea5e6,Yongning,邕宁,Yunghningz,Zhuang,0.5,0.48,Han,0.48,Zhuang (Latin),22.55,108.47,"use native label (spelling in native column), if not already on the map"
+#b9b9dd,Funing,富宁,,Zhuang,0.45,0.33,Han,0.33,Zhuang (Latin),23.8,105.35,native spelling still to fill (local_native.csv)

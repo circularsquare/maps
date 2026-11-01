@@ -1,0 +1,68 @@
+key,zh,x,y,w,h,layout,placed_inside,dist,anchor,where,source,on_layer1
+#8ce297,海城,7678,2508,11,23,column,partly,26.9,"english label, first-round spot",main,oldnames high,True
+#daf431,天津,6929,2346,11,23,column,partly,0.7,interior,inset,oldnames high,False
+#f04e2f,武侯,5921,3932,23,11,line,partly,0.7,interior,inset,picks,False
+#eecd43,海淀,6762,2183,11,23,column,partly,1.6,interior,inset,oldnames high,False
+#e2eb5d,南开,6914,2339,11,23,column,partly,4.5,interior,inset,oldnames high,False
+#cce030,小寨,6256,3010,23,11,line,partly,0.7,interior,inset,picks,False
+#bbe422,枣园,6240,2995,23,11,line,partly,2.5,interior,inset,picks,False
+#c9ee56,红桥,6929,2331,23,11,line,partly,10.1,interior,inset,oldnames high,False
+#f03420,成都,5927,3917,23,11,line,partly,7.5,interior,inset,picks,False
+#f0dc07,东城,6777,2192,11,23,column,partly,4.5,interior,inset,oldnames high,False
+#f0d407,西城,6750,2210,23,11,line,partly,19.3,interior,inset,oldnames high,False
+#ebee29,未央,6267,2982,11,23,column,partly,5.5,interior,inset,picks,False
+#f38825,江北,6133,3704,11,23,column,partly,1.6,interior,inset,picks,False
+#d4ee4f,大直沽,6944,2346,11,35,column,partly,8.5,interior,inset,oldnames high,False
+#f36d59,青羊,5906,3914,11,23,column,partly,2.5,interior,inset,picks,False
+#f15740,金牛,5921,3902,23,11,line,partly,11.1,interior,inset,picks,False
+#f2e345,望京,6777,2177,23,11,line,partly,7.4,interior,inset,oldnames high,False
+#e7744d,武昌,7923,4012,11,23,column,partly,1.6,interior,inset,picks,False
+#e3d42b,大红门,6777,2219,35,11,line,partly,14.6,interior,inset,oldnames high,False
+#ea8b51,沙坪坝,6114,3709,11,35,column,partly,1.6,interior,inset,picks,False
+#f37b59,天府,5917,3947,23,11,line,partly,14.1,interior,inset,picks,False
+#70dd75,潍坊,7466,3033,23,11,line,partly,15.3,english label,main,oldnames high,False
+#ccea6f,邯郸,7079,3096,11,23,column,partly,18.0,english label,main,oldnames high,False
+#ed7766,犀浦,5894,3899,23,11,line,partly,12.9,interior,inset,picks,False
+#ea7958,琉璃场,5948,3932,11,35,column,partly,7.4,interior,inset,picks,False
+#e8dc43,曲江,6283,2997,11,23,column,partly,9.6,interior,inset,picks,False
+#eea139,南岸,6148,3711,11,23,column,partly,14.2,interior,inset,picks,False
+#bddc48,唐山,7320,2739,23,11,line,partly,13.1,english label,main,oldnames high,False
+#eeed51,通惠,6792,2200,23,11,line,partly,2.1,interior,inset,oldnames medium,False
+#e5f060,咸阳,6211,2991,23,11,line,partly,0.7,interior,inset,picks,False
+#f35e5e,成华,5954,3905,11,23,column,partly,9.9,interior,inset,picks,False
+#ea8e74,华阳,5921,3962,23,11,line,partly,9.5,interior,inset,picks,False
+#e8df62,保定,7120,2848,23,11,line,partly,9.6,english label,main,oldnames high,False
+#5bd7f4,金城,6205,3242,23,11,line,partly,13.9,english label,main,picks,False
+#faf06b,建章,6240,2980,23,11,line,partly,16.8,interior,inset,picks,False
+#d2ea79,濮阳,7143,3183,11,23,column,partly,19.0,english label,main,oldnames high,False
+#e79e91,汤逊湖,7917,4053,35,11,line,partly,21.3,interior,inset,picks,False
+#c8e87f,彭城,7343,3320,23,11,line,partly,39.0,english label,main,oldnames high,False
+#d3e56e,徐州,7342,3335,23,11,line,partly,29.0,english label,main,oldnames high,False
+#eba792,滨湖,7399,3598,23,11,line,partly,9.3,interior,main,picks,False
+#f68989,新都,5939,3887,23,11,line,partly,8.4,english label,inset,picks,False
+#eaa28c,温江,5889,3914,11,23,column,partly,5.2,english label,inset,picks,False
+#e5b496,蚌埠,7375,3468,23,11,line,partly,12.4,english label,main,oldnames high,False
+#8de799,泰安,7306,3110,11,23,column,partly,14.5,english label,main,oldnames high,False
+#ea988c,郫县,5882,3884,23,11,line,partly,5.7,english label,inset,picks,False
+#dde992,北辰,6914,2316,23,11,line,yes,0.5,english label,inset,oldnames high,False
+#d3f47d,东丽,6959,2330,11,23,column,yes,1.0,english label,inset,oldnames high,False
+#eda695,龙泉驿,5973,3922,11,35,column,yes,1.0,english label,inset,picks,False
+#e6ed82,杨柳青,6890,2366,35,11,line,partly,12.2,english label,inset,oldnames high,False
+#c9f87d,滨海,6995,2355,23,11,line,yes,0.0,english label,inset,oldnames high,False
+#f0d281,房山,6726,2246,23,11,line,yes,0.5,english label,inset,oldnames high,False
+#e0e593,顺义,6791,2149,23,11,line,yes,0.5,english label,inset,oldnames high,False
+#d8ee83,海河,6959,2382,23,11,line,yes,2.5,english label,inset,oldnames medium,False
+#a7dad9,岳阳,7072,3907,11,23,column,partly,23.6,english label,main,oldnames high,False
+#9ce8b2,枣庄,7351,3257,23,11,line,partly,15.7,english label,main,oldnames high,False
+#dfe987,三河,6861,2170,23,11,line,yes,0.0,english label,inset,oldnames high,False
+#e5f67e,廊坊,6819,2280,23,11,line,yes,0.0,english label,inset,oldnames high,False
+#f9a0a2,广汉,5969,3864,23,11,line,yes,0.0,english label,inset,picks,False
+#eaed6f,亦庄,6799,2249,23,11,line,yes,0.5,english label,inset,oldnames high,False
+#f0ef8a,香河,6834,2212,23,11,line,yes,0.5,english label,inset,oldnames high,False
+#a8ebb5,周村,7359,3018,23,11,line,partly,3.9,english label,main,oldnames low,False
+#e4f0ab,定陶,7204,3260,23,11,line,yes,2.0,english label,main,oldnames high,False
+#bdf0c4,微山,7287,3231,23,11,line,partly,1.0,english label,main,oldnames high,False
+#bdf0c1,邹平,7332,3014,23,11,line,yes,1.1,english label,main,oldnames high,False
+#eed5c1,怀远,7347,3462,11,23,column,yes,0.7,english label,main,oldnames high,False
+#dee5c1,武安,7026,3102,23,11,line,yes,0.0,english label,main,oldnames high,False
+#eecc9e,九龙,7541,4355,23,11,line,yes,2.0,english label,main,oldnames medium,False

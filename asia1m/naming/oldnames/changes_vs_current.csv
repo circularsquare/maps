@@ -1,0 +1,155 @@
+change,key,name,zh,her_x,her_y,her_w,her_h,her_colour,new_x,new_y,new_w,new_h,new_colour,note
+add,#e0e593,Shunyi,顺义,,,,,,6791,2149,23,11,#a8ac6f,on the inset
+add,#dfe987,Sanhe,三河,,,,,,6861,2170,23,11,#a8af66,on the inset
+add,#f2e345,Wangjing,望京,,,,,,6777,2177,23,11,#b6ab34,on the inset
+add,#eecd43,Haidian,海淀,,,,,,6762,2183,11,23,#b39a33,on the inset
+add,#f0dc07,Dongcheng,东城,,,,,,6777,2192,11,23,#b4a506,on the inset
+add,#eeed51,Tonghui,通惠,,,,,,6792,2200,23,11,#b3b23d,on the inset
+add,#f0d407,Xicheng,西城,,,,,,6750,2210,23,11,#b49f06,on the inset
+add,#f0ef8a,Xianghe,香河,,,,,,6834,2212,23,11,#b4b468,on the inset
+add,#e3d42b,Dahongmen,大红门,,,,,,6777,2219,35,11,#ab9f21,on the inset
+add,#f0d281,Fangshan,房山,,,,,,6726,2246,23,11,#b49e61,on the inset
+add,#eaed6f,Yizhuang,亦庄,,,,,,6799,2249,23,11,#b0b254,on the inset
+add,#e5f67e,Langfang,廊坊,,,,,,6819,2280,23,11,#acb95f,on the inset
+add,#dde992,Beichen,北辰,,,,,,6914,2316,23,11,#a6af6e,on the inset
+add,#d3f47d,Dongli,东丽,,,,,,6959,2330,11,23,#9fb75e,on the inset
+add,#c9ee56,Hongqiao,红桥,,,,,,6929,2331,23,11,#97b341,on the inset
+add,#e2eb5d,Nankai,南开,,,,,,6914,2339,11,23,#aab146,on the inset
+add,#daf431,Tianjin,天津,,,,,,6929,2346,11,23,#a4b725,on the inset
+add,#d4ee4f,Dazhigu,大直沽,,,,,,6944,2346,11,35,#9fb33c,on the inset
+add,#c9f87d,Binhai,滨海,,,,,,6995,2355,23,11,#97ba5e,on the inset
+add,#e6ed82,Yangliuqing,杨柳青,,,,,,6890,2366,35,11,#adb262,on the inset
+add,#d8ee83,Haihe,海河,,,,,,6959,2382,23,11,#a2b363,on the inset
+add,#8ce297,Haicheng,海城,,,,,,7678,2508,11,23,#69aa72,"on the main; already on her imported Layer 1, same spot"
+add,#bddc48,Tangshan,唐山,,,,,,7320,2739,23,11,#8ea536,on the main
+add,#e8df62,Baoding,保定,,,,,,7120,2848,23,11,#aea84a,on the main
+add,#faf06b,Jianzhang,建章,,,,,,6240,2980,23,11,#bcb451,on the inset
+add,#ebee29,Weiyang,未央,,,,,,6267,2982,11,23,#b1b31f,on the inset
+add,#e5f060,Xianyang,咸阳,,,,,,6211,2991,23,11,#acb448,on the inset
+add,#bbe422,Zaoyuan,枣园,,,,,,6240,2995,23,11,#8dab1a,on the inset
+add,#e8dc43,Qujiang,曲江,,,,,,6283,2997,11,23,#aea533,on the inset
+add,#cce030,Xiaozhai,小寨,,,,,,6256,3010,23,11,#99a824,on the inset
+add,#bdf0c1,Zouping,邹平,,,,,,7332,3014,23,11,#8eb491,on the main
+add,#a8ebb5,Shoucun,周村,,,,,,7359,3018,23,11,#7eb188,on the main
+add,#70dd75,Weifang,潍坊,,,,,,7466,3033,23,11,#54a658,on the main
+add,#ccea6f,Handan,邯郸,,,,,,7079,3096,11,23,#99b054,on the main
+add,#dee5c1,Wuan,武安,,,,,,7026,3102,23,11,#a7ac91,on the main
+add,#8de799,Taian,泰安,,,,,,7306,3110,11,23,#6aae73,on the main
+add,#d2ea79,Puyang,濮阳,,,,,,7143,3183,11,23,#9eb05b,on the main
+add,#bdf0c4,Weishan,微山,,,,,,7287,3231,23,11,#8eb493,on the main
+add,#5bd7f4,Jincheng,金城,,,,,,6205,3242,23,11,#45a2b7,on the main
+add,#9ce8b2,Zaozhuang,枣庄,,,,,,7351,3257,23,11,#75ae86,on the main
+add,#e4f0ab,Dingtao,定陶,,,,,,7204,3260,23,11,#abb481,on the main
+add,#c8e87f,Pengcheng,彭城,,,,,,7343,3320,23,11,#96ae60,on the main
+add,#d3e56e,Xuzhou,徐州,,,,,,7342,3335,23,11,#9fac53,on the main
+add,#eed5c1,Huaiyuan,怀远,,,,,,7347,3462,11,23,#b3a091,on the main
+add,#e5b496,Bengbu,蚌埠,,,,,,7375,3468,23,11,#ac8771,on the main
+add,#eba792,Luogang,滨湖,,,,,,7399,3598,23,11,#b17e6e,on the main
+add,#f38825,Jiangbei,江北,,,,,,6133,3704,11,23,#b7661c,on the inset
+add,#ea8b51,Shapingba,沙坪坝,,,,,,6114,3709,11,35,#b0693d,on the inset
+add,#eea139,Nan'an,南岸,,,,,,6148,3711,11,23,#b3792b,on the inset
+add,#f9a0a2,Guanghan,广汉,,,,,,5969,3864,23,11,#bb787a,on the inset
+add,#ea988c,Pixian,郫县,,,,,,5882,3884,23,11,#b07269,on the inset
+add,#f68989,Xindu,新都,,,,,,5939,3887,23,11,#b96767,on the inset
+add,#ed7766,Xipu,犀浦,,,,,,5894,3899,23,11,#b25a4d,on the inset
+add,#f15740,Jinniu,金牛,,,,,,5921,3902,23,11,#b54230,on the inset
+add,#f35e5e,Chenghua,成华,,,,,,5954,3905,11,23,#b74747,on the inset
+add,#a7dad9,Yueyang,岳阳,,,,,,7072,3907,11,23,#7ea4a3,on the main
+add,#f36d59,Qingyang,青羊,,,,,,5906,3914,11,23,#b75243,on the inset
+add,#eaa28c,Wenjiang,温江,,,,,,5889,3914,11,23,#b07a69,on the inset
+add,#f03420,Chengdu,成都,,,,,,5927,3917,23,11,#b42718,on the inset
+add,#eda695,Longquanyi,龙泉驿,,,,,,5973,3922,11,35,#b27d70,on the inset
+add,#f04e2f,Wuhou,武侯,,,,,,5921,3932,23,11,#b43b24,on the inset
+add,#ea7958,Liulichang,琉璃场,,,,,,5948,3932,11,35,#b05b42,on the inset
+add,#f37b59,Tianfu,天府,,,,,,5917,3947,23,11,#b75d43,on the inset
+add,#ea8e74,Huayang,华阳,,,,,,5921,3962,23,11,#b06b57,on the inset
+add,#e7744d,Wuchang,武昌,,,,,,7923,4012,11,23,#ae573a,on the inset
+add,#e79e91,Tangxun,汤逊湖,,,,,,7917,4053,35,11,#ae776d,on the inset
+add,#eecc9e,Jiulong,九龙,,,,,,7541,4355,23,11,#b39977,on the main
+check characters,#a2b2e7,Qiqihar,齐齐哈尔,7636,1868,29,24,#7a86ae,,,,,#7a86ae,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#e2d1e9,Ningguta,宁古塔昂邦章京辖,8163,2053,31,16,#aa9daf,,,,,#aa9daf,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#b2c5e5,Yushu,榆树,7906,2099,24,17,#8694ac,,,,,#8694ac,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#d0ebe7,Horqin,科尔沁左翼后,7585,2213,35,11,#9cb1ae,,,,,#9cb1ae,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#c4f4a5,Liaohe,大辽河,7572,2532,23,11,#93b77c,,,,,#93b77c,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#d4f490,Shanhaiguan,山海关,7427,2668,22,35,#9fb76c,,,,,#9fb76c,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#84f6cc,Yantai,烟台,7629,2905,33,24,#63b999,,,,,#63b999,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#9cf8bb,Huangdao,黄岛,7549,3102,48,17,#75ba8d,,,,,#75ba8d,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#8bf2d0,Rizhao,日照,7516,3155,39,25,#69b69c,,,,,#69b69c,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#e7c07d,Pingdingshan,平顶山,6991,3431,36,16,#ae905e,,,,,#ae905e,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#9c82d3,Yangcheng,阳澄湖,8027,3455,23,11,#75629f,,,,,#75629f,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,"#edc3b7@116.8,32.7",Bagongshan,八公山,7331,3483,20,34,#b2938a,,,,,#b2938a,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#c887a6,Yangzhou,扬州,7546,3484,30,24,#96667d,,,,,#96667d,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#e496ed,Xinbei,新北,7608,3534,19,20,#ab71b2,,,,,#ab71b2,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f1ebe7,Bailong,白龙江,6313,3592,22,11,#b5b1ae,,,,,#b5b1ae,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f0d8d1,Micang,米仓山,6463,3642,23,11,#b4a29d,,,,,#b4a29d,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ab9fe1,Pinghu,平湖,7727,3661,49,19,#8178a9,,,,,#8178a9,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ba9bee,Yuyao,余姚,7747,3721,18,22,#8c75b3,,,,,#8c75b3,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f37276,Mianyang,绵阳,6300,3752,23,16,#b75659,,,,,#b75659,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ba9bee,Yuyao,余姚,8148,3762,18,22,#8c75b3,,,,,#8c75b3,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f3b0ba,Santai,三台,6334,3772,22,22,#b7848c,,,,,#b7848c,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f1b8b8,Zhongjiang,中江,6320,3801,21,22,#b58a8a,,,,,#b58a8a,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ce9ae9,Choujiang,稠江,7669,3830,16,23,#9b74af,,,,,#9b74af,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#eb9be7,Huang,黄,7782,3882,23,11,#b175ae,,,,,#b175ae,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#c8e8cb,Wuling,武陵山,6684,3925,11,23,#96ae99,,,,,#96ae99,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#d6f0d5,Zhangjiajie,张家界,6815,3928,35,17,#a1b4a0,,,,,#a1b4a0,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#c8fcd4,Yugan,余干,7384,3936,19,23,#96bd9f,,,,,#96bd9f,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f0ac8c,Leshan,乐山,6228,3947,23,17,#b48169,,,,,#b48169,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#eec996,Yongchuan,永川,6435,3968,15,23,#b39771,,,,,#b39771,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#9fdfb2,Pingxiang,萍乡,7154,4071,15,23,#78a886,,,,,#78a886,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f3c0ac,Lianjiang,连江,7653,4130,23,17,#b79081,,,,,#b79081,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f5af7e,Changle,长乐,7687,4183,15,23,#b8845f,,,,,#b8845f,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f2cb89,Huian,惠安,7641,4298,15,23,#b69967,,,,,#b69967,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#d0a8e9,Jiuyi,九疑亭,6985,4344,23,11,#9c7eaf,,,,,#9c7eaf,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#eddb75,Meizhou,梅州,7391,4433,17,23,#b2a558,,,,,#b2a558,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f2df2f,Wuhua,五华,6166,4449,16,23,#b6a824,,,,,#b6a824,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f2eb2f,Panlong,盘龙,6184,4456,23,18,#b6b124,,,,,#b6b124,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f5799e,Liuzhou,柳州,6799,4482,34,34,#b85b77,,,,,#b85b77,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ddc372,Heyuan,河源,7293,4489,33,36,#a69356,,,,,#a69356,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f8c684,Shanwei,汕尾,7367,4593,23,39,#ba9563,,,,,#ba9563,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#f12101,Guangzhou,广州,7409,4748,118,22,#b51901,,,,,#b51901,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#cdb7ee,Langson,Langson,6545,4799,43,9,#9a8ab3,,,,,#9a8ab3,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#ec8188,Wanjiang,万江,7448,4924,16,23,#b16166,,,,,#b16166,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#db7373,Songshan,松山湖,7490,4933,11,23,#a55757,,,,,#a55757,in this region's colour but not readable as the data's characters in Ark Pixel
+check characters,#fca152,Qiongshan,琼山,6935,4950,25,16,#bd793e,,,,,#bd793e,in this region's colour but not readable as the data's characters in Ark Pixel
+move,#dee200,Xi'an,西安,6156,2954,23,11,#a7aa00,,,,,#a7aa00,"right characters and colour, more than 40 px from its region"
+move,#83bdfa,Chongming,崇明,8302,3551,23,11,#638ebc,,,,,#638ebc,"right characters and colour, more than 40 px from its region"
+move,#ee9750,Jialing,嘉陵江,6204,3696,35,11,#b3723c,,,,,#b3723c,"right characters and colour, more than 40 px from its region"
+move,#ee7709,Chongqing,重庆,6210,3711,23,11,#b35a07,,,,,#b35a07,"right characters and colour, more than 40 px from its region"
+move,#f0a263,Jiulongpo,九龙坡,6202,3726,35,11,#b47a4b,,,,,#b47a4b,"right characters and colour, more than 40 px from its region"
+move to inset,#c9f87d,Binhai,滨海,7326,2803,23,11,#97ba5e,,,,,,her English label is on the inset; the new inset label is in local_labels_new.png
+recolour,#a29b6f,Hohhot,呼和浩特,6755,2686,47,11,#a4a285,,,,,#7a7554,drawn in the colour of #dad8b1 Huimin
+recolour,#93f036,Dalian,大连,7593,2772,23,11,#91b75e,,,,,#6fb429,drawn in the colour of #c1f47d Ganjingzi
+recolour,#df8680,Laoshan,老山,7709,3394,33,11,#aa6b6b,,,,,#a86560,drawn in no region's colour
+recolour,#c6b4e7,Gaoyou,高邮,7566,3424,11,23,#9284a5,,,,,#9587ae,drawn in the colour of #c2afdc Gaoyou
+recolour,#e69acd,Danyang,丹阳,7578,3540,23,11,#ad74a8,,,,,#ad749a,drawn in the colour of #e69adf Danyang
+recolour,#edb0e1,Maoshan,茅山,7575,3566,23,11,#b284ae,,,,,#b284a9,drawn in no region's colour
+recolour,#6d7edf,Jiading,嘉定,7743,3574,23,11,#3f55ad,,,,,#525fa8,drawn in the colour of #5471e6 Baoshan
+recolour,#b975e4,Binhu,滨湖,7662,3576,23,11,#7e60a8,,,,,#8b58ab,drawn in the colour of #a87fdf Binhu
+recolour,#6b7cd7,Qingpu,青浦,7740,3604,23,11,#4450a8,,,,,#515da2,drawn in the colour of #5a6adf Minhang
+recolour,#77e942,Yunyan,云岩,6557,4262,32,11,#66ae39,,,,,#5aaf32,drawn in no region's colour
+recolour,#c2edae,Nanming,南明,6558,4286,31,11,#50a91b,,,,,#92b283,drawn in no region's colour
+recolour,#95ee6c,Guanshan?nu?,观山湖,6555,4298,44,11,#75b150,,,,,#70b351,drawn in no region's colour
+recolour,#abee6c,Baiyun,白云,6570,4311,31,11,#81b150,,,,,#81b351,drawn in no region's colour
+recolour,#cecdd9,Mangshan,莽山,7117,4376,11,23,#a592a2,,,,,#9b9aa3,drawn in no region's colour
+recolour,#e4c3cf,Lianzhou,连州,7068,4438,23,11,#a68484,,,,,#ab939c,drawn in no region's colour
+recolour,#cfebc9,Dehong,德宏,5746,4551,23,11,#90a890,,,,,#9cb197,drawn in no region's colour
+recolour,#f3835a,Zhanjiang,湛江,6950,4844,23,11,#b75c44,,,,,#b76344,drawn in no region's colour
+rename,#8ae995,Liaoyang,辽阳,7679,2533,23,11,#68af70,,,,,#68af70,"her label reads 海城, the name of #8ce297 Haicheng; this colour is Liaoyang"
+rename,#c5c087,Donghe,东河,6668,2707,11,23,#949066,,,,,#949066,her label reads 包头 (the first round's characters)
+rename,#e8e5c4,Urad,乌拉特前,6688,2711,23,11,#aeac93,,,,,#aeac93,"her label reads 东河, the name of #c5c087 Donghe; this colour is Urad"
+rename,#b7f199,Zhangqing,长清,7271,3081,23,11,#8ab573,,,,,#8ab573,"her label reads 济南, the name of #80eb58 Jinan; this colour is Zhangqing"
+rename,#c8ebb5,Taishan,泰山,7280,3096,23,11,#96b188,,,,,#96b188,"her label reads 长清, the name of #b7f199 Zhangqing; this colour is Taishan"
+rename,#dff1a6,Fu?yang,滏阳,7092,3099,11,23,#a8b57d,,,,,#a8b57d,"her label reads 邯郸, the name of #ccea6f Handan; this colour is Fu?yang"
+rename,#e7f1b1,Daokou,道口,7118,3189,23,11,#aeb585,,,,,#aeb585,"her label reads 濮阳, the name of #d2ea79 Puyang; this colour is Daokou"
+rename,#dceec8,Gupi,古邳,7371,3334,23,11,#a5b396,,,,,#a5b396,"her label reads 徐州, the name of #d3e56e Xuzhou; this colour is Gupi"
+rename,#e6eeb4,Xiao,萧,7314,3335,23,11,#adb387,,,,,#adb387,her label reads 萧县 (the first round's characters)
+rename,#8990df,Taicang,太仓,8096,3443,23,11,#676ca8,,,,,#676ca8,"her label reads 千灯, the name of #7684d0 Qiandeng; this colour is Taicang"
+rename,#ab8fe8,Haiyu,海虞,7670,3546,23,11,#816cae,,,,,#816cae,"her label reads 江阴, the name of #c387e9 Jiangyin; this colour is Haiyu"
+rename,#af7bd0,Xishan,锡山,7659,3561,23,11,#845d9c,,,,,#845d9c,"her label reads 惠山, the name of #b67fd8 Huishan; this colour is Xishan"
+rename,#8990df,Taicang,太仓,7713,3564,11,23,#676ca8,,,,,#676ca8,"her label reads 常熟, the name of #8a7ce4 Changshu; this colour is Taicang"
+rename,#6d7edf,Jiading,嘉定,7728,3564,11,23,#525fa8,,,,,#525fa8,"her label reads 太仓, the name of #8990df Taicang; this colour is Jiading"
+rename,#7684d0,Qiandeng,千灯,7711,3594,23,11,#59639c,,,,,#59639c,"her label reads 吴中, the name of #9779e1 Wuzhong; this colour is Qiandeng"
+rename,#7fc5f5,Nanhui,南汇,7792,3617,23,11,#6094b8,,,,,#6094b8,"her label reads 奉贤, the name of #79afe8 Fengxian; this colour is Nanhui"
+rename,#c48cd8,Mogan,莫干,7642,3693,11,23,#9369a2,,,,,#9369a2,"her label reads 杭州, the name of #e24adb Hangzhou; this colour is Mogan"
+rename,#ebb9fc,Sanmen,三门,7814,3787,23,11,#b18bbd,,,,,#b18bbd,"her label reads 宁海, the name of #dac0f5 Ninghai; this colour is Sanmen"
+rename,#cbeed8,Linxiang,临湘,7085,3899,23,11,#99b3a2,,,,,#99b3a2,"her label reads 岳阳, the name of #a7dad9 Yueyang; this colour is Linxiang"
