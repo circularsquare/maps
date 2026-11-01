@@ -134,8 +134,9 @@ export function loadFailed(why: string) {
   // after startup; at a failed startup the player's choice releases it (every worker may report)
   else if (startup.peek() === "ready") {
     clock?.setHeld(false);
-    // WASM out of memory aborts as `unreachable` (T-737)
-    if (!demandStopped.peek()) demandStopped.value = /unreachable|memory|allocat/i.test(why) ? "memory" : "error";
+    // a dead worker's text always names its WASM size and a panic always aborts as `unreachable`, so
+    // only a failed allocation counts (`last_panic`'s "out of memory", V8's "could not allocate", T-1891)
+    if (!demandStopped.peek()) demandStopped.value = /out of memory|could not allocate|allocation failed/i.test(why) ? "memory" : "error";
   }
 }
 

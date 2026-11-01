@@ -9,8 +9,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master c5a11543 (T-1884/T-1885 phone dock, after T-1883 and T-1854). 8800 at c5a11543, smoke 20/20 both shades, 1,988 terrain files in its dist,
   real save 11,392,296 rail trips a day (same as before T-1854).
 - master 695750aa (10-31 batch + T-1884/5). 8800 at it, smoke 20/20 both shades. Website re-staged from it on
-  2026-10-30b's data (no data change); HOLD the push: T-1890 (additive terrain surcharges: ground 0.5 + mountains
-  2.5 etc., water +2, tunnels no terrain) is with t1887; re-stage after landing it. Next free id T-1891.
+  2026-10-30b's data. T-1890 additive surcharges landed (157c2a6a), 8800 and website re-staged from it; waits for
+  Anita's commit and push. HOLD it: T-1891 "Demand ran out of memory" on a new NYC game with one line (agent t1891,
+  Opus) is a release blocker; told Anita not to push until it is understood. Next free id T-1892.
 - **LIVE: 2026-10-30b** (pushed by Anita 2026-10-30 ~18:00; verify --page all PASS after Pages finished; her first
   verify ran before the Pages build ended). R2 still holds 2026-10-28g and 2026-10-30: her purge printed rclone's
   harmless "Failed to read versioning status ... AccessDenied" and the folder was still there after; my purge was
