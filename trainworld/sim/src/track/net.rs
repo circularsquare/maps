@@ -2176,30 +2176,7 @@ impl Network {
 
     /// The point of an edge nearest to (x, y): chainage and distance, m.
     pub fn project(&self, e: u32, x: f64, y: f64) -> (f64, f64) {
-        let mut best = (0.0, f64::INFINITY);
-        for p in self.edge_pieces(e) {
-            // Plane offsets into the piece; the chainage returned is ground metres.
-            let cands: [f64; 2] = if p.k == 0.0 {
-                let d = ((x - p.x0) * p.th0.cos() + (y - p.y0) * p.th0.sin()).clamp(0.0, p.plen);
-                [d, d]
-            } else {
-                // Angle of the point around the centre, as a distance along the arc from its
-                // start; the wrap can land either side of the start, so try both turns.
-                let (cx, cy) = p.center();
-                let a0 = (p.y0 - cy).atan2(p.x0 - cx);
-                let a = (y - cy).atan2(x - cx);
-                let t = geom::wrap((a - a0) * p.k.signum());
-                [(t / p.k.abs()).clamp(0.0, p.plen), ((t + 2.0 * PI) / p.k.abs()).clamp(0.0, p.plen)]
-            };
-            for d in cands {
-                let (px, py, _) = p.at_plane(d);
-                let dist = (px - x).hypot(py - y);
-                if dist < best.1 {
-                    best = (p.s0 + p.ground_s(d), dist);
-                }
-            }
-        }
-        best
+        geom::project(self.edge_pieces(e), x, y)
     }
 
     // ---------------------------------------------------------------- routing
@@ -2422,7 +2399,7 @@ impl Network {
         // radius that no longer fits gives up 0.05% of it until it does.
         for part in [&mut p1, &mut p2] {
             for _ in 0..10 {
-                let bad: Vec<usize> = self.fit(part).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).collect();
+                let bad = self.fit(part).clamped;
                 if bad.is_empty() {
                     break;
                 }

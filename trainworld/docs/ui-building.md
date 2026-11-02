@@ -122,17 +122,18 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 
 - **Drawing beside track** [T-1685, T-1721]: with the beside switch on and the track tool in hand, a
   faint blue band 40 px either side of all track, blueprint or built, marks where drawing snaps beside
-  it. A start clicked in the band on open ground (further than the 15 px that joins track) goes on
-  the line 8 m (`QUAD_SPACING`) from that track, on the click's side. From any start (that one, a
+  it. A start clicked in the band on open ground (further than the 8 px that joins track) goes on
+  the line 12 m (`BESIDE_SPACING`) from that track, on the click's side. From any start (that one, a
   track end, the end of the last segment), while the pointer is on open ground in the band, the
-  segment ends on the line beside the pointer, on the pointer's side, and runs along it, curves
-  concentric with the track's: a start on the line runs along it all the way; any other start comes
-  in, turning onto the line (a curve under the usual rules) once it has gone along the track as far
-  as the start is from it, at most halfway to the end. A start on the line moves across with the
-  pointer if it is a first segment's; one already built on the other side gives a plain segment.
-  Leaving the band, or onto track or a node, gives the plain segment. The segment is ordinary
-  track: the same checks refuse it, it ramps over what it crosses by itself (the track's own ramps
-  are not copied), joins nothing at its end and adds no crossovers.
+  segment ends on the line beside the pointer and runs along it, curves concentric with the
+  track's: a start on the line runs along it all the way; any other start comes in, turning onto
+  the line (a curve under the usual rules) somewhere past where it has gone along the track as far
+  as the start is from it. The line is on the start's side, so the segment never crosses the track
+  it follows [T-1895]: a chain keeps to its side when the pointer strays across. Only a first
+  click's start near the line moves across with the pointer. Leaving the band, or onto track or a
+  node, gives the plain segment. The segment is ordinary track: the same checks refuse it, it ramps
+  over what it crosses by itself (the track's own ramps are not copied), joins nothing at its end
+  and adds no crossovers.
 - **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
   yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
   segment will end beside track.
@@ -158,8 +159,13 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   drawn, the tag says so and a click is refused, so a run left open in one city never lays track to
   the next one the player pans to (real routes, T-727, are not capped) [T-1020]. While
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
-  [`map/curveCircle.ts`]; none for a straight segment. A click beyond the 1,796 m circle gets that
+  [`map/curveCircle.ts`]; none for a straight segment. A dashed line in the same colour runs on 90
+  px from the segment's end the way it arrives there, where a straight drawn on from that end would
+  go; a straight segment has one too [T-1895]. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
+- **What a click joins** [T-1895]: within 12 px of a node (a track end, a junction, a station) a
+  click joins at it; within 8 px of a piece of track it branches off it (the station tool reaches
+  15 px for track); further out it is open ground.
 - **From a station** [T-1155]: a click on a through station, its node or its platform, starts
   the track 20 m past the platform's end on the side the pointer is, as a junction there
   (stations take no junction; [track-and-service.md](track-and-service.md) 6.1); a segment ending
@@ -345,7 +351,7 @@ switch on, the track tool follows the real network the layer draws.
   track model would accept (the same trial edit as above), each at the point on its track nearest
   the pointer, tried in this order: the tracks within 4 px of the nearest, then the rest within
   15 px (at most 5 tracks) [T-1820: 1.5 times the earlier 10; `SNAP_EDGE_PX` in `map/tools.ts`].
-  The station tool never snaps to a node: the track tool's 18 px node radius (`SNAP_NODE_PX`) covered
+  The station tool never snaps to a node: the track tool's node radius (18 px then; 12 px since T-1895, `TRACK_NODE_PX`) covered
   a long stretch of track zoomed out, pulling stations onto joints [T-1870]. Among the near tracks the order is: one where the station would not meet
   a station (none within the two platforms' reaches along the track, up to a junction), blueprint
   over built, the track the last station of the session went on (from its node along the track to

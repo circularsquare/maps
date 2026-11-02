@@ -14,7 +14,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   intersection (PIs)**: it runs straight between them and cuts the corner at each with a circular
   curve (Anita, 2026-10-09; T-092). A PI's radius is auto unless set: the largest that fits half of
   each adjacent leg (the whole leg next to an end), capped at what the top speed needs (1,796 m). A
-  curve under the minimum radius is refused ("The curve is too tight"). A route starting or ending
+  set radius is the widest that corner may take (T-1895): where its legs have no room for it, it
+  takes the room they have (all of a leg it shares with an end, what an auto corner leaves, or a
+  share in proportion to their own between two set corners), never a refusal. A curve under the
+  minimum radius is refused ("The curve is too tight"). A route starting or ending
   on existing track gets a lead-in PI on that track's heading, so it leaves like a turnout and its
   first curve starts at the node (it never runs on top of the main line). Track in a save that
   keeps the points it was drawn through (T-079) keeps its shape; its first reshape makes those
@@ -91,7 +94,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   point midway along the selected interval between an end and a corner, or two corners; the
   new square can then be dragged. Removing the last corner restores a straight stretch.
   Insertion, removal and per-corner levels each use the existing checked, undoable shape edit.
-  The inspector can also put all corners on one level; its ends keep theirs, with ramps. A set
+  The inspector can also put all corners on one level; its ends keep theirs, with ramps. A radius
+  the stepper sets wider than the corner has room for is stored as the widest that fits. A set
   radius that a drag leaves no room for goes back to auto (splitting track for a station or a
   branch sets the radii next to the split so its shape does not change; a split inside a curve
   gives the two new PIs the radius that ends each half at the node, the curve's own to under 1%,
@@ -160,8 +164,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). Grades do not change speed.
 - **Levels** -3 to +3, **8 m apart** (+1 viaduct, -1 cut and cover, -2 bored, -3 deep). **Max
   grade 4%**, so a ramp is **200 m per level**. Level is set per PI, at the level selected when it
-  was clicked; a ramp is centred between vertices of different levels. Nodes and platforms sit at
-  whole levels. Tracks cross freely
+  was clicked; a ramp is centred between vertices of different levels. A ramp longer than its leg
+  spreads into the legs either side at its two levels, as near its centre as they allow, so it
+  starts sooner and a corner inside it is part way up (T-1895); only when those legs together are
+  too short is it refused ("Not enough room to change elevation"). A piece is never cut where a
+  ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
@@ -224,17 +231,21 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **A route beside track** (T-1685, T-1721, `TrackApi::set_route_beside(_, to_edge)`, used by the
   next `preview_route` or `add_route` only): a route with no PIs whose end is open ground beside the
   run of track through `to_edge` (walked through plain joints and stations as doubling up walks, any
-  track count, at most 400 pieces) ends on the line 8 m (`QUAD_SPACING`) from that run on the end's
-  side and runs along it: `express_verts` on the run's PI polyline (curve radii as fitted on the
-  whole run), every corner concentric, with T-1678's easing of inside corners. A start on the line
-  (a node within half the spacing of it, open ground within three spacings of the track) runs along
-  it from the start, an open-ground start moving onto it and no lead-ins at the ends; a node start
-  on the line's other side gives the plain route. Any other start comes in: its route keeps its
-  lead-in and turns, at an auto-radius corner, onto the line at the roundest of 17 places (T-1781):
-  from where it has gone along the run as far as the start is from the run (at most half the way to
-  the end) out to 90% of the way, the one whose fitted corner is widest (to the design radius, then
-  the nearest), its straight in not crossing the run and the line's own corners still fitting; the
-  nearest if none qualifies. Every PI is at the end's level
+  track count, at most 400 pieces) ends on the line 12 m (`BESIDE_SPACING`, T-1895) from that run
+  and runs along it: `express_verts` on the run's track as fitted, cut where the route starts and
+  ends (inside a curve, a corner where the tangents at the cut part's ends cross, with the curve's
+  radius), every corner concentric, with T-1678's easing of inside corners. Distances and sides
+  are taken from the fitted track, curves and all. The line is on the start's side, so the route
+  never crosses the run (T-1895), except where the start is on the run itself or is open ground
+  within three spacings of it, which take the end's side. A start on the line (a node within half
+  the spacing of it, open ground within three spacings of the track) runs along it from the start,
+  an open-ground start moving onto it and no lead-ins at the ends. Any other start comes in: its
+  route keeps its lead-in and turns, at an auto-radius corner, onto the line at the roundest of 17
+  places (T-1781): from where it has gone along the run as far as the start is from the run (at
+  most half the way to the end) out to 90% of the way, the one whose fitted corner is widest (to
+  the design radius, then the nearest), the line's own corners still fitting and no part of it
+  crossing the run. A route that would still cross the run (none of the places qualifies, or a
+  lead-in does) is the plain route instead. Every PI is at the end's level
   (the run's ramps are not copied, T-1722); the route ramps over what it crosses as any route does.
   Otherwise it is an ordinary route: the same checks, its own loose ends, no crossovers. The
   drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
@@ -302,9 +313,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   Through more than 16 vertices (a snapped real route) each stretch of water is bridged on its
   own, between the corners 4 km of chainage either side, those corners keeping the radii the
   whole route gives them (water read every 3.1 m, a quarter of the usual step, since each piece
-  is checked with its own samples); where that finds no room the stretch is raised whole,
-  ramping on the last leg before the water and the first after it that are long enough for a
-  ramp, and with no such leg (water just past an end) the route is refused as below
+  is checked with its own samples); where that finds no room the stretch is raised whole from a
+  corner before the water to one after it, the ramps starting as late and ending as soon as they
+  can while the water and 14.5 m either side stay up, spread over as many short legs as they need
+  (T-1895, above); with no room even so (water just past an end) the route is refused as below
   [T-727d, T-1187; `bridge::bridge_long`].
   A new end over water (a free click, not track already there) stays up at level 1, with no ramp
   on its side, so a segment may end or start mid-river with one ramp, on the land side; quad
@@ -346,7 +358,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   it loses, along that end's old direction from the node, its platform reach plus 10 m long (less
   where the removed piece was shorter, never short of the platform), of the removed piece's kind,
   level and state, so a station is never off track and keeps its place and orientation (T-1699,
-  `keep_under_stations`). Removing the station too takes all of it. The map draws it there, at its true length and bent as the track is, from
+  `keep_under_stations`). Removing the station too takes all of it. A removal is never refused for
+  the track it keeps or joins (T-1895): where that track would be refused (a curve, a crossing), the
+  removal goes without it, the trim, the kept pieces and the joins at removed stations left out.
+  The map draws it there, at its true length and bent as the track is, from
   zoom 14 ([ui-map.md](ui-map.md) "Stations"). Platform length caps train length (20 m cars).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms

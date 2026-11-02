@@ -287,7 +287,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
-- Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks, the layout's guess and the room snap; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t144-check` (station geometry, line
+- Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks, the layout's guess and the room snap; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `save_net.py <save> <out>` (a game save's network bytes
+  for Rust tests on a real save, given as `T1895_NET`: T-1895's ignored `beside_sweep_real_save`
+  counts drawing-beside previews that cross the track followed, by start kind), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t144-check` (station geometry, line
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1419-carry` (an edited line's riders carried onto its new stops), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and

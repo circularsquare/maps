@@ -7,7 +7,6 @@ const TEXT: Record<string, string | (() => string)> = {
   "Geom:ZeroLeg": "Two points are in the same place.",
   "Geom:Reversal": "The track would turn back on itself.",
   "Geom:RadiusTooSmall": () => `The curve is too tight. Curves need a radius of at least ${length(100)}.`,
-  "Geom:ArcDoesNotFit": "A curve's set radius is too wide for the corners either side of it. Make it smaller or set it to auto.",
   "Geom:RampTooShort": () => `Not enough room to change elevation. Each step up or down needs ${length(200)} of ramp.`,
   "Geom:LevelRange": "Elevation goes from −3 to +3.",
   GroundOverWater: "Track at ground level cannot cross water. Pick a viaduct or tunnel elevation.",

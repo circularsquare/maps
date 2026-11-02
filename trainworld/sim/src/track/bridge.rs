@@ -10,7 +10,7 @@
 
 use super::cost::{water_spans, WaterMask};
 use super::frame::merc_k;
-use super::geom::{self, Fit, GeomIssue, Piece, Pi};
+use super::geom::{self, Fit, Piece, Pi};
 use super::params::*;
 
 /// The level a bridge runs at.
@@ -242,7 +242,7 @@ fn bridge_long_in(verts: &[Pi], scaled: bool, spans: Spans, lift: [bool; 2]) -> 
             // not fit: the stretch goes up whole, rather than one lake refusing 500 km (T-727d)
             _ => {
                 let up = |end: usize, wet_there: bool| lift[end] && wet_there || pis[if end == 0 { 0 } else { pis.len() - 1 }].level == BRIDGE_LEVEL;
-                raised(&sub, s0, s1, [up(0, s0 <= 1e-6), up(1, s1 >= f.len - 1e-6)]).ok_or(NoRoom)?
+                raised(&sub, s0, s1, [up(0, s0 <= 1e-6), up(1, s1 >= f.len - 1e-6)], scaled).ok_or(NoRoom)?
             }
         };
         // the window's ends are the route's own corners, radius and all
@@ -302,18 +302,40 @@ fn held(v: &[Pi], scaled: bool, spans: Spans) -> bool {
     })
 }
 
-/// A window raised whole: up on the last leg before the water long enough for a ramp, down on the
-/// first such leg after it, each ramp centred between its leg's two corners; from its start or to
-/// its end where `stay_up` says so. None where there is no such leg.
-fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64, stay_up: [bool; 2]) -> Option<Vec<Pi>> {
-    let mut v: Vec<Pi> = sub.iter().map(|p| p.0).collect();
-    let fits = |j: usize| sub[j + 1].1 - sub[j].1 >= RAMP + 2.0 * SHORE;
-    let lo = if stay_up[0] { 0 } else { (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE)? + 1 };
-    let hi = if stay_up[1] { sub.len() - 1 } else { (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE)? };
-    for p in &mut v[lo..=hi] {
-        p.level = BRIDGE_LEVEL;
-    }
-    Some(v)
+/// A window raised whole, from a corner before the water to one after it (from its start or to its
+/// end where `stay_up` says so). The ramps start as late and end as soon as they can while the
+/// stretch `s0 - SHORE..s1 + SHORE` (the whole route's chainage) stays up: a ramp longer than its
+/// leg spreads into the legs either side (T-1895), so many short legs serve as well as one long
+/// one. None where nothing fits.
+fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64, stay_up: [bool; 2], scaled: bool) -> Option<Vec<Pi>> {
+    let n = sub.len();
+    let base: Vec<Pi> = sub.iter().map(|p| p.0).collect();
+    let los: Vec<usize> = if stay_up[0] { vec![0] } else { (1..n).rev().filter(|&i| sub[i - 1].1 <= s0 - SHORE).collect() };
+    let his: Vec<usize> = if stay_up[1] { vec![n - 1] } else { (0..n - 1).filter(|&i| sub[i + 1].1 >= s1 + SHORE).collect() };
+    let up = |v: &[Pi], lo: usize, hi: usize| -> Option<Vec<Pi>> {
+        let mut v = v.to_vec();
+        for p in &mut v[lo..=hi] {
+            p.level = BRIDGE_LEVEL;
+        }
+        let g = geom::fit_in(&v, scaled);
+        // the window's own chainage at a place along the whole route, by its corners
+        let at = |s: f64| {
+            let i = sub.partition_point(|p| p.1 <= s).clamp(1, n - 1);
+            let t = ((s - sub[i - 1].1) / (sub[i].1 - sub[i - 1].1).max(1e-9)).clamp(0.0, 1.0);
+            g.vert_s[i - 1] + t * (g.vert_s[i] - g.vert_s[i - 1])
+        };
+        let (a, b) = (at(s0 - SHORE).max(0.0), at(s1 + SHORE).min(g.len));
+        let mut s = a;
+        while s < b + WATER_STEP / 4.0 {
+            if geom::height_at(&g.vert, s.min(b)) < LEVEL_H - 0.01 {
+                return None;
+            }
+            s += WATER_STEP / 4.0;
+        }
+        g.issues.is_empty().then_some(v)
+    };
+    // the ramp up as late as it goes, then the ramp down as soon as it goes with it
+    los.iter().find_map(|&lo| his.iter().copied().filter(|&hi| hi >= lo).find_map(|hi| up(&base, lo, hi)))
 }
 
 /// The ramps one after another, each with the nearest vertices that hold it; then the whole. The
@@ -480,7 +502,7 @@ fn slice(piece: &Piece, scaled: bool, reqs: &[Req]) -> Option<Vec<V>> {
 fn settle(f: &Fit, nv: &mut [Pi], scaled: bool) -> Option<Fit> {
     let mut g = geom::fit_in(nv, scaled);
     for _ in 0..10 {
-        let bad: Vec<usize> = g.issues.iter().filter_map(|i| if let GeomIssue::ArcDoesNotFit(j) = i { Some(*j) } else { None }).collect();
+        let bad = g.clamped.clone();
         if bad.is_empty() {
             break;
         }

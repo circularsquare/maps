@@ -42,7 +42,7 @@ import type { RouteEnd } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import type { Level } from "../game/types";
-import { circleOnScreen } from "./curveCircle";
+import { circleOnScreen, endHeading } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
@@ -61,11 +61,14 @@ import { playBuild } from "./buildSound";
 const TOUCH_GAP_PX = 44;
 type LngLatish = { lng: number; lat: number };
 
-// T-1820: 1.5 times the earlier 12 and 10; the station tool snaps to track only (T-1870)
-const SNAP_NODE_PX = 18;
+// T-1820: the station tool's reach for track, 1.5 times the earlier 10 (it snaps to track only, T-1870)
 const SNAP_EDGE_PX = 15;
+// T-1895: the track tool's, smaller, since a click near track more often means open ground than
+// a branch; a node (a loose end to carry on from) keeps more
+const TRACK_NODE_PX = 12;
+const TRACK_EDGE_PX = 8;
 const NOT_ON_TRACK = "Place stations on track";
-/** open ground this near track (and further than SNAP_EDGE_PX) draws beside it (T-1685) */
+/** open ground this near track (and further than TRACK_EDGE_PX) draws beside it (T-1685) */
 const BESIDE_PX = 40;
 /** tracks this much further from the pointer than the nearest still count as overlapping it (T-469) */
 const OVERLAP_PX = 4;
@@ -86,8 +89,10 @@ const HOLD_AT = 7;
 /** the worker's answer for a track tried this close to the pointer's spot stands for it (T-695) */
 const KNOWN_PX = 16;
 const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformStation", "PlatformJunction", "PlatformJoint", "PlatformCrossing", "StationPorts", "StationJunction"]);
-/** the express pair's spacing (sim `QUAD_SPACING`) */
-const QUAD_SPACING_M = 8;
+/** how far the line on from a segment's end reaches (T-1895) */
+const TANGENT_PX = 120;
+/** track drawn beside track, centre to centre (sim `BESIDE_SPACING`, T-1895) */
+const BESIDE_SPACING_M = 12;
 
 const lengthOf = (pts: ArrayLike<number>) => {
   let l = 0;
@@ -302,14 +307,15 @@ export class Tools {
     const station = tool.peek() === "station";
     if (station) this.alts = [];
     if (!w || !n || (this.noSnap && tool.peek() === "track")) return { kind: "free", lx: fx, ly: fy };
-    let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
+    const edgePx = station ? SNAP_EDGE_PX : TRACK_EDGE_PX;
+    let best = TRACK_NODE_PX * TRACK_NODE_PX, hit: Snap | null = null;
     // only what is near the pointer (T-724); everything with the map pitched
     const at = pointerLocal(this.overlay, px, py);
     // T-1870: a station goes on the track at the pointer, never pulled to a node within the radius
     // (zoomed out that was a long stretch of track); `roomSnap` moves it where the platform needs room
     nodes &&= !station;
-    const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], SNAP_NODE_PX * at[2]) : null;
-    const nearEdges = at ? edgesNear(n, at[0], at[1], SNAP_EDGE_PX * at[2]) : null;
+    const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
+    const nearEdges = at ? edgesNear(n, at[0], at[1], edgePx * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus) continue; // a bus stop is no track to build on (T-1464)
       const [lx, ly] = toLocal(node.lng, node.lat);
@@ -324,7 +330,7 @@ export class Tools {
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
-      let eb = SNAP_EDGE_PX * SNAP_EDGE_PX, eh: Snap | null = null;
+      let eb = edgePx * edgePx, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
         const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
@@ -351,7 +357,7 @@ export class Tools {
   }
 
   /** T-1685: with Snap beside on, open ground within BESIDE_PX of track: the nearest piece, and the
-   * spot QUAD_SPACING_M from it on the pointer's side (local units) */
+   * spot BESIDE_SPACING_M from it on the pointer's side (local units) */
   private besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
     const n = this.overlay.renderer.net;
     const at = pointerLocal(this.overlay, px, py);
@@ -369,7 +375,7 @@ export class Tools {
         const ux = pts[k + 3] - pts[k], uy = pts[k + 4] - pts[k + 1], ul = Math.hypot(ux, uy) || 1;
         const fx = pts[k] + ux * t, fy = pts[k + 1] + uy * t;
         const side = Math.sign(ux * (at[1] - fy) - uy * (at[0] - fx)) || 1;
-        hit = { edge, lx: fx - (uy / ul) * QUAD_SPACING_M * side, ly: fy + (ux / ul) * QUAD_SPACING_M * side };
+        hit = { edge, lx: fx - (uy / ul) * BESIDE_SPACING_M * side, ly: fy + (ux / ul) * BESIDE_SPACING_M * side };
       }
     }
     return hit;
@@ -1467,6 +1473,38 @@ export class Tools {
     this.circle.firstElementChild!.setAttribute("r", String(c.r));
   }
 
+  /** T-1895: beside the circle, a short line on from the segment's end the way it arrives, where a
+   * straight drawn on from there would go; for a straight segment too. */
+  private tangent: SVGSVGElement | null = null;
+  private curveTangent(pv: PreviewAnswer | null) {
+    const h = pv ? endHeading(pv.verts, pv.pts, pv.arc, toLngLat, toLocal) : null;
+    if (!h) {
+      if (this.tangent) this.tangent.style.display = "none";
+      return;
+    }
+    const NS = "http://www.w3.org/2000/svg";
+    if (!this.tangent) {
+      this.tangent = document.createElementNS(NS, "svg");
+      this.tangent.setAttribute("width", "1");
+      this.tangent.setAttribute("height", "1");
+      this.tangent.appendChild(document.createElementNS(NS, "line"));
+      this.box.insertBefore(this.tangent, this.box.firstChild);
+    }
+    const [x0, y0] = this.screen(h.x, h.y);
+    const [x1, y1] = this.screen(h.x + h.ux, h.y + h.uy);
+    const l = Math.hypot(x1 - x0, y1 - y0);
+    if (!(l > 0)) {
+      this.tangent.style.display = "none";
+      return;
+    }
+    this.tangent.style.display = "";
+    this.tangent.setAttribute("class", "curve-circle" + (pv!.ok ? "" : " bad"));
+    placeAt(this.tangent, x0, y0, 0, 0, false);
+    const line = this.tangent.firstElementChild!;
+    line.setAttribute("x2", String(((x1 - x0) / l) * TANGENT_PX));
+    line.setAttribute("y2", String(((y1 - y0) / l) * TANGENT_PX));
+  }
+
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
     // on touch the pointer is a tap, a place on the map: its screen point follows the camera
@@ -1565,6 +1603,7 @@ export class Tools {
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
     this.curveCircle(t === "track" && this.start ? this.lastPreview : null);
+    this.curveTangent(t === "track" && this.start ? this.lastPreview : null);
 
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";

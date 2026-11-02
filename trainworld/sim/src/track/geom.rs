@@ -209,8 +209,6 @@ pub enum GeomIssue {
     Reversal(usize),
     /// The arc at this vertex is under the minimum radius.
     RadiusTooSmall(usize),
-    /// The arc at this (player-set) vertex does not fit its legs.
-    ArcDoesNotFit(usize),
     /// The ramp on this leg is longer than the leg.
     RampTooShort(usize),
     /// A vertex level outside -3..+3.
@@ -234,6 +232,8 @@ pub struct Fit {
     /// Height breakpoints `(s, z)`, piecewise linear.
     pub vert: Vec<[f64; 2]>,
     pub issues: Vec<GeomIssue>,
+    /// Vertices whose set radius had no room in its legs and was narrowed to fit (T-1895).
+    pub clamped: Vec<usize>,
 }
 
 /// Fit arcs at the interior vertices of `v` (`v[0]` and the last are the end nodes) and lay the
@@ -280,6 +280,8 @@ pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
     let mut delta = vec![0.0; n];
     // Plane radius at each vertex (f.radius holds the ground one).
     let mut rp = vec![0.0; n];
+    // the scale each vertex's radius was taken at
+    let mut ks = vec![1.0; n];
     if !zero {
         for i in 1..n - 1 {
             let d = wrap(leg_th[i] - leg_th[i - 1]);
@@ -307,23 +309,37 @@ pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
                 }
             }
             let r = pick(k);
-            if r < (MIN_RADIUS - 1e-6) * k {
-                f.issues.push(GeomIssue::RadiusTooSmall(i));
-            }
             delta[i] = d;
             rp[i] = r;
+            ks[i] = k;
             f.radius[i] = if scaled { r / k } else { r };
             f.tangent[i] = r * t;
         }
+        // T-1895: a set radius is the widest the corner may take. Where its legs have no room for
+        // it, it takes what they have: all of a leg it shares with an end, what an auto corner
+        // leaves, or a share in proportion between two set corners.
+        let set = |j: usize| v[j].radius > 0.0 && j > 0 && j < n - 1;
+        let t0 = f.tangent.clone();
         for i in 0..n - 1 {
             let tol = if scaled { FIT_TOL * kv(i) } else { FIT_TOL };
-            if f.tangent[i] + f.tangent[i + 1] > leg_len[i] + tol {
-                for j in [i, i + 1] {
-                    let blame = v[j].radius > 0.0 && j > 0 && j < n - 1;
-                    if blame && !f.issues.contains(&GeomIssue::ArcDoesNotFit(j)) {
-                        f.issues.push(GeomIssue::ArcDoesNotFit(j));
-                    }
+            if t0[i] + t0[i + 1] <= leg_len[i] + tol {
+                continue;
+            }
+            for (j, o) in [(i, i + 1), (i + 1, i)] {
+                if set(j) {
+                    let cap = if set(o) { leg_len[i] * t0[j] / (t0[j] + t0[o]) } else { leg_len[i] - t0[o] };
+                    f.tangent[j] = f.tangent[j].min(cap.max(0.0));
                 }
+            }
+        }
+        for j in 1..n - 1 {
+            if f.tangent[j] < t0[j] {
+                rp[j] = f.tangent[j] / (delta[j].abs() / 2.0).tan();
+                f.radius[j] = if scaled { rp[j] / ks[j] } else { rp[j] };
+                f.clamped.push(j);
+            }
+            if delta[j] != 0.0 && rp[j] < (MIN_RADIUS - 1e-6) * ks[j] {
+                f.issues.push(GeomIssue::RadiusTooSmall(j));
             }
         }
     }
@@ -399,7 +415,7 @@ pub fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
         }
     }
     for _ in 0..4 {
-        let over: Vec<usize> = fit_in(verts, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).filter(|j| set.contains(j)).collect();
+        let over: Vec<usize> = fit_in(verts, scaled).clamped.into_iter().filter(|j| set.contains(j)).collect();
         if over.is_empty() {
             break;
         }
@@ -410,11 +426,15 @@ pub fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
 }
 
 /// Height breakpoints: level at every vertex, a ramp of 200 m per level centred between two
-/// vertices of different levels (so the result does not depend on the drawing direction).
+/// vertices of different levels (so the result does not depend on the drawing direction). A ramp
+/// longer than its leg spreads into the legs either side that are at its two levels, as near its
+/// centre as they allow (T-1895: it starts sooner), so a vertex inside it is part way up; only
+/// those runs of legs being too short is `RampTooShort`.
 fn vertical(v: &[Pi], vs: &[f64], issues: &mut Vec<GeomIssue>) -> Vec<[f64; 2]> {
     let n = v.len();
     let z = |i: usize| v[i].level as f64 * LEVEL_H;
     let mut pts = vec![[0.0, z(0)]];
+    let mut prev_end = vs[0];
     for k in 0..n - 1 {
         if v[k].level == v[k + 1].level {
             continue;
@@ -423,12 +443,21 @@ fn vertical(v: &[Pi], vs: &[f64], issues: &mut Vec<GeomIssue>) -> Vec<[f64; 2]> 
         let c = (vs[k] + vs[k + 1]) / 2.0;
         let (mut a, mut b) = (c - r / 2.0, c + r / 2.0);
         if a < vs[k] - 1e-6 || b > vs[k + 1] + 1e-6 {
-            issues.push(GeomIssue::RampTooShort(k));
-            a = a.max(vs[k]);
-            b = b.min(vs[k + 1]).max(a);
+            let lo = (0..=k).rev().take_while(|&j| v[j].level == v[k].level).last().unwrap_or(k);
+            let hi = (k + 1..n).take_while(|&j| v[j].level == v[k + 1].level).last().unwrap_or(k + 1);
+            let (w0, w1) = (vs[lo].max(prev_end), vs[hi]);
+            if w1 - w0 >= r - 1e-6 {
+                a = a.clamp(w0, (w1 - r).max(w0));
+                b = a + r;
+            } else {
+                issues.push(GeomIssue::RampTooShort(k));
+                a = a.max(vs[k]);
+                b = b.min(vs[k + 1]).max(a);
+            }
         }
         pts.push([a, z(k)]);
         pts.push([b, z(k + 1)]);
+        prev_end = b;
     }
     pts.push([vs[n - 1], z(n - 1)]);
     pts
@@ -469,6 +498,34 @@ pub fn pos_at(pieces: &[Piece], s: f64) -> (f64, f64, f64) {
     }
     let p = &pieces[piece_at(pieces, s)];
     p.at((s - p.s0).clamp(0.0, p.len))
+}
+
+/// The point of an alignment nearest to (x, y): chainage and distance (plane units).
+pub fn project(pieces: &[Piece], x: f64, y: f64) -> (f64, f64) {
+    let mut best = (0.0, f64::INFINITY);
+    for p in pieces {
+        // Plane offsets into the piece; the chainage returned is ground metres.
+        let cands: [f64; 2] = if p.k == 0.0 {
+            let d = ((x - p.x0) * p.th0.cos() + (y - p.y0) * p.th0.sin()).clamp(0.0, p.plen);
+            [d, d]
+        } else {
+            // Angle of the point around the centre, as a distance along the arc from its
+            // start; the wrap can land either side of the start, so try both turns.
+            let (cx, cy) = p.center();
+            let a0 = (p.y0 - cy).atan2(p.x0 - cx);
+            let a = (y - cy).atan2(x - cx);
+            let t = wrap((a - a0) * p.k.signum());
+            [(t / p.k.abs()).clamp(0.0, p.plen), ((t + 2.0 * PI) / p.k.abs()).clamp(0.0, p.plen)]
+        };
+        for d in cands {
+            let (px, py, _) = p.at_plane(d);
+            let dist = (px - x).hypot(py - y);
+            if dist < best.1 {
+                best = (p.s0 + p.ground_s(d), dist);
+            }
+        }
+    }
+    best
 }
 
 /// Points along the alignment for drawing: piece ends, and arcs split so no step is longer than
@@ -522,8 +579,25 @@ mod tests {
         let mut v = [pi(0.0, 0.0), pi(1000.0, 0.0), pi(1000.0, 1000.0)];
         v[1].radius = 80.0;
         assert!(fit(&v).issues.contains(&GeomIssue::RadiusTooSmall(1)));
-        v[1].radius = 1500.0; // tangent 1500 > 1000 m leg
-        assert!(fit(&v).issues.contains(&GeomIssue::ArcDoesNotFit(1)));
+        // tangent 1500 > 1000 m leg: the curve takes the whole leg instead (T-1895)
+        v[1].radius = 1500.0;
+        let f = fit(&v);
+        assert!(f.issues.is_empty() && f.clamped == [1], "{:?}", f.issues);
+        assert!((f.radius[1] - 1000.0).abs() < 1e-9);
+        // two set corners sharing a 600 m leg too short for both share it by their tangents
+        let mut w = [pi(0.0, 0.0), pi(1000.0, 0.0), pi(1000.0, 600.0), pi(2000.0, 600.0)];
+        (w[1].radius, w[2].radius) = (900.0, 300.0);
+        let f = fit(&w);
+        assert!(f.issues.is_empty() && f.clamped == [1, 2]);
+        assert!((f.tangent[1] - 450.0).abs() < 1e-9 && (f.tangent[2] - 150.0).abs() < 1e-9);
+        // beside an auto corner, what the auto curve leaves
+        w[2].radius = 0.0;
+        let f = fit(&w);
+        assert!(f.clamped == [1] && (f.tangent[1] + f.tangent[2] - 600.0).abs() < 1e-9);
+        // narrowed under the minimum is still too tight
+        let mut t = [pi(0.0, 0.0), pi(50.0, 0.0), pi(50.0, 50.0)];
+        t[1].radius = 300.0;
+        assert!(fit(&t).issues.contains(&GeomIssue::RadiusTooSmall(1)));
         v[1].radius = 400.0;
         let f = fit(&v);
         assert!(f.issues.is_empty());
@@ -575,6 +649,20 @@ mod tests {
         // 0 -> +3 needs 600 m.
         let f = fit(&[Pi::new(0.0, 0.0, 0.0, 0), Pi::new(500.0, 0.0, 0.0, 3)]);
         assert!(f.issues.contains(&GeomIssue::RampTooShort(0)));
+        // T-1895: a 100 m leg from 0 to +1 between legs at those levels: the ramp spreads into them
+        // about the leg's middle (450 to 650 m)
+        let p = |x: f64, l: i8| Pi::new(x, 0.0, 0.0, l);
+        let f = fit(&[p(0.0, 0), p(500.0, 0), p(600.0, 1), p(1200.0, 1)]);
+        assert!(f.issues.is_empty(), "{:?}", f.issues);
+        assert_eq!((height_at(&f.vert, 449.0), height_at(&f.vert, 651.0)), (0.0, 8.0));
+        assert!((height_at(&f.vert, 550.0) - 4.0).abs() < 1e-9);
+        // with only 40 m before it at level 0, it starts at the end and runs on
+        let f = fit(&[p(0.0, 0), p(40.0, 0), p(140.0, 1), p(1200.0, 1)]);
+        assert!(f.issues.is_empty());
+        assert_eq!((height_at(&f.vert, 0.0), height_at(&f.vert, 200.0)), (0.0, 8.0));
+        // runs too short either side together are still too short
+        let f = fit(&[p(0.0, 0), p(40.0, 0), p(140.0, 1), p(180.0, 1)]);
+        assert!(f.issues.contains(&GeomIssue::RampTooShort(1)));
     }
 
     #[test]

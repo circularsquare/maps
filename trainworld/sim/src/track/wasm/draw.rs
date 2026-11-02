@@ -14,12 +14,26 @@ impl TrackApi {
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         if let Some(eb) = self.route_beside.take() {
-            if let Some((ends, pis, on_line)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
+            if let Some((b_ends, b_pis, on_line, run)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
                 // a start on the line leaves along it; one coming in keeps its lead-in
                 self.beside_on = on_line;
-                let r = self.route_op_ramped(&ends, &pis, tracks, flying);
+                let r = self.route_op_ramped(&b_ends, &b_pis, tracks, flying);
                 self.beside_on = false;
-                return r;
+                // T-1895: never across the track followed, lead-ins included; the plain route
+                // instead (a start on that track meets it there)
+                let scaled = self.w.net.frame().scaled();
+                let crossed = |verts: &[Pi]| {
+                    let skip = 0.5 * beside::BESIDE_SPACING * kk(scaled, verts[0].y);
+                    let on_run = run.iter().any(|&e| self.w.net.edge_ok(e) && self.w.net.project(e, verts[0].x, verts[0].y).1 < skip);
+                    run.iter().any(|&e| self.w.net.edge_ok(e) && beside::route_crosses(verts, self.w.net.edge_pieces(e), scaled, if on_run { 2.0 * skip } else { 0.0 }))
+                };
+                match &r {
+                    Ok((_, verts, nn, ne)) if crossed(verts) => {
+                        let (nn, ne) = (nn.clone(), ne.clone());
+                        self.release(&nn, &ne);
+                    }
+                    _ => return r,
+                }
             }
         }
         self.route_op_ramped(ends, pis, tracks, flying)
@@ -755,17 +769,19 @@ impl TrackApi {
     }
 
     /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running
-    /// parallel at about `QUAD_SPACING`, and the chainage on it level with `s`.
+    /// parallel at about `QUAD_SPACING` (or the wider `BESIDE_SPACING` of track drawn beside, T-1895),
+    /// and the chainage on it level with `s`.
     pub(super) fn twin_at(&self, e: u32, s: f64) -> Option<(u32, f64)> {
         let net = &self.w.net;
         let (x, y, th) = geom::pos_at(net.edge_pieces(e), s);
+        let k = net.k_at(y);
         let mut best: Option<(u32, f64, f64)> = None;
         for f in 0..net.edge_count() as u32 {
             if f == e || !net.edge_ok(f) {
                 continue;
             }
             let (sf, dist) = net.project(f, x, y);
-            if !(QUAD_SPACING * 0.5..=QUAD_SPACING * 1.5).contains(&dist) {
+            if !(QUAD_SPACING * 0.5 * k..=beside::BESIDE_SPACING * 1.25 * k).contains(&dist) {
                 continue;
             }
             let thf = geom::pos_at(net.edge_pieces(f), sf).2;

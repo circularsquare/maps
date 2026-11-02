@@ -1335,6 +1335,8 @@ button.save-add:hover { color: var(--text); }
 .curve-circle { position: absolute; left: 0; top: 0; overflow: visible; }
 .curve-circle circle { fill: none; stroke: var(--map-ink); stroke-opacity: .35; stroke-width: 1px; }
 .curve-circle.bad circle { stroke: #d42a2a; stroke-opacity: .7; }
+.curve-circle line { stroke: var(--map-ink); stroke-opacity: .7; stroke-width: 1.5px; stroke-dasharray: 5 4; }
+.curve-circle.bad line { stroke: #d42a2a; stroke-opacity: .7; }
 .station-ghost.ok path { fill: #2f6fe0a6; stroke: #1c4fb8; }
 .station-ghost.bad path { fill: #e03c3ca6; stroke: #b91f1f; }
 

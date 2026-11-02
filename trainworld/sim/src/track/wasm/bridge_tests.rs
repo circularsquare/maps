@@ -628,3 +628,40 @@ fn a_bridge_off_constructed_track_and_quad_track() {
     }
     assert!(problems(&q).is_empty());
 }
+
+/// T-1895: a long snapped-style route through many close corners (a traced real line) across a
+/// river in its middle, where no single leg near the water is long enough for a ramp: the ramps
+/// spread over several legs (refused as "Not enough space for bridge ramps" before). The same
+/// across a track at its level, ramped over.
+#[test]
+fn long_route_through_close_corners_bridges_mid_route() {
+    for over_track in [false, true] {
+        for (step, amp, wave) in [(150.0, 30.0, 400.0), (120.0, 40.0, 300.0), (100.0, 25.0, 250.0), (180.0, 60.0, 500.0), (90.0, 15.0, 200.0)] {
+            let mut a = api();
+            a.set_route_tangent(true);
+            let (bx, by) = base(&a);
+            if over_track {
+                a.set_route_ramp(true);
+                assert_eq!(a.add_route(&[0.0, 0.0, bx + 6150.0, by - 1500.0, 0.0, 0.0, 0.0, bx + 6150.0, by + 1500.0, 0.0], &[], 2, false), 0, "{}", a.issue_kinds());
+            } else {
+                water(&mut a, &[(6000.0, 6300.0)]);
+            }
+            let before = alive(&a);
+            let mut pis = vec![];
+            let mut x = step;
+            while x < 12000.0 - step / 2.0 {
+                pis.extend([bx + x, by + amp * (x / wave).sin(), 0.0, 0.0]);
+                x += step;
+            }
+            let e = [0.0, 0.0, bx, by, 0.0, 0.0, 0.0, bx + 12000.0, by + amp * (12000.0 / wave).sin(), 0.0];
+            assert_eq!(a.add_route(&e, &pis, 2, false), 0, "track {over_track} step {step}: {}", a.issue_kinds());
+            assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+            // up at x = 6150 (the river's middle, or the track crossed)
+            let new: Vec<u32> = alive(&a).into_iter().filter(|e| !before.contains(e)).collect();
+            let (cx, cy) = (bx + 6150.0, by + amp * (6150.0f64 / wave).sin());
+            let e = *new.iter().min_by(|&&p, &&q| a.w.net.project(p, cx, cy).1.total_cmp(&a.w.net.project(q, cx, cy).1)).unwrap();
+            let top = height(&a, e, a.w.net.project(e, cx, cy).0);
+            assert!((top - LEVEL_H).abs() < 1e-6, "track {over_track} step {step}: {top} m at the crossing");
+        }
+    }
+}

@@ -1,21 +1,26 @@
-//! Drawing beside track (T-1685): a route laid parallel to existing track at the express pair's
-//! spacing, its corners concentric with the track's (`express_verts`).
+//! Drawing beside track (T-1685): a route laid parallel to existing track at `BESIDE_SPACING`, its
+//! corners concentric with the track's (`express_verts`).
 
 use super::*;
 
 /// Pieces walked from the start's piece, all told, looking for the end's.
 const BESIDE_WALK: usize = 400;
+/// Centre line to centre line between track and a route drawn beside it, m (T-1685; T-1895).
+pub const BESIDE_SPACING: f64 = 12.0;
 
 impl TrackApi {
     /// `route_op`'s ends and PIs for a route beside the run of track through piece `eb` (the one
-    /// the end is beside), and whether its start is on that run's line already. That line is
-    /// `QUAD_SPACING` from the track on the end's side, its corners concentric with the track's.
-    /// A start on the line (within half the spacing of it) runs along it to the end, an open-ground
-    /// start moving onto it, a node start on the other side giving None. Any other start comes in
-    /// (T-1721): its route turns onto the line where it has run along the track the start's
-    /// distance from it (at most half the way to the end), then runs along it. The end moves onto
-    /// the line. None if an end is on track.
-    pub(super) fn beside_ends(&self, ends: &[f64], eb: u32) -> Option<(Vec<f64>, Vec<f64>, bool)> {
+    /// the end is beside), whether its start is on that run's line already, and the run's pieces.
+    /// That line is `BESIDE_SPACING` from the track, its corners concentric with the track's, on
+    /// the start's side (T-1895: never across the track), or the pointer's where the start is on
+    /// the track or is open ground near the line. A start on the line (within half the spacing of
+    /// it) runs along it to the end, an open-ground start moving onto it. Any other start comes in
+    /// (T-1721): its route turns onto the line somewhere from where it has run along the track the
+    /// start's distance from it (at most half the way to the end). The end moves onto the line.
+    /// Distances and sides are taken from the track as fitted, curves and all, and the line is cut
+    /// where the start and end are, inside a curve too. None if an end is on track, or every way
+    /// onto the line would cross the track.
+    pub(super) fn beside_ends(&self, ends: &[f64], eb: u32) -> Option<(Vec<f64>, Vec<f64>, bool, Vec<u32>)> {
         let net = &self.w.net;
         let at = |c: &[f64]| -> Option<(f64, f64, bool)> {
             match c[0] as i32 {
@@ -26,81 +31,69 @@ impl TrackApi {
         };
         let (a, b) = (at(&ends[0..5])?, at(&ends[5..10])?);
         let scaled = net.frame().scaled();
-        let mut v = self.beside_run(eb, eb, scaled)?;
-        let mut pa = project(&v, a.0, a.1);
-        let mut pb = project(&v, b.0, b.1);
-        if pb.0 < pa.0 {
-            v.reverse();
-            (pa, pb) = (project(&v, a.0, a.1), project(&v, b.0, b.1));
-        }
-        // the side the pointer is on
-        let side = if pb.1 >= 0.0 { 1.0 } else { -1.0 };
-        let gap = QUAD_SPACING * kk(scaled, a.1);
-        let on_line = (pa.2 - gap).abs() <= gap / 2.0 || !a.2 && pa.2 <= gap * 3.0;
-        if on_line && a.2 && pa.1 * side < 0.0 {
+        let (mut v, run) = self.beside_run(eb, eb, scaled)?;
+        let mut f = geom::fit_in(&v, scaled);
+        if f.pieces.is_empty() {
             return None;
         }
-        let mut cum = vec![0.0];
-        for w in v.windows(2) {
-            cum.push(cum[cum.len() - 1] + (w[1].x - w[0].x).hypot(w[1].y - w[0].y));
+        // chainage along the run's track, and the offset from it (plane units, left positive)
+        let place = |f: &geom::Fit, x: f64, y: f64| {
+            let (s, d) = geom::project(&f.pieces, x, y);
+            let (px, py, th) = geom::pos_at(&f.pieces, s);
+            (s, if th.cos() * (y - py) - th.sin() * (x - px) >= 0.0 { d } else { -d })
+        };
+        let (mut pa, mut pb) = (place(&f, a.0, a.1), place(&f, b.0, b.1));
+        if pb.0 < pa.0 {
+            v.reverse();
+            f = geom::fit_in(&v, scaled);
+            (pa, pb) = (place(&f, a.0, a.1), place(&f, b.0, b.1));
         }
-        let along = |s: f64| { let i = (s.floor() as usize).min(v.len() - 2); cum[i] + (cum[i + 1] - cum[i]) * (s - i as f64) };
-        let at_len = |l: f64| {
-            let i = (0..v.len() - 1).find(|&i| cum[i + 1] >= l).unwrap_or(v.len() - 2);
-            i as f64 + if cum[i + 1] > cum[i] { (l - cum[i]) / (cum[i + 1] - cum[i]) } else { 0.0 }
-        };
-        let point = |s: f64| -> Pi {
-            let i = (s.floor() as usize).min(v.len() - 2);
-            let t = s - i as f64;
-            Pi::new(v[i].x + (v[i + 1].x - v[i].x) * t, v[i].y + (v[i + 1].y - v[i].y) * t, 0.0, v[i].level)
-        };
-        // the line from `from` (a place along `v`) to the end, and its route corners
+        let k = kk(scaled, a.1);
+        let gap = BESIDE_SPACING * k;
+        let da = pa.1.abs();
+        let on_line = (da - gap).abs() <= gap / 2.0 || !a.2 && da <= gap * 3.0;
+        let sign = |o: f64| if o >= 0.0 { 1.0 } else { -1.0 };
+        let side = if da > gap / 2.0 && (a.2 || !on_line) { sign(pa.1) } else { sign(pb.1) };
+        // `express_verts` takes the spacing as a multiple of the quad's
+        let scale = side * BESIDE_SPACING / QUAD_SPACING;
+        let level = ends[9] as i8;
+        // the line from chainage `from` to the end, and its own ends
         let line = |from: f64| -> Option<(Vec<Pi>, (f64, f64), (f64, f64))> {
-            let mut sub = vec![point(from)];
-            let first = from.floor() as usize + 1;
-            let last = (pb.0.ceil() as usize).saturating_sub(1);
-            for p in v.iter().take(last + 1).skip(first) {
-                if (p.x - sub[sub.len() - 1].x).hypot(p.y - sub[sub.len() - 1].y) > 0.01 {
-                    sub.push(*p);
-                }
-            }
-            let end = point(pb.0);
-            while sub.len() > 1 && (end.x - sub[sub.len() - 1].x).hypot(end.y - sub[sub.len() - 1].y) < 0.01 {
-                sub.pop();
-            }
-            sub.push(end);
-            if (end.x - sub[0].x).hypot(end.y - sub[0].y) < 1.0 {
+            if pb.0 - from < 1.0 {
                 return None;
             }
-            let own = |k: usize, p: (f64, f64, bool)| if p.2 && on_line && k == 0 { (p.0, p.1) } else { express_end(&sub, k, side, scaled) };
-            let (oa, ob) = (own(0, a), own(1, b));
-            let (ex, _, _) = express_verts(&sub, 1, sub.len() - 2, scaled, side, Some(oa), Some(ob))?;
+            let sub = cut(&f, from, pb.0, level);
+            let own = |k: usize| if a.2 && on_line && k == 0 { (a.0, a.1) } else { express_end(&sub, k, scale, scaled) };
+            let (oa, ob) = (own(0), own(1));
+            let (ex, _, _) = express_verts(&sub, 1, sub.len() - 2, scaled, scale, Some(oa), Some(ob))?;
             Some((ex, oa, ob))
         };
+        // a start on the track meets it there, which is no crossing
+        let crosses = |route: &[Pi]| route_crosses(route, &f.pieces, scaled, if da <= gap / 2.0 { gap } else { 0.0 });
         let (ex, oa, ob) = if on_line {
-            line(pa.0)?
+            let c = line(pa.0)?;
+            if crosses(&c.0) {
+                return None;
+            }
+            c
         } else {
             // T-1781: coming in, the turn onto the line where its auto radius is largest (to the
-            // design radius, then the nearest), its straight in clear of the track; at the least
-            // the start's own distance along
-            let (la, le) = (along(pa.0), along(pb.0));
-            let near = la + pa.2.min((le - la) / 2.0);
+            // design radius, then the nearest), the line's corners still fitting and the way in
+            // clear of the track; at the least the start's own distance along
+            let near = pa.0 + (da / k).min((pb.0 - pa.0) / 2.0);
             let mut best: Option<(f64, (Vec<Pi>, (f64, f64), (f64, f64)))> = None;
-            for k in 0..=TURN_IN_TRIES {
-                let l = near + (le - near) * 0.9 * k as f64 / TURN_IN_TRIES as f64;
-                let Some(c) = line(at_len(l)) else { continue };
-                if c.0.len() < 2 || (k > 0 && crosses(&v, (a.0, a.1), (c.0[0].x, c.0[0].y))) {
-                    continue;
-                }
+            for t in 0..=TURN_IN_TRIES {
+                let l = near + (pb.0 - near) * 0.9 * t as f64 / TURN_IN_TRIES as f64;
+                let Some(c) = line(l) else { continue };
                 // the route's own fit sizes the turn, the line's corners keeping their radii
-                let mut route = vec![Pi::new(a.0, a.1, 0.0, ends[9] as i8)];
-                route.extend(c.0.iter().map(|p| Pi { level: ends[9] as i8, ..*p }));
+                let mut route = vec![Pi::new(a.0, a.1, 0.0, level)];
+                route.extend(c.0.iter().map(|p| Pi { level, ..*p }));
                 route[1].radius = 0.0;
-                let f = geom::fit_capped(&route, scaled, self.route_cap);
-                if !f.issues.is_empty() && k > 0 {
+                let g = geom::fit_capped(&route, scaled, self.route_cap);
+                if (!g.issues.is_empty() || !g.clamped.is_empty()) && t > 0 || crosses(&route) {
                     continue;
                 }
-                let r = f.radius[1];
+                let r = g.radius[1];
                 if best.as_ref().map_or(true, |b| r > b.0 + 1.0) {
                     best = Some((r, c));
                 }
@@ -119,13 +112,13 @@ impl TrackApi {
         // at the end's level throughout: the track's own ramps are not copied (T-1722), the route
         // ramps over what it crosses by itself
         let pis = ex[lo..ex.len() - 1].iter().flat_map(|p| [p.x, p.y, p.radius, ends[9]]).collect();
-        Some((e, pis, on_line))
+        Some((e, pis, on_line, run))
     }
 
     /// The run of track through piece `ea`, through plain joints and stations, as one vertex list
-    /// with every curve's radius as fitted (so a cut leg keeps its curves' size). None if `eb` is
-    /// not on it.
-    fn beside_run(&self, ea: u32, eb: u32, scaled: bool) -> Option<Vec<Pi>> {
+    /// with every curve's radius as fitted (so a cut leg keeps its curves' size), and its pieces.
+    /// None if `eb` is not on it.
+    pub(super) fn beside_run(&self, ea: u32, eb: u32, scaled: bool) -> Option<(Vec<Pi>, Vec<u32>)> {
         let net = &self.w.net;
         if !net.edge_ok(ea) || !net.edge_ok(eb) {
             return None;
@@ -176,35 +169,42 @@ impl TrackApi {
             }
             v.extend(s);
         }
-        Some(v)
+        Some((v, run.iter().map(|r| r.0).collect()))
     }
 }
 
 /// Turn-in points tried along the track coming in to the line beside it (T-1781).
 const TURN_IN_TRIES: usize = 16;
+/// A curve cut shorter than this at an end of the line is left out, m.
+const MIN_CUT_ARC: f64 = 0.5;
 
-/// Whether the straight from `a` to `b` crosses polyline `v`.
-fn crosses(v: &[Pi], a: (f64, f64), b: (f64, f64)) -> bool {
-    let side = |p: (f64, f64), q: (f64, f64), r: (f64, f64)| (q.0 - p.0) * (r.1 - p.1) - (q.1 - p.1) * (r.0 - p.0);
-    v.windows(2).any(|w| {
-        let (c, d) = ((w[0].x, w[0].y), (w[1].x, w[1].y));
-        side(a, b, c) * side(a, b, d) < 0.0 && side(c, d, a) * side(c, d, b) < 0.0
-    })
+/// Alignment `f` from chainage `s0` to `s1` as corners at `level`: a point at each end, and for
+/// each curve (or part of one) between, a corner where the tangents at that part's ends cross,
+/// with the curve's radius set. Fitted, it is the same track, cut inside a curve if need be.
+fn cut(f: &geom::Fit, s0: f64, s1: f64, level: i8) -> Vec<Pi> {
+    let pt = |s: f64| {
+        let (x, y, _) = geom::pos_at(&f.pieces, s);
+        Pi::new(quant(x), quant(y), 0.0, level)
+    };
+    let mut out = vec![pt(s0)];
+    for p in &f.pieces {
+        let (a, b) = (p.s0.max(s0), (p.s0 + p.len).min(s1));
+        if p.k == 0.0 || b - a < MIN_CUT_ARC {
+            continue;
+        }
+        let (da, db) = (p.plane_d(a - p.s0), p.plane_d(b - p.s0));
+        let (x, y, th) = p.at_plane(da);
+        let t = p.radius() * ((db - da) * p.k.abs() / 2.0).tan();
+        out.push(Pi::new(quant(x + t * th.cos()), quant(y + t * th.sin()), quant(p.ground_radius()), level));
+    }
+    out.push(pt(s1));
+    out
 }
 
-/// Where (x, y) falls along polyline `v`: leg index plus the share of that leg, and which side
-/// (positive left of the polyline's direction), and how far from it.
-fn project(v: &[Pi], x: f64, y: f64) -> (f64, f64, f64) {
-    let mut best = (f64::INFINITY, 0.0, 0.0);
-    for i in 0..v.len() - 1 {
-        let (dx, dy) = (v[i + 1].x - v[i].x, v[i + 1].y - v[i].y);
-        let l2 = dx * dx + dy * dy;
-        let t = if l2 > 0.0 { (((x - v[i].x) * dx + (y - v[i].y) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
-        let (fx, fy) = (v[i].x + dx * t, v[i].y + dy * t);
-        let d = (x - fx).hypot(y - fy);
-        if d < best.0 {
-            best = (d, i as f64 + t, dx * (y - fy) - dy * (x - fx));
-        }
-    }
-    (best.1, best.2, best.0)
+/// Whether `route`, fitted, crosses the track `pieces` anywhere past `skip` along it.
+pub(super) fn route_crosses(route: &[Pi], pieces: &[geom::Piece], scaled: bool, skip: f64) -> bool {
+    let g = geom::fit_in(route, scaled);
+    let mut hits = vec![];
+    crate::track::cross::intersect_alignments(&g.pieces, pieces, false, &mut hits);
+    hits.iter().any(|h| h.0 > skip)
 }

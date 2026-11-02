@@ -635,15 +635,14 @@ fn vertices_of(net: &Network, d: &EdgeData, moved: &[(u32, f64, f64)]) -> Vec<Pi
     v
 }
 
-/// Set radii that no longer fit their legs go back to auto, where `may(pi index, pi)` allows it.
+/// Set radii that no longer fit their legs go back to auto, where `may(pi index, pi)` allows it;
+/// any other (one the edit sets) becomes the widest that fits (T-1895), as the fit draws it.
 fn relax_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], may: &dyn Fn(usize, &Pi) -> bool) {
     let verts = vertices_of(net, d, moved);
-    for issue in net.fit(&verts).issues {
-        if let GeomIssue::ArcDoesNotFit(j) = issue {
-            if j > 0 && j < verts.len() - 1 && may(j - 1, &d.pis[j - 1]) {
-                d.pis[j - 1].radius = 0.0;
-            }
-        }
+    let f = net.fit(&verts);
+    for &j in &f.clamped {
+        let p = &mut d.pis[j - 1];
+        p.radius = if may(j - 1, p) { 0.0 } else { ((f.radius[j] / QUANT) * (1.0 - 1e-9)).floor() * QUANT };
     }
 }
 
@@ -812,7 +811,8 @@ fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
 /// corner next to an end may use the whole leg, which is now the half leg it had anyway. A leg
 /// that changes level is not cut, since a ramp is centred between its corners and the joint, a
 /// node, must be at a whole level. Any radius that would still come out different (rounding to the
-/// millimetre grid) is set to the whole stroke's, so the track is where it was drawn.
+/// millimetre grid) is set to the whole stroke's, so the track is where it was drawn. A leg a ramp
+/// spreads into from the next (T-1895) is not cut either.
 fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec<Vec<Pi>> {
     let f = geom::fit_in(verts, scaled);
     let mut cuts: Vec<(usize, Pi)> = vec![];
@@ -820,7 +820,8 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec
         for i in first..(first + clicks).saturating_sub(1) {
             let (p, q) = (verts[i], verts[i + 1]);
             let leg = (q.x - p.x).hypot(q.y - p.y);
-            if p.level != q.level || leg < 2.0 * MIN_JOINT_LEG * kk(scaled, p.y) || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
+            let ramped = p.level != q.level || geom::on_ramp(&f.vert, f.vert_s[i], f.vert_s[i + 1]);
+            if ramped || leg < 2.0 * MIN_JOINT_LEG * kk(scaled, p.y) || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
                 continue;
             }
             cuts.push((i, Pi::new(quant((p.x + q.x) / 2.0), quant((p.y + q.y) / 2.0), 0.0, p.level)));
@@ -846,7 +847,7 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec
         // centimetre once its radius is set (the scale is taken at the arc's middle), so it is
         // eased by a hundredth of a percent at a time until it fits
         for _ in 0..4 {
-            let over: Vec<usize> = geom::fit_in(&p, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).collect();
+            let over = geom::fit_in(&p, scaled).clamped;
             if over.is_empty() {
                 break;
             }
@@ -882,7 +883,8 @@ const LONG_ROUTE_VERTS: usize = 16;
 /// turn, larger outside). Returns its vertices, the index of its first corner-like vertex and how
 /// many there are (the taper ends and the corners), for `stroke_pieces`. None if degenerate.
 ///
-/// T-423: `side` is 1 for the express pair on the left, -1 on the right. An end given as
+/// T-423: `side` is 1 for the express pair on the left, -1 on the right; another size scales the
+/// spacing (drawing beside track, `BESIDE_SPACING`). An end given as
 /// `own_a` or `own_b` (the express pair's own end node there, from `quad_beside`) has no swing:
 /// the pair runs parallel right to that end, every PI of the drawn route concentric.
 fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: f64, own_a: Option<(f64, f64)>, own_b: Option<(f64, f64)>) -> Option<(Vec<Pi>, usize, usize)> {
@@ -895,7 +897,7 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: 
     };
     // Ground spacing for the radii; plane spacing (times k at the stroke's start) for positions.
     let kp = kk(scaled, verts[0].y);
-    let dg = QUAD_SPACING;
+    let dg = QUAD_SPACING * side.abs();
     let d = QUAD_SPACING * kp * side;
     // the corners offset: every PI between an own end and the next, else the clicked ones
     let lo = if own_a.is_some() { 1 } else { first };
@@ -966,11 +968,9 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: 
     // pieces, and the 5,400 km single edge took 3 s to add).
     for _ in 0..8 {
         let mut eased = false;
-        for issue in geom::fit_in(&out, scaled).issues {
-            if let GeomIssue::ArcDoesNotFit(j) = issue {
-                out[j].radius = 0.0;
-                eased = true;
-            }
+        for j in geom::fit_in(&out, scaled).clamped {
+            out[j].radius = 0.0;
+            eased = true;
         }
         if !eased {
             break;
@@ -1277,7 +1277,6 @@ fn issue_kind(i: &Issue) -> String {
                 GeomIssue::ZeroLeg(_) => "ZeroLeg",
                 GeomIssue::Reversal(_) => "Reversal",
                 GeomIssue::RadiusTooSmall(_) => "RadiusTooSmall",
-                GeomIssue::ArcDoesNotFit(_) => "ArcDoesNotFit",
                 GeomIssue::RampTooShort(_) => "RampTooShort",
                 GeomIssue::LevelRange(_) => "LevelRange",
             }

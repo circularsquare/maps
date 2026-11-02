@@ -315,7 +315,7 @@ impl Near {
             .issues
             .iter()
             .filter(|g| {
-                let (ZeroLeg(j) | Reversal(j) | RadiusTooSmall(j) | ArcDoesNotFit(j) | RampTooShort(j) | LevelRange(j)) = **g;
+                let (ZeroLeg(j) | Reversal(j) | RadiusTooSmall(j) | RampTooShort(j) | LevelRange(j)) = **g;
                 (self.lo..=self.hi).contains(&(self.a + j)) && pick(g)
             })
             .count()

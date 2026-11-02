@@ -83,10 +83,16 @@ impl TrackApi {
         }
         let gone: Vec<u32> = [Some(id), partner].into_iter().flatten().collect();
         let (keep, nn, ne) = self.keep_under_stations(&gone, &[]);
+        let kept = !keep.is_empty();
+        let plain = ops.clone();
         ops.extend(keep);
         let r = self.run(Op::Batch(ops));
         if r != 0 {
             self.release(&nn, &ne);
+            // T-1895: never refused for the track kept under a station; it goes without
+            if kept {
+                return self.run(Op::Batch(plain));
+            }
         }
         r
     }
@@ -444,23 +450,30 @@ impl TrackApi {
     /// a removed station loses that stop and is routed again through the rest (T-859), else left
     /// broken, as removed track leaves it.
     pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
-        let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations) else {
-            return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
-        };
-        let r = self.run(Op::Batch(ops));
-        if r == 0 {
-            self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
-        } else {
+        // T-1895: a removal is never refused for what the track it keeps or joins would be (a
+        // curve, a crossing): refused that way, it goes without them
+        for plain in [false, true] {
+            let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations, plain) else {
+                return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
+            };
+            let r = self.run(Op::Batch(ops));
+            if r == 0 {
+                self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+                return 0;
+            }
             self.release(&nn, &ne);
+            if plain {
+                return r;
+            }
         }
-        r
+        unreachable!()
     }
 
     /// What `delete_pieces` would do to lines (T-859), tried and rolled back: per line that stops
     /// at a removed station or would be left broken (and was not), three numbers: the line, 1 if
     /// it loses a stop, 1 if it would be broken.
     pub fn removal_lines(&mut self, edges: &[u32], stations: &[u32]) -> Vec<f64> {
-        let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations) else { return vec![] };
+        let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations, false) else { return vec![] };
         let net = &self.w.net;
         let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l)).collect();
         let was: Vec<bool> = lines.iter().map(|&l| net.line_broken[l as usize]).collect();
@@ -478,8 +491,9 @@ impl TrackApi {
     }
 
     /// The ops of `delete_pieces`, the node and edge ids they claim (track kept under stations,
-    /// T-1699), and the stations removed (sorted); None when nothing named is there.
-    pub(super) fn pieces_ops(&mut self, edges: &[u32], stations: &[u32]) -> Option<(Vec<Op>, (Vec<u32>, Vec<u32>), Vec<u32>)> {
+    /// T-1699), and the stations removed (sorted); None when nothing named is there. `plain`: no
+    /// track kept or joined.
+    pub(super) fn pieces_ops(&mut self, edges: &[u32], stations: &[u32], plain: bool) -> Option<(Vec<Op>, (Vec<u32>, Vec<u32>), Vec<u32>)> {
         let net = &self.w.net;
         let mut gone: Vec<u32> = edges.iter().copied().filter(|&e| net.edge_ok(e)).collect();
         for &e in edges {
@@ -530,6 +544,9 @@ impl TrackApi {
         }
         ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
         ops.extend(tail);
+        if plain {
+            return Some((ops, (vec![], vec![]), st));
+        }
         let (keep, nn, ne) = self.keep_under_stations(&gone, &st);
         ops.extend(keep);
         let joins = self.station_joins(&ops, &st);
