@@ -194,12 +194,9 @@ pub const HOLD_MARGIN_M: f64 = 20.0;
 /// T-1924: a slower line on shared track counts for a faster one's following loss only when it
 /// takes at least this much longer over the stretch, s.
 pub const FOLLOW_MIN_S: f64 = 1.0;
-/// T-1924: the least a following loss puts at each place it waits, s: a larger loss spreads over
-/// more of the stations the slower trains stop at.
-pub const FOLLOW_SPLIT_S: f64 = 90.0;
-/// T-1924: the most places one stretch's following loss waits at (each a stop in the run profile,
-/// whose cost grows with the stops in a hop).
-pub const FOLLOW_WAITS_MAX: usize = 4;
+/// T-2018: the slowest a following loss lowers a stretch's speed to, m/s; a loss too big for it
+/// waits at the stop before the stretch.
+pub const FOLLOW_CRAWL_MIN_V: f64 = 0.5;
 
 // ---- service (SPEC 6.3, 6.5) ----
 

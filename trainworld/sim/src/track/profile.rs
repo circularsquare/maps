@@ -35,11 +35,13 @@ pub struct Profile {
     pub hold: f64,
 }
 
-/// A capacity delay to absorb at path offset `s`.
+/// A capacity delay to absorb at path offset `s`, or with `span` over `[s, s + span]` as slower
+/// running (T-2018: a following loss, so the train never stands between stops for it).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Hold {
     pub s: f64,
     pub delay: f64,
+    pub span: f64,
 }
 
 /// Traction bands: (speed where the band ends, acceleration). The last band is open; only
@@ -297,8 +299,65 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
     let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
     p.dwell = dw[1..n - 1].iter().sum();
     let mut per_hop: Vec<Vec<Hold>> = vec![vec![]; n - 1];
+    let mut scratch = Vec::new();
+    // spread holds: one lowered speed over their span, the same in every hop they cover
+    let mut hop_zones: Vec<Vec<(f64, f64, f64)>> = vec![vec![]; n - 1];
+    for h in holds.iter().filter(|h| h.span > 0.0 && h.delay >= HOLD_MIN_S) {
+        let (s0, s1) = (h.s, h.s + h.span);
+        let parts: Vec<(usize, f64, f64)> = (0..n - 1)
+            .filter_map(|i| {
+                let (z0, z1) = (s0.max(leave(i)), s1.min(stops[i + 1]));
+                (z1 > z0 + 1.0).then_some((i, z0, z1))
+            })
+            .collect();
+        let Some(&(i_first, ..)) = parts.first() else {
+            // no running in it: wait at the stop before
+            let i = stops.partition_point(|&s| s <= h.s).saturating_sub(1).min(n - 2);
+            dw[i] += h.delay;
+            p.hold += h.delay;
+            continue;
+        };
+        let base: f64 = parts.iter().map(|&(i, ..)| hop_time(limits, leave(i), stops[i + 1], &hop_zones[i], &[], &mut scratch)).sum();
+        let extra = |vc: f64, scratch: &mut Vec<Phase>| {
+            parts
+                .iter()
+                .map(|&(i, z0, z1)| {
+                    let mut z = hop_zones[i].clone();
+                    z.push((z0, z1, vc));
+                    hop_time(limits, leave(i), stops[i + 1], &z, &[], scratch)
+                })
+                .sum::<f64>()
+                - base
+        };
+        let most = extra(FOLLOW_CRAWL_MIN_V, &mut scratch);
+        let vc = if most <= h.delay {
+            // too much to run off: the rest waits at the stop before the span
+            dw[i_first] += h.delay - most;
+            FOLLOW_CRAWL_MIN_V
+        } else {
+            let (mut lo, mut hi) = (FOLLOW_CRAWL_MIN_V, limits.iter().map(|l| l[1]).fold(V_TOP, f64::max));
+            for _ in 0..50 {
+                let mid = 0.5 * (lo + hi);
+                let e = extra(mid, &mut scratch);
+                if (e - h.delay).abs() < 0.05 {
+                    (lo, hi) = (mid, mid);
+                    break;
+                }
+                if e > h.delay {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            0.5 * (lo + hi)
+        };
+        for &(i, z0, z1) in &parts {
+            hop_zones[i].push((z0, z1, vc));
+        }
+        p.hold += h.delay;
+    }
     for h in holds {
-        if h.delay < HOLD_MIN_S {
+        if h.delay < HOLD_MIN_S || h.span > 0.0 {
             continue;
         }
         let i = stops.partition_point(|&s| s <= h.s).saturating_sub(1).min(n - 2);
@@ -310,7 +369,6 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             per_hop[i].push(*h);
         }
     }
-    let mut scratch = Vec::new();
     let mut out = Vec::new();
     let mut t = 0.0;
     p.arr.push(0.0);
@@ -321,7 +379,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
     p.dep.push(t);
     for i in 0..n - 1 {
         let (a, b) = (leave(i), stops[i + 1]);
-        let mut zones: Vec<(f64, f64, f64)> = vec![];
+        let mut zones: Vec<(f64, f64, f64)> = std::mem::take(&mut hop_zones[i]);
         let mut mids: Vec<(f64, f64)> = vec![];
         for h in &per_hop[i] {
             let base = hop_time(limits, a, b, &zones, &mids, &mut scratch);
@@ -358,7 +416,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             }
             p.hold += h.delay;
         }
-        match hops.0.get(i).filter(|_| per_hop[i].is_empty() && hops.0.len() == n - 1) {
+        match hops.0.get(i).filter(|_| per_hop[i].is_empty() && zones.is_empty() && hops.0.len() == n - 1) {
             Some((ph, d)) => {
                 for q in ph {
                     push(&mut out, t + q.t, q.s, q.v, q.a);
@@ -531,17 +589,17 @@ mod tests {
         let base = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[]);
         assert!((base.dep[1] - base.arr[1] - 30.0).abs() < 1e-9);
         for delay in [5.0, 20.0, 45.0, 120.0] {
-            let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay }]);
+            let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay, span: 0.0 }]);
             assert!((p.duration - base.duration - delay).abs() < 0.5, "delay {delay}: {} vs {}", p.duration, base.duration);
             assert!((p.arr[1] - base.arr[1]).abs() < 1e-9);
         }
         // A long hold is a stop in front of the point; a short one is not.
-        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 120.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 120.0, span: 0.0 }]);
         assert!(p.phases.iter().any(|ph| ph.v == 0.0 && (ph.s - 3500.0).abs() < 1e-9));
-        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 5.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 5.0, span: 0.0 }]);
         assert!(!p.phases.iter().any(|ph| ph.v == 0.0 && (ph.s - 3500.0).abs() < 1e-9));
         // A hold right after a stop becomes dwell there.
-        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 2010.0, delay: 40.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 2010.0, delay: 40.0, span: 0.0 }]);
         assert!((p.dep[1] - p.arr[1] - 70.0).abs() < 1e-9);
     }
 }

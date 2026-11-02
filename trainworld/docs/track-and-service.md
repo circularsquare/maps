@@ -528,11 +528,13 @@ faster train ends up behind a slower one: its loss is the whole difference, star
 high-speed track counts the same way. Stretches of one direction with different slower lines that
 overlap are one resource (`ResKind::Follow`, wire kind 11, `build_follow`), with no utilisation, so
 no map dot, and it neither fills nor caps track. The loss is a hold like the others, so it is in round
-trips, trains needed, average speed and demand. It waits outside the stations the slower trains stop
-at on the stretch (its own platform where it stops there too; never the first, never where the slower
-line ends), else at its own stops there, else halfway: shared out over evenly spaced places, at least
-90 s each and at most 4 places a stretch (`FOLLOW_SPLIT_S`, `FOLLOW_WAITS_MAX`; each place is a stop in
-the run profile, whose cost grows with the stops in a hop). Worked example (20 km, a station every
+trips, trains needed, average speed and demand. It is run off as slower running over the whole
+stretch (T-2018): one speed cap from the stretch's start to its end, the same in every hop there,
+bisected so the run takes exactly the loss longer (`profile::Hold::span`); the train never stands
+between stops for it. A loss too big even at 0.5 m/s (`FOLLOW_CRAWL_MIN_V`) waits its rest at the
+stop before the stretch. Drawn, the faster train closes on the one ahead while that one stands at
+its stations and is held behind it by the display guard ([ui-map.md](ui-map.md) "Never through the train ahead"), so
+it trails it. Worked example (20 km, a station every
 km, 10 locals an hour, 6 expresses from end to end, double track, `express_behind_local_takes_about_
 its_time`): the local takes 33.3 min one way, the express 8.4 min free and 31.3 min behind it. With the
 formula alone, the note's 80 km/h figures (16.5 min longer, a local every 6 min, 1m47s spacing) give
@@ -752,7 +754,7 @@ than catching it up midway (the share of half the smaller headway it is off, squ
   history (a refused or trial edit puts the phases back), saved in a trailing `LPH1` block and in the
   eras (`ERA2`); a save without them has every line placed once, in id order, on load. Riders' waits
   are by headway, so demand does not move; it cannot keep an express from catching a local far down a
-  long stretch (the following loss's stops above show it trailing). When the pattern changes (a new period, or an edit) a new
+  long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains
   never leave a terminal in pairs.
 - **Trains join and leave at the ends** (T-206, notes/T-206.md). An edit that changes a running

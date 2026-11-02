@@ -568,14 +568,13 @@ fn express_behind_local_takes_about_its_time() {
     assert!((free - w.svc.lines[own as usize].runs[0].free.duration).abs() < 30.0, "own track: no loss");
     assert!(!w.svc.cap.res.iter().zip(&w.svc.cap.tag).any(|(_, t)| matches!(t, Tag::Follow { line } if *line == own)));
     assert!(w.svc.cap.res.iter().zip(&w.svc.cap.tag).all(|(_, t)| !matches!(t, Tag::Follow { line } if *line == local)), "the local is never behind the express");
-    // the loss waits outside stations along the way, none of it at the first stop
+    // T-2018: the loss is slower running over the whole stretch: no stand between its stops, none
+    // of it at the first stop
     let run = &w.svc.lines[express as usize].runs[0];
-    assert_eq!(run.holds[0].iter().filter(|h| h.delay >= FOLLOW_SPLIT_S).count(), FOLLOW_WAITS_MAX, "spread over several stations");
+    eprintln!("holds {:?}", run.holds[0].iter().map(|h| (h.s.round(), h.delay.round(), h.span.round())).collect::<Vec<_>>());
+    assert_eq!(run.holds[0].iter().filter(|h| h.span > 0.0).count(), 1, "one spread hold");
     assert_eq!(run.stop_holds[0][0], 0.0);
-    eprintln!("holds {:?}", run.holds[0].iter().map(|h| (h.s.round(), h.delay.round())).collect::<Vec<_>>());
-    // (queueing holds on the shared track wait at its entry, before the first stop; the
-    // following loss's are all along the way)
-    assert_eq!(run.holds[0].iter().filter(|h| h.s > 500.0 && h.s < 19500.0 && h.delay >= FOLLOW_SPLIT_S).count(), run.holds[0].iter().filter(|h| h.delay >= FOLLOW_SPLIT_S).count());
+    never_stands_between_stops(run, 0);
     // at medium the locals run every 15 minutes: some trips get through first, so it loses less
     let (lo1, ex1) = (dur(&w, local, 1), dur(&w, express, 1));
     assert!(ex1 < ex - 60.0 && ex1 < lo1, "medium: express {ex1}, high {ex}");
@@ -596,6 +595,20 @@ fn express_behind_local_takes_about_its_time() {
     same_as_global(&w, "local back");
 }
 
+/// T-2018: a run's profile at `lev` stands still only at its stops, and keeps moving everywhere
+/// between them (sampled every 5 s).
+fn never_stands_between_stops(run: &super::super::service::Run, lev: usize) {
+    use super::super::profile::state_at;
+    let p = &run.prof[lev];
+    let mut t = 0.0;
+    while t < p.duration {
+        let (s, v) = state_at(&p.phases, t);
+        let at_stop = run.stop_s.iter().any(|&x| (x - s).abs() < 5.0);
+        assert!(v > 0.01 || at_stop, "stands at {s:.0} m, t {t:.0} s, between stops {:?}", run.stop_s);
+        t += 5.0;
+    }
+}
+
 /// T-1965: an express that turns where the local turns, on its whole path, can never get away from
 /// it: it takes the local's time at every headway, and leaves right behind the local's trains.
 #[test]
@@ -612,6 +625,10 @@ fn express_locked_behind_local() {
         assert!((ex - lo).abs() < 120.0, "level {lev}: the express takes the local's time: {ex} against {lo}");
     }
     assert!((dur(&w, express, 2) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0, "no local at low");
+    // T-2018: it runs the whole way at a lowered speed, never standing between its two stops
+    for r in 0..2 {
+        never_stands_between_stops(&w.svc.lines[express as usize].runs[r], 0);
+    }
     // its departures right behind the local's (T-1965 spacing): within a few minutes after one
     let deps = |l: u32| {
         let mut out = vec![];
