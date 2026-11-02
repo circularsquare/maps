@@ -33,6 +33,7 @@ import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
+import { RoadFeed } from "./roadFeed";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
@@ -663,6 +664,7 @@ function newModel(): TrackApi {
   api = a;
   xferSet = null;
   worldWaterIn = false;
+  roadFeed.reset();
   // T-309: each region's local time, kept across loads
   a.set_time_zones(timeZoneTable());
   a.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
@@ -957,18 +959,56 @@ function worldWaterIntoModel(): Promise<void> {
   }, () => {});
 }
 
-/** Before Construct: the terrain under every blueprint piece. */
-async function terrainForBlueprint() {
+/** World x, y of every blueprint piece's drawn polyline, one array per edge. */
+function blueprintPolylines(): number[][] {
   const a = api!;
-  const xy: number[] = [];
+  const out: number[][] = [];
   const ei = a.edges_info();
   for (let i = 0; i < ei.length; i += 10) {
     if (ei[i + 4] === 1) continue;
     const r = a.edge_render(ei[i]);
+    const xy: number[] = [];
     for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
+    out.push(xy);
   }
-  const need = zonesOfPoints(xy).filter((id) => !terrainIn.has(id));
-  if (need.length) await ensureTerrain(need);
+  return out;
+}
+
+/** Before Construct: the terrain and the roads (T-1929) under every blueprint piece. */
+async function groundForBlueprint() {
+  const lines = blueprintPolylines();
+  const need = zonesOfPoints(lines.flat()).filter((id) => !terrainIn.has(id));
+  await Promise.all([need.length ? ensureTerrain(need) : null, roadsUnder(...lines)]);
+}
+
+// ---------------------------------------------------------------- road crossings (T-1929)
+
+/** the blueprint's price before the road tiles landing now (`roadFeed`'s burst) */
+let roadsBefore: number | null = null;
+const roadFeed = new RoadFeed(() => {
+  const a = api;
+  if (!a) return null;
+  return (tx, ty, extent, pts, starts, weights) => {
+    roadsBefore ??= a.blueprint_cost();
+    return a.add_road_tile(tx, ty, extent, pts, starts, weights);
+  };
+}, () => {
+  const before = roadsBefore;
+  roadsBefore = null;
+  if (api && before !== null && Math.abs(api.blueprint_cost() - before) > 1e-9) sendState();
+  // the ghost asks again
+  send({ kind: "roads" });
+});
+
+/** Fetch the road tiles under these polylines of world x, y (not waited for by previews). */
+function roadsUnder(...lines: ArrayLike<number>[]): Promise<void> {
+  const keys = new Set<number>();
+  for (const xy of lines) {
+    const ll: number[] = [];
+    for (let k = 0; k + 1 < xy.length; k += 2) ll.push(...frame.toLonLat(xy[k], xy[k + 1]));
+    for (const key of RoadFeed.tilesOf(ll)) keys.add(key);
+  }
+  return keys.size ? roadFeed.ensure([...keys]) : Promise.resolve();
 }
 
 /** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
@@ -1134,6 +1174,8 @@ async function openNetwork(net: Uint8Array) {
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
+  // T-1929: the roads under the blueprint, so its quote has them before Construct waits for them
+  void roadsUnder(...blueprintPolylines());
 }
 
 /** After a network is loaded: the masks of every zone its track meets, then the network opened again
@@ -3148,6 +3190,11 @@ onmessage = (e: MessageEvent<ToClock>) => {
     thumbShade = msg.shade;
     return;
   }
+  if (msg.kind === "roadTiles") {
+    roadFeed.setTemplate(msg.template);
+    if (api) void roadsUnder(...blueprintPolylines());
+    return;
+  }
   if (msg.kind === "account") {
     const before = cloudCtx;
     cloudCtx = msg.ctx;
@@ -3423,7 +3470,7 @@ async function handle(msg: ToClock) {
     }
     await worldWaterIntoModel();
     await masksFor(msg.op);
-    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await terrainForBlueprint();
+    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await groundForBlueprint();
     const tA = performance.now();
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
@@ -3601,6 +3648,7 @@ async function handle(msg: ToClock) {
       ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.set_route_ramp(!!msg.ramp), a.set_route_beside(...besideOf(msg)), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
       : (a.set_design_speed(msg.design ?? 160), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq);
     if (!out) return sendStale(msg.seq);
+    void roadsUnder(routePoints(out));
     if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";
     let arc: Float64Array | undefined;
     const ra = msg.kind === "preview" ? a.route_arc() : null;

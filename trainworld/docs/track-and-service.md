@@ -803,8 +803,8 @@ train-km and car-km, a player-set fare curve by distance. One price list worldwi
 US$75M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
 the dearer level) times a
 multiplier per level (Anita, 2026-11-02, T-1928, notes/T-1897.md: round numbers, +1 and -1 at 1.0).
-Ground is the cheap level, as open country is: the knockdowns and road crossings of a city are not
-computed. A bored tunnel is near a cheap-country metro such as Korea's or Spain's, about
+Ground is the cheap level, as open country is; in a city it pays for the roads it crosses (below). A
+bored tunnel is near a cheap-country metro such as Korea's or Spain's, about
 US$100-150M a tunnelled km with its stations (T-805):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
@@ -859,6 +859,24 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
   "Water +2.5x" when it crosses water (T-1887); its multiplier includes both, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.
+- **Road crossings** (T-1929, Anita 2026-11-02, notes/T-1929.md): track adds **US$6M for each road
+  it crosses at level 0** (`ROAD_CROSSING_COST`; its height under half a level, so the low half of
+  a ramp too), standing for the knockdowns and road works of a city. Roads are the basemap's zoom
+  14 lines (OpenMapTiles `transportation`): trunk, primary, secondary, tertiary, minor and busway
+  count 1, a motorway 3; service ways, tracks, paths, and any road on a bridge or in a tunnel count
+  none. A divided road is two lines, so it counts twice. So ground track through a dense centre
+  (11-13 crossings a km) costs about US$90-100M a km, more than a +1 viaduct, and in open country
+  (under 1 a km) about US$27M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
+  sends, `roadFeed.ts`, decoded by `map/roadTiles.ts`) under each route preview and under the
+  blueprint after a load, and puts each in the track model (`TrackApi::add_road_tile`,
+  `track/roads.rs`: in Web Mercator tile units, indexed 32 x 32 cells a tile, never dropped in a
+  session). Like terrain, each edge keeps its crossings' chainages (`Network::edge_roads`, the
+  alignment sampled every 20 m, `ROAD_STEP`), worked out again for the edges a tile reaches when
+  it lands; a split, a reshape or a load works them out from the tiles in hand, nothing is saved.
+  No preview waits for tiles: one priced before they land is asked again when they do, and
+  Construct waits for the tiles under the blueprint, so nothing is paid on a guess (a tile that
+  cannot be fetched counts no roads). The blueprint quote has one "Road crossings" row, kind 7,
+  the weighted count and price.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
 - Stations (200 m, two platform tracks), US$M: a fixed 50 that every station has wherever it is

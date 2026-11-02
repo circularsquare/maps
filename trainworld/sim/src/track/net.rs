@@ -12,12 +12,21 @@ use super::cross::{self, Grid};
 use super::frame::{Frame, FrameKind};
 use super::geom::{self, GeomIssue, Pi, Piece};
 use super::params::*;
+use super::roads::{self, Roads};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::f64::consts::PI;
 
 /// Most edge ends one node can have.
 pub const MAX_PORTS: usize = 8;
+
+/// What a newly installed file changes in the edges it reaches (`Network::rework_ground`).
+#[derive(Clone, Copy)]
+enum Ground {
+    Water,
+    Terrain,
+    Roads,
+}
 
 /// A run of items in a pool.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -362,6 +371,8 @@ pub struct Network {
     pub edge_water: Vec<Span>,
     /// Derived: chainage spans of ground that is not flat, `[s0, s1, class]` (T-1270).
     pub edge_terrain: Vec<Span>,
+    /// Derived: chainages of the roads the alignment crosses, `[s, weight]` (T-1929).
+    pub edge_roads: Vec<Span>,
     pub edge_cost: Vec<f64>,
     /// Time to run the edge at its speed limits, no acceleration (for routing).
     pub edge_time: Vec<f64>,
@@ -371,6 +382,7 @@ pub struct Network {
     pub verts: Pool<[f64; 2]>,
     pub water: Pool<[f64; 2]>,
     pub terrain_spans: Pool<[f64; 3]>,
+    pub road_spans: Pool<[f64; 2]>,
 
     pub line_alive: Vec<bool>,
     pub line_name: Vec<String>,
@@ -431,6 +443,9 @@ pub struct Network {
     /// The terrain grids installed (T-1270): from the clock worker, not saved, and carried over to a
     /// loaded network like the water mask.
     pub terrain: Terrain,
+    /// The road tiles installed (T-1929): from the clock worker, not saved, and carried over to a
+    /// loaded network like the terrain.
+    pub roads: Roads,
     /// The street speeds installed (T-1577, `streets.rs`): from the clock worker, not saved, and carried
     /// over to a loaded network like the terrain.
     pub streets: super::streets::Streets,
@@ -644,6 +659,7 @@ impl Network {
             edge_vert: vec![],
             edge_water: vec![],
             edge_terrain: vec![],
+            edge_roads: vec![],
             edge_cost: vec![],
             edge_time: vec![],
             edge_free: vec![],
@@ -652,6 +668,7 @@ impl Network {
             verts: Pool::default(),
             water: Pool::default(),
             terrain_spans: Pool::default(),
+            road_spans: Pool::default(),
             line_alive: vec![],
             line_name: vec![],
             line_symbol: vec![],
@@ -688,6 +705,7 @@ impl Network {
             edge_lines: vec![],
             water_mask: Box::new(NoWater),
             terrain: Terrain::default(),
+            roads: Roads::default(),
             streets: Default::default(),
             time_zones: Default::default(),
             touch: Touch::default(),
@@ -851,6 +869,7 @@ impl Network {
         self.edge_vert.push(Span::default());
         self.edge_water.push(Span::default());
         self.edge_terrain.push(Span::default());
+        self.edge_roads.push(Span::default());
         self.edge_cost.push(0.0);
         self.edge_time.push(0.0);
         self.edge_lines_off.push(*self.edge_lines_off.last().unwrap());
@@ -989,6 +1008,9 @@ impl Network {
     }
     pub fn edge_terrain(&self, e: u32) -> &[[f64; 3]] {
         self.terrain_spans.get(self.edge_terrain[e as usize])
+    }
+    pub fn edge_roads(&self, e: u32) -> &[[f64; 2]] {
+        self.road_spans.get(self.edge_roads[e as usize])
     }
     pub fn line_path(&self, l: u32) -> &[u32] {
         self.paths.get(self.line_path[l as usize])
@@ -1300,7 +1322,7 @@ impl Network {
     pub fn add_water(&mut self, mask: Box<dyn WaterMask>, b: [f64; 4]) {
         self.water_mask = mask;
         self.mask_epoch = self.mask_epoch.wrapping_add(1);
-        self.rework_ground(b, true);
+        self.rework_ground(b, Ground::Water);
     }
 
     /// T-1270: a terrain grid added to those in use, its bounds `b` in the network frame: only the
@@ -1308,12 +1330,20 @@ impl Network {
     /// but the price depends on terrain.
     pub fn add_terrain(&mut self, grid: std::sync::Arc<cost::ClassGrid>, b: [f64; 4]) {
         self.terrain.grids.push(grid);
-        self.rework_ground(b, false);
+        self.rework_ground(b, Ground::Terrain);
     }
 
-    /// Work out again the water (when `water`) or the terrain, and the price, of the edges reaching
-    /// into `b`.
-    fn rework_ground(&mut self, b: [f64; 4], water: bool) {
+    /// T-1929: a road tile added to those in use (`roads::Roads::key`), its bounds `b` in the
+    /// network frame: only the edges reaching into `b` have their crossings and price worked out
+    /// again, as for terrain.
+    pub fn add_roads(&mut self, key: u32, tile: std::sync::Arc<roads::RoadTile>, b: [f64; 4]) {
+        self.roads.tiles.insert(key, tile);
+        self.rework_ground(b, Ground::Roads);
+    }
+
+    /// Work out again the water, the terrain or the road crossings, and the price, of the edges
+    /// reaching into `b`.
+    fn rework_ground(&mut self, b: [f64; 4], what: Ground) {
         self.repriced = true;
         let frame = self.frame;
         for e in 0..self.edge_count() as u32 {
@@ -1326,21 +1356,34 @@ impl Network {
                 continue;
             }
             let pieces = pieces.to_vec();
-            if water {
-                let mut wet = vec![];
-                cost::water_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
-                self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
-            } else {
-                let mut ground = vec![];
-                cost::terrain_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
-                self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
+            match what {
+                Ground::Water => {
+                    let mut wet = vec![];
+                    cost::water_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
+                    self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
+                }
+                Ground::Terrain => {
+                    let mut ground = vec![];
+                    cost::terrain_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
+                    self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
+                }
+                Ground::Roads => {
+                    let mut cross = vec![];
+                    roads::crossings(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
+                    self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
+                }
             }
-            let wet = self.water.get(self.edge_water[i]);
-            self.edge_cost[i] = if self.edge_crossover[i] {
-                cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
-            } else {
-                cost::track_cost_t(self.edge_len[i], self.verts.get(self.edge_vert[i]), wet, self.terrain_spans.get(self.edge_terrain[i]), self.edge_tracks[i], self.edge_hsr[i])
-            };
+            self.edge_cost[i] = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+        }
+    }
+
+    /// An edge's price from its derived parts: a crossover's switches, else its track and the roads
+    /// it crosses at ground level (T-1929).
+    fn edge_price(&self, i: usize, vert: &[[f64; 2]], wet: &[[f64; 2]], terrain: &[[f64; 3]], cross: &[[f64; 2]]) -> f64 {
+        if self.edge_crossover[i] {
+            cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
+        } else {
+            cost::track_cost_t(self.edge_len[i], vert, wet, terrain, self.edge_tracks[i], self.edge_hsr[i]) + roads::charge(vert, cross).1
         }
     }
 
@@ -1391,10 +1434,12 @@ impl Network {
                 self.verts.free(self.edge_vert[i]);
                 self.water.free(self.edge_water[i]);
                 self.terrain_spans.free(self.edge_terrain[i]);
+                self.road_spans.free(self.edge_roads[i]);
                 self.edge_pieces[i] = Span::default();
                 self.edge_vert[i] = Span::default();
                 self.edge_water[i] = Span::default();
                 self.edge_terrain[i] = Span::default();
+                self.edge_roads[i] = Span::default();
                 self.edge_len[i] = 0.0;
                 self.edge_cost[i] = 0.0;
                 self.edge_time[i] = 0.0;
@@ -1406,13 +1451,14 @@ impl Network {
             let mut ground = vec![];
             let frame = self.frame;
             cost::terrain_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
+            let mut cross = vec![];
+            if !self.edge_crossover[i] {
+                roads::crossings(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
+            }
             self.edge_len[i] = f.len;
-            self.edge_cost[i] = if self.edge_crossover[i] {
-                cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
-            } else {
-                cost::track_cost_t(f.len, &f.vert, &wet, &ground, self.edge_tracks[i], self.edge_hsr[i])
-            };
+            self.edge_cost[i] = self.edge_price(i, &f.vert, &wet, &ground, &cross);
             self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
+            self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
             let cap = self.v_cap(e);
             self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_curve().min(cap)).sum::<f64>().max(1e-3);
             self.edge_pieces[i] = self.pieces.replace(old, &f.pieces);
@@ -1609,6 +1655,9 @@ impl Network {
         }
         if self.terrain_spans.needs_compact() {
             self.terrain_spans.compact(&mut self.edge_terrain);
+        }
+        if self.road_spans.needs_compact() {
+            self.road_spans.compact(&mut self.edge_roads);
         }
         if self.stops.needs_compact() {
             self.stops.compact(&mut self.line_stops);
@@ -1938,7 +1987,8 @@ impl Network {
 
     /// Unbuilt costs grouped by kind, charged level, track count (`HSR_ROW` for high-speed track),
     /// water and ramp. Seven numbers per row: those five keys, metres/count, US$M. Kind 6 is what
-    /// the terrain adds to track (T-1270), its level field holding the terrain class.
+    /// the terrain adds to track (T-1270), its level field holding the terrain class; kind 7 the
+    /// roads crossed at ground level, weighted (T-1929).
     pub fn blueprint_cost_items(&self) -> Vec<f64> {
         // the fifth key field is a track row's terrain class (T-1839; a ramp is no price factor, it is
         // charged at its dearer end, so ramps are not told apart), 0 for every other kind
@@ -1959,6 +2009,11 @@ impl Network {
                     let class = if cost::terrain_surcharge(level, class) == 0.0 { 0 } else { class };
                     add(0, level, if hsr { HSR_ROW } else { tracks }, wet, class, m, c);
                 });
+                // kind 7: roads crossed at ground level (T-1929), a count
+                let (n, c) = roads::charge(self.edge_vert(e as u32), self.edge_roads(e as u32));
+                if n > 0.0 {
+                    add(7, 0, 0, false, 0, n, c);
+                }
             }
         }
         for n in 0..self.node_count() {

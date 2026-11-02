@@ -17,12 +17,13 @@ import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 
-// 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's, 10 and 11 T-1464's bus routes and buses
-const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages", "Bus routes", "Buses"];
+// 6 T-1270's terrain, 7 T-1929's roads crossed at ground level, 8 and 9 T-1281's, 10 and 11 T-1464's
+// bus routes and buses
+const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "Road crossings", "Station upgrades", "Passages", "Bus routes", "Buses"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
-const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "", "station upgrade", "passage", "route", "bus"];
+const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "road crossing", "station upgrade", "passage", "route", "bus"];
 const levelWords = (r: BlueprintItem) => `${levelName(r.level).toLowerCase()} (${levelLabel(r.level)})`;
 
 /** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
@@ -31,6 +32,7 @@ function rowName(r: BlueprintItem) {
   if (r.kind === 10) return distance(r.quantity);
   if (r.kind === 11) return plural(r.quantity, "new bus", "new buses");
   if (r.kind === 9) return plural(r.quantity, "passage");
+  if (r.kind === 7) return plural(r.quantity, "road crossing");
   if (r.kind === 0) return `${distance(r.quantity)} ${levelWords(r)}`;
   return `${plural(r.quantity, NOUN[r.kind] || "item")}, ${levelWords(r)}`;
 }

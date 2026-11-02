@@ -39,7 +39,8 @@ import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { edit, say, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
-import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
+import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
+import { roadTileTemplate } from "./busRoads";
 import { toLngLat, toLocal } from "./geo";
 import type { Level } from "../game/types";
 import { circleOnScreen, endHeading } from "./curveCircle";
@@ -48,7 +49,7 @@ import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, wa
 import type { Overlay } from "./overlay";
 import { placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
-import { chip, costTint, elevationFact, factRow, speedFact, terrainFact, waterFact } from "./trackTagRows";
+import { chip, costTint, elevationFact, factRow, roadFact, speedFact, terrainFact, waterFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -218,6 +219,18 @@ export class Tools {
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
     effect(() => { buildLevel.value; autoRamp.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
+    // asked again when more of them land
+    let roadsSent = false;
+    const sendRoadTiles = () => {
+      if (!roadsSent) void roadTileTemplate(map).then((t) => {
+        if (t && !roadsSent) client.post({ kind: "roadTiles", template: t });
+        roadsSent ||= !!t;
+      });
+    };
+    map.on("styledata", sendRoadTiles);
+    sendRoadTiles();
+    onRoadsLanded(() => { if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
@@ -1811,7 +1824,7 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = [terrainFact(pv.ground), waterFact(pv.ground)].filter((f) => f !== null);
+  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground)].filter((f) => f !== null);
   if (ground.length) out.push(factRow(...ground));
   return out;
 }

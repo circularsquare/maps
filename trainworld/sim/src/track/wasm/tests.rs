@@ -59,6 +59,74 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     assert!((a.blueprint_cost() - after).abs() < 1e-6);
 }
 
+/// Road tiles over the box of network points `(x0, y0)`-`(x1, y1)`: a road running north-south every
+/// `every` tile units (about 0.46 m each at New York), lined up across tiles as real roads are.
+fn add_road_grid(a: &mut TrackApi, x0: f64, y0: f64, x1: f64, y1: f64, every: i32) {
+    use crate::track::roads::{merc, EXTENT};
+    let (w, s) = { let ll = a.to_lonlat(x0, y0); merc(ll[0], ll[1]) };
+    let (e, n) = { let ll = a.to_lonlat(x1, y1); merc(ll[0], ll[1]) };
+    let tile = |v: f64| (v / EXTENT).floor() as u32;
+    for tx in tile(w.min(e))..=tile(w.max(e)) {
+        for ty in tile(s.min(n))..=tile(s.max(n)) {
+            let (mut pts, mut starts) = (vec![], vec![]);
+            let ox = (tx as f64 * EXTENT) as i64;
+            let mut gx = (every as i64 - ox.rem_euclid(every as i64)) as i32;
+            while gx < EXTENT as i32 {
+                starts.push((pts.len() / 2) as u32);
+                pts.extend([gx, -64, gx, EXTENT as i32 + 64]);
+                gx += every;
+            }
+            let weights = vec![1u8; starts.len()];
+            assert!(a.add_road_tile(tx, ty, EXTENT, &pts, &starts, &weights));
+        }
+    }
+}
+
+#[test]
+fn roads_charge_ground_track_and_stay_through_splits_and_loads() {
+    // T-1929: 3 km at ground and 3 km at +1, then roads every ~92 m (200 units) land under both
+    let mut a = api();
+    let ground: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ground, &[], 2, false), 0, "{}", a.issues());
+    let high = [0.0, 0.0, 0.0, -1000.0, 1.0, 0.0, 0.0, 3000.0, -1000.0, 1.0];
+    assert_eq!(a.add_route(&high, &[], 2, false), 0, "{}", a.issues());
+    let before = a.blueprint_cost();
+    assert!((before - 3.0 * (22.5 + 75.0)).abs() < 1e-6, "{before}");
+    add_road_grid(&mut a, -500.0, -1500.0, 3500.0, 1500.0, 200);
+    let after = a.blueprint_cost();
+    let crossings = (after - before) / ROAD_CROSSING_COST;
+    assert!((crossings - crossings.round()).abs() < 1e-9 && (30.0..=36.0).contains(&crossings), "{crossings} crossings");
+    // the quote has them as one row, its count and price, and the rows still add up to the total
+    let rows = a.blueprint_cost_items();
+    let road: Vec<&[f64]> = rows.chunks_exact(7).filter(|r| r[0] == 7.0).collect();
+    assert!(road.len() == 1 && road[0][5] == crossings && (road[0][6] - crossings * ROAD_CROSSING_COST).abs() < 1e-9, "{rows:?}");
+    assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
+    // the tool's preview counts them on the ground and not on a viaduct
+    let more: Vec<f64> = free(0.0, 1000.0).iter().chain(free(2000.0, 1000.0).iter()).copied().collect();
+    let out = a.preview_route(&more, &[], 2, false);
+    let g = a.preview_ground();
+    assert!(out[0] == 1.0 && (20.0..=24.0).contains(&g[5]) && (g[6] - g[5] * ROAD_CROSSING_COST).abs() < 1e-9, "{g:?}");
+    assert!((out[1] - (2.0 * 22.5 + g[6])).abs() < 1e-6, "{:?}", &out[..5]);
+    let up = [0.0, 0.0, 0.0, 1000.0, 1.0, 0.0, 0.0, 2000.0, 1000.0, 1.0];
+    a.preview_route(&up, &[], 2, false);
+    assert_eq!(a.preview_ground()[5], 0.0);
+    // a station splitting the ground track keeps every crossing
+    let e = (0..a.w.net.edge_count() as u32).find(|&e| a.w.net.edge_ok(e) && a.w.net.node_level[a.w.net.edge_a[e as usize] as usize] == 0).unwrap();
+    assert_eq!(a.add_station(2, e, 1530.0, 0.0, 200, "Mid".into()), 0, "{}", a.issues());
+    let split: f64 = (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).map(|e| crate::track::roads::charge(a.w.net.edge_vert(e), a.w.net.edge_roads(e)).0).sum();
+    assert_eq!(split, crossings);
+    // constructing pays them; a save loaded keeps the tiles in force
+    a.set_cash(1e6);
+    let cash = a.cash();
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let paid = cash - a.cash();
+    let costs = a.costs();
+    assert!((costs[1] - costs[0]).abs() < 1e-6 && paid > crossings * ROAD_CROSSING_COST, "{paid} {costs:?}");
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert!((a.costs()[1] - costs[1]).abs() < 1e-6, "{:?} {costs:?}", a.costs());
+}
+
 #[test]
 fn upkeep_is_cheaper_for_track_that_stays_on_the_ground() {
     // T-1931: US$20k a km a game day on the ground, 25k on a viaduct, 35k in cut and cover, 40k bored

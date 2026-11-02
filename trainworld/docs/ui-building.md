@@ -61,7 +61,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
   by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
-  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover. The fleet quote previews the constructed service, so lines started together include their
+  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $6M per road crossing", "Road crossings × 12", "= $72M") [T-1929]. The fleet quote previews the constructed service, so lines started together include their
   resulting delays, without changing the game. The quote, and a planned line's Construct price in
   its panel, are asked of the clock worker only while a panel shows them, 250 ms after the last
   edit (`game/quotes.ts`, T-1171); a state carries neither.
@@ -200,7 +200,10 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track. A third line names the roughest terrain class charged with its
   surcharge ("Mountains +3.0x", "Hills +1.2x", "Hills +0.5x") and "Water +2.5x" when the segment
-  crosses water, each with an icon [T-1394, T-1887, T-1890].
+  crosses water, and the roads it crosses at ground level with what they add ("12 road crossings
+  +$72M", 6.4), each with an icon [T-1394, T-1887, T-1890, T-1929]. The cost line's price includes
+  the road crossings; its multiplier does not. Road tiles landing after the ghost was priced ask it
+  again.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
   In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
 - **Ctrl** (Cmd on a Mac, where Ctrl+click is a right click) [T-1887]: held with the track tool,

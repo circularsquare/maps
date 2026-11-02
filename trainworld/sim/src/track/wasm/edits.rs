@@ -655,13 +655,15 @@ impl TrackApi {
     pub(super) fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8, hsr: bool) -> Vec<f64> {
         let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks, hsr);
         self.preview_marks = trial_crossings(&r);
+        let (roads, road_cost) = self.w.road_charge_of(&f);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
-            Err(_) => (0.0, track),
+            Err(_) => (0.0, track + road_cost),
         };
         let base = BASE_COST_PER_KM * f.len / 1000.0 * crate::track::cost::track_factor(tracks, hsr);
         let mult = if base > 0.0 { track / base } else { 0.0 };
-        self.preview_ground = self.w.ground_metres(&f);
+        let g = self.w.ground_metres(&f);
+        self.preview_ground = [g[0], g[1], g[2], g[3], g[4], roads, road_cost];
         self.done(r.map(|mut r| {
             r.dirty = Default::default();
             r

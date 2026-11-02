@@ -117,6 +117,11 @@ let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array, fine: string[] | nu
 export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array, fine: string[] | null) => void) {
   stationsAheadSink = f;
 }
+const roadsListeners: (() => void)[] = [];
+/** T-1929: call `f` whenever road tiles land in the track model (a ghost priced before them is out of date). */
+export function onRoadsLanded(f: () => void) {
+  roadsListeners.push(f);
+}
 let netAheadSink: ((key: string) => void) | null = null;
 /** T-1539: call `f` with a loading save's `saveNetKey`, before its first snapshot. */
 export function onNetAhead(f: (key: string) => void) {
@@ -839,6 +844,9 @@ export class ClockClient {
         break;
       case "terrain":
         addTerrainGrid(msg.id, msg.bytes);
+        break;
+      case "roads":
+        for (const f of roadsListeners) f();
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions

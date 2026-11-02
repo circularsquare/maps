@@ -18,6 +18,7 @@ use super::geom::{self, design_radii, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData};
 use super::params::*;
 use super::profile;
+use super::roads::{self, RoadTile, Roads};
 use super::save;
 use super::streets::StreetGrid;
 use super::world::{auto_trains, ChargeError, EditResult, Op, TrackWorld};
@@ -87,8 +88,9 @@ pub struct TrackApi {
     rasters: Vec<PackWater>,
     /// The world's coarse water (`add_world_water`, T-1285), deciding where no pack raster does.
     world_water: Option<Arc<RunMask>>,
-    /// Metres of the last preview by terrain class and over water (`preview_ground`, `ground_metres`).
-    preview_ground: [f64; 5],
+    /// Metres of the last preview by terrain class and over water (`preview_ground`, `ground_metres`),
+    /// then the roads it crosses at ground level, weighted, and their price (T-1929).
+    preview_ground: [f64; 7],
     /// The boarding account (T-164): demand's riders per period, and each train's load and each
     /// platform's crowd worked out from them. Never saved.
     boarding: Boarding,
@@ -282,7 +284,7 @@ impl TrackApi {
             station_cost: 0.0,
             rasters: vec![],
             world_water: None,
-            preview_ground: [0.0; 5],
+            preview_ground: [0.0; 7],
             boarding: Boarding::default(),
             spans: vec![],
             now: f64::NAN,
@@ -373,6 +375,7 @@ impl TrackApi {
         std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
         net.time_zones = self.w.net.time_zones.clone();
         net.terrain = self.w.net.terrain.clone();
+        net.roads = self.w.net.roads.clone();
         net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
         self.w.svc.cal = self.boarding.holidays.clone();
@@ -480,9 +483,31 @@ impl TrackApi {
     }
 
     /// Metres of the last route or edge preview in each terrain class where it is charged (flat,
-    /// rolling, hilly, mountain; T-1270), for the track tool's tag.
+    /// rolling, hilly, mountain; T-1270) and over water (T-1887), then the roads it crosses at
+    /// ground level, weighted, and their price, US$M (T-1929), for the track tool's tag.
     pub fn preview_ground(&self) -> Vec<f64> {
         self.preview_ground.to_vec()
+    }
+
+    /// Add a zoom 14 road tile (T-1929, `roads::RoadTile::new`: `pts` x, y pairs in units of
+    /// `extent` across the tile, line `i` from point `starts[i]`, weighted `weights[i]`): the
+    /// blueprint and built track it reaches is priced again. A tile already in is kept as it is.
+    pub fn add_road_tile(&mut self, tx: u32, ty: u32, extent: f64, pts: &[i32], starts: &[u32], weights: &[u8]) -> bool {
+        let key = Roads::key(tx, ty);
+        if self.w.net.roads.tiles.contains_key(&key) || tx >= roads::TILES || ty >= roads::TILES {
+            return false;
+        }
+        let tile = Arc::new(RoadTile::new(extent, pts, starts, weights));
+        let [w, s, e, n] = roads::tile_bounds(tx, ty);
+        let frame = self.w.net.frame();
+        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        for (lon, lat) in [(w, s), (w, n), (e, s), (e, n), (0.5 * (w + e), s), (0.5 * (w + e), n)] {
+            let (x, y) = frame.from_lonlat(lon, lat);
+            b = [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)];
+        }
+        let m = 100.0;
+        self.w.net.add_roads(key, tile, [b[0] - m, b[1] - m, b[2] + m, b[3] + m]);
+        true
     }
 
     /// Install the world's coarse water mask (T-1285, a `world.water` file's bytes,
@@ -514,6 +539,7 @@ impl TrackApi {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 net.time_zones = self.w.net.time_zones.clone();
                 net.terrain = self.w.net.terrain.clone();
+                net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
                 // T-1720: the calendar the clock worker last sent (it sends again when it changes)

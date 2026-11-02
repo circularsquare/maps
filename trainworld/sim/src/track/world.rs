@@ -807,6 +807,14 @@ impl TrackWorld {
         ground
     }
 
+    /// The roads a fitted alignment crosses at ground level, weighted, and their price, US$M (T-1929).
+    pub fn road_charge_of(&self, f: &super::geom::Fit) -> (f64, f64) {
+        let mut cross = vec![];
+        let frame = self.net.frame();
+        super::roads::crossings(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.net.roads, &mut cross);
+        super::roads::charge(&f.vert, &cross)
+    }
+
     /// Metres of a fitted alignment for the track tool's tag: in each terrain class where the class
     /// is charged (T-1270: off water, at elevation -1 and above), then over water at any level
     /// (T-1887).

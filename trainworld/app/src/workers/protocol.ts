@@ -152,6 +152,8 @@ export type ToClock =
   | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }
   /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
   | { kind: "shade"; shade: "light" | "dark" }
+  /** T-1929: the basemap's zoom 14 tile URL template, where the worker fetches the roads track crosses */
+  | { kind: "roadTiles"; template: string }
   /** `early` (T-1407, the track tool's blueprint segments): a route edit that changes no line for
    * demand is answered before its state is built, so the next ghost is not kept waiting */
   | { kind: "edit"; seq: number; op: EditOp; early?: boolean }
@@ -548,7 +550,8 @@ export type FromClock =
       /** the track's price over its length at the base price (level, water and terrain averaged, T-085) */
       mult: number;
       /** metres of a route preview on flat, rolling, hilly and mountain ground where the terrain is
-       * charged (T-1270, `TrackApi.preview_ground`) */
+       * charged (T-1270, `TrackApi.preview_ground`), over water (T-1887), then the roads it crosses
+       * at ground level, weighted, and their price in US$M (T-1929) */
       ground?: number[];
       issues: string[];
       /** per vertex: x, y (local units; the middle of its curve), radius m (0 = no arc), speed
@@ -597,6 +600,8 @@ export type FromClock =
   | { kind: "netAhead"; key: string }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
   | { kind: "terrain"; id: string; bytes: ArrayBuffer }
+  /** T-1929: road tiles just put in the track model: a preview asked before them is out of date */
+  | { kind: "roads" }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
    * before T-729; `start`, its start zone (T-728), whose realm shows (T-975) */
   | { kind: "opened"; zones: string[] | null; start?: string }

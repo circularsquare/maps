@@ -1,7 +1,7 @@
 // The elevation and speed limit in the map's tags (T-526): the track hover and the track tool's
 // placing tag write them the same way, an icon then the value on its display colour.
 
-import { levelLabel, speed } from "../game/format";
+import { levelLabel, moneyShort, plural, speed } from "../game/format";
 import { bulletNode, isBusLine } from "../ui/bullet";
 import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
@@ -110,6 +110,21 @@ export function waterFact(ground: ArrayLike<number> | undefined): HTMLSpanElemen
   const s = document.createElement("span");
   s.className = "tag-fact";
   s.append(icon(WATER_PATH, "Water"), chip(`Water +${WATER_SURCHARGE}x`, WATER_COLOUR, 0.6));
+  return s;
+}
+
+/** A road with its centre line dashed. */
+const ROAD_PATH = "M5 1.5L3.5 14.5M11 1.5l1.5 13M8 2v2.2M8 6.9v2.2M8 11.8V14";
+const ROAD_COLOUR = "#c9b28a";
+
+/** The icon and a chip for the roads a route crosses at ground level and what they add (T-1929, the
+ * preview's sixth and seventh figures: weighted count, US$M); null where it crosses none. */
+export function roadFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+  const n = ground?.[5] ?? 0;
+  if (!ground || n < 1) return null;
+  const s = document.createElement("span");
+  s.className = "tag-fact";
+  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, "road crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
   return s;
 }
 

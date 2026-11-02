@@ -10,7 +10,17 @@ export interface RoadLines {
   extent: number;
   /** each line's x, y pairs in tile units, 0..extent across the tile (a little beyond at its edge) */
   lines: Int32Array[];
+  /** each line's weight, what `keep` gave it (a plain true is 1) */
+  weights?: number[];
 }
+
+/** A road's `class` and `brunnel` (bridge, tunnel, ford or none) in OpenMapTiles. */
+export type RoadKeep = (cls: string, brunnel: string | null) => boolean | number;
+
+/** What a road counts for where track at ground level crosses it (T-1929): the bus classes 1, a
+ * motorway 3; a road on a bridge or in a tunnel is already out of the way, 0. */
+export const crossingWeight: RoadKeep = (cls, brunnel) =>
+  brunnel === "bridge" || brunnel === "tunnel" ? 0 : cls === "motorway" ? 3 : BUS_CLASSES.has(cls) ? 1 : 0;
 
 class Reader {
   pos = 0;
@@ -59,9 +69,9 @@ function valueString(r: Reader, end: number): string | null {
   return out;
 }
 
-/** The lines of a tile's `transportation` layer whose class `keep` accepts; none when the tile has no
- * such layer. */
-export function decodeRoads(buf: ArrayBuffer, keep: (cls: string) => boolean = (c) => BUS_CLASSES.has(c)): RoadLines {
+/** The lines of a tile's `transportation` layer that `keep` accepts (true or a weight above 0); none
+ * when the tile has no such layer. */
+export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSES.has(c)): RoadLines {
   const b = new Uint8Array(buf);
   const t = new Reader(b);
   while (t.pos < t.end) {
@@ -93,12 +103,12 @@ export function decodeRoads(buf: ArrayBuffer, keep: (cls: string) => boolean = (
     }
     t.pos = end;
     if (name !== "transportation") continue;
-    const classKey = keys.indexOf("class");
-    const lines: Int32Array[] = [];
+    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel");
+    const lines: Int32Array[] = [], weights: number[] = [];
     for (const [s, e] of feats) {
       const fr = new Reader(b, e);
       fr.pos = s;
-      let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null;
+      let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null;
       while (fr.pos < e) {
         const ft = fr.varint(), ff = ft >> 3, fw = ft & 7;
         if (ff === 2 && fw === 2) {
@@ -106,6 +116,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: (cls: string) => boolean = (
           while (fr.pos < te) {
             const k = fr.varint(), v = fr.varint();
             if (k === classKey) cls = values[v] ?? null;
+            else if (k === brunnelKey) brunnel = values[v] ?? null;
           }
         } else if (ff === 3 && fw === 0) type = fr.varint();
         else if (ff === 4 && fw === 2) {
@@ -114,7 +125,10 @@ export function decodeRoads(buf: ArrayBuffer, keep: (cls: string) => boolean = (
           fr.pos = geomEnd;
         } else fr.skip(fw);
       }
-      if (type !== 2 || geomStart < 0 || cls === null || !keep(cls)) continue;
+      if (type !== 2 || geomStart < 0 || cls === null) continue;
+      const kept = keep(cls, brunnel);
+      const weight = kept === true ? 1 : kept === false ? 0 : kept;
+      if (!(weight > 0)) continue;
       const g = new Reader(b, geomEnd);
       g.pos = geomStart;
       let x = 0, y = 0, cur: number[] | null = null;
@@ -127,14 +141,14 @@ export function decodeRoads(buf: ArrayBuffer, keep: (cls: string) => boolean = (
           x += (dx >> 1) ^ -(dx & 1);
           y += (dy >> 1) ^ -(dy & 1);
           if (id === 1) {
-            if (cur && cur.length >= 4) lines.push(Int32Array.from(cur));
+            if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight);
             cur = [x, y];
           } else cur?.push(x, y);
         }
       }
-      if (cur && cur.length >= 4) lines.push(Int32Array.from(cur));
+      if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight);
     }
-    return { extent, lines };
+    return { extent, lines, weights };
   }
-  return { extent: 4096, lines: [] };
+  return { extent: 4096, lines: [], weights: [] };
 }

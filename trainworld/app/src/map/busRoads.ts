@@ -42,6 +42,26 @@ export interface Leg {
 
 type Tile = { rl: RoadLines | null; at: number } | "loading";
 
+/** The basemap's tile URL template for the layer holding the roads; null while the style is not in. */
+export async function roadTileTemplate(map: MlMap): Promise<string | null> {
+  try {
+    const style = map.getStyle();
+    const layer = style?.layers.find((l) => (l as { "source-layer"?: string })["source-layer"] === "transportation");
+    const id = layer && "source" in layer ? (layer.source as string) : null;
+    if (!id) return null;
+    const live = map.getSource(id) as { tiles?: string[]; url?: string } | undefined;
+    const spec = style.sources[id] as { tiles?: string[]; url?: string } | undefined;
+    const tiles = live?.tiles ?? spec?.tiles;
+    if (tiles?.length) return tiles[0];
+    const url = live?.url ?? spec?.url;
+    if (!url) return null;
+    const json = await (await fetch(url)).json();
+    return json.tiles?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export class BusRoads {
   private graph = new RoadGraph();
   private tiles = new Map<number, Tile>();
@@ -61,24 +81,7 @@ export class BusRoads {
 
   private url(): Promise<string | null> {
     if (this.template) return this.template;
-    const p = (async () => {
-      try {
-        const style = this.map.getStyle();
-        const layer = style?.layers.find((l) => (l as { "source-layer"?: string })["source-layer"] === "transportation");
-        const id = layer && "source" in layer ? (layer.source as string) : null;
-        if (!id) return null;
-        const live = this.map.getSource(id) as { tiles?: string[]; url?: string } | undefined;
-        const spec = style.sources[id] as { tiles?: string[]; url?: string } | undefined;
-        const tiles = live?.tiles ?? spec?.tiles;
-        if (tiles?.length) return tiles[0];
-        const url = live?.url ?? spec?.url;
-        if (!url) return null;
-        const json = await (await fetch(url)).json();
-        return json.tiles?.[0] ?? null;
-      } catch {
-        return null;
-      }
-    })();
+    const p = roadTileTemplate(this.map);
     // a style that is not there yet is asked again
     void p.then((u) => {
       if (!u) this.template = null;
