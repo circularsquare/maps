@@ -397,12 +397,16 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 
 /// The stops a stop edit leaves and their path. Stops closed into a loop whose path only goes
 /// out and back the same way (a lollipop's loop stops taken out) make no loop (T-1273): the line
-/// ends where it turns, a terminus, rather than reversing partway there.
+/// ends where it turns, a terminus, rather than reversing partway there. An open line whose path
+/// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`).
 fn edited_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
     let path = net.route(&stops)?;
+    if !closed(&stops) {
+        return Some(straighten(net, &stops, &path).unwrap_or((stops, path)));
+    }
     let n = path.len();
-    if !closed(&stops) || n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {
+    if n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {
         return Some((stops, path));
     }
     let nodes: Vec<u32> = std::iter::once(net.path_nodes(path[0]).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();

@@ -550,12 +550,11 @@ notes/T-420.md has the tables.
   dollars are US dollars). At market rates 0.7 is the exponent that keeps each country's minutes per
   unit of its own money as T-1277's rule at PPP to the 0.5 had them (price levels rise with income);
   it sits mid value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
-  the player's curve times each country's scale, 1 by default (T-1906; a save from before T-1906
-  defaults to its income over India's to the same power), so in a new game the start country's
-  fares weigh the same wherever it is, and a country the player expands into charges the start
-  country's fares until the player sets its scale: a US start's $2.50 base weighs 11 times as much in
-  India; a scale the player sets moves inter-city riders from that country too (T-1286, every
-  country's scale over its income's). In the local layers the car's money (ownership, parking) stays
+  the player's curve times each country's scale, by default its income over the start country's to
+  the same power (T-1906; over India's in a save from before), so at the default scales a fare
+  weighs the same everywhere and a poorer country brings in less per rider; a scale the player sets
+  moves inter-city riders from that country too (T-1286, every country's scale over its income's).
+  Anita (2026-11-02): 0.7 for the default fares, perhaps lower, never linear. In the local layers the car's money (ownership, parking) stays
   at 3 minutes a dollar everywhere. The regional market's longer trips split each country's people
   into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
   country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
@@ -565,7 +564,7 @@ notes/T-420.md has the tables.
   the 0.5. The starting curve is one straight line set once for the start country, $2.50 plus 20
   cents a km in the US ($6.50 at 20 km, $22.50 at 100; Anita: about $2.50 in the US, $1 in Japan),
   elsewhere times (its income over the US's)^0.7, rounded: Japan $1.30, Germany $1.90, China $0.65,
-  India $0.22. Simple on purpose (Anita); near real metro and commuter fares in the US and Japan, over
+  India $0.22, the same in every game wherever it starts. Simple on purpose (Anita); near real metro and commuter fares in the US and Japan, over
   China's and India's. Check: a country's published fare at 50-150 km against it (notes/T-1521.md).
   **High-speed fares** (T-1626): the fare above the base is times the player's high-speed multiplier
   (default 1.5) by the share of the trip's km on high-speed lines, in route choice, mode choice and

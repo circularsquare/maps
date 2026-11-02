@@ -135,6 +135,13 @@ export interface NetworkBuffers {
   anchor?: Anchor;
   /** per train sample, its stop-to-stop stretch (`Strokes.stretch` of its stroke, -1 none) */
   sampleStretch?: Float32Array;
+  /** T-1965, for the train guard (`trainGuard.ts`): per line id its first entry in `pathEntry` and
+   * how many; per entry its edge and direction (edge << 1, low bit set from b to a, as `LineData.path`),
+   * where it starts along run 0 and its length, m */
+  pathTable?: Int32Array;
+  pathEntry?: Int32Array;
+  pathFrom?: Float32Array;
+  pathLen?: Float32Array;
   /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
@@ -1130,6 +1137,24 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   });
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
+  const pathTable = new Int32Array(Math.max(1, maxLine + 1) * 2);
+  let pathN = 0;
+  for (const l of s.lines) if (l.ok) pathN += l.path.length;
+  const pathEntry = new Int32Array(pathN), pathFrom = new Float32Array(pathN), pathLen = new Float32Array(pathN);
+  pathN = 0;
+  for (const l of s.lines) {
+    if (!l.ok) continue;
+    pathTable[l.id * 2] = pathN;
+    pathTable[l.id * 2 + 1] = l.path.length;
+    let d = 0;
+    for (const p of l.path) {
+      const len = edgeLen.get(p >> 1) ?? 0;
+      pathEntry[pathN] = p;
+      pathFrom[pathN] = d;
+      pathLen[pathN++] = len;
+      d += len;
+    }
+  }
   const serial = ++cache.serial, last = cache.last;
   const patch: NetPatch | undefined = last ? {
     base: last.serial,
@@ -1167,6 +1192,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     sampleBand,
     corridor: bands.corridor,
     sampleStretch,
+    pathTable,
+    pathEntry,
+    pathFrom,
+    pathLen,
     turnbacks,
     edgePts,
     anchor: anchor(),

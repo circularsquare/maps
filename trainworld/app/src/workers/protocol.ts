@@ -82,12 +82,14 @@ export type EditOp =
   /** switch blueprint track and stations off or on (T-333): Construct and the quote skip what is off; one undoable edit */
   | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
   | { op: "constructLine"; line: number }
-  | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
+  /** `autoFast` (T-1899, on addLine, setStops and insertStop): a new line's trains become high-speed
+   * when more than half its route's km is high-speed track, ordinary otherwise */
+  | { op: "addLine"; stops: NodeId[]; name: string; colour: string; autoFast?: boolean }
   | { op: "copyLine"; line: number; name?: string }
-  | { op: "setStops"; line: number; stops: NodeId[] }
+  | { op: "setStops"; line: number; stops: NodeId[]; autoFast?: boolean }
   /** T-648: the station put in where the line tool's search fits it best (`TrackApi::insert_stop`),
    * then set as `setStops`; refused with "InsertStop" when no track joins it in */
-  | { op: "insertStop"; line: number; station: NodeId }
+  | { op: "insertStop"; line: number; station: NodeId; autoFast?: boolean }
   /** T-1791, the group view's stop edits, all keeping the line's path: stop `index` out (an end's removal cuts the path back), the line ended at stop `index` (the stops past it toward the nearer end go), a station the line passes made a stop; refused with "LinePath" */
   | { op: "dropStop"; line: number; index: number }
   | { op: "endLineAt"; line: number; index: number }

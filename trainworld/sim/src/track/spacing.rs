@@ -5,7 +5,7 @@
 //! an edit changed are placed, against every other line as it runs, so the rest keep their times.
 //! Waits are by headway, so demand does not move.
 
-use super::capacity::ResKind;
+use super::capacity::{ResKind, FOLLOW_LOCKED};
 use super::net::Network;
 use super::params::LEVELS;
 use super::profile;
@@ -25,15 +25,37 @@ struct Meet {
     a: f64,
     b: f64,
     hb: f64,
+    /// T-1965: the two lines are a following pair that can never part (`capacity::FOLLOW_LOCKED`):
+    /// the faster one's trains belong right behind the slower one's, this far (s) after them;
+    /// positive when this line follows, negative when it leads, 0 for any other pair
+    behind: f64,
 }
 
 /// How crowded a phase leaves the line's meetings: per train, how far it is short of half the
-/// smaller headway from the nearest train of the other line there, squared, as a share.
+/// smaller headway from the nearest train of the other line there, squared, as a share. For a
+/// following pair that can never part, how far each following train is from right behind a
+/// leading one, as a share of the same half headway, squared.
 fn crowding(meets: &[Meet], h: f64, phase: f64) -> f64 {
     let n = ((3600.0 / h).ceil() as usize).clamp(1, MAX_TRAINS);
     let mut sum = 0.0;
     for m in meets {
         let g = 0.5 * h.min(m.hb);
+        if m.behind > 0.0 {
+            for k in 0..n {
+                let x = (m.a + phase + k as f64 * h - m.b - m.behind).rem_euclid(m.hb);
+                sum += (x.min(m.hb - x) / g).powi(2);
+            }
+            continue;
+        }
+        if m.behind < 0.0 {
+            // the other line's trains each want one of this line's ahead of them
+            let nb = ((3600.0 / m.hb).ceil() as usize).clamp(1, MAX_TRAINS);
+            for k in 0..nb {
+                let x = (m.b + k as f64 * m.hb + m.behind - m.a - phase).rem_euclid(h);
+                sum += (x.min(h - x) / g).powi(2);
+            }
+            continue;
+        }
         for k in 0..n {
             let x = (m.a + phase + k as f64 * h - m.b).rem_euclid(m.hb);
             let d = x.min(m.hb - x);
@@ -77,6 +99,24 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             }
         }
     }
+    // T-1965: following pairs that never part: (faster line, its run), (slower line, its run), spacing s
+    let mut locked: Vec<((u32, u8), (u32, u8), f64)> = vec![];
+    for r in 0..cap.res.len() {
+        if cap.res[r].kind != ResKind::Follow {
+            continue;
+        }
+        let us = cap.users_of(r);
+        let Some(f) = us.iter().find(|u| u.owner) else { continue };
+        for u in us.iter().filter(|u| !u.owner && u.stop == FOLLOW_LOCKED) {
+            if want[f.line as usize] || want[u.line as usize] {
+                locked.push(((f.line, f.run), (u.line, u.run), u.at));
+            }
+        }
+    }
+    // this line's run `ur` against line `v`'s run `vr`: how far behind (+) or ahead (-) it belongs
+    let behind = |l: u32, ur: u8, v: u32, vr: u8| {
+        locked.iter().find_map(|x| if (x.0, x.1) == ((l, ur), (v, vr)) { Some(x.2) } else if (x.0, x.1) == ((v, vr), (l, ur)) { Some(-x.2) } else { None }).unwrap_or(0.0)
+    };
     let time = |l: u32, run: u8, lev: usize, at: f64| profile::time_at(&svc.lines[l as usize].runs[run as usize].prof[lev].phases, at.max(0.0));
     // each line's pattern, worked out once
     let mut lats: Vec<Option<Option<super::service::Lattice>>> = vec![None; net.line_count()];
@@ -128,7 +168,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             if first.is_empty() {
                 continue;
             }
-            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64 }).collect();
+            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(l, x.0 .2, x.0 .0, x.0 .1) }).collect();
             let cur = (p[lev] as f64).rem_euclid(h);
             let now = crowding(&meets, h, cur);
             let (mut best, mut at) = (now, cur);

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { launchChrome, collectErrors, importSave, registry, REAL_SAVE, ANGLE, ARTIFACTS } from './lib.mjs';
-// T-1906: a new game starts with round fares for where it starts (New York $2.50 base, Tokyo $1.30)
-// and every country's fare scale at 1.00x; the real save keeps its fares and stored scales and reads
+// T-1906: a new game starts with round fares for where it starts (New York $2.50 base, Tokyo $1.30),
+// every other country at its own start fares by income, and every dial at 1.00x; the real save keeps its fares and stored scales and reads
 // 1.00x too; a loan whose interest a day is past the last week's profit a day is refused, with the
 // reason in its hover.
 //   node trainworld/checks/t1906-money-rules.mjs [url]     (from the maps root; default localhost:6150)
@@ -31,9 +31,17 @@ const scaleRow = (page) => page.$$eval('ul.fare-rows > li', (lis) => {
 const loanButtons = (page) => page.$$eval('button.btn.text', (bs) => bs.filter((b) => /^\$\d+B$/.test(b.textContent)).map((b) => ({ text: b.textContent, disabled: b.disabled, tip: b.dataset.tip })));
 const scalesIn = (page) => page.evaluate(async () => {
   const { fareScale } = await import('/src/game/income.ts');
+  const { roundedDefault } = await import('/src/game/fareDefault.ts');
   const f = window.tw.moneyState.value.fares;
-  return { nodes: f.nodes, scales: f.scales, at: Object.fromEntries(['US', 'JP', 'IN', 'DE', 'CN'].map((c) => [c, fareScale(c, f.scales)])) };
+  const cs = ['US', 'JP', 'IN', 'DE', 'CN'];
+  return {
+    nodes: f.nodes, scales: f.scales,
+    at: Object.fromEntries(cs.map((c) => [c, fareScale(c, f.scales)])),
+    base: Object.fromEntries(cs.map((c) => [c, roundedDefault(f, c)?.base ?? f.nodes[0][1] * fareScale(c, f.scales)])),
+  };
 });
+const BASES = { US: 2.5, JP: 1.3, IN: 0.22, DE: 1.9, CN: 0.65 };
+const basesOk = (b) => Object.entries(BASES).every(([c, v]) => near(b[c], v));
 
 try {
   const page = await ctx.newPage();
@@ -43,7 +51,19 @@ try {
   await open(page, '');
   const ny = await scalesIn(page);
   report('New York: fares $2.50, $6.50 at 20 km, $22.50 at 100 km', sameNodes(ny.nodes, [[0, 2.5], [20, 6.5], [100, 22.5]]), JSON.stringify(ny.nodes));
-  report('New York: every country at scale 1', Object.values(ny.at).every((v) => v === 1) && JSON.stringify(ny.scales) === '{"*":1}', JSON.stringify(ny));
+  report('New York: start income scale stored, each country at its own default base (US 2.50, JP 1.30, IN 0.22, DE 1.90, CN 0.65)', JSON.stringify(ny.scales) === '{"@":11.6}' && ny.at.US === 1 && basesOk(ny.base), JSON.stringify(ny));
+  const own = await page.evaluate(async () => {
+    const { setFareScale } = await import('/src/game/world.ts');
+    const { fareScale, storedScale, shownScale } = await import('/src/game/income.ts');
+    await setFareScale('JP', storedScale(2, 'JP', window.tw.moneyState.value.fares.scales));
+    await new Promise((r) => setTimeout(r, 500));
+    const s = window.tw.moneyState.value.fares.scales;
+    const out = { scales: s, jp: fareScale('JP', s), shown: shownScale(fareScale('JP', s), 'JP', s), old: [fareScale('US', { '*': 1 }), fareScale('JP', { '*': 1, JP: 2 })] };
+    await setFareScale('JP', null);
+    await new Promise((r) => setTimeout(r, 500));
+    return out;
+  });
+  report(`Japan's dial set to 2.00x: stored 2, charged twice its default, reads 2.00x; a "*" save still reads`, own.scales.JP === 2 && near(own.jp, 2 * 6.1 / 11.6) && near(own.shown, 2) && own.old[0] === 1 && own.old[1] === 2, JSON.stringify(own));
   const nyRow = await scaleRow(page);
   report('New York: the panel reads "United States fares 1.00x"', nyRow?.name === 'United States fares' && nyRow?.value === '1.00x', JSON.stringify(nyRow));
   const loans = await loanButtons(page);
@@ -74,7 +94,7 @@ try {
   await open(page, `&city=${tokyo}`);
   const tk = await scalesIn(page);
   report(`Tokyo (${tokyo}): base $1.30`, near(tk.nodes[0][1], 1.3), JSON.stringify(tk.nodes));
-  report('Tokyo: every country at scale 1', Object.values(tk.at).every((v) => v === 1), JSON.stringify(tk.at));
+  report('Tokyo: start income scale stored, each country at its own default base (US 2.50)', JSON.stringify(tk.scales) === '{"@":6.1}' && tk.at.JP === 1 && basesOk(tk.base), JSON.stringify(tk));
   const tkRow = await scaleRow(page);
   report('Tokyo: "Japan fares 1.00x"', tkRow?.name === 'Japan fares' && tkRow?.value === '1.00x', JSON.stringify(tkRow));
   await page.$eval('ul.fare-rows > li:last-child', (li) => li.scrollIntoView({ block: 'center' }));

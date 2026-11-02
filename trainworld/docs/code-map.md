@@ -18,6 +18,7 @@ tests natively.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
   `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283; `TW_DUMP=<file>` writes `lines_info` at load, after the edits and after a save and reload, T-1787; `TW_LINES=<file>` a table of each line's rates, round trips, delays and trains at load, to compare two builds, T-1924);
   `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779).
+  Station placements swept along every piece, refusals counted by reason and by the joints under the platform: the ignored tests in `wasm/station_sweep_tests.rs` (a drawn network, and a save's network bytes in `T1964_NET`; T-1964).
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
@@ -113,7 +114,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `workers/cloud.ts`.
 - `quotes.ts`: the construct-all quote and a planned line's price, asked of the clock worker when a panel shows them (T-1171; the line panel's button is `ui/inspector/ConstructButton.tsx`).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209),
-  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1906: the default scale (`EVERY`, 1 in a new game) and the panel's scale as a multiple of it; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
+  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1906: the start country's income scale (`START`), each country's default over it, and the panel's scale as a multiple of the default; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -170,7 +171,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
-- Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
+- Trains and trips: `trainGuard.ts` (trains in view held behind the train ahead on their track, drawn late by a lag per trip, T-1965; its line paths are `NetworkBuffers.pathTable` and the like), `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885; the car's and the plane's parts and the answer between places with no station from the market rows, `game/marketRule.ts`, T-1148).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, train fill), `stationCircles.ts` (the station ridership circles on a 2D canvas over the bubbles' and their hover hit, T-1448; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
@@ -289,7 +290,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   a minute).
 - Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks, the layout's guess and the room snap; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `save_net.py <save> <out>` (a game save's network bytes
   for Rust tests on a real save, given as `T1895_NET`: T-1895's ignored `beside_sweep_real_save`
-  counts drawing-beside previews that cross the track followed, by start kind), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t144-check` (station geometry, line
+  counts drawing-beside previews that cross the track followed, by start kind), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t1964-station-joints <url>` (browser: the station tool on every plain joint of two routes drawn as the track tool draws, about a minute), `t144-check` (station geometry, line
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1419-carry` (an edited line's riders carried onto its new stops), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
@@ -341,6 +342,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost and the hours' upkeep back; port 6165 by default),
   `old/t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
+  `t1965-follow.mjs [url] [locals] [expresses] [hours]` (a new game's straight double track with a local and its express, or `SAVE=` with `CENTER` and `ZOOM`, at 960x: every frame's pairs of trains overlapping on one track by the timetable and as drawn, the GPU against the CPU, a meeting before and after to artifacts/trainworld/t1965/; about 2 minutes, T-1965), `t1965-jz.mjs [url]` (the shared New York save's Z held behind a J, pictures), `t1965-perf.mjs [url] [save] [scenes]` (the guard's ms a frame and the main thread's, guard on and off in turn),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
   `old/t1029-edit.mjs` (a series of track, station, service and undo edits on the real save or Japan's network at 6x throttling: the worker's and main thread's ms per edit under a CPU profile; `DUMP=1` hashes of the world, the drawn network and the GPU stroke buffers to compare across code or `?patch=` settings; 4-5 minutes for Japan),
   `old/t1170-anchor.mjs` (a save, default New York, its camera jumped between cities: jump to the first frame at the new draw anchor, long tasks, the worker's ms, and a track piece right after a jump; `SAVE`, `CITIES`, `THROTTLE`, `SETTLE`, `QUERY=patch=shiftcheck` for how far the moved pieces are from exact; T-1170),
@@ -430,8 +432,8 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   network the bubble; port 6115 by default, about two minutes), `t1550-far-bubbles.mjs` (far out with
   the city bubbles on, a click where a station meets a bubble selects the bubble and shows its tag,
   just closer in the station; port 6170, about two minutes), `t1906-money-rules.mjs [url]` (new
-  games in New York and Tokyo start at $2.50 and $1.30 with every country's scale 1 and the panel at
-  1.00x; the real save keeps its fares and stored scales and reads 1.00x; the loan profit rule and
+  games in New York and Tokyo start at $2.50 and $1.30, every other country at its own round start
+  fares, the panel at 1.00x and a set dial stored as shown; the real save keeps its fares and stored scales and reads 1.00x; the loan profit rule and
   the refused buttons' hovers; pictures in t1906/; port 6150, about a minute; replaces
   `old/t1554-fare-display.mjs`), `t1626-hsr-fare.mjs [url]` (a new game:
   the High speed fare row only once a line runs high-speed trains; on that line multipliers 1.0, 1.5
@@ -487,6 +489,11 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   save or a fresh game: keep placing carries on over open ground and stops on joining a loose end or
   mid-piece; a 40 px press-drag moves a blueprint end and undoes, a short click branches; the squares
   show; about a minute, port 6183 by default, T-1811),
+  `t1899-stop-orders.mjs [clicks|build]` (Node, the track model: 120 click orders of stations along
+  one way through a fresh city's track, none may backtrack; `build` writes the city's game file),
+  `t1899-stop-logic.mjs [url]` (browser, that city: clicks along a way round run straight, a new line
+  on high-speed track gets high-speed trains and back, an established line keeps its type, overlapping
+  markers on a new line take the station no trains stop at; about a minute, default port 6120, T-1899),
   `t1869-drag.mjs [url]` (a new game by Central Park, real mouse drags: a blueprint curve's middle
   bends the curve through the pointer and undoes, a platform end moves its station, the Select tool's
   pick shows its squares moving and the speed labels; screenshots to artifacts/trainworld/t1869/;

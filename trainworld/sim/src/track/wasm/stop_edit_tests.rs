@@ -87,6 +87,68 @@ fn branch_stops_go_in_route_order() {
     assert_eq!(a.line_reversals(copy), [1.0]);
 }
 
+/// T-1899: A - JA, then from JA to JB a direct stretch (10 km) and a long way round north through
+/// X1 and X2 (about 40 km), then JB - B. Both ways leave each junction on the same side, so a
+/// train coming back from X1 to A has to reverse there to go on to B.
+fn detour_fixture() -> (TrackWorld, [u32; 4]) {
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let ja = node(&mut w, 1000.0, 0.0, 0);
+    let jb = node(&mut w, 11000.0, 0.0, 0);
+    let b = node(&mut w, 12000.0, 0.0, 0);
+    let x1 = node(&mut w, 4000.0, 15000.0, 0);
+    let x2 = node(&mut w, 8000.0, 15000.0, 0);
+    edge(&mut w, a, ja, &[], 0).unwrap();
+    edge(&mut w, ja, jb, &[], 0).unwrap();
+    edge(&mut w, jb, b, &[], 0).unwrap();
+    edge(&mut w, ja, x1, &[(2500.0, 0.0), (2500.0, 15000.0)], 0).unwrap();
+    edge(&mut w, x1, x2, &[], 0).unwrap();
+    edge(&mut w, x2, jb, &[(9500.0, 15000.0), (9500.0, 0.0)], 0).unwrap();
+    for n in [a, b, x1, x2] {
+        station(&mut w, n, 200);
+    }
+    (w, [a, x1, x2, b])
+}
+
+/// Stops added one at a time with `insert_stop`, as the line tool's clicks add them.
+fn click(a: &mut TrackApi, id: u32, order: &[u32]) {
+    for &s in order {
+        let stops: Vec<u32> = a.insert_stop(id, s).iter().map(|&x| x as u32).collect();
+        assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+    }
+}
+
+/// T-1899: stops that all lie along one way through the track run straight along it, whatever
+/// order they were clicked in, even where reversing at a stop would make a shorter route.
+#[test]
+fn stops_along_a_way_round_run_straight() {
+    let orders: [[usize; 4]; 6] = [[0, 3, 1, 2], [0, 3, 2, 1], [3, 0, 1, 2], [1, 0, 3, 2], [0, 1, 3, 2], [2, 3, 0, 1]];
+    for order in orders {
+        let (w, s) = detour_fixture();
+        let mut a = api();
+        a.w = w;
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        click(&mut a, id, &order.map(|k| s[k]));
+        let got = a.w.net.line_stops(id).to_vec();
+        let mut back = got.clone();
+        back.reverse();
+        assert!(got == s || back == s, "clicked {order:?}: stops {got:?}, want {s:?} either way");
+        assert!(a.line_reversals(id).is_empty() && a.line_end_turns(id).is_empty(), "clicked {order:?}");
+    }
+    // stops set in an order that goes back and forth come out straight too
+    let (w, [sa, x1, x2, sb]) = detour_fixture();
+    let mut a = api();
+    a.w = w;
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_stops(id, &[x2, x1, sa, sb]), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[sb, x2, x1, sa]);
+    assert!(a.line_reversals(id).is_empty());
+    assert_eq!(a.set_stops(id, &[x1, sa, sb]), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[sb, x1, sa]);
+}
+
 /// No reversing limiter (capacity kind 9) on any of the line's nodes.
 fn no_limiter(a: &TrackApi, l: u32) -> bool {
     let cap = &a.w.svc.cap;

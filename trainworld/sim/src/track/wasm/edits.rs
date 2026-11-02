@@ -262,10 +262,28 @@ impl TrackApi {
         (t > 0.0 && t < 1.0 && off < 0.05).then_some((o, which, od, far, t))
     }
 
-    /// Ops joining edge `e` with the pieces at its joints (T-244, `free_joint`) within `reach` of
+    /// The other piece at a plain joint of `e` (T-1964): a node with no station where only `e` and
+    /// one other edge meet, one on each side, the other not a loop. Returns that edge, which of its
+    /// ends is at the joint, and its data.
+    pub(super) fn plain_joint(&self, node: u32, e: u32) -> Option<(u32, u32, EdgeData)> {
+        let net = &self.w.net;
+        let i = node as usize;
+        let p = &net.node_ports[i];
+        if p.n != 2 || net.node_platform[i] > 0 || p.side[0] == p.side[1] {
+            return None;
+        }
+        let (o, which) = p.ends().iter().map(|&c| (c >> 1, c & 1)).find(|&(o, _)| o != e)?;
+        if net.end_node(o, 1 - which) == node {
+            return None;
+        }
+        Some((o, which, net.edge_data(o)?))
+    }
+
+    /// Ops joining edge `e` with the pieces at its joints (T-244, `plain_joint`) within `reach` of
     /// chainage `s`, so something placed at `s` has room; and where `s` is on the joined edge,
     /// which keeps `e`'s id and direction. The shape is unchanged (a radius the joined fit would
-    /// change is set to the one it had), lines through it follow. Pieces join when both are
+    /// change is set to the one it had; a joint up to `JOINT_KINK_M` off the straight is
+    /// straightened), lines through it follow. Pieces join when both are
     /// constructed or both blueprint (switched alike), with the same track count (T-624) and type
     /// (high speed or not, T-817); a built piece's cost is derived from its shape, so the joined
     /// edge costs what the two did. None if no joint is that near.
@@ -282,17 +300,15 @@ impl TrackApi {
         let mut sides: [Vec<(u32, u32, EdgeData)>; 2] = [vec![], vec![]];
         let mut seen = vec![e];
         for (k, side) in sides.iter_mut().enumerate() {
-            let (mut node, mut gap, mut corner) = if k == 0 { (d.a, s, own[1]) } else { (d.b, len - s, own[own.len() - 2]) };
+            let (mut node, mut gap) = if k == 0 { (d.a, s) } else { (d.b, len - s) };
             let mut cur = e;
             while gap < reach {
-                let Some((o, which, od, _, _)) = self.free_joint(node, cur, corner, true) else { break };
+                let Some((o, which, od)) = self.plain_joint(node, cur) else { break };
                 if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.hsr != d.hsr || od.crossover || d.crossover {
                     break;
                 }
                 seen.push(o);
-                let v = vertices_of(net, &od, &[]);
                 node = net.end_node(o, 1 - which);
-                corner = if which == 0 { v[v.len() - 2] } else { v[1] };
                 gap += net.edge_len[o as usize];
                 cur = o;
                 side.push((o, which, od));
@@ -315,14 +331,18 @@ impl TrackApi {
         let mut parts: Vec<(Vec<Pi>, Vec<f64>)> = sides[0].iter().rev().map(|(_, which, od)| oriented(od, *which == 0)).collect();
         parts.push((own.clone(), radii(&own)));
         parts.extend(sides[1].iter().map(|(_, which, od)| oriented(od, *which == 1)));
-        // A joint is dropped as a vertex unless its level differs from a neighbour's: a ramp is
-        // centred between two vertices of different levels, so dropping it would move the ramp.
+        // A joint is dropped as a vertex unless its level differs from a neighbour's (a ramp is
+        // centred between two vertices of different levels, so dropping it would move the ramp) or
+        // it is more than `JOINT_KINK_M` off the straight between its neighbours. Two pieces may meet
+        // at up to twice the heading tolerance (T-1964); dropping such a joint moves the track by at
+        // most `JOINT_KINK_M`, where a corner kept there would slow trains and squeeze the curves
+        // beside it.
         let mut verts: Vec<(Pi, f64)> = vec![];
         let last = parts.len() - 1;
         let mut before: Option<Pi> = None;
         for (p, (v, r)) in parts.into_iter().enumerate() {
             if let Some(prev) = before {
-                if !(prev.level == v[0].level && v[0].level == v[1].level) {
+                if !(prev.level == v[0].level && v[0].level == v[1].level) || !near_straight(prev, v[0], v[1]) {
                     verts.push((v[0], 0.0));
                 }
             }
@@ -650,4 +670,20 @@ impl TrackApi {
         self.preview_speeds.clone()
     }
 
+}
+
+/// How far off the straight between its neighbours a joint may be and still be dropped when two
+/// pieces are joined under a platform, m (`unjoin_near`).
+const JOINT_KINK_M: f64 = 1.0;
+
+/// Whether `j` lies between `p` and `q` within `JOINT_KINK_M` of the straight from one to the other.
+fn near_straight(p: Pi, j: Pi, q: Pi) -> bool {
+    let (dx, dy) = (q.x - p.x, q.y - p.y);
+    let l = dx.hypot(dy);
+    if l < 1.0 {
+        return false;
+    }
+    let (jx, jy) = (j.x - p.x, j.y - p.y);
+    let t = (jx * dx + jy * dy) / (l * l);
+    t > 0.0 && t < 1.0 && (jx * dy - jy * dx).abs() / l < JOINT_KINK_M
 }

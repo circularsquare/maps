@@ -556,7 +556,9 @@ fn express_behind_local_takes_about_its_time() {
     use super::super::tests::line;
     let (mut w, n, q) = twenty_km();
     let local = line(&mut w, &n, [10.0, 4.0, 0.0]);
-    let express = line(&mut w, &[n[0], n[20]], [6.0, 2.0, 2.0]);
+    // (from the second station: an express turning where the local does would never get away from
+    // it, `express_locked_behind_local`)
+    let express = line(&mut w, &[n[1], n[20]], [6.0, 2.0, 2.0]);
     let own = line(&mut w, &q, [6.0, 2.0, 2.0]);
     same_as_global(&w, "express and local");
     let dur = |w: &TrackWorld, l: u32, lev: usize| w.svc.lines[l as usize].runs[0].prof[lev].duration;
@@ -594,6 +596,36 @@ fn express_behind_local_takes_about_its_time() {
     same_as_global(&w, "local back");
 }
 
+/// T-1965: an express that turns where the local turns, on its whole path, can never get away from
+/// it: it takes the local's time at every headway, and leaves right behind the local's trains.
+#[test]
+fn express_locked_behind_local() {
+    use super::super::tests::line;
+    let (mut w, n, _) = twenty_km();
+    let local = line(&mut w, &n, [4.0, 1.0, 0.0]);
+    let express = line(&mut w, &[n[0], n[20]], [2.0, 1.0, 1.0]);
+    same_as_global(&w, "locked");
+    let dur = |w: &TrackWorld, l: u32, lev: usize| w.svc.lines[l as usize].runs[0].prof[lev].duration;
+    for lev in 0..2 {
+        let (lo, ex) = (dur(&w, local, lev), dur(&w, express, lev));
+        eprintln!("level {lev}: local {lo:.0} s, express {ex:.0} s (free {:.0} s)", w.svc.lines[express as usize].runs[0].free.duration);
+        assert!((ex - lo).abs() < 120.0, "level {lev}: the express takes the local's time: {ex} against {lo}");
+    }
+    assert!((dur(&w, express, 2) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0, "no local at low");
+    // its departures right behind the local's (T-1965 spacing): within a few minutes after one
+    let deps = |l: u32| {
+        let mut out = vec![];
+        let t0 = 86400.0 + 8.0 * 3600.0;
+        w.svc.run_deps(&w.net, l as usize, 0, t0, t0 + 3600.0, &mut out);
+        out.iter().map(|t| t.dep).collect::<Vec<f64>>()
+    };
+    let (dl, dx) = (deps(local), deps(express));
+    for x in &dx {
+        let after = dl.iter().map(|l| x - l).filter(|d| *d > 0.0).fold(f64::INFINITY, f64::min);
+        assert!(after < 300.0, "an express leaves {after:.0} s after a local: {dl:?} {dx:?}");
+    }
+}
+
 /// T-1924: a high-speed train behind ordinary trains on high-speed track loses time too.
 #[test]
 fn high_speed_behind_ordinary_trains() {
@@ -616,5 +648,6 @@ fn high_speed_behind_ordinary_trains() {
     eprintln!("high speed {:.0} s (free {:.0} s), ordinary {:.0} s", run.prof[0].duration, run.free.duration, slow_run.prof[0].duration);
     assert!(run.free.duration < slow_run.free.duration - 500.0);
     assert!(run.prof[0].duration > run.free.duration + 300.0, "it is held behind the ordinary trains");
-    assert!(run.prof[0].duration < slow_run.prof[0].duration);
+    // with the same two ends it never gets away from them (T-1965): their time
+    assert!((run.prof[0].duration - slow_run.prof[0].duration).abs() < 120.0);
 }

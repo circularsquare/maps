@@ -246,7 +246,7 @@ function placesOf(m: MarketShown): { near: number; fars: number[] } {
 }
 
 const NO_RAIL: Record<string, string> = {
-  farClosed: "An end of this trip is not open in this game, so trains between the two are not worked out.",
+  farClosed: "No route.",
   noRail: "No train serves both ends in this period.",
   unmatched: "No homes of the inter-city model are here.",
 };
@@ -412,7 +412,6 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   // T-1902: what the train is weighed against, over the trips it can serve, and its share of those
   const hasCar = Number.isFinite(t.carPerceived), hasPlane = t.trips > 0 ? t.air / t.trips >= 0.005 : !!corridor?.flight;
   const rivals = { label: hasCar && hasPlane ? "Car or plane" : hasCar ? "Car" : "Plane", both: hasCar && hasPlane };
-  const servedTrain = t.trips * t.served > 0 ? Math.min(1, t.rail / (t.trips * t.served)) : 0;
   const cities = m.near && m.near.gid < 0 && (m.fars ?? [m.far]).every((f) => f.gid < 0) ? "cities" : "places";
   return (
     <>
@@ -457,22 +456,22 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               <span class="grow">Time</span>
               <span class="val">{minText(tm.total)}</span>
             </li>
+            {t.served > 0 && (
+              <li>
+                <span class="grow">Trips possible by train</span>
+                <span class="val w-num">{pctShare(t.served)}</span>
+              </li>
+            )}
             {Number.isFinite(t.railPerceived) && (
-              <li data-tip="The minutes the model weighs against the car and the plane, door to door, averaged over the trips the train can serve">
+              <li>
                 <span class="grow">Effective time</span>
                 <span class="val">{minText(t.railPerceived)}</span>
               </li>
             )}
             {Number.isFinite(t.railPerceived) && Number.isFinite(t.otherPerceived) && (
-              <li data-tip={`${rivals.label} for the same trips the train can serve, averaged the same way${rivals.both ? ", the two weighed together as people choose between them" : ""}. The train takes ${pctShare(servedTrain)} of these trips.`}>
-                <span class="grow">{rivals.label} for these trips</span>
+              <li data-tip={`Effective time by ${rivals.label.toLowerCase()} on trips possible by train.`}>
+                <span class="grow">{rivals.label} on the same trips</span>
                 <span class="val">{minText(t.otherPerceived)}</span>
-              </li>
-            )}
-            {t.served > 0 && (
-              <li data-tip={`Trips between areas with a station in reach at both ends. The rest have no train.`}>
-                <span class="grow">Trips the train can serve</span>
-                <span class="val w-num">{pctShare(t.served)}</span>
               </li>
             )}
           </ul>

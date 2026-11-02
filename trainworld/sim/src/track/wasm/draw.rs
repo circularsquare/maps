@@ -751,7 +751,13 @@ impl TrackApi {
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
                 continue;
             }
-            let (more, s) =self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
+            let (more, s) = self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
+            // within a split's reach of a joint that stays (unlike pieces, T-1964), on the joint
+            if let Some(n) = self.joint_at(e, &more, s) {
+                ops.extend(more);
+                ops.push(Op::Station { node: n, data: Some(st.clone()) });
+                continue;
+            }
             ops.extend(more);
             let (node, new_edge) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
             nodes.push(node);
@@ -765,7 +771,39 @@ impl TrackApi {
         if r != 0 || dry {
             self.release(&nodes, &edges);
         }
+        // a split refused on a ramp is the platform's ramp, said as such (T-1964)
+        if r != 0 && self.issues.iter().any(|i| matches!(i, Issue::SplitPoint { .. })) {
+            let net = &self.w.net;
+            let ramp = at.iter().any(|&(e, s)| e != u32::MAX && net.edge_ok(e) && geom::on_ramp(net.edge_vert(e), s - 3.0, s + 3.0));
+            if ramp {
+                self.issues.retain(|i| !matches!(i, Issue::SplitPoint { .. } | Issue::PlatformNotLevel { .. }));
+                self.issues.push(Issue::PlatformNotLevel { node: u32::MAX });
+            }
+        }
+        // a platform on a ramp is the reason; the shape a join under it gives that ramp is not
+        // something the player drew (T-1917)
+        if r != 0 && self.issues.iter().any(|i| matches!(i, Issue::PlatformNotLevel { .. })) {
+            self.issues.retain(|i| !matches!(i, Issue::Geom { .. } | Issue::NodeHeading { .. }));
+        }
         r
+    }
+
+    /// The joint a station at chainage `s` of edge `e` goes on (T-1964): one within a split's 5 m
+    /// of the edge's end, after `joins` (`unjoin_near`'s ops, which may have made `e` longer), where
+    /// two pieces meet that could not be joined.
+    fn joint_at(&self, e: u32, joins: &[Op], s: f64) -> Option<u32> {
+        let net = &self.w.net;
+        let (mut a, mut b, mut len) = (net.edge_a[e as usize], net.edge_b[e as usize], net.edge_len[e as usize]);
+        for op in joins {
+            match op {
+                Op::Edge { id, data: Some(d) } if *id == e => (a, b) = (d.a, d.b),
+                Op::Edge { id, data: None } => len += net.edge_len[*id as usize],
+                _ => {}
+            }
+        }
+        let n = if s < 5.0 { a } else if s > len - 5.0 { b } else { return None };
+        let p = &net.node_ports[n as usize];
+        (p.n == 2 && net.node_platform[n as usize] == 0 && p.side[0] != p.side[1]).then_some(n)
     }
 
     /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running

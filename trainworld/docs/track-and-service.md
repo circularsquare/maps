@@ -78,14 +78,19 @@ Full design, numbers and sources: `notes/T-008.md`.
   them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
   within half a platform of joints first joins the pieces there into one edge, joint after joint
   until the platform has room (a long platform over several short segments; T-418), the shape
-  unchanged. A joint between two different levels stays as a corner on the joined edge, since a
+  unchanged. Pieces that meet at a slight angle (up to the heading tolerance each way: a click
+  almost straight ahead of a track end draws a straight piece that far off) join too: the joint is dropped when it is within 1 m of the straight
+  between the corners either side, moving the track there by at most that, and otherwise stays as
+  a corner (T-1964). A joint between two different levels stays as a corner on the joined edge, since a
   ramp is centred between corners; a cut through a leg whose ramp lies on a straight puts a corner
   at each end of the ramp on its side (T-622), so a station there does not move the ramp. Two
   constructed pieces join as two blueprint ones do (T-624): the joined edge stays constructed, with
   no charge and no refund, and lines, trains, levels and curve radii carry over unchanged. Joints that cannot be joined
-  (a different track count, constructed beside blueprint, blueprint switched on beside off) stay, and a platform that
-  reaches one is refused as "the end of a piece of track". A platform may not reach a crossing
-  with track on the same level (a flat crossing, 6.2), within 1 m of its ends.
+  (a different track count, high speed beside ordinary, constructed beside blueprint, blueprint switched on beside off) stay, and a platform that
+  reaches one is refused as "the end of a piece of track"; a station clicked within 5 m of one
+  goes on the joint itself (T-1964). A platform may not reach a crossing
+  with track on the same level (a flat crossing, 6.2), within 1 m of its ends, nor lie on a ramp
+  (a split on a ramp is refused as the platform's ramp).
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The
@@ -507,7 +512,11 @@ there). The faster train meets the slower ones at a random place in their headwa
 average is `D - (H - s)/2` when `D >= H - s` (it always catches up and ends at the slower line's time
 less a minute or two), else `D² / 2(H - s)` (some trips get through first). Slower lines are taken
 together from the slowest: for each, the loss behind those at least as slow with their trains
-summed; the largest counts (`capacity::follow_loss`). A high-speed train behind ordinary trains on
+summed; the largest counts (`capacity::follow_loss`). **Locked behind** (T-1965): where the two
+runs are the same path end to end (both turn at the faster line's two ends) and the slower one
+reaches the end at least 30 s later (`FOLLOW_LOCK_MIN_S`), order on the line never changes, so every
+faster train ends up behind a slower one: its loss is the whole difference, start to arrival
+(`FOLLOW_LOCKED`), at any headway. An express copied from a local takes the local's time. A high-speed train behind ordinary trains on
 high-speed track counts the same way. Stretches of one direction with different slower lines that
 overlap are one resource (`ResKind::Follow`, wire kind 11, `build_follow`), with no utilisation, so
 no map dot, and it neither fills nor caps track. The loss is a hold like the others, so it is in round
@@ -633,8 +642,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   Nothing stores it: a reversal is two path entries arriving at and leaving a node on the same
   side, and stops are matched to the path so every reversal not at a bare end falls on one. The
   route search may reverse at a hop's first stop, or at a bare end on the way, for 600 s of search
-  time each (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as 5 km of path
-  (`REVERSAL_INSERT_M`), so a route without one wins unless it is much longer. A reversing train
+  time each (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as twice the
+  route's length, at least 5 km (`order_cost`, `REVERSAL_INSERT_M`, T-1899), so a route without one
+  wins unless it is over three times as long. A reversing train
   stands the line's turnaround there, not its dwell; its middle stands d short of the node on
   arrival and leaves from d past it in the run's unfolded offsets (`Run::jump`, the same place on
   the ground; d is half the train at a through station, half the platform at a dead end, half the
@@ -657,7 +667,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
-  the reversal penalty (append wins ties). Copying preserves stops, exact path, dwell, turnaround, cars,
+  the reversal penalty (append wins ties); an open line whose edited route reverses is tried again
+  stop by stop and takes a straighter order where one exists (`straighten`, T-1899). Copying preserves stops, exact path, dwell, turnaround, cars,
   colour and custom badge as independent inputs, and starts with no trains (counts at 0, or a
   headway line's headways at none) until the player sets them, so a copy never doubles a
   service (T-1161); edits and removal are undoable.
@@ -723,7 +734,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   (`Network::line_phase`, `Lattice::phase`), picked so the line's trains and those of each line it
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
   as they can (`spacing::place`: per train of an hour, how far it falls short of half the smaller
-  headway from the other line's nearest there, squared, summed; 24 phases tried a headway). Greedy on
+  headway from the other line's nearest there, squared, summed; 24 phases tried a headway). A pair
+locked behind (6.2) is placed the other way (T-1965): each of the faster line's trains as near as
+it can be to the spacing `s` behind one of the slower line's, so it is drawn following it rather
+than catching it up midway (the share of half the smaller headway it is off, squared). Greedy on
   edits: only the lines an edit changes directly are placed, in id order, against the others as they
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
@@ -947,16 +961,21 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
   never cheaper, so no fare is below the base or falls with distance. **Fares by country**
-  (T-1277, T-1906, `app/src/game/income.ts`): each country charges the curve times its fare scale:
-  the player's own, 0.1 to 19.9 to a hundredth (`Fares.scales`, saved with the fares), else the
-  default, `scales["*"]` (`EVERY`), which a new game sets to 1. A save from before T-1906 has no
-  `"*"`: its curve is in India's units and a country's default is (its GDP per head at market rates
-  over India's)^0.7 in tenths (`incomeScale`: the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521).
-  The Money tab shows a scale divided by the country's default, so every country reads 1.00x until the
-  player sets one (`shownScale`, `storedScale`). A new game's curve is set once from the country it
-  starts in (`startNodes` in `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at
-  $0.0862, $0.2241 and $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the
-  country's `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.30, $3.40 and $12.
+  (T-1277, T-1906, `app/src/game/income.ts`): each country charges the curve times its fare scale,
+  by default its `incomeScale`, (its GDP per head at market rates over India's)^0.7 in tenths (the US
+  11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521). A new game's curve is its start country's fares and
+  it stores that country's income scale as `scales["@"]` (`START`), so a country's default is its
+  income scale over that one (1 where it started). There the player's own scales are kept as multiples
+  of the default, 0.1 to 19.9 to a hundredth, so stored and shown are the same; a save from before
+  T-1906 has no `"@"`, its curve in India's units and its scales absolute (`scales["*"]`, `EVERY`, in a
+  few saves of 2026-11-02, is one default for every country). The Money tab shows a scale divided by
+  the country's default, so every country reads 1.00x until the player sets one (`shownScale`,
+  `storedScale`). A new game's curve is set once from the country it starts in (`startNodes` in
+  `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at $0.0862, $0.2241 and
+  $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the country's
+  `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.30, $3.40 and $12. While
+  that curve is untouched, a country without the player's scale charges its own round start curve
+  (`roundedDefault`: a US start's Japan $1.30, not $1.3147).
   In a save from before, while a country's scale and the curve (the old start's) are untouched, its
   three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each

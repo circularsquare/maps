@@ -668,6 +668,7 @@ uniform highp sampler2D u_samples; // RG32F: run 0 of each line, x/y local units
 uniform highp sampler2D u_lines;   // RGBA32F per line: first sample, count, length m, step m
 in vec2 a_trip;              // profile, departure - epoch (s)
 in float a_end;              // drawn until - epoch (s): standing at the terminal for its next departure (T-206)
+in float a_lag;              // drawn this many seconds behind its timetable (T-1965, trainGuard.ts)
 
 ivec2 tc(int i, int w) { return ivec2(i % w, i / w); }
 
@@ -691,7 +692,7 @@ vec2 lineAt(vec4 L, float d) {
 bool trainDist(out vec4 L, out float d, out int line) {
   int prof = int(a_trip.x + 0.5);
   vec4 M = texelFetch(u_meta, tc(prof, ${TEX_W}), 0);
-  float tau = u_time - a_trip.y;
+  float tau = u_time - a_trip.y - a_lag;
   if (M.y < 0.5 || tau < 0.0 || (tau > M.z && u_time > a_end)) return false;
   int lo = int(M.x), hi = int(M.x + M.y) - 1;
   for (int k = 0; k < 18; k++) {
@@ -855,7 +856,7 @@ void main() {
   float st = texelFetch(u_stretch, tc(si, ${TEX_W}), 0).x;
   if (v_fill >= 0.0 && a_load.x >= 0.0 && st >= 0.0) {
     float aboard;
-    if (u_time - a_trip.y >= a_load.y) {
+    if (u_time - a_trip.y - a_lag >= a_load.y) {
       float f = clamp((u_time - a_stand.x) / max(a_stand.y - a_stand.x, 1.0), 0.0, 1.0);
       aboard = f * (a_stand.z >= 0.0 ? texelFetch(u_loads, tc(int(a_stand.z + st + 0.5), ${TEX_W}), 0).x : max(a_stand.w, 0.0));
     } else {

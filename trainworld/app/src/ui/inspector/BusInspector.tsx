@@ -193,7 +193,7 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
   if (!(s > 0) || !(st.km > 0)) return null;
   const kmh = (2 * st.km) / (s / 3600);
   return (
-    <li data-tip={`${distance(st.km * 2000)} there and back in ${Math.round(s / 60)} min, the round trip less the turning at the ends. Dwell at stations is in it.`}>
+    <li>
       <span class="grow">Average speed</span>
       <span class="val">{speed(kmh)}</span>
     </li>

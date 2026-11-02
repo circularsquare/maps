@@ -231,6 +231,10 @@ export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand
  * views, dims the other lines and puts a toggle marker on every station (map/stopMarkers.ts). */
 export const stopEditing = computed(() => tool.value === "line" && lineDraft.value.line !== null);
+/** T-1899: the line whose first stops are being picked, from New line until its stop editing ends,
+ * and the train type the stops last gave it: its clicks pick high-speed or ordinary trains by the
+ * track and prefer stations no trains stop at. Null once the player sets the type by hand. */
+export const newLine = signal<{ line: number; fast: boolean } | null>(null);
 /** A newly created line opens its inspector with the default name selected for replacement. */
 export const renameLinePrompt = signal<string | null>(null);
 /** How the Lines and Stations lists are sorted: the column clicked and its direction (T-310). Kept

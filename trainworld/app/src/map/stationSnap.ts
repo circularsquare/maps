@@ -2,7 +2,7 @@
 // tracks, and the nearest spot with room when the platform would not fit the pointer's. Pure, so
 // checks/t671-station-snap-check.mjs runs it without a browser.
 
-export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean }
+export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean; hsr?: boolean }
 export interface SnapNode { platform: number; ports: number; bus?: true }
 /** a spot on a track: the edge, and how far along it from node `a` to node `b`, 0 to 1 */
 export interface Spot { edge: number; frac: number }
@@ -206,7 +206,7 @@ export function roomNear(c: { edge: number; frac: number }, platform: number, la
 /** From `node`, `gap` metres along `e0`, on through plain joints while the gap is under `reach`,
  * as unjoin_near joins them: the node reached and the gap to it. */
 function joinThrough(e0: SnapEdge, node: number, gap: number, reach: number, lay: Layout, joint: (n: number) => boolean): [number, number] {
-  const same = (o: SnapEdge) => o.built === e0.built && !!o.off === !!e0.off && (o.tracks ?? 1) === (e0.tracks ?? 1) && !o.crossover && !e0.crossover;
+  const same = (o: SnapEdge) => o.built === e0.built && !!o.off === !!e0.off && (o.tracks ?? 1) === (e0.tracks ?? 1) && !!o.hsr === !!e0.hsr && !o.crossover && !e0.crossover;
   let from = e0.id;
   const seen = new Set([from]);
   while (gap < reach && joint(node)) {

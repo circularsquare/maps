@@ -166,8 +166,8 @@ pub const CONFLICT_S: f64 = 90.0;
 /// Every train reversing partway holds its station side's limiter this long: 12 an hour (T-797,
 /// a stopgap until T-657's reversing design).
 pub const REVERSAL_LIMIT_S: f64 = 300.0;
-/// A reversal's cost to the route search (s) and to the stop insertion (m), so a route without
-/// one wins unless it is much longer (T-797).
+/// A reversal's cost to the route search (s) and its least cost to the stop insertion (m; more on
+/// a longer route, `order_cost`), so a route without one wins unless it is much longer (T-797).
 pub const REVERSAL_SEARCH_S: f64 = 600.0;
 pub const REVERSAL_INSERT_M: f64 = 5000.0;
 /// How far short of a bare track end a reversing train's tail stops, m (T-797 B3).

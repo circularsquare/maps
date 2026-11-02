@@ -605,13 +605,15 @@ History, cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Last, "Loan"
 (not in a sandbox) [T-1661]: with none out, "Borrow" and three buttons, $1B, $5B and $10B, each hover
 giving the rule (1% of the loan a game day, one at a time), or, disabled, why it is refused
-[T-1906]: "Interest would be $50.0M per day. Fares less running costs and upkeep averaged $32.0M per
-day over the last 7 days." ("yesterday" after one whole day), or before a whole day with fares "Until
+[T-1906]: "Interest would be $50.0M per day. Average profit over the past 7 days was $32.0M per
+day." (after one whole day "Profit yesterday was $32.0M per day."; profit is fares minus running
+costs and upkeep), or before a whole day with fares "Until
 there is a full day of fares, the most you can borrow is $1B."; with one out, "Borrowed" and its amount,
 "Interest a day" (hover: the rule) and a "Repay" button, disabled while the cash is under the loan
-(hover: what it needs). In a save from before T-1906, default fares show rounded: a country's fares are the curve times its scale,
-rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar, until the player
-changes the curve or that country's scale; a newer game's start curve is already round [T-1662, T-1906, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
+(hover: what it needs). Default fares show rounded until the player changes the curve or that
+country's scale: in a save from before T-1906 a country's fares are the curve times its scale,
+rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar; in a newer game
+each country charges the round start curve it would have had as a new game's [T-1662, T-1906, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
 ## Cities tab

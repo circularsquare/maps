@@ -18,7 +18,9 @@ export function followTrain(r: NetworkRenderer, sel: Selection, t: number): Sele
   for (let hop = 0; hop < 4; hop++) {
     const i = r.tripIndex(profile, dep - epoch);
     if (i < 0) break;
-    const end = r.tripEnds[i] + epoch, next = r.tripNexts[i];
+    // a train the guard holds (T-1965) is still on its way until it has caught its timetable up
+    const lag = r.tripLag(i), late = lag > 0 && r.net ? dep + r.net.meta[profile * 4 + 2] + lag : -Infinity;
+    const end = Math.max(r.tripEnds[i] + epoch, late), next = r.tripNexts[i];
     if (t < end || !Number.isFinite(next)) break;
     const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
     let j = -1;

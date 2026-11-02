@@ -707,13 +707,14 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   station reaches is not read as the corridor; By train (the period with most trips, "Inter-city,
   midday") with the main route ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
   to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
-  station), Effective time (the pairs' felt cost, averaged over the pairs the train serves and
-  their riders' income groups), then [T-1902] "Car for these trips" (or "Plane", or "Car or
-  plane" where the plane has 0.5% of the trips or more: the other ways as the choice weighs them
-  together, the reference less ln(rest) over the scale, over the same pairs and riders; its hover
-  gives the train's share of those trips) and "Trips the train can serve" (the share of the trips
-  on pairs with a station in reach at both ends; the rest have no train), so the train's share
-  reads as its share of the trips it can serve times that share; the
+  station), then [T-1902] "Trips possible by train" (the share of the trips on pairs with a
+  station in reach at both ends; no hover), Effective time (the pairs' felt cost, averaged over the
+  pairs the train serves and their riders' income groups; no hover, since an average over pairs has
+  no one equation), then "Car on the same trips" (or "Plane", or "Car or plane" where the plane has
+  0.5% of the trips or more: the other ways as the choice weighs them together, the reference minus
+  ln(rest) over the scale, over the same pairs and riders; hover "Effective time by car on trips
+  possible by train."), so the train's share reads as its share of the trips possible by train
+  times that share; a far end not open in the game reads "No route."; the
   main route's share ("43% of train users between these cities take this exact route", "places"
   when an end is a 6 km area or a selection) and up to four other routes (routes under 0.5% of the riders are left out,
   but while any rail rider is counted the biggest route stays, so riders spread thin over many

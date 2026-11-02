@@ -1,5 +1,5 @@
 import { edit, lineById, say, stationsById, world } from "./world";
-import { lineDraft, renameLinePrompt, selection, tool } from "./ui";
+import { lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
 import { money } from "./format";
@@ -74,7 +74,7 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   const first = ends.length ? world.value?.save.stations.find((s) => s.num === ends[0]) : undefined;
   const city = first ? stationZone(first) : viewedZone.peek();
   const name = nextLineName(city), colour = nextFreeColour(startOf(first), lineMates(city).length);
-  let a = ends.length ? await edit({ op: "addLine", stops: ends, name, colour }, true) : null;
+  let a = ends.length ? await edit({ op: "addLine", stops: ends, name, colour, autoFast: true }, true) : null;
   if (!a?.ok) { ends.length = 0; a = await edit({ op: "addLine", stops: [], name, colour }); }
   if (!a.ok || a.line === undefined) return;
   live.tools?.exit();
@@ -82,6 +82,7 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   renameLinePrompt.value = String(a.line);
   selection.value = { kind: "line", line: String(a.line) };
   tool.value = "line";
+  newLine.value = { line: a.line, fast: !!world.peek()?.lineStats[String(a.line)]?.fast };
 }
 
 /** The N key: a new line, starting on the selected track when no line runs on it. */

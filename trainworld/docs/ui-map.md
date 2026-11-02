@@ -363,7 +363,7 @@ change; only links are saved. Riders change between any two stations of a comple
   shorter than 11, 17.6 and 26.4 px at those zooms and bends with its track along the circle
   through its ends and middle. Each car is turned along the chord between its ends, so the consist
   snakes round curves and stays on the route at terminals (notes/T-047.md). One instanced draw for
-  all trains, positions from keyframes on the GPU. A click on any car selects the train; one drawn
+  all trains, positions from keyframes on the GPU, less each train's lag (below). A click on any car selects the train; one drawn
   over a station selects the train.
 - **On its own track** [T-658b]: as double track parts into two (about zoom 17, "Lines and
   track"), a train moves from the centre line to the right-hand track of its direction of travel
@@ -372,6 +372,20 @@ change; only links are saved. Riders change between any two stations of a comple
   to the centre over the taper (`sampleLane`, one value a 50 m sample). A train turning back
   stands on its arrival track and steps across to the other as its next trip starts. Clicks
   find it where it is drawn (`laneShiftM`).
+- **Never through the train ahead** [T-1965, `map/trainGuard.ts`]: each train is drawn from its
+  own line's timetable, which can put a faster train inside a slower one on the same track (an
+  edge in one direction). Each frame, for trains in or within 150 px of the view on lines that
+  share track with another line, a train's front stays 30 m behind the back of the train ahead on
+  its track (their true lengths; zoomed out, lines sharing track are drawn side by side), and a
+  train does not move onto a merge while another is on it. Order on a track never changes from one
+  frame to the next. A held train is drawn late in its own run (`lag` per trip, an attribute on the
+  GPU), so it keeps its stops and speeds and waits outside a station where the train ahead stands;
+  once clear it makes the lag up at 0.3 s a game second, drawn up to 30% faster than its timetable.
+  A train still held when its next trip is due takes that trip late by the rest. At most 20 minutes
+  behind (past that it is let through), and a clock jump of over 15 minutes starts every train on
+  its timetable. Clicks, hover tags, the train panel and following a selected train use the drawn
+  place. Flat crossings and junction moves are not guarded (T-1966). `?perfOff=follow` or
+  `renderer.follow` turns it off.
 - **How full** [T-103, T-207, T-218, T-230]: the core fills from its back like a gauge across the
   whole consist, in the dark shade of the line colour (48% of the line RGB) over an 18% white tint.
   Half full is every seat taken, full is packed to crush, from the boarding account

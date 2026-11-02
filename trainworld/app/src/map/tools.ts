@@ -31,7 +31,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -260,6 +260,8 @@ export class Tools {
       if (active !== this.editingLine) {
         this.editingLine = active;
         this.lineSession++;
+        // T-1899: a line is new until its first stop editing ends
+        if (newLine.peek() && newLine.peek()!.line !== active) newLine.value = null;
       }
       if (active === null || !w) return;
       const line = w.save.lines.find((l) => Number(l.id) === active);
@@ -1155,11 +1157,31 @@ export class Tools {
       : station === before[0] && tier === "close" && !closedLoop ? [...before, station]
       // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
       : before.filter((s) => s !== station);
-    const a = await edit({ op: "setStops", line: id, stops });
+    const a = await edit({ op: "setStops", line: id, stops, autoFast: this.autoFast(id) });
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+      this.noteFast(id);
     }
+  }
+
+  /** T-1899: whether a stop edit on `id` picks its train type by the track: while it is the new line
+   * and the player has not set the type by hand since the last stop edit. */
+  private autoFast(id: number): boolean {
+    const n = newLine.peek();
+    if (n?.line !== id) return false;
+    const fast = world.peek()?.lineStats[String(id)]?.fast;
+    if (fast !== undefined && fast !== n.fast) {
+      newLine.value = null;
+      return false;
+    }
+    return true;
+  }
+
+  /** T-1899: the type the new line's stops gave it, to tell a later change by hand. */
+  private noteFast(id: number) {
+    const fast = world.peek()?.lineStats[String(id)]?.fast;
+    if (newLine.peek()?.line === id && fast !== undefined) newLine.value = { line: id, fast };
   }
 
   private async addStop(station: number, session: number) {
@@ -1174,10 +1196,11 @@ export class Tools {
     }
     // the worker fits it in among the stops it holds then (T-648), so a queued click never works
     // from stops an earlier one changed
-    const a = await edit({ op: "insertStop", line: id, station });
+    const a = await edit({ op: "insertStop", line: id, station, autoFast: this.autoFast(id) });
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+      this.noteFast(id);
     }
   }
 

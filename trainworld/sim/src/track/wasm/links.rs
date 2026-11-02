@@ -555,7 +555,7 @@ impl TrackApi {
     }
 
     /// T-1299: the ops joining the two pieces left at each removed station's node into one where
-    /// they simply join (`unjoin_near`'s rules: on one straight, alike in kind and state), planned
+    /// they simply join (`unjoin_near`'s rules: a plain joint, alike in kind and state), planned
     /// on the track as `ops` leave it. A piece already joined at another station is left as it is.
     fn station_joins(&mut self, ops: &[Op], st: &[u32]) -> Vec<Op> {
         let Ok(inv) = self.w.sketch(Op::Batch(ops.to_vec()), false) else { return vec![] };

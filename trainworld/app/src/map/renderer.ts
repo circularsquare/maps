@@ -27,6 +27,7 @@ import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type 
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
 import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
+import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
 import { BAND_RANGE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
@@ -260,6 +261,17 @@ export class NetworkRenderer {
   private loadBuf: WebGLBuffer | null = null;
   /** per trip in the trip buffer: its stand at the terminal before its next trip (T-1785, `trainStands`) */
   private standBuf: WebGLBuffer | null = null;
+  /** per trip in the trip buffer: seconds it is drawn behind its timetable (T-1965, `guard.lag`) */
+  private lagBuf: WebGLBuffer | null = null;
+  private lagDirty = false;
+  /** T-1965: trains on the same track drawn one behind the other, never through each other; off
+   * with `?perfOff=follow` or live */
+  guard = new TrainGuard();
+  follow = !perfOff("follow");
+  /** game seconds trip `i` of the buffer is drawn behind its timetable (T-1965) */
+  tripLag(i: number): number {
+    return this.follow && i >= 0 ? this.guard.lag[i] ?? 0 : 0;
+  }
   /** the hour's loads (T-164), replaced with the trips; kept apart from `res`, like the trips */
   private loadTex: WebGLTexture | null = null;
   private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
@@ -624,8 +636,11 @@ export class NetworkRenderer {
     this.standBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.standBuf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, -1]), gl.DYNAMIC_DRAW);
+    this.lagBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.lagBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(1), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    this.loadTex = this.texture(new Float32Array(1), "r32f", TEX_W, []);
+    this.loadTex =this.texture(new Float32Array(1), "r32f", TEX_W, []);
   }
 
   private texture(data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number, list = this.res): WebGLTexture {
@@ -1004,6 +1019,7 @@ export class NetworkRenderer {
     this.res = [];
     this.probeVao = null;
     this.net = n;
+    this.guard.setNetwork(n);
     this.marks.setNetwork(n.marks);
     this.lots.setNetwork(n.lots);
     const oldTrack = this.track, oldLines = this.lines;
@@ -1104,6 +1120,7 @@ export class NetworkRenderer {
     this.attrib(this.trainProg, "a_end", this.endBuf!, 1, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_load", this.loadBuf!, 2, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_stand", this.standBuf!, 4, gl.FLOAT, 1);
+    this.attrib(this.trainProg, "a_lag", this.lagBuf!, 1, gl.FLOAT, 1);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -1286,6 +1303,10 @@ export class NetworkRenderer {
       gl.bufferData(gl.ARRAY_BUFFER, offs.length ? offs : new Float32Array([-1, 0]), gl.DYNAMIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.standBuf);
       gl.bufferData(gl.ARRAY_BUFFER, t.board ? trainStands(t.board, t.data, t.nexts ?? null) : new Float32Array(Math.max(1, t.data.length / 2) * 4).fill(-1), gl.DYNAMIC_DRAW);
+      // every train on its timetable until the guard says otherwise (it keeps each trip's lag)
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.lagBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Math.max(1, t.data.length / 2)), gl.DYNAMIC_DRAW);
+      this.lagDirty = true;
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       if (t.board?.loads.length) {
         if (this.loadTex) gl.deleteTexture(this.loadTex);
@@ -1746,9 +1767,10 @@ export class NetworkRenderer {
     this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
       this.detailedTrains = zoom >= STATION_BOX_ZOOM && !opt.hollowTrains;
+      const tw = interp(zoom, TRAIN_PX) * dpr * k;
+      this.guardTrains(time, cam, a, project, vp[0] / dpr, vp[1] / dpr);
       gl.useProgram(this.trainProg);
       gl.uniform1i(this.trainU.u_hollow, opt.hollowTrains ? 1 : 0);
-      const tw = interp(zoom, TRAIN_PX) * dpr * k;
       gl.useProgram(this.trainProg);
       setCamera(gl, this.trainU, lc);
       gl.uniform2f(this.trainU.u_viewport, vp[0], vp[1]);
@@ -1809,6 +1831,35 @@ export class NetworkRenderer {
     gl.activeTexture(gl.TEXTURE0);
     this.timer.end();
     this.quiet = false;
+  }
+
+  /** T-1965: hold trains in view back behind those ahead on their track (`TrainGuard`), and upload
+   * their lags when they change. `w`, `h`: the view, CSS px. */
+  private guardTrains(time: number, cam: Camera, a: Anchor, project: Project, w: number, h: number) {
+    const t0 = performance.now();
+    this.guardTrainsOn(time, cam, a, project, w, h);
+    this.guardMs = performance.now() - t0;
+  }
+  /** ms the guard took the last frame (checks) */
+  guardMs = 0;
+  private guardOut: [number, number] = [0, 0];
+  private guardTrainsOn(time: number, cam: Camera, a: Anchor, globeProject: Project, w: number, h: number) {
+    let changed = this.lagDirty;
+    this.lagDirty = false;
+    if (this.follow) {
+      // the flat map's projection without an array a call (`projector` makes one each)
+      const m = cam.globe ? null : mul4(cam.merc, localToMercMatrix(a)), out = this.guardOut;
+      const project = m ? (x: number, y: number) => { clipToCss(m, x, y, w, h, out); return out; } : globeProject;
+      changed = this.guard.update({ time, epoch: this.tripEpoch, trips: this.trips, ends: this.tripEnds, nexts: this.tripNexts, project, w, h }) || changed;
+    } else if (this.guard.lag.some((v) => v !== 0)) {
+      this.guard.lag.fill(0);
+      changed = true;
+    }
+    if (!changed || this.guard.lag.length !== this.tripCount || !this.tripCount) return;
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.lagBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.guard.lag);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
   /** Select the bridge program and set its uniforms for this frame: `ring` and `half` (a bridge's
@@ -1998,6 +2049,7 @@ export class NetworkRenderer {
       gl.bindVertexArray(this.probeVao);
       this.attrib(this.probeProg, "a_trip", this.tripBuf!, 2, gl.FLOAT, 0);
       this.attrib(this.probeProg, "a_end", this.endBuf!, 1, gl.FLOAT, 0);
+      this.attrib(this.probeProg, "a_lag", this.lagBuf!, 1, gl.FLOAT, 0);
       gl.bindVertexArray(null);
     }
     const out = this.buffer(new Float32Array(Math.max(1, n) * 2), []);

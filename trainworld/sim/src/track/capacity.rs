@@ -771,7 +771,17 @@ struct Stretch {
     longer: f64,
     spacing: f64,
     waits: Vec<(f64, i32)>,
+    /// T-1965: the two runs are the same path end to end, so the faster one never gets away
+    locked: bool,
 }
+
+/// T-1965: on a following resource, a slower user's `stop` when it runs the faster run's whole path
+/// and turns where it turns: with no passing, order on the line never changes, so the faster train
+/// ends up behind a slower one on every trip and loses all of `D`.
+pub const FOLLOW_LOCKED: i32 = 1;
+/// T-1965: two lines that differ by less than this over a shared path (s) are taken as one pattern,
+/// never one locked behind the other.
+const FOLLOW_LOCK_MIN_S: f64 = 30.0;
 
 /// T-1924 (notes/T-1900.md N1): the following loss of each line in `owners` behind slower lines on
 /// track it shares with them in the same direction. A shared stretch is a run of path entries both
@@ -864,7 +874,12 @@ fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capa
                     if waits.is_empty() {
                         waits.push((0.5 * (fa + fb), -1));
                     }
-                    stretches.push(Stretch { i0, i1: last, line: l, run: r, longer, spacing, waits });
+                    // T-1965: the same path end to end, the slower one reaching the end a while
+                    // later: the faster one arrives with it, so loses that
+                    let lock = (reach_at(s_run, sb) - leave_at(s_run, sa)) - (reach_at(run, fb) - leave_at(run, fa));
+                    let locked = i0 == 0 && last + 1 == ns && j0 == 0 && j1 + 1 == s_run.segs.len() && lock >= FOLLOW_LOCK_MIN_S;
+                    let longer = if locked { lock } else { longer };
+                    stretches.push(Stretch { i0, i1: last, line: l, run: r, longer, spacing, waits, locked });
                 }
                 if i == ns {
                     break;
@@ -895,7 +910,7 @@ fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capa
                 waits.dedup_by(|a, b| a.1 == b.1 && (a.1 >= 0 || (a.0 - b.0).abs() < 1.0));
                 users.clear();
                 users.extend(waits.iter().map(|&(at, stop)| User { line: f, run: fr as u8, owner: true, occ: 0.0, at, stop }));
-                users.extend(stretches[g..end].iter().map(|s| User { line: s.line, run: s.run, owner: false, occ: s.longer, at: s.spacing, stop: -1 }));
+                users.extend(stretches[g..end].iter().map(|s| User { line: s.line, run: s.run, owner: false, occ: s.longer, at: s.spacing, stop: if s.locked { FOLLOW_LOCKED } else { -1 } }));
                 let mid = run.nodes[(stretches[g].i0 + hi + 1) / 2] as usize;
                 push_res(cap, ResKind::Follow, net.node_x[mid], net.node_y[mid], u32::MAX, path_edge(run.segs[stretches[g].i0]), &users, Tag::Follow { line: f });
                 g = end;
@@ -910,33 +925,36 @@ fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capa
 /// spacing `s` it must keep and then follows: on average `D - (H - s)/2` when `D` is at least
 /// `H - s` (it always catches up), else `D² / 2(H - s)`. Slower lines are taken together from the
 /// slowest: the loss behind those at least as slow as each is worked out with their trains
-/// together, and the largest counts.
+/// together, and the largest counts. Behind a slower line it can never get away from
+/// (`FOLLOW_LOCKED`, T-1965) the loss is all of `D`.
 pub fn follow_loss(us: &[User], net: &Network, lev: usize) -> (f64, u32) {
     let Some(f) = us.iter().find(|u| u.owner) else { return (0.0, u32::MAX) };
     if net.line_tph[f.line as usize][lev] <= 0.0 {
         return (0.0, u32::MAX);
     }
-    let mut slow: Vec<(f64, f64, f64, u32, u8)> = vec![]; // longer, spacing, tph, line, run
+    let mut slow: Vec<(f64, f64, f64, u32, u8, bool)> = vec![]; // longer, spacing, tph, line, run, locked
     for u in us.iter().filter(|u| !u.owner) {
         let tph = net.line_tph[u.line as usize][lev] as f64;
         if tph <= 0.0 {
             continue;
         }
+        let locked = u.stop == FOLLOW_LOCKED;
         match slow.iter_mut().find(|x| (x.3, x.4) == (u.line, u.run)) {
             Some(x) => {
                 if u.occ > x.0 {
                     (x.0, x.1) = (u.occ, u.at);
                 }
+                x.5 |= locked;
             }
-            None => slow.push((u.occ, u.at, tph, u.line, u.run)),
+            None => slow.push((u.occ, u.at, tph, u.line, u.run, locked)),
         }
     }
     slow.sort_by(|a, b| b.0.total_cmp(&a.0).then((a.3, a.4).cmp(&(b.3, b.4))));
     let (mut best, mut who, mut tph) = (0.0, u32::MAX, 0.0);
-    for &(d, s, t, l, _) in &slow {
+    for &(d, s, t, l, _, locked) in &slow {
         tph += t;
         let gap = (3600.0 / tph - s).max(0.0);
-        let loss = if d >= gap { d - 0.5 * gap } else { d * d / (2.0 * gap) };
+        let loss = if locked { d } else if d >= gap { d - 0.5 * gap } else { d * d / (2.0 * gap) };
         if loss > best {
             (best, who) = (loss, l);
         }

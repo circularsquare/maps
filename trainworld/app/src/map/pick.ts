@@ -355,7 +355,8 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     for (let k = r.tripCount - (first >= 0 ? 0 : 1); k >= 0; k--) {
       const i = k === r.tripCount ? first : k;
       if (k < r.tripCount && i === first) continue;
-      const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch;
+      // drawn where the guard holds it (T-1965)
+      const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i);
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
       const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand);
       if (!at) continue;

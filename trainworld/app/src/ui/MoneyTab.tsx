@@ -283,8 +283,8 @@ export function MoneyTab() {
 function loanRefusal(amount: number, profit: ReturnType<typeof loanProfit>): string | null {
   if (loanAllowed(amount, profit)) return null;
   if (!profit) return `Until there is a full day of fares, the most you can borrow is $${LOAN_AMOUNTS[0] / 1000}B.`;
-  const over = profit.days === 1 ? "yesterday" : `over the last ${profit.days} days`;
-  return `Interest would be ${money(amount * LOAN_RATE * 1e6)} per day. Fares less running costs and upkeep averaged ${money(profit.perDay * 1e6)} per day ${over}.`;
+  const over = profit.days === 1 ? "Profit yesterday was" : `Average profit over the past ${profit.days} days was`;
+  return `Interest would be ${money(amount * LOAN_RATE * 1e6)} per day. ${over} ${money(profit.perDay * 1e6)} per day.`;
 }
 
 /** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out, each refused

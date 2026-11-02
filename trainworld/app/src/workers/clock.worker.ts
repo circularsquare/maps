@@ -17,7 +17,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
-import { EVERY, FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
+import { FARE_BASELINE, incomeScale, oldCurveFactor, oldIncomeScale, scaleFromOld, START, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf, levelOn, quietKind } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -44,11 +44,11 @@ const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
 const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
-/** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city), charged
- * as set in every country until the player sets a scale. */
+/** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city); every
+ * other country charges them by its income over that country's until the player sets a scale. */
 function startFares(spec?: NewGameSpec): Fares {
   const country = (spec?.start ? CITIES.find((x) => x.id === spec.start)?.country : undefined) ?? cityById(HOME_CITY).country;
-  return { ...faresOf({ nodes: startNodes(country) }, START_FARE), scales: { [EVERY]: 1 }, baseline: FARE_BASELINE, basis: "usd" };
+  return { ...faresOf({ nodes: startNodes(country) }, START_FARE), scales: { [START]: incomeScale(country) }, baseline: FARE_BASELINE, basis: "usd" };
 }
 /** A save's fares. One from before T-1277 kept New York's fares, so its curve is divided by the home
  * country's scale; one from before T-1521 (no `basis`) is turned to the market-rate rule with every
@@ -2883,7 +2883,44 @@ function colourInt(c: string) {
   return parseInt(c.slice(1), 16);
 }
 
-function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?: number } {
+/** T-1899: the share of a line's route km on high-speed track, 0 with no route. */
+function hsrShare(a: TrackApi, line: number): number {
+  const path = a.line_path(line);
+  if (!path.length) return 0;
+  const hsr = new Set(a.hsr_edges()), len = new Map<number, number>(), info = a.edges_info();
+  for (let i = 0; i < info.length; i += 10) len.set(info[i], info[i + 5]);
+  let all = 0, fast = 0;
+  for (const p of path) {
+    const m = len.get(p >> 1) ?? 0;
+    all += m;
+    if (hsr.has(p >> 1)) fast += m;
+  }
+  return all > 0 ? fast / all : 0;
+}
+
+type Applied = { r: number; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number };
+
+/** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
+ * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo
+ * history (an undo takes the stop back first), and nothing the first try bought is kept. */
+function withAutoFast(a: TrackApi, line: number, edit: () => number): Applied {
+  const was = [a.cash(), a.fleet(), a.fleet_fast()] as const;
+  const back = () => (a.undo(), a.set_cash(was[0]), a.set_fleet(was[1]), a.set_fleet_fast(was[2]));
+  const r = edit();
+  if (r !== 0 || !a.line_path(line).length) return { r };
+  const fast = hsrShare(a, line) > 0.5;
+  if (fast === a.line_fast(line)) return { r };
+  back();
+  if (a.set_line_fast(line, fast) !== 0) return { r: edit() };
+  const charge = a.last_charge(), trainCharge = a.last_train_charge();
+  if (edit() !== 0) {
+    back();
+    return { r: edit() };
+  }
+  return { r: 0, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
+}
+
+function apply(op: EditOp): Applied {
   const a = api!;
   switch (op.op) {
     case "route": {
@@ -2947,7 +2984,11 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "addLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_LINE_TRAINS;
-      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, newLineCars, colourInt(op.colour), op.name || a.next_line_name()), line: id };
+      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, newLineCars, colourInt(op.colour), op.name || a.next_line_name());
+      // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
+      if (r !== 0 || !op.autoFast || hsrShare(a, id) <= 0.5) return { r, line: id };
+      const charge = a.last_charge(), trainCharge = a.last_train_charge();
+      return a.set_line_fast(id, true) === 0 ? { r, line: id, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() } : { r, line: id, charge, trainCharge };
     }
     case "copyLine": {
       const id = a.new_line_id();
@@ -2972,12 +3013,16 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       if (r === 0) a.set_line_badge(id, name, colour, cloneSymbol(a.line_symbol(op.line) || letterOf(from), symbols));
       return { r, line: id };
     }
-    case "setStops":
-      return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
+    case "setStops": {
+      const set = () => a.set_stops(op.line, new Uint32Array(op.stops));
+      return op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
+    }
     case "insertStop": {
       // one message instead of a query and then setStops: a round trip less, and no stale stops
       const stops = a.insert_stop(op.line, op.station);
-      return stops.length ? { r: a.set_stops(op.line, Uint32Array.from(stops)) } : { r: INSERT_REFUSED };
+      if (!stops.length) return { r: INSERT_REFUSED };
+      const set = () => a.set_stops(op.line, Uint32Array.from(stops));
+      return op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
     }
     case "dropStop": {
       const r = a.drop_stop(op.line, op.index);
@@ -3379,17 +3424,18 @@ async function handle(msg: ToClock) {
       api.set_now(gameNow());
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
-    const { r, line, node, skipped } = apply(msg.op);
+    const { r, line, node, skipped, charge: charged, trainCharge } = apply(msg.op);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
     const tB = performance.now();
     timing = {};
-    const charge = r === 0 ? api.last_charge() : 0;
+    // an op of two edits (T-1899) says what both charged
+    const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
     const answer = (early?: boolean) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early });
     if (r !== 0) return answer();
     dirty = edited = true;
-    if (charge > 0) bookCharge(seq, charge, api.last_train_charge());
+    if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());
     forget();
     const demand = api.dirty_demand_lines();
     // T-1780: blueprint track changes no train's run, so the trips and boarding account stand

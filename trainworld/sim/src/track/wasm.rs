@@ -701,16 +701,29 @@ fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> 
     (net.path_reversals(&path).len() == net.path_reversals(net.line_path(line)).len()).then_some(path)
 }
 
-/// The line's stops with `station` inserted where its path is shortest, and that path
-/// (`TrackApi::insert_stop`): every slot tried with the route search `set_stops` uses. Between
-/// slots with the same path (a stretch the line runs out and back over), the one whose stops lie
-/// closest together along it wins (T-1674), then the end. None if no slot has a route, or it is a
-/// stop already.
+/// What a path costs the stop insertion search: its length, and per reversal twice that length, at
+/// least `REVERSAL_INSERT_M` (T-1899). Stops that lie along one way through the track then run
+/// straight along it unless that way is over three times as long: a flat 5 km let a long way round
+/// lose to reversing at a stop, and clicks then built lines that went back and forth.
+fn order_cost(net: &Network, path: &[u32]) -> f64 {
+    let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum();
+    len + net.path_reversals(path).len() as f64 * REVERSAL_INSERT_M.max(2.0 * len)
+}
+
+/// The line's stops with `station` inserted where its path costs least (`order_cost`), and that
+/// path (`TrackApi::insert_stop`). None if the line is not there.
 fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
     if !net.line_ok(line) {
         return None;
     }
-    let old = net.line_stops(line);
+    best_slot(net, net.line_stops(line), station, memo)
+}
+
+/// `old` with `station` inserted where the path costs least, and that path: every slot tried with
+/// the route search `set_stops` uses. Between slots with the same path (a stretch the line runs out
+/// and back over), the one whose stops lie closest together along it wins (T-1674), then the end.
+/// None if no slot has a route, or it is a stop already.
+fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
     if old.contains(&station) {
         return None;
     }
@@ -723,8 +736,7 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
         let mut stops = old.to_vec();
         stops.insert(slot, station);
         if let Some(path) = route_memo(net, &stops, memo) {
-            let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum::<f64>()
-                + REVERSAL_INSERT_M * net.path_reversals(&path).len() as f64;
+            let len = order_cost(net, &path);
             let wins = if len < best_len - 0.001 {
                 best_spread = None;
                 true
@@ -743,6 +755,23 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
         }
     }
     best
+}
+
+/// T-1899: an open line's stops whose path turns back, put in again one at a time in their order
+/// as a click puts a stop in (`best_slot`): that order and its path if it turns back fewer times
+/// and costs less. Catches lines an edit left going back and forth along one way, whichever
+/// edit it was.
+fn straighten(net: &Network, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    let turns = net.path_reversals(path).len();
+    if turns == 0 || stops.len() < 3 || closed(stops) {
+        return None;
+    }
+    let mut memo = HopMemo::new();
+    let mut best: (Vec<u32>, Vec<u32>) = (vec![], vec![]);
+    for &s in stops {
+        best = best_slot(net, &best.0, s, &mut memo)?;
+    }
+    (net.path_reversals(&best.1).len() < turns && order_cost(net, &best.1) < order_cost(net, path) - 0.001).then_some(best)
 }
 
 /// The sum of the distances along `path` between every two of `stops`, as the line's trains run
@@ -1473,3 +1502,7 @@ mod upgrade_tests;
 /// T-1382: the changes the clock worker reads its state rows again for.
 #[cfg(test)]
 mod changed_tests;
+
+/// T-1964: station placements across joints between pieces of track.
+#[cfg(test)]
+mod station_sweep_tests;

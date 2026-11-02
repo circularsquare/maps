@@ -336,7 +336,7 @@ switch on, the track tool follows the real network the layer draws.
   and shows that: a spot is refused when the
   platform (half its length each way, all of it from a dead end node) and a station's reach beyond
   come within 1 m of the next station, junction or track end, a drawn route's plain joints within
-  reach joined through when the pieces match (built or blueprint, tracks, not a crossover), as the
+  reach joined through when the pieces match (built or blueprint, tracks, high speed, not a crossover), as the
   track model joins them; or when a flat crossing (the map's marks) is under the platform. Then the
   clock worker tries the real edit
   (`TrackApi.preview_station`) and its answer replaces the guess; a refused spot stays where the
@@ -556,12 +556,26 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
 [T-109 to T-112, T-233, T-237, T-239; `map/stopMarkers.ts`] A line is made from the Lines tab
 (New line, name it, click stations; [ui-inspectors.md](ui-inspectors.md)) and its stops edited from
-the line panel (Edit stops). Map clicks test every insertion position and take the shortest valid
-route, keeping the existing stop order; removing a stop leaves the others in order. Where several
+the line panel (Edit stops). Map clicks test every insertion position and take the cheapest valid
+route, keeping the existing stop order: its length, plus per reversal twice that length (at least
+5 km, `order_cost`), so stops that lie along one way through the track run straight along it unless
+that way is over three times as long (T-1899). Every stop edit of an open line whose route then
+reverses also tries its stops again one at a time in their order, as clicks would add them, and
+takes that order when it reverses fewer times and costs less (`straighten`); removing a stop
+otherwise leaves the others in order. Where several
 positions give the same path (a station on a stretch the line runs out and back over, past a
 reversal), the stop goes where the stops lie closest together along the path (least sum of
 distances between every two stops), so it is served on the pass that leads on to the rest of the
 line, whatever order the stations were clicked in (T-1674); a full tie goes to the later position.
+
+A **new line** (T-1899) is one from New line until its stop editing first ends (Done, Enter, Escape,
+another tool or line). While it is new, each stop added or removed on the map sets its trains: high
+speed when more than half its route's km is high-speed track, ordinary otherwise (a track's New line
+button does the same for the two stops it starts with). The type is set before the stops in the undo
+history, so an undo takes the stop back first. Setting the type by hand ends this for that line; a
+line edited later keeps its type. Where markers overlap under a click, the line's stops win, then
+stations the line's path reaches as it is, then the rest it can reach; on a new line, a station no
+running line's trains stop at then wins over one they do; then the nearest.
 
 **Stop editing mode** (Edit stops, New line, Copy line):
 

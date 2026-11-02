@@ -28,6 +28,25 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - data/work/pre-T1854/terrain (58 MB): delete once T-1854's terrain is seen clean in play. data/work/terrain-fine/
   (3.1 GB): T-1854's intermediate, kept for threshold tweaks.
 - Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
+- 11-02 later: master afb75407 (T-1926 crowding strip 9ad82dee, T-1902 trip explorer cc3972d2, T-1906 fares/loans
+  afb75407); 8800 at afb75407, smoke 20/20 both shades. Smoke's "far new game" Tokyo riders fell 76,870 -> 15,591 with
+  T-1906 (a New York start charges US fares in Tokyo at 1.00x): asked Anita.
+- t1899 stop logic DONE 11-02, uncommitted in the main tree (archived; no strings). Its edits share wasm.rs, params.rs,
+  clock.worker.ts, protocol.ts with t1964/t1965: commit the main tree once those two report, then land the trees.
+- Trees t1929 (road crossings) and t1898 (blueprint selection) DONE, waiting to land: the main tree's uncommitted
+  sim/src/track/wasm.rs (t1964's) blocks the fast-forward. Land after t1964 commits; both add WASM functions.
+- Disk (maps-d6's request 11-02): world_run's old join backups deleted on Anita's word (12.0 GB; kept 20261030-134355).
+  sim/target/debug (4.3 GB): clear only between rounds with no main-tree agent building.
+- Mine, uncommitted 11-02 (Anita's text review): "Trips possible by train" (MarketTrip.tsx, ui-inspectors.md), loan hover
+  "Interest would be $X per day. Average profit over the past 7 days was $Y per day." (MoneyTab.tsx), bus average-speed
+  hover dropped (BusInspector.tsx, it said "less the turning"). New style rule in her global CLAUDE.md: never "less" for
+  minus. Asked her about "Car for these trips" (explained; proposal pending).
+- t1906 follow-up DONE 11-02, uncommitted (scales["@"] = start country's income scale; Tokyo in smoke's far game 42,288,
+  was 76,870 before T-1906, since all start fares are 2.5x the old). Anita 11-02: fares scale flat (whole curve), as built.
+- Mine, uncommitted: trip panel order "Trips possible by train", "Effective time", "Car on the same trips" (Anita OK'd);
+  no hovers on the first two; car hover "Effective time by car on trips possible by train."; a closed far end "No route."
+- t1906 resumed 11-02: each country's default fare scale = its own income level relative to the start (^0.7 kept;
+  Anita: "maybe even lower tbh but dont want linear").
 - Next free task id: T-1974 (ranges up to T-1973 handed to agents below).
 
 ## In flight (maps-a7; her 11-02 batch is T-1892 to T-1907, verbatim in notes/todo-2026-11-02.md)
@@ -47,10 +66,23 @@ Agents running (each with an id range for new tasks):
 - a2fb39543e201af98 t1906 (Opus), main tree, port 6150: fare dials 1.0x + starting fare by place, loan cap. T-1960-1963.
 - a27084daa2f6582bd t1965 (Opus), main tree, port 6160: drawn trains never overlap on the same track and level (her test
   track: express drawn through the local). T-1966-1969.
-- a5dd38be8410cf911 t1964 (Opus), main tree, port 6130: stations across several pieces of track. T-1970-1973.
+- t1964 DONE 11-02, uncommitted (archived; no strings; real save unchanged, it has no plain joints). Main tree now
+  waits only on t1965 (shares wasm.rs, params.rs, clock.worker.ts, protocol.ts with t1899/t1964): commit all main-tree
+  work when t1965 reports, then land trees t1929 and t1898 (both touch wasm.rs; expect a rebase conflict there).
 - Disk: only ~21 GB free on C: (11-02): no new worktrees; remove t1929/t1898/t1902 trees as they land.
 - Mine, uncommitted: tangent line dotted and as faint as the circle (style.css, ui-building.md); Anita 11-02 OK'd junction
   and terminal prices following the level table, the capacity gauge, 12 px join reach.
+- Anita 11-02: "this week i'd like to try adding more of the world"; first think about build speedups and a streamlined
+  country process. a59f655aa8c81f4dc t1974 (Opus, research only): wall time per stage from world_run logs, ranked
+  speedups, files T-1976-1981. ac0d3e79f8fced0e3 t1975 (Opus, research only): pitfalls, token costs, a draft playbook
+  at notes/T-1975-adding-a-country.md (apply to docs/adding-a-city.md after Anita sees it), files T-1982-1987.
+  Next free id: T-1988. t1975 DONE 11-02: notes/T-1975.md, draft notes/T-1975-adding-a-country.md (190 lines vs 710;
+  to become docs/adding-a-country.md, rest moves to docs/world-run.md and adding-a-city-by-hand.md, T-1987); filed
+  T-1982-1987. Tokens: clean country ~6M, faults decide cost; wakes 25-77% of tokens. Shown to Anita 11-02.
+  t1974 DONE 11-02: notes/T-1974.md; filed T-1976-1981. Market register re-reads 900 MB of joint files per row (7-9 min,
+  holds the registry lock). Proposed to Anita: before Cambodia/Malaysia build T-1976 (market reads only touched files),
+  T-1977 (parallel outlines), T-1982 preflight, T-1983 kit, T-1985 drive >3.0, T-1986 heal by place + busy port, T-1987
+  playbook swap; T-1979 and T-1981 alongside; T-1978 before Mexico; T-1980 + AWS before Indonesia/India/Brazil/replan. Next countries after: Cambodia, Malaysia (T-1738), then Mexico, Turkey.
 Not started: T-1896 gap highlight (drawing; after t1929/t1898 land), T-1903 demand-bubble total, T-1904 speed (switching
 homes/destinations, local before whole-world solve, global vs local label), T-1907 map drawing (hair/skin, overlapping
 line clicks, fading, riders on track, rotation).
@@ -75,6 +107,9 @@ line clicks, fading, riders on track, rotation).
 5. T-1794 train-count settle; Southeast Asia (T-1738) when cores are spare. Waiting on Anita: bus design (T-1445).
 
 ## Lessons from this run
+- A new row or hover that has an existing counterpart (the local trip panel's Effective time for the market's) copies
+  its pattern; Anita 11-02: "theres a clear reference here, i think its bad that we didnt use that". Put the reference in
+  briefs for any panel work.
 - Look at every UI agent's pictures yourself for spacing before reporting done (Anita, 2026-10-30, the Cities World
   row: "i really feel like you guys should be able to check this"). Measure text-to-rule gaps against the row pitch.
 - An agent's tooltip text can wrap mid-range in its own picture; read the pictures, not just the strings.

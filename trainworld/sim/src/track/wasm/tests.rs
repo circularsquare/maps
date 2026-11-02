@@ -160,10 +160,12 @@ fn an_express_added_over_constructed_track_runs() {
     assert!(a.w.svc.lines[ex as usize].running, "over constructed track the line runs at once");
     assert_eq!(a.set_line_fast(ex, true), 0, "{}", a.issues());
     assert_eq!(a.set_line_cars(ex, 10), 0, "{}", a.issues());
-    assert_eq!(a.set_auto_headway(ex, 900, 1200, 0), 0, "{}", a.issues());
+    // (it turns where the all-stops line does, so takes its time, T-1965: a medium headway well
+    // clear of a whole number of trains)
+    assert_eq!(a.set_auto_headway(ex, 900, 1500, 0), 0, "{}", a.issues());
     let (trip, tph) = (a.w.svc.lines[ex as usize].round_trip, a.w.net.line_tph[ex as usize]);
-    assert_eq!(a.w.svc.lines[ex as usize].trains, [auto_trains(trip[0], 900), auto_trains(trip[1], 1200), 0]);
-    assert!(tph[0] > 3.9 && tph[1] > 2.9 && tph[2] == 0.0, "{tph:?}");
+    assert_eq!(a.w.svc.lines[ex as usize].trains, [auto_trains(trip[0], 900), auto_trains(trip[1], 1500), 0]);
+    assert!(tph[0] > 3.9 && tph[1] > 2.3 && tph[2] == 0.0, "{tph:?}");
     // nothing to construct: refused, and the issue says so
     assert_eq!(a.construct_line(ex), 1);
     assert_eq!(a.issue_kinds(), "NothingToConstruct");
@@ -2338,7 +2340,8 @@ fn a_station_on_a_stretch_with_a_ramp_leaves_the_ramp_where_it_was() {
 #[test]
 fn a_joint_that_cannot_be_merged_says_so() {
     // built beside blueprint, single beside double track (blueprint or built): the platform
-    // reaches the joint, which stays, and the answer names it (not "a junction or another station")
+    // reaches the joint, which stays, and the answer names it (not "a junction or another station");
+    // within 5 m of it the station goes on the joint (T-1964)
     let cases: [(&str, Box<dyn Fn(&mut TrackApi, u32, u32)>, [u8; 2]); 4] = [
         ("built | blueprint", Box::new(|a, e1, _| assert_eq!(a.construct(&[e1], &[]), 0, "{}", a.issues())), [2, 2]),
         ("blueprint | built", Box::new(|a, _, e2| assert_eq!(a.construct(&[e2], &[]), 0, "{}", a.issues())), [2, 2]),
@@ -2348,8 +2351,9 @@ fn a_joint_that_cannot_be_merged_says_so() {
     for (what, setup, tracks) in cases {
         for (x, k) in joint_scan(&*setup, [0, 0, 0], tracks) {
             let near = (x - 1000.0).abs() < 105.0;
-            match (near, k.as_str()) {
-                (true, "PlatformJoint") | (true, "SplitPoint") | (false, "") => {}
+            let on = (x - 1000.0).abs() < 5.0;
+            match (near && !on, k.as_str()) {
+                (true, "PlatformJoint") | (false, "") => {}
                 _ => panic!("{what} at {x}: {k:?}"),
             }
         }

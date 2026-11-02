@@ -64,9 +64,10 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   if (!l || !net) return null;
   const name = `${l.name} train`;
   const r = ov.renderer;
-  const i = r.board ? r.tripIndex(profile, dep - r.tripsEpoch) : -1;
-  // a train standing at a terminal for its next departure is drawn past its trip (T-206)
-  const at = tripAt(net, profile, dep, clock.now(), i >= 0 && r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
+  const i = r.tripIndex(profile, dep - r.tripsEpoch);
+  // a train standing at a terminal for its next departure is drawn past its trip (T-206), and one
+  // the guard holds behind its timetable (T-1965)
+  const at = tripAt(net, profile, dep + r.tripLag(i), clock.now(), i >= 0 && r.board && r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
   const st = w.lineStats[l.id];
   if (!at || !st || !display.peek().trainLoad) return [name];
   const dv = demandView.peek();

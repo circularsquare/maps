@@ -23,7 +23,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
   const st = w.lineStats[l.id];
   // a train standing at a terminal for its next departure is drawn past its trip (T-206)
   const ren = live.overlay!.renderer, ti = ren.tripIndex(profile, dep - ren.tripsEpoch);
-  const at = tripAt(net, profile, dep, clock.now(), ti >= 0 && ren.tripEnds ? ren.tripEnds[ti] + ren.tripsEpoch : -Infinity);
+  const at = tripAt(net, profile, dep + ren.tripLag(ti), clock.now(), ti >= 0 && ren.tripEnds ? ren.tripEnds[ti] + ren.tripsEpoch : -Infinity);
   const name = stationNames(w);
   const run = Math.floor(profile / 3) % 2;
   const stops = run === 0 ? l.stops : [...l.stops].reverse();

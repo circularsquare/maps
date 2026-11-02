@@ -17,7 +17,7 @@
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
-import { lineDraft, stopEditing } from "../game/ui";
+import { lineDraft, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { queryClock } from "../workers/clockClient";
 import { tagLines } from "./labelLayout";
@@ -295,18 +295,36 @@ export class StopMarkers {
   }
 
   /** The station whose marker is under a map point (CSS px), preferring stops, then the ones that
-   * can be added, then the nearest. */
+   * can be added, then, for a new line, stations no trains stop at yet (T-1899), then the nearest. */
   pick(px: number, py: number): string | null {
     if (!this.line) return null;
+    const served = newLine.peek()?.line === this.line.num ? this.served() : null;
+    // rank, then 1 for a station no trains stop at on a new line, then nearness
     let best: string | null = null, bestRank = -1, bestD = Infinity;
     for (const [id, m] of this.marks) {
       if (!m.shown) continue;
       const d = Math.hypot(m.x - px, m.y - py);
       if (d > m.d / 2 + 2) continue;
-      const rank = RANK[this.tierOf(id)];
+      const rank = RANK[this.tierOf(id)] * 2 + (served && !served.has(id) ? 1 : 0);
       if (rank > bestRank || (rank === bestRank && d < bestD)) [best, bestRank, bestD] = [id, rank, d];
     }
     return best;
+  }
+
+  private servedFor: { w: WorldView; ids: Set<string> } | null = null;
+  /** The stations some other line's running trains stop at. */
+  private served(): Set<string> {
+    const w = world.peek();
+    if (!w) return new Set();
+    if (this.servedFor?.w !== w) {
+      const ids = new Set<string>();
+      for (const l of w.save.lines) {
+        const st = w.lineStats[l.id];
+        if (l.num !== this.line?.num && st?.status === "running" && st.trainsNeeded.some((t) => t > 0)) for (const s of l.stops) ids.add(s);
+      }
+      this.servedFor = { w, ids };
+    }
+    return this.servedFor.ids;
   }
 
   /** What hovering a marker says. */

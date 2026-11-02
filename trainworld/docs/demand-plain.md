@@ -141,9 +141,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   train 101 effective minutes against walking's 91, went from train 7% to none.
 - Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 6.0 in the UK,
   8.4 in Japan, 16 in China, 51 in India (by GDP per head in US dollars, to the power -0.7). The
-  fare is the player's curve of trip length times the country's fare scale (1.0 everywhere until
-  the player sets one; a new game's curve starts at $2.50 in the US, $1.30 in Japan, $0.22 in India,
-  set once from where it starts; older saves keep their fares by income), paid once a trip; choosing
+  fare is the player's curve of trip length times the country's fare scale (by income, so a new
+  game's fares start at $2.50 in the US, $1.30 in Japan, $0.22 in India wherever it starts, or the
+  player's own; older saves keep their fares), paid once a trip; choosing
   between routes sees only its first stretch. On high-speed lines the fare above the base is 1.5
   times as much (or the player's multiplier), by the share of the trip's km on them, so riders weigh
   the dearer fare. A transfer fare the player sets ($0 to start) is paid at each change of line,
