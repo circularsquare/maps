@@ -43,9 +43,10 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 
 ## The demand selector and purpose filter
 
-- **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
+- **None / Homes / Destinations / Total** [T-132, T-1903, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101]; starting a new game turns Destinations on, a start on the world map included [T-801, T-1441], and opening a saved game leaves the setting as it is. Destinations is every activity end (work, shopping, social, school and
-  university, airport, medical, attractions). Before the buttons, joined to them, the row's icon [T-1137]: a selected
+  university, airport, medical, attractions); Total is both ends summed per bubble, trips to and from
+  the place (`commuterEnd` "both"), no hover on the button, like Homes and Destinations. Before the buttons, joined to them, the row's icon [T-1137]: a selected
   demand bubble, filled with the default Train share ramp's middle purple mixed 38% toward white
   (`.hint-cell .bubble`), no outline [T-1835]; a click folds the row (Folding, below).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
@@ -186,7 +187,8 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   (`bubbleLevel`). Resolution 9 is the finest at any step. All levels are built at
   once, so the setting costs no rebuild.
 - **Area is trip legs**, outward and return, at a fixed density: 88,900 legs/km² for homes
-  (50,000 with the radius then cut by a quarter, T-1294) and 160,000 for destinations, so a home
+  (50,000 with the radius then cut by a quarter, T-1294) and 160,000 for destinations and for Total
+  (T-1903: so a job centre looks as under Destinations and a home area about 0.75 times its Homes radius), so a home
   bubble is 1.34 times the radius of a destination bubble of the same legs; times 0.75
   (`BUBBLE_BASE`, T-1852: the old 0.75x is the new 1x) times the Bubble size
   setting (0.5-2x width). No minimum size; nobody
@@ -215,13 +217,13 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   their own zone only.
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
-  Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
+  Destinations, "to and from here" for Total and a Total selection's far end [T-1903], a purpose's name before "trips" under a filter), then a thin **mode bar**
   (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, widths by share, no numbers. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
   airport badges too). A bubble's hover has no split by trip purpose (Anita, 2026-10-19, T-697).
 - **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
   halo) on each airport's busiest terminal cell, so on its biggest destination bubble; no bubble
-  of its own. Shown with Destinations under All purposes or Airport, for the focused zone and the
+  of its own. Shown with Destinations or Total under All purposes or Airport, for the focused zone and the
   nearby zones, hidden while a bubble is selected and in the city overview. Airports are the cells
   that receive the airport purpose's legs (500 a day or more), terminal cells within 2.5 km sharing
   one plane. Planes take no clicks (a click reaches the bubble under); the hover, within 8 px of
@@ -255,7 +257,7 @@ riders counters keep their own smoothing (Live feel).
   Search picks the zone by the nearest boundary.
 - **Nearby zones**: up to three more zones whose boundaries touch the visible map, nearest first,
   show their own bubbles with the same look, end, purpose and day, under the focused zone's, while
-  Homes or Destinations is on and above zoom 8.5. Each has its own bubble worker; their hovers
+  a demand view is on and above zoom 8.5. Each has its own bubble worker; their hovers
   read as the focused zone's. A click on one focuses
   its zone, which takes over that zone's worker and bubbles, and selects the bubble. Selections,
   far ends and the inspector are the focused zone's only. The demand pool opens a
@@ -301,9 +303,13 @@ riders counters keep their own smoothing (Live feel).
   for starting a box, but not over dragging a blueprint point [T-474]. Escape or an empty click
   clears the selection.
 - **On the map**: the other bubbles hide; the selected ones are outlined, and their far end
-  (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
+  (destinations for Homes, homes for Destinations, both for Total: the two `flows` answers merged
+  cell by cell [T-1903]) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
-  far-end bubble opens the trip explorer for the pair [T-208].
+  far-end bubble opens the trip explorer for the pair [T-208]; the explorer counts one way, so from
+  a Total selection it opens as homes or destinations, whichever way has more of the pair's trips
+  (for a far zone or place, likewise by the longer trips; for a selected city's trips, by the
+  selection's bigger end) [T-1903].
 - **Loading mark** [T-1216, `DemandOverlay.setLoading`]: from the click until the selection's far
   end is drawn, the selected bubbles' outline is the panels' spinner drawn by the overlay: a quarter
   of it in full map ink, the rest at 30%, turning clockwise once every 1.2 s. None while demand or
@@ -326,7 +332,8 @@ riders counters keep their own smoothing (Live feel).
   other zone bubbles are the same but twice as long, 12% of the map's longer side [T-739] (in each
   zone bubble's colour, running from that bubble toward the selected one). Under every bubble, no hover (`setLines` in
   `map/demandOverlay.ts`).
-- **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
+- **The inspector** (`ui/inspector/CommutersInspector.tsx`): titled "Trips from homes here",
+  "Trips to destinations here" or "Trips to and from here" (Total, both ends' legs summed [T-1903]); the selection's local trip legs and
   split; no list of far-end places and no inter-city trips (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School,
   Errands, Leisure, Airports, Medical and Attractions [T-142, T-192, T-263, T-1253], with a
@@ -361,7 +368,7 @@ inspector lists no commuters or inter-city riders [T-1812].
 - On the map a bubble selection's are always drawn (no setting), except under a local purpose
   filter, which draws only that purpose's outings across a zone line [T-1229] (none under Work,
   Airport and Attractions): the far end of its own end (Homes: where the trips go; Destinations:
-  where they come from). Only zones other than the focused one are drawn;
+  where they come from; Total: both summed by place and zone, hover "to and from" [T-1903]). Only zones other than the focused one are drawn;
   same-zone counts stay in the inspector [T-139].
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position. At 9.5 and below they
   become one labelled bubble per other zone at its registry centre, names and
@@ -380,8 +387,8 @@ inspector lists no commuters or inter-city riders [T-1812].
 
 ## Zoomed far out: one bubble per zone
 
-[T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below (below zoom 2.5, the whole world, nothing is drawn and the local bubbles stay off: `CITY_MARKS_MIN_ZOOM` [T-1046]; a selected city still draws), with Homes or
-Destinations on and no bubble selection, every zone in the regional market, the focused
+[T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below (below zoom 2.5, the whole world, nothing is drawn and the local bubbles stay off: `CITY_MARKS_MIN_ZOOM` [T-1046]; a selected city still draws), with Homes,
+Destinations or Total on and no bubble selection, every zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it, which counts only zones whose market pack

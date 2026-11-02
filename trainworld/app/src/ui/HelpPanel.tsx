@@ -12,6 +12,9 @@ const toolKeys = Object.keys(TOOL_KEYS).join(", ");
 const tabKeys = Object.keys(TAB_KEYS).map((k) => k.toUpperCase()).join(", ");
 
 const SECTIONS: [string, [string, string][]][] = [
+  ["Map", [
+    ["Right drag, Ctrl drag", "Rotate the map"],
+  ]],
   ["Demand bubbles", [
     ["Shift drag", "Draw a box to select bubbles"],
     ["Hold, then drag", "Draw the box from a bubble"],

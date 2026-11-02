@@ -1,6 +1,6 @@
-// The blueprint tool (T-333): a drag draws a box on the map, and the blueprint track it touches and
-// the blueprint stations inside it are picked (game/blueprintPick.ts); dragging the pick moves the
-// nodes that were inside the box (T-1898). Shift adds to what is picked.
+// The blueprint tool (T-333): a drag draws a box on the map, and the blueprint track with both ends
+// inside it and the blueprint stations inside it are picked (game/blueprintPick.ts, T-2019);
+// dragging the pick moves the nodes that were inside the box (T-1898). Shift adds to what is picked.
 // A click picks the piece under the pointer, a click on nothing clears. Shift+click adds the track on
 // the shortest way there from the pick, or takes a picked piece out; a double click picks the run
 // junction to junction (T-1680).
@@ -43,25 +43,6 @@ const HOLD_SLOP_PX = 8;
 const MAX_SQUARES = 400;
 
 type Rect = [number, number, number, number];
-
-/** Whether the segment (ax, ay)-(bx, by) touches the rectangle (Liang-Barsky clipping). */
-export function segmentTouches(r: Rect, ax: number, ay: number, bx: number, by: number): boolean {
-  let t0 = 0, t1 = 1;
-  const dx = bx - ax, dy = by - ay;
-  const clip = (p: number, q: number) => {
-    if (p === 0) return q >= 0;
-    const t = q / p;
-    if (p < 0) {
-      if (t > t1) return false;
-      if (t > t0) t0 = t;
-    } else {
-      if (t < t0) return false;
-      if (t < t1) t1 = t;
-    }
-    return true;
-  };
-  return clip(-dx, ax - r[0]) && clip(dx, r[2] - ax) && clip(-dy, ay - r[1]) && clip(dy, r[3] - ay);
-}
 
 export class BlueprintBox {
   private box: HTMLDivElement;
@@ -256,7 +237,7 @@ export class BlueprintBox {
   private fingers = new Set<number>();
 
   /** A finger on the map with the tool on: a tap adds or takes out the piece under it, a hold then
-   * drag adds what a box touches, a press on the pick drags it, anything else pans or zooms. */
+   * drag adds what a box holds, a press on the pick drags it, anything else pans or zooms. */
   private touchDown(e: PointerEvent) {
     this.fingers.add(e.pointerId);
     if (this.fingers.size > 1) return void this.dropHold(); // a pinch
@@ -447,25 +428,15 @@ export class BlueprintBox {
     bpPicked.value = has ? withoutPicked(cur, hit) : unionPicked(cur, hit);
   }
 
-  /** The track a box touches and the stations (drawn, so zoomed in enough) inside it: the
-   * blueprint ones if there are any, else the constructed ones (T-829). Only the nodes inside it
-   * move with a drag (T-1898, Anita: "only move the waypoints that are in the selection box"):
-   * track partly inside stretches to follow. */
+  /** What a box holds: the track with both its ends inside it and the stations (drawn, so zoomed in
+   * enough) inside it; the blueprint ones if there are any, else the constructed ones (T-829). Track
+   * only partly inside is not picked (T-2019, Anita), so the pick shows what a drag moves: the
+   * nodes inside the box (T-1898, "only move the waypoints that are in the selection box"). */
   private within(r: Rect): BpPicked {
     const n = this.overlay.renderer.net, w = world.peek();
     const out: BpPicked = { edges: [], stations: [], nodes: [] };
     if (!n || !w) return out;
     const p = new Float64Array(4);
-    for (const [id, pts] of n.edgePts) {
-      for (let k = 0; k + 5 < pts.length; k += 3) {
-        this.overlay.toScreenInto(pts[k], pts[k + 1], p, 0);
-        this.overlay.toScreenInto(pts[k + 3], pts[k + 4], p, 2);
-        if (segmentTouches(r, p[0], p[1], p[2], p[3])) {
-          out.edges.push(id);
-          break;
-        }
-      }
-    }
     if (this.map.getZoom() >= STATIONS_ZOOM) {
       for (let i = 0; i < n.stationCount; i++) {
         this.overlay.toScreenInto(n.stations[i * 3], n.stations[i * 3 + 1], p, 0);
@@ -473,15 +444,25 @@ export class BlueprintBox {
       }
     }
     const inside = new Set(out.stations);
-    const picked = new Set(out.edges);
-    for (const e of w.edges) {
-      if (!picked.has(e.id)) continue;
-      for (const id of [e.a, e.b]) {
+    const held = new Map<number, boolean>();
+    const holds = (id: number) => {
+      let v = held.get(id);
+      if (v === undefined) {
         const node = w.nodes.get(id);
-        if (!node || inside.has(id)) continue;
-        const [x, y] = this.overlay.toScreen(...toLocal(node.lng, node.lat));
-        if (x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]) inside.add(id);
+        if (!node) v = false;
+        else {
+          const [x, y] = this.overlay.toScreen(...toLocal(node.lng, node.lat));
+          v = x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3];
+        }
+        held.set(id, v);
       }
+      return v;
+    };
+    for (const e of w.edges) {
+      if (!holds(e.a) || !holds(e.b) || !n.edgePts.has(e.id)) continue;
+      out.edges.push(e.id);
+      inside.add(e.a);
+      inside.add(e.b);
     }
     out.nodes = [...inside];
     return onlyOneKind(out);

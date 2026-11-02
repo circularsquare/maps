@@ -7,7 +7,6 @@ import type { ComponentChildren, RefObject } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { decodeRelated, type RelatedGroup } from "../../game/relatedLines";
 import { BAR, LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight, relatedLayout } from "../../game/relatedLayout";
-import { distance } from "../../game/format";
 import type { LineInput } from "../../game/types";
 import { selection } from "../../game/ui";
 import { linesByNum, stationNames, world } from "../../game/world";
@@ -76,8 +75,6 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
     rowY: (i) => geo.ys[i] ?? i * 25 + 12.5,
     lineName: (n) => byNum.get(n)?.name ?? "",
     stopName,
-    stopCount: (n) => byNum.get(n)?.stops.length ?? 0,
-    dist: distance,
   });
   const listH = geo.ys.length ? geo.ys[geo.ys.length - 1] + 13 : lay.rows.length ? lay.rows[lay.rows.length - 1].y + 13 : 0;
   const pad: [number, number] = [Math.ceil(Math.max(0, -lay.extent[0])), Math.ceil(Math.max(0, lay.extent[1] - listH))];
@@ -95,10 +92,10 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
 
   // crossing bars: the bullets after a row's name (all of them, up to TALL_MAX, where more than two
   // stretch the row's mark, T-1786), or the first two lines crossing a side line's row
-  const bars = lay.rows.map((r, i) => {
+  const bars = lay.rows.map((r) => {
     const drawn = new Set(r.drawn);
     const lines = r.lStop >= 0 ? transfers(r.lStop, drawn).map((o) => o.num) : r.cross.slice(0, ROUND_MAX);
-    return lines.slice(0, lines.length > ROUND_MAX ? TALL_MAX : ROUND_MAX).map((n) => ({ n, tip: lay.crossTip(i, n) }));
+    return lines.slice(0, lines.length > ROUND_MAX ? TALL_MAX : ROUND_MAX);
   });
   const W = lay.width;
   const rows: ComponentChildren[] = [];
@@ -124,17 +121,17 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
     <div class="related" style={{ "--gw": W + "px", "--spine": lay.spineX + "px", paddingTop: geo.pad[0] + "px", paddingBottom: geo.pad[1] + "px" }}>
       <svg class="related-draw" width={W} height={listH + geo.pad[0] + geo.pad[1]}>
         <g transform={`translate(0 ${geo.pad[0]})`}>
-        {lay.rows.map((r, i) => bars[i].map((b, k) => (
+        {lay.rows.map((r, i) => bars[i].map((n, k) => (
           <line x1={1} x2={W - 1} y1={r.y + barOffset(k, bars[i].length)} y2={r.y + barOffset(k, bars[i].length)}
-            stroke={byNum.get(b.n)?.colour} stroke-width={LINE} data-tip={b.tip} onClick={() => pick(b.n)} />
+            stroke={byNum.get(n)?.colour} stroke-width={LINE} onClick={() => pick(n)} />
         )))}
         {lay.columns.map((c) => {
           const stroke = byNum.get(c.line)?.colour;
           return (
-            <g class="link" data-tip={c.tip} onClick={() => pick(c.line)}>
+            <g class="link" onClick={() => pick(c.line)}>
               {[c.d, ...c.ends.map((e) => e.d)].map((d) => <path d={d} fill="none" stroke="var(--bg)" stroke-width={LINE + 3} />)}
               <path d={c.d} fill="none" stroke={stroke} stroke-width={LINE} />
-              {c.ends.map((e) => <path d={e.d} fill="none" stroke={stroke} stroke-width={LINE} data-tip={e.tip} />)}
+              {c.ends.map((e) => <path d={e.d} fill="none" stroke={stroke} stroke-width={LINE} />)}
             </g>
           );
         })}

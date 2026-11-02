@@ -140,6 +140,11 @@ export function SettingsTab() {
       <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} percent set={(v) => setDisplay("lineWidth", v)} />
       <Slider label="Base map" min={0} max={1} step={0.05} value={d.basemapContrast} percent
         tip="Base map contrast" set={(v) => setDisplay("basemapContrast", v)} />
+      <div class="checks">
+        <Check checked={d.rotateMap} onChange={(v) => setDisplay("rotateMap", v)}>
+          Rotate map with right drag
+        </Check>
+      </div>
       <div class="h">Theme</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />

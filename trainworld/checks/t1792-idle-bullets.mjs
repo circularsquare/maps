@@ -43,7 +43,7 @@ try {
   check(tips.length > 0, `Lines tab: ${tips.length} dimmed bullet(s)`);
   check(tips.every((t) => t === null || /Not running$/.test(t)), `hovers end with "Not running": ${JSON.stringify([...new Set(tips)])}`);
   const dim = await page.evaluate(() => { const e = document.querySelector('.chip.idle'); return e && getComputedStyle(e).opacity; });
-  check(dim === '0.4', `idle opacity ${dim}`);
+  check(dim === '0.7', `idle opacity ${dim}`);
   // a running line's bullets are not dimmed
   const others = await page.$$eval('.chip:not(.idle)', (els) => els.length);
   check(others > 0, `${others} undimmed bullets`);

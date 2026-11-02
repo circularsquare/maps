@@ -52,7 +52,17 @@ export function defaultScale(country: string | undefined, scales: Record<string,
 export function fareScale(country: string | undefined, scales: Record<string, number> | undefined): number {
   const own = country && country !== START && country !== EVERY ? scales?.[country] : undefined;
   if (own === undefined || !Number.isFinite(own)) return defaultScale(country, scales);
-  return relative(scales) ? hundredth(own) * defaultScale(country, scales) : hundredth(own);
+  return multipleOf(country!, own, scales) * defaultScale(country, scales);
+}
+/** T-2021: the player's multiple of the country's default fares, to the nearest 0.01x, as the Money
+ * tab shows it. A save from before T-1906 keeps the scale itself, so its multiple is that over the
+ * default. Every effect of a fare multiplier works from this rounded multiple. */
+function multipleOf(country: string, own: number, scales: Record<string, number> | undefined): number {
+  return relative(scales) ? hundredth(own) : Math.min(SCALE_MAX, Math.max(0.01, Math.round((own / defaultScale(country, scales)) * 100) / 100));
+}
+/** T-2021: a player's scale as kept, so that it holds a multiple rounded to 0.01x. */
+export function tidyOwn(country: string, v: number, scales: Record<string, number> | undefined): number {
+  return relative(scales) ? hundredth(v) : multipleOf(country, v, scales) * defaultScale(country, scales);
 }
 /** T-1286: per country, its scale over its income's where not 1: the factor the regional market
  * weighs fares from there at. In a game from T-1906 on that is every country in the income table. */
@@ -66,13 +76,11 @@ export function fareFactors(scales: Record<string, number> | undefined): Record<
   }
   return out;
 }
-/** A player's scale as kept: a hundredth within range (T-1554; saved ones are tenths). */
-export const tidyScale = hundredth;
 /** T-1906: a scale in the panel's terms, a multiple of the country's default (1.00x until the
- * player sets one), and back to what is stored. */
-export const shownScale = (scale: number, country: string, scales: Record<string, number> | undefined): number => scale / defaultScale(country, scales);
+ * player sets one), to 0.01x, and back to what is stored. */
+export const shownScale = (scale: number, country: string, scales: Record<string, number> | undefined): number => Math.round((scale / defaultScale(country, scales)) * 100) / 100;
 export const storedScale = (shown: number, country: string, scales: Record<string, number> | undefined): number =>
-  tidyScale(relative(scales) ? shown : shown * defaultScale(country, scales));
+  tidyOwn(country, relative(scales) ? shown : shown * defaultScale(country, scales), scales);
 
 // T-1521: a save from before kept its curve and scales under T-1277's rule (GDP per head at PPP, to
 // the 0.5). It loads with its home country's fares weighing exactly as they did (others within the

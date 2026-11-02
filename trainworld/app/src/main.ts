@@ -59,7 +59,7 @@ import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { ReversalMarks } from "./map/reversalMarks";
-import { startTrackHover } from "./map/trackHover";
+import { lineSizeAt, startTrackHover } from "./map/trackHover";
 import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
@@ -421,7 +421,7 @@ function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
   // lines, stations and trains, then commuter bubbles while they are shown, then the rest (T-1515)
-  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true);
+  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true, (num, seg) => lineSizeAt(overlay, num, seg));
 }
 capacity.selectClick = selectAt;
 // Linking stops when its station is no longer the selection or a tool is picked.

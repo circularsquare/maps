@@ -99,11 +99,11 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     if (demandView.peek() !== at) ensure();
   };
 
-  /** Which airports to badge now: Destinations bubbles are on and show the airport's trips. */
+  /** Which airports to badge now: Destinations or Total bubbles are on and show the airport's trips. */
   const wanted = () => {
     const sel = selection.peek()?.kind;
     const p = purposeFilter.peek();
-    return display.peek().commuters && display.peek().commuterEnd === "work" && (p === "all" || p === "airport")
+    return display.peek().commuters && display.peek().commuterEnd !== "home" && (p === "all" || p === "airport")
       && !cityOverview.peek() && sel !== "commuters";
   };
 

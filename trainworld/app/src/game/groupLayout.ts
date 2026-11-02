@@ -54,12 +54,16 @@ export interface GroupOpts {
   crossings?: (key: string) => number;
   /** line `k` is drawn last place first should it be the spine (T-1894, north up, `game/northUp.ts`) */
   reversed?: (k: number) => boolean;
+  /** T-2016: line `k`'s bullet width, px (a two-character bullet is a pill wider than CHIP_W) */
+  chipW?: (k: number) => number;
 }
 
 /** A bar's width, the gap between lines running together, lines apart, px. */
 export const BAR = 5, GAP = 2, PITCH = BAR + GAP, SPREAD = 24;
-/** A named row's height, a tick row's, the bullets' pitch, room above and below, px. */
+/** A named row's height, a tick row's, a round bullet's pitch, room above and below, px. */
 export const NAME_H = 18, TICK_H = 8, CHIP = 18;
+/** A round bullet's width and the gap between bullets side by side, px (CHIP = CHIP_W + CHIP_GAP). */
+export const CHIP_W = 16, CHIP_GAP = 2;
 const PAD = 22, MARGIN = 11;
 /** Rows looked ahead when ordering; a crossing's cost against a row of likeness. */
 const AHEAD = 60, CROSS = 8;
@@ -354,28 +358,32 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
   });
   const near = new Map<string, GroupBullet[]>();
   for (const bu of bullets) { const key = `${bu.end}:${Math.round(bu.y)}`; near.set(key, [...(near.get(key) ?? []), bu]); }
+  const half = (bu: GroupBullet) => (o.chipW?.(bu.col) ?? CHIP_W) / 2;
+  // centre to centre of two bullets side by side
+  const apart = (p: GroupBullet, q: GroupBullet) => half(p) + half(q) + CHIP_GAP;
   for (const g of near.values()) {
     g.sort((p, q) => p.x - q.x);
-    // runs of bullets closer than CHIP spread round their mean
+    // runs of bullets that would touch go side by side, CHIP_GAP apart whatever their widths, round their mean
     let i = 0;
     while (i < g.length) {
       let j = i;
-      while (j + 1 < g.length && g[j + 1].x - g[j].x < CHIP) j++;
-      const m = (g[i].x + g[j].x) / 2;
-      for (let q = i; q <= j; q++) g[q].x = m + (q - i - (j - i) / 2) * CHIP;
+      while (j + 1 < g.length && g[j + 1].x - g[j].x < apart(g[j], g[j + 1])) j++;
+      const m = (g[i].x + g[j].x) / 2, off = [0];
+      for (let q = i + 1; q <= j; q++) off.push(off[off.length - 1] + apart(g[q - 1], g[q]));
+      for (let q = i; q <= j; q++) g[q].x = m + off[q - i] - off[off.length - 1] / 2;
       i = j + 1;
     }
   }
   for (const bu of bullets) {
     for (let tries = 0; tries < 3; tries++) {
-      const hit = lines.map((_, j) => xAt(j, bu.y)).filter((x, j) => j !== bu.col && Number.isFinite(x) && Math.abs(x - bu.x) < CHIP / 2 + BAR / 2);
+      const hit = lines.map((_, j) => xAt(j, bu.y)).filter((x, j) => j !== bu.col && Number.isFinite(x) && Math.abs(x - bu.x) < half(bu) + BAR / 2);
       if (!hit.length) break;
       const mid = hit.reduce((s, x) => s + x, 0) / hit.length;
-      bu.x = bu.x < mid ? Math.min(...hit) - CHIP / 2 - BAR / 2 - 1 : Math.max(...hit) + CHIP / 2 + BAR / 2 + 1;
+      bu.x = bu.x < mid ? Math.min(...hit) - half(bu) - BAR / 2 - 1 : Math.max(...hit) + half(bu) + BAR / 2 + 1;
     }
   }
   // room for bullets pushed past the left edge
-  const lo = Math.min(...bullets.map((bu) => bu.x - CHIP / 2));
+  const lo = Math.min(...bullets.map((bu) => bu.x - half(bu)));
   if (lo < 1) {
     const dx = 1 - lo;
     for (const xk of xs) for (let r = 0; r < R; r++) xk[r] += dx;
@@ -392,6 +400,6 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
     }
     return d;
   });
-  const width = Math.max(...xs.flat().filter(Number.isFinite).map((x) => x + MARGIN), ...bullets.map((bu) => bu.x + CHIP / 2 + 1));
+  const width = Math.max(...xs.flat().filter(Number.isFinite).map((x) => x + MARGIN), ...bullets.map((bu) => bu.x + half(bu) + 1));
   return { rows, xs, spans, paths, bullets, width: Math.ceil(width), height, together, xAt };
 }

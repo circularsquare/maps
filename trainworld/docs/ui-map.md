@@ -281,8 +281,8 @@ Street stops are small rings from zoom 14, ends small rounded squares from zoom 
 a train station the station's own circle stands for the stop. Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
-badge and name, "Bus line", then "Not running yet" while planned or, with the Traffic track
-display, the riders on the stretch between the stops under the pointer; "Bus stop" or "End of the
+badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],
+the riders on the stretch between the stops under the pointer; "Bus stop" or "End of the
 line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
 short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the
@@ -451,7 +451,12 @@ those who got on, less the load carried on.
   tears) 8% and knocked out (cartoon X eyes, a tongue out) 3% on sad ones; a bucket hat, a
   baseball cap or sunglasses 2.5% each on any face (no sunglasses over shut or X'd eyes, and no z
   under a hat); short hair 10% and long hair 10%, in one of four colours (brown, black, auburn,
-  honey), on a face with no hat [T-1852]; and a child, drawn at 72% size, 6%. Three sprites on a 2D canvas over the network; a frame loop
+  honey), on a face with no hat [T-1852]; and a child, drawn at 72% size, 6%. In a country the
+  table in `map/faceTones.ts` lists (the station's zone's country), a face is one of six plain skin
+  tones instead of the mood's yellow, drawn from the country's weights, tired ones mixed 35% towards
+  drained yellow and sad ones 45% towards blue, and its hair colour is drawn from the country's weights (black
+  for about 9 in 10 in East, Southeast and South Asia); elsewhere the yellow face and evenly drawn
+  hair [T-1907]. Three sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
 - **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own, one of the 12 semitones from C5
   [T-706]: a city's first five lines (a line's city is where its first stop is) take C, E, G, D, A in
@@ -566,10 +571,13 @@ those who got on, less the load carried on.
 
 - **Track** [T-157, T-526, `map/trackHover.ts`]: with the select tool or a build tool, the pointer on
   a line or track shows a tag at once saying what the track display draws there. Line: the line's
-  bullet, then its name, on one row [T-2007]. Traffic:
-  that row and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
+  bullet, then its name, on one row [T-2007]; under it, in every track view, "41,200 riders per
+  day" (or "0 riders per day") on that stop-to-stop stretch, both
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
-  ("Errands trips only"); then "Average load 28%": the stretch's riders (every purpose) over what the
+  ("Errands trips only"); outside Traffic no riders row until demand answers. Over track with
+  lines on it (the tag of Height and Speed, which draw no line strokes) the first row is the
+  riders of all those lines on their stretches there together, worded the same [T-1907]. Traffic
+  adds "Average load 28%": the stretch's riders (every purpose) over what the
   day's trips could hold at crush, the line panel's Average load for one stretch, the trips counted
   from the boarding account for the day shown (the average day 5 weekdays, a Saturday and a Sunday
   over 7), capped at 100%, no row until the account answers or where no trips run [T-2007];
@@ -642,10 +650,12 @@ Demand discs
 drawn under 8 px in radius are hit within 8 px of their centre [T-566, `MIN_PICK_PX` in
 `map/demandHover.ts`; the hover tag follows the same test], unless a disc drawn above them holds
 the pointer; where those areas overlap the nearest centre wins.
-Clicking the line already selected selects the track under it; a click on track several lines run
-over (one edge, more than one line on it) selects the track whose inspector lists those lines to
-choose from [T-654, `pick`'s `chooseShared`], except where the lines are side by side, where it
-selects the band's line [T-1799]. Clicking a selection's longer-trip discs keeps the
+Clicking the line already selected selects the track under it. Where several lines are under the
+pointer (drawn over each other, or side by side [T-1799]) a click selects the nearest, and between
+lines within 2 px of each other the one with more riders per day on that stretch (more trains an
+hour times cars before demand answers); a click with one of them selected selects the next in that
+order, and after the last the track, whose inspector lists them all [T-1907, `pick`'s
+`chooseShared` and `size`, `lineSizeAt` in `map/trackHover.ts`]. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.
 
@@ -723,3 +733,13 @@ there is hidden (`hiddenOnGlobe` in `map/live.ts`; a mark placed through the ove
 which gives NaN there, goes through `placeAt` in `map/screenPlace.ts`, which hides it, T-1777). Clicks, hovers and the building tools work at
 every zoom on the globe: picking projects with the globe's camera and narrows its candidates round
 the pointer's own place (`pointerLocal` in `map/pick.ts`).
+
+The map, flat or globe, is always seen from straight above (MapLibre's `maxPitch` 0). A right-button
+drag turns it, as does Ctrl with a left drag (MapLibre's own), while Settings > Map's "Rotate map with
+right drag" is on (the default); fingers and the keyboard never turn it. In the blueprint tool and the
+bus tool the right button stays theirs (a pan; a step back or removal), so no drag turns the map while
+either is on. Turning the switch off eases the map back to north. While the map is turned, a needle
+pointing north shows beside the find button (hover "Turn map back to north"); a click eases the map
+back to north and the needle goes [T-1907, T-2031; `followRotation` in `map/mapView.ts`,
+`NorthButton` in `ui/DemandSelector.tsx`]. Everything drawn over the map follows the turn; names,
+tags, faces and other DOM marks stay upright.

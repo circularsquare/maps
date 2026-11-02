@@ -140,7 +140,7 @@ function smooth(train: Float32Array, walk: Float32Array, drive: Float32Array): [
   return [t, w, d];
 }
 
-function build(end: "home" | "work", train: Float32Array, walk: Float32Array, drive: Float32Array) {
+function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Float32Array, drive: Float32Array) {
   const totals: [number, number, number] = [0, 0, 0];
   for (let i = 0; i < train.length; i++) {
     totals[0] += train[i];

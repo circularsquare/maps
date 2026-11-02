@@ -1,5 +1,5 @@
 // The related-lines diagram's layout (T-1168, notes/T-1168.md "Layout"; T-1391): rows, columns,
-// their ends, stop pills, the rows where a side line's bullet shows, and hover texts, from
+// their ends, stop pills and their hovers, the rows where a side line's bullet shows, from
 // `decodeRelated`'s groups. Pure, so a Node check can run it (checks/t1168-layout.mjs); drawn by
 // ui/inspector/RelatedStops.tsx.
 
@@ -44,8 +44,6 @@ export interface LayoutOpts {
   lineName: (line: number) => string;
   /** A line's stop name, the selected line's included. */
   stopName: (line: number, stop: number) => string;
-  stopCount: (line: number) => number;
-  dist?: (m: number) => string;
   /** T-1894: the selected line drawn last stop first (north up, `game/northUp.ts`); not for a loop. */
   flip?: boolean;
   /** T-1894: whether a side line's stop the selected line does not stop at gets a row (default all). */
@@ -70,8 +68,8 @@ export interface LayoutRow {
 
 /** A column's end past its rows: a turn out to the side where the other line leaves, or straight on
  * past the selected line's end. */
-export interface LayoutEnd { d: string; tip: string }
-export interface LayoutColumn { line: number; side: "L" | "R"; x: number; r0: number; r1: number; up: boolean; down: boolean; d: string; tip: string; ends: LayoutEnd[] }
+export interface LayoutEnd { d: string }
+export interface LayoutColumn { line: number; side: "L" | "R"; x: number; r0: number; r1: number; up: boolean; down: boolean; d: string; ends: LayoutEnd[] }
 /** `passed`: the selected line does not stop in this mark (a side line's stop, or the line's own
  * beyond a column that passes), drawn with a faded rim (T-1795). */
 export interface LayoutPill { row: number; x0: number; x1: number; big: boolean; passed: boolean; tip: string }
@@ -87,19 +85,14 @@ export interface RelatedLayout {
   pills: LayoutPill[];
   /** The highest and lowest y anything is drawn at, px. */
   extent: [number, number];
-  /** The hover of a crossing bar at a row, by line, where the classification has words for it. */
-  crossTip: (row: number, line: number) => string;
 }
 
 interface Row { lStop: number; ref: { line: number; stop: number }; sL: number; complex: number; stops: Set<number>; cross: number[]; marks: number[] }
 interface Item { g: number; line: number; r0: number; r1: number; up: boolean; down: boolean; shared: number; own: number; side?: "L" | "R"; slot?: number }
 
-const km = (m: number) => `${(m / 1000).toFixed(1)} km`;
-
 function andList(xs: string[]): string {
   return xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
 }
-const stops = (n: number) => `${n} ${n === 1 ? "stop" : "stops"}`;
 
 /** A loop's last stop is its first: a meeting there belongs to the first row, except where a line
  * beside it runs on across the seam to the end, whose column then goes on past the last row. */
@@ -124,9 +117,8 @@ function flipGroups(groups: RelatedGroup[], S: number): RelatedGroup[] {
 }
 
 export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedLayout {
-  const L = o.line, dist = o.dist ?? km;
+  const L = o.line;
   const rowY = o.rowY ?? ((i: number) => i * 25 + 12.5);
-  const me = o.lineName(L);
   const nStops = o.stopS.length;
   const loop = !!o.loop && nStops > 2;
   const flip = !!o.flip && !loop && nStops > 1;
@@ -238,42 +230,6 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
   const name = (i: number) => o.stopName(kept[i].ref.line, kept[i].ref.stop);
   const ys: number[] = [];
 
-  // hover texts
-  const colTip = (it: Item) => {
-    const g = groups[it.g], on = o.lineName(it.line);
-    const t = [`${on} runs beside ${me} from ${name(it.r0)} to ${name(it.r1)}`, `${stops(it.shared)} in common`];
-    if (it.own) t.push(`${stops(it.own)} of its own`);
-    if (g.shared) t.push("On the same track");
-    const gaps = g.gaps.filter((x) => x.run > 1);
-    if (gaps.length) {
-      const run = gaps.reduce((a, x) => a + x.run, 0), ls = gaps.reduce((a, x) => a + x.lStep, 0), st = Math.max(...gaps.map((x) => x.stray));
-      t.push(`${dist(run)} on its own track beside ${dist(ls)} of ${me}`, `Up to ${Math.round(st)} m from ${me}'s track`);
-    }
-    return t.join("\n");
-  };
-  // the same line beside again further along, in its own order
-  const sameLine = (it: Item, later: boolean) => {
-    const g = groups[it.g];
-    const others = items.filter((j) => j !== it && j.line === it.line && (groups[j.g].sO0 > g.sO0) === later);
-    return others.sort((a, b) => (later ? groups[a.g].sO0 - groups[b.g].sO0 : groups[b.g].sO0 - groups[a.g].sO0))[0];
-  };
-  const endTip = (it: Item, end: "up" | "down") => {
-    const g = groups[it.g], on = o.lineName(it.line), n = o.stopCount(it.line);
-    // towards the other line's own end: down the diagram is on along it when it runs our way
-    const later = (end === "down") === (g.dir > 0);
-    const back = sameLine(it, later);
-    if (back) {
-      const b = groups[back.g];
-      const between = later ? b.stopsBefore - (n - g.stopsAfter) : g.stopsBefore - (n - b.stopsAfter);
-      const at = end === "down" ? name(back.r0) : name(back.r1);
-      return end === "down" ? `${on} leaves here\nBack beside ${me} at ${at} after ${stops(Math.max(0, between))} of its own`
-        : `${on} joins here\nIt left ${me} at ${at} ${stops(Math.max(0, between))} back`;
-    }
-    const past = later ? g.stopsAfter : g.stopsBefore;
-    const term = o.stopName(it.line, later ? n - 1 : 0);
-    return `${on} goes on to ${term}\n${past} more ${past === 1 ? "stop" : "stops"}`;
-  };
-
   // turns out to the side, by side and gap: leaving first, outermost first, then joining,
   // innermost first, FAN px apart so a bundle leaving together never crosses itself
   const turns = new Map<string, { gap: number; ev: [number, number, Item, "up" | "down"][] }>();
@@ -299,22 +255,22 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     const ends: LayoutEnd[] = [];
     let y0 = yAt(it.r0), y1 = yAt(it.r1);
     if (yUp !== undefined) {
-      ends.push({ d: `M${g0},${yUp} H${x + s * R} Q${x},${yUp} ${x},${yUp + R}`, tip: endTip(it, "up") });
+      ends.push({ d: `M${g0},${yUp} H${x + s * R} Q${x},${yUp} ${x},${yUp + R}` });
       y0 = yUp + R;
       ys.push(yUp - LINE);
     } else if (it.up) {
-      ends.push({ d: `M${x},${y0 - EXT} V${y0}`, tip: endTip(it, "up") });
+      ends.push({ d: `M${x},${y0 - EXT} V${y0}` });
       ys.push(y0 - EXT);
     }
     if (yDown !== undefined) {
-      ends.push({ d: `M${x},${yDown - R} Q${x},${yDown} ${x + s * R},${yDown} H${g0}`, tip: endTip(it, "down") });
+      ends.push({ d: `M${x},${yDown - R} Q${x},${yDown} ${x + s * R},${yDown} H${g0}` });
       y1 = yDown - R;
       ys.push(yDown + LINE);
     } else if (it.down) {
-      ends.push({ d: `M${x},${y1} V${y1 + EXT}`, tip: endTip(it, "down") });
+      ends.push({ d: `M${x},${y1} V${y1 + EXT}` });
       ys.push(y1 + EXT);
     }
-    columns.push({ line: it.line, side: it.side!, x, r0: it.r0, r1: it.r1, up: it.up, down: it.down, d: `M${x},${y0} V${y1}`, tip: colTip(it), ends });
+    columns.push({ line: it.line, side: it.side!, x, r0: it.r0, r1: it.r1, up: it.up, down: it.down, d: `M${x},${y0} V${y1}`, ends });
   }
 
   // bullets of side lines: at the first and last rows both lines stop at, and at the rows both stop
@@ -366,19 +322,5 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     drawn: items.filter((it) => it.r0 <= i && i <= it.r1).map((it) => it.line), y: yAt(i),
   }));
   if (kept.length) ys.push(yAt(0) - 6, yAt(kept.length - 1) + 6);
-  const crossTip = (i: number, line: number) => {
-    if (line === L) return `${me} stops at ${name(i)} twice`;
-    const t = [`${o.lineName(line)} crosses at ${name(i)}`];
-    const r = kept[i];
-    const gs = groups.map((g, gi) => [g, gi] as const).filter(([g]) => g.line === line).sort((a, b) => a[0].sO0 - b[0].sO0);
-    const k = gs.findIndex(([g]) => g.kind === "crossing" && g.meetings.some((m) => m.complex === r.complex));
-    const g = gs[k]?.[0];
-    if (g?.split && Number.isFinite(g.split.stray) && k > 0) {
-      const prev = gs[k - 1][0].meetings.at(-1);
-      const at = prev ? (prev.stopL >= 0 ? o.stopName(L, prev.stopL) : prev.stopO >= 0 ? o.stopName(line, prev.stopO) : "") : "";
-      t.push(`It left ${me}${at ? " at " + at : ""} ${dist(g.split.run)} back`, `Its track strays up to ${dist(g.split.stray)} from ${me}'s in between`);
-    }
-    return t.join("\n");
-  };
-  return { rows: out, width: W, spineX: X0, spine, loopEnds, columns, pills, extent: [Math.min(0, ...ys), Math.max(0, ...ys)], crossTip };
+  return { rows: out, width: W, spineX: X0, spine, loopEnds, columns, pills, extent: [Math.min(0, ...ys), Math.max(0, ...ys)] };
 }

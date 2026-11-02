@@ -17,8 +17,8 @@ const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if
 
 const LEVELS = [3, 2, 1, 0, -1, -2, -3];
 // US$M a km of double track at each level on flat ground (params.rs LEVEL_MULT x 75)
-const PER_KM = { 3: 150, 2: 112.5, 1: 75, 0: 22.5, [-1]: 75, [-2]: 120, [-3]: 150 };
-const MULT = { 3: 2, 2: 1.5, 1: 1, 0: 0.3, [-1]: 1, [-2]: 1.6, [-3]: 2 };
+const PER_KM = { 3: 150, 2: 112.5, 1: 75, 0: 37.5, [-1]: 75, [-2]: 120, [-3]: 150 };
+const MULT = { 3: 2, 2: 1.5, 1: 1, 0: 0.5, [-1]: 1, [-2]: 1.6, [-3]: 2 };
 
 const { ctx, close } = await launchChrome({ prefix: 'tw-t1928-' });
 try {
@@ -56,7 +56,10 @@ try {
       const m = /cost (\d+\.\d+)x, \$([\d.,]+)([kMB])/.exec(tag);
       if (theme === 'light') {
         const mult = m && Number(m[1]);
-        const dollars = m && Number(m[2].replace(/,/g, '')) * (m[3] === 'B' ? 1000 : m[3] === 'k' ? 0.001 : 1);
+        const usd = (n, u) => Number(n.replace(/,/g, '')) * (u === 'B' ? 1000 : u === 'k' ? 0.001 : 1);
+        // T-1929: the tag's price includes the roads crossed at ground level (T-2017: "22 crossings +$132M"), which this check leaves out
+        const roads = /crossings? \+\$([\d.,]+)([kMB])/.exec(tag);
+        const dollars = m && usd(m[2], m[3]) - (roads ? usd(roads[1], roads[2]) : 0);
         const km = Number(/([\d.]+) km/.exec(tag)?.[1] ?? NaN);
         check(!!m && Math.abs(mult - MULT[level]) < 0.011 && Math.abs(dollars / km - PER_KM[level]) < PER_KM[level] * 0.03 + 1, `level ${level}: tag "${tag}" (${MULT[level]}x, about ${PER_KM[level]} a km)`);
       }

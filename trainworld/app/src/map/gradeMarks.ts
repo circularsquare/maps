@@ -61,11 +61,17 @@ void main() {
   float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
   vec4 c = project(a_mark.xy);
+  v_m = a_mark;
+  // T-2031: the ramp's direction as drawn on screen (y down), so it follows a turned map
+  if (ramp) {
+    vec4 c2 = project(a_mark.xy + 10.0 * vec2(cos(a_mark.w), sin(a_mark.w)));
+    vec2 d = (c2.xy / c2.w - c.xy / c.w) * vec2(u_viewport.x, -u_viewport.y);
+    v_m.w = atan(d.y, d.x);
+  }
   vec2 p = corner * rq;
   c.xy += vec2(p.x, -p.y) / (u_viewport * 0.5) * c.w;
   gl_Position = c;
   v_p = p;
-  v_m = a_mark;
   v_s = a_style;
   v_r = r;
 }`;

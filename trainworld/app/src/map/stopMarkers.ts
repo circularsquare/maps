@@ -20,6 +20,7 @@ import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { queryClock } from "../workers/clockClient";
+import { GapFlash } from "./gapFlash";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 
@@ -156,8 +157,12 @@ export class StopMarkers {
   private revAt = new Map<string, string>();
   private seenWorld: WorldView | null = null;
   private seenLine: number | null = null;
+  private gap: GapFlash;
+  /** the last gap asked for; an older answer is dropped */
+  private gapAsked = 0;
 
   constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number, tier: StopTier) => void) {
+    this.gap = new GapFlash(map, overlay);
     this.box = document.createElement("div");
     this.box.className = "stop-marks";
     this.box.style.display = "none";
@@ -180,6 +185,8 @@ export class StopMarkers {
         this.fromWorker = null;
         this.tiers = new Map();
         this.hideTag();
+        this.gapAsked++;
+        this.gap.clear();
         this.overlay.invalidate();
         return;
       }
@@ -380,9 +387,23 @@ export class StopMarkers {
       this.reasonFor = id;
       this.showTag([`${name} is not on track this line can reach.`, "Draw track from the line to it first."], px, py, true);
       this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
+      this.showGap(id);
       return;
     }
     this.hideTag();
     this.toggle(Number(id), this.tierOf(id));
   }
+
+  /** T-1896: where the line's track and station `id`'s are nearest, drawn for a few seconds. */
+  private showGap(id: string) {
+    if (!this.line?.stops.length) return;
+    const asked = ++this.gapAsked, line = this.line.num;
+    void queryClock({ what: "stopGap", line, station: Number(id) }).then((d) => {
+      if (asked !== this.gapAsked || this.line?.num !== line) return;
+      if (d && d.length === 4) this.gap.show([d[0], d[1]], [d[2], d[3]]);
+      if (DEBUG) (window as unknown as { twGap?: number[] | null }).twGap = d && d.length === 4 ? Array.from(d) : null;
+    });
+  }
 }
+
+const DEBUG = new URLSearchParams(location.search).get("debug") === "1";

@@ -35,7 +35,9 @@ export interface DayLedger {
   build: number;
   /** track and station upkeep (T-867); absent in days saved before it, read as 0 */
   upkeep?: number;
-  /** loan interest (T-1661); absent when none was paid */
+  /** loan payments, interest included (T-2022); absent when none was paid */
+  loan?: number;
+  /** loan interest in saves from before T-2022, read into `loan` */
   interest?: number;
   /** train rides taken (T-565); absent in days saved before it, read as 0 */
   rides?: number;
@@ -52,7 +54,8 @@ export interface HourLedger {
   build: number;
   /** upkeep (T-867), as in `DayLedger` */
   upkeep?: number;
-  /** loan interest (T-1661), as in `DayLedger` */
+  /** loan payments (T-2022) and old interest, as in `DayLedger` */
+  loan?: number;
   interest?: number;
   /** train rides taken (T-565), as in `DayLedger` */
   rides?: number;
@@ -71,8 +74,11 @@ export interface SaveHeader {
   clock: number;
   /** US$M */
   cash: number;
-  /** T-1661: the loan out, US$M; absent for none */
+  /** T-1661: the loan out, US$M borrowed; absent for none */
   loan?: number;
+  /** T-2022: its payment a day, US$M, and the game days of payments left; absent before T-2022 */
+  loanPay?: number;
+  loanDays?: number;
   /** cars owned */
   fleet: number;
   /** high-speed cars owned (T-817; absent in older saves) */
@@ -118,7 +124,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true }
 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
-  game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, fleet: true, fleetFast: true,
+  game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
   opened: true, demandFine: true, newCars: true, level: true, guide: true,
 };

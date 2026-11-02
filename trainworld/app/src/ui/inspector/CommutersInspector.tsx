@@ -43,12 +43,12 @@ function Modes({ totals }: { totals: [number, number, number] }) {
 export function CommutersInspector() {
   const p = commuterPick.value;
   if (!p || p.sel?.kind !== "commuters") return null;
-  const home = p.sel.end === "home";
+  const end = p.sel.end;
   return (
     <>
       <div class="title">
         {swatch(...p.totals)}
-        <span class="name">{home ? "Trips from homes here" : "Trips to destinations here"}</span>
+        <span class="name">{end === "home" ? "Trips from homes here" : end === "work" ? "Trips to destinations here" : "Trips to and from here"}</span>
       </div>
       <div class="sub muted" data-tip="Outward and return legs included.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />

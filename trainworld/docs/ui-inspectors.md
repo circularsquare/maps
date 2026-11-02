@@ -245,10 +245,10 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
   riders wait ~11 min for a train with room" (or "Riders get on the first train
-  with room"), then, where it has any, a thin strip of one cell per stretch (the run between two stops, the fuller way) in the
+  with room"), then, where it has any, a thin strip of one cell per interval (the run between two stops, the fuller way) in the
   crowding colour of the riders' wait there over the level's periods, green where trains have room, with "Full on 2 of 14
-  stretches" below it (a stretch is full from a minute's wait, as the dots count a platform; "Full on all 14 stretches"; no line for a
-  single stretch) [T-1926, T-1901; `levelStretches` and `tipStrip` in `game/today.ts` and `ui/tip.ts`; the tail of
+  intervals" below it (an interval is full from a minute's wait, as the dots count a platform; "Full on all 14 intervals"; no line for a
+  single interval; T-2023: "interval", Anita's word, in every shown string) [T-1926, T-1901; `levelStretches` and `tipStrip` in `game/today.ts` and `ui/tip.ts`; the tail of
   `Boarding::line_periods`; the Lines tab's trains hover has the same strip], then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
   trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then, only when the
   line's day is not a weekday, "On weekdays, riders wait ~15 min for a train with room" [T-1684, T-1797, T-1893]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
@@ -352,12 +352,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   apart: the two bulleted ones at a row with up to two, and at a row with more [T-1786] all of
   them up to 6, the row 38 px tall, its pill 10 px wide and stretched to (bars − 1) × 5 + 13 px with
   5 px corners so each bar meets its straight side, and its bullets (up to 6, in the bars' order, the
-  rest behind the "+") in two rows; a side line's own row keeps two bars. Hovers: a column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of
-  its own, "On the same track", its own-track km beside the line's and how far it strays at most), a
-  pill ("6, 6 and 6X stop at 23 St", "4 and 5 pass"), a column's turn or straight end ("4 goes on to
-  Woodlawn", "14 more stops", or "5 leaves here", "Back beside 2 at 149 St after 10 stops of its
-  own"), a bar ("4 crosses at 149 St", and for a line met before with too wide a gap, where it left
-  and how far its track strays; "Hook stops at Union Sq twice" for the line's own).
+  rest behind the "+") in two rows; a side line's own row keeps two bars. Hovers: a pill only ("6, 6 and 6X stop at 23 St",
+  "4 and 5 pass"); the columns, their ends and the bars have none (T-2020), and a bullet names its line as everywhere.
   A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. Time following slower trains on shared track is its own row,
   "Behind slower trains", apart from "Waiting at busy track", and its places name the line ahead
@@ -518,11 +514,16 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   for the device pixel ratio and CSS zoom it is drawn at, and the circle moved with it, so the ink,
   not the font's line box, is centred in the circle at any font, UI scale and pixel ratio, within
   half a device pixel (`checks/t745-bullets.mjs` measures it on the rendered pixels).
+  A one-character bullet is a 16 px circle (a wide letter such as W a little wider), a longer one a
+  pill of the same height, 4 px each side of its text. Bullets in a row are 2 px apart whatever their
+  widths, wherever they are listed (`.bullets` in style.css, or the row's own 2 px gap); in two rows
+  each row is spaced on its own; in a group diagram bullets side by side at a line's end are 2 px
+  apart and each is centred on its line or the run's mean (`chipW` in `game/groupLayout.ts`) [T-2016].
   A line with no trains at the demand level in force on its own clock (a train count of 0 or a
   headway of 0, or a planned or broken line; counts typed but not yet applied count) has its
-  bullet dimmed, everywhere it is drawn: grey at 0.4 opacity, flat, readable in both shades, and
-  its hover adds "Not running" (`game/lineRunning.ts`, one set read by `Chip` and `lineBullet`;
-  `checks/t1792-idle-bullets.mjs`) [T-1792]. The GPU map layers draw no symbol bullets.
+  bullet faded lightly, everywhere it is drawn: 0.7 opacity and a little greyed (its column in a
+  group diagram at 0.7 too), and its hover adds "Not running" (`game/lineRunning.ts`, one set read
+  by `Chip` and `lineBullet`; `checks/t1792-idle-bullets.mjs`) [T-1792, T-1907]. The GPU map layers draw no symbol bullets.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".

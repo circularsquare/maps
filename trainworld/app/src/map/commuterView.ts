@@ -22,7 +22,7 @@ import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
-import type { Selection } from "../game/types";
+import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
 import { display, purposeFilter, selection, shade, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
@@ -63,8 +63,50 @@ const tripWords = () => {
 };
 
 const STUB_ALPHA = 0.8;
+/** Total's legs per cell, summed once per result (T-1903) */
+const bothSums = new WeakMap<CellModes, Float32Array[]>();
 /** One end's trip legs per cell: rail, walking, driving. */
-const endModes = (m: CellModes, end: "home" | "work") => (end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive]);
+const endModes = (m: CellModes, end: BubbleEnd): Float32Array[] => {
+  if (end === "home") return [m.homeRail, m.homeWalk, m.homeDrive];
+  if (end === "work") return [m.workRail, m.workWalk, m.workDrive];
+  let s = bothSums.get(m);
+  if (!s) {
+    s = ([[m.homeRail, m.workRail], [m.homeWalk, m.workWalk], [m.homeDrive, m.workDrive]] as const).map(([a, b]) => {
+      const o = new Float32Array(a.length);
+      for (let i = 0; i < a.length; i++) o[i] = a[i] + b[i];
+      return o;
+    });
+    bothSums.set(m, s);
+  }
+  return s;
+};
+/** The far end of a selection at `end`: Total's far end is both ends too. */
+const otherEnd = (end: BubbleEnd): BubbleEnd => (end === "home" ? "work" : end === "work" ? "home" : "both");
+
+/** Two directions' far ends as one (T-1903: a Total selection's), cells merged. */
+function mergeFar(a: FarEnd, b: FarEnd): FarEnd {
+  const at = new Map<number, number>(), cells: number[] = [];
+  for (const f of [a, b]) for (const c of f.cells) if (!at.has(c)) (at.set(c, cells.length), cells.push(c));
+  const n = cells.length, rail = new Float32Array(n), walk = new Float32Array(n), drive = new Float32Array(n);
+  for (const f of [a, b]) for (let k = 0; k < f.cells.length; k++) {
+    const i = at.get(f.cells[k])!;
+    (rail[i] += f.farRail[k]), (walk[i] += f.farWalk[k]), (drive[i] += f.farDrive[k]);
+  }
+  return { rail: a.rail + b.rail, walk: a.walk + b.walk, drive: a.drive + b.drive, cells: Uint32Array.from(cells), farRail: rail, farWalk: walk, farDrive: drive,
+    cutRail: a.cutRail + b.cutRail, cutWalk: a.cutWalk + b.cutWalk, cutDrive: a.cutDrive + b.cutDrive };
+}
+function mergeFlows(h: Flows, w: Flows): Flows {
+  let byPurpose: Flows["byPurpose"];
+  if (h.byPurpose || w.byPurpose) {
+    byPurpose = new Map();
+    for (const k of new Set([...(h.byPurpose?.keys() ?? []), ...(w.byPurpose?.keys() ?? [])])) {
+      const x = h.byPurpose?.get(k), y = w.byPurpose?.get(k);
+      byPurpose.set(k, x && y ? mergeFar(x, y) : (x ?? y)!);
+    }
+  }
+  // the timing charts sum rows of one name (ui/inspector/PurposeBreakdown.tsx)
+  return { ...mergeFar(h, w), version: h.version, end: h.end, purposes: [...h.purposes, ...w.purposes], byPurpose };
+}
 /** The discs (`DISC` floats each) whose centres are in the box between two pointers: their indices. */
 const discsIn = (discs: Float32Array, a: Anchor, p0: Pointer, p1: Pointer): number[] => {
   const [x0, y0] = toLocal(p0.lng, p0.lat, a), [x1, y1] = toLocal(p1.lng, p1.lat, a);
@@ -187,9 +229,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })());
 
   // ---- the city's bubbles ----
-  type ZoneShown = { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
+  type ZoneShown = { dv: DemandView; end: BubbleEnd; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
   /** whether bubbles already shown are the ones the current result, end and purpose would build */
-  const isCurrent = (s: ZoneShown, dv: DemandView, end: "home" | "work", purpose: PurposeFilter, updating: boolean) =>
+  const isCurrent = (s: ZoneShown, dv: DemandView, end: BubbleEnd, purpose: PurposeFilter, updating: boolean) =>
     s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version;
   let shown: ZoneShown | null = null;
   let built: { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
@@ -326,9 +368,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   });
 
   /** One end's legs per cell (rail, walking, driving), copies to transfer to a worker. */
-  const endCells = (m: CellModes, end: "home" | "work") => endModes(m, end).map((a) => a.slice());
+  const endCells = (m: CellModes, end: BubbleEnd) => endModes(m, end).map((a) => a.slice());
   /** Bubbles of one end from legs per cell (rail, walking, driving; transferred), in worker `w`. */
-  const buildOn = (w: Worker, end: "home" | "work", cells: Float32Array[]) => {
+  const buildOn = (w: Worker, end: BubbleEnd, cells: Float32Array[]) => {
     const id = nextId++;
     sync(w);
     return new Promise<Bubbles>((done) => {
@@ -425,8 +467,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   });
 
   // ---- hover ----
-  const endWord = (end: "home" | "work") => (end === "home" ? "from here" : "to here");
-  const bubbleTag = (end: "home" | "work", t: number, w: number, d: number, ...rest: string[]) => [`${count(t + w + d)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d), ...rest];
+  const endWord = (end: BubbleEnd) => (end === "home" ? "from here" : end === "work" ? "to here" : "to and from here");
+  const bubbleTag = (end: BubbleEnd, t: number, w: number, d: number, ...rest: string[]) => [`${count(t + w + d)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d), ...rest];
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
@@ -434,7 +476,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
       if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i]);
       i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      if (i >= 0 && far) return bubbleTag(sel.end === "home" ? "work" : "home", far.train[i], far.walk[i], far.drive[i], "Click to explore this trip");
+      if (i >= 0 && far) return bubbleTag(otherEnd(sel.end), far.train[i], far.walk[i], far.drive[i], "Click to explore this trip");
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
@@ -506,6 +548,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (!fe || !far || !city || !cellsWorld || !shown || !idx.length || idx.some((i) => i >= far!.group.length)) return null;
     const g = city.levels[bubbleLevel(map.getZoom())];
     const qs = new Set(idx.map((i) => far!.group[i]));
+    const end = pairEnd(sel, (f) => {
+      const e = farOf(f, shown!.purpose);
+      let n = 0;
+      if (e) for (let k = 0; k < e.cells.length; k++) if (qs.has(g.groupOf[e.cells[k]])) n += e.farRail[k] + e.farWalk[k] + e.farDrive[k];
+      return n;
+    });
     // each end's bubbles at the zoom on screen: their trips, and their busiest cell
     type Side = Map<number, { n: number; best: number; bestN: number }>;
     const tally = (side: Side, q: number, c: number, n: number) => {
@@ -520,7 +568,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (qs.has(q)) tally(farSide, q, c, fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
     }
     const m = shown.modes;
-    const [mt, mw, md] = endModes(m, sel.end);
+    const [mt, mw, md] = endModes(m, end);
     for (const c of sel.cells) tally(nearSide, g.groupOf[c], c, mt[c] + mw[c] + md[c]);
     const busiest = (side: Side) => [...side.values()].filter((s) => s.best >= 0).sort((a, b) => b.n - a.n);
     const farB = busiest(farSide), nearB = busiest(nearSide);
@@ -529,13 +577,13 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const to = bestOf(farB).best, own = bestOf(nearB).best;
     const xy = cellsWorld;
     const at = (c: number): [number, number] => [xy[c * 2], xy[c * 2 + 1]];
-    const pairOf = (n: number, f: number): { from: [number, number]; to: [number, number] } => (sel.end === "home" ? { from: at(n), to: at(f) } : { from: at(f), to: at(n) });
+    const pairOf = (n: number, f: number): { from: [number, number]; to: [number, number] } => (end === "home" ? { from: at(n), to: at(f) } : { from: at(f), to: at(n) });
     const trip: Selection = { kind: "trip", ...pairOf(own, to) };
     // T-586: the explorer counts the trips between the selection and every cell of the far bubbles,
     // as their hovers do
     const farCells: number[] = [];
     for (const q of qs) for (let k = g.off[q]; k < g.off[q + 1]; k++) farCells.push(g.members[k]);
-    const places: TripPlaces = { end: sel.end, near: Uint32Array.from(sel.cells), far: Uint32Array.from(farCells) };
+    const places: TripPlaces = { end, near: Uint32Array.from(sel.cells), far: Uint32Array.from(farCells) };
     // T-865: several bubbles at an end: the busiest few a side, each to each, weighted by the near
     // bubble's trip legs times the far bubble's trips with the selection
     if (nearB.length > 1 || farB.length > 1) {
@@ -591,10 +639,29 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const sel = selection.peek();
     if (sel?.kind !== "city") return null;
     const c = cityById(sel.city), own = cityById(activeCity.peek());
-    const near = nearPoint(s);
+    const one = oneEnd(s);
+    const near = nearPoint(one);
     if (c.place === own.place || !near) return null;
     const p = lngLatToPack(c.center[0], c.center[1]);
-    return openFarTrip(s, sel, near, [p.x, p.y], { place: c.place, gid: -1 });
+    return openFarTrip(one, sel, near, [p.x, p.y], { place: c.place, gid: -1 });
+  };
+  /** T-1903: a Total selection as homes or destinations, whichever end has more of its trip legs,
+   * for the market's trip explorer, which counts one way */
+  const oneEnd = (s: Extract<Selection, { kind: "commuters" }>): CommutersOneWay => {
+    if (s.end !== "both") return { ...s, end: s.end };
+    let n = 0;
+    if (shown) {
+      const [ht, hw, hd] = endModes(shown.modes, "home"), [wt, ww, wd] = endModes(shown.modes, "work");
+      for (const c of s.cells) n += ht[c] + hw[c] + hd[c] - wt[c] - ww[c] - wd[c];
+    }
+    return { ...s, end: n >= 0 ? "home" : "work" };
+  };
+  /** T-1903: a Total selection opens a far bubble's trips one way, homes or destinations, whichever
+   * has more of the pair's trips (`n` counts them in one direction's answer) */
+  const pairEnd = (sel: Extract<Selection, { kind: "commuters" }>, n: (f: Flows) => number): "home" | "work" => {
+    if (sel.end !== "both") return sel.end;
+    const p = lastFlows?.sel === sel ? lastFlows.parts : undefined;
+    return p && n(p.work) > n(p.home) ? "work" : "home";
   };
 
   /** T-865: the far-end discs whose centres are in a box: their indices. */
@@ -721,7 +788,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let flowAsk = 0;
   let lastFlowKey: unknown = null;
   /** the selection's last far-end answer, every purpose in it (T-158) */
-  let lastFlows: { sel: Selection; dv: DemandView | null; f: Flows } | null = null;
+  let lastFlows: { sel: Selection; dv: DemandView | null; f: Flows; parts?: { home: Flows; work: Flows } } | null = null;
 
   /** Near and far discs at the level on screen. */
   const drawPick = () => {
@@ -825,11 +892,17 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const ask = ++flowAsk;
     const t1 = performance.now();
     commuterStats.pickAt = t1;
-    const answer = lastFlows?.sel === sel && lastFlows.dv === dv ? Promise.resolve(lastFlows.f) : flows(sel.end, Uint32Array.from(sel.cells));
-    void answer.then(async (f) => {
+    const both = async (cells: Uint32Array) => {
+      const [h, w] = await Promise.all([flows("home", cells), flows("work", cells)]);
+      return h && w ? { f: mergeFlows(h, w), parts: { home: h, work: w } } : null;
+    };
+    const answer = lastFlows?.sel === sel && lastFlows.dv === dv ? Promise.resolve({ f: lastFlows.f, parts: lastFlows.parts })
+      : sel.end === "both" ? both(Uint32Array.from(sel.cells)) : flows(sel.end, Uint32Array.from(sel.cells)).then((f) => (f ? { f, parts: undefined } : null));
+    void answer.then(async (got) => {
       // null: the workers moved on; the next demand result asks again
-      if (ask !== flowAsk || !f || selection.peek() !== sel || !worker) return;
-      lastFlows = { sel, dv, f };
+      if (ask !== flowAsk || !got || selection.peek() !== sel || !worker) return;
+      const f = got.f;
+      lastFlows = { sel, dv, f, parts: got.parts };
       commuterStats.flowsAt = performance.now();
       commuterStats.flowsMs = commuterStats.flowsAt - t1;
       const fe = farOf(dealtOf(f, purpose), purpose);

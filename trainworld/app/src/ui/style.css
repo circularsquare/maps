@@ -230,7 +230,7 @@ body.resizing, body.resizing * { user-select: none; }
 .title .group-chips { display: flex; gap: 2px; flex: none; }
 .group-copy { display: flex; gap: 4px; margin: 0 0 8px; }
 .group-diagram { padding-bottom: 4px; }
-.group-diagram .group-col.idle, .group-bullet.idle .chip { opacity: 0.4; }
+.group-diagram .group-col.idle, .group-bullet.idle .chip:not(.idle) { opacity: 0.7; }
 /* T-1809: the diagram, its bullets and the names are placed by groupLayout's y */
 .group-body { position: relative; }
 .group-body > svg { position: absolute; left: 0; top: 0; display: block; overflow: visible; stroke: none; stroke-width: 1; }
@@ -246,7 +246,7 @@ body.resizing, body.resizing * { user-select: none; }
 .group-diagram .group-row:hover { fill: var(--shade); }
 .group-diagram .group-cross { cursor: pointer; }
 .group-diagram .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
-.group-diagram .pill.idle { opacity: 0.4; }
+.group-diagram .pill.idle { opacity: 0.7; }
 .group-diagram .pill.pass { stroke-opacity: 0.4; }
 .group-diagram .tick, .group-diagram .ghost { fill: #fff; stroke: var(--net-ink); stroke-width: 1; }
 .group-diagram .ghost { opacity: 0; }
@@ -363,8 +363,10 @@ body.resizing, body.resizing * { user-select: none; }
 .chip.lg.bus { border-radius: 5px; }
 .chip > svg text { fill: currentColor; }
 /* T-1792: a line with no trains at its level now */
-.chip.idle { opacity: 0.4; filter: grayscale(0.6); }
+.chip.idle { opacity: 0.7; filter: grayscale(0.3); }
 .chip.link { cursor: pointer; }
+/* T-2016: a row of bullets, 2 px apart whatever their widths and whatever gap the row around them keeps */
+.bullets { display: inline-flex; align-items: center; gap: 2px; flex: none; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 /* T-521: a station row keeps at least 3 bullets, its name gives way */
 .rows.stations > li { gap: 4px; }
@@ -617,6 +619,7 @@ rect.now { fill-opacity: .45; }
 /* T-1786: a row with more than two crossing lines is 1.5 rows tall, its bullets in two rows */
 .stops.related-rows li.tall { min-height: 38px; }
 .stops .stop-chips2 { flex: none; display: grid; grid-template-rows: 16px 16px; gap: 2px; justify-items: start; }
+.stop-chips2 > span { display: flex; gap: 2px; }
 /* T-1391: a stop row too tight for its name, time and bullets drops the time; a loop's bar goes on
    past its first and last stops and curves round */
 .stops li[data-tight] .t { display: none; }
@@ -1119,10 +1122,10 @@ button.save-add:hover { color: var(--text); }
 /* a demand bubble's mark: a circle, as wide as a line bullet */
 .rest-bub { flex: none; box-sizing: border-box; width: 12px; height: 12px; margin: 0 2px; border-radius: 50%;
             border: 1.5px solid var(--map-ink); background: color-mix(in srgb, var(--map-ink) 15%, transparent); }
-.tag-facts { display: flex; gap: 8px; align-items: center; }
+.tag-facts { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
 /* a ridership circle's two parts in its tag (T-1448), each after a dot in its map colour */
 .tag-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; }
-.tag-fact { display: inline-flex; gap: 3px; align-items: center; }
+.tag-fact { display: inline-flex; flex: none; gap: 3px; align-items: center; white-space: nowrap; }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }

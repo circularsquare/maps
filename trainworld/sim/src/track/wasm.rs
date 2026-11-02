@@ -634,6 +634,7 @@ mod beside;
 mod crossings;
 mod links;
 mod lines;
+mod gap;
 mod snapshot;
 mod service;
 mod upgrades;
@@ -844,6 +845,12 @@ fn turn_nodes(net: &Network, path: &[u32]) -> Vec<u32> {
 /// turning back at bare track ends. Moves work both ways, so a node outside it has no route to or
 /// from a stop either.
 fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
+    reach_from(net, stops).0
+}
+
+/// `reachable_from`'s nodes, and per edge end code (`edge << 1 | end`) whether the search left
+/// through it, so an edge is reached when either of its two codes is (T-1896).
+fn reach_from(net: &Network, stops: &[u32]) -> (Vec<bool>, Vec<bool>) {
     let mut seen_node = vec![false; net.node_count()];
     let mut seen = vec![false; 2 * net.edge_count()];
     let mut queue: Vec<u32> = vec![];
@@ -872,7 +879,7 @@ fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
             }
         }
     }
-    seen_node
+    (seen_node, seen)
 }
 
 /// A drawn stroke cut into pieces, one per corner clicked (T-244), so removing one removes only
@@ -1555,3 +1562,5 @@ mod station_sweep_tests;
 /// T-1898: drags keep the design speed; a selection's track type.
 #[cfg(test)]
 mod t1898_tests;
+#[cfg(test)]
+mod gap_tests;

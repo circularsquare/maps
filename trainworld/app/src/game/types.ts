@@ -243,6 +243,11 @@ export interface WorldView {
 
 // ---------- selection ----------
 
+/** The demand bubbles' end: trips from homes, to destinations, or both together (T-1903). */
+export type BubbleEnd = "home" | "work" | "both";
+/** A bubble selection taken one way, for the trip explorer, which counts trips from homes or to destinations. */
+export type CommutersOneWay = Extract<Selection, { kind: "commuters" }> & { end: "home" | "work" };
+
 /** What the inspector shows. `null` = nothing selected, and the inspector is empty. */
 export type Selection =
   | { kind: "line"; line: LineId }
@@ -254,8 +259,8 @@ export type Selection =
   /** a train: its profile (line, run, demand level) and departure, absolute game seconds */
   | { kind: "train"; line: LineId; profile: number; dep: number }
   /** commuter bubbles picked on the map (T-097): the cells (city pack order) of `areas` bubbles,
-   * at the homes or the jobs end */
-  | { kind: "commuters"; end: "home" | "work"; cells: number[]; areas: number }
+   * at the homes or the jobs end, or both (T-1903) */
+  | { kind: "commuters"; end: BubbleEnd; cells: number[]; areas: number }
   /** a city's longer-trips bubble picked zoomed far out (T-186): the registry's city id */
   | { kind: "city"; city: string }
   /** the trip explorer (T-195): where a trip starts and ends, world metres; `to` null until the

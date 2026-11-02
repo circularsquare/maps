@@ -65,12 +65,12 @@ fn a_passage_is_priced_by_its_length_and_built_with_its_stations() {
 #[test]
 fn upgrades_go_into_the_blueprint_and_are_paid_at_once_on_a_built_station() {
     let (mut a, st) = station();
-    assert!((a.station_upgrade_cost(st, upgrades::TERMINAL) - 22.5).abs() < 1e-9, "1 km of track at ground level");
+    assert!((a.station_upgrade_cost(st, upgrades::TERMINAL) - 37.5).abs() < 1e-9, "1 km of track at ground level");
     assert_eq!(a.station_upgrade_cost(st, upgrades::PARK_RIDE), 20.0);
     assert_eq!(a.station_upgrade_cost(st, upgrades::WAITING_ROOM), 5.0);
     let quote = a.blueprint_cost();
     assert_eq!(a.set_station_upgrade(&[st], upgrades::TERMINAL, true), 0, "{}", a.issues());
-    assert!((a.blueprint_cost() - quote - 22.5).abs() < 1e-6, "in the blueprint's quote");
+    assert!((a.blueprint_cost() - quote - 37.5).abs() < 1e-6, "in the blueprint's quote");
     assert_eq!(a.station_upgrades(), vec![st, upgrades::TERMINAL as u32]);
     assert_eq!(a.set_station_upgrade(&[st], upgrades::TERMINAL, true), 1, "already there");
     assert_eq!(a.undo(), 0);
@@ -78,7 +78,7 @@ fn upgrades_go_into_the_blueprint_and_are_paid_at_once_on_a_built_station() {
     assert_eq!(a.set_station_upgrade(&[st], upgrades::TERMINAL, true), 0);
     let cash = a.cash();
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
-    assert!((cash - a.cash() - quote - 22.5).abs() < 1e-6, "constructed with the station");
+    assert!((cash - a.cash() - quote - 37.5).abs() < 1e-6, "constructed with the station");
     // on the built station: paid at once, final
     let cash = a.cash();
     assert_eq!(a.set_station_upgrade(&[st], upgrades::WAITING_ROOM, true), 0, "{}", a.issues());

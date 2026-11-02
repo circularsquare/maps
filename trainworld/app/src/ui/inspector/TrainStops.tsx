@@ -108,7 +108,7 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
           <li data-tip={r.last
             ? `Everyone on board gets off at ${r.name}, the end of the line`
             : `${count(r.off)} of the ${count(r.arriving)} riders on board get off at ${r.name}, and ${count(r.on)} get on`}>
-            <span class="grow stop-name"><span class="name">{r.name}</span>{r.lines.map((l) => <Chip line={l} size="sm" />)}</span>
+            <span class="grow stop-name"><span class="name">{r.name}</span>{r.lines.length > 0 && <span class="bullets">{r.lines.map((l) => <Chip line={l} size="sm" />)}</span>}</span>
             {Number.isFinite(r.inS) && (
               <span class="muted small" data-tip={`Arrives in ${duration(r.inS)}`}>{r.inS < 60 ? "<1 min" : `${Math.round(r.inS / 60)} min`}</span>
             )}

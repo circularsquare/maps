@@ -1,6 +1,6 @@
 // Hovering track (T-157): a tag by the pointer says what the current track display draws there:
-// the line's bullet and name (Line), its riders per day and average load on that stop-to-stop
-// stretch (Line + traffic thickness, T-2007), and always the elevation and speed limit there plus the lines on the track (T-473,
+// the line's bullet and name and its riders per day on that stop-to-stop stretch (any view,
+// T-1907), its average load there (Traffic, T-2007), and always the elevation and speed limit there plus the lines on the track (T-473,
 // T-526). It shows at once. The tag follows the map's pick order (T-133): with the select tool,
 // demand bubbles, capacity tags and editing handles above the network hide it; with a build tool
 // the demand views are beneath the network, and the tag sits above the pointer, clear of the
@@ -51,6 +51,18 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stopIds: read
   return sum;
 }
 
+/** T-1907: how big line `num` is at its stroke segment `seg`, for a click on lines drawn over each
+ * other: its riders per day on that stretch, else (no demand yet) its trains an hour times cars,
+ * scaled so any riders outrank it. */
+export function lineSizeAt(ov: Overlay, num: number, seg: number): number {
+  const w = world.peek(), l = w?.save.lines.find((x) => x.num === num);
+  if (!w || !l) return 0;
+  const k = ov.renderer.net?.lines.stretch?.[seg] ?? -1;
+  const day = dailyRiders(demandView.peek(), l.id, l.stops, k);
+  if (day !== null) return day + 1;
+  return ((l.tph[clock.demand.peek()] ?? 0) * (w.lineStats[l.id]?.cars ?? 1)) / 1e6;
+}
+
 /** The tag's lines for a line stroke segment `i`. */
 function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: { share: number; wait: number } | null): TipLine[] {
   const num = n.lines.colour[i];
@@ -59,15 +71,17 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const status = l ? w?.lineStats[l.id]?.status : undefined;
   if (status === "planned") return [name, "Not running yet"];
   if (status === "broken") return [name, "Not running"];
-  if (!l || !traffic) return [name];
-  if (!dv) return [name, "Calculating demand"];
+  if (!l) return [name];
+  // T-1907: the riders in every track view; outside Traffic a tag without them says nothing of demand
+  if (!dv) return traffic ? [name, "Calculating demand"] : [name];
   const k = n.lines.stretch ? n.lines.stretch[i] : -1;
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops, k, purpose);
-  if (day === null) return [name, "Calculating demand"];
+  if (day === null) return traffic ? [name, "Calculating demand"] : [name];
   const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
   const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  if (!traffic) return out;
   // T-2007: the stretch's average load, every purpose's riders against the day's trips at crush
   const st = w?.lineStats[l.id];
   const all = purpose === "all" ? day : dailyRiders(dv, l.id, l.stops, k, "all");
@@ -97,15 +111,15 @@ function named(l: LineInput): HTMLDivElement {
 }
 
 /** A running bus line's riders on the stretch between its stops under the pointer, as a rail line's
- * tag says them (`lineTip`); nothing unless the track display is traffic. */
+ * tag says them (`lineTip`). */
 function busRiders(ov: Overlay, w: WorldView, line: number, px: number, py: number, traffic: boolean): TipLine[] {
   const l = w.save.lines.find((x) => x.num === line);
-  if (!l || !traffic) return [];
+  if (!l) return [];
   const dv = demandView.peek();
-  if (!dv) return ["Calculating demand"];
+  if (!dv) return traffic ? ["Calculating demand"] : [];
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops, ov.renderer.buses.stretchAt(ov, px, py, line), purpose);
-  if (day === null) return ["Calculating demand"];
+  if (day === null) return traffic ? ["Calculating demand"] : [];
   const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
   return purpose === "all" ? [count] : [count, `${purposeName(purpose)} trips only`];
 }
@@ -184,7 +198,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   // T-473: always the elevation, speed and lines on it, whatever the track display; no lines row
   // where none runs (T-526). Track under a bundle of lines loses to the lines, except at its edges.
   const on = linesOn(w, hit.edge);
-  if (on.length) return [...facts, lineBullets(on)];
+  if (on.length) {
+    return [...edgeRiders(n, hit.edge, on), ...facts, lineBullets(on)];
+  }
   return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : facts;
 }
 
@@ -207,6 +223,25 @@ function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: num
     rows.unshift(v >= 0 ? factRow(trainSpeedFact(v)) : "No trains run here");
   }
   return rows;
+}
+
+/** T-1907: the riders per day of every line on an edge, each on its stretch there, as a tag row;
+ * none until demand has an answer for each. Height and Speed draw no line strokes, so their tag is
+ * the track's, and this is where they say the riders. */
+function edgeRiders(n: NetworkBuffers, edge: number, on: LineInput[]): string[] {
+  const dv = demandView.peek();
+  if (!dv || !n.lines.stretch) return [];
+  const k = new Map<number, number>();
+  for (let i = 0; i < n.lines.count && k.size < on.length; i++) if (n.lines.edge[i] === edge && !k.has(n.lines.colour[i])) k.set(n.lines.colour[i], n.lines.stretch[i]);
+  const purpose = purposeFilter.peek();
+  let sum = 0;
+  for (const l of on) {
+    const day = dailyRiders(dv, l.id, l.stops, k.get(l.num) ?? -1, purpose);
+    if (day === null) return [];
+    sum += day;
+  }
+  const count = `${sum < 0.5 ? "0" : forecast(sum)} riders ${shownDayPhrase.peek()}`;
+  return purpose === "all" ? [count] : [count, `${purposeName(purpose)} trips only`];
 }
 
 function lineOnEdge(n: NetworkBuffers, edge: number): boolean {

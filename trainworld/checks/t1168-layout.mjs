@@ -35,7 +35,6 @@ const opts = (l, width) => ({
   line: l, stopS: api.line_stop_s(l, 0), width,
   lineName: (x) => short(api.line_name(x)),
   stopName: (x, s) => api.node_name(lineStops.get(x)[s]).split(' / ')[0],
-  stopCount: (x) => lineStops.get(x).length,
 });
 
 let fail = 0;
@@ -62,7 +61,6 @@ const layoutOf = (name, width = 340) => {
   check(!col('A').length && !col('R').length, 'the 2: no A or R column');
   const x149 = lay.rows.findIndex((r) => nm(lay.rows.indexOf(r)).startsWith('149 St-Grand'));
   check(x149 >= 0 && lay.rows[x149].cross.some((c) => short(api.line_name(c)) === '4'), 'the 2: the 4 crosses at 149 St-Grand Concourse');
-  check(lay.crossTip(x149, lay.rows[x149].cross.find((c) => short(api.line_name(c)) === '4')).includes('strays up to'), 'the 2: the crossing hover names the stray');
 }
 {
   const { col } = layoutOf('subway 6X');

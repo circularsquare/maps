@@ -79,8 +79,8 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   const trip = read?.id === id ? read.trip : undefined;
   const total = weights.reduce((s, x) => s + x.w, 0);
   const purposeTip = total > 0
-    ? `Drawn from the ${exact(total)} riders on this stretch in the ${PERIODS[p].name.toLowerCase()}:\n` + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
-    : "No split by purpose for this stretch yet";
+    ? `Drawn from the ${exact(total)} riders on this interval in the ${PERIODS[p].name.toLowerCase()}:\n` + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
+    : "No split by purpose for this interval yet";
   const better = trip && trip.train !== null && trip.car !== null ? (trip.train <= trip.car ? "train" : "car") : null;
   const chances = trip && trip.pTrain !== null && trip.pDrive !== null
     ? `\nOf the people making this trip in the ${PERIODS[p].name.toLowerCase()}, ${pct(trip.pTrain)} take the train and ${pct(trip.pDrive)} drive`

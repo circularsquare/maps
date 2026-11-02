@@ -3,10 +3,12 @@
 // real save in headless Chrome.
 //   node trainworld/checks/t1898-select.mjs [url]      (from the maps root; about two minutes)
 // 1. A run of three straight blueprint pieces and a single-track piece beside its middle; a box
-//    round the middle piece and the single track picks all four, but a drag of the pick moves only
-//    the four nodes inside the box: the run's outer ends stay, its outer pieces stretch.
-// 2. High speed in the bar makes the three double pieces high-speed track and counts the single one
-//    as not changed; Regular puts them back.
+//    round the middle piece and the single track (cutting across the run's outer pieces) picks those
+//    two only (T-2019: a piece with an end outside the box is not picked; a click on one still picks
+//    it), and a drag of the pick moves the four nodes inside the box: the run's outer ends stay, its
+//    outer pieces stretch.
+// 2. High speed in the bar makes the picked double piece high-speed track and counts the single one
+//    as not changed; Regular puts it back.
 // 3. At 320 km/h (Build tab: High speed) a 3 km straight and a tangent curve from its end at the
 //    design radius (zoom 14): bending the curve's middle 15 px sharper keeps 300 km/h or more, 15 px
 //    gentler keeps 320, 40 px sharper slows it only to what its legs allow (over 160), and a 15 px
@@ -112,22 +114,44 @@ try {
   const corners = await Promise.all([made.nodes[1], made.nodes[2], ...made.singleNodes].map(async (n) => screenOf(await nodeAt(n))));
   const L = Math.min(...corners.map((p) => p.x)) - 30, R = Math.max(...corners.map((p) => p.x)) + 30;
   const T = Math.min(...corners.map((p) => p.y)) - 30, B = Math.max(...corners.map((p) => p.y)) + 30;
-  await page.mouse.move(Math.round(L), Math.round(T));
-  await page.mouse.down();
-  for (let i = 1; i <= 10; i++) { await page.mouse.move(Math.round(L + ((R - L) * i) / 10), Math.round(T + ((B - T) * i) / 10)); await page.waitForTimeout(30); }
-  await page.screenshot({ path: `${OUT}box-drawn.png` });
-  await page.mouse.up();
-  await page.waitForTimeout(800);
-  const pick = await page.evaluate(async () => { const p = (await import('/src/game/blueprintPick.ts')).bpPicked.value; return { edges: p.edges, nodes: p.nodes ?? null }; });
-  const wantEdges = [...made.run, made.single];
+  const drawBox = async (shot) => {
+    await page.mouse.move(Math.round(L), Math.round(T));
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(Math.round(L + ((R - L) * i) / 10), Math.round(T + ((B - T) * i) / 10)); await page.waitForTimeout(30); }
+    if (shot) await page.screenshot({ path: `${OUT}${shot}` });
+    await page.mouse.up();
+    await page.waitForTimeout(800);
+  };
+  const picked = () => page.evaluate(async () => { const p = (await import('/src/game/blueprintPick.ts')).bpPicked.value; return { edges: p.edges, nodes: p.nodes ?? null }; });
+  const edgeMid = async (id) => {
+    const [a, b] = await page.evaluate((id) => { const e = window.tw.world.value.edges.find((x) => x.id === id); return [e.a, e.b]; }, id);
+    const pa = await screenOf(await nodeAt(a)), pb = await screenOf(await nodeAt(b));
+    return { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
+  };
+  await drawBox('box-drawn.png');
+  const pick = await picked();
+  // T-2019: only the middle piece and the single track have both ends in the box; the run's outer
+  // pieces cross its edge and are not picked, so what is picked is what a drag moves
+  const wantEdges = [made.run[1], made.single];
   const wantNodes = [made.nodes[1], made.nodes[2], ...made.singleNodes];
-  report(wantEdges.every((e) => pick.edges.includes(e)) && pick.nodes?.length === 4 && wantNodes.every((n) => pick.nodes.includes(n)),
-    'a box picks the track it touches and keeps the nodes inside it', `${pick.edges.length} pieces, nodes ${JSON.stringify(pick.nodes)}`);
+  report(pick.edges.length === 2 && wantEdges.every((e) => pick.edges.includes(e)) && pick.nodes?.length === 4 && wantNodes.every((n) => pick.nodes.includes(n)),
+    'a box picks only the track with both ends inside it, and keeps the nodes inside it', `${pick.edges.length} pieces ${JSON.stringify(pick.edges)}, nodes ${JSON.stringify(pick.nodes)}`);
+  report(!pick.edges.includes(made.run[0]) && !pick.edges.includes(made.run[2]), 'a piece the box only cuts across is not picked', `outer pieces ${made.run[0]} and ${made.run[2]}`);
   await page.mouse.move(5, 5);
   await page.waitForTimeout(300);
   const squares = await visible('.tool-marks > .pi-mark:not(.curve)');
   await page.screenshot({ path: `${OUT}box-picked.png` });
   report(squares.length === 4, 'the pick has squares only on the nodes inside the box', `${squares.length} squares`);
+  // a click on the outer piece, which the box left out, still picks it
+  const o0 = await edgeMid(made.run[0]);
+  await page.mouse.click(Math.round(o0.x), Math.round(o0.y));
+  await page.waitForTimeout(600);
+  const one = await picked();
+  report(one.edges.length === 1 && one.edges[0] === made.run[0], 'a click on a single piece still picks it', JSON.stringify(one.edges));
+  await page.mouse.move(5, 5);
+  await drawBox();
+  const again = await picked();
+  report(again.edges.length === 2 && wantEdges.every((e) => again.edges.includes(e)), 'the box drawn again picks the same two pieces', JSON.stringify(again.edges));
   const before = await Promise.all(made.nodes.map(nodeAt)), sBefore = await Promise.all(made.singleNodes.map(nodeAt));
   const at1 = await screenOf(before[1]), per = await packPerPx();
   await drag(at1.x, at1.y, 40, 30, 'box-during.png');
@@ -155,12 +179,12 @@ try {
   const h1 = await hsrOf(), n1 = await notice();
   await bar('bar-high-speed.png');
   await page.screenshot({ path: `${OUT}high-speed.png` });
-  report(h1.slice(0, 3).every(Boolean) && !h1[3] && n1 === '3 of 4 pieces set to high-speed track. 1 could not change.', 'High speed makes the picked double track high speed, single track left', `${JSON.stringify(h1)}, "${n1}"`);
+  report(h1[0] && !h1[1] && n1 === '1 of 2 pieces set to high-speed track. 1 could not change.', 'High speed makes the picked double track high speed, single track left', `${JSON.stringify(h1)}, "${n1}"`);
   was = await notice();
   await page.click('.blueprint-bar button:has-text("Regular")');
   await said(was);
   const h2 = await hsrOf(), n2 = await notice();
-  report(h2.every((v) => !v) && n2 === '3 of 4 pieces set to regular track. 1 could not change.', 'Regular puts it back', `${JSON.stringify(h2)}, "${n2}"`);
+  report(h2.every((v) => !v) && n2 === '1 of 2 pieces set to regular track. 1 could not change.', 'Regular puts it back', `${JSON.stringify(h2)}, "${n2}"`);
 
   // 3: 320 km/h
   await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.setTrackType('hsr'); ui.designSpeed.value = 320; });

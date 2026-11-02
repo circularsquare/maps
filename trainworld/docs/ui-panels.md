@@ -429,7 +429,7 @@ has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on S
 ## Controls
 
 [T-908, `ui/HelpPanel.tsx`] The "?" at the top of Settings [T-1099] (hover "Controls") opens a panel over the
-map beside the dock, under the tab row, listing only the controls no button shows: the bubble
+map beside the dock, under the tab row, listing only the controls no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
 the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
@@ -463,7 +463,7 @@ choice (3-color by default [T-1724], the old Mode mix, or 2-color [T-833], the o
 100% train; no hovers on any of it [T-804, T-1838]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names [off by default, T-1729], "Track at capacity" [the capacity markers; hover "Marks where stations or track cannot smoothly handle scheduled train frequencies", T-1843], "Trains at capacity" [T-1152, T-1843: the Traffic view's red edges, on by default; hover "Marks where trains are full and passengers cannot board"; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings [no hover, T-1843], "Lines side by side" [T-1886: lines sharing track as bands beside each other, off by default; [ui-map.md](ui-map.md) "Lines sharing track side by side"], Drives [T-1435, T-1477: the car-flow arcs, off by default; hover "Show arcs for common driving trips", T-1843; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels, Real network, Terrain [hover "Construction is more expensive in steep terrain", T-1843]), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, no hovers [T-1843], and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, no hovers [T-1843], and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], and "Rotate map with right drag" (on by default; off turns the map back to north; [ui-map.md](ui-map.md) "Globe") [T-2031], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is logged in ("Logged in as alice", "Logged in with
 Google" or "Not logged in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -514,8 +514,9 @@ sits under the mode [T-1822, T-1835].
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
 T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
-[T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, interest
-while a loan is out or was paid yesterday (the network's only, never a region's), new trains,
+[T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, "Loan" (the loan's payments,
+hover "Paid back over 60 game days in equal payments")
+while a loan is out or was paid yesterday (the network's only, never a region's) [T-2022], new trains,
 construction, net (Upkeep's hover is three lines: $30k per km of track per day, $50k per station per day, High speed rail 1.5x; Running trains' hover reads "Trains cost $4 per km, plus $2 per train car"; T-867, T-1838), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
@@ -540,7 +541,7 @@ Under the charts a tick under each day or hour that was a holiday or a superholi
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
-"Interest" line when it had loan interest, which the expenses line includes. The fares, whatever the toggle,
+"Loan" line when it had loan payments, which the expenses line includes [T-2022]. The fares, whatever the toggle,
 are one country's [T-1277, T-1690]: the selected station's or city's, else that of the built station
 nearest the view's centre, else (nothing built) the zone in view's, else the home city's. The graph and rows show the network's curve times that country's fare scale, and
 an edit there sets the curve (divided back by the scale), so every country's fares move with it.
@@ -584,8 +585,8 @@ by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change 
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
 fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852) with its scale in a stepper as a multiple of the country's default fares, "1.00x" until set (hover "Fares in Japan as a multiple of the default fares."),
-stepping by 0.05 from 0.10 to 19.90 in a game from T-1906 on (a click types one, kept to a hundredth
-of the stored scale); once the player has set one, an undo icon after the stepper ("Back to 1.00x")
+stepping by 0.05 from 0.10 to 19.90 in a game from T-1906 on (a click types one, kept to 0.01x and
+acting as exactly that, T-2021); once the player has set one, an undo icon after the stepper ("Back to 1.00x")
 returns to the default. Its stepper sits in the same column as the rows above
 [T-1277, T-1554, T-1584, T-1727, T-1906]. The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
@@ -603,14 +604,15 @@ layer's rail trips times exp(its fare sensitivity over its rail trips x the curv
 riders' mean trip length, line by line), fare income as the riders kept pay the new fares]. Under
 History, cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Last, "Loan"
-(not in a sandbox) [T-1661]: with none out, "Borrow" and three buttons, $1B, $5B and $10B, each hover
-giving the rule (1% of the loan a game day, one at a time), or, disabled, why it is refused
-[T-1906]: "Interest would be $50.0M per day. Average profit over the past 7 days was $32.0M per
+(not in a sandbox) [T-1661, T-2022]: with none out, "Borrow" and three buttons, $1B, $5B and $10B, each hover
+"Borrow $1.00B and pay back $22.2M per day for 60 days", or, disabled, why it is refused
+[T-1906]: "Payments would be $111M per day. Average profit over the past 7 days was $32.0M per
 day." (after one whole day "Profit yesterday was $32.0M per day."; profit is fares minus running
 costs and upkeep), or before a whole day with fares "Until
 there is a full day of fares, the most you can borrow is $1B."; with one out, "Borrowed" and its amount,
-"Interest a day" (hover: the rule) and a "Repay" button, disabled while the cash is under the loan
-(hover: what it needs). Default fares show rounded until the player changes the curve or that
+"Payment per day" (hover "Interest is 1% per day of what is left"), "Days left" (whole days, rounded up)
+and a "Repay" button that pays off what is left (hover "Pay back the $999M left from the cash"),
+disabled while the cash is under it (hover "Needs $999M in cash"). Default fares show rounded until the player changes the curve or that
 country's scale: in a save from before T-1906 a country's fares are the curve times its scale,
 rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar; in a newer game
 each country charges the round start curve it would have had as a new game's [T-1662, T-1906, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
@@ -973,7 +975,7 @@ registry centre and zoom, or over New York with none [T-310].
   status says "Loading data" with a thin bar after it, its hover naming the cities and step
   ("Loading Boston, 37%. Loading city data"); in a narrow bar the thin bar goes first, then the
   text ends in an ellipsis.
-- **Bubbles on their way** [T-1493]: with Homes or Destinations on, a zone in view that has its
+- **Bubbles on their way** [T-1493]: with Homes, Destinations or Total on, a zone in view that has its
   figures but whose own bubbles are not drawn yet (being asked for, waiting behind a solve, built)
   has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with
   no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in

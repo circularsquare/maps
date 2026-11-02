@@ -8,8 +8,9 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { loadBasemap } from "./basemap";
 import { styleUp } from "./styleReady";
 import { cityById, cityWithin, hashView } from "../game/cities";
-import { display } from "../game/ui";
+import { display, tool } from "../game/ui";
 import { effect } from "@preact/signals";
+import { mapBearing } from "./live";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -42,8 +43,14 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     },
     dragRotate: false,
     pitchWithRotate: false,
+    maxPitch: 0,
   });
+  // T-1907, T-2031: only a mouse drag turns the map (followRotation); fingers and keys neither turn
+  // nor tilt it
   map.touchZoomRotate.disableRotation();
+  map.keyboard.disableRotation();
+  map.touchPitch.disable();
+  followRotation(map);
   warnOnNetworkFailure(map);
   wheelGapsByEventTime(map);
   loadBasemap(map);
@@ -81,6 +88,23 @@ function followProjection(map: maplibregl.Map) {
   effect(() => {
     void display.value.projection;
     apply();
+  });
+}
+
+/** T-2031: a right-button drag (or Ctrl and a left drag, MapLibre's own) turns the map while the
+ * Settings switch is on, except in the blueprint and bus tools, whose right button pans or steps
+ * back. Switched off, the map eases back to north. */
+function followRotation(map: maplibregl.Map) {
+  map.on("move", () => {
+    const b = map.getBearing();
+    if (b !== mapBearing.peek()) mapBearing.value = b;
+  });
+  effect(() => {
+    const on = display.value.rotateMap;
+    const t = tool.value;
+    if (on && t !== "blueprint" && t !== "bus") map.dragRotate.enable();
+    else map.dragRotate.disable();
+    if (!on && map.getBearing() !== 0) map.easeTo({ bearing: 0, duration: 300 });
   });
 }
 

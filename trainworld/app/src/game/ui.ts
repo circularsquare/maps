@@ -7,7 +7,7 @@ import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PH
 import { loadNunito } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
-import { LEVELS, type Level, type Selection } from "./types";
+import { LEVELS, type BubbleEnd, type Level, type Selection } from "./types";
 
 export type Tab = "build" | "lines" | "stations" | "money" | "cities" | "settings";
 /** Tabs a remembered choice can name. */
@@ -59,8 +59,8 @@ export interface DisplaySettings {
   faces: boolean;
   /** the commuter dot map, coloured by how people get to work */
   commuters: boolean;
-  /** the dot map's end of the commute: where commuters live, or where they work */
-  commuterEnd: "home" | "work";
+  /** the bubbles' end of the trips: homes, destinations, or both summed (T-1903) */
+  commuterEnd: BubbleEnd;
   /** commuter bubbles' size, as a multiple of their width (T-099; 1 = BUBBLE_DENSITY's sizes) */
   bubbleSize: number;
   /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 30% under it */
@@ -100,6 +100,8 @@ export interface DisplaySettings {
   /** T-1207: the lighter map (fewer basemap layers, pixel ratio 1): on, off, or on by itself once
    * frames run slow while the camera moves (map/lite.ts) */
   lighterMap: "auto" | "on" | "off";
+  /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
+  rotateMap: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -144,6 +146,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   basemapContrast: 1,
   hillshade: false,
   lighterMap: "auto",
+  rotateMap: true,
 };
 
 const STORE = "trainworld-ui";

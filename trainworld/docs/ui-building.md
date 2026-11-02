@@ -62,7 +62,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
   by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
-  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $6M per road crossing", "Road crossings × 12", "= $72M") [T-1929]. The fleet quote previews the constructed service, so lines started together include their
+  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $6M per road crossing", "Road crossings × 12", "= $72M") [T-1929, T-2017]. The fleet quote previews the constructed service, so lines started together include their
   resulting delays, without changing the game. The quote, and a planned line's Construct price in
   its panel, are asked of the clock worker only while a panel shows them, 250 ms after the last
   edit (`game/quotes.ts`, T-1171); a state carries neither.
@@ -196,14 +196,14 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it starts, a bridge's top or a dip's bottom, where it ends, each once [T-707]),
   `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
   on yellow above 1x, deeper up to 2.5x, plain at 1x and below. It is the level's multiplier
-  (6.4: 0.3x at ground, 1.0x at +1) plus terrain's and water's surcharges, averaged over the track
+  (6.4: 0.5x at ground, 1.0x at +1) plus terrain's and water's surcharges, averaged over the track
   priced, both pairs on quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track. A third line names the roughest terrain class charged with its
   surcharge ("Mountains +3.0x", "Hills +1.2x", "Hills +0.5x") and "Water +2.5x" when the segment
   crosses water, and the roads it crosses at ground level with what they add ("12 road crossings
-  +$72M", 6.4), each with an icon [T-1394, T-1887, T-1890, T-1929]. The cost line's price includes
+  +$72M", 6.4), each with an icon; a chip's label and value stay on one line, and when the row is too wide whole chips move to the next line [T-1394, T-1887, T-1890, T-1929, T-2017]. The cost line's price includes
   the road crossings; its multiplier does not. Road tiles landing after the ghost was priced ask it
   again.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
@@ -441,14 +441,16 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   previewed as a node drag is: the nodes a box held inside it (T-1898, Anita: "only move the
   waypoints that are in the selection box"; `BpPicked.nodes`), and for pieces picked by a click,
   a double click or Shift+click both their ends; picked stations; never a crossover's ends. A
-  piece only partly in a box stretches to follow. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
+  piece with one end outside the pick stretches to follow. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
   drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
   While the tool has a pick, every movable node of it has the white square of a draggable point
   (from zoom 9), and the squares move with a drag [T-1869]; the drag shows each curve's speed
   label on the previewed track and, where it cannot be moved, why, as a node drag does.
-- **Left drag** elsewhere draws a box. It picks the track it touches and the stations inside it
-  (stations only from zoom 9, where they are drawn; a junction goes with its track, never on its
-  own), blueprint if the box holds any, else constructed; the pick follows the box live.
+- **Left drag** elsewhere draws a box. It picks the track with both its ends inside it (T-2019,
+  Anita: only "track segments that have both their endpoints in the selection box"; a piece the box
+  only cuts across is not picked or highlighted, so the pick is what a drag moves) and the stations
+  inside it (stations only from zoom 9, where they are drawn; a junction goes with its track, never
+  on its own), blueprint if the box holds any, else constructed; the pick follows the box live.
   **Shift+drag adds** to the pick, and the sum keeps one kind by the same rule (constructed pieces
   drop out once any blueprint is in). A click picks the piece under the pointer (a station first,
   blueprint over constructed), a click on nothing clears the pick. A piece that is constructed or
@@ -616,6 +618,16 @@ running line's trains stop at then wins over one they do; then the nearest.
   the track" for a bare track end), "Click to remove
   the stop" or "No track joins it to this line", under the station's name; a click on the last says
   why in its own tag for four seconds.
+- **The gap** (T-1896; `map/gapFlash.ts`, `TrackApi::stop_gap`): that click also draws where the
+  track is missing for about five seconds (4.2 s full, then a 0.8 s fade), in the trip explorer's
+  look for a straight line (a dotted ink line on a casing band, an open ring at each end). The two
+  sides are the track the line router can reach from the line's stops and from the station
+  (`reach_from`, the same search that marks the station unreachable). The gap runs from the loose
+  end (a node with one track end or none) of either side nearest the other side's track to that
+  nearest point of track, so a stretch built up to a line but not joined shows from its end to the
+  line; a side with no loose ends tries its nodes. Nothing is drawn when the two sides share track
+  (unreachable only by turning back). If either end is outside the view (less 45 px), the camera
+  fits the gap with 90 px of room, never zooming in.
 - **Loops** (T-798): the first stop's marker says "Click to close the loop" (tier 5) while the line
   has two or more stops and track leads round from the last stop back to it without the train going
   back the way it came; the click appends the first stop (`setStops`). On a loop it says "Click to

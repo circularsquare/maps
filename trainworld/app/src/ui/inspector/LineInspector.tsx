@@ -310,6 +310,18 @@ function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>): Li
     .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
 }
 
+/** T-1786: bullets in two rows, the first row the longer; T-2016: each row on its own, so a pill above a
+ * circle leaves no gap beside the circle. */
+export function TwoRows({ lines }: { lines: LineInput[] }) {
+  const k = Math.ceil(lines.length / 2);
+  return (
+    <span class="stop-chips2">
+      <span>{lines.slice(0, k).map((o) => <Chip line={o} size="sm" />)}</span>
+      <span>{lines.slice(k).map((o) => <Chip line={o} size="sm" />)}</span>
+    </span>
+  );
+}
+
 /** The busiest two as bullets, then `extra` (lines drawn beside it whose bullet shows at this row,
  * T-1391), the rest behind a "+" whose hover names them. */
 export function StopTransfers({ l, i, drawn, extra = [], tall }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[]; tall?: boolean }) {
@@ -320,8 +332,8 @@ export function StopTransfers({ l, i, drawn, extra = [], tall }: { l: LineInput;
   return (
     <>
       {tall
-        ? <span class="stop-chips2" style={{ gridTemplateColumns: `repeat(${Math.ceil(shown.length / 2)}, auto)` }}>{shown.map((o) => <Chip line={o} size="sm" />)}</span>
-        : shown.map((o) => <Chip line={o} size="sm" />)}
+        ? <TwoRows lines={shown} />
+        : <span class="bullets">{shown.map((o) => <Chip line={o} size="sm" />)}</span>}
       {rest.length > 0 && <span class="stop-more" data-tip={[...new Set(rest.map((o) => o.name))].join("\n")}>+</span>}
     </>
   );

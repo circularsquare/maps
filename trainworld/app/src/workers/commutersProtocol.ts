@@ -2,6 +2,7 @@
 // (workers/commuters.worker.ts), T-097.
 
 import type { FrameSpec } from "../game/frame";
+import type { BubbleEnd } from "../game/types";
 import type { Anchor } from "../map/geo";
 /** H3 resolutions the bubbles are aggregated at, finest first (cells are resolution 9). */
 export const BUBBLE_RES = [9, 8, 7, 6] as const;
@@ -16,8 +17,9 @@ export const DISC = 8;
  * Trip legs per m² of bubble, per end, so the bubbles' total area is the same at every aggregation
  * level. Destinations at 160,000 a km²: job centres are several times denser than any home area.
  * Homes at 50,000 a km² with the radius then cut by a quarter (T-1294, Anita), so about 88,900.
+ * Total (both ends summed, T-1903) at the destinations' density.
  */
-export const BUBBLE_DENSITY = { home: 50000 / 0.75 ** 2 / 1e6, work: 160000 / 1e6 } as const;
+export const BUBBLE_DENSITY = { home: 50000 / 0.75 ** 2 / 1e6, work: 160000 / 1e6, both: 160000 / 1e6 } as const;
 
 export type ToCommuters =
   /** `anchor`: the draw anchor positions are measured from (T-317, map/geo.ts); every answer says
@@ -25,7 +27,7 @@ export type ToCommuters =
   | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; frame: FrameSpec; anchor: Anchor }
   /** the draw anchor moved: measure the cells from the new one and send them back (`Moved`) */
   | { kind: "anchor"; id: number; anchor: Anchor }
-  | { kind: "build"; id: number; end: "home" | "work"; train: Float32Array; walk: Float32Array; drive: Float32Array }
+  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */
   | { kind: "sum"; id: number; cells: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array };
@@ -86,7 +88,7 @@ export interface BubbleLevel {
 export interface Bubbles {
   kind: "bubbles";
   id: number;
-  end: "home" | "work";
+  end: BubbleEnd;
   /** one per BUBBLE_RES */
   levels: BubbleLevel[];
   /** commuters by mode, the whole city */

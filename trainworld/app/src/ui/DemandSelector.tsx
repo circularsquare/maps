@@ -12,6 +12,7 @@ import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
 import { Search } from "./Search";
 import { KeepDot } from "./KeepDot";
+import { live, mapBearing } from "../map/live";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
@@ -27,10 +28,24 @@ export function MapTopLeft() {
     <StationRidership />
     <div class="map-find">
       <Search />
+      <NorthButton />
       <KeepDot />
     </div>
     <DemandStopped />
   </div>;
+}
+
+/** T-2031: while the map is turned, a needle pointing north; a click turns the map back. */
+function NorthButton() {
+  const b = mapBearing.value;
+  if (Math.abs(b) < 0.5) return null;
+  return <button type="button" class="btn icon map-north" aria-label="Turn map back to north" data-tip="Turn map back to north"
+    onClick={() => live.map?.easeTo({ bearing: 0, duration: 300 })}>
+    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style={{ transform: `rotate(${-b}deg)` }}>
+      <path d="M7 0.5 L9.3 7 L4.7 7 Z" fill="var(--accent)" />
+      <path d="M7 13.5 L9.3 7 L4.7 7 Z" fill="currentColor" opacity="0.4" />
+    </svg>
+  </button>;
 }
 
 /** The map's demand view stays within reach whichever dock tab is open. */
@@ -46,7 +61,7 @@ export function DemandSelector() {
   if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label="Demand on the map"><FoldCell row="bubbles" /></div>;
   return <div class="demand-selector" role="group" aria-label="Demand on the map">
     <FoldCell row="bubbles" />
-    {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"] ] as const).map(([value, label]) =>
+    {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"], ["both", "Total"] ] as const).map(([value, label]) =>
       <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value}
         aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : undefined}
         onClick={() => {

@@ -71,11 +71,11 @@ pub const BRAKE: f64 = 0.9;
 // ---- costs, US$M (SPEC 6.4) ----
 
 /// Per route-km of double track at multiplier 1, which is the first viaduct and cut and cover (T-1928,
-/// Anita 2026-11-02, notes/T-1897.md): ground is 0.3 of it (US$22.5M), bored tunnels 1.6 and 2.0, a
+/// Anita 2026-11-02, notes/T-1897.md): ground is 0.5 of it (US$37.5M; T-2017), bored tunnels 1.6 and 2.0, a
 /// bored tunnel near cheap-country metros (Korea, Spain: about $100-150M a tunnelled km with stations).
 pub const BASE_COST_PER_KM: f64 = 75.0;
 /// Multiplier per level, index `level + 3` (-3 .. +3): up and down mirror each other.
-pub const LEVEL_MULT: [f64; 7] = [2.0, 1.6, 1.0, 0.3, 1.0, 1.5, 2.0];
+pub const LEVEL_MULT: [f64; 7] = [2.0, 1.6, 1.0, 0.5, 1.0, 1.5, 2.0];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
 /// High-speed track's price over double track at the same level (T-817, notes/T-817.md).
 pub const HSR_COST: f64 = 1.5;
@@ -94,8 +94,7 @@ pub const FLAT_CROSSING_KM: f64 = 0.1;
 /// Water mask sampling step along track, m: half the pack mask's 25 m pixel (notes/T-004.md).
 pub const WATER_STEP: f64 = 12.5;
 /// What each terrain class adds to the level's multiplier (T-1890, Anita 2026-10-31): flat, low
-/// hills, high hills, mountains. Added, so at grade in mountains is 0.3 + 3 = 3.3x (T-1928: the
-/// same dollars as before, in the new unit).
+/// hills, high hills, mountains. Added, so at grade in mountains is 0.5 + 3 = 3.5x.
 pub const TERRAIN_SURCHARGE: [f64; 4] = [0.0, 0.5, 1.2, 3.0];
 /// What water adds to track's multiplier at any level (T-1890); stations, junctions and crossings
 /// over water take `WATER_COST` times their price.

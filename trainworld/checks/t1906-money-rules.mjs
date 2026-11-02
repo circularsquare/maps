@@ -3,7 +3,7 @@ import { gunzipSync } from 'node:zlib';
 import { launchChrome, collectErrors, importSave, registry, REAL_SAVE, ANGLE, ARTIFACTS } from './lib.mjs';
 // T-1906: a new game starts with round fares for where it starts (New York $2.50 base, Tokyo $1.30),
 // every other country at its own start fares by income, and every dial at 1.00x; the real save keeps its fares and stored scales and reads
-// 1.00x too; a loan whose interest a day is past the last week's profit a day is refused, with the
+// 1.00x too; a loan whose payment a day (T-2022) is past the last week's profit a day is refused, with the
 // reason in its hover.
 //   node trainworld/checks/t1906-money-rules.mjs [url]     (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on failure; pictures in artifacts/trainworld/t1906/. About a minute.
@@ -74,7 +74,7 @@ try {
     const loanAfterBig = window.tw.moneyState.value.loan;
     return { big, loanAfterBig };
   });
-  report('the worker refuses a $5B loan on day 1', r.loanAfterBig === 0, JSON.stringify(r));
+  report('the worker refuses a $5B loan on day 1', r.loanAfterBig === null, JSON.stringify(r));
   await page.evaluate(() => window.tw.map.jumpTo({ center: [139.7, 35.69], zoom: 10 }));
   await page.waitForFunction(() => [...document.querySelectorAll('ul.fare-rows .fr-what')].some((e) => e.textContent === 'Japan fares'), undefined, { timeout: 30000 }).catch(() => {});
   const jpRow = await scaleRow(page);
@@ -111,7 +111,7 @@ try {
     return { p, k1: loanAllowed(1000, p), k5: loanAllowed(5000, p), young, y1: loanAllowed(1000, young), y5: loanAllowed(5000, young), loss, l1: loanAllowed(1000, loss) };
   });
   report('profit a day: fares less running and upkeep over the last 7 whole days', rule.p?.perDay === 40 && rule.p?.days === 7, JSON.stringify(rule.p));
-  report('$40M a day of profit: $1B ($10M) allowed, $5B ($50M) refused', rule.k1 && !rule.k5);
+  report('$40M a day of profit: $1B ($22M a day, T-2022) allowed, $5B ($111M) refused', rule.k1 && !rule.k5);
   report('no day with fares yet: only $1B', rule.young === null && rule.y1 && !rule.y5);
   report('a loss: no loan', !rule.l1, JSON.stringify(rule.loss));
 

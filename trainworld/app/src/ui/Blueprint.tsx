@@ -40,7 +40,7 @@ function rowName(r: BlueprintItem) {
 // A display copy of the price list (sim/src/track/params.rs and cost.rs own the real one), so a row's
 // hover can show its price as the sum it is.
 const BASE_M_PER_KM = 75;
-const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.3, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
+const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
 const STATION_M: Record<Level, number> = { 3: 70, 2: 55, 1: 40, 0: 25, [-1]: 75, [-2]: 100, [-3]: 125 };
 const STATION_FIXED_M = 50;
 const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2, BUS_ROUTE_M_PER_KM = 1;

@@ -138,7 +138,7 @@ function stretchStrip(v: ArrayLike<number>, d: Demand, stops: number): string {
   const waits = levelStretches(v, d, stops);
   if (!waits) return "";
   const full = waits.filter((w) => w >= FULL_STRETCH_MIN).length;
-  const all = waits.length, text = full === 0 || all === 1 ? "" : full === all ? `Full on all ${all} stretches` : `Full on ${full} of ${all} stretches`;
+  const all = waits.length, text = full === 0 || all === 1 ? "" : full === all ? `Full on all ${all} intervals` : `Full on ${full} of ${all} intervals`;
   return `\n${tipStrip(waits.map(crowdColour))}` + (text ? `\n${text}` : "");
 }
 

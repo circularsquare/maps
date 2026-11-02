@@ -802,15 +802,15 @@ Money is present, not tight, as in NIMBY Rails: construction, train purchase, op
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
 US$75M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
 the dearer level) times a
-multiplier per level (Anita, 2026-11-02, T-1928, notes/T-1897.md: round numbers, +1 and -1 at 1.0).
+multiplier per level (Anita, 2026-11-02, T-1928, T-2017, notes/T-1897.md: round numbers, +1 and -1 at 1.0).
 Ground is the cheap level, as open country is; in a city it pays for the roads it crosses (below). A
 bored tunnel is near a cheap-country metro such as Korea's or Spain's, about
 US$100-150M a tunnelled km with its stations (T-805):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
 |---|---|---|---|---|---|---|---|
-| Multiplier | 2.0 | 1.5 | 1.0 | 0.3 | 1.0 | 1.6 | 2.0 |
-| US$M per km | 150 | 112.5 | 75 | 22.5 | 75 | 120 | 150 |
+| Multiplier | 2.0 | 1.5 | 1.0 | 0.5 | 1.0 | 1.6 | 2.0 |
+| US$M per km | 150 | 112.5 | 75 | 37.5 | 75 | 120 | 150 |
 
 In a **sandbox** game [T-728] every price, fare and cost is the same, but no edit is refused for
 money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-panels.md).
@@ -838,7 +838,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   | Mean 30 m slope over a cell | under 2.5° | 2.5-5.5° | 5.5-11° | 11° and over |
   | Ground round it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
   | Surcharge at -1 to +3 (`TERRAIN_SURCHARGE`) | +0 | +0.5 | +1.2 | +3 |
-  | US$M a km at ground level (0.3 +) | 22.5 | 60 | 112.5 | 247.5 |
+  | US$M a km at ground level (0.5 +) | 37.5 | 75 | 127.5 | 262.5 |
   | US$M a km on a +1 viaduct (1.0 +) | 75 | 112.5 | 165 | 300 |
   | US$M a km in a -2 tunnel (1.6) | 120 | 120 | 120 | 120 |
 
@@ -865,8 +865,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   14 lines (OpenMapTiles `transportation`): trunk, primary, secondary, tertiary, minor and busway
   count 1, a motorway 3; service ways, tracks, paths, and any road on a bridge or in a tunnel count
   none. A divided road is two lines, so it counts twice. So ground track through a dense centre
-  (11-13 crossings a km) costs about US$90-100M a km, more than a +1 viaduct, and in open country
-  (under 1 a km) about US$27M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
+  (11-13 crossings a km) costs about US$100-115M a km, more than a +1 viaduct, and in open country
+  (under 1 a km) about US$40M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
   sends, `roadFeed.ts`, decoded by `map/roadTiles.ts`) under each route preview and under the
   blueprint after a load, and puts each in the track model (`TrackApi::add_road_tile`,
   `track/roads.rs`: in Web Mercator tile units, indexed 32 x 32 cells a tile, never dropped in a
@@ -882,11 +882,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - Stations (200 m, two platform tracks), US$M: a fixed 50 that every station has wherever it is
   (platforms, halls, systems), plus a part by level, 25 at grade, 25 + 15 a level up, 50 + 25 a
   level down: 75 at grade, 90/105/120 at +1/+2/+3, 125/150/175 at -1/-2/-3 (T-1267). So a ground
-  station costs half a -2 one, where ground track costs under a fifth of -2 track. Scaled by
+  station costs half a -2 one, where ground track costs under a third of -2 track. Scaled by
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
-  1 km of track at the station's level (US$22.5M at grade, US$120M at -2, 2x over water), park and
+  1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water), park and
   ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
@@ -996,7 +996,10 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   T-1906 has no `"@"`, its curve in India's units and its scales absolute (`scales["*"]`, `EVERY`, in a
   few saves of 2026-11-02, is one default for every country). The Money tab shows a scale divided by
   the country's default, so every country reads 1.00x until the player sets one (`shownScale`,
-  `storedScale`). A new game's curve is set once from the country it starts in (`startNodes` in
+  `storedScale`). **The multiple is kept and used to the nearest 0.01x** (T-2021, Anita): set, loaded
+  (an old save's absolute scale becomes its multiple of the default, rounded, times the default) and in
+  every effect (`fareScale`, `fareFactors`, so fares charged, income and the demand sent to the sim),
+  so a displayed 1.30x acts as exactly 1.30 times the default (`multipleOf`, `tidyOwn`). A new game's curve is set once from the country it starts in (`startNodes` in
   `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at $0.0862, $0.2241 and
   $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the country's
   `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.30, $3.40 and $12. While

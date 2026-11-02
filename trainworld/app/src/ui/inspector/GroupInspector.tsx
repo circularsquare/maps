@@ -9,7 +9,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { stopKey } from "../../game/complexView";
-import { BAR, CHIP, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
+import { BAR, CHIP, CHIP_GAP, CHIP_W, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
+import { bulletText } from "../bullet";
 import { groupAllStops, groupBullet, groupHover, groupLabel, groupName, lineGroups } from "../../game/lineGroups";
 import { byHand, handOrder } from "../../game/handOrder";
 import { LINE_PALETTE } from "../../game/palette";
@@ -27,7 +28,7 @@ import { locateLine } from "../locate";
 import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
-import { DEMAND_LABEL } from "./LineInspector";
+import { DEMAND_LABEL, TwoRows } from "./LineInspector";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
@@ -135,8 +136,10 @@ export function GroupInspector({ group }: { group: number }) {
   const crossN = new Map(keys.map((k) => [k, (outside.get(k) ?? []).length]));
   const at = stationsById(w);
   const ups = ls.map((l) => drawnReversed(at.get(l.stops[0]), at.get(l.stops[l.stops.length - 1]), l.stops.length > 2 && l.stops[0] === l.stops[l.stops.length - 1]));
-  const sig = JSON.stringify([all, ins, [...crossN], ups]);
-  if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0, reversed: (k) => ups[k] }) };
+  // T-2016: each line's bullet width, so a two-character pill sits as snugly beside its neighbours
+  const chipW = ls.map((l) => bulletText(l.letter, "sm")?.w ?? CHIP_W);
+  const sig = JSON.stringify([all, ins, [...crossN], ups, chipW]);
+  if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0, reversed: (k) => ups[k], chipW: (k) => chipW[k] }) };
   const lay = kept.lay;
   const now = ls.map((l) => trainsNow(w, l));
   const W = lay.width;
@@ -179,7 +182,7 @@ export function GroupInspector({ group }: { group: number }) {
       if (Number.isFinite(x) && last.y > y + CHIP) floating.push({ k: b.col, x });
     });
     floating.sort((a, b) => a.x - b.x);
-    for (let i = 1; i < floating.length; i++) floating[i].x = Math.max(floating[i].x, floating[i - 1].x + CHIP);
+    for (let i = 1; i < floating.length; i++) floating[i].x = Math.max(floating[i].x, floating[i - 1].x + (chipW[floating[i - 1].k] + chipW[floating[i].k]) / 2 + CHIP_GAP);
   }
 
   const shown = lay.rows.map((row, r) => ({ row, r }));
@@ -297,13 +300,13 @@ export function GroupInspector({ group }: { group: number }) {
           {lay.bullets.map((b) => {
             const l = ls[b.col];
             return (
-              <span class={"group-bullet" + (now[b.col].n ? "" : " idle")} style={{ left: b.x - 8 + "px", top: b.y - 8 + "px" }} onPointerEnter={() => (groupHover.value = l.num)}>
+              <span class={"group-bullet" + (now[b.col].n ? "" : " idle")} style={{ left: b.x - chipW[b.col] / 2 + "px", top: b.y - 8 + "px" }} onPointerEnter={() => (groupHover.value = l.num)}>
                 <Chip line={l} size="sm" tip={now[b.col].n ? l.name : `${l.name}\nNo trains at ${DEMAND_LABEL[now[b.col].lev].toLowerCase()} demand`} />
               </span>
             );
           })}
           {floating.map((f) => (
-            <span class={"group-bullet float" + (now[f.k].n ? "" : " idle")} style={{ left: f.x - 8 + "px", top: past + 2 + "px" }} onPointerEnter={() => (groupHover.value = ls[f.k].num)}>
+            <span class={"group-bullet float" + (now[f.k].n ? "" : " idle")} style={{ left: f.x - chipW[f.k] / 2 + "px", top: past + 2 + "px" }} onPointerEnter={() => (groupHover.value = ls[f.k].num)}>
               <Chip line={ls[f.k]} size="sm" />
             </span>
           ))}
@@ -317,7 +320,7 @@ export function GroupInspector({ group }: { group: number }) {
                 <div class={"group-name" + (cells.some((c) => c.stop) ? "" : " muted")} style={{ top: row.y - row.h / 2 + "px", height: row.h + "px" }} data-tip={rowTip(r)}>
                   <span class="grow" onClick={() => (selection.value = { kind: "station", station: cells[0].station })}>{[...new Set(cells.map((c) => nm(c.station)))].join(" / ")}</span>
                   {tall
-                    ? <span class="stop-chips2" style={{ gridTemplateColumns: `repeat(${Math.ceil(chips.length / 2)}, auto)` }}>{chips.map((o) => <Chip line={o} size="sm" />)}</span>
+                    ? <TwoRows lines={chips} />
                     : chips.map((o) => <Chip line={o} size="sm" />)}
                   {rest.length > 0 && <span class="stop-more" data-tip={[...new Set(rest.map((o) => o.name))].join("\n")}>+</span>}
                 </div>

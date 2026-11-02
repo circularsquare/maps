@@ -2,6 +2,7 @@
 // Set by main.ts.
 
 import type { Map as MlMap } from "maplibre-gl";
+import { signal } from "@preact/signals";
 import { behindHorizon } from "./gl";
 import type { EdgeEditor } from "./edgeEdit";
 import type { NodeDrag } from "./nodeDrag";
@@ -20,6 +21,9 @@ export function hiddenOnGlobe(lng: number, lat: number): boolean {
   if (typeof t?.isLocationOccluded === "function") return t.isLocationOccluded({ lng, lat });
   return behindHorizon(live.overlay?.cam, lng, lat);
 }
+
+/** T-2031: the map's bearing, degrees; 0 is north up (set in map/mapView.ts, read by the north button) */
+export const mapBearing = signal(0);
 
 export const live:{ map: MlMap | null; overlay: Overlay | null; tools: Tools | null; edgeEditor: EdgeEditor | null; nodeDrag: NodeDrag | null } = {
   map: null,

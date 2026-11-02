@@ -150,7 +150,7 @@ fn double_up_makes_quad() {
 }
 
 /// T-711: the drawing tag's cost multiplier (`preview_route`'s fifth number) is the level's on
-/// plain ground for quad as for double (0.3x at ground, 1.0x at +1), and quad's price is what
+/// plain ground for quad as for double (0.5x at ground, 1.0x at +1), and quad's price is what
 /// the edit adds, twice double's.
 #[test]
 fn quad_preview_multiplier_and_price() {

@@ -206,7 +206,7 @@ function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => vo
     <i class="search-mark" />
     {/* a same-named result's tag goes on a line of its own, so a long name's ellipsis never hides it */}
     <span class={"grow" + (hit.built ? "" : " muted")}>{hit.name}{hit.tag && <><br /><span class="muted small">{hit.tag}</span></>}</span>
-    {hit.lines.length ? chips(hit.lines).map((l) => <Chip line={l} size="sm" pick={pickLine} />) : <span class="muted small">Station</span>}
+    {hit.lines.length ? <span class="bullets">{chips(hit.lines).map((l) => <Chip line={l} size="sm" pick={pickLine} />)}</span> : <span class="muted small">Station</span>}
   </>;
 }
 

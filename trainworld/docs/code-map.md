@@ -14,7 +14,7 @@ tests natively.
   platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`), `crossings.rs`, `links.rs`,
-  `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
+  `lines.rs` (the gap a stop cannot cross: `gap.rs`, T-1896), `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
   `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283; `TW_DUMP=<file>` writes `lines_info` at load, after the edits and after a save and reload, T-1787; `TW_LINES=<file>` a table of each line's rates, round trips, delays and trains at load, to compare two builds, T-1924);
   `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779).
@@ -99,7 +99,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   stations that changed, the world's in `complexView.ts` and the clock worker's snapshot in
   `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
-  hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
+  the pills' hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `scheduleCopy.ts`
   (a line's schedule settings copied and pasted, kept in localStorage, T-1293), `remove.ts` (removing things, with the question asked before removing
@@ -145,7 +145,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `markData.ts` and `gradeMarks.ts` (the crossing, junction and ramp marks: their data, and
   their draw pass, hit test and tag; T-629, T-655, T-1871), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
-  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which click
+  `faces.ts`, the rising faces on a 2D canvas of its own; T-686; `faceTones.ts`, their skin tones
+  and hair colours by country, T-1907), `buildSound.ts` (which click
   plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised bung, T-1413, the load chime, T-1655, and the sample player),
   `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
   all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
@@ -169,7 +170,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the nearest spot with room for the platform, T-671, T-1870), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093; a platform's end or a curve's middle, T-1869), `dragHandles.ts` (where the curve-middle and platform-end handles are, for the markers and the drag, T-1869), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
-  `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
+  `stopMarkers.ts` (the toggle markers of stop editing, T-233; the gap to a station they cannot
+  reach, drawn by `gapFlash.ts`, T-1896), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
 - Trains and trips: `trainGuard.ts` (trains in view held behind the train ahead on their track, drawn late by a lag per trip, T-1965; its line paths are `NetworkBuffers.pathTable` and the like), `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885; the car's and the plane's parts and the answer between places with no station from the market rows, `game/marketRule.ts`, T-1148).
@@ -349,7 +351,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
   `old/t1029-edit.mjs` (a series of track, station, service and undo edits on the real save or Japan's network at 6x throttling: the worker's and main thread's ms per edit under a CPU profile; `DUMP=1` hashes of the world, the drawn network and the GPU stroke buffers to compare across code or `?patch=` settings; 4-5 minutes for Japan),
   `old/t1170-anchor.mjs` (a save, default New York, its camera jumped between cities: jump to the first frame at the new draw anchor, long tasks, the worker's ms, and a track piece right after a jump; `SAVE`, `CITIES`, `THROTTLE`, `SETTLE`, `QUERY=patch=shiftcheck` for how far the moved pieces are from exact; T-1170),
-  `old/t1380-edit.mjs` (a series of station edits on Japan or the real save at 6x throttling: stations added, moved, constructed, linked, removed, a line's stops, undo and redo; the worker's and main thread's ms, `StationLabels.set` and the complexes named, page and clock worker both under a CPU profile; `TOP=1`; about 6 minutes for Japan), `t1380-complexes.mjs` and `t1380-labels.mjs` (random edits: the patched complexes and station names against a whole build, node only, seconds; in smoke), `t1799-bands.mjs` (the shared-track and real New York saves: bands crossing where two lines run on together, against the pairwise rule and from circles of partings, a click on each band of the busiest shared edges, trains on their band; `[url]`, own Vite, about 2 minutes), `t1381-strokes.mjs` (random edits to a stroke set's pieces: the strokes posted and merged against the pieces laid out whole, through a real transfer; node only, seconds; in smoke), `t2005-recent-builds.mjs` (the zones built in last are kept from the levels of detail's memory drops; node only, seconds; in smoke), `t1382-rows.mjs` (random edits on the real save or Japan in the track model: the state's rows read from changes against a fresh full read; `--self-test` and `--self-test-names` must detect a held-back change list; node only, about 30 s; in smoke),
+  `old/t1380-edit.mjs` (a series of station edits on Japan or the real save at 6x throttling: stations added, moved, constructed, linked, removed, a line's stops, undo and redo; the worker's and main thread's ms, `StationLabels.set` and the complexes named, page and clock worker both under a CPU profile; `TOP=1`; about 6 minutes for Japan), `t1380-complexes.mjs` and `t1380-labels.mjs` (random edits: the patched complexes and station names against a whole build, node only, seconds; in smoke), `t1799-bands.mjs` (the shared-track and real New York saves: bands crossing where two lines run on together, against the pairwise rule and from circles of partings, a click on each band of the busiest shared edges, trains on their band; `[url]`, own Vite, about 2 minutes), `t1381-strokes.mjs` (random edits to a stroke set's pieces: the strokes posted and merged against the pieces laid out whole, through a real transfer; node only, seconds; in smoke), `t2005-recent-builds.mjs` (the zones built in last are kept from the levels of detail's memory drops; node only, seconds; in smoke), `t2021-fare-multiple.mjs` (a fare multiplier of 1.2999 or 1.304 acts and shows as 1.30x, in a new game's multiples and an older save's absolute scale; node only, seconds; in smoke), `t1382-rows.mjs` (random edits on the real save or Japan in the track model: the state's rows read from changes against a fresh full read; `--self-test` and `--self-test-names` must detect a held-back change list; node only, about 30 s; in smoke),
   `old/t1283-edit-time.mjs` (the real save's busiest line switched to headways, stepped and set by hand: the clock worker's apply and total per edit, failing past 1 s; about a minute),
   `old/t1276-headway-steady.mjs` (the real save's busiest line on headways, its Medium headway stepped fast and slow both ways and typed with the clock running: every inspector change sampled, the schedule's three rows keep their order and never blank, and one headway shows one train count throughout, give or take the one train the landed edit may settle by; about 2 minutes),
   `old/t1286-market-scale.mjs <url> [country] [factor]` (the real save's weekday at the income's scales and with one country's scale at `factor` times its income's: each zone's local rail trips and the market's, by corridors touching that country; run on a build without the change too and compare the JSON in `artifacts/trainworld/t1286/`; about 3 minutes),
@@ -438,7 +440,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   games in New York and Tokyo start at $2.50 and $1.30, every other country at its own round start
   fares, the panel at 1.00x and a set dial stored as shown; the real save keeps its fares and stored scales and reads 1.00x; the loan profit rule and
   the refused buttons' hovers; pictures in t1906/; port 6150, about a minute; replaces
-  `old/t1554-fare-display.mjs`), `t1626-hsr-fare.mjs [url]` (a new game:
+  `old/t1554-fare-display.mjs`), `t2022-loan-schedule.mjs` (node with `--experimental-strip-types`,
+  no browser: `game/loan.ts`'s 60 equal payments drained in uneven slices, the total, zero after the
+  last day, a payment on short cash, a save round trip and a pre-T-2022 loan; a second),
+  `t1626-hsr-fare.mjs [url]` (a new game:
   the High speed fare row only once a line runs high-speed trains; on that line multipliers 1.0, 1.5
   and 2.0 lose riders and raise the fare a ride; a shot to artifacts/trainworld/t1626-money.png;
   about three minutes), `old/t1516-fares-never-negative.mjs`
@@ -492,6 +497,8 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   save or a fresh game: keep placing carries on over open ground and stops on joining a loose end or
   mid-piece; a 40 px press-drag moves a blueprint end and undoes, a short click branches; the squares
   show; about a minute, port 6183 by default, T-1811),
+  `t1896-gap.mjs` (Node, the track model: the gap a stop cannot cross on made-up track, and every
+  line's cut-off stations on the real save get theirs in time, T-1896),
   `t1899-stop-orders.mjs [clicks|build]` (Node, the track model: 120 click orders of stations along
   one way through a fresh city's track, none may backtrack; `build` writes the city's game file),
   `t1899-stop-logic.mjs [url]` (browser, that city: clicks along a way round run straight, a new line

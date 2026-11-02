@@ -10,6 +10,7 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
+import type { Loan } from "../game/loan";
 import type { DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
@@ -120,7 +121,7 @@ export type EditOp =
   /** T-1626: the fare multiplier on high-speed lines */
   | { op: "fareHsr"; mul: number }
   | { op: "fareTransfer"; usd: number }
-  /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or repay it in full; refused otherwise */
+  /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or pay off what is left of it; refused otherwise */
   | { op: "borrow"; amount: number }
   | { op: "repay" }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
@@ -242,11 +243,12 @@ export type ToClock =
    * what doubling up a track adds to the blueprint (`[US$M]`, or `[-1, ...]` and the refusal's
    * kinds as character codes, joined by newlines; T-708), or what removing pieces does to lines
    * (`removal_lines`, T-859), the blueprint's quote rows (`blueprint_cost_items`, seven numbers a
-   * row, US$M) or a planned line's `[build, trains]` in US$M (T-1171: priced only when a panel asks) */
+   * row, US$M) or a planned line's `[build, trains]` in US$M (T-1171: priced only when a panel asks),
+   * or the gap between a line and a station no track joins it to (`stop_gap`, T-1896) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -294,8 +296,8 @@ export interface MoneyState {
   busRouteKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  /** T-1661: the loan out, US$M; 0 for none */
-  loan: number;
+  /** T-1661, T-2022: the loan out, null for none */
+  loan: Loan | null;
   fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; hsr?: number; transfer?: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];

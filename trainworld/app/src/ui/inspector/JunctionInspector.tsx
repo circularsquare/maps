@@ -162,7 +162,7 @@ export function JunctionInspector({ node }: { node: number }) {
               <li>
                 <span class="grow what">
                   <span>
-                    {m.lines.map((id) => lineOf.get(id) && <Chip line={lineOf.get(id)!} size="sm" />)} {label(m)}
+                    <span class="bullets">{m.lines.map((id) => lineOf.get(id) && <Chip line={lineOf.get(id)!} size="sm" />)}</span> {label(m)}
                   </span>
                   {m.crosses.length > 0 && <span class="muted small">Crosses {m.crosses.map((k) => label(moves[k])).join(", ")}</span>}
                 </span>

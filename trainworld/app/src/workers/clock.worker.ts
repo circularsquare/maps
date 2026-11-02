@@ -12,12 +12,12 @@ import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01,
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { LOAN_AMOUNTS, LOAN_RATE, loanAllowed, loanProfit } from "../game/loan";
+import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
-import { FARE_BASELINE, incomeScale, oldCurveFactor, oldIncomeScale, scaleFromOld, START, tidyScale } from "../game/income";
+import { EVERY, FARE_BASELINE, incomeScale, oldCurveFactor, oldIncomeScale, scaleFromOld, START, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf, levelOn, quietKind } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -61,7 +61,9 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const k = !old ? 1 : oldCurveFactor(home) / (f.baseline ? 1 : oldIncomeScale(home));
   const g = k === 1 ? f : { base: f.base * k, perKm: f.perKm * k, nodes: f.nodes?.map(([km, v]) => [km, v * k] as [number, number]) };
   const scales: Record<string, number> = {};
-  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : tidyScale(v);
+  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : v;
+  // T-2021: each country's own multiple is kept to the nearest 0.01x (the start and every-country keys are the default's, not a multiple)
+  for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = tidyOwn(c, scales[c], scales);
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
   // T-1801: a save from before has none: changes are free
@@ -264,23 +266,25 @@ let demandFine: string[] | undefined;
 function setMode(m: GameMode) {
   mode = m;
   api!.set_unlimited(m === "sandbox");
-  if (m === "sandbox") loan = 0;
+  if (m === "sandbox") loan = null;
 }
-/** T-1661: the loan out, US$M (0 for none) */
-let loan = 0;
-/** A loan or its repayment (r 0 done, else refused: a sandbox, a loan already out, a size that is not offered, interest past the profits (T-1906), no loan, too little cash). */
+/** T-1661, T-2022: the loan out, null for none */
+let loan: Loan | null = null;
+/** A loan, or paying off what is left of it (r 0 done, else refused: a sandbox, a loan already out, a size that is not offered, payments past the profits (T-1906), no loan, too little cash). */
 function loanOp(op: { op: "borrow"; amount: number } | { op: "repay" }): number {
   const a = api!;
   if (mode === "sandbox") return 1;
   if (op.op === "borrow") {
-    if (loan > 0 || !LOAN_AMOUNTS.includes(op.amount)) return 1;
+    if (loan || !LOAN_AMOUNTS.includes(op.amount)) return 1;
     if (!loanAllowed(op.amount, loanProfit(ledger, Math.floor(moneyNow() / 86400)))) return 1;
-    loan = op.amount;
+    loan = newLoan(op.amount);
     a.set_cash(a.cash() + op.amount);
   } else {
-    if (loan <= 0 || a.cash() < loan) return 1;
-    a.set_cash(a.cash() - loan);
-    loan = 0;
+    if (!loan) return 1;
+    const left = loanBalance(loan);
+    if (a.cash() < left) return 1;
+    a.set_cash(a.cash() - left);
+    loan = null;
   }
   if (kept) kept.cash = a.cash();
   return 0;
@@ -1500,7 +1504,7 @@ function savedRegions(copy: <T extends object>(e: T) => T = (e) => ({ ...e })): 
  * charts cannot tell from the full figures and which gzips to about 60% of them. */
 function rounded<T extends object>(e: T): T {
   const out: Record<string, number> = { ...e } as Record<string, number>;
-  for (const k of ["fares", "running", "upkeep", "interest", "trains", "build"]) if (typeof out[k] === "number") out[k] = Math.round(out[k] * 1e6) / 1e6;
+  for (const k of ["fares", "running", "upkeep", "loan", "trains", "build"]) if (typeof out[k] === "number") out[k] = Math.round(out[k] * 1e6) / 1e6;
   if (typeof out.rides === "number") out.rides = Math.round(out.rides * 10) / 10;
   if (typeof out.points === "number") out.points = Math.round(out.points);
   return out as T;
@@ -1508,12 +1512,15 @@ function rounded<T extends object>(e: T): T {
 
 /** A saved ledger in order with one entry per day or hour: saves written before T-488 can list a
  * day twice, the second time empty, which merging adds back where it belongs. */
-function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; upkeep?: number; interest?: number; rides?: number; points?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
+function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; upkeep?: number; loan?: number; interest?: number; rides?: number; points?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
   const by = new Map<number, T>();
-  for (const e of list ?? []) {
-    const k = at(e), d = by.get(k);
-    if (!d) by.set(k, { ...e, rides: e.rides ?? 0, points: e.points ?? 0 });
-    else { d.fares += e.fares; d.running += e.running; d.upkeep = (d.upkeep ?? 0) + (e.upkeep ?? 0); d.interest = (d.interest ?? 0) + (e.interest ?? 0); d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
+  for (const old of list ?? []) {
+    // T-2022: a save's interest is its loan payments
+    const { interest, ...e } = old as T;
+    if (interest) (e as T).loan = (e.loan ?? 0) + interest;
+    const k = at(e as T), d = by.get(k);
+    if (!d) by.set(k, { ...e, rides: e.rides ?? 0, points: e.points ?? 0 } as T);
+    else { d.fares += e.fares; d.running += e.running; d.upkeep = (d.upkeep ?? 0) + (e.upkeep ?? 0); if (e.loan) d.loan = (d.loan ?? 0) + e.loan; d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
   }
   return [...by.values()].sort((a, b) => at(a) - at(b));
 }
@@ -1611,7 +1618,7 @@ function moneyState(): MoneyState {
     upkeepHsr: moneyParams[10],
     upkeep: upkeepNow(),
     economy: moneyParams[2],
-    loan,
+    loan: loan && { ...loan },
     fares: { ...fares },
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
     ledger: ledger.map((d) => ({ ...d })),
@@ -1723,8 +1730,9 @@ function settle(): boolean {
     const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);
     partFare = Math.max(partFare, wf);
     partCost = Math.max(partCost, wc);
-    const interest = loan * LOAN_RATE / 24 * dc;
-    cash += fare * df - (cost + up) * dc - interest;
+    const owed = loan ? loanDrain(loan, dc / 24) : 0;
+    if (loan && loan.days <= 0) loan = null;
+    cash += fare * df - (cost + up) * dc - owed;
     const d = dayEntry(Math.floor(t / 86400));
     d.fares += fare * df;
     d.running += cost * dc;
@@ -1735,9 +1743,9 @@ function settle(): boolean {
     e.running += cost * dc;
     e.upkeep = (e.upkeep ?? 0) + up * dc;
     e.rides = (e.rides ?? 0) + rides * df;
-    if (interest > 0) {
-      d.interest = (d.interest ?? 0) + interest;
-      e.interest = (e.interest ?? 0) + interest;
+    if (owed > 0) {
+      d.loan = (d.loan ?? 0) + owed;
+      e.loan = (e.loan ?? 0) + owed;
     }
     for (const [z, [f, c, n]] of regionHour(t, rl)) {
       for (const r of regionEntries(z, d.day, h)) { r.fares += f * df; r.running += c * dc; r.rides = (r.rides ?? 0) + n * df; }
@@ -1894,7 +1902,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...(loan > 0 ? { loan } : {}), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars, ...(guide ? { guide } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars, ...(guide ? { guide } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2212,7 +2220,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -2246,7 +2254,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   guide = h.mode === "sandbox" ? undefined : h.guide;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
-  loan = mode === "sandbox" ? 0 : Math.max(0, h.loan ?? 0);
+  loan = mode === "sandbox" ? null : loanFromSave(h);
   startZone = h.start;
   opened = h.opened;
   newer = unread;
@@ -2296,7 +2304,7 @@ async function newGame(spec?: NewGameSpec) {
     return;
   }
   setNewGame(spec);
-  loan = 0;
+  loan = null;
   newer = false;
   newerFile = null;
   api!.load(emptyTrack!);
@@ -3130,7 +3138,7 @@ function apply(op: EditOp): Applied {
     case "fareScale": {
       const scales = { ...fares.scales };
       if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
-      else scales[op.country] = tidyScale(op.scale);
+      else scales[op.country] = tidyOwn(op.country, op.scale, scales);
       fares = { ...fares, scales };
       return { r: 0 };
     }
@@ -3598,6 +3606,7 @@ async function handle(msg: ToClock) {
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
       : q.what === "stopTiers" ? api.stop_tiers(q.line)
+      : q.what === "stopGap" ? api.stop_gap(q.line, q.station)
       : q.what === "passedStations" ? api.passed_stations(q.line)
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)

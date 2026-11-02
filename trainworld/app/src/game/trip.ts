@@ -13,7 +13,7 @@ import { stationNameNear } from "./places";
 import type { Flows } from "./demand";
 import { PERIODS } from "./periods";
 import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "./purposes";
-import type { Selection } from "./types";
+import type { CommutersOneWay, Selection } from "./types";
 import { MARKET_TRIP_LAYOUT, TRIP_LAYOUT } from "../workers/demandProtocol";
 import { stationNames, stationsById, world } from "./world";
 
@@ -676,7 +676,7 @@ export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; places:
 /** Open the trip explorer between a bubble selection's near end (`near`, world metres) and a far
  * place at `at` (T-208, T-866), from the selection `from`; `fars` more than one are counted as a
  * group. Returns the trip selection. */
-export function openFarTrip(sel: Extract<Selection, { kind: "commuters" }>, from: Selection, near: [number, number], at: [number, number], far: MarketEnd, fars: MarketEnd[] = []): Selection {
+export function openFarTrip(sel: CommutersOneWay, from: Selection, near: [number, number], at: [number, number], far: MarketEnd, fars: MarketEnd[] = []): Selection {
   const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: at, far } : { kind: "trip", from: at, to: near, far };
   tripOpenedFrom.value = { trip, from, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0), ...(fars.length > 1 ? { fars } : {}), ...marketGroup(sel, near) } };
   return trip;

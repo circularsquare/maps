@@ -20,7 +20,7 @@ export function routeRow(r: TripRoute, st: ReadonlyMap<string, string>, ln: Read
   const names = rides.map((l) => ln.get(l.line)?.name ?? "a line").join(" then ");
   const label = (
     <>
-      {rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}
+      <span class="bullets">{rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}</span>
       <span class="grow">{names} to {to}</span>
     </>
   );

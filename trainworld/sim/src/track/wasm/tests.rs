@@ -34,22 +34,22 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     let deep: Vec<f64> = [0.0, 0.0, 0.0, 2000.0, -2.0, 0.0, 0.0, 3000.0, 2000.0, -2.0].to_vec();
     assert_eq!(a.add_route(&deep, &[], 2, false), 0, "{}", a.issues());
     let before = a.blueprint_cost();
-    assert!((before - (3.0 * 22.5 + 3.0 * 120.0)).abs() < 1e-6, "{before}");
+    assert!((before - (3.0 * 37.5 + 3.0 * 120.0)).abs() < 1e-6, "{before}");
     let ll = a.to_lonlat(1500.0, 1000.0);
     assert!(!a.add_terrain(b"TWT1"));
     assert!(a.add_terrain(&terrain_round(ll[0], ll[1], 120, 3)));
     let after = a.blueprint_cost();
-    assert!((after - (3.0 * 247.5 + 3.0 * 120.0)).abs() < 1e-6, "{after}");
+    assert!((after - (3.0 * 262.5 + 3.0 * 120.0)).abs() < 1e-6, "{after}");
     let rows = a.blueprint_cost_items();
     // T-1839: track rows carry the terrain class in the fifth field, the ground's part is no row
     let hilly: f64 = rows.chunks_exact(7).filter(|r| r[0] == 0.0 && r[4] == 3.0).map(|r| r[6]).sum();
-    assert!((hilly - 3.0 * 247.5).abs() < 1e-6 &&!rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
+    assert!((hilly - 3.0 * 262.5).abs() < 1e-6 &&!rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
     // the tool's preview prices the same and says how much ground it crosses in each class
     let more: Vec<f64> = free(0.0, -1000.0).iter().chain(free(2000.0, -1000.0).iter()).copied().collect();
     let out = a.preview_route(&more, &[], 2, false);
     assert_eq!(out[0], 1.0);
-    assert!((out[1] - 2.0 * 247.5).abs() < 1e-6 && (out[4] - 3.3).abs() < 1e-9, "{:?}", &out[..5]);
+    assert!((out[1] - 2.0 * 262.5).abs() < 1e-6 && (out[4] - 3.5).abs() < 1e-9, "{:?}", &out[..5]);
     let g = a.preview_ground();
     // T-1887: then over water
     assert!(g[3] > 1999.0 && g[0] < 1.0 && g[4] == 0.0, "{g:?}");
@@ -91,7 +91,7 @@ fn roads_charge_ground_track_and_stay_through_splits_and_loads() {
     let high = [0.0, 0.0, 0.0, -1000.0, 1.0, 0.0, 0.0, 3000.0, -1000.0, 1.0];
     assert_eq!(a.add_route(&high, &[], 2, false), 0, "{}", a.issues());
     let before = a.blueprint_cost();
-    assert!((before - 3.0 * (22.5 + 75.0)).abs() < 1e-6, "{before}");
+    assert!((before - 3.0 * (37.5 + 75.0)).abs() < 1e-6, "{before}");
     add_road_grid(&mut a, -500.0, -1500.0, 3500.0, 1500.0, 200);
     let after = a.blueprint_cost();
     let crossings = (after - before) / ROAD_CROSSING_COST;
@@ -106,7 +106,7 @@ fn roads_charge_ground_track_and_stay_through_splits_and_loads() {
     let out = a.preview_route(&more, &[], 2, false);
     let g = a.preview_ground();
     assert!(out[0] == 1.0 && (20.0..=24.0).contains(&g[5]) && (g[6] - g[5] * ROAD_CROSSING_COST).abs() < 1e-9, "{g:?}");
-    assert!((out[1] - (2.0 * 22.5 + g[6])).abs() < 1e-6, "{:?}", &out[..5]);
+    assert!((out[1] - (2.0 * 37.5 + g[6])).abs() < 1e-6, "{:?}", &out[..5]);
     let up = [0.0, 0.0, 0.0, 1000.0, 1.0, 0.0, 0.0, 2000.0, 1000.0, 1.0];
     a.preview_route(&up, &[], 2, false);
     assert_eq!(a.preview_ground()[5], 0.0);
@@ -732,10 +732,10 @@ fn blueprint_construct_run() {
     let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
     let pv = a.preview_route(&ends, &[], 2, false);
     assert_eq!(pv[0], 1.0, "{}", a.issues());
-    assert!((pv[1] - 3.0 * 22.5).abs() < 0.5, "cost {}", pv[1]);
+    assert!((pv[1] - 3.0 * 37.5).abs() < 0.5, "cost {}", pv[1]);
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     assert_eq!(a.built_cost(), 0.0);
-    assert!((a.blueprint_cost() - 67.5).abs() < 0.5);
+    assert!((a.blueprint_cost() - 112.5).abs() < 0.5);
     let nodes = a.nodes_info();
     let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
     let e = a.edges_info()[0] as u32;
@@ -770,8 +770,8 @@ fn blueprint_construct_run() {
     assert_eq!(a.fleet(), a.cars_needed());
     assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
     // three stations at grade, 75 each (T-1267)
-    assert!((6000.0 - a.cash() - (67.5 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-    assert!((a.last_charge() - (67.5 + 225.0 + trains)).abs() < 0.5);
+    assert!((6000.0 - a.cash() - (112.5 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+    assert!((a.last_charge() - (112.5 + 225.0 + trains)).abs() < 0.5);
     assert!(!a.can_undo(), "construct is final");
     // More trains an hour buys more trains; short of money it is refused and nothing changes.
     let (fleet, cash) = (a.fleet(), a.cash());

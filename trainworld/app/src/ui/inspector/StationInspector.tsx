@@ -274,7 +274,7 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
   const end = (x: string) => (
     <>
       <span>{byId.get(x)?.name ?? ""}</span>
-      {linesAt(x).map((l) => <Chip line={l} size="sm" />)}
+      <span class="bullets">{linesAt(x).map((l) => <Chip line={l} size="sm" />)}</span>
     </>
   );
   const length = (a: string, b: string) => {

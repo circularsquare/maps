@@ -317,20 +317,42 @@ function blueprintOf(s: { flags: Float32Array; count: number }): Int32Array {
   return had;
 }
 
-/** How many different lines have strokes on an edge. */
-function linesOnEdge(s: { colour: Uint32Array; edge: Uint32Array; count: number }, edge: number): number {
-  let first = -1;
-  for (let i = 0; i < s.count; i++) {
-    if (s.edge[i] !== edge) continue;
-    if (first < 0) first = s.colour[i];
-    else if (s.colour[i] !== first) return 2;
+/** T-1907: the different lines with a stroke within the slop, each with the segment found and its
+ * squared px distance. */
+function linesNear(ov: Overlay, n: NetworkBuffers, px: number, py: number, slop: number): { num: number; i: number; d: number }[] {
+  const L = n.lines, out: { num: number; i: number; d: number }[] = [];
+  for (let k = 0; k < 16; k++) {
+    const [i, d] = topSeg(ov, L.seg, L.count, px, py, slop, ov.renderer.pickBand, ov.renderer.pickBandPx, (j) => !out.some((x) => x.num === L.colour[j]), ov.renderer.lineWidths, ov.renderer.slotPx);
+    if (i < 0) break;
+    out.push({ num: L.colour[i], i, d });
   }
-  return 1;
+  return out;
 }
 
-/** `chooseShared`: a click (not a hover) on track several lines share picks the track, whose
- * inspector lists the lines, instead of the line drawn on top (T-654). */
-export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, current: Selection = null, chooseShared = false): Selection {
+/** T-1907: nearest first; lines within 2 px of the nearest left in a run are taken as tied and go
+ * larger first by `size`. */
+function rankLines(near: { num: number; i: number; d: number }[], size?: (num: number, seg: number) => number): { num: number; i: number; d: number }[] {
+  const byD = near.map((x) => ({ ...x, r: Math.sqrt(x.d), s: size ? size(x.num, x.i) : 0 })).sort((a, b) => a.r - b.r || a.num - b.num);
+  const out: typeof byD = [];
+  for (let k = 0; k < byD.length; ) {
+    let e = k + 1;
+    while (e < byD.length && byD[e].r - byD[k].r <= 2) e++;
+    out.push(...byD.slice(k, e).sort((a, b) => b.s - a.s || a.num - b.num));
+    k = e;
+  }
+  return out;
+}
+
+/** The order of the last click on lines drawn over each other (its place in local units), while
+ * clicks stay within CYCLE_PX of it (T-1907). */
+let cycle: { net: NetworkBuffers; x: number; y: number; order: { num: number; i: number }[]; edge: number } | null = null;
+const CYCLE_PX = 6;
+
+/** `chooseShared`: a click (not a hover). Where several lines are under the pointer it picks the
+ * nearest, the larger by `size` (line number, segment) within 2 px, and a click with one of them
+ * selected picks the next; after the last, the track, whose inspector lists them all (T-1907, which
+ * replaced T-654's track first). */
+export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, current: Selection = null, chooseShared = false, size?: (num: number, seg: number) => number): Selection {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
   const best = SLOP_PX * SLOP_PX + 1;
@@ -403,12 +425,28 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   }
   if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, B, bandPx, undefined, wide, widePx);
   const lineHit = li >= 0 ? String(n.lines.colour[li]) : null;
-  if (lineHit && !(current?.kind === "line" && current.line === lineHit)) {
-    // track several lines run over opens the track's list of them rather than the line on top (T-654),
-    // unless each line has its own band to click
-    if (chooseShared && !(bandPx > 0) && linesOnEdge(n.lines, n.lines.edge[li]) > 1) return { kind: "track", edge: n.lines.edge[li] };
-    return { kind: "line", line: lineHit };
+  if (lineHit && chooseShared) {
+    // a click by the last one, with one of its lines or its track selected, goes on round its order
+    const back = cycle && cycle.net === n ? ov.toScreen(cycle.x, cycle.y) : null;
+    const was = back && Math.hypot(px - back[0], py - back[1]) <= CYCLE_PX ? cycle : null;
+    const at = !was ? -1 : current?.kind === "line" ? was.order.findIndex((x) => String(x.num) === current.line)
+      : current?.kind === "track" && current.edge === was.edge ? was.order.length : -1;
+    if (was && at >= 0) {
+      const next = (at + 1) % (was.order.length + 1);
+      if (next === was.order.length) return { kind: "track", edge: was.edge };
+      return { kind: "line", line: String(was.order[next].num) };
+    }
+    const near = linesNear(ov, n, px, py, slop);
+    if (near.length > 1) {
+      const order = rankLines(near, size);
+      const here = ov.screenToLocal(px, py);
+      cycle = here ? { net: n, x: here[0], y: here[1], order, edge: n.lines.edge[order[0].i] } : null;
+      const cur = current?.kind === "line" ? order.findIndex((x) => String(x.num) === current.line) : -1;
+      return { kind: "line", line: String(order[cur === 0 ? 1 : 0].num) };
+    }
+    cycle = null;
   }
+  if (lineHit && !(current?.kind === "line" && current.line === lineHit)) return { kind: "line", line: lineHit };
 
   for (let i = n.junctionIds.length - 1; i >= 0; i--) {
     ov.toScreenInto(n.junctions[i * 2], n.junctions[i * 2 + 1], SCRATCH, 0);

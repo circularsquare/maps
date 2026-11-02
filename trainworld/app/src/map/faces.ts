@@ -7,6 +7,8 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { sizeCanvasLike } from "./gl";
 import type { Overlay } from "./overlay";
+import { mix, SKIN, toneFor } from "./faceTones";
+import { countryAt } from "../game/holidays";
 
 /** Faces alive at once, all platforms together. */
 const MAX_ALIVE = 36;
@@ -59,6 +61,8 @@ export interface Look {
   hair: Hair;
   /** index into `HAIR` */
   tint: number;
+  /** T-1907: index into faceTones' `SKIN`, or -1 for the mood's own colour */
+  skin: number;
 }
 export const EXPR_CHANCE: Record<Exclude<Expression, "">, number> = { flat: 0.04, sleepy: 0.04, crying: 0.08, dead: 0.03 };
 export const ACC_CHANCE: Record<Exclude<Accessory, "">, number> = { bucket: 0.025, cap: 0.025, shades: 0.025 };
@@ -73,7 +77,8 @@ const HAIR = [
   { fill: "#d9a441", edge: "#a97c24" },
 ];
 
-export function pickLook(mood: Mood, rand: () => number = Math.random): Look {
+/** `country`: the station's (T-1907), which sets the skin tone and hair colour (map/faceTones.ts). */
+export function pickLook(mood: Mood, rand: () => number = Math.random, country: string | null = null): Look {
   let expr: Expression = "", acc: Accessory = "";
   const re = rand(), ra = rand();
   const exprs: Exclude<Expression, "">[] = mood === "sad" ? ["crying", "dead"] : ["flat", "sleepy"];
@@ -84,12 +89,25 @@ export function pickLook(mood: Mood, rand: () => number = Math.random): Look {
   if (acc === "shades" && (expr === "dead" || expr === "sleepy" || expr === "crying")) acc = "";
   const child = rand() < CHILD_CHANCE;
   let hair: Hair = "";
-  const rh = rand(), tint = Math.floor(rand() * HAIR.length);
+  const rh = rand(), { skin, tint } = toneFor(country, HAIR.length, rand(), rand());
   if (!acc || acc === "shades") hair = rh < HAIR_CHANCE.short ? "short" : rh < HAIR_CHANCE.short + HAIR_CHANCE.long ? "long" : "";
-  return { mood, expr, acc, child, hair, tint };
+  return { mood, expr, acc, child, hair, tint, skin };
 }
 
-export const lookKey = (l: Look) => `${l.mood}|${l.expr}|${l.acc}|${l.hair}${l.hair ? l.tint : ""}`;
+export const lookKey = (l: Look) => `${l.mood}|${l.expr}|${l.acc}|${l.hair}${l.hair ? l.tint : ""}|${l.skin}`;
+
+/** T-1907: a skin-toned face's colours keep a hint of its mood, the tired greyer and the sad bluer. */
+const MOOD_TINT: Record<Mood, { to: string; t: number } | null> = {
+  happy: null,
+  tired: { to: "#cfc8a8", t: 0.35 },
+  sad: { to: "#78aef0", t: 0.45 },
+};
+function faceColours(l: Look): { fill: string; edge: string; ink: string } {
+  const s = SKIN[l.skin];
+  if (!s) return LOOK[l.mood];
+  const m = MOOD_TINT[l.mood];
+  return m ? { fill: mix(s.fill, m.to, m.t), edge: mix(s.edge, m.to, m.t * 0.6), ink: s.ink } : s;
+}
 
 const HATS = {
   bucket: { fill: "#a9d8b8", edge: "#5f9e76" },
@@ -99,13 +117,13 @@ const HATS = {
 /** One face, its centre at SPRITE/2 across and 4 px under SPRITE/2 down, leaving room above for a
  * hat. */
 export function sprite(look: Look | Mood): HTMLCanvasElement {
-  const l: Look = typeof look === "string" ? { mood: look, expr: "", acc: "", child: false, hair: "", tint: 0 } : look;
+  const l: Look = typeof look === "string" ? { mood: look, expr: "", acc: "", child: false, hair: "", tint: 0, skin: -1 } : look;
   const { mood, expr, acc, hair } = l;
   const c = document.createElement("canvas");
   c.width = c.height = SPRITE;
   const g = c.getContext("2d")!;
   const m = SPRITE / 2, mx = m, my = m + 4;
-  const { fill, edge, ink } = LOOK[mood];
+  const { fill, edge, ink } = faceColours(l);
   g.lineCap = "round";
   g.lineJoin = "round";
   const h = hair ? HAIR[l.tint % HAIR.length] : null;
@@ -342,6 +360,8 @@ export class Faces {
   private sprites = new Map<string, HTMLCanvasElement>();
   private faces: Face[] = [];
   private raf = 0;
+  /** each platform's country (T-1907), looked up at its first face */
+  private countries = new Map<string, string>();
 
   constructor(private map: MlMap, private overlay: Overlay) {
     map.on("resize", () => this.canvas && this.size());
@@ -369,10 +389,12 @@ export class Faces {
     this.ensure();
     const now = performance.now();
     const half = Math.max(10, length * 0.4);
+    let country = this.countries.get(station) ?? null;
+    if (!country && (country = countryAt(lng, lat))) this.countries.set(station, country);
     for (let i = 0; i < room; i++) {
       const along = (Math.random() * 2 - 1) * half, across = (Math.random() * 2 - 1) * 2;
       const dx = Math.cos(heading) * along - Math.sin(heading) * across, dy = Math.sin(heading) * along + Math.cos(heading) * across;
-      this.faces.push({ station, lng, lat, dx, dy, born: now + i * 160 + Math.random() * 220, look: pickLook(mood), sway: (Math.random() * 2 - 1) * 5 });
+      this.faces.push({ station, lng, lat, dx, dy, born: now + i * 160 + Math.random() * 220, look: pickLook(mood, Math.random, country), sway: (Math.random() * 2 - 1) * 5 });
     }
     if (!this.raf) this.raf = requestAnimationFrame(() => this.frame());
   }

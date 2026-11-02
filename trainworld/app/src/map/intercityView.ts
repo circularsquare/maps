@@ -36,7 +36,7 @@ import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, UNBU
 import { openedZones } from "../game/openedZones";
 import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
-import type { Selection } from "../game/types";
+import type { CommutersOneWay, Selection } from "../game/types";
 import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
@@ -49,6 +49,26 @@ import { hiddenOnGlobe } from "./live";
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
 
 const marketOf = (id: string) => cityById(id).place;
+
+/** Two directions' longer trips as one (T-1903: a Total selection's starts and ends), by place and zone. */
+function mergePlaces(a: PlaceFlows, b: PlaceFlows): PlaceFlows {
+  const opt = (x?: number, y?: number) => (x === undefined && y === undefined ? undefined : (x ?? 0) + (y ?? 0));
+  // the far ends' mean position, weighted by trips (NaN with none)
+  const mean = (x: number, n: number, y: number, m: number) => (n > 0 && m > 0 ? (x * n + y * m) / (n + m) : n > 0 ? x : y);
+  const places = new Map<number, PlaceFlows["places"][number]>();
+  for (const p of [...a.places, ...b.places]) {
+    const q = places.get(p.place);
+    places.set(p.place, !q ? { ...p } : { ...q, all: q.all + p.all, rail: q.rail + p.rail, air: q.air + p.air, car: q.car + p.car, walk: opt(q.walk, p.walk),
+      x: mean(q.x, q.all, p.x, p.all), y: mean(q.y, q.all, p.y, p.all) });
+  }
+  const zones = new Map<number, PlaceFlows["zones"][number]>();
+  for (const z of [...a.zones, ...b.zones]) {
+    const q = zones.get(z.gid);
+    zones.set(z.gid, !q ? { ...z } : { ...q, all: q.all + z.all, rail: q.rail + z.rail, walk: opt(q.walk, z.walk) });
+  }
+  return { all: a.all + b.all, rail: a.rail + b.rail, air: a.air + b.air, car: a.car + b.car, walk: opt(a.walk, b.walk), elsewhere: a.elsewhere + b.elsewhere,
+    places: [...places.values()].sort((p, q) => q.all - p.all), zones: [...zones.values()].sort((p, q) => q.all - p.all) };
+}
 /** the zones still loading (game/loading.ts `zoneLoads`), changing only when the set does */
 const loadingZones = computed(() => [...zoneLoads.value.keys()].sort().join(","));
 
@@ -220,7 +240,8 @@ function rowOf(p: MarketPairs, za: number): Float64Array {
 export function startIntercityView(view: DemandOverlay, map: MlMap) {
   let marks: Marks | null = null;
   /** what is on show, redrawn when the setting changes */
-  let current: { flows: PlaceFlows; verb: string; own: number; by?: IntercitySelection["byPurpose"]; end?: "home" | "work" } | null = null;
+  /** `parts`: a Total selection's two directions, trips starting here (home) and ending here (work) */
+  let current: { flows: PlaceFlows; verb: string; own: number; by?: IntercitySelection["byPurpose"]; end?: "home" | "work"; parts?: { home: PlaceFlows; work: PlaceFlows } } | null = null;
   const labels = document.createElement("div");
   labels.className = "intercity-labels";
   map.getContainer().appendChild(labels);
@@ -472,8 +493,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   // ---- what is selected ----
   let seen: Selection = null;
   let ask = 0;
-  const show = (flows: PlaceFlows, verb: string, own: number, by?: IntercitySelection["byPurpose"], end?: "home" | "work") => {
-    current = { flows, verb, own, by, end };
+  const show = (flows: PlaceFlows, verb: string, own: number, by?: IntercitySelection["byPurpose"], end?: "home" | "work", parts?: { home: PlaceFlows; work: PlaceFlows }) => {
+    current = { flows, verb, own, by, end, parts };
     render();
   };
   const clear = () => {
@@ -499,7 +520,23 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const mine = ++ask;
     void (async () => {
       const own = marketOf(focus);
-      const r = await intercitySelection(sel.end, Uint32Array.from(sel.cells));
+      const cells = Uint32Array.from(sel.cells);
+      if (sel.end === "both") {
+        // T-1903: Total draws the trips starting here and those ending here as one far end
+        const [h, w] = await Promise.all([intercitySelection("home", cells), intercitySelection("work", cells)]);
+        if (mine !== ask || !h || !w || selection.peek() !== sel) return;
+        const by = new Map<PurposeKey, { starts: PlaceFlows; ends: PlaceFlows }>();
+        for (const k of new Set([...(h.byPurpose?.keys() ?? []), ...(w.byPurpose?.keys() ?? [])])) {
+          const s = h.byPurpose?.get(k)?.starts, e = w.byPurpose?.get(k)?.ends;
+          const m = s && e ? mergePlaces(s, e) : (s ?? e)!;
+          by.set(k, { starts: m, ends: m });
+        }
+        const all = mergePlaces(h.starts, w.ends);
+        intercityPick.value = { sel, data: { ...h, starts: all, ends: all, byPurpose: by }, own };
+        show(all, "to and from", own, by, "home", { home: h.starts, work: w.ends });
+        return;
+      }
+      const r = await intercitySelection(sel.end, cells);
       // null: the workers moved on, and the next demandView asks again
       if (mine !== ask || !r || selection.peek() !== sel) return;
       intercityPick.value = { sel, data: r, own };
@@ -516,9 +553,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     if (marks?.far && sel?.kind === "commuters" && nearPointOf) {
       const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
       const f = i >= 0 ? marks.far[i] : undefined;
-      const near = f ? nearPointOf(sel) : null;
-      if (!f || !near) return undefined;
-      return openFarTrip(sel, sel, near, f.at, { place: f.place, gid: f.gid });
+      if (!f) return undefined;
+      const one = oneWay(sel, [f]);
+      const near = nearPointOf(one);
+      if (!near) return undefined;
+      return openFarTrip(one, sel, near, f.at, { place: f.place, gid: f.gid });
     }
     if (!marks?.cities) return undefined;
     const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
@@ -563,10 +602,19 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     if (!ends.length) return null;
     if (sel?.kind === "city") return placeTrip(sel, ends.map((e) => e.place));
     if (sel?.kind !== "commuters" || !marks?.far || !nearPointOf) return null;
-    const near = nearPointOf(sel);
+    const one = oneWay(sel, ends);
+    const near = nearPointOf(one);
     if (!near) return null;
     const first = marks.far.find((f) => f.place === ends[0].place && f.gid === ends[0].gid)!;
-    return openFarTrip(sel, sel, near, first.at, ends[0], ends);
+    return openFarTrip(one, sel, near, first.at, ends[0], ends);
+  };
+  /** T-1903: a Total selection opens the trip explorer, which counts one way, as homes or
+   * destinations: whichever has more of its trips with `fars` */
+  const oneWay = (sel: Extract<Selection, { kind: "commuters" }>, fars: { place: number; gid: number }[]): CommutersOneWay => {
+    if (sel.end !== "both") return { ...sel, end: sel.end };
+    const n = (pf: PlaceFlows) => fars.reduce((s, f) => s + ((f.gid >= 0 ? pf.zones.find((z) => z.gid === f.gid)?.all : pf.places.find((q) => q.place === f.place)?.all) ?? 0), 0);
+    const p = current?.parts;
+    return { ...sel, end: p && n(p.work) > n(p.home) ? "work" : "home" };
   };
   return { click };
 }

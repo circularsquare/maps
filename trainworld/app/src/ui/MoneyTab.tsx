@@ -2,7 +2,7 @@
 
 import { busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
 import { borrow, repay, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
-import { LOAN_AMOUNTS, LOAN_RATE, loanAllowed, loanProfit } from "../game/loan";
+import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
 import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
@@ -20,7 +20,7 @@ import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { MoneyHistory } from "./MoneyHistory";
 import { ScopeToggle } from "./listParts";
 
-const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.interest ?? 0) - d.trains - d.build;
+const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.loan ?? 0) - d.trains - d.build;
 
 /** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
 function upkeepTip(m: MoneyState): string {
@@ -203,11 +203,11 @@ export function MoneyTab() {
           {cell(prev, (d) => -(d.upkeep ?? 0))}
           <TodayCell zone={zone} v={(d) => -(d.upkeep ?? 0)} />
         </tr>
-        {zone === null && (m.loan > 0 || (prev?.interest ?? 0) > 0) && (
+        {zone === null && (m.loan || (prev?.loan ?? 0) > 0) && (
           <tr>
-            <td data-tip={`Interest on the loan: ${LOAN_RATE * 100}% of it per game day`}>Interest</td>
-            {cell(prev, (d) => -(d.interest ?? 0))}
-            <TodayCell zone={zone} v={(d) => -(d.interest ?? 0)} />
+            <td data-tip={`Paid back over ${LOAN_TERM} game days in equal payments`}>Loan</td>
+            {cell(prev, (d) => -(d.loan ?? 0))}
+            <TodayCell zone={zone} v={(d) => -(d.loan ?? 0)} />
           </tr>
         )}
         <tr>
@@ -284,14 +284,13 @@ function loanRefusal(amount: number, profit: ReturnType<typeof loanProfit>): str
   if (loanAllowed(amount, profit)) return null;
   if (!profit) return `Until there is a full day of fares, the most you can borrow is $${LOAN_AMOUNTS[0] / 1000}B.`;
   const over = profit.days === 1 ? "Profit yesterday was" : `Average profit over the past ${profit.days} days was`;
-  return `Interest would be ${money(amount * LOAN_RATE * 1e6)} per day. ${over} ${money(profit.perDay * 1e6)} per day.`;
+  return `Payments would be ${money(loanPayment(amount) * 1e6)} per day. ${over} ${money(profit.perDay * 1e6)} per day.`;
 }
 
 /** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out, each refused
- * past what profits pay (T-1906); the loan, its interest a day and Repay while one is. */
-function LoanRows({ loan, ledger }: { loan: number; ledger: DayLedger[] }) {
-  const rule = `Interest is ${LOAN_RATE * 100}% of the loan per game day. One loan at a time.`;
-  if (loan <= 0) {
+ * past what profits pay (T-1906); the loan, its payment a day, the days left and Repay while one is (T-2022). */
+function LoanRows({ loan, ledger }: { loan: Loan | null; ledger: DayLedger[] }) {
+  if (!loan) {
     const profit = loanProfit(ledger, liveMoney.value.today?.day ?? ledger[ledger.length - 1]?.day ?? 0);
     return (
       <>
@@ -301,7 +300,7 @@ function LoanRows({ loan, ledger }: { loan: number; ledger: DayLedger[] }) {
             <span class="group">
               {LOAN_AMOUNTS.map((a) => {
                 const no = loanRefusal(a, profit);
-                return <button class="btn text" disabled={no !== null} data-tip={no ?? `Borrow ${money(a * 1e6)}. ${rule}`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
+                return <button class="btn text" disabled={no !== null} data-tip={no ?? `Borrow ${money(a * 1e6)} and pay back ${money(loanPayment(a) * 1e6)} per day for ${LOAN_TERM} days`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
               })}
             </span>
           </Row>
@@ -309,14 +308,16 @@ function LoanRows({ loan, ledger }: { loan: number; ledger: DayLedger[] }) {
       </>
     );
   }
-  const canPay = liveMoney.value.cash >= loan;
+  const left = loanBalance(loan);
+  const canPay = liveMoney.value.cash >= left;
   return (
     <>
       <div class="h">Loan</div>
       <ul class="rows">
-        <Row label="Borrowed"><Money dollars={loan * 1e6} /></Row>
-        <Row label="Interest per day"><span data-tip={rule}><Money dollars={loan * LOAN_RATE * 1e6} /></span></Row>
-        <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? `Pay back ${money(loan * 1e6)} from the cash` : `Needs ${money(loan * 1e6)} in cash`} onClick={() => void repay()}>Repay</button>} />
+        <Row label="Borrowed"><Money dollars={loan.amount * 1e6} /></Row>
+        <Row label="Payment per day"><span data-tip={`Interest is ${LOAN_RATE * 100}% per day of what is left`}><Money dollars={loan.pay * 1e6} /></span></Row>
+        <Row label="Days left">{Math.ceil(loan.days)}</Row>
+        <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? `Pay back the ${money(left * 1e6)} left from the cash` : `Needs ${money(left * 1e6)} in cash`} onClick={() => void repay()}>Repay</button>} />
       </ul>
     </>
   );
