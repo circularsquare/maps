@@ -21,7 +21,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { selection, tool } from "../game/ui";
+import { designSpeed, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { queryClock } from "../workers/clockClient";
@@ -272,11 +272,11 @@ export class NodeDrag {
     const b = d.bend;
     if (b) {
       // the shape last shown is the one made
-      if (b.pis && b.shown) await edit({ op: "edgePis", edge: b.edge, pis: this.bentPis(b, b.shown) });
+      if (b.pis && b.shown) await edit({ op: "edgePis", edge: b.edge, pis: this.bentPis(b, b.shown), design: designSpeed.peek() });
       this.clear();
       return;
     }
-    const a = await edit({ op: "moveNode", node: d.node, x: d.x, y: d.y });
+    const a = await edit({ op: "moveNode", node: d.node, x: d.x, y: d.y, design: designSpeed.peek() });
     if (!a.ok && !a.issues.length) say("This cannot be moved there.", true);
     this.clear();
     if (a.ok) live.tools?.nodeMoved(d.node);

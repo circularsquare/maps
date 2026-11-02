@@ -1028,11 +1028,12 @@ fn reshape_blueprint_track() {
     assert_eq!(a.undo(), 0);
     assert_eq!(a.undo(), 0);
     assert_eq!(a.edges_info()[5], len0);
-    // a set radius the edit leaves alone goes back to auto when its corner moves where it no
-    // longer fits (radii a split froze); one the edit sets becomes the widest that fits (T-1895)
+    // a set radius the edit leaves alone stays set when its corner moves where it no longer fits,
+    // narrowed by the fit (T-1898); one the edit sets becomes the widest that fits (T-1895)
     assert_eq!(a.set_edge_pis(e, &[2000.0, 1000.0, 1500.0, 0.0]), 0, "{}", a.issues());
     assert_eq!(a.set_edge_pis(e, &[300.0, 1500.0, 1500.0, 0.0]), 0, "{}", a.issues());
-    assert_eq!(a.edge_pis(e)[3], 0.0, "back to auto");
+    assert_eq!(a.edge_pis(e)[3], 1500.0, "kept as the most");
+    assert!(a.edge_pis(e)[5] < 1500.0, "narrowed to {}", a.edge_pis(e)[5]);
     assert_eq!(a.set_edge_pis(e, &[300.0, 1500.0, 1700.0, 0.0]), 0, "{}", a.issues());
     let r = a.edge_pis(e)[3];
     assert!(r > 100.0 && r < 1700.0, "narrowed to {r}");

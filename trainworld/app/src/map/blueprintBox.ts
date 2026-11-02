@@ -1,5 +1,6 @@
 // The blueprint tool (T-333): a drag draws a box on the map, and the blueprint track it touches and
-// the blueprint stations inside it are picked (game/blueprintPick.ts). Shift adds to what is picked.
+// the blueprint stations inside it are picked (game/blueprintPick.ts); dragging the pick moves the
+// nodes that were inside the box (T-1898). Shift adds to what is picked.
 // A click picks the piece under the pointer, a click on nothing clears. Shift+click adds the track on
 // the shortest way there from the pick, or takes a picked piece out; a double click picks the run
 // junction to junction (T-1680).
@@ -11,10 +12,10 @@
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
 import type { Map as MlMap } from "maplibre-gl";
-import { bpPicked, onlyOneKind, pathTo, removePicked, runOf, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
+import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, switchPicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
+import { designSpeed, selection, tool } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { selection, tool } from "../game/ui";
 import { touchInput } from "./touch";
 import { edit, say, world } from "../game/world";
 import type { ClockClient } from "../workers/clockClient";
@@ -165,14 +166,13 @@ export class BlueprintBox {
 
   private movableOf: { pick: BpPicked | null; version: number; nodes: number[] } = { pick: null, version: -1, nodes: [] };
   /** The pick's nodes that can move: every edge there blueprint, no crossover, station not
-   * constructed (the ends of picked track and picked stations). */
+   * constructed (of `dragNodes`: those a box held, or the ends of picked track and picked stations). */
   private movable(): number[] {
     const w = world.peek(), p = bpPicked.peek();
     if (!w || (!p.edges.length && !p.stations.length)) return [];
     const was = this.movableOf;
     if (was.pick === p && was.version === w.version) return was.nodes;
-    const ids = new Set(p.stations);
-    for (const e of w.edges) if (p.edges.includes(e.id)) ids.add(e.a), ids.add(e.b);
+    const ids = dragNodes(p);
     const fixed = new Set<number>();
     for (const e of w.edges) if (e.crossover) fixed.add(e.a), fixed.add(e.b);
     const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
@@ -391,7 +391,7 @@ export class BlueprintBox {
         this.drag = { x0: m.x0, y0: m.y0, x: m.x0, y: m.y0, add, base: add ? bpPicked.peek() : { edges: [], stations: [] }, pan: false, moved: false };
       } else {
         this.client.dropPreview();
-        const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy });
+        const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy, design: designSpeed.peek() });
         if (!a.ok && !a.issues.length) say(m.issues.length ? describeIssues(m.issues) : "This cannot be moved there.", true);
         this.endMove();
         return;
@@ -444,16 +444,16 @@ export class BlueprintBox {
   private toggle(hit: BpPicked) {
     const cur = bpPicked.peek();
     const has = hit.edges.length ? cur.edges.includes(hit.edges[0]) : cur.stations.includes(hit.stations[0]);
-    bpPicked.value = has
-      ? { edges: cur.edges.filter((v) => !hit.edges.includes(v)), stations: cur.stations.filter((v) => !hit.stations.includes(v)), built: cur.built }
-      : unionPicked(cur, hit);
+    bpPicked.value = has ? withoutPicked(cur, hit) : unionPicked(cur, hit);
   }
 
   /** The track a box touches and the stations (drawn, so zoomed in enough) inside it: the
-   * blueprint ones if there are any, else the constructed ones (T-829). */
+   * blueprint ones if there are any, else the constructed ones (T-829). Only the nodes inside it
+   * move with a drag (T-1898, Anita: "only move the waypoints that are in the selection box"):
+   * track partly inside stretches to follow. */
   private within(r: Rect): BpPicked {
     const n = this.overlay.renderer.net, w = world.peek();
-    const out: BpPicked = { edges: [], stations: [] };
+    const out: BpPicked = { edges: [], stations: [], nodes: [] };
     if (!n || !w) return out;
     const p = new Float64Array(4);
     for (const [id, pts] of n.edgePts) {
@@ -472,6 +472,18 @@ export class BlueprintBox {
         if (p[0] >= r[0] && p[0] <= r[2] && p[1] >= r[1] && p[1] <= r[3]) out.stations.push(Number(n.stationIds[i]));
       }
     }
+    const inside = new Set(out.stations);
+    const picked = new Set(out.edges);
+    for (const e of w.edges) {
+      if (!picked.has(e.id)) continue;
+      for (const id of [e.a, e.b]) {
+        const node = w.nodes.get(id);
+        if (!node || inside.has(id)) continue;
+        const [x, y] = this.overlay.toScreen(...toLocal(node.lng, node.lat));
+        if (x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]) inside.add(id);
+      }
+    }
+    out.nodes = [...inside];
     return onlyOneKind(out);
   }
 

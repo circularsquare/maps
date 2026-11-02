@@ -10,7 +10,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { selection, tool } from "../game/ui";
+import { designSpeed, selection, tool } from "../game/ui";
 import { edit, world } from "../game/world";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { queryClock } from "../workers/clockClient";
@@ -108,7 +108,7 @@ export class EdgeEditor {
 
   /** New PIs for a stretch (the inspector's radius stepper): one undoable edit. */
   async setPis(edge: number, pis: EdgePi[]) {
-    await edit({ op: "edgePis", edge, pis: pis.map(toInput) });
+    await edit({ op: "edgePis", edge, pis: pis.map(toInput), design: designSpeed.peek() });
   }
 
   get dragging() {
@@ -165,7 +165,7 @@ export class EdgeEditor {
     if (!d) return;
     this.drag = null;
     const edge = this.edge;
-    if (d.moved && edge >= 0) await edit({ op: "edgePis", edge, pis: this.shape.pis.map(toInput) });
+    if (d.moved && edge >= 0) await edit({ op: "edgePis", edge, pis: this.shape.pis.map(toInput), design: designSpeed.peek() });
     this.endPreview();
   }
 
@@ -215,7 +215,7 @@ export class EdgeEditor {
         : this.shape.legacy
           ? []
           : this.shape.pis
-              .filter((c) => c.used > 0 && c.used < 5000)
+              .filter((c) => c.used > 0 && (c.used < 5000 || (c.kmh > 160.5 && c.kmh < 319.5)))
               .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), kmh: c.kmh }));
     labels.forEach((c, i) => {
       const [x, y] = this.overlay.toScreen(...c.at);

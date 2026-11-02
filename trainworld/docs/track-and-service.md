@@ -101,7 +101,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   Insertion, removal and per-corner levels each use the existing checked, undoable shape edit.
   The inspector can also put all corners on one level; its ends keep theirs, with ramps. A radius
   the stepper sets wider than the corner has room for is stored as the widest that fits. A set
-  radius that a drag leaves no room for goes back to auto (splitting track for a station or a
+  radius that a drag leaves no room for stays set and the fit narrows it (T-1898; splitting track for a station or a
   branch sets the radii next to the split so its shape does not change; a split inside a curve
   gives the two new PIs the radius that ends each half at the node, the curve's own to under 1%,
   or goes to the curve's end when it is within a few metres of it, T-258). A joint between two
@@ -121,9 +121,15 @@ Full design, numbers and sources: `notes/T-008.md`.
   **Several nodes together** (T-475, `move_nodes`, the Select tool's pick): each moves by the same
   offset; an edge between two of them shifts whole, PIs included; an edge to a node that stays
   follows the one-node rule above. All must be movable, or nothing moves.
+  **Drags keep the design speed** (T-1898): in any reshape or node drag a set radius stays set,
+  the most its corner may take (above), so a 320 km/h curve bent a little keeps nearly 320 and
+  slows only as far as its legs make it, and is wide again once they have room. A corner the edit
+  moves or adds (a dragged PI, a bent curve's PI, the PI moving with a node, a new lead-in) with an
+  auto radius is laid out for the Build tab's target max speed, as a drawn corner is (`design_radii`;
+  each of these edits carries `design`). At 160 nothing is set and corners stay auto.
   **Bending a curve by its middle** (T-1869): dragging a blueprint curve's middle moves that
   curve's PI so the curve's middle lands under the pointer, its radius rule unchanged (auto stays
-  auto, a set radius that no longer fits goes back to auto): a reshape of the edge as dragging the
+  auto, a set radius stays set and narrows to fit): a reshape of the edge as dragging the
   PI is, the PI found by stepping it by the preview's miss until the middle is within 0.3 m. Either
   end of a blueprint platform drags the station node by the pointer's move.
 - **Placing stations**: click on track (it is split there), or a loose end's node for an end
@@ -214,7 +220,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
   ordinary track at plain nodes like any two pieces; a split keeps the flag on both halves, and
   two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
-  It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
+  Blueprint double track switches to high speed or back, shape and level kept, with the Select
+  tool's bar (T-1898, `TrackApi::set_edges_hsr`); single track, crossovers and constructed track
+  stay as they are. It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track

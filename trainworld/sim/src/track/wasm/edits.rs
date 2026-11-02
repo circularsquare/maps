@@ -159,8 +159,8 @@ impl TrackApi {
     }
 
     /// A blueprint edge with new PIs, its ends and tracks kept. A set radius the edit did not
-    /// change that no longer fits its legs (a neighbour moved; radii frozen by a split) goes back
-    /// to auto; one the edit set is kept, and refused if it does not fit.
+    /// change stays a most (`narrow_set_radii`); one the edit set is stored as the widest that
+    /// fits. A corner the edit placed or moved is laid out for the design speed (`design_corners`).
     ///
     /// A joint between two pieces of one stroke (T-244: a plain node where this edge and one
     /// other blueprint edge meet, lying on the straight between the corners either side of it)
@@ -192,7 +192,9 @@ impl TrackApi {
                 others.push((o, which, od));
             }
         }
-        relax_radii(net, &mut d, &moved, &|k, p| same_count && old[k].radius == p.radius);
+        narrow_set_radii(net, &mut d, &moved, &|k, p| !(same_count && old[k].radius == p.radius));
+        let made: Vec<usize> = (0..d.pis.len()).filter(|&k| !old.iter().any(|o| (o.x, o.y) == (d.pis[k].x, d.pis[k].y))).collect();
+        design_corners(net, &mut d, &moved, &made, self.route_cap);
         let verts = vertices_of(net, &d, &moved);
         let (tracks, hsr) = (d.tracks, d.hsr);
         if moved.is_empty() {
@@ -208,8 +210,7 @@ impl TrackApi {
         let (a, b) = (d.a, d.b);
         ops.push(Op::Edge { id, data: Some(d) });
         let (mut before, mut after) = (vec![], vec![]);
-        for (o, which, mut od) in others {
-            relax_radii(net, &mut od, &moved, &|_, _| true);
+        for (o, which, od) in others {
             let mut v = vertices_of(net, &od, &moved);
             let joint = net.end_node(o, which);
             // drawn in the stroke's order: up to the joint at a, on from the joint at b
@@ -415,10 +416,12 @@ impl TrackApi {
         let net = &self.w.net;
         let f = net.fit(&vertices_of(net, &d, &[]));
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
+        // T-1898: high-speed track's curves are labelled up to its own cap, not 160
+        let top = if d.hsr { V_HSR } else { V_TOP };
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
             let (mx, my) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i + 1]); (x, y) } else { (p.x, p.y) };
-            out.extend([p.x, p.y, p.radius, p.level as f64, rad, if rad > 0.0 { geom::curve_speed(rad) * 3.6 } else { V_TOP * 3.6 }, mx, my]);
+            out.extend([p.x, p.y, p.radius, p.level as f64, rad, if rad > 0.0 { (A_LAT * rad).sqrt().min(top) * 3.6 } else { top * 3.6 }, mx, my]);
         }
         out
     }
@@ -450,8 +453,9 @@ impl TrackApi {
     /// keeps its heading (SPEC 6.2: every end leaves along it): there each edge's first PI, the
     /// one that holds the heading, moves with the node; an edge with no PI of its own to move
     /// (none at all, or only one that also holds the far node's heading) gets a lead-in PI on the
-    /// heading, as drawing does. A track end's heading follows its edge. A set radius that no
-    /// longer fits its legs goes back to auto.
+    /// heading, as drawing does. A track end's heading follows its edge. A set radius stays a
+    /// most (`narrow_set_radii`); a corner moved or added is laid out for the design speed
+    /// (`design_corners`, T-1898).
     pub fn move_node(&mut self, node: u32, x: f64, y: f64) -> u32 {
         match self.moved(node, x, y) {
             Ok((op, _)) => self.run(op),
@@ -474,7 +478,9 @@ impl TrackApi {
         self.preview_moved(op, shapes)
     }
 
-    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<Vec<Pi>>) -> Vec<f64> {
+    /// `shapes`: each changed edge's vertices and whether it is high-speed track (T-1898: its
+    /// curves' speeds go up to 320, not 160).
+    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<(Vec<Pi>, bool)>) -> Vec<f64> {
         let r = self.w.trial(op);
         self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
@@ -487,10 +493,10 @@ impl TrackApi {
         }));
         self.last = None;
         let mut out = vec![ok, cost, shapes.len() as f64];
-        for verts in &shapes {
+        for (verts, hsr) in &shapes {
             let f = self.w.net.fit(verts);
             out.push(verts.len() as f64);
-            vertex_rows(&f, verts, &mut out, V_TOP);
+            vertex_rows(&f, verts, &mut out, if *hsr { V_HSR } else { V_TOP });
             let mut pts = vec![];
             render_samples(&f.pieces, &f.vert, &mut pts);
             out.push((pts.len() / 3) as f64);
@@ -500,7 +506,7 @@ impl TrackApi {
     }
 
     /// The edit moving `node` to (x, y) (`move_node`), and each changed edge's vertices.
-    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<Vec<Pi>>), Issue> {
+    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<(Vec<Pi>, bool)>), Issue> {
         let Some(nd) = self.w.net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
         self.moved_by(&[node], quant(x) - nd.x, quant(y) - nd.y)
     }
@@ -528,7 +534,7 @@ impl TrackApi {
     }
 
     /// The edit moving `nodes` by (dx, dy), and each changed edge's vertices.
-    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<Vec<Pi>>), Issue> {
+    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<(Vec<Pi>, bool)>), Issue> {
         let net = &self.w.net;
         let mut ops = vec![];
         let mut moves: Vec<(u32, f64, f64)> = vec![];
@@ -572,7 +578,7 @@ impl TrackApi {
                         p.y = quant(p.y + dy);
                     }
                     d.thru.clear();
-                    shapes.push(vertices_of(net, &d, &moves));
+                    shapes.push((vertices_of(net, &d, &moves), d.hsr));
                     ops.push(Op::Edge { id: e, data: Some(d) });
                     continue;
                 }
@@ -586,33 +592,41 @@ impl TrackApi {
                     v.reverse();
                 }
                 let leave = if ports.side[k] == 1 { h } else { h + PI };
+                // which of `v` this edit placed or moved (T-1898)
+                let mut made = vec![false; v.len()];
+                let (scaled, cap) = (net.frame().scaled(), self.route_cap);
                 if keep && (v.len() >= 2 || (v.len() == 1 && !far_keep)) {
                     // its first PI holds the heading: it moves with the node
                     v[0].x = quant(v[0].x + dx);
                     v[0].y = quant(v[0].y + dy);
+                    made[0] = true;
                 } else {
                     if v.is_empty() && far_keep {
                         let fp = &net.node_ports[fi];
                         let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
                         let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
-                        if let Some(p) = lead_in_along(fx, fy, net.node_level[fi], fdir, (x, y), net.frame().scaled()) {
+                        if let Some(p) = lead_in_capped(fx, fy, net.node_level[fi], fdir, (x, y), scaled, cap) {
                             v.push(p);
+                            made.push(true);
                         }
                     }
                     if keep {
                         let toward = v.first().map_or((fx, fy), |p| (p.x, p.y));
-                        if let Some(p) = lead_in_along(x, y, net.node_level[i], leave, toward, net.frame().scaled()) {
+                        if let Some(p) = lead_in_capped(x, y, net.node_level[i], leave, toward, scaled, cap) {
                             v.insert(0, p);
+                            made.insert(0, true);
                         }
                     }
                 }
                 if which == 1 {
                     v.reverse();
+                    made.reverse();
                 }
                 d.pis = v;
                 d.thru.clear();
-                relax_radii(net, &mut d, &moves, &|_, _| true);
-                shapes.push(vertices_of(net, &d, &moves));
+                let made: Vec<usize> = (0..made.len()).filter(|&k| made[k]).collect();
+                design_corners(net, &mut d, &moves, &made, cap);
+                shapes.push((vertices_of(net, &d, &moves), d.hsr));
                 ops.push(Op::Edge { id: e, data: Some(d) });
             }
         }

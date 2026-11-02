@@ -1751,9 +1751,11 @@ export function curveLabels(verts: Float64Array): CurveLabel[] {
     const r = verts[i * 4 + 2];
     let j = i + 1;
     while (j < nv - 1 && r > 0 && Math.abs(verts[j * 4 + 2] - r) < 0.5) j++;
-    if (r > 0 && r < 5000) {
+    // T-1898: a wide curve on high-speed track is labelled while it holds trains under 320
+    const kmh = verts[i * 4 + 3];
+    if (r > 0 && (r < 5000 || (kmh > 160.5 && kmh < 319.5))) {
       const m = (i + j - 1) >> 1;
-      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], radius: r, kmh: verts[i * 4 + 3] });
+      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], radius: r, kmh });
     }
     i = j;
   }

@@ -498,6 +498,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   bends the curve through the pointer and undoes, a platform end moves its station, the Select tool's
   pick shows its squares moving and the speed labels; screenshots to artifacts/trainworld/t1869/;
   about a minute, port 6169 by default, T-1869),
+  `t1898-select.mjs [url]` (the real save, real mouse drags: a Select tool box moves only the nodes
+  inside it, the bar's High speed and Regular with their messages, and a 320 km/h curve bent and its
+  joint dragged keeping its speed; screenshots to artifacts/trainworld/t1898/; about two minutes,
+  port 6190 by default, T-1898),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),

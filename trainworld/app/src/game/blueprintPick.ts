@@ -17,9 +17,33 @@ export interface BpPicked {
   stations: number[];
   /** constructed pieces (a pick with no blueprint in it); else blueprint only */
   built?: boolean;
+  /** T-1898: the nodes a drag of the pick moves, where a box picked only those inside it; absent,
+   * every end of the picked track and every picked station (`dragNodes`) */
+  nodes?: number[];
 }
 
 const NONE: BpPicked = { edges: [], stations: [] };
+
+/** The nodes a drag of the pick moves (some may turn out not movable: map/blueprintBox.ts). */
+export function dragNodes(p: BpPicked): number[] {
+  if (p.nodes) return p.nodes;
+  const w = world.peek();
+  const ids = new Set(p.stations);
+  if (w && p.edges.length) {
+    const picked = new Set(p.edges);
+    for (const e of w.edges) if (picked.has(e.id)) ids.add(e.a), ids.add(e.b);
+  }
+  return [...ids];
+}
+
+/** `p` with its `nodes` cut to those still on its track or stations. */
+function trimNodes(p: BpPicked): BpPicked {
+  if (!p.nodes) return p;
+  const on = new Set(dragNodes({ edges: p.edges, stations: p.stations }));
+  const nodes = p.nodes.filter((n) => on.has(n));
+  return nodes.length === p.nodes.length ? p : { ...p, nodes };
+}
+
 export const bpPicked = signal<BpPicked>(NONE);
 
 export const clearBpPicked = () => {
@@ -33,14 +57,21 @@ export function onlyOneKind(p: BpPicked): BpPicked {
   const builtEdge = new Set(w.edges.filter((e) => e.built).map((e) => e.id));
   const builtStation = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
   const bp = p.edges.some((e) => !builtEdge.has(e)) || p.stations.some((s) => !builtStation.has(s));
-  return bp
-    ? { edges: p.edges.filter((e) => !builtEdge.has(e)), stations: p.stations.filter((s) => !builtStation.has(s)) }
-    : { edges: p.edges, stations: p.stations, built: p.edges.length + p.stations.length > 0 };
+  const nodes = p.nodes ? { nodes: p.nodes } : {};
+  return trimNodes(bp
+    ? { edges: p.edges.filter((e) => !builtEdge.has(e)), stations: p.stations.filter((s) => !builtStation.has(s)), ...nodes }
+    : { edges: p.edges, stations: p.stations, built: p.edges.length + p.stations.length > 0, ...nodes });
 }
 
 /** Merge two picks (shift adds), one kind kept. */
 export function unionPicked(a: BpPicked, b: BpPicked): BpPicked {
-  return onlyOneKind({ edges: [...new Set([...a.edges, ...b.edges])], stations: [...new Set([...a.stations, ...b.stations])] });
+  const nodes = a.nodes || b.nodes ? { nodes: [...new Set([...dragNodes(a), ...dragNodes(b)])] } : {};
+  return onlyOneKind({ edges: [...new Set([...a.edges, ...b.edges])], stations: [...new Set([...a.stations, ...b.stations])], ...nodes });
+}
+
+/** `p` less the pieces in `out` (a Shift+click on a picked piece). */
+export function withoutPicked(p: BpPicked, out: BpPicked): BpPicked {
+  return trimNodes({ edges: p.edges.filter((v) => !out.edges.includes(v)), stations: p.stations.filter((v) => !out.stations.includes(v)), built: p.built, ...(p.nodes ? { nodes: p.nodes } : {}) });
 }
 
 type Adj = Map<number, TrackEdge[]>;
@@ -163,10 +194,10 @@ export async function doubleUpPicked(pieces: number[]) {
  * elevation all of it is on (null when mixed or ramped). */
 export const pickedState = computed(() => {
   const w = world.value, p = bpPicked.value;
-  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null };
+  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0 };
   const edges = new Map(w.edges.map((e) => [e.id, e]));
   const stations = stationsByNum(w);
-  let off = 0, on = 0, lengthM = 0;
+  let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0;
   let level: Level | null | undefined;
   for (const id of p.edges) {
     const e = edges.get(id);
@@ -175,10 +206,14 @@ export const pickedState = computed(() => {
     lengthM += e.lengthM;
     const l = e.levelMin === e.levelMax ? e.levelMin : null;
     level = level === undefined || level === l ? l : null;
+    if (canBeHsr(e)) e.hsr ? hsr++ : regular++;
   }
   for (const id of p.stations) (stations.get(id)?.off ? off++ : on++);
-  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null };
+  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular };
 });
+
+/** T-1898: blueprint track that can be high-speed or regular (`TrackApi::set_edges_hsr`): double, no crossover. */
+const canBeHsr = (e: TrackEdge) => !e.built && e.tracks === 2 && !e.crossover;
 
 /** Every blueprint piece switched off, for the Build tab. */
 export const offTotals = computed(() => {
@@ -218,6 +253,18 @@ export async function levelPicked(level: Level) {
   else say(`${count(n, "piece", "pieces")} set to ${to}.`);
 }
 
+/** T-1898: the picked blueprint double track made high-speed or regular, one undoable edit; single
+ * track and crossovers stay as they are, counted in the notice as `levelPicked` does. */
+export async function hsrPicked(hsr: boolean) {
+  const p = bpPicked.peek();
+  if (p.built || !p.edges.length) return;
+  const a = await edit({ op: "edgesHsr", edges: p.edges, hsr }, true);
+  if (!a.ok) return;
+  const n = p.edges.length, skipped = a.skipped ?? 0, to = hsr ? "high-speed track" : "regular track";
+  if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
+  else say(`${count(n, "piece", "pieces")} set to ${to}.`);
+}
+
 /** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
  * changing a line after a yes, as for one piece (game/remove.ts). */
 export async function removePicked() {
@@ -243,8 +290,8 @@ effect(() => {
   if (!w || (!p.edges.length && !p.stations.length)) return;
   const edges = new Set(w.edges.filter((e) => e.built === !!p.built).map((e) => e.id));
   const stations = new Set(w.save.stations.filter((s) => s.built === !!p.built).map((s) => s.num));
-  const next = { edges: p.edges.filter((e) => edges.has(e)), stations: p.stations.filter((s) => stations.has(s)), built: p.built };
-  if (next.edges.length !== p.edges.length || next.stations.length !== p.stations.length) bpPicked.value = next;
+  const next = trimNodes({ edges: p.edges.filter((e) => edges.has(e)), stations: p.stations.filter((s) => stations.has(s)), built: p.built, ...(p.nodes ? { nodes: p.nodes } : {}) });
+  if (next.edges.length !== p.edges.length || next.stations.length !== p.stations.length || next.nodes?.length !== p.nodes?.length) bpPicked.value = next;
 });
 effect(() => {
   if (tool.value !== "blueprint") clearBpPicked();

@@ -478,7 +478,8 @@ impl TrackApi {
     }
 
     /// T-817: the design speed of routes after this, km/h: their curves are laid out for it, up to
-    /// `design_radius(kmh)`. Clamped to 160..320; 160 is the drawing tool as before.
+    /// `design_radius(kmh)`, and so are corners a reshape or node drag moves or adds (T-1898).
+    /// Clamped to 160..320; 160 is the drawing tool as before.
     pub fn set_design_speed(&mut self, kmh: f64) {
         let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_SPEEDS[0], DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
         self.route_cap = design_radius(kmh);

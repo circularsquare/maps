@@ -49,17 +49,21 @@ export type EditOp =
   /** `design` (T-817): the design speed its curves are laid out for, km/h; 160 when absent */
   | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
   | { op: "removeEdge"; edge: EdgeId }
-  /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends */
-  | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
+  /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends;
+   * `design` (T-1898): as a route's, for the corners it moves or adds */
+  | { op: "edgePis"; edge: EdgeId; pis: PiInput[]; design?: number }
   /** move a blueprint node (T-093) to pack metres x, y; the blueprint track there follows */
-  | { op: "moveNode"; node: NodeId; x: number; y: number }
+  | { op: "moveNode"; node: NodeId; x: number; y: number; design?: number }
   /** move several blueprint nodes together by dx, dy pack metres (T-475) */
-  | { op: "moveNodes"; nodes: NodeId[]; dx: number; dy: number }
+  | { op: "moveNodes"; nodes: NodeId[]; dx: number; dy: number; design?: number }
   /** a whole blueprint stretch on one level, shape kept */
   | { op: "edgeLevel"; edge: EdgeId; level: Level }
   /** several blueprint stretches on one level, one undoable edit (T-815); pieces that cannot
    * change are left out, counted in the answer's `skipped` */
   | { op: "edgesLevel"; edges: EdgeId[]; level: Level }
+  /** several blueprint pieces made high-speed or regular track, one undoable edit (T-1898); single
+   * track, crossovers and constructed track are left out, counted in `skipped` */
+  | { op: "edgesHsr"; edges: EdgeId[]; hsr: boolean }
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
@@ -154,11 +158,11 @@ export type ToClock =
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
-  | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
+  | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[]; design?: number }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
-  | { kind: "previewNode"; seq: number; node: NodeId; x: number; y: number }
+  | { kind: "previewNode"; seq: number; node: NodeId; x: number; y: number; design?: number }
   /** the same for several nodes moved together (T-475) */
-  | { kind: "previewNodes"; seq: number; nodes: NodeId[]; dx: number; dy: number }
+  | { kind: "previewNodes"; seq: number; nodes: NodeId[]; dx: number; dy: number; design?: number }
   /** previews up to `seq` are no longer wanted (a newer one waits, or the run ended): one not yet
    * started, or waiting for water masks, is answered `stale` at once (T-1039); handled outside
    * the queue */

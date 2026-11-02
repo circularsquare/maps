@@ -17,7 +17,7 @@ import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
 import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
-import { guideFinished, lineDraft, selection, tool } from "../game/ui";
+import { designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
@@ -1018,16 +1018,16 @@ export class ClockClient {
 
   /** What giving blueprint track new PIs would do (T-064); shares the one-in-flight queue. */
   previewEdge(edge: number, pis: PiInput[], cb: (a: PreviewAnswer) => void) {
-    this.ask((seq) => ({ kind: "previewEdge", seq, edge, pis }), cb);
+    this.ask((seq) => ({ kind: "previewEdge", seq, edge, pis, design: designSpeed.peek() }), cb);
   }
 
   /** What moving a blueprint node to pack metres (x, y) would do (T-093); the same queue. */
   previewNode(node: number, x: number, y: number, cb: (a: PreviewAnswer) => void) {
-    this.ask((seq) => ({ kind: "previewNode", seq, node, x, y }), cb);
+    this.ask((seq) => ({ kind: "previewNode", seq, node, x, y, design: designSpeed.peek() }), cb);
   }
 
   previewNodes(nodes: number[], dx: number, dy: number, cb: (a: PreviewAnswer) => void) {
-    this.ask((seq) => ({ kind: "previewNodes", seq, nodes, dx, dy }), cb);
+    this.ask((seq) => ({ kind: "previewNodes", seq, nodes, dx, dy, design: designSpeed.peek() }), cb);
   }
 
   /** Whether a station could be placed here (T-311): the worker tries `addStation` and rolls it

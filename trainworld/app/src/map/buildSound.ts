@@ -29,7 +29,7 @@ function soundOf(i: Intent): BuildSound | null {
     }
     case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast":
     case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "removeLine": case "copyLine": case "lineGroup":
-    case "doubleUp": case "edgeLevel": case "edgesLevel": case "flying":
+    case "doubleUp": case "edgeLevel": case "edgesLevel": case "edgesHsr": case "flying":
       return "pop";
     default:
       return null;

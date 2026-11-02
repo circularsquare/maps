@@ -635,14 +635,33 @@ fn vertices_of(net: &Network, d: &EdgeData, moved: &[(u32, f64, f64)]) -> Vec<Pi
     v
 }
 
-/// Set radii that no longer fit their legs go back to auto, where `may(pi index, pi)` allows it;
-/// any other (one the edit sets) becomes the widest that fits (T-1895), as the fit draws it.
-fn relax_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], may: &dyn Fn(usize, &Pi) -> bool) {
+/// A radius the edit itself sets (`set(pi index, pi)`) that its legs have no room for is stored
+/// as the widest that fits (T-1895), as the fit draws it. Any other set radius is kept as it is: a
+/// most, narrowed by the fit while the legs are short and wide again once they have room (T-1898;
+/// going back to auto capped it at 160 km/h).
+fn narrow_set_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], set: &dyn Fn(usize, &Pi) -> bool) {
     let verts = vertices_of(net, d, moved);
     let f = net.fit(&verts);
     for &j in &f.clamped {
         let p = &mut d.pis[j - 1];
-        p.radius = if may(j - 1, p) { 0.0 } else { ((f.radius[j] / QUANT) * (1.0 - 1e-9)).floor() * QUANT };
+        if set(j - 1, p) {
+            p.radius = ((f.radius[j] / QUANT) * (1.0 - 1e-9)).floor() * QUANT;
+        }
+    }
+}
+
+/// T-1898: the auto corners of `d` at PI indices `made` (ones an edit placed or moved) laid out for
+/// the design radius `cap`, as drawing lays its own (`design_radii`): wider than `R_CAP` where they
+/// have room, set to it.
+fn design_corners(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], made: &[usize], cap: f64) {
+    if cap <= R_CAP || made.is_empty() {
+        return;
+    }
+    let mut verts = vertices_of(net, d, moved);
+    let at: Vec<usize> = made.iter().map(|k| k + 1).collect();
+    design_radii(&mut verts, &at, cap, net.frame().scaled());
+    for &k in made {
+        d.pis[k].radius = verts[k + 1].radius;
     }
 }
 
@@ -1506,3 +1525,7 @@ mod changed_tests;
 /// T-1964: station placements across joints between pieces of track.
 #[cfg(test)]
 mod station_sweep_tests;
+
+/// T-1898: drags keep the design speed; a selection's track type.
+#[cfg(test)]
+mod t1898_tests;

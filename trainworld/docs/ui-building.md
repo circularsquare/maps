@@ -432,9 +432,11 @@ stations. Disabled blueprint is left out by Construct and the blueprint total, a
 is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
 - **Dragging the pick** [T-475]: a left drag that starts on picked track or within 9 px of one
-  of its nodes (a grab cursor there) moves every movable node of the pick (the ends of picked
-  track and picked stations; not a crossover's ends) by the same offset, previewed as a node drag
-  is. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
+  of its nodes (a grab cursor there) moves every movable node of the pick by the same offset,
+  previewed as a node drag is: the nodes a box held inside it (T-1898, Anita: "only move the
+  waypoints that are in the selection box"; `BpPicked.nodes`), and for pieces picked by a click,
+  a double click or Shift+click both their ends; picked stations; never a crossover's ends. A
+  piece only partly in a box stretches to follow. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
   drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
   While the tool has a pick, every movable node of it has the white square of a draggable point
   (from zoom 9), and the squares move with a drag [T-1869]; the drag shows each curve's speed
@@ -461,7 +463,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   appears and goes in one step) is the pick's inspector: "N selected" (its hover says blueprint or
   constructed and lists track and stations), the picked track's total length, and the actions.
   For blueprint: the seven elevation buttons tinted as in the Build tab (the one all the picked
-  track is on solid), then Disable and Enable as buttons with icon and word (keys D and E in their
+  track is on solid), **Regular** and **High speed** while the pick holds blueprint double track
+  [T-1898; `hsrPicked`, `TrackApi::set_edges_hsr`] (the kind all of it is solid, neither when
+  mixed; High speed's hover gives its 1.5x price): every picked double piece to that kind in one
+  undoable edit, single track and crossovers left as they are and counted in the message as for
+  elevation ("3 of 5 pieces set to high-speed track. 2 could not change."), then Disable and Enable as buttons with icon and word (keys D and E in their
   hovers), each greyed when it would change nothing. For either kind: **Double up** while the pick
   holds double track (the track inspector's icon) [T-1680; `doubleUpPieces`, `doubleUpPicked`]: one
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
@@ -523,7 +529,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   (left out within 14 px of its piece's ends, where their squares are), and from zoom 14, where
   platforms are drawn, both ends of a blueprint station's platform have a square. Dragging a
   curve's middle bends the curve so that it runs through the pointer, its ends and other corners
-  staying put ([track-and-service.md](track-and-service.md) 6.1); dragging a platform's end moves
+  staying put ([track-and-service.md](track-and-service.md) 6.1; a set radius stays set and an
+  auto one is laid out for the target max speed, so a 320 km/h curve keeps 320 where it has room,
+  T-1898; curve speed labels show on curves under 5,000 m, and on high-speed track on any curve
+  holding trains under 320, its speeds counted up to 320 there); dragging a platform's end moves
   the station as dragging its node does, by the pointer's move, so the end stays near the pointer
   (the platform then follows its track). Both preview, commit and cancel as a node drag does, and
   take a press over a demand bubble [T-486]. A node within reach comes before either.

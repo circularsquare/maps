@@ -6,7 +6,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, money, moneyCash, perDistance, plural, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
-import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
+import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -194,7 +194,8 @@ function PickDoubleUp() {
 
 /** T-353, T-815, T-829: while the Select tool has a selection, a bar at the map's top centre, the
  * selection's inspector: how many pieces and how much track, then for blueprint the elevation
- * buttons, Disable and Enable; Remove and Clear for either kind. Appears and goes in one step. */
+ * buttons, regular or high-speed track (T-1898, for its double track), Disable and Enable; Remove
+ * and Clear for either kind. Appears and goes in one step. */
 export function BlueprintBar() {
   const s = pickedState.value;
   const n = s.edges + s.stations;
@@ -215,6 +216,12 @@ export function BlueprintBar() {
             data-tip={s.level === null ? "Elevation of the selected track: mixed" : `Elevation ${levelName(s.level)}`} aria-label="Elevation" aria-expanded={levels}
             onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
         )}
+      {!s.built && s.hsr + s.regular > 0 && (
+        <div class="group" role="group" aria-label="Track type">
+          <button class={"btn" + (s.hsr === 0 ? " on" : "")} onClick={() => void hsrPicked(false)}>Regular</button>
+          <button class={"btn" + (s.regular === 0 ? " on" : "")} data-tip={`Costs ${HSR_TRACK}x as much as regular track`} onClick={() => void hsrPicked(true)}>High speed</button>
+        </div>
+      )}
       {!s.built && (
         <div class="group">
           <button class="btn text" data-tip="Leave these out when constructing (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>

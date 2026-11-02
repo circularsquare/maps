@@ -283,6 +283,31 @@ impl TrackApi {
         self.run(Op::Batch(ops))
     }
 
+    /// Make blueprint edges high-speed or regular track (T-1898), shape and level unchanged. One
+    /// undoable edit. Constructed track, single track and crossovers cannot change and are counted
+    /// in `last_skipped`; pieces already that kind are not. Returns 1 when nothing changed.
+    pub fn set_edges_hsr(&mut self, ids: &[u32], hsr: bool) -> u32 {
+        let net = &self.w.net;
+        let mut ops = vec![];
+        let mut skipped = 0;
+        for &e in ids {
+            let Some(mut d) = net.edge_data(e) else { continue };
+            if d.built || d.crossover || d.tracks != 2 {
+                skipped += 1;
+            } else if d.hsr != hsr {
+                d.hsr = hsr;
+                ops.push(Op::Edge { id: e, data: Some(d) });
+            }
+        }
+        self.skipped = skipped;
+        if ops.is_empty() {
+            self.money_short = None;
+            self.issues = vec![];
+            return 1;
+        }
+        self.run(Op::Batch(ops))
+    }
+
     /// Put several blueprint edges on one level (T-815), one undoable edit. Each piece's corners go
     /// to the level as `set_edge_level` does for one, and so does every node all of whose track is
     /// among them (a joint, a loose end, a junction, a blueprint station), so a picked run has no
