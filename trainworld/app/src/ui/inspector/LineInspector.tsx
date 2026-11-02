@@ -278,8 +278,8 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
  * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
  * averaged by those riders. The hover gives each of the level's periods its trains full (T-1523:
  * the pooled figure can rank a few bad platforms above a worse period spread over many). */
-export function CrowdDots({ v, wk, d }: { v: Float64Array; wk: Float64Array | null; d: Demand }) {
-  const c = crowdLevel(v, d), r = wk && crowdLevel(wk, d);
+export function CrowdDots({ v, wk, d, stops }: { v: Float64Array; wk: Float64Array | null; d: Demand; stops: number }) {
+  const c = crowdLevel(v, d, stops), r = wk && crowdLevel(wk, d);
   if (!c) return null;
   // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
   const tip = r && wk !== v ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
@@ -1008,7 +1008,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} stops={l.stops.length} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

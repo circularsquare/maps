@@ -2,6 +2,15 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1906 [P2] Money rules. Done 2026-11-02 (agent t1906): every country's fare scale 1.00x by default; a new game's curve set from where it starts (US $2.50, Japan $1.30, by income^0.7); old saves keep their fares and read 1.00x; a loan whose interest tops the last 7 days' profit is refused. `checks/t1906-money-rules.mjs`.
+- T-1926 [P3] Crowding strip in the hover. Done 2026-11-02 (agent t1926): the level dot's and the Lines tab's trains hovers gain a thin strip, one cell per stretch in the crowding colours (green with room), and "Full on 2 of 14 stretches"; dots and counts unchanged. ui-inspectors.md, notes/T-1901.md.
+- T-1901 [P3] Crowding indicators: one full stretch or the whole line. Design written 2026-11-02; Anita chose option B in the hover, built as T-1926. notes/T-1901.md.
+- T-1895 [P1] Placement geometry. Done 2026-11-02 (agent t1895): a set curve radius is now a maximum that narrows to fit (`ArcDoesNotFit` gone), ramps spread into neighbouring legs, removals never refused for kept track, snap beside at 12 m on the start's side (real-save sweep crossings 15,561 -> 9 worst case; rest T-1916), join 12 px and branch 8 px, a dashed tangent line. track-and-service.md 6.1, ui-building.md.
+- T-1900 [P2] Slower trains and faster ones on shared track. Answered 2026-11-02 (agent t1900): the sim gave a shared average delay only; Anita chose N1, built as T-1924 with T-1925; passing tracks T-1927 someday. notes/T-1900.md.
+- T-1924 [P2] Following loss on shared track. Done 2026-11-02 (agent t1924): a faster line behind slower ones on a shared stretch loses `D - (H - s)/2` (else `D²/2(H - s)`), as waits outside the slower trains' stations (90 s or more, at most 4 a stretch); quad track's pairs share nothing; line panel row "Behind slower trains". 20 km example: express 31.3 min against the local's 33.3 (8.4 free). Shared New York save: Z, Babylon and Port Washington expresses +5 min round trip; real save unchanged. track-and-service.md 6.2, notes/T-1900.md.
+- T-1925 [P2] Space departures of lines sharing track. Done 2026-11-02 (agent t1924): a phase per line and level (`LPH1`, eras `ERA2`, save level 2), placed greedily for the lines an edit changes; demand unchanged (real save 11,392,296 rail trips, as before). track-and-service.md 6.3.
+- T-339 [P3] Expresses pass locals at no cost on double track. Replaced 2026-11-02 by T-1924.
+
 - T-1935 [P3] Chinese and Korean attraction estimates. Done 2026-11-02 (agent t1905): estimates times 5 in mainland China and 2.5 in South Korea (observation towers, Hong Kong and Macau excepted); medians against figures x0.19 -> x0.96 and x0.30 -> x0.74. notes/T-1905.md.
 - T-1934 [P2] Paid parking cap 50 -> 40. Abandoned 2026-11-02: Anita now thinks 50 minutes is reasonable. notes/T-1905.md.
 - T-1932 [P2] An attraction's staff draw no social outings. Done 2026-11-02 (agent t1905): within 1 km, leisure jobs above 2,000 a cell, up to one per 1,000 visitors a year, leave social's weight (`social_leisure`, everyday.rs). notes/T-1905.md.

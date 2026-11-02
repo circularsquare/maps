@@ -67,8 +67,8 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
 /** T-472, T-491, T-1677, T-1684: a line's trains now, coloured by its riders' wait for a train with
  * room in the period now, hovered with the weekday's figures for the level now as the line panel's
  * ring is (`crowdLevel`). */
-function TrainsNow({ line, n, period, bus, v, lev }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand }) {
-  const c = !bus && v && n > 0 ? crowdLevel(v, lev) : null;
+function TrainsNow({ line, n, period, bus, v, lev, stops }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
+  const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops) : null;
   const d = today.value.get(line);
   const now = d && n > 0 ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = now ? crowdClass(now.score) : "";
@@ -128,9 +128,12 @@ export function LinesTab() {
   const acct = accountVersion.value;
   const crowd = useClockQuery(crowdNums.length ? { what: "linesPeriods", lines: crowdNums, day: 0 } : null, [w?.version, acct, crowdNums.join(",")], (d) => d);
   if (!w) return null;
+  // T-1926: each line's numbers come after their count, in `crowdNums`' order
+  const crowdAt: Float64Array[] = [];
+  for (let i = 0; crowd && i < crowd.length; i += 1 + crowd[i]) crowdAt.push(crowd.subarray(i + 1, i + 1 + crowd[i]));
   const crowdOf = (l: LineInput) => {
-    const k = crowdNums.indexOf(l.num), block = PERIODS.length * PERIOD_STRIDE;
-    return crowd && k >= 0 && crowd.length === crowdNums.length * block && lineFiguresIn(demandView.value, l.id, l.stops.length) ? crowd.subarray(k * block, (k + 1) * block) : undefined;
+    const v = crowdAt.length === crowdNums.length ? crowdAt[crowdNums.indexOf(l.num)] : undefined;
+    return v && v.length >= PERIODS.length * PERIOD_STRIDE && lineFiguresIn(demandView.value, l.id, l.stops.length) ? v : undefined;
   };
   const sel = selection.value;
   // T-309: each line's demand level now in its own local time
@@ -318,7 +321,7 @@ export function LinesTab() {
           <>
             <RidersToday line={l.id} />
             <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} bus={!!st.bus} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} />
+            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} bus={!!st.bus} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
           </>
         )}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

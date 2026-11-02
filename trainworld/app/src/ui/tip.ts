@@ -16,6 +16,11 @@ import { hoverHeld, isModifierKey } from "./blurHold";
 const BULLET = /\u0002([^|\u0003]*)\|([^\u0003]*)\u0003/;
 export const tipBullet = (letter: string, colour: string) => `\u0002${letter.replace(/[\u0002\u0003|]/g, "")}|${colour}\u0003`;
 
+/** T-1926: a line of its own in a hover's text drawn as a thin strip, one cell per colour
+ * (`tipStrip`), as wide as the hover's text. */
+const STRIP = /^\u0004([^\u0005]*)\u0005$/;
+export const tipStrip = (colours: string[]) => `\u0004${colours.join(";")}\u0005`;
+
 /** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
  * "Keep placing (Caps Lock)", is lettered in the theme's accent. */
 const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
@@ -82,6 +87,16 @@ export function startTips() {
       text = t;
       tag.replaceChildren(...t.split("\n").map((line) => {
         const d = document.createElement("div");
+        const strip = STRIP.exec(line);
+        if (strip) {
+          d.className = "tip-strip";
+          for (const c of strip[1].split(";")) {
+            const cell = document.createElement("i");
+            cell.style.background = c;
+            d.append(cell);
+          }
+          return d;
+        }
         const parts = line.split(BULLET);
         for (let i = 0; i < parts.length; i += 3) {
           if (parts[i]) appendWithKeys(d, parts[i]);

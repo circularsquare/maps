@@ -903,12 +903,16 @@ impl Boarding {
     /// numbers (`crowding`), then per period the rider-seconds waited after full trains at each
     /// stop, both directions, in the line's stop order (T-818: where they wait; T-1255: with each
     /// rider turned away at `WAIT_FOR_ROOM_S`), then per period the riders arriving at each stop
-    /// likewise (T-1255). Empty without an account.
+    /// likewise (T-1255), then per period the rider-seconds waited after full trains at the first
+    /// stop of each of the `n - 1` stretches, and the riders arriving there, each the fuller way's
+    /// (T-1926: the line panel's crowding strip). Empty without an account.
     pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
         let mut out = Self::crowding(acc, ls).concat();
         let n = acc.runs[0].n;
+        let mut stretch_here = vec![0.0f64; PERIODS * n.saturating_sub(1)];
+        let mut stretch_came = vec![0.0f64; PERIODS * n.saturating_sub(1)];
         let mut at = vec![0.0f64; PERIODS * n];
         // T-1255: per period and stop, the riders arriving there, both directions
         let mut came = vec![0.0f64; PERIODS * n];
@@ -929,16 +933,33 @@ impl Boarding {
                 let ts = &ra.order_t[k * m..(k + 1) * m];
                 let ord = &ra.order[k * m..(k + 1) * m];
                 let s = if r == 0 { k } else { n - 1 - k };
+                let mut here = [0.0f64; PERIODS];
                 for i in 0..m {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
                     let gone = ra.gone[ord[i] as usize * n + k] as f64;
                     let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                    at[period_at(ts[i]) * n + s] += q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
+                    let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
+                    at[period_at(ts[i]) * n + s] += w;
+                    here[period_at(ts[i])] += w;
+                }
+                // T-1926: the stretch leaving this stop, in run 0's numbering; the fuller way's
+                if k + 1 < n {
+                    let t = if r == 0 { k } else { n - 2 - k };
+                    for p in 0..PERIODS {
+                        let c = ra.arrivals[k].per[p];
+                        let at_t = p * (n - 1) + t;
+                        if c > 0.0 && here[p] * stretch_came[at_t] >= stretch_here[at_t] * c {
+                            stretch_here[at_t] = here[p];
+                            stretch_came[at_t] = c;
+                        }
+                    }
                 }
             }
         }
         out.extend(at);
         out.extend(came);
+        out.extend(stretch_here);
+        out.extend(stretch_came);
         out
     }
 

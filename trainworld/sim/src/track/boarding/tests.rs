@@ -471,7 +471,11 @@ fn the_line_summary_names_the_full_trains_and_when() {
     assert!(p(0, 6) > 0.0 && p(0, 6) <= p(0, 4) * len_km + 1e-6 && p(0, 7) > 0.0 && p(0, 7) <= p(0, 2) * len_km + 1e-6, "{v:?}");
     let n = w.svc.lines[l as usize].stops.len();
     let at: f64 = v[PERIODS * PERIOD_STRIDE..PERIODS * PERIOD_STRIDE + n].iter().sum();
-    assert!(v.len() == PERIODS * (PERIOD_STRIDE + 2 * n) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
+    assert!(v.len() == PERIODS * (PERIOD_STRIDE + 2 * n + 2 * (n - 1)) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
+    // T-1926: the stretches' waits and arrivals follow, and the morning's average wait there is minutes
+    let sh = PERIODS * (PERIOD_STRIDE + 2 * n);
+    let (here, came): (f64, f64) = (v[sh..sh + n - 1].iter().sum(), v[sh + PERIODS * (n - 1)..sh + PERIODS * (n - 1) + n - 1].iter().sum());
+    assert!(came > 0.0 && here / came > 300.0, "{here} {came}");
     // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
     let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
     // T-491: the period now's wait, arrivals and ride end the block, then T-818's two (T-1255: the

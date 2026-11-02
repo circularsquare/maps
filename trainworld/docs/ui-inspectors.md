@@ -95,8 +95,8 @@ purpose filter the purpose drawn is ringed in the bar.
   "When trains come full, riders wait ~9 min for a train with room" (or "Riders get on the first
   train with room"), then "6-10: 22/88 trains full" for each of the level's periods with any full; one function
   (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's `line_periods` numbers, which
-  the tab asks for every running train line in one clock query (`linesPeriods`, one block of
-  numbers per line). A bus line's hover is its bus count.
+  the tab asks for every running train line in one clock query (`linesPeriods`, each line's
+  numbers after their count). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
@@ -245,7 +245,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
   riders wait ~11 min for a train with room" (or "Riders get on the first train
-  with room"), then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
+  with room"), then, where it has any, a thin strip of one cell per stretch (the run between two stops, the fuller way) in the
+  crowding colour of the riders' wait there over the level's periods, green where trains have room, with "Full on 2 of 14
+  stretches" below it (a stretch is full from a minute's wait, as the dots count a platform; "Full on all 14 stretches"; no line for a
+  single stretch) [T-1926, T-1901; `levelStretches` and `tipStrip` in `game/today.ts` and `ui/tip.ts`; the tail of
+  `Boarding::line_periods`; the Lines tab's trains hover has the same strip], then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
   trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then, only when the
   line's day is not a weekday, "On weekdays, riders wait ~15 min for a train with room" [T-1684, T-1797, T-1893]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each

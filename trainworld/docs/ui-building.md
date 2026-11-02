@@ -159,7 +159,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   drawn, the tag says so and a click is refused, so a run left open in one city never lays track to
   the next one the player pans to (real routes, T-727, are not capped) [T-1020]. While
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
-  [`map/curveCircle.ts`]; none for a straight segment. A dashed line in the same colour runs on 90
+  [`map/curveCircle.ts`]; none for a straight segment. A dotted line as faint as the circle runs on 120
   px from the segment's end the way it arrives there, where a straight drawn on from that end would
   go; a straight segment has one too [T-1895]. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].

@@ -17,6 +17,8 @@ import { moneyState } from "./money";
 import { count, trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
 import { levelOn } from "./days";
+import { crowdColour } from "./palette";
+import { tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
 import { cameraMoving } from "./ui";
@@ -81,7 +83,7 @@ export const PERIOD_STRIDE = 11;
  * numbers `v`, as the line panel's dot and the Lines list's trains cell show it: the average wait
  * for a train with room (min) of the riders at the platforms where trains come full, the level's
  * periods averaged by those riders, and the hover. Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip: string; phrase: string } | null {
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops = 0): { wait: number; tip: string; phrase: string } | null {
   let trains = 0, weight = 0, wait = 0;
   const lines: string[] = [];
   for (let i = 0; i < PERIODS.length; i++) {
@@ -98,8 +100,46 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
   const mins = avg >= 1 ? `~${Math.round(avg)} min` : waitText(avg);
   const phrase = avg >= 0.05 ? `riders wait ${mins} for a train with room` : "trains are not at capacity";
   const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Trains are not at capacity")
+    + (avg >= 0.05 ? stretchStrip(v, d, stops) : "")
     + lines.map((s) => `\n${s}`).join("");
   return { wait: avg, tip, phrase };
+}
+
+/** T-1926: a stretch (the run between two stops, the fuller way) is full from this wait (min), the
+ * rule the dots use for a platform (`BUSY_PLATFORM_S` in boarding.rs). */
+const FULL_STRETCH_MIN = 1;
+
+/** T-1926: each stretch's average wait for a train with room (min) over a demand level's periods in
+ * which it is full (`FULL_STRETCH_MIN` or more), as the level's dot averages its platforms, 0 where
+ * it never is; from the tail of `line_periods` (per period and stretch, the rider-seconds waited,
+ * then the riders arriving; `stops` the line's stops). Null where `v` has no such tail (a line of
+ * one stop, an older WASM build). */
+export function levelStretches(v: ArrayLike<number>, d: Demand, stops: number): number[] | null {
+  const s = stops - 1, n = PERIODS.length;
+  if (s < 1) return null;
+  const tail = v.length - 2 * n * s;
+  if (v.length !== n * (PERIOD_STRIDE + 2 * stops + 2 * s) && tail !== n * PERIOD_STRIDE) return null;
+  const out: number[] = [];
+  for (let k = 0; k < s; k++) {
+    let here = 0, came = 0;
+    for (let i = 0; i < n; i++) {
+      if (PERIODS[i].demand !== d) continue;
+      const h = v[tail + i * s + k], c = v[tail + n * s + i * s + k];
+      if (c > 0 && h >= FULL_STRETCH_MIN * 60 * c) { here += h; came += c; }
+    }
+    out.push(came > 0 ? here / came / 60 : 0);
+  }
+  return out;
+}
+
+/** The hover's strip of a level's stretches under its first line, with how many are full: "\n" and
+ * the two lines, or nothing without stretch figures. */
+function stretchStrip(v: ArrayLike<number>, d: Demand, stops: number): string {
+  const waits = levelStretches(v, d, stops);
+  if (!waits) return "";
+  const full = waits.filter((w) => w >= FULL_STRETCH_MIN).length;
+  const all = waits.length, text = full === 0 || all === 1 ? "" : full === all ? `Full on all ${all} stretches` : `Full on ${full} of ${all} stretches`;
+  return `\n${tipStrip(waits.map(crowdColour))}` + (text ? `\n${text}` : "");
 }
 
 /** T-1893: the profit hover's line when the line's day is not a weekday, so a loss on a quiet day

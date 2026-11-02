@@ -1714,12 +1714,25 @@ function settle(): boolean {
   return ended;
 }
 
-/** T-1677: the per-period crowding numbers (the first `PERIODS * PERIOD_STRIDE` of `line_periods`) of
- * each line in `lines`, one block after another, zeros for a line with no account. */
+/** T-1677, T-1926: the per-period crowding numbers (the first `PERIODS * PERIOD_STRIDE` of
+ * `line_periods`) and the per-stretch ones that end it (rider-seconds waited, then riders arriving,
+ * per period and stretch) of each line in `lines`, each line's as its count of numbers and then them
+ * (none for a line with no account). */
 function linesPeriods(a: TrackApi, lines: number[], day: number): Float64Array {
-  const block = PERIODS.length * 11;
-  const out = new Float64Array(lines.length * block);
-  lines.forEach((n, k) => out.set(a.line_periods(n, day).subarray(0, block), k * block));
+  const P = PERIODS.length, block = P * 11;
+  const per = lines.map((n) => {
+    const v = a.line_periods(n, day);
+    // per period: 11 numbers, 2 per stop, 2 per stretch (stops - 1): 4 * stops + 9
+    const stops = (v.length / P - 9) / 4, tail = Number.isInteger(stops) && stops > 1 ? 2 * P * (stops - 1) : 0;
+    if (v.length < block) return v;
+    const out = new Float64Array(block + tail);
+    out.set(v.subarray(0, block));
+    if (tail) out.set(v.subarray(v.length - tail), block);
+    return out;
+  });
+  const out = new Float64Array(per.reduce((s, v) => s + 1 + v.length, 0));
+  let i = 0;
+  for (const v of per) { out[i++] = v.length; out.set(v, i); i += v.length; }
   return out;
 }
 
