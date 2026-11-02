@@ -49,6 +49,19 @@ export function lodBudgetGB(): number {
   return 1.5 * Math.min(8, dm ?? 8) / 8;
 }
 
+/** T-2005: the zone built in before the last one is kept from the memory drops this long after its build */
+export const SECOND_BUILT_KEEP_MS = 10 * 60_000;
+
+/** T-2005: the zones the memory drops spare for being built in (`built`: when each zone last had a
+ * station placed or a stop added). The zone(s) of the latest build, however long ago; and those of
+ * the build before it while it is under SECOND_BUILT_KEEP_MS old. Only zones in `among` count (a
+ * zone no station reaches any more holds nothing to keep). */
+export function builtKeep(built: ReadonlyMap<CityId, number>, now: number, among: ReadonlySet<CityId>): CityId[] {
+  const rows = [...built].filter(([id]) => among.has(id));
+  const times = [...new Set(rows.map(([, t]) => t))].sort((a, b) => b - a);
+  return rows.filter(([, t]) => t === times[0] || (t === times[1] && now - t < SECOND_BUILT_KEEP_MS)).map(([id]) => id);
+}
+
 export interface LodInput {
   /** every zone the solves cover (reached), in any order */
   zones: readonly CityId[];
@@ -65,13 +78,16 @@ export interface LodInput {
   now: number;
   /** the zones' memory allowed (GB, as `zonesGB` counts it) */
   budget: number;
+  /** `builtKeep`: fine zones that stay fine however long left alone, and go last over the budget */
+  keep?: readonly CityId[];
 }
 
 /**
  * The next fine set: priorities 1-3 always; a fine zone stays fine unless it has been in none of
  * them for LEFT_ALONE_MS; then, while the zones' memory is over the budget, the lowest priority
  * fine zone goes (an off-screen one before an on-screen one, the least recently looked at first),
- * never one in 1-3 nor one made fine within FINE_HOLD_MS. No zone becomes fine here except by
+ * never one in 1-3 nor one made fine within FINE_HOLD_MS; the `keep` zones neither go for being left
+ * alone nor before every other droppable zone. No zone becomes fine here except by
  * priorities 1-3: a coarse zone is refined by looking at it.
  */
 export function planFine(inp: LodInput): Set<CityId> {
@@ -79,13 +95,14 @@ export function planFine(inp: LodInput): Set<CityId> {
   const held = new Set(inp.held.filter((id) => zones.has(id)));
   const recent = (id: CityId) => inp.now - (inp.madeFine.get(id) ?? -Infinity) < FINE_HOLD_MS;
   const next = new Set(held);
+  const keep = new Set(inp.keep);
   for (const id of inp.fine) {
     if (!zones.has(id) || next.has(id)) continue;
-    if (inp.now - (inp.touched.get(id) ?? -Infinity) < LEFT_ALONE_MS || recent(id)) next.add(id);
+    if (keep.has(id) || inp.now - (inp.touched.get(id) ?? -Infinity) < LEFT_ALONE_MS || recent(id)) next.add(id);
   }
   const near = new Set(inp.near);
   const drops = [...next].filter((id) => !held.has(id) && !recent(id))
-    .sort((a, b) => Number(near.has(a)) - Number(near.has(b)) || (inp.touched.get(a) ?? -Infinity) - (inp.touched.get(b) ?? -Infinity));
+    .sort((a, b) => Number(keep.has(a)) - Number(keep.has(b)) || Number(near.has(a)) - Number(near.has(b)) || (inp.touched.get(a) ?? -Infinity) - (inp.touched.get(b) ?? -Infinity));
   let gb = zonesGB(zones, next);
   for (const id of drops) {
     if (gb <= inp.budget) break;

@@ -565,17 +565,23 @@ those who got on, less the load carried on.
 ## Hover tags on the network
 
 - **Track** [T-157, T-526, `map/trackHover.ts`]: with the select tool or a build tool, the pointer on
-  a line or track shows a tag at once saying what the track display draws there. Line: the name. Traffic:
-  the name and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
+  a line or track shows a tag at once saying what the track display draws there. Line: the line's
+  bullet, then its name, on one row [T-2007]. Traffic:
+  that row and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
-  ("Errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
-  for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
-  for the speed limit (two right chevrons, then "120 km/h" on its Speed colour), each colour at
+  ("Errands trips only"); then "Average load 28%": the stretch's riders (every purpose) over what the
+  day's trips could hold at crush, the line panel's Average load for one stretch, the trips counted
+  from the boarding account for the day shown (the average day 5 weekdays, a Saturday and a Sunday
+  over 7), capped at 100%, no row until the account answers or where no trips run [T-2007];
+  and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries one row
+  for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and
+  the speed limit beside it (two right chevrons, then "120 km/h" on its Speed colour) [T-2007], each colour at
   half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap
   (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what
   the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
   here" where the limit is shown [T-1271]; and last every line using the track as
-  line bullets, in the save's order, wrapping, over a line as over bare track (the markup and CSS of
+  line bullets, in the save's order, wrapping, over bare track, and over a line every other line
+  there (its own bullet heads the tag) [T-2007] (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs
   there) [T-532, T-559]. A planned line adds
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says

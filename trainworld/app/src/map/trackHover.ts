@@ -1,6 +1,6 @@
 // Hovering track (T-157): a tag by the pointer says what the current track display draws there:
-// the line's name (Line), its riders per day on that stop-to-stop stretch (Line + traffic
-// thickness), and always the elevation and speed limit there plus the lines on the track (T-473,
+// the line's bullet and name (Line), its riders per day and average load on that stop-to-stop
+// stretch (Line + traffic thickness, T-2007), and always the elevation and speed limit there plus the lines on the track (T-473,
 // T-526). It shows at once. The tag follows the map's pick order (T-133): with the select tool,
 // demand bubbles, capacity tags and editing handles above the network hide it; with a build tool
 // the demand views are beneath the network, and the tag sits above the pointer, clear of the
@@ -13,7 +13,7 @@ import { clock } from "../game/clock";
 import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
 import { purposeName, type PurposeFilter } from "../game/purposes";
 import { DEMAND_INDEX, type LineInput, type WorldView } from "../game/types";
-import { ask, display, isBuildTool, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
+import { ask, display, isBuildTool, purposeFilter, selection, shownDay, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
 import { restHolds } from "./hoverRest";
@@ -30,7 +30,8 @@ import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf, stopKey } from "../game/complexView";
 import { forecast } from "../game/format";
-import { chip, elevationFact, factRow, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
+import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
+import { stretchLoad, tripsLanded } from "./stretchLoad";
 import { crowdColour } from "../game/palette";
 
 /** Daily riders on run 0's stretch `k` of a line with these `stops`, both directions: every
@@ -54,7 +55,7 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stopIds: read
 function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: { share: number; wait: number } | null): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
-  const name = l?.name ?? `Line ${num}`;
+  const name = l ? named(l) : `Line ${num}`;
   const status = l ? w?.lineStats[l.id]?.status : undefined;
   if (status === "planned") return [name, "Not running yet"];
   if (status === "broken") return [name, "Not running"];
@@ -67,6 +68,11 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
   const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  // T-2007: the stretch's average load, every purpose's riders against the day's trips at crush
+  const st = w?.lineStats[l.id];
+  const all = purpose === "all" ? day : dailyRiders(dv, l.id, l.stops, k, "all");
+  const load = st && w && all !== null ? stretchLoad(num, w.version, st.cars, shownDay.peek(), all) : null;
+  if (load !== null && load !== undefined) out.push(`Average load ${Math.round(load * 100)}%`);
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
   const lev = DEMAND_INDEX[clock.demand.peek()];
   if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
@@ -81,6 +87,13 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
     out.push(d);
   }
   return out;
+}
+
+/** T-2007: a line's bullet, then its name, on one row. */
+function named(l: LineInput): HTMLDivElement {
+  const d = factRow(lineBullet(l), Object.assign(document.createElement("span"), { textContent: l.name }));
+  d.style.gap = "5px";
+  return d;
 }
 
 /** A running bus line's riders on the stretch between its stops under the pointer, as a rail line's
@@ -159,8 +172,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, B, bandPx, (j) => String(L.colour[j]) === hit.line, wide, widePx);
     if (i < 0) return null;
     if (out) out.hot = { line: L.colour[i] };
-    // T-473: the track under the line says its elevation and speed too; T-559: and every line on it
-    const on = linesOn(w, L.edge[i]);
+    // T-473: the track under the line says its elevation and speed too; T-559: and every other line
+    // on it (T-2007: the line's own bullet heads the tag)
+    const on = linesOn(w, L.edge[i]).filter((x) => x.num !== L.colour[i]);
     return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.stretch ? L.stretch[i] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
   }
   if (hit.kind !== "track") return null;
@@ -180,14 +194,13 @@ function linesOn(w: WorldView | null, edge: number): LineInput[] {
   return e ? w!.save.lines.filter((l) => e.lines.includes(l.id)) : [];
 }
 
-/** The elevation and speed limit at a point of an edge's track stroke, a row each (T-473,
- * T-526); none off the stroke. */
+/** The elevation and speed limit at a point of an edge's track stroke, on one row (T-473, T-526,
+ * T-2007); none off the stroke. */
 function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: number): TipLine[] {
   const T = ov.renderer.net!.track;
   const [i] = topSeg(ov, T.seg, T.count, px, py, slop, undefined, 0, (j) => T.edge[j] === edge);
   if (i < 0) return [];
-  const rows: TipLine[] = [factRow(elevationFact(T.level[i]))];
-  if (T.speed?.[i] !== undefined) rows.push(factRow(speedFact(T.speed[i])));
+  const rows: TipLine[] = [T.speed?.[i] !== undefined ? factRow(elevationFact(T.level[i]), speedFact(T.speed[i])) : factRow(elevationFact(T.level[i]))];
   // T-1271: the Speed view draws the trains' speed where they run, the limit elsewhere; say which
   if (display.peek().trackColour === "speed") {
     const v = T.trainSpeed?.[i] ?? -1;
@@ -295,6 +308,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
     tool.value;
     ask.value;
     clock.minute.value; // trains move and crowds change under a resting pointer (T-194)
+    tripsLanded.value;
     if (shown) queueMicrotask(() => shown && update());
   });
 }

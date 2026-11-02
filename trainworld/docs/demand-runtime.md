@@ -113,7 +113,10 @@ on a click, on an edit, when a load's card goes and every 30 s:
 
 Zones in 1-3 are always fine. A fine zone in none of 1-3 for 10 minutes goes coarse, whatever the
 memory; past the budget the lowest fine zone goes at once (5 before 4, the least recently in 1-3
-first); never one made fine within 5 minutes. A coarse zone goes fine only by entering 1-3. A zone
+first); never one made fine within 5 minutes. The zone built in last (a station placed or a stop
+added there; `builtKeep`, T-2005) is spared both: it stays fine however long left alone, and goes
+only when nothing else droppable is left over the budget. So is the zone built in before it, while
+that build is under 10 minutes old. A coarse zone goes fine only by entering 1-3. A zone
 reached since the last check opens fine (a station was just built there). The budget is the zones'
 memory a solving worker may hold, by T-1197's rate (`memoryCheck.ts`) with a coarse zone at 0.7 of
 a fine one: 1.5 GB on a device reporting 8 GB, less in proportion below. A game's first fine set is

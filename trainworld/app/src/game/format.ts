@@ -167,6 +167,10 @@ export function upkeepLines(m: UpkeepRates & { upkeepHsr: number }): string {
   const km = (v: number) => money(perDistance(v * m.economy));
   return `${km(m.upkeepTrackKm)} per ${distUnit()} of ground track per day\n${km(m.upkeepViaductKm)} on a viaduct\n${km(m.upkeepCutKm)} in cut and cover\n${km(m.upkeepBoredKm)} in a bored tunnel\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
 }
+/** T-2006: the elevation hovers' line, "Upkeep $25k per km per day"; `perKm` is one km of the track type at that level (regionMoney `edgeUpkeep`). */
+export function levelUpkeepLine(perKm: number): string {
+  return `Upkeep ${money(perDistance(perKm))} per ${distUnit()} per day`;
+}
 /** T-1838: the Running trains row's hover: "Trains cost $4 per km, plus $2 per train car". */
 export function runCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `Trains cost ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per train car`;

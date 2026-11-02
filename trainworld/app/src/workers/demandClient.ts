@@ -68,7 +68,7 @@ import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations,
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
 import { packToLngLat } from "../game/coords";
 import { addOpened, reportDemandFine } from "../game/openedZones";
-import { firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
+import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
 import { world } from "../game/world";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
@@ -1007,6 +1007,8 @@ class DemandClient {
   private touched = new Map<CityId, number>();
   private madeFine = new Map<CityId, number>();
   private edited = new Map<CityId, number>();
+  /** T-2005: wall ms each zone last had a station placed or a stop added (never pruned) */
+  private built = new Map<CityId, number>();
   private viewAt: { id: CityId | null; at: number } = { id: null, at: 0 };
   private lodTimer = 0;
   private lodTick = 0;
@@ -1062,6 +1064,7 @@ class DemandClient {
     this.touched.clear();
     this.madeFine.clear();
     this.edited.clear();
+    this.built.clear();
   }
 
   /** A game's first fine set (`firstFine`), from the save's list or the budget. */
@@ -1091,7 +1094,8 @@ class DemandClient {
     // a zone reached since the last check counts as just made fine (it opened fine)
     const fresh = zones.filter((id) => !this.lodZones!.has(id));
     for (const id of fresh) { this.fine.add(id); this.touched.set(id, now); this.madeFine.set(id, now); }
-    const next = planFine({ zones, held, near: nearbyZones.peek(), fine: this.fine, touched: this.touched, madeFine: this.madeFine, now, budget: lodBudgetGB() });
+    const keep = builtKeep(this.built, now, new Set(zones));
+    const next = planFine({ zones, held, near: nearbyZones.peek(), fine: this.fine, touched: this.touched, madeFine: this.madeFine, now, budget: lodBudgetGB(), keep });
     for (const id of next) if (!this.fine.has(id)) this.madeFine.set(id, now);
     for (const id of [...this.edited.keys()]) if (now - this.edited.get(id)! >= EDIT_KEEP_MS) this.edited.delete(id);
     for (const id of [...this.touched.keys()]) if (!next.has(id) && now - this.touched.get(id)! >= LEFT_ALONE_MS) this.touched.delete(id);
@@ -1136,7 +1140,7 @@ class DemandClient {
   lodState() {
     const zones = this.lodReach() ?? [];
     const open = [...this.levelPosted].filter(([id]) => this.opened.has(id));
-    return { mode: this.lod, fine: [...this.fine], fineOpen: open.filter(([, l]) => l === LOD_FINE).map(([id]) => id), coarseOpen: open.filter(([, l]) => l === LOD_COARSE).map(([id]) => id), releveling: [...this.releveling], refining: refiningZone.peek(), rough: [...roughZones.peek()], zonesGB: zonesGB(zones, this.fine), budgetGB: lodBudgetGB() };
+    return { mode: this.lod, fine: [...this.fine], fineOpen: open.filter(([, l]) => l === LOD_FINE).map(([id]) => id), coarseOpen: open.filter(([, l]) => l === LOD_COARSE).map(([id]) => id), releveling: [...this.releveling], refining: refiningZone.peek(), rough: [...roughZones.peek()], built: [...this.built].sort((a, b) => b[1] - a[1]).map(([id]) => id), zonesGB: zonesGB(zones, this.fine), budgetGB: lodBudgetGB() };
   }
 
   /** The zones a new network changed (stations added, removed or moved; lines whose stops, trains or
@@ -1144,8 +1148,8 @@ class DemandClient {
   private noteEdits(prev: Service, next: Service) {
     const f = makeFrame(next.frame), zone = (s: { x: number; y: number }) => zoneAt(...f.toLonLat(s.x, s.y));
     const was = new Map(prev.stations.map((s) => [s.id, s])), now = new Map(next.stations.map((s) => [s.id, s]));
-    const zones = new Set<CityId | null>();
-    for (const s of next.stations) { const o = was.get(s.id); if (!o || o.x !== s.x || o.y !== s.y) zones.add(zone(s)); }
+    const zones = new Set<CityId | null>(), built = new Set<CityId | null>();
+    for (const s of next.stations) { const o = was.get(s.id); if (!o || o.x !== s.x || o.y !== s.y) { zones.add(zone(s)); built.add(zone(s)); } }
     for (const s of prev.stations) if (!now.has(s.id)) zones.add(zone(s));
     const lines = new Map(prev.lines.map((l) => [l.id, l]));
     const view = activeCity.peek();
@@ -1157,9 +1161,11 @@ class DemandClient {
       const at = (id: string) => { const s = now.get(id) ?? was.get(id); return s ? zone(s) : null; };
       if (moved.length) for (const id of moved) zones.add(at(id));
       else if (l.stops.some((id) => at(id) === view)) zones.add(view);
+      for (const id of l.stops) if (!had.has(id)) built.add(at(id));
     }
     const t = Date.now();
     for (const id of zones) if (id) this.edited.set(id, t);
+    for (const id of built) if (id) this.built.set(id, t);
   }
 
   // --- Closing what is no longer needed (T-301) ---------------------------------------------------

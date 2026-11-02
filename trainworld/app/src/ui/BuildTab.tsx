@@ -1,6 +1,8 @@
 // The Build tab: tools, elevation, track type, target speed and platforms, and the blueprint quote.
 
-import { distUnit, length, levelName, perDistance, speed } from "../game/format";
+import { distUnit, length, levelName, levelUpkeepLine, perDistance, speed } from "../game/format";
+import { edgeUpkeep } from "../game/regionMoney";
+import { moneyState } from "../game/money";
 import type { Level } from "../game/types";
 import { batch } from "@preact/signals";
 import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
@@ -24,6 +26,8 @@ export function BuildTab() {
   const lv = buildLevel.value;
   const hsrF = trackType.value === "hsr" ? HSR_COST : 1;
   const mult = MULT[lv] * hsrF;
+  const m = moneyState.value;
+  const upkeepTip = (l: Level) => (m ? "\n" + levelUpkeepLine(edgeUpkeep({ built: true, tracks: 2, hsr: hsrF !== 1, lengthM: 1000, levelMin: l, levelMax: l }, m)) : "");
   return (
     <>
       <div class="build-options">
@@ -45,11 +49,11 @@ export function BuildTab() {
         </div>
         <div class="h">Elevation</div>
         <div class="build-track-row">
-          <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})`} onPick={(l) => (buildLevel.value = l)} />
+          <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})${upkeepTip(l)}`} onPick={(l) => (buildLevel.value = l)} />
         </div>
         {/* T-1394: the Terrain switch beside the price it changes; T-1802: the ramp switch left of it */}
         <div class="build-track-row price-row">
-          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}`}>
+          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}${upkeepTip(lv)}`}>
             ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
           </p>
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}

@@ -2,6 +2,11 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2007 [P2] Track hover: average load, one-row facts and bullet. Done 2026-11-02 (agent t2007): Traffic adds "Average load 28%" (stretch riders over the day's trips at crush, map/stretchLoad.ts); elevation and speed share a row; the line's bullet then name head the tag, other lines' bullets below.
+- T-2005 [P2] Memory drops spare the last built-in zone. Done 2026-11-02 (agent t2005): the zone with the last station placed or stop added stays fine however old, the one before it for 10 minutes (`builtKeep` in `demandLod.ts`); `checks/t2005-recent-builds.mjs` in smoke, and a headless New York, Philadelphia, Boston game an hour on kept Boston and coarsened Philadelphia.
+- T-2008 [P3] No tangent line for a first straight segment. Done 2026-11-02 (agent t2006): a segment from an open-ground start with no curve draws no dotted line on (`curveTangent`, map/tools.ts); chained and curved segments keep theirs.
+- T-2006 [P2] Elevation upkeep in the Build tab's hovers. Done 2026-11-02 (agent t2006): the elevation buttons and the price line under them add "Upkeep $25k per km per day", the picked track type's rate from `edgeUpkeep` (`levelUpkeepLine`, game/format.ts).
+
 - T-1982 [P2] `checks/country_preflight.py`. Done 2026-11-02 (agent t1984): FLAGs Darwin's Unincorporated NT, Whyalla and Adelaide on Australia's pre-patch dry run, nothing on Vietnam's plan (two NOTEs); a cut city is a big FUA's urban centre split, not the FUA. notes/T-1984.md.
 - T-1984 [P2] Planner defaults. Done 2026-11-02 (agent t1984): zones under 50,000 dead everywhere, a split city centre one zone (`FUA_WHOLE`), far towns of a unit dead (`far_towns`); Australia's and Vietnam's dry runs give their shipped units; 39 of 47 countries' replans unchanged, the rest listed. notes/T-1984.md.
 - T-1985 [P2] Gate: a zone's drive_factor_median fails only above 3.0. Done 2026-11-02 (agent t1984): same verdicts on China's, Vietnam's and Canada's zones; Yuanyang (3.13) keeps its relaxation. notes/T-1984.md.

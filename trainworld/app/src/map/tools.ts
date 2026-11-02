@@ -1510,10 +1510,12 @@ export class Tools {
   }
 
   /** T-1895: beside the circle, a short line on from the segment's end the way it arrives, where a
-   * straight drawn on from there would go; for a straight segment too. */
+   * straight drawn on from there would go; for a straight segment too, except one from a free start,
+   * whose line on is its own continuation (T-2008). */
   private tangent: SVGSVGElement | null = null;
   private curveTangent(pv: PreviewAnswer | null) {
-    const h = pv ? endHeading(pv.verts, pv.pts, pv.arc, toLngLat, toLocal) : null;
+    const straightFromFree = this.start?.end.kind === "free" && !(pv?.arc && pv.arc.length >= 3 && pv.arc[2] > 0);
+    const h = pv && !straightFromFree ? endHeading(pv.verts, pv.pts, pv.arc, toLngLat, toLocal) : null;
     if (!h) {
       if (this.tangent) this.tangent.style.display = "none";
       return;

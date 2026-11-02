@@ -14,7 +14,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   2 by 2 grid [T-1128], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  (hover "Ground level (Shift+4)" and so on: Shift+1 to Shift+7 pick the drawing
+  (hover "Ground level (Shift+4)" and so on, with a second line "Upkeep $20k per km per day", that
+  elevation's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006]: Shift+1 to Shift+7 pick the drawing
   elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
@@ -27,7 +28,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
   multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
   it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
-  [T-1159]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
+  [T-1159] and gives the same upkeep line as the elevation buttons [T-2006]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
   the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
   6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High
@@ -161,7 +162,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
   [`map/curveCircle.ts`]; none for a straight segment. A dotted line as faint as the circle runs on 120
   px from the segment's end the way it arrives there, where a straight drawn on from that end would
-  go; a straight segment has one too [T-1895]. A click beyond the 1,796 m circle gets that
+  go; a straight segment has one too [T-1895], except one from a start on open ground, whose
+  line on would only continue it [T-2008]. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
 - **What a click joins** [T-1895]: within 12 px of a node (a track end, a junction, a station) a
   click joins at it; within 8 px of a piece of track it branches off it (the station tool reaches
