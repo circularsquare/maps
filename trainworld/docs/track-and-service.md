@@ -947,15 +947,18 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
   never cheaper, so no fare is below the base or falls with distance. **Fares by country**
-  (T-1277, `app/src/game/income.ts`): the curve is set for India, the baseline, and each country
-  charges it times its fare scale: by default (its GDP per head at market rates over India's)^0.7 in
-  tenths (the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521), or the player's own, 0.1 to 19.9 to a
-  hundredth (`Fares.scales`, saved with the fares; only the player's are kept). The Money tab shows a
-  scale divided by Japan's default (6.1), so Japan reads 1.00x and India 0.16x (`shownScale`,
-  `storedScale`; T-1554): display only, the saved scales and curve stay in India's units. A new game's curve (T-1670,
-  `START_NODES`) has nodes at 0, 20 and 100 km at $0.0862, $0.2241 and $0.7757, one straight line: in New York $1
-  + $0.08 a km ($2.60 at 20 km, $9.00 at 100); while a country's scale and
-  the curve are untouched its three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
+  (T-1277, T-1906, `app/src/game/income.ts`): each country charges the curve times its fare scale:
+  the player's own, 0.1 to 19.9 to a hundredth (`Fares.scales`, saved with the fares), else the
+  default, `scales["*"]` (`EVERY`), which a new game sets to 1. A save from before T-1906 has no
+  `"*"`: its curve is in India's units and a country's default is (its GDP per head at market rates
+  over India's)^0.7 in tenths (`incomeScale`: the US 11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521).
+  The Money tab shows a scale divided by the country's default, so every country reads 1.00x until the
+  player sets one (`shownScale`, `storedScale`). A new game's curve is set once from the country it
+  starts in (`startNodes` in `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at
+  $0.0862, $0.2241 and $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the
+  country's `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.30, $3.40 and $12.
+  In a save from before, while a country's scale and the curve (the old start's) are untouched, its
+  three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each
   scale the player set kept at its factor over the income's, so its home country's fares weigh
   exactly as before and the rest within the scales' rounding (`game/income.ts`). A save from before T-1277 carries no

@@ -113,7 +113,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `workers/cloud.ts`.
 - `quotes.ts`: the construct-all quote and a planned line's price, asked of the clock worker when a panel shows them (T-1171; the line panel's button is `ui/inspector/ConstructButton.tsx`).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209),
-  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1554: the panel's scale as a multiple of Japan's fares; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
+  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1906: the default scale (`EVERY`, 1 in a new game) and the panel's scale as a multiple of it; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -429,9 +429,11 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   line or station inside a bubble selects it with no bubble tag, one on a bubble clear of the
   network the bubble; port 6115 by default, about two minutes), `t1550-far-bubbles.mjs` (far out with
   the city bubbles on, a click where a station meets a bubble selects the bubble and shows its tag,
-  just closer in the station; port 6170, about two minutes), `t1554-fare-display.mjs` (the real
-  save's New York fares per km match its own, the shown scale reads Japan 1.00x and India 0.16x, the
-  Money tab's heading names the country; about a minute), `t1626-hsr-fare.mjs [url]` (a new game:
+  just closer in the station; port 6170, about two minutes), `t1906-money-rules.mjs [url]` (new
+  games in New York and Tokyo start at $2.50 and $1.30 with every country's scale 1 and the panel at
+  1.00x; the real save keeps its fares and stored scales and reads 1.00x; the loan profit rule and
+  the refused buttons' hovers; pictures in t1906/; port 6150, about a minute; replaces
+  `old/t1554-fare-display.mjs`), `t1626-hsr-fare.mjs [url]` (a new game:
   the High speed fare row only once a line runs high-speed trains; on that line multipliers 1.0, 1.5
   and 2.0 lose riders and raise the fare a ride; a shot to artifacts/trainworld/t1626-money.png;
   about three minutes), `old/t1516-fares-never-negative.mjs`

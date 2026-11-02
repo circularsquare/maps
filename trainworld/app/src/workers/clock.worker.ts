@@ -12,11 +12,12 @@ import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01,
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
+import { LOAN_AMOUNTS, LOAN_RATE, loanAllowed, loanProfit } from "../game/loan";
+import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
-import { FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
+import { EVERY, FARE_BASELINE, oldCurveFactor, oldIncomeScale, scaleFromOld, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf, levelOn, quietKind } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -43,6 +44,12 @@ const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
 const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
+/** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city), charged
+ * as set in every country until the player sets a scale. */
+function startFares(spec?: NewGameSpec): Fares {
+  const country = (spec?.start ? CITIES.find((x) => x.id === spec.start)?.country : undefined) ?? cityById(HOME_CITY).country;
+  return { ...faresOf({ nodes: startNodes(country) }, START_FARE), scales: { [EVERY]: 1 }, baseline: FARE_BASELINE, basis: "usd" };
+}
 /** A save's fares. One from before T-1277 kept New York's fares, so its curve is divided by the home
  * country's scale; one from before T-1521 (no `basis`) is turned to the market-rate rule with every
  * fare weighing as it did (game/income.ts). */
@@ -92,7 +99,7 @@ let timing: Record<string, number> = {};
 // Money and the clock (T-028). The main thread's clock is the game's; it tells this worker each
 // time it is set, paused or changes speed, and the worker settles fares and running costs one game
 // hour at a time from that.
-let fares: Fares = { ...START_FARES };
+let fares: Fares = startFares();
 let ledger: DayLedger[] = [];
 let hourLedger: HourLedger[] = [];
 /** fare income per game hour in each period, US$M (from the main thread's demand results), per
@@ -260,12 +267,13 @@ function setMode(m: GameMode) {
 }
 /** T-1661: the loan out, US$M (0 for none) */
 let loan = 0;
-/** A loan or its repayment (r 0 done, else refused: a sandbox, a loan already out, a size that is not offered, no loan, too little cash). */
+/** A loan or its repayment (r 0 done, else refused: a sandbox, a loan already out, a size that is not offered, interest past the profits (T-1906), no loan, too little cash). */
 function loanOp(op: { op: "borrow"; amount: number } | { op: "repay" }): number {
   const a = api!;
   if (mode === "sandbox") return 1;
   if (op.op === "borrow") {
     if (loan > 0 || !LOAN_AMOUNTS.includes(op.amount)) return 1;
+    if (!loanAllowed(op.amount, loanProfit(ledger, Math.floor(moneyNow() / 86400)))) return 1;
     loan = op.amount;
     a.set_cash(a.cash() + op.amount);
   } else {
@@ -2155,7 +2163,7 @@ let convertedOnLoad = false;
  * it (T-308); the return value says so, and the caller then writes the slot again in the new
  * format. Money, fares and the ledger load as saved, but for anything settled after the clock
  * (`unsettleAfter`). With `fresh`, the save is a real network a new game starts from (T-731): only
- * its network, fleet and fares are kept, the rest is a new game's. */
+ * its network and fleet are kept, the rest is a new game's (fares too, T-1906). */
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
   todayGen++;
   todayLast = null;
@@ -2185,7 +2193,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
   api!.set_fleet_bus(h.fleetBus ?? 0);
-  fares = loadFares(h.fares);
+  fares = fresh ? startFares(fresh) : loadFares(h.fares);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
@@ -2228,6 +2236,7 @@ function setNewGame(spec?: NewGameSpec) {
   opened = g.opened;
   demandFine = undefined;
   guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0 } : undefined;
+  fares = startFares(spec);
 }
 
 /** After a slot's save was converted on load: keep the old-format copy under a key the saves list
@@ -2253,7 +2262,6 @@ async function newGame(spec?: NewGameSpec) {
   api!.set_fleet(0);
   api!.set_fleet_fast(0);
   api!.set_fleet_bus(0);
-  fares = { ...START_FARES };
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);

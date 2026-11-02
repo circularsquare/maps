@@ -2,13 +2,13 @@
 
 import { busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
 import { borrow, repay, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
-import { LOAN_AMOUNTS, LOAN_RATE } from "../game/loan";
+import { LOAN_AMOUNTS, LOAN_RATE, loanAllowed, loanProfit } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
 import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
-import { DISPLAY_BASELINE, FARE_BASELINE, fareScale, incomeScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
+import { FARE_BASELINE, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
 import { scopeZone, viewCentre } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
@@ -84,22 +84,21 @@ function countryName(iso: string): string {
   }
 }
 
-/** T-1277: the fare scale where the panel looks, in multiples of Japan's fares (T-1554): a stepper
- * by 0.05, typed on a click, and a button back to the income's scale once the player has set one. */
-function FareScaleRow({ country, scale, own }: { country: string; scale: number; own: boolean }) {
-  const set = (v: number) => void setFareScale(country, storedScale(v));
-  const income = shownScale(incomeScale(country));
+/** T-1277: the fare scale where the panel looks, as a multiple of the country's default (T-1906:
+ * 1.00x until set): a stepper by 0.05, typed on a click, and a button back to the default once the
+ * player has set one. */
+function FareScaleRow({ country, scale, own, scales }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined }) {
+  const set = (v: number) => void setFareScale(country, storedScale(v, country, scales));
   const name = countryName(country);
-  const shown = shownScale(scale);
-  const japan = countryName(DISPLAY_BASELINE);
+  const shown = shownScale(scale, country, scales);
   const text = (v: number) => `${v.toFixed(2)}x`;
   return (
     <li>
       <span class="fr-what">{`${name} fares`}</span>
       <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of those in ${japan}.` }} />
+        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of the default fares.` }} />
       {own
-        ? <button class="btn icon" aria-label="Back to the income's scale" data-tip={`Back to ${text(income)}, the scale by income`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
+        ? <button class="btn icon" aria-label="Back to the default fares" data-tip={`Back to ${text(1)}`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
         : <span />}
     </li>
   );
@@ -233,7 +232,7 @@ export function MoneyTab() {
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
           <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
-          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />
+          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} />
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />
@@ -275,25 +274,35 @@ export function MoneyTab() {
       <ul class="rows">
         <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>
       </ul>
-      {m.mode !== "sandbox" && <LoanRows loan={m.loan} />}
+      {m.mode !== "sandbox" && <LoanRows loan={m.loan} ledger={m.ledger} />}
     </>
   );
 }
 
-/** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out; the loan,
- * its interest a day and Repay while one is. */
-function LoanRows({ loan }: { loan: number }) {
+/** T-1906: why a loan of `amount` US$M is refused, null if it is not. */
+function loanRefusal(amount: number, profit: ReturnType<typeof loanProfit>): string | null {
+  if (loanAllowed(amount, profit)) return null;
+  if (!profit) return `Until there is a full day of fares, the most you can borrow is $${LOAN_AMOUNTS[0] / 1000}B.`;
+  const over = profit.days === 1 ? "yesterday" : `over the last ${profit.days} days`;
+  return `Interest would be ${money(amount * LOAN_RATE * 1e6)} per day. Fares less running costs and upkeep averaged ${money(profit.perDay * 1e6)} per day ${over}.`;
+}
+
+/** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out, each refused
+ * past what profits pay (T-1906); the loan, its interest a day and Repay while one is. */
+function LoanRows({ loan, ledger }: { loan: number; ledger: DayLedger[] }) {
   const rule = `Interest is ${LOAN_RATE * 100}% of the loan per game day. One loan at a time.`;
   if (loan <= 0) {
+    const profit = loanProfit(ledger, liveMoney.value.today?.day ?? ledger[ledger.length - 1]?.day ?? 0);
     return (
       <>
         <div class="h">Loan</div>
         <ul class="rows">
           <Row label="Borrow">
             <span class="group">
-              {LOAN_AMOUNTS.map((a) => (
-                <button class="btn text" data-tip={`Borrow ${money(a * 1e6)}. ${rule}`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>
-              ))}
+              {LOAN_AMOUNTS.map((a) => {
+                const no = loanRefusal(a, profit);
+                return <button class="btn text" disabled={no !== null} data-tip={no ?? `Borrow ${money(a * 1e6)}. ${rule}`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
+              })}
             </span>
           </Row>
         </ul>

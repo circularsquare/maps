@@ -2,11 +2,11 @@
 // dollar costs a rider `FARE_W_REF` x (GDP per head / `FARE_Y_REF`)^-`FARE_E` perceived minutes, by
 // the country the trip starts in (the plane's fare by the departing country; the local layers' car
 // money stays at 3 minutes a dollar, the market's longer trips weigh it by income group, T-1431,
-// below). The player's fare curve is set for `FARE_BASELINE`, a lower-middle-income country, and
-// each country charges it times its fare scale: by default its income over the baseline's to the
-// same power, rounded to a tenth, or the player's own figure (`Fares.scales`). GDP per head at
-// market rates: countryIncome.json `usd` (notes/T-1521/money_table.py, World Bank
-// NY.GDP.PCAP.CD). At market rates the exponent is 0.7 where it was 0.5 at PPP: price levels rise
+// below). Each country charges the player's fare curve times its fare scale: the player's own figure
+// (`Fares.scales`), else the default (`defaultScale`: 1 in a new game; in a save from before
+// T-1906, its income over `FARE_BASELINE`'s, a lower-middle-income country, to the same power,
+// rounded to a tenth). GDP per head at market rates: countryIncome.json `usd`
+// (notes/T-1521/money_table.py, World Bank NY.GDP.PCAP.CD). At market rates the exponent is 0.7 where it was 0.5 at PPP: price levels rise
 // with income, and 0.7 keeps each country's minutes per unit of its own money as before (T-1521).
 
 import table from "./countryIncome.json";
@@ -16,13 +16,9 @@ export const FARE_Y_REF = 90000;
 export const FARE_E = 0.7;
 /** India, the largest lower-middle-income country (GDP per head about $2,700). */
 export const FARE_BASELINE = "IN";
-/** The player's fare scales (in baseline units, as stored) go from this to `SCALE_MAX`. */
+/** Fare scales, as stored, go from this to `SCALE_MAX`. */
 export const SCALE_MIN = 0.1;
 export const SCALE_MAX = 19.9;
-/** T-1554: the panel shows a scale as a multiple of Japan's fares: Japan's default scale (6.1
- * baseline units) reads 1.00x, India's 0.16x, the US's 1.90x. Display only: the game stores and
- * charges baseline units, so no save changes. */
-export const DISPLAY_BASELINE = "JP";
 /** The panel's step, in its own units. */
 export const SHOWN_STEP = 0.05;
 
@@ -34,18 +30,30 @@ const hundredth = (v: number) => Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.ro
 
 /** Perceived minutes a fare dollar costs a rider from `country`. */
 export const fareWeight = (country: string | undefined): number => FARE_W_REF * (gdpOf(country) / FARE_Y_REF) ** -FARE_E;
-/** The fare scale `country` has unless the player sets one. */
+/** The fare scale a country's income gives: a save from before T-1906 charges it where the player
+ * set none. */
 export const incomeScale = (country: string | undefined): number => tenth((gdpOf(country) / gdpOf(FARE_BASELINE)) ** FARE_E);
-/** The fare scale in `country`: the player's, else its income's. */
-export function fareScale(country: string | undefined, scales: Record<string, number> | undefined): number {
-  const own = country ? scales?.[country] : undefined;
-  return own !== undefined && Number.isFinite(own) ? hundredth(own) : incomeScale(country);
+/** T-1906: the key in `Fares.scales` for every country the player set no scale for. A new game sets
+ * it to 1, so every country charges the curve as set; a save from before has none and each country
+ * charges its income's scale. */
+export const EVERY = "*";
+/** The scale `country` charges unless the player sets one. */
+export function defaultScale(country: string | undefined, scales: Record<string, number> | undefined): number {
+  const all = scales?.[EVERY];
+  return all !== undefined && Number.isFinite(all) ? hundredth(all) : incomeScale(country);
 }
-/** T-1286: per country the player set a scale for, that scale over its income's, where not 1: the
- * factor the regional market weighs fares from there at. */
+/** The fare scale in `country`: the player's, else the default. */
+export function fareScale(country: string | undefined, scales: Record<string, number> | undefined): number {
+  const own = country && country !== EVERY ? scales?.[country] : undefined;
+  return own !== undefined && Number.isFinite(own) ? hundredth(own) : defaultScale(country, scales);
+}
+/** T-1286: per country, its scale over its income's where not 1: the factor the regional market
+ * weighs fares from there at. With `EVERY` set that is every country in the income table. */
 export function fareFactors(scales: Record<string, number> | undefined): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const c of Object.keys(scales ?? {})) {
+  const keys = Object.keys(scales ?? {});
+  for (const c of scales?.[EVERY] !== undefined ? new Set([...Object.keys(GDP), ...keys]) : keys) {
+    if (c === EVERY) continue;
     const f = fareScale(c, scales) / incomeScale(c);
     if (f !== 1) out[c] = f;
   }
@@ -53,9 +61,10 @@ export function fareFactors(scales: Record<string, number> | undefined): Record<
 }
 /** A player's scale as kept: a hundredth within range (T-1554; saved ones are tenths). */
 export const tidyScale = hundredth;
-/** A scale in the panel's terms (Japan's default is 1), and back to what is stored. */
-export const shownScale = (stored: number): number => stored / incomeScale(DISPLAY_BASELINE);
-export const storedScale = (shown: number): number => tidyScale(shown * incomeScale(DISPLAY_BASELINE));
+/** T-1906: a scale in the panel's terms, a multiple of the country's default (1.00x until the
+ * player sets one), and back to what is stored. */
+export const shownScale = (stored: number, country: string, scales: Record<string, number> | undefined): number => stored / defaultScale(country, scales);
+export const storedScale = (shown: number, country: string, scales: Record<string, number> | undefined): number => tidyScale(shown * defaultScale(country, scales));
 
 // T-1521: a save from before kept its curve and scales under T-1277's rule (GDP per head at PPP, to
 // the 0.5). It loads with its home country's fares weighing exactly as they did (others within the

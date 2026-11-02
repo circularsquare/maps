@@ -583,11 +583,11 @@ line runs high-speed trains, "High speed" with the high-speed fare multiplier in
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
-fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852) with its scale in a stepper as a multiple of Japan's fares, "1.00x" (Japan's default;
-India 0.16x, the US 1.90x), stepping by 0.05 from 0.02 to 3.26 (a click types one, kept to a hundredth
-of a baseline unit); once the player has set one, an undo icon after the stepper ("Back to 1.90x, the
-scale by income") returns to the income's. Its stepper sits in the same column as the rows above
-[T-1277, T-1554, T-1584, T-1727]. The base fare
+fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852) with its scale in a stepper as a multiple of the country's default fares, "1.00x" until set (hover "Fares in Japan as a multiple of the default fares."),
+stepping by 0.05 from 0.10 to 19.90 in a game from T-1906 on (a click types one, kept to a hundredth
+of the stored scale); once the player has set one, an undo icon after the stepper ("Back to 1.00x")
+returns to the default. Its stepper sits in the same column as the rows above
+[T-1277, T-1554, T-1584, T-1727, T-1906]. The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
 cent of fare where a stretch is too short for that to move it. A click on any value opens a box to
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
@@ -604,11 +604,14 @@ riders' mean trip length, line by line), fare income as the riders kept pay the 
 History, cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Last, "Loan"
 (not in a sandbox) [T-1661]: with none out, "Borrow" and three buttons, $1B, $5B and $10B, each hover
-giving the rule (1% of the loan a game day, one at a time); with one out, "Borrowed" and its amount,
+giving the rule (1% of the loan a game day, one at a time), or, disabled, why it is refused
+[T-1906]: "Interest would be $50.0M per day. Fares less running costs and upkeep averaged $32.0M per
+day over the last 7 days." ("yesterday" after one whole day), or before a whole day with fares "Until
+there is a full day of fares, the most you can borrow is $1B."; with one out, "Borrowed" and its amount,
 "Interest a day" (hover: the rule) and a "Repay" button, disabled while the cash is under the loan
-(hover: what it needs). Default fares show rounded: a country's fares are the curve times its scale,
+(hover: what it needs). In a save from before T-1906, default fares show rounded: a country's fares are the curve times its scale,
 rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar, until the player
-changes the curve or that country's scale [T-1662, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
+changes the curve or that country's scale; a newer game's start curve is already round [T-1662, T-1906, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
 ## Cities tab

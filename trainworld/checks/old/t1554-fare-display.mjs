@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { launchChrome, collectErrors, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
+import { launchChrome, collectErrors, importSave, REAL_SAVE, ANGLE } from '../lib.mjs';
 // T-1554: the fare scale is shown as a multiple of Japan's fares (Japan's default 1.00x, India's 0.16x)
 // under a heading naming the country, and nothing stored changes. Fares per km in the real save's New
 // York are the save's own base $1.50 + $0.10 a km within the income scale's rounding (0.4%, as before); the stored scale
