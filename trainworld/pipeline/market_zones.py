@@ -11,7 +11,7 @@ apart, and merges them into app/src/game/registry.json (`place`, `country`, `mar
 `market.places`) and the rows into app/src/game/market-rows.json (T-776, market_rows.py). A new zone
 needs only its own file and this merge. Only the rows a changed, new or gone zone file can reach are
 worked out again (T-929, `plan_rows`; data/work/market_rows.inputs.json records what each row was made
-from); a changed market_pack binary or market rule redoes them all.
+from); a change to the sim crate's sources or the market rule redoes them all.
 
 A zone's file holds its endpoint sites (its pack's cells in 600 m squares of its own pack frame),
 each site's parking for an arriving car and the people of its H3 r5 cell (the long-haul tail's
@@ -59,8 +59,9 @@ AIR_RADIUS_KM, AIR_MIN_PAX, DIRECT_MIN_PAX, AIR_MAX = 150.0, 1e6, 5e4, 8
 AIR_SOURCE = "airports: OurAirports (public domain), chosen and flagged direct by FR24 passengers (maps/flights, offline, T-378)"
 
 
-def airports_by_zone(reg):
-    """Per registered zone id: its airports' [lon, lat], and for each the places it flies to directly."""
+def airports_by_zone(reg, only=None):
+    """Per registered zone id (of `only`, else all): its airports' [lon, lat], and for each the places
+    it flies to directly."""
     ports = []
     with open(OURAIRPORTS_CSV, encoding="utf-8") as f:
         for r in csv.DictReader(f):
@@ -100,9 +101,11 @@ def airports_by_zone(reg):
     place = {c["id"]: c["place"] for c in reg["cities"] if "place" in c}
     out = {}
     for cid, v in chosen.items():
-        flies = lambda pc: set().union(*(routes.get(x, set()) for x in pc[1]))
+        if only is not None and cid not in only:
+            continue
+        flies = [set().union(*(routes.get(x, set()) for x in pc[1])) for pc in v]
         out[cid] = {"airports": [[round(p[1], 5), round(p[2], 5)] for p, _ in v],
-                    "air_direct": [sorted(place[o] for o, oc in codes.items() if o != cid and flies(pc) & oc) for pc in v],
+                    "air_direct": [sorted(place[o] for o, oc in codes.items() if o != cid and f & oc) for f in flies],
                     "air_codes": [p[0] for p, _ in v]}
     return out
 
@@ -200,48 +203,71 @@ def own_sites(cid, frame):
 class Groups:
     """Commutes between the packs of a joint gravity group (T-463: Japan's first),
     data/work/<group>.joint_commutes.json from bin/joint_gravity.rs --packs: by 6 km square of each
-    pack's own frame, matched here to the squares of the zone files' 6 km zones."""
-    def __init__(self, reg):
+    pack's own frame, matched here to the squares of the zone files' 6 km zones. With `only`, the
+    rows of those packs alone, from the files holding pairs that start there (T-1976)."""
+    def __init__(self, reg, only=None, work=None):
         self.reg = {c["id"]: c for c in reg["cities"]}
         self.rows, self.source, self.keys = {}, {}, {}
+        work = work or ROOT / "data/work"
+        only = None if only is None else set(only)
+        want = (lambda h: True) if only is None else only.__contains__
         # each pair of packs from the newest file covering it (T-786: a country's file covers its own
         # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves).
         # A file solving a pack replaces all its pairs, those with packs it leaves out included: an
         # older file's pairs could name an earlier row of the same id (T-1758: Vietnam's tox and
         # Henan's hag, 3,000 km apart)
         import intercity
+        files = list(intercity.joint_files(work).items())  # oldest first
+        later = [set()]  # the packs solved by files newer than each: their pairs here are all replaced
+        for _p, f in reversed(files[1:]):
+            later.append(later[-1] | f["solved"])
+        later.reverse()
         pairs = {}
-        for path, f in intercity.joint_files(ROOT / "data/work").items():  # oldest first
-            g = json.loads(path.read_text(encoding="utf-8"))
+        for (path, f), newer in zip(files, later):
             for k in [k for k in pairs if k[0] in f["solved"] or k[1] in f["solved"]]:
                 del pairs[k]
+            if only is not None and not (f["homes"] & only) - newer:
+                continue
+            g = json.loads(path.read_text(encoding="utf-8"))
             ids = g["packs"]
             for k in range(len(g["trips"])):
                 h, w = ids[g["home_pack"][k]], ids[g["work_pack"][k]]
-                if h not in self.reg or w not in self.reg:
+                if h not in self.reg or w not in self.reg or not want(h):
                     continue  # a pack that parked after this solve took its commutes out of the registry (T-997)
                 pairs.setdefault((h, w), []).append((tuple(g["home_zone"][k]), w, tuple(g["work_zone"][k]), g["trips"][k]))
                 self.source[h] = g["source"]
         for (h, _w), lst in pairs.items():
             self.rows.setdefault(h, []).extend(lst)
+        self.source = {h: s for h, s in self.source.items() if h in self.rows}
         self.everyday_rows, self.everyday_source = {}, {}
-        self.add_everyday(ROOT / "data/work")
+        self.add_everyday(work, only, want)
 
-    def add_everyday(self, work):
+    def add_everyday(self, work, only, want):
         """T-1175: everyday outings across zone lines (pipeline/cross_everyday.py), each drawing pack's
         from the newest unit file that drew from it (a school or university draws from its site, so
         its pairs are the activity end's pack's), filed under the home end's pack."""
         import cross_everyday
+        files = cross_everyday.unit_files(work)  # oldest first
+        last = {}
+        for path, f in files.items():
+            for o in f["order"]:
+                last[o] = path
+        final = set(last.values())
         drawn = {}
-        for path in cross_everyday.unit_files(work):  # oldest first
-            g = json.loads(path.read_text(encoding="utf-8"))
-            ids, by = g["packs"], {}
-            for k in range(len(g["trips"])):
-                h, a, kind = ids[g["home_pack"][k]], ids[g["act_pack"][k]], g["kind"][k]
-                by.setdefault(a if kind in (2, 3) else h, []).append(
-                    (h, tuple(g["home_zone"][k]), a, tuple(g["act_zone"][k]), kind, g["trips"][k], g["walk"][k]))
-            for o in g["solved"]:
-                drawn[o] = (by.get(o, []), g["source"])
+        for path, f in files.items():
+            if only is None or (f["homes"] & only and path in final):
+                g = json.loads(path.read_text(encoding="utf-8"))
+                ids, by = g["packs"], {}
+                for k in range(len(g["trips"])):
+                    h, a, kind = ids[g["home_pack"][k]], ids[g["act_pack"][k]], g["kind"][k]
+                    if want(h):
+                        by.setdefault(a if kind in (2, 3) else h, []).append(
+                            (h, tuple(g["home_zone"][k]), a, tuple(g["act_zone"][k]), kind, g["trips"][k], g["walk"][k]))
+                source = g["source"]
+            else:
+                by, source = {}, None  # no pair of a wanted pack, so none it could take
+            for o in f["order"]:
+                drawn[o] = (by.get(o, []), source)
         for lst, source in drawn.values():
             for h, hk, a, ak, kind, t, w in lst:
                 if h in self.reg and a in self.reg:
@@ -502,7 +528,8 @@ def _main(args):
         ids = []  # T-540: only the market rows, after a zone left the registry
     else:
         ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
-    air = airports_by_zone(reg) if ids or air_only else {}
+    named = None if air_only or len(ids) == len(reg["cities"]) else set(ids)
+    air = airports_by_zone(reg, named) if ids or air_only else {}
     for cid, a in air.items():
         print(f"{cid}: airports {' '.join(a['air_codes']) or 'none'}", flush=True)
     if air_only:
@@ -518,7 +545,7 @@ def _main(args):
         ids = []
     if ids:
         F = Field()
-        groups = Groups(reg)
+        groups = Groups(reg, named)
     for cid in ids:
         out = build(cid, reg, F, air)
         path = PACKS / f"{cid}.market.json"
@@ -530,7 +557,9 @@ def _main(args):
     exe = simbin.exe(ROOT, "market_pack")
     reg = shared_lock.read_json(REG)
     have = market_rows.load(ROOT)
-    want, compose, record = plan_rows(reg, have, _sha(exe.read_bytes()), full="--full" in args)
+    # keyed on the sim's sources, not the binary's bytes: each run's sim copy builds its own binary,
+    # which redid every row (3-4 minutes) at a run's first market step (T-1976)
+    want, compose, record = plan_rows(reg, have, simbin.source_sha(ROOT), full="--full" in args)
     if want is None:
         subprocess.run([str(exe), "--root", str(ROOT), "--out", str(rows)], check=True)
         got = json.loads(rows.read_text(encoding="utf-8"))

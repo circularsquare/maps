@@ -20,7 +20,7 @@ in `DECISIONS.md`, finished work in `ARCHIVE.md`, measurements in `notes/`. Wher
 | The regional layer (5) | [docs/regional.md](docs/regional.md) |
 | Track, trains, capacity, money, boarding (6) | [docs/track-and-service.md](docs/track-and-service.md) |
 | Interface (8) | [panels](docs/ui-panels.md), [inspectors](docs/ui-inspectors.md), [network on the map](docs/ui-map.md), [demand views](docs/ui-demand-views.md), [building](docs/ui-building.md) |
-| Adding a city | [docs/adding-a-city.md](docs/adding-a-city.md) |
+| Adding a country | [docs/adding-a-country.md](docs/adding-a-country.md); the runner [docs/world-run.md](docs/world-run.md); by hand [docs/adding-a-city-by-hand.md](docs/adding-a-city-by-hand.md) |
 
 ---
 
@@ -96,7 +96,7 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   each country's sources and procedure are in [docs/data-register.md](docs/data-register.md), the
   rules in [docs/demand-worldwide.md](docs/demand-worldwide.md). New rows come from the world plan
   (`pipeline/world_plan.json`) through the unattended runner (`pipeline/world_run.py`,
-  [docs/adding-a-city.md](docs/adding-a-city.md)).
+  [docs/world-run.md](docs/world-run.md)).
 - **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
   parent under 2,500 trip ends a weekday becomes one cell, in busier parents touching children under
   1,250 each merge, a cell under 1,250 left alone joins a touching merged cell of its zone

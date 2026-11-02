@@ -1,4 +1,4 @@
-// Startup timing (T-172/T-174's method, docs/adding-a-city.md step 9): a production build in a
+// Startup timing (T-172/T-174's method, docs/adding-a-city-by-hand.md step 9): a production build in a
 // scratch folder served by checks/static-serve.mjs (Range, no-store), headless Chrome with its own
 // temporary profile, default demand pool. A new game RUNS times, then the real NYC save
 // (T-007-real-nyc.save) RUNS times. Marks are ms since navigation: world = track drawn, clock =

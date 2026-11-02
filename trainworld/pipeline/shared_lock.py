@@ -1,5 +1,5 @@
 """T-786: cross-process locks on the files several runners and tools share, so two runners never
-lose each other's edits (docs/adding-a-city.md, Running the pipeline).
+lose each other's edits (docs/world-run.md, Running the pipeline).
 
     with shared_lock.held("registry", "register.py"):   read, change and write the file
         ...

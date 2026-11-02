@@ -13,7 +13,7 @@ Which sources each country has, which are used, and which procedure its packs fo
 ## The first country outside the US: Canada (Toronto, T-277, 2026-10-13)
 
 What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter in
-`pipeline/canada.py`, the substitution table in docs/adding-a-city.md "Outside the US"):
+`pipeline/canada.py`, the substitution table in docs/adding-a-city-by-hand.md "Outside the US"):
 
 - **Institutions** are not taken off homes: Canada publishes people in collective dwellings only
   for larger areas, not by dissemination area. Its incarceration rate is about a fifth of the

@@ -1,5 +1,5 @@
 """T-537, pipeline stage 5: a planned city's outline from OSM admin boundaries, for any country
-(nigeria.py's method made generic). The rules are docs/adding-a-city.md 3 "A planned city".
+(nigeria.py's method made generic). The rules are docs/world-run.md "A planned city".
 
 Each of the world plan row's units (geoBoundaries, NUTS-3 or ITL3, as the plan chose) takes the OSM
 boundary=administrative relation, at any admin level, that overlaps it best, or the several relations

@@ -15,7 +15,7 @@ and which whole admin units each one holds.
                                             with --out, a dry run written there; with --replan,
                                             its built zone rows regrouped too (T-1189)
 
-The rules are docs/adding-a-city.md "Which cities, and where their edges go". Downloads land in
+The rules are docs/world-run.md "The world plan". Downloads land in
 data/raw/worldplan/ when missing; extents as GeoJSON in data/work/worldplan/. Everything is computed
 in Mollweide metres on GHS-POP's 1 km grid (2025 epoch), a pixel counted where its centre falls.
 """
@@ -167,10 +167,19 @@ COUNTY_ISO = {"72": "PRI", "60": None, "66": None, "69": None, "78": None}
 # `contiguous` rule of zone_groups (Anita, 2026-10-22: no exclaves)
 WATER_GAP_KM = 10.0
 ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one archipelago (Anita, 2026-10-22)
-ZONE_ALONE_MIN = 10_000  # with `contiguous`, a zone that joined nothing and holds fewer people is dead space
-# the same for a country on the default rule that wants it (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800: T-1744)
-# (Whyalla, 24,000 between dead LGAs, T-1857; Port Pirie's grouped 98,000 stays)
-ALONE_MIN = {"VNM": ZONE_MIN_POP, "AUS": 50_000}
+# a zone holding fewer people once grouped is dead space, in every country (T-1984): such zones parked on their own
+# figures (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800, T-1744; Whyalla, 24,000 between dead LGAs, T-1857)
+ZONE_ALONE_MIN = 50_000
+ALONE_MIN = {}  # a country's own figure, where it needs one
+# a GHS-FUA whose units (FUA_SHARE of their free people in it) hold this many free people is one zone, over the cap
+# if need be, when zones each holding FUA_CUT_SHARE of its main urban centre's people split it (T-1984: the cap had cut
+# Adelaide in two; the Red River and Mekong deltas' big FUAs are countryside round smaller centres, not cut)
+FUA_WHOLE = 1_000_000
+FUA_CUT_SHARE = 0.2
+# a zone's unit (not its most populous) with this many free people in pieces over SCATTER_KM from the rest of the
+# zone is dead space (T-1984: "Unincorporated NT" put Yulara, Nhulunbuy and Alyangula in Darwin's zone, T-1857)
+SCATTER_KM = 100.0
+SCATTER_PEOPLE = 1_000
 # a country's joint commute solve split by first-level unit (T-897: one China group would pass
 # intercity.MAX_GROUP_ZONES); first-level names as geoBoundaries gives them, to the solve region's
 # name; a first-level unit not listed is its own region, named by its first word
@@ -1269,7 +1278,7 @@ def write(st, out, feats, dropped):
     # plan_zones' rows and the FUA countries' (plan_metros) stay as they are
     zone_rows = [r for r in old.get("metros", []) if r.get("kind") == "zone" or alone_row(r)]
     built = [b for b in built if b["id"] not in {r["id"] for r in zone_rows}]
-    doc = {"note": "T-536, pipeline stage 4: written by pipeline/world_plan.py; the rules are in docs/adding-a-city.md",
+    doc = {"note": "T-536, pipeline stage 4: written by pipeline/world_plan.py; the rules are in docs/world-run.md",
            "built": str(datetime.now().date()),
            "unit_sources": {**old.get("unit_sources", {}), **st["sources"]},
            "metros": out + zone_rows + built,
@@ -1393,7 +1402,7 @@ def unit_borders(simple):
 
 
 def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False, fixed=(), flows=None,
-                fixed_units=None, big_km2=0.0, cities=(), join_km=0.0):
+                fixed_units=None, big_km2=0.0, cities=(), join_km=0.0, whole=None, core=None, fua_zones=None):
     """Free units (ids) grouped into zones, smallest first, until each holds `floor` people, or
     ZONE_MIN_POP over `big_km2` (T-1140, docs/zones.md 2). A zone under ZONE_MIN_POP joins the zone of
     its region it travels with most (`flows`; the longest border breaking ties) whose union wraps
@@ -1415,7 +1424,11 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     nearest zone within WATER_GAP_KM across water instead of the island rule, so every zone's parts
     touch, and islands of one region within ARCHIPELAGO_KM join as one.
     Then each zone still wrapping something is cut in two across it (`cut`) and the halves regroup,
-    a half whose every join wraps staying as it is, RING_ROUNDS times at most. `fixed`: the metro rows and built packs, [{id, name, geom (Mollweide),
+    a half whose every join wraps staying as it is, RING_ROUNDS times at most. Last, the zones each
+    holding FUA_CUT_SHARE of a big GHS-FUA's main urban centre (`core`, big_fuas) are made one whatever
+    the cap, though while over it its biggest piece outside the FUA's units (`whole`) holding
+    ZONE_ALONE_MIN and under FUA_CUT_SHARE of the centre stands as a zone of its own; `fua_zones` gets
+    {lead: FUA} of each (T-1984). `fixed`: the metro rows and built packs, [{id, name, geom (Mollweide),
     xy (people centre)}]. `flows`: {key: {key: n}}, travel both ways between units (or a fixed area's
     own key); `fixed_units`: {fixed id: [units or keys]}, the fixed areas' shares of `flows`. Returns
     ({lead id: [units]}, [log lines])."""
@@ -1739,6 +1752,43 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
         merge(only=touched)
     for _, a, (t, b) in rings():
         lines.append(f"  ring left: {by[a].name} wraps {name(t, b)}")
+    for f, cu in sorted((core or {}).items()):
+        held = {z: sum(cu.get(i, 0.0) for i in ids) for z, ids in zones.items()}
+        tot = sum(held.values())
+        mostly = sorted((z for z, n in held.items() if tot and n >= FUA_CUT_SHARE * tot), key=lambda z: -held[z])
+        if len(mostly) < 2:
+            continue
+        ids = [i for z in mostly for i in zones.pop(z)]
+        rest, seen, pieces = {i for i in ids if whole.get(i) != f}, set(), []
+        for s in sorted(rest):
+            if s in seen:
+                continue
+            piece, front = {s}, [s]
+            while front:
+                front = [j for i in front for j in adj[i] if j in rest and j not in piece]
+                piece.update(front)
+            seen |= piece
+            pieces.append(sorted(piece, key=lambda i: -by[i].free))
+        # over the cap only by the FUA itself: its biggest outlying piece that can be a zone goes, until it fits
+        n, shed = sum(by[i].free for i in ids), []
+        for p in sorted(pieces, key=lambda p: -sum(by[i].free for i in p)):
+            m = sum(by[i].free for i in p)
+            if n <= cap or m < ZONE_ALONE_MIN:
+                break
+            if sum(cu.get(i, 0.0) for i in p) >= FUA_CUT_SHARE * tot:  # part of the centre, which stays whole
+                continue
+            shed.append(p)
+            n -= m
+        out = {i for p in shed for i in p}
+        keep = sorted((i for i in ids if i not in out), key=lambda i: -(by[i].free if whole.get(i) == f else -1))
+        for grp in [keep] + shed:
+            zones[grp[0]] = grp
+            for i in grp:
+                owner[i] = grp[0]
+        fua_zones[keep[0]] = f
+        lines.append(f"  {f[1]}'s functional urban area: the {len(mostly)} zones its centre was split between made one, {sum(by[i].free for i in keep):,.0f} "
+                     f"people" + "".join(f"; {by[p[0]].name} ({sum(by[i].free for i in p):,.0f}) outside it stays a zone"
+                                         for p in shed))
     return zones, lines
 
 
@@ -1904,6 +1954,85 @@ def city_fuas(zby, ids, city_pop=None):
                 out[i] = city[f]
                 break
     return out
+
+
+def far_towns(by, ids):
+    """T-1984: the units of zone `ids` other than its most populous whose pieces reached from the rest of the zone
+    only by a step over SCATTER_KM hold SCATTER_PEOPLE free people (geoBoundaries' "Unincorporated NT": Yulara,
+    Nhulunbuy and Alyangula in Darwin's zone)."""
+    out = []
+    if len(ids) < 2:
+        return out
+    top = max(ids, key=lambda i: by[i].free)
+    for i in ids:
+        g = by[i].geom
+        b = g.bounds
+        if i == top or shapely.get_num_geometries(g) < 2 or max(b[2] - b[0], b[3] - b[1]) < SCATTER_KM * 1000:
+            continue
+        parts = list(shapely.get_parts(g))
+        others = [by[j].geom for j in ids if j != i]
+        tree = STRtree(parts)
+        seen = {int(k) for o in others for k in tree.query(o, predicate="dwithin", distance=SCATTER_KM * 1000)}
+        front = list(seen)
+        while front:
+            front = list({int(k) for p in front for k in tree.query(parts[p], predicate="dwithin", distance=SCATTER_KM * 1000)} - seen)
+            seen.update(front)
+        far = [parts[k] for k in range(len(parts)) if k not in seen]
+        if far and by[i].px is not None:
+            x, y, p = by[i].px
+            if sum(float(p[contains_xy(f, x, y)].sum()) for f in far) >= SCATTER_PEOPLE:
+                out.append(i)
+    return out
+
+
+def fua_centres(iso, least):
+    """Country `iso`'s GHS-FUAs of `least` people or more (2015) and each one's biggest urban centre (UCDB R2024A,
+    its centroid in the FUA): [(FUA index, FUA name, FUA people, centre name, centre polygon)], Mollweide."""
+    fua, fgeom = load_fua()
+    lay = "GHS_UCDB_THEME_GENERAL_CHARACTERISTICS_GLOBE_R2024A"
+    uc = pyogrio.read_dataframe(UCDB, layer=lay, columns=["ID_UC_G0", "GC_UCN_MAI_2025", "GC_POP_TOT_2025"])
+    ug = {i: (n, p, polygonal(g)) for i, n, p, g in zip(uc.ID_UC_G0, uc.GC_UCN_MAI_2025, uc.GC_POP_TOT_2025, uc.geometry)}
+    cen = pyogrio.read_dataframe(UCDB, layer="UC_centroids")
+    cid, ctree = list(cen.ID_UC_G0), STRtree(list(cen.geometry))
+    out = []
+    for f in range(len(fua)):
+        if fua.Cntry_ISO[f] != iso or fua.FUA_p_2015[f] < least:
+            continue
+        inside = [ug[cid[int(c)]] for c in ctree.query(fgeom[f], predicate="contains") if cid[int(c)] in ug]
+        if inside:
+            n, _, g = max(inside, key=lambda t: t[1])
+            out.append((f, str(fua.eFUA_name[f]), float(fua.FUA_p_2015[f]), str(n), g))
+    return out
+
+
+def big_fuas(zby, ids, iso, least=FUA_WHOLE):
+    """T-1984: country `iso`'s GHS-FUAs of `least` people or more whose units (FUA_SHARE of their free people in it)
+    among `ids` hold `least` free people too: ({unit: (FUA index, name)} of those units, {(FUA index, name): {unit:
+    its free people in the FUA's biggest urban centre}} over `ids`); the name is the centre's, else the FUA's."""
+    fua, fgeom = load_fua()
+    cs = fua_centres(iso, least)
+    centres = {f: g for f, _, _, _, g in cs}
+    # the centre's name, its bracketed common name first (UCDB's "Bayamón [San Juan]"), else the FUA's
+    label = {f: next((s for s in (*re.findall(r"\[(.+?)\]", c), c, n) if latin(s)), n) for f, n, _, c, _ in cs}
+    got, core = {}, {f: {} for f in centres}
+    for i in ids:
+        u = zby[i]
+        x, y, p = u.px if u.px is not None else (np.zeros(0),) * 3
+        s = float(p.sum())
+        if not s:
+            continue
+        for f, g in centres.items():
+            if g.intersects(u.geom):
+                n = float(p[contains_xy(g, x, y)].sum())
+                if n:
+                    core[f][i] = n
+            if i not in got and fgeom[f].intersects(u.geom) and p[contains_xy(fgeom[f], x, y)].sum() >= FUA_SHARE * s:
+                got[i] = f
+    tot = collections.Counter()
+    for i, f in got.items():
+        tot[f] += zby[i].free
+    keep = {f for f in centres if tot[f] >= least}
+    return {i: (f, label[f]) for i, f in got.items() if f in keep}, {(f, label[f]): core[f] for f in keep}
 
 
 def group_units(units, free, level, gap_m):
@@ -2364,9 +2493,16 @@ def plan_zones(isos3, out_path=None, replan=False):
         big = rule.get("big_km2", BIG_ZONE_KM2)
         city_pop = rule.get("city_pop", CITY_POP)
         cities = city_units(zunits, zfree, city_pop)
+        (whole, core), fua_zones = big_fuas(zby, zfree, iso) if FUA_WHOLE else ({}, {}), {}
         groups, lines = zone_groups(zunits, zfree, region, floor, cap, rule.get("contiguous", False), fixed, travel,
-                                    fixed_units, big, cities, rule.get("join_km", 0.0))
-        alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN if rule.get("contiguous") else 0)
+                                    fixed_units, big, cities, rule.get("join_km", 0.0), whole, core, fua_zones)
+        if level is None:
+            for lead, ids in groups.items():
+                for i in far_towns(by, ids):
+                    ids.remove(i)
+                    dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "scattered": True})
+                    lines.append(f"  {by[i].name}: towns over {SCATTER_KM:g} km from the rest of its zone, dead space")
+        alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN)
         if alone_min:  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < alone_min]:
                 for i in (m for g in groups.pop(lead) for m in members[g]):
@@ -2413,10 +2549,14 @@ def plan_zones(isos3, out_path=None, replan=False):
             named = [u for u in byname if latin(zone_name(u.name, iso))] or byname
             if level is None:  # T-1762: the origin is in the unit the zone is named after, not on a far border village
                 best = densest(named[:1]) or best
+            fz = fua_zones.get(lead)
+            if fz:  # T-1984: a big GHS-FUA's zone takes its name, and its origin from the FUA's own units
+                best = densest([by[m] for u in byname if whole.get(u.id) == fz for m in members[u.id]]) or best
+                us = [by[best[3]]] + [u for u in us if u.id != best[3]]  # the unit it leads with holds its origin
             lon, lat = INV.transform(best[1], best[2])
             tz = COUNTRY_TZ.get(iso) or tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
-            name = zone_name(named[0].name, iso)
-            if iso == "KOR" and level is not None and re.search(r"-gu( \[|$)", named[0].name) and named[0].parents:
+            name = fz[1] if fz and latin(fz[1]) else zone_name(named[0].name, iso)
+            if iso == "KOR" and level is not None and re.search(r"-gu( \[|$)", named[0].name) and named[0].parents and not fz:
                 name = named[0].parents[0][1]  # a gu is a district of a metropolitan city: the city (Ulsan)
             if name in names and iso in ("USA", "PRI"):  # Jefferson County in many states: with its state
                 name = named[0].name

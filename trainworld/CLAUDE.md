@@ -8,7 +8,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | File | Holds | Who edits |
 |---|---|---|
 | `SPEC.md` | What the game is and how it works, **as of now**, in summary | agents, rewritten in place |
-| `docs/` | The spec in detail, one file per area: `demand.md` (index of the `demand-*.md` files), `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
+| `docs/` | The spec in detail, one file per area: `demand.md` (index of the `demand-*.md` files), `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-country.md` (the playbook for a new country), `world-run.md` (the runner, the plan's rule), `adding-a-city-by-hand.md` (a hand-built city or country module), `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
 | `TASKS.md` | Open agent work, by priority | agents |
 | `DECISIONS.md` | Dated choices someone might revisit, and why; from 2026-10-20 on. Older ones: `DECISIONS-to-2026-10-19.md` | agents, add only |
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first; from 2026-10-20 on. Older ones: `ARCHIVE-to-2026-10-19.md` | agents, add only |
@@ -59,7 +59,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 - **notes/ is the agents'** (Anita, 2026-10-13): move, merge or delete freely. One-off scripts go
   once their task is done; scripts worth keeping go to `checks/`. Check outputs (.json, .log) go in
   `../artifacts/trainworld/`, never notes/.
-- **Project knowledge lives here**, not in Claude's memory. Adding a city: `docs/adding-a-city.md`.
+- **Project knowledge lives here**, not in Claude's memory. Adding a country: `docs/adding-a-country.md`; its scripts are in `tools/country/`.
 - **The data register** (`docs/data-register.md`): a city or data task that uses, finds or rules
   out a source updates that country's cell, and files a P3 task for a source usable but not used.
 
@@ -98,7 +98,7 @@ Briefs carry only the task; these hold for every agent.
   A browser load counts its demand workers too (about a core each, plus the page): a headless load
   of a big save took 5 cores on a 4-core claim and starved Anita's game (2026-10-27); cap the
   page's solving workers to fit the claim.
-- **While a join runs, nothing else writes `data/packs`**, any country's packs included: each unit's
+- **While a join runs, nothing else writes `data/packs` or `data/terrain`, any country's included**: each unit's
   re-gate compares every registered pack against its snapshot and parks the unit on any change (a walk
   rerun parked China's Henan, 2026-10-24).
 - **Pack rebuilds** back up to `data/work/pre-T###/` first; a backup goes, without asking, once a
@@ -241,7 +241,7 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   past about 500k tokens (the figure in its task notice) with substantial work left writes its state
   to its notes and is replaced by a fresh one (Anita, 2026-10-21).
 - **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
-  task ends with a retrospective (docs/adding-a-city.md 12); the orchestrator records each task's
+  task ends with a retrospective (docs/adding-a-country.md 10); the orchestrator records each task's
   tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.
 - **Asks for Anita** go in the "For you" block of the final message, never in `TODO.md` (Anita,
   2026-10-15). If there are many, or they outlive the session, put them in `notes/for-anita.md` and

@@ -21,6 +21,10 @@ import { cloudContext } from "../game/account";
 import { accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { removeSlot, sendDeletes } from "../workers/cloud";
 
+declare const __TW_VERSION__: string | undefined;
+/** The build's commit count (vite.config.ts), "dev" on a dev server. */
+const VERSION = typeof __TW_VERSION__ === "string" ? __TW_VERSION__ : "dev";
+
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
  * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last; `?slot=<key>` and
@@ -131,6 +135,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}
+    <p class="start-version muted small">build {VERSION}</p>
     {sheet ? <div class="start-box new-game-box">
       <h1 id="start-title" class="big">New game</h1>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />

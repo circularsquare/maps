@@ -39,6 +39,18 @@ def run(root, name, args, **kw):
                            "--manifest-path", _manifest(root), "--", *args], env=e, check=True, **kw)
 
 
+def source_sha(root):
+    """A sha1 of the sim crate's sources a build reads (Cargo.toml, Cargo.lock, src/), the same for
+    every copy of the same code: two builds of one source differ in their bytes (T-1976)."""
+    import hashlib
+    sim = Path(_manifest(root)).parent
+    h = hashlib.sha1()
+    for p in sorted([sim / "Cargo.toml", sim / "Cargo.lock", *(sim / "src").rglob("*.rs")]):
+        if p.exists():
+            h.update(p.relative_to(sim).as_posix().encode() + b"\0" + p.read_bytes().replace(b"\r\n", b"\n") + b"\0")
+    return h.hexdigest()
+
+
 def exe(root, name, jobs="3"):
     """The binary `name`'s path, built first if its code changed."""
     e = env(root, jobs)

@@ -1,4 +1,5 @@
 import { copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
@@ -128,12 +129,23 @@ function packs(): Plugin {
   };
 }
 
+/** The start menu's version: the commit count, so 8800 and the published page can be told apart at a glance
+ * (the orchestrator names it in its reports); "dev" on the dev server, whose tree may not match a commit. */
+function version(): string {
+  if (process.argv.includes("build") === false) return "dev";
+  try {
+    return execSync("git rev-list --count HEAD", { cwd: dirname(fileURLToPath(import.meta.url)) }).toString().trim();
+  } catch {
+    return "dev";
+  }
+}
+
 export default defineConfig({
   // Served under /trainworld/ by maps/serve.py, so every URL in the build must be relative.
   base: "./",
   worker: { format: "es" },
   // T-328: the app build, part of the demand cache's key: new at each build and dev-server start
-  define: { __TW_BUILD__: JSON.stringify(Date.now().toString(36)) },
+  define: { __TW_BUILD__: JSON.stringify(Date.now().toString(36)), __TW_VERSION__: JSON.stringify(version()) },
   build: { outDir: "dist", target: "es2022" },
   // T-682: the real-network layer reads noritetsu's tiles beside the game (map/realNetwork.ts); 8800 serves them
   // at /noritetsu/ and sends no CORS headers, so the dev server passes the path through

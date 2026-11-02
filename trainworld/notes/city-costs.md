@@ -1,6 +1,6 @@
 # Cost per city
 
-One line per city task, added when its retrospective is in (docs/adding-a-city.md 12). Weighted
+One line per city task, added when its retrospective is in (docs/adding-a-country.md 10 for countries; docs/adding-a-city-by-hand.md 12 for hand-made cities). Weighted
 tokens from `checks/token_usage.py` (cache reads 0.1, writes 1.25, output 5, input 1); wall time
 from first to last call. Calibration: 45% to 46% of Anita's weekly limit over about 9.5M weighted
 tokens (2026-10-14, coarse: the meter shows whole percents). Second point: 51% on the morning of
@@ -28,3 +28,27 @@ metros are 300-700M, a quarter to three quarters of a week.
 | Mumbai | T-292 | Opus | 32 min | about 3.2M | built twice (OSM talukas off the 2011 lines) | tier 0, 2011 census grown to 2020, curve fitted on B-28 bands |
 | Lagos | T-459 | Opus | 36 min | about 3.2M | built twice (a refinery's land use lumped 6.5% of jobs in one cell) | tier 0 from global sources alone, OSM LGA outline, Mumbai's curve |
 | Sao Paulo | T-458 | Opus | 35 min | about 3.9M | test-line stations (two Overpass failures) 0.95M; built three times (World Bank timeout, a degenerate curve fit) | tier 0, 2022 census tracts, OD 2017 survey for jobs, work from home and curve |
+
+## Per country (T-1975, 2026-11-02)
+
+Weighted tokens (`checks/token_usage.py`; cache read 0.1, write 1.25, output 5) of the country agents
+only, not the orchestrator. "Wakes" are calls that re-cached over 100k tokens after an idle gap. New
+countries add a line here from their orchestrator's `token_usage.py` run (docs/adding-a-country.md 10).
+
+| Country | Agent (task) | Rows | Weighted | Of it wakes | Peak context |
+|---|---|---|---|---|---|
+| Korea | T-1238 build | 23 | 2.4M | 0.3M | 227k |
+| Korea | T-1262 Daegu fix (2 agents) | 2 | 4.1M | 0 | 249k |
+| Korea and Canada | T-1191 zone rules (2 agents) | design | 11.4M | 0 | 524k |
+| Canada | T-1239 with T-1377 | 50 | 16.1M | 7.3M (17) | 452k |
+| Vietnam | T-1738 | 95 | 6.1M | 2.0M (6) | 317k |
+| Thailand, Singapore | t1757, with T-1743 and T-1758 code | 68 | 6.1M | 0 | 337k |
+| Origin reruns VN CA EU CN | T-1762 (Sonnet) | 35 rebuilt | 22.3M | 17.1M (46) | 365k |
+| Australia | T-1857, with a new module | 28 | 5.6M | 1.6M (5) | 319k |
+| China | T-897, nine agents | 756 | about 45M | 12M | 420k |
+| China rebuild | T-1185 design and run | 638 | 15.9M | 4.4M | 395k |
+| Spain (runner zones' pilot) | T-723, three agents | 40 | 12.6M | 3.4M | 324k |
+| Italy and France | T-779 | 177 | 7.1M | 2.2M | 381k |
+| Portugal and Greece | T-786 | 44 | 10.3M | 4.9M | 363k |
+| Rest of Europe | T-788, two agents | about 220 | 11.9M | 5.1M | 322k |
+| US and Puerto Rico | T-1004 family, about 20 agents | 242 | about 100M (upper bound: briefs citing T-1004) | 12M | 535k |

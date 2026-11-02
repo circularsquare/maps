@@ -15,11 +15,28 @@ whose pieces are joined per zone at the end.
 Out: each changed zone's new rings (its land and its sea as one), and its sea alone grown a little
 into its own land (`water`): the app adds that to a focused zone's own boundary, so the shade outside
 the focused zone leaves its sea clear too.
+
+T-1977: the sea tiles, the zones' polygons, the windows and the per-zone finish run over `jobs`
+processes, and their results are kept in a cache folder, so a rerun redoes only what its inputs
+changed. A window's result depends on the zones near it (those whose grown box meets its extent
+plus a degree, since a whole-degree sea tile exists when any zone's grown box meets it), the sea file
+and this file's code, and its key is a hash of exactly those; a zone's finish adds the windows its
+box meets. Every task is a function of its arguments and results are merged in a fixed order, so the
+output does not depend on `jobs` or on what the cache held.
 """
+import concurrent.futures as cf
+import hashlib
 import math
+import multiprocessing as mp
+import os
+import pickle
+import shutil
+import tempfile
 import time
+from pathlib import Path
 
 import numpy as np
+import scipy
 import shapely
 from shapely import STRtree
 from shapely.geometry import LineString, Polygon, box
@@ -34,6 +51,7 @@ SAMPLE_M = 250
 SEA_TOL_M = 60
 WIN_DEG = 3
 MARGIN_DEG = 0.6
+GROW = 0.12  # a zone's box takes the sea tiles this far (degrees, longitude times the zone's scale) round it
 G = 100000  # zone_outlines' identity grid
 R_E = 6378137.0
 
@@ -104,116 +122,375 @@ def only_polys(g):
     return shapely.multipolygons(ps) if len(ps) > 1 else (ps[0] if ps else Polygon())
 
 
-def read_sea(boxes):
-    """{(x, y): the sea over that whole-degree tile, simplified, in Mercator} for every tile the boxes
-    (lon/lat) cover that has sea."""
-    tiles = set()
-    for w, s, e, n in boxes:
-        for x in range(math.floor(w), math.floor(e) + 1):
-            for y in range(max(-85, math.floor(s)), min(84, math.floor(n)) + 1):
-                tiles.add((x, y))
+# ------------------------------------------------------------------ pool and cache plumbing
+
+_G = {}  # a worker's state: the zones, their geometries once built, the sea tiles near the last window
+
+
+def _setup(state):
+    _G.clear()
+    _G.update(state)
+    _G["geom"] = {}
+    _G["tiles"] = {}
+
+
+def run_tasks(fn, tasks, jobs, state=None, chunk=1):
+    """fn over the tasks, results in task order, as they finish. jobs > 1: that many spawned processes,
+    each set up with `state`; otherwise this process, set up the same way."""
+    tasks = list(tasks)
+    if not tasks:
+        return
+    if jobs <= 1 or len(tasks) == 1:
+        _setup(state or {})
+        for t in tasks:
+            yield fn(t)
+        return
+    with cf.ProcessPoolExecutor(max_workers=min(jobs, len(tasks)), mp_context=mp.get_context("spawn"),
+                                initializer=_setup, initargs=(state or {},)) as ex:
+        yield from ex.map(fn, tasks, chunksize=chunk)
+
+
+def code_version():
+    """What a cached result must have been made by: this file's text and the libraries' versions."""
+    h = hashlib.sha1(Path(__file__).read_bytes())
+    h.update(f"|{shapely.__version__}|{shapely.geos_version}|{np.__version__}|{scipy.__version__}".encode())
+    return h.hexdigest()[:12]
+
+
+def tile_version():
+    """What a cached sea tile must have been made by: the code that cuts it and the libraries'."""
+    import inspect
+    h = hashlib.sha1(f"{SEA_TOL_M}|{shapely.__version__}|{shapely.geos_version}|{np.__version__}".encode())
+    for f in (_tile_task, merc, only_polys, polys_of):
+        h.update(inspect.getsource(f).encode())
+    return h.hexdigest()[:8]
+
+
+def zone_hash(z, rings, lat):
+    h = hashlib.sha1(f"{z}|{lat!r}|".encode())
+    for r in rings:
+        h.update(np.asarray(r, dtype=np.int64).tobytes())
+        h.update(b"|")
+    return h.hexdigest()[:20]
+
+
+def dump(path, obj):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+    with open(tmp, "wb") as f:
+        pickle.dump(obj, f, protocol=4)
+    os.replace(tmp, path)
+
+
+def undump(path):
+    try:
+        with open(path, "rb") as f:
+            return pickle.load(f)
+    except Exception:
+        return None
+
+
+# ------------------------------------------------------------------ sea tiles
+
+def grown_box(lonlat, k):
+    w, s, e, n = lonlat
+    return (w - GROW * k, s - GROW, e + GROW * k, n + GROW)
+
+
+def tiles_of(box_):
+    w, s, e, n = box_
+    return [(x, y) for x in range(math.floor(w), math.floor(e) + 1) for y in range(max(-85, math.floor(s)), min(84, math.floor(n)) + 1)]
+
+
+def tile_path(tdir, x, y):
+    return Path(tdir) / f"{x}_{y}.wkb"
+
+
+def _tile_task(a):
+    """The sea over one whole-degree tile, simplified, in Mercator, written to the tile folder as WKB
+    (an empty file when the tile has no sea)."""
+    x, y, fgb, tdir = a
     import pyogrio
-    path = osm_water.sea_fgb()
-    out = {}
-    t0 = time.time()
-    for k, (x, y) in enumerate(sorted(tiles)):
-        df = pyogrio.read_dataframe(path, bbox=(x, y, x + 1, y + 1), columns=[])
-        if not len(df):
-            continue
+    p = tile_path(tdir, x, y)
+    df = pyogrio.read_dataframe(fgb, bbox=(x, y, x + 1, y + 1), columns=[])
+    data = b""
+    if len(df):
         # simplified first, in degrees (a metre of latitude), then cut to the tile and joined
         g = shapely.simplify(df.geometry.to_numpy(), SEA_TOL_M / 111000, preserve_topology=False)
         bad = ~shapely.is_valid(g)
         g[bad] = shapely.make_valid(g[bad])
         g = only_polys(unary_union(shapely.clip_by_rect(g, x, y, x + 1, y + 1)))
-        if g.is_empty:
-            continue
-        g = only_polys(shapely.make_valid(shapely.transform(g, merc)))
         if not g.is_empty:
-            out[(x, y)] = g
-        if (k + 1) % 500 == 0:
-            log(f"  sea: {k + 1} of {len(tiles)} tiles, {time.time() - t0:.0f} s")
-    log(f"  sea: {len(tiles)} tiles, {len(out)} with sea, {time.time() - t0:.0f} s")
-    return out
+            g = only_polys(shapely.make_valid(shapely.transform(g, merc)))
+            if not g.is_empty:
+                data = shapely.to_wkb(g)
+    tmp = p.with_name(p.name + f".{os.getpid()}.tmp")
+    tmp.write_bytes(data)
+    os.replace(tmp, p)
 
 
-def sample(g, step):
-    """Points along g's boundary no more than `step` apart, (n, 2)."""
-    return shapely.get_coordinates(shapely.segmentize(g.boundary, step))
-
-
-def add_water(rings, lat_of):
-    """rings: {zone id: [ring of identity-grid vertices]} (the coarse outlines); lat_of: {id: latitude}.
-    Out: ({id: [rings]} for the zones whose outline takes sea, {id: [rings]} their sea for the focus shade)."""
+def read_tiles(tiles, fgb, tdir, jobs):
+    """Make sure every tile has its file in tdir."""
+    Path(tdir).mkdir(parents=True, exist_ok=True)
+    todo = sorted(t for t in tiles if not tile_path(tdir, *t).exists())
+    if not todo:
+        return
     t0 = time.time()
-    L, k = {}, {}
-    for z, rs in rings.items():
-        p = zone_polygon(rs)
-        if p is not None:
-            L[z] = p
-            k[z] = scale(lat_of[z])
-    zid = list(L)
-    lgeoms = [L[z] for z in zid]
-    ltree = STRtree(lgeoms)
-    log(f"  {len(zid)} zone polygons, {time.time() - t0:.0f} s")
+    for i, _ in enumerate(run_tasks(_tile_task, [(x, y, fgb, str(tdir)) for x, y in todo], jobs, chunk=8)):
+        if (i + 1) % 500 == 0:
+            log(f"  sea: {i + 1} of {len(todo)} tiles, {time.time() - t0:.0f} s")
+    log(f"  sea: {len(todo)} tiles read, {time.time() - t0:.0f} s")
 
-    lonlat = {}
+
+def tile_geom(x, y):
+    """A tile's sea from the worker's tile folder, or None; kept while windows near it run."""
+    k = (x, y)
+    if len(_G["tiles"]) > 120:
+        _G["tiles"].clear()
+    if k not in _G["tiles"]:
+        data = tile_path(_G["tdir"], x, y).read_bytes()
+        _G["tiles"][k] = shapely.from_wkb(data) if data else None
+    return _G["tiles"][k]
+
+
+def ext_of(core):
+    return (core[0] - MARGIN_DEG, max(-85, core[1] - MARGIN_DEG), core[2] + MARGIN_DEG, min(85, core[3] + MARGIN_DEG))
+
+
+def window_tiles(ext):
+    """The tiles whose sea could meet a window's extent (a ring more than do, for the edges)."""
+    return [(x, y) for x in range(math.floor(ext[0]) - 1, math.floor(ext[2]) + 2) for y in range(math.floor(ext[1]) - 1, math.floor(ext[3]) + 2)]
+
+
+# ------------------------------------------------------------------ the zones
+
+def _poly_task(a):
+    """(WKB of the zone's polygon, its box in lon/lat) or None."""
+    z, rs = a
+    p = zone_polygon(rs)
+    if p is None:
+        return None
+    w, s, e, n = shapely.bounds(p)
+    (w, s), (e, n) = unmerc(np.array([[w, s], [e, n]]))
+    return shapely.to_wkb(p), (float(w), float(s), float(e), float(n))
+
+
+def _coast_task(a):
+    """Does the zone lie within GAP_M of sea? (its own tiles hold all the sea that near)"""
+    wkb, bx, k = a
+    p = shapely.from_wkb(wkb)
+    geoms = [g for g in (tile_geom(x, y) for x, y in tiles_of(bx)) if g is not None]
+    if not geoms:
+        return False
+    return bool(len(STRtree(geoms).query(p, predicate="dwithin", distance=GAP_M * k)))
+
+
+def _geom(i):
+    g = _G["geom"].get(i)
+    if g is None:
+        g = _G["geom"][i] = shapely.from_wkb(_G["wkb"][i])
+    return g
+
+
+def _near(b):
+    """Indices, ascending, of the zones whose polygon's box meets the box b (merc)."""
+    bd = _G["bounds"]
+    return np.nonzero((bd[:, 0] <= b[2]) & (bd[:, 2] >= b[0]) & (bd[:, 1] <= b[3]) & (bd[:, 3] >= b[1]))[0]
+
+
+def _window_task(xy):
+    """{zone id: WKB of its sea inside the window's core}."""
+    x, y = xy
+    core = (x * WIN_DEG, y * WIN_DEG, (x + 1) * WIN_DEG, (y + 1) * WIN_DEG)
+    ext = ext_of(core)
+    ext_m = merc_box(*ext)
+    b = ext_m.bounds
+    have = _G["tileset"]
+    need = sorted(t for t in window_tiles(ext) if t in have)
+    for t in [t for t in _G["tiles"] if t not in need]:
+        del _G["tiles"][t]
+    geoms = [g for g in (tile_geom(*t) for t in need) if g is not None]
+    if not geoms:
+        return {}
+    stree = STRtree(geoms)
+    S = only_polys(unary_union([shapely.clip_by_rect(geoms[i], *b) for i in sorted(stree.query(ext_m))]))
+    if S.is_empty:
+        return {}
+    here = [int(i) for i in _near(b)]
+    zid, k = _G["zid"], _G["k"]
+    out = window(core, [zid[i] for i in here], {zid[i]: _geom(i) for i in here}, k, S, ext_m)
+    return {z: shapely.to_wkb(g) for z, g in out.items()}
+
+
+def _finish_task(a):
+    """One zone's (grown rings or None, its sea's rings) from its window pieces (WKB)."""
+    i, pieces = a
+    zid, k = _G["zid"], _G["k"]
+    z, Lz = zid[i], _geom(i)
+    kz = k[z]
+    t = 300 * kz
+    w = [p for p in polys_of(unary_union([shapely.from_wkb(d) for d in pieces])) if p.distance(Lz) < 1.0 and p.area > (SAMPLE_M * kz) ** 2]
+    if not w:
+        return None
+    w = unary_union(w)
+    grown = rings_of(only_polys(unary_union([Lz, w])))
+    # into its own land by 2t but no nearer than t to another zone's, so that with the zone's own
+    # boundary (within t of this outline) it leaves no gap at the coast
+    band = w.buffer(2 * t, quad_segs=2)
+    b = band.bounds
+    others = [shapely.clip_by_rect(_geom(int(j)), b[0] - t, b[1] - t, b[2] + t, b[3] + t) for j in _near(b) if int(j) != i]
+    band = band.intersection(Lz)
+    if others:
+        band = band.difference(unary_union(others).buffer(t, quad_segs=2))
+    wf = only_polys(shapely.make_valid(unary_union([w, band]).simplify(t, preserve_topology=True)))
+    return grown, rings_of(wf, holes=False)
+
+
+def add_water(rings, lat_of, jobs=1, cache=None, prune=False):
+    """rings: {zone id: [ring of identity-grid vertices]} (the coarse outlines); lat_of: {id: latitude}.
+    Out: ({id: [rings]} for the zones whose outline takes sea, {id: [rings]} their sea for the focus shade).
+    cache: a folder for results kept between runs (None: none kept); prune: drop what this run did not use."""
+    t0 = time.time()
+    own_tmp = None
+    if cache is None:
+        own_tmp = cache = tempfile.mkdtemp(prefix="zone_water_")
+    cache = Path(cache)
+    try:
+        return _add_water(rings, lat_of, jobs, cache, prune, t0)
+    finally:
+        if own_tmp:
+            shutil.rmtree(own_tmp, ignore_errors=True)
+
+
+def _add_water(rings, lat_of, jobs, cache, prune, t0):
+    ver = code_version()
+    fgb = osm_water.sea_fgb()
+    st = os.stat(fgb)
+    sea_fp = f"{st.st_size}-{st.st_mtime_ns}"
+    tdir = cache / f"sea-{sea_fp}-{tile_version()}"
+
+    # the zones' polygons, kept by the hash of their rings
+    hz = {z: zone_hash(z, rs, lat_of[z]) for z, rs in rings.items()}
+    store = undump(cache / "zones.pkl") if (cache / "zones.pkl").exists() else None
+    store = store["zones"] if store and store.get("ver") == ver else {}
+    todo = [z for z in rings if hz[z] not in store]
+    for z, res in zip(todo, run_tasks(_poly_task, [(z, rings[z]) for z in todo], jobs, chunk=4)):
+        store[hz[z]] = {"poly": res, "coast": {}}
+    zid = [z for z in rings if store[hz[z]]["poly"] is not None]
+    k = {z: scale(lat_of[z]) for z in zid}
+    lonlat = {z: store[hz[z]]["poly"][1] for z in zid}
+    log(f"  {len(zid)} zone polygons ({len(todo)} new), {time.time() - t0:.0f} s")
+
+    # which zones lie on the coast, per sea file
+    alltiles = set()
     for z in zid:
-        w, s, e, n = shapely.bounds(L[z])
-        (w, s), (e, n) = unmerc(np.array([[w, s], [e, n]]))
-        lonlat[z] = (w, s, e, n)
-    grow = 0.12
-    sea = read_sea([(w - grow * k[z], s - grow, e + grow * k[z], n + grow) for z, (w, s, e, n) in lonlat.items()])
-    if not sea:
-        return {}, {}
-    stiles = list(sea)
-    stree = STRtree([sea[t] for t in stiles])
-    coastal = [z for z in zid if len(stree.query(L[z], predicate="dwithin", distance=GAP_M * k[z]))]
+        alltiles.update(tiles_of(grown_box(lonlat[z], k[z])))
+    need = [z for z in zid if sea_fp not in store[hz[z]]["coast"]]
+    if need:
+        read_tiles({t for z in need for t in tiles_of(grown_box(lonlat[z], k[z]))}, fgb, tdir, jobs)
+        flags = run_tasks(_coast_task, [(store[hz[z]]["poly"][0], grown_box(lonlat[z], k[z]), k[z]) for z in need], jobs,
+                          {"tdir": str(tdir)}, chunk=8)
+        for z, c in zip(need, flags):
+            store[hz[z]]["coast"] = {sea_fp: c}
+    coastal = [z for z in zid if store[hz[z]]["coast"][sea_fp]]
     windows = set()
     for z in coastal:
         w, s, e, n = lonlat[z]
-        for x in range(math.floor((w - grow * k[z]) / WIN_DEG), math.floor((e + grow * k[z]) / WIN_DEG) + 1):
-            for y in range(math.floor((s - grow) / WIN_DEG), math.floor((n + grow) / WIN_DEG) + 1):
+        for x in range(math.floor((w - GROW * k[z]) / WIN_DEG), math.floor((e + GROW * k[z]) / WIN_DEG) + 1):
+            for y in range(math.floor((s - GROW) / WIN_DEG), math.floor((n + GROW) / WIN_DEG) + 1):
                 windows.add((x, y))
+    windows = sorted(windows)
     log(f"  {len(coastal)} coastal zones in {len(windows)} windows, {time.time() - t0:.0f} s")
 
-    pieces = {}
-    for i, (x, y) in enumerate(sorted(windows)):
-        core = (x * WIN_DEG, y * WIN_DEG, (x + 1) * WIN_DEG, (y + 1) * WIN_DEG)
-        for z, g in window(core, L, k, zid, ltree, sea, stiles, stree).items():
-            pieces.setdefault(z, []).append(g)
-        if (i + 1) % 25 == 0:
-            log(f"  {i + 1} of {len(windows)} windows, {time.time() - t0:.0f} s")
+    # each window's key: the zones whose grown box meets its extent a degree wider
+    gb = np.array([grown_box(lonlat[z], k[z]) for z in zid]).reshape(-1, 4)
+    wkey, wsize = {}, {}
+    for x, y in windows:
+        e = ext_of((x * WIN_DEG, y * WIN_DEG, (x + 1) * WIN_DEG, (y + 1) * WIN_DEG))
+        m = (gb[:, 0] <= e[2] + 1) & (gb[:, 2] >= e[0] - 1) & (gb[:, 1] <= e[3] + 1) & (gb[:, 3] >= e[1] - 1)
+        h = hashlib.sha1(f"{ver}|{sea_fp}|{x},{y}|".encode())
+        for i in np.nonzero(m)[0]:
+            h.update(hz[zid[i]].encode())
+        wkey[(x, y)] = h.hexdigest()[:24]
+        wsize[(x, y)] = int(m.sum())
+    wdir = cache / "win"
+    result = {}
+    miss = []
+    for w in windows:
+        r = undump(wdir / f"{wkey[w]}.pkl") if (wdir / f"{wkey[w]}.pkl").exists() else None
+        if r is None:
+            miss.append(w)
+        else:
+            result[w] = r
+    log(f"  {len(windows) - len(miss)} windows kept, {len(miss)} to do, {time.time() - t0:.0f} s")
 
+    # state the pool's processes get: every zone's polygon and the sea tiles that exist
+    state = {"zid": zid, "k": k, "wkb": [store[hz[z]]["poly"][0] for z in zid], "tdir": str(tdir), "tileset": alltiles,
+             "bounds": np.array([shapely.bounds(shapely.from_wkb(store[hz[z]]["poly"][0])) for z in zid]).reshape(-1, 4)}
+    pieces = {}
+    if miss:
+        read_tiles({t for w in miss for t in window_tiles(ext_of((w[0] * WIN_DEG, w[1] * WIN_DEG, (w[0] + 1) * WIN_DEG, (w[1] + 1) * WIN_DEG))) if t in alltiles},
+                   fgb, tdir, jobs)
+        miss.sort(key=lambda w: (-wsize[w], w))  # the busiest windows first, so none is left for last
+        for i, (w, r) in enumerate(zip(miss, run_tasks(_window_task, miss, jobs, state))):
+            dump(wdir / f"{wkey[w]}.pkl", r)
+            result[w] = r
+            if (i + 1) % 25 == 0:
+                log(f"  {i + 1} of {len(miss)} windows, {time.time() - t0:.0f} s")
+    pwin = {}
+    for w in windows:
+        for z, d in result[w].items():
+            pieces.setdefault(z, []).append(d)
+            pwin.setdefault(z, []).append(w)
+
+    # a zone's finish depends on its polygon, its pieces and the zones near them (which its band avoids)
+    zi = {z: i for i, z in enumerate(zid)}
+    order = list(pieces)
+    lb = np.array([lonlat[z] for z in zid]).reshape(-1, 4)
+    fkey = {}
+    for z in order:
+        ws = pwin[z]
+        w0, s0 = min(x for x, _ in ws) * WIN_DEG - 0.2, min(y for _, y in ws) * WIN_DEG - 0.2
+        e0, n0 = (max(x for x, _ in ws) + 1) * WIN_DEG + 0.2, (max(y for _, y in ws) + 1) * WIN_DEG + 0.2
+        m = (lb[:, 0] <= e0) & (lb[:, 2] >= w0) & (lb[:, 1] <= n0) & (lb[:, 3] >= s0)
+        h = hashlib.sha1(f"{ver}|{hz[z]}|".encode())
+        for d in pieces[z]:
+            h.update(hashlib.sha1(d).digest())
+        for i in np.nonzero(m)[0]:
+            h.update(hz[zid[i]].encode())
+        fkey[z] = h.hexdigest()[:24]
+    fin = undump(cache / "finals.pkl") if (cache / "finals.pkl").exists() else None
+    fin = fin["finals"] if fin and fin.get("ver") == ver else {}
+    todo = [z for z in order if fkey[z] not in fin]
+    for z, r in zip(todo, run_tasks(_finish_task, [(zi[z], pieces[z]) for z in todo], jobs, state, chunk=2)):
+        fin[fkey[z]] = r
     grown, water = {}, {}
-    for z, ps in pieces.items():
-        t = 300 * k[z]
-        w = [p for p in polys_of(unary_union(ps)) if p.distance(L[z]) < 1.0 and p.area > (SAMPLE_M * k[z]) ** 2]
-        if not w:
-            continue
-        w = unary_union(w)
-        grown[z] = rings_of(only_polys(unary_union([L[z], w])))
-        # into its own land by 2t but no nearer than t to another zone's, so that with the zone's own
-        # boundary (within t of this outline) it leaves no gap at the coast
-        band = w.buffer(2 * t, quad_segs=2)
-        b = band.bounds
-        others = [shapely.clip_by_rect(lgeoms[j], b[0] - t, b[1] - t, b[2] + t, b[3] + t) for j in ltree.query(band) if zid[j] != z]
-        band = band.intersection(L[z])
-        if others:
-            band = band.difference(unary_union(others).buffer(t, quad_segs=2))
-        wf = only_polys(shapely.make_valid(unary_union([w, band]).simplify(t, preserve_topology=True)))
-        water[z] = rings_of(wf, holes=False)
-    log(f"  {len(grown)} zones take sea, {time.time() - t0:.0f} s")
+    for z in order:
+        if fin[fkey[z]] is not None:
+            grown[z], water[z] = fin[fkey[z]]
+    log(f"  {len(grown)} zones take sea ({len(todo)} finished anew), {time.time() - t0:.0f} s")
+
+    if prune:
+        used = {f"{wkey[w]}.pkl" for w in windows}
+        for f in wdir.glob("*.pkl") if wdir.exists() else []:
+            if f.name not in used:
+                f.unlink()
+        for d in cache.glob("sea-*"):
+            if d != tdir:
+                shutil.rmtree(d, ignore_errors=True)
+        keep = {hz[z] for z in rings}
+        store = {h: v for h, v in store.items() if h in keep}
+        used_f = set(fkey.values())
+        fin = {h: v for h, v in fin.items() if h in used_f}
+    dump(cache / "zones.pkl", {"ver": ver, "zones": store})
+    dump(cache / "finals.pkl", {"ver": ver, "finals": fin})
     return grown, water
 
 
-def window(core, L, k, zid, ltree, sea, stiles, stree):
-    """{zone id: its sea inside the core box (lon/lat)}, worked out over the core and its margin."""
-    ext = (core[0] - MARGIN_DEG, max(-85, core[1] - MARGIN_DEG), core[2] + MARGIN_DEG, min(85, core[3] + MARGIN_DEG))
-    core_m, ext_m = merc_box(*core), merc_box(*ext)
-    S = only_polys(unary_union([shapely.clip_by_rect(sea[stiles[i]], *ext_m.bounds) for i in stree.query(ext_m)]))
-    if S.is_empty:
-        return {}
-    here = [zid[j] for j in ltree.query(ext_m)]
+def window(core, here, L, k, S, ext_m):
+    """{zone id: its sea inside the core box (lon/lat)}, worked out over the core and its margin; here:
+    the zones whose boxes meet the extent, L their polygons, S the sea over the extent."""
+    core_m = merc_box(*core)
     Lw = {z: only_polys(shapely.clip_by_rect(L[z], *ext_m.bounds)) for z in here}
     Lw = {z: g for z, g in Lw.items() if not g.is_empty}
     coastal = [z for z in Lw if shapely.dwithin(Lw[z], S, GAP_M * k[z])]
@@ -290,6 +567,11 @@ def window(core, L, k, zid, ltree, sea, stiles, stree):
         if not g.is_empty:
             out[names[n]] = g
     return out
+
+
+def sample(g, step):
+    """Points along g's boundary no more than `step` apart, (n, 2)."""
+    return shapely.get_coordinates(shapely.segmentize(g.boundary, step))
 
 
 def owner_cells(pts, own):

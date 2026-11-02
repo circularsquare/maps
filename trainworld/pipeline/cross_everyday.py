@@ -48,12 +48,11 @@ def run_unit(members, fixed, name, root=ROOT, work=None, dry=False):
 
 
 def unit_files(work):
-    """Every unit file as {path: {solved, t}}, oldest first."""
-    files = {}
-    for p in sorted(Path(work).glob("*.cross_everyday.json")):
-        g = json.loads(p.read_text(encoding="utf-8"))
-        files[p] = {"solved": set(g["solved"]), "t": float(g.get("solved_at") or p.stat().st_mtime)}
-    return dict(sorted(files.items(), key=lambda kv: kv[1]["t"]))
+    """Every unit file as {path: {solved, order, t, homes}}, oldest first: `order` its solved packs in
+    the file's order, `homes` the packs its pairs start from (pair_files.py, T-1976)."""
+    import pair_files
+    return {p: {"solved": set(e["solved"]), "order": e["solved"], "t": e["t"], "homes": set(e["homes"])}
+            for p, e in pair_files.files(work, "everyday").items()}
 
 
 def kept_arrays(k, kinds):

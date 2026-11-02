@@ -803,6 +803,8 @@ rect.now { fill-opacity: .45; }
 .start-menu.with-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-sizing: border-box; }
 .with-logo .start-box { min-height: 0; flex: 0 1 auto; box-sizing: border-box; max-width: 100%; }
 .start-logo { display: block; flex: none; pointer-events: none; max-width: 100%; }
+/* the build number, bottom left, so a player or Anita can tell which build is up */
+.start-version { position: absolute; left: 12px; bottom: 8px; margin: 0; zoom: var(--ui, 1); }
 .start-box:has(.start-saves) { width: min(540px, 100%); }
 .start-box h1 { margin: 0; }
 .start-new { align-self: flex-start; border-color: var(--accent); }

@@ -187,7 +187,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, read once for the outlines and the realms' shade, T-800, with the sea off each coast from
-  `pipeline/zone_water.py` and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test (a cell of the outline's grid no edge meets answers alone, `cellSays` in `workers/cityReach.ts`, T-1348; else its bands of latitude), for realms and the track's zones; it also gives `cityWithin` a place's zone by these outlines, and `readOutlinesForPlaces` is the clock worker's lean copy for that, T-1265), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  `pipeline/zone_water.py` (its windows over `--jobs` processes and cached in
+  `data/work/zone_outlines_cache`, T-1977) and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test (a cell of the outline's grid no edge meets answers alone, `cellSays` in `workers/cityReach.ts`, T-1348; else its bands of latitude), for realms and the track's zones; it also gives `cityWithin` a place's zone by these outlines, and `readOutlinesForPlaces` is the clock worker's lean copy for that, T-1265), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
   by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
   the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
@@ -308,7 +309,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t761_market_bench`, sim/src/demand/intercity/tests.rs).
 - Python: `token_usage.py <transcript.jsonl> ...` (an agent's token use from its transcript,
   CLAUDE.md "Token counts"), `world_field_check.py` (the world field's country totals and fixed
-  links, T-375; from trainworld/), and in pipeline/ `test_education_sources.py` and
+  links, T-375; from trainworld/), `runner_fixes.py` (the world runner's market file picking, cache
+  clearing, market heal and busy-port refusal, T-1976, T-1986; nothing live written, about a minute),
+  and in pipeline/ `test_education_sources.py` and
   `test_university_sources.py` (`python -m unittest test_university_sources test_education_sources`
   from pipeline/, no network).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`). A `page.evaluate` that moves the map returns
@@ -563,6 +566,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;
   `ROWS`, a list of rows, checks them all in one sandbox game, `ZONES_PER_PAGE` (8) to a page load,
   T-928; a zone whose wait timed out, the solve's `SOLVE_WAIT_S` 180, tried once more in a fresh page, T-965).
+- `country_preflight.py <ISO> <dry plan> [--png out]` (Python, T-1982): a country's preflight on its
+  dry plan (docs/adding-a-country.md 3): FLAG lines for scattered rows, far origins, zones under
+  50,000 and big FUAs' centres split between rows; NOTE lines for built neighbours within 50 km,
+  reused ids' old terrain files and empty far islets; a picture of the rows. Exit 1 on a FLAG.
 - `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
   the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
   number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
@@ -663,7 +670,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (`TrackApi::add_world_water`), deciding where no pack raster covers a point (`MaskSet`).
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
-  water-only pack in `data/work/osm_water/`; docs/adding-a-city.md). `sea` reads the coastline
+  water-only pack in `data/work/osm_water/`; docs/adding-a-city-by-hand.md). `sea` reads the coastline
   polygons from `data/raw/osmdata/water-polygons-split-4326.fgb`, which `sea_fgb` makes from the zip
   when missing or older than it (T-963).
 - `osm_features.py [extracts]` reads a Geofabrik extract's point and area features once into
@@ -704,13 +711,13 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `plan_config.py`: a planned row's `CITIES` config, every field from the row or a rule, then its
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the
-  OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3), cut along the
+  OSM admin relations matching the row's units (T-537, docs/world-run.md "A planned city"), cut along the
   existing packs whose outline box meets it (`cut_packs`; the boxes cached in
   `data/work/pack_boxes.json` by file size and time, T-963).
 - `world_run.py plan|run|join|status [--rows ..|--countries ..|--limit N] [--jobs N] [--workers W] [--no-join] [--root dir]`: the
   runner (T-540): world plan rows a region at a time through download, build, gate, registry,
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
-  each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md
+  each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/world-run.md
   "Running the pipeline"). The gate's rates test is built once at a run's start (`build_everyday`,
   T-931). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
   stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
@@ -792,7 +799,9 @@ across zone lines, T-1175: the members' kept shares into their packs and res-9 c
 rows into app/src/game/market-rows.json and each zone's `country` into the registry through
 `market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377;
 only the rows of zones whose market pack changed, came or went and of places within 250 km of
-them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929),
+them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929;
+the joint and everyday files with pairs from the named zones only, picked by `pair_files.py`'s index,
+whose `unused --move` moves files that give no zone a pair to `data/work/retired/`, T-1976),
 `market_drives.py build` for new or moved places (the routed drives between places,
 `data/packs/market-drives.bin`; each place's paths cached in `data/work/market_drives/sources/`, so
 only new places are routed, minutes; the first run makes the world slope grid there, about 5
@@ -810,4 +819,5 @@ Toronto (`tor`, T-277) is registered with `market: -1` (outside the regional mar
 `canada.py` (`canada.py tor --finish` reruns gravity, purposes and checks from the cached cells).
 Its OSM inputs come from the Geofabrik Ontario extract, not Overpass.
 
-Adding a city: the step-by-step checklist is `docs/adding-a-city.md`.
+Adding a country: the playbook is `docs/adding-a-country.md` (its scripts: `tools/country/`); the runner and the plan's rule are
+`docs/world-run.md`; a hand-made city or a country module is `docs/adding-a-city-by-hand.md`.

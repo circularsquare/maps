@@ -1,5 +1,5 @@
 """T-540, pipeline stage 8: the runner. Builds world plan rows into shipped or parked packs with no
-agent judgement (docs/adding-a-city.md "Running the pipeline"; design notes/T-535.md).
+agent judgement (docs/world-run.md "Running the pipeline"; design notes/T-535.md).
 
     python -I pipeline/world_run.py plan   [select]            what a run would do; nothing built
     python -I pipeline/world_run.py run    [select] [options]  build, gate, register, join, clean up
@@ -64,7 +64,6 @@ import importlib
 import importlib.abc
 import importlib.machinery
 import json
-import math
 import os
 import re
 import shutil
@@ -362,7 +361,8 @@ class Run:
             before = len(reg["cities"])
             gone = [c["center"] for c in reg["cities"] if c["id"] in ids and c.get("center")]
             reg["cities"] = [c for c in reg["cities"] if c["id"] not in ids]
-            if len(reg["cities"]) != before:
+            gone = len(reg["cities"]) != before
+            if gone:
                 shared().write_atomic(self.reg_path, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
                 import market_rows  # shared() put the pipeline on the path (the runner runs with -I, T-779)
                 market_rows.save(reg, market_rows.load(self.root), self.root)
@@ -371,27 +371,19 @@ class Run:
                 if p.exists():
                     p.unlink()
         if gone:
-            self.heal_market(gone)
+            self.heal_market()
 
-    HEAL_KM = 400  # past the market's 250 km reach (market_zones near_km) and any joint group's commutes
-
-    def heal_market(self, near):
-        """T-1743, T-1231: registered market packs within HEAL_KM of `near` ([lon, lat] of packs just
-        unregistered) still naming a place no registered pack holds are rewritten, or the next
-        `market_pack` refuses them ("invalid commute between zones")."""
+    def heal_market(self):
+        """T-1743, T-1986: registered market packs still naming a place no registered pack holds (of
+        packs just unregistered) are rewritten, or the next `market_pack` refuses them ("invalid
+        commute between zones"). Every pack is read, whatever its distance: a joint group's commutes
+        reached past any fixed radius (China's gyn, szu, aku, T-1806); about 30 s for 2,000 packs."""
         reg = self.registry()
         held = {c.get("place") for c in reg["cities"]}
-
-        def close(c):
-            if not c.get("center"):
-                return True
-            lon, lat = c["center"]
-            return any(math.hypot((lon - x) * math.cos(math.radians((lat + y) / 2)), lat - y) * 111.2 < self.HEAL_KM
-                       for x, y in near)
         stale = []
         for c in reg["cities"]:
             p = self.packs / f"{c['id']}.market.json"
-            if close(c) and p.exists():
+            if p.exists():
                 m = json.loads(p.read_text(encoding="utf-8"))
                 if any(q not in held for k in ("commute_place", "everyday_place") for q in m.get(k, [])):
                     stale.append(c["id"])
@@ -590,6 +582,8 @@ class Run:
             return
         if self.stop_file.exists():
             raise SystemExit(f"{self.stop_file} exists: delete it to run")
+        if self.browser:
+            self.check_port()
         try:
             self.check_sim()
         except RunFault as x:
@@ -779,7 +773,7 @@ class Run:
                 bad.append(f"{p} is not {want}")
         if bad:
             raise RunFault("the TW_SIM_DIR copy cannot see this tree's packs: " + "; ".join(bad) +
-                           " (junctions: docs/adding-a-city.md, Running the pipeline)")
+                           " (junctions: docs/world-run.md, Running the pipeline)")
 
     def build_everyday(self):
         """T-931: the gate's `every_pack_everyday` test binary, built once at the run's start from
@@ -973,18 +967,21 @@ class Run:
         self.rec(cid, name=r["name"], build_s=round(time.time() - t0), steps=steps)
         print(f"  {cid}: built in {time.time() - t0:.0f} s", flush=True)
 
-    # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern
+    # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern; the
+    # terrain grid too, which zone_terrain.py makes only where none is (T-1986: Australia's lnc)
     ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz")),
                   ("data/raw/ca", ("osm_jobs_{}.csv.gz",)), ("data/raw", ("osm_places_{}.json",)),
                   ("data/raw/t142b", ("osm_*_{}.json",)), ("data/raw/t196", ("osm_*_{}.json",)),
-                  ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")))
+                  ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")),
+                  ("data/terrain", ("{}.terrain",)))
 
     def clear_row_caches(self, cid):
         """A planned row (new, or its units changed since it was last built) is built from scratch: an
         earlier row with its id, or its own old outline, left caches the build would read back."""
         gone = []
         for d, pats in self.ROW_CACHES:
-            base = (self.root if d == "data/work" else REAL) / d  # data/raw is the real tree's in a scratch run too
+            # data/raw is the real tree's in a scratch run too
+            base = (self.root if d in ("data/work", "data/terrain") else REAL) / d
             for pat in pats:
                 for p in base.glob(pat.format(cid)):
                     p.unlink()
@@ -1108,16 +1105,21 @@ class Run:
             self.unregister(parked)
         return shipped
 
-    def start_vite(self, L):
+    def check_port(self):
+        """T-1079, T-1986: a server already on the gate's port would answer the gate's poll and be taken
+        for the runner's own Vite (37 US rows parked on another session's), so a run stops here, at its
+        start as well as before each gate."""
         import socket
-        import urllib.request
-        # T-1079: a server already on the port would answer the poll below and be taken for ours
         for host in ("127.0.0.1", "::1"):
             try:
                 socket.create_connection((host, self.port), timeout=2).close()
             except OSError:
                 continue
             raise SystemExit(f"port {self.port} is already taken (another session's Vite?); pick a free one with --port")
+
+    def start_vite(self, L):
+        import urllib.request
+        self.check_port()
         log = open(f"{L}.vite.log", "a", encoding="utf-8")
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         self.vite = subprocess.Popen(["node", str(REAL / "checks/dev-nowatch.mjs"), str(self.port)], cwd=str(MAPS),
@@ -1202,7 +1204,7 @@ class Run:
             self.rec(i, result="shipped")
             print(f"  {i}: SHIPPED", flush=True)
         try:  # T-800: the coarse outline of every registered zone; a failure only leaves the file as it was
-            ok, _, tail = self.step("zone_outlines", [], f"{L}.outlines.log")
+            ok, _, tail = self.step("zone_outlines", ["--jobs", str(self.jobs)], f"{L}.outlines.log")
             if not ok:
                 print(f"  warning: coarse zone outlines not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
@@ -1326,9 +1328,9 @@ class Run:
         for i in g:
             out += [self.packs / f"{i}.json", self.packs / f"{i}.bin", self.work / f"res9/{i}.json",
                     self.work / f"res9/{i}.bin", self.work / f"res9/{i}.merged.json"]
-        for p in self.work.glob("*.joint_commutes.json"):
-            if set(json.loads(p.read_text(encoding="utf-8")).get("packs", [])) & set(g):
-                out.append(p)
+        shared()  # the pipeline on the path
+        import pair_files
+        out += [p for p, e in pair_files.files(self.work, "joint").items() if set(e["packs"]) & set(g)]
         return out
 
     def backup(self, g, bak):

@@ -75,6 +75,8 @@ THRESHOLDS = {
     "top_school_cell_pupils": {"fail": (None, 20000), "warn": (None, 5000)},
     "largest_hospital_beds": {"fail": (None, 5000)},
     "drive_factor_median": {"fail": (1.1, 2.0)},
+    # a zone of hills, deltas or fjords: over 230 relaxed by hand, none kept parked; above 3.0 only Yuanyang, 3.13 (T-1985)
+    "drive_factor_median_zone": {"fail": (1.1, 3.0), "warn": (None, 2.0)},
     "road_snap_median_m": {"warn": (None, 300)},
     "osm_land_share": {"warn": (None, 0.8)},
     "osm_top_place_jobs_share": {"fail": (None, 0.01)},          # tier 0 proxy jobs only
@@ -175,7 +177,7 @@ def fig_read_pack(city):
 
 def water_polygons(header, outline):
     """OSM inland water polygons inside the outline, from the extracts' water caches, or None
-    when no cache is on disk (deleted after a batch, docs/adding-a-city.md 11)."""
+    when no cache is on disk (deleted after a batch, docs/adding-a-city-by-hand.md 11)."""
     import pyogrio
     import shapely
     import osm_water
@@ -466,9 +468,9 @@ def figures(city, reg, logs):
 
 # ---------------------------------------------------------------- judging
 
-def judge(name, value, detail=None):
-    """PASS/WARN/FAIL of a figure against THRESHOLDS[name]."""
-    t = THRESHOLDS[name]
+def judge(name, value, detail=None, key=None):
+    """PASS/WARN/FAIL of a figure against THRESHOLDS[key or name]."""
+    t = THRESHOLDS[key or name]
     res = {"name": name, "value": value, "detail": detail}
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
         res["status"] = "SKIP"
@@ -605,7 +607,7 @@ def checks_of(city, f, rates, browser, changed, joint=None):
     h = f["hospital"]
     c.append(skip("largest_hospital_beds", h["skip"]) if "skip" in h else judge("largest_hospital_beds", h["value"], h["detail"]))
     if "drive_factor_median" in f:
-        c.append(judge("drive_factor_median", f["drive_factor_median"]))
+        c.append(judge("drive_factor_median", f["drive_factor_median"], key="drive_factor_median_zone" if f["kind"] == "zone" else None))
         c.append(judge("road_snap_median_m", f["road_snap_median_m"]))
     else:
         c.append(skip("drive_factor_median", "no routes"))

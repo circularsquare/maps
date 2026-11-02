@@ -279,7 +279,7 @@ demand-worldwide.md "Tier 0".
 ## Every country: the world plan
 
 Which metros get a pack and which units each holds (`pipeline/world_plan.py`, T-536; the rule in
-adding-a-city.md 1). Downloads in `data/raw/worldplan/`, fetched when missing.
+world-run.md "The world plan"). Downloads in `data/raw/worldplan/`, fetched when missing.
 
 | Input | Source | Terms |
 |---|---|---|
@@ -335,6 +335,6 @@ the first that holds:
 
 Then work down the columns: residents and jobs by industry, schools, universities, medical and
 airports each take the national source if it is U-grade elsewhere, else tier 0. Follow the
-worked example's paragraph in adding-a-city.md "Outside the US" for the chain of commands.
+worked example's paragraph in adding-a-city-by-hand.md "Outside the US" for the chain of commands.
 A gated source does not change the archetype until it is in hand; it goes in its cell with the
 task that would use it.

@@ -70,7 +70,7 @@ not found, reload PATH: `$env:PATH = [Environment]::GetEnvironmentVariable('PATH
 6. When the log says done (or the machine is gone): `bucket.py get <run>/<results>` for each result.
 7. `trainworld\tools\aws\teardown.py <run>`: terminates the machine if it is still up, sweeps our
    leftovers, prints the cost and the listing, exits 1 if anything of ours is left.
-8. Land and gate at home: back up (`notes/t1018/us/backup.py`), `land.py <run>` (rows the machine
+8. Land and gate at home: back up (`tools/country/backup.py`), `land.py <run>` (rows the machine
    left built go into data/ and turn "built" under the plan lock; parked rows are listed with their
    causes), then `world_run.py run --rows ... --no-join` gates them (a built row with its packs skips
    the download and build), then the join; then `bucket.py rm <run>` once the results are checked.

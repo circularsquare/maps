@@ -9,7 +9,7 @@ regional market and add commutes between cities) inside a world divided into zon
 
 The world is divided into **zones**, and every place is in exactly one zone or in dead space.
 
-- A **city zone** is a metro area: a world plan row (adding-a-city.md 1) or a hand-drawn extent
+- A **city zone** is a metro area: a world plan row (world-run.md "The world plan") or a hand-drawn extent
   (the nine Northeast city packs, Toronto).
 - A **non-city zone** (countryside zone) is land around city zones that is not part of any metro:
   the rest of a covered country (section 2), or in the US the counties between city zones.
@@ -121,8 +121,21 @@ own figures (pop_vs_plan, top_zone_jobs_share, the browser's test line, a named 
 not carried; the gate decides them afresh.
 A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
-any "/"), and has its origin at the densest square km of the unit it is named after (T-1762; Korea's grouped zones: of the zone). Vietnam's
-zones under 100,000 people that join nothing are dead space (`ALONE_MIN`, T-1744: Muong Nhe, Con Dao). A replan of the metros keeps zone rows as
+any "/"), and has its origin at the densest square km of the unit it is named after (T-1762; Korea's grouped zones: of the zone).
+Three rules after the merge, in every country (T-1984):
+- **A city is not cut**: where zones each holding a fifth of the people of a GHS-FUA's main urban
+  centre split it (the FUA over **1M**, its units, half their people in it, holding 1M of the free
+  people), those zones are one, over the cap if need be, named after the centre with its origin at the
+  densest square km of the FUA's units; while the zone is over the cap, its biggest piece outside the
+  FUA's units holding 50,000 stays a zone of its own (`FUA_WHOLE`: Adelaide 1.47M, with Port Pirie's
+  countryside its own zone, 0.10M). The
+  Red River and Mekong deltas' big FUAs are countryside round smaller centres and stay in several zones.
+- **No far towns**: a unit, not its zone's most populous, with 1,000 people in pieces over **100 km**
+  from the rest of the zone is dead space (`SCATTER_KM`: geoBoundaries' "Unincorporated NT" put Yulara,
+  Nhulunbuy and Alyangula in Darwin's zone).
+- **No tiny zones**: a zone under **50,000** people is dead space (`ZONE_ALONE_MIN`; `ALONE_MIN` for a
+  country's own figure): such zones parked on their own figures (Muong Nhe, Con Dao, Whyalla).
+A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below; China's zones take the `china` module, so their
 people are the 2020 census by township as its metros', T-1185). Which countries are covered, and with how many zones:
@@ -131,8 +144,8 @@ docs/data-register.md.
 density floor, and one rule each. Korea's plan units are eup, myeon and dong (its metro rows' grain),
 so its zones take them **by si, gun and gu** (`group_level`, geoBoundaries ADM2): the free units of
 one parent that touch or lie within 10 km across water are one unit for the merge rule, so a zone is
-whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin's islands, under
-10,000 people with no zone within 10 km, are dead space. **Canada zones its cities and the corridors
+whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin's islands, small
+with no zone within 10 km, are dead space. **Canada zones its cities and the corridors
 between**: a census subdivision whose own centre has fewer than **100,000** people within **150 km**
 (GHS-POP, the US's included) is dead space (`reach`), which leaves out the north, Labrador, the
 territories and the empty land between distant cities; and two zones whose people centres lie more
@@ -141,8 +154,8 @@ them travel partners, Regina and Saskatoon's); a unit under 100,000 still joins 
 however far, or small towns would stand as zones of 10,000-50,000. Canada's units are the plan's census subdivisions
 (`plan_units`; read afresh, Natural Earth's land would give the Great Lakes to the shore units).
 notes/T-1191.md. **Australia** takes Canada's rule on geoBoundaries LGAs, read afresh, with its zones on the
-`australia` module (census people by SA1); the interior, the north-west and Cape York are dead space. Adelaide is one
-zone over the cap and Sydney holds all of Greater Sydney, both set by hand in the plan (T-1857).
+`australia` module (census people by SA1); the interior, the north-west and Cape York are dead space. Sydney's metro
+holds all of Greater Sydney, set by hand in the plan (T-1857).
 **No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
 themselves, "kinda like voronoi"). Of the joins the merge rule allows, one that makes a zone
 **wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's
@@ -180,8 +193,7 @@ Recorded in the row's `remnants` source and the country's `remnants`. notes/T-11
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
 dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
 water (another region's zone across water only for a zone under 80% of the floor, as by land; T-1015),
-island zones of one region join within 50 km (Penghu, Kinmen), and a zone that can join
-nothing with under 10,000 people is dead space. Hong Kong, Macau and Taiwan are countries of their
+and island zones of one region join within 50 km (Penghu, Kinmen). Hong Kong, Macau and Taiwan are countries of their
 own, never in a Chinese zone. Units follow the de facto lines (`world_plan.DE_FACTO`: Arunachal
 Pradesh is India's, Aksai Chin China's). Chinese rows solve their joint commutes by province
 (`solve_region`; Beijing, Tianjin and Hebei as one, Shanghai with Jiangsu), each held against its
@@ -339,7 +351,9 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   end in them, the fixed neighbours' into the country too; each pair of packs takes its commutes
   from the newest file covering it, none from a file older than one solving either pack (an old
   file's pairs could name an earlier row of the same id, T-1758), and a file a newer one covers
-  whole is removed. A country's
+  whole is removed. `market_zones.py <ids>` parses only the files with pairs starting in those
+  packs, picked from `data/work/pair_files.index.json` (each file's solved packs, packs, time and
+  home packs, kept while its size and modified time hold; T-1976). A country's
   join so costs its own solve only, however long the chain of covered countries; a neighbour's
   own commutes and factors stay as its last solve left them until it is solved again. National
   borders take the 0.05 default, so under 0.02% of commuters cross one (notes/T-786.md).

@@ -1,5 +1,5 @@
 """T-537, pipeline stage 5: the build_city config of a planned city, generated from its world plan
-row (pipeline/world_plan.json). Every field comes from the row or a rule (docs/adding-a-city.md 3
+row (pipeline/world_plan.json). Every field comes from the row or a rule (docs/world-run.md
 "A planned city"), and the row's country module (its `module`) puts its `plan_hooks(row)` keys over
 them (T-555); build_city.CITIES takes every planned row whose id it does not already have. A zone
 row (`kind` "zone", T-723) gives a zone's config: its kind and name, and the zone curve.

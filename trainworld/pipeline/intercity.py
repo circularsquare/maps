@@ -117,13 +117,11 @@ def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), ho
 def joint_files(work):
     """T-786: every joint commutes file as {path: {solved, packs, t}}, oldest first. A file covers
     the pairs of its packs with an end among its solved ones; market_zones.py takes each pair from
-    the newest file covering it, and none from a file older than one solving either end. A file from before T-786 solved every pack it lists."""
-    files = {}
-    for p in sorted(Path(work).glob("*.joint_commutes.json")):
-        g = json.loads(p.read_text(encoding="utf-8"))
-        files[p] = {"solved": set(g.get("solved") or g["packs"]), "packs": set(g["packs"]),
-                    "t": float(g.get("solved_at") or p.stat().st_mtime)}
-    return dict(sorted(files.items(), key=lambda kv: kv[1]["t"]))
+    the newest file covering it, and none from a file older than one solving either end. `homes`: the
+    packs its pairs start from (pair_files.py, T-1976)."""
+    import pair_files
+    return {p: {"solved": set(e["solved"]), "packs": set(e["packs"]), "t": e["t"], "homes": set(e["homes"])}
+            for p, e in pair_files.files(work, "joint").items()}
 
 
 def covers(a, b):

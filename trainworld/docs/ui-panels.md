@@ -746,7 +746,8 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
 Americas, Europe and East Asia) with no start city; a start from the player's location is centred on
-it (below). Opening the page shows the start menu (below).
+it (below). Opening the page shows the start menu (below), with "build 786" muted at its bottom left: the
+commit count of the build (`__TW_VERSION__`, vite.config.ts), "dev" on a dev server.
 For a loaded game the URL's view says only which city or zone; the map starts at that city's
 registry centre and zoom, or over New York with none [T-310].
 

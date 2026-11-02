@@ -2,7 +2,7 @@
 
     python pipeline/build_city.py tor        (build_city.main hands a "ca" city to main() here)
 
-What each US input becomes (docs/adding-a-city.md, "Outside the US"; docs/demand-worldwide.md):
+What each US input becomes (docs/adding-a-city-by-hand.md, "Outside the US"; docs/demand-worldwide.md):
 
 - Census blocks -> 2021 dissemination areas (DAs, 400-700 people each): population from Statistics
   Canada table 98-10-0015-01, polygons from Esri Canada's copy of the StatCan boundary file (StatCan's

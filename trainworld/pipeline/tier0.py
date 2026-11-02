@@ -624,7 +624,7 @@ def cap_places(places, in_pack, blend_osm):
 
 def osm_signal_line(city, sig, jobs, blend=None):
     """The OSM job-place signal's make-up and its largest single place, as one line the pack gate
-    reads (T-460, docs/adding-a-city.md): `osm_signal: key=value ...`, values without spaces, the
+    reads (T-460, docs/adding-a-city-by-hand.md "Outside the US"): `osm_signal: key=value ...`, values without spaces, the
     place name last and percent-encoded. A place is one OSM area (its spread rows together, when the
     cached rows carry the area's id), else one row; its jobs share is what it brings through the
     OSM part of the blend."""

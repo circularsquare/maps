@@ -2,90 +2,52 @@
 
 Orchestrator: session 7c3c98d5-ca3b-4748-b736-bac9826c72c1, name maps-a7, since 2026-11-02
 Previous (nothing in flight, no wait needed; it is not in ListAgents): session c9a4388f-3ba1-4290-bb0a-d9ad50756061, name maps-18, handed over 2026-11-02
-Updated: 2026-11-02 (two rounds and two trees landed; six agents running)
+Updated: 2026-11-02 (batch landed; country speedups running)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master: 0681dba2 (11-02 batch rounds one and two, T-1924/T-1925 and T-1895 landed). 8800 at 0681dba2, smoke 20/20
-  both shades (2026-11-02). Uncommitted since: my ARCHIVE/TASKS moves of T-1895 and T-1900.
+- master: 0238b24d. 8800 at 0238b24d, smoke 20/20 both shades (2026-11-02). Everything from Anita's 11-02 batch that
+  was built is landed (see ARCHIVE top). No trees open (t1895, t1898, t1902, t1924, t1929 landed and removed).
 - 8800 rebuild: my script `C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\7c3c98d5-ca3b-4748-b736-bac9826c72c1\scratchpad\snapbuild.cmd <hash>`
-  (checkout --detach <hash> in maps/.tw-snap; CARGO_TARGET_DIR=maps/.tw-snap-target; CARGO_BUILD_JOBS=2; cargo on PATH;
-  npm run build), run through `cmd /c` with output to snapbuild.log beside it. Then smoke on http://localhost:8800/trainworld/
-  light and SMOKE_SHADE=dark. Never pass HEAD. Checks that import source (t1832-keep) need a dev Vite, not 8800.
-- My dev Vite: `node trainworld/checks/dev-nowatch.mjs 6102` (background); restart on a new port after app edits.
-- **LIVE (2026-10-31): the build of c7c5785a on R2 data `trainworld/2026-10-30b`**; website cef6eb1. A code-only release:
-  `deploy.py --skip-data --version 2026-10-30b --smoked`, then website add/commit/push (only on Anita's word), `gh run
-  watch`, then `deploy.py --verify --page --version 2026-10-30b`. A data change needs a new `--version`. Not deployed
-  since; publish only when she says.
-- R2 holds only `trainworld/2026-10-30b`. Purges are Anita's (`rclone purge r2:anitamaps/trainworld/<v> --s3-no-check-bucket`).
-- Shared files: when two agents' edits sit in one file, stage by hunk (HEAD text plus one agent's pieces, `git hash-object -w`
-  + `git update-index --cacheinfo`; examples stage_*.py in the old scratchpad
-  C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\c9a4388f-3ba1-4290-bb0a-d9ad50756061\scratchpad).
-  So far I've avoided it by committing a round when the agents sharing files have all reported.
-- World: 1,925 shipped (Australia 28 of 28), 18 held, 5 parked (nic lez meo doo lel).
-- Cores: cap 10 (checked 11-02).
-- data/work/pre-T1854/terrain (58 MB): delete once T-1854's terrain is seen clean in play. data/work/terrain-fine/
-  (3.1 GB): T-1854's intermediate, kept for threshold tweaks.
-- Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
-- 11-02 later: master afb75407 (T-1926 crowding strip 9ad82dee, T-1902 trip explorer cc3972d2, T-1906 fares/loans
-  afb75407); 8800 at afb75407, smoke 20/20 both shades. Smoke's "far new game" Tokyo riders fell 76,870 -> 15,591 with
-  T-1906 (a New York start charges US fares in Tokyo at 1.00x): asked Anita.
-- t1899 stop logic DONE 11-02, uncommitted in the main tree (archived; no strings). Its edits share wasm.rs, params.rs,
-  clock.worker.ts, protocol.ts with t1964/t1965: commit the main tree once those two report, then land the trees.
-- Trees t1929 (road crossings) and t1898 (blueprint selection) DONE, waiting to land: the main tree's uncommitted
-  sim/src/track/wasm.rs (t1964's) blocks the fast-forward. Land after t1964 commits; both add WASM functions.
-- Disk (maps-d6's request 11-02): world_run's old join backups deleted on Anita's word (12.0 GB; kept 20261030-134355).
-  sim/target/debug (4.3 GB): clear only between rounds with no main-tree agent building.
-- Mine, uncommitted 11-02 (Anita's text review): "Trips possible by train" (MarketTrip.tsx, ui-inspectors.md), loan hover
-  "Interest would be $X per day. Average profit over the past 7 days was $Y per day." (MoneyTab.tsx), bus average-speed
-  hover dropped (BusInspector.tsx, it said "less the turning"). New style rule in her global CLAUDE.md: never "less" for
-  minus. Asked her about "Car for these trips" (explained; proposal pending).
-- t1906 follow-up DONE 11-02, uncommitted (scales["@"] = start country's income scale; Tokyo in smoke's far game 42,288,
-  was 76,870 before T-1906, since all start fares are 2.5x the old). Anita 11-02: fares scale flat (whole curve), as built.
-- Mine, uncommitted: trip panel order "Trips possible by train", "Effective time", "Car on the same trips" (Anita OK'd);
-  no hovers on the first two; car hover "Effective time by car on trips possible by train."; a closed far end "No route."
-- t1906 resumed 11-02: each country's default fare scale = its own income level relative to the start (^0.7 kept;
-  Anita: "maybe even lower tbh but dont want linear").
-- Next free task id: T-1974 (ranges up to T-1973 handed to agents below).
+  through `cmd /c` with output to snapbuild.log beside it; then smoke on http://localhost:8800/trainworld/ light and
+  SMOKE_SHADE=dark. Never pass HEAD. My dev Vite: `node trainworld/checks/dev-nowatch.mjs 6104` (background).
+- **LIVE (2026-10-31): c7c5785a on R2 `trainworld/2026-10-30b`**. Not deployed since; publish only on Anita's word
+  (`deploy.py --skip-data --version 2026-10-30b --smoked`, website commit/push on her word, verify).
+- Commits: when two agents' edits share a file, I either wait until both report or stage by hunk (scratchpad
+  stage_clock.py is an example). Tree landings rebase; a conflict stops in the tree (resolve there, `rebase
+  --continue`, run the tests, land again).
+- World: 1,925 shipped, 18 held, 5 parked (nic lez meo doo lel). Cores cap 10.
+- Disk: ~33 GB free after deleting world_run's old join backups (Anita OK'd 11-02). sim/target/debug (4.3 GB) can go
+  between rounds with no main-tree agent building.
+- Build numbers (Anita 11-02): the start menu shows "build N" bottom left, N = `git rev-list --count HEAD` of the
+  built commit (vite.config.ts `__TW_VERSION__`; "dev" on a dev server). Name "8800 is at build N" in every report
+  about what landed. Mine, uncommitted: vite.config.ts, StartMenu.tsx, style.css, ui-panels.md.
+- Next free task id: T-1999 (ranges up to T-1998 handed out below).
 
-## In flight (maps-a7; her 11-02 batch is T-1892 to T-1907, verbatim in notes/todo-2026-11-02.md)
-She said 11-02: skew to Opus, Sonnet for routine. Done and landed: T-1892, 1893, 1894, 1895, 1905 (+1932, 1935), 1924,
-1925, 1928, 1930, 1931; designs T-1897, 1900, 1901. Her calls 11-02: prices round numbers (+1/-1 = 1.0x, base $75M),
-upkeep 20/25/35/40k by structure, water limit 30 km, road crossings $6M (motorway 3), crowding strip in the dot's hover
-(no pie, green = no delay), passing tracks someday (T-1927), no parking change (T-1934 abandoned), China x5 / Korea x2.5
-attractions, rebuilds later (T-1933 waits).
-Agents running (each with an id range for new tasks):
-- a173638cfe272a6eb t1902 (Opus), tree .tw-trees/t1902 (from 153ff30f; land rebases), port 6140: trip explorer. T-1920-1923.
-- a9d9bc7c54072f5d4 t1929 (Opus), tree .tw-trees/t1929, port 6180: road crossing charge. T-1944-1947.
-- a29d2053b6c814ce7 t1898 (Opus), tree .tw-trees/t1898, port 6190: blueprint selection, 320 drag. T-1948-1951.
-- t1926 crowding strip DONE 11-02, uncommitted (archived). clock.worker.ts mixes its edits with t1906's (fares, loan),
-  so commit both together when t1906 reports (or stage by hunk). wasm.rs and station_sweep_tests.rs are t1964's.
-  DECISIONS already holds t1898/t1902 lines for work not landed yet.
-- a020af69a11d39802 t1899 (Opus), main tree, port 6120: stop logic (auto HSR, tiebreak, reversing). T-1956-1959.
-- a2fb39543e201af98 t1906 (Opus), main tree, port 6150: fare dials 1.0x + starting fare by place, loan cap. T-1960-1963.
-- a27084daa2f6582bd t1965 (Opus), main tree, port 6160: drawn trains never overlap on the same track and level (her test
-  track: express drawn through the local). T-1966-1969.
-- t1964 DONE 11-02, uncommitted (archived; no strings; real save unchanged, it has no plain joints). Main tree now
-  waits only on t1965 (shares wasm.rs, params.rs, clock.worker.ts, protocol.ts with t1899/t1964): commit all main-tree
-  work when t1965 reports, then land trees t1929 and t1898 (both touch wasm.rs; expect a rebase conflict there).
-- Disk: only ~21 GB free on C: (11-02): no new worktrees; remove t1929/t1898/t1902 trees as they land.
-- Mine, uncommitted: tangent line dotted and as faint as the circle (style.css, ui-building.md); Anita 11-02 OK'd junction
-  and terminal prices following the level table, the capacity gauge, 12 px join reach.
-- Anita 11-02: "this week i'd like to try adding more of the world"; first think about build speedups and a streamlined
-  country process. a59f655aa8c81f4dc t1974 (Opus, research only): wall time per stage from world_run logs, ranked
-  speedups, files T-1976-1981. ac0d3e79f8fced0e3 t1975 (Opus, research only): pitfalls, token costs, a draft playbook
-  at notes/T-1975-adding-a-country.md (apply to docs/adding-a-city.md after Anita sees it), files T-1982-1987.
-  Next free id: T-1988. t1975 DONE 11-02: notes/T-1975.md, draft notes/T-1975-adding-a-country.md (190 lines vs 710;
-  to become docs/adding-a-country.md, rest moves to docs/world-run.md and adding-a-city-by-hand.md, T-1987); filed
-  T-1982-1987. Tokens: clean country ~6M, faults decide cost; wakes 25-77% of tokens. Shown to Anita 11-02.
-  t1974 DONE 11-02: notes/T-1974.md; filed T-1976-1981. Market register re-reads 900 MB of joint files per row (7-9 min,
-  holds the registry lock). Proposed to Anita: before Cambodia/Malaysia build T-1976 (market reads only touched files),
-  T-1977 (parallel outlines), T-1982 preflight, T-1983 kit, T-1985 drive >3.0, T-1986 heal by place + busy port, T-1987
-  playbook swap; T-1979 and T-1981 alongside; T-1978 before Mexico; T-1980 + AWS before Indonesia/India/Brazil/replan. Next countries after: Cambodia, Malaysia (T-1738), then Mexico, Turkey.
-Not started: T-1896 gap highlight (drawing; after t1929/t1898 land), T-1903 demand-bubble total, T-1904 speed (switching
-homes/destinations, local before whole-world solve, global vs local label), T-1907 map drawing (hair/skin, overlapping
-line clicks, fading, riders on track, rotation).
+## In flight (maps-a7)
+Anita 11-02: "this week i'd like to try adding more of the world"; she approved the speedup plan (T-1974, T-1975
+notes). Running, all in the main tree:
+- t1976 DONE 11-02, uncommitted: pipeline/pair_files.py index (data/work/pair_files.index.json); register one row
+  493 s -> 12 s, join market_zones (AU) 709 -> 119 s; byte-identical; 54 unused files (374 MB) moved to
+  data/work/retired/; heal reads every pack; terrain cleared with row caches; port check at go(). checks/runner_fixes.py.
+  First market step after landing redoes every row once (3-4 min; the record key changed). Filed T-1988.
+- t1977 DONE 11-02, uncommitted: zone_outlines --jobs + cache in data/work/zone_outlines_cache (byte-identical; cold
+  4.4 min at 4 jobs from 19.4, unchanged rerun 21 s, one zone changed ~45 s). Any edit to zone_water.py empties the
+  cache. Memory per worker at --jobs 10 unmeasured. Filed T-1992 (cold run cheaper).
+- a37e361794b90a63b t1984 (Opus): T-1982 country_preflight.py, T-1984 planner defaults, T-1985 drive factor fails
+  only above 3.0 (my call). Dry runs only. ids T-1994-1996.
+- t1983 DONE 11-02, uncommitted: tools/country/ kit (setup_sim, backup, restore, setbuilt, stale, start_hidden,
+  waitany); docs/adding-a-country.md (playbook), docs/world-run.md, docs/adding-a-city-by-hand.md (adding-a-city.md
+  deleted; links fixed incl. comments in world_run.py, world_plan.py, zone_outlines.py, pack_gate.py, which other
+  agents are also editing). Filed T-1997 (first country run on the kit). Commit with t1976/t1977/t1984 when they report.
+Anita 11-02: "yes fine to keep going with adding countries". After they land: Cambodia and Malaysia (T-1738) on the new playbook (a Sonnet agent per T-1975, Opus if a module),
+with T-1979 (World Bank fetch once) and T-1981 (solve scaling measure) alongside; T-1978 before Mexico; T-1980 + AWS
+before Indonesia/India/Brazil/replans. Anita asked why global sources first (answered 11-02: decide sources before
+the run; a ready census hook goes in the first pass; jobs/flows modules later).
+Not started from her 11-02 batch: T-1896 gap highlight, T-1903 demand-bubble total, T-1904 demand speed, T-1907 map
+drawing; follow-ups filed: T-1916, T-1917, T-1920, T-1936, T-1937, T-1944 (Midtown priced as mountains), T-1948, T-1949,
+T-1966 (flat crossings in the train guard), T-1967, T-1970.
 
 ## Open questions to Anita (asked, unanswered)
 - Blueprint row hover wording (T-1890): "Elevated +1: 1.0x", "Mountains +2.5x", "Cost factor 3.0x" to match the tag

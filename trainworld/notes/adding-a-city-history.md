@@ -1,6 +1,6 @@
 # adding-a-city.md, material cut in the T-588 tidy (2026-10-17)
 
-Moved out of docs/adding-a-city.md: history, timings and lists that no longer decide a build. The doc keeps the rules and commands.
+Moved out of docs/adding-a-city.md (since split into docs/adding-a-city-by-hand.md and docs/world-run.md): history, timings and lists that no longer decide a build. The doc keeps the rules and commands.
 
 ## Intro as written 2026-10-12 to 2026-10-13 (T-179, T-277)
 
