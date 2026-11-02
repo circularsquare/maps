@@ -15,10 +15,11 @@ import { useThumbIn } from "./thumbShade";
 import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
 import { exportGame, exportSlot, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
-import type { SaveSlot, SlotBackup } from "../workers/saveFile";
+import { listBackups, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
-import { accountBackups, accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
-import { tiedTo, type AccountBackup, type CloudContext } from "../workers/cloud";
+import { accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
+import { tiedTo, type CloudContext } from "../workers/cloud";
+import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
 import { viewStart } from "./locate";
 import { Modal } from "./Modal";
@@ -27,8 +28,6 @@ import { NewGameSheet } from "./NewGame";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
-/** The playing game's earlier versions are listed (kept for the visit). */
-const versionsOpen = signal(false);
 
 /** "Saved just now", "Saved 4 min ago", "Saved today at 14:05", "Saved Oct 12 at 14:05". */
 function savedWhen(at: number, now: number): string {
@@ -80,11 +79,12 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
  * cash; also the start menu's (T-677). */
 export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren }) {
   const when = savedWhen(slot.at, now);
+  const cities = cityList(slot.cities ?? []);
   return <>
     <div class="small muted save-when"><span data-tip={`Last saved ${fullDate(slot.at)}`}>{autosaved ? when.replace("Saved", "Autosaved") : when}</span>{mark}</div>
     <div class="small muted num">
       <span data-tip={`Game day ${slot.day}`}>Day {slot.day}</span>
-      {slot.cities?.length ? <> · {cityList(slot.cities)}</> : null}
+      {cities ? <> · {cities}</> : null}
     </div>
     {slot.lines !== undefined && <div class="small muted num">
       <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line")}</span>
@@ -191,8 +191,6 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
           {playing ? <>
             <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
             <button class="btn icon save-download" data-tip={newer ? "Download as a file, as the newer version saved it" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
-            <button class={"btn icon save-versions" + (versionsOpen.value ? " on" : "")} data-tip="Earlier versions" aria-label="Earlier versions" aria-pressed={versionsOpen.value}
-              onClick={() => (versionsOpen.value = !versionsOpen.peek())}><Icon.history /></button>
             <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
             <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
           </> : <>
@@ -207,42 +205,89 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
   );
 }
 
-const RESTORE_TIP = "Open this backup as a new saved game. The game you are playing is saved first.";
+// ---------------------------------------------------------------- T-2037: a game's other versions
 
-/** T-1826: "Just now", "12 min ago", "3 h ago", "2 days ago", "3 weeks ago". */
-function ageText(at: number, now: number): string {
-  const min = Math.floor((now - at) / 60000);
-  if (min < 1) return "Just now";
-  if (min < 60) return `${min} min ago`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h} h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 14) return d === 1 ? "1 day ago" : `${d} days ago`;
-  return `${Math.floor(d / 7)} weeks ago`;
+/** The cards whose other versions are listed, by origin (kept for the visit, in the menu and panel). */
+const versionsShown = signal<ReadonlySet<string>>(new Set());
+
+/** Each slot's backups (main thread, from storage), read again when `stamp` moves. */
+export function useBackups(keys: string[], stamp: number): Record<string, SlotBackup[]> {
+  const [got, setGot] = useState<Record<string, SlotBackup[]>>({});
+  const id = keys.join(",");
+  useEffect(() => {
+    let live = true;
+    void Promise.all(keys.map(async (k) => [k, await listBackups(k).catch(() => [])] as const)).then((l) => { if (live) setGot(Object.fromEntries(l)); });
+    return () => { live = false; };
+  }, [id, stamp]);
+  return got;
 }
 
-/** The playing game's earlier versions, newest first, each opened as a new slot: the account's while
- * the account keeps the game (T-988) and this browser's (T-744, T-1826), in one list. */
-function Versions({ slot, backups, account, now }: { slot: SaveSlot; backups: SlotBackup[]; account: AccountBackup[] | null; now: number }) {
+/** What a version's row says and its place in storage. */
+function versionFacts(v: Version): { day?: number; stations?: number; tip?: string; cloud?: string } {
+  switch (v.kind) {
+    case "slot": return { day: v.slot.day, stations: v.slot.stations };
+    case "account": return { day: v.game.facts?.day, stations: v.game.facts?.stations, cloud: "On your account. Open downloads it here." };
+    case "backup": return { day: v.backup.day, stations: v.backup.stations, tip: v.backup.pull ? "This browser's copy before your account's replaced it" : "A backup in this browser" };
+    case "accountBackup": return { tip: "A backup on your account", cloud: "A backup on your account" };
+  }
+}
+const versionId = (v: Version) => v.kind === "slot" ? v.slot.key : v.kind === "account" ? "account:" + v.game.id : v.kind === "backup" ? v.backup.key : `account-backup:${v.game.id}:${v.backup.rev}`;
+
+/** "1 other version", "11 other versions". */
+export const otherVersions = (n: number) => n === 1 ? "1 other version" : `${n} other versions`;
+
+/** What opening and deleting a version does where the card is (the saves panel, the start menu);
+ * each answers a reason to show, or "" when done. */
+export interface VersionActions { open: (v: Version) => Promise<string>; remove: (v: Version) => Promise<string> }
+
+/** The line at the bottom of a game's card, "11 other versions", and under it, opened, each other
+ * version: when it was saved, its day and stations, Open, and for a slot or account game a delete. */
+export function VersionsLine({ group, now, act }: { group: GameGroup; now: number; act: VersionActions }) {
+  const [asking, setAsking] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
-  const rows = [
-    ...(account ?? []).map((b) => ({ at: b.savedAt * 1000, row: <div class="save-backup small" data-account-backup={b.rev}>
-      <span class="muted num" data-tip={`A backup of this game on your account from ${fullDate(b.savedAt * 1000)}`}>{ageText(b.savedAt * 1000, now)}<span class="save-cloud"><Icon.cloud /></span></span>
-      <button class="btn text" data-tip={RESTORE_TIP} onClick={async () => {
-        setMsg("");
-        if (await restoreAccountBackup(slot, b)) savesOpen.value = false;
-        else setMsg("This backup could not be downloaded.");
-      }}>Open as a copy</button>
-    </div> })),
-    ...backups.map((b) => ({ at: b.at, row: <div class="save-backup small" data-backup={b.key}>
-      <span class="muted num" data-tip={b.pull ? `This game in this browser on ${fullDate(b.at)}, game day ${b.day}, before your account's copy replaced it` : `A backup of this game in this browser from ${fullDate(b.at)}, game day ${b.day}`}>{ageText(b.at, now)} · Day {b.day}</span>
-      <button class="btn text" data-tip={RESTORE_TIP} onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Open as a copy</button>
-    </div> })),
-  ].sort((a, b) => b.at - a.at).map((x) => x.row);
-  return <div class="save-backups">
-    {rows.length ? rows : <div class="small muted">No earlier versions yet</div>}
+  const n = group.others.length;
+  if (!n) return null;
+  const open = versionsShown.value.has(group.origin);
+  const toggle = () => {
+    const s = new Set(versionsShown.peek());
+    if (!s.delete(group.origin)) s.add(group.origin);
+    versionsShown.value = s;
+  };
+  const run = async (p: Promise<string>) => { setMsg(""); const why = await p; if (why) setMsg(why); };
+  return <div class="save-versions">
+    <button class={"save-versions-line small" + (open ? " open" : "")} aria-expanded={open} onClick={toggle}><Icon.chevron />{otherVersions(n)}</button>
+    {open && <ul class="save-version-list">
+      {group.others.map((v) => {
+        const id = versionId(v), f = versionFacts(v), deletable = v.kind === "slot" || v.kind === "account";
+        const where = v.kind === "account" ? "your account" : v.kind === "slot" && onAccount(v.slot) ? "this browser and your account" : "this browser";
+        return <li key={id} data-version={id} data-kind={v.kind}>
+          <div class="save-version">
+            <span class="small muted num" data-tip={f.tip}>
+              {savedWhen(v.at, now)}{f.day !== undefined && <> · Day {f.day}</>}{f.stations !== undefined && <> · {plural(f.stations, "station")}</>}
+              {f.cloud && <span class="save-cloud" data-tip={f.cloud}><Icon.cloud /></span>}
+            </span>
+            {deletable && <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete this version" onClick={() => setAsking(id)}><Icon.bin /></button>}
+            <button class="btn text save-version-open" onClick={() => void run(act.open(v))}>Open</button>
+          </div>
+          {asking === id && <div class="callout bad">
+            <p>Delete this version from {where}?</p>
+            <div class="pane-foot"><button class="btn text" onClick={() => { setAsking(null); void run(act.remove(v)); }}>Delete version</button><button class="btn text" onClick={() => setAsking(null)}>Keep it</button></div>
+          </div>}
+        </li>;
+      })}
+    </ul>}
     {msg && <div class="small bad">{msg}</div>}
   </div>;
+}
+
+/** The question before a card's game is deleted with every version (T-2037); also the start menu's. */
+export function deleteGroupQuestion(group: GameGroup, playing = false): string {
+  const name = group.top.kind === "slot" ? group.top.slot.name : group.top.game.name;
+  const heads = groupHeads(group);
+  const browser = heads.some((v) => v.kind === "slot"), account = heads.some((v) => v.kind === "account" || onAccount(v.slot));
+  const where = browser && account ? "this browser and your account" : account ? "your account" : "this browser";
+  const what = group.others.length ? `"${name}" and its ${otherVersions(group.others.length)}` : `"${name}"`;
+  return playing ? `Delete ${what} from ${where}? The game ends and you go back to the start menu.` : `Delete ${what} from ${where}?`;
 }
 
 /** The head's icon: signed out a crossed cloud that opens Sign in, signed in a cloud that opens the
@@ -296,6 +341,37 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
     manageSaveSlot("create", undefined, copyName(saves.slots.find((s) => s.key === saves.active)?.name));
   };
   const t = Math.max(now, at);
+  // T-2037: one card per game
+  const backups = useBackups(saves.slots.map((s) => s.key), Math.floor(Math.max(0, ...saves.slots.map((s) => s.at)) / 60_000));
+  const groups = groupVersions(saves.slots, ctx ? accountOnly(saves.slots) : [], backups, saves.active, ctx ? accountList.value?.games ?? [] : []);
+  const shut = () => { savesOpen.value = false; return ""; };
+  const actions = (g: GameGroup): VersionActions => ({
+    open: async (v) => {
+      if (v.kind === "slot") { manageSaveSlot("open", v.slot.key); return shut(); }
+      if (v.kind === "backup") { manageSaveSlot("restore", v.backup.key); return shut(); }
+      if (v.kind === "account") {
+        const key = await downloadAccountGame(v.game);
+        if (!key) return "This game could not be downloaded.";
+        manageSaveSlot("open", key);
+        return shut();
+      }
+      const name = g.top.kind === "slot" ? g.top.slot.name : g.top.game.name;
+      return await restoreAccountBackup(v.game.id, name, g.origin, v.backup) ? shut() : "This backup could not be downloaded.";
+    },
+    remove: async (v) => {
+      if (v.kind === "slot") manageSaveSlot("delete", v.slot.key);
+      else if (v.kind === "account" && !await deleteAccountGame(v.game.id)) return "This game could not be deleted.";
+      return "";
+    },
+  });
+  // the card's delete: every slot and account game of the game, the one being played last
+  const removeGroup = (g: GameGroup) => {
+    for (const v of groupHeads(g)) {
+      if (v.kind === "account") void deleteAccountGame(v.game.id);
+      else if (v.slot.key !== saves.active) manageSaveSlot("delete", v.slot.key);
+    }
+    if (groupHeads(g).some((v) => v.kind === "slot" && v.slot.key === saves.active)) manageSaveSlot("delete", saves.active);
+  };
   return (
     <>
       {!saves.writable && saves.reason && <p class="callout bad">{saves.reason}</p>}
@@ -307,25 +383,17 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         {!saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip="Make a copy" aria-label="Make a copy" disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
       </div>
       <ul class="save-slots">
-        {saves.slots.map((slot) => {
-          const playing = slot.key === saves.active;
-          return <li data-slot={slot.key} class={playing ? "on" : ""}>
-            <SlotCard slot={slot} playing={playing} now={t} writable={saves.writable} renaming={rename === slot.key} copying={copyFrom !== null}
-              onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onCopy={copy} onDelete={() => setRemoving(slot.key)} />
-            {playing && versionsOpen.value && <Versions slot={slot} backups={saves.backups} account={accountBackups(slot)} now={t} />}
-            {removing === slot.key && <div class="callout bad">
-              <p>{deleteQuestion(slot, playing)}</p>
-              <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
-            </div>}
-          </li>;
-        })}
-        {ctx && accountOnly(saves.slots).map((g) => {
-          const card = cardOf(g);
-          return <li data-account={g.id}>
-            <AccountCard slot={card} now={t} onDelete={() => setRemoving(card.key)} />
-            {removing === card.key && <div class="callout bad">
-              <p>Delete "{g.name}" from your account?</p>
-              <div class="pane-foot"><button class="btn text" onClick={() => { void deleteAccountGame(g.id); setRemoving(null); }}>Delete from your account</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+        {groups.map((g) => {
+          const top = g.top, slot = top.kind === "slot" ? top.slot : cardOf(top.game), playing = slot.key === saves.active;
+          return <li key={g.origin} data-origin={g.origin} {...(top.kind === "slot" ? { "data-slot": slot.key } : { "data-account": top.game.id })} class={playing ? "on" : ""}>
+            {top.kind === "slot"
+              ? <SlotCard slot={slot} playing={playing} now={t} writable={saves.writable} renaming={rename === slot.key} copying={copyFrom !== null}
+                onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onCopy={copy} onDelete={() => setRemoving(g.origin)} />
+              : <AccountCard slot={slot} now={t} onDelete={() => setRemoving(g.origin)} />}
+            <VersionsLine group={g} now={t} act={actions(g)} />
+            {removing === g.origin && <div class="callout bad">
+              <p>{deleteGroupQuestion(g, playing)}</p>
+              <div class="pane-foot"><button class="btn text" onClick={() => { removeGroup(g); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
             </div>}
           </li>;
         })}

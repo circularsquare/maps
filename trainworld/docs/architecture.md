@@ -432,9 +432,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   after its start (`newGameName`: "Tokyo", "Tokyo sandbox", "World" for a map start, then " 2" and
   on if taken; T-728) and written once something changes, or at once when it starts from a real
   network; a loaded file's is
-  named after the file without `.save` and written at once; a restored backup's is the slot's name
-  and the backup's time, "<name> at 3:28 AM", any such time already on the name dropped first
-  (`forkName` in workers/cloud.ts, also for account restores and forks; T-1363). A tab without its slot's lock must make a copy before leaving a changed
+  named after the file without `.save` and written at once; a restored backup's (this browser's or
+  the account's) takes the name of the game it backs up and is a version of that game (T-2037,
+  "Versions of one game" below). A tab without its slot's lock must make a copy before leaving a changed
   game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
   read on start stays as it is (its bytes also under `unreadable-<time>`) and the new game gets a
   slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
@@ -461,13 +461,39 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   all for a slot's tiers the oldest are dropped (tier 0 always stays; a save is usually about
   100 KB). Before the account's copy replaces a slot (`writeFetched`: a newer copy taken in, after
   giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`.
-  Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. The saves panel
-  lists the playing slot's under its card's Earlier versions with the account's [T-1395], each with
-  Open as a copy. Deleting a slot deletes them. `?backupMs=` sets the 10-minute step for checks,
-  the others scaled with it.
+  Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. Each slot's
+  backups, and the account's of each of its game's account games, are listed among the card's other
+  versions (T-2037; ui-panels.md "Saved games"); opening one makes a new slot, a version of the same
+  game. A backup keeps the slot's `origin` and `edit`. Deleting a slot deletes them. `?backupMs=`
+  sets the 10-minute step for checks, the others scaled with it.
+- **Versions of one game** [T-2037, T-2030; `workers/versions.ts`]: every slot record carries
+  `origin`, the id of the game it descends from, and `edit`, the wall time of the latest player
+  change in its bytes (an edit, a list order, sandbox: wherever the clock worker marks `edited`; the
+  clock's own saves and a save by hand leave it). A new game, Open a file and a file loaded from the
+  start menu start an origin of their own (a new game id); Make a copy, a backup or account backup
+  opened, a conflict's split and a game downloaded from the account keep their parent's. The origin
+  is slot metadata and account facts only, never in the save file, so a downloaded file opened again
+  is a game of its own. All saves of one origin, this browser's slots, the account's games not in
+  this browser (their facts' `origin`) and the backups of each, are versions of one game shown as one
+  card; the card's game is the version with the latest `edit` (a save without one counts its `at`),
+  and in the saves panel the slot being played. **Saves from before T-2037** get an origin at start
+  (`stampAll`: the start menu's settle with the account's list, the clock worker's start without):
+  a name with no ending is a game of its own (its account id, else its slot key); a name ending in a
+  fork's or restore's time (" at 6:17 PM") or " copy" takes the origin of the save named as the name
+  without its endings, the one with an origin already or else the lowest id, and with none of that
+  name the saves sharing the base name go together under the lowest id among them
+  (`assignOrigins`); a fork's or restore's time comes off the name as the origin is stamped (forks
+  and restores now keep the game's name), " copy" stays. Account games listed but not in this browser get the same rule at listing, so
+  every device groups them alike; a game downloaded from the account is stamped with the list in
+  hand. A rename leaves the origin.
+- **Saving by hand over another tab** [T-2037]: a tab that takes the slot's lock with Save first
+  looks at the slot: if another tab wrote a player change there that this tab never read (`edit`
+  above the one it last read or wrote), that version moves to a new slot, the same game, still tied
+  to the account game it went up as, and this slot is tied to a new account game (`keepOtherTabs`).
 - **Deleting is for good** [T-1827 removed]: deleting a slot (saves panel, start menu, or a
   deletion from the account taking off an unchanged copy, `settleSlot`) deletes it, its backups,
-  sync record and demand cache. T-1827 had kept deleted slots 30 days under `deleted:<ms>-<id>`;
+  sync record and demand cache. A card's delete deletes every slot and account game of its origin
+  (T-2037); one version is deleted from the card's list of other versions. T-1827 had kept deleted slots 30 days under `deleted:<ms>-<id>`;
   Anita removed it the same day, and `sweepDeleted` clears any such keys at every start.
 - **Storage full or cleared while open** [T-1829]: a connection the browser closes (site data
   cleared, the database deleted from another page: `close` and `versionchange`) is forgotten, and
@@ -548,31 +574,42 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (`trainworld.device.v1`). The main thread posts `{kind: "account", ctx}` to the clock worker on
   every session change; a 401 there posts `accountGone` back and the page signs out.
   - **Uploads** (the clock worker, after `writeSlot`): the save bytes as Download
-    as a file writes them, the name, the card's facts and picture. A save by hand goes at once
-    with `force`; an autosave at most every 2 wall minutes (`GAP_MS`), a timer sending what the
-    gap held back; the page hiding sends at once (best effort); a rename at once. A save over
-    4 MB is never sent (the server closes the connection past 4.6 MB).
+    as a file writes them, the name, the card's facts (with `origin` and `edit`, T-2037) and
+    picture. A save by hand goes at once with `force`; a rename at once; an autosave only when it
+    holds a player change the account lacks (`editedHere`: the slot's `edit` above the record's,
+    T-2030), at most every 2 wall minutes (`GAP_MS`), a timer sending what the gap held back; the
+    page hiding sends at once (best effort) on the same terms. The clock's own saves go up with the
+    next player change. A save over 4 MB is never sent (the server closes the connection past 4.6 MB).
   - **On load**: the start menu settles every slot it can lock before the worker starts
-    (`settleOnStart`), and the worker again on start and on `online`: a slot changed here goes
-    up; an unchanged one takes a newer account copy (slot record from the server's facts and
-    picture, nothing decoded); one the account deleted (a tombstone) is deleted if unchanged, else
-    kept as a new account game; deletions made here while offline are sent. The game opened is
-    claimed (`claim`); an unchanged slot behind the account is replaced in place (`loadGame`
-    through the game's message queue).
+    (`settleOnStart`), and the worker again on start and on `online` (`settleSlot`): a slot with a
+    player change here goes up; one without (the clock's saves at most) takes a newer account copy
+    (slot record from the server's facts and picture, nothing decoded; what it held goes to its
+    `pull` backup); one the account deleted (a tombstone) is deleted if it has no player change
+    here, else kept as a new account game; deletions made here while offline are sent. The game
+    opened is claimed (`claim`); a slot with no player change here behind the account is replaced
+    in place (`loadGame` through the game's message queue).
+  - **Conflicts** [T-2037, T-2030]: a slot with a player change here whose account game moved on, or
+    which another device opened from the same rev, keeps its version. If the account's copy has no
+    player change this slot's last sync lacked (its facts' `edit`; `editedThere`), the clock alone
+    moved it on and this slot is saved over it with `force` (the server keeps the copy written over
+    as a backup). Otherwise this slot is split off (`splitOff`): tied to a new account game of the
+    same origin and name and uploaded, while the account's copy stays under the old id; both are
+    versions of the one card, the later player change on top. A game being played carries on in
+    its slot, nothing swapped.
   - **Two devices** work as two tabs do: the last device to open a game is its writer; another
-    device's upload hears 409 "elsewhere", stops autosaving the game, locally too, and says
-    "Autosave is off here because this game was opened on another device."; its save by hand
-    claims it back with `force`. Its slot is marked given way, so its next load takes the account
-    copy without a fork. **A fork** (changed here, and the account moved on from the same rev, say
-    a game opened offline): this browser's version goes into a new slot "Tokyo at 9:41 PM", a new
-    account game, and the old slot takes the account's copy; a game being played carries on in the
-    fork's slot.
+    device's upload hears 409 "elsewhere". If the writer's copy has no player change this device
+    lacks (an idle tab that opened the game and only ran its clock, T-2030), this device saves over
+    it with `force` and carries on; otherwise it stops autosaving the game, locally too, and says
+    "Autosave is off here because this game was opened on another device."; its save by hand then
+    splits its version off as above rather than write over the other device's change. Its slot is
+    marked given way.
   - **Deleting** a tied slot deletes its account game (queued as `cloud-deletes` while offline);
     a game the account deleted, under a tombstone, never comes back under its id (410): a kept
     copy gets a new id. A game opened unchanged after another device deleted it is kept in this
     browser only.
-  - **The account's backups** (two a game, made by the server) are listed under the playing game
-    and restored as copies through Open a file's path (`restoreAccountBackup`); the route names a
+  - **The account's backups** (up to four a game, made by the server) are listed among the card's
+    other versions and opened as a new version of the game through Open a file's path, the origin
+    passed with it (`restoreAccountBackup`, the start menu's `fileChoice`); the route names a
     backup by place, so the page checks its `X-Rev`.
   - **Signing out with Remove** marks the account in sessionStorage (`trainworld.signout-remove`),
     goes to the start menu if a game is open, and there settles, deletes every slot of the account

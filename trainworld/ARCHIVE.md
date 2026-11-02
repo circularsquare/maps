@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2037 [P2] Saves: one card per game, no forks. Done 2026-11-02: every save carries its game's origin and latest player change; one card per origin, the latest change on top, "N other versions" opens a row each; conflicts split off as versions. checks/t2037-versions.mjs.
+- T-2030 [P3] Idle tab won Anita's Tokyo. Done 2026-11-02 with T-2037: the clock's own saves no longer go up or count in a conflict; an elsewhere from an idle writer is saved over.
 - T-2031 [P2] Rotate the map with a right drag. Done 2026-11-02 (agent t2031): right or Ctrl drag turns it (not in the blueprint or bus tool), Settings "Rotate map with right drag" on by default, a north needle beside find while turned; ramp marks now follow the turn. Frame cost within noise (+4-7% median).
 - T-2022 [P2] Loans repay themselves. Done 2026-11-02 (agent t2022): 60 equal daily payments at 1% a day ($22.2M for $1B), paid whatever the cash; Repay pays off the rest; the T-1906 rule compares the payment with profit; old loans restart 60 days on load. checks/t2022-loan-schedule.mjs.
 - T-1997 [P2] First country on the standing kit. Done 2026-11-02 (agent t1738b): Cambodia, Malaysia and Brunei shipped on it (47 rows, one join); eight kit and playbook fixes (setbuilt `--hold`, `zone_new_origins.py --apply`, preflight units split and grouped zones, the GHSL check, GB_SPLIT_FAR). notes/T-1738.md 11.

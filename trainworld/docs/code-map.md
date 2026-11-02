@@ -223,7 +223,7 @@ with a panel per city, T-894), `stateRows.ts` (`StateRows`: the state's edge, no
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format
-and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, forks; used by the clock worker and the main thread), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, conflicts split off as versions; used by the clock worker and the main thread), `versions.ts` (T-2037: a save's origin and latest player change, the origin rule for older saves, saves grouped into one card per game), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandLod.ts` (which zones are held fine and which coarse, T-1223; the zones built in last are spared, T-2005), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
@@ -427,6 +427,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   dropping the order; the pill's default text and colour; a group in the shared Tokyo start; light
   and dark into artifacts/trainworld/t1813/; about two minutes),
   `t1829-storage.mjs [url]` (a squeezed store saved by dropping demand caches, and full for good saying so then saving once there is room; site data cleared and the database deleted under a running game, saved again under its name and account tie; deleting a slot or a tombstone is for good, T-1827 leftovers swept at start; about three minutes),
+  `t2037-versions.mjs [url]` (one card per game: the origin rule on Anita's Tokyo forks, the latest
+  player change on top, the conflict and idle-tab rules through `settleSlot` against a fake account
+  server in the page, pictures of the start menu and saves panel light and dark, collapsed and
+  open, into artifacts/trainworld/t2037/; about three minutes),
   `t1826-saves.mjs [url]` (backup tiers simulated and live with `?backupMs=50`, a pull's backup, a
   newer save with an extra block or a higher level opened read-only and left byte for byte through
   an edit and a minute, Download and Make a copy of it, the leave-page question only with an

@@ -299,9 +299,15 @@ export interface StoredSave extends Partial<SlotSummary> {
   day: number;
   name?: string;
   city?: string;
+  /** T-2037: the id of the game this save descends from (a new game's own id; copies, conflicts and
+   * restored backups keep their parent's); absent before T-2037 until `stampOrigins` */
+  origin?: string;
+  /** T-2037: Date.now() of the latest player change in these bytes (an edit, a list order, sandbox;
+   * not the clock's own saves); absent before T-2037, read as `at` (versions.ts `editOf`) */
+  edit?: number;
 }
 
-export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-988 */ cloud?: SyncRecord; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; }
 
 /** T-988: a slot's tie to a game on the account (`sync:<slot>`, deleted with the slot). Absent, or
  * without `acct`, for a slot tied to no account (a game made while signed out). The slot has changed
@@ -314,6 +320,8 @@ export interface SyncRecord {
   rev: number;
   /** the slot's `at` at that moment */
   syncedAt: number;
+  /** T-2037: the slot's `edit` at that moment; absent before T-2037, read as `syncedAt` */
+  edit?: number;
   /** Date.now() of the last upload that went through */
   upAt?: number;
   /** when the account's copy was saved (ms), for "Saved to your account" */
@@ -435,19 +443,35 @@ export async function listSlots(): Promise<SaveSlot[]> {
     const s = saves[i];
     if (!s) return [];
     if (syncs[i]) seeSync(key, syncs[i]);
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, cloud: syncs[i] }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, cloud: syncs[i], origin: s.origin, edit: s.edit }];
   }).sort((a, b) => b.at - a.at);
 }
 
 /** Save while preserving a slot's latest name (it may have been renamed elsewhere; `lastName`, the
- * name last seen, where the slot has gone, T-1829); true if the slot was not there before. */
+ * name last seen, where the slot has gone, T-1829) and its origin and latest change when `v` has none
+ * (T-2037); true if the slot was not there before. */
 export async function writeSlot(key: string, v: StoredSave, lastName?: string): Promise<boolean> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   const old = await req<StoredSave | undefined>(s.get(key));
-  await req(s.put({ ...v, name: v.name ?? old?.name ?? lastName ?? slotName(key) }, key));
+  await req(s.put({ ...v, name: v.name ?? old?.name ?? lastName ?? slotName(key), origin: v.origin ?? old?.origin, edit: v.edit ?? old?.edit }, key));
   await done;
   return !old;
+}
+
+/** T-2037: an origin written into each slot that has none (`origins`, by slot key), in one transaction,
+ * with the name `names` gives it, if any; nothing else in the slot changes. */
+export async function stampOrigins(origins: Map<string, string>, names: Map<string, string> = new Map()): Promise<void> {
+  if (!origins.size) return;
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    for (const [key, origin] of origins) {
+      const old = await req<StoredSave | undefined>(s.get(key));
+      if (old && !old.origin) s.put({ ...old, origin, ...(names.has(key) ? { name: names.get(key) } : {}) }, key);
+    }
+    await done;
+  } catch { /* stamped next time */ }
 }
 
 const SYNC_PREFIX = "sync:";
@@ -567,7 +591,7 @@ export const BACKUP_STEPS = [10 * 60_000, 3600_000, 86400_000, 7 * 86400_000];
 /** T-1826: the most a slot's tier backups hold, bytes; past it the oldest tiers are dropped (tier 0
  * is always kept). About 100 KB a save is usual. */
 export const BACKUP_CAP = 8 << 20;
-export interface SlotBackup { key: string; at: number; day: number; /** the slot before the account's copy replaced it */ pull?: boolean }
+export interface SlotBackup { key: string; at: number; day: number; /** the slot before the account's copy replaced it */ pull?: boolean; /** T-2037 */ stations?: number; edit?: number }
 const backupKey = (slot: string, tier: string) => `${BACKUP_PREFIX}${slot}:${tier}`;
 
 export async function listBackups(slot: string): Promise<SlotBackup[]> {
@@ -576,7 +600,7 @@ export async function listBackups(slot: string): Promise<SlotBackup[]> {
   const out: SlotBackup[] = [];
   for (const key of keys) {
     const b = (await req(s.get(key))) as StoredSave | undefined;
-    if (b) out.push({ key, at: b.at, day: b.day, ...(key.endsWith(":pull") ? { pull: true } : {}) });
+    if (b) out.push({ key, at: b.at, day: b.day, stations: b.stations, edit: b.edit, ...(key.endsWith(":pull") ? { pull: true } : {}) });
   }
   return out.sort((a, b) => b.at - a.at);
 }
@@ -644,6 +668,10 @@ export async function backupBeforeReplace(key: string, next: { at: number; bytes
 export function isBackupOf(key: string, slot: string): boolean {
   return key.startsWith(`${BACKUP_PREFIX}${slot}:`);
 }
+/** T-2037: the slot a backup key belongs to ("" for none). */
+export function backupSlot(key: string): string {
+  return key.startsWith(BACKUP_PREFIX) ? key.slice(BACKUP_PREFIX.length, key.lastIndexOf(":")) : "";
+}
 
 // T-328: the last final demand result of each slot, kept beside it under `demand:<slot>:<network
 // hash>` (workers/demandCache.ts says what is in it). One per slot: writing one removes the slot's
@@ -708,7 +736,7 @@ export async function readDemandAhead<T>(save: string): Promise<T | null> {
  * new game, picked in the saves panel. The page reloads to free the last game's memory; the clock
  * worker takes this from storage as it starts. */
 export type PendingLoad =
-  | { kind: "import"; bytes: Uint8Array; name: string; from: string }
+  | { kind: "import"; bytes: Uint8Array; name: string; from: string; /** T-2037: an account backup's game */ origin?: string; edit?: number }
   | { kind: "restore"; key: string; from: string }
   | { kind: "new"; spec: NewGameSpec; name?: string };
 const PENDING = "pending-load";

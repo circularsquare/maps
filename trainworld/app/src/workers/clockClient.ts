@@ -270,19 +270,27 @@ export async function exportSlot(slot: SaveSlot): Promise<boolean> {
   return true;
 }
 /** Load a save file the player picked, into a new slot named after the file (T-743). */
-export async function importGame(file: File) {
+/** `version`: the file is a version of that game (an account backup, T-2037), else a game of its own. */
+export async function importGame(file: File, version?: { origin: string; edit: number }) {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  if (await ifItFits({ bytes })) switchGame({ load: "file" }, { kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: saveSlotsState.peek().active });
+  if (await ifItFits({ bytes })) switchGame({ load: "file" }, { kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: saveSlotsState.peek().active, ...version });
 }
 /** T-1612: a save file picked on the start menu, where no game is in hand to reload from: its game is
  * left in storage as after `switchGame`, and the menu's pick is `{ pending: true }`. A reason (to show)
  * when the file cannot open. */
-export async function fileChoice(file: File): Promise<GameChoice | string> {
+export async function fileChoice(file: File, version?: { origin: string; edit: number }): Promise<GameChoice | string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   try { await decodeSave(bytes); } catch { return "This file is not a saved game."; }
   const why = await saveRefusal({ bytes });
   if (why) return why;
-  if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "" })) return "Browser storage is unavailable.";
+  if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "", ...version })) return "Browser storage is unavailable.";
+  return { pending: true };
+}
+/** T-2037: a backup of slot `from` opened from the start menu, as `fileChoice` does a file. */
+export async function backupChoice(key: string, from: string): Promise<GameChoice | string> {
+  const why = await saveRefusal({ key });
+  if (why) return why;
+  if (!await writePending({ kind: "restore", key, from })) return "Browser storage is unavailable.";
   return { pending: true };
 }
 /** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */

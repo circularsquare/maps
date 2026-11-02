@@ -101,11 +101,12 @@ try {
   const live = await backups(a, home);
   const tierKeys = live.filter((b) => /:t\d$/.test(b.key)).map((b) => b.key.slice(-2)).sort();
   await a.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true; });
-  await a.waitForSelector('.save-slots li.on .save-versions');
-  await a.click('.save-slots li.on .save-versions');
+  // T-2037: listed under the card's "other versions" line
+  await a.waitForSelector('.save-slots li.on .save-versions-line');
+  await a.click('.save-slots li.on .save-versions-line');
   await a.waitForTimeout(800);
-  const rows = await a.locator('.save-backups .save-backup span.muted').allTextContents();
-  report('live backups fill four tiers, listed with their age', line !== null && tierKeys.join() === 't0,t1,t2,t3' && rows.length === 4 && rows.every((r) => /(ago|Just now) · Day \d+/.test(r)),
+  const rows = await a.locator('.save-slots li.on .save-version-list li[data-kind="backup"] .save-version > span').allTextContents();
+  report('live backups fill four tiers, listed with their age', line !== null && tierKeys.join() === 't0,t1,t2,t3' && rows.length === 4 && rows.every((r) => /^Saved .* · Day \d+/.test(r)),
     `(line ${line}; tiers ${tierKeys.join()}; ages ${live.map((b) => ((Date.now() - b.at) / 1000).toFixed(1) + ' s').join(', ')}; rows ${JSON.stringify(rows)})`);
   await a.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = false; });
 

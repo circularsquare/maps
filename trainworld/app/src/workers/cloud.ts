@@ -6,7 +6,8 @@
 // write and claims the game it opens (clock.worker.ts); the main thread settles every slot on the
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
-import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
 
 /** What a page needs to reach the account: the server, the session and this browser's device id.
  * `on`: the server keeps games (`/noritetsu/config`'s `trainworldGames`); records are still tied
@@ -18,6 +19,8 @@ export interface CloudContext { base: string; token: string; acct: string; devic
 export interface GameFacts {
   at: number; day: number; city?: string; mode?: GameMode; cities?: string[]; lines?: number; stations?: number; cash?: number;
   panels?: ThumbPanel[]; shade?: "light" | "dark";
+  /** T-2037: the game's origin and its latest player change (versions.ts); the server stores facts unread */
+  origin?: string; edit?: number;
 }
 /** One of a game's account backups (newest first in `backups`): no picture or facts, only its bytes. */
 export interface AccountBackup { rev: number; savedAt: number; bytes: number; writer: string }
@@ -51,8 +54,12 @@ export function newGameId(): string {
 
 /** A slot tied to this account and synced (not kept here only). */
 export const tiedTo = (rec: SyncRecord | null | undefined, ctx: CloudContext): rec is SyncRecord => !!rec && rec.acct === ctx.acct && !rec.local;
-/** Changed here since its last sync. */
+/** Written here since its last sync (the clock's own saves too). */
 export const changedHere = (slot: { at: number }, rec: SyncRecord) => slot.at !== rec.syncedAt;
+/** T-2030: a player change made here since its last sync; the clock's own saves are not one. */
+export const editedHere = (slot: { at: number; edit?: number }, rec: SyncRecord) => editOf(slot) > syncedEditOf(rec);
+/** T-2030: the account's copy has a player change this slot's last sync did not have. */
+export const editedThere = (g: AccountGame, rec: SyncRecord) => g.rev !== rec.rev && accountEditOf(g) > syncedEditOf(rec);
 
 // ---------------------------------------------------------------- HTTP
 
@@ -113,6 +120,7 @@ export async function fetchGame(ctx: CloudContext, g: AccountGame): Promise<Fetc
   const stored: StoredSave = {
     bytes: a.bytes, at: typeof f.at === "number" ? f.at : savedAt * 1000, day: f.day ?? 0, city: f.city, name: g.name,
     thumb, panels: thumb ? f.panels : undefined, shade: f.shade, cities: f.cities ?? [], lines: f.lines ?? 0, stations: f.stations ?? 0, cash: f.cash ?? 0, mode: f.mode,
+    origin: typeof f.origin === "string" ? f.origin : undefined, edit: typeof f.edit === "number" ? f.edit : undefined,
   };
   return { stored, id: g.id, rev, savedAt };
 }
@@ -122,7 +130,7 @@ export async function fetchGame(ctx: CloudContext, g: AccountGame): Promise<Fetc
 export async function writeFetched(ctx: CloudContext, key: string, got: Fetched) {
   await backupBeforeReplace(key, got.stored);
   await writeSlot(key, got.stored);
-  await writeSync(key, { id: got.id, acct: ctx.acct, rev: got.rev, syncedAt: got.stored.at, okAt: got.savedAt * 1000 });
+  await writeSync(key, { id: got.id, acct: ctx.acct, rev: got.rev, syncedAt: got.stored.at, edit: editOf(got.stored), okAt: got.savedAt * 1000 });
 }
 
 /** The account's copy of `g` written into slot `key` (whose lock the caller holds); null if it could
@@ -135,9 +143,11 @@ export async function takeInto(ctx: CloudContext, key: string, g: AccountGame): 
 }
 
 /** An account game not in this browser, downloaded into a new slot; its key, or null. */
-export async function downloadGame(ctx: CloudContext, g: AccountGame): Promise<string | null> {
+export async function downloadGame(ctx: CloudContext, g: AccountGame, list: AccountList | null = null): Promise<string | null> {
   const key = "slot-" + crypto.randomUUID();
-  return await takeInto(ctx, key, g) ? key : null;
+  if (!await takeInto(ctx, key, g)) return null;
+  await stampAll(list); // T-2037: a game from before T-2037 joins its card's origin
+  return key;
 }
 
 /** The bytes of game `id`'s account backup of rev `rev`; null if it has gone. The route names a backup
@@ -196,7 +206,7 @@ function pictureOf(thumb?: string): Blob | null {
 }
 export const factsOf = (s: StoredSave): GameFacts => ({
   at: s.at, day: s.day, city: s.city, mode: s.mode, cities: s.cities?.slice(0, MAX_CITIES), lines: s.lines, stations: s.stations, cash: s.cash,
-  panels: s.panels, shade: s.shade,
+  panels: s.panels, shade: s.shade, origin: s.origin, edit: s.edit,
 });
 
 /** "ok"; "elsewhere": another device has the game open; "failed": not sent (the record says why);
@@ -224,7 +234,7 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
     if (!now) return "skip";
     if (a.status === 200 && a.json) {
       // a slot written again while this went up stays changed here, and goes next time
-      await writeSync(key, { ...now, rev: a.json.rev, syncedAt: stored.at, upAt: Date.now(), okAt: a.json.savedAt * 1000, gaveWay: undefined, error: undefined });
+      await writeSync(key, { ...now, rev: a.json.rev, syncedAt: stored.at, edit: editOf(stored), upAt: Date.now(), okAt: a.json.savedAt * 1000, gaveWay: undefined, error: undefined });
       return "ok";
     }
     const code = a.json?.code;
@@ -249,27 +259,35 @@ export async function claim(ctx: CloudContext, rec: SyncRecord): Promise<"ok" | 
 
 // ---------------------------------------------------------------- settling
 
-/** A trailing " at 3:28 AM" (or "at 03:28", "at 15:28") that a fork or restore added before. */
-const AT_TIME = /\s+at\s+\d{1,2}[:.]\d{2}(?:[\s  ]*[ap]\.?\s?m\.?)?$/i;
-/** A fork's or a restored backup's name (local or account): the slot's, less any time an earlier
- * fork or restore gave it, and the copy's own save time. */
-export function forkName(name: string, at: number): string {
-  let base = name;
-  while (AT_TIME.test(base)) base = base.replace(AT_TIME, "");
-  return `${base || name} at ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+/** T-2037: a conflict (a player change here while the account's copy moved on with one of its own, or
+ * another device opened it from this rev): slot `key` keeps its version and is tied to a new account
+ * game of the same origin and name, uploaded now; the account's copy stays under the old id, another
+ * version of the same game. The caller holds the slot's lock. */
+export async function splitOff(ctx: CloudContext, key: string): Promise<Upload> {
+  const [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
+  if (!stored || !rec) return "skip";
+  // the origin before the id changes, or a save from before T-2037 would read as a game of its own
+  if (!stored.origin) await stampOrigins(new Map([[key, rec.id]]));
+  await writeSync(key, { id: newGameId(), acct: ctx.acct, rev: 0, syncedAt: 0 });
+  return upload(ctx, key);
 }
 
-/** This browser's version of slot `key` copied into a new slot as a new account game (a fork), and
- * uploaded; the new key. */
-export async function forkOut(ctx: CloudContext, key: string, stored: StoredSave): Promise<string> {
-  const to = "slot-" + crypto.randomUUID();
-  const lease = await leaseSlot(to);
-  try {
-    await writeSlot(to, { ...stored, name: forkName(stored.name || "Saved game", stored.at) });
-    await writeSync(to, { id: newGameId(), acct: ctx.acct, rev: 0, syncedAt: 0 });
-  } finally { lease?.release(); }
-  await upload(ctx, to);
-  return to;
+/** T-2037: an origin for every slot in this browser without one (`assignOrigins` over the slots and
+ * the account's games, an account game's uploaded origin first). */
+export async function stampAll(list: AccountList | null): Promise<void> {
+  const slots = await listSlots().catch(() => [] as SaveSlot[]);
+  if (slots.every((s) => s.origin)) return;
+  const games = list?.games ?? [];
+  const factsOrigin = (id?: string) => { const o = id ? games.find((g) => g.id === id)?.facts?.origin : undefined; return typeof o === "string" ? o : undefined; };
+  const here = new Set(slots.map((s) => s.cloud?.id).filter(Boolean));
+  const origins = assignOrigins([
+    ...slots.map((s) => ({ id: s.cloud?.id || s.key, name: s.name, origin: s.origin ?? factsOrigin(s.cloud?.id) })),
+    ...games.filter((g) => !here.has(g.id)).map((g) => ({ id: g.id, name: g.name, origin: factsOrigin(g.id) })),
+  ]);
+  const fresh = slots.filter((s) => !s.origin);
+  // a fork's or restore's time on the name goes with it: the card is one game under one name
+  const names = new Map(fresh.filter((s) => withoutForkTime(s.name) !== s.name).map((s) => [s.key, withoutForkTime(s.name)]));
+  await stampOrigins(new Map(fresh.map((s) => [s.key, origins.get(s.cloud?.id || s.key)!])), names);
 }
 
 /** A record for a slot first written while signed in: tied to the account. */
@@ -279,29 +297,26 @@ export async function tieNew(ctx: CloudContext, key: string): Promise<SyncRecord
   return rec;
 }
 
-/** Settle slot `key`, whose lock the caller holds, against the account's list: upload what changed
- * here, take a newer account copy into an unchanged slot, delete one deleted on the account, and fork
- * one changed on both sides. True if anything was written. */
+/** Settle slot `key`, whose lock the caller holds, against the account's list (T-2030, T-2037): a
+ * player change here goes up; a slot with none (the clock's own saves at most) takes a newer account
+ * copy; one deleted on the account is deleted unless changed here. Changed on both sides, or opened on
+ * another device from this rev, this version splits off (`splitOff`); a copy that moved on by the clock
+ * alone is saved over. True if anything was written. */
 export async function settleSlot(ctx: CloudContext, key: string, list: AccountList): Promise<boolean> {
   const [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
   if (!stored || !tiedTo(rec, ctx)) return false;
   const g = list.games.find((x) => x.id === rec.id);
-  const changed = changedHere(stored, rec) && !rec.gaveWay;
+  const edited = editedHere(stored, rec);
   if (!g && list.tombstones.some((t) => t.id === rec.id)) {
-    if (!changed) { await deleteSlot(key); return true; }
-    await writeSync(key, { ...rec, id: newGameId(), rev: 0, syncedAt: 0 });
+    if (!edited) { await deleteSlot(key); return true; }
+    await writeSync(key, { ...rec, id: newGameId(), rev: 0, syncedAt: 0, edit: undefined });
     return await upload(ctx, key) === "ok";
   }
-  if (!g) return changed || rec.rev > 0 ? await upload(ctx, key) === "ok" : false;
-  if (g.rev === rec.rev) {
-    if (!changed) return false;
-    if (g.writer === ctx.device) return await upload(ctx, key) === "ok";
-    // another device opened it from this rev: its game goes on there, this one's changes are kept apart
-  } else if (!changed) {
-    return !!await takeInto(ctx, key, g);
-  }
-  await forkOut(ctx, key, stored);
-  return !!await takeInto(ctx, key, g);
+  if (!g) return edited || rec.rev > 0 ? await upload(ctx, key) === "ok" : false;
+  if (!edited) return g.rev === rec.rev ? false : !!await takeInto(ctx, key, g);
+  if (g.rev === rec.rev && g.writer === ctx.device) return await upload(ctx, key) === "ok";
+  if (g.rev !== rec.rev && !editedThere(g, rec)) return await upload(ctx, key, true) === "ok";
+  return await splitOff(ctx, key) === "ok";
 }
 
 /** On load: every slot this page can lock (but `skip`, the one it plays) settled against the
@@ -311,6 +326,7 @@ export async function settle(ctx: CloudContext, skip = "", stop = () => false): 
   await sendDeletes(ctx);
   const list = await listGames(ctx);
   if (!list) return null;
+  await stampAll(list);
   let wrote = false;
   for (const s of await listSlots().catch(() => [] as SaveSlot[])) {
     if (stop()) break;

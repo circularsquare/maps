@@ -1291,9 +1291,19 @@ button.save-add:hover { color: var(--text); }
 .save-files { display: flex; flex-wrap: wrap; gap: 8px; }
 .save-when { display: flex; align-items: center; }
 .save-account.warn { color: var(--warn); }
-/* T-744, T-1395: the playing slot's earlier versions, under its card */
-.save-backups { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+/* T-2037: a game's other versions, a line at the bottom of its card that opens to list them */
+.save-versions { margin-top: 6px; }
+.save-versions-line { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; border: 0; background: none;
+  color: var(--muted); font-family: inherit; cursor: pointer; }
+.save-versions-line:hover, .save-versions-line:focus-visible { color: var(--text); }
+.save-versions-line svg { width: 12px; height: 12px; }
+.save-versions-line.open svg { transform: rotate(90deg); }
+.save-version-list { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.save-version { display: flex; gap: 6px; align-items: center; }
+.save-version > span { flex: 1; min-width: 0; display: flex; align-items: center; }
+.save-version-list .pane-foot { margin-top: 6px; }
+.start-saves li.has-versions .start-save { border-bottom: 0; }
+.start-saves .save-versions { margin: 0; padding: 0 8px 6px; border: 1px solid var(--rule); border-top: 0; background: var(--bg); }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }

@@ -9,16 +9,17 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
 import { leaseSlot, listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
-import { CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
+import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
+import { groupHeads, groupVersions, type GameGroup } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { StartLogo } from "./StartLogo";
 import { AccountButton, startAccountUi } from "./AccountPanel";
-import { deleteQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
+import { deleteGroupQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
 import { cloudContext } from "../game/account";
-import { accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
+import { accountBackupFile, accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { removeSlot, sendDeletes } from "../workers/cloud";
 
 declare const __TW_VERSION__: string | undefined;
@@ -89,7 +90,6 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   const [slots, setSlots] = useState(first0);
   const changed = slotsChanged.value;
   useEffect(() => { if (changed) void listSlots().then(setSlots, () => {}); }, [changed]);
-  const account = accountOnly(slots).map(cardOf);
   // T-1197: a saved game too big for this device is refused with the reason
   const [refused, setRefused] = useState<string | null>(null);
   const open = async (key: string) => {
@@ -130,6 +130,29 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     else pick(c);
   });
   const now = Date.now();
+  // T-2037: one card per game, its version with the latest player change on top
+  const backups = useBackups(slots.map((s) => s.key), slots.length);
+  const groups = groupVersions(slots, accountOnly(slots), backups, "", accountList.value?.games ?? []);
+  const wait = () => Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
+  const chose = (c: GameChoice | string) => { if (typeof c === "string") return c; pick(c); return ""; };
+  const actions = (g: GameGroup): VersionActions => ({
+    open: async (v) => {
+      if (v.kind === "slot") { await open(v.slot.key); return ""; }
+      if (v.kind === "account") { await open("account:" + v.game.id); return ""; }
+      await wait();
+      if (v.kind === "backup") return chose(await backupChoice(v.backup.key, v.slot.key));
+      const file = await accountBackupFile(v.game.id, g.top.kind === "slot" ? g.top.slot.name : g.top.game.name, v.backup);
+      return file ? chose(await fileChoice(file, { origin: g.origin, edit: v.backup.savedAt * 1000 })) : "This backup could not be downloaded.";
+    },
+    remove: async (v) => {
+      if (v.kind === "slot" || v.kind === "account") await remove(v.kind === "slot" ? v.slot : cardOf(v.game));
+      return "";
+    },
+  });
+  const removeGroup = async (g: GameGroup) => {
+    setRemoving(null);
+    for (const v of groupHeads(g)) await remove(v.kind === "slot" ? v.slot : cardOf(v.game));
+  };
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
   // T-1567: the logo stays mounted over both, so its trains run on when the sheet opens
   // with the logo the welcome heading goes (Anita), the logo naming the menu
@@ -147,22 +170,26 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
         {returning && <button class="btn start-file" onClick={load}>Load from file</button>}
       </div>
       {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
-      {slots.length + account.length > 0 && <>
+      {groups.length > 0 && <>
         <h2 class="start-head">Saved games</h2>
         <ul class="start-saves">
-          {[...slots, ...account].map((s) => <li key={s.key}>
-            <div class="start-slot">
-              <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
-                <SlotThumb slot={s} />
-                <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
-              </button>
-              <button class="btn icon start-delete" data-tip="Delete" aria-label={`Delete ${s.name}`} onClick={() => setRemoving(s.key)}><Icon.bin /></button>
-            </div>
-            {removing === s.key && <div class="callout bad">
-              <p>{s.key.startsWith("account:") ? `Delete "${s.name}" from your account?` : deleteQuestion(s)}</p>
-              <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void remove(s)}>Delete save</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
-            </div>}
-          </li>)}
+          {groups.map((g) => {
+            const s = g.top.kind === "slot" ? g.top.slot : cardOf(g.top.game);
+            return <li key={g.origin} data-origin={g.origin} class={g.others.length ? "has-versions" : undefined}>
+              <div class="start-slot">
+                <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
+                  <SlotThumb slot={s} />
+                  <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
+                </button>
+                <button class="btn icon start-delete" data-tip="Delete" aria-label={`Delete ${s.name}`} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
+              </div>
+              <VersionsLine group={g} now={now} act={actions(g)} />
+              {removing === g.origin && <div class="callout bad">
+                <p>{deleteGroupQuestion(g)}</p>
+                <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void removeGroup(g)}>Delete save</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+              </div>}
+            </li>;
+          })}
         </ul>
       </>}
     </div>}

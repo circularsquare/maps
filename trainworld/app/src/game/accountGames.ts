@@ -5,7 +5,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { accountOpen, accountState, cloudContext, deviceId, forgetScoreSlots, session, signOut } from "./account";
-import { answerMerge, changedHere, deleteGame, downloadGame, ELSEWHERE_MS, fetchBackup, forkName, gamePicture, listGames, settle, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
+import { answerMerge, changedHere, deleteGame, downloadGame, ELSEWHERE_MS, fetchBackup, gamePicture, listGames, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
 import { deleteSlot, leaseSlot, listSlots, readStored, readSync, type SaveSlot } from "../workers/saveFile";
 import { clockRunning, importGame, leaveToMenu, postAccount, saveSlotsState } from "../workers/clockClient";
 
@@ -98,6 +98,7 @@ async function settleNow(): Promise<void> {
   await accountKnown();
   if (removing()) return removeOnStart();
   const ctx = cloudContext();
+  if (!ctx?.on && !picked) await stampAll(null); // T-2037: signed in, `settle` stamps with the account's list
   if (!ctx?.on || picked) return;
   // once a game is picked no other slot is locked here, so the clock worker can take the picked one
   const list = await settle(ctx, "", () => picked).catch(() => null);
@@ -110,7 +111,7 @@ async function settleNow(): Promise<void> {
 /** An account game downloaded into a new slot; its key, or null with nothing done. */
 export async function downloadAccountGame(g: AccountGame): Promise<string | null> {
   const ctx = cloudContext();
-  return ctx?.on ? downloadGame(ctx, g) : null;
+  return ctx?.on ? downloadGame(ctx, g, accountList.peek()) : null;
 }
 
 /** An account game not in this browser deleted from the account. */
@@ -165,15 +166,21 @@ export function accountBackups(slot: SaveSlot | undefined): AccountBackup[] | nu
   return g ? g.backups ?? [] : null;
 }
 
-/** An account backup opened as a new saved game, named as a restored backup is ("Tokyo at 9:41 AM"),
- * the game in hand saved first; the copy goes on the account as a game of its own. False if the backup
- * could not be downloaded. */
-export async function restoreAccountBackup(slot: SaveSlot, b: AccountBackup): Promise<boolean> {
+/** An account backup of game `id` as a file named `name`, or null if it could not be downloaded. */
+export async function accountBackupFile(id: string, name: string, b: AccountBackup): Promise<File | null> {
   const ctx = cloudContext();
-  if (!ctx?.on || !slot.cloud) return false;
-  const bytes = await fetchBackup(ctx, slot.cloud.id, b.rev);
-  if (!bytes) return false;
-  await importGame(new File([bytes as BlobPart], `${forkName(slot.name, b.savedAt * 1000)}.save`));
+  if (!ctx?.on) return null;
+  const bytes = await fetchBackup(ctx, id, b.rev);
+  return bytes ? new File([bytes as BlobPart], `${name}.save`) : null;
+}
+
+/** An account backup opened as a new version of game `origin` under its name (T-2037), the game in
+ * hand saved first; it goes on the account as a game of its own. False if the backup could not be
+ * downloaded. */
+export async function restoreAccountBackup(id: string, name: string, origin: string, b: AccountBackup): Promise<boolean> {
+  const file = await accountBackupFile(id, name, b);
+  if (!file) return false;
+  await importGame(file, { origin, edit: b.savedAt * 1000 });
   return true;
 }
 

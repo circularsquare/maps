@@ -662,7 +662,11 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   first [T-743; the slot rules in architecture.md]. On a test page, whose game has no card, a copy
   icon (hover "Make a copy") follows them. Each of these, and Open and Open as a copy, reloads the
   page into its game ("Loading" below).
-- One card per browser slot: a 204 x 136 picture of its network, drawn by the clock worker when the
+- One card per game [T-2037; architecture.md "Versions of one game"]: every slot of one origin,
+  the account's games of it not in this browser and their backups are one card, showing the slot
+  being played if it is one of them, else the version with the latest player change; the card is
+  that version's (its name, picture, facts and buttons). Cards are ordered by their latest save,
+  newest first. A card's picture is a 204 x 136 picture of its network, drawn by the clock worker when the
   slot is saved, at 480 x 320, on the land colour of the theme it was saved in [T-543]. The card
   shows it in the theme now set, whichever it was saved in: the page recolours the picture's land,
   rule and grey track to the other theme's and leaves the lines' colours, and the names over it use
@@ -684,14 +688,18 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   saved. Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
   - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
     (hover "Make a copy"), download (hover "Download as a file", `trainsworld-nyc-day-12.save`),
-    clock (hover "Earlier versions"), bin (hover "Delete", asked first: `Delete "Tokyo" from this
-    browser? The game ends and you go back to the start menu.`, from this browser and your account
-    when tied) and Save [T-1852]. Deleting the game being played removes the slot, its backups and
-    the account's copy, stops autosave writing it again, and reloads the page to the start menu as a
-    page opened with no game chosen (`ClockClient.leave`, worker `deletePlaying`).
+    bin (hover "Delete", asked first: `Delete "Tokyo" from this browser? The game ends and you go
+    back to the start menu.`, from this browser and your account when tied) and Save [T-1852].
+    Deleting the game being played removes the slot, its backups and the account's copy, stops
+    autosave writing it again, and reloads the page to the start menu as a page opened with no game
+    chosen (`ClockClient.leave`, worker `deletePlaying`).
   - **Every other card in this browser**: download (its last save in this browser, read from
     storage) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
     loads it).
+  - **A card's bin deletes the game**: every version, after `Delete "Tokyo" and its 3 other
+    versions from this browser and your account?` (or "from this browser", "from your account" as
+    the versions are kept; the Playing card's adds "The game ends and you go back to the start
+    menu."); the game being played goes last.
 - **Rename** [T-1247]: the pencil or a double click on a card's name (any card) puts a box in its
   place with the name selected; Enter or leaving the box renames, Escape puts the name back.
 - **Make a copy** [T-1395]: the copy is made at once, named "<game> copy", and becomes the Playing
@@ -716,22 +724,28 @@ tab, as beside Lines and Stations. With no built station the tab reads "No stati
   only, made signed out, or another account's) has a crossed cloud after its name (hover "Only in
   this browser"); on one tied to no account it is a button (hover "Only in this browser. Click to
   add it to your account.") that adds the game, which goes up at once [T-988 stage 3; the start
-  menu's cloud is not a button]. After the browser's cards, the account's games not in this
-  browser: the server's picture and facts, a cloud after the name (hover "On your account. Open
-  downloads it here."), bin (hover "Delete", asked first: "Delete "Tokyo" from your account?") and
-  Open (downloads it into a new slot and opens it as Open does). Deleting a tied slot asks "Delete
-  "Tokyo" from this browser and your account?".
-- **Earlier versions** [T-744, T-988 stage 3, T-1395, T-1826]: the clock icon lists them under the
-  Playing card (the icon lit while open; open or shut is kept for the visit), newest first, each
-  by its age, "Just now", "12 min ago", "3 h ago", "2 days ago", "3 weeks ago" (the exact time on
-  hover), with Open as a copy, which closes the panel and opens it in a new slot, named "<game> at
-  2:05 PM" (an earlier restore's time dropped). One list holds this browser's backups (up to four
-  tiers reaching back about 10 minutes, an hour, a day and a week, and the one from before the
-  account's copy last replaced the slot, whose hover says so; "· Day 26" after each) and, while the
-  game is on the account signed in and the account listed it, the account's two, a small cloud
-  after their age (their Open as a copy downloads it and opens it as Open a file does, a new game
-  on the account; a failed download says "This backup could not be downloaded."). With none yet
-  the list says "No earlier versions yet".
+  menu's cloud is not a button]. A game whose versions are all on the account and none in this
+  browser is a card of the server's picture and facts, a cloud after the name (hover "On your
+  account. Open downloads it here."), bin (hover "Delete", asked first: "Delete "Tokyo" from your
+  account?") and Open (downloads it into a new slot and opens it as Open does). Deleting a tied
+  slot asks "Delete "Tokyo" from this browser and your account?".
+- **Other versions** [T-2037, replacing T-1395's Earlier versions icon; `VersionsLine`]: a card
+  with more than one version ends in a line "3 other versions" ("1 other version") with a chevron
+  before it; a click opens or shuts the list under it (kept per game for the visit, in the panel
+  and the start menu alike). The list is every other version, newest save first, one row each:
+  "Saved today at 14:05 · Day 26 · 164 stations" (the day and stations where the version knows
+  them), a bin for a slot or an account game (asked first in the row: `Delete this version from this
+  browser?`, "from this browser and your account?", "from your account?", with Delete version and
+  Keep it), and Open. The versions are the game's other slots in this browser (Open opens that slot,
+  which stays as it was until changed), its account games not in this browser (a cloud after the
+  text, hover "On your account. Open downloads it here."; Open downloads it into a new slot), each
+  slot's backups but those that are the slot's own version (its save time, or its latest player change with only the clock run since; up to four tiers reaching back about 10 minutes, an hour, a day and a week, hover
+  "A backup in this browser", and the one from before the account's copy last replaced the slot,
+  hover "This browser's copy before your account's replaced it") and, signed in, the account's
+  backups of each of its account games (time only; a cloud, hover "A backup on your account").
+  Opening a backup makes a new slot under the game's name, another version of it. Nothing opened
+  writes over another version. A failed download says "This game could not be downloaded." or
+  "This backup could not be downloaded.".
 - **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
   top bar and the callout say "This game was saved by a newer version. Reload the page to
   update."; Save refuses with the same words (its hover too). Download's hover is "Download as a
@@ -836,11 +850,12 @@ registry centre and zoom, or over New York with none [T-310].
 
 - Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
   no tagline [T-1710] (the account button at
-  its top right when accounts are on [T-972]), New game at the top, then "Saved games", one button per browser slot, the most recent first, each with the
-  saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
+  its top right when accounts are on [T-972]), New game at the top, then "Saved games", one card per game as in the saves panel (T-2037: the version with the latest player change on top, the latest save first), each a button with the
+  saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash), and under it, joined to it, the saves panel's "3 other versions" line and list (above).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
-  that, 10 s at most), and the account's games not in this browser follow the browser's as cards
-  with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
+  that, 10 s at most), and a game only on the account is a card with a cloud (hover "On your
+  account"); a click downloads it into a new slot and opens it. A backup opened from the list waits
+  as a file does (`pending-load`) and opens in a new slot.
   With no saved game and no game played here before (a first visit) it opens straight on the new
   game sheet [T-1441, T-1612]. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it is centred around 10° E, 20° N one zoom closer
@@ -862,11 +877,12 @@ registry centre and zoom, or over New York with none [T-310].
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
 - **Delete and Load from file** [T-1612; the same code as the saves panel's: `removeSlot`,
-  `deleteQuestion`, `pickSaveFile`]. Every card has the panel's bin at its bottom right (hover
+  `deleteGroupQuestion`, `pickSaveFile`]. Every card has the panel's bin at its bottom right (hover
   "Delete"); it asks under the card, `Delete "Tokyo" from this browser?` (from this browser and your
-  account when the slot is tied to it; `Delete "Tokyo" from your account?` for an account-only card), with
-  Delete save and Keep it, and the card goes at once, the account's copy with it (now, or at the next
-  chance). A slot open in another tab says so and stays. Load from file (beside New game) is shown
+  account when the slot is tied to it; `Delete "Tokyo" from your account?` for an account-only card;
+  `Delete "Tokyo" and its 3 other versions from ...` with more than one version, T-2037), with
+  Delete save and Keep it, and the card goes at once with every version, the account's copies with
+  it (now, or at the next chance). A slot open in another tab says so and stays. Load from file (beside New game) is shown
   to a returning visitor only: one with a saved game here or on the account, or whose browser has played
   a game before (the remembered last slot, even once every save is deleted); a first visit sees only New
   game, and a returning visitor with no saves opens on the menu, not the sheet. A .save file goes to a
