@@ -480,6 +480,33 @@ trains are timetabled:
 One line alone has no queueing delay (its trains are evenly spaced) until it is over capacity. A
 90 s junction shared by two equal lines: 27 s at 75%, 81 s at 90%, ~3 min at 100%, ~7 min at 110%.
 
+**Behind slower trains** (T-1924, notes/T-1900.md N1; Anita 2026-11-02). A faster line on a stretch
+of track it shares with a slower one in the same direction catches it up and follows it: there are
+no passing tracks (T-1927 is the someday reach goal). A shared stretch is a run of path entries both
+lines take one after the other (same edge, same direction), cut where either turns back or they part.
+Quad track is two edges, so lines on its two pairs share nothing and an express on its own pair keeps
+its speed. Over the stretch the slower line takes `D` longer than the faster one from their free
+profiles (leaving the entry; the faster one reaching the exit, the slower one leaving it), with
+headway `H` and the spacing a train behind it keeps `s` (the section occupancy above at its top speed
+there). The faster train meets the slower ones at a random place in their headway, so its loss on
+average is `D - (H - s)/2` when `D >= H - s` (it always catches up and ends at the slower line's time
+less a minute or two), else `D² / 2(H - s)` (some trips get through first). Slower lines are taken
+together from the slowest: for each, the loss behind those at least as slow with their trains
+summed; the largest counts (`capacity::follow_loss`). A high-speed train behind ordinary trains on
+high-speed track counts the same way. Stretches of one direction with different slower lines that
+overlap are one resource (`ResKind::Follow`, wire kind 11, `build_follow`), with no utilisation, so
+no map dot, and it neither fills nor caps track. The loss is a hold like the others, so it is in round
+trips, trains needed, average speed and demand. It waits outside the stations the slower trains stop
+at on the stretch (its own platform where it stops there too; never the first, never where the slower
+line ends), else at its own stops there, else halfway: shared out over evenly spaced places, at least
+90 s each and at most 4 places a stretch (`FOLLOW_SPLIT_S`, `FOLLOW_WAITS_MAX`; each place is a stop in
+the run profile, whose cost grows with the stops in a hop). Worked example (20 km, a station every
+km, 10 locals an hour, 6 expresses from end to end, double track, `express_behind_local_takes_about_
+its_time`): the local takes 33.3 min one way, the express 8.4 min free and 31.3 min behind it. With the
+formula alone, the note's 80 km/h figures (16.5 min longer, a local every 6 min, 1m47s spacing) give
+a 14.4 min loss. A line's following losses are built again whenever any edge it runs over is (the
+slower line's path and stops change its `D`), and solved again when a line on them is rescheduled.
+
 **No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
 on every resource but a station crossover (whose load counts through trains that never meet),
 `rho` stops at 100%. Where the lines a resource carries want more, each line's rate is scaled down
@@ -676,7 +703,19 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   without trains, high demand before an empty evening) departs until its own end, so the line's last
   trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
   A whole-line fleet's reverse departures are offset by the forward trip so
-  each train turns straight back. When the pattern changes (a new period, or an edit) a new
+  each train turns straight back. **Spaced from other lines** (T-1925, notes/T-1900.md D1): every
+  departure of a level, both runs, leaves a phase after those times, under a headway
+  (`Network::line_phase`, `Lattice::phase`), picked so the line's trains and those of each line it
+  shares track, a platform or a flat junction move with reach the first place they meet as far apart
+  as they can (`spacing::place`: per train of an hour, how far it falls short of half the smaller
+  headway from the other line's nearest there, squared, summed; 24 phases tried a headway). Greedy on
+  edits: only the lines an edit changes directly are placed, in id order, against the others as they
+  run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
+  track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
+  history (a refused or trial edit puts the phases back), saved in a trailing `LPH1` block and in the
+  eras (`ERA2`); a save without them has every line placed once, in id order, on load. Riders' waits
+  are by headway, so demand does not move; it cannot keep an express from catching a local far down a
+  long stretch (the following loss's stops above show it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains
   never leave a terminal in pairs.
 - **Trains join and leave at the ends** (T-206, notes/T-206.md). An edit that changes a running

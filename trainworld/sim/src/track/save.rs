@@ -34,12 +34,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 10] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1"];
+pub const BLOCKS: [&[u8; 4]; 11] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 1;
+pub const LEVEL: u32 = 2;
 
 struct W(Vec<u8>);
 impl W {
@@ -330,6 +330,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-1925: the lines' departure phases, after LOR1 and only when some line has one: count, then
+    // per line its index and three f32 bits
+    let phased: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_phase_of(l))).filter(|x| x.1 != [0.0; 3]).collect();
+    if !phased.is_empty() {
+        w.0.extend_from_slice(b"LPH1");
+        w.u(phased.len() as u64);
+        for (i, p) in phased {
+            w.u(i as u64);
+            for x in p { w.u(x.to_bits() as u64); }
+        }
+    }
     w.0
 }
 
@@ -584,6 +595,17 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if kind == 0 { net.line_rank = rank } else { net.node_rank = rank }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LPH1") {
+        r.1 += 4;
+        let mut phase = vec![[0.0f32; 3]; n_lines];
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
+            if i < n_lines { phase[i] = p; }
+        }
+        net.line_phase = phase;
+        net.phases_placed = true;
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -677,6 +699,6 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (1, 10), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (2, 11), "a new block raises LEVEL: raise it, then update this pin");
     }
 }

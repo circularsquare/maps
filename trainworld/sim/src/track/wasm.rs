@@ -108,17 +108,20 @@ pub struct TrackApi {
 
 /// T-1071: the end of a track save that carries the service's eras (`Service::encode_eras`):
 /// the eras, their length as a u32, then this tag. The network's decoder stops before them.
-const ERAS_TAG: &[u8; 4] = b"ERA1";
+/// `ERA2` (T-1925) eras carry departure phases; `ERA1`, older saves', do not.
+const ERAS_TAG: &[u8; 4] = b"ERA2";
+const ERAS_TAG_1: &[u8; 4] = b"ERA1";
 
-/// A save's network bytes and its eras, if it has any.
-fn split_eras(bytes: &[u8]) -> (&[u8], Option<&[u8]>) {
+/// A save's network bytes and its eras, if it has any, and whether they carry phases.
+fn split_eras(bytes: &[u8]) -> (&[u8], Option<(&[u8], bool)>) {
     let n = bytes.len();
-    if n < 8 || &bytes[n - 4..] != ERAS_TAG {
+    if n < 8 || (&bytes[n - 4..] != ERAS_TAG && &bytes[n - 4..] != ERAS_TAG_1) {
         return (bytes, None);
     }
+    let phases = &bytes[n - 4..] == ERAS_TAG;
     let len = u32::from_le_bytes(bytes[n - 8..n - 4].try_into().unwrap()) as usize;
     match (n - 8).checked_sub(len) {
-        Some(start) => (&bytes[..start], Some(&bytes[start..n - 8])),
+        Some(start) => (&bytes[..start], Some((&bytes[start..n - 8], phases))),
         None => (bytes, None),
     }
 }
@@ -518,8 +521,8 @@ impl TrackApi {
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();
                 // a save made while trains changed over loads with them where they were (T-1071)
-                if let Some(e) = eras {
-                    if self.w.svc.decode_eras(e).is_err() {
+                if let Some((e, phases)) = eras {
+                    if self.w.svc.decode_eras(e, phases).is_err() {
                         self.w.svc.eras.clear();
                         self.w.svc.shifts.clear();
                     }

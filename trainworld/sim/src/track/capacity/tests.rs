@@ -510,3 +510,111 @@ fn loops_join_sections_and_update_incrementally() {
     line(&mut v, &[m, k], [6.0, 3.0, 0.0]);
     same_as_global(&v, "balloon and a line onto its loop");
 }
+
+/// T-1924: the formula of notes/T-1900.md's worked example: 16.5 minutes longer, a local every 6
+/// minutes, 1m47s spacing: the express loses 14.4 minutes on average; behind a local once an hour,
+/// only some trips catch it up.
+#[test]
+fn following_loss_formula() {
+    use super::super::tests::world;
+    let mut w = world();
+    let (f, s) = (w.net.alloc_line(), w.net.alloc_line());
+    w.net.line_tph[f as usize] = [6.0, 6.0, 0.0];
+    w.net.line_tph[s as usize] = [10.0, 1.0, 10.0];
+    let us = [
+        User { line: f, run: 0, owner: true, occ: 0.0, at: 100.0, stop: -1 },
+        User { line: s, run: 0, owner: false, occ: 990.0, at: 107.0, stop: -1 },
+    ];
+    let (high, who) = follow_loss(&us, &w.net, 0);
+    assert!((high - (990.0 - (360.0 - 107.0) / 2.0)).abs() < 1e-9, "{high}");
+    assert_eq!(who, s);
+    let (rare, _) = follow_loss(&us, &w.net, 1);
+    assert!((rare - 990.0 * 990.0 / (2.0 * (3600.0 - 107.0))).abs() < 1e-9, "{rare}");
+    assert_eq!(follow_loss(&us, &w.net, 2).0, 0.0, "no express trains, no loss");
+}
+
+/// A straight 20 km double track with a station every km (stops `n[0..=20]`), and a second
+/// double track beside it with stations only at its ends (`q`), as an express pair of quad track
+/// is: separate edges.
+fn twenty_km() -> (TrackWorld, Vec<u32>, [u32; 2]) {
+    use super::super::tests::{edge, node, station, world};
+    let mut w = world();
+    let n: Vec<u32> = (0..=20).map(|k| node(&mut w, k as f64 * 1000.0, 0.0, 0)).collect();
+    for k in 0..20 { edge(&mut w, n[k], n[k + 1], &[], 0).unwrap(); }
+    for &x in &n { station(&mut w, x, 200); }
+    let q = [node(&mut w, 0.0, 400.0, 0), node(&mut w, 20000.0, 400.0, 0)];
+    edge(&mut w, q[0], q[1], &[], 0).unwrap();
+    for &x in &q { station(&mut w, x, 200); }
+    (w, n, q)
+}
+
+/// T-1924: an express behind a local on 20 km of shared double track takes about the local's time;
+/// on its own track (quad track's other pair) it keeps its speed. Its loss waits outside the
+/// stations the local stops at, never as one long stop at the start.
+#[test]
+fn express_behind_local_takes_about_its_time() {
+    use super::super::tests::line;
+    let (mut w, n, q) = twenty_km();
+    let local = line(&mut w, &n, [10.0, 4.0, 0.0]);
+    let express = line(&mut w, &[n[0], n[20]], [6.0, 2.0, 2.0]);
+    let own = line(&mut w, &q, [6.0, 2.0, 2.0]);
+    same_as_global(&w, "express and local");
+    let dur = |w: &TrackWorld, l: u32, lev: usize| w.svc.lines[l as usize].runs[0].prof[lev].duration;
+    let (lo, ex, free) = (dur(&w, local, 0), dur(&w, express, 0), dur(&w, own, 0));
+    eprintln!("high: local {:.0} s, express {:.0} s (free {:.0} s), own track {:.0} s", lo, ex, w.svc.lines[express as usize].runs[0].free.duration, free);
+    assert!(ex > lo - 300.0 && ex < lo, "the express follows the local: {ex} against {lo}");
+    assert!((free - w.svc.lines[own as usize].runs[0].free.duration).abs() < 30.0, "own track: no loss");
+    assert!(!w.svc.cap.res.iter().zip(&w.svc.cap.tag).any(|(_, t)| matches!(t, Tag::Follow { line } if *line == own)));
+    assert!(w.svc.cap.res.iter().zip(&w.svc.cap.tag).all(|(_, t)| !matches!(t, Tag::Follow { line } if *line == local)), "the local is never behind the express");
+    // the loss waits outside stations along the way, none of it at the first stop
+    let run = &w.svc.lines[express as usize].runs[0];
+    assert_eq!(run.holds[0].iter().filter(|h| h.delay >= FOLLOW_SPLIT_S).count(), FOLLOW_WAITS_MAX, "spread over several stations");
+    assert_eq!(run.stop_holds[0][0], 0.0);
+    eprintln!("holds {:?}", run.holds[0].iter().map(|h| (h.s.round(), h.delay.round())).collect::<Vec<_>>());
+    // (queueing holds on the shared track wait at its entry, before the first stop; the
+    // following loss's are all along the way)
+    assert_eq!(run.holds[0].iter().filter(|h| h.s > 500.0 && h.s < 19500.0 && h.delay >= FOLLOW_SPLIT_S).count(), run.holds[0].iter().filter(|h| h.delay >= FOLLOW_SPLIT_S).count());
+    // at medium the locals run every 15 minutes: some trips get through first, so it loses less
+    let (lo1, ex1) = (dur(&w, local, 1), dur(&w, express, 1));
+    assert!(ex1 < ex - 60.0 && ex1 < lo1, "medium: express {ex1}, high {ex}");
+    // at low no local runs: no loss
+    assert!((dur(&w, express, 2) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0);
+    // the panel's split names the local
+    let r = (0..w.svc.cap.res.len()).find(|&r| matches!(w.svc.cap.tag[r], Tag::Follow { line } if line == express)).unwrap();
+    assert_eq!(w.svc.cap.follow_leader(&w.net, r, 0), Some(local));
+    assert_eq!(w.svc.cap.wire_kind(r), 11);
+    // the local's schedule moves the express; removing the local frees it
+    w.apply(Op::Schedule { id: local, tph: [4.0, 4.0, 0.0] }).unwrap();
+    same_as_global(&w, "fewer locals");
+    assert!(dur(&w, express, 0) < ex - 60.0);
+    w.apply(Op::Line { id: local, data: None }).unwrap();
+    same_as_global(&w, "no local");
+    assert!((dur(&w, express, 0) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0);
+    w.undo().unwrap().unwrap();
+    same_as_global(&w, "local back");
+}
+
+/// T-1924: a high-speed train behind ordinary trains on high-speed track loses time too.
+#[test]
+fn high_speed_behind_ordinary_trains() {
+    use super::super::tests::{line, node, station, world};
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 60000.0, 0.0, 0);
+    let id = w.net.alloc_edge();
+    w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a, b, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: true, sep: false }) }).unwrap();
+    station(&mut w, a, 200);
+    station(&mut w, b, 200);
+    let slow = line(&mut w, &[a, b], [8.0, 0.0, 0.0]);
+    let fast = line(&mut w, &[a, b], [4.0, 0.0, 0.0]);
+    let mut d = w.net.line_data(fast).unwrap();
+    d.fast = true;
+    w.apply(Op::Line { id: fast, data: Some(d) }).unwrap();
+    same_as_global(&w, "high speed");
+    let run = &w.svc.lines[fast as usize].runs[0];
+    let slow_run = &w.svc.lines[slow as usize].runs[0];
+    eprintln!("high speed {:.0} s (free {:.0} s), ordinary {:.0} s", run.prof[0].duration, run.free.duration, slow_run.prof[0].duration);
+    assert!(run.free.duration < slow_run.free.duration - 500.0);
+    assert!(run.prof[0].duration > run.free.duration + 300.0, "it is held behind the ordinary trains");
+    assert!(run.prof[0].duration < slow_run.prof[0].duration);
+}

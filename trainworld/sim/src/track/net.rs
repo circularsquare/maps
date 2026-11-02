@@ -404,6 +404,13 @@ pub struct Network {
     /// Outside the undo history, like the sort it replaces.
     pub line_rank: Vec<u32>,
     pub node_rank: Vec<u32>,
+    /// T-1925: by line id, how many seconds after its pattern's own times each level's departures
+    /// leave, so lines sharing track or a flat junction do not leave together (`spacing::place`);
+    /// shorter than a missing entry is 0. Outside the undo history; saved in `LPH1`.
+    pub line_phase: Vec<[f32; 3]>,
+    /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
+    /// reload keeps it rather than placing every line
+    pub phases_placed: bool,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -545,6 +552,10 @@ impl Network {
         self.frame
     }
 
+    /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
+    pub fn line_phase_of(&self, l: u32) -> [f32; 3] {
+        self.line_phase.get(l as usize).copied().unwrap_or([0.0; 3])
+    }
     /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
     /// stop's. 0 without a time zone table or stops.
     pub fn line_shift(&self, l: u32) -> f64 {
@@ -664,6 +675,8 @@ impl Network {
             line_group_look: vec![],
             line_rank: vec![],
             node_rank: vec![],
+            line_phase: vec![],
+            phases_placed: false,
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),

@@ -145,6 +145,7 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
     for lev in 0..LEVELS {
         add(lat.tph[lev].to_bits() as u64);
         add(lat.off[lev].to_bits());
+        add(lat.phase[lev].to_bits());
     }
     add(lat.lead.to_bits());
     for r in 0..2 {

@@ -129,6 +129,20 @@ impl TrackWorld {
         self.net.derive(&t);
         self.svc.update_all(&self.net);
         self.settle_train_counts(!self.net.rates_from_save);
+        // T-1925: a network without phases (an older save, a new world) has every line placed once,
+        // in id order; a reload for new water keeps them
+        if !self.net.phases_placed {
+            let all: Vec<u32> = (0..self.net.line_count() as u32).collect();
+            self.place_departures(&all);
+            self.net.phases_placed = true;
+        }
+    }
+
+    /// T-1925: place `lines`' departures (`spacing::place`) into `Network::line_phase`.
+    fn place_departures(&mut self, lines: &[u32]) {
+        let mut phase = std::mem::take(&mut self.net.line_phase);
+        super::spacing::place(&self.net, &self.svc, lines, &mut phase);
+        self.net.line_phase = phase;
     }
 
     /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
@@ -368,11 +382,14 @@ impl TrackWorld {
     /// a network in debt can still be edited. `final_` edits clear the undo history (SPEC 6.4);
     /// the others go on the undo stack. Returns the result and what `extra` came to.
     pub fn apply_paid(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<(EditResult, f64), ChargeError> {
+        let phases = self.net.line_phase.clone();
         let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         let x = extra(self);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
             let _ = self.restore(inv);
+            // T-1925: and the departures as they were
+            self.net.line_phase = phases;
             return Err(ChargeError::Money { need, have: cash });
         }
         if final_ {
@@ -389,6 +406,7 @@ impl TrackWorld {
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
         let op = if redo { self.redo.pop()? } else { self.undo.pop()? };
         let back = |w: &mut TrackWorld, op: Op| if redo { w.redo.push(op) } else { w.undo.push(op) };
+        let phases = self.net.line_phase.clone();
         Some(match self.restore(op.clone()) {
             Ok((mut r, inv)) => {
                 // what an undo or redo restores was paid for or removed before: only the trains
@@ -396,6 +414,7 @@ impl TrackWorld {
                 let need = extra(self);
                 if need > 1e-9 && need > cash + 1e-6 {
                     let _ = self.restore(inv);
+                    self.net.line_phase = phases;
                     back(self, op);
                     Err(ChargeError::Money { need, have: cash })
                 } else {
@@ -427,9 +446,11 @@ impl TrackWorld {
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
+        let phases = self.net.line_phase.clone();
         let (r, inv) = self.commit(op)?;
         let value = inspect(self);
         let _ = self.restore(inv);
+        self.net.line_phase = phases;
         Ok((r, value))
     }
 
@@ -548,6 +569,8 @@ impl TrackWorld {
         direct.extend_from_slice(&t.schedules);
         direct.sort_unstable();
         direct.dedup();
+        // T-1925: the lines the edit changed take departure slots among the others
+        self.place_departures(&direct);
         let mut resources = vec![];
         for (r, res) in self.svc.cap.res.iter().enumerate() {
             let on_track = (res.edge != u32::MAX && der.edges.binary_search(&res.edge).is_ok())

@@ -355,7 +355,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   own"), a bar ("4 crosses at 149 St", and for a line met before with too wide a gap, where it left
   and how far its track strays; "Hook stops at Union Sq twice" for the line's own).
   A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
-  naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  naming where it waits most [T-031]. Time following slower trains on shared track is its own row,
+  "Behind slower trains", apart from "Waiting at busy track", and its places name the line ahead
+  ("Behind J trains") [T-1924]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); its trains steppers move by 2 and the count's hover says how many run each way; the

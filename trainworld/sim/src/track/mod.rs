@@ -46,6 +46,7 @@ pub mod profile;
 pub mod related;
 pub mod save;
 pub mod service;
+pub mod spacing;
 pub mod span;
 pub mod streets;
 pub mod trace;

@@ -30,9 +30,16 @@ pub enum ResKind {
     Junction,
     /// One direction of one route through a flat crossing, loaded by the other route.
     Crossing,
+    /// T-1924: a faster line's direction behind slower lines on a stretch of track it shares
+    /// with them, where it catches them up and follows (the following loss, notes/T-1900.md N1).
+    Follow,
 }
 
 /// A line direction using a resource. Owners get the delay; the others only load it.
+/// On a `ResKind::Follow` resource (T-1924) the owners are the faster line's places to wait (its
+/// loss is shared out between some of them, `holds_for`) with `occ` 0, and each other user is a
+/// slower line ahead: `occ` is how much longer it takes over the shared stretch (s), `at` the
+/// spacing a train following it keeps (s).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct User {
     pub line: u32,
@@ -79,6 +86,9 @@ enum Tag {
     Sidings,
     /// A flat crossing of `Resource::edge` with `other`.
     Crossing { other: u32 },
+    /// T-1924: line `line`'s following loss on one stretch (`build_follow`); rebuilt whenever any
+    /// edge the line runs over is.
+    Follow { line: u32 },
 }
 
 /// Every resource with its users, utilisation and delay. Resource indices are valid until the
@@ -117,14 +127,16 @@ impl Capacity {
 
     /// Whether the resource caps throughput (T-517). A station crossover's load counts through
     /// trains that never conflict with each other, so it only delays.
+    /// A following loss (T-1924) neither fills nor caps anything either.
     pub fn limits(&self, r: usize) -> bool {
-        !matches!(self.tag[r], Tag::Turnback { .. })
+        !matches!(self.tag[r], Tag::Turnback { .. } | Tag::Follow { .. })
     }
 
     /// The kind the app words alerts by (`ResKind as u8` for 0 to 5), finer where the cause differs:
     /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
     /// reversal crossing the other track at a through station, 9 lines reversing partway at a
-    /// station (T-797), 10 a terminal's sidings (T-1281).
+    /// station (T-797), 10 a terminal's sidings (T-1281), 11 a faster line held behind slower ones
+    /// (T-1924; never a map dot, its utilisation is 0).
     pub fn wire_kind(&self, r: usize) -> u8 {
         let kind = self.res[r].kind;
         match self.tag[r] {
@@ -132,6 +144,7 @@ impl Capacity {
             Tag::Turnback { .. } => 8,
             Tag::Reversal => 9,
             Tag::Sidings => 10,
+            Tag::Follow { .. } => 11,
             Tag::Section { .. } if kind == ResKind::Section => {
                 let users = self.users_of(r);
                 if users.iter().any(|u| u.line != users[0].line) { 7 } else { 0 }
@@ -731,6 +744,216 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
     }
 }
 
+/// When a run leaves offset `s` (after standing there), from its free profile.
+fn leave_at(run: &super::service::Run, s: f64) -> f64 {
+    let first = run.stop_s.first().copied().unwrap_or(0.0);
+    let last = run.stop_s.last().copied().unwrap_or(run.len);
+    profile::time_at(&run.free.phases, s.clamp(first, last))
+}
+
+/// When a run first reaches offset `s` (before standing there), from its free profile.
+fn reach_at(run: &super::service::Run, s: f64) -> f64 {
+    let first = run.stop_s.first().copied().unwrap_or(0.0);
+    let last = run.stop_s.last().copied().unwrap_or(run.len);
+    let s = s.clamp(first, last);
+    if s <= first { return 0.0; }
+    profile::time_at(&run.free.phases, (s - 0.5).max(first))
+}
+
+/// One shared stretch of a faster line's run behind one slower run: path entries `i0..=i1` of the
+/// faster run, `j0` of the slower one's first, how much longer the slower one takes over it, the
+/// spacing behind it, and the faster run's places to wait there.
+struct Stretch {
+    i0: usize,
+    i1: usize,
+    line: u32,
+    run: u8,
+    longer: f64,
+    spacing: f64,
+    waits: Vec<(f64, i32)>,
+}
+
+/// T-1924 (notes/T-1900.md N1): the following loss of each line in `owners` behind slower lines on
+/// track it shares with them in the same direction. A shared stretch is a run of path entries both
+/// lines take one after the other (same edge, same direction), cut where either turns back or they
+/// part; quad track is two edges, so lines on its two pairs share nothing. Stretches of one run
+/// with different slower lines that overlap are one resource. The faster line waits outside the
+/// stations the slower ones stop at on the stretch (at its own stop where it stops too), else at
+/// its own stops there, else halfway along.
+fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capacity) {
+    let mut occ: Vec<(u32, u32, u8, u32)> = vec![]; // path entry, line, run, entry index
+    let mut seen: Vec<u32> = vec![];
+    let mut chains: Vec<(u32, u8, usize, usize, usize)> = vec![]; // line, run, i0, j0, last i
+    let mut stretches: Vec<Stretch> = vec![];
+    let mut users: Vec<User> = vec![];
+    for &f in owners {
+        let Some(fs) = lines.get(f as usize).filter(|l| l.running && !l.is_bus()) else { continue };
+        // the lines on its track, indexed by path entry
+        seen.clear();
+        for &p in &fs.runs[0].segs {
+            for &l in net.lines_on_edge(path_edge(p)) {
+                if l != f && !seen.contains(&l) && lines.get(l as usize).is_some_and(|x| x.running && !x.is_bus()) {
+                    seen.push(l);
+                }
+            }
+        }
+        if seen.is_empty() {
+            continue;
+        }
+        seen.sort_unstable();
+        occ.clear();
+        for &l in &seen {
+            for (r, run) in lines[l as usize].runs.iter().enumerate() {
+                occ.extend(run.segs.iter().enumerate().map(|(j, &p)| (p, l, r as u8, j as u32)));
+            }
+        }
+        occ.sort_unstable();
+        for (fr, run) in fs.runs.iter().enumerate() {
+            stretches.clear();
+            chains.clear();
+            let ns = run.segs.len();
+            for i in 0..=ns {
+                // close the chains that do not carry on to entry i (or past the end)
+                let turn = i > 0 && i < ns && net.turns_back(run.segs[i - 1], run.segs[i]);
+                let mut k = 0;
+                while k < chains.len() {
+                    let (l, r, i0, j0, last) = chains[k];
+                    let next = if i < ns && !turn && last + 1 == i {
+                        let j = j0 + (i - i0);
+                        let s_run = &lines[l as usize].runs[r as usize];
+                        j < s_run.segs.len() && s_run.segs[j] == run.segs[i] && !net.turns_back(s_run.segs[j - 1], s_run.segs[j])
+                    } else {
+                        false
+                    };
+                    if next {
+                        chains[k].4 = i;
+                        k += 1;
+                        continue;
+                    }
+                    chains.swap_remove(k);
+                    let s_run = &lines[l as usize].runs[r as usize];
+                    let j1 = j0 + (last - i0);
+                    let (fa, fb) = (run.seg_off[i0], run.node_s[last + 1]);
+                    let (sa, sb) = (s_run.seg_off[j0], s_run.node_s[j1 + 1]);
+                    let longer = (leave_at(s_run, sb) - leave_at(s_run, sa)) - (reach_at(run, fb) - leave_at(run, fa));
+                    if longer < FOLLOW_MIN_S {
+                        continue;
+                    }
+                    let spacing = SECTION_BASE_S + profile::v_max(&s_run.free.phases, sa, sb) / SIGNAL_BRAKE;
+                    let back = lines[l as usize].train_len / 2.0 + fs.train_len / 2.0 + HOLD_MARGIN_M;
+                    let n_stops = run.stop_idx.len();
+                    let own_stop = |node: usize| run.stop_idx.iter().position(|&x| x as usize == node).filter(|&q| q > 0 && q + 1 < n_stops);
+                    let mut waits: Vec<(f64, i32)> = vec![];
+                    // where the slower line stops on the stretch; not its last stop, where it
+                    // leaves the platform to turn
+                    let s_last = s_run.stop_idx.last().map_or(usize::MAX, |&x| x as usize);
+                    for &kk in &s_run.stop_idx {
+                        let kk = kk as usize;
+                        if kk <= j0 || kk > j1 + 1 || kk == s_last {
+                            continue;
+                        }
+                        let node = i0 + (kk - j0);
+                        waits.push(match own_stop(node) {
+                            Some(q) => (run.stop_s[q], q as i32),
+                            None => (run.node_s[node] - back, -1),
+                        });
+                    }
+                    if waits.is_empty() {
+                        waits.extend((i0 + 1..=last).filter_map(|node| own_stop(node).map(|q| (run.stop_s[q], q as i32))));
+                    }
+                    if waits.is_empty() {
+                        waits.push((0.5 * (fa + fb), -1));
+                    }
+                    stretches.push(Stretch { i0, i1: last, line: l, run: r, longer, spacing, waits });
+                }
+                if i == ns {
+                    break;
+                }
+                // start chains for the runs on entry i that no chain carries on
+                let p = run.segs[i];
+                let a = occ.partition_point(|o| o.0 < p);
+                for o in occ[a..].iter().take_while(|o| o.0 == p) {
+                    let j = o.3 as usize;
+                    if chains.iter().any(|c| (c.0, c.1) == (o.1, o.2) && c.3 + (i - c.2) == j) {
+                        continue;
+                    }
+                    chains.push((o.1, o.2, i, j, i));
+                }
+            }
+            // overlapping stretches are one resource
+            stretches.sort_by(|a, b| (a.i0, a.i1, a.line, a.run).cmp(&(b.i0, b.i1, b.line, b.run)));
+            let mut g = 0;
+            while g < stretches.len() {
+                let mut end = g + 1;
+                let mut hi = stretches[g].i1;
+                while end < stretches.len() && stretches[end].i0 <= hi {
+                    hi = hi.max(stretches[end].i1);
+                    end += 1;
+                }
+                let mut waits: Vec<(f64, i32)> = stretches[g..end].iter().flat_map(|s| s.waits.iter().copied()).collect();
+                waits.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+                waits.dedup_by(|a, b| a.1 == b.1 && (a.1 >= 0 || (a.0 - b.0).abs() < 1.0));
+                users.clear();
+                users.extend(waits.iter().map(|&(at, stop)| User { line: f, run: fr as u8, owner: true, occ: 0.0, at, stop }));
+                users.extend(stretches[g..end].iter().map(|s| User { line: s.line, run: s.run, owner: false, occ: s.longer, at: s.spacing, stop: -1 }));
+                let mid = run.nodes[(stretches[g].i0 + hi + 1) / 2] as usize;
+                push_res(cap, ResKind::Follow, net.node_x[mid], net.node_y[mid], u32::MAX, path_edge(run.segs[stretches[g].i0]), &users, Tag::Follow { line: f });
+                g = end;
+            }
+        }
+    }
+}
+
+/// T-1924: a following resource's loss per train at a level, and the slower line that sets it
+/// (u32::MAX for none). A train of the faster line meets the slower trains at a random place in
+/// their headway `H`; over a stretch the slower one takes `D` longer on, it closes the gap less the
+/// spacing `s` it must keep and then follows: on average `D - (H - s)/2` when `D` is at least
+/// `H - s` (it always catches up), else `D² / 2(H - s)`. Slower lines are taken together from the
+/// slowest: the loss behind those at least as slow as each is worked out with their trains
+/// together, and the largest counts.
+pub fn follow_loss(us: &[User], net: &Network, lev: usize) -> (f64, u32) {
+    let Some(f) = us.iter().find(|u| u.owner) else { return (0.0, u32::MAX) };
+    if net.line_tph[f.line as usize][lev] <= 0.0 {
+        return (0.0, u32::MAX);
+    }
+    let mut slow: Vec<(f64, f64, f64, u32, u8)> = vec![]; // longer, spacing, tph, line, run
+    for u in us.iter().filter(|u| !u.owner) {
+        let tph = net.line_tph[u.line as usize][lev] as f64;
+        if tph <= 0.0 {
+            continue;
+        }
+        match slow.iter_mut().find(|x| (x.3, x.4) == (u.line, u.run)) {
+            Some(x) => {
+                if u.occ > x.0 {
+                    (x.0, x.1) = (u.occ, u.at);
+                }
+            }
+            None => slow.push((u.occ, u.at, tph, u.line, u.run)),
+        }
+    }
+    slow.sort_by(|a, b| b.0.total_cmp(&a.0).then((a.3, a.4).cmp(&(b.3, b.4))));
+    let (mut best, mut who, mut tph) = (0.0, u32::MAX, 0.0);
+    for &(d, s, t, l, _) in &slow {
+        tph += t;
+        let gap = (3600.0 / tph - s).max(0.0);
+        let loss = if d >= gap { d - 0.5 * gap } else { d * d / (2.0 * gap) };
+        if loss > best {
+            (best, who) = (loss, l);
+        }
+    }
+    (best, who)
+}
+
+impl Capacity {
+    /// T-1924: the slower line a following resource's loss is behind at a level, or None.
+    pub fn follow_leader(&self, net: &Network, r: usize, lev: usize) -> Option<u32> {
+        if !matches!(self.tag[r], Tag::Follow { .. }) {
+            return None;
+        }
+        Some(follow_loss(self.users_of(r), net, lev).1).filter(|&l| l != u32::MAX)
+    }
+}
+
 /// Every resource and who uses it, from the lines' runs (paths, stops, free profiles).
 pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
     let mut cap = Capacity::default();
@@ -738,6 +961,7 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
     build_sections(net, lines, &all, &|_| true, &mut cap);
     build_nodes(net, lines, &all, &|_| true, &mut cap);
     build_crossings(net, lines, &all, &|_| true, &mut cap);
+    build_follow(net, lines, &all, &mut cap);
     cap
 }
 
@@ -748,6 +972,14 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
     let by_line = matches!(tag, Tag::Reversal);
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
+    if let Tag::Follow { .. } = tag {
+        // T-1924: no utilisation, so no map dot; only the faster line's loss
+        for (lev, d) in delay_r.iter_mut().enumerate() {
+            let w = follow_loss(us, net, lev).0;
+            *d = if continuous { w } else if w.round() < HOLD_MIN_S { 0.0 } else { w.round() };
+        }
+        return (rho_r, delay_r);
+    }
     let mut owner_streams: Vec<((u32, u8), f64)> = vec![];
     for lev in 0..LEVELS {
         if turns.is_some_and(|n| !us[..n].iter().any(|u| net.line_tph[u.line as usize][lev] > 0.0)
@@ -860,6 +1092,16 @@ impl Capacity {
             }
         }
         let flag = |v: &[bool], i: u32| v.get(i as usize).copied().unwrap_or(true);
+        // T-1924: a line's following losses come from every line on its track, so all of them go
+        // and are built again when any edge it runs over is hot
+        let mut follow = vec![false; lines.len()];
+        for e in (0..ne).filter(|&e| he[e]) {
+            for &l in net.lines_on_edge(e as u32) {
+                if let Some(x) = follow.get_mut(l as usize) {
+                    *x = true;
+                }
+            }
+        }
 
         // ---- drop what the edit invalidates
         let mut affected = vec![false; lines.len()];
@@ -881,6 +1123,7 @@ impl Capacity {
                 }
                 Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal | Tag::Sidings => flag(&dn, self.res[r].node),
                 Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
+                Tag::Follow { line } => flag(&follow, line) || !lines.get(line as usize).is_some_and(|l| l.running),
             };
             if dead {
                 kill.push(r);
@@ -926,6 +1169,8 @@ impl Capacity {
         let sel = |x: &Crossing| flag(&de, x.e1) || flag(&de, x.e2);
         let c = cand(&mut net.crossings.iter().filter(|x| matches!(x.kind, CrossKind::Flat(_)) && sel(x)).flat_map(|x| [x.e1, x.e2]));
         build_crossings(net, lines, &c, &sel, self);
+        let owners: Vec<u32> = (0..lines.len() as u32).filter(|&l| follow[l as usize]).collect();
+        build_follow(net, lines, &owners, self);
 
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
@@ -1028,7 +1273,36 @@ pub fn holds_for(cap: &Capacity, lines: &[LineSvc], want: Option<&[bool]>) -> Ve
             std::array::from_fn(|r| std::array::from_fn(|_| (vec![], if wanted(l) { vec![0.0; ls.runs[r].stop_s.len()] } else { vec![] })))
         })
         .collect();
+    let mut waits: Vec<&User> = vec![];
     for r in 0..cap.res.len() {
+        if let Tag::Follow { line } = cap.tag[r] {
+            // T-1924: the loss shared out over evenly spaced places to wait, at least
+            // FOLLOW_SPLIT_S each, so a long stretch shows the faster train held outside
+            // station after station rather than once
+            if !wanted(line as usize) {
+                continue;
+            }
+            waits.clear();
+            waits.extend(cap.users_of(r).iter().filter(|u| u.owner));
+            let n = waits.len();
+            for lev in 0..LEVELS {
+                let d = cap.delay[r][lev];
+                if d <= 0.0 || n == 0 {
+                    continue;
+                }
+                let m = ((d / FOLLOW_SPLIT_S).floor() as usize).clamp(1, n.min(FOLLOW_WAITS_MAX));
+                for k in 0..m {
+                    let u = waits[(2 * k + 1) * n / (2 * m)];
+                    let slot = &mut out[u.line as usize][u.run as usize][lev];
+                    if u.stop >= 0 {
+                        slot.1[u.stop as usize] += d / m as f64;
+                    } else {
+                        slot.0.push(Hold { s: u.at, delay: d / m as f64 });
+                    }
+                }
+            }
+            continue;
+        }
         for u in cap.users_of(r) {
             if !u.owner || !wanted(u.line as usize) {
                 continue;

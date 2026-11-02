@@ -475,12 +475,17 @@ impl Boarding {
         for t in net.line_tph[l] {
             h.f(t as f64);
         }
+        // T-1925: the departure phases
+        for p in net.line_phase_of(l as u32) {
+            h.f(p as f64);
+        }
         // the patterns before recent changes (T-206): the account's day holds their departures
         for e in svc.eras_of(l) {
             h.f(e.until);
             for lev in 0..LEVELS {
                 h.f(e.lat.tph[lev] as f64);
                 h.f(e.lat.off[lev]);
+                h.f(e.lat.phase[lev]);
             }
             h.f(e.lat.lead);
             h.f(e.lat.shift);

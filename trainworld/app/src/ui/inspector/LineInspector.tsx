@@ -57,28 +57,38 @@ export function levelTimes(d: Demand): string {
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
 
-/** Where a line waits, in words (T-031): from `TrackApi.line_delays`. */
-function spotsFrom(d: Float64Array): { text: string; s: number }[] {
+/** Where a line waits, in words (T-031): from `TrackApi.line_delays`. `behind`: the part of its
+ * delay spent following slower trains on shared track (kind 11, T-1924), the rest is waiting at
+ * busy track. */
+interface Spots { spots: { text: string; s: number }[]; behind: number }
+function spotsFrom(d: Float64Array): Spots {
   const out: { text: string; s: number }[] = [];
   const st = stationsNow();
+  const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
+  let behind = 0;
   for (let i = 0; i + 4 < d.length; i += 5) {
     const [kind, node, x, y, s] = [d[i], d[i + 1], d[i + 2], d[i + 3], d[i + 4]];
     const near = nearestStation(x, y)?.name;
     const at = node >= 0 ? st.get(node)?.name : undefined;
+    if (kind === 11) behind += s;
+    const ahead = kind === 11 && node >= 0 ? lines.get(node)?.name : undefined;
     const text =
-      (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
-        ? `At ${at}`
-        : kind === 4
-          ? `At the junction${near ? " near " + near : ""}`
-          : kind === 5
-            ? `At the crossing${near ? " near " + near : ""}`
-            : `On the track${near ? " near " + near : ""}`;
+      kind === 11
+        ? ahead ? `Behind ${ahead} trains` : "Behind slower trains"
+        : (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
+          ? `At ${at}`
+          : kind === 4
+            ? `At the junction${near ? " near " + near : ""}`
+            : kind === 5
+              ? `At the crossing${near ? " near " + near : ""}`
+              : `On the track${near ? " near " + near : ""}`;
     const same = out.find((o) => o.text === text); // both directions, or two stretches by one station
     if (same) same.s += s;
     else out.push({ text, s });
   }
-  return out.sort((a, b) => b.s - a.s).slice(0, 3);
+  return { spots: out.sort((a, b) => b.s - a.s).slice(0, 3), behind };
 }
+const NO_SPOTS: Spots = { spots: [], behind: 0 };
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
 interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
@@ -146,7 +156,7 @@ function markTip(m: RouteMark): string {
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
-function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stops: number; spots: { text: string; s: number }[] }) {
+function RoundTrip({ st, lev, stops, spots: { spots, behind: behindAll } }: { st: LineStats; lev: number; stops: number; spots: Spots }) {
   // T-798: a loop shows its lap, one way round (the longer way's, half its round trip); a circle
   // stands the dwell at its first stop and turns nowhere, a balloon turns there
   const runs = st.loop ? 1 : 2;
@@ -158,6 +168,9 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
   // and so does a bare track end it reverses at (B3), which is no stop
   const reversing = runs * (reversals + (st.endTurns?.length ?? 0)) * st.turnaroundS;
   const delay = (st.delayS[lev] ?? 0) / (st.loop ? 2 : 1);
+  // T-1924: following slower trains, apart from waiting at busy track
+  const behind = Math.min(delay, behindAll / (st.loop ? 2 : 1));
+  const waiting = delay - behind;
   const running = Math.max(0, total - dwell - turn - reversing - delay);
   return (
     <>
@@ -169,7 +182,8 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
         <Row label="Dwell at stops">{duration(dwell)}</Row>
         {turn > 0 && <Row label={st.loop ? "Turning at the end" : "Turning at the ends"}>{duration(turn)}</Row>}
         {reversing > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
-        {delay > 0 && <Row label="Waiting at busy track">{duration(delay)}</Row>}
+        {waiting >= 0.5 && <Row label="Waiting at busy track">{duration(waiting)}</Row>}
+        {behind >= 0.5 && <Row label="Behind slower trains">{duration(behind)}</Row>}
       </ul>
       {delay > 0 && spots.length > 0 && (
         <ul class="rows sub-rows">
@@ -724,7 +738,7 @@ function RailLineInspector({ id }: { id: string }) {
   const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
   // where it loses time to busy track, asked again after every edit and when the level turns
-  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? [];
+  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? NO_SPOTS;
   const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));

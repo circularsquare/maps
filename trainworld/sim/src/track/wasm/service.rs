@@ -192,7 +192,9 @@ impl TrackApi {
 
     /// Where a line loses time to capacity at a demand level (T-031): per resource it waits at,
     /// largest first, `[kind (ResKind as u8), node (or -1), x, y, delay per round trip s]`; delay
-    /// counts each of its directions that waits there.
+    /// counts each of its directions that waits there. Behind slower trains (kind 11, T-1924) the
+    /// second number is the slower line it follows (or -1), and the delay its one direction's loss
+    /// on that stretch.
     pub fn line_delays(&self, line: u32, level: usize) -> Vec<f64> {
         let cap = &self.w.svc.cap;
         let lev = level.min(LEVELS - 1);
@@ -204,14 +206,20 @@ impl TrackApi {
             }
             let k = cap.users_of(r).iter().filter(|u| u.owner && u.line == line).count();
             if k > 0 {
-                v.push((r, d * k as f64));
+                // a following loss is one direction's, however many places it waits at
+                v.push((r, if cap.wire_kind(r) == 11 { d } else { d * k as f64 }));
             }
         }
         v.sort_by(|a, b| b.1.total_cmp(&a.1));
         v.iter()
             .flat_map(|&(r, d)| {
                 let x = &cap.res[r];
-                [cap.wire_kind(r) as f64, if x.node == u32::MAX { -1.0 } else { x.node as f64 }, x.x, x.y, d]
+                let node = match cap.follow_leader(&self.w.net, r, lev) {
+                    Some(l) => l as f64,
+                    None if cap.wire_kind(r) == 11 || x.node == u32::MAX => -1.0,
+                    None => x.node as f64,
+                };
+                [cap.wire_kind(r) as f64, node, x.x, x.y, d]
             })
             .collect()
     }

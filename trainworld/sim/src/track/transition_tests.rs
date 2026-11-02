@@ -258,7 +258,7 @@ fn a_game_saved_while_trains_change_over_loads_the_same() {
     assert!(!w.svc.eras_of(long as usize).is_empty(), "{:?} {:?}", w.svc.eras, w.svc.lattice(&w.net, long as usize));
     let eras = w.svc.encode_eras(&w.net);
     let mut back = TrackWorld::new(super::save::decode(&super::save::encode(&w.net)).unwrap());
-    back.svc.decode_eras(&eras).unwrap();
+    back.svc.decode_eras(&eras, true).unwrap();
     assert_eq!(back.svc.eras, w.svc.eras);
     assert_eq!(back.svc.shifts, w.svc.shifts);
     // the same trips, to well under a second: the rates a load settles again agree to about 1e-3 s

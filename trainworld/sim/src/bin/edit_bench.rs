@@ -50,6 +50,17 @@ fn main() {
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(&path, format!("{:?}\n", a.lines_info())).unwrap();
     }
+    // T-1924: per line after the load, tab-separated: id, name, km, then per level (high, medium,
+    // low) trains an hour, round trip s, delay s and trains, to compare two builds' run times
+    if let Ok(path) = std::env::var("TW_LINES") {
+        let mut s = String::from("id\tname\tkm\ttph\tround_trip\tdelay\ttrains\n");
+        for c in a.lines_info().chunks(22) {
+            let id = c[0] as u32;
+            let f = |k: usize| format!("{:.2}/{:.2}/{:.2}", c[k], c[k + 1], c[k + 2]);
+            s += &format!("{id}\t{}\t{:.2}\t{}\t{}\t{}\t{}\n", a.line_name(id), c[9] / 1000.0, f(5), f(10), f(16), f(13));
+        }
+        std::fs::write(&path, s).unwrap();
+    }
     let mut all = vec![];
     all.push(time(&mut a, "headway 300/600/1200", &|a| a.set_auto_headway(best, 300, 600, 1200)));
     for i in 0..reps {

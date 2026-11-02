@@ -179,16 +179,19 @@ fn time_reaching(ph: &[profile::Phase], dur: f64, s: f64) -> f64 {
 /// clock (T-309): its periods start on its own region's hours. `lead`: seconds every period's
 /// departures leave the ends before its start, so a train belongs to the period in force when it
 /// reaches the line's middle (T-835); one figure for both runs keeps a whole-line fleet aligned.
+/// `phase`: seconds every departure of a level leaves after that, both runs, under a headway, so
+/// lines sharing track leave apart (T-1925, `spacing::place`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lattice {
     pub tph: [f32; LEVELS],
     pub off: [f64; LEVELS],
     pub lead: f64,
     pub shift: f64,
+    pub phase: [f64; LEVELS],
 }
 
 impl Lattice {
-    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS], lead: 0.0, shift: 0.0 };
+    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS], lead: 0.0, shift: 0.0, phase: [0.0; LEVELS] };
 }
 
 /// The most a period's departures lead its start (a run over four hours): half the shortest period,
@@ -259,7 +262,7 @@ fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usiz
     let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.tph[levels[q]]);
     let end_lead = if next > 0.0 { lat.lead } else { 0.0 };
     let (start, end) = (day as f64 * DAY_S + h0 * 3600.0 - lat.lead, day as f64 * DAY_S + h1 * 3600.0 - end_lead);
-    let ps = start + if r == 1 { lat.off[lev] } else { 0.0 };
+    let ps = start + lat.phase[lev] + if r == 1 { lat.off[lev] } else { 0.0 };
     // the points ps + k hw before the period's end
     let mut n = ((end - ps) / hw).ceil() as i64;
     while n > 0 && ps + (n - 1) as f64 * hw >= end {
@@ -843,7 +846,10 @@ impl Service {
         });
         // a loop's middle is half a lap from its first stop (T-798): the same figure
         let lead = (0.25 * (ls.runs[0].prof[1].duration + ls.runs[1].prof[1].duration)).clamp(0.0, LEAD_MAX_S);
-        Some(Lattice { tph, off, lead, shift: ls.shift })
+        // T-1925: under a headway, whatever the headway has become since it was placed
+        let p = net.line_phase_of(l as u32);
+        let phase = std::array::from_fn(|lev| if tph[lev] > 0.0 { (p[lev] as f64).rem_euclid(3600.0 / tph[lev] as f64) } else { 0.0 });
+        Some(Lattice { tph, off, lead, shift: ls.shift, phase })
     }
 
     /// Every line's local time again, after the time zone table changed (T-309).
@@ -982,6 +988,8 @@ impl Service {
                 e.lat.off.iter().for_each(|x| body.extend(x.to_le_bytes()));
                 body.extend(e.lat.lead.to_le_bytes());
                 body.extend(e.lat.shift.to_le_bytes());
+                // T-1925 (`ERA2`): the departure phases
+                e.lat.phase.iter().for_each(|x| body.extend(x.to_le_bytes()));
                 body.extend((e.drawn.len() as u32).to_le_bytes());
                 for &(r, d) in &e.drawn {
                     body.push(r);
@@ -1003,7 +1011,8 @@ impl Service {
     }
 
     /// Eras and shifts from `encode_eras`, onto a service just built from the saved network.
-    pub fn decode_eras(&mut self, bytes: &[u8]) -> Result<(), String> {
+    /// `phases`: the eras carry departure phases (`ERA2`, T-1925); older ones (`ERA1`) do not.
+    pub fn decode_eras(&mut self, bytes: &[u8], phases: bool) -> Result<(), String> {
         let mut at = 0usize;
         let mut take = |n: usize| -> Result<&[u8], String> {
             let b = bytes.get(at..at + n).ok_or("truncated eras")?;
@@ -1026,11 +1035,12 @@ impl Service {
                 let tph = [num!(f32), num!(f32), num!(f32)];
                 let off = [num!(f64), num!(f64), num!(f64)];
                 let (lead, shift) = (num!(f64), num!(f64));
+                let phase = if phases { [num!(f64), num!(f64), num!(f64)] } else { [0.0; LEVELS] };
                 let mut drawn = vec![];
                 for _ in 0..num!(u32) {
                     drawn.push((num!(u8), num!(f64)));
                 }
-                v.push(Era { until, lat: Lattice { tph, off, lead, shift }, drawn });
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase }, drawn });
             }
             let mut s = vec![];
             for _ in 0..num!(u32) {
