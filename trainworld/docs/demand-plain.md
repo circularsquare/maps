@@ -36,7 +36,10 @@ town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's 
   worldwide from Wikidata, each with its visitors a year: Wikidata's own figure where it has one
   (the Met 6.5M, Tokyo Disneyland 15.1M), otherwise a share of a budget: everyone living within
   25 km makes 6 outings a year, and the world's tourists see 0.6 listed places a trip, both shared
-  by how often the place's Wikipedia page is read (Kiyomizu-dera 3.4M, West Lake 10M). Each has
+  by how often the place's Wikipedia page is read, no one place taking much over 5% of its
+  neighbours' outings (Kiyomizu-dera 2.2M, Nagoya Castle 2.7M). China's estimates are times 5 and
+  Korea's times 2.5, since few people there read Wikipedia. A theme park's own staff don't also
+  draw everyday visits as if they were restaurants. Each has
   that many visits a day, half from homes and half from where visitors eat and stay, from across
   the city: the chance halves only every 10 km. New York gets about 280,000 visits a day, London
   410,000, Tokyo 380,000. Small next to the city's

@@ -698,6 +698,19 @@ fn attractions_keep_their_visits_and_stay_optional() {
     assert_eq!(none.purpose_count() as usize, AIRPORT + 1);
 }
 
+/// T-1932: an attraction's staff come out of the leisure lumps within reach, nearest first, down
+/// to the lump size; small cells and far attractions leave the weights alone.
+#[test]
+fn attraction_staff_leave_the_social_weight() {
+    let (h, b) = facility_fixture(&[0.0, 500.0, 900.0, 3000.0], None, None);
+    let commutes = DemandApi::new(&h, &b).unwrap();
+    let leisure = [5000.0, 3000.0, 2500.0, 500.0];
+    let out = social_leisure(&commutes, &[0.0, 0.0, 4_000_000.0], &leisure);
+    assert_eq!(out, vec![2000.0, 2000.0, 2500.0, 500.0]);
+    assert_eq!(social_leisure(&commutes, &[9000.0, 0.0, 4_000_000.0], &leisure), leisure.to_vec());
+    assert_eq!(social_leisure(&commutes, &[], &leisure), leisure.to_vec());
+}
+
 /// A pack's header and bin with one more f32 cell array.
 fn with_array(h: &str, mut b: Vec<u8>, name: &str, values: &[f32]) -> (String, Vec<u8>) {
     let mut h: serde_json::Value = serde_json::from_str(h).unwrap();

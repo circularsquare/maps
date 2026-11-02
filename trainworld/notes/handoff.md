@@ -7,7 +7,11 @@ Updated: 2026-11-02 (batch filed, first five agents launched)
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master: c7c5785a plus this handoff commit. 8800 at c7c5785a, smoke 20/20 both shades.
+- master: 902af16d (round one of the 11-02 batch). 8800 at 902af16d, smoke 20/20 both shades (2026-11-02).
+  My 8800 rebuild script: C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\7c3c98d5-ca3b-4748-b736-bac9826c72c1\scratchpad\snapbuild.cmd <hash>
+- Uncommitted, done, for round two: t1905's T-1932 (sim/src/demand/everyday.rs) and T-1935 (attractions.json, China x5,
+  Korea x2.5), ui-text's "in past 24h" pass, my Cities.tsx cut of the ", fares minus..." tails; t1928 is doing upkeep
+  20/25/35/40 (Anita 11-02). Commit all once t1928 reports, smoke, rebuild 8800.
 - **LIVE (2026-10-31): the build of c7c5785a on R2 data `trainworld/2026-10-30b`**; website cef6eb1, `deploy.py --verify
   --page --version 2026-10-30b` all PASS. A code-only release: `deploy.py --skip-data --version 2026-10-30b --smoked`,
   then website add/commit/push (the auto-mode classifier refused my commit once, allowed it once Anita said so in the

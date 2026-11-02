@@ -748,17 +748,25 @@ notes/T-420.md has the tables.
   list for the world: places of attraction classes with coordinates, sized by Wikidata's visitors a
   year (P1174) where given, else by a budget shared by Wikipedia page views (English plus the
   country's own editions, T-1766): 6 outings a year for each person within 25 km (GHSL), shared
-  among the places within 25 km by views^1.3 with 0.03 views a resident for places not listed, plus
+  among the places within 25 km by views^1.3 with 0.03 views a resident for places not listed, a
+  place's share s counting as s / (1 + s / 0.05), so the lone listed place of a town does not take
+  most of its people's outings (T-1905), plus
   one world pool of tourists (World Bank international arrivals plus one domestic trip a resident a
-  year, 0.6 listed places a trip) shared by views^0.5. Global constants, no per-country term; kept
+  year, 0.6 listed places a trip) shared by views^0.5. Global constants, except where a country's
+  people hardly read Wikipedia: estimates in mainland China times 5 (blocked there) and South Korea
+  times 2.5 (Namuwiki), observation towers excepted (T-1935; Anita: per-country attraction factors
+  are fine). Kept
   from 100,000; visits a day drawn half from homes and half from leisure jobs with the chance halving
-  every 10 km. A lake, hill or island that Wikidata also tags a tourist attraction counts (West Lake;
+  every 10 km. An attraction's staff draw no social outings: within 1 km of it, a cell's leisure jobs
+  above 2,000, up to one per 1,000 visitors a year, leave social's weight (T-1932; a theme park's own
+  jobs otherwise drew a city's social outings as if they were restaurants). A lake, hill or island that Wikidata also tags a tourist attraction counts (West Lake;
   in practice China's AAAAA class); a presidential palace or headquarters counts only with a figure.
-  Of 12,682 places, 1,273 carry a figure (the US 268, Italy 193, France 156, China 21, Japan 24,
-  Nigeria none); against them the budget is within 3x for 68%. Why it may not carry over: Wikipedia
-  is blocked in mainland China, so Chinese places read about 0.4 of their figures (West Lake 10M on
-  its residents alone); views follow fame abroad as well as visits, so a famous lone place in a big
-  city runs high (the Oriental Pearl Tower 13M against about 3.5M, Delhi's Red Fort 22M); domestic
+  Of 12,641 places, 1,273 carry a figure (the US 268, Italy 193, France 156, China 21, Japan 24,
+  Nigeria none); against them the budget is within 3x for 76%, within 2x for 53%. Why it may not
+  carry over: the country factors rest on few figures (China 18, Korea 7), and another country
+  where Wikipedia is little read would need its own; views follow fame abroad as well as visits, so a
+  famous place with no figure runs high (the Oriental Pearl Tower 5.5M against about 3.4M, Delhi's
+  Red Fort 7.4M); the staff rule's 2,000 and 1,000 are judgement, set on Disneyland and the Met; domestic
   tourism is one trip a person everywhere, rich or poor; a figure can be a whole institution's or a
   slip (the build estimates any above 25M); a country whose places have few editions (Nigeria,
   Brazil) gets few attractions. Hotels are not in the packs, so leisure jobs stand for where

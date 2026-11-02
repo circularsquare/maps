@@ -270,9 +270,11 @@ when there is no other, and none above 25M, which is an institution's or a slip)
 a budget by its Wikipedia page views (English plus its country's own editions, a month of the
 monthly dump times 12; notes/T-1766.md): 6 outings a year for each person within 25 km (GHSL),
 shared among the places within 25 km by views^1.3 with 0.03 views a resident standing for places
-not listed; and one world pool of tourists, the World Bank's international arrivals (2019) plus one
+not listed, a place's share s counting as s / (1 + s / 0.05) so no place takes much over 5% of
+them (T-1905); and one world pool of tourists, the World Bank's international arrivals (2019) plus one
 domestic trip a resident a year, each seeing 0.6 listed places, shared among all places by
-views^0.5; at most 25M. A presidential palace or headquarters counts only with a figure. Kept from
+views^0.5; times 5 in mainland China and 2.5 in South Korea, where Wikipedia is little read, but
+not for an observation tower (T-1935); at most 25M. A presidential palace or headquarters counts only with a figure. Kept from
 100,000. One that lies in another (location or part of, within 500 m) or within 100 m of
 a larger one is left to the larger, and a few the build names (passers-by, a resort beside its own
 parks) are left out. About 12,900 worldwide. At a pack's opening the demand worker hands its
@@ -285,6 +287,10 @@ leisure jobs (where visitors eat and stay), each normalised, drawn with a 14.4 k
 visits before the 150 m exclusion and the 40-80 km taper; two destination samples a home cell. No
 clearance as round a terminal: with dozens of attractions in a centre it would take the centre's
 hotels out. Visits come on top of social outings, not out of them (0.1-0.5% of a city's trips).
+An attraction's staff draw no social outings (T-1932, `social_leisure` in everyday.rs): within
+1 km of it, a cell's leisure jobs above 2,000, up to one per 1,000 visitors a year, nearest cells
+first, are left out of social's leisure-jobs half (its visitors come by this purpose); the other
+uses of leisure jobs keep them.
 The rate `rate_attractions` (1.0) is the one multiplier. Measured: notes/T-263.md "Stage 2 as built".
 
 Unmodelled purposes are labelled explicitly. Activity chains, visitor origins and cross-pack everyday outings

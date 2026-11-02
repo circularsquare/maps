@@ -81,6 +81,47 @@ const AIRPORT_CLEAR_M: f32 = 1500.0;
 /// ATUS 2023: 7.6% of leisure outings (eating out, socialising, sport and recreation) end
 /// outdoors away from home (notes/T-196.md). A pack without parks keeps 0.5 / 0.5 exactly.
 const PARK_SHARE: f64 = 0.08;
+/// T-1932: an attraction's staff draw no social outings (its visitors come by the attractions
+/// purpose): within `STAFF_M` of it, the leisure jobs a cell holds above `STAFF_LUMP`, up to one job
+/// per `STAFF_VISITORS` visitors a year, nearest cells first. The lump keeps a museum among a
+/// centre's restaurants from emptying them; a theme park's own jobs are such a lump (Disneyland's
+/// back-of-house cell 16,345).
+const STAFF_M: f32 = 1000.0;
+const STAFF_LUMP: f32 = 2000.0;
+const STAFF_VISITORS: f32 = 1000.0;
+
+/// The leisure jobs that draw social outings: `leisure` less the staff of the attractions `a`
+/// ((x, y, visitors a year) triples), as `STAFF_M` says.
+fn social_leisure(commutes: &DemandApi, a: &[f32], leisure: &[f32]) -> Vec<f32> {
+    let city = &commutes.city;
+    let mut out = leisure.to_vec();
+    let lumps: Vec<usize> = (0..out.len()).filter(|&c| out[c] > STAFF_LUMP).collect();
+    if lumps.is_empty() {
+        return out;
+    }
+    for t in a.chunks_exact(3) {
+        let (x, y, v) = (t[0], t[1], t[2]);
+        if !(v > 0.0) {
+            continue;
+        }
+        let mut near: Vec<(f32, usize)> = lumps
+            .iter()
+            .map(|&c| ((city.x[c] - x).powi(2) + (city.y[c] - y).powi(2), c))
+            .filter(|&(d2, _)| d2 <= STAFF_M * STAFF_M)
+            .collect();
+        near.sort_by(|p, q| p.0.total_cmp(&q.0));
+        let mut staff = v / STAFF_VISITORS;
+        for (_, c) in near {
+            let take = (out[c] - STAFF_LUMP).max(0.0).min(staff);
+            out[c] -= take;
+            staff -= take;
+            if staff <= 0.0 {
+                break;
+            }
+        }
+    }
+    out
+}
 /// School and university: samples are drawn from the activity site (homes), the site's
 /// enrollment is the budget. Every other kind draws its samples from the home end.
 fn site_anchored(kind: usize) -> bool {
@@ -1330,9 +1371,11 @@ impl EverydayApi {
         let park_share = if parks.is_some() { PARK_SHARE } else { 0.0 };
         let (half_pop, half_leisure) = if tl > 0.0 { (0.5 * (1.0 - park_share), 0.5 * (1.0 - park_share)) } else { (1.0 - park_share, 0.0) };
         let tk = parks.as_ref().map_or(1.0, |p| sum(p));
+        let outing_leisure = social_leisure(commutes, attractions, &leisure);
+        let ts = sum(&outing_leisure);
         let social: Vec<f32> = (0..n)
             .map(|c| {
-                let leisure_part = if tl > 0.0 { half_leisure * leisure[c] as f64 / tl } else { 0.0 };
+                let leisure_part = if ts > 0.0 { half_leisure * outing_leisure[c] as f64 / ts } else { 0.0 };
                 let park_part = parks.as_ref().map_or(0.0, |p| park_share * p[c] as f64 / tk);
                 (half_pop * pop[c] as f64 / tp + leisure_part + park_part) as f32
             })

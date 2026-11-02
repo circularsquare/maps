@@ -22,7 +22,7 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
-    <span class="lb-value num" data-tip={`${exact(r.value)} points ${where} in the past 24 hours`}>{pointsShort(r.value)}</span>
+    <span class="lb-value num" data-tip={`${exact(r.value)} points ${where} in past 24h`}>{pointsShort(r.value)}</span>
   </li>;
 }
 

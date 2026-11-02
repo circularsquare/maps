@@ -249,7 +249,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
     <>
       <div class="h divided" />
       <ul class="rows">
-        <li data-tip={`${d.riders.toLocaleString("en-US")} riders in the past 24 hours`}>
+        <li data-tip={`${d.riders.toLocaleString("en-US")} riders in past 24h`}>
           <span class="grow">Riders</span>
           <span class="val">{count(d.riders)}</span>
         </li>

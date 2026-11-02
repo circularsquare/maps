@@ -163,7 +163,7 @@ function ComplexLines({ id, members, lines, byId, now }: { id: string; members: 
           {r.line && <Chip line={r.line} size="sm" />}
           <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
           <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
-          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings in the past 24 hours` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
+          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings in past 24h` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
         </li>
       ))}
     </ul>
@@ -337,7 +337,7 @@ function StationDetails({ s, lines, props }: {
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
             <Chip line={l} />
             <span class="grow">{l.name}</span>
-            <span class="val" data-tip={t.has(l.id) ? `${count(b)} boardings on ${l.name} in the past 24 hours` : undefined}>{t.has(l.id) ? count(b) : ""}</span>
+            <span class="val" data-tip={t.has(l.id) ? `${count(b)} boardings on ${l.name} in past 24h` : undefined}>{t.has(l.id) ? count(b) : ""}</span>
           </li>
         ))}
       </ul>

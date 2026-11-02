@@ -5,7 +5,8 @@ rate-limits and times out on queries this size). An attraction is an item that i
 one of `KINDS` (or a subclass) or of a `DIRECT` class, with coordinates, and is none of `NOT`.
 Its visitors a year are its latest visitor figure (P1174) where it has one, else its share of a
 budget (T-1766, `budget`): the outings of the people living within `POP_KM` of it (GHSL, 1 km
-world grid) and its country's tourists, shared by Wikipedia page views. A lake, hill, island or
+world grid) and its country's tourists, shared by Wikipedia page views, one place's share of
+the residents' outings topping out near `SHARE_HALF` (T-1905). A lake, hill, island or
 reserve that Wikidata also gives a class under "tourist attraction" (West Lake, Huangshan) counts in
 spite of its nature class. Kept at
 `MIN_VISITORS` or more. Where one attraction lies inside another
@@ -92,6 +93,8 @@ LEFT_OUT = {
     "Q206521": "Disneyland Paris, the resort: its two parks are rows of their own",
     "Q9202": "Statue of Liberty: the Statue of Liberty National Monument counts its visitors",
     "Q3618777": "Antiquarium in Pompeii: its figure is the whole site's, a row of its own",
+    "Q910180": "Mausoleum of the First Qin Emperor: one ticket with the Terracotta Army, which counts them",
+    "Q11482253": "Statue of Peace, Seoul: a statue on a pavement, passers-by",
 }
 # A figure above this is a whole institution's (the Smithsonian's 30M) or a slip (281M for the
 # Royal Ontario Museum): the place is sized by the budget instead, which stops here too. The largest
@@ -372,7 +375,8 @@ def people_within(points):
 # Visits from a budget (T-1766, notes/T-1766.md). Each place's visits a year are its share of two
 # pools by its page views (English and its country's own editions): the outings of the people
 # within POP_KM (OUTINGS each a year, shared among the places within POP_KM of the place and
-# UNLISTED views' worth of places not on the list, by views to LOCAL_POWER), and the world's
+# UNLISTED views' worth of places not on the list, by views to LOCAL_POWER, one place's share topping
+# out near SHARE_HALF), and the world's
 # tourists (international arrivals plus DOMESTIC trips a resident a year, each seeing SEEN listed
 # places, shared among all places by views to TOURIST_POWER). One pool for the world's tourists:
 # shared by country, a country with many small places listed (Italy's 6,000) thins its own and
@@ -391,6 +395,24 @@ LOCAL_POWER = 1.3
 # Views a year of the places not on the list, for each person living near: a city with few places
 # listed (Luoyang, Shanghai) does not pour all its people's outings into them.
 UNLISTED = 0.03
+# A place's share s of its residents' outings counts as s / (1 + s / SHARE_HALF), so it tops out near
+# SHARE_HALF (T-1905): against the Wikidata figures the budget ran x0.7 where s is under 2% and x3
+# (a tenth of places x10) where it is over 30%, the lone listed place of a town (Okazaki Castle 7.7M
+# against the park's 1.5M) or of a city that lists few (Nagoya Castle 10.8M against 2.2M). China's
+# places, which read low on views (Wikipedia is blocked there), fall from x0.43 to x0.2 of their
+# figures: their few listed places had made up for it (notes/T-1905.md).
+SHARE_HALF = 0.05
+# Estimates times this where the country's own people hardly read Wikipedia, so views understate
+# visits (T-1935; Anita 2026-11-02: per-country attraction factors are fine): mainland China blocks
+# it (its 18 figures sat at a median x0.19 of the budget), South Korea reads Namuwiki (7 figures,
+# x0.30; Gyeongbokgung's 6.9M a year, 2025, held it to 2.5). Hong Kong and Macau, which Wikidata
+# puts in CN, read Wikipedia freely (HK's figures x0.4-0.7) and are left out by `NOT_MAINLAND`. An
+# observation tower is not scaled: its views come from abroad and its lifts hold its visitors (the
+# Oriental Pearl Tower about 3.4M a year, its 100 millionth in its 30th year).
+COUNTRY_SCALE = {"CN": 5.0, "KR": 2.5}
+OBSERVATION_TOWER = "Q1440300"
+# lon/lat boxes: Hong Kong, Macau
+NOT_MAINLAND = [(113.82, 22.13, 114.45, 22.57), (113.52, 22.10, 113.61, 22.22)]
 ARRIVALS_YEAR = 2019
 # Not in the World Bank's tables (UNWTO 2019; the Ministry of the Interior's population).
 NOT_IN_WB = {"TW": (11_864_000, 23_603_000)}
@@ -419,13 +441,16 @@ def budget(todo):
         grid.setdefault((it["gx"], it["gy"]), []).append(it)
     for it in todo:
         near = sum(o["pv"] ** LOCAL_POWER for dx in (-1, 0, 1) for dy in (-1, 0, 1) for o in grid.get((it["gx"] + dx, it["gy"] + dy), []) if metres(it, o) < cell)
-        it["local"] = OUTINGS * it["pop"] * it["pv"] ** LOCAL_POWER / (near + (UNLISTED * it["pop"]) ** LOCAL_POWER)
+        share = it["pv"] ** LOCAL_POWER / (near + (UNLISTED * it["pop"]) ** LOCAL_POWER)
+        it["local"] = OUTINGS * it["pop"] * share / (1 + share / SHARE_HALF)
     # tourists: the world's, by views to TOURIST_POWER
     pool = SEEN * sum((arrivals.get(cc) or 0) + DOMESTIC * (people.get(cc) or 0) for cc in {it["cc"] for it in todo} if cc in people)
     weight = sum(it["pv"] ** TOURIST_POWER for it in todo)
     for it in todo:
         it["tourist"] = pool * it["pv"] ** TOURIST_POWER / weight
-        it["est"] = min(it["local"] + it["tourist"], MAX_FIGURE)
+        mainland = not any(w <= it["lon"] <= e and s <= it["lat"] <= n for w, s, e, n in NOT_MAINLAND)
+        scale = COUNTRY_SCALE.get(it["cc"], 1.0) if mainland and OBSERVATION_TOWER not in it["kinds"] else 1.0
+        it["est"] = min(scale * (it["local"] + it["tourist"]), MAX_FIGURE)
 
 
 def build(raw):
@@ -547,7 +572,8 @@ def check(rows):
     print("  by country (figures, median budget/figure): " + ", ".join(f"{c or '--'} {len(v)} x{math.exp(sorted(v)[len(v) // 2]):.2f}" for c, v in sorted(by.items(), key=lambda kv: -len(kv[1]))[:16]))
     print(f"  visits in the file: {sum(it['v'] for it in rows) / 1e9:.2f} billion a year ({sum(it['v'] for it in rows if it['src']) / 1e9:.2f} estimated)")
     names = ["Kiyomizu-dera", "West Lake", "Lingyin Temple", "Kinkaku-ji", "Fushimi Inari-taisha", "Tōdai-ji", "Sensō-ji", "Meiji Shrine", "Louvre", "Eiffel Tower",
-             "Notre-Dame de Paris", "Forbidden City", "Metropolitan Museum of Art", "Grand Palace", "Wat Arun", "Taj Mahal", "Colosseum"]
+             "Notre-Dame de Paris", "Forbidden City", "Metropolitan Museum of Art", "Grand Palace", "Wat Arun", "Taj Mahal", "Colosseum",
+             "Okazaki Castle", "Nagoya Castle", "Christ the Redeemer"]
     at = {it["name"]: it for it in rows}
     for n in names:
         if n in at:

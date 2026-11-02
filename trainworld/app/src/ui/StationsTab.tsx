@@ -39,7 +39,7 @@ function stationRiders(ids: string[], mode: StationUseMode): number | null {
 function stationRidersTip(n: number, mode: StationUseMode): string {
   return mode === "origins" ? `${count(n)} riders start a rail trip here ${shownDayPhrase.value}`
     : mode === "transfers" ? `${count(n)} riders change lines here ${shownDayPhrase.value}`
-    : `${count(n)} boardings in the past 24 hours`;
+    : `${count(n)} boardings in past 24h`;
 }
 function StationToday({ ids }: { ids: string[] }) {
   const mode = display.value.stationUse, n = stationRiders(ids, mode);
@@ -233,7 +233,7 @@ export function StationsTab() {
     + (drag?.on && drag.id === r.members[0] ? " dragged" : "");
   const ghost = drag?.on ? st.find((r) => r.members[0] === drag.id) : undefined;
   const ridersWhat = d.stationUse === "origins" ? `riders starting a rail trip ${shownDayPhrase.value}`
-    : d.stationUse === "transfers" ? `riders changing lines ${shownDayPhrase.value}` : "boardings in the past 24 hours";
+    : d.stationUse === "transfers" ? `riders changing lines ${shownDayPhrase.value}` : "boardings in past 24h";
   return (
     <>
       <div class="line-list-actions"><ScopeToggle /></div>

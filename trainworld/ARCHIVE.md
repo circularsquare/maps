@@ -2,9 +2,13 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1935 [P3] Chinese and Korean attraction estimates. Done 2026-11-02 (agent t1905): estimates times 5 in mainland China and 2.5 in South Korea (observation towers, Hong Kong and Macau excepted); medians against figures x0.19 -> x0.96 and x0.30 -> x0.74. notes/T-1905.md.
+- T-1934 [P2] Paid parking cap 50 -> 40. Abandoned 2026-11-02: Anita now thinks 50 minutes is reasonable. notes/T-1905.md.
+- T-1932 [P2] An attraction's staff draw no social outings. Done 2026-11-02 (agent t1905): within 1 km, leisure jobs above 2,000 a cell, up to one per 1,000 visitors a year, leave social's weight (`social_leisure`, everyday.rs). notes/T-1905.md.
+
 - T-1928 [P2] New level price table. Done 2026-11-02 (agent t1928): base US$75M a km, factors -3..+3 2.0/1.6/1.0/0.3/1.0/1.5/2.0 (ground 22.5, viaduct and cut and cover 75, bored 120 and 150), surcharges hills +0.5/+1.2, mountains +3, water +2.5; tags and Build tab follow. check `checks/t1928-prices.mjs`.
 - T-1930 [P2] Long water. Done 2026-11-02 (agent t1928): viaduct and cut and cover over more than 30 km of unbroken water refused (`Issue::WaterTooLong`), across edges meeting in the water; bored unlimited.
-- T-1931 [P3] Upkeep by level. Done 2026-11-02 (agent t1928): US$20k a km a game day at level 0, US$30k at any other level, stations unchanged; New York save unchanged (no ground track).
+- T-1931 [P3] Upkeep by level. Done 2026-11-02 (agent t1928): US$20k a km a game day on the ground, 25k viaduct, 35k cut and cover, 40k bored (an edge pays the dearest it touches), stations unchanged.
 
 - T-1905 [P2] Destination sanity. Done 2026-11-02 (agent t1905): an attraction's share of its residents' outings saturates near 5% (Okazaki Castle 7.7M -> 1.3M, Nagoya Castle 10.8M -> 2.7M); Disneyland's excess is its leisure jobs, JFK's bubbles its spread block jobs, SouthPark is real; proposals T-1932 to T-1935. notes/T-1905.md.
 

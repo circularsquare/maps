@@ -375,7 +375,7 @@ const PANEL_MARK_FLOOR = 0.5;
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
 function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
-  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in the past 24 hours` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
+  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in past 24h` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
 /** The plain stops strip; a loop's bar goes on past its ends and curves round (T-1391). */

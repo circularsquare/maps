@@ -177,7 +177,7 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   const past = id ? pointsPast24h.value.get(id) : undefined;
   const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
   const lines = [name];
-  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${shownDayOn.value} with the riders now`);
+  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in past 24h`, `${exact(rate ?? 0)} points ${shownDayOn.value} with the riders now`);
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 

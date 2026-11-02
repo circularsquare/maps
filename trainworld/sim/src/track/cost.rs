@@ -430,6 +430,13 @@ pub fn terrain_surcharge(level: i8, class: u8) -> f64 {
     if level >= TERRAIN_MIN_LEVEL { TERRAIN_SURCHARGE[class.min(3) as usize] } else { 0.0 }
 }
 
+/// Upkeep rate a route-km of double track, real US$, for an edge whose levels run from `lo` to `hi`:
+/// the dearest structure in that range (bored -2 and -3, then cut and cover -1, then viaduct, then
+/// ground) (T-1931).
+pub fn track_upkeep_km(lo: i32, hi: i32) -> f64 {
+    if lo <= -2 { UPKEEP_BORED_KM } else if lo == -1 { UPKEEP_CUT_KM } else if hi > 0 { UPKEEP_VIADUCT_KM } else { UPKEEP_GROUND_KM }
+}
+
 /// Level of a height, rounded.
 pub fn level_of(z: f64) -> i8 {
     (z / LEVEL_H).round() as i8

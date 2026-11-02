@@ -48,7 +48,7 @@ function RidersToday({ line }: { line: string }) {
   if (linesPending.value.has(line)) return <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
-  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{text}</span>;
+  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in past 24h` : undefined}>{text}</span>;
 }
 
 /** T-735, T-867: a line's fares less running cost and its share of upkeep over the past 24 hours. */
@@ -93,8 +93,8 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   return (
     <>
       {pending ? <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>
-        : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in the past 24 hours, each line's added up\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
-      {any ? <span class="val w-linemoney" data-tip={`Expected profit today: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
+        : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in past 24h in total\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
+      {any ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>
     </>
   );
@@ -372,8 +372,8 @@ export function LinesTab() {
       {w.save.lines.length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
-        { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
-        { key: "money", label: "Money", tip: "Sort by expected profit today, fares minus running costs and upkeep", first: -1, cls: "w-linemoney" },
+        { key: "riders", label: "Riders", tip: "Sort by riders in past 24h", first: -1, cls: "w-riders" },
+        { key: "money", label: "Money", tip: "Sort by expected profit today", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the center of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}

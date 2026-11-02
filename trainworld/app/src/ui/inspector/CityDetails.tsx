@@ -142,7 +142,7 @@ export function CityNetwork({ city }: { city: City }) {
           <li onClick={() => (selection.value = { kind: "line", line: line.id })}>
             <Chip line={line} />
             <span class="grow">{line.name}</span>
-            <span class="val" data-tip={known ? `${count(n)} boardings on ${line.name} in ${city.name} in the past 24 hours` : undefined}>{known ? count(n) : ""}</span>
+            <span class="val" data-tip={known ? `${count(n)} boardings on ${line.name} in ${city.name} in past 24h` : undefined}>{known ? count(n) : ""}</span>
           </li>
         ))}
       </ul>
@@ -151,7 +151,7 @@ export function CityNetwork({ city }: { city: City }) {
         {stationRows.slice(0, TOP).map(({ lead, n }) => (
           <li onClick={() => (selection.value = { kind: "station", station: lead.id })}>
             <span class="grow">{lead.name}</span>
-            <span class="val" data-tip={known ? `${count(n)} boardings at ${lead.name} in the past 24 hours` : undefined}>{known ? count(n) : ""}</span>
+            <span class="val" data-tip={known ? `${count(n)} boardings at ${lead.name} in past 24h` : undefined}>{known ? count(n) : ""}</span>
           </li>
         ))}
       </ul>

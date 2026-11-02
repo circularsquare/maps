@@ -52,7 +52,7 @@ export function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday:
 export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
   const { d } = f;
   const rows = [
-    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)}/day, fares minus running trains and upkeep`,
+    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)}/day`,
     `Fares ${money(d.fares * 1e6)}`,
     `Running trains ${money(-d.running * 1e6)}`,
     `Upkeep ${money(-(d.upkeep ?? 0) * 1e6)}`,
@@ -67,7 +67,7 @@ export function pointsTip(id: CityId, name: string): string {
   const past = pointsPast24h.value.get(id) ?? 0;
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
   return [
-    `${exact(past)} points in ${name} in the past 24 hours`,
+    `${exact(past)} points in ${name} in past 24h`,
     `${exact(rate)} points ${shownDayOn.value} with the riders now`,
     `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
   ].join("\n");
@@ -114,7 +114,7 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   const pastAll = rows.reduce((n, r) => n + (past.get(r.id) ?? 0), 0);
   const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
   const pointsTip = [
-    `${exact(pastAll)} points in the world in the past 24 hours`,
+    `${exact(pastAll)} points in the world in past 24h`,
     `${exact(rateAll)} points ${shownDayOn.value} with the riders now`,
   ].join("\n");
   return (
@@ -170,8 +170,8 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "train", label: "Train", tip: "Sort by the train share of trips", first: -1, cls: "w-citybar c-cities" },
         { key: "rides", label: "Trips", tip: "Sort by train trips per day", first: -1, cls: "w-riders c-cities" },
-        { key: "money", label: "Profit", tip: "Sort by profit per day, fares minus running trains and upkeep", first: -1, cls: "w-money c-cities c-money" },
-        { key: "points", label: "Points", tip: "Sort by points in the past 24 hours", first: -1, cls: "w-points c-cities" },
+        { key: "money", label: "Profit", tip: "Sort by profit per day", first: -1, cls: "w-money c-cities c-money" },
+        { key: "points", label: "Points", tip: "Sort by points in past 24h", first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">
         <TotalRow rows={rows} day={day} />

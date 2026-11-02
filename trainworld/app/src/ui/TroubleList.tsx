@@ -65,12 +65,12 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     if (d.leftBehind >= LEFT_MIN && d.leftBehind >= LEFT_SHARE * wanted) {
       out.push({ key: "l" + l.id, tier: 3, size: d.leftBehind, lead: <Chip line={l} size="sm" plain />, label: l.name,
         value: <span class="trouble-fig"><Icon.person />{count(d.leftBehind)}</span>,
-        tip: `${count(d.leftBehind)} of the ${count(wanted)} riders who wanted a train were left at the platform by a full one in the past 24 hours\n${count(d.fullTrains)}/${count(d.trains)} trains left full`,
+        tip: `${count(d.leftBehind)} of the ${count(wanted)} riders who wanted a train were left at the platform by a full one in past 24h\n${count(d.fullTrains)}/${count(d.trains)} trains left full`,
         go: goLine(l) });
     } else if (d.trains > 0 && d.fullTrains >= FULL_SHARE * d.trains) {
       out.push({ key: "f" + l.id, tier: 5, size: d.fullTrains / d.trains, lead: <Chip line={l} size="sm" plain />, label: l.name,
         value: <span class="trouble-fig"><Icon.train />{count(d.fullTrains)}/{count(d.trains)}</span>,
-        tip: `${count(d.fullTrains)}/${count(d.trains)} trains left full in the past 24 hours`, go: goLine(l) });
+        tip: `${count(d.fullTrains)}/${count(d.trains)} trains left full in past 24h`, go: goLine(l) });
     }
   }
   const lines = new Map(w.save.lines.map((l) => [l.id, l]));

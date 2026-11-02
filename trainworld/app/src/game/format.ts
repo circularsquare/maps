@@ -156,14 +156,16 @@ const perUnitText = (perKm: number) => {
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
 }
-type UpkeepRates = { upkeepTrackKm: number; upkeepOffGroundKm: number; upkeepStation: number; economy: number };
-/** T-867, T-1931: "$20k per km of ground track per day, $30k per km of viaduct and tunnel track per day and $50k per station per day", at the game's economy, in the shown unit. */
+type UpkeepRates = { upkeepTrackKm: number; upkeepViaductKm: number; upkeepCutKm: number; upkeepBoredKm: number; upkeepStation: number; economy: number };
+/** T-867, T-1931: "$20k per km of ground track per day, $25k on a viaduct, $35k in cut and cover, $40k in a bored tunnel and $50k per station per day", at the game's economy, in the shown unit. */
 export function upkeepRule(m: UpkeepRates): string {
-  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of ground track per day, ${money(perDistance(m.upkeepOffGroundKm * m.economy))} per ${distUnit()} of viaduct and tunnel track per day and ${money(m.upkeepStation * m.economy)} per station per day`;
+  const km = (v: number) => money(perDistance(v * m.economy));
+  return `${km(m.upkeepTrackKm)} per ${distUnit()} of ground track per day, ${km(m.upkeepViaductKm)} on a viaduct, ${km(m.upkeepCutKm)} in cut and cover, ${km(m.upkeepBoredKm)} in a bored tunnel and ${money(m.upkeepStation * m.economy)} per station per day`;
 }
-/** T-1838, T-1931: the Upkeep row's hover, four lines: "$20k per km of ground track per day", "$30k per km of viaduct and tunnel track per day", "$50k per station per day", "High speed rail 1.5x". */
+/** T-1838, T-1931: the Upkeep row's hover, six lines: "$20k per km of ground track per day", "$25k on a viaduct", "$35k in cut and cover", "$40k in a bored tunnel", "$50k per station per day", "High speed rail 1.5x". */
 export function upkeepLines(m: UpkeepRates & { upkeepHsr: number }): string {
-  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of ground track per day\n${money(perDistance(m.upkeepOffGroundKm * m.economy))} per ${distUnit()} of viaduct and tunnel track per day\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
+  const km = (v: number) => money(perDistance(v * m.economy));
+  return `${km(m.upkeepTrackKm)} per ${distUnit()} of ground track per day\n${km(m.upkeepViaductKm)} on a viaduct\n${km(m.upkeepCutKm)} in cut and cover\n${km(m.upkeepBoredKm)} in a bored tunnel\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
 }
 /** T-1838: the Running trains row's hover: "Trains cost $4 per km, plus $2 per train car". */
 export function runCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {

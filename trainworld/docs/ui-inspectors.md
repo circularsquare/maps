@@ -39,10 +39,10 @@ line or station row opens its view.
 hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
 cost, trains that left full, riders left behind. They follow the schedule as it is, so they move at
 once when it changes; the player is told "today" (Anita, T-1893: "24 h" was hard to keep
-consistent): labels and headings "Boardings today" or "Today"; their hovers say "N riders in the
-past 24 hours" (Anita: today can mean the past 24 hours); the profit's hover "Expected
+consistent): labels and headings "Boardings today" or "Today"; their hovers say "N riders in
+past 24h" (Anita: today can mean the past 24 hours, and "past 24h" is the short form); the profit's hover "Expected
 profit today: $x" (it is today's projection). The line panel's block has no heading, only the rule above it. The points (Cities
-tab, top bar, leaderboard) stay "in the past 24 hours": they are a sum of the last 24 whole game
+tab, top bar, leaderboard) say "in past 24h" too: they are a sum of the last 24 whole game
 hours, moving once an hour. They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
@@ -133,8 +133,8 @@ purpose filter the purpose drawn is ringed in the bar.
   (below; hover lists its lines), its name (the player's, else its oldest line's name; a
   double click on it opens a name box, Enter or leaving it keeps the name, Esc drops it, and
   typing the oldest line's name back clears it), and its lines' riders, money and trains added up,
-  each hover listing the lines' own figures (riders "1.59M riders in the past 24 hours, each
-  line's added up", since a rider changing between two of its lines counts twice), the trains
+  each hover listing the lines' own figures (riders "1.59M riders in past 24h in total", money
+  "Expected profit today in total: $x"; a rider changing between two of its lines counts twice), the trains
   uncoloured. Only running lines count; a group with none reads Planned (or Broken). A group
   shows open by default [T-1818], its lines indented 24 px, each a line row as any other, sorted
   by the tab's sort (or the hand order); the chevron closes it, and what the player closed stays

@@ -63,9 +63,9 @@ impl TrackApi {
             // T-1464: a bus's price US$M, running cost per bus-km and a route's upkeep a day per
             // road-km US$, a route's price per road-km US$M
             BUS_PRICE, RUN_COST_BUS_KM, UPKEEP_BUS_KM, BUS_ROUTE_COST_PER_KM,
-            // T-1931: upkeep a day per km of double track that is not on the ground US$ (index 7
-            // is the ground rate)
-            UPKEEP_OFF_GROUND_KM,
+            // T-1931: upkeep a day per km of double track on a viaduct, in cut and cover and in a
+            // bored tunnel, US$ (index 7 is the ground rate)
+            UPKEEP_VIADUCT_KM, UPKEEP_CUT_KM, UPKEEP_BORED_KM,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each

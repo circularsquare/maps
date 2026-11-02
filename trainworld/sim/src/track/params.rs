@@ -119,12 +119,15 @@ pub const RUN_COST_CAR_KM: f64 = 2.0;
 pub const HS_CAR_PRICE: f64 = 3.75;
 pub const HS_RUN_COST_TRAIN_KM: f64 = 5.0;
 pub const HS_RUN_COST_CAR_KM: f64 = 3.0;
-/// Upkeep a day, real US$ (US$20k, 30k and 50k a game day at `ECONOMY`), charged whether trains
-/// run or not (T-867, notes/T-867.md): per route-km of constructed double track, times
+/// Upkeep a day, real US$ (US$20k, 25k, 35k, 40k and 50k a game day at `ECONOMY`), charged whether
+/// trains run or not (T-867, notes/T-867.md): per route-km of constructed double track, times
 /// `track_factor` (so quad track, two pairs, pays twice), and per constructed station at any level.
-/// Track that stays on the ground pays the first rate, every other piece the second (T-1931).
+/// Track pays by structure (T-1931, Anita 2026-11-02): ground, viaduct (+1 to +3), cut and cover
+/// (-1), bored tunnel (-2, -3); an edge pays the dearest it touches (`cost::track_upkeep_km`).
 pub const UPKEEP_GROUND_KM: f64 = 200.0;
-pub const UPKEEP_OFF_GROUND_KM: f64 = 300.0;
+pub const UPKEEP_VIADUCT_KM: f64 = 250.0;
+pub const UPKEEP_CUT_KM: f64 = 350.0;
+pub const UPKEEP_BORED_KM: f64 = 400.0;
 pub const UPKEEP_STATION: f64 = 500.0;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
