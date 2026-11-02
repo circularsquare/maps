@@ -742,5 +742,21 @@
 "ade": {"name": "Adelaide", "aliases": ["Onkaparinga", "Salisbury"]},
 "roc": {"name": "Rockingham", "aliases": ["Mandurah", "Bunbury"]},
 "dbb": {"name": "Dubbo", "aliases": ["Bathurst", "Orange"]},
-"tow": {"name": "Toowoomba", "aliases": ["Warwick"]}
+"tow": {"name": "Toowoomba", "aliases": ["Warwick"]},
+"ste": {"name": "Kampong Cham", "aliases": ["Stueng Trang"]},
+"prs": {"name": "Prey Veng", "aliases": ["Preah Sdach", "Svay Rieng"]},
+"smo": {"name": "Kampong Speu", "aliases": ["Samraong Tong", "Chbar Mon"]},
+"cuk": {"name": "Sihanoukville", "aliases": ["Preah Sihanouk", "Kampot", "Kep", "Chhuk"]},
+"bti": {"name": "Takeo", "aliases": ["Doun Kaev", "Bati"]},
+"byx": {"name": "Kampong Thom", "aliases": ["Stueng Saen", "Baray"]},
+"ruk": {"name": "Pursat", "aliases": ["Rukh Kiri"]},
+"pay": {"name": "Poipet", "aliases": ["Paoy Paet", "Sisophon", "Serei Saophoan"]},
+"rol": {"name": "Kampong Chhnang", "aliases": ["Rolea B'ier"]},
+"buk": {"name": "George Town", "aliases": ["Penang", "Pulau Pinang", "Bukit Mertajam", "Seberang Perai"]},
+"kix": {"name": "Ipoh", "aliases": ["Kinta"]},
+"koe": {"name": "Alor Setar", "aliases": ["Kota Setar", "Alor Star"]},
+"mlk": {"name": "Melaka", "aliases": ["Malacca", "Melaka Tengah"]},
+"lru": {"name": "Taiping", "aliases": ["Larut dan Matang"]},
+"hik": {"name": "Teluk Intan", "aliases": ["Hilir Perak"]},
+"gad": {"name": "Bandar Seri Begawan", "aliases": ["Brunei", "Gadong"]}
 }

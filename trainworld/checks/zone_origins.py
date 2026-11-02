@@ -24,11 +24,10 @@ def units_of(iso):
         return cache[iso]
     src = real["unit_sources"][iso]
     out = {}
-    if src["kind"] == "geoBoundaries":
-        p = TW / f"data/raw/worldplan/geoboundaries/{iso}_{src['level']}.geojson"
-        if p.exists():
-            for f in json.loads(p.read_text(encoding="utf-8"))["features"]:
-                out[f["properties"]["shapeID"]] = (f["properties"].get("shapeName"), shape(f["geometry"]))
+    if src["kind"] == "geoBoundaries":  # as the preflight reads them: every level, Malaysia's far parts split
+        sys.path.insert(0, str(TW / "checks"))
+        import country_preflight
+        out = country_preflight.units_of(iso, src)
     elif src["kind"] == "NUTS3":
         for f in json.loads((TW / src["file"]).read_text(encoding="utf-8"))["features"]:
             pr = f["properties"]

@@ -145,6 +145,8 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Regina and Saskatoon, Rimouski and Fredericton)
               "KOR": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "group_level": 1,
                       "task": "T-1191"},
+              # Malaysia's mukim (1,859) by their district, as Korea's (T-1738: zones of up to 288 mukim)
+              "MYS": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "group_level": 1, "task": "T-1738"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
@@ -575,6 +577,29 @@ def gb_level(meta, iso, adm):
 
 GAP_MIN_KM2 = 5.0  # land of the country no unit covers, from this size, joins a unit (T-897)
 GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each file is then rebuilt
+# geoBoundaries files that dissolve same-named units into one feature (Malaysia's ADM3: 40 mukim such as
+# Pulai, in Johor and three other states, 135-589 km apart; T-1738): each cluster of parts over FAR_PART_KM
+# from the biggest part is a unit of its own, "<shapeID>~<k>". Not every country: far islands are real elsewhere
+GB_SPLIT_FAR = {"MYS"}
+FAR_PART_KM = 50.0
+
+
+def far_parts(g, pop=None):
+    """Clusters of g's parts, each part within FAR_PART_KM of another in its cluster: the most populous
+    first (with `pop`, a Pop; else the one with the biggest part), as the unit id stays with it (Johor
+    Bahru's Pulai holds 0.5M people, a Kelantan Pulai more land)"""
+    parts = sorted(shapely.get_parts(g), key=lambda p: -p.area)
+    groups = [[parts[0]]]
+    for p in parts[1:]:
+        k = next((k for k, gr in enumerate(groups) if any(q.distance(p) <= FAR_PART_KM * 1e3 for q in gr)), None)
+        if k is None:
+            groups.append([p])
+        else:
+            groups[k].append(p)
+    out = [polygonal(union_all(gr)) for gr in groups]
+    if pop is not None and len(out) > 1:
+        out.sort(key=lambda c: -float(pop.inside(c)[2].sum()))
+    return out
 
 
 def gb_units(meta, iso, adm):
@@ -585,11 +610,12 @@ def gb_units(meta, iso, adm):
     import pickle
     r = gb_level(meta, iso, adm)
     path = fetch(f"{iso}_{adm}.geojson", r["simplifiedGeometryGeoJSON"], "geoboundaries")
-    cache = path.with_suffix(f".{GB_CACHE}.pkl")
+    cache = path.with_suffix(f".{GB_CACHE}{'s2' if iso in GB_SPLIT_FAR else ''}.pkl")
     if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
         return pickle.loads(cache.read_bytes())
     gj = json.loads(path.read_text(encoding="utf-8"))
     out = []
+    pop = Pop() if iso in GB_SPLIT_FAR else None
     for f in gj["features"]:
         p = f["properties"]
         if f["geometry"] is None:
@@ -601,7 +627,9 @@ def gb_units(meta, iso, adm):
         g = de_facto(iso, g)
         if g is None or g.is_empty:
             continue
-        out.append((p.get("shapeID") or f"{iso}-{adm}-{len(out)}", p.get("shapeName") or "", g))
+        uid = p.get("shapeID") or f"{iso}-{adm}-{len(out)}"
+        for k, piece in enumerate(far_parts(g, pop) if pop is not None else [g]):
+            out.append((uid if k == 0 else f"{uid}~{k}", p.get("shapeName") or "", piece))
     out = fill_gaps(iso, out)
     tmp = cache.with_suffix(".part")
     tmp.write_bytes(pickle.dumps(out))
@@ -2637,7 +2665,7 @@ def plan_zones(isos3, out_path=None, replan=False):
                         "feats": feats + [v[1] for v in grown.values()],
                         "drop": set(old) | {f["properties"]["id"] for f in feats} | set(grown)})
         rows[:] = [grown[r["id"]][0] if r["id"] in grown else r for r in rows if r["id"] not in old] + out
-    assert all(plan_config.is_plan_row(r) for r in rows if r.get("kind") == "zone")
+    assert all(plan_config.is_plan_row(r) or r.get("status") == "held" for r in rows if r.get("kind") == "zone")
     if out_path:  # a dry run: the plan and its extents beside each other, the real ones untouched
         doc, ext = json.loads(OUT.read_text(encoding="utf-8")), json.loads((WORK / "extents.geojson").read_text(encoding="utf-8"))
         splice(doc, ext, changes)

@@ -145,7 +145,10 @@ density floor, and one rule each. Korea's plan units are eup, myeon and dong (it
 so its zones take them **by si, gun and gu** (`group_level`, geoBoundaries ADM2): the free units of
 one parent that touch or lie within 10 km across water are one unit for the merge rule, so a zone is
 whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin's islands, small
-with no zone within 10 km, are dead space. **Canada zones its cities and the corridors
+with no zone within 10 km, are dead space. **Malaysia** (T-1738) zones its mukim the same way, by
+district, with the floor, cap and no-exclaves rule but the usual density floor (the interiors of Pahang,
+Sabah and Sarawak dead space); its geoBoundaries ADM3 joins same-named mukim of different states into one
+feature, so `world_plan.GB_SPLIT_FAR` makes each part over 50 km away a unit of its own. **Canada zones its cities and the corridors
 between**: a census subdivision whose own centre has fewer than **100,000** people within **150 km**
 (GHS-POP, the US's included) is dead space (`reach`), which leaves out the north, Labrador, the
 territories and the empty land between distant cities; and two zones whose people centres lie more

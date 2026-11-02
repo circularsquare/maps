@@ -1,5 +1,6 @@
 """T-1765: the origin world_plan's rule (densest GHSL pixel of the unit the zone leads with, outside metro packs) gives
-each named zone row, without a replan. python new_origins.py id [id...] -> JSON lines {id: [lon, lat]} in out file argv: --out f"""
+each named zone row, without a replan. python new_origins.py id [id...] -> JSON lines {id: [lon, lat]} in out file argv: --out f
+--apply writes them into the live plan under its lock, for planned rows only, the old one kept as source.origin_was (T-1738)."""
 import json
 import pickle
 import sys
@@ -11,6 +12,8 @@ import world_plan as wp  # noqa: E402
 from shapely import contains_xy  # noqa: E402
 
 args = sys.argv[1:]
+apply = "--apply" in args
+args = [a for a in args if a != "--apply"]
 out = None
 if "--out" in args:
     i = args.index("--out")
@@ -49,3 +52,15 @@ for cid in args:
     print(cid, r["name"], iso, "lead", u.name, "old", r["origin"], "new", res[cid], "pixel pop", round(float(p[i])), flush=True)
 if out:
     json.dump(res, open(out, "w"))
+if apply:
+    import shared_lock
+    with shared_lock.held("plan", "zone_new_origins.py --apply"):
+        doc = shared_lock.read_json(wp.OUT)
+        for r in doc["metros"]:
+            if r.get("id") in res and r.get("status") == "planned" and r["origin"] != res[r["id"]]:
+                r.setdefault("source", {})["origin_was"] = r["origin"]
+                r["origin"] = res[r["id"]]
+                print("applied", r["id"], r["origin"])
+            elif r.get("id") in res:
+                print("left", r["id"], r.get("status"))
+        shared_lock.write_atomic(wp.OUT, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")

@@ -59,10 +59,17 @@ def units_of(iso, src):
     """{unit id: (name, lon/lat geometry)} from the plan's unit source (geoBoundaries, NUTS3, ITL3), or {}."""
     out = {}
     if src.get("kind") == "geoBoundaries":
-        p = TW / f"data/raw/worldplan/geoboundaries/{iso}_{src['level']}.geojson"
-        if p.exists():
+        # every level the plan read (Malaysia's Sabah is ADM2 under an ADM3 plan), split as gb_units splits
+        pop = wp.Pop() if iso in wp.GB_SPLIT_FAR else None
+        for level in sorted(set(src.get("urls", {})) | {src["level"]}):
+            p = TW / f"data/raw/worldplan/geoboundaries/{iso}_{level}.geojson"
+            if not p.exists():
+                continue
             for f in json.loads(p.read_text(encoding="utf-8"))["features"]:
-                out[f["properties"]["shapeID"]] = (f["properties"].get("shapeName"), shape(f["geometry"]))
+                uid, name, g = f["properties"]["shapeID"], f["properties"].get("shapeName"), shape(f["geometry"])
+                pieces = [wp.to_ll(q) for q in wp.far_parts(wp.to_moll(g), pop)] if pop is not None else [g]
+                for k, q in enumerate(pieces):
+                    out[uid if k == 0 else f"{uid}~{k}"] = (name, q)
     elif src.get("kind") in ("NUTS3", "ITL3") and src.get("file"):
         for f in json.loads((TW / src["file"]).read_text(encoding="utf-8"))["features"]:
             pr = f["properties"]
@@ -132,7 +139,9 @@ def main(argv):
 
     # origins
     for r in zones:
-        if iso == "KOR" or not units or not r.get("origin"):
+        # a grouped zone (`group_level`: Korea, Malaysia) takes its origin in the group it is named after, not
+        # its first unit
+        if (r.get("source") or {}).get("groups") or not units or not r.get("origin"):
             continue
         names = (r.get("source") or {}).get("unit_names") or [r["name"]]
         lead = next((i for i in r["units"][iso] if i in units and units[i][0] == names[0]), None) \

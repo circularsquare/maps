@@ -20,7 +20,7 @@ output go in `artifacts/trainworld/`. `<kit>` is your own scratchpad folder; `<t
 | `setup_sim.py <kit> [make\|check\|refresh\|remove]` | HEAD's `sim/` in `<kit>\simroot\sim`, with `data` and `app` junctions to this tree's |
 | `backup.py <task> <stage> <CC,CC\|all> [--dry]` | the shared files and the countries' packs, to `data/work/pre-<task>/<stage>/` |
 | `restore.py <task> <stage> [--go]` | puts a backup back (lists without `--go`) |
-| `setbuilt.py <ids> [<check> "<reason>"] [--dry]` | parked rows back to built, optionally relaxing one gate check |
+| `setbuilt.py <ids> [<check> "<reason>"] [--dry]` | parked rows back to built, optionally relaxing one gate check; `--hold "<reason>"` holds planned or parked rows instead (no run or join takes them) |
 | `stale.py [--cmd <file>]` | market packs naming a place with no pack; writes the .cmd that rewrites them |
 | `start_hidden.ps1 <cmd>` | starts a .cmd detached, no window; prints its PID and its children |
 | `waitany.ps1 <pid,pid>` | waits for any of the PIDs to exit |
@@ -68,7 +68,13 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
 
-Done when: the dry plan's rows look like the country's towns and countryside.
+**People where GHSL has them wrong.** Zones that are not cities but hold a city's people (Cambodia's
+Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
+figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a
+district (1 km pixels of 20,000-48,000 in villages). Such rows are held (`setbuilt.py <ids> --hold "<reason>"`)
+with a task, the rest of the country built.
+
+Done when: the dry plan's rows look like the country's towns and countryside, with about the people they have.
 
 ## 3. Preflight (on the dry plan; fix before any build)
 
@@ -80,12 +86,16 @@ It prints a FLAG line for each fault, NOTE lines for the run, and the picture's 
 `artifacts\trainworld\preflight\<ISO>.png`: the rows, flagged ones in red, far parts circled, other countries'
 packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLAG, dry run again.
 
-1. **Origins** (FLAG origin): none of the country's zones over 25 km from the unit it leads with. Over: the
-   row's origin goes to its town (`checks/zone_new_origins.py <ids>`).
+1. **Origins** (FLAG origin): none of the country's zones over 25 km from the unit it leads with (grouped
+   zones are not checked: their origin is in the group they are named after). Over: on the live plan (section 4),
+   `checks/zone_new_origins.py <ids> --apply` moves the row's origin to its lead unit's densest pixel.
 2. **Scattered units** (FLAG scattered): no row with towns (1,000 people) in parts over 100 km from all its
    others. The planner already makes such a unit dead space when it is not its zone's most populous
    (`world_plan.far_towns`, T-1984: "Unincorporated NT"); far islets with next to no one are a NOTE. Fix:
-   the far unit to dead space.
+   the far unit to dead space. But when the flagged units are ordinary small units with parts hundreds of km
+   apart (Malaysia's mukim: Pulai in Johor Bahru and in Kelantan), the geoBoundaries file has dissolved
+   same-named units into one feature: add the country to `world_plan.GB_SPLIT_FAR` (each far cluster its own
+   unit, T-1738) and dry run again.
 3. **Lone tiny zones** (FLAG lone): a zone under 50,000 people parks on its own values. The planner makes
    them dead space in every country (`world_plan.ZONE_ALONE_MIN`, T-1984); a FLAG means a country figure
    in `ALONE_MIN` let one through.
@@ -132,7 +142,8 @@ Write `<kit>\run.cmd`:
 
 with N the cores granted. Regions over 100 rows: `set TW_QUIET_S=3600` in the .cmd. Start it with
 `powershell -File <tc>\start_hidden.ps1 <kit>\run.cmd`; it prints the cmd's PID and, three seconds
-later, its children (the python PID is one of them; `cores.py claim ... --pid` takes it).
+later, its children (the cmd's own python.exe child is venv's launcher, alive as long as the run: `cores.py claim
+... --pid` and the wait take that one).
 
 **Before waiting**, write in the notes: batch id (the log's first lines), log path, cmd and python PIDs,
 liveness (`Get-Process -Id <pid>`, `world_run.py status`), restart (the same command: built rows are taken
@@ -184,7 +195,8 @@ Done when: `world_run.py status` shows the country's gated rows shipped.
 
 - `world_run.py status`: the country's rows shipped, dead space, or parked with a task each.
 - `<tc>\stale.py`: 0 market packs name a freed place.
-- `checks\zone_origins.py`: none of the country's rows over 25 km.
+- `checks\zone_origins.py`: none of the country's rows over 25 km (a grouped zone's origin is measured from its
+  first unit, not its group: over 25 km there is fine when the origin is a town of the district it is named after).
 - Load check on the biggest metro and one rural zone: `ROWS=<kit>\rows.json node <tw>\checks\city-browser.mjs`
   (rows from `world_run/<batch>/gate/<id>.row.json`) on your Vite: PASS, and the `-line.png` opened: the
   line runs through the town.
