@@ -20,10 +20,11 @@ import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { periodAt } from "../game/periods";
 import type { PurposeFilter, PurposeKey } from "../game/purposes";
-import { askMarketTrip, askTrip, averageTrips, busiestPeriod, mergeMarketPeriods, type MarketEnd, kindsOf, openRoute, routeLabel, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type MarketPeriod, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
+import { askMarketTrip, askTrip, averageTrips, busiestPeriod, countsTrain, mergeMarketPeriods, type MarketEnd, kindsOf, openRoute, routeLabel, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type MarketPeriod, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
 import { purposeFilter, selection, shownDay } from "../game/ui";
 import { metresBetween } from "../game/walks";
 import { stationNames, stopsById, world } from "../game/world";
+import { placeAt } from "../game/zones";
 import { addFinder } from "./demandHover";
 import { toLngLat, toLocal, unitPerPxAt } from "./geo";
 import { sizeCanvasLike } from "./gl";
@@ -46,7 +47,7 @@ interface Drawn {
   /** screen-independent polylines in local units (map/geo.ts), with what the hover says; a ride
    * follows its line's track (T-208) */
   parts: { pts: [number, number][]; colour: string; width: number; dash: boolean; alpha: number; tip: string[] }[];
-  stops: { at: [number, number]; big: boolean; tip: string[] }[];
+  stops: { at: [number, number]; big: boolean; tip: string[]; label?: string }[];
 }
 
 export interface TripTool {
@@ -82,6 +83,28 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const s = map.project(toLngLat(p[0], p[1]));
     return [s.x, s.y] as [number, number];
   };
+
+  const font = `600 12px ${getComputedStyle(map.getContainer()).fontFamily || "sans-serif"}`;
+  /** T-1902: the main route's named stations, right of their dots on a halo of the land; a name
+   * that would overlap one already drawn is left out. */
+  function drawLabels(shades: ReturnType<typeof shadeColours>) {
+    const taken: [number, number, number, number][] = [];
+    ctx.font = font;
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    for (const s of drawn?.stops ?? []) {
+      if (!s.label) continue;
+      const [x, y] = screenLocal(s.at);
+      const w = ctx.measureText(s.label).width, box: [number, number, number, number] = [x + 7, y - 8, x + 11 + w, y + 8];
+      if (taken.some((b) => box[0] < b[2] && b[0] < box[2] && box[1] < b[3] && b[1] < box[3])) continue;
+      taken.push(box);
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = shades.land;
+      ctx.strokeText(s.label, x + 9, y);
+      ctx.fillStyle = shades.mapInk;
+      ctx.fillText(s.label, x + 9, y);
+    }
+  }
 
   function draw() {
     const dpr = map.getPixelRatio();
@@ -155,6 +178,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       ctx.strokeStyle = NET_INK;
       ctx.stroke();
     }
+    drawLabels(shades);
     // the two ends: where the trip starts an open ring, where it ends a filled disc
     for (const [p, filled] of [[marks.from, false], [marks.to, true]] as const) {
       if (!p) continue;
@@ -230,7 +254,9 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   let builtOn: NetworkBuffers | null = null;
   const rebuild = () => {
     const v = tripView.peek(), q = shownPeriod.peek(), w = world.peek();
-    const t = v?.trip?.periods[q] ?? null;
+    const t0 = v?.trip?.periods[q] ?? null;
+    // T-1902: a route read with the walk limits lifted is drawn only while the headline counts train trips
+    const t = t0 && !t0.railOffered && t0.lifted && !countsTrain(v?.mix ?? null) ? { ...t0, routes: [] } : t0;
     // T-866: between zones, the market's routes from the selection's point to the far end's
     const mt = v?.market?.periods[q] ?? null;
     builtOn = overlay.renderer.net ?? null;
@@ -238,7 +264,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     // T-1252: answered with no train route in the period shown, a straight line joins the two ends
     const answered = !!v && (!!v.trip || !!v.market || !!v.failed);
     if (answered && marks?.to && !drawn?.parts.length) {
-      const anyRoute = (v.trip?.periods ?? v.market?.periods ?? []).some((p) => p?.routes.length);
+      const anyRoute = v.trip ? v.trip.periods.some((p) => p?.routes.length && (p.railOffered || countsTrain(v.mix))) : (v.market?.periods ?? []).some((p) => p?.routes.length);
       const d = metresBetween(...packToLngLat(marks.from[0], marks.from[1]), ...packToLngLat(marks.to[0], marks.to[1]));
       straight = [anyRoute ? "No train route at this time of day" : "No train route between these two points", `${distance(d)} in a straight line`];
     } else straight = null;
@@ -434,8 +460,9 @@ const FAR_PLACE_M = 60000;
 /**
  * T-866, T-885: a trip tool trip with an end outside the focused zone's cells. One end in them: its
  * own cell (as homes for the start, destinations for the end) and the far 6 km zone with longer
- * trips with it nearest the other end, else the nearest such place. Neither: the two zones' places
- * whose centres are nearest the ends. Null when nothing fits; undefined while the workers move on.
+ * trips with it nearest the other end, else the nearest such place, else (T-1902) the two places
+ * whole. Neither: the places of the zones the ends are in (else whose centres are nearest). Null
+ * when nothing fits; undefined while the workers move on.
  */
 async function farEnd(from: [number, number], to: [number, number]): Promise<{ end: "home" | "work"; cells: Uint32Array; far: MarketEnd; near?: MarketEnd } | null | undefined> {
   const cells = await cityCells();
@@ -449,18 +476,25 @@ async function farEnd(from: [number, number], to: [number, number]): Promise<{ e
     return best;
   };
   const a = cellAt(from), b = a < 0 ? cellAt(to) : -1;
-  if (a < 0 && b < 0) {
-    const placeAt = (pt: [number, number]) => {
-      let best = -1, bestD = FAR_PLACE_M;
-      for (const c of CITIES) {
-        const p = lngLatToPack(c.center[0], c.center[1]), d = Math.hypot(p.x - pt[0], p.y - pt[1]);
-        if (d <= bestD) (bestD = d), (best = c.place);
-      }
-      return best;
-    };
-    const pa = placeAt(from), pb = placeAt(to);
-    return pa >= 0 && pb >= 0 && pa !== pb ? { end: "home", cells: new Uint32Array(0), near: { place: pa, gid: -1 }, far: { place: pb, gid: -1 } } : null;
-  }
+  // the market place of the zone a point is in, else the one whose centre is nearest within FAR_PLACE_M
+  const placeOf = (pt: [number, number]) => {
+    const id = placeAt(...packToLngLat(pt[0], pt[1]));
+    const c = id ? CITIES.find((x) => x.id === id) : undefined;
+    if (c) return c.place;
+    let best = -1, bestD = FAR_PLACE_M;
+    for (const c of CITIES) {
+      const p = lngLatToPack(c.center[0], c.center[1]), d = Math.hypot(p.x - pt[0], p.y - pt[1]);
+      if (d <= bestD) (bestD = d), (best = c.place);
+    }
+    return best;
+  };
+  // T-1902: the two places whole, when the points' own cells and areas give no far end (a city
+  // centre where few people live has no longer trips of its own to a far area)
+  const places = () => {
+    const pa = placeOf(from), pb = placeOf(to);
+    return pa >= 0 && pb >= 0 && pa !== pb ? { end: "home" as const, cells: new Uint32Array(0), near: { place: pa, gid: -1 }, far: { place: pb, gid: -1 } } : null;
+  };
+  if (a < 0 && b < 0) return places();
   const end = a >= 0 ? "home" : "work", near = Uint32Array.of(a >= 0 ? a : b), other = a >= 0 ? to : from;
   const ic = await intercitySelection(end, near);
   if (!ic) return undefined;
@@ -469,7 +503,7 @@ async function farEnd(from: [number, number], to: [number, number]): Promise<{ e
   const zone = flowsOf.zones.filter((z) => z.all > 0).sort((p, q) => dist(p) - dist(q))[0];
   if (zone && dist(zone) <= FAR_ZONE_M) return { end, cells: near, far: { place: zone.place, gid: zone.gid } };
   const place = flowsOf.places.filter((p) => p.all > 0 && Number.isFinite(p.x)).sort((p, q) => dist(p) - dist(q))[0];
-  return place && dist(place) <= FAR_PLACE_M ? { end, cells: near, far: { place: place.place, gid: -1 } } : null;
+  return place && dist(place) <= FAR_PLACE_M ? { end, cells: near, far: { place: place.place, gid: -1 } } : places();
 }
 
 function segDist(x: number, y: number, a: [number, number], b: [number, number]): number {
@@ -569,6 +603,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
   const open = openRoute.peek();
   const isOpen = (r: TripRoute) => open !== null && r !== t.routes[0] && label(r) === open;
   const routes = [...t.routes].reverse().sort((a, b) => Number(isOpen(a)) - Number(isOpen(b)));
+  const labelled = new Set<string>();
   for (const r of routes) {
     const shown = isOpen(r);
     const main = r === t.routes[0] || shown;
@@ -595,7 +630,10 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
           const p = pos(id);
           const ends = k === 0 || k === l.stations.length - 1;
           const line = ln.get(l.line)?.name ?? "the line";
-          if (p) out.stops.push({ at: p, big: ends, tip: [name(id), k === 0 ? `Board ${line} here` : k === l.stations.length - 1 ? `Leave ${line} here` : `${line} stops here`] });
+          // T-1902: the main route's boardings, changes and last stop named on the map, as in the inspector's rows
+          const label = ends && r === t.routes[0] && !labelled.has(name(id)) ? name(id) : undefined;
+          if (label) labelled.add(label);
+          if (p) out.stops.push({ at: p, big: ends, tip: [name(id), k === 0 ? `Board ${line} here` : k === l.stations.length - 1 ? `Leave ${line} here` : `${line} stops here`], label });
         });
       }
     }

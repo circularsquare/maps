@@ -674,8 +674,10 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   trips") opens the trip between the selection and it; so does a trip tool trip with an end
   outside the focused zone's cells (the cell of the end inside, as homes for the start or
   destinations for the end, to the far 6 km area with trips with it nearest the other end, within
-  6 km, else the nearest such place within 60 km; both ends outside: the zones' places whose centres
-  are nearest each end). Every other pair of ends [T-885, T-881; the table in notes/T-885.md]: a
+  6 km, else the nearest such place within 60 km, else [T-1902] the two places whole, as when both
+  ends are outside: the places of the zones the two ends are in, else those whose centres are
+  nearest within 60 km). A city centre where few people live has almost no longer trips of its own,
+  so its cell finds no far end and the two whole places answer. Every other pair of ends [T-885, T-881; the table in notes/T-885.md]: a
   Shift box over inter-city bubbles takes them as one far end (each asked, then merged:
   `mergeMarketPeriods`, trips added, times trip weighted, the five biggest routes kept); a zone
   selected in the city view, then another zone's bubble (or a Shift box over several) is the
@@ -705,8 +707,15 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   station reaches is not read as the corridor; By train (the period with most trips, "Inter-city,
   midday") with the main route ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
   to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
-  station), Effective time (the pairs' felt cost, averaged over the pairs the train serves), the
-  main route's share and up to four other routes (routes under 0.5% of the riders are left out,
+  station), Effective time (the pairs' felt cost, averaged over the pairs the train serves and
+  their riders' income groups), then [T-1902] "Car for these trips" (or "Plane", or "Car or
+  plane" where the plane has 0.5% of the trips or more: the other ways as the choice weighs them
+  together, the reference less ln(rest) over the scale, over the same pairs and riders; its hover
+  gives the train's share of those trips) and "Trips the train can serve" (the share of the trips
+  on pairs with a station in reach at both ends; the rest have no train), so the train's share
+  reads as its share of the trips it can serve times that share; the
+  main route's share ("43% of train users between these cities take this exact route", "places"
+  when an end is a 6 km area or a selection) and up to four other routes (routes under 0.5% of the riders are left out,
   but while any rail rider is counted the biggest route stays, so riders spread thin over many
   station pairs still show their trip [T-1500]); **By car** [T-1148]: Drive (15 minutes plus the
   road at 85 km/h), Running costs (each person's dollars), Parking, any Channel crossing or Ferry
@@ -714,7 +723,10 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   parts follow from the sim's minutes and mean distance by the rule (`carPartsOf` in
   `game/marketRule.ts`), parking the rest; **By plane** where the pair flies (one far place): the
   drives to and from the airports, 135 minutes at them, the flight, the fare and the effective
-  time, from the market rows; Train by period (only when rail is in play). The routes are drawn
+  time, from the market rows; the car's and the plane's money at the travellers' mean minutes a
+  dollar (`travelWeight`, the sim's `Place::trip_w`: the fare weight times the income groups'
+  factors by their trips, so the longer trips' lower weight on money), as the choice weighs it
+  [T-1902]; Train by period (only when rail is in play). The routes are drawn
   on the map as a local trip's, from the selection's busiest cell to the far end's centre. Rail
   is not worked out when a place's zone at either end is not open in the game [T-991]: the panel
   then shows only the straight-line distance between the two places' centres and By car from it
@@ -780,7 +792,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   says choice of routes is the time saved by having several ways to go; the terms are the worker's
   perceived minutes, `routeTerms` in `game/trip.ts`), then one sentence with the share of the
   trip's train users on the route and the same trains from other platforms or walks added ("65% of
-  the train users on this trip take this route, the rest use different routes."), with up to four
+  train users between these places take this exact route."), with up to four
   "Other routes" and their shares, then a "Smaller routes" row with what is left [T-709]; the
   sentence's and the row's hover say how many pairs of stations the users spread over and what the
   busiest pair takes [T-709].
@@ -802,7 +814,19 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   by what holds it back: on a trip under `ride_min_km` (5 km) "too far to walk to, and the trip is
   too short to drive to one"; with no station within a drive, "none is within a drive of the start";
   else the bigger end, "The walk from the nearest station to the end is too long" or "The stations
-  near the start are too far, even by car". Its hover gives the two ends' felt minutes and the limit. Every row and bar segment has a hover with its figure and what it is made
+  near the start are too far, even by car". Its hover gives the two ends' felt minutes and the limit.
+  **When the headline counts train trips anyway** [T-1902] (at least one whole trip; the headline
+  counts the homes and places around the two points, and the views deal a zone's commuters over
+  its cells, so train riders land on cells too far from the stations for the cells' own trip), a trip whose walks are too long, whose station pairs all walk further than
+  walking there, or that walking beats shows the route read with those limits lifted
+  (`DemandApi.trip` slot 46): one line "The stations are too far from these exact points. Trips
+  from nearby take this route." (or "Walking is quicker from these exact points. ..."), its hover
+  the felt minutes and the limit, then the route's rows, fare, time and
+  effective time as usual; its chances and Train by period stay the trip's own. With no train
+  counted the reason stays and the lifted route is not drawn.
+  **Station names** in the route's rows (the walk or drive to the first station, each ride's "to",
+  a change's walk, the walk from the last; the market's "To" and "From" rows) are links: a click
+  centres the map on the station, at zoom 12 or closer, and keeps the trip selected [T-1902]. Every row and bar segment has a hover with its figure and what it is made
   of. The trip is the two places' own (each one's walk to its stations, T-720); where the map's
   bubbles count it differently, grouped with the homes and places near each end, the period rows'
   hovers add that count ("Counted with the homes and places near here, as the map's bubbles count
@@ -813,5 +837,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   stations only when the drawn network no longer matches the solve's), with a dark casing and the
   boarding and leaving stations bigger; walks dashed and straight; other routes thinner and faint
   under it, except an opened one [T-870], drawn at full strength a little thinner than the main
-  route, on top of it, with its stations marked. Hovering a ride gives line, stations, stops, minutes after the wait, crowding's effect
+  route, on top of it, with its stations marked. The main route's boarding, change and last
+  stations are named beside their dots in map ink on a halo of the land, a name that would overlap
+  one already drawn left out [T-1902]. Hovering a ride gives line, stations, stops, minutes after the wait, crowding's effect
   and the route's share; a walk its distance and minutes; a station what the route does there.

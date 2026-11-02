@@ -29,7 +29,7 @@ import { curveKnots, scaledKnots } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
-import { arriveOf, comeMax, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -1078,7 +1078,7 @@ function query(msg: Query) {
             if (v[0] !== 1) continue;
             if (!best || v[3] + v[20] + v[23] > best[3] + best[20] + best[23]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
           }
-          if (!best) { best = new Float64Array(24); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
+          if (!best) { best = new Float64Array(MARKET_TRIP_LAYOUT.HEAD); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = best[24] = -1; }
           answers.push(best);
           periods.push(q);
         }
@@ -1339,7 +1339,7 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
 
 /** The same for an `IntercityApi.market_trip` answer (T-866: head 24 since T-880, pairs of 7, legs of 12). */
 function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 24, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
+  const { HEAD, PAIR_LEN } = MARKET_TRIP_LAYOUT, { LEG_LEN } = TRIP_LAYOUT;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[11], nr = v[12];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }

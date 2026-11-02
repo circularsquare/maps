@@ -564,6 +564,11 @@ impl Place {
     fn groups(&self) -> &[(f32, f32)] {
         if self.ng == 0 { &ONE_GROUP } else { &self.gr[..self.ng as usize] }
     }
+    /// T-1902: perceived minutes a dollar costs its longer trips' travellers on average (`w` times
+    /// the groups' trip weighted factor), what the trip explorer prices the car and plane at.
+    fn trip_w(&self) -> f32 {
+        self.w() * self.groups().iter().map(|g| g.0 * g.1).sum::<f32>()
+    }
 }
 /// T-1431: a row's `fg` as a place keeps it: the shares made to add up to 1; none for no groups.
 fn income_groups(fg: &[f64]) -> Result<([(f32, f32); GROUPS], u8), String> {

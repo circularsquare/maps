@@ -344,11 +344,20 @@ export function corridorOf(a: number, b: number): Corridor | null {
 const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) : 0);
 
 /** The car from place `from` to place `to` centre to centre, paying `to`'s parking (the sim's
- * figure between two places' rows, `head_from_rows`); null with no road between them. */
+ * figure between two places' rows, `head_from_rows`), money at the travellers' weight
+ * (`travelWeight`); null with no road between them. */
 export function carBetween(from: number, to: number): CarCost | null {
   const p = marketRow(from), q = marketRow(to);
   if (!p || !q || from === to || p.road !== q.road) return null;
-  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), fareWeight(p.country), pairCarUsd(p, q));
+  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to), travelWeight(p.country), pairCarUsd(p, q));
+}
+
+/** T-1902: perceived minutes a dollar costs the longer trips' travellers from `country` on average:
+ * the fare weight times their income groups' factors weighted by their trips (the sim's
+ * `Place::trip_w`). The longer trips weigh money below a local trip's (`LONG_TRIP_MONEY`), so this
+ * is what the explorer prices the car and the plane at. */
+export function travelWeight(country: string | undefined): number {
+  return fareWeight(country) * incomeGroups(country, RULE.eps).reduce((s, g) => s + g.share * g.factor, 0);
 }
 
 const tailOn = (d: number) => Math.min(1, Math.max(0, (d - RULE.tail_onset_km[0]) / (RULE.tail_onset_km[1] - RULE.tail_onset_km[0])));
@@ -410,7 +419,7 @@ export function rowsAnswer(from: MarketEnd, to: MarketEnd, day: number): (Market
     const n = trips * longerShare(day, q);
     return {
       round: 0, trips: n, rail: 0, air: n * c.air, car: n * c.carShare,
-      railPerceived: NaN, carPerceived: car ? car.total : NaN, refPerceived: c.refMin,
+      railPerceived: NaN, otherPerceived: NaN, carPerceived: car ? car.total : NaN, refPerceived: c.refMin,
       km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: fareWeight(FARE_BASELINE), why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
     };
   });

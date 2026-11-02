@@ -7,6 +7,7 @@ import { PERIODS } from "../../game/periods";
 import { tripPeriod, type TripLeg, type TripRoute } from "../../game/trip";
 import type { LineInput } from "../../game/types";
 import { world } from "../../game/world";
+import { live } from "../../map/live";
 import { shownPeriod } from "../../map/tripView";
 import { Chip } from "../widgets";
 import { minText, pctShare } from "./tripText";
@@ -26,6 +27,21 @@ export function routeRow(r: TripRoute, st: ReadonlyMap<string, string>, ln: Read
   return { names, from, to, label };
 }
 
+/** T-1902: the map moved to a station, the trip kept selected (its focused zone too). */
+export function showStation(id: string) {
+  const map = live.map, w = world.peek();
+  const s = w?.save.stations.find((x) => x.id === id);
+  if (!map || !s) return;
+  map.jumpTo({ center: [s.lng, s.lat], zoom: Math.max(map.getZoom(), STATION_ZOOM) });
+}
+/** How far in a click on a station's name goes at least: the station and the streets around it. */
+const STATION_ZOOM = 12;
+
+/** A station's name in a route's rows, a click on it moving the map there. */
+export function StationLink({ id, name }: { id: string; name: string }) {
+  return <span class="place-link" onClick={(e) => { e.stopPropagation(); showStation(id); }}>{name}</span>;
+}
+
 /** The rows for a route's legs: a walk between stations, and each ride with its line chip. `rideTip`
  * words a ride's hover. */
 export function legRows(r: TripRoute, name: (station: string) => string, ln: ReadonlyMap<string, LineInput>, rideTip: (l: TripLeg) => string): JSX.Element[] {
@@ -33,7 +49,7 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
     if (l.kind === "walk") {
       return (
         <li data-tip={`${l.min.toFixed(1)} min on foot`}>
-          <span class="grow">Change: walk to {name(l.to)}</span>
+          <span class="grow">Change: walk to <StationLink id={l.to} name={name(l.to)} /></span>
           <span class="val">{minText(l.min)}</span>
         </li>
       );
@@ -43,7 +59,7 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
     return (
       <li data-tip={rideTip(l)}>
         {line && <Chip line={line} size="sm" />}
-        <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"}{bus ? " bus" : ""} to {name(l.to)}</span>
+        <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"}{bus ? " bus" : ""} to <StationLink id={l.to} name={name(l.to)} /></span>
         <span class="val">{minText(l.waitMin + l.min)}</span>
       </li>
     );

@@ -10,13 +10,13 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { CAR_MIN_PER_USD, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
 import { MarketTrip } from "./MarketTrip";
-import { legRows, PeriodRows, routeRow } from "./RouteParts";
+import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
 import { minText, num1, pctShare, roundTo } from "./tripText";
 
 const usd = (v: number) => "$" + v.toFixed(2);
@@ -166,7 +166,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
           ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road`
           : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h`
             + (t.groupWalkStartMin >= 0 && Math.abs(t.groupWalkStartMin - pair.accessMin) >= 1 ? `\nThe map's bubbles count the homes near here at ${minText(t.groupWalkStartMin)} to their nearest station` : "")}>
-          <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to {name(first.from)}</span>
+          <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to <StationLink id={first.from} name={name(first.from)} /></span>
           <span class="val">{minText(pair.accessMin)}</span>
         </li>
       )}
@@ -179,7 +179,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       })}
       {pair && last && (
         <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
-          <span class="grow">Walk from {name(last.to)}</span>
+          <span class="grow">Walk from <StationLink id={last.to} name={name(last.to)} /></span>
           <span class="val">{minText(pair.egressMin)}</span>
         </li>
       )}
@@ -354,8 +354,21 @@ function mainShare(t: TripPeriod): number {
 /** How much of the trip's train riders the main route carries. */
 function mainNote(t: TripPeriod, riders: number | null): string {
   const all = routeRows(t, riders).shown[0];
-  if (all >= 0.995) return "Every train user on this trip takes this route.";
-  return `${pctShare(all)} of the train users on this trip take this route` + (1 - all >= 0.005 ? ", the rest use different routes." : ".");
+  if (all >= 0.995) return "Every train user between these places takes this route.";
+  return `${pctShare(all)} of train users between these places take this exact route.`;
+}
+
+/** T-1902: the train is not offered from these two exact points, but the trips counted here
+ * include train trips (the model works them out for the areas around the points): the route they
+ * take, said why above it. */
+function LiftedNote({ t }: { t: TripPeriod }) {
+  const slower = t.why === "slowerThanWalk" || t.why === "walkFurther";
+  const tip = t.why === "walkFurther"
+    ? "From these two points, walking all the way is shorter than the walks to, between and from the stations. The train trips counted here are worked out for the areas around the two points."
+    : slower
+    ? `From these two points walking counts as ${minText(t.walkMin * t.walkWeight)}, about as much as the train. The train trips counted here are worked out for the areas around the two points.`
+    : `Getting to a station counts as ${minText(t.walkStartPerceived)} from the start and ${minText(t.walkEndPerceived)} to the end. The train is offered when the two come to ${Math.round(t.pairWalkMax)} min or less. The train trips counted here are worked out for the areas around the two points.`;
+  return <p class="muted small" data-tip={tip}>{slower ? "Walking is quicker from these exact points. Trips from nearby take this route." : "The stations are too far from these exact points. Trips from nearby take this route."}</p>;
 }
 
 /** T-720: the trip is the two places' own; the map's bubbles count it with the homes and places
@@ -439,6 +452,7 @@ export function TripInspector() {
   const of = n >= 0.5 ? `the ${count(n)} ${trips(n, filter)} ${day} between the two places` : n > 0 ? `the ${tripWords(filter)} ${day} between the two places` : `the people making this trip in the ${period.toLowerCase()}`;
   // T-911: the train riders the headline counts, in whole trips, for the route shares (none: the model's)
   const riders = n > 0 ? wholePeople([mix!.rail, mix!.walk, mix!.drive], peopleOf(n))[0] || null : null;
+  const trainCounted = countsTrain(mix);
   const countTip = n > 0 ? [`${exact(n)} ${tripWords(filter)} ${day} between the two places, both ways`, ...(filter === "all" ? mix!.purposes.filter((p) => p.rail + p.walk + p.drive >= 0.5).map((p) => `${purposeName(p.key)}: ${exact(p.rail + p.walk + p.drive)}`) : [])].join("\n") : `${distance(t.distM)} in a straight line`;
   const words = purposeWords(v!.purpose);
   const picked = tripPeriod.value !== null;
@@ -452,7 +466,7 @@ export function TripInspector() {
       <p class="muted small" data-tip={countTip}>{n >= 0.5 ? `${count(n)} ${trips(n, filter)} ${day}` : n > 0 ? `Under 1 ${trips(1, filter)} ${day}` : period}, {distance(t.distM)} apart</p>
       <ModeBar t={t} mix={mix} of={of} />
       <div class="h">By train<span class="right muted small" data-tip={repTip}>{purposeName(v!.purpose)}, {period.toLowerCase()}</span></div>
-      {!t.railOffered ? <NoRail t={t} /> : avg ? (
+      {!t.railOffered && !(t.lifted && trainCounted) ? <NoRail t={t} /> : avg ? (
         <>
           <ul class="rows">
             <li data-tip={`${avgTip}${t.railSampled !== t.sampled ? `; the train is offered for ${t.railSampled} of them` : ""}`}>
@@ -464,6 +478,7 @@ export function TripInspector() {
         </>
       ) : main && tot && pair ? (
         <>
+          {!t.railOffered && <LiftedNote t={t} />}
           <RouteLegs t={t} r={main} />
           <ul class="rows">
             <FareRows t={t} r={main} />
@@ -477,7 +492,7 @@ export function TripInspector() {
               <span class="val">{minText(t.railPerceived)}</span>
             </li>
           </ul>
-          {t.walkFade < 1 && <BarelyQuicker t={t} />}
+          {t.railOffered && t.walkFade < 1 && <BarelyQuicker t={t} />}
           <p class="muted small">{mainNote(t, riders)}</p>
           <OtherRoutes t={t} riders={riders} />
         </>

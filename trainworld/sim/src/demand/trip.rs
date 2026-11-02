@@ -35,7 +35,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 46;
+pub const HEAD: usize = 47;
 pub const PAIR_LEN: usize = 20;
 pub const LEG_LEN: usize = 13;
 
@@ -683,6 +683,24 @@ impl DemandApi {
         h[42] = p.ride_min_km as f64;
         h[43] = p.pair_walk_max as f64;
         h[44] = pc.fade as f64;
+        // T-1902: the views can count train riders between cells too far from the stations for
+        // the cells' own trip (they count the homes and places around them); the route such riders
+        // take is read with the limits on walks lifted, the trip's own chances left as they are
+        let lifted = matches!(pc.why, WALKS_TOO_LONG | SLOWER_THAN_WALK | WALK_FURTHER).then(|| {
+            let pf = Params { pair_walk_max: f32::INFINITY, walk_fade: 0.0, walk_rule: 0.0, ..p.clone() };
+            match m {
+                Model::Commute => pair_choice(self, sz, &pf, &sk, u, v),
+                Model::Everyday(ev) => everyday_choice(&TripInputs { p: &pf, ..**ev }, sz, &sk, u, v, cells_m, true),
+            }
+        });
+        let pc = match lifted {
+            Some(c) if c.why == RAIL_OFFERED => {
+                h[46] = 1.0;
+                h[14] = c.rail as f64;
+                c
+            }
+            _ => pc,
+        };
         if pc.why != RAIL_OFFERED {
             h[31] = 1.0;
             return h;
@@ -769,7 +787,10 @@ impl DemandApi {
     /// real minutes (-1 none); whether the home end could drive to a station (`RIDE_TOO_SHORT`..
     /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`; the factor on
     /// rail's share for being barely cheaper than walking (`Params::walk_fade_of`, T-1782); the
-    /// transfer fare a change pays (perceived minutes, `Params::xfer_fare`, T-1801).
+    /// transfer fare a change pays (perceived minutes, `Params::xfer_fare`, T-1801); 1 when rail is
+    /// not offered (walks too long, walking further than walking there, or slower than walking)
+    /// but the pairs and routes below are read with those limits lifted, rail's cost then theirs
+    /// (T-1902), else 0.
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and

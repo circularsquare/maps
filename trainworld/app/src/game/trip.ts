@@ -14,7 +14,7 @@ import type { Flows } from "./demand";
 import { PERIODS } from "./periods";
 import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "./purposes";
 import type { Selection } from "./types";
-import { TRIP_LAYOUT } from "../workers/demandProtocol";
+import { MARKET_TRIP_LAYOUT, TRIP_LAYOUT } from "../workers/demandProtocol";
 import { stationNames, stationsById, world } from "./world";
 
 /** One leg of a route: a ride on a line, or a walk after a ride, to another station or between the
@@ -128,8 +128,12 @@ export interface TripPeriod {
   roadPerceived: number;
   railOffered: boolean;
   why: NoRail;
+  /** T-1902: not offered for these two cells (walks too long, or slower than walking), but the
+   * pairs, routes and `railPerceived` are those read with the walk limits lifted: the route the
+   * train riders the views count here take */
+  lifted: boolean;
   /** the train's cost (the logsum over station pairs, perceived minutes); NaN if not offered,
-   * except where walking is as quick (`slowerThanWalk`) */
+   * except where walking is as quick (`slowerThanWalk`) or the route is `lifted` */
   railPerceived: number;
   /** T-1782: the factor on the train's share for being barely quicker than walking (1 none) */
   walkFade: number;
@@ -219,7 +223,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   return {
     round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
-    railOffered: offered, why, railPerceived: offered || why === "slowerThanWalk" ? v[14] : NaN, walkFade: v[44], railOfMotor: v[15], utility: v[16],
+    railOffered: offered, why, lifted: v[46] === 1, railPerceived: offered || why === "slowerThanWalk" || v[46] === 1 ? v[14] : NaN, walkFade: v[44], railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], xferFarePerceived: v[45] ?? 0, minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
     groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
     rideToStation: RIDE[v[41]] ?? "none", rideMinKm: v[42], pairWalkMax: v[43],
@@ -298,9 +302,12 @@ export interface MarketPeriod {
    * the far end for Destinations), legs a day both ways and by train; the rest drive. Their train
    * riders are in `pairs` and `routes` too. */
   commute: { legs: number; rail: number };
+  /** T-1902: the car and the plane as one figure, as the choice weighs them against the train, over
+   * the same zone pairs and riders as `railPerceived`; NaN none */
+  otherPerceived: number;
 }
 
-const MT_HEAD = 24, MT_PAIR_LEN = 7;
+const { HEAD: MT_HEAD, PAIR_LEN: MT_PAIR_LEN } = MARKET_TRIP_LAYOUT;
 
 /** Read one period's `IntercityApi.market_trip` answer. */
 export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod | null {
@@ -320,6 +327,7 @@ export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod 
     pairs, routes: readRoutes(v, MT_HEAD + np * MT_PAIR_LEN, nr, at), cut: v[13],
     everyday: { legs: v[19], rail: v[20], walk: v[21] },
     commute: { legs: v[22], rail: v[23] },
+    otherPerceived: nan(v[24]),
   };
 }
 
@@ -386,6 +394,7 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   return {
     ...top, trips, rail, everyday, commute, air: sum((p) => p.air), car: sum((p) => p.car),
     railPerceived: wmean((p) => p.railPerceived, (p) => p.trips * p.served),
+    otherPerceived: wmean((p) => p.otherPerceived, (p) => p.trips * p.served),
     // T-991: ends with no trips worked out (not open) still carry a distance and a car, by place
     carPerceived: trips > 0 ? wmean((p) => p.carPerceived, (p) => p.trips) : wmean((p) => p.carPerceived, () => 1),
     refPerceived: wmean((p) => p.refPerceived, (p) => p.trips),
@@ -541,7 +550,7 @@ export function averageTrips(trips: { trip: Trip; w: number }[], label: (r: Trip
       distM: mean((t) => t.distM), driveDistM: mean((t) => t.driveDistM), driveRoadKm: mean((t) => t.driveRoadKm),
       driveMin: mean((t) => t.driveMin), drivePerceived: mean((t) => t.drivePerceived), parkPerceived: mean((t) => t.parkPerceived),
       carOwnPerceived: mean((t) => t.carOwnPerceived), roadPerceived: mean((t) => t.roadPerceived),
-      railOffered: rail.length > 0, why: rail.length ? "" : base.why,
+      railOffered: rail.length > 0, why: rail.length ? "" : base.why, lifted: false,
       railPerceived: railW > 0 ? rail.reduce((s, x) => s + x.w * x.t.railPerceived, 0) / railW : NaN,
       railOfMotor: mean((t) => t.railOfMotor), utility: mean((t) => t.utility),
       pWalk: mean((t) => t.pWalk), pTrain: mean((t) => t.pTrain), pDrive: mean((t) => t.pDrive),
@@ -570,6 +579,13 @@ export function wholePeople(shares: number[], n: number, pooled = -1): number[] 
 
 /** T-911: the whole number of people `n` trips a day stand for (at least one, when there are any). */
 export const peopleOf = (n: number) => (n > 0 ? Math.max(1, Math.round(n)) : 0);
+
+/** T-1902: the headline counts at least one whole train trip (as its bar rounds the modes), so the
+ * explorer shows a train route even where the two exact points have none (`TripPeriod.lifted`). */
+export function countsTrain(mix: TripMix | null): boolean {
+  const n = mix ? mix.rail + mix.walk + mix.drive : 0;
+  return n > 0 && wholePeople([mix!.rail, mix!.walk, mix!.drive], peopleOf(n))[0] > 0;
+}
 
 /** Trips a day (legs both ways) between two places by mode, under the purpose filter. */
 export interface TripMix {

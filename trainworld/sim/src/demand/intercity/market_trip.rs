@@ -11,7 +11,7 @@ use crate::demand::trip::{routes, Leg};
 
 /// Numbers in the answer's head and per station pair (`IntercityApi::market_trip`); a leg is
 /// `trip::LEG_LEN` numbers.
-pub const MT_HEAD: usize = 24;
+pub const MT_HEAD: usize = 25;
 pub const MT_PAIR_LEN: usize = 7;
 /// Station pairs under this share of the rail riders are not walked for routes, and routes under
 /// it are left out (as `trip.rs`).
@@ -103,7 +103,8 @@ impl IntercityApi {
     /// `MT_HEAD` numbers: status (1 answered, 0 period not solved here), the period's crowding
     /// round; the period's trips, rail, plane and car trips; rail's perceived cost (the pairs'
     /// logsums, trip weighted over the pairs rail can serve; -1 none); the car's perceived minutes
-    /// (trip weighted; -1 no car); the zone pairs' mean distance, km; the base fare (perceived
+    /// (trip weighted, money at the travellers' mean weight, `Place::trip_w`; -1 no car); the zone
+    /// pairs' mean distance, km; the base fare (perceived
     /// minutes) and perceived minutes per dollar; station pairs, routes; the rail riders' share on
     /// routes not listed; why rail is not offered (0 offered, 1 the far place is not open here, 2
     /// no zone pair rail can serve, 3 no square matched a site); the share of the trips on pairs
@@ -112,7 +113,9 @@ impl IntercityApi {
     /// zone line between the two ends, as the pairs choose them: legs a day, rail legs and walking
     /// legs (the rest go by car); then (T-880) the commutes between zones with homes at the
     /// commuting end and work at the other, as `selection` counts them: legs a day and rail legs
-    /// (the rest drive). The trips, rail, plane and car above are the longer trips alone; the
+    /// (the rest drive); then (T-1902) the modes but rail as rail's choice weighs them together
+    /// (the reference less ln(rest) over the scale), trip weighted over the same pairs and income
+    /// groups as rail's cost (-1 none). The trips, rail, plane and car above are the longer trips alone; the
     /// station pairs and routes carry every kind of rail rider.
     ///
     /// Then per station pair, most rail riders first, `MT_PAIR_LEN` numbers: a route node at the
@@ -142,7 +145,7 @@ impl IntercityApi {
         h[17] = r.refm(&m.places[a], &m.places[b]) as f64;
         if r.car {
             let (from, to) = if dir == 0 { (a, b) } else { (b, a) };
-            h[7] = r.car_cost(r.km as f32, m.places[to].park as f32).at(m.places[from].w()) as f64;
+            h[7] = r.car_cost(r.km as f32, m.places[to].park as f32).at(m.places[from].trip_w()) as f64;
         }
     }
 
@@ -159,6 +162,7 @@ impl IntercityApi {
         h[10] = p.fare_w as f64;
         h[6] = -1.;
         h[7] = -1.;
+        h[24] = -1.;
         let m = &self.m;
         let near: Vec<usize> = (0..w.len()).filter(|&z| w[z] > 0.).collect();
         let fars = self.zones_of(far, far_gid);
@@ -239,6 +243,7 @@ impl IntercityApi {
         let mut terms: Vec<(u32, u32, f64)> = vec![];
         let mut fares: Vec<f32> = vec![];
         let beta = p.beta as f64;
+        let mut oc = 0f64;
         for &z in &near {
             for &b in &fars {
                 if z == b {
@@ -257,24 +262,24 @@ impl IntercityApi {
                 let split = r.split_car(from, to);
                 let d = m.zone_km(za, zb) as f32;
                 let car_cost = r.car_cost(d, zb.park);
-                // the head's minutes for a rider of average income
-                let mid = r.alt(car_cost, split, from.w(), &m.mp);
+                // T-1431: each income group of the place the trip starts from, as the pass
+                // (T-1520: one logsum at the groups' mean)
+                let gs = from.groups();
+                let fm: f32 = gs.iter().map(|g| g.0 * g.1).sum();
+                // the reference for a rider of average income, as the place pair's rule; the car's
+                // minutes at the travellers' mean weight on money (T-1902: what the choice weighs)
                 all += t;
                 km += t * d as f64;
-                ref_c += t * mid.drive as f64;
+                ref_c += t * r.alt(car_cost, split, from.w(), &m.mp).drive as f64;
                 n += 1.;
                 if r.car {
-                    cc += t * mid.car as f64;
+                    cc += t * car_cost.at(from.w() * fm) as f64;
                     cc_w += t;
                 }
                 let solvable = self.solvable(a, bb);
                 let mut offered = false;
-                // T-1431: each income group of the place the trip starts from, as the pass
-                // (T-1520: one logsum at the groups' mean)
-                let gs = from.groups();
                 let th0 = p.band_unsoftened(self.base.band_of_d2(d * d * 1e6));
                 let (ra, rb) = (&self.access[a], &self.access_work[bb]);
-                let fm: f32 = gs.iter().map(|g| g.0 * g.1).sum();
                 let mix = solvable.then(|| rail_mix_x(&re, s, p.fare_min, ra, rb, p.beta, p.soften(th0, r.alt(car_cost, split, from.w() * fm, &m.mp).car), fx.as_ref(), self.fare_d(a, fm), &mut terms, &mut fares));
                 for &(share, f) in gs {
                     let tg = t * share as f64;
@@ -289,6 +294,8 @@ impl IntercityApi {
                             offered = true;
                             rc += tg * rail_c as f64;
                             rc_w += tg;
+                            // T-1902: the modes but rail as one figure rail is weighed against
+                            oc += tg * (alt.drive as f64 - (alt.rest as f64).ln() / bt as f64);
                             let rt = tg * frac;
                             let cost = |list: &[(usize, f32)], st: u32| list.iter().find(|e| e.0 == st as usize).map_or(0., |e| -(e.1.max(1e-30) as f64).ln() / beta);
                             for &(sa, sb, v) in &terms {
@@ -388,6 +395,7 @@ impl IntercityApi {
         h[5] = car;
         if rc_w > 0. {
             h[6] = rc / rc_w;
+            h[24] = oc / rc_w;
         }
         if cc_w > 0. {
             h[7] = cc / cc_w;
