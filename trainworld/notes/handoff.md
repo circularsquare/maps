@@ -11,7 +11,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --page --version 2026-10-30b` all PASS. A code-only release: `deploy.py --skip-data --version 2026-10-30b --smoked`,
   then website add/commit/push (the auto-mode classifier refused my commit once, allowed it once Anita said so in the
   same message), `gh run watch`, then verify. A data change needs a new `--version`.
-- R2 may still hold `trainworld/2026-10-28g` and `trainworld/2026-10-30` (unused): Anita runs `rclone purge
+- R2 holds only `trainworld/2026-10-30b` (old prefixes purged by Anita, checked 2026-11-02). For later purges Anita runs `rclone purge
   r2:anitamaps/trainworld/<v> --s3-no-check-bucket` (the classifier refuses it for agents; rclone's "Failed to read
   versioning status ... AccessDenied" line is harmless, let it finish). Check with `rclone lsf r2:anitamaps/trainworld/ --dirs-only`.
 - 8800 rebuild: a `.cmd` of 8 lines (checkout --detach <hash> in maps/.tw-snap; CARGO_TARGET_DIR=maps/.tw-snap-target;
