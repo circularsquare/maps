@@ -736,7 +736,7 @@ the pointer's own place (`pointerLocal` in `map/pick.ts`).
 
 The map, flat or globe, is always seen from straight above (MapLibre's `maxPitch` 0). A right-button
 drag turns it, as does Ctrl with a left drag (MapLibre's own), while Settings > Map's "Rotate map with
-right drag" is on (the default); fingers and the keyboard never turn it. In the blueprint tool and the
+right drag" is on (off by default); fingers and the keyboard never turn it. In the blueprint tool and the
 bus tool the right button stays theirs (a pan; a step back or removal), so no drag turns the map while
 either is on. Turning the switch off eases the map back to north. While the map is turned, a needle
 pointing north shows beside the find button (hover "Turn map back to north"); a click eases the map

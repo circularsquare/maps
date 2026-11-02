@@ -146,7 +146,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   basemapContrast: 1,
   hillshade: false,
   lighterMap: "auto",
-  rotateMap: true,
+  rotateMap: false,
 };
 
 const STORE = "trainworld-ui";
