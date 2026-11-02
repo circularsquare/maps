@@ -11,13 +11,13 @@ function set(hidden: boolean) {
   const root = document.documentElement;
   if (root.classList.contains(CLASS) === hidden) return;
   root.classList.toggle(CLASS, hidden);
-  if (hidden) helpOpen.value = false;
+  if (hidden) { helpOpen.value = false; showHint(); } // T-1893: the reminder shows at once, not only on a mouse move
   else { clearTimeout(hintTimer); hint?.classList.remove("on"); }
   live.map?.resize(); // the map takes the dock's and the bar's room
 }
 
-// T-1548: with the interface hidden, moving the mouse shows a small reminder at the top centre until
-// the mouse has been still for HINT_MS; it is hidden outright, with no fade (Anita: no CSS transitions).
+// T-1548, T-1893: with the interface hidden, hiding it and then moving the mouse show a small reminder
+// at the top centre until the mouse has been still for HINT_MS; it is hidden outright, with no fade.
 const HINT_MS = 3000;
 let hint: HTMLElement | null = null;
 let hintTimer = 0;

@@ -564,6 +564,11 @@ rect.now { fill-opacity: .45; }
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
 .stops li.adding::after { opacity: 0.45; }
+/* T-1894: while stops are edited, a stop's dot (or a passed station's row in related lines) is a click target */
+.stops .stop-hit { position: absolute; left: 0; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; cursor: pointer; z-index: 3; }
+.stops .stop-hit:hover { box-shadow: inset 0 0 0 2px var(--bad); }
+.stops .stop-hit.add:hover { box-shadow: inset 0 0 0 2px var(--text); }
+.stops.related-rows .stop-hit { left: calc(var(--spine) - 10px); }
 /* T-1464: a bus line's stops: a square at each end, a ring at a station, small rings for the street stops */
 .bus-stops { list-style: none; margin: 0; padding: 0; }
 .bus-stops li { display: flex; align-items: center; gap: 8px; min-height: 25px; }
@@ -1158,6 +1163,8 @@ button.save-add:hover { color: var(--text); }
   #topbar .cash { grid-area: cash; margin-bottom: -1px; }
   #topbar .bar-rule { display: block; grid-area: rule; align-self: stretch; width: 1px; background: var(--rule); }
   #topbar .clock { grid-area: clock; justify-self: end; max-width: 100%; height: auto; padding-left: 0; border-left: 0; margin-bottom: -1px; }
+  /* T-1893: the time and date end at the same right edge as the speed buttons under them */
+  #topbar .clock-text { justify-content: flex-end; }
   #topbar .split { grid-area: split; }
   #topbar .speed { grid-area: speed; justify-self: end; }
 }
@@ -1167,6 +1174,7 @@ button.save-add:hover { color: var(--text); }
     grid-template-areas: "city cash" "split split" "clock speed"; }
   #topbar .bar-rule { display: none; }
   #topbar .clock { justify-self: start; }
+  #topbar .clock-text { justify-content: flex-start; }
 }
 
 /* ---------- shorter screens ---------- */
@@ -1467,7 +1475,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

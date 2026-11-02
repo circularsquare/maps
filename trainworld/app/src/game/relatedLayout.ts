@@ -46,6 +46,10 @@ export interface LayoutOpts {
   stopName: (line: number, stop: number) => string;
   stopCount: (line: number) => number;
   dist?: (m: number) => string;
+  /** T-1894: the selected line drawn last stop first (north up, `game/northUp.ts`); not for a loop. */
+  flip?: boolean;
+  /** T-1894: whether a side line's stop the selected line does not stop at gets a row (default all). */
+  sideStop?: (line: number, stop: number) => boolean;
 }
 
 export interface LayoutRow {
@@ -107,17 +111,32 @@ function foldLoop(groups: RelatedGroup[], n: number, total: number, toEnd: Set<n
   });
 }
 
+/** T-1894: the groups as seen from the selected line's far end, offsets measured back from `S`. */
+function flipGroups(groups: RelatedGroup[], S: number): RelatedGroup[] {
+  const f = (x: number) => S - x;
+  return groups.map((g) => ({
+    ...g, sL0: f(g.sL1), sL1: f(g.sL0), dir: g.dir > 0 ? -1 : 1,
+    meetings: g.meetings.map((m) => ({ ...m, sL: f(m.sL) })),
+    track: g.track.map(([a, b]) => [f(b), f(a)] as [number, number]),
+    gaps: g.gaps.map((x) => ({ ...x, sL0: f(x.sL1), sL1: f(x.sL0) })),
+    own: g.own.map((s) => ({ ...s, sL: f(s.sL) })),
+  }));
+}
+
 export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedLayout {
   const L = o.line, dist = o.dist ?? km;
   const rowY = o.rowY ?? ((i: number) => i * 25 + 12.5);
   const me = o.lineName(L);
   const nStops = o.stopS.length;
   const loop = !!o.loop && nStops > 2;
+  const flip = !!o.flip && !loop && nStops > 1;
+  const S = o.stopS[nStops - 1] ?? 0;
+  const stopS = (i: number) => (flip ? S - o.stopS[i] : o.stopS[i]);
   // groups beside a loop that run on across its seam past the last row
   const toEnd = new Set<number>();
-  const groups = loop ? foldLoop(groupsIn, nStops, o.stopS[nStops - 1], toEnd) : groupsIn;
+  const groups = loop ? foldLoop(groupsIn, nStops, o.stopS[nStops - 1], toEnd) : flip ? flipGroups(groupsIn, S) : groupsIn;
   // ---- rows: the selected line's stops, then side lines' stations at the nearest point of it
-  const rows: Row[] = Array.from({ length: loop ? nStops - 1 : nStops }, (_, i) => ({ lStop: i, ref: { line: L, stop: i }, sL: o.stopS[i], complex: -1, stops: new Set<number>(), cross: [], marks: [] }));
+  const rows: Row[] = Array.from({ length: loop ? nStops - 1 : nStops }, (_, i) => ({ lStop: i, ref: { line: L, stop: i }, sL: stopS(i), complex: -1, stops: new Set<number>(), cross: [], marks: [] }));
   for (const g of groups) for (const m of g.meetings) if (m.stopL >= 0 && rows[m.stopL]) rows[m.stopL].complex = m.complex;
   const rowAt = (complex: number, sL: number, make: () => Row | null): Row | null => {
     let best: Row | null = null;
@@ -127,7 +146,8 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     if (r) rows.push(r);
     return r;
   };
-  const sideRow = (line: number, stop: number, sL: number, complex: number): Row => ({ lStop: -1, ref: { line, stop }, sL, complex, stops: new Set(), cross: [], marks: [] });
+  const sideRow = (line: number, stop: number, sL: number, complex: number): Row | null =>
+    (o.sideStop && !o.sideStop(line, stop) ? null : { lStop: -1, ref: { line, stop }, sL, complex, stops: new Set(), cross: [], marks: [] });
   const beside = groups.map((g, gi) => [g, gi] as const).filter(([g]) => g.kind === "beside");
   for (const [g, gi] of beside) {
     for (const m of g.meetings) {
@@ -137,7 +157,7 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     }
     for (const s of g.own) rowAt(s.complex, s.sL, () => sideRow(g.line, s.stop, s.sL, s.complex))?.stops.add(gi);
   }
-  const sortRows = (rs: Row[]) => rs.sort((a, b) => a.sL - b.sL || (a.lStop >= 0 && b.lStop >= 0 ? a.lStop - b.lStop : 0));
+  const sortRows = (rs: Row[]) => rs.sort((a, b) => a.sL - b.sL || (a.lStop >= 0 && b.lStop >= 0 ? (flip ? b.lStop - a.lStop : a.lStop - b.lStop) : 0));
   sortRows(rows);
 
   // ---- columns: each beside group over the rows it stops at and those inside its span

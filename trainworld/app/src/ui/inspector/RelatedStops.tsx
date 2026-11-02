@@ -40,18 +40,25 @@ export function useTightTimes(ref: RefObject<HTMLElement | null>) {
   }, [ref.current]);
 }
 
-export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }: {
+export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder, onAdd, transfers }: {
   l: LineInput;
   stopS: number[];
   colour: string;
   /** the line is a loop drawn once round */
   loop: boolean;
+  /** the line drawn last stop first (T-1894, north up) */
+  flip: boolean;
+  /** while stops are edited: the station the line passes at a side line's stop (its node), which a
+   * click on the row makes a stop (`onAdd`), else null; without it side lines' stops the line passes
+   * get no row (T-1894) */
+  adder?: (station: string) => number | null;
+  onAdd?: (node: number) => void;
   /** the selected line's stop `i` as the plain list draws it, without the bullets of `drawn`
    * lines, with those of `marks` after the crossing lines' */
   lRow: (i: number, drawn: ReadonlySet<number>, marks: LineInput[]) => ComponentChildren;
   /** rows after the selected line's stop `i` that are not stops (the stations it passes while
-   * its stops are edited) */
-  after?: (i: number) => ComponentChildren;
+   * its stops are edited, less `shown`, those with a side row) */
+  after?: (i: number, shown: ReadonlySet<number>) => ComponentChildren;
   transfers: RowTransfers;
 }) {
   const w = world.value!;
@@ -63,8 +70,9 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
   const [geo, setGeo] = useState<{ ys: number[]; width: number; pad: [number, number] }>({ ys: [], width: 340, pad: [0, 0] });
   const byNum = linesByNum(w), names = stationNames(w);
   const stopName = (line: number, stop: number) => names.get(byNum.get(line)?.stops[stop] ?? "") ?? "";
+  const addAt = (line: number, stop: number) => { const s = byNum.get(line)?.stops[stop]; return s && adder ? adder(s) : null; };
   const lay = relatedLayout(groups, {
-    line: l.num, stopS, width: geo.width, loop,
+    line: l.num, stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
     rowY: (i) => geo.ys[i] ?? i * 25 + 12.5,
     lineName: (n) => byNum.get(n)?.name ?? "",
     stopName,
@@ -94,19 +102,23 @@ export function RelatedStops({ l, stopS, colour, loop, lRow, after, transfers }:
   });
   const W = lay.width;
   const rows: ComponentChildren[] = [];
+  const n = l.stops.length;
+  const shown = new Set(lay.rows.filter((r) => r.lStop < 0).map((r) => addAt(r.ref.line, r.ref.stop)).filter((x) => x !== null));
   lay.rows.forEach((r) => {
-    if (r.lStop > 0 && after) rows.push(after(r.lStop - 1));
-    rows.push(r.lStop >= 0
-      ? lRow(r.lStop, new Set(r.drawn), r.marks.map((n) => byNum.get(n)).filter((o) => o !== undefined))
-      : (
-        <li class="side" data-r>
-          <span class="grow">
-            <span class="stop-name muted" onClick={() => { const s = byNum.get(r.ref.line)?.stops[r.ref.stop]; if (s) selection.value = { kind: "station", station: s }; }}>
-              {stopName(r.ref.line, r.ref.stop)}
-            </span>
+    // the stations passed between two stops go between their rows, whichever way up
+    if (after && (flip ? r.lStop >= 0 && r.lStop < n - 1 : r.lStop > 0)) rows.push(after(flip ? r.lStop : r.lStop - 1, shown));
+    if (r.lStop >= 0) { rows.push(lRow(r.lStop, new Set(r.drawn), r.marks.map((n) => byNum.get(n)).filter((o) => o !== undefined))); return; }
+    const add = addAt(r.ref.line, r.ref.stop), here = stopName(r.ref.line, r.ref.stop);
+    rows.push(
+      <li class="side" data-r>
+        {add !== null && onAdd && <span class="stop-hit add" data-tip={`Click to add a stop at ${here}`} onClick={() => onAdd(add)} />}
+        <span class="grow">
+          <span class="stop-name muted" onClick={() => { const s = byNum.get(r.ref.line)?.stops[r.ref.stop]; if (s) selection.value = { kind: "station", station: s }; }}>
+            {here}
           </span>
-        </li>
-      ));
+        </span>
+      </li>
+    );
   });
   return (
     <div class="related" style={{ "--gw": W + "px", "--spine": lay.spineX + "px", paddingTop: geo.pad[0] + "px", paddingBottom: geo.pad[1] + "px" }}>

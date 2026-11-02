@@ -11,7 +11,7 @@ import { lineMoneyTip } from "../MoneyText";
 import { busesText, count, distance, headway, money, plural, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
-import { runningToday, today, useToday } from "../../game/today";
+import { dayNote, runningToday, today, useToday } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
@@ -247,11 +247,9 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
   const run = runningToday(l, st);
   return (
     <>
-      <div class="h divided">
-        <span data-tip="The past 24 hours">Past 24 hours</span>
-      </div>
+      <div class="h divided" />
       <ul class="rows">
-        <li data-tip={`${d.riders.toLocaleString("en-US")} riders boarded in the past 24 hours`}>
+        <li data-tip={`${d.riders.toLocaleString("en-US")} riders in the past 24 hours`}>
           <span class="grow">Riders</span>
           <span class="val">{count(d.riders)}</span>
         </li>
@@ -261,7 +259,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
             <span class="val">{count(changing)}</span>
           </li>
         )}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, true)}>
+        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, true, dayNote(l, st))}>
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>

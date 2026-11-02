@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { lineMoneyTip, Money } from "../MoneyText";
-import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainKind, trainRunCost } from "../../game/format";
+import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
-import { crowdLevel, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
+import { crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
 import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
@@ -39,7 +39,9 @@ import { demandView, lineFiguresIn } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
 import { LineGroup } from "./LineGroup";
-import { afterCopy } from "../../game/lineGroups";
+import { drawnReversed } from "../../game/northUp";
+import type { EditOp } from "../../workers/protocol";
+import { scrollerOf } from "../scroller";
 
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -191,11 +193,8 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
   if (!(s > 0) || !(st.km > 0)) return null;
   const km = st.loop ? st.km : 2 * st.km;
   const kmh = km / (s / 3600);
-  const tip = st.loop
-    ? `${distance(km * 1000)} once round in ${duration(s)}${st.loop === "balloon" ? ", the lap less the turning at the end" : ""}. Dwell at stops and waiting at busy track are in it.`
-    : `${distance(km * 1000)} there and back in ${duration(s)}, the round trip less the turning at the ends. Dwell at stops and waiting at busy track are in it, so it is the average speed of both directions together.`;
   return (
-    <li data-tip={tip}>
+    <li>
       <span class="grow">Average speed</span>
       <span class="val">{speed(kmh)}</span>
     </li>
@@ -212,7 +211,7 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
     if (!pending) return null;
     return (
       <>
-        <div class="h divided"><span>Past 24 hours</span></div>
+        <div class="h divided" />
         <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">constructing...</span></Row></ul>
       </>
     );
@@ -221,13 +220,11 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
   const run = runningToday(l, st);
   return (
     <>
-      <div class="h divided">
-        <span>Past 24 hours</span>
-      </div>
+      <div class="h divided" />
       <ul class="rows">
         <Row label="Riders">{pending ? <span class="muted" data-tip="Calculating riders after your change">constructing...</span> : count(d.riders)}</Row>
         {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, false)}>
+        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, false, dayNote(l, st))}>
           <span class="grow">Profit</span>
           <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
         </li>
@@ -271,7 +268,7 @@ export function CrowdDots({ v, wk, d }: { v: Float64Array; wk: Float64Array | nu
   const c = crowdLevel(v, d), r = wk && crowdLevel(wk, d);
   if (!c) return null;
   // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
-  const tip = r ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
+  const tip = r && wk !== v ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
   return <i class="crowd-dot" style={{ background: crowdColour(c.wait), outlineColor: r ? crowdColour(r.wait) : "transparent" }} data-tip={tip} />;
 }
 
@@ -429,16 +426,9 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
   const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
   const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
-  const tip = (to: number) => {
-    let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
-    const m = moneyState.value, trains = Math.max(...st.trainsNeeded);
-    const k = m && trainKind(m, st.fast);
-    if (k) t += `\nRunning costs ${trainRunCost(k, to)}${to !== cars ? `, ${trainRunCost(k, cars)} now` : ""}`;
-    if (k && st.status === "running" && to > cars) {
-      t += "\n" + carsBought(k, (to - cars) * trains);
-    }
-    return t + "\n" + capText;
-  };
+  // T-1893: the number between the buttons carries the hover; the buttons have none
+  const m = moneyState.value;
+  const tip = `${carsText(cars)} can carry ${(cars * CRUSH_PER_CAR).toLocaleString("en-US")} riders` + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
   // T-751: a + at the cap offers to lengthen the platforms that stop it
   const step = (d: number) => {
     const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
@@ -446,12 +436,18 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     else if (d > 0 && r === false && cap < PLATFORM_MAX_M / CAR_M) setWant({ line: l.id, cars: cap + 1 });
     return r;
   };
+  // T-1894: a typed length past the platforms' cap goes to the cap and offers to expand them for it
+  const typed = (v: number) => {
+    const to = Math.max(1, Math.round(v));
+    if (to !== cars) void stepLineCars(l.id, Math.min(st.cars, cap), cap, to - cars);
+    setWant(to > cap && cap < PLATFORM_MAX_M / CAR_M ? { line: l.id, cars: Math.min(to, Math.floor(PLATFORM_MAX_M / CAR_M)) } : null);
+  };
   const offer = want && want.line === l.id && want.cars > cap ? want.cars : 0;
   return (
     <ul class="rows">
       <li>
         <span class="grow" data-tip={capText}>Train length</span>
-        <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipDown={cars > 1 ? tip(cars - 1) : capText} tipUp={cars < cap ? tip(cars + 1) : capText} />
+        <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipValue={tip} type={{ text: String(cars), set: typed, tip }} />
       </li>
       {offer > 0 && <LongerPlatforms l={l} st={st} stations={plats} cars={cars} to={offer} onDone={() => setWant(null)} />}
     </ul>
@@ -687,6 +683,9 @@ export function useSymbolBox(l: LineInput | undefined) {
   };
 }
 
+/** One diagram stop edit at a time: a second click before the world has the first would count from stale indices. */
+let stopEditing = false;
+
 function RailLineInspector({ id }: { id: string }) {
   const w = world.value;
   // T-670: one editor for the name, symbol and colour; T-672: the colour a drag shows before the edit is sent
@@ -718,6 +717,9 @@ function RailLineInspector({ id }: { id: string }) {
       window.removeEventListener("keydown", esc, true);
     };
   }, [editing]);
+  // T-1894: the editor sits under the pinned title, so opening it scrolls the panel to its top
+  const titleEl = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (editing) scrollerOf(titleEl.current)?.scrollTo({ top: 0 }); }, [editing]);
   // T-309: the demand level now in the line's own local time
   const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
@@ -766,8 +768,10 @@ function RailLineInspector({ id }: { id: string }) {
     const a = await edit({ op: "setStops", line: l.num, stops });
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
   };
+  // the passed stations related lines draw as rows of their own (set as it draws them)
+  let sideShown: ReadonlySet<number> = new Set();
   const addGaps = (gs: number[]) => {
-    const add = passed.filter((p) => gs.includes(p.gap));
+    const add = passed.filter((p) => gs.includes(p.gap) && !sideShown.has(p.node));
     const stops = l.stops.flatMap((s, i) => [Number(s), ...add.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
     return setStops(stops);
@@ -775,6 +779,15 @@ function RailLineInspector({ id }: { id: string }) {
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => plural(n, "station");
   const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
+  const stopEdit = async (op: EditOp) => {
+    if (stopEditing) return;
+    stopEditing = true;
+    try {
+      const a = await edit(op);
+      const now = world.peek()?.save.lines.find((x) => x.num === l.num);
+      if (a.ok && now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: now.stops.map(Number) };
+    } finally { stopEditing = false; }
+  };
   const remove = () => {
     ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
       ask.value = null;
@@ -792,27 +805,54 @@ function RailLineInspector({ id }: { id: string }) {
     try {
       const a = await edit({ op: "copyLine", line: l.num });
       if (!a.ok || a.line === undefined) return;
-      // T-1791: the copy joins its source's group, whose view opens
-      selection.value = afterCopy(world.peek()?.save.lines ?? [], a.line);
+      // T-1894: the copy's own panel opens with its stops being edited
+      const made = world.peek()?.save.lines.find((x) => x.num === a.line);
+      if (made) toggleEditStops(made);
     } finally { setCopying(false); }
   };
 
   const shown = preview ?? l.colour;
+  const nStops = l.stops.length;
+  // T-1894: north (or for an east-west line, west) end on top; a loop as built
+  const byId = stationsById(w);
+  const flip = drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
+  // T-1894: while stops are edited a click on a stop's dot takes it out keeping the path, Shift-click
+  // ends the line there, as in the group view; a stop the line needs has no click
+  const dotClick = (i: number): { tip: string; click: (e: MouseEvent) => void } | null => {
+    const end = i === 0 || i === nStops - 1, loop = !!st.loop;
+    if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
+    const here = name.get(l.stops[i]) ?? "";
+    return {
+      tip: `Click to remove the stop at ${here}` + (end || loop || nStops < 3 ? "" : "\nShift-click to end the line here"),
+      click: (e) => void stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i }),
+    };
+  };
+  // the station the line passes at a side line's stop (related lines while stops are edited)
+  const adder = (station: string): number | null => {
+    const members = new Set(complexOf(station));
+    return passed.find((x) => members.has(String(x.node)))?.node ?? null;
+  };
   // T-1168: stop `i`'s row; `drawn` (in the related-lines view) are the lines drawn beside the line
   // there, `bullets` those of them whose bullet shows here
   const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[]) => {
     const s = l.stops[i];
     const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || selfTransfer(l, i);
     const tall = !!drawn && transferLines(l, i, drawn).length > ROUND_MAX;
+    // the stretches above and below the row, and the time from the stop on top
+    const above = flip ? (i < nStops - 1 ? i : -1) : i - 1, below = flip ? i - 1 : (i < nStops - 1 ? i : -1);
+    const total = times[nStops - 1] ?? 0;
+    const t = flip ? (i < nStops - 1 && times[i] !== undefined ? total - times[i] : undefined) : i > 0 ? times[i] : undefined;
+    const dot = dotClick(i);
     return (
       <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "")} data-r={drawn ? true : undefined}>
-        {looks && !drawn && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
-        {looks && !drawn && i < looks.length && <StretchHalf s={looks[i]} down />}
+        {looks && !drawn && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}
+        {looks && !drawn && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}
+        {dot && <span class="stop-hit" data-tip={dot.tip} onClick={dot.click} />}
         <span class="grow">
           <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
             {name.get(s)}
           </span>
-          {i > 0 && times[i] !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[i - 1])}>{duration(times[i])}</span>}
+          {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above])}>{duration(t)}</span>}
           {st.reversals?.includes(i) && (
             <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
               <Icon.uturn />
@@ -821,7 +861,7 @@ function RailLineInspector({ id }: { id: string }) {
         </span>
         <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} />
         <StopToday line={l.id} i={i} />
-        <RouteMarks marks={marks.filter((m) => m.gap === i)} />
+        <RouteMarks marks={flip ? marks.filter((m) => m.gap === i - 1).reverse() : marks.filter((m) => m.gap === i)} />
         {editingStops && (
           <button class="btn icon mini danger" data-tip={st.loop && i > 0 && i === l.stops.length - 1 ? "Open the loop" : "Take this stop out of the line"} aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
             <Icon.cross />
@@ -835,9 +875,12 @@ function RailLineInspector({ id }: { id: string }) {
   // edited the last row stays, holding the button that opens the loop
   const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
   // T-646: after stop `i`, while stops are edited, the stations the line passes before the next
-  const afterStop = (i: number) => {
-    const here = editingStops ? passed.filter((p) => p.gap === i) : [];
+  const afterStop = (i: number, shown?: ReadonlySet<number>) => {
+    // T-1894: a station with its own row in related lines is added there, not here
+    if (shown) sideShown = shown;
+    const here = editingStops ? passed.filter((p) => p.gap === i && !sideShown.has(p.node)) : [];
     if (!here.length || i + 1 >= l.stops.length) return null;
+    if (flip) here.reverse();
     // Add and Cancel take the clicked row's place, Add stretched over where the pointer is, so a double
     // click lands on Add; the stations are listed below (T-1489)
     return pending?.includes(i)
@@ -870,25 +913,27 @@ function RailLineInspector({ id }: { id: string }) {
             <Icon.related />
           </button>
         )}
-        <span class="right muted small">boardings in past 24 h</span>
+        <span class="right muted small">boardings today</span>
       </div>
       {related ? (
         <div onDblClick={onListDblClick}>
-          <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} lRow={stopRow} after={editingStops ? afterStop : undefined}
-            transfers={(i, drawn) => transferLines(l, i, drawn)} />
+          <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} flip={flip} lRow={stopRow} after={editingStops ? afterStop : undefined}
+            adder={editingStops ? adder : undefined} onAdd={(node) => void stopEdit({ op: "stopPassed", line: l.num, station: node })} transfers={(i, drawn) => transferLines(l, i, drawn)} />
         </div>
       ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce} onDblClick={onListDblClick}>
-        {l.stops.map((_, i) => (loopOnce && i === l.stops.length - 1 ? null : <>
-          {stopRow(i)}
-          {afterStop(i)}
-        </>))}
+        {flip
+          ? l.stops.map((_, k) => { const i = nStops - 1 - k; return <>{stopRow(i)}{i > 0 && afterStop(i - 1)}</>; })
+          : l.stops.map((_, i) => (loopOnce && i === nStops - 1 ? null : <>
+            {stopRow(i)}
+            {afterStop(i)}
+          </>))}
       </PlainStops>}
     </>
   );
 
   return (
     <>
-      <div class="title" data-line-edit>
+      <div class="title" data-line-edit ref={titleEl}>
         <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}

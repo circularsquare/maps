@@ -13,8 +13,8 @@ import { live } from "../map/live";
 import { costBackground } from "../map/trackTagRows";
 
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
-const BASE_M_PER_KM = 90;
-const MULT: Record<Level, number> = { 3: 1.8, 2: 1.3, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.1, [-3]: 1.2 };
+const BASE_M_PER_KM = 75;
+const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.3, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
 /** high-speed track's price over double track (params.rs `HSR_COST`, T-817) */
 const HSR_COST = 1.5;
 

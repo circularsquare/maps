@@ -246,7 +246,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   the light ones take dark letters. A new line takes the default farthest in OKLab from the
   colours of the lines near where it starts (its first stop, else the middle of the map): those
   with a stop within 15 km, topped up with the next nearest to six, ties at random
-  (`nextFreeColour` in `game/lineActions.ts`, T-1278).
+  (`nextFreeColour` in `game/lineActions.ts`, T-1278). The first six (red, blue, green, orange,
+  purple, yellow) are the plain ones: a city's first four lines take only these, and later lines
+  count their distance 1.3 times, so they win unless clearly taken nearby (T-1894).
 - **Marks on the track** [T-629, T-655, T-1871; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):

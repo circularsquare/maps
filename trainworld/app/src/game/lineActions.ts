@@ -32,9 +32,13 @@ const NEAR_M = 15_000;
 /** ... topped up with the nearest lines beyond to this many. */
 const NEAR_MIN = 6;
 
+/** T-1894: the palette's first colours (red, blue, green, orange, purple, yellow) are the plain
+ * ones: a city's first lines take only these, later ones favour them by this factor on distance. */
+const BASIC = 6, BASIC_FIRST = 4, BASIC_BIAS = 1.3;
+
 /** T-1278: the palette colour farthest in OKLab from the colours of the lines near `at` (lng, lat;
- * none: every line), ties at random. */
-export function nextFreeColour(at: [number, number] | null): string {
+ * none: every line), ties at random; `cityLines` the lines already in the new line's city. */
+export function nextFreeColour(at: [number, number] | null, cityLines = Infinity): string {
   const w = world.peek();
   const lines = w?.save.lines ?? [];
   const pos = w ? stationsById(w) : new Map<string, StationInput>();
@@ -48,7 +52,8 @@ export function nextFreeColour(at: [number, number] | null): string {
     return { colour: l.colour, d: at ? d : 0 };
   }).sort((a, b) => a.d - b.d);
   const used = near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => colourDistanceFrom(x.colour));
-  const score = LINE_PALETTE.map((c) => used.reduce((m, f) => Math.min(m, f(c)), Infinity));
+  const first = cityLines < BASIC_FIRST;
+  const score = LINE_PALETTE.map((c, i) => (first && i >= BASIC ? -Infinity : (used.length ? used.reduce((m, f) => Math.min(m, f(c)), Infinity) : 1) * (i < BASIC ? BASIC_BIAS : 1)));
   const best = Math.max(...score);
   const pool = LINE_PALETTE.filter((_, i) => score[i] >= best - 1e-6);
   return pool[Math.floor(Math.random() * pool.length)];
@@ -68,7 +73,7 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   const ends = on ? (world.value?.save.stations ?? []).filter((s) => s.num === on.a || s.num === on.b).sort((p, q) => (p.num === on!.a ? 0 : 1) - (q.num === on!.a ? 0 : 1)).map((s) => s.num) : [];
   const first = ends.length ? world.value?.save.stations.find((s) => s.num === ends[0]) : undefined;
   const city = first ? stationZone(first) : viewedZone.peek();
-  const name = nextLineName(city), colour = nextFreeColour(startOf(first));
+  const name = nextLineName(city), colour = nextFreeColour(startOf(first), lineMates(city).length);
   let a = ends.length ? await edit({ op: "addLine", stops: ends, name, colour }, true) : null;
   if (!a?.ok) { ends.length = 0; a = await edit({ op: "addLine", stops: [], name, colour }); }
   if (!a.ok || a.line === undefined) return;

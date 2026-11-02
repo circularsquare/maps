@@ -226,7 +226,7 @@ fn crossings_flat_separated_or_invalid() {
     let e = edge(&mut w, c, d, &[], 0).unwrap();
     assert_eq!(w.net.crossings.len(), 1);
     assert_eq!(w.net.crossings[0].kind, CrossKind::Flat(0));
-    let want = 4.0 * 45.0 + super::cost::crossing_cost(0, false);
+    let want = 4.0 * 22.5 + super::cost::crossing_cost(0, false);
     assert!((w.net.total_cost() - before - want).abs() < 1e-6);
     // Moved down a level (ramps on long legs): separated.
     let mut ed = w.net.edge_data(e).unwrap();
@@ -407,8 +407,35 @@ fn hudson_crossing_needs_a_bridge_or_tunnel() {
     assert!(wet_len > 600.0);
     let len = w.net.edge_len[e as usize];
     let c = w.net.edge_cost[e as usize];
-    assert!(c > len / 1000.0 * 90.0 * 0.9, "water should raise the price: {c}");
+    assert!(c > len / 1000.0 * 75.0 * 1.0, "water should raise the price: {c}");
     println!("Hudson at -1: {len:.0} m, {wet_len:.0} m wet, US${c:.0}M");
+}
+
+/// T-1930: a viaduct or cut and cover over more than 30 km of unbroken water is refused, across
+/// edges that meet in the water too; a bored tunnel is not.
+#[test]
+fn long_water_is_refused_to_viaducts_and_cut_and_cover_only() {
+    let too_long = |r: &Result<u32, Vec<Issue>>| r.as_ref().err().is_some_and(|e| e.iter().any(|i| matches!(i, Issue::WaterTooLong { .. })));
+    for (wet_to, level, refused) in [(37_000.0, 1, true), (27_000.0, 1, false), (37_000.0, -1, true), (27_000.0, -1, false), (37_000.0, -2, false), (37_000.0, -3, false)] {
+        let mut w = world();
+        w.net.set_water_mask(Box::new(move |x: f64, _y: f64| x > 2000.0 && x < wet_to));
+        w.reload();
+        let a = node(&mut w, 0.0, 0.0, level);
+        let b = node(&mut w, 40_000.0, 0.0, level);
+        let r = edge(&mut w, a, b, &[], level);
+        assert_eq!(too_long(&r), refused, "{wet_to} m at {level}: {:?}", r.as_ref().err());
+    }
+    // two edges meeting at a node in the water: each is under 30 km, together they are not
+    let mut w = world();
+    w.net.set_water_mask(Box::new(|x: f64, _y: f64| x > 2000.0 && x < 37_000.0));
+    w.reload();
+    let a = node(&mut w, 0.0, 0.0, 1);
+    let m = node(&mut w, 20_000.0, 0.0, 1);
+    let b = node(&mut w, 40_000.0, 0.0, 1);
+    let first = edge(&mut w, a, m, &[], 1);
+    assert!(first.is_ok(), "{:?}", first.err());
+    let second = edge(&mut w, m, b, &[], 1);
+    assert!(too_long(&second), "{:?}", second.err());
 }
 
 #[test]

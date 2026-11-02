@@ -100,9 +100,11 @@ export const lineShares = computed(() => {
 });
 
 /** T-867: a constructed edge's upkeep a game day, US$ (0 for blueprint and crossovers). */
-export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {
+export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number; levelMin: number; levelMax: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepOffGroundKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {
   if (!e.built || e.crossover) return 0;
-  return (e.lengthM / 1000) * m.upkeepTrackKm * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
+  // T-1931: the ground's rate for an edge that never leaves level 0, as the track model counts it
+  const rate = e.levelMin === 0 && e.levelMax === 0 ? m.upkeepTrackKm : m.upkeepOffGroundKm;
+  return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
 }
 /** T-1464: a bus route's road km by region, each stretch between two stops half to each stop's
  * region (the drawn stops' ground distances, scaled to the road length). */

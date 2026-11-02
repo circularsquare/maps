@@ -6,9 +6,9 @@ import { signal } from "@preact/signals";
 // T-1547: classes 1 and 2 are both "Hills"; the surcharge shown beside the name tells them apart
 export const TERRAIN_NAMES = ["Flat", "Hills", "Hills", "Mountains"] as const;
 /** what each class adds to the level's multiplier (sim `TERRAIN_SURCHARGE`, T-1890) */
-export const TERRAIN_SURCHARGES = [0, 0.4, 1, 2.5] as const;
+export const TERRAIN_SURCHARGES = [0, 0.5, 1.2, 3] as const;
 /** what water adds to track's multiplier at any level (sim `WATER_SURCHARGE`) */
-export const WATER_SURCHARGE = 2;
+export const WATER_SURCHARGE = 2.5;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 
 /** A zone's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world

@@ -236,6 +236,8 @@ pub enum Issue {
     /// A segment drawn at ground level over water that has no room on land for a bridge's
     /// ramps (T-656); the drawing tool words it in place of `GroundOverWater`.
     BridgeNoRoom,
+    /// A viaduct or cut and cover tunnel over more than `WATER_SPAN_MAX` of unbroken water (T-1930).
+    WaterTooLong { edge: u32 },
     Crossing { e1: u32, e2: u32, x: f64, y: f64, overlap: bool },
     NoSuchNode { node: u32 },
     NoSuchEdge { edge: u32 },
@@ -1655,6 +1657,84 @@ impl Network {
                 s += WATER_STEP / 2.0;
             }
         }
+        if !self.edge_water(e).is_empty() && !self.edge_crossover[e as usize] && self.bridged_water_through(e) > WATER_SPAN_MAX {
+            out.push(Issue::WaterTooLong { edge: e });
+        }
+    }
+
+    /// The parts of an edge's water spans that are not bored tunnel (level -1 or above), as
+    /// chainage intervals sampled every `BRIDGED_STEP` (T-1930).
+    fn bridged_water(&self, e: u32) -> Vec<[f64; 2]> {
+        const BRIDGED_STEP: f64 = 25.0;
+        let vert = self.edge_vert(e);
+        let mut out: Vec<[f64; 2]> = vec![];
+        for w in self.edge_water(e) {
+            let n = ((w[1] - w[0]) / BRIDGED_STEP).ceil().max(1.0) as usize;
+            let step = (w[1] - w[0]) / n as f64;
+            let mut open: Option<f64> = None;
+            for j in 0..n {
+                let bridged = cost::level_of(geom::height_at(vert, w[0] + (j as f64 + 0.5) * step)) >= -1;
+                match (bridged, open) {
+                    (true, None) => open = Some(w[0] + j as f64 * step),
+                    (false, Some(s0)) => {
+                        out.push([s0, w[0] + j as f64 * step]);
+                        open = None;
+                    }
+                    _ => {}
+                }
+            }
+            if let Some(s0) = open {
+                out.push([s0, w[1]]);
+            }
+        }
+        out
+    }
+
+    /// The longest stretch of viaduct or cut and cover over unbroken water that runs through edge
+    /// `e`, m, counting the same stretch on the edges meeting it at a node in the water (T-1930).
+    /// Stops adding past `WATER_SPAN_MAX`.
+    fn bridged_water_through(&self, e: u32) -> f64 {
+        const TOL: f64 = 1.0;
+        let len = self.edge_len[e as usize];
+        let mut best = 0.0f64;
+        for r in self.bridged_water(e) {
+            let mut total = r[1] - r[0];
+            for (which, touches) in [(0u32, r[0] <= TOL), (1, r[1] >= len - TOL)] {
+                if touches && total <= WATER_SPAN_MAX {
+                    total += self.bridged_water_beyond(e, which, &mut vec![e], WATER_SPAN_MAX - total);
+                }
+            }
+            best = best.max(total);
+        }
+        best
+    }
+
+    /// The most water run an end of edge `e` can add, m: of the other edges at that end's node, the
+    /// one whose run from the node is longest, through its far end in turn where it spans the edge.
+    /// `room` is how much more matters.
+    fn bridged_water_beyond(&self, e: u32, which: u32, seen: &mut Vec<u32>, room: f64) -> f64 {
+        const TOL: f64 = 1.0;
+        let node = self.end_node(e, which) as usize;
+        let mut best = 0.0f64;
+        for &c in self.node_ports[node].ends() {
+            let (o, ow) = (c >> 1, c & 1);
+            if o == e || seen.contains(&o) || self.edge_crossover[o as usize] || !self.edge_ok(o) {
+                continue;
+            }
+            let olen = self.edge_len[o as usize];
+            let Some(r) = self.bridged_water(o).into_iter().find(|r| if ow == 0 { r[0] <= TOL } else { r[1] >= olen - TOL }) else { continue };
+            let mut total = r[1] - r[0];
+            if total < room && r[0] <= TOL && r[1] >= olen - TOL {
+                seen.push(o);
+                total += self.bridged_water_beyond(o, 1 - ow, seen, room - total);
+                seen.pop();
+            }
+            best = best.max(total);
+            if best >= room {
+                break;
+            }
+        }
+        best
     }
 
     fn check_node(&self, n: u32, out: &mut Vec<Issue>) {

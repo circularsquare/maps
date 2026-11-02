@@ -156,20 +156,25 @@ const perUnitText = (perKm: number) => {
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
 }
-/** T-867: "$30k per km of track per day and $50k per station per day", at the game's economy, in the shown unit. */
-export function upkeepRule(m: { upkeepTrackKm: number; upkeepStation: number; economy: number }): string {
-  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of track per day and ${money(m.upkeepStation * m.economy)} per station per day`;
+type UpkeepRates = { upkeepTrackKm: number; upkeepOffGroundKm: number; upkeepStation: number; economy: number };
+/** T-867, T-1931: "$20k per km of ground track per day, $30k per km of viaduct and tunnel track per day and $50k per station per day", at the game's economy, in the shown unit. */
+export function upkeepRule(m: UpkeepRates): string {
+  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of ground track per day, ${money(perDistance(m.upkeepOffGroundKm * m.economy))} per ${distUnit()} of viaduct and tunnel track per day and ${money(m.upkeepStation * m.economy)} per station per day`;
 }
-/** T-1838: the Upkeep row's hover, three lines: "$30k per km of track per day", "$50k per station per day", "High speed rail 1.5x". */
-export function upkeepLines(m: { upkeepTrackKm: number; upkeepStation: number; economy: number; upkeepHsr: number }): string {
-  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of track per day\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
+/** T-1838, T-1931: the Upkeep row's hover, four lines: "$20k per km of ground track per day", "$30k per km of viaduct and tunnel track per day", "$50k per station per day", "High speed rail 1.5x". */
+export function upkeepLines(m: UpkeepRates & { upkeepHsr: number }): string {
+  return `${money(perDistance(m.upkeepTrackKm * m.economy))} per ${distUnit()} of ground track per day\n${money(perDistance(m.upkeepOffGroundKm * m.economy))} per ${distUnit()} of viaduct and tunnel track per day\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
 }
 /** T-1838: the Running trains row's hover: "Trains cost $4 per km, plus $2 per train car". */
 export function runCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `Trains cost ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per train car`;
 }
+/** T-1893: the train length's hover line: "Running a train costs $4 per km, plus $2 per car". */
+export function trainCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
+  return `Running a train costs ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per car`;
+}
 /** The upkeep rule as a sentence; `lead` is "Upkeep" or "Once constructed, upkeep". */
-export function upkeepText(m: { upkeepTrackKm: number; upkeepStation: number; economy: number; upkeepHsr: number; upkeepSingle: number }, lead: string): string {
+export function upkeepText(m: UpkeepRates & { upkeepHsr: number; upkeepSingle: number }, lead: string): string {
   return `${lead} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.`;
 }
 type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
@@ -178,10 +183,6 @@ export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCost
   return fast
     ? { carPrice: m.hsCarPrice, runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm, spare: Math.max(0, m.fleetFast - m.carsNeededFast) }
     : { carPrice: m.carPrice, runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, spare: Math.max(0, m.fleet - m.carsNeeded) };
-}
-/** What a train of `cars` costs to run: "$27 a train-km". */
-export function trainRunCost(m: { runCostTrainKm: number; runCostCarKm: number }, cars: number): string {
-  return `${perUnitText(m.runCostTrainKm + cars * m.runCostCarKm)} a train-${distUnit()}`;
 }
 
 export const busesText = (n: number) => plural(n, "bus", "buses");

@@ -1,7 +1,7 @@
 // T-1270 in a new game through the edit API: track priced by the ground's terrain class. A
-// kilometre or so at ground level on flat ground in Brooklyn costs 45 US$M a km, the same at
-// ground level on mountain ground above Innsbruck 6x that (0.5 + 2.5, T-1890), and a bored tunnel (-2) there its flat
-// 99; Construct charges the quote. The spots come from the zones' terrain files (a run of cells of
+// kilometre or so at ground level on flat ground in Brooklyn costs 22.5 US$M a km, the same at
+// ground level on mountain ground above Innsbruck 11x that (0.3 + 3, T-1928), and a bored tunnel (-2) there its flat
+// 120; Construct charges the quote. The spots come from the zones' terrain files (a run of cells of
 // one class). Then screenshots: the hillshade (Settings, Terrain) at Innsbruck in both themes, and
 // the track tool's tag over a mountain segment. About a minute.
 // Usage: node trainworld/checks/t1270-terrain.mjs [url] (default http://localhost:6184/)
@@ -107,13 +107,13 @@ try {
   }, [a, b, level]);
 
   const plain = await segment(flatA, flatB, 0);
-  check(!plain.error && Math.abs(plain.perKm - 45) < 0.5, `flat ground at 0: ${plain.perKm?.toFixed(2) ?? plain.error} US$M a km (45)`);
+  check(!plain.error && Math.abs(plain.perKm - 22.5) < 0.5, `flat ground at 0: ${plain.perKm?.toFixed(2) ?? plain.error} US$M a km (22.5)`);
   const ground = await segment(mtn.a, mtn.b, 0);
-  check(!ground.error && Math.abs(ground.perKm - 270) < 4, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (270: 0.5 + 2.5, T-1890)`);
+  check(!ground.error && Math.abs(ground.perKm - 247.5) < 4, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (247.5: 0.3 + 3, T-1928)`);
   check(ground.rows?.some(([cls]) => cls === 3), `the blueprint breakdown has a mountain row (${JSON.stringify(ground.rows)})`);
   const dy = 0.004; // a parallel run 450 m south, for the tunnel
   const tunnel = await segment([mtn.a[0], mtn.a[1] - dy], [mtn.b[0], mtn.b[1] - dy], -2);
-  check(!tunnel.error && Math.abs(tunnel.perKm - 99) < 0.5, `a bored tunnel at -2 there: ${tunnel.perKm?.toFixed(2) ?? tunnel.error} US$M a km (99)`);
+  check(!tunnel.error && Math.abs(tunnel.perKm - 120) < 0.5, `a bored tunnel at -2 there: ${tunnel.perKm?.toFixed(2) ?? tunnel.error} US$M a km (120)`);
 
   // Construct charges what the quote says
   const built = await page.evaluate(async () => {
@@ -140,7 +140,7 @@ try {
   const lng = mtn.a[0], lat = mtn.a[1] + 0.004, len = mtn.b[0] - mtn.a[0];
   await page.evaluate(([lng, lat, len]) => void window.tw.map.jumpTo({ center: [lng + len / 2, lat], zoom: 14 }), [lng, lat, len]);
   await page.waitForTimeout(1500);
-  await page.keyboard.press('r');
+  await page.keyboard.press('1');
   await page.waitForTimeout(400);
   const px = async (x, y) => page.evaluate(([x, y]) => { const r = window.tw.map.getCanvas().getBoundingClientRect(), p = window.tw.map.project([x, y]); return [r.left + p.x, r.top + p.y]; }, [x, y]);
   const [x0, y0] = await px(lng, lat), [x1, y1] = await px(lng + len, lat);
@@ -151,7 +151,7 @@ try {
   await page.mouse.move(x1 + 1, y1, { steps: 1 });
   await page.waitForTimeout(1200);
   const tag = await page.evaluate(() => [...document.querySelectorAll('.tool-tag')].map((t) => t.textContent).join(' | '));
-  check(/Mountains \+2\.5x|Hills \+1\.0x|Hills \+0\.4x/.test(tag), `the track tool's tag names the ground (${tag})`);
+  check(/Mountains \+3\.0x|Hills \+1\.2x|Hills \+0\.5x/.test(tag), `the track tool's tag names the ground (${tag})`);
   await page.screenshot({ path: join(OUT, 'mountain-tag.png') });
   await page.keyboard.press('Escape');
 

@@ -1,7 +1,7 @@
 // The track model's problem kinds (`TrackApi.issue_kinds`, sim/src/track/wasm.rs) in plain
 // words for the player. Player-facing text: copy rules in Anita's CLAUDE.md.
 
-import { length, money } from "./format";
+import { length, money, roughDistance } from "./format";
 
 const TEXT: Record<string, string | (() => string)> = {
   "Geom:ZeroLeg": "Two points are in the same place.",
@@ -12,6 +12,7 @@ const TEXT: Record<string, string | (() => string)> = {
   "Geom:LevelRange": "Elevation goes from −3 to +3.",
   GroundOverWater: "Track at ground level cannot cross water. Pick a viaduct or tunnel elevation.",
   BridgeNoRoom: "Not enough space for bridge ramps",
+  WaterTooLong: () => `Viaducts and cut and cover tunnels cannot cross more than ${roughDistance(30000)} of open water. Use a bored tunnel.`,
   Crossing: "The new track would cross other track less than one elevation step above or below it.",
   CrossingOverlap: "The new track would run on top of existing track.",
   NodeHeading: "Track has to leave a junction along the existing track.",

@@ -1,7 +1,8 @@
 ﻿# Orchestrator handoff, trainworld
 
-Orchestrator: session c9a4388f-3ba1-4290-bb0a-d9ad50756061, name maps-18, since 2026-10-30 11:22
-Updated: 2026-11-02 (clean break: nothing in flight; Anita starts a fresh orchestrator for her long TODO.md list)
+Orchestrator: session 7c3c98d5-ca3b-4748-b736-bac9826c72c1, name maps-a7, since 2026-11-02
+Previous (nothing in flight, no wait needed; it is not in ListAgents): session c9a4388f-3ba1-4290-bb0a-d9ad50756061, name maps-18, handed over 2026-11-02
+Updated: 2026-11-02 (batch filed, first five agents launched)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -29,9 +30,39 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   (3.1 GB): T-1854's intermediate, kept for threshold tweaks.
 - Next free task id: T-1892. Old tree .tw-trees/t1734 kept (Anita). Localhost needs `?acct=live` once for accounts.
 
-## In flight
-Nothing. Anita's TODO.md short-term has a long new list from her 2026-10-31 to 11-01 playtests: file it as a batch
-(copy verbatim into notes/todo-2026-11-02.md and the briefs; trainworld/CLAUDE.md).
+## In flight (maps-a7, started 2026-11-02; her batch is filed as T-1892 to T-1907, verbatim in notes/todo-2026-11-02.md)
+Agents (Opus except ui-text; she said 11-02 skew to Opus, Sonnet for routine). Each has a reserved id range for new tasks
+(next free id: see the last agent line).
+- ui-text T-1892/T-1893 DONE 11-02, uncommitted in the main tree (archived; pictures artifacts/trainworld/t1893/; smoke not
+  run; strings shown to Anita 11-02). Plan: commit t1894 + ui-text + t1928 together once t1928 finishes (shared docs,
+  DECISIONS, SPEC; t1905's attractions files stay out), then smoke and rebuild 8800.
+- Anita 11-02 on prices: round numbers, +1/-1 = 1.0x (sent to t1928: 2.0/1.6/1.0/0.3/1.0/1.5/2.0, base $75M; surcharges
+  +0.5/+1.2/+3/+2.5); upkeep 20k/30k; do road crossings (T-1929) to make cheap ground pay in cities.
+- t1894 DONE 11-02, uncommitted in the main tree (archived; pictures artifacts/trainworld/t1894/; smoke not run). Commit
+  together with ui-text's T-1893 (both edit LineInspector.tsx). Its 3 hover strings shown to Anita 11-02.
+- ab4a79199ce67b330 t1895 (Opus), tree .tw-trees/t1895, port 6130: T-1895 placement geometry. ids T-1916-1919.
+- a173638cfe272a6eb t1902 (Opus), tree .tw-trees/t1902, port 6140: T-1902 trip explorer. ids T-1920-1923.
+- t1900 and t1897 designs DONE 11-02. Anita's answers 11-02: express loses time (T-1924, with T-1925 spread departures,
+  my call); passing tracks not yet (T-1927 to Someday); no pie, crowding strip in the dot's hover with green for no delay
+  (T-1926, after T-1893/T-1894 land); cost changes "all reversible, fine either way" so all built as proposed, water
+  limit 30 km (my call, Hangzhou Bay fits), motorways = 3 crossings (my call).
+- ad0bb7a5986007fb7 t1924 (Opus), tree .tw-trees/t1924, port 6160: T-1924 + T-1925. ids T-1936-1939.
+- a6b3e64630cf425c7 t1928 (Sonnet), main tree incl. Rust, port 6170: T-1928, T-1930, T-1931. ids T-1940-1943.
+  T-1929 (road crossings) waits for T-1895's landing. Next free id: T-1944.
+- t1905 DONE 11-02, uncommitted (attractions_json.py share curve s/(1+s/0.05), attractions.json rebuilt; include in the
+  round commit after smoke). Proposed T-1932 (attraction staff no social pull), T-1933 (airport jobs on terminals, US
+  rebuild), T-1934 (parking cap 50->40, two constants + market packs + ceiling rerun), T-1935 (China attractions x0.20):
+  asked Anita 11-02. Her answers 11-02: build T-1932, rescale China's attractions per country (T-1935; per-country
+  attraction factors fine, "attractions are bespoke anyways"), no parking change (T-1934 abandoned), rebuilds later
+  (T-1933 waits). t1905 resumed for these (a9c1e7af6b8dcf76b).
+- Also 11-02 (ui-text follow-up DONE, uncommitted, strings shown): ui-text resumed (profit hover "Today is a weekend" etc.; F2 hides the day/night animation; rolling counts
+  labelled "today" but hovers "in the past 24 hours"). t1897 resumed for a brief real-world upkeep-by-level report
+  (she read tunnels cost a lot to maintain, viaducts not); the 20k/30k upkeep build stands until she sees it.
+  Report in (notes/T-1897.md 4): proposes ground 20k, viaduct 25k, cut and cover 35k, bored 40k; asked her 11-02. First answers her "how did Disneyland get 10x" (city-wide
+  share spread over few known attractions?). Done when named cases are within 2x of published (her 11-02 call). ids T-1932-1935.Not yet started (briefs still to write; verbatim items are in the notes file): T-1896 gap highlight, T-1897 costs (proposal to
+her on realism), T-1898 blueprint selection, T-1899 stop logic, T-1903 demand-bubble total, T-1904 speed, T-1905 destination
+sanity (needs a done-when), T-1906 money rules, T-1907 map drawing. T-1896/1897/1898/1899 touch the same drawing/sim files as
+T-1895: wait for its landing or give them their own trees.
 
 ## Open questions to Anita (asked, unanswered)
 - Blueprint row hover wording (T-1890): "Elevated +1: 1.0x", "Mountains +2.5x", "Cost factor 3.0x" to match the tag

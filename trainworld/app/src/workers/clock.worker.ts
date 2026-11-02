@@ -1553,6 +1553,7 @@ function moneyState(): MoneyState {
     runCostCarKm: moneyParams[1],
     runCostTrainKm: moneyParams[3],
     upkeepTrackKm: moneyParams[7],
+    upkeepOffGroundKm: moneyParams[15],
     upkeepStation: moneyParams[8],
     upkeepSingle: moneyParams[9],
     upkeepHsr: moneyParams[10],

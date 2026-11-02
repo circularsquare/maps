@@ -83,4 +83,20 @@ const layoutOf = (name, width = 340) => {
   const { lay } = layoutOf('subway 4', 280);
   check(lay.width <= 0.4 * 280 + 1, `the 4 at the narrowest dock (280 px): the drawing in 40% of the panel (${lay.width} px)`);
 }
+{
+  // T-1894: drawn last stop first, the same columns with the rows the other way up; no side rows
+  // where `sideStop` turns them all away
+  const l = ids.find((x) => short(api.line_name(x)) === '2');
+  const groups = decodeRelated(api.line_related(l, of));
+  const a = relatedLayout(groups, opts(l, 340)), b = relatedLayout(groups, { ...opts(l, 340), flip: true });
+  const stopsA = a.rows.map((r) => r.lStop).filter((s) => s >= 0), stopsB = b.rows.map((r) => r.lStop).filter((s) => s >= 0);
+  check(stopsB.join() === [...stopsA].reverse().join(), 'the 2 flipped: its stops bottom to top');
+  const cols = (lay) => lay.columns.map((c) => `${c.line}:${c.r1 - c.r0}`).sort().join();
+  check(cols(a) === cols(b) && a.rows.length === b.rows.length, 'the 2 flipped: the same rows and columns');
+  const one = b.columns.filter((c) => short(api.line_name(c.line)) === '1');
+  const nmB = (i) => opts(l, 340).stopName(b.rows[i].ref.line, b.rows[i].ref.stop);
+  check(one.length === 1 && nmB(one[0].r0) === '96 St' && nmB(one[0].r1) === 'Chambers St', 'the 2 flipped: the 1 from 96 St down to Chambers St');
+  const c = relatedLayout(groups, { ...opts(l, 340), sideStop: () => false });
+  check(c.rows.every((r) => r.lStop >= 0), 'the 2 without side stops: only its own rows');
+}
 process.exit(fail ? 1 : 0);

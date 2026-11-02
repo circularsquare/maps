@@ -44,8 +44,8 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
         const price = prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0;
         const state = !on ? "" : s.built ? " on" : " planned";
         const act = on
-          ? s.built ? "Built. Click to remove it; nothing is refunded." : "In the blueprint. Click to take it out."
-          : s.built ? "Click to build it, paid at once." : "Click to add it to the blueprint.";
+          ? s.built ? "Built. Click to remove it; nothing is refunded" : "In the blueprint. Click to take it out"
+          : s.built ? "Click to build" : "Click to add it to the blueprint";
         const Ic = ICONS[u.bit];
         return (
           <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
@@ -72,9 +72,9 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";
   const cost = (all ? st.length : missing.length) * price;
   const act = all
-    ? built ? `Built. Click to remove it from all ${st.length} stations; nothing is refunded.` : "In the blueprint. Click to take it out."
+    ? built ? `Built. Click to remove it from all ${st.length} stations; nothing is refunded` : "In the blueprint. Click to take it out"
     : (have.length ? `${have.length} of ${st.length} stations have one. Click to build it at the other ${missing.length}` : `Click to build it for all ${st.length} stations`)
-      + (built ? ", paid at once." : " in the blueprint.");
+      + (built ? "" : " in the blueprint");
   const click = async () => {
     const a = await edit({ op: "stationUpgrade", nodes: (all ? st : missing).map((x) => x.num), bit: u.bit, on: !all });
     if (!a.ok) return;

@@ -255,14 +255,13 @@ drain evenly [T-284], each hour's share following when riders travel and trains 
 landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one, and the change takes
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
-with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
-multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
-[T-805], times the ground's terrain class (flat 1x, hills 1.25x or 1.6x, mountains 2.5x; the player sees both hill classes as "Hills") at
-every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; Settings can
+with $6B in an empty New York [T-805]; double track costs a base of US$75M a km times a
+multiplier per elevation (US$22.5M at grade, 75 at +1 and -1, 120 at -2) [T-805, T-1928], plus the ground's terrain class (hills +0.5 or +1.2, mountains +3; the player sees both hill classes as "Hills") at
+every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; a viaduct or cut and cover tunnel over more than 30 km of unbroken water is refused [T-1930]; Settings can
 shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
 US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
-track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
+track and stations cost upkeep whether trains run or not, US$20k a km of double track on the ground (US$30k at any other level, T-1931) and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
 using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. The curve is set for India (a lower-middle-income baseline) and each country charges it times its fare scale, by default its GDP per head at market rates over India's to the power 0.7 in tenths (the US 11.6), or the player's own, set in the Money tab for the country of the selected station or city, else the one in view, shown there as a multiple of Japan's fares (Japan 1.00x) though kept in India's units; a trip pays its starting country's [T-1277, T-1554]. While the curve is a new game's and the player has set no scale for a country, that country's three fares are rounded (to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar) and charged as rounded, in demand and income alike: Japan $0.55, $1.35 and $4.75 at 0, 20 and 100 km, New York $1.00, $2.60 and $9.00 (the default curve is one straight line, $1 plus $0.08 a km in New York) [T-1662, T-1670]. Rides on a line with high-speed trains pay the curve's part above the base times a high-speed multiplier, 1.5 unless the player sets another in the Money tab (shown once such a line exists, saved with the game); a trip that changes lines pays the base once and the rest times its km-weighted multiplier, in demand and income alike [T-1626]. The player may take one loan at a time, of $1B, $5B or $10B, at the bottom of the Money tab: its interest is 1% of it a game day, drained evenly through the day and shown in the history as its own item, and Repay pays it back in full once the cash covers it, after which another can be taken; a sandbox has none, and the loan is saved with the game [T-1661].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
@@ -312,7 +311,7 @@ slowing a control (Anita 2026-10-29). A new normal game shows a **Tutorial card*
 under the search button with six steps ticked as the player does them (track, stations, construct,
 a line, stops, a train), until the player has finished it once in the browser [T-1822;
 docs/ui-panels.md "Tutorial card"]; a browser's first elevation is +1. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
-count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
+count the past 24 hours from the boarding account (labelled "today", the profit "expected profit today" [T-1893]), while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
 biggest car flows as arcs [T-1435]) show demand's
 whole day: the average day by default, or a weekday, a Saturday or a Sunday [T-464, T-262]. On the map, lines sharing track are drawn over each other,

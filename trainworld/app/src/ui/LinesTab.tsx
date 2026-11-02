@@ -16,7 +16,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, crowding, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, crowding, dayNote, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
 import { demandView, lineFiguresIn } from "../game/demand";
 import { useClockQuery } from "./useClockQuery";
 import { Chip, Icon, SortHead } from "./widgets";
@@ -58,7 +58,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, !!st.bus)}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, !!st.bus, dayNote(l, st))}>
       <Money dollars={net} />
     </span>
   );
@@ -94,7 +94,7 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
     <>
       {pending ? <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>
         : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in the past 24 hours, each line's added up\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
-      {any ? <span class="val w-linemoney" data-tip={`${money(net)} net in the past 24 hours\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
+      {any ? <span class="val w-linemoney" data-tip={`Expected profit today: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>
     </>
   );
@@ -109,7 +109,7 @@ function TotalToday() {
   if (!t.size) return null;
   let n = 0;
   for (const d of t.values()) n += d.riders;
-  return <span class="muted">{count(n)} riders in the past 24 hours</span>;
+  return <span class="muted">{count(n)} riders today</span>;
 }
 
 export function LinesTab() {
@@ -373,7 +373,7 @@ export function LinesTab() {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
-        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares minus running costs and upkeep", first: -1, cls: "w-linemoney" },
+        { key: "money", label: "Money", tip: "Sort by expected profit today, fares minus running costs and upkeep", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the center of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}

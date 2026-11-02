@@ -1,6 +1,6 @@
 // T-1791, T-1809: the group view's combined diagram, laid out (pure, for checks/t1791-layout.mjs).
 // Rows: one place each (a station complex, `key`), top to bottom. They start from the group's line
-// with most stops in its path order; each other line is matched to them by place, turned round if it
+// with most stops in its path order, north end on top (`reversed`); each other line is matched to them by place, turned round if it
 // runs the other way, and its own places go in as one block: between the rows it leaves and rejoins,
 // or above its first shared row or below its last, whichever leaves the shorter bar beside them (so a
 // branch's stops stay together and it hangs off the row where it leaves).
@@ -52,6 +52,8 @@ export interface GroupOpts {
   transfer?: (key: string) => boolean;
   /** the crossing bars drawn through this place's row (past ROUND_MAX the row grows to fit them) */
   crossings?: (key: string) => number;
+  /** line `k` is drawn last place first should it be the spine (T-1894, north up, `game/northUp.ts`) */
+  reversed?: (k: number) => boolean;
 }
 
 /** A bar's width, the gap between lines running together, lines apart, px. */
@@ -125,7 +127,7 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
   };
   const nStops = (k: number) => ps[k].filter((p) => p.stop).length;
   const spine = ps.reduce((b, _, k) => (nStops(k) > nStops(b) ? k : b), 0);
-  seq.push(...ps[spine].map((p) => mk(spine, p)));
+  seq.push(...(o.reversed?.(spine) ? [...ps[spine]].reverse() : ps[spine]).map((p) => mk(spine, p)));
   for (let k = 0; k < n; k++) {
     if (k === spine) continue;
     let pl = ps[k];

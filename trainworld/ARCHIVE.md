@@ -2,6 +2,16 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1928 [P2] New level price table. Done 2026-11-02 (agent t1928): base US$75M a km, factors -3..+3 2.0/1.6/1.0/0.3/1.0/1.5/2.0 (ground 22.5, viaduct and cut and cover 75, bored 120 and 150), surcharges hills +0.5/+1.2, mountains +3, water +2.5; tags and Build tab follow. check `checks/t1928-prices.mjs`.
+- T-1930 [P2] Long water. Done 2026-11-02 (agent t1928): viaduct and cut and cover over more than 30 km of unbroken water refused (`Issue::WaterTooLong`), across edges meeting in the water; bored unlimited.
+- T-1931 [P3] Upkeep by level. Done 2026-11-02 (agent t1928): US$20k a km a game day at level 0, US$30k at any other level, stations unchanged; New York save unchanged (no ground track).
+
+- T-1905 [P2] Destination sanity. Done 2026-11-02 (agent t1905): an attraction's share of its residents' outings saturates near 5% (Okazaki Castle 7.7M -> 1.3M, Nagoya Castle 10.8M -> 2.7M); Disneyland's excess is its leisure jobs, JFK's bubbles its spread block jobs, SouthPark is real; proposals T-1932 to T-1935. notes/T-1905.md.
+
+- T-1893 [P2] Small text and chrome batch. Done 2026-11-02 (agent ui-text): "24 h" labels now "today" and the line panel's block is headerless, profit hover "Expected profit today" naming a weekend or holiday, no weekday repeat in the crowd dot hover, cars hover on the number, upkeep red, "Click to build", F2 hint shows at once, capacity dot is a gauge, top bar time right-aligned on two rows.
+- T-1892 [P2] City panel totals. Done 2026-11-02 (agent ui-text): the city view has Stations, Lines and Train trips rows.
+- T-1894 [P2] Line panel and diagram. Done 2026-11-02 (agent t1894): north up (west for east-west lines) in line and group diagrams; click a stop's dot to remove while editing; side lines' passed stops only when interlined and editing; Copy line opens the copy editing stops; typed train length; plain colours for a city's first four lines.
+
 - T-1890 [P1] Terrain and water added, not multiplied. Done 2026-10-31 (agent t1887): level + terrain (+0.4, +1.0, +2.5; none in bored tunnels) + water (+2, any level); mountains 3.0x at grade, 3.5x viaduct, 1.1x tunnel; tags "Mountains +2.5x", "Water +2x". [notes/T-1887.md](notes/T-1887.md).
 
 - T-1887 [P1] Water tag, dearer mountains at grade, Ctrl draws without snapping. Done 2026-10-31 (agent t1887): "Water 2x" in the track tag; ground-level factor 6 in mountains (270 a km against viaduct 225, tunnel 99); Ctrl or Cmd held snaps to nothing. [notes/T-1887.md](notes/T-1887.md).

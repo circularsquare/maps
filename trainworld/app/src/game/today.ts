@@ -8,7 +8,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
-import { clock } from "./clock";
+import { clock, lineSeconds } from "./clock";
 import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
@@ -17,7 +17,7 @@ import { moneyState } from "./money";
 import { count, trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
 import { levelOn } from "./days";
-import { kindIn, lineCountry } from "./holidays";
+import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
 import { cameraMoving } from "./ui";
 
@@ -100,6 +100,20 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand): { wait: number; tip
   const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Trains are not at capacity")
     + lines.map((s) => `\n${s}`).join("");
   return { wait: avg, tip, phrase };
+}
+
+/** T-1893: the profit hover's line when the line's day is not a weekday, so a loss on a quiet day
+ * does not alarm; null on a weekday. */
+export function dayNote(l: LineInput, st: LineStats): string | null {
+  const country = lineCountry(l.stops), day = Math.floor(lineSeconds(st) / 86400);
+  const kind = kindIn(country, day);
+  if (kind === 0) return null;
+  if (kind === 1 || kind === 2) return "Today is a weekend";
+  if (kind === 3) {
+    const name = country ? holidayOn(country, day) : null;
+    return `Today is a holiday${name ? ` (${name})` : ""}`;
+  }
+  return "Today is a holiday travel day";
 }
 
 const LEVEL_INDEX = { high: 0, medium: 1, low: 2 } as const;

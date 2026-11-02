@@ -59,10 +59,13 @@ impl TrackApi {
     pub fn money_params(&self) -> Vec<f64> {
         vec![
             CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM,
-            UPKEEP_TRACK_KM, UPKEEP_STATION, crate::track::cost::track_factor(1, false), crate::track::cost::track_factor(2, true),
+            UPKEEP_GROUND_KM, UPKEEP_STATION, crate::track::cost::track_factor(1, false), crate::track::cost::track_factor(2, true),
             // T-1464: a bus's price US$M, running cost per bus-km and a route's upkeep a day per
             // road-km US$, a route's price per road-km US$M
             BUS_PRICE, RUN_COST_BUS_KM, UPKEEP_BUS_KM, BUS_ROUTE_COST_PER_KM,
+            // T-1931: upkeep a day per km of double track that is not on the ground US$ (index 7
+            // is the ground rate)
+            UPKEEP_OFF_GROUND_KM,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each

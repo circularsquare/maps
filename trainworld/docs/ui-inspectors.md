@@ -19,24 +19,31 @@ view's own rows below.
 inter-city bubble zoomed out, or by a click on its row in the Cities tab (a double click there moves
 the camera, as in the Stations tab). The go-to icon sits on the title's line, at its right; under it, rows: **Train share** (the
 zone's, as the top bar gives it; hover the split with counts), and for a zone with a built station
-**Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
+**Stations** (built ones, the Cities tab's count), **Lines** (lines with a stop in the zone) and
+**Train trips** ("12.3M/day", the Cities tab's Trips figure for the day shown, hover the whole figure
+"per weekday" and so on) [T-1892], then **Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
 tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
 star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
 [T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): within
 the zone, with the goal ticks over its mode bar, to other places, the top three
 destinations. Then, for a zone with a built station: **By purpose**, the purpose bar of the
 inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
-**Top lines**, the five lines with most boardings at the zone's stations in the past 24 hours
-(bullet, name, count with hover); **Top stations**, the five complexes (or lone stations) in the
-zone with most boardings in the past 24 hours, named after the member with most lines. A click on a
+**Top lines**, the five lines with most boardings at the zone's stations today
+(bullet, name, count with hover; the header's right says "boardings today"); **Top stations**, the five complexes (or lone stations) in the
+zone with most boardings today, named after the member with most lines. A click on a
 line or station row opens its view.
 
-## The past 24 hours, not a forecast
+## The past 24 hours, shown as today
 
-[T-293, T-446] The line and station panels and the Lines and Stations tabs count the past 24
+[T-293, T-446, T-1893] The line and station panels and the Lines and Stations tabs count the past 24
 hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
-cost, trains that left full, riders left behind. Labels say "in past 24 h" or "24 h";
-hovers say "in the past 24 hours". They are counted by the clock worker from the boarding
+cost, trains that left full, riders left behind. They follow the schedule as it is, so they move at
+once when it changes; the player is told "today" (Anita, T-1893: "24 h" was hard to keep
+consistent): labels and headings "Boardings today" or "Today"; their hovers say "N riders in the
+past 24 hours" (Anita: today can mean the past 24 hours); the profit's hover "Expected
+profit today: $x" (it is today's projection). The line panel's block has no heading, only the rule above it. The points (Cities
+tab, top bar, leaderboard) stay "in the past 24 hours": they are a sum of the last 24 whole game
+hours, moving once an hour. They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
 riders arrived by its last departure in it less those still waiting, less the same at the
@@ -55,7 +62,7 @@ purpose filter the purpose drawn is ringed in the bar.
 ## Lines tab and the line inspector
 
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
-  sorts by clicking a column header [T-310]: Name, City (below), Riders (past 24 hours), Money (the line's fares less its running cost over the past 24 hours, in the money format with negatives red; its hover gives the fares, the running cost and the net) [T-735], Trains and Near. A click sorts by that
+  sorts by clicking a column header [T-310]: Name, City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. The name keeps at least about six characters; the Money column goes first when the
@@ -67,7 +74,7 @@ purpose filter the purpose drawn is ringed in the bar.
   shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
   gives the real figure.
   **A running line the player just rescheduled, re-stopped or built reads "constructing..."** in
-  place of its riders, here and in the line inspector's Past 24 hours (its Riders row, the purpose
+  place of its riders, here and in the line inspector's counts block (its Riders row, the purpose
   split hidden), until the riders that count the change land: its cluster's local result after the
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
   run or more those in a window of zones round it re-solved, T-1735) or the whole solve [T-1665,
@@ -157,7 +164,9 @@ purpose filter the purpose drawn is ringed in the bar.
   ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
   stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
-  is a random `LINE_PALETTE` colour no line in that city uses, else a random one of the least used [T-856]
+  is the `LINE_PALETTE` colour farthest from the lines near it, ties at random [T-856, T-1278]; a
+  city's first four lines take only red, blue, green, orange, purple or yellow, and later ones
+  favour those six (their distance counted 1.3 times) [T-1894]
   (`nextLineName`, `nextFreeColour` in `game/lineActions.ts`). A copy is named "<name> copy". The N key does it from any tab
   [T-670]; the same on a selected track no line runs on (its inspector's "Lines here" heading
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
@@ -178,7 +187,8 @@ purpose filter the purpose drawn is ringed in the bar.
   through renames; one without follows its name. Dragging in the picker changes the badge and the stop dots in the
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
-  swatch click, an arrow key step or a typed hex.
+  swatch click, an arrow key step or a typed hex. Opening the editor scrolls the panel to its top,
+  since the editor sits under the pinned title (the group view's too) [T-1894].
 - **Under the title** a muted line, left aligned with the title's bullet, gives the stop count
   and length, "24 stops, 16.3 km", led by "High-speed, " on a line of high-speed trains [T-1280].
   Above it, for a line in a group [T-1791, T-1813, T-1818], a row reading "Part of [bullet]
@@ -189,7 +199,7 @@ purpose filter the purpose drawn is ringed in the bar.
   starts 6 px below the title, which covers that much of whatever follows it.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key O), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the
-  two when the source had none, and the group view opens, T-1791; its name and symbol are the next
+  two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
   "<name> clone N" (a copy of "X clone 1" is "X clone 2") with the old symbol's first letter and N (t or tm gives t1, then t2), N the lowest
   not taken, T-1872, `game/cloneNames.ts`), and Delete line (asked first). While stops are being edited the Stops list (with a remove
@@ -236,18 +246,21 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
   riders wait ~11 min for a train with room" (or "Riders get on the first train
   with room"), then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
-  trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then "On weekdays,
-  riders wait ~15 min for a train with room" [T-1684, T-1797]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then, only when the
+  line's day is not a weekday, "On weekdays, riders wait ~15 min for a train with room" [T-1684, T-1797, T-1893]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
   option's hover giving its top speed ("High speed trains run up to 320 km/h on high speed track
   or 160 km/h on normal track", "Normal trains run up to 160 km/h") and, on a running line, what
   switching buys ("Buys 270 cars for US$x", or "Uses N cars from the depot"), nothing else; then
   **Average speed**, both ways over the round trip less the turning at the ends, so stops and
-  waiting at busy track count (hover gives the distance and time) [T-549, T-1159]; then a **Train length** stepper in cars [T-733], 1 up to what the line's
-  shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
-  the riders a train then holds at crush ("7 cars, 1,120 riders a train at most"), the cars it
-  buys or takes from the depot on a running line, and the cap ("The 160 m platform at East fits
-  8 cars"), which the label's hover also gives (the schedule's rows, Trains, Average speed and
+  waiting at busy track count (no hover, T-1893) [T-549, T-1159]; then a **Train length** stepper in cars [T-733], 1 up to what the line's
+  shortest platform fits (platform / 20 m; a click on the number types it, and a typed length past
+  the cap goes to the cap and offers the platforms' expansion below for the length typed, at most 20
+  cars [T-1894]), the buttons with no hover and the
+  number of cars between them hovering "8 cars can carry 1,280 riders" (160 a car, at crush) and
+  "Running a train costs $4 per km, plus $2 per car" (the line's train kind, shown unit) [T-1893];
+  the label's hover gives the cap ("The 160 m platform at East fits
+  8 cars"; the schedule's rows, Trains, Average speed and
   Train length are one run of rows with no rules between, their controls 4 px apart [T-1159]); stepping up to the cap stores the default (the most
   that fits, `cars` 0), so the trains follow the platforms again; a + at the cap (under 400 m, 20 cars) refuses (the stepper shakes and the refusal knock plays) and adds a row under
   it, "2 stations are too short for 7-car trains." with a button "Expand all for US$15.0M" (`LongerPlatforms`; "Expand it" for one station, no price when they are still blueprint): it lengthens each short stop's platform to the wanted cars x 20 m with
@@ -261,17 +274,22 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   line's "Track this line ran on is gone" is one too;
   Today for a running line:
   riders by purpose,
-  one Profit row (the net over the 24 hours, fares less running cost and the line's share of upkeep,
-  in the alert red when negative; the hover gives the net, fares, running trains and upkeep share, T-867, T-1443; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
+  one Profit row (the expected profit today, fares less running cost and the line's share of upkeep,
+  in the alert red when negative; the hover gives "Expected profit today: $x", fares, running trains and upkeep share, T-867, T-1443,
+  and when the line's day is not a weekday one more line, "Today is a weekend", "Today is a holiday
+  (Thanksgiving Day)" (no name when the calendar has none) or "Today is a holiday travel day", so a loss
+  on it does not alarm, T-1893 `dayNote` in `game/today.ts`; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
   aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
   over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left at platform as "x/y", x those a full train left behind and y those who
-  wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
-  "Past 24 hours", with a rule above it and none between its rows
-  (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
-  the start (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
+  wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block has no heading
+  (T-1893), only a rule above it and none between its rows
+  (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]),
+  **north up** [T-1894, `game/northUp.ts`]: the end farther north on top, or for a line within about
+  22 degrees of east-west (north-south distance under 0.4 of east-west) the west end; a loop as
+  built; each with its time from the stop on top (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
   the trains' top speed, normal track, curves or a crossover, and when the stops are too close
   to reach it [T-817]; dropped from a row whose name, time and bullets do not all fit, T-1391) and
   boardings in the past 24 hours, each transfer stop (any station of its complex
@@ -281,7 +299,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   shows each station once, its bar going on past the first and last stops and curving round to
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
   "Open the loop") [T-1391]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
-  a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; **flat junctions and
+  a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; **while stops are
+  edited** a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
+  and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove
+  the stop at 225 St", "Shift-click to end the line here"; none on a stop the line needs: a line of
+  two, a loop's ends, where trains turn back), beside the remove button [T-1894]; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
@@ -313,8 +335,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   out to its side half a row past where it leaves (turns at one gap 5 px apart); where it ends, the
   column ends at its stop; a span over one row only, or a line with no column left, is drawn as
   crossings; beside a loop, a line running on across the loop's first stop goes on past the last
-  row; rows are the line's stops (as in the plain list, bullets leaving out the lines drawn there)
-  and the side lines' own stops at the nearest point of the line, names muted and nothing else; a
+  row; rows are the line's stops (as in the plain list, bullets leaving out the lines drawn there,
+  north up the same way), and only while stops are edited, the side lines' stops at a station the
+  line passes (interlined: a station of the complex is on its path), at the nearest point of the
+  line, names muted, a click on the row's mark adding the stop (hover "Click to add a stop at 96
+  St"; such a station leaves the "+ N stations passed" row) [T-1894]; a
   side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
   at each row both stop at next to one only one of them does (where an express's stops part from a
   local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
@@ -342,7 +367,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
 
 [T-1791 stages 2 and 3, T-1809; `ui/inspector/GroupInspector.tsx`, layout `game/groupLayout.ts`,
 check `checks/t1791-layout.mjs`; notes/T-1809.md] A line group's panel, opened from its Lines-tab
-row, the group name in a line panel, and Copy line. Stops are edited in its diagram (below); the
+row and the group name in a line panel. Stops are edited in its diagram (below); the
 line panel's own remove button works as before.
 
 - **Title**: the group's bullet, large, its name and Show on the map (all its lines' stops). A
@@ -357,7 +382,7 @@ line panel's own remove button works as before.
   the page is open) and Copy line, which opens a row of the group's bullets; a click on one copies
   that line (hover "Copy 4") into the group.
 - **Rows**: one place (station complex, `stopKey`) each. They start from the line with most stops in
-  its path order; each other line is matched to them by place, turned round if it runs the other
+  its path order, north up as the line panel's stops (T-1894); each other line is matched to them by place, turned round if it runs the other
   way, and its own places go in as one block: between the rows it leaves and rejoins, or above its
   first shared row or below its last, whichever leaves the shorter bar running beside them. So a
   branch hangs off the row where it leaves and its stops stay together. A line sharing no place goes
@@ -415,7 +440,7 @@ in place of Edit stops (Save route while the route is open, which saves it; T-15
 nothing); while planned, its Construct price with the route and the buses in the hover. Schedule:
 buses or a headway per demand level, as for trains, and the average speed. Stops: the ends and the
 train stations met, the street stops between folded into one row each, minutes from the start.
-The past 24 hours: riders, Changing to trains (riders a day changing between this bus and any rail
+The counts block, headingless as the line panel's: riders, Changing to trains (riders a day changing between this bus and any rail
 line at the stations it meets), profit, average load and buses leaving full. No train kind, length,
 stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
 the Build tab's quote has rows for bus routes and new buses.
@@ -505,7 +530,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
     `singleStation` in `game/complexView.ts`): its own inspector and outline, its
     subtitle ending with "Complex of 16 stations" as a link back (complex view itself has no subtitle). Any new selection, the same
     station included, shows the complex again.
-  - **The complex map** (below), then the complex's "Boardings in past 24 h" with their purpose split [T-1095].
+  - **The complex map** (below), then the complex's "Boardings today" with their purpose split [T-1095].
   - **Closest stations** [T-312, T-323; `ui/inspector/ClosestStations.tsx`, `game/walks.ts`]: the
     three other stations with the shortest walk, built or blueprint (blueprint muted and marked),
     each with the chips of its lines (six at most, then "+n") and walking minutes ("7 min", the
@@ -537,7 +562,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   from all. A single station's Remove station is at the panel's bottom, in red text (Anita, T-1852:
   the Delete tool does the same). Each upgrade is outlined when
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
-  in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
+  in a sentence, its price and what a click does ("Click to build" on a built station, no ", paid at once"; none of the click lines ends in a period) [T-1893]. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing
   refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
   only) and Remove track (Remove blueprint on a blueprint) [T-1669]; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"

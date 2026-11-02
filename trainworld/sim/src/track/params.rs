@@ -70,13 +70,12 @@ pub const BRAKE: f64 = 0.9;
 
 // ---- costs, US$M (SPEC 6.4) ----
 
-/// Per route-km of double track at multiplier 1. Against cheap-country metros (Korea, Spain: about
-/// $100-150M a tunnelled km with stations; Anita, 2026-10-21, undoing T-467's halving).
-pub const BASE_COST_PER_KM: f64 = 90.0;
-/// Multiplier per level, index `level + 3` (-3 .. +3). Anita, 2026-10-08 (+2 and +3 lowered from
-/// 1.4 and 2.0 the same day). Ground and +1 raised from 0.3 and 0.8 for the building knockouts and
-/// road crossings the model does not compute (T-1068).
-pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.5, 1.0, 1.3, 1.8];
+/// Per route-km of double track at multiplier 1, which is the first viaduct and cut and cover (T-1928,
+/// Anita 2026-11-02, notes/T-1897.md): ground is 0.3 of it (US$22.5M), bored tunnels 1.6 and 2.0, a
+/// bored tunnel near cheap-country metros (Korea, Spain: about $100-150M a tunnelled km with stations).
+pub const BASE_COST_PER_KM: f64 = 75.0;
+/// Multiplier per level, index `level + 3` (-3 .. +3): up and down mirror each other.
+pub const LEVEL_MULT: [f64; 7] = [2.0, 1.6, 1.0, 0.3, 1.0, 1.5, 2.0];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
 /// High-speed track's price over double track at the same level (T-817, notes/T-817.md).
 pub const HSR_COST: f64 = 1.5;
@@ -95,11 +94,15 @@ pub const FLAT_CROSSING_KM: f64 = 0.1;
 /// Water mask sampling step along track, m: half the pack mask's 25 m pixel (notes/T-004.md).
 pub const WATER_STEP: f64 = 12.5;
 /// What each terrain class adds to the level's multiplier (T-1890, Anita 2026-10-31): flat, low
-/// hills, high hills, mountains. Added, so at grade in mountains is 0.5 + 2.5 = 3.0x.
-pub const TERRAIN_SURCHARGE: [f64; 4] = [0.0, 0.4, 1.0, 2.5];
+/// hills, high hills, mountains. Added, so at grade in mountains is 0.3 + 3 = 3.3x (T-1928: the
+/// same dollars as before, in the new unit).
+pub const TERRAIN_SURCHARGE: [f64; 4] = [0.0, 0.5, 1.2, 3.0];
 /// What water adds to track's multiplier at any level (T-1890); stations, junctions and crossings
 /// over water take `WATER_COST` times their price.
-pub const WATER_SURCHARGE: f64 = 2.0;
+pub const WATER_SURCHARGE: f64 = 2.5;
+/// The most unbroken water a viaduct or a cut and cover tunnel may cross, m (T-1930): Hangzhou Bay's
+/// rail bridge is 29 km. Bored tunnels have no limit.
+pub const WATER_SPAN_MAX: f64 = 30_000.0;
 /// The lowest level the terrain surcharge applies to: bored tunnels (-2, -3) cost the same anywhere.
 pub const TERRAIN_MIN_LEVEL: i8 = -1;
 /// Terrain sampling step along track, m: under a quarter of the class grid's ~115 m cell (T-1854).
@@ -116,10 +119,12 @@ pub const RUN_COST_CAR_KM: f64 = 2.0;
 pub const HS_CAR_PRICE: f64 = 3.75;
 pub const HS_RUN_COST_TRAIN_KM: f64 = 5.0;
 pub const HS_RUN_COST_CAR_KM: f64 = 3.0;
-/// Upkeep a day, real US$ (US$30k and US$50k a game day at `ECONOMY`), charged whether trains run
-/// or not (T-867, notes/T-867.md): per route-km of constructed double track, times `track_factor`
-/// (so quad track, two pairs, pays twice), and per constructed station at any level.
-pub const UPKEEP_TRACK_KM: f64 = 300.0;
+/// Upkeep a day, real US$ (US$20k, 30k and 50k a game day at `ECONOMY`), charged whether trains
+/// run or not (T-867, notes/T-867.md): per route-km of constructed double track, times
+/// `track_factor` (so quad track, two pairs, pays twice), and per constructed station at any level.
+/// Track that stays on the ground pays the first rate, every other piece the second (T-1931).
+pub const UPKEEP_GROUND_KM: f64 = 200.0;
+pub const UPKEEP_OFF_GROUND_KM: f64 = 300.0;
 pub const UPKEEP_STATION: f64 = 500.0;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game

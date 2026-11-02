@@ -266,6 +266,8 @@ export interface MoneyState {
   /** T-867: upkeep a day, real US$, per km of double track and per station, and single and
    * high-speed track's upkeep over double track's */
   upkeepTrackKm: number;
+  /** T-1931: the same per km of track that is not on the ground (`upkeepTrackKm` is the ground's) */
+  upkeepOffGroundKm: number;
   upkeepStation: number;
   upkeepSingle: number;
   upkeepHsr: number;

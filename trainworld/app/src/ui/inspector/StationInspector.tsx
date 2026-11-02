@@ -156,7 +156,7 @@ function ComplexLines({ id, members, lines, byId, now }: { id: string; members: 
       <li class="cols muted small">
         <span class="grow">Lines</span>
         <span class="val">Waiting</span>
-        <span class="val">24 h</span>
+        <span class="val">Today</span>
       </li>
       {rows.map((r) => (
         <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
@@ -178,7 +178,7 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
   const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
   return (
       <ul class="rows pick">
-        <Row label="Boardings in past 24 h" bold>
+        <Row label="Boardings today" bold>
           {known ? count(total) : ""}
         </Row>
         <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: at(l) }))} unit="boardings" />
@@ -327,11 +327,11 @@ function StationDetails({ s, lines, props }: {
         </li>
         {s.built && m && (
           <Row label="Upkeep">
-            <span data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>
+            <span class="money-neg" data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>
           </Row>
         )}
       </ul>
-      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings in past 24 h</span></div>}
+      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings today</span></div>}
       <ul class="rows pick">
         {here.map(([l, b]) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>

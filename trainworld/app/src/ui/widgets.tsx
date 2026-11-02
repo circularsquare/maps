@@ -171,7 +171,7 @@ export function shakeEl(el: HTMLElement | null) {
  * `set` with the number typed (anything else is dropped), Escape cancels. `text` is what the box
  * starts with, `tip` the value's hover. `onStep` returns false for a step refused (T-1844): the
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
   const u = p.jumpUnit ? " " + p.jumpUnit : "";
   const jump = p.jump ? `Shift-click for 5${u}, Ctrl-click for 20${u}` : undefined;
@@ -192,7 +192,7 @@ export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => bo
       <button class="btn" aria-label={"Less " + p.label} data-tip={tip(p.tipDown)} onClick={(e) => step(-by(e))}>
         <Icon.minus />
       </button>
-      {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v">{p.value}</span>}
+      {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v" data-tip={p.tipValue}>{p.value}</span>}
       <button class="btn" aria-label={"More " + p.label} data-tip={tip(p.tipUp)} onClick={(e) => step(by(e))}>
         <Icon.plus />
       </button>

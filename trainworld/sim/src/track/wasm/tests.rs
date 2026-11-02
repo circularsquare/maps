@@ -34,22 +34,22 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     let deep: Vec<f64> = [0.0, 0.0, 0.0, 2000.0, -2.0, 0.0, 0.0, 3000.0, 2000.0, -2.0].to_vec();
     assert_eq!(a.add_route(&deep, &[], 2, false), 0, "{}", a.issues());
     let before = a.blueprint_cost();
-    assert!((before - (3.0 * 45.0 + 3.0 * 99.0)).abs() < 1e-6, "{before}");
+    assert!((before - (3.0 * 22.5 + 3.0 * 120.0)).abs() < 1e-6, "{before}");
     let ll = a.to_lonlat(1500.0, 1000.0);
     assert!(!a.add_terrain(b"TWT1"));
     assert!(a.add_terrain(&terrain_round(ll[0], ll[1], 120, 3)));
     let after = a.blueprint_cost();
-    assert!((after - (3.0 * 270.0 + 3.0 * 99.0)).abs() < 1e-6, "{after}");
+    assert!((after - (3.0 * 247.5 + 3.0 * 120.0)).abs() < 1e-6, "{after}");
     let rows = a.blueprint_cost_items();
     // T-1839: track rows carry the terrain class in the fifth field, the ground's part is no row
     let hilly: f64 = rows.chunks_exact(7).filter(|r| r[0] == 0.0 && r[4] == 3.0).map(|r| r[6]).sum();
-    assert!((hilly - 3.0 * 270.0).abs() < 1e-6 && !rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
+    assert!((hilly - 3.0 * 247.5).abs() < 1e-6 &&!rows.chunks_exact(7).any(|r| r[0] == 6.0), "{rows:?}");
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
     // the tool's preview prices the same and says how much ground it crosses in each class
     let more: Vec<f64> = free(0.0, -1000.0).iter().chain(free(2000.0, -1000.0).iter()).copied().collect();
     let out = a.preview_route(&more, &[], 2, false);
     assert_eq!(out[0], 1.0);
-    assert!((out[1] - 2.0 * 270.0).abs() < 1e-6 && (out[4] - 3.0).abs() < 1e-9, "{:?}", &out[..5]);
+    assert!((out[1] - 2.0 * 247.5).abs() < 1e-6 && (out[4] - 3.3).abs() < 1e-9, "{:?}", &out[..5]);
     let g = a.preview_ground();
     // T-1887: then over water
     assert!(g[3] > 1999.0 && g[0] < 1.0 && g[4] == 0.0, "{g:?}");
@@ -60,8 +60,26 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
 }
 
 #[test]
+fn upkeep_is_cheaper_for_track_that_stays_on_the_ground() {
+    // T-1931: US$20k a km a game day on the ground, US$30k at any other level
+    let mut up = vec![];
+    for level in [0.0, 1.0, -2.0] {
+        let mut a = api();
+        a.set_cash(1e6);
+        let ends = [0.0, 0.0, 0.0, 0.0, level, 0.0, 0.0, 10_000.0, 0.0, level];
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        up.push(a.upkeep()[1]);
+    }
+    assert!((up[0] - 0.2).abs() < 1e-3 && (up[1] - 0.3).abs() < 1e-3 && (up[2] - 0.3).abs() < 1e-3, "{up:?}");
+    let params = api().money_params();
+    assert_eq!((params[7], params[15]), (200.0, 300.0));
+}
+
+#[test]
 fn upkeep_of_a_ten_km_line_and_its_shares() {
-    // T-867: 10 km of double track with a station every km: $30k a km and $50k a station a day
+    // T-867: 10 km of double track at -1 with a station every km: $30k a km (T-1931: off the
+    // ground) and $50k a station a day
     let mut a = api();
     a.set_cash(1e6);
     let mut st = vec![];
@@ -639,10 +657,10 @@ fn blueprint_construct_run() {
     let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
     let pv = a.preview_route(&ends, &[], 2, false);
     assert_eq!(pv[0], 1.0, "{}", a.issues());
-    assert!((pv[1] - 3.0 * 45.0).abs() < 0.5, "cost {}", pv[1]);
+    assert!((pv[1] - 3.0 * 22.5).abs() < 0.5, "cost {}", pv[1]);
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     assert_eq!(a.built_cost(), 0.0);
-    assert!((a.blueprint_cost() - 135.0).abs() < 0.5);
+    assert!((a.blueprint_cost() - 67.5).abs() < 0.5);
     let nodes = a.nodes_info();
     let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
     let e = a.edges_info()[0] as u32;
@@ -677,8 +695,8 @@ fn blueprint_construct_run() {
     assert_eq!(a.fleet(), a.cars_needed());
     assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
     // three stations at grade, 75 each (T-1267)
-    assert!((6000.0 - a.cash() - (135.0 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-    assert!((a.last_charge() - (135.0 + 225.0 + trains)).abs() < 0.5);
+    assert!((6000.0 - a.cash() - (67.5 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+    assert!((a.last_charge() - (67.5 + 225.0 + trains)).abs() < 0.5);
     assert!(!a.can_undo(), "construct is final");
     // More trains an hour buys more trains; short of money it is refused and nothing changes.
     let (fleet, cash) = (a.fleet(), a.cash());
@@ -705,13 +723,13 @@ fn blueprint_construct_run() {
     let cars = a.lines_info()[21];
     let train_km = 30.0 * 2.0 * len_km;
     assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
-    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 300.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0]);
+    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 200.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0, 300.0]);
     assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
-    // Upkeep (T-867): $30k a km of double track and $50k a station a game day, all on the one
-    // line; built track no line uses goes to the rest.
+    // Upkeep (T-867, T-1931): $20k a km of double track on the ground and $50k a station a game
+    // day, all on the one line; built track no line uses goes to the rest.
     let up = a.upkeep();
     assert!((up[3] - 3.0).abs() < 0.01 && up[4] == 3.0, "{up:?}");
-    assert!((up[1] - 0.03 * up[3]).abs() < 1e-9 && (up[2] - 0.15).abs() < 1e-9);
+    assert!((up[1] - 0.02 * up[3]).abs() < 1e-9 && (up[2] - 0.15).abs() < 1e-9);
     let shares = a.line_upkeep(&[8.0, 10.0, 6.0]);
     assert_eq!(shares.len(), 4, "{shares:?}");
     assert_eq!(shares[0], id as f64);

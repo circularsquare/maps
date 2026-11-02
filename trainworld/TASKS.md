@@ -68,6 +68,23 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-1647 [P3] Cheaper market searches per node: T-1608's early stop saves only 6% of nodes (every destination has a far longer-trip start), so profile `Search::run`, `entry_costs` and `trip_km` on the native Japan pass (`t1545_dump`) for exact savings. Done when the native pass is 15% faster with figures identical. Open. notes/T-1608.md.
 
 ## Interface
+Anita's TODO.md short term, filed 2026-11-02 (her 10-31 to 11-02 playtests; verbatim in notes/todo-2026-11-02.md; items may repeat earlier ones).
+- T-1895 [P1] Placement geometry: ramps start sooner on long snapped segments, "curves set radius too wide" meaning/auto and never refuse a removal, snap-next-to-track never crosses the track and is less tight, smaller merge hit radius, tangent line past the curve ring. Taking, 2026-11-02, t1895 agent (tree .tw-trees/t1895).
+- T-1896 [P2] Find and highlight the gap when a stop says "no track connecting". Define the gap first. Open.
+- T-1897 [P2] Track costs and rules: at-grade road-crossing cost, are costs realistic (params proposal to Anita), no viaduct over very long or deep water, no cut and cover, rural maintenance realism. Proposal approved 2026-11-02; T-1928, T-1930, T-1931 done, T-1929 (road crossings) open; notes/T-1897.md.
+- T-1898 [P2] Blueprint selection: box moves only waypoints inside it, set regular or high speed on a selection, dragging a 320 km/h blueprint's middle point keeps 320. Open.
+- T-1899 [P2] Stop logic: new line's first stops on high-speed track auto-switch train type (new lines only), prefer stations with no trains as a tiebreak, no needless reversing on any stop edit. Open.
+- T-1900 [P2] Slower trains block faster ones on shared track and at crowded interchanges. Design written; Anita 2026-11-02 chose N1 (T-1924); archive once T-1924 lands. notes/T-1900.md.
+- T-1901 [P3] Crowding indicators. Design written; Anita 2026-11-02 chose the strip in the hover (T-1926); archive once it lands. notes/T-1901.md.
+- T-1924 [P2] Following loss on shared track: a faster line behind a slower one on a shared stretch loses `D - (H - s)/2` (or `D²/2(H - s)`), held as stops before the slower line's stops, reset where they part (replaces T-339). Anita 2026-11-02: yes. Taking, 2026-11-02, t1924 agent with T-1925 (tree .tw-trees/t1924). notes/T-1900.md N1.
+- T-1925 [P2] Space departures of lines sharing track or a flat junction (one offset per line and level, greedy on edits), so trains are not drawn on top of each other. Goes with T-1924 (the orchestrator's call, 2026-11-02). notes/T-1900.md D1.
+- T-1926 [P3] Crowding strip in the hover (Anita 2026-11-02: no pie; keep the dots as they are, add T-1901's option B strip, one cell per stretch, to the level dot's hover; no delay green, not grey). notes/T-1901.md B. After T-1893 and T-1894 land (same files).
+- T-1929 [P2] Ground track pays per road crossed (US$6M, motorways 3 crossings), counted from the basemap's zoom 14 roads on draw and kept per edge; tag and quote show it. Anita 2026-11-02: go. After T-1895 lands (drawing code). notes/T-1897.md 2.
+- T-1902 [P2] Trip explorer: effective time against share confusion (Seoul-Busan, Tokyo-Seoul), wording, clickable and labelled waypoints, "walk too long" while people ride, large-city pairs "can't be worked out". Taking, 2026-11-02, t1902 agent (tree .tw-trees/t1902).
+- T-1903 [P3] A "total" selection for demand bubbles; click shows trips to or from. Open.
+- T-1904 [P2] Speed: switching homes and destinations instant, local solves not waiting for the whole world solve, label for global against local calculating. Open.
+- T-1906 [P2] Money rules: country fare multipliers default 1.0x with a sensible first fare by start place, no loan whose interest profits can't pay. Open.
+- T-1907 [P3] Map drawing: black hair mostly in Asia plus skin tone by country, clicking overlapping lines picks the closer then cycles, weaker fading for lines with no trains, riders on track without traffic mode, undo a rotated map. Open.
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
 - T-1856 [P2] Terrain cells as hexagons, our own lattice (Anita 2026-10-30: yes), after T-1854 lands so price and shape changes stay apart. notes/T-1854.md. Open.
 - T-1858 [P3] Loading the all-Japan save takes minutes before the first city shows demand; after it the other cities come fast (Anita 2026-10-30: "that's fine then"). Investigation stopped early; its last note: a demand cache exists that a load might show first. Look only if she asks again.
@@ -165,6 +182,7 @@ Also T-1345's Nice (T-769), and T-1344's Paris and London items if those metros 
 - T-203 [P3] Medical sites mapped as multipolygon relations are skipped. notes/someday.md
 - T-548 [P3] Rerun `hospital_beds.py pool` after T-203. notes/T-387.md
 - T-235 [P3] Re-run the park draw on T-234's population. notes/someday.md
+- T-1933 [P2] Airport jobs on the terminals: a census block's jobs over an airport go to its airport_trips cells, so JFK is one cluster instead of ~30 equal bubbles. Pipeline (build_city.py's block spread). Anita 2026-11-02: at a later rebuild. notes/T-1905.md.
 T-203, T-548 and T-235 re-enrich the nine US metro packs. Also T-1345's LODES lumps (T-043).
 
 ### China's next rebuild
@@ -300,7 +318,8 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-666 [P3] An automatic bridge refused near a short first arc or tight turn. notes/someday.md
 - T-668 [P3] Dragging a bridged segment refuses ground over water.
 - T-248 [P3] Construct and level acting on a whole run between junctions. notes/someday.md
-- T-339 [P3] Expresses pass locals at no cost on double track (Anita: "thats whatever"). notes/someday.md
+- T-339 [P3] Expresses pass locals at no cost on double track. Replaced by T-1924 (Anita 2026-11-02: yes); archive with it.
+- T-1927 [P3] Passing tracks at stations that reset T-1924's following loss (T-334 option D). Anita 2026-11-02: not yet, "a reach goal to investigate at some point"; passing only at set points may complicate things. notes/T-1900.md.
 - T-340 [P3] Quad track's rest: end-node stations, express pair side. notes/someday.md
 - T-702 [P3] Station ghost leftovers on overlapping imported lines. notes/someday.md
 - T-755 [P3] No room for ramps at Lake Hamana on the traced Tokaido Shinkansen. notes/someday.md

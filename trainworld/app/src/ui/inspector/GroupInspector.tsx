@@ -19,7 +19,9 @@ import { LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight } from "../../game/rel
 import { today } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
-import { edit, stationNames, world } from "../../game/world";
+import { edit, stationNames, stationsById, world } from "../../game/world";
+import { drawnReversed } from "../../game/northUp";
+import { scrollerOf } from "../scroller";
 import type { EditOp } from "../../workers/protocol";
 import { locateLine } from "../locate";
 import { tipBullet } from "../tip";
@@ -52,11 +54,6 @@ async function change(op: EditOp) {
 /** The last layout, kept while its inputs are the same (ordering tries every arrangement per row). */
 let kept: { sig: string; lay: GroupLayout } | null = null;
 
-/** The nearest ancestor that scrolls. */
-function scrollerOf(el: HTMLElement | null): HTMLElement | null {
-  for (let e = el?.parentElement ?? null; e; e = e.parentElement) if (e.scrollHeight > e.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(e).overflowY)) return e;
-  return null;
-}
 
 export function GroupInspector({ group }: { group: number }) {
   const w = world.value;
@@ -83,6 +80,9 @@ export function GroupInspector({ group }: { group: number }) {
     return () => { window.removeEventListener("pointerdown", away, true); window.removeEventListener("keydown", esc, true); };
   }, [editing]);
   useEffect(() => { setEditing(false); setSymbol(null); setPreview(null); }, [group]);
+  // T-1894: the editor sits under the pinned title, so opening it scrolls the panel to its top
+  const titleEl = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (editing) scrollerOf(titleEl.current)?.scrollTo({ top: 0 }); }, [editing]);
   // how far the panel is scrolled past the diagram's top, px (0 while its top shows)
   const [past, setPast] = useState(0);
   const body = useRef<HTMLDivElement>(null);
@@ -133,8 +133,10 @@ export function GroupInspector({ group }: { group: number }) {
   const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(l.stops, w.lineStats[l.id]?.passed ?? [], stopKey) }));
   const keys = [...new Set(ins.flatMap((x) => x.places.map((p) => p.key)))];
   const crossN = new Map(keys.map((k) => [k, (outside.get(k) ?? []).length]));
-  const sig = JSON.stringify([all, ins, [...crossN]]);
-  if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0 }) };
+  const at = stationsById(w);
+  const ups = ls.map((l) => drawnReversed(at.get(l.stops[0]), at.get(l.stops[l.stops.length - 1]), l.stops.length > 2 && l.stops[0] === l.stops[l.stops.length - 1]));
+  const sig = JSON.stringify([all, ins, [...crossN], ups]);
+  if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0, reversed: (k) => ups[k] }) };
   const lay = kept.lay;
   const now = ls.map((l) => trainsNow(w, l));
   const W = lay.width;
@@ -183,7 +185,7 @@ export function GroupInspector({ group }: { group: number }) {
   const shown = lay.rows.map((row, r) => ({ row, r }));
   return (
     <>
-      <div class="title" data-group-edit>
+      <div class="title" data-group-edit ref={titleEl}>
         <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
         <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>

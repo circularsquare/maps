@@ -1,6 +1,6 @@
 // Capacity markers (SPEC 6.2, T-031, T-1772): a round dot on every resource at 75% and up for the
-// demand level in force, yellow at 75% to red when overloaded (over 100%, or full with some line's
-// trains waiting for room, T-517), with a clock face whose hand shows each train's wait there.
+// demand level in force, a gauge ringed yellow at 75% to red when overloaded (over 100%, or full
+// with some line's trains waiting for room, T-517), its needle at the utilisation (T-1893).
 // Nothing shows below 75% or zoom 12. Each dot sits on its resource's anchor; dots keep a little
 // room between them and the worst delays win. Station names draw over them and never move them.
 // A junction's dot is a link to the junction's inspector, where a flyover can be built (T-080).
@@ -26,9 +26,6 @@ const NO_MARKERS = perfOff("markers");
 const DOT = 16;
 /** room kept clear round a shown dot, CSS px, zoomed out and from zoom 14 */
 const PAD_FAR = 6, PAD_NEAR = 3;
-/** a wait of this many seconds turns the hand once round; longer waits stay there */
-const FULL_TURN_S = 600;
-
 const DEMAND = ["high", "medium", "low"];
 
 /** The dot's colour by utilisation: yellow at 75%, orange at 90%, red at 100% and over. */
@@ -45,21 +42,17 @@ const rgbText = (c: [number, number, number]) => `rgb(${c.map(Math.round).join("
 const HAND_INK = "#262626";
 const n2 = (v: number) => +v.toFixed(2);
 
-/** The dot as SVG: a disc on the casing colour, a mark at 12 o'clock, and with a wait, a hand and
- * the lighter sweep from 12 to it. */
-export function clockDot(rho: number, over: boolean, waitS: number): string {
-  const col = dotColour(rho, over), R = 5.2;
-  let face = "";
-  if (waitS >= 2) {
-    const t = Math.min(1, waitS / FULL_TURN_S), a = 2 * Math.PI * t;
-    const x = n2(R * Math.sin(a)), y = n2(-R * Math.cos(a));
-    face = t >= 1
-      ? `<circle r="${R}" fill="#fff" fill-opacity="0.45"/>`
-      : `<path d="M0 0V${-R}A${R} ${R} 0 ${t > 0.5 ? 1 : 0} 1 ${x} ${y}Z" fill="#fff" fill-opacity="0.45"/>`;
-    face += `<path d="M0 0L${n2(0.92 * x)} ${n2(0.92 * y)}" stroke="${HAND_INK}" stroke-width="1.5" stroke-linecap="round"/>`;
-  }
-  return `<svg viewBox="-8 -8 16 16" aria-hidden="true"><circle r="7.25" fill="${col}" stroke="var(--map-casing, #fff)" stroke-width="1.5"/>`
-    + face + `<path d="M0 -6.1V-4.9" stroke="${HAND_INK}" stroke-width="1.2" stroke-linecap="round"/><circle r="1.2" fill="${HAND_INK}"/></svg>`;
+/** T-1893: the dot as SVG, a gauge: a white disc ringed in the utilisation's colour, a three
+ * quarter dial inside and a needle turned to the utilisation (full scale at 100%, so it points
+ * lower right when full or over). */
+export function capacityDot(rho: number, over: boolean): string {
+  const col = dotColour(rho, over), r = 3.4;
+  const a = (-135 + 270 * (over ? 1 : Math.min(1, rho))) * Math.PI / 180;
+  const x = n2(r * Math.sin(a)), y = n2(-r * Math.cos(a));
+  return `<svg viewBox="-8 -8 16 16" aria-hidden="true"><circle r="7.25" fill="#fff" stroke="var(--map-casing, #fff)" stroke-width="1.5"/>`
+    + `<circle r="6.2" fill="none" stroke="${col}" stroke-width="2"/>`
+    + `<path d="M-2.4 2.4A3.4 3.4 0 1 1 2.4 2.4" fill="none" stroke="${HAND_INK}" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round"/>`
+    + `<path d="M0 0L${x} ${y}" stroke="${HAND_INK}" stroke-width="1.5" stroke-linecap="round"/><circle r="1.1" fill="${HAND_INK}"/></svg>`;
 }
 
 /** The dot's hover: what it is at what utilisation, its trains an hour against the most it takes,
@@ -127,7 +120,7 @@ export class CapacityMarkers {
       const el = document.createElement("div");
       el.className = "cap-mark";
       if (perfTry("labelLayers")) el.style.willChange = "transform"; // T-045 measurement
-      el.innerHTML = clockDot(m.rho, !!m.held, m.delayS);
+      el.innerHTML = capacityDot(m.rho, !!m.held);
       const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level);
       const junction = m.kind === 4 ? junctions[i] : null;
       if (junction !== null) el.classList.add("link");

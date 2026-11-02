@@ -512,11 +512,11 @@ and starting again there would cost, otherwise a stop in front of it. So trains 
 queue at a tangle.
 
 **Shown** on the map as a round dot on every resource at 75% and up, for the demand level in
-force; nothing shows below 75%. Its colour runs from yellow at 75% through orange at 90% to red at
-100%, and it is red when over 100% or full with some line's trains waiting for room (overloaded).
-On it a clock face: a mark at 12 o'clock and, once trains wait there, a hand with the sweep from 12
-lighter, one full turn for a 10 minute wait per train (longer waits stay at a full turn); with no
-wait yet, no hand. No number on the dot (T-1772). Hovering it shows three lines: what it is and its
+force; nothing shows below 75%. It is a gauge (T-1893; before it a clock face whose hand was the
+wait): a white disc with a ring whose colour runs from yellow at 75% through orange at 90% to red
+at 100%, red when over 100% or full with some line's trains waiting for room (overloaded). Inside,
+a three quarter dial and a needle at the utilisation (full scale at 100%, so lower right when full
+or over). No number on the dot (T-1772); the wait is in the hover. Hovering it shows three lines: what it is and its
 utilisation ("shared track at 81% of capacity", ">100%" when over), its trains an hour against the
 most it takes ("20/25 trains per hour"), and the wait per train at the level in force ("at high
 demand, slows trains by 1m21s"; no line without a wait). Each resource has a kind the app words by
@@ -724,29 +724,36 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
-US$90M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
+US$75M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
 the dearer level) times a
-multiplier per level (Anita, 2026-10-08; ground and +1 raised to 0.5 and 1.0 for the building
-knockouts and road crossings that are not computed, T-1068). The reference is a cheap-country metro such as Korea's
-or Spain's, about US$100-150M a tunnelled km with its stations (Anita, 2026-10-21, T-805):
+multiplier per level (Anita, 2026-11-02, T-1928, notes/T-1897.md: round numbers, +1 and -1 at 1.0).
+Ground is the cheap level, as open country is: the knockdowns and road crossings of a city are not
+computed. A bored tunnel is near a cheap-country metro such as Korea's or Spain's, about
+US$100-150M a tunnelled km with its stations (T-805):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
 |---|---|---|---|---|---|---|---|
-| Multiplier | 1.8 | 1.3 | 1.0 | 0.5 | 1.0 | 1.1 | 1.2 |
-| US$M per km | 162 | 117 | 90 | 45 | 90 | 99 | 108 |
+| Multiplier | 2.0 | 1.5 | 1.0 | 0.3 | 1.0 | 1.6 | 2.0 |
+| US$M per km | 150 | 112.5 | 75 | 22.5 | 75 | 120 | 150 |
 
 In a **sandbox** game [T-728] every price, fare and cost is the same, but no edit is refused for
 money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-panels.md).
 
-- **Over or under water: track's multiplier +2** at any level (T-1890: a +1 bridge is 3.0x, a -2
-  tunnel 3.1x); stations, junctions and crossings over water cost 2x. **Level 0 cannot be built
+- **Over or under water: track's multiplier +2.5** at any level (T-1890, T-1928: a +1 bridge is
+  3.5x, a -2 tunnel 4.1x); stations, junctions and crossings over water cost 2x. **Level 0 cannot be built
   over water**; a ground-level segment drawn across it becomes a bridge (6.1). Water comes from a
   mask in the pack (T-030), and outside every pack's mask from the world's coarse mask (T-1285).
+- **Long water** (T-1930, Anita 2026-11-02): a viaduct (+1 to +3, the bridge a ground segment
+  becomes included) or a cut and cover tunnel (-1) is refused over more than 30 km of unbroken
+  water (`WATER_SPAN_MAX`, `Issue::WaterTooLong`; Hangzhou Bay's rail bridge is 29 km), counted
+  along the track and across edges that meet at a node in the water. Bored tunnels (-2, -3) have no
+  limit, and a bored stretch ends the count. No depth is known, so there is no depth rule. Track
+  already built is not refused again, but an edit touching it is checked.
 - **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md; added, not multiplied, since
   T-1890): each zone's ground is in four classes, and track at elevation -1 to +3 adds the class's
   surcharge to its level's multiplier; bored tunnels (-2, -3) cost the same anywhere. So in
   mountains a tunnel is the cheapest way through, then ground track, then a viaduct. Over water
-  only the water's +2 counts. A ramp is charged at the dearer of its two levels with the surcharge
+  only the water's +2.5 counts. A ramp is charged at the dearer of its two levels with the surcharge
   counted. Stations, junctions, crossings and upkeep take no surcharge; nothing is refused for
   steep ground; grades do not slow trains.
 
@@ -754,10 +761,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   |---|---|---|---|---|
   | Mean 30 m slope over a cell | under 2.5° | 2.5-5.5° | 5.5-11° | 11° and over |
   | Ground round it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
-  | Surcharge at -1 to +3 (`TERRAIN_SURCHARGE`) | +0 | +0.4 | +1.0 | +2.5 |
-  | US$M a km at ground level (0.5 +) | 45 | 81 | 135 | 270 |
-  | US$M a km on a +1 viaduct (1.0 +) | 90 | 126 | 180 | 315 |
-  | US$M a km in a -2 tunnel (1.1) | 99 | 99 | 99 | 99 |
+  | Surcharge at -1 to +3 (`TERRAIN_SURCHARGE`) | +0 | +0.5 | +1.2 | +3 |
+  | US$M a km at ground level (0.3 +) | 22.5 | 60 | 112.5 | 247.5 |
+  | US$M a km on a +1 viaduct (1.0 +) | 75 | 112.5 | 165 | 300 |
+  | US$M a km in a -2 tunnel (1.6) | 120 | 120 | 120 | 120 |
 
   The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 30 m, CC BY 4.0, T-1854)
   by `pipeline/zone_terrain.py` from the intermediate in `data/work/terrain-fine/`
@@ -773,19 +780,19 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
-  segment crosses where it is charged with its surcharge ("Mountains +2.5x", T-1394, T-1890), and
-  "Water +2x" when it crosses water (T-1887); its multiplier includes both, and the blueprint breakdown has a
+  segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
+  "Water +2.5x" when it crosses water (T-1887); its multiplier includes both, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
 - Stations (200 m, two platform tracks), US$M: a fixed 50 that every station has wherever it is
   (platforms, halls, systems), plus a part by level, 25 at grade, 25 + 15 a level up, 50 + 25 a
   level down: 75 at grade, 90/105/120 at +1/+2/+3, 125/150/175 at -1/-2/-3 (T-1267). So a ground
-  station costs half a -2 one, where ground track costs 0.45 of -2 track. Scaled by
+  station costs half a -2 one, where ground track costs under a fifth of -2 track. Scaled by
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
-  1 km of track at the station's level (US$45M at grade, US$99M at -2, 2x over water), park and
+  1 km of track at the station's level (US$22.5M at grade, US$120M at -2, 2x over water), park and
   ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
@@ -832,11 +839,12 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
   `HS_RUN_COST_*`, T-817, T-867).
 - **Upkeep** (T-867, notes/T-867.md): constructed track and stations cost money every game day
-  whether trains run or not, draining evenly through the day: US$30k a route-km of double track
-  times its price factor (`track_factor`: high-speed 1.5x, single 0.6x; quad is two double-track
-  edges, so twice), US$50k a constructed station at any elevation; crossovers, junctions and
-  flyovers nothing on top; blueprint nothing (`UPKEEP_TRACK_KM`, `UPKEEP_STATION`, real US$300 and
-  500 times `ECONOMY`; `TrackApi::upkeep`). A line's share (`TrackApi::line_upkeep`): each edge's
+  whether trains run or not, draining evenly through the day: a route-km of double track US$20k
+  on an edge that stays at level 0 and US$30k on any other (T-1931; Anita 2026-11-02), times its price
+  factor (`track_factor`: high-speed 1.5x, single 0.6x; quad is two double-track edges, so twice),
+  US$50k a constructed station at any elevation; crossovers, junctions and flyovers nothing on top;
+  blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_OFF_GROUND_KM`, `UPKEEP_STATION`, real US$200, 300
+  and 500 times `ECONOMY`; `TrackApi::upkeep`; the app reads the two levels from `edges_info`). A line's share (`TrackApi::line_upkeep`): each edge's
   upkeep split between the running lines on it by their trains a weekday, each station's between
   the running lines stopping there; what no running line uses counts only for the network. Its
   profit (line panel, Lines tab) is fares less its running cost and that share. By region, each
@@ -844,7 +852,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   (`upkeepShares`, game/regionMoney.ts). The ledgers keep it as `upkeep` beside `running`. Shown
   in the Money tab's Upkeep row, an Upkeep row a day in the station panel (constructed stations)
   and the track inspector (not on crossovers), and "$X / day upkeep" under the Build tab's
-  blueprint total (the pieces switched off left out); each hover states the rule.
+  blueprint total (the pieces switched off left out); each hover states the rule. The panels' upkeep
+  figures (station, track and the Build tab's) are in the alert red, as a cost [T-1893].
 - Running costs, upkeep and **fares**
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
@@ -970,7 +979,7 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
   day earns and spends what a hundred real days would. The fare the player sets and the US$4 a
   train-km plus US$2 a car-km shown (Money tab, line panel and train length hovers) are the figures
-  before that scaling; upkeep is shown as the game day's figure (US$30k, real US$300); construction
+  before that scaling; upkeep is shown as the game day's figure (US$20k, real US$200); construction
   and train prices are not scaled.
 
 ### 6.5 Edits

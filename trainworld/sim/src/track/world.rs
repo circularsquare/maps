@@ -816,8 +816,7 @@ impl TrackWorld {
 fn same_issue(a: &Issue, b: &Issue) -> bool {
     match (a, b) {
         (Issue::Crossing { e1, e2, overlap, .. }, Issue::Crossing { e1: f1, e2: f2, overlap: o2, .. }) => (e1, e2, overlap) == (f1, f2, o2),
-        (Issue::GroundOverWater { edge, .. }, Issue::GroundOverWater { edge: f, .. }) => edge == f,
-        _ => a == b,
+        (Issue::GroundOverWater { edge, .. }, Issue::GroundOverWater { edge: f, .. }) => edge == f,        _ => a == b,
     }
 }
 

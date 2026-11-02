@@ -7,13 +7,14 @@ import { type City, type CityId } from "../../game/cities";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
 import { cityDemandViews, demandView } from "../../game/demand";
-import { count, money } from "../../game/format";
+import { count, exact, money } from "../../game/format";
 import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
 import { GOAL_SHARES, goalsReached, pointsPast24h, pointsShort, STAR_SHARE } from "../../game/points";
 import { splitTip } from "../../game/splitTip";
 import { stationsToday, today, useToday } from "../../game/today";
-import { selection, shownDay, shownDayOn } from "../../game/ui";
+import { selection, shownDay, shownDayOn, shownDayPhrase } from "../../game/ui";
+import { builtCities } from "../../game/worldTotals";
 import { AVERAGE_DAY } from "../../game/days";
 import { stationsById, world } from "../../game/world";
 import type { LineInput, StationInput } from "../../game/types";
@@ -44,6 +45,10 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
   const f = built && m ? figures(city.id, m) : null;
   const at = goalsReached(city.id);
   const reached = GOAL_SHARES.map((g, k) => ({ g, t: at[k] })).filter((x) => x.t !== undefined);
+  // T-1892: the same counts as the Cities tab's hover and Trips column, and the lines that stop here
+  const w = world.value;
+  const stations = builtCities().get(city.id) ?? 0;
+  const lines = w ? cityScope(city.id, stationsById(w), w.save.lines).length : 0;
   return (
     <>
     <ul class="rows">
@@ -53,6 +58,18 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
       </li>
       {built && (
         <>
+          <li>
+            <span class="grow">Stations</span>
+            <span class="val">{exact(stations)}</span>
+          </li>
+          <li>
+            <span class="grow">Lines</span>
+            <span class="val">{exact(lines)}</span>
+          </li>
+          <li>
+            <span class="grow">Train trips</span>
+            <span class="val" data-tip={v ? `${exact(v.railTripsPerDay)} train trips ${shownDayPhrase.value} in ${city.name}` : undefined}>{v ? `${count(v.railTripsPerDay)}/day` : "–"}</span>
+          </li>
           <li>
             <span class="grow">Points</span>
             <span class="val" data-tip={pointsTip(city.id, city.name)}>{pointsShort(pointsPast24h.value.get(city.id) ?? 0)}</span>
@@ -119,7 +136,7 @@ export function CityNetwork({ city }: { city: City }) {
           </ul>
         </>
       )}
-      <div class="h">Top lines<span class="right muted small">boardings in past 24 h</span></div>
+      <div class="h">Top lines<span class="right muted small">boardings today</span></div>
       <ul class="rows pick">
         {lineRows.map(({ line, n }) => (
           <li onClick={() => (selection.value = { kind: "line", line: line.id })}>
@@ -129,7 +146,7 @@ export function CityNetwork({ city }: { city: City }) {
           </li>
         ))}
       </ul>
-      <div class="h">Top stations<span class="right muted small">boardings in past 24 h</span></div>
+      <div class="h">Top stations<span class="right muted small">boardings today</span></div>
       <ul class="rows pick">
         {stationRows.slice(0, TOP).map(({ lead, n }) => (
           <li onClick={() => (selection.value = { kind: "station", station: lead.id })}>

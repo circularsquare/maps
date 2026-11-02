@@ -43,10 +43,9 @@ export function groupBullet(members: readonly LineInput[], riders: (id: string) 
   return { text, colour: best?.colour ?? "#888888" };
 }
 
-/** What Copy line opens (T-1791): the copy's group view, or the copy where it has no group. */
-export function afterCopy(lines: readonly LineInput[], copy: number): Selection {
-  const g = lines.find((l) => l.num === copy)?.group;
-  return g ? { kind: "group", group: g } : { kind: "line", line: String(copy) };
+/** What Copy line opens: the copy's own panel (T-1894). */
+export function afterCopy(_lines: readonly LineInput[], copy: number): Selection {
+  return { kind: "line", line: String(copy) };
 }
 
 /** The line whose column the pointer is on in the group view: the map draws it full, the rest faint. */

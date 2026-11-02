@@ -173,7 +173,15 @@ const CAR_PRICES: [f64; 3] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE];
 /// nothing on top of their track (T-867).
 fn edge_upkeep(n: &Network, e: usize) -> Option<f64> {
     (n.edge_alive[e] && n.edge_built[e] && !n.edge_crossover[e])
-        .then(|| n.edge_len[e] / 1000.0 * UPKEEP_TRACK_KM * super::cost::track_factor(n.edge_tracks[e], n.edge_hsr[e]) * ECONOMY / 1e6)
+        .then(|| n.edge_len[e] / 1000.0 * edge_upkeep_km(n, e) * super::cost::track_factor(n.edge_tracks[e], n.edge_hsr[e]) * ECONOMY / 1e6)
+}
+/// An edge's upkeep rate a route-km, real US$ (T-1931): the ground rate where every vertex of its
+/// profile is at level 0, the other rate for an edge that rises or dips anywhere. The app reads the
+/// same two levels from `edges_info`, so its figures match (`edgeUpkeep`, game/regionMoney.ts).
+fn edge_upkeep_km(n: &Network, e: usize) -> f64 {
+    let level = |z: f64| (z / LEVEL_H).round();
+    let on_ground = n.edge_vert(e as u32).iter().all(|v| level(v[1]) == 0.0);
+    if on_ground { UPKEEP_GROUND_KM } else { UPKEEP_OFF_GROUND_KM }
 }
 fn upkept_station(n: &Network, i: usize) -> bool {
     n.node_alive[i] && n.node_platform[i] > 0 && n.node_built[i]

@@ -246,7 +246,8 @@ wide so a longer date moves nothing [T-1868].
   rows, left of the clock and the speed buttons (`.bar-rule`). The rows are 1 px apart; the first row sits 4 px lower than it
   did and the name and the bar are 12 px from the left edge. On a short row the name
   gives way (onto two lines, whole words). Below 300 px the bar takes three rows (the name and cash; the split; the clock and speed, no divider),
-  with cash, time, train share and all speed controls kept. Hovering the split or the time gives
+  with cash, time, train share and all speed controls kept. The time and date end at the same right
+  edge as the speed buttons under them (`.clock-text` right-aligned, T-1893). Hovering the split or the time gives
   what was dropped [T-106, T-1775].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
   games.
@@ -440,10 +441,10 @@ changed that a button does not show gets its row here.
 **Hiding the interface** [T-1491, `ui/hideUi.ts`]: F2 (`HIDE_UI_KEY`, any panel or field, with no
 modifier) puts `ui-hidden` on the page, whose rule in `style.css` hides the dock, the top bar, the tool
 notes, the map's control rows, search, blueprint bars, trouble list, loading card, touch bar, debug
-panel and MapLibre's controls; the map, network, bubbles, station labels and hover tags stay, and the
+panel, the day and night strip with its train (`.map-sky`, T-1893) and MapLibre's controls; the map, network, bubbles, station labels and hover tags stay, and the
 map takes the room. F2 or Esc brings it back (Esc first, before every other Esc). Listed in the
-Controls panel as "F2". While hidden, moving the mouse shows "Press F2 to show the UI" at the top
-centre; it disappears 3 s after the mouse stops [T-1548].
+Controls panel as "F2". While hidden, pressing F2 and then moving the mouse show "Press F2 to show the UI" at the top
+centre; it disappears 3 s after the key or the mouse stops [T-1548, T-1893].
 
 **Confirmations** [T-113]: a centred dialog headed "Confirm?" [T-1242] with operation-specific text, cancel
 and action buttons. Cancel has initial focus, Tab stays inside, Escape cancels, focus returns when
