@@ -85,6 +85,7 @@ uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted
                              // stroke has grown to their width (0-1), a blueprint track's width apart
 uniform int u_lane_mode;     // 0 one stroke, 1 the band under both tracks, 2 the right track, 3 the left
 uniform float u_dim;        // line strokes other than the selected line's: share of full strength (T-233)
+uniform vec2 u_mute;        // T-2058 prototype: those strokes' width share (0 as built) and colour mixed to the casing's
 uniform int u_by_level;
 uniform int u_by_speed;
 uniform vec3 u_level_colours[7];
@@ -173,6 +174,8 @@ void main() {
   float bandW = tBand ? 1.0 : 1.0 - bandOn * mix(a_band.z, a_band.w, along);
   float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : wmul));
   float extra = sel ? u_width.y : 0.0;
+  bool muted = u_kind == 1 && u_mute.x > 0.0 && !sel;
+  if (muted) bandW *= u_mute.x;
   bool full = u_full_pass > 0;
   bool fullOut = u_full_pass == 2;
   // riders waiting for a train with room on a band of shared track: marked inside that band (below)
@@ -262,6 +265,7 @@ void main() {
   if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
   bool hot = (u_kind == 1 && int(a_colour) == u_hot.x) || (u_kind == 0 && int(a_edge) == u_hot.y);
   if (hot && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), ${HOT_LINE_MIX});
+  if (muted && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, u_mute.y);
   // high-speed track (T-817): a thin centre line along the stroke, light on built track (dark in
   // the dark theme), the rail colour on blueprint; once its tracks part, the stroke's own colour
   // between them

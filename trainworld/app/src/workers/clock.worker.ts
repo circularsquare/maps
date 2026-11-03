@@ -24,6 +24,7 @@ import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains, shiftNetCache, type NetworkBuffers } from "../map/network";
+import { setBandMode } from "../map/lineBands";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
@@ -3272,6 +3273,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
     if (msg.patch) patchMode = msg.patch;
+    if (msg.bandMode) setBandMode(msg.bandMode);
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
     packBase = msg.pack;

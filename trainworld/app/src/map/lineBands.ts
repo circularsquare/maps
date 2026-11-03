@@ -57,6 +57,22 @@ const SHIFT_TOL = 0.05;
 /** T-1799 stage 3's corridors: tracks side by side drawn as one ribbon. */
 export const CORRIDORS = true;
 
+/** T-2058 prototype, set from `?perfTry=bandsSmooth` (notes/T-2058.md): "" as built; "smooth" every
+ * change of a band's shift a long S-curve, changes that overlap added together */
+let bandMode = "";
+export function setBandMode(m: string): void {
+  if (m === bandMode) return;
+  bandMode = m;
+  last = null;
+}
+/** "smooth": a change's length, m, for ribbons of up to two lines, and more per line beyond (all of a
+ * ribbon's lines take the same length at a change, so they move together) */
+const SMOOTH_M = 250;
+const SMOOTH_PER_LINE_M = 50;
+const SMOOTH_MAX_M = 800;
+/** knots per change, along its S-curve */
+const SMOOTH_KNOTS = 9;
+
 interface BandLine { id: number; ok: boolean; path: number[]; bus?: unknown }
 interface BandEdge { id: number; a: number; b: number }
 
@@ -112,7 +128,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     });
   }
   // the same paths over the same edges as last time (a rebuild for trains or a timetable): the same bands
-  let sig = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""};`;
+  let sig = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode};`;
   for (const l of rail) sig += `${l.id}:${l.path.join(",")};`;
   const used = [...on.keys()].map((e) => [pts.get(e), ends.get(e)?.a, ends.get(e)?.b] as const);
   if (!opts?.debug && last && last.sig === sig && last.used.length === used.length && used.every((u, i) => u[0] === last!.used[i][0] && u[1] === last!.used[i][1] && u[2] === last!.used[i][2])) return { ...last.out, corridor: last.corridor.slice() };
@@ -498,8 +514,58 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
         ease[u + 1][0] = Math.min(c + half, M[b.s1] + H[b.s1] - lb / 2);
       }
     }
-    runs.forEach((u, ui) => {
-      const [t0, t1] = ease[ui];
+    /** T-2058 "smooth": the pieces' values as steps, each eased over a long S-curve and added up, so
+     * changes closer together than their length make one smooth curve rather than steps */
+    const smoothKnots = (byRun: [number, number, number, number][][], rs: Run[]) => {
+      const qOf = (j: number) => (R[j].lines.length > 1 ? 1 - BAND_SHARE : 0);
+      const pl: { a: number; b: number; j0: number; j1: number; first: number; last: number; run: number; rc: number }[] = [];
+      byRun.forEach((ps, ui) => {
+        for (const p of ps) pl.push({ a: M[p[0]] - H[p[0]], b: M[p[1]] + H[p[1]], first: p[0], last: p[1], j0: p[2], j1: p[3], run: ui, rc: recipeOf(R[p[2]], S[p[2]], sgnAt(p[2])) });
+      });
+      if (!pl.length) return;
+      const steps: { c: number; L: number; dv: number; dq: number }[] = [];
+      for (let i = 0; i + 1 < pl.length; i++) {
+        const A = pl[i], B = pl[i + 1];
+        // (each piece one value, its first's, so the steps add up to every piece's own value)
+        const dv = val(B.j0) - val(A.j0), dq = qOf(B.j0) - qOf(A.j0);
+        if (Math.abs(dv) < 1e-6 && Math.abs(dq) < 1e-6) continue;
+        const na = R[A.j1].lines.length, nb = R[B.j0].lines.length;
+        const L = Math.min(SMOOTH_MAX_M, SMOOTH_M + SMOOTH_PER_LINE_M * Math.max(0, Math.max(na, nb) - 2));
+        const g0 = A.b, g1 = B.a;
+        let c = (g0 + g1) / 2;
+        // at a node between ribbons of different lines: on the side with fewer, from the node (stage 4)
+        if (A.run !== B.run && g1 - g0 < 0.5 && K[A.last] !== K[B.first] && rs[A.run].r.lines.length !== rs[B.run].r.lines.length) c = rs[A.run].r.lines.length > rs[B.run].r.lines.length ? g0 + L / 2 : g0 - L / 2;
+        steps.push({ c, L, dv, dq });
+      }
+      const end = start[n];
+      const at = new Set<number>([0, end]);
+      for (const s of steps) for (let i = 0; i < SMOOTH_KNOTS; i++) {
+        const m = s.c + s.L * (i / (SMOOTH_KNOTS - 1) - 0.5);
+        if (m > 0 && m < end) at.add(Math.round(m * 100) / 100);
+      }
+      const ms = [...at].sort((x, y) => x - y);
+      const S3 = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+      const v0 = val(pl[0].j0), q0 = qOf(pl[0].j0);
+      let p = 0;
+      for (const m of ms) {
+        let v = v0, q = q0;
+        for (const s of steps) {
+          const f = S3((m - s.c) / s.L + 0.5);
+          v += s.dv * f;
+          q += s.dq * f;
+        }
+        // the Traffic view's recipe: the piece the knot is in, else the nearer of the two round it
+        while (p + 1 < pl.length && pl[p + 1].a <= m) p++;
+        const rc = p + 1 < pl.length && m > pl[p].b && m - pl[p].b > pl[p + 1].a - m ? pl[p + 1].rc : pl[p].rc;
+        if (km.length && m <= km[km.length - 1] + 1e-3) continue;
+        km.push(m);
+        kv.push(v);
+        kq.push(Math.max(0, q));
+        kr.push(rc);
+      }
+    };
+    /** run u's own samples in pieces of one value: [first, last sample, the samples whose values they take] */
+    const piecesOf = (u: Run) => {
       // each sample stands for the median of the five around it on its edge, so one sample where a
       // track is just coming beside (the middle not yet settled) is no bump
       const kept: number[] = [];
@@ -522,6 +588,12 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
         if (p && Math.abs(val(j) - val(p[2])) <= SHIFT_TOL && K[j0] === K[p[0]]) (p[1] = j0), (p[3] = j);
         else pieces.push([j0, j0, j, j]);
       }
+      return pieces;
+    };
+    if (bandMode) smoothKnots(runs.map(piecesOf), runs);
+    else runs.forEach((u, ui) => {
+      const [t0, t1] = ease[ui];
+      const pieces = piecesOf(u);
       if (!pieces.length) return;
       let first = pieces.findIndex((p) => M[p[1]] >= t0);
       if (first < 0) first = pieces.length - 1;

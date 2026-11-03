@@ -139,6 +139,8 @@ export type ToClock =
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
   | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
+      /** T-2058: a prototype of lines side by side (`bandTry` in perfFlags.ts) */
+      bandMode?: string;
       /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
       guide?: boolean }
   /** T-1822: the Getting started card's progress, to keep in the save */

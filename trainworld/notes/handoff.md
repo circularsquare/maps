@@ -1,61 +1,84 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session 7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb, name maps-b2, since 2026-11-02 13:52
-Updated: 2026-11-02 ~17:30
+Updated: 2026-11-02 ~23:45
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 50b93f8d = **build 792**; 8800 at build 792, smoke 22/22 light and dark (2026-11-02 ~17:20). No worktrees open.
-  Landed today (maps-b2): 428b047e (T-2005..2008), 8daed22e (Cambodia, Malaysia, Brunei: T-1738, T-1997), dd7357cf (T-1896,
-  T-1903, T-1907, T-2016, T-2017, T-2019..2023, T-2031), 26528bb6 (T-2018 tree landing; main WASM rebuilt), 50b93f8d
-  (rotation off by default). Uncommitted: only TODO.md (Anita's).
+- master 7e730216 = **build 797**; 8800 at build 797, smoke 22/22 light and dark (2026-11-02 ~23:40). No worktrees open,
+  no agents running. Uncommitted: only TODO.md (Anita's) and this file.
+  Landed today (maps-b2): 428b047e (T-2005..2008), 8daed22e (Cambodia, Malaysia, Brunei), dd7357cf (big UI round),
+  26528bb6 (T-2018), 50b93f8d (rotation off), d58da554 (T-2037/T-2030 saves one card per game), 60506f3c (T-1904 demand
+  speed), 0b5d6c13 + 030f1c35 (T-2045 focus pool, capped at 2 workers), 7e730216 (Indonesia, T-1738/T-2036).
 - 8800 rebuild: `cmd /c "<my scratchpad>\snapbuild.cmd <hash> > <my scratchpad>\snapbuild.log 2>&1"` (my scratchpad:
   C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb\scratchpad; the
   script is the same as maps-a7's), then smoke on http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Never pass HEAD.
-  Build number = `git rev-list --count <hash>`. My dev Vite when needed: `node trainworld/checks/dev-nowatch.mjs 6105`.
-- **LIVE (2026-10-31): c7c5785a on R2 `trainworld/2026-10-30b`**. Not deployed since; publish only on Anita's word
-  (`deploy.py --skip-data --version 2026-10-30b --smoked`, website commit/push on her word, verify).
-- Commits: when agents' edits share a file, wait until all have reported, then one commit; a tree landing needs the main
-  tree committed first for any file it touches.
-- World: 1,972 shipped, 22 held (incl. Cambodia's tpe anv phm slk, T-2000), 5 parked (nic lez meo doo lel). Cores cap 14
-  since ~17:40 2026-11-02 (Anita away: "feel free to use more cores"); back to 10 (`python cores.py cap 10`) when she returns.
-- Disk: ~33 GB free (11-02 morning). sim/target/debug (4.3 GB) can go between rounds.
+  Build number = `git rev-list --count <hash>`. Normal smoke times: new game ~104 s, real save final ~180 s.
+- Staging only one agent's lines of a shared file (TASKS/DECISIONS): `python <my scratchpad>\stage_without.py <maps root>
+  <path> "<marker>"` stages the working copy minus new lines containing the marker.
+- **LIVE (2026-11-03 ~00:40): 7e730216 (build 797) on freeze 20261102-230529, R2 `trainworld/2026-11-03`, website
+  f50e733**, verified (6 PASS). Publish only on Anita's word. From a freeze: `freeze.py build <stamp>` with
+  `TW_MARKET_DRIVES=<main>\data\packs\market-drives.bin` set, then `deploy.py --dist <dist> --version <v> --smoked`,
+  website `git add trainsworld/ trainworld/` commit push, `deploy.py --verify --page --version <v>`. Known gap: ~250
+  zones (ID, MY) have no terrain file in this publish (flat prices there); the Philippines agent builds them.
+- World: 2,174 shipped (Indonesia 203 of 205; frozen `data/frozen/20261102-230529`); held incl. Cambodia's tpe anv phm slk
+  (T-2000) and Papua's puc (T-2038); parked nic lez meo doo lel and Seram Bagian Barat set (T-2039). Cores cap 10.
+- Disk: check before the next country (Indonesia added packs; 71 GB free at Indonesia's start).
 - Smoke's node list lacks checks/t2022-loan-schedule.mjs (needs `node --experimental-strip-types`); add when convenient.
 
 ## In flight (maps-b2)
-- a245961e82247f810 (Opus) **Indonesia** (T-1738 section 12, kit tools/country/, scratchpad t1738c, Vite 6152, ids
-  T-2038..2042): plan, runs, one join with MY (KL origin moved to the centre, T-2036), Brunei realm call (Anita: merge into
-  Malaysia, or a Borneo realm once Indonesia is in), load checks. It owns data/packs and data/terrain: nothing else writes
-  data/ until it reports. Liveness, batch ids, restart commands go in notes/T-1738.md section 12 before each wait. Over ~8 h
-  estimated: it stops and reports before AWS.
-- ad9f9e773bec0bad0 (Opus) **T-2037 + T-2030 saves: one card per game** (port 6153, scratchpad t2037, ids T-2043/2044).
-  Her design (2026-11-02): group every save of one origin, copies too; the version with the latest player change wins (an
-  idle tab's clock saves must not win); "11 other versions" line at the card bottom, expand lists each version with time and
-  stations. Server unchanged if possible (stops and reports if shonei-server would need a change). App only.
-  ad9f9e77 reported ~18:15: done, uncommitted (workers/versions.ts new, saveFile.ts, cloud.ts, clock.worker.ts, clockClient.ts,
-  accountGames.ts, SavesPanel.tsx, StartMenu.tsx, style.css, checks/t2037-versions.mjs, t1826-saves.mjs, architecture.md,
-  ui-panels.md, code-map.md, DECISIONS x5; filed T-2043 t988-cloud check needs updating). Resumed for a fix: a version
-  identical to the card's own was listed (duplicate first row), and "Day 30 ·" trailing dot. Then commit (app only; do
-  NOT rebuild 8800 while Indonesia writes data/packs). Tell Anita: her Tokyo card's top may be the idle 44-line copy until
-  she edits one (old saves have no edit time); the Fukuoka version is listed under it; a save by hand does not count as a
-  change (agent's call); idle money reaches other devices only with her next edit.
-- Next countries after Indonesia (Anita 2026-11-02): Philippines, New Zealand, then India, Turkey, Eastern Europe, one
-  easy Middle East country, Mexico, Brazil. T-1978 (chunked gates) before Mexico; T-1979 (World Bank fetch once).
-  Country speed (T-1981 result): the joint solve is wide only ~70 s then a one-core tail; the first post-T-1976 register took
-  12.8 min (not 3-4): worth a look before the big ones.
-- Not started: T-1904 (demand speed: switching homes/destinations, local solves before the world solve; design first).
-- Next free task id: T-2045.
+- ada85057bf13b2345 (Opus) **Philippines** (T-1738 section 13, kit scratchpad t1738d, Vite 6152, run ports 6386/6387,
+  ids T-2053..2057, up to 8 cores). Started ~23:55 2026-11-02 (Anita: "can move on to philippines"). Owns data/packs and
+  data/terrain until it reports. Manila (>20M) gated alone per playbook 5.
+  Told ~00:15 to also build missing zone terrain (250 zones lacked data/terrain/<id>.terrain: ID, MY...; playbook gap).
+- Anita ~00:05 2026-11-03, going to bed: "feel free to use all cores. and keep going rather than waiting for handoff cuz
+  i wont be able to start new agent". Cap 15. Indonesia text acknowledged. Publish today's work: yes (doing it).
+- a49f9cff5f5f759a0 (Opus) **T-2058 interlining continuous** (main tree, map/lineBands.ts, corridors.ts; Vite 6156;
+  scratchpad t2058; ids T-2059..2062): stage 1 = failure catalogue + 2-4 ideas + prototype behind a flag, and "muted
+  lines thinner" (T-1873 alt) behind a flag. Stops for her pick.
+- a56d6f32a2d5c7d06 (Opus) **T-1966 flat-crossing waits** (tree .tw-trees/t1966; Vite 6157; ids T-2063..2065). It was
+  off because occupancy came from 16 s frames (100-150 trains held), not for speed.
+- a16dcf08738642b86 (Opus) **T-1881 + T-1889 + T-1944 terrain hills/prices, then T-1856 hexagons** (tree t1881; Vite
+  6158; ids T-2066..2069). Must not write data/terrain until the Philippines reports; gives me rebuild commands.
+  zone_terrain.py already uses GEDTM30 bare earth for prices; the hillshade is the public Terrain Tiles.
+- a7287a1c25e0066ee (Opus) **T-2040 + T-1979 + T-1978 + T-1980 build speedups** (tree t2040; Vite 6159, ports
+  6388/6389; ids T-2070..2073). No real runs; land after the Philippines. T-1981 not started (needs a real join).
+- Publish DONE and verified ~00:40 (see State). Detail: freeze 20261102-230529 built with `TW_MARKET_DRIVES=<main>\data\packs\market-drives.bin` (a freeze
+  lacks market-drives.bin, so without it the dist had none!) into artifacts/trainworld/publish/20261102-230529/dist;
+  `deploy.py --dist <that> --version 2026-11-03 --smoked` running, log my scratchpad deploy.log. Then website: `git -C
+  ../website add trainsworld/ trainworld/`, commit "anitabuilder", push (her word given); leave her
+  pages/thoughts/cities.md alone; then `deploy.py --verify --page --version 2026-11-03`.
+- T-1445: she asked if it was done: it was (T-1464, T-1465, T-1514); archived 2026-11-03.
+- T-1966: Anita "we only need to do it where we're looking closely": sent to its agent (waits only on screen, close zooms).
+- a5625c4ecb8319d0b (Opus) **T-2074 player voices**: what players love/hate in similar games -> research/player-voices.md,
+  15-25 ranked ideas for her to pick (no tasks filed).
+- abe19b070fec1727d (Opus) **T-2075 next-country data**: census admin totals + joining boundaries for NZ, India, Turkey,
+  E. Europe, a Middle East pick, Mexico, Brazil, and Indonesia/Cambodia/Philippines (for T-2038, T-2000) ->
+  research/next-countries-data.md, data-register cells, may file T-2076..2085.
+- **After the Philippines** (Anita 2026-11-03: anything; speedups, India, or smaller countries first): commit it, rebuild
+  8800; land the t2040 speedup tree (smoke in tree), then New Zealand as the first real run with the speedups (and
+  T-1981's CPU poll during its join), then India with T-2075's admin totals. Turkey alongside if cores allow.
+- Standing rule now in maps/CLAUDE.md "Keep the work moving": sweep what's not done every report / couple of hours and
+  start what can go; stale done lines to ARCHIVE. trainworld/CLAUDE.md "Look outward": research references freely.
+- Tidied TASKS: T-1898, T-1902 (landed e8dc880a, cc3972d2), T-1974, T-1975 (designs done) moved to ARCHIVE. Tree
+  .tw-trees/t1734 is kept on purpose (T-1734, Anita: come back to it).
+- Next countries (Anita 2026-11-02): Philippines, New Zealand, then India, Turkey, Eastern Europe, one easy Middle East
+  country, Mexico, Brazil. Before the giants: T-2040 (the gate's browser step hangs after a ~20M+ metro with other zones on
+  the page; Indonesia lost 3 h to it; playbook now says gate such a metro alone), T-1978 (chunked gates) before Mexico,
+  T-1979 (World Bank fetch once). Indonesia took ~8 h wall (Java 53 min to build, join 48 min).
+- Anita 2026-11-02 answers: keep "cities" in the status tag; save by hand is not a game change (fine as is); the loading
+  card stays until the whole world finishes (T-2049 abandoned).
+- Next free task id: T-2086 (T-2041, T-2042, T-2047, T-2048, T-2050..2052 were handed out but unused).
 
 ## Open questions to Anita (asked, unanswered)
-- (Answered 2026-11-02: loans 60 days yes; Total bubbles keep the destinations' density; gap to the far track's nearest
-  point is right.)
 - (Older) Settings label "Lines side by side" vs "Draw lines side by side" (T-1886).
 
 ## Open problems
 - T-1891: "Demand ran out of memory" once on a new NYC game on 8800; not reproducible. If it recurs, get the hover text
-  or the console line `demand: worker N panicked`. notes/T-1891.md.
+  or the console line `demand: worker N panicked`. notes/T-1891.md. (T-2045's focus pool adds ~0.9 GB peak on big saves.)
 - T-1889: riverbanks priced as hills/mountains (East River at 42nd St) from T-1854's classes.
+- T-2046: Seoul's first bubble switch after a zoom waits ~6 s on the Tokyo save; cause unknown.
 
 ## Next (older list from maps-18; her batches and countries come first)
 1. T-1881 hillshade from a surface model shows dense centres as hills.

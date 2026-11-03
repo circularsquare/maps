@@ -2,6 +2,13 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1445 [P2] Buses, design. Closed 2026-11-03: built already as T-1464 (bus lines drawn by clicks, stops placed by the sim), T-1465 and T-1514 (routes along the basemap's roads); the TASKS line was stale (Anita asked whether it was done). docs/ui-building.md "Drawing a bus line".
+
+- T-1974 [P1] Build time speedups, design. Done 2026-11-02 (agent t1974): ranked speedups filed as T-1976..T-1981; T-1976, T-1977 done. notes/T-1974.md.
+- T-1975 [P1] A streamlined country playbook, design. Done 2026-11-02 (agent t1975), applied as T-1987 (docs/adding-a-country.md). notes/T-1975.md.
+- T-1898 [P2] Blueprint selection: box moves only nodes inside it, Regular/High speed on a pick, set radius kept through drags. Landed 2026-11-02 as e8dc880a.
+- T-1902 [P2] Trip explorer: money-weighted car and plane, nearby routes, labelled stations, city-centre pairs. Landed 2026-11-02 as cc3972d2. notes/T-1902.md.
+
 - T-2036 [P3] Kuala Lumpur's origin to the centre. Done 2026-11-02 (agent t1738c): moved from Ampang to Masjid Jamek, kua rebuilt and joined with Indonesia; the test line runs through the centre, 151k riders (was 35k). notes/T-1738.md 12.
 
 - T-2049 [P2] End the loading card when the zone in view settles in the focus pool. Abandoned 2026-11-02: Anita, "loading card should stay up until whole world finishes".

@@ -206,6 +206,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.
+- **Look outward** (Anita, 2026-11-03: "if you wanna explore external sources / references, feel free to do so. in
+  fact i think we've maybe been underdoing that for this project"). Any agent may search for references (how other
+  games, transit apps and map makers solve the same problem, papers, data sources) when it would help the task, and a
+  design brief should ask for it. Write what was found and its links in the task's notes or `research/`.
 - **Demand rules must hold up worldwide** (2026-10-12): any task that adds or changes a demand
   rule updates its entry in `docs/demand-worldwide.md`.
 - **Intercity demand**: retune plus commutes between cities (2026-10-13, option 2 of

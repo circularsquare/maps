@@ -25,7 +25,7 @@ import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
-import { perfOff } from "../perfFlags";
+import { perfOff, perfTry } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -91,6 +91,9 @@ const LANE_NARROW = 0.2, LANE_NARROW_PX = 16;
 /** T-1799 (Anita, 2026-10-29): lines sharing track fold into one stroke as a line's width falls
  * through these CSS px zoomed out (about zoom 9.5 to 10) */
 const BAND_FOLD_PX = [1.25, 1.75] as const;
+/** T-2058 prototype: with a line picked, the others' width share and how far their colour is mixed
+ * towards the casing's, drawn solid; null: at `dimOthers` opacity as built */
+const MUTE: readonly [number, number] | null = perfTry("muteThinPale") ? [0.45, 0.5] : perfTry("muteThin") ? [0.45, 0] : null;
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -617,7 +620,7 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_mute"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1416,7 +1419,10 @@ export class NetworkRenderer {
     setSelLines(gl, u, opt.selLines);
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
     gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
-    gl.uniform1f(u.u_dim, opt.dimOthers ?? 1);
+    // T-2058 prototype: the other lines thinner and solid (`?perfTry=muteThin`, `muteThinPale`)
+    const mute = MUTE && (opt.dimOthers ?? 1) < 1 ? MUTE : null;
+    gl.uniform1f(u.u_dim, mute ? 1 : opt.dimOthers ?? 1);
+    gl.uniform2f(u.u_mute, mute?.[0] ?? 0, mute?.[1] ?? 0);
     gl.uniform1i(u.u_by_level, opt.byLevel ? 1 : 0);
     gl.uniform1i(u.u_by_speed, opt.bySpeed ? 1 : 0);
     // Lines sharing track are drawn over each other, the last on top (T-190); picking knows the

@@ -76,10 +76,15 @@
 //   noDouble     adopted as default in T-075; use perfOff=noDouble for the old behavior
 //   focusFirst   the main pool's solving workers hold their solve and opening while the focus pool
 //                solves the zone in view (T-2045: Tokyo settled 5% sooner, the load's final 37% later)
+//   bandsSmooth  T-2058: lines side by side move sideways only in long S-curves, overlapping ones added
+//   muteThin     T-2058: with a line picked, the other lines thinner and drawn solid (not see-through)
+//   muteThinPale T-2058: muteThin, the other lines' colours also mixed halfway to the land
 
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
 export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus") => off.has(part);
-export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
+export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst" | "bandsSmooth" | "muteThin" | "muteThinPale") => tries.has(fix);
+/** T-2058 prototypes of lines side by side (map/lineBands.ts `setBandMode`), "" none */
+export const bandTry = (): string => (perfTry("bandsSmooth") ? "smooth" : "");
