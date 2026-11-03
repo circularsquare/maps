@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2219 Station buildings 3, the drawing (2026-11-03, agent t2219): floor and members' boxes one shape, shops with glyphs, the name in the cross-hall, the hall's crowd stipple and Room row, car parks outside; 30 buildings cost nothing measurable (0.3 ms tick). ui-map.md "Station buildings on the map".
+- T-2236 Crowding shown by load (2026-11-03, agent t2236): map marks, the line panel's dots and stops diagram and the Lines list's train count now go by the busiest hour's load past 100% of rated (full at 150%), not waits; hover "Peak load 132% at 08:00". 117 marks on New York, all past 100%, none missed. notes/T-2236.md
 - T-2163 Network diagram stage 5, clicks and a picture (2026-11-03, agent t2163): clicks and hovers as the map's, the rest faded, the camera carried both ways, build keys back to the map, "Save picture" (New York 7,516 x 6,882 px, names read); `checks/t2163-diagram-clicks.mjs`. notes/T-2163.md
 - T-2235 Network diagram loading bar (2026-11-03, agent t2163): "Calculating diagram" with the bunny's train and a thin loading bar fed by the layout worker's progress, 0 to 98% in 51 steps over 4 s on New York. notes/T-2163.md
 

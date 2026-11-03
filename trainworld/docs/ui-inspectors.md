@@ -81,22 +81,17 @@ purpose filter the purpose drawn is ringed in the bar.
   `game/lineFigures.ts`]; a game load shows none.
   What an edit did to riders and profit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Edit note").
-- **Trains to add** [T-472, T-491, T-818, T-1255, T-1677]: a row's train count (the trains its level needs now, the bare
-  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted (a 0 is muted and has no hover). The score is the
-  average extra wait for a train with room of the riders at the platforms where trains come full
-  [T-1255]: rider-minutes spent on the platform after a full train left them, each waiting the
-  gap to the next departure, and 30 minutes for each rider a full platform turned away, over the
-  riders arriving, counting only the platforms (a direction of the line at a stop) whose riders
-  wait a minute or more on average in the period (`BUSY_PLATFORM_S` in
-  `sim/src/track/boarding.rs`); every rider counts alike (T-818's fare weighting was dropped with
-  T-1255): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`, the
-  colour scale's steps): yellow from 6 min, orange from 9, red from 15; orange and red colour the
-  count (`crowdClass`). The hover is the line panel's dot hover for the same level [T-1672, T-1677]:
-  "When trains come full, riders wait ~9 min for a train with room" (or "Riders get on the first
-  train with room"), then "6-10: 22/88 trains full" for each of the level's periods with any full; one function
-  (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's `line_periods` numbers, which
-  the tab asks for every running train line in one clock query (`linesPeriods`, each line's
-  numbers after their count). A bus line's hover is its bus count.
+- **Trains to add** [T-472, T-1677, T-2236]: a row's train count (the trains its level needs now, the bare
+  number under the "Trains" header [T-532]) is coloured by the line's load in the period now on today's kind of
+  day, otherwise muted (a 0 is muted and has no hover): the busiest hour's mean load of the trains on the line's
+  fullest stretch (the fuller direction) as a share of the rated load, 160 a car (`period_peaks` in
+  `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad` in `game/today.ts`).
+  Grades (`CROWD_GRADES`, the colour scale's steps): past 100% from 100.5%, orange from 130%, red from 140%;
+  orange and red colour the count (`crowdClass`). The hover is the line panel's dot hover for the same level on
+  a weekday [T-1672, T-1677]: "Peak load 132%", the strip of intervals, then one line per period of the
+  level; one function (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's
+  `line_periods` numbers, which the tab asks for every running train line in one clock query (`linesPeriods`,
+  each line's numbers after their count). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
@@ -240,19 +235,20 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   runs the medium trains 6-24, T-1720), "Low demand: 0-6": that one line only [T-406, T-1536,
   T-1797]; on a
   running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
-  average wait for a train with room at the platforms where trains come full, as in Trains to add
-  [T-1255] (the level's periods averaged by those platforms' riders; High is its three periods, 6-10, 10-16 and 16-20), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
-  at 3, yellow at 6, orange at 9, red at 15, crimson at 20, plum at 25, purple at 35 and indigo from 50 (T-1553; `crowdColour` in
-  `game/palette.ts`, fed `avgWait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
-  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "When trains come full,
-  riders wait ~11 min for a train with room" (or "Riders get on the first train
-  with room"), then, where it has any, a thin strip of one cell per interval (the run between two stops, the fuller way) in the
-  crowding colour of the riders' wait there over the level's periods, green where trains have room, with "Full on 2 of 14
-  intervals" below it (an interval is full from a minute's wait, as the dots count a platform; "Full on all 14 intervals"; no line for a
-  single interval; T-2023: "interval", Anita's word, in every shown string) [T-1926, T-1901; `levelStretches` and `tipStrip` in `game/today.ts` and `ui/tip.ts`; the tail of
-  `Boarding::line_periods`; the Lines tab's trains hover has the same strip], then a line for each of the level's periods with trains full, in time order: "10-16: 4/10
-  trains full" (a period with none full has no line) [T-1523, T-1672, T-1797], then, only when the
-  line's day is not a weekday, "On weekdays, riders wait ~15 min for a train with room" [T-1684, T-1797, T-1893]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  load past the rated load, as in Trains to add [T-2236]: the busiest hour's mean load of the trains on the
+  line's fullest stretch (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
+  and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`), its colour
+  running smoothly with that load: green to 100%, yellow-green at 110%, yellow at 120%, orange at 130%, red at
+  140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
+  the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,
+  T-2236]; hover "Peak load 132%", then, where any interval (the run between two stops, the fuller way) is past
+  100%, a thin strip of one cell per interval in the crowding colour of its load over the level's periods, with
+  "Past 100% on 2 of 14 intervals" below it ("Past 100% on all 14 intervals"; no line for a single interval;
+  T-2023: "interval", Anita's word, in every shown string) [T-1926, T-1901; `tipStrip` in `ui/tip.ts`; the Lines
+  tab's trains hover has the same strip], then, for a level of more than one period with trains, a line for each
+  in time order: "10-16: 118%" [T-1523, T-1672, T-1797], then, only when the line's day is not a weekday, "On
+  weekdays, peak load 140%" [T-1684, T-1797, T-1893]; riders left at the platform by trains at crush are the
+  station panel's and the trouble list's, not the dots'; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
   option's hover giving its top speed ("High speed trains run up to 320 km/h on high speed track
   or 160 km/h on normal track", "Normal trains run up to 160 km/h") and, on a running line, what
@@ -325,7 +321,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   between them and the stretch (T-1284), the edges from half
   strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
-  "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
+  "Peak load 132% at 08:00" where marked (T-2236); **related lines** [T-1168,
   notes/T-1168.md, T-1391]: an icon after "Stops" (two lines side by side, a station oval between them, the right line curving away at the bottom, T-1802; hover "Show
   related lines" / "Hide related lines", one setting for every line, on at first and kept while
   the page is open, kept while stops are edited, the stations passed then between the rows) draws
@@ -689,14 +685,17 @@ stations are constructed.
 - **Notices**: "Station building built at Times Sq-42 St for $204M.", "Times Sq-42 St station building
   changed for $32.2M." (or "... changed."), "Removed the Times Sq-42 St station building."
 - **In the panel**, after Passages, "Station building": its name, renamed in place (`NameEdit`, free),
-  "Area" and its floor, then Edit outline and Remove building. Remove building, and the delete tool
+  "Area" and its floor, "Room" and the riders its hall holds once the platforms are full, to the
+  nearest 100 ("36,700 riders"; while platform crowds are drawn and riders wait there, "4,200/36,700
+  riders"; hover "Riders who can wait in the hall once the platforms are full") [T-2219], then Edit
+  outline and Remove building. Remove building, and the delete tool
   on the floor ("Remove the Times Sq-42 St station building"), ask first: "Remove the Times Sq-42 St
   station building? Nothing is refunded." Neither is in the Ctrl+Z history.
-- **On the map**, for now (the full drawing is T-2219): from zoom 13, fading in to zoom 14 (the floor
-  at 60% until then), a floor of #f9f7f3 in both themes with one rim in the stations' ink, drawn with
-  the car parks under the track and the boxes; a building with no station inside at half strength;
-  the one being edited is left to the tool. The floor's hover: its name and "Station building" (and
-  "No station inside" when empty); a click on it selects the complex, as a car park's does.
+- **On the map**: [ui-map.md](ui-map.md) "Station buildings on the map" (one shape with its
+  members' boxes, shops, the hall's crowd, the name); the one being edited is left to the tool. The
+  floor's hover: its name and "Station building", then "No station inside" when empty, or, while
+  platform crowds are drawn and riders wait in the hall, "4,200 riders waiting in the hall" [T-2219];
+  a click on it selects the complex, as a car park's does.
 
 ## The trip explorer
 

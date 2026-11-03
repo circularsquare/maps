@@ -3,6 +3,7 @@
 
 import { platformRoom, QUEUE_STRIDE, waitingAt, type BoardHour } from "../game/boarding";
 import { lineAt, type NetworkBuffers } from "./network";
+import type { Hall } from "./buildingFloors";
 
 export class PlatformCrowds {
   /** per station: how full its + and - side are (0-1), whether that side is full (T-219); 4 each */
@@ -17,6 +18,9 @@ export class PlatformCrowds {
   /** per platform of the hour: its station's index in the station buffer (-1 none) and its side;
    * per station which sides have platforms (1 the + side, 2 the - side) */
   private placed: { station: Int32Array; side: Int8Array; sides: Uint8Array; board: BoardHour; net: NetworkBuffers } | null = null;
+  /** T-2219: each station building's hall as last worked out, in the network's order */
+  hall: (Hall & { room: number; members: number })[] = [];
+  private memberOf: { net: NetworkBuffers; of: Int32Array } | null = null;
   /** the time and hour the crowds were last worked out for */
   private at = { t: NaN, board: null as BoardHour | null };
   private any = false;
@@ -55,34 +59,68 @@ export class PlatformCrowds {
       w[s * 2 + k] += waiting;
       if (waiting >= 1) any = true;
     }
+    // T-2219: riders past a side's room in a station building stand in its hall, one pool for the
+    // building; a side shows red only once the hall is full too
+    const bs = n.buildings ?? [];
+    const memberOf = this.membersOf(n);
+    const hall = bs.map((b) => ({ id: b.id, waiting: 0, full: false, spill: new Set<number>(), room: b.room, members: b.members.length }));
+    const sideRoom = (s: number) => (sides[s] === 3 ? platformRoom(n.stationLength?.[s] ?? 0) : 2 * platformRoom(n.stationLength?.[s] ?? 0));
+    for (let s = 0; s < n.stationCount; s++) {
+      const k = memberOf[s];
+      if (k < 0 || !sides[s]) continue;
+      const room = sideRoom(s), over = sides[s] === 3 ? Math.max(0, w[s * 2] - room) + Math.max(0, w[s * 2 + 1] - room) : Math.max(0, w[s * 2] + w[s * 2 + 1] - room);
+      if (over > 0) {
+        hall[k].waiting += over;
+        hall[k].spill.add(s);
+      }
+    }
+    for (const h of hall) h.full = h.waiting >= h.room;
+    this.hall = hall;
     for (let s = 0; s < n.stationCount; s++) {
       if (!sides[s]) continue;
-      const room = platformRoom(n.stationLength?.[s] ?? 0);
+      const room = platformRoom(n.stationLength?.[s] ?? 0), inHall = memberOf[s] >= 0, hallFull = inHall ? hall[memberOf[s]].full : true;
       if (sides[s] === 3) {
         c[s * 4] = Math.min(1, w[s * 2] / room);
         c[s * 4 + 1] = Math.min(1, w[s * 2 + 1] / room);
-        c[s * 4 + 2] = c[s * 4] >= 1 ? 1 : 0;
-        c[s * 4 + 3] = c[s * 4 + 1] >= 1 ? 1 : 0;
+        c[s * 4 + 2] = c[s * 4] >= 1 && hallFull ? 1 : 0;
+        c[s * 4 + 3] = c[s * 4 + 1] >= 1 && hallFull ? 1 : 0;
       } else {
         // trains on one side only (a terminal): the whole platform is theirs
-        const f = Math.min(1, (w[s * 2] + w[s * 2 + 1]) / (2 * room)), bad = f >= 1 ? 1 : 0;
+        const f = Math.min(1, (w[s * 2] + w[s * 2 + 1]) / (2 * room)), bad = f >= 1 && hallFull ? 1 : 0;
         c.set([f, f, bad, bad], s * 4);
       }
     }
-    // each dot's (T-228): its station's platforms
+    // each dot's (T-228): its station's platforms; in a building, its fullest side against its own
+    // room and an even share of the hall's
     const dc = this.dotCrowds, dw = this.dotWait;
     dc.fill(0);
     dw.fill(0);
     for (let s = 0; s < n.stationCount; s++) {
       if (!sides[s]) continue;
-      dc[s * 2] = Math.max(c[s * 4], c[s * 4 + 1]);
-      if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[s * 2 + 1] = 1; // a full side
+      const k = memberOf[s];
+      if (k >= 0) {
+        const share = hall[k].room / Math.max(1, hall[k].members), most = sides[s] === 3 ? Math.max(w[s * 2], w[s * 2 + 1]) : (w[s * 2] + w[s * 2 + 1]) / 2;
+        dc[s * 2] = Math.min(1, most / (platformRoom(n.stationLength?.[s] ?? 0) + share));
+        if ((c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0)) dc[s * 2 + 1] = 1;
+      } else {
+        dc[s * 2] = Math.max(c[s * 4], c[s * 4 + 1]);
+        if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[s * 2 + 1] = 1; // a full side
+      }
       dw[s] = w[s * 2] + w[s * 2 + 1];
     }
     changed(c, dc);
     this.at = { t, board: b };
     this.any = any;
     return any;
+  }
+
+  /** Per station of `n`, the station building it is in (its index in `n.buildings`), -1 none. */
+  private membersOf(n: NetworkBuffers): Int32Array {
+    if (this.memberOf?.net === n) return this.memberOf.of;
+    const of = new Int32Array(Math.max(1, n.stationCount)).fill(-1);
+    (n.buildings ?? []).forEach((b, k) => { for (const s of b.members) of[s] = k; });
+    this.memberOf = { net: n, of };
+    return of;
   }
 
   /** The share of the room to stand that the platform side of queue `q` of the trip buffer holds,

@@ -241,20 +241,23 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     0.5 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
     reads as a stripe on a red or orange line; the fixed part of band and outline scales with zoom
     (30% at zoom 9, 60% at 12, full from 15; `fullScale` in `map/renderer.ts`, T-1549), and the
-    line's body is darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
-    with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
-    from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
-    mark as strong as that wait: 50% of full strength at 0.2 min plus the rest in proportion, all
-    of it from 8 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
-    mixed from the casing's colour towards the red and the darkening scaled alike, so the real
-    save's typical stretch (1.5 min at 08:00) shows at about 60%. Where lines sit side by side
-    the wait marks only that line's band, with the same red dashes along both its sides, outside its
+    line's body is darker by 14% (`FULL_DARKEN`). A crowded stretch between two stops [T-2236] (its
+    busiest hour's trains, in the fuller direction, carry on average past 100% of their rated load, 160
+    a car, as the hover rounds it: `CROWDED_FROM` 1.005 in boarding.rs; the trains leaving the
+    stretch's first stop in each hour of the day, from the boarding account of the hour's kind of
+    day, track-and-service.md 6.6) has the same mark as strong as that load: 50% of full strength
+    just past 100% plus the rest in proportion, all of it at crush's 150% (`FULL_FLOOR`,
+    `CROWD_LOAD_FROM`, `CROWD_LOAD_STRONG` in `map/rendererShaders.ts`), the band mixed from the
+    casing's colour towards the red and the darkening scaled alike. Riders waiting for a train with
+    room (trains at crush) are not a map mark: the station panel's platforms and the trouble list
+    say them. Where lines sit side by side
+    the crowding marks only that line's band, with the same red dashes along both its sides, outside its
     colour and as wide as a line's own, in their rim of the casing's colour, drawn after every line's
     colour so they show over the bands beside it (T-2184, Anita: one crowding mark, "even if that
     means it draws over nearby lines"; pass 3 of the line strokes), and the band darkens; track at
     capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
-    demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
-    crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
+    demand" in red, or "Peak load 132% at 08:00" (that busiest hour, the line's local time) with the
+    load on its crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Crowded trains" (on by default) shows or hides both marks
     and their hover lines.
   - **Level** (`height` in code; hover "Show track level colors"): the track coloured by level, blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
@@ -406,8 +409,42 @@ centres are within 100 m (demand's merge distance) are linked too, whatever thei
 directly or through others, plus the player's links [T-197] and every station touching one station
 building [T-2217]. Worked out whenever stations or links change; only links and buildings are saved.
 Riders change between any two stations of a complex on foot [T-161, [demand-kernel.md](demand-kernel.md) 4.4].
-A station building draws for now as a plain floor and rim under the track and boxes
-([ui-inspectors.md](ui-inspectors.md) "Station buildings"; its full drawing is T-2219).
+
+**Station buildings on the map** [T-2219, `map/buildingFloors.ts` drawing what `map/buildingNet.ts`
+works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; the tool and panel in
+[ui-inspectors.md](ui-inspectors.md) "Station buildings"]:
+- **One shape**: the floor (#f9f7f3 in both themes, as the boxes are white in both) and its members'
+  boxes are one white shape with one rim in the stations' ink, 1.5 station rims wide (2 in the dark
+  theme), half of it over the floor. Members are the stations whose drawn platform touches the
+  outline; their own rims are not drawn on the floor (its floor marks the stencil), so they are plain
+  white bands on it, and a part sticking out keeps its rim and joins the building's. No bridges are
+  drawn between two members. Other stations draw over it as their own boxes. The track and lines run
+  over the floor as over the land, and through the members' boxes as through any box.
+- **Shops**: on the floor clear of the outline (3 m), every platform's box (4 m) and every line (3 m
+  past its stroke) and the waiting room, cells on a grid lined up with the first edge, 13 m along
+  the platforms by 15 m across with 4 m between, outward from a clear cross-hall 28 m wide across the
+  middle of the long side. About 85% of cells have a shop, and 40% of those take the next cell too as
+  one long shop; picked by the building and the cell, so they never shuffle. Seven pale colours with a
+  rim 16% darker, the same in both themes; from zoom 17 a shop at least 9 px across has a glyph in its
+  rim's colour, upright on the screen: a cup, a bag, a bowl or a book. No hover.
+- **By zoom**: below 13 nothing (dots and connectors as before). From 13 the floor and rim fade in, the
+  floor at 60% until 14; from 14 the whole shape, members' rims off the floor; shops fade in from 15
+  to 15.5, glyphs from 16.8 to 17. A building with no station inside is at half strength with no shops.
+- **The hall's crowd** (with platform crowds on, from zoom 14): riders past a member's side's room
+  stand in the hall, one pool for the building (room: one rider to 2 m² of the floor not under its
+  members' platforms, `hallRoom`). They are a stipple of the walkers' grey (2 px dots on a 4 px
+  screen grid) on 4 m cells of free floor, as many cells as the hall's share full, nearest the
+  platforms spilling first; red when the hall is full. A member's side turns red only when it is past
+  its room and the hall is full; zoomed out a member's dot reads its fullest side against its own room
+  plus an even share of the hall.
+- **The name**: one label for the building, its name, and its stations' own names go. From zoom 14
+  it sits in the middle of the cross-hall, dark and bold on the floor in both themes, when the
+  building's short side on screen is at least the name's width plus 24 px; otherwise below the floor
+  (right of it when the floor is taller than wide on screen). Placed before the stations' names.
+- **Selected**: the complex's building gets the selected stations' outline and glow round its rim;
+  its members' boxes get none of their own.
+- Car parks go outside the outline: the lot search tries beside its edges first, longest edge first,
+  and counts any overlap with a building as bad.
 
 ## Trains
 

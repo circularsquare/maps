@@ -6,7 +6,7 @@ import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
-import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 export const TEX_W = 2048;
 export const LINES_W = 1024;
@@ -43,11 +43,10 @@ const SPEED_BLEND = (() => {
   return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([kmh, hex], i) =>
     `v_color = mix(v_color, ${v3(hex)}, clamp((a_speed - ${s[i][0].toFixed(1)}) / ${(kmh - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
 })();
-/** T-1152, T-1160: a full stretch's red edge and darkening (the traffic view) as a share of track at
- * capacity's, by its riders' average wait for a train with room: FULL_FLOOR at FULL_WAIT_FROM (min,
- * the account's `FULL_WAIT_MIN_S`), all of it from FULL_WAIT_STRONG; the real save's typical 1.5 min
- * wait reads clearly (T-1663). */
-export const FULL_FLOOR = 0.5, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 8;
+/** T-2236: a crowded stretch's red edge and darkening (the traffic view) as a share of track at
+ * capacity's, by its busiest hour's load as a share of the rated load: FULL_FLOOR just past
+ * CROWD_LOAD_FROM, all of it at CROWD_LOAD_STRONG, crush. */
+export const FULL_FLOOR = 0.5, CROWD_LOAD_FROM = 1, CROWD_LOAD_STRONG = 1.5;
 /** T-1663: the red band is this share of the line's own width on top of the zoom-scaled base, so it reads on thin and thick lines alike. */
 const FULL_WIDTH_SHARE = "0.15";
 const HOT_RIM_MIX = "0.6";
@@ -125,7 +124,7 @@ in float a_speed;
 in vec3 a_wmul;            // width as a multiple of the line width (riders, T-084), 1 otherwise; the
                            // Traffic view's band shift at its start and end, line widths left (T-1799)
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
-in vec2 a_full;             // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its riders' wait for a train with room (min), 0 none; and local units along its run to its start (T-2184)
+in vec2 a_full;             // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its busiest hour's load over the rated load (T-2236), 0 none; and local units along its run to its start (T-2184)
 in vec4 a_band;             // T-1799: its band's shift left at its start and end (share of ${BAND_RANGE} line widths), 1 - its width share at both
 in vec2 a_band_m;           // T-2132: metres left from its track to its ribbon's middle at its start and end (share of ${BAND_M_RANGE})
 out vec3 v_color;
@@ -189,12 +188,12 @@ void main() {
   if (muted) bandW *= u_mute.x;
   bool full = u_full_pass == 1 || u_full_pass == 2;
   bool fullOut = u_full_pass == 2;
-  // riders waiting for a train with room on a band of shared track: its red edges drawn after every
+  // a crowded stretch on a band of shared track: its red edges drawn after every
   // line's colour (pass 3), over the bands beside it, since under the ribbon's casing they would not show
   bool waitIn = shared && tBand && a_full.x > 0.0;
   bool late = u_full_pass == 3;
   if ((full && (!(u_kind == 1 && a_full.x != 0.0) || waitIn)) || (late && !waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float fs = a_full.x < 0.0 ? 1.0 : a_full.x > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full.x - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
+  float fs = a_full.x < 0.0 ? 1.0 : a_full.x > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full.x - ${CROWD_LOAD_FROM.toFixed(3)}) / ${(CROWD_LOAD_STRONG - CROWD_LOAD_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
   float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
@@ -388,6 +387,7 @@ uniform float u_pass_half; // a box with passing tracks is at least this wide ei
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
 uniform highp int u_room; // 1: the waiting rooms joined to the boxes instead (T-1416)
+uniform highp int u_bld;  // T-2219: 1 only stations in no station building, 2 only those in one, 0 all
 uniform float u_pixel;
 in vec3 a_st;
 in vec2 a_axis;          // half the platform along its track at its middle, local units
@@ -436,7 +436,8 @@ void main() {
   bool sel = a_sel > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
   bool noAnnex = u_room > 0 && (!boxes || (flags & ${ST_ROOM}) == 0);
-  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  bool inBld = (flags & ${ST_BUILDING}) != 0;
+  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex || (u_bld == 1 && inBld) || (u_bld == 2 && !inBld)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);

@@ -1305,16 +1305,14 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   account's loads, departures and riders left behind do not read the pulses, so they and
   demand's crowding feedback stay one rule. The fares' timing within the hour (T-284) counts
   the pulses with the steady arrivals.
-- **Stretches at capacity** (T-1125, T-1152, T-1160; `RunAccount::full_shares`, `stop_waits`): per
-  stretch between two stops and direction, the share of the day's trains leaving it packed to
-  crush, and the average extra wait for a train with room of the day's riders arriving at its first
-  stop (rider-seconds waited after full trains, each left behind waiting the gap to the next
-  departure, over riders arriving; the line panel's crowding also counts the riders turned away,
-  T-1255, and this does not). Worked out once with
-  each account; the account's hour lists the stretches where the longer wait of the two directions
-  is at least `FULL_WAIT_MIN_S` (12 s, where the crowding colour leaves green), with the higher
-  share and that wait, and the traffic view marks them by the wait ([ui-map.md](ui-map.md) "Track
-  display").
+- **Crowded stretches** (T-2236; `RunAccount::hour_loads`, `Boarding::stretch_hours`, `period_peaks`): per
+  stretch between two stops, direction and hour of the day, the mean riders aboard the trains leaving its
+  first stop in that hour; as a share of the line's rated load (`LineSvc::rated`, 160 a car; a bus's or
+  boat's is its crush), the fuller direction's. Worked out once with each account; the account's hour lists
+  the stretches whose busiest hour is at `CROWDED_FROM` (1.005, past 100% as the hover rounds it) or more,
+  with that load and hour, and the traffic view marks them by the load ([ui-map.md](ui-map.md) "Track
+  display"); `line_periods` ends with each period's busiest hour per stretch, and `Boarding::window` with the
+  period now's on the fullest stretch (the line panel's crowding dots and the Lines tab's train count).
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
@@ -1325,10 +1323,8 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
   fullest train, trains leaving full and when, riders left behind a day, longest wait), the Lines
-  tab's train count and the schedule's crowding dots (riders' extra wait after full trains
-  against their ride, `Boarding::crowding`, T-491; each rider counted by the fare they pay, the
-  base plus the per-km rate times the km a boarder at that stop rides on average with every stop
-  letting off its share, `ride_km`, T-818) and the platforms. Demand's busiest-hour average train
+  tab's train count and the schedule's crowding dots (the busiest hour's load past the rated load,
+  `period_peaks`, T-2236) and the platforms. Demand's busiest-hour average train
   is not shown: riders arrive fastest mid-peak, so a line it puts under 100% can still leave riders
   behind (notes/T-230.md).
 

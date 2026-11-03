@@ -23,9 +23,10 @@ use super::service::{LineSvc, Service, Trip};
 use super::span::{self, Mask};
 use std::collections::HashMap;
 
-/// Seats and riders at crush load, 150% of the rated 160 (T-2186), per 20 m car: the demand
-/// kernel's `SEATS_PER_CAR` and `CRUSH_PER_CAR` (sim/src/demand/api.rs).
+/// Seats, riders at the rated load (100%) and at crush (150%, T-2186) per 20 m car: the demand
+/// kernel's `SEATS_PER_CAR`, `RATED_PER_CAR` and `CRUSH_PER_CAR` (sim/src/demand/api.rs).
 pub const SEATS_PER_CAR: f64 = 44.0;
+pub const RATED_PER_CAR: f64 = 160.0;
 pub const CRUSH_PER_CAR: f64 = 240.0;
 pub const DAY: f64 = 86400.0;
 pub const PERIODS: usize = PERIOD_HOURS.len();
@@ -247,12 +248,10 @@ pub struct RunAccount {
     pub stop_open: Vec<f64>,
     /// Per period and stop (`p * n + k`), the km a boarder there rides on this line (`ride_km`).
     pub ride_km: Vec<f64>,
-    /// Per stretch (stop k to k + 1 in this run's order), the share of the day's trains that leave
-    /// it packed to crush (`full_shares`, T-1125, T-1152).
-    pub full: Vec<f32>,
-    /// Per stretch, the extra wait (s) of the day's riders arriving at its first stop for a train
-    /// with room, on average (`stop_waits`, T-1160).
-    pub wait: Vec<f32>,
+    /// Per stretch (stop k to k + 1 in this run's order) and hour of the day (`k * 24 + h`), the
+    /// mean riders aboard the trains leaving its first stop in that hour, 0 with none
+    /// (`hour_loads`, T-2236).
+    pub hour_load: Vec<f32>,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -675,21 +674,20 @@ impl Boarding {
                 }
             }
         }
-        // T-1125, T-1152, T-1160: the stretches where riders wait FULL_WAIT_MIN_S or more for a
-        // train with room, either way, in run 0's numbering; the share of the day's trains packed
-        // to crush there and that wait (s), each the fuller way's
-        let (mut full, mut shares, mut waits): (Vec<f32>, Vec<f32>, Vec<f32>) = (vec![], vec![], vec![]);
+        // T-2236: the crowded stretches, in run 0's numbering: those whose busiest hour's trains
+        // run at `CROWDED_FROM` of the rated load or more, either way; that load as a share of the
+        // rated, and the hour of the day it is in (the line's local time)
+        let (mut full, mut peaks, mut hours): (Vec<f32>, Vec<f32>, Vec<f32>) = (vec![], vec![], vec![]);
         for l in 0..nl {
             let day = self.kind_at(epoch + shift(l), l);
-            let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
-            let back = |v: &[f32], s: usize| v.len().checked_sub(1 + s).and_then(|i| v.get(i)).copied().unwrap_or(0.0);
-            let (r0, r1) = (&acc.runs[0], acc.runs.get(1));
-            for s in 0..r0.full.len().max(r1.map_or(0, |r| r.full.len())) {
-                let wait = r0.wait.get(s).copied().unwrap_or(0.0).max(r1.map_or(0.0, |r| back(&r.wait, s)));
-                if wait >= FULL_WAIT_MIN_S {
+            let (Some(Some(acc)), Some(ls)) = (self.accounts[day].get(l), svc.lines.get(l)) else { continue };
+            let sh = Self::stretch_hours(acc, ls);
+            for (s, by_hour) in sh.chunks(24).enumerate() {
+                let (h, &v) = by_hour.iter().enumerate().fold((0, &0.0), |b, x| if *x.1 > *b.1 { x } else { b });
+                if v >= CROWDED_FROM {
                     full.extend([l as f32, s as f32]);
-                    shares.push(r0.full.get(s).copied().unwrap_or(0.0).max(r1.map_or(0.0, |r| back(&r.full, s))));
-                    waits.push(wait);
+                    peaks.push(v as f32);
+                    hours.push(h as f32);
                 }
             }
         }
@@ -708,8 +706,48 @@ impl Boarding {
         }
         out.push((full.len() / 2) as f32);
         out.extend_from_slice(&full);
-        out.extend_from_slice(&shares);
-        out.extend_from_slice(&waits);
+        out.extend_from_slice(&peaks);
+        out.extend_from_slice(&hours);
+        out
+    }
+
+    /// T-2236: per stretch in run 0's numbering and hour of the day (`t * 24 + h`), the mean load
+    /// of the trains leaving its first stop in the hour as a share of the rated load, the fuller
+    /// way's.
+    fn stretch_hours(acc: &LineAccount, ls: &LineSvc) -> Vec<f64> {
+        let n = acc.runs.first().map_or(0, |r| r.n);
+        let s = n.saturating_sub(1);
+        let rated = ls.rated();
+        let mut out = vec![0.0f64; s * 24];
+        for (r, ra) in acc.runs.iter().enumerate() {
+            if ra.n != n || ra.hour_load.len() != s * 24 {
+                continue;
+            }
+            for k in 0..s {
+                let t = if r == 0 { k } else { s - 1 - k };
+                for h in 0..24 {
+                    let v = ra.hour_load[k * 24 + h] as f64 / rated;
+                    if v > out[t * 24 + h] {
+                        out[t * 24 + h] = v;
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// T-2236: per period and stretch (`p * (n - 1) + t`), the busiest hour's load in the period
+    /// as a share of the rated load (`stretch_hours`).
+    fn period_peaks(acc: &LineAccount, ls: &LineSvc) -> Vec<f64> {
+        let sh = Self::stretch_hours(acc, ls);
+        let s = sh.len() / 24;
+        let mut out = vec![0.0f64; PERIODS * s];
+        for t in 0..s {
+            for h in 0..24 {
+                let p = period_at(h as f64 * 3600.0);
+                out[p * s + t] = out[p * s + t].max(sh[t * 24 + h]);
+            }
+        }
         out
     }
 
@@ -862,7 +900,8 @@ impl Boarding {
     /// of them are packed full on their trip (`under_way`, T-472), then the trips counted, the
     /// number the full ones are out of (T-481), then for the period now on `t`'s kind of day the
     /// rider-seconds waited after full trains, riders arriving and rider-seconds aboard
-    /// (`crowding`, T-491), and the first two times the km those riders ride (T-818).
+    /// (`crowding`, T-491), 0, and the busiest hour's load in the period on the fullest stretch as
+    /// a share of the rated load (`period_peaks`, T-2236).
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
@@ -906,7 +945,8 @@ impl Boarding {
     /// rider turned away at `WAIT_FOR_ROOM_S`), then per period the riders arriving at each stop
     /// likewise (T-1255), then per period the rider-seconds waited after full trains at the first
     /// stop of each of the `n - 1` stretches, and the riders arriving there, each the fuller way's
-    /// (T-1926: the line panel's crowding strip). Empty without an account.
+    /// (T-1926), then per period the busiest hour's load on each stretch as a share of the rated
+    /// load (`period_peaks`, T-2236: the line panel's crowding). Empty without an account.
     pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
@@ -961,6 +1001,7 @@ impl Boarding {
         out.extend(came);
         out.extend(stretch_here);
         out.extend(stretch_came);
+        out.extend(Self::period_peaks(acc, ls));
         out
     }
 
@@ -1074,10 +1115,14 @@ impl Boarding {
             out.extend(stops);
             let (on, packed) = Self::under_way(acc, ls, tod);
             out.extend([on, packed, trains]);
-            let c = Self::crowding(acc, ls)[period_at(tod)];
-            // T-1255: the crowding at the platforms where trains come full, every rider alike (the
-            // km-weighted pair stays for the layout)
-            out.extend([c[9], c[10], c[5], 0.0, 0.0]);
+            let p = period_at(tod);
+            let c = Self::crowding(acc, ls)[p];
+            let pk = Self::period_peaks(acc, ls);
+            let s = pk.len() / PERIODS;
+            let peak = pk[p * s..(p + 1) * s].iter().fold(0.0f64, |a, &b| a.max(b));
+            // T-1255: the crowding at the platforms where trains come full, every rider alike; T-2236:
+            // the load past rated in the slot the km-weighted wait had
+            out.extend([c[9], c[10], c[5], 0.0, peak]);
             count += 1;
         }
         out[0] = count as f64;
@@ -1198,48 +1243,21 @@ impl RunAccount {
         best.map(|b| b.0)
     }
 
-    /// T-1125, T-1152: per stretch, the share of the day's trains leaving its first stop packed to
-    /// crush (`cap`).
-    pub fn full_shares(&self, cap: f64) -> Vec<f32> {
+    /// T-2236: per stretch and hour of the day (`k * 24 + h`), the mean riders aboard the trains
+    /// leaving its first stop in that hour, 0 with none.
+    pub fn hour_loads(&self) -> Vec<f32> {
         let (n, m) = (self.n, self.deps.len());
-        let mut out = vec![0.0f32; n.saturating_sub(1)];
-        if m == 0 {
-            return out;
-        }
-        for (k, f) in out.iter_mut().enumerate() {
-            let full = (0..m).filter(|&j| self.load[self.order[k * m + j] as usize * n + k] as f64 >= cap - 0.5).count();
-            *f = full as f32 / m as f32;
-        }
-        out
-    }
-
-    /// T-1160: per stretch, the rider-seconds waited at its first stop after full trains (each
-    /// rider left behind waits the gap to the next departure, as `Boarding::crowding` counts them)
-    /// over the riders arriving there.
-    pub fn stop_waits(&self) -> Vec<f32> {
-        let (n, m) = (self.n, self.deps.len());
-        let mut out = vec![0.0f32; n.saturating_sub(1)];
-        if m == 0 {
-            return out;
-        }
-        for (k, w) in out.iter_mut().enumerate() {
-            let riders = self.arrivals.get(k).map_or(0.0, |a| a.day);
-            if !(riders > 0.0) {
-                continue;
-            }
-            let ts = &self.order_t[k * m..(k + 1) * m];
-            let ord = &self.order[k * m..(k + 1) * m];
-            let mut waited = 0.0f64;
+        let s = n.saturating_sub(1);
+        let (mut sum, mut trains) = (vec![0.0f64; s * 24], vec![0u32; s * 24]);
+        for k in 0..s {
             for i in 0..m {
-                let q = self.q_after[ord[i] as usize * n + k] as f64;
-                if q > 0.0 {
-                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                    waited += q * gap.max(0.0);
-                }
+                let (Some(&j), Some(&t)) = (self.order.get(k * m + i), self.order_t.get(k * m + i)) else { continue };
+                let h = ((t.rem_euclid(DAY) / 3600.0) as usize).min(23);
+                sum[k * 24 + h] += self.load.get(j as usize * n + k).copied().unwrap_or(0.0) as f64;
+                trains[k * 24 + h] += 1;
             }
-            *w = (waited / riders) as f32;
         }
-        out
+        sum.iter().zip(&trains).map(|(&a, &c)| if c > 0 { (a / c as f64) as f32 } else { 0.0 }).collect()
     }
 }
 
@@ -1305,10 +1323,9 @@ fn ride_km(alpha: &[f64], stop_s: &[f64], n: usize) -> Vec<f64> {
 /// The account's day starts at this hour, when platforms are usually empty.
 pub const START_HOUR: f64 = 3.0;
 
-/// A stretch is marked full (T-1125, T-1160) where the riders arriving at its first stop wait at
-/// least this long (s) on average for a train with room: 0.2 min, where the crowding colour
-/// (app/src/game/palette.ts `CROWD_STOPS`) leaves green.
-pub const FULL_WAIT_MIN_S: f32 = 12.0;
+/// T-2236: a stretch is marked crowded where its busiest hour's trains run at this share of the
+/// rated load or more on average: past 100% as the hover rounds it.
+pub const CROWDED_FROM: f64 = 1.005;
 
 /// T-1255: a platform where trains come full, for the line panel's crowding: its riders wait at
 /// least this long (s) on average for a train with room in the period, those turned away counting
@@ -1335,8 +1352,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         }
         acc = simulate_carry(net, svc, l, r, lr, peak, warm, quiet, wrap, &through, &mut vec![]);
     }
-    acc.full = acc.full_shares(svc.lines[l].crush());
-    acc.wait = acc.stop_waits();
+    acc.hour_load = acc.hour_loads();
     acc
 }
 
@@ -1419,8 +1435,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         open,
         stop_open: vec![f64::NEG_INFINITY; n],
         ride_km,
-        full: vec![],
-        wait: vec![],
+        hour_load: vec![],
     };
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();

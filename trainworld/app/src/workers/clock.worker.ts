@@ -2488,7 +2488,8 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
     shiftFrom = null;
     shiftWas = new Map();
   }
-  const n = networkFromState({ ...s, render: r, complexOf }, netCache, true);
+  const buildingLL = s.buildings?.map((b) => b.corners.flatMap((_, i) => (i % 2 ? [] : frame.toLonLat(b.corners[i], b.corners[i + 1]))));
+  const n = networkFromState({ ...s, render: r, complexOf, buildingLL }, netCache, true);
   const t2 = performance.now();
   // a moved build is off the exact one by float32 rounding: `?patch=shiftcheck` measures by how much
   if (patchMode === "shiftcheck" && shifted) checkShift(n, networkFromState({ ...s, render: r, complexOf }));

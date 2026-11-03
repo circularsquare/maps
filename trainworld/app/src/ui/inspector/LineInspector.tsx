@@ -9,8 +9,8 @@ import { lineMoneyTip, Money } from "../MoneyText";
 import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
-import { crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
-import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR } from "../../game/boarding";
+import { crowdLevel, dayNote, peakLoadText, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
+import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -20,7 +20,7 @@ import { ask, display, lineDraft, purposeFilter, relatedLines, renameLinePrompt,
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { linesPending } from "../../game/lineFigures";
-import { FULL_FLOOR, FULL_WAIT_FROM, FULL_WAIT_STRONG } from "../../map/rendererShaders";
+import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
@@ -304,17 +304,15 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
   return room > 0 ? Math.min(CRUSH_PER_CAR / RATED_PER_CAR, aboard / room) : null;
 }
 
-/** T-477, T-515, T-1255: one dot per demand level, graded by `crowding` of the riders at the
- * platforms where trains come full (`BUSY_PLATFORM_S` in boarding.rs: their wait for a train with
- * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
- * averaged by those riders. The hover gives each of the level's periods its trains full (T-1523:
- * the pooled figure can rank a few bad platforms above a worse period spread over many). */
+/** T-477, T-515, T-2236: one dot per demand level, coloured by the busiest hour's load on the line's
+ * fullest stretch over the level's periods (`crowdLevel`), from the boarding account. The hover
+ * gives each of the level's periods its load (T-1523). */
 export function CrowdDots({ v, wk, d, stops }: { v: Float64Array; wk: Float64Array | null; d: Demand; stops: number }) {
-  const c = crowdLevel(v, d, stops), r = wk && crowdLevel(wk, d);
+  const c = crowdLevel(v, d, stops), r = wk && crowdLevel(wk, d, stops);
   if (!c) return null;
   // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
   const tip = r && wk !== v ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
-  return <i class="crowd-dot" style={{ background: crowdColour(c.wait), outlineColor: r ? crowdColour(r.wait) : "transparent" }} data-tip={tip} data-guide={d === "high" ? "crowd" : undefined} />;
+  return <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: r ? crowdColour(r.load) : "transparent" }} data-tip={tip} data-guide={d === "high" ? "crowd" : undefined} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -378,29 +376,29 @@ const STRETCH_MIN_PX = 2, STRETCH_MAX_PX = 14;
  * crowding mark (0 for none, as the map's, `FULL_FLOOR`), and its hover. */
 interface StretchLook { w: number; full: number; tip: string }
 
-/** The map's full-stretch marks on line `num` (T-1160, `Renderer.fullStretch`): each stretch's
- * riders' wait for a train with room, min, or NaN for none. They change with the boarding account's
- * hour, so they are read again every half second and the panel re-renders only when one changes. */
-function useFullWaits(num: number, stretches: number, on: boolean): number[] {
-  const read = () => Array.from({ length: on ? Math.max(0, stretches) : 0 }, (_, k) => live.overlay?.renderer.fullStretch(num, k)?.wait ?? NaN);
-  const [waits, setWaits] = useState<number[]>(read);
+/** The map's crowding marks on line `num` (T-2236, `Renderer.fullStretch`), null for none. They
+ * change with the boarding account's hour, so they are read again every half second and the panel
+ * re-renders only when one changes. */
+function useCrowded(num: number, stretches: number, on: boolean): (CrowdedStretch | null)[] {
+  const read = () => Array.from({ length: on ? Math.max(0, stretches) : 0 }, (_, k) => live.overlay?.renderer.fullStretch(num, k) ?? null);
+  const [crowded, setCrowded] = useState<(CrowdedStretch | null)[]>(read);
   useEffect(() => {
     let key = "";
     const tick = () => {
-      const w = read(), k = w.map((x) => (Number.isNaN(x) ? "" : x.toFixed(2))).join(",");
-      if (k !== key) { key = k; setWaits(w); }
+      const w = read(), k = w.map((x) => (x ? `${x.load.toFixed(3)}@${x.hour}` : "")).join(",");
+      if (k !== key) { key = k; setCrowded(w); }
     };
     tick();
     if (!on) return;
     const h = setInterval(tick, 500);
     return () => clearInterval(h);
   }, [num, stretches, on]);
-  return waits;
+  return crowded;
 }
 
 /** The stretches' looks in the Traffic view, or null outside it or before demand has riders for the
  * line (the plain bar then). */
-function stretchLooks(l: LineInput, names: string[], waits: number[]): StretchLook[] | null {
+function stretchLooks(l: LineInput, names: string[], crowded: (CrowdedStretch | null)[]): StretchLook[] | null {
   const n = l.stops.length, purpose = purposeFilter.value, dv = demandView.value;
   if (n < 2) return null;
   const day: number[] = [];
@@ -412,10 +410,10 @@ function stretchLooks(l: LineInput, names: string[], waits: number[]): StretchLo
   const most = Math.max(...day);
   const per = shownDayPhrase.value;
   return day.map((v, k) => {
-    const wait = waits[k] ?? NaN;
-    const full = Number.isNaN(wait) ? 0 : FULL_FLOOR + (1 - FULL_FLOOR) * Math.min(1, Math.max(0, (wait - FULL_WAIT_FROM) / (FULL_WAIT_STRONG - FULL_WAIT_FROM)));
+    const c = crowded[k] ?? null;
+    const full = c ? FULL_FLOOR + (1 - FULL_FLOOR) * Math.min(1, Math.max(0, (c.load - CROWD_LOAD_FROM) / (CROWD_LOAD_STRONG - CROWD_LOAD_FROM))) : 0;
     const tip = `${names[k]} to ${names[k + 1]}\n${v < 0.5 ? "0" : forecast(v)} riders ${per}` + (purpose === "all" ? "" : `, ${purposeName(purpose)} trips only`)
-      + (Number.isNaN(wait) ? "" : `\nAverage ${wait < 10 ? wait.toFixed(1) : Math.round(wait)} minute wait for a train with room`);
+      + (c ? `\n${peakLoadText(c)}` : "");
     return { w: STRETCH_MIN_PX + (STRETCH_MAX_PX - STRETCH_MIN_PX) * (most > 0 ? v / most : 0), full, tip };
   });
 }
@@ -848,11 +846,11 @@ function RailLineInspector({ id }: { id: string }) {
   useToday();
   // T-1272: the Traffic view draws the stops diagram by load, with the map's crowding marks
   const traffic = display.value.trackColour === "traffic" && !editingStops;
-  const waits = useFullWaits(l?.num ?? -1, (l?.stops.length ?? 1) - 1, traffic && display.value.fullMarks);
+  const crowded = useCrowded(l?.num ?? -1, (l?.stops.length ?? 1) - 1, traffic && display.value.fullMarks);
   if (!w || !l) return null;
   const st = w.lineStats[l.id];
   const name = stationNames(w);
-  const looks = traffic && st.status === "running" ? stretchLooks(l, l.stops.map((s) => name.get(s) ?? ""), waits) : null;
+  const looks = traffic && st.status === "running" ? stretchLooks(l, l.stops.map((s) => name.get(s) ?? ""), crowded) : null;
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const auto = headwayShown(l.id);
   const canAuto = l.stops.length >= 2 && st.status !== "broken";

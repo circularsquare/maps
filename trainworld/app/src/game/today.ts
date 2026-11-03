@@ -11,10 +11,10 @@ import { useEffect } from "preact/hooks";
 import { clock, lineSeconds } from "./clock";
 import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
-import { accountVersion } from "./boarding";
+import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
-import { count, trainKind } from "./format";
+import { clockTime, count, trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
 import { levelOn } from "./days";
 import { crowdColour } from "./palette";
@@ -37,109 +37,67 @@ export interface LineToday {
   /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
   trainsNow: number;
   fullNow: number;
-  /** T-491: the period now: rider-seconds waited after full trains and riders arriving, at the
-   * platforms where trains come full (T-1255), rider-seconds aboard; T-818: the first two times
-   * the km those riders ride (0 since T-1255: every rider counts alike) */
-  crowdWait: number;
-  crowdRiders: number;
-  crowdRide: number;
-  crowdWaitKm: number;
-  crowdRidersKm: number;
+  /** T-2236: the period now on today's kind of day: the busiest hour's load on the line's fullest
+   * stretch as a share of the rated load (`period_peaks` in boarding.rs) */
+  crowdLoad: number;
 }
 
-/** T-491, T-818: how much crowding costs a line's riders: their average extra wait for a train
- * with room (min), each rider counted by the fare they pay on the line (the base plus the per-km
- * rate times the km they ride; `waitKmS` and `ridersKm` are the waits and riders times those km),
- * so a long ride weighs more than a short hop. A rider a full platform turned away counts the
- * 30 minutes they would not wait (T-1255, the account's). The score is that wait (T-1255: no
- * longer against the ride, so the Trains to add count reads as the schedule's dots do). `weight` is
- * the fares the wait was averaged over, for averaging periods. */
-export function crowding(waitS: number, riders: number, rideS: number, waitKmS = 0, ridersKm = 0): { wait: number; ride: number; score: number; weight: number } {
-  if (!(riders > 0)) return { wait: 0, ride: 0, score: 0, weight: 0 };
-  const f = moneyState.peek()?.fares;
-  const paid = f ? f.base * riders + f.perKm * ridersKm : 0;
-  const wait = (paid > 0 ? (f!.base * waitS + f!.perKm * waitKmS) / paid : waitS / riders) / 60, ride = rideS / riders / 60;
-  return { wait, ride, score: wait, weight: paid > 0 ? paid : riders };
-}
-
-/** Grades of `crowding`'s score, minutes (T-1255, the colour scale's yellow, orange and red;
- * `CROWD_STOPS`): 0 none to speak of, 1 some, 2 orange, 3 red. */
-export const CROWD_GRADES = [6, 9, 15];
-export function crowdGrade(score: number): 0 | 1 | 2 | 3 {
-  return score >= CROWD_GRADES[2] ? 3 : score >= CROWD_GRADES[1] ? 2 : score >= CROWD_GRADES[0] ? 1 : 0;
+/** T-2236: grades of a load as a share of the rated load (`CROWD_STOPS`): 0 within it, 1 past 100%
+ * as `loadText` rounds it (`CROWDED_FROM` in boarding.rs), 2 orange from 130%, 3 red from 140%. */
+export const CROWD_GRADES = [1.005, 1.3, 1.4];
+export function crowdGrade(load: number): 0 | 1 | 2 | 3 {
+  return load >= CROWD_GRADES[2] ? 3 : load >= CROWD_GRADES[1] ? 2 : load >= CROWD_GRADES[0] ? 1 : 0;
 }
 /** Text the player should act on (T-472): orange and red grades. */
-export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
-  const g = crowdGrade(score);
+export function crowdClass(load: number): "" | "crowd-warn" | "crowd-bad" {
+  const g = crowdGrade(load);
   return g === 3 ? "crowd-bad" : g === 2 ? "crowd-warn" : "";
 }
-/** "2.3 min", or "under 0.1 min" */
-export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min < 10 ? min.toFixed(1) : Math.round(min)} min`);
+/** "132%" */
+export const loadText = (share: number) => `${Math.round(share * 100)}%`;
+/** A crowded stretch's hover line (T-2236): "Peak load 132% at 08:00". */
+export const peakLoadText = (c: CrowdedStretch) => `Peak load ${loadText(c.load)} at ${clockTime(c.hour * 60)}`;
 
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
 export const PERIOD_STRIDE = 11;
 
-/** T-477, T-515, T-1255, T-1672, T-1677: one demand level's crowding from a line's `line_periods`
- * numbers `v`, as the line panel's dot and the Lines list's trains cell show it: the average wait
- * for a train with room (min) of the riders at the platforms where trains come full, the level's
- * periods averaged by those riders, and the hover. Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops = 0): { wait: number; tip: string; phrase: string } | null {
-  let trains = 0, weight = 0, wait = 0;
-  const lines: string[] = [];
+/** Where the busiest hour's load per period and stretch starts in a line's `line_periods` numbers
+ * `v` (T-2236, `period_peaks` in boarding.rs: `p * (stops - 1) + k`), or -1 where `v` has none (a
+ * line of one stop, an older WASM build). */
+function peaksAt(v: ArrayLike<number>, stops: number): number {
+  const s = stops - 1, n = PERIODS.length;
+  return s >= 1 && v.length === n * (PERIOD_STRIDE + 2 * stops + 3 * s) ? v.length - n * s : -1;
+}
+
+/** T-477, T-515, T-2236: one demand level's crowding from a line's `line_periods` numbers `v`, as
+ * the line panel's dot and the Lines list's trains cell show it: the busiest hour's load on the
+ * line's fullest stretch over the level's periods, as a share of the rated load, and the hover with
+ * each stretch's colour and each period's load. Null when the level runs no trains. */
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { load: number; tip: string; phrase: string } | null {
+  const at = peaksAt(v, stops), s = stops - 1;
+  if (at < 0) return null;
+  let trains = 0, peak = 0;
+  const per = new Array<number>(s).fill(0), lines: string[] = [];
   for (let i = 0; i < PERIODS.length; i++) {
     const p = PERIODS[i];
-    if (p.demand !== d) continue;
-    const o = i * PERIOD_STRIDE;
-    if (!(v[o] > 0)) continue;
-    const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
-    trains += v[o]; weight += c.weight; wait += c.wait * c.weight;
-    if (Math.round(v[o + 1]) > 0) lines.push(`${p.from}-${p.to}: ${count(v[o + 1])}/${count(v[o])} trains full`);
+    if (p.demand !== d || !(v[i * PERIOD_STRIDE] > 0)) continue;
+    trains += v[i * PERIOD_STRIDE];
+    let most = 0;
+    for (let k = 0; k < s; k++) {
+      const x = v[at + i * s + k];
+      per[k] = Math.max(per[k], x);
+      most = Math.max(most, x);
+    }
+    peak = Math.max(peak, most);
+    lines.push(`${p.from}-${p.to}: ${loadText(most)}`);
   }
   if (!(trains > 0)) return null;
-  const avg = weight > 0 ? wait / weight : 0;
-  const mins = avg >= 1 ? `~${Math.round(avg)} min` : waitText(avg);
-  const phrase = avg >= 0.05 ? `riders wait ${mins} for a train with room` : "trains are not at capacity";
-  const tip = (avg >= 0.05 ? `When trains come full, ${phrase}` : "Trains are not at capacity")
-    + (avg >= 0.05 ? stretchStrip(v, d, stops) : "")
-    + lines.map((s) => `\n${s}`).join("");
-  return { wait: avg, tip, phrase };
-}
-
-/** T-1926: a stretch (the run between two stops, the fuller way) is full from this wait (min), the
- * rule the dots use for a platform (`BUSY_PLATFORM_S` in boarding.rs). */
-const FULL_STRETCH_MIN = 1;
-
-/** T-1926: each stretch's average wait for a train with room (min) over a demand level's periods in
- * which it is full (`FULL_STRETCH_MIN` or more), as the level's dot averages its platforms, 0 where
- * it never is; from the tail of `line_periods` (per period and stretch, the rider-seconds waited,
- * then the riders arriving; `stops` the line's stops). Null where `v` has no such tail (a line of
- * one stop, an older WASM build). */
-export function levelStretches(v: ArrayLike<number>, d: Demand, stops: number): number[] | null {
-  const s = stops - 1, n = PERIODS.length;
-  if (s < 1) return null;
-  const tail = v.length - 2 * n * s;
-  if (v.length !== n * (PERIOD_STRIDE + 2 * stops + 2 * s) && tail !== n * PERIOD_STRIDE) return null;
-  const out: number[] = [];
-  for (let k = 0; k < s; k++) {
-    let here = 0, came = 0;
-    for (let i = 0; i < n; i++) {
-      if (PERIODS[i].demand !== d) continue;
-      const h = v[tail + i * s + k], c = v[tail + n * s + i * s + k];
-      if (c > 0 && h >= FULL_STRETCH_MIN * 60 * c) { here += h; came += c; }
-    }
-    out.push(came > 0 ? here / came / 60 : 0);
-  }
-  return out;
-}
-
-/** The hover's strip of a level's stretches under its first line, with how many are full: "\n" and
- * the two lines, or nothing without stretch figures. */
-function stretchStrip(v: ArrayLike<number>, d: Demand, stops: number): string {
-  const waits = levelStretches(v, d, stops);
-  if (!waits) return "";
-  const full = waits.filter((w) => w >= FULL_STRETCH_MIN).length;
-  const all = waits.length, text = full === 0 || all === 1 ? "" : full === all ? `Full on all ${all} intervals` : `Full on ${full} of ${all} intervals`;
-  return `\n${tipStrip(waits.map(crowdColour))}` + (text ? `\n${text}` : "");
+  const over = per.filter((x) => x >= CROWD_GRADES[0]).length;
+  const text = over === 0 || s === 1 ? "" : over === s ? `Past 100% on all ${s} intervals` : `Past 100% on ${over} of ${s} intervals`;
+  const tip = `Peak load ${loadText(peak)}`
+    + (over > 0 ? `\n${tipStrip(per.map(crowdColour))}` + (text ? `\n${text}` : "") : "")
+    + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "");
+  return { load: peak, tip, phrase: `peak load ${loadText(peak)}` };
 }
 
 /** T-1893: the profit hover's line when the line's day is not a weekday, so a loss on a quiet day
@@ -200,7 +158,7 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     const id = d[i], n = d[i + 1], nSpans = d[i + 6];
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
     const e = i + 7 + 2 * nSpans + n;
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5], crowdWaitKm: d[e + 6], crowdRidersKm: d[e + 7] };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdLoad: d[e + 7] };
     at.push({ id: String(id), t });
     i = e + 8;
   }

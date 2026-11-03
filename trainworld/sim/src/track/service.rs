@@ -84,6 +84,10 @@ impl LineSvc {
     pub fn crush(&self) -> f64 {
         if self.ferry { BOAT_CRUSH } else if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
     }
+    /// Riders a train takes at its rated load (100%, T-2186); a bus or boat is full at it.
+    pub fn rated(&self) -> f64 {
+        if self.ferry || self.is_bus() { self.crush() } else { super::boarding::RATED_PER_CAR * self.cars.max(1) as f64 }
+    }
     /// The station node of stop `k` of run `run`, where its riders wait: a rail line's or a ferry line's
     /// (a port); None for a bus line, whose stops have no platform.
     pub fn stop_node(&self, run: usize, k: usize) -> Option<u32> {

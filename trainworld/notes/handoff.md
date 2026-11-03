@@ -1,7 +1,7 @@
-﻿# Orchestrator handoff, trainworld
+# Orchestrator handoff, trainworld
 
 Orchestrator: session 6b129d28-dd4c-41cd-a38e-7497bd99e810, name maps-1c, since 2026-11-03 12:49
-Updated: 2026-11-03 16:45
+Updated: 2026-11-03 15:45
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -38,23 +38,32 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## In flight (all Opus, this session's subagents)
 - **India T-2111 JOIN**: batch 20261103-121621, python PID 42596 (cores t2111, 5), log
-  artifacts/trainworld/t2111-join.log, run logs artifacts/trainworld/world_run/20261103-121621; at 16:40 on
+  artifacts/trainworld/t2111-join.log, run logs artifacts/trainworld/world_run/20261103-121621; at ~14:45 on
   hyd-in-telangana. Background Wait-Process notifies me. Kit in maps-b2's scratchpad
   ...\7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb\scratchpad\t2111. Undo: `restore.py T2111 prejoin --go`. After:
   `world_run.py status`, playbook 8 (docs/adding-a-country.md): stale.py, zone_origins.py, load checks (ned, kol, one
   rural zone), smoke, register row, ARCHIVE; commit India's files and a new freeze for 8800 (prune the old freeze).
   Then T-2213 islands can use data/packs.
-- 17:45: master **5a7a76e5** = T-2218 building tool + T-2233 passing stations drawn; **8800 = build 844**, smoke 23/23
+- ~15:15: master **5a7a76e5** = T-2218 building tool + T-2233 passing stations drawn; **8800 = build 844**, smoke 23/23
   light and dark. Filed T-2248 (second stopping line on the inner track, short edges), T-2249 (platform crowd with
   outer tracks). Started af25dc1d4819a3f3d **t2236** crowding by load (Vite 6187) and a95e57756862f26bc **t2219**
   building drawing (Vite 6189), both main tree, both told to keep renderer edits local.
-- 18:05: **T-2195 DONE in tree .tw-trees/t2195** (Staten Island 37,547 riders/weekday, capacity-bound; solve +8% on 3
+- ~15:55: **T-2236 DONE, uncommitted** (crowding by busiest hour's load past rated; Rust boarding.rs changed in the
+  main tree, main WASM rebuilt by it; check t2236-crowding.mjs PASS, smoke 23/23; strings shown to Anita). Its
+  renderer.ts, rendererShaders.ts, trackHover.ts hunks sit beside t2219's in-progress ones: commit T-2236 + T-2219
+  together when t2219 reports, then land t2195 (rebase; expect the gauge line in rendererShaders.ts and boarding).
+  Follow-ups: drop the unused platform-wait numbers in Rust `crowding()`; maybe a trouble-list row past ~140%.
+- 15:45: master **eb57aad3** = T-2163 + T-2235 diagram clicks, Save picture, loading bar (code-map's check-list hunk
+  left for the next commit); **8800 = build 845**, smoke 23/23 light and dark. India join at Odisha's group.
+  Follow-ups not filed yet (notes/T-2163.md): big-network picture tiling, the demand loading card over the diagram,
+  Trains/Traffic widths, NYC's second "Times Sq-42 St" complex.
+- ~15:25: **T-2195 DONE in tree .tw-trees/t2195** (Staten Island 37,547 riders/weekday, capacity-bound; solve +8% on 3
   workers; ferry-free save to the bit; 352 cargo tests; check t2195-ferry-demand.mjs 8/8; smoke 23/23 in tree). Changes
   BOAT_CRUSH in sim (main WASM rebuilt by land). It shares boarding.ts, rendererShaders.ts, clock.worker.ts,
   protocol.ts and four docs with main-tree agents' uncommitted edits (t2236, t2219, t2163): land right after the next
-  main-tree commit (rebase, wasm, typecheck, smoke in tree, land). Strings shown to Anita 18:10. Then T-2196 fans and
+  main-tree commit (rebase, wasm, typecheck, smoke in tree, land). Strings shown to Anita ~15:25. Then T-2196 fans and
   T-2220 (0.8 rule).
-- (superseded) **T-2218 DONE ~17:10, uncommitted** (building tool: buildingView.ts, buildingDraw.ts, buildingFloors.ts, check
+- (superseded) **T-2218 DONE ~14:55, uncommitted** (building tool: buildingView.ts, buildingDraw.ts, buildingFloors.ts, check
   t2218-building-tool.mjs 27/27, smoke 23/23; strings to show Anita). Its renderer.ts, pick.ts, tools.ts hunks sit
   beside t2233's in-progress ones: commit T-2218 + T-2233 together when t2233 reports. Follow-ups for T-2219: the
   Room row with the hall crowd, the dark floor rim (#8f8b85) faint; touch dragging of handles not built.
@@ -77,7 +86,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - "train trips/day" in the top bar's hover and the achievement ("1M train trips/day"): become "trips" too? (13:40)
 - T-2223 gap look: now / fine (pick) / wide / edge / spaced, artifacts/trainworld/review/gap-*.png.
 - T-2222 band snap: needs an export of her current Tokyo game plus the view and zoom.
-- Strings to acknowledge: passing tracks panels (T-2232) and the Ferry tool (T-2194), listed in the 16:45 message.
+- Strings to acknowledge: passing tracks panels (T-2232) and the Ferry tool (T-2194), listed in the ~14:45 message.
 - Answered 13:40: islands go, word "No route"; edit note "trips"; temp files always delete; keep only the current and
   latest published builds. Earlier today: passing tracks go (400 m price, every station; hover "Allow faster trains to
   pass slower trains that are stopped here"), crowding from 70%, capacity 150%, ferries go (ports only, "No water path

@@ -34,12 +34,34 @@ const ROOM_NEAR_M = 14, ROOM_TRACK_M = 5;
 const LABEL_BELOW = { halfWide: 90, deep: 50 }, LABEL_RIGHT = { wide: 150, halfDeep: 25 };
 const CELL_M = 40;
 
-interface Rect { x: number; y: number; ux: number; uy: number; hl: number; hd: number }
+export interface Rect { x: number; y: number; ux: number; uy: number; hl: number; hd: number }
+
+/** A station building's outline (local x, y pairs) and its members (station indices), which car parks
+ * stay out of (T-2219). */
+export interface LotOutline { corners: ArrayLike<number>; members: readonly number[] }
+
+/** Where station `i`'s waiting room stands on the floor, as placed (ST_ROOM, ST_FLIP): the patch the
+ * room search reserves, half sizes in m. */
+export function roomRect(i: number, stations: Float32Array, stationLine: Float32Array, perM: number): Rect {
+  const f = platformFrame(i, stations, stationLine);
+  const side = Math.round(stations[i * 3 + 2]) & ST_FLIP ? 1 : -1;
+  return { x: f.mx + f.nx * side * 24 * perM, y: f.my + f.ny * side * 24 * perM, ux: f.dx, uy: f.dy, hl: 30, hd: 12 };
+}
+
+/** A platform's middle, its way there and the left of it (+), local units. */
+function platformFrame(i: number, stations: Float32Array, stationLine: Float32Array) {
+  const x = stations[i * 3], y = stations[i * 3 + 1], o = i * 2 * PLATFORM_POINTS, m = PLATFORM_POINTS >> 1;
+  let dx = stationLine[o + m * 2 + 2] - stationLine[o + m * 2 - 2], dy = stationLine[o + m * 2 + 3] - stationLine[o + m * 2 - 1];
+  const dl = Math.hypot(dx, dy) || 1;
+  dx /= dl; dy /= dl;
+  return { mx: x + stationLine[o + m * 2], my: y + stationLine[o + m * 2 + 1], dx, dy, nx: -dy, ny: dx };
+}
 
 /** Place every complex's waiting room and car park. `stations` flags: ST_ROOM and ST_PARK as built
  * at each station on entry; on return ST_ROOM is left only on the one station per complex whose box
  * draws the room, with ST_FLIP for its side. `complexOf`: each node's complex (0xffffffff none);
- * absent, each station is its own. Returns the lots, LOT_STRIDE numbers each. */
+ * absent, each station is its own. `outlines`: the station buildings, which lots go outside of
+ * (T-2219). Returns the lots, LOT_STRIDE numbers each. */
 export function placeFacilities(
   st: { id: number; lat: number; stationBuilt?: boolean; stationOff?: boolean; platform: number }[],
   stations: Float32Array,
@@ -48,6 +70,7 @@ export function placeFacilities(
   edgePts: Map<number, Float32Array>,
   waysAt: Map<number, number[]>,
   complexOf?: ArrayLike<number>,
+  outlines: readonly LotOutline[] = [],
 ): Float32Array {
   const flag = (i: number) => Math.round(stations[i * 3 + 2]);
   const want: number[] = [];
@@ -105,14 +128,7 @@ export function placeFacilities(
     return out;
   };
 
-  /** a platform's middle, its way there and the left of it (+), local units */
-  const frame = (i: number) => {
-    const x = stations[i * 3], y = stations[i * 3 + 1], o = i * 2 * PLATFORM_POINTS, m = PLATFORM_POINTS >> 1;
-    let dx = stationLine[o + m * 2 + 2] - stationLine[o + m * 2 - 2], dy = stationLine[o + m * 2 + 3] - stationLine[o + m * 2 - 1];
-    const dl = Math.hypot(dx, dy) || 1;
-    dx /= dl; dy /= dl;
-    return { mx: x + stationLine[o + m * 2], my: y + stationLine[o + m * 2 + 1], dx, dy, nx: -dy, ny: dx };
-  };
+  const frame = (i: number) => platformFrame(i, stations, stationLine);
 
   const lots: number[] = [], lotRects: Rect[] = [], rooms: Rect[] = [];
   const order = [...groups.values()].sort((a, b) => st[a[0]].id - st[b[0]].id);
@@ -182,10 +198,36 @@ export function placeFacilities(
       for (const o of rooms) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
       for (const o of lotRects) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
       if (rectsMeet(r, label, perM, 0)) bad += 1;
+      for (const o of outlines) if (outlineMeets(o.corners, r, perM, CLEAR_LOT_M)) bad += 3;
       return bad;
     };
     let pick: { r: Rect; bays: number; bad: number } | null = null;
-    search: for (const [len, nb] of sizes) {
+    // a complex in a station building: along the outside of its edges first, longest edge first
+    const home = outlines.find((o) => o.members.some((i) => members.includes(i)));
+    if (home) {
+      const c = home.corners, n = c.length / 2;
+      const edges = Array.from({ length: n }, (_, k) => k).sort((a, b) => edgeLen(c, b) - edgeLen(c, a));
+      let cx = 0, cy = 0;
+      for (let k = 0; k < n; k++) { cx += c[2 * k] / n; cy += c[2 * k + 1] / n; }
+      edge: for (const [len, nb] of sizes) {
+        const hl = Math.floor(len / SPACE_W) * SPACE_W / 2, hd = nb * BAY_M / 2;
+        for (const k of edges) {
+          const j = (k + 1) % n, ex = c[2 * j] - c[2 * k], ey = c[2 * j + 1] - c[2 * k + 1], el = Math.hypot(ex, ey) || 1;
+          const ux = ex / el, uy = ey / el;
+          // the side away from the outline's middle
+          const mx = (c[2 * k] + c[2 * j]) / 2, my = (c[2 * k + 1] + c[2 * j + 1]) / 2;
+          const sg = (cx - mx) * -uy + (cy - my) * ux > 0 ? -1 : 1, off = (hd + CLEAR_LOT_M + 2) * perM;
+          for (const a of [0, -0.3, 0.3]) {
+            const t = a * el;
+            const r: Rect = { x: mx + ux * t - uy * sg * off, y: my + uy * t + ux * sg * off, ux, uy, hl, hd };
+            const bad = badness(r);
+            if (!pick || bad < pick.bad) pick = { r, bays: nb, bad };
+            if (bad === 0) break edge;
+          }
+        }
+      }
+    }
+    if (!pick || pick.bad > 0) search: for (const [len, nb] of sizes) {
       const hl = Math.floor(len / SPACE_W) * SPACE_W / 2, hd = nb * BAY_M / 2;
       for (const gap of LOT_GAPS_M) for (const i of along) {
         const f = frame(i);
@@ -229,6 +271,24 @@ export function segHitsRect(x0: number, y0: number, x1: number, y1: number, r: R
     if (lo > hi) return false;
   }
   return true;
+}
+
+function edgeLen(c: ArrayLike<number>, k: number) {
+  const j = (k + 1) % (c.length / 2);
+  return Math.hypot(c[2 * j] - c[2 * k], c[2 * j + 1] - c[2 * k + 1]);
+}
+
+/** Whether a rectangle comes within `pad` m of a station building's floor (an outline, local x, y pairs). */
+function outlineMeets(c: ArrayLike<number>, r: Rect, perM: number, pad: number) {
+  const n = c.length / 2;
+  let odd = false;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    if (segHitsRect(c[2 * j], c[2 * j + 1], c[2 * i], c[2 * i + 1], r, perM, pad)) return true;
+    const ay = c[2 * i + 1], by = c[2 * j + 1];
+    if ((ay > r.y) !== (by > r.y) && r.x < c[2 * i] + ((c[2 * j] - c[2 * i]) * (r.y - ay)) / (by - ay)) odd = !odd;
+  }
+  // no edge near it: inside the floor if its middle is
+  return odd;
 }
 
 /** Whether two rectangles come within `pad` m of each other (separating axes). */

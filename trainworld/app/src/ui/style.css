@@ -891,6 +891,8 @@ button.save-add:hover { color: var(--text); }
 .stn-label-plane { position: absolute; inset: 0; }
 .stn-label { position: absolute; left: 0; top: 0; font-size: 12px; color: var(--map-ink); white-space: nowrap;
              text-shadow: 0 0 2px var(--map-land), 0 0 2px var(--map-land), 0 0 3px var(--map-land); }
+/* T-2219: a station building's name on its floor, which is light in both themes */
+.stn-label.bld.inside { font-size: calc(14px * var(--ui, 1)); font-weight: 700; color: #2b2926; text-shadow: 0 0 2px #f9f7f3, 0 0 2px #f9f7f3, 0 0 3px #f9f7f3; }
 
 #tools {
   position: absolute; left: 0; bottom: 0; z-index: 3; max-width: 100%;

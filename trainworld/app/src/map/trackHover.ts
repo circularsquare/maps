@@ -29,12 +29,14 @@ import { hiddenRealmTip } from "./realmOverlay";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf, stopKey } from "../game/complexView";
-import { forecast } from "../game/format";
+import { clockTime, forecast } from "../game/format";
+import type { CrowdedStretch } from "../game/boarding";
+import { loadText } from "../game/today";
 import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { stretchLoad, tripsLanded } from "./stretchLoad";
 import { crowdColour } from "../game/palette";
 import { floorAt } from "./buildingFloors";
-import { buildingMembersById } from "../game/buildingView";
+import { buildingMembersById, hallWaiting } from "../game/buildingView";
 import type { BuildingInput } from "../game/types";
 
 /** Daily riders on run 0's stretch `k` of a line with these `stops`, both directions: every
@@ -67,7 +69,7 @@ export function lineSizeAt(ov: Overlay, num: number, seg: number): number {
 }
 
 /** The tag's lines for a line stroke segment `i`. */
-function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: { share: number; wait: number } | null): TipLine[] {
+function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: CrowdedStretch | null): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l ? named(l) : `Line ${num}`;
@@ -95,12 +97,11 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
     out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
   }
-  // T-1125, T-1160: the riders' wait for a train with room here (the boarding account), its minutes
-  // on their crowding colour as the line panel's dots
-  if (full && !Number.isNaN(full.wait)) {
+  // T-2236: the crowding mark's load (the boarding account's busiest hour), on its crowding colour
+  // as the line panel's dots
+  if (full) {
     const d = document.createElement("div");
-    const m = full.wait < 10 ? full.wait.toFixed(1) : String(Math.round(full.wait));
-    d.append("Average ", chip(`${m} minute`, crowdColour(full.wait)), " wait for a train with room");
+    d.append("Peak load ", chip(loadText(full.load), crowdColour(full.load)), ` at ${clockTime(full.hour * 60)}`);
     out.push(d);
   }
   return out;
@@ -226,7 +227,10 @@ function linesOn(w: WorldView | null, edge: number): LineInput[] {
 
 /** T-2218: a station building's floor: its name, and that it has no station inside when so. */
 function buildingTip(b: BuildingInput): TipLine[] {
-  return (buildingMembersById.peek().get(b.id)?.length ?? 0) > 0 ? [b.name, "Station building"] : [b.name, "Station building", "No station inside"];
+  if (!(buildingMembersById.peek().get(b.id)?.length)) return [b.name, "Station building", "No station inside"];
+  // T-2219: the hall's crowd, while platform crowds are drawn
+  const hall = hallWaiting.peek().get(b.id) ?? 0;
+  return hall >= 1 ? [b.name, "Station building", `${Math.round(hall).toLocaleString("en-US")} riders waiting in the hall`] : [b.name, "Station building"];
 }
 
 /** The elevation and speed limit at a point of an edge's track stroke, on one row (T-473, T-526,

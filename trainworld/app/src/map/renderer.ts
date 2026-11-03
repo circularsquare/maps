@@ -11,9 +11,9 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_BUILDING, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
-import { readBoardHour, trainStands, type BoardHour } from "../game/boarding";
+import { readBoardHour, trainStands, type BoardHour, type CrowdedStretch } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
@@ -27,7 +27,7 @@ import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type 
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
 import { perfOff, perfTry } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
-import { BuildingFloors } from "./buildingFloors";
+import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
@@ -487,9 +487,11 @@ export class NetworkRenderer {
   /** The selected stations as drawn, with the bridges or connectors between them (T-217, T-313):
    * the outline and glow go round them, and the demand bubbles are cut away round them so they
    * show above (T-189). */
-  selectedShapes(project: Project): StationShape[] {
+  selectedShapes(project: Project, offFloors = false): StationShape[] {
     const out: StationShape[] = [];
     for (const i of this.selectedDrawn()) {
+      // a station building's members: its floor's outline goes round them (T-2219)
+      if (offFloors && Math.round(this.net!.stations[i * 3 + 2]) & ST_BUILDING) continue;
       const s = this.drawnShapeOf(i, project);
       out.push(s, ...this.annexesOf(i, s).map((x) => x.shape));
     }
@@ -670,7 +672,7 @@ export class NetworkRenderer {
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_look", "u_band_edge", "u_band_m", "u_mute"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -1011,10 +1013,10 @@ export class NetworkRenderer {
     upload(this.tex.fill, l ? l.fill : new Float32Array(samples * 2), "rg32f");
   }
 
-  /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
-   * with a red edge and a darker body on the lines over them, and the stretches where riders wait
-   * for a train with room (the boarding account's, each hour), whose red edge and darkening are
-   * stronger as that wait grows (T-1160, rendererShaders.ts `FULL_FLOOR`). */
+  /** T-819, T-2236: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
+   * with a red edge and a darker body on the lines over them, and the crowded stretches (the
+   * boarding account's, each hour), whose red edge and darkening are stronger as their busiest
+   * hour's load passes the rated load (rendererShaders.ts `FULL_FLOOR`). */
   setFull(edges: ReadonlySet<number> | null, traffic: boolean) {
     const was = this.fullEdges;
     const same = (!edges || !edges.size) === (!was || !was.size) && (!edges || !was || (edges.size === was.size && [...edges].every((e) => was.has(e))));
@@ -1025,35 +1027,33 @@ export class NetworkRenderer {
   }
   private fullEdges: ReadonlySet<number> | null = null;
   private fullTraffic = false;
-  /** the full stretches as last written, line * 4096 + stretch: the share of the day's trains
-   * packed there (1 from a WASM build without shares) and the riders' average wait there for a
-   * train with room, min (NaN from a WASM build without waits) */
-  private fullKeys = new Map<number, { share: number; wait: number }>();
+  /** the crowded stretches as last written, line * 4096 + stretch: the busiest hour's load as a
+   * share of the rated load and that hour (the line's local time) */
+  private fullKeys = new Map<number, CrowdedStretch>();
   private fullDrawn = "";
-  /** What is drawn on line `line`'s run 0 stretch `s` (T-1125, T-1160); null where nothing is. */
-  fullStretch(line: number, s: number): { share: number; wait: number } | null {
+  /** The crowding drawn on line `line`'s run 0 stretch `s` (T-2236); null where none is. */
+  fullStretch(line: number, s: number): CrowdedStretch | null {
     return this.fullTraffic ? this.fullKeys.get(line * 4096 + s) ?? null : null;
   }
   private writeFull() {
     const l = this.lines, n = this.net;
-    const keys = new Map<number, { share: number; wait: number }>();
-    const b = this.board, fs = this.fullTraffic ? b?.fullStretches : undefined;
+    const keys = new Map<number, CrowdedStretch>();
+    const b = this.board, fs = this.fullTraffic ? b?.crowdStretches : undefined;
     for (let k = 0; b && fs && k < fs.length; k += 2) {
       const j = k / 2;
-      keys.set(fs[k] * 4096 + fs[k + 1], { share: b.fullShares.length ? b.fullShares[j] : 1, wait: b.fullWaits.length ? b.fullWaits[j] / 60 : NaN });
+      keys.set(fs[k] * 4096 + fs[k + 1], { load: b.crowdLoads[j] ?? 0, hour: b.crowdHours[j] ?? 0 });
     }
-    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].map(([k, v]) => `${k}:${v.share}:${v.wait}`).join(",")}`;
+    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].map(([k, v]) => `${k}:${v.load}:${v.hour}`).join(",")}`;
     this.fullKeys = keys;
     if (!l || !l.count || !n || drawn === this.fullDrawn) return;
     this.fullDrawn = drawn;
-    // the shader's a_full: -1 track at capacity, else the stretch's wait (min); a WASM build without
-    // waits gives the share of full trains as a wait, all of it at 75%
+    // the shader's a_full: -1 track at capacity, else the stretch's load over the rated load
     const f = this.fullEdges, stretch = n.lines.stretch;
     let any = false;
     const out = fullAttr(n.lines, l.count, (i) => {
       if (f?.size && f.has(n.lines.edge[i])) return (any = true), -1;
       const s = keys.size && stretch ? keys.get(n.lines.colour[i] * 4096 + stretch[i]) : undefined;
-      const v = s ? (Number.isNaN(s.wait) ? 15 * Math.min(1, s.share / 0.75) : s.wait) : 0;
+      const v = s ? s.load : 0;
       if (v !== 0) any = true;
       return v;
     });
@@ -1080,6 +1080,7 @@ export class NetworkRenderer {
     this.guard.setNetwork(n);
     this.marks.setNetwork(n.marks);
     this.lots.setNetwork(n.lots);
+    this.floors.setNetwork(n.buildings);
     const oldTrack = this.track, oldLines = this.lines;
     this.track = this.strokes(n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
     this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null);
@@ -1470,7 +1471,7 @@ export class NetworkRenderer {
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
-    if (redraw) this.floors.draw(cam, vp, dpr, zoom);
+    if (redraw) this.floors.draw(lc, vp, dpr, zoom);
     if (redraw && zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
@@ -1673,6 +1674,8 @@ export class NetworkRenderer {
       }
       cache.draw(0);
     }
+    // the station buildings' hall crowds (T-2219), over the track and under the boxes
+    this.floors.drawHall(lc, vp, dpr, zoom, opt.crowds && this.board && !hidden ? this.crowds.hall : null);
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
@@ -1761,10 +1764,13 @@ export class NetworkRenderer {
       gl.useProgram(this.stationProg);
       gl.uniform1f(su.u_tint, any && !boxes ? 1 : 0);
       gl.uniform1f(su.u_mask, 0);
-      if (through) {
+      if (through || (boxes && this.hasStencil)) {
         gl.clearStencil(0);
         gl.clear(gl.STENCIL_BUFFER_BIT);
       }
+      // T-2219: a station building's floor in the stencil, where its members' rims are not drawn
+      const floored = boxes && this.hasStencil && this.floors.markStencil(lc);
+      gl.useProgram(this.stationProg);
       // the annexes joined to the boxes (T-1416), in the same layers so box and annex are one
       // shape; no track runs through them
       const layerDraw = (pass: number, layer: number, withBridges: boolean, annexes = true) => {
@@ -1789,6 +1795,23 @@ export class NetworkRenderer {
           gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, bridges);
         }
       };
+      // the dark shapes; a station building's members' only off its floor (T-2219)
+      const rims = (pass: number) => {
+        if (!floored) return layerDraw(pass, 0, true);
+        gl.useProgram(this.stationProg);
+        gl.uniform1i(su.u_bld, 1);
+        layerDraw(pass, 0, true);
+        gl.enable(gl.STENCIL_TEST);
+        gl.stencilMask(0);
+        gl.stencilFunc(gl.EQUAL, 0, STENCIL_BIT);
+        gl.useProgram(this.stationProg);
+        gl.uniform1i(su.u_bld, 2);
+        layerDraw(pass, 0, false);
+        gl.useProgram(this.stationProg);
+        gl.uniform1i(su.u_bld, 0);
+        gl.stencilMask(0xff);
+        gl.disable(gl.STENCIL_TEST);
+      };
       // every station, then the selected ones over them with their outline and glow; each pass the
       // dark shapes, then the white inside every rim, so stations drawn over each other are one white
       // shape with one outline (T-217), then the crowds and the track through them (T-236)
@@ -1797,18 +1820,21 @@ export class NetworkRenderer {
         if (pass === 1) {
           const shapes = this.selectedShapes(project);
           if (!shapes.length) break;
-          this.drawGlow(shapes, dpr, vp);
+          // a selected building's outline goes round its floor, not its members' boxes (T-2219)
+          if (floored) this.floors.drawSelected(new Set(this.selectedDrawn()), project, vp, dpr, zoom, this.ink);
+          this.drawGlow(floored ? this.selectedShapes(project, true) : shapes, dpr, vp);
         }
         // zoomed out the connectors' white goes under the dots' white, so a dot's crowd pie (T-228)
         // stays whole (T-313)
         if (connectors) connDraw(pass, 0);
-        layerDraw(pass, 0, true);
+        rims(pass);
         if (connectors) connDraw(pass, 1);
         layerDraw(pass, 1, true);
         if (!boxes) continue;
         if (through) {
           // mark this pass's white, no colour
           gl.enable(gl.STENCIL_TEST);
+          gl.stencilMask(~STENCIL_BIT & 0xff);
           gl.stencilFunc(gl.ALWAYS, pass + 1, 0xff);
           gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
           gl.colorMask(false, false, false, false);
@@ -1826,12 +1852,13 @@ export class NetworkRenderer {
             gl.uniform1f(this.bridgeU.u_mask, 0);
           }
           gl.colorMask(true, true, true, true);
+          gl.stencilMask(0xff);
           gl.disable(gl.STENCIL_TEST);
         }
         if (fills) layerDraw(pass, 2, false);
         if (through) {
           gl.enable(gl.STENCIL_TEST);
-          gl.stencilFunc(gl.EQUAL, pass + 1, 0xff);
+          gl.stencilFunc(gl.EQUAL, pass + 1, ~STENCIL_BIT & 0xff);
           gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
           if (cache) cache.draw(1);
           else {

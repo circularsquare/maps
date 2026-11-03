@@ -93,7 +93,7 @@ export function SettingsTab() {
           <span data-tip="Places where track or stations can't fit the trains scheduled">Track at capacity</span>
         </Check>
         <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
-          <span data-tip="Places where trains are full and riders can't board">Trains at capacity</span>
+          <span data-tip="Stretches where trains carry more than their rated load at the busiest hour">Crowded trains</span>
         </Check>
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           Flat junctions and crossings

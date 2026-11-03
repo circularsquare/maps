@@ -12,9 +12,10 @@ import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
+import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
+import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
@@ -110,6 +111,8 @@ export interface NetworkBuffers {
   stationLinks?: Float32Array;
   /** The complexes' car parks (T-1528, map/facilityPlace.ts), LOT_STRIDE numbers each. */
   lots?: Float32Array;
+  /** The station buildings as drawn (T-2219, map/buildingNet.ts); their members have ST_BUILDING. */
+  buildings?: BuildingDraw[];
   /** junction nodes (3+ edge ends, no station): x, y per node, for picking */
   junctions: Float32Array;
   junctionIds: number[];
@@ -1212,15 +1215,22 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
+  // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of
+  const outlines = buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts, false);
+  for (let i = 0; i < st.length; i++) if (outlines.memberOf[i] >= 0) stations[i * 3 + 2] += ST_BUILDING;
   // T-1528: one waiting room and one car park per complex
-  const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf);
+  const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf, outlines.draw);
+  // their insides, which leave room for the waiting rooms just placed
+  const bld = outlines.draw.length ? buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts) : outlines;
   // the player's links as bridges between the two platforms' nearest points (T-217)
   const stationIndex = new Map(st.map((n, i) => [n.id, i]));
   const shapeAt = (i: number) => platformShapeAt({ stationShape, stationAxis, stationLine }, i);
   const linkIdx: number[] = [], linkEnds: number[] = [];
+  // none between two stations of one building: its floor joins them (T-2219)
+  const oneFloor = (i: number, j: number) => bld.memberOf[i] >= 0 && bld.memberOf[i] === bld.memberOf[j];
   for (let k = 0; k + 1 < (s.links?.length ?? 0); k += 2) {
     const i = stationIndex.get(s.links[k]), j = stationIndex.get(s.links[k + 1]);
-    if (i === undefined || j === undefined) continue;
+    if (i === undefined || j === undefined || oneFloor(i, j)) continue;
     linkIdx.push(i, j);
     linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
   }
@@ -1228,6 +1238,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx);
     for (let k = 0; k + 1 < auto.length; k += 2) {
       const i = auto[k], j = auto[k + 1];
+      if (oneFloor(i, j)) continue;
       linkIdx.push(i, j);
       linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
     }
@@ -1282,6 +1293,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationLinkIdx: new Int32Array(linkIdx),
     stationLinks: new Float32Array(linkEnds),
     lots,
+    ...(bld.draw.length ? { buildings: bld.draw } : {}),
     junctions,
     junctionIds: jn.map((n) => n.id),
     marks: new Float32Array(marks),

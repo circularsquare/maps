@@ -477,17 +477,24 @@ fn the_line_summary_names_the_full_trains_and_when() {
     assert!(p(0, 6) > 0.0 && p(0, 6) <= p(0, 4) * len_km + 1e-6 && p(0, 7) > 0.0 && p(0, 7) <= p(0, 2) * len_km + 1e-6, "{v:?}");
     let n = w.svc.lines[l as usize].stops.len();
     let at: f64 = v[PERIODS * PERIOD_STRIDE..PERIODS * PERIOD_STRIDE + n].iter().sum();
-    assert!(v.len() == PERIODS * (PERIOD_STRIDE + 2 * n + 2 * (n - 1)) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
+    assert!(v.len() == PERIODS * (PERIOD_STRIDE + 2 * n + 3 * (n - 1)) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
     // T-1926: the stretches' waits and arrivals follow, and the morning's average wait there is minutes
     let sh = PERIODS * (PERIOD_STRIDE + 2 * n);
     let (here, came): (f64, f64) = (v[sh..sh + n - 1].iter().sum(), v[sh + PERIODS * (n - 1)..sh + PERIODS * (n - 1) + n - 1].iter().sum());
     assert!(came > 0.0 && here / came > 300.0, "{here} {came}");
+    // T-2236: then each period's busiest hour's load on each stretch: the morning's trains packed
+    // to crush somewhere, 150% of the rated load
+    let pk = &v[sh + 2 * PERIODS * (n - 1)..];
+    let morning = pk[..n - 1].iter().fold(0.0f64, |a, &b| a.max(b));
+    assert!((morning - CRUSH_PER_CAR / RATED_PER_CAR).abs() < 0.01 && pk.iter().all(|&x| (0.0..=1.501).contains(&x)), "{pk:?}");
     // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
     let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
     // T-491: the period now's wait, arrivals and ride end the block, then T-818's two (T-1255: the
     // wait and arrivals at the platforms where trains come full, here every one)
     let (wait, arrived) = (v[v.len() - 5], v[v.len() - 4]);
     assert!((wait - p(0, 9)).abs() < 1e-6 && (arrived - p(0, 10)).abs() < 1e-6 && wait > 0.0);
+    // T-2236: the morning's load past rated ends it
+    assert!((v[v.len() - 1] - morning).abs() < 1e-9, "{}", v[v.len() - 1]);
     let (on, packed, trains) = (v[v.len() - 8], v[v.len() - 7], v[v.len() - 6]);
     assert!(on > 0.0 && (on - w.svc.lines[l as usize].trains[HIGH] as f64).abs() <= 2.0 && packed == on, "{on} {packed}");
     // T-481: the full trains are counted out of every trip in the 24 hours
@@ -806,11 +813,11 @@ fn the_hour_lines_up_with_the_drawn_trips() {
     let tail = 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2;
     let nf = out[tail + ne] as usize;
     assert_eq!(out.len(), tail + ne + 1 + nf * 4);
-    assert!(nf >= 1, "riders left behind at every train: a stretch at capacity (T-1125)");
-    let shares = &out[tail + ne + 1 + nf * 2..tail + ne + 1 + nf * 3];
-    assert!(shares.iter().all(|&s| s > 0.0 && s <= 1.0), "{shares:?} (T-1152)");
-    let waits = &out[tail + ne + 1 + nf * 3..];
-    assert!(waits.iter().all(|&s| s >= FULL_WAIT_MIN_S), "{waits:?} (T-1160)");
+    assert!(nf >= 1, "riders left behind at every train: a crowded stretch (T-1125, T-2236)");
+    let peaks = &out[tail + ne + 1 + nf * 2..tail + ne + 1 + nf * 3];
+    assert!(peaks.iter().all(|&s| s as f64 >= CROWDED_FROM && s <= 1.501), "{peaks:?} (T-2236)");
+    let hours = &out[tail + ne + 1 + nf * 3..];
+    assert!(hours.iter().all(|&h| (0.0..24.0).contains(&h) && h.fract() == 0.0), "{hours:?} (T-2236)");
     // T-1123: each train stops before it leaves, never before the train ahead left
     let (ev, arr) = (&out[tail - ne * 2..tail], &out[tail..tail + ne]);
     for e in 0..ne {

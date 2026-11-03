@@ -81,15 +81,18 @@ export interface BoardHour {
   arrive: Float32Array;
   /** per pulse, the station node its riders walk from and the walk, s (T-1124) */
   pulseFrom: Float32Array;
-  /** the stretches where trains run packed to crush (T-1125): line id and run 0 stretch, pairs */
-  fullStretches: Float32Array;
-  /** per full stretch, the share of the day's trains packed to crush there (T-1152); empty from a
-   * WASM build before it */
-  fullShares: Float32Array;
-  /** per full stretch, the riders' average wait there for a train with room, s (T-1160); empty from
-   * a WASM build before it */
-  fullWaits: Float32Array;
+  /** the crowded stretches (T-2236: the busiest hour's trains past the rated load, `CROWDED_FROM` in
+   * boarding.rs): line id and run 0 stretch, pairs */
+  crowdStretches: Float32Array;
+  /** per crowded stretch, its busiest hour's load as a share of the rated load, the fuller way's */
+  crowdLoads: Float32Array;
+  /** per crowded stretch, that hour of the day in the line's local time */
+  crowdHours: Float32Array;
 }
+
+/** A crowded stretch on the map (T-2236): its busiest hour's load as a share of the rated load, and
+ * that hour of the day in the line's local time. */
+export interface CrowdedStretch { load: number; hour: number }
 
 export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
   const [nt, nl, nq, ne, np] = [b[0], b[1], b[2], b[3], b[4]];
@@ -102,10 +105,10 @@ export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
   const arrive = b.subarray(i, (i += ne));
   const pulseFrom = b.subarray(i, (i += np * 2));
   const nf = b[i++] ?? 0;
-  const fullStretches = b.subarray(i, (i += nf * 2));
-  const fullShares = b.length >= i + nf ? b.subarray(i, i + nf) : new Float32Array(0);
-  const fullWaits = b.length >= i + 2 * nf ? b.subarray(i + nf, i + 2 * nf) : new Float32Array(0);
-  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses, arrive, pulseFrom, fullStretches, fullShares, fullWaits };
+  const crowdStretches = b.subarray(i, (i += nf * 2));
+  const crowdLoads = b.subarray(i, (i += nf));
+  const crowdHours = b.subarray(i, i + nf);
+  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses, arrive, pulseFrom, crowdStretches, crowdLoads, crowdHours };
 }
 
 /** The most riders waiting on one platform side (T-1067, `WAITING_CAP` in boarding.rs): the account

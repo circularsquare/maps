@@ -16,7 +16,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, crowding, dayNote, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
 import { demandView, lineFiguresIn } from "../game/demand";
 import { useClockQuery } from "./useClockQuery";
 import { Chip, Icon, SortHead } from "./widgets";
@@ -64,14 +64,13 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-472, T-491, T-1677, T-1684: a line's trains now, coloured by its riders' wait for a train with
- * room in the period now, hovered with the weekday's figures for the level now as the line panel's
- * ring is (`crowdLevel`). */
+/** T-472, T-1677, T-1684, T-2236: a line's trains now, coloured by its load past the rated load in
+ * the period now, hovered with the weekday's figures for the level now as the line panel's ring is
+ * (`crowdLevel`). */
 function TrainsNow({ line, n, period, bus, ferry, v, lev, stops }: { line: string; n: number; period: string; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
   const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops) : null;
   const d = today.value.get(line);
-  const now = d && n > 0 ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
-  const cls = now ? crowdClass(now.score) : "";
+  const cls = !bus && d && n > 0 ? crowdClass(d.crowdLoad) : "";
   const tip = bus ? `${period}: ${ferry ? boatsText(n) : busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }

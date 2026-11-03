@@ -11,6 +11,10 @@ import { world } from "./world";
  * and the drawing: null while it is off. `id` the building being reshaped, null for a new one. */
 export const buildingDraft = signal<{ id: number | null; corners: number; closed: boolean } | null>(null);
 
+/** Riders waiting in each building's hall by its id, while platform crowds are drawn (T-2219, written
+ * by map/buildingFloors.ts); empty otherwise. */
+export const hallWaiting = signal<ReadonlyMap<number, number>>(new Map());
+
 /** Each building's members by its id (stations whose platform touches it, any level). */
 export const buildingMembersById = computed(() => {
   const w = world.value, bs = w?.save.buildings ?? [];

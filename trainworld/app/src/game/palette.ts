@@ -46,15 +46,12 @@ function rampColour(stops: [number, string][], v: number): string {
 /** The colour the Speed display gives `kmh`. */
 export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
 
-/** T-673, T-692, T-1160, T-1255: crowding's colour by the average wait for a train with room (min;
- * the line panel's since T-1255 at the platforms where trains come full, a rider a full platform
- * turned away counting the 30 minutes they would not wait), the same in both themes: green to 0.2,
- * yellow-green at 3, yellow at 6, orange at 9, red at 15 (Anita), then crimson at 20, plum at 25,
- * purple at 35 and indigo from 50 (T-1553: the long lines' waits, 9 to 30 minutes, were two reds).
- * The line panel's crowding dots, its Trains to add count, and the wait in the Traffic view's
- * full-stretch hover. */
-export const CROWD_STOPS: [number, string][] = [[0, "#4f9a4f"], [0.2, "#4f9a4f"], [3, "#98bd3a"], [6, "#d8b425"], [9, "#e07a1f"], [12, "#d4552a"], [15, "#c43c3c"], [20, "#a82846"], [25, "#861f5c"], [35, "#6b2a86"], [50, "#3f2a8c"]];
-export const crowdColour = (waitMin: number) => rampColour(CROWD_STOPS, waitMin);
+/** T-2236: crowding's colour by trains' load as a share of the rated load (the busiest hour's), the
+ * same in both themes: green to 100%, then yellow-green at 110%, yellow at 120%, orange at 130%,
+ * red at 140% and crimson at crush's 150% (the old wait ramp's colours, T-1255). The line panel's
+ * crowding dots and stops diagram, the Lines list's trains, and the Traffic view's hover. */
+export const CROWD_STOPS: [number, string][] = [[1, "#4f9a4f"], [1.1, "#98bd3a"], [1.2, "#d8b425"], [1.3, "#e07a1f"], [1.4, "#c43c3c"], [1.5, "#a82846"]];
+export const crowdColour = (load: number) => rampColour(CROWD_STOPS, load);
 
 /** Station rings and names on the map. */
 export const NET_INK = "#2b2b2b";

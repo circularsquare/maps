@@ -6,7 +6,9 @@ import { lineDemand } from "../../game/demand";
 import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist, groundScale } from "../../game/coords";
 import { outlineArea } from "../../game/buildings";
-import { buildingOf } from "../../game/buildingView";
+import { buildingMembersById, buildingOf, hallWaiting } from "../../game/buildingView";
+import { hallRoom } from "../../game/buildingLayout";
+import { platformOffsets } from "../../game/complexes";
 import { passagePrice } from "../../game/upgrades";
 import type { LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
@@ -314,12 +316,18 @@ function StationBuilding({ id, members }: { id: string; members: string[] }) {
   let my = 0;
   for (let i = 0; i < n; i++) my += b.corners[2 * i + 1] / n;
   const k = groundScale(my), m2 = outlineArea(b.corners) / (k * k);
+  // T-2219: the hall's room and, while platform crowds are drawn, the riders waiting in it
+  const w = world.value, byId = w ? stationsById(w) : new Map<string, StationInput>(), inside = buildingMembersById.value.get(b.id) ?? [];
+  const room = roomOf(b.corners, k, inside.map((m) => byId.get(m)).filter((s): s is StationInput => !!s));
+  const waiting = hallWaiting.value.get(b.id) ?? 0;
+  const whole = (n: number) => Math.round(n).toLocaleString("en-US");
   return (
     <>
       <div class="h">Station building</div>
       <ul class="rows">
         <li class="building-name"><NameEdit key={b.id} name={b.name} onRename={(name) => void edit({ op: "renameBuilding", id: b.id, name })} /></li>
         <li><span class="grow">Area</span><span class="val">{area(m2)}</span></li>
+        {inside.length > 0 && <li><span class="grow">Room</span><span class="val" data-tip="Riders who can wait in the hall once the platforms are full">{waiting >= 1 ? `${whole(waiting)}/${whole(room)}` : whole(room)} riders</span></li>}
       </ul>
       <Actions>
         <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>Edit outline</button>
@@ -327,6 +335,20 @@ function StationBuilding({ id, members }: { id: string; members: string[] }) {
       </Actions>
     </>
   );
+}
+
+/** A building's hall room (game/buildingLayout.ts) from its members' platforms, kept for one outline and
+ * set of platforms. */
+let roomKept = { key: "", room: 0 };
+function roomOf(corners: number[], k: number, members: StationInput[]): number {
+  const lines = members.map((s) => {
+    const o = platformOffsets(s, groundScale(s.y)), out: number[] = [];
+    for (let i = 0; i + 1 < o.length; i += 2) out.push(s.x + o[i], s.y + o[i + 1]);
+    return out;
+  });
+  const key = corners.join(",") + "|" + lines.map((l) => l.join(",")).join("|");
+  if (key !== roomKept.key) roomKept = { key, room: Math.round(hallRoom(corners, k, lines) / 100) * 100 };
+  return roomKept.room;
 }
 
 /** The station view's own rows and actions. */

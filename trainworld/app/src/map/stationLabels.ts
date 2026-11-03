@@ -24,6 +24,15 @@ import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { afterPaint } from "../game/busy";
+import { buildingMembersById } from "../game/buildingView";
+import { buildingFrame } from "../game/buildingLayout";
+import { insideOutline } from "../game/buildings";
+import { groundScale, packToLngLat } from "../game/coords";
+import { world } from "../game/world";
+import { FLOOR_ZOOM } from "./buildingFloors";
+
+/** a station building's name goes in its cross-hall from here in (the floor's full zoom) */
+const FLOOR_FULL_ZOOM = 14;
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -78,6 +87,11 @@ export class StationLabels {
   private projected: [number, number] = [0, 0];
 
   private throttle: PlaceThrottle;
+  /** T-2219: the station buildings' names: the cross-hall's middle, its ends across the short side
+   * and the outline, local units */
+  private bldLabels: (Label & { corners: [number, number][]; ends: [number, number][]; inside: boolean })[] = [];
+  private bldKey = "";
+  private bldSeen = "";
 
   constructor(container: HTMLElement, private overlay: Overlay, private map: MlMap) {
     this.throttle = new PlaceThrottle(() => overlay.moving);
@@ -145,6 +159,14 @@ export class StationLabels {
     // names' positions are in its local units (T-307).
     const cx = complexes.peek();
     const plan = this.names.plan(stations, w.save.lines, cx, anchor().version);
+    // a station building's name and outline (T-2219)
+    const bk = (w.save.buildings ?? []).map((b) => `${b.id}:${b.name}:${b.corners.join(",")}`).join("|");
+    if (bk !== this.bldSeen && !plan) {
+      this.bldSeen = bk;
+      this.needsPlacement = true;
+      this.place();
+    }
+    this.bldSeen = bk;
     if (!plan) return;
     if (PATCH_MODE === "0") plan.full = true;
     // T-1357: many names not drawn before (a game's first network) are built once the network has
@@ -326,7 +348,15 @@ export class StationLabels {
     // clear of a platform box, which widens as the map zooms in (T-204), or of a transfer dot (T-313)
     const ss = this.overlay.renderer.stationStyle;
     const gap = Math.max(GAP, plainBoxHalfPx(ss, zoom) + 4, ss.boxes ? 0 : ss.radius[1] + 3);
-    for (const l of this.labels) {
+    // T-2219: a station building's name first, in its cross-hall when it fits, else beside it; its
+    // stations' own names go
+    const inBuilding = this.placeBuildings(zoom, W, H, margin, placedBoxes, padX, padY);
+    for (let i = 0; i < this.labels.length; i++) {
+      const l = this.labels[i];
+      if (inBuilding.size && this.names.list[i]?.members.every((m) => inBuilding.has(m.id))) {
+        hide(l);
+        continue;
+      }
       const [sx, sy] = this.overlay.toScreen(l.x, l.y);
       const x = l.below ? sx - l.w / 2 : sx + gap;
       const y = l.below ? sy + gap - 2 : sy - l.h / 2;
@@ -348,6 +378,82 @@ export class StationLabels {
       l.ox = rx - sx;
       l.oy = ry - sy;
     }
+  }
+
+  /** T-2219: the station buildings' names, placed before the stations' (`placed` takes their boxes);
+   * the members of the buildings named, whose own names go. */
+  private placeBuildings(zoom: number, W: number, H: number, margin: number, placed: BoxGrid, padX: number, padY: number): Set<string> {
+    const w = world.peek(), bs = zoom >= FLOOR_ZOOM ? w?.save.buildings ?? [] : [], members = buildingMembersById.peek();
+    const named = bs.filter((b) => (members.get(b.id)?.length ?? 0) > 0);
+    const key = named.map((b) => `${b.id}:${b.name}:${b.corners.join(",")}`).join("|") + `@${anchor().version}`;
+    if (key !== this.bldKey) {
+      this.bldKey = key;
+      const spare = new Map(this.bldLabels.map((l) => [l.el.textContent ?? "", l]));
+      this.bldLabels = named.map((b) => {
+        const n = b.corners.length / 2;
+        let my = 0;
+        for (let i = 0; i < n; i++) my += b.corners[2 * i + 1] / n;
+        const f = buildingFrame(b.corners, groundScale(my));
+        const um = (f.u0 + f.u1) / 2, vm = (f.v0 + f.v1) / 2, shortU = f.u1 - f.u0 < f.v1 - f.v0, half = Math.min(f.u1 - f.u0, f.v1 - f.v0) / 2;
+        const local = (u: number, v: number) => { const [x, y] = f.back(u, v); return toLocal(...packToLngLat(x, y)); };
+        const [x, y] = local(um, vm);
+        const corners = Array.from({ length: n }, (_, i) => toLocal(...packToLngLat(b.corners[2 * i], b.corners[2 * i + 1])));
+        const ends = shortU ? [local(um - half, vm), local(um + half, vm)] : [local(um, vm - half), local(um, vm + half)];
+        const old = spare.get(b.name);
+        if (old) spare.delete(b.name);
+        const el = old?.el ?? document.createElement("div");
+        if (!old) {
+          el.className = "stn-label bld";
+          el.textContent = b.name;
+          this.plane.appendChild(el);
+        }
+        return { el, x, y, below: true, w: old?.w ?? 0, h: old?.h ?? 0, corners, ends, inside: insideOutline(b.corners, ...f.back(um, vm)) };
+      });
+      for (const l of spare.values()) l.el.remove();
+    }
+    const out = new Set<string>();
+    for (const b of named) for (const id of members.get(b.id) ?? []) out.add(id);
+    const hide = (l: Label) => { if (l.hidden !== true) l.el.style.visibility = "hidden"; l.hidden = true; };
+    for (const l of this.bldLabels) {
+      if (!l.w) { l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; }
+      const [sx, sy] = this.overlay.toScreen(l.x, l.y);
+      const [ax, ay] = this.overlay.toScreen(...l.ends[0]), [bx, by] = this.overlay.toScreen(...l.ends[1]);
+      let x: number, y: number;
+      // measured at the size it has on the floor, so the test does not flip with the size
+      const wIn = l.el.classList.contains("inside") ? l.w : (l.w * 14) / 12;
+      const inside = l.inside && zoom >= FLOOR_FULL_ZOOM && Math.hypot(bx - ax, by - ay) >= wIn + 24;
+      if (l.el.classList.contains("inside") !== inside) {
+        // the name is set larger on the floor
+        l.el.classList.toggle("inside", inside);
+        l.w = l.el.offsetWidth;
+        l.h = l.el.offsetHeight;
+      }
+      if (inside) {
+        x = sx - l.w / 2;
+        y = sy - l.h / 2;
+      } else {
+        // beside the floor: below it, or right of it when it is taller than wide on the screen
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const c of l.corners) {
+          const [cx, cy] = this.overlay.toScreen(c[0], c[1]);
+          x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy);
+        }
+        const below = x1 - x0 >= y1 - y0;
+        x = below ? sx - l.w / 2 : x1 + 6;
+        y = below ? y1 + 4 : sy - l.h / 2;
+      }
+      const off = !Number.isFinite(sx + sy) || x + l.w < -margin || x > W + margin || y + l.h < -margin || y > H + margin;
+      if (off) { hide(l); continue; }
+      placed.add([x - padX, y - padY, x + l.w + padX, y + l.h + padY]);
+      if (l.hidden !== false) l.el.style.visibility = "";
+      l.hidden = false;
+      const rx = Math.round(x), ry = Math.round(y), transform = `translate(${rx}px, ${ry}px)`;
+      if (l.transform !== transform) l.el.style.transform = l.transform = transform;
+      this.shownLabels.push(l);
+      l.ox = rx - sx;
+      l.oy = ry - sy;
+    }
+    return out;
   }
 
   /** T-1621: between full placements, for a camera change other than a flat pan (zoom, rotation,

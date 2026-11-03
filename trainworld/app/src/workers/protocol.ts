@@ -562,6 +562,8 @@ export interface ClockState {
   /** the clock worker only: each node's station complex (0xffffffff none), for drawing one waiting
    * room and car park per complex (T-1528) */
   complexOf?: Uint32Array;
+  /** the clock worker only: each of `buildings`' corners as lng, lat pairs, for drawing them (T-2219) */
+  buildingLL?: number[][];
   render: ClockRender;
   /** where two tracks cross at one height (T-629), 5 numbers each: x, y (local units), kind (0
    * flat, 1 bad), level, built (1 when both tracks are) */
