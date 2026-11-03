@@ -82,7 +82,7 @@ function BuildingButton({ s }: { s: StationInput }) {
   const d = buildingDraft.value;
   const drawing = tool.value === "building" && !!d && (b ? d.id === b.id : d.id === null);
   const state = drawing || b ? " on" : "";
-  const tip = `Station building\nJoins every station it touches into one complex so that people can transfer.\nCosts ${perArea(BUILDING_PER_M2 * 1e6)}\n`
+  const tip = `Station building\nJoins every station it touches into one complex so that people can transfer.\nChanging trains inside it feels a little quicker.\nCosts ${perArea(BUILDING_PER_M2 * 1e6)}\n`
     + (drawing ? "Click to stop" : b ? "Built. Click to change its outline" : "Click, then change its outline on the map");
   const click = () => {
     if (drawing) return live.tools?.exit();

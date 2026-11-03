@@ -469,7 +469,7 @@ fn an_inter_city_start_waits_the_planned_wait() {
     let sk = skims(&build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[1.0, 1.0], &[2.0, 20.0]), &p), &p);
     assert!((sk.r[1] - 26.0).abs() < 1e-4, "{}", sk.r[1]);
     assert!((entry(&sk)[1] - 17.0).abs() < 1e-4, "{}", entry(&sk)[1]);
-    assert!((planned_board_cost(240.0, 1.0, &p) - p.transfer_min - 30.0).abs() < 1e-5);
+    assert!((planned_board_cost(240.0, 1.0, 1.0, &p) - p.transfer_min - 30.0).abs() < 1e-5);
     // every 10 minutes, then a change onto an hourly line: the change waits 30 as before
     let sk = skims(&build_graph(&common_test_net(&[&[0, 1], &[1, 2]], &[6.0, 1.0], &[2.0, 2.0]), &p), &p);
     let s = sk.s;
@@ -806,6 +806,61 @@ fn a_change_costs_fixed_minutes_and_the_walk_between_platforms() {
     assert_eq!((legs[0].change, legs[2].change), (0.0, 2.0));
     let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
     assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
+}
+
+/// T-2220: a change at a station in a station building counts 0.8 of its fixed minutes (1.6); its
+/// platform walk, the wait, the first boarding, the transfer fare and stations outside are as
+/// before.
+#[test]
+fn a_change_in_a_station_building_counts_less() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 1], &[1, 2]], &[12.0, 12.0], &[2.0, 2.0]);
+    let s = net.n_stations();
+    net.st_y[1] = 40.0;
+    net.stop_x = net.line_stops.iter().map(|&st| net.st_x[st as usize]).collect();
+    net.stop_y = vec![0.0, 0.0, 80.0, 0.0];
+    let plain = skims(&build_graph(&net, &p), &p);
+    let walk = p.xfer_min(80.0) * p.w_xfer;
+    // waits 2.5, rides 2, the change's fixed 2 and its walk
+    assert!((plain.r[2] - (2.5 + 2.0 + 2.0 + walk + 2.5 + 2.0)).abs() < 1e-4, "{}", plain.r[2]);
+    // a building round the first station only: the first boarding pays no change there or here
+    net.st_ups = vec![upgrades::IN_BUILDING, 0, 0, 0];
+    let first = skims(&build_graph(&net, &p), &p);
+    assert!(first.r.iter().zip(&plain.r).all(|(a, b)| a == b || (a - b).abs() < 1e-4), "a building where nobody changes changes nothing");
+    net.st_ups = vec![0, upgrades::IN_BUILDING, 0, 0];
+    let g = build_graph(&net, &p);
+    assert_eq!((g.change_f(1), g.change_f(0)), (0.8, 1.0));
+    let sk = skims(&g, &p);
+    assert!((sk.r[2] - (2.5 + 2.0 + 1.6 + walk + 2.5 + 2.0)).abs() < 1e-4, "{}", sk.r[2]);
+    assert!((sk.r[s + 2] - plain.r[s + 2]).abs() < 1e-4, "a trip starting in the building pays no change");
+    // the trip explorer: 1.6 on the change, the walk whole
+    let legs = &super::super::trip::routes(&g, &sk, &p, 0, 2, 0.005)[0].1;
+    assert_eq!(legs.iter().map(|l| l.kind).collect::<Vec<_>>(), vec![1, 2, 1]);
+    assert!((legs[2].change - 1.6).abs() < 1e-6 && legs[0].change == 0.0);
+    assert!((legs[1].perc - walk).abs() < 1e-5);
+    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
+    assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
+    // a transfer fare is paid whole
+    let pf = Params { xfer_fare: 3.0, ..p };
+    let fare = skims(&build_graph(&net, &pf), &pf);
+    assert!((fare.r[2] - sk.r[2] - 3.0).abs() < 1e-4, "{} {}", fare.r[2], sk.r[2]);
+}
+
+/// T-2220: a walk between two stations in one building is whole; only the boarding's fixed minutes
+/// at the far one count 0.8.
+#[test]
+fn a_walk_between_building_stations_is_whole() {
+    let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    let mut net = common_test_net(&[&[0, 1], &[2, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+    net.st_group = vec![0, 1, 1, 3];
+    let walk_edge = |g: &Graph, r: usize, to: u32| (g.adj_off[g.n_st + r] as usize..g.adj_off[g.n_st + r + 1] as usize).find(|&e| g.adj_to[e] == to).map(|e| g.adj_cost[e]).unwrap();
+    let plain = skims(&build_graph(&net, &p), &p);
+    net.st_ups = vec![0, upgrades::IN_BUILDING, upgrades::IN_BUILDING, 0];
+    let g = build_graph(&net, &p);
+    // route nodes: line 0 run 0 = 0, 1 (stations 0, 1); line 1 run 0 = 4, 5 (2, 3)
+    assert_eq!(walk_edge(&g, 1, 2), p.xfer_min(2000.0) * p.w_xfer);
+    let sk = skims(&g, &p);
+    assert!((plain.r[3] - sk.r[3] - 0.4).abs() < 1e-4, "{} {}", plain.r[3], sk.r[3]);
 }
 
 /// T-161: stations of one complex are walking transfers whatever the distance, costed like any

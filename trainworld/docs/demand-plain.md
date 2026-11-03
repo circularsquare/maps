@@ -117,7 +117,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
   two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
-  walkways: 300 m takes 2.5 minutes rather than 5.4. Nobody changes back onto the line they just
+  walkways: 300 m takes 2.5 minutes rather than 5.4. Inside a station building the player drew,
+  the fixed 2 minutes count 0.8, so 1.6; the walk and the wait are as anywhere. Nobody changes back onto the line they just
   left to go back the way they came: on a full line people wait at their station. Where a line
   comes back through a station (a loop on a stalk), people may change there onto the same line
   heading somewhere else, like any change.

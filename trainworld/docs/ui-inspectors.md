@@ -660,7 +660,8 @@ stations are constructed.
 - **The tool** starts only from the station building icon at the end of the upgrade row (no Build tab
   button or key). On a complex with no building it opens on the smallest rectangle round the
   complex's boxes, turned to its longest platform, 15 m out from them (`offeredRectangle`); on one
-  with a building it opens that outline to edit. Its hover: "Station building", what it does, "Costs
+  with a building it opens that outline to edit. Its hover: "Station building", what it does (it joins
+  the stations it touches; "Changing trains inside it feels a little quicker.", T-2220), "Costs
   $2,000 per m²" ($186 per sq ft with US units), then "Click, then change its outline on the map",
   or "Built. Click to change its outline", or "Click to stop" while drawing.
 - **A closed outline** shows its corners as round handles and each edge's middle as a small one.

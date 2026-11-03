@@ -390,7 +390,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   members are every station whose platform touches it, at any level, constructed or not: the
   platform's centre line (as the complexes see it) inside the outline or within 8 m of an edge
   (half a drawn box's width). Worked out again whenever stations or outlines change, never saved;
-  a building joins its members into one complex as a passage would, at the plain change pace.
+  a building joins its members into one complex as a passage would, at the plain change pace, and
+  a change inside it counts 0.8 of its fixed minutes, the walk whole (T-2220, demand-kernel.md 4.4).
   US$2,000 a m² of floor, paid at once, no upkeep, counted in the built value; a new outline pays
   for the floor the old one did not cover and refunds nothing for floor given up; removing it
   refunds nothing. Not in the undo history (`Network::buildings`, saved in a trailing `BLD1` block

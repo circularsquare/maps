@@ -5,6 +5,10 @@ export const UPGRADE = { terminal: 1, parkRide: 2, waitingRoom: 4, passing: 8 } 
 /** In the station panel's order; the clock worker's `upgradeCost` answer follows it too. */
 export const UPGRADE_BITS: number[] = [UPGRADE.terminal, UPGRADE.parkRide, UPGRADE.waitingRoom, UPGRADE.passing];
 
+/** Set on a station building's members in demand's snapshot only, never bought or saved (T-2220,
+ * `upgrades::IN_BUILDING`): a change there counts 0.8. */
+export const IN_BUILDING = 16;
+
 export interface UpgradeText {
   bit: number;
   name: string;

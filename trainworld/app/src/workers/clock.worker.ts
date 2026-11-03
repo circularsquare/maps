@@ -31,8 +31,8 @@ import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from 
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
-import { buildingsFrom, withBuildingLinks } from "../game/buildings";
-import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
+import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
+import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
@@ -2871,6 +2871,12 @@ function buildSnapshot(): NetworkSnapshot {
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   const cx = complexesOf(snapshotComplexes, geo, links);
   stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
+  // T-2220: a change inside a station building is quicker; the bit is the snapshot's alone, never saved
+  const blds = buildingsOf(a);
+  if (blds.length) {
+    const inside = new Set(buildingMembers(blds, geo, groundK).flat());
+    for (const s of stations) if (inside.has(String(s.id))) s.upgrades = (s.upgrades ?? 0) | IN_BUILDING;
+  }
   // T-1281: the links are passages, walked faster; between constructed stations only
   const built = new Set(geo.map((g) => g.id));
   const passages = links.filter(([p, q]) => built.has(p) && built.has(q)).map(([p, q]) => [Number(p), Number(q)] as [number, number]);

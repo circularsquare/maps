@@ -184,7 +184,12 @@ levels:
    the arrival's cost (`platform_walk`), and which lines join the pool does not depend on the
    platform arrived at; the trip explorer shows each route's own walk. A change across one
    platform walks nothing, platforms 80 m apart cost 2.0 perceived minutes, 120 m 3.0 and a linked
-   pair 1 km apart 25, each with the fixed 2. The members stay separate demand stations joined by walk edges rather
+   pair 1 km apart 25, each with the fixed 2. **In a station building** (T-2220) the fixed minutes
+   count `upgrades::BUILDING_CHANGE` (0.8): the clock worker sets `upgrades::IN_BUILDING` in the
+   snapshot upgrades of each building's members (game/buildings.ts, never saved), and a boarding at
+   such a station pays 1.6 fixed minutes (`Graph::change_f`; the first boarding's take-back alike;
+   any transfer fare whole). Walks are whole: at 0.8 they made a building's effect hang on which
+   platforms its outline took in. The members stay separate demand stations joined by walk edges rather
    than one merged station: each keeps its own catchment and position, a long link is not a free
    teleport, and transfers stay counted platform to platform for the complex map (T-176). The
    trip explorer shows such a change as a walk between the two stations. The 100 m merge is single

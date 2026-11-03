@@ -860,6 +860,15 @@ notes/T-420.md has the tables.
   (Paris's Chatelet, Tokyo's Otemachi, Hong Kong's Central-Hong Kong walkway) have stairs, gates
   and crowds that slow them below 2 m/s, and riders dislike them more than their minutes say.
   Check: a few published passage times against the rule.
+- **Changes inside a station building** (T-2220, Anita's yes, 2026-11-03: "changes inside it a
+  little faster"). At a station the player has drawn a building round, a change's fixed 2 perceived
+  minutes count 0.8 (1.6); the walk between platforms, the wait and any transfer fare are
+  unchanged (with the walk at 0.8 too, a building that left one line's platforms outside swung a
+  parallel line 83% on New York). A flat judgement figure the player buys, the waiting room's 0.8
+  again; it reads nothing local. Why it may not carry over: some real hubs are slow to
+  change in however big their roof (Shinjuku, Chatelet, Penn Station's levels), where signage,
+  stairs and crowds, not the roof, decide the time. Check: published interchange times inside a few
+  big single-roof stations (Berlin Hbf, Tokyo, Grand Central) against the rule's.
 - **Station upgrades in demand** (T-1281, Anita's yes, 2026-10-25). A park and ride takes 10
   perceived minutes off a ride's fixed 15 to or from that station; a waiting room counts the
   half-headway wait there at 0.8 of its minutes, in route choice as in mode choice. Both are flat
