@@ -308,9 +308,21 @@ fn junction_delay_matches_the_spec_example() {
     let run = &w.svc.lines[a as usize].runs[0];
     assert!(run.holds[HIGH].iter().any(|h| h.delay == 27.0));
     assert!(run.prof[HIGH].hold >= 27.0);
+    // T-1966: the map's guard gets the same pair, as the two owners' moves
+    let pairs = super::capacity::move_conflicts(&w.net, &w.svc.lines);
+    assert_eq!(pairs.len(), 1, "{pairs:?}");
+    assert_eq!(pairs[0][0], j);
+    let moves_of = |l: u32, r: usize| {
+        let run = &w.svc.lines[l as usize].runs[r];
+        let k = run.nodes.iter().position(|&n| n == j).unwrap();
+        [run.segs[k - 1], run.segs[k]]
+    };
+    let got = [[pairs[0][1], pairs[0][2]], [pairs[0][3], pairs[0][4]]];
+    assert!(got.contains(&moves_of(a, 0)) && got.contains(&moves_of(b, 1)), "{got:?}");
     // A flying junction removes it.
     let (w, _, _, _) = y_junction([15.0, 18.0, 0.0], true);
     assert!(!w.svc.cap.res.iter().any(|r| r.kind == ResKind::Junction));
+    assert!(super::capacity::move_conflicts(&w.net, &w.svc.lines).is_empty());
 }
 
 #[test]

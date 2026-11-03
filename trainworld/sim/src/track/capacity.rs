@@ -744,6 +744,53 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
     }
 }
 
+/// T-1966: the junction moves that cross at the same level (the pairs `build_nodes` loads each
+/// other's junction resource with), over every line that is ok, running or not, for the map's
+/// train guard: per pair, the node and each move's arriving and leaving path entries as its run
+/// lists them.
+pub fn move_conflicts(net: &Network, lines: &[LineSvc]) -> Vec<[u32; 5]> {
+    let mut moves: Vec<(u32, f64, f64, u32, u32)> = vec![]; // node, pA, pB, in entry, out entry
+    for ls in lines {
+        if !ls.ok || ls.is_bus() {
+            continue;
+        }
+        for run in &ls.runs {
+            for k in 1..run.nodes.len().saturating_sub(1) {
+                let n = run.nodes[k];
+                let (p, q) = (run.segs[k - 1], run.segs[k]);
+                if net.node_ports[n as usize].n < 3 || net.node_flying[n as usize] || net.turns_back(p, q) {
+                    continue;
+                }
+                let (ein, win) = (path_edge(p), 1 - path_dir(p));
+                let (eout, wout) = (path_edge(q), path_dir(q));
+                let (pa, pb) = if net.port_side(ein, win).unwrap_or(0) == 0 {
+                    (track_pos(net, n, ein, win, true), track_pos(net, n, eout, wout, true))
+                } else {
+                    (track_pos(net, n, eout, wout, false), track_pos(net, n, ein, win, false))
+                };
+                moves.push((n, pa, pb, p, q));
+            }
+        }
+    }
+    moves.sort_by(|a, b| (a.0, a.3, a.4).cmp(&(b.0, b.3, b.4)));
+    moves.dedup_by(|a, b| (a.0, a.3, a.4) == (b.0, b.3, b.4));
+    let mut out = vec![];
+    let mut i = 0;
+    while i < moves.len() {
+        let end = moves[i..].partition_point(|x| x.0 == moves[i].0) + i;
+        for a in i..end {
+            for b in a + 1..end {
+                let (x, y) = (&moves[a], &moves[b]);
+                if (x.1 - y.1) * (x.2 - y.2) < 0.0 {
+                    out.push([x.0, x.3, x.4, y.3, y.4]);
+                }
+            }
+        }
+        i = end;
+    }
+    out
+}
+
 /// When a run leaves offset `s` (after standing there), from its free profile.
 fn leave_at(run: &super::service::Run, s: f64) -> f64 {
     let first = run.stop_s.first().copied().unwrap_or(0.0);

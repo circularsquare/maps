@@ -113,6 +113,10 @@ export function laneState(zoom: number) {
  * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
  * full (T-559). */
 export const CROWD_ZOOM = STATION_BOX_ZOOM;
+/** T-1966: trains wait for each other at flat crossings and crossing junction moves from this zoom,
+ * where a train is drawn as its cars at about its true length, so two at a crossing read apart;
+ * further out they are drawn through each other (Anita, 2026-11-03: only where we're looking closely). */
+export const CONFLICT_ZOOM = STATION_BOX_ZOOM;
 const CROWD_RGB = rgbf("#77726d");
 /** The track drawn through a station box (T-236) is at most this share of the box's white, so the
  * crowd shows beside it. */
@@ -1774,7 +1778,7 @@ export class NetworkRenderer {
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
       this.detailedTrains = zoom >= STATION_BOX_ZOOM && !opt.hollowTrains;
       const tw = interp(zoom, TRAIN_PX) * dpr * k;
-      this.guardTrains(time, cam, a, project, vp[0] / dpr, vp[1] / dpr);
+      this.guardTrains(time, cam, a, project, vp[0] / dpr, vp[1] / dpr, zoom >= CONFLICT_ZOOM);
       gl.useProgram(this.trainProg);
       gl.uniform1i(this.trainU.u_hollow, opt.hollowTrains ? 1 : 0);
       gl.useProgram(this.trainProg);
@@ -1840,23 +1844,23 @@ export class NetworkRenderer {
   }
 
   /** T-1965: hold trains in view back behind those ahead on their track (`TrainGuard`), and upload
-   * their lags when they change. `w`, `h`: the view, CSS px. */
-  private guardTrains(time: number, cam: Camera, a: Anchor, project: Project, w: number, h: number) {
+   * their lags when they change. `w`, `h`: the view, CSS px; `close`: zoomed in to CONFLICT_ZOOM. */
+  private guardTrains(time: number, cam: Camera, a: Anchor, project: Project, w: number, h: number, close: boolean) {
     const t0 = performance.now();
-    this.guardTrainsOn(time, cam, a, project, w, h);
+    this.guardTrainsOn(time, cam, a, project, w, h, close);
     this.guardMs = performance.now() - t0;
   }
   /** ms the guard took the last frame (checks) */
   guardMs = 0;
   private guardOut: [number, number] = [0, 0];
-  private guardTrainsOn(time: number, cam: Camera, a: Anchor, globeProject: Project, w: number, h: number) {
+  private guardTrainsOn(time: number, cam: Camera, a: Anchor, globeProject: Project, w: number, h: number, close: boolean) {
     let changed = this.lagDirty;
     this.lagDirty = false;
     if (this.follow) {
       // the flat map's projection without an array a call (`projector` makes one each)
       const m = cam.globe ? null : mul4(cam.merc, localToMercMatrix(a)), out = this.guardOut;
       const project = m ? (x: number, y: number) => { clipToCss(m, x, y, w, h, out); return out; } : globeProject;
-      changed = this.guard.update({ time, epoch: this.tripEpoch, trips: this.trips, ends: this.tripEnds, nexts: this.tripNexts, project, w, h }) || changed;
+      changed = this.guard.update({ time, epoch: this.tripEpoch, trips: this.trips, ends: this.tripEnds, nexts: this.tripNexts, project, w, h, close }) || changed;
     } else if (this.guard.lag.some((v) => v !== 0)) {
       this.guard.lag.fill(0);
       changed = true;

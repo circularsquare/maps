@@ -142,6 +142,8 @@ export interface NetworkBuffers {
   pathEntry?: Int32Array;
   pathFrom?: Float32Array;
   pathLen?: Float32Array;
+  /** T-1966, for the train guard: `ClockState.conflicts` */
+  conflicts?: Float64Array;
   /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
@@ -1196,6 +1198,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathEntry,
     pathFrom,
     pathLen,
+    conflicts: s.conflicts,
     turnbacks,
     edgePts,
     anchor: anchor(),

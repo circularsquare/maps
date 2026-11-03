@@ -516,6 +516,9 @@ export interface ClockState {
   /** where two tracks cross at one height (T-629), 5 numbers each: x, y (local units), kind (0
    * flat, 1 bad), level, built (1 when both tracks are) */
   crossings?: Float32Array;
+  /** T-1966: the flat crossings and crossing junction moves trains are held at on screen
+   * (`TrackApi.guard_conflicts`) */
+  conflicts?: Float64Array;
   money: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
    * `render` */

@@ -1384,6 +1384,7 @@ function buildState(): ClockState {
     return out;
   });
   const crossings = markPoints(a.crossings_info(), 5);
+  const conflicts = a.guard_conflicts();
   const tq4 = performance.now(); timing.sRest = tq4 - tq3;
   const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;
@@ -1398,6 +1399,7 @@ function buildState(): ClockState {
     markers,
     fullTrack,
     crossings,
+    conflicts,
     cash: a.cash(),
     builtCost,
     blueprintCost,

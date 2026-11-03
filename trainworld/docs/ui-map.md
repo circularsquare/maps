@@ -406,8 +406,27 @@ change; only links are saved. Riders change between any two stations of a comple
   A train still held when its next trip is due takes that trip late by the rest. At most 20 minutes
   behind (past that it is let through), and a clock jump of over 15 minutes starts every train on
   its timetable. Clicks, hover tags, the train panel and following a selected train use the drawn
-  place. Flat crossings and junction moves are not guarded (T-1966). `?perfOff=follow` or
-  `renderer.follow` turns it off.
+  place. `?perfOff=follow` or `renderer.follow` turns it off.
+- **Waiting at flat crossings** [T-1966, `map/trainGuard.ts`]: zoomed in to `CONFLICT_ZOOM` (14,
+  where trains are drawn as cars at about their true length), trains in or near the view wait for
+  each other at flat crossings and at junction moves that cross (the track model's conflicting
+  pairs, `TrackApi.guard_conflicts`). The rule is by time: each train's time over a conflict comes
+  from its timetable and lag, from its front 20 m short of the point to its back 10 m past it (a
+  train standing over it at its run's end or start holds it for the whole stand). One already over
+  it keeps it; the rest go in the order they reach it (those already over another conflict
+  first), each standing with its front 20 m short until every train on a crossing route ahead of
+  it has cleared, then going on late (the same lag as above). A train that will have to wait at a
+  conflict before its back clears the one it is at stands short of that one too, so it never stops
+  on a crossing. A train first looked at (come into view, zoomed in to, after a clock jump) takes
+  its turn by its timetable too, so two found over one point are parted. Trains of a line with
+  crossings but no shared track are then also held behind the train ahead on their track, as
+  above, so one queues behind a train waiting at a crossing; a train standing out its turn at the
+  end of its run holds no one there.
+  No wait is longer than 4 minutes (`CONFLICT_WAIT_MAX`), and a train already 8 minutes late
+  waits no more: past either it is let over, drawn through whatever is there. Zoomed out further, trains are drawn through each other at
+  crossings. The timetable already carries the average wait at each conflict as a hold
+  (track-and-service.md 6.2), so the drawn wait changes no run time, boarding or demand.
+  `?perfOff=crossWait` or `renderer.guard.crossings` turns it off.
 - **How full** [T-103, T-207, T-218, T-230]: the core fills from its back like a gauge across the
   whole consist, in the dark shade of the line colour (48% of the line RGB) over an 18% white tint.
   Half full is every seat taken, full is packed to crush, from the boarding account

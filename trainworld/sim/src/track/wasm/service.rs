@@ -310,6 +310,25 @@ impl TrackApi {
         out
     }
 
+    /// T-1966: the conflicts the map's train guard holds trains at: `[flat crossings, per crossing:
+    /// edge 1, where it is along edge 1 from its node a (0..1), edge 2, along edge 2; junction
+    /// pairs, per pair: node, one move's arriving and leaving path entries, the other's]`.
+    pub fn guard_conflicts(&self) -> Vec<f64> {
+        let net = &self.w.net;
+        let mut out = vec![0.0];
+        for c in net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))) {
+            let at = |e: u32, s: f64| (s / net.edge_len[e as usize].max(1e-9)).clamp(0.0, 1.0);
+            out.extend([c.e1 as f64, at(c.e1, c.s1), c.e2 as f64, at(c.e2, c.s2)]);
+            out[0] += 1.0;
+        }
+        let pairs = crate::track::capacity::move_conflicts(net, &self.w.svc.lines);
+        out.push(pairs.len() as f64);
+        for p in pairs {
+            out.extend(p.iter().map(|&v| v as f64));
+        }
+        out
+    }
+
     /// The flat junctions (no flyover, no station) and flat crossings a line's route passes, in
     /// route order (T-629): per mark `[4 junction | 5 crossing, the stop it follows, how far on
     /// to the next stop 0..1, x, y, number of other lines there, those lines' numbers]`. Other

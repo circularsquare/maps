@@ -61,6 +61,8 @@
 //   strokeGather the visible strokes drawn range by range, not gathered into one buffer (before T-1644; `renderer.strokeGather`)
 //   bands    lines sharing track drawn over each other, not side by side (before T-1799; `renderer.lineBands`), whatever Settings says (T-1886)
 //   follow   every train drawn on its own timetable, through the trains ahead on its track (before T-1965; `renderer.follow`)
+//   crossWait trains drawn through each other at flat crossings and crossing junction moves (before
+//            T-1966; `renderer.guard.crossings`)
 //   daySums  the bubbles of a day other than a weekday are asked of the workers' live state each
 //            round, and a cached result keeps a weekday's alone (before T-1904)
 //   prebuild the bubbles of an end not on show are built only when it is picked, and a newer
@@ -85,7 +87,7 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
 /** T-2058: how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : perfOff("bandsOrder") ? "smooth" : "smooth,order");
