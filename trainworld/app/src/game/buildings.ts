@@ -9,7 +9,7 @@
 //
 // Pure geometry, no signals (checks/t2217-buildings.mjs runs it in node).
 
-import { platformOffsets, segmentGap } from "./complexes";
+import { BOX_TOUCH_M, platformOffsets, segmentGap } from "./complexes";
 import type { BuildingInput, StationId, StationInput } from "./types";
 
 export type { BuildingInput };
@@ -17,6 +17,13 @@ export type { BuildingInput };
 /** A platform this near the outline touches it, ground m: half a drawn box's width (BOX_TOUCH_M);
  * the track model's `building::TOUCH_M`. */
 export const BUILDING_TOUCH_M = 8;
+
+/** US$M a m² of floor, the track model's `upgrades::BUILDING_PER_M2`: US$2,000. */
+export const BUILDING_PER_M2 = 0.002;
+/** The rectangle the upgrade row offers stands this far out from the boxes, ground m (T-2218). */
+export const OFFER_PAD_M = 15;
+/** Snaps turn an edge within this of a right angle to the building's axis (T-2218). */
+export const SNAP_RAD = (10 * Math.PI) / 180;
 
 type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length" | "line">;
 
@@ -104,4 +111,94 @@ export function withBuildingLinks<T extends readonly (readonly [StationId, Stati
     lastLinks = buildingLinks(buildings, stations, kAt);
   }
   return lastLinks.length ? [...links, ...lastLinks] : links;
+}
+
+// ---------------------------------------------------------------- the tool's shapes (T-2218)
+// Pack units throughout: the frame is conformal, so its angles are true ones.
+
+/** The smallest rectangle round these stations' boxes, turned to the longest platform, OFFER_PAD_M
+ * out from them: four corners, flat, its first edge along that platform. Null for no platform. */
+export function offeredRectangle(stations: readonly Geo[], kAt: (y: number) => number = () => 1): number[] | null {
+  const plat = stations.filter((s) => s.length > 0);
+  if (!plat.length) return null;
+  const lead = plat.reduce((a, b) => (b.length > a.length ? b : a));
+  const c = Math.cos(lead.heading), s = Math.sin(lead.heading);
+  let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity, my = 0;
+  for (const st of plat) {
+    const p = platformOffsets(st, kAt(st.y));
+    my += st.y / plat.length;
+    for (let i = 0; i + 1 < p.length; i += 2) {
+      const x = st.x + p[i], y = st.y + p[i + 1];
+      const u = x * c + y * s, v = -x * s + y * c;
+      u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v);
+    }
+  }
+  const pad = (BOX_TOUCH_M / 2 + OFFER_PAD_M) * kAt(my);
+  u0 -= pad; u1 += pad; v0 -= pad; v1 += pad;
+  return [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].flatMap(([u, v]) => [u * c - v * s, u * s + v * c]);
+}
+
+/** The direction of the line along `axis` or a right angle to it nearest the direction `a`, if within
+ * `tol` of it (radians); else null. */
+export function snapAngle(a: number, axis: number, tol = SNAP_RAD): number | null {
+  const q = Math.PI / 2;
+  const k = Math.round((a - axis) / q);
+  const d = a - axis - k * q;
+  return Math.abs(d) <= tol ? axis + k * q : null;
+}
+
+type P = { x: number; y: number };
+
+/** The line through `from` along `axis` or a right angle to it that the edge from `from` to `p` is
+ * within `tol` of, as its direction; null for none (or no length). */
+export function snapLine(from: P, p: P, axis: number, tol = SNAP_RAD): number | null {
+  const dx = p.x - from.x, dy = p.y - from.y;
+  return dx || dy ? snapAngle(Math.atan2(dy, dx), axis, tol) : null;
+}
+
+/** `p` moved onto the line through `o` along direction `a`. */
+export function ontoLine(o: P, a: number, p: P): P {
+  const c = Math.cos(a), s = Math.sin(a), t = (p.x - o.x) * c + (p.y - o.y) * s;
+  return { x: o.x + c * t, y: o.y + s * t };
+}
+
+/** Where the lines through `o1` along `a1` and through `o2` along `a2` meet; null when parallel. */
+export function meet(o1: P, a1: number, o2: P, a2: number): P | null {
+  const c1 = Math.cos(a1), s1 = Math.sin(a1), c2 = Math.cos(a2), s2 = Math.sin(a2);
+  const den = c1 * s2 - s1 * c2;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((o2.x - o1.x) * s2 - (o2.y - o1.y) * c2) / den;
+  return { x: o1.x + c1 * t, y: o1.y + s1 * t };
+}
+
+/** How far the direction from `o` to `p` is off direction `a`, radians (either way along the line). */
+function offLine(o: P, p: P, a: number): number {
+  const d = Math.atan2(p.y - o.y, p.x - o.x) - a;
+  const r = ((d % Math.PI) + Math.PI) % Math.PI;
+  return Math.min(r, Math.PI - r);
+}
+
+/** A corner at `p` between corners `prev` and `next` (either may be absent), each edge to it turned
+ * to a right angle of `axis` when within `tol`. Where both snap, their meeting point when it is within
+ * `reach` of `p` (so a corner held near a right angle stays there), else the edge nearer its line
+ * alone (so a corner dragged further follows the pointer along it). */
+export function snapCorner(p: P, prev: P | null, next: P | null, axis: number, tol = SNAP_RAD, reach = Infinity): P {
+  const a = prev ? snapLine(prev, p, axis, tol) : null;
+  const b = next ? snapLine(next, p, axis, tol) : null;
+  if (a !== null && b !== null) {
+    const m = meet(prev!, a, next!, b);
+    if (m && Math.hypot(m.x - p.x, m.y - p.y) <= reach) return m;
+    return offLine(prev!, p, a) <= offLine(next!, p, b) ? ontoLine(prev!, a, p) : ontoLine(next!, b, p);
+  }
+  if (a !== null) return ontoLine(prev!, a, p);
+  if (b !== null) return ontoLine(next!, b, p);
+  return p;
+}
+
+/** The outline's floor in pack units², even-odd area (shoelace). */
+export function outlineArea(c: ArrayLike<number>): number {
+  const n = c.length / 2;
+  let s = 0;
+  for (let i = 0, j = n - 1; i < n; j = i++) s += c[2 * j] * c[2 * i + 1] - c[2 * i] * c[2 * j + 1];
+  return Math.abs(s) / 2;
 }

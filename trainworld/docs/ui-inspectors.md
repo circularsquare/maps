@@ -572,6 +572,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
     demand model's routed walk ([demand-mode.md](demand-mode.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
   - **Passages**: each passage touching the complex, its length (price on hover) and Remove.
+  - **Station building** [T-2218]: the complex's building (below), if any.
     The panel has no Trip from here button (the T key starts a trip from any tab) and no
     commuters, "where they live or work" or inter-city trips sections [T-1812].
 - **Station view** (one station opened alone) has its level under the name ("Level +1"), then in place of the
@@ -590,8 +591,9 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof),
   passing tracks (a through track with a track bowing out each side; hover "Allow faster trains to
   pass slower trains that are stopped here", Anita's wording; only where the station is on double
-  track or already has them) [T-2232] and passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
-  passage, the first two for every station of the complex at once [T-1528]: built at all of them or
+  track or already has them) [T-2232], passage (two platforms and a walkway) and station building (a hall round a platform,
+  T-2218, below); in complex view park and ride, the waiting room, the
+  passage and the station building, the first two for every station of the complex at once [T-1528]: built at all of them or
   none, a complex where only some have it shows as not built and a click builds it at the rest,
   priced one station's price at each station that has none, and a click on a built one removes it
   from all. A single station's Remove station is at the panel's bottom, in red text (Anita, T-1852:
@@ -651,6 +653,50 @@ their chips, its length and Remove (nothing refunded once built). Only the playe
 removed: stations the distance rule groups cannot be split. Passages are not in the Ctrl+Z history
 (a setting, like fares); removing a station drops its passages. Demand counts a passage once both
 stations are constructed.
+
+## Station buildings
+
+[T-2218, `map/buildingDraw.ts`, `map/buildingFloors.ts`, `game/buildingView.ts`; the rules in
+[track-and-service.md](track-and-service.md) "Station buildings"; design notes/T-2208.md 3]
+
+- **The tool** starts only from the station building icon at the end of the upgrade row (no Build tab
+  button or key). On a complex with no building it opens on the smallest rectangle round the
+  complex's boxes, turned to its longest platform, 15 m out from them (`offeredRectangle`); on one
+  with a building it opens that outline to edit. Its hover: "Station building", what it does, "Costs
+  $2,000 per m²" ($186 per sq ft with US units), then "Click, then change its outline on the map",
+  or "Built. Click to change its outline", or "Click to stop" while drawing.
+- **A closed outline** shows its corners as round handles and each edge's middle as a small one.
+  Drag a corner to move it; right click a corner to delete it (3 at least); drag an edge's middle to
+  make a new corner there. The bar at the map's bottom left says "New station building: 4 corners"
+  (or "Station building outline") with Cancel (Esc) and Construct, or Save outline, (Enter).
+- **Drawing by hand**: Esc drops a new outline (a second Esc leaves the tool). Each click places a
+  corner, a ghost edge follows the pointer, the outline so far is shaded closed through it; a click on
+  the first corner (12 px), a double click or Enter closes it; Backspace or a right click takes back
+  the last corner.
+- **The snap** (Ctrl held: none): the first edge turns to the axis of a platform within 50 m of the
+  first corner when within 10°; every later edge to the first edge's direction or a right angle to it
+  when within 10°; a corner within 8 px of a line along those directions through the first corner
+  lands on it. With three corners at a right angle the fourth shows as a ghost and Enter takes it. A
+  dragged corner snaps both its edges where they meet within 8 px of the pointer, else only the one
+  nearer its line, so a rectangle's corner can be dragged out of square.
+- **The tag** by the pointer, from the track model's quote of the outline (closed, or through the
+  pointer while drawing): its floor ("102,000 m²"), its price ("$204M"; editing, "$32.2M for the added
+  floor") and "13 stations inside"; or the refusal, red: "A station building has 3 to 24 corners",
+  "The outline cannot cross itself", "Keep the corners within 1 km of each other", "A station building
+  needs at least 1,000 m²", "Station buildings cannot overlap", "Draw the building round a built
+  station". Over a handle it says what dragging does. Construct or Save outline refused for any of
+  these (or money) keeps the tool on with the reason as a notice.
+- **Notices**: "Station building built at Times Sq-42 St for $204M.", "Times Sq-42 St station building
+  changed for $32.2M." (or "... changed."), "Removed the Times Sq-42 St station building."
+- **In the panel**, after Passages, "Station building": its name, renamed in place (`NameEdit`, free),
+  "Area" and its floor, then Edit outline and Remove building. Remove building, and the delete tool
+  on the floor ("Remove the Times Sq-42 St station building"), ask first: "Remove the Times Sq-42 St
+  station building? Nothing is refunded." Neither is in the Ctrl+Z history.
+- **On the map**, for now (the full drawing is T-2219): from zoom 13, fading in to zoom 14 (the floor
+  at 60% until then), a floor of #f9f7f3 in both themes with one rim in the stations' ink, drawn with
+  the car parks under the track and the boxes; a building with no station inside at half strength;
+  the one being edited is left to the tool. The floor's hover: its name and "Station building" (and
+  "No station inside" when empty); a click on it selects the complex, as a car park's does.
 
 ## The trip explorer
 

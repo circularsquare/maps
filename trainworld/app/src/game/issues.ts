@@ -1,7 +1,7 @@
 // The track model's problem kinds (`TrackApi.issue_kinds`, sim/src/track/wasm.rs) in plain
 // words for the player. Player-facing text: copy rules in Anita's CLAUDE.md.
 
-import { length, money, roughDistance } from "./format";
+import { area, length, money, roughDistance } from "./format";
 
 const TEXT: Record<string, string | (() => string)> = {
   "Geom:ZeroLeg": "Two points are in the same place.",
@@ -49,6 +49,14 @@ const TEXT: Record<string, string | (() => string)> = {
   BranchNoRoom: "Track cannot branch off just past this platform, because a junction or another station is too close.",
   Internal: "That edit failed and was undone.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
+  // T-2218: station buildings (sim/src/track/building.rs)
+  BuildingCorners: "A station building has 3 to 24 corners.",
+  BuildingEdgesCross: "The outline cannot cross itself.",
+  BuildingTooWide: () => `Keep the corners within ${roughDistance(1000)} of each other.`,
+  BuildingTooSmall: () => `A station building needs at least ${area(1000)}.`,
+  BuildingOverlap: "Station buildings cannot overlap.",
+  BuildingNoStation: "Draw the building round a built station.",
+  NoSuchBuilding: "That station building is not there any more.",
 };
 
 /** What a refused edit would have bought (T-1696): the money refusal names it. */

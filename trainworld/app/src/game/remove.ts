@@ -11,8 +11,8 @@ import { andList, bigDistance, distance } from "./format";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
-/** `bus`: a bus line by its number, route and line together. */
-export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number };
+/** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
+export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number } | { kind: "building"; id: number };
 
 /** T-1161: the track a piece's removal keeps at its a and b ends, m. Past a station the removal
  * would leave at a bare end, half its platform and 4 m stay, so the station keeps its place; the
@@ -63,6 +63,10 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
     // T-2194: removing a ferry line keeps its ports and is undoable, so it asks nothing
     return l && b ? { what: l.name, built: b.built && !b.ferry } : null;
   }
+  if (r.kind === "building") {
+    const b = w.save.buildings?.find((x) => x.id === r.id);
+    return b ? { what: `the ${b.name} station building`, built: true } : null;
+  }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);
     return s ? { what: `${s.built ? "the built station " : ""}${s.name}${s.built ? "" : " station"}`, built: s.built } : null;
@@ -103,6 +107,7 @@ function opOf(r: Removable): EditOp {
   if (r.kind === "track") return { op: "removeEdge", edge: r.edge };
   if (r.kind === "station") return { op: "removeStation", node: r.node };
   if (r.kind === "bus") return { op: "removeLine", line: r.line };
+  if (r.kind === "building") return { op: "removeBuilding", id: r.id };
   return { op: "flying", node: r.node, flying: false };
 }
 
@@ -127,7 +132,7 @@ export async function removeThing(r: Removable) {
     if (wasSelected) selection.value = null;
     say(`Removed ${d.what}.`);
   };
-  const lines = r.kind === "flyover" || r.kind === "bus" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
+  const lines = r.kind === "flyover" || r.kind === "bus" || r.kind === "building" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
   const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);

@@ -14,6 +14,8 @@ import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
 import { LOT_STRIDE } from "./facilityPlace";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
+import { floorAt } from "./buildingFloors";
+import { buildingMembersById } from "../game/buildingView";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -376,14 +378,14 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     const first = current?.kind === "train" ? r.tripIndex(current.profile, current.dep - r.tripsEpoch) : -1;
     const at = pointerLocal(ov, px, py);
     // T-724: only trips on a stretch of line near the pointer are placed (same answers)
-    const marked = at ? markNearBlocks(n, at[0], at[1], (Math.sqrt(best) + 1) * at[2] + 3 * r.laneShiftM + r.bandReach * r.bandShiftM + (BAND_M_RANGE / 2) * r.bandOn + 1) : null;
+    const marked = at ? markNearBlocks(n, at[0], at[1], (Math.sqrt(best) + 1) * at[2] + 3 * r.laneShiftM + r.passShiftM + r.bandReach * r.bandShiftM + (BAND_M_RANGE / 2) * r.bandOn + 1) : null;
     for (let k = r.tripCount - (first >= 0 ? 0 : 1); k >= 0; k--) {
       const i = k === r.tripCount ? first : k;
       if (k < r.tripCount && i === first) continue;
       // drawn where the guard holds it (T-1965)
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i);
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
-      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn);
+      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM);
       if (!at) continue;
       if (r.detailedTrains) {
         const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
@@ -470,5 +472,9 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   // a car park, under everything (T-1528): the station its hover names, so its complex
   const lot = ov.renderer.lotAt(px, py, (x, y) => ov.toScreen(x, y));
   if (lot >= 0) return { kind: "station", station: n.stationIds[ov.renderer.lots.lots[lot * LOT_STRIDE + 8]] };
+  // a station building's floor, under that (T-2218): its complex, through its first member
+  const floor = floorAt(ov, px, py);
+  const member = floor && buildingMembersById.peek().get(floor.id)?.[0];
+  if (member) return { kind: "station", station: member };
   return null;
 }

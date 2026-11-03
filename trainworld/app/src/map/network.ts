@@ -14,7 +14,7 @@ import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markDat
 import { placeFacilities } from "./facilityPlace";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
+import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
@@ -41,6 +41,10 @@ export const F_HSR = 256;
 /** A line segment where its band's shift eases (T-1799, between two knots that differ): strokeLod
  * never merges it with segments either side, whose Traffic view shift may differ. */
 export const F_EASE = 512;
+/** A passing station's outer track (T-2233, `passingTracks`), in `turnbacks`: its lane value is how far
+ * out it is, 0 on the running track to 255 on the outer track; F_PASS_LEFT on the left of its way. */
+export const F_PASSING = 1024;
+export const F_PASS_LEFT = 2048;
 
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
@@ -130,8 +134,17 @@ export interface NetworkBuffers {
   sampleBand?: Float32Array;
   /** the edges that run side by side as one ribbon (T-1799 stage 3): `CORRIDOR_STRIDE` numbers each (`LineBands.corridor`) */
   corridor?: Float32Array;
-  /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`) */
+  /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`), and
+   * passing stations' outer tracks (T-2233, `F_PASSING`) */
   turnbacks?: Strokes;
+  /** T-2233: per train sample, m past the nearest end of a platform with passing tracks where its line
+   * stops (below 0 along the platform), where its trains move out to the outer track (`passBow`
+   * over PASS_LEAD_M); absent or large: none near */
+  samplePass?: Float32Array;
+  /** T-2233, for the train guard: every passing station on each line's path, PASS_STRIDE numbers
+   * each, by line then along run 0: line, offset along run 0 (m), half the platform (m), node, 1
+   * where the line stops there */
+  passing?: Float32Array;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
   edgePts: Map<number, Float32Array>;
   /** The draw anchor every position here is relative to (T-307, geo.ts): the clock worker's when
@@ -616,6 +629,67 @@ function terminalSidings(b: StrokeBuilder, s: ClockState, ways: (node: number) =
 }
 
 /**
+ * Passing tracks' outer pair (T-2233): at each station in `at`, each of its ways from the node, a
+ * track either side along the platform that bows back onto the running track over PASS_LEAD_M past
+ * its end. The renderer sets how far out the outer track is (`passingState`); lane values say how
+ * far along the bow (`passBow`) a point is.
+ */
+function passingTracks(b: StrokeBuilder, at: readonly ClockState["nodes"][number][], ways: (node: number) => [number, Float32Array][]) {
+  const LEAD_CUTS = 8;
+  for (const n of at) {
+    const ws = ways(n.id);
+    if (ws.length < 2) continue;
+    const perM = 1 / Math.cos(n.lat * Math.PI / 180);
+    const flags = F_PASSING | (n.stationBuilt ? 0 : F_FADED);
+    const d0 = n.platform / 2 * perM, d1 = d0 + PASS_LEAD_M * perM;
+    const cuts = Array.from({ length: LEAD_CUTS + 1 }, (_, j) => d0 + (d1 - d0) * j / LEAD_CUTS);
+    for (const [edge, p] of ws) {
+      const pts: number[] = [p[0], p[1], p[2]], lane: number[] = [255];
+      let d = 0;
+      for (let k = 0; k + 1 < p.length / 3 && d < d1; k++) {
+        const len = Math.hypot(p[k * 3 + 3] - p[k * 3], p[k * 3 + 4] - p[k * 3 + 1]);
+        const end = Math.min(d + len, d1);
+        for (const c of cuts) if (len > 0 && c > d && c < end) {
+          const t = (c - d) / len;
+          for (let j = 0; j < 3; j++) pts.push(p[k * 3 + j] + (p[k * 3 + 3 + j] - p[k * 3 + j]) * t);
+          lane.push(Math.round(255 * passBow((c - d0) / (d1 - d0))));
+        }
+        const t = len > 0 ? (end - d) / len : 1;
+        for (let j = 0; j < 3; j++) pts.push(p[k * 3 + j] + (p[k * 3 + 3 + j] - p[k * 3 + j]) * t);
+        lane.push(Math.round(255 * passBow((end - d0) / (d1 - d0))));
+        d += len;
+      }
+      if (pts.length < 6) continue;
+      for (const left of [false, true]) b.add(pts, TRACK, edge, flags | (left ? F_PASS_LEFT : 0), false, 0, undefined, lane);
+    }
+  }
+}
+
+/** Where each line's trains are at passing stations (T-2233), from the stations in `at`: per line, for
+ * every one on its path, `PASS_STRIDE` numbers (`NetworkBuffers.passing`); and per train sample, how far
+ * past the nearest platform's end where the line stops, m (`NetworkBuffers.samplePass`). */
+export const PASS_STRIDE = 5;
+function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, ClockState["nodes"][number]>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, lens: readonly number[], out: number[]): number[] {
+  const stops = new Set(l.stops.slice(1, -1));
+  const mine: number[] = [];
+  let d = 0;
+  const visit = (node: number, off: number) => {
+    const n = at.get(node);
+    if (!n || !n.stationBuilt) return;
+    const stop = stops.has(node);
+    out.push(l.id, off, n.platform / 2, node, stop ? 1 : 0);
+    if (stop) mine.push(off, n.platform / 2);
+  };
+  // (a run's ends are where its trains turn, on the running track)
+  l.path.forEach((p, k) => {
+    const e = edgeEnds.get(p >> 1);
+    d += lens[k] ?? 0;
+    if (e && k + 1 < l.path.length) visit((p & 1) ? e.a : e.b, d);
+  });
+  return mine;
+}
+
+/**
  * An edge's drawn points for a line on it (T-1799): with a point added at each knot of its band
  * (`lineBands`), and per point its shift and `1 - width share` (`StrokeBuilder.add`'s `band`). `b`:
  * the line's band profile, `k` the path entry, in its travel direction (`reverse`: b to a).
@@ -948,7 +1022,14 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const onEdge = linesOnEdges(s);
   const edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
   const edgeEnds = new Map(s.edges.map((e) => [e.id, e]));
+  // stations whose passing tracks work: on double track (T-2233, sim `overtake::passing_at`)
+  const doubleAt = new Set<number>();
+  for (const e of s.edges) if (e.tracks === 2) doubleAt.add(e.a).add(e.b);
+  const passingAt = new Map<number, ClockState["nodes"][number]>();
+  for (const n of s.nodes) if (n.platform > 0 && hasUpgrade(n.upgrades, UPGRADE.passing) && doubleAt.has(n.id)) passingAt.set(n.id, n);
+  const passing: number[] = [];
   const nSamples = r.samples.length / 2;
+  const samplePass = new Float32Array(passingAt.size ? nSamples : 0).fill(1e9);
   const sampleStroke = new Int32Array(nSamples).fill(-1);
   const sampleLane = new Float32Array(nSamples).fill(1);
   const sampleBand = new Float32Array(nSamples * 2);
@@ -1031,6 +1112,14 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     }
     sampleLane.set(sm.lane, first);
     if (sm.band.length) sampleBand.set(sm.band, first * 2);
+    if (passingAt.size && !l.bus) {
+      const mine = linePassing(l, passingAt, edgeEnds, lens, passing);
+      for (let k = 0; k < count && mine.length; k++) {
+        let v = 1e9;
+        for (let j = 0; j < mine.length; j += 2) v = Math.min(v, Math.abs(k * step - mine[j]) - mine[j + 1]);
+        samplePass[first + k] = v;
+      }
+    }
   }
   cache.lines = linesSeen;
   cache.samples = samplesSeen;
@@ -1089,7 +1178,11 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const p = edgePts.get(id), e = edgeEnds.get(id);
     return !p || !e ? new Float32Array(0) : e.a === node ? p : reversed(p);
   };
-  const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => terminalSidings(b, s, (n) => (waysAt.get(n) ?? []).map((id) => [id, way(n, id)])));
+  const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => {
+    const ways = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => [id, way(n, id)]);
+    terminalSidings(b, s, ways);
+    passingTracks(b, [...passingAt.values()], ways);
+  });
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
   const nodeLocal = new Map<number, [number, number]>();
@@ -1116,7 +1209,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-1528: one waiting room and one car park per complex
@@ -1210,6 +1303,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathLen,
     conflicts: s.conflicts,
     turnbacks,
+    ...(passingAt.size ? { samplePass, passing: new Float32Array(passing) } : {}),
     edgePts,
     anchor: anchor(),
     serial,
@@ -1282,8 +1376,9 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
  * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`); `bandM`:
  * metres a line width is drawn, where its line's band shifts it (T-1799, `NetworkRenderer.bandShiftM`),
  * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
- * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number } | null {
+ * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). `passM`: metres out to a
+ * passing station's outer track, where its trains stop (T-2233, `NetworkRenderer.passShiftM`). */
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -1292,11 +1387,11 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d, run, shiftM, bandM, band, bandOn), s, run, line, shiftM, bandM, band, bandOn };
+  return { ...pointAt(n, line, d, run, shiftM, bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM };
 }
 
 /** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
-function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0) {
+function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0) {
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
   const dx = fx - bx, dy = fy - by;
@@ -1309,7 +1404,22 @@ function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0
     ox += dy * k;
     oy -= dx * k;
   }
+  const bow = passM && n.samplePass && len > 1e-9 ? passBow(sampleValue(n, n.samplePass, line, d) / PASS_LEAD_M) : 0;
+  if (bow > 0) {
+    // the outer track to the right of its travel, as the train shader's `shiftAt`
+    const k = passM * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) / len;
+    ox += (-dy * k - ox) * bow;
+    oy += (dx * k - oy) * bow;
+  }
   return { x: x + ox, y: y + oy, dx, dy };
+}
+
+/** A per-sample value of a line at offset `d` along run 0, between its samples. */
+function sampleValue(n: NetworkBuffers, v: Float32Array, line: number, d: number): number {
+  const first = n.lineTable[line * 4];
+  if (n.lineTable[line * 4 + 1] < 2) return v[first] ?? 1e9;
+  const [si, f] = sampleSegment(n, line, d);
+  return v[si] + (v[si + 1] - v[si]) * f;
 }
 
 /** A line's band at offset `d` along run 0 (`b`, 2 per sample): [shift, line widths left of it; metres to its ribbon's middle]. */
@@ -1336,7 +1446,7 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM, at.band, at.bandOn);
+  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM, at.band, at.bandOn, at.passM);
   const [cx, cy] = lineAt(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
   const [bx, by] = lineAt(n, at.line, carD - half), [fx, fy] = lineAt(n, at.line, carD + half);
   return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };

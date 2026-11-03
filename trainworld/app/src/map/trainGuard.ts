@@ -16,8 +16,13 @@
 // renderer's `CONFLICT_ZOOM`), where two trains at a crossing read apart; further out they are drawn
 // through each other. The timetable already carries the average wait (track-and-service.md 6.2);
 // this only draws one.
+//
+// T-2233: at a station with passing tracks a train that stops is drawn on the outer track and one that
+// does not on the running track beside it, so there neither holds the other: the one place order on a
+// track may change.
 
-import { profileS, type NetworkBuffers } from "./network";
+import { PASS_STRIDE, profileS, type NetworkBuffers } from "./network";
+import { PASS_LEAD_M } from "./stationGeometry";
 import { perfOff } from "../perfFlags";
 
 /** Room left between a held train's front and the back of the train ahead, m. */
@@ -44,6 +49,10 @@ export const CONFLICT_WAIT_MAX = 240;
 const HOLD_TOL_M = 1;
 /** path entries of one move in one key: in * MOVE_KEY + out */
 const MOVE_KEY = 2 ** 26;
+/** A train stopping at a passing station is on its outer track, out of the way, once its back is
+ * this share of the outer track's lead short of the platform (drawn 90% of the way out), until its
+ * front is past the lead. */
+const PASS_IN = 0.2;
 
 /** What the guard needs of the frame: the time and the view. */
 export interface GuardFrame {
@@ -119,6 +128,13 @@ export class TrainGuard {
   private seen = new Uint8Array(0);
   /** checks: when an array, each train let over at CONFLICT_WAIT_MAX is noted in it */
   log: unknown[] | null = null;
+  /** T-2233, per line: the passing stations it stops at (offset along run 0, half the platform, node,
+   * as `NetworkBuffers.passing`), and those it runs through */
+  private passStops = new Map<number, number[]>();
+  private passThrough = new Map<number, Set<number>>();
+  /** since the last `resetCounts`: train pairs found beside each other at a passing station, summed
+   * over frames (checks) */
+  passedBy = 0;
   /** trains also wait for each other at flat crossings and crossing junction moves (T-1966) */
   crossings = !perfOff("crossWait");
 
@@ -127,11 +143,27 @@ export class TrainGuard {
     this.conflictWaits = 0;
     this.conflictWaitSum = 0;
     this.conflictLetThrough = 0;
+    this.passedBy = 0;
   }
 
   setNetwork(n: NetworkBuffers) {
     if (n === this.net) return;
     this.net = n;
+    this.passStops.clear();
+    this.passThrough.clear();
+    const P = n.passing;
+    if (P) for (let k = 0; k + PASS_STRIDE <= P.length; k += PASS_STRIDE) {
+      const line = P[k];
+      if (P[k + 4]) {
+        const v = this.passStops.get(line);
+        if (v) v.push(P[k + 1], P[k + 2], P[k + 3]);
+        else this.passStops.set(line, [P[k + 1], P[k + 2], P[k + 3]]);
+      } else {
+        const v = this.passThrough.get(line);
+        if (v) v.add(P[k + 3]);
+        else this.passThrough.set(line, new Set([P[k + 3]]));
+      }
+    }
     this.crossOn.clear();
     this.moveIdx.clear();
     this.moveRes = [];
@@ -395,14 +427,34 @@ export class TrainGuard {
       const back = sNew[c] + off - half[c];
       return back < zone && back + 2 * half[c] > 0 ? Math.max(back, 0) : Infinity;
     };
+    // T-2233: the passing station each candidate stands at on its outer track (-1 none), and a pair
+    // where one is there and the other runs through it, so is beside it
+    const outer = this.passStops.size ? this.outerAt(f, cand, cs, half) : null;
+    const beside = (a: number, b: number) => {
+      const p = f.trips[cand[a] * 2], q = f.trips[cand[b] * 2];
+      return (outer![a] >= 0 && !!this.passThrough.get(Math.floor(q / 6))?.has(outer![a])) || (outer![b] >= 0 && !!this.passThrough.get(Math.floor(p / 6))?.has(outer![b]));
+    };
+    const besideIn = outer ? lists.map((v) => {
+      for (let j = 0; j < v.length; j += REG) if (outer[v[j]] >= 0) return true;
+      return false;
+    }) : null;
     for (let pass = 0; pass < 6; pass++) {
       let moved = false;
-      for (const v of lists) {
+      lists.forEach((v, li) => {
         let m = Infinity;
         for (let j = 0; j < v.length; j += REG) {
           const c = v[j], off = v[j + 1], zone = v[j + 2];
-          if (m < Infinity) {
-            const cap = m - gapM - off - half[c];
+          let mc = m;
+          if (besideIn?.[li]) {
+            // each train ahead holds it unless the two are beside each other
+            mc = Infinity;
+            for (let q = 0; q < j; q += REG) {
+              if (beside(c, v[q])) { if (pass === 0) this.passedBy++; continue; }
+              mc = Math.min(mc, holds(v[q], v[q + 1], v[q + 2]));
+            }
+          }
+          if (mc < Infinity) {
+            const cap = mc - gapM - off - half[c];
             if (sNew[c] > cap + 1e-6) {
               sNew[c] = cap;
               moved = true;
@@ -410,7 +462,7 @@ export class TrainGuard {
           }
           m = Math.min(m, holds(c, off, zone));
         }
-      }
+      });
       if (!moved) break;
     }
     // a held candidate's lag: the time in its run when it was at its new place
@@ -621,6 +673,21 @@ export class TrainGuard {
       if (waitRes[i] >= 0 && waitFrom[i] !== -Infinity && !mustWait.has(c)) waitRes[i] = -1;
     }
     return changed;
+  }
+
+  /** Per candidate, the passing station whose outer track it is on (`PASS_IN`), -1 none (T-2233). */
+  private outerAt(f: GuardFrame, cand: number[], cs: number[], half: number[]): Int32Array {
+    const meta = this.net!.meta, out = new Int32Array(cand.length).fill(-1);
+    for (let c = 0; c < cand.length; c++) {
+      const p = f.trips[cand[c] * 2], st = this.passStops.get(Math.floor(p / 6));
+      if (!st) continue;
+      const run0 = Math.floor(p / 3) % 2 === 0, L = meta[p * 4 + 3], s = cs[c], h = half[c];
+      for (let k = 0; k < st.length; k += 3) {
+        const at = run0 ? st[k] : L - st[k], ph = st[k + 1];
+        if (s - h >= at - ph - PASS_IN * PASS_LEAD_M && s + h <= at + ph + PASS_LEAD_M) { out[c] = st[k + 2]; break; }
+      }
+    }
+    return out;
   }
 
   /** Trip `i`'s wait ends: it goes over at `at` (game s - epoch). */

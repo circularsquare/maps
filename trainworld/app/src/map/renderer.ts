@@ -11,7 +11,7 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_ROOM, stationAnnexes, stationCoords, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, trainStands, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -27,6 +27,7 @@ import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type 
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
 import { perfOff, perfTry } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
+import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
@@ -114,6 +115,15 @@ export function laneState(zoom: number) {
   const t = Math.max(0, Math.min(1, (gap - LANE_PART_PX) / (LANE_APART_PX - LANE_PART_PX)));
   const narrow = 1 - LANE_NARROW * Math.max(0, Math.min(1, (gap - LANE_APART_PX) / (LANE_NARROW_PX - LANE_APART_PX)));
   return { gap, grow, t, narrow, share: LANE_SHARE * narrow, reach: grow > 0 ? 0.5 * (1 + LANE_SHARE * narrow) * gap : 0 };
+}
+/** Passing stations close in (T-2233), CSS px: how far out the outer tracks are (PASS_TRACK_M on the
+ * ground, or a train's drawn width and PASS_GAP_PX if wider, so one passing never touches one standing)
+ * and the least half width of their box (that, half a train, the rim and a pixel). */
+export function passingState(zoom: number, ringPx: number) {
+  const lanes = laneState(zoom), mPx = lanes.gap / LANE_M;
+  const train = interp(zoom, TRAIN_PX) * (1 - lanes.t) + 3 * mPx * lanes.t;
+  const off = Math.max(PASS_TRACK_M * mPx, train + PASS_GAP_PX);
+  return { off, half: off + train / 2 + ringPx + 1, mPx };
 }
 /** Platform crowds (T-164, T-219): drawn from this zoom, where platforms are (T-204), as each side's
  * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
@@ -269,6 +279,8 @@ export class NetworkRenderer {
   readonly marks = new GradeMarks();
   /** the complexes' car parks (T-1528) */
   readonly lots = new ParkingLots();
+  /** the station buildings' floors (T-2218) */
+  readonly floors = new BuildingFloors();
   private res: { del: () => void }[] = [];
   private previewRes: { del: () => void }[] = [];
   private track: StrokeVao | null = null;
@@ -384,11 +396,12 @@ export class NetworkRenderer {
     }
     return out;
   }
-  /** Station `i` on screen as a platform or its own dot (stationGeometry.ts). */
-  stationShapeOf(i: number, project: Project): StationShape {
+  /** Station `i` on screen as a platform or its own dot (stationGeometry.ts); `plain`: as wide as one
+   * without passing tracks. */
+  stationShapeOf(i: number, project: Project, plain = false): StationShape {
     const n = this.net!;
     const flag = Math.round(n.stations[i * 3 + 2]);
-    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0);
+    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0, !plain && (flag & ST_PASSING) !== 0);
   }
   private hotList = new Int32Array(HOT_STATIONS);
   /** The bridge program's hovered instances (T-730): the pairs in `pairs` (station indices, two
@@ -528,6 +541,12 @@ export class NetworkRenderer {
   /** Metres a train on double track is drawn to the right of its line's centre line at the last
    * draw (T-658): 2 m once the two tracks have parted, 0 further out (picking) */
   laneShiftM = 0;
+  /** T-2233: metres from the centre line to a passing station's outer track as drawn at the last draw,
+   * where trains stopping there stand (`passingState`); 0 zoomed out (picking). `passing`: the network
+   * has passing tracks; `hadSamplePass`: its trains move out to them. */
+  passShiftM = 0;
+  private passing = false;
+  private hadSamplePass = false;
   /** T-1799: CSS px a band's shift of one line width (`Strokes.band`) is drawn at the last draw, 0
    * where lines sharing track are drawn as one stroke (picking); the same in metres for trains */
   bandPx = 0;
@@ -645,18 +664,19 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
     this.lots.init(gl);
+    this.floors.init(gl);
     this.bubbles.init(gl);
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_look", "u_band_edge", "u_band_m", "u_mute"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_look", "u_band_edge", "u_band_m", "u_mute"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1090,7 +1110,11 @@ export class NetworkRenderer {
     // the Traffic view's bands were the last network's
     const hadTraffic = this.trafficBands !== null;
     this.trafficBands = null;
-    if (hadTraffic || !(same.has("sampleLane") && same.has("sampleBand") && this.tex.lane)) this.putLane(n);
+    const passChanged = n.samplePass ? !same.has("samplePass") : this.hadSamplePass;
+    this.hadSamplePass = !!n.samplePass;
+    this.passing = false;
+    for (let i = 0; i < n.stationCount && !this.passing; i++) this.passing = (n.stations[i * 3 + 2] & ST_PASSING) !== 0;
+    if (hadTraffic || passChanged || !(same.has("sampleLane") && same.has("sampleBand") && this.tex.lane)) this.putLane(n);
     put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
     put("colours", "lineColours", () => [n.lineColours, "rgba8", LINES_W]);
     put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
@@ -1185,6 +1209,7 @@ export class NetworkRenderer {
       v[k * 4] = lane?.length ? lane[k] ?? 1 : 1;
       v[k * 4 + 1] = band?.[k * 2] ?? 0;
       v[k * 4 + 2] = band?.[k * 2 + 1] ?? 0;
+      v[k * 4 + 3] = n.samplePass?.[k] ?? 1e9;
     }
     this.putTexture("lane", v, "rgba32f", TEX_W);
   }
@@ -1424,14 +1449,17 @@ export class NetworkRenderer {
     // a dot's rim is thinner than a box's (T-322)
     const ring = boxes ? stationRing(zoom) : dotRing(zoom);
     const boxLinePx = interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx = stationRing(BOX_WIDTH_ZOOM);
-    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden };
+    // passing stations close in (T-2233): their outer tracks, the trains stopping there, their boxes
+    const pass = boxes && this.passing ? passingState(zoom, ring) : null;
+    this.passShiftM = pass ? pass.off / pass.mPx : 0;
+    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}) };
     const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
     // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
     // track and line strokes drawn again, no wider than TRACK_IN_BOX of the box's white and
     // without casing, where the stencil marks a station's white (1 the unselected, 2 the selected).
     const through = n.stationCount > 0 && boxes && this.hasStencil;
     // every box has one width on the ground (T-239); any station's gives it on screen here
-    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project).halfWidth : 0) - ring);
+    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project, true).halfWidth : 0) - ring);
     const trackCap = Math.max(1, TRACK_IN_BOX * boxWhite) * dpr;
     // T-1638: everything up to the stations changes only with the camera, the network and how it is
     // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
@@ -1442,6 +1470,7 @@ export class NetworkRenderer {
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
+    if (redraw) this.floors.draw(cam, vp, dpr, zoom);
     if (redraw && zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
@@ -1521,6 +1550,7 @@ export class NetworkRenderer {
     this.laneShiftM = LANE_M / 2 * lanes.t;
     const G = lanes.gap * dpr;
     gl.uniform4f(u.u_lanes, G, lanes.t, lanes.grow, lanes.share * G);
+    gl.uniform1f(u.u_pass_off, pass ? pass.off * dpr : 0);
     const modes = lanes.t > 0 ? [1, 2, 3] : [0];
     const picked = new Map<StrokeVao, { vao: StrokeVao; ranges: number[] | null }>();
     if (redraw) {
@@ -1580,6 +1610,8 @@ export class NetworkRenderer {
         if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, cap);
       }
       gl.uniform1i(u.u_bp_part, 0);
+      // passing stations' outer tracks along their platforms (T-2233)
+      if (cap > 0 && pass) stroke(this.turnback, 0, wTrack, false, cap);
     };
     if (redraw) {
     if (this.highlight) {
@@ -1602,8 +1634,8 @@ export class NetworkRenderer {
       gl.uniform1i(u.u_lane_mode, 0);
     }
     trackStrokes();
-    // where lines turn back, over their tracks (T-658d)
-    if (lanes.t > 0) stroke(this.turnback, 0, wTrack, false);
+    // where lines turn back, over their tracks (T-658d), and passing stations' outer tracks (T-2233)
+    if (lanes.t > 0 || pass) stroke(this.turnback, 0, wTrack, false);
     gl.uniform1i(u.u_ghost, 1);
     // the ghost, and a placed segment's stand-in until its network is drawn (T-1407)
     for (const g of [this.placed, this.preview]) {
@@ -1683,6 +1715,7 @@ export class NetworkRenderer {
       // local units per px at BOX_WIDTH_ZOOM (the box's width, T-204)
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
       gl.uniform2f(su.u_fixed, (boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) - (opt.boxShrinkPx ?? 0)) * dpr, unitAtBox);
+      gl.uniform1f(su.u_pass_half, (pass ? pass.half - (opt.boxShrinkPx ?? 0) : 0) * dpr);
       gl.bindVertexArray(this.stationVao);
       gl.uniform1f(su.u_pixel, dpr);
       gl.uniform1i(su.u_layer, 0);
@@ -1861,6 +1894,7 @@ export class NetworkRenderer {
       // on its line's band (T-1799)
       gl.uniform1f(this.trainU.u_bands, this.bandPx * dpr);
       gl.uniform1f(this.trainU.u_bands_m, this.bandMPx * dpr);
+      gl.uniform2f(this.trainU.u_passing, pass ? pass.off * dpr : 0, pass ? 1 : 0);
       gl.bindVertexArray(this.trainVao);
       // every train but the selected; then the selected one's halo, round the whole consist as one
       // pill; then the selected train over it (T-242)

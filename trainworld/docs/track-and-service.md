@@ -399,7 +399,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   (`BuildingCorners`), edges that cross (`BuildingEdgesCross`), two corners more than 1 km apart
   (`BuildingTooWide`), under 1,000 m² (`BuildingTooSmall`), more than 1 m² over another building
   (`BuildingOverlap`), no constructed station touching it (`BuildingNoStation`). Over water and
-  other track is fine. A station removed leaves its building standing, empty.
+  other track is fine. A station removed leaves its building standing, empty. The clock worker's
+  edit ops `addBuilding`, `reshapeBuilding`, `renameBuilding` and `removeBuilding` (T-2218) are
+  handled as a passage is: the charge (`building_charge`) booked as construction that day and hour,
+  in the region of the outline's middle; the `buildingQuote` query gives a drawn outline's floor,
+  price, stations touching and refusal. The tool and panel: ui-inspectors.md "Station buildings".
 - **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
   panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
   it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is
@@ -961,7 +965,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
   1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water), passing
   tracks the platform plus 0.4 km of it, 1.5x on high-speed track (US$22.5M for a 200 m station at
-  grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
+  grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km, a station building US$2,000 a m² of floor (T-2217). A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The
@@ -1131,7 +1135,8 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   part by the region of each boarding stop and the per-km part by passenger-km, each stretch
   between two stops half to each stop's region; running cost by route km, split the same way.
   A paid edit's construction goes to regions by the cost of the track it newly built in each
-  (track midpoint's region; with no track, its new stations' regions, evenly); its new trains by the
+  (track midpoint's region; with no track, its new stations' regions, evenly; with neither, a station
+  building's by the region of its outline's middle, T-2218); its new trains by the
   route km of the line the edit names, else as its construction. The main thread works out these
   shares (it has the zone boundaries) and sends them; a charge waits under "" until its shares
   arrive. Cash, the fleet and the fare curve stay network-wide. Saved in the header (`regions`);

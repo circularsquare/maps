@@ -14,7 +14,7 @@ import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
 import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
-import { groundDist } from "./coords";
+import { groundDist, packToLngLat } from "./coords";
 import { hsrFare } from "./fareCurve";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
@@ -178,6 +178,17 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
   if (!cost.size) {
     const built = new Set(before?.save.stations.filter((s) => s.built).map((s) => s.id) ?? []);
     for (const s of after.save.stations) if (s.built && !built.has(s.id)) add(cost, stationZone(s) ?? "", 1);
+  }
+  // T-2218: a station building added or reshaped, by its outline's middle
+  if (!cost.size) {
+    const was = new Map(before?.save.buildings?.map((b) => [b.id, b.corners.join()]) ?? []);
+    for (const b of after.save.buildings ?? []) {
+      if (was.get(b.id) === b.corners.join()) continue;
+      const n = b.corners.length / 2;
+      let x = 0, y = 0;
+      for (let i = 0; i < n; i++) x += b.corners[2 * i] / n, y += b.corners[2 * i + 1] / n;
+      add(cost, placeAt(...packToLngLat(x, y)) ?? "", 1);
+    }
   }
   const build = norm(cost);
   const runShares = line !== undefined ? lineShares.peek().get(line)?.run : undefined;

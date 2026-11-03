@@ -3,8 +3,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { lineDemand } from "../../game/demand";
-import { count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
-import { groundDist } from "../../game/coords";
+import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
+import { groundDist, groundScale } from "../../game/coords";
+import { outlineArea } from "../../game/buildings";
+import { buildingOf } from "../../game/buildingView";
 import { passagePrice } from "../../game/upgrades";
 import type { LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
@@ -259,6 +261,7 @@ export function StationInspector({ id }: { id: string }) {
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
+      {!s.port && <StationBuilding id={id} members={members} />}
       {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{s.port ? "Remove port" : "Remove station"}</button></Actions>}
     </>
   );
@@ -299,6 +302,29 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
           })}
         </ul>
       )}
+    </>
+  );
+}
+
+/** T-2218: the station building the complex belongs to: its name, floor, Edit outline and Remove building. */
+function StationBuilding({ id, members }: { id: string; members: string[] }) {
+  const b = buildingOf(members);
+  if (!b) return null;
+  const n = b.corners.length / 2;
+  let my = 0;
+  for (let i = 0; i < n; i++) my += b.corners[2 * i + 1] / n;
+  const k = groundScale(my), m2 = outlineArea(b.corners) / (k * k);
+  return (
+    <>
+      <div class="h">Station building</div>
+      <ul class="rows">
+        <li class="building-name"><NameEdit key={b.id} name={b.name} onRename={(name) => void edit({ op: "renameBuilding", id: b.id, name })} /></li>
+        <li><span class="grow">Area</span><span class="val">{area(m2)}</span></li>
+      </ul>
+      <Actions>
+        <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>Edit outline</button>
+        <button class="btn text danger" onClick={() => void removeThing({ kind: "building", id: b.id })}>Remove building</button>
+      </Actions>
     </>
   );
 }

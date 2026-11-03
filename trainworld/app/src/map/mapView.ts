@@ -102,7 +102,7 @@ function followRotation(map: maplibregl.Map) {
   effect(() => {
     const on = display.value.rotateMap;
     const t = tool.value;
-    if (on && t !== "blueprint" && t !== "bus" && t !== "ferry") map.dragRotate.enable();
+    if (on && t !== "blueprint" && t !== "bus" && t !== "ferry" && t !== "building") map.dragRotate.enable();
     else map.dragRotate.disable();
     if (!on && map.getBearing() !== 0) map.easeTo({ bearing: 0, duration: 300 });
   });

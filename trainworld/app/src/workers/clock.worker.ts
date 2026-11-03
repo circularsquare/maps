@@ -2529,7 +2529,7 @@ function postDiagram() {
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "corridor", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "samplePass", "passing", "corridor", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post
@@ -3322,6 +3322,14 @@ function apply(op: EditOp): Applied {
       return { r: loanOp(op) };
     case "link":
       return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };
+    case "addBuilding":
+      return { r: a.add_building(new Float64Array(op.corners), op.name) };
+    case "reshapeBuilding":
+      return { r: a.reshape_building(op.id, new Float64Array(op.corners)) };
+    case "renameBuilding":
+      return { r: a.rename_building(op.id, op.name) };
+    case "removeBuilding":
+      return { r: a.remove_building(op.id) };
     case "undo":
       return { r: a.undo() };
     case "redo":
@@ -3336,6 +3344,14 @@ const DROP_REFUSED = -2;
 
 function issues(): string[] {
   return api!.issue_kinds().split("\n").filter(Boolean);
+}
+
+/** T-2218: the "buildingQuote" query's answer: [m², US$M, stations touching, built ones], then the
+ * refusal's kinds as character codes, joined by newlines (none: it can be built). */
+function buildingQuoteAnswer(id: number | null, corners: number[]): Float64Array {
+  const q = api!.building_quote(id ?? 0xffffffff, new Float64Array(corners));
+  const kinds = api!.issue_kinds();
+  return new Float64Array([...q, ...Array.from(kinds, (c) => c.charCodeAt(0))]);
 }
 
 /** The "doubleUp" query's answer (protocol.ts). */
@@ -3657,6 +3673,23 @@ async function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge });
       return;
     }
+    if (msg.op.op === "addBuilding" || msg.op.op === "reshapeBuilding" || msg.op.op === "renameBuilding" || msg.op.op === "removeBuilding") {
+      // T-2218: as a passage: outside the undo history and paid at once; the complexes change with
+      // the outline, so the drawing and demand both follow
+      const { r } = apply(msg.op);
+      const charge = r === 0 && (msg.op.op === "addBuilding" || msg.op.op === "reshapeBuilding") ? api.building_charge() : 0;
+      const node = r === 0 && msg.op.op === "addBuilding" ? api.last_building() : undefined;
+      if (r === 0) {
+        dirty = edited = true; editAt = Date.now();
+        if (charge > 0) bookCharge(msg.seq, charge, 0);
+        sendState();
+        if (msg.op.op !== "renameBuilding") scheduleSnapshot();
+        keep();
+        if (charge > 0) void autosave();
+      }
+      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, node });
+      return;
+    }
     await worldWaterIntoModel();
     await masksFor(msg.op);
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await groundForBlueprint();
@@ -3817,6 +3850,7 @@ async function handle(msg: ToClock) {
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
+      : q.what === "buildingQuote" ? buildingQuoteAnswer(q.id, q.corners)
       : q.what === "lineWaits" ? api.line_waits(q.line, q.level)
       // T-2232: [station, its passing tracks' price] pairs
       : q.what === "passingSpots" ? Float64Array.from(Array.from(api.passing_spots(q.line), (n) => [n, api!.station_upgrade_cost(n, UPGRADE.passing)]).flat())

@@ -135,6 +135,12 @@ export type EditOp =
   | { op: "repay" }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
+  /** T-2218: station buildings (game/buildings.ts), paid at once and not undoable, as passages are;
+   * corners are pack x, y pairs, flat; a name "" takes the first built member's */
+  | { op: "addBuilding"; corners: number[]; name: string }
+  | { op: "reshapeBuilding"; id: number; corners: number[] }
+  | { op: "renameBuilding"; id: number; name: string }
+  | { op: "removeBuilding"; id: number }
   | { op: "undo" }
   | { op: "redo" };
 
@@ -264,7 +270,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -587,7 +593,7 @@ export interface ClockState {
 export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
-  /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
+  /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean }
   | {
       kind: "preview";

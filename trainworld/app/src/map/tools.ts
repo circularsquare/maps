@@ -57,6 +57,9 @@ import { snapBeside, snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { FerryDraw } from "./ferryDraw";
+import { BuildingDraw } from "./buildingDraw";
+import { buildingAtPack } from "../game/buildingView";
+import { BuildingFloors, startBuildingFloors } from "./buildingFloors";
 import { playBuild } from "./buildSound";
 import { perfOff } from "../perfFlags";
 
@@ -167,6 +170,8 @@ export class Tools {
   readonly bus: BusDraw;
   /** the ferry line tool (T-2194) */
   readonly ferry: FerryDraw;
+  /** the station building tool (T-2218) */
+  readonly building: BuildingDraw;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
   /** the newest request asked for; an older one's answer landing late is dropped (T-830) */
@@ -211,6 +216,9 @@ export class Tools {
     effect(() => { if (tool.value !== "bus") this.bus.clear(); });
     this.ferry = new FerryDraw(map, this.box, this.tag, overlay, { exit: () => this.exit() });
     effect(() => { if (tool.value !== "ferry") this.ferry.clear(); });
+    this.building = new BuildingDraw(map, this.box, this.tag, overlay, { exit: () => this.exit() });
+    effect(() => { if (tool.value !== "building") this.building.clear(); });
+    startBuildingFloors(overlay);
     overlay.afterMapFrame.push(() => this.place());
     // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was (a run's segment stays)
     map.getContainer().addEventListener("mouseleave", () => {
@@ -460,6 +468,7 @@ export class Tools {
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "bus") return this.bus.move(e);
     if (t === "ferry") return this.ferry.move(e);
+    if (t === "building") return this.building.move(e);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
     this.ghostSpent = false;
@@ -483,6 +492,7 @@ export class Tools {
     else if (t === "delete") this.deleteClick(e);
     else if (t === "bus") this.bus.click(e);
     else if (t === "ferry") this.ferry.click(e);
+    else if (t === "building") this.building.click(e);
   }
 
   // ---------------------------------------------------------------- touch (T-1260)
@@ -495,6 +505,7 @@ export class Tools {
     if (t === "line") return this.click(e);
     if (t === "bus") return this.bus.tap(e);
     if (t === "ferry") return this.ferry.tap(e);
+    if (t === "building") return this.building.tap(e);
     if (this.touchAt && this.nearTouch(e.point.x, e.point.y)) return void this.touchConfirm();
     const ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (t === "track") {
@@ -540,6 +551,7 @@ export class Tools {
     const t = tool.peek(), at = this.touchAt;
     if (t === "bus") return this.bus.confirm();
     if (t === "ferry") return this.ferry.confirm();
+    if (t === "building") return this.building.confirm();
     if (t === "track") {
       const from = this.start;
       if (!from || !at || this.placing) return;
@@ -572,6 +584,7 @@ export class Tools {
   private touchBack() {
     if (tool.peek() === "bus") return this.bus.touchBack();
     if (tool.peek() === "ferry") return this.ferry.touchBack();
+    if (tool.peek() === "building") return this.building.touchBack();
     if (tool.peek() !== "track") return this.touchStop();
     if (this.touchAt && this.start) {
       this.hover = null;
@@ -583,7 +596,7 @@ export class Tools {
   /** The bar's stop button: the run ends (its placed track stays) or the placement is dropped; the tool stays on. */
   private touchStop() {
     const t = tool.peek();
-    if (t === "bus" || t === "ferry") return this.exit();
+    if (t === "bus" || t === "ferry" || t === "building") return this.exit();
     if (t === "track") return this.reset();
     this.touchAt = null;
     this.hover = null;
@@ -628,6 +641,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "bus") return this.bus.touchState();
     if (t === "ferry") return this.ferry.touchState();
+    if (t === "building") return this.building.touchState();
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
       const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
@@ -649,7 +663,7 @@ export class Tools {
       touchCtl.value = ctl;
     }
     const host = this.touchHost, t = tool.peek();
-    const at = t === "bus" ? this.bus.touchPoint() : t === "ferry" ? this.ferry.touchPoint() : this.touchAt ?? (t === "track" && this.start ? this.start : null);
+    const at = t === "bus" ? this.bus.touchPoint() : t === "ferry" ? this.ferry.touchPoint() : t === "building" ? this.building.touchPoint() : this.touchAt ?? (t === "track" && this.start ? this.start : null);
     if (!ctl || !at) {
       host.style.display = "none";
       this.handle.style.display = "none";
@@ -689,6 +703,7 @@ export class Tools {
     if (t === "select") return false;
     if (t === "bus") return this.bus.key(e);
     if (t === "ferry") return this.ferry.key(e);
+    if (t === "building") return this.building.key(e);
     if (e.key === "Escape") {
       if (t === "track" && this.start) this.reset();
       else this.exit();
@@ -1095,6 +1110,11 @@ export class Tools {
       const at = this.overlay.screenToLocal(px, py);
       if (line >= 0 && at) return { kind: "bus", line, lx: at[0], ly: at[1] };
     }
+    // T-2218: a station building's floor, under everything else
+    if (!BuildingFloors.shownAt(this.map.getZoom())) return null;
+    const ll = this.map.unproject([px, py]), q = lngLatToPack(ll.lng, ll.lat), b = buildingAtPack(q.x, q.y);
+    const here = b && this.overlay.screenToLocal(px, py);
+    if (b && here) return { kind: "building", id: b.id, lx: here[0], ly: here[1] };
     return null;
   }
 
@@ -1669,10 +1689,15 @@ export class Tools {
       this.ferry.place();
       return;
     }
+    if (t === "building") {
+      this.ring.style.display = "none";
+      this.building.place();
+      return;
+    }
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
-      if (d && d.kind !== "track" && d.kind !== "bus") {
+      if (d && d.kind !== "track" && d.kind !== "bus" && d.kind !== "building") {
         this.ring.className = "snap-ring";
         this.ring.style.display = "";
         put(this.ring, d.lx, d.ly);

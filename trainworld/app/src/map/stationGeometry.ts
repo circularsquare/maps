@@ -243,6 +243,8 @@ export interface StationStyle {
   boxRingPx: number;
   /** zoomed out below STATIONS_ZOOM: only selected stations are drawn and picked (T-205) */
   hidden?: boolean;
+  /** the least half width of a box with passing tracks (ST_PASSING, T-2233) */
+  passHalfPx?: number;
 }
 
 /** A box is this share of the width that covers a plain line and its rim at BOX_WIDTH_ZOOM
@@ -333,7 +335,7 @@ export function polyFrame(q: ArrayLike<number>, a: number, b: number): [number, 
  * length and width are both fixed on the ground, so it has one shape at every zoom (T-204), and
  * the same width for every station (T-239).
  */
-export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean): StationShape {
+export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, passing = false): StationShape {
   const mx = x + sh.mx, my = y + sh.my;
   const [cx, cy] = project(mx, my), [ex, ey] = project(mx + sh.ax, my + sh.ay), [qx, qy] = project(mx - sh.ay, my + sh.ax);
   const len = Math.hypot(ex - cx, ey - cy), nl = Math.hypot(qx - cx, qy - cy);
@@ -343,7 +345,7 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const axisLoc = Math.hypot(sh.ax, sh.ay);
   const [ox, oy] = axisLoc > 1e-9 ? [0, 0] : project(mx + 1, my);
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
-  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0);
+  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0, st.boxes && passing ? st.passHalfPx ?? 0 : 0);
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
   const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle
@@ -369,7 +371,7 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
  * width or dot, with `halfWidth` its true half width (local units) and `perLoc` CSS px per local
  * unit. A pick skips a station whose node is further than this plus its line's reach (T-724). */
 export function stationReachPx(st: StationStyle, halfWidth: number, perLoc: number): number {
-  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, boxHalfPxAtBoxZoom(st));
+  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, boxHalfPxAtBoxZoom(st), st.passHalfPx ?? 0);
   return 2 * Math.max(hw, st.radius[0], st.radius[1], 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1);
 }
 
@@ -398,6 +400,21 @@ export function insideStation(s: StationShape, x: number, y: number, padding = 0
  * (drawn as the complex's lot, parkingLots.ts), a terminal. ST_BUFFER (T-1527): a terminal where
  * the track ends, so its platform's -axis end has a buffer stop. */
 export const ST_ROOM = 32, ST_FLIP = 64, ST_PARK = 128, ST_TERMINAL = 256, ST_BUFFER = 512;
+/** Passing tracks (T-2233), working: built on double track. The box is wide enough for a train on
+ * each outer track beside one passing (`passingState`). */
+export const ST_PASSING = 1024;
+/** Passing tracks' outer pair (T-2233): this far from the centre line on the ground, m (the
+ * running tracks are 2 m out), and joining the running track over this much past the platform's end. */
+export const PASS_TRACK_M = 6, PASS_LEAD_M = 100;
+/** Close in, an outer track and the train on it are at least this far out on screen, CSS px, beyond a
+ * train's width: two trains side by side never touch while drawn wider than they are. */
+export const PASS_GAP_PX = 1.5;
+/** How far along its lead (0 the platform's end, 1 where it meets the running track) a passing
+ * station's outer track is, as drawn: eased both ends. */
+export const passBow = (x: number) => {
+  const t = Math.max(0, Math.min(1, x));
+  return 1 - t * t * (3 - 2 * t);
+};
 /** The annex joined to a box (T-1416): the waiting room. */
 export const ANNEX_ROOM = 1;
 /** A terminal's box end where the track ends is a dark bar this many rims thick (T-1416, T-1527), a

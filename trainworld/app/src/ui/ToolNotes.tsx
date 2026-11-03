@@ -7,6 +7,7 @@ import { linesByNum, notice, world } from "../game/world";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
+import { buildingDraft } from "../game/buildingView";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
@@ -23,6 +24,7 @@ const HINT: Record<Tool, string> = {
   blueprint: "",
   bus: "",
   ferry: "",
+  building: "",
 };
 
 /** T-1649: a removal that breaks dozens of lines lists the first few and counts the rest. */
@@ -93,7 +95,9 @@ function Notice() {
   // T-2194: the ferry tool's the same, counting ports
   const ferry = t === "ferry" ? ferryDraft.value : null;
   const ferryLine = ferry && ferry.line !== null && world.value ? linesByNum(world.value).get(ferry.line) : undefined;
-  if (!show && !hint && !bus && !ferry) return null;
+  // T-2218: the station building tool: the outline's corners, and Construct or Save outline
+  const building = t === "building" ? buildingDraft.value : null;
+  if (!show && !hint && !bus && !ferry && !building) return null;
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = t === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
   return (
@@ -113,6 +117,15 @@ function Notice() {
           <span class="bus-acts">
             <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
             <button class="btn text" data-tip="Enter" disabled={ferry.points < 2} onClick={() => void live.tools?.ferry.finish()}>{ferryLine ? "Save route" : "Make line"}</button>
+          </span>
+        </p>
+      )}
+      {building && (
+        <p class="stop-edit-head">
+          <span>{building.id === null ? "New station building" : "Station building outline"}: {plural(building.corners, "corner")}</span>
+          <span class="bus-acts">
+            <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
+            <button class="btn text" data-tip="Enter" disabled={!building.closed} onClick={() => void live.tools?.building.finish()}>{building.id === null ? "Construct" : "Save outline"}</button>
           </span>
         </p>
       )}

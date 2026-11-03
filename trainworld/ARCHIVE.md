@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2233 [P2] Passing tracks on the map. Done 2026-11-03 (agent t2233): outer tracks bowing round the platform from zoom 14 in a wider box, stopping trains drawn on them, the guard letting through trains pass there; test line 50 passes, all at passing stations, none through a train. notes/T-2228.md 9.
+- T-2218 Station buildings 2 (2026-11-03, agent t2218): the tool from the upgrade row (the complex's rectangle, snaps, Edit outline's handles), the panel section, delete, floor hover and refusals, a plain floor and rim; worker ops and ledger. `checks/t2218-building-tool.mjs`; ui-inspectors.md "Station buildings".
+
 - T-2162 Network diagram names (2026-11-03, agent t2162): placed per zoom level in the layout worker, interchanges first; no overlaps or nearer-pill names on New York or Tokyo at any level; round Shinjuku every interchange named at 14 px, Times Sq 13 of 15 (47-50 Sts, 7 Av knot). notes/T-2162.md
 - T-2194 [P2] Ferries F3: the Ferry tool, map and panels. Done 2026-11-03 (agent t2194): ports only (key O), dashed routes, pointed boats, the bus panel in boats, Lines tab, Ferry fare row and boat rows, `fleetFerry` saved; `checks/t2194-ferry-tool.mjs`. ui-building.md "Drawing a ferry line".
 - T-2232 [P2] Passing tracks in the panels (T-2228 stage 2). Done 2026-11-03 (agent t2232, tree t2232): station icon, the line button (one edit, tracks' price shown), "Waiting for faster trains" with its places; `checks/t2232-passing-panels.mjs`. notes/T-2228.md 5, 8.

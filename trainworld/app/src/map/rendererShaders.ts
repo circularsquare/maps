@@ -6,7 +6,7 @@ import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
-import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 export const TEX_W = 2048;
 export const LINES_W = 1024;
@@ -84,6 +84,7 @@ uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 bl
 uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted (0-1), how far the
                              // stroke has grown to their width (0-1), a blueprint track's width apart
 uniform int u_lane_mode;     // 0 one stroke, 1 the band under both tracks, 2 the right track, 3 the left
+uniform float u_pass_off;    // T-2233: px from the centre line to a passing station's outer track, 0 not drawn
 uniform float u_dim;        // line strokes other than the selected line's: share of full strength (T-233)
 uniform vec2 u_mute;        // T-2058 prototype: those strokes' width share (0 as built) and colour mixed to the casing's
 uniform int u_by_level;
@@ -164,7 +165,10 @@ void main() {
   // a turn-back crossover (T-658d) goes from one track to the other: drawn once, as a track
   bool turnback = (flags & 128) != 0;
   if (turnback && (u_lane_mode != 2 || u_casing > 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float lfm = turnback ? 1.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
+  // a passing station's outer track (T-2233): one track, its lane how far out along its bow
+  bool passing = (flags & 1024) != 0;
+  if (passing && (u_pass_off <= 0.0 || u_casing > 0.0 || u_lane_mode == 1 || u_lane_mode == 3)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float lfm = turnback || (passing && u_lane_mode == 2) ? 1.0 : passing ? 0.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
   bool bpShape = bpTrack || bpLine || ghost;
   float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z;
   float core = bpShape ? u_bp.x + 2.0 * u_bp.y : u_width.x;
@@ -258,7 +262,8 @@ void main() {
   // right-hand track (-nrm) and run 1 the left
   float lv = along < 0.5 ? a_lane.x : a_lane.y;
   if (turnback) lv = 2.0 * lv - 1.0;
-  if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * lv * lane_off;
+  if (passing) off += nrm * ((flags & 2048) != 0 ? 1.0 : -1.0) * mix(u_lane_mode == 2 ? lane_off : 0.0, u_pass_off, lv);
+  else if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * lv * lane_off;
   // the slot in line widths from the ribbon's middle, and the middle in metres from the track, each
   // at the zoom in view (T-2132); through a station's box (u_cap) the bands close up as they narrow to fit
   if (bandOn > 0.0) {
@@ -379,6 +384,7 @@ uniform float u_ring;    // its dark rim (px)
 uniform float u_boxes;   // 1: platforms along the track; 0: dots (zoomed out)
 uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_ZOOM, and local
                          // units per px there; the width on the ground, and the least on screen (T-553)
+uniform float u_pass_half; // a box with passing tracks is at least this wide either side, px (T-2233)
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
 uniform highp int u_room; // 1: the waiting rooms joined to the boxes instead (T-1416)
@@ -450,6 +456,8 @@ void main() {
   // it keeps one shape from there in; further out it keeps that width on screen (T-553)
   float perLoc = axisLoc > 1e-9 ? len / axisLoc : 0.0;
   float hw = max(max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc, boxes ? u_fixed.x : 0.0);
+  // wide enough for its outer tracks' trains (T-2233)
+  if (boxes && (flags & ${ST_PASSING}) != 0) hw = max(hw, u_pass_half);
   // a dot covers a plain line through it as drawn now
   float cover = 0.3 * u_line + u_ring + u_pixel;
   float hl = max(len, hw);
@@ -789,6 +797,7 @@ uniform highp sampler2D u_lane_tex; // RGBA32F per sample: how far apart its tra
 uniform vec2 u_lane;               // px from the centre line to a track's once parted, how far parted (0-1)
 uniform float u_bands;             // px a band's shift of one line width is drawn, 0 none (T-1799)
 uniform float u_bands_m;           // and of a metre to its ribbon's middle (T-2132)
+uniform vec2 u_passing;            // T-2233: px from the centre line to a passing station's outer track, 1 drawn there
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
@@ -807,14 +816,20 @@ out float v_detail;
 out float v_cab;
 flat out float v_boat;
 
-/** How far apart the two tracks are at distance d along run 0 (laneAt in network.ts), and the
- * line's band's shift and metres there (bandAt). */
-vec3 laneAt(vec4 L, float d) {
+/** How far apart the two tracks are at distance d along run 0 (laneAt in network.ts), the
+ * line's band's shift and metres there (bandAt), and m past a passing platform it stops at (T-2233). */
+vec4 laneAt(vec4 L, float d) {
   float dd = clamp(d, 0.0, L.z);
   float i0 = clamp(floor(dd / L.w), 0.0, max(L.y - 2.0, 0.0));
   float f = clamp((dd - i0 * L.w) / max(min(L.w, L.z - i0 * L.w), 1e-3), 0.0, 1.0);
   int si = int(L.x + i0);
-  return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0).xyz, texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0).xyz, f);
+  return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0), texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0), f);
+}
+/** A train's shift across, px: on its own track (T-658), its band (T-1799, T-2132), and onto a passing
+ * station's outer track where it stops (T-2233, network.ts \`passingTracks\`). */
+float shiftAt(vec4 lb, float side) {
+  float base = side * u_lane.y * lb.x * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
+  return mix(base, side * u_passing.x, u_passing.y * (1.0 - smoothstep(0.0, ${PASS_LEAD_M.toFixed(1)}, lb.w)));
 }
 
 void main() {
@@ -848,7 +863,7 @@ void main() {
   if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
-  vec3 lb = laneAt(L, carD);
+  vec4 lb = laneAt(L, carD);
   float lane = u_lane.y * lb.x;
   px.y = mix(px.y, 3.0 * kM * u_px_per_unit, lane);
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
@@ -867,9 +882,8 @@ void main() {
   // T-2182: its two ends each shifted by the band there, so a train easing sideways with its band
   // turns with it rather than sliding crabwise
   float side = (int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0;
-  vec3 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
-  float shB = side * u_lane.y * lbb.x * u_lane.x + lbb.y * u_bands + lbb.z * u_bands_m;
-  float shF = side * u_lane.y * lbf.x * u_lane.x + lbf.y * u_bands + lbf.z * u_bands_m;
+  vec4 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
+  float shB = shiftAt(lbb, side), shF = shiftAt(lbf, side);
   if (shB != shF) {
     bs += nrm * shB;
     fs += nrm * shF;
@@ -881,7 +895,7 @@ void main() {
       sl = sl2;
     }
     // (the ends back in the frame of the train's own centre, unshifted, for the bend below)
-    float shC0 = side * lane * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
+    float shC0 = shiftAt(lb, side);
     bs -= nrm * shC0;
     fs -= nrm * shC0;
   }
@@ -908,7 +922,7 @@ void main() {
     k = clamp(k, -0.8 / halfq.y, 0.8 / halfq.y);
   }
   vec2 q = vec2(corner.x * halfq.x * (1.0 + halfq.y * abs(k)), corner.y < 0.0 ? min(0.0, ends) - halfq.y : max(0.0, ends) + halfq.y);
-  float shift = ((int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0) * lane * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
+  float shift = shiftAt(lb, side);
   c.xy += (sdir * q.x + nrm * (q.y + shift)) / half_vp * c.w;
   gl_Position = c;
   v_uv = q;

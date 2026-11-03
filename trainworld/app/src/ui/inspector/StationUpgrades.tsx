@@ -3,8 +3,14 @@
 // junction inspector's flyover does. The passage (the player's link, T-197) starts a pick of the
 // other station instead; its passages are listed below the row.
 
-import { money, roughDistance } from "../../game/format";
+import { money, perArea, roughDistance } from "../../game/format";
 import { LINK_MAX_M } from "../../game/complexes";
+import { BUILDING_PER_M2, offeredRectangle } from "../../game/buildings";
+import { buildingDraft, buildingOf } from "../../game/buildingView";
+import { complexOf } from "../../game/complexView";
+import { groundScale } from "../../game/coords";
+import { tool } from "../../game/ui";
+import { live } from "../../map/live";
 import { cancelLink, linking, linksAmong, startLink } from "../../game/links";
 import type { StationInput } from "../../game/types";
 import { hasUpgrade, PASSAGE_BASE, PASSAGE_PER_KM, UPGRADE, UPGRADE_BITS, UPGRADE_TEXT, type UpgradeText } from "../../game/upgrades";
@@ -22,6 +28,8 @@ const ICONS: Record<number, () => preact.JSX.Element> = {
 };
 // two platforms and the walkway between them
 const PassageIcon = () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 3.5h3v9h-3zM11.5 3.5h3v9h-3z" /><path d="M4.5 8h7" /></svg>;
+// a hall round a platform
+const BuildingIcon = () => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z" /><path class="solid" d="M4 7h8v2H4z" /></svg>;
 
 /** `members`: the complex's stations in complex view, where park and ride and the waiting room are
  * built for all of them at once as one shared facility (T-1528), and the passage. */
@@ -37,6 +45,7 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
     <div class="upgrades" role="group" aria-label="Complex upgrades">
       {UPGRADE_TEXT.filter((u) => u.doesAll).map((u) => <ComplexUpgrade u={u} members={members} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />)}
       <PassageButton s={s} />
+      <BuildingButton s={s} />
     </div>
   );
   // T-2231: passing tracks work on double track only
@@ -60,7 +69,34 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
         );
       })}
       <PassageButton s={s} />
+      <BuildingButton s={s} />
     </div>
+  );
+}
+
+/** T-2218: the station building tool, started on the complex's building, or on the smallest rectangle
+ * round its boxes when it has none. */
+function BuildingButton({ s }: { s: StationInput }) {
+  const members = complexOf(s.id);
+  const b = buildingOf(members);
+  const d = buildingDraft.value;
+  const drawing = tool.value === "building" && !!d && (b ? d.id === b.id : d.id === null);
+  const state = drawing || b ? " on" : "";
+  const tip = `Station building\nJoins every station it touches into one complex so that people can transfer.\nCosts ${perArea(BUILDING_PER_M2 * 1e6)}\n`
+    + (drawing ? "Click to stop" : b ? "Built. Click to change its outline" : "Click, then change its outline on the map");
+  const click = () => {
+    if (drawing) return live.tools?.exit();
+    const w = world.peek();
+    if (!w || !live.tools) return;
+    if (b) return live.tools.building.begin(b.corners, b.id, s.id);
+    const byId = stationsById(w);
+    const rect = offeredRectangle(members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x), groundScale);
+    live.tools.building.begin(rect, null, s.id);
+  };
+  return (
+    <button class={"btn icon upgrade" + state} aria-label="Station building" aria-pressed={drawing} data-tip={tip} onClick={click}>
+      <BuildingIcon />
+    </button>
   );
 }
 

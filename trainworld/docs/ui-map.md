@@ -117,6 +117,15 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   a dead-end terminus's platform, and at a through station one diagonal just outside the
   platform on the side the line arrives from, from the arrival track to the departure track. Not
   picked, no hover of its own.
+- **Passing tracks** [T-2233, `passingTracks` in `map/network.ts`, `passingState` in
+  `map/renderer.ts`]: from zoom 14, a station with passing tracks on double track has an outer
+  track either side in bare-track grey, along the platform and bowing back onto the running track
+  over 100 m past each end (eased both ends), through the box and outside it, faded on a blueprint
+  station. The outer tracks are 6 m from the centre line on the ground, or further out where trains
+  are drawn wider than they are: a train's drawn width and 1.5 px from it, so a train on one never
+  touches one passing (10.5 px at zoom 15). The box is at least wide enough for a train on each outer
+  track (about 36 px at zoom 15 against 11.25 for others); clicks, the selection outline and the
+  rest take the same width. Not picked, no hover of their own.
 - **Close in, trains keep right** [T-319]: each line's run 0 is drawn on the right-hand track of its direction
   and run 1 on the left. Under a line's two tracks is a band as wide as the pair or its traffic
   width, whichever is wider, in the line colour mixed 60% towards the casing, over one casing
@@ -394,9 +403,11 @@ number) and shows n as its symbol.
 the node at a dead end; `workers/platformLines.ts`) or the straight segment of the platform's length
 through the node along the track heading (the older rule, kept so no complex splits). Stations whose
 centres are within 100 m (demand's merge distance) are linked too, whatever their levels; a complex is everything linked
-directly or through others, plus the player's links [T-197]. Worked out whenever stations or links
-change; only links are saved. Riders change between any two stations of a complex on foot
-[T-161, [demand-kernel.md](demand-kernel.md) 4.4].
+directly or through others, plus the player's links [T-197] and every station touching one station
+building [T-2217]. Worked out whenever stations or links change; only links and buildings are saved.
+Riders change between any two stations of a complex on foot [T-161, [demand-kernel.md](demand-kernel.md) 4.4].
+A station building draws for now as a plain floor and rim under the track and boxes
+([ui-inspectors.md](ui-inspectors.md) "Station buildings"; its full drawing is T-2219).
 
 ## Trains
 
@@ -418,13 +429,25 @@ change; only links are saved. Riders change between any two stations of a comple
   find it where it is drawn (`laneShiftM`). A train's two ends are each shifted by the lane and
   band there, and it faces along the line between them, so a train easing sideways with its band
   (lines side by side) or onto its own track turns with it (T-2182).
+- **On the outer track at a passing station** [T-2233]: from zoom 14 a train of a line that stops
+  at a station with passing tracks (not at its run's ends) moves out to the outer track on its right
+  as it comes through the 100 m lead, stands there, and comes back over the far lead, following
+  the drawn track (`samplePass`: per 50 m sample, metres past the nearest such platform's end).
+  Trains of lines running through stay on the running track. Two lines' trains that both stop
+  there share the outer track.
 - **Never through the train ahead** [T-1965, `map/trainGuard.ts`]: each train is drawn from its
   own line's timetable, which can put a faster train inside a slower one on the same track (an
   edge in one direction). Each frame, for trains in or within 150 px of the view on lines that
   share track with another line, a train's front stays 30 m behind the back of the train ahead on
   its track (their true lengths; zoomed out, lines sharing track are drawn side by side), and a
   train does not move onto a merge while another is on it. Order on a track never changes from one
-  frame to the next. A held train is drawn late in its own run (`lag` per trip, an attribute on the
+  frame to the next, but at a station with passing tracks [T-2233]: a train standing on its outer
+  track (its back no more than 20 m of the lead short of the platform, its front no further than
+  past the lead) and a train of a line running through that station hold neither of each other, at
+  every zoom, so the faster one is drawn passing. Each direction of a line has one phase while the
+  timetable's holds assume each direction's own (track-and-service.md 6.2), so in one direction a
+  drawn express can catch a local between stations; it is then held behind it to the next station
+  where the local stops on passing tracks, and passes there. A held train is drawn late in its own run (`lag` per trip, an attribute on the
   GPU), so it keeps its stops and speeds and waits outside a station where the train ahead stands;
   once clear it makes the lag up at 0.3 s a game second, drawn up to 30% faster than its timetable.
   A train still held when its next trip is due takes that trip late by the rest. At most 20 minutes

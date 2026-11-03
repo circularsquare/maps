@@ -219,12 +219,13 @@ effect(() => setBubbleShade(shade.value));
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus" | "ferry";
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus" | "ferry" | "building";
 export const tool = signal<Tool>("select");
 /** T-1207: the map's camera is moving (set by map/overlay.ts); live counts in panels wait for it. */
 export const cameraMoving = { now: false };
-/** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
-export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint" || t === "bus" || t === "ferry";
+/** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). The
+ * station building tool (T-2218) starts from a station's upgrade row, but it builds too. */
+export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint" || t === "bus" || t === "ferry" || t === "building";
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. `lines`: a row each
  * under the text, after the line's bullet (T-859: what a removal does to lines). */

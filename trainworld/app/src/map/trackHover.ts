@@ -33,6 +33,9 @@ import { forecast } from "../game/format";
 import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { stretchLoad, tripsLanded } from "./stretchLoad";
 import { crowdColour } from "../game/palette";
+import { floorAt } from "./buildingFloors";
+import { buildingMembersById } from "../game/buildingView";
+import type { BuildingInput } from "../game/types";
 
 /** Daily riders on run 0's stretch `k` of a line with these `stops`, both directions: every
  * period's load summed; null when demand has no answer for it that fits its stops (T-1419: after an
@@ -144,6 +147,12 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   // each pointer move (T-1394)
   const hit = pick(ov, px, py, d.trains && !isBuildTool(tool.peek()));
   if (w && hit?.kind === "train") return trainTip(ov, w, hit.line, hit.profile, hit.dep);
+  // T-2218: a station building's floor where no box or car park is (pick gives its complex)
+  const floor = hit?.kind === "station" && floorAt(ov, px, py);
+  if (floor && hit?.kind === "station" && ov.renderer.stationAt(px, py, (x, y) => ov.toScreen(x, y), 2) < 0 && ov.renderer.lotAt(px, py, (x, y) => ov.toScreen(x, y)) < 0) {
+    if (out) out.hot = { stations: complexOf(hit.station) };
+    return buildingTip(floor);
+  }
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
     if (i >= 0 && out) out.hot = { stations: complexOf(hit.station) };
@@ -171,7 +180,12 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     }
   }
   // the ridership circles: over the bubbles, but the network beneath them keeps the hover (T-1448)
-  if (!hit) return w && !isBuildTool(tool.peek()) ? circleTip(px, py) : null;
+  if (!hit) {
+    // an empty building's floor picks nothing
+    const empty = floorAt(ov, px, py);
+    if (empty) return buildingTip(empty);
+    return w && !isBuildTool(tool.peek()) ? circleTip(px, py) : null;
+  }
   const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
   const slop = reach * reach + 1;
   if (hit.kind === "line") {
@@ -208,6 +222,11 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
 function linesOn(w: WorldView | null, edge: number): LineInput[] {
   const e = w?.edges.find((x) => x.id === edge);
   return e ? w!.save.lines.filter((l) => e.lines.includes(l.id)) : [];
+}
+
+/** T-2218: a station building's floor: its name, and that it has no station inside when so. */
+function buildingTip(b: BuildingInput): TipLine[] {
+  return (buildingMembersById.peek().get(b.id)?.length ?? 0) > 0 ? [b.name, "Station building"] : [b.name, "Station building", "No station inside"];
 }
 
 /** The elevation and speed limit at a point of an edge's track stroke, on one row (T-473, T-526,
@@ -278,7 +297,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
       if (live.nodeDrag?.hit(px, py)?.movable) return null; // a blueprint node handle
     } else if (!isBuildTool(t)) return null;
     if (t === "bus" && live.tools?.bus.onHandle) return null; // its own tag says what the point does (T-1514)
-    if (t === "ferry") return null; // its own tag says what a click there does (T-2194)
+    if (t === "ferry" || t === "building") return null; // its own tag says what a click there does (T-2194, T-2218)
     const out: { hot?: Partial<Hot> } = {};
     const lines = trackTip(ov, px, py, map.getZoom(), out);
     setPointerNet(lines && t === "select" ? out.hot ?? null : null);

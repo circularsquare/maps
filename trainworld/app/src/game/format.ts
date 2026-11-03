@@ -116,6 +116,17 @@ export function length(m: number): string {
   return `${v.toLocaleString("en-US")} ${us() ? "ft" : "m"}`;
 }
 
+/** A floor's area, three significant figures: 90700 -> "90,700 m²" or "976,000 sq ft" (T-2218). */
+export function area(m2: number): string {
+  const v = us() ? m2 * FT_PER_M * FT_PER_M : m2;
+  return `${exact(Number(v.toPrecision(3)))} ${us() ? "sq ft" : "m²"}`;
+}
+
+/** A price per area, US$ a m²: 2000 -> "$2,000 per m²" or "$186 per sq ft". */
+export function perArea(usdPerM2: number): string {
+  return us() ? `$${exact(usdPerM2 / (FT_PER_M * FT_PER_M))} per sq ft` : `$${exact(usdPerM2)} per m²`;
+}
+
 /** A distance from here: metres to the nearest 10, then kilometres; feet, then miles. */
 export function shortDistance(m: number): string {
   if (us()) {
