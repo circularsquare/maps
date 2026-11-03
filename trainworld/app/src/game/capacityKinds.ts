@@ -24,7 +24,8 @@ const EACH_WAY = " each way";
 /** Indexed by kind: 0 track, 1 single track, 2 platform, 3 terminus, 4 junction, 5 flat crossing,
  * 6 a line turning on a through station's platform, 7 track shared by several lines, 8 a line
  * turning across the other track at a through station, 9 lines reversing partway at a station (T-797),
- * 10 a terminal's sidings (T-1281). */
+ * 10 a terminal's sidings (T-1281), 12 shared track from where lines join it, a merge (T-2185).
+ * 11, behind slower trains, is never a dot or a limit. */
 export const CAPACITY_KINDS: CapacityKindText[] = [
   { name: "Track", short: "track", title: "Track", prep: "near", ways: EACH_WAY, cause: "Each train needs a gap behind it for braking and signals, longer on faster track.", help: "Run fewer trains, or make the track slower so each train needs a shorter gap." },
   { name: "Single track", short: "single track", title: "Single track", prep: "near", ways: " both ways together", cause: "Trains from both directions share one track, and each holds it from one passing point to the next.", help: "Add another track, or a station along it where trains can pass." },
@@ -38,6 +39,7 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
   { name: "Reversing partway", short: "trains reversing", title: "Reversing", prep: "at", ways: "", cause: "Trains reverse here partway along their line, at most 12 an hour on each side of a station or at a track end, or 30 at a station with a terminal.", help: "Build a terminal at the station, route the line through without reversing, or split it into two lines that end here." },
   { name: "Terminal sidings", short: "terminal sidings", title: "Terminal sidings", prep: "at", ways: "", cause: "Each train turning here stands in one of two sidings past the platform for its turnaround and a minute more.", help: "Turn some trains at another station, or end the line at a dead end with more platform tracks." },
 ];
+CAPACITY_KINDS[12] = { name: "Merge", short: "merge", title: "Merge", prep: "near", ways: "", cause: "Trains of several lines join one track here and wait for a gap on it.", help: "Give some of the lines their own track past the merge, or run fewer trains." };
 
 const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
 

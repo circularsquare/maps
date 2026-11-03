@@ -136,7 +136,8 @@ impl Capacity {
     /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
     /// reversal crossing the other track at a through station, 9 lines reversing partway at a
     /// station (T-797), 10 a terminal's sidings (T-1281), 11 a faster line held behind slower ones
-    /// (T-1924; never a map dot, its utilisation is 0).
+    /// (T-1924; never a map dot, its utilisation is 0), 12 track several lines join from different
+    /// edges at its start, a merge, where they wait for it (T-2185; `Resource::node` is that node).
     pub fn wire_kind(&self, r: usize) -> u8 {
         let kind = self.res[r].kind;
         match self.tag[r] {
@@ -145,6 +146,7 @@ impl Capacity {
             Tag::Reversal => 9,
             Tag::Sidings => 10,
             Tag::Follow { .. } => 11,
+            Tag::Section { .. } if kind == ResKind::Section && self.res[r].node != u32::MAX => 12,
             Tag::Section { .. } if kind == ResKind::Section => {
                 let users = self.users_of(r);
                 if users.iter().any(|u| u.line != users[0].line) { 7 } else { 0 }
@@ -427,23 +429,34 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
     let mut g = 0;
     let mut m = 0;
     let mut users = vec![];
+    let mut joins: Vec<(u32, u32)> = vec![]; // per user: the node it enters at, the edge it comes from (MAX: starts there)
     while g < grouped.len() {
         let root = grouped[g].0;
         let end = grouped[g..].partition_point(|x| x.0 == root) + g;
         let first_edge = keys[root as usize] / 2;
         let single = net.edge_tracks[first_edge as usize] == 1;
         users.clear();
+        joins.clear();
         let mut u = g;
         while u < end {
             let (l, r) = (grouped[u].1, grouped[u].2);
             let ue = grouped[u..end].partition_point(|x| (x.1, x.2) == (l, r)) + u;
-            let run = &lines[l as usize].runs[r as usize];
+            let ls = &lines[l as usize];
+            let run = &ls.runs[r as usize];
             let (mut entry, mut exit) = (f64::INFINITY, f64::NEG_INFINITY);
             for x in &grouped[u..ue] {
                 let i = x.3 as usize;
                 entry = entry.min(run.seg_off[i]);
                 exit = exit.max(run.node_s[i + 1]);
             }
+            let i0 = grouped[u..ue].iter().map(|x| x.3).min().unwrap_or(0) as usize;
+            let from = match (i0, run.segs.last()) {
+                (0, Some(&p)) if ls.kind == LoopKind::Circle => path_edge(p),
+                (0, _) => u32::MAX,
+                _ => path_edge(run.segs[i0 - 1]),
+            };
+            // (arriving on the track it leaves on: it turns back there, no join)
+            joins.push((run.nodes[i0], if from == path_edge(run.segs[i0]) { u32::MAX } else { from }));
             let ph = &run.free.phases;
             let occ_s = if single {
                 profile::time_at(ph, exit) - profile::time_at(ph, entry) + SINGLE_TRACK_MARGIN_S
@@ -457,10 +470,23 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
         let kf = cap.keys.len() as u32;
         cap.keys.extend(members[m..me].iter().map(|x| x.1));
         m = me;
-        let pcs = net.edge_pieces(first_edge);
-        let (x, y, _) = geom::pos_at(pcs, net.edge_len[first_edge as usize] / 2.0);
+        // T-2185: lines joining this track from two or more edges at one node (a merge) wait there
+        // for it, so it sits at that node and is worded as the merge (`node` set, wire kind 12)
+        let merge = !single && joins.iter().all(|j| j.0 == joins[0].0) && {
+            let mut from: Vec<u32> = joins.iter().map(|j| j.1).filter(|&e| e != u32::MAX).collect();
+            from.sort_unstable();
+            from.dedup();
+            from.len() >= 2
+        };
+        let (x, y, node) = if merge {
+            let n = joins[0].0;
+            (net.node_x[n as usize], net.node_y[n as usize], n)
+        } else {
+            let (x, y, _) = geom::pos_at(net.edge_pieces(first_edge), net.edge_len[first_edge as usize] / 2.0);
+            (x, y, u32::MAX)
+        };
         let kind = if single { ResKind::SingleTrack } else { ResKind::Section };
-        push_res(cap, kind, x, y, u32::MAX, first_edge, &users, Tag::Section { first: kf, count: (cap.keys.len() as u32) - kf });
+        push_res(cap, kind, x, y, node, first_edge, &users, Tag::Section { first: kf, count: (cap.keys.len() as u32) - kf });
         g = end;
     }
 }

@@ -325,6 +325,42 @@ fn junction_delay_matches_the_spec_example() {
     assert!(super::capacity::move_conflicts(&w.net, &w.svc.lines).is_empty());
 }
 
+/// T-2185: the Y's two lines join one track towards T at J, so their trains wait at J for it: that
+/// shared track is the merge (wire kind 12), at J, and the map marks it from 75% like every other
+/// resource. Leaving T together and parting at J is plain shared track. A flyover keeps the merge.
+#[test]
+fn merge_waits_are_at_the_join() {
+    for flying in [false, true] {
+        let (w, a, b, j) = y_junction([12.0, 4.0, 0.0], flying);
+        let cap = &w.svc.cap;
+        let merges: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 12).collect();
+        assert_eq!(merges.len(), 1, "flying {flying}");
+        let r = merges[0];
+        assert_eq!(cap.res[r].kind, ResKind::Section);
+        assert_eq!(cap.res[r].node, j);
+        assert_eq!((cap.res[r].x, cap.res[r].y), (w.net.node_x[j as usize], w.net.node_y[j as usize]));
+        let mut owners: Vec<(u32, u8)> = cap.users_of(r).iter().map(|u| (u.line, u.run)).collect();
+        owners.sort_unstable();
+        assert_eq!(owners, vec![(a, 1), (b, 1)], "both lines towards T");
+        assert!((0..cap.res.len()).any(|q| cap.wire_kind(q) == 7 && cap.res[q].node == u32::MAX), "the other way is shared track");
+        // 24 trains an hour at high demand, 8 at medium: marked at high only, each train waiting
+        // Kingman's delay for two equal lines, held just short of J
+        let s = cap.users_of(r).iter().map(|u| u.occ).sum::<f64>() / 2.0;
+        let rho = cap.rho[r][HIGH];
+        assert!((rho - 24.0 * s / 3600.0).abs() < 1e-9 && rho >= 0.75, "{rho}");
+        assert!(cap.rho[r][MEDIUM] < 0.75);
+        // (a schedule by frequency rounds its waits to the second)
+        assert_eq!(cap.delay[r][HIGH], super::capacity::kingman(rho, 0.5, s).round());
+        assert!(w.busy(HIGH).iter().any(|m| m.0 == r && m.1 == ResKind::Section));
+        assert!(!w.busy(MEDIUM).iter().any(|m| m.0 == r));
+        for l in [a, b] {
+            let run = &w.svc.lines[l as usize].runs[1];
+            let at_j = run.node_s[run.nodes.iter().position(|&n| n == j).unwrap()];
+            assert!(run.holds[HIGH].iter().any(|h| h.delay == cap.delay[r][HIGH] && h.s < at_j && h.s > at_j - 200.0), "line {l} waits short of J");
+        }
+    }
+}
+
 #[test]
 fn blueprint_quote_accounts_for_partial_junctions_and_flyovers() {
     let (mut w, _, _, j) = y_junction([12.0, 6.0, 3.0], true);

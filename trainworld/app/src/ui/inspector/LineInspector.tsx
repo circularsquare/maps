@@ -81,7 +81,9 @@ function spotsFrom(d: Float64Array): Spots {
             ? `At the junction${near ? " near " + near : ""}`
             : kind === 5
               ? `At the crossing${near ? " near " + near : ""}`
-              : `On the track${near ? " near " + near : ""}`;
+              : kind === 12
+                ? `At the merge${near ? " near " + near : ""}`
+                : `On the track${near ? " near " + near : ""}`;
     const same = out.find((o) => o.text === text); // both directions, or two stretches by one station
     if (same) same.s += s;
     else out.push({ text, s });

@@ -586,8 +586,12 @@ platform, terminus, junction, flat crossing, a line turning on a through station
 turning on the platform": the line ends there and holds the platform for its turnaround plus 60 s;
 helped by building a terminal there), track several lines run over ("shared track"), a turn across
 the other track at a through station ("trains turning across the track"), the limiter on reversing
-partway ("trains reversing"; "Reversing at Nerul Village is full" in the line panel), and a
-terminal's sidings (T-1281). A line whose fleet is cut shows an
+partway ("trains reversing"; "Reversing at Nerul Village is full" in the line panel), a
+terminal's sidings (T-1281), and a **merge** (T-2185, wire kind 12, "merge"): shared double track
+whose lines come onto it from two or more edges at one node (a line turning back there, or starting
+there, joins nothing). Its trains wait for it at that node, so its point is the node, where they
+stand; other track sits midway along its first edge. On a Y two lines run, the way towards the
+main line is a merge and the way out from it plain shared track. A line whose fleet is cut shows an
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
