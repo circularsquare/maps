@@ -42,6 +42,7 @@ import { LineGroup } from "./LineGroup";
 import { drawnReversed } from "../../game/northUp";
 import type { EditOp } from "../../workers/protocol";
 import { scrollerOf } from "../scroller";
+import { UPGRADE } from "../../game/upgrades";
 
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -58,16 +59,19 @@ export function levelTimes(d: Demand): string {
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
 
 /** Where a line waits, in words (T-031): from `TrackApi.line_delays`. `behind`: the part of its
- * delay spent following slower trains on shared track (kind 11, T-1924), the rest is waiting at
- * busy track. */
-interface Spots { spots: { text: string; s: number }[]; behind: number }
+ * delay spent following slower trains on shared track (kind 11, T-1924); `waits`: standing at
+ * passing tracks for faster trains (kind 13, T-2231), whose places come from `lineWaits`; the rest
+ * is waiting at busy track. */
+interface Spot { text: string; s: number }
+interface Spots { spots: Spot[]; behindSpots: Spot[]; behind: number; waits: number }
 function spotsFrom(d: Float64Array): Spots {
-  const out: { text: string; s: number }[] = [];
+  const busy: Spot[] = [], following: Spot[] = [];
   const st = stationsNow();
   const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
-  let behind = 0;
+  let behind = 0, waits = 0;
   for (let i = 0; i + 4 < d.length; i += 5) {
     const [kind, node, x, y, s] = [d[i], d[i + 1], d[i + 2], d[i + 3], d[i + 4]];
+    if (kind === 13) { waits += s; continue; }
     const near = nearestStation(x, y)?.name;
     const at = node >= 0 ? st.get(node)?.name : undefined;
     if (kind === 11) behind += s;
@@ -84,13 +88,30 @@ function spotsFrom(d: Float64Array): Spots {
               : kind === 12
                 ? `At the merge${near ? " near " + near : ""}`
                 : `On the track${near ? " near " + near : ""}`;
+    const out = kind === 11 ? following : busy;
     const same = out.find((o) => o.text === text); // both directions, or two stretches by one station
     if (same) same.s += s;
     else out.push({ text, s });
   }
-  return { spots: out.sort((a, b) => b.s - a.s).slice(0, 3), behind };
+  return { spots: busy, behindSpots: following, behind, waits };
 }
-const NO_SPOTS: Spots = { spots: [], behind: 0 };
+const NO_SPOTS: Spots = { spots: [], behindSpots: [], behind: 0, waits: 0 };
+
+/** T-2232: the stations a line stands at for faster trains, from `TrackApi.line_waits`' triples,
+ * both directions summed: "At E, for Express trains". */
+function waitSpotsFrom(d: Float64Array): Spot[] {
+  const st = stationsNow();
+  const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
+  const by = new Map<number, { s: number; faster: string[] }>();
+  for (let i = 0; i + 2 < d.length; i += 3) {
+    const x = by.get(d[i]) ?? { s: 0, faster: [] };
+    const name = lines.get(d[i + 1])?.name;
+    if (name && !x.faster.includes(name)) x.faster.push(name);
+    x.s += d[i + 2];
+    by.set(d[i], x);
+  }
+  return [...by].map(([node, x]) => ({ text: `At ${st.get(node)?.name ?? ""}${x.faster.length ? `, for ${andList(x.faster)} trains` : ""}`, s: x.s }));
+}
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
 interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
@@ -158,7 +179,7 @@ function markTip(m: RouteMark): string {
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
-function RoundTrip({ st, lev, stops, spots: { spots, behind: behindAll } }: { st: LineStats; lev: number; stops: number; spots: Spots }) {
+function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: behindAll, waits: waitsAll }, waitSpots }: { st: LineStats; lev: number; stops: number; spots: Spots; waitSpots: Spot[] }) {
   // T-798: a loop shows its lap, one way round (the longer way's, half its round trip); a circle
   // stands the dwell at its first stop and turns nowhere, a balloon turns there
   const runs = st.loop ? 1 : 2;
@@ -172,8 +193,23 @@ function RoundTrip({ st, lev, stops, spots: { spots, behind: behindAll } }: { st
   const delay = (st.delayS[lev] ?? 0) / (st.loop ? 2 : 1);
   // T-1924: following slower trains, apart from waiting at busy track
   const behind = Math.min(delay, behindAll / (st.loop ? 2 : 1));
-  const waiting = delay - behind;
+  // T-2232: and standing at passing tracks for faster ones
+  const forFaster = Math.min(delay - behind, waitsAll / (st.loop ? 2 : 1));
+  const waiting = delay - behind - forFaster;
   const running = Math.max(0, total - dwell - turn - reversing - delay);
+  // T-2232: each delay row with its own places right under it, the largest three
+  const delayRow = (label: string, v: number, places: Spot[]) => v >= 0.5 && (
+    <>
+      <ul class="rows"><Row label={label}>{duration(v)}</Row></ul>
+      <ul class="rows sub-rows">
+        {places.filter((p) => p.s >= 0.5).sort((a, b) => b.s - a.s).slice(0, 3).map((p) => (
+          <Row label={p.text}>
+            <span class="muted">{duration(p.s)}</span>
+          </Row>
+        ))}
+      </ul>
+    </>
+  );
   return (
     <>
       <ul class="rows">
@@ -184,18 +220,10 @@ function RoundTrip({ st, lev, stops, spots: { spots, behind: behindAll } }: { st
         <Row label="Dwell at stops">{duration(dwell)}</Row>
         {turn > 0 && <Row label={st.loop ? "Turning at the end" : "Turning at the ends"}>{duration(turn)}</Row>}
         {reversing > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
-        {waiting >= 0.5 && <Row label="Waiting at busy track">{duration(waiting)}</Row>}
-        {behind >= 0.5 && <Row label="Behind slower trains">{duration(behind)}</Row>}
       </ul>
-      {delay > 0 && spots.length > 0 && (
-        <ul class="rows sub-rows">
-          {spots.map((p) => (
-            <Row label={p.text}>
-              <span class="muted">{duration(p.s)}</span>
-            </Row>
-          ))}
-        </ul>
-      )}
+      {delayRow("Waiting at busy track", waiting, busy)}
+      {delayRow("Behind slower trains", behind, behindSpots)}
+      {delayRow("Waiting for faster trains", forFaster, waitSpots)}
     </>
   );
 }
@@ -535,6 +563,48 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   );
 }
 
+/** T-2232: under the round trip, one button that adds passing tracks at every station where the
+ * line's trains get passed or pass a slower line's (`TrackApi.passing_spots`), in one edit; built
+ * stations pay at once, blueprint ones join the blueprint. Gone once none is missing. */
+function PassingTracks({ l, version }: { l: LineInput; version: number }) {
+  const spots = useClockQuery({ what: "passingSpots", line: l.num }, [l.num, version], (d) => {
+    const out: { num: number; price: number }[] = [];
+    for (let i = 0; i + 1 < d.length; i += 2) out.push({ num: d[i], price: d[i + 1] });
+    return out;
+  });
+  const btn = useRef<HTMLButtonElement>(null);
+  const busy = useRef(false);
+  const byNum = stationsNow();
+  const at = (spots ?? []).map((x) => ({ ...x, s: byNum.get(x.num) })).filter((x): x is { num: number; price: number; s: StationInput } => !!x.s);
+  if (!at.length) return null;
+  const built = at.filter((x) => x.s.built);
+  const price = built.reduce((a, x) => a + x.price, 0);
+  const n = plural(at.length, "station");
+  const names = at.length > 8 ? at.slice(0, 7).map((x) => x.s.name).join(", ") + ` and ${at.length - 7} more` : andList(at.map((x) => x.s.name));
+  const go = async () => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const a = await edit({ op: "stationUpgrade", nodes: at.map((x) => x.num), bit: UPGRADE.passing, on: true });
+      if (!a.ok) { shakeEl(btn.current); return; }
+      // the edit also buys the trains a slower line now needs for its headway
+      const trains = a.charge - price;
+      say(price > 1e-9
+        ? `Passing tracks built at ${plural(built.length, "station")} for ${money(price * 1e6)}.` + (trains > 0.05 ? ` New trains cost ${money(trains * 1e6)}.` : "")
+        : `Passing tracks added to the blueprint at ${n}.`);
+    } finally {
+      busy.current = false;
+    }
+  };
+  return (
+    <div class="line-stop-actions">
+      <button ref={btn} class="btn text" data-tip={`At ${names}`} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
+        Add passing tracks at {n}{price > 1e-9 ? ` for ${money(price * 1e6)}` : ""}
+      </button>
+    </div>
+  );
+}
+
 /** T-817: the line's kind of train, normal or high speed, and its average speed (T-1159). A
  * switch buys the line's cars of the other kind beyond that kind's spares; the cars it leaves
  * stay in the depot. */
@@ -754,6 +824,7 @@ function RailLineInspector({ id }: { id: string }) {
   const lev = DEMAND_INDEX[now];
   // where it loses time to busy track, asked again after every edit and when the level turns
   const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? NO_SPOTS;
+  const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: lev } : null, [l?.num, w?.version, lev], waitSpotsFrom) ?? [];
   const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
@@ -1047,7 +1118,8 @@ function RailLineInspector({ id }: { id: string }) {
       {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} />}
 
       {!editingStops && stopsBlock}
-      {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <PassingTracks l={l} version={w.version} />}
     </>
   );
 }

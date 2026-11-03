@@ -3817,6 +3817,9 @@ async function handle(msg: ToClock) {
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
+      : q.what === "lineWaits" ? api.line_waits(q.line, q.level)
+      // T-2232: [station, its passing tracks' price] pairs
+      : q.what === "passingSpots" ? Float64Array.from(Array.from(api.passing_spots(q.line), (n) => [n, api!.station_upgrade_cost(n, UPGRADE.passing)]).flat())
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {

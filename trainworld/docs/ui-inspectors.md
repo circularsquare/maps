@@ -359,7 +359,17 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. Time following slower trains on shared track is its own row,
   "Behind slower trains", apart from "Waiting at busy track", and its places name the line ahead
-  ("Behind J trains") [T-1924]. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  ("Behind J trains") [T-1924]. Time standing at passing tracks for faster trains is
+  "Waiting for faster trains", its places "At E, for Express trains" (both directions summed, from
+  `TrackApi.line_waits`) [T-2232]. Each of these three rows has its own places right under it, the
+  largest three; places under 0.5 s are left out. Under the round trip, on a line
+  that shares track with a faster or slower one, a button "Add passing tracks at 5 stations for
+  $225M" (no price where the stations are blueprint; hover "At B, C, D, E and F", past 8 stations
+  the first 7 and "and 3 more") adds passing tracks at every station `TrackApi.passing_spots` names
+  in one `stationUpgrade` edit; the price is the tracks' alone, and the notice adds the trains a
+  slower line then buys for its headway ("Passing tracks built at 5 stations for $225M. New trains
+  cost $150M."; blueprint: "Passing tracks added to the blueprint at 5 stations."). A refusal shakes
+  the button and the notice says why. Gone once none is missing [T-2232]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); its trains steppers move by 2 and the count's hover says how many run each way; the
@@ -577,8 +587,10 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   header, above all rows and lists. A station has, in station view, Construct station (a blueprint
   only) in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
-  icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof) and
-  passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
+  icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof),
+  passing tracks (a through track with a track bowing out each side; hover "Allow faster trains to
+  pass slower trains that are stopped here", Anita's wording; only where the station is on double
+  track or already has them) [T-2232] and passage (two platforms and a walkway); in complex view park and ride, the waiting room and the
   passage, the first two for every station of the complex at once [T-1528]: built at all of them or
   none, a complex where only some have it shows as not built and a click builds it at the rest,
   priced one station's price at each station that has none, and a click on a built one removes it

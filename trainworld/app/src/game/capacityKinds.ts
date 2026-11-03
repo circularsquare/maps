@@ -25,7 +25,8 @@ const EACH_WAY = " each way";
  * 6 a line turning on a through station's platform, 7 track shared by several lines, 8 a line
  * turning across the other track at a through station, 9 lines reversing partway at a station (T-797),
  * 10 a terminal's sidings (T-1281), 12 shared track from where lines join it, a merge (T-2185).
- * 11, behind slower trains, is never a dot or a limit. */
+ * 11, behind slower trains, and 13, waiting at passing tracks for faster ones (T-2231), are never a
+ * dot or a limit. */
 export const CAPACITY_KINDS: CapacityKindText[] = [
   { name: "Track", short: "track", title: "Track", prep: "near", ways: EACH_WAY, cause: "Each train needs a gap behind it for braking and signals, longer on faster track.", help: "Run fewer trains, or make the track slower so each train needs a shorter gap." },
   { name: "Single track", short: "single track", title: "Single track", prep: "near", ways: " both ways together", cause: "Trains from both directions share one track, and each holds it from one passing point to the next.", help: "Add another track, or a station along it where trains can pass." },

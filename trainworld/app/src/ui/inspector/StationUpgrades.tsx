@@ -17,6 +17,8 @@ const ICONS: Record<number, () => preact.JSX.Element> = {
   [UPGRADE.parkRide]: () => <svg viewBox="0 0 16 16"><path d="M5.5 13V3h3.5a3 3 0 010 6H5.5" /></svg>,
   // a bench under a roof
   [UPGRADE.waitingRoom]: () => <svg viewBox="0 0 16 16"><path d="M2 6l6-3.5L14 6M3.5 10.5h9M4.5 10.5v3M11.5 10.5v3M4.5 8h7" /></svg>,
+  // a through track, and a track each side bowing out round the platforms and back
+  [UPGRADE.passing]: () => <svg viewBox="0 0 16 16"><path d="M1 8h14M1 8c2.5 0 2.5-4 5-4h4c2.5 0 2.5 4 5 4M1 8c2.5 0 2.5 4 5 4h4c2.5 0 2.5-4 5-4" /></svg>,
 };
 // two platforms and the walkway between them
 const PassageIcon = () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 3.5h3v9h-3zM11.5 3.5h3v9h-3z" /><path d="M4.5 8h7" /></svg>;
@@ -37,9 +39,11 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
       <PassageButton s={s} />
     </div>
   );
+  // T-2231: passing tracks work on double track only
+  const double = !!world.value?.edges.some((e) => (e.a === s.num || e.b === s.num) && e.tracks === 2);
   return (
     <div class="upgrades" role="group" aria-label="Station upgrades">
-      {UPGRADE_TEXT.map((u) => {
+      {UPGRADE_TEXT.filter((u) => u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit)).map((u) => {
         const on = hasUpgrade(s.upgrades, u.bit);
         const price = prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0;
         const state = !on ? "" : s.built ? " on" : " planned";

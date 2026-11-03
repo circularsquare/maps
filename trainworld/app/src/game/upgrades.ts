@@ -1,9 +1,9 @@
 // Station upgrades (T-1281, notes/T-1281.md): the bits are `sim/src/track/upgrades.rs`'s.
 
-export const UPGRADE = { terminal: 1, parkRide: 2, waitingRoom: 4 } as const;
+export const UPGRADE = { terminal: 1, parkRide: 2, waitingRoom: 4, passing: 8 } as const;
 
 /** In the station panel's order; the clock worker's `upgradeCost` answer follows it too. */
-export const UPGRADE_BITS: number[] = [UPGRADE.terminal, UPGRADE.parkRide, UPGRADE.waitingRoom];
+export const UPGRADE_BITS: number[] = [UPGRADE.terminal, UPGRADE.parkRide, UPGRADE.waitingRoom, UPGRADE.passing];
 
 export interface UpgradeText {
   bit: number;
@@ -20,6 +20,8 @@ export const UPGRADE_TEXT: UpgradeText[] = [
     doesAll: "Traveling to any station in this complex from far away feels 10 minutes shorter." },
   { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waiting here for a train feels 20% shorter.",
     doesAll: "Waiting at any station in this complex for a train feels 20% shorter." },
+  // T-2232: Anita's wording
+  { bit: UPGRADE.passing, name: "Passing tracks", does: "Allow faster trains to pass slower trains that are stopped here" },
 ];
 
 /** A passage's price (sim `upgrades::passage_price`), US$M: a base plus a rate a km of the straight line. */
