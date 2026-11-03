@@ -102,6 +102,8 @@ crossing (WASM, own tree); T-2146 network diagram (design); T-2152 Lines tab ove
 3. T-1794 train-count settle. T-2009 Quad upkeep figures.
 
 ## Lessons from this run
+- maps-0f 11-03: her TODO.md short-term can repeat an earlier batch line for line (11-03c = 11-02b; T-2154-56 were
+  already T-2006-08). Diff new TODO items against the earlier notes/todo-*.md files before filing.
 - "Keep the work moving" (maps/CLAUDE.md): sweep what's not done at every report and start what can go; stale done
   lines to ARCHIVE. "Look outward" (trainworld/CLAUDE.md): research references freely.
 - Pipeline edits land only between runs (a run imports pipeline modules per subprocess); worktrees for pipeline agents.
@@ -144,12 +146,17 @@ so their hunks need no untangling; T-2147's `crush2/crush15` hunks (demandClient
 measurement code, ask its report whether they stay. Patch of shared files: my scratchpad t2122-shared.patch.
 maps-b2's subagent ids can't be messaged from here ("no transcript"); their reports come through maps-b2.
 
-- a2fc803621d80181c (Opus) **T-2154-58 + T-2166** UI batch (Vite 6176, scratchpad t2154, ids T-2170/71).
-- **T-2153 DONE** ~10:35, uncommitted (demandLod, demandClient, openedZones, clockClient, protocol, clock.worker,
+- 48b7ae8b (~10:45) = UI batch (T-2157, T-2158, T-2009, T-2166; T-2154-56 were already done as T-2006-08) + T-2153.
+  **8800 = build 827 (48b7ae8b)**, freeze 20261103-051954, smoke 23/23 light and dark (~11:00).
+- **T-2147 DONE** ~11:00 (maps-b2's agent): proposal in notes/T-2147.md for Anita (keep 160/car as 100%, run to 150%,
+  crowding from 100%; about +4%; not what holds Asia low). The `crush2/crush15` flag stays on master as measurement.
+- (was) **T-2153 DONE** ~10:35 (demandLod, demandClient, openedZones, clockClient, protocol, clock.worker,
   saveFile, main.ts onStationsAhead 2 lines, checks/t2005, docs demand-runtime + code-map, DECISIONS, ARCHIVE): new
   save header field `demandBuilt`. Commit with the UI batch (shared main.ts, DECISIONS, ARCHIVE). Not India's files:
   pipeline/tier0.py, world_plan.json, registry.json, market-rows.json, notes/T-2111.md.
-- a7e46912ec3685dba **T-2146 round 2** resumed with Anita's notes (ids T-2168/69).
+- **T-2146 round 2 DONE** ~10:50 (agent a7e46912ec3685dba, resumable): Vignelli-style ribbons, snapped 0/45/90 with
+  orthogonal-then-diagonal legs; review/diagram-tokyo-r2.png; stages T-2159..T-2163 + T-2168 boxes, T-2169 water wait
+  on her go. Known flaws: fat/tilted pills at big interchanges (T-2161), far names (T-2162).
 
 ## Queued (maps-0f), older
 - Her third 11-03 batch (notes/todo-2026-11-03c.md): T-2153 to T-2158, filed 09:32, lines uncommitted in TASKS.md.
