@@ -59,8 +59,11 @@ export const CORRIDORS = true;
 
 /** T-2058 (notes/T-2058.md): "smooth" every change of a band's shift a long S-curve, changes that
  * overlap added together; "order" each pair of tracks' order in a ribbon decided once for the
- * network; "" T-1848's eases and per-ribbon order (`?perfOff=bandsSmooth`, `bandsOrder`: `bandTry`) */
-let bandMode = "smooth,order";
+ * network; "fit" a change at a node on the side with more lines where the side with fewer is shorter
+ * than its curve; "snap" a ribbon change just ahead of a merge's or split's node placed as at the
+ * node (T-2059, T-2060); "" T-1848's eases and per-ribbon order (`?perfOff=bandsSmooth`,
+ * `bandsOrder`, `bandsPlace`: `bandTry`) */
+let bandMode = "smooth,order,fit,snap";
 export function setBandMode(m: string): void {
   if (m === bandMode) return;
   bandMode = m;
@@ -112,6 +115,8 @@ interface Ribbon {
    * this track sees them right to left */
   shape: { rid: [number, number] };
   flip: boolean;
+  /** its Traffic recipes by slot and sign, once worked out */
+  rc?: number[];
 }
 
 /** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). */
@@ -263,7 +268,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     if (!r) {
       const ids = linesOf(e), edges = ids.map(() => e), { key, back } = keysOf(ids);
       const shape: Shape = { ids, edges, rids: [...ids].reverse(), redges: edges, key, back, rid: [-1, -1] };
-      own.set(e, (r = { shape, flip: false, lines: ids, edges, key, back, mid: 0 }));
+      own.set(e, (r = { shape, flip: false, lines: ids, edges, key, back, mid: 0, rc: undefined }));
     }
     return r;
   };
@@ -332,8 +337,8 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     for (const m of mem) {
       const fwd = m.rel * cw > 0, mm = mid - cw * m.off;
       const v: Ribbon = fwd
-        ? { shape: sh, flip: false, lines: sh.ids, edges: sh.edges, key: sh.key, back: sh.back, mid: mm }
-        : { shape: sh, flip: true, lines: sh.rids, edges: sh.redges, key: sh.back, back: sh.key, mid: -mm };
+        ? { shape: sh, flip: false, lines: sh.ids, edges: sh.edges, key: sh.key, back: sh.back, mid: mm, rc: undefined }
+        : { shape: sh, flip: true, lines: sh.rids, edges: sh.redges, key: sh.back, back: sh.key, mid: -mm, rc: undefined };
       if (m.e === e) memo[i] = v;
       else put(m.e, m.i, v);
     }
@@ -449,17 +454,28 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     return r.shape.rid[f];
   };
   const tRecipes: number[] = [];
-  const recipeIds = new Map<string, number>();
+  const recipeIds = new Map<number, Map<number, number>>();
   const recipeOf = (r: Ribbon, slot: number, sgn: number) => {
-    const rid = ridOf(r), mid = Math.fround(r.mid * BAND_LW_PER_M), key = `${rid},${slot},${sgn},${mid}`;
-    let id = recipeIds.get(key);
+    const memo = (r.rc ??= []), mk = slot * 2 + (sgn > 0 ? 1 : 0);
+    if (memo[mk] !== undefined) return memo[mk];
+    const rid = ridOf(r), mid = Math.fround(r.mid * BAND_LW_PER_M), key = (rid * 4096 + slot) * 2 + (sgn > 0 ? 1 : 0);
+    let byMid = recipeIds.get(key);
+    if (!byMid) recipeIds.set(key, (byMid = new Map()));
+    let id = byMid.get(mid);
     if (id === undefined) {
       tRecipes.push(rid, slot, sgn, mid);
-      recipeIds.set(key, (id = tRecipes.length / RECIPE - 1));
+      byMid.set(mid, (id = tRecipes.length / RECIPE - 1));
     }
-    return id;
+    return (memo[mk] = id);
   };
-  const tRecords: number[] = [];
+  // (filled in place: about 3M numbers on the real New York save)
+  let tRecords = new Float32Array(1 << 16), nRec = 0;
+  const need = (k: number) => {
+    if (nRec + k <= tRecords.length) return;
+    const b = new Float32Array(Math.max(tRecords.length * 2, nRec + k));
+    b.set(tRecords.subarray(0, nRec));
+    tRecords = b;
+  };
   let nRecords = 0;
 
   // ---- along each line
@@ -545,14 +561,16 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     opts?.debug?.set(l.id, { M, f: dbgF, key: KEY, v: [...V], entry: K, dropped: [...dropped], runs: runs.map((u) => [u.key, u.s0, u.s1]) });
     // knots in path metres: per run its value, eased into the next over CORRIDOR_EASE_M, or at a
     // node between different lines over BAND_RAMP_M on the side with fewer (T-1799 stage 4)
-    // (kw: each knot's Traffic recipes, recipe and weight pairs)
-    const km: number[] = [], kv: number[] = [], kq: number[] = [], kw: number[][] = [];
+    // (each knot's Traffic recipes: recipe and weight pairs in kf, from ko, kn of them)
+    const km: number[] = [], kv: number[] = [], kq: number[] = [], ko: number[] = [], kn: number[] = [], kf: number[] = [];
     const push = (m: number, j: number) => {
       if (km.length && m <= km[km.length - 1] + 1e-3) m = km[km.length - 1] + 1e-3;
       km.push(m);
       kv.push(val(j));
       kq.push(R[j].lines.length > 1 ? 1 - BAND_SHARE : 0);
-      kw.push([recipeOf(R[j], S[j], sgnAt(j)), 1]);
+      ko.push(kf.length);
+      kn.push(1);
+      kf.push(recipeOf(R[j], S[j], sgnAt(j)), 1);
     };
     const ease: [number, number][] = runs.map(() => [0, start[n]]);
     for (let u = 0; u + 1 < runs.length; u++) {
@@ -599,60 +617,119 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
         let c = (g0 + g1) / 2;
         // at a node between ribbons of different lines: on the side with fewer, from the node (stage 4),
         // counted first on the line's own edges (a ribbon near a junction takes in the tracks beside)
-        const oa = on.get(l.path[K[A.last]] >> 1)?.length ?? 1, ob = on.get(l.path[K[B.first]] >> 1)?.length ?? 1;
-        if (node && oa !== ob) c = oa > ob ? g0 + L / 2 : g0 - L / 2;
-        else if (node && ra !== rb) c = ra > rb ? g0 + L / 2 : g0 - L / 2;
+        const linesAt = (k: number) => on.get(l.path[k] >> 1)?.length ?? 1;
+        let oa = linesAt(K[A.last]), ob = linesAt(K[B.first]), nodeM = node ? g0 : -1;
+        if (!node && A.run !== B.run && ra !== rb && bandMode.includes("snap")) {
+          // tracks coming beside along the way that join one edge soon after, or leave one edge just
+          // before (a merge or split whose ribbon forms ahead of its node): placed as at that node, so
+          // the lines are in their places where the tracks meet (T-2059, the Jersey City merge)
+          if (rb > ra) {
+            for (let k = K[B.first] + 1; k < n && start[k] < g1 + L / 2 && nodeM < 0; k++) if (linesAt(k) !== linesAt(k - 1)) (nodeM = start[k]), (oa = linesAt(k - 1)), (ob = linesAt(k));
+          } else for (let k = K[A.last]; k > 0 && start[k] > g0 - L / 2 && nodeM < 0; k--) if (linesAt(k) !== linesAt(k - 1)) (nodeM = start[k]), (oa = linesAt(k - 1)), (ob = linesAt(k));
+        }
+        if (nodeM >= 0 && oa !== ob) c = oa > ob ? nodeM + L / 2 : nodeM - L / 2;
+        else if (node && ra !== rb) {
+          // on the side with fewer lines where the curve fits in that run, else on the side with
+          // more (a track beside or apart for less than the curve's length, T-2060)
+          const fewer = ra > rb ? 1 : -1, fits = !bandMode.includes("fit") || lenRun(rs[ra > rb ? B.run : A.run]) >= L;
+          c += (fits ? fewer : -fewer) * (L / 2);
+        }
         steps.push({ c, L });
       }
       const end = start[n];
-      const at = new Set<number>([0, end]);
+      const at: number[] = [0, end];
       for (const s of steps) if (s.L > 0) for (let i = 0; i < SMOOTH_KNOTS; i++) {
         const m = s.c + s.L * (i / (SMOOTH_KNOTS - 1) - 0.5);
-        if (m > 0 && m < end) at.add(Math.round(m * 100) / 100);
+        if (m > 0 && m < end) at.push(Math.round(m * 100) / 100);
       }
-      const ms = [...at].sort((x, y) => x - y);
+      const ms = Float64Array.from(at).sort();
       const S3 = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
       // each knot a mix of the pieces: piece p weighs how far the step into it has gone less how far
       // the step out of it has, so the Traffic view's widths mix exactly as the Line view's shifts
       // (the first piece, plus per step k its S times piece k + 1 less piece k: swept along, the steps
       // passed folded into `base`, only those under way worked out at each knot)
+      // (T-2059: in flat arrays, each list kept in the order a Map or Set would keep it, so the sums
+      // are added up in the same order as before)
+      const P = pl.length, pv = new Float64Array(P), pq = new Float64Array(P), prc = new Int32Array(P);
+      for (let p = 0; p < P; p++) {
+        pv[p] = val(pl[p].j0);
+        pq[p] = qOf(pl[p].j0);
+        prc[p] = pl[p].rc;
+      }
       const ns = steps.length, lo = steps.map((s) => s.c - s.L / 2), hi = steps.map((s) => s.c + s.L / 2);
       const byLo = [...steps.keys()].sort((a, b) => lo[a] - lo[b]), byHi = [...steps.keys()].sort((a, b) => hi[a] - hi[b]);
-      const base = new Map<number, number>([[0, 1]]), going = new Set<number>();
-      const put = (mp: Map<number, number>, p: number, w: number) => {
-        const x = (mp.get(p) ?? 0) + w;
-        if (Math.abs(x) < 1e-9) mp.delete(p);
-        else mp.set(p, x);
+      /** the steps passed, per piece, and the pieces whose sum is not zero */
+      const base = new Float64Array(P), bk: number[] = [0];
+      base[0] = 1;
+      const bput = (p: number, w: number) => {
+        const x = base[p] + w;
+        if (Math.abs(x) < 1e-9) {
+          if (base[p] !== 0) bk.splice(bk.indexOf(p), 1);
+          base[p] = 0;
+        } else {
+          if (base[p] === 0) bk.push(p);
+          base[p] = x;
+        }
+      };
+      const going: number[] = [], inGo = new Uint8Array(ns);
+      const W = new Float64Array(P), mark = new Uint8Array(P), touched: number[] = [];
+      const touch = (p: number, w: number) => {
+        if (!mark[p]) {
+          mark[p] = 1;
+          touched.push(p);
+        }
+        W[p] += w;
       };
       let iL = 0, iH = 0;
-      for (const m of ms) {
-        while (iL < ns && lo[byLo[iL]] < m) going.add(byLo[iL++]);
+      for (let x = 0; x < ms.length; x++) {
+        const m = ms[x];
+        if (x && m === ms[x - 1]) continue;
+        while (iL < ns && lo[byLo[iL]] < m) {
+          const k = byLo[iL++];
+          inGo[k] = 1;
+          going.push(k);
+        }
         while (iH < ns && hi[byHi[iH]] <= m) {
           const k = byHi[iH++];
-          going.delete(k);
-          put(base, k + 1, 1);
-          put(base, k, -1);
+          if (inGo[k]) {
+            inGo[k] = 0;
+            going.splice(going.indexOf(k), 1);
+          }
+          bput(k + 1, 1);
+          bput(k, -1);
         }
         if (km.length && m <= km[km.length - 1] + 1e-3) continue;
-        const pw = new Map(base);
+        touched.length = 0;
+        for (const p of bk) touch(p, base[p]);
         for (const k of going) {
           const s = S3((m - steps[k].c) / steps[k].L + 0.5);
-          put(pw, k + 1, s);
-          put(pw, k, -s);
+          touch(k + 1, s);
+          touch(k, -s);
         }
         let v = 0, q = 0;
-        const mix = new Map<number, number>();
-        for (const [p, w] of pw) {
-          v += w * val(pl[p].j0);
-          q += w * qOf(pl[p].j0);
-          mix.set(pl[p].rc, (mix.get(pl[p].rc) ?? 0) + w);
+        const o = kf.length;
+        for (const p of touched) {
+          const w = W[p];
+          W[p] = 0;
+          mark[p] = 0;
+          if (Math.abs(w) < 1e-9) continue;
+          v += w * pv[p];
+          q += w * pq[p];
+          // its recipe's weight, summed over the pieces sharing it
+          let i = o;
+          while (i < kf.length && kf[i] !== prc[p]) i += 2;
+          if (i < kf.length) kf[i + 1] += w;
+          else kf.push(prc[p], w);
         }
+        let e = o;
+        for (let i = o; i < kf.length; i += 2) if (Math.abs(kf[i + 1]) > 1e-6) (kf[e] = kf[i]), (kf[e + 1] = kf[i + 1]), (e += 2);
+        kf.length = e;
+        if (e === o) kf.push(prc[0], 1);
         km.push(m);
         kv.push(v);
         kq.push(Math.max(0, q));
-        const list: number[] = [];
-        for (const [rc, w] of mix) if (Math.abs(w) > 1e-6) list.push(rc, w);
-        kw.push(list.length ? list : [pl[0].rc, 1]);
+        ko.push(o);
+        kn.push((kf.length - o) / 2);
       }
     };
     /** run u's own samples in pieces of one value: [first, last sample, the samples whose values they take] */
@@ -701,52 +778,70 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     // per path entry: its knots, with one at each end where it lies between two
     const knots: number[] = [];
     const starts: number[] = [];
-    const recMark = tRecords.length, recCount = nRecords;
+    const recMark = nRec, recCount = nRecords;
     let q = 0, ki = 0, nonzero = false;
-    /** two knots' recipe lists mixed, t of the way from a to b */
-    const mixed = (a: number[], b: number[], t: number) => {
-      if (t <= 0 || a === b || (a.length === 2 && b.length === 2 && a[0] === b[0] && a[1] === b[1])) return a;
+    /** knot i's recipe list as an array */
+    const listOf = (i: number) => kf.slice(ko[i], ko[i] + 2 * kn[i]);
+    /** knots i and i + 1's recipe lists mixed, t of the way */
+    const mixed = (i: number, t: number) => {
+      const a = ko[i], na = 2 * kn[i], b = ko[i + 1], nb = 2 * kn[i + 1];
+      if (t <= 0 || (na === 2 && nb === 2 && kf[a] === kf[b] && kf[a + 1] === kf[b + 1])) return listOf(i);
       const m = new Map<number, number>();
-      for (let i = 0; i < a.length; i += 2) m.set(a[i], (m.get(a[i]) ?? 0) + a[i + 1] * (1 - t));
-      for (let i = 0; i < b.length; i += 2) m.set(b[i], (m.get(b[i]) ?? 0) + b[i + 1] * t);
+      for (let x = a; x < a + na; x += 2) m.set(kf[x], (m.get(kf[x]) ?? 0) + kf[x + 1] * (1 - t));
+      for (let x = b; x < b + nb; x += 2) m.set(kf[x], (m.get(kf[x]) ?? 0) + kf[x + 1] * t);
       const out: number[] = [];
       for (const [r, w] of m) if (Math.abs(w) > 1e-6) out.push(r, w);
       return out;
     };
     const at = (m: number): [number, number, number[]] => {
       while (q + 1 < km.length && km[q + 1] < m) q++;
-      if (m <= km[0]) return [kv[0], kq[0], kw[0]];
+      if (m <= km[0]) return [kv[0], kq[0], listOf(0)];
       const z = km.length - 1;
-      if (q + 1 >= km.length || m >= km[z]) return [kv[z], kq[z], kw[z]];
+      if (q + 1 >= km.length || m >= km[z]) return [kv[z], kq[z], listOf(z)];
       const t = (m - km[q]) / (km[q + 1] - km[q]);
-      return [kv[q] + (kv[q + 1] - kv[q]) * t, kq[q] + (kq[q + 1] - kq[q]) * t, mixed(kw[q], kw[q + 1], t)];
+      return [kv[q] + (kv[q + 1] - kv[q]) * t, kq[q] + (kq[q + 1] - kq[q]) * t, mixed(q, t)];
     };
     for (let k = 0; k < n; k++) {
       starts.push(knots.length / KNOT);
       const m0 = start[k], m1 = start[k + 1], len = m1 - m0;
       const p = l.path[k], e = p >> 1;
       const ed = ends.get(e), P = pts.get(e);
-      const rs: number[] = [];
+      const rec = !!(ed && P && P.length >= 6), head = nRec;
+      if (rec) {
+        need(6);
+        tRecords[nRec++] = l.id;
+        tRecords[nRec++] = e;
+        tRecords[nRec++] = p & 1;
+        tRecords[nRec++] = P![0];
+        tRecords[nRec++] = P![1];
+        nRec++;
+      }
       let nk = 0;
-      const add = (f: number, v: number, w: number, list: number[]) => {
+      const add = (f: number, v: number, w: number, list: readonly number[], o: number, c: number) => {
         // (the one recipe when it is one alone, else -1: between two, for `bandPoints`' eases)
-        knots.push(f, v, w, list.length === 2 && list[1] === 1 ? list[0] : -1);
-        rs.push(f, list.length / 2, ...list);
+        knots.push(f, v, w, c === 1 && list[o + 1] === 1 ? list[o] : -1);
+        if (rec) {
+          need(2 + 2 * c);
+          tRecords[nRec++] = f;
+          tRecords[nRec++] = c;
+          for (let x = o; x < o + 2 * c; x++) tRecords[nRec++] = list[x];
+        }
         nk++;
         if (Math.abs(v) > 1e-6 || w > 0) nonzero = true;
       };
-      add(0, ...at(m0));
+      const a0 = at(m0);
+      add(0, a0[0], a0[1], a0[2], 0, a0[2].length / 2);
       while (ki < km.length && km[ki] <= m0 + 1e-3) ki++;
-      for (; ki < km.length && km[ki] < m1 - 1e-3; ki++) add(len > 0 ? (km[ki] - m0) / len : 0, kv[ki], kq[ki], kw[ki]);
-      add(1, ...at(m1));
-      if (ed && P && P.length >= 6) {
-        tRecords.push(l.id, e, p & 1, P[0], P[1], nk);
-        for (const x of rs) tRecords.push(x);
+      for (; ki < km.length && km[ki] < m1 - 1e-3; ki++) add(len > 0 ? (km[ki] - m0) / len : 0, kv[ki], kq[ki], kf, ko[ki], kn[ki]);
+      const a1 = at(m1);
+      add(1, a1[0], a1[1], a1[2], 0, a1[2].length / 2);
+      if (rec) {
+        tRecords[head + 5] = nk;
         nRecords++;
       }
     }
     if (!nonzero) {
-      tRecords.length = recMark;
+      nRec = recMark;
       nRecords = recCount;
       continue;
     }
@@ -757,13 +852,13 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     out.set(knots, 1 + starts.length);
     of.set(l.id, out);
   }
-  const corridor = new Float32Array(3 + tRibbons.length + tRecipes.length + tRecords.length);
+  const corridor = new Float32Array(3 + tRibbons.length + tRecipes.length + nRec);
   corridor[0] = nRibbons;
   corridor.set(tRibbons, 1);
   corridor[1 + tRibbons.length] = tRecipes.length / RECIPE;
   corridor.set(tRecipes, 2 + tRibbons.length);
   corridor[2 + tRibbons.length + tRecipes.length] = nRecords;
-  corridor.set(tRecords, 3 + tRibbons.length + tRecipes.length);
+  corridor.set(tRecords.subarray(0, nRec), 3 + tRibbons.length + tRecipes.length);
   return { of, order, rule, corridor };
 }
 

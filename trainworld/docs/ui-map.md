@@ -177,10 +177,17 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   round it, the Traffic view's widths mixed by the same weights). Where it sits: a change at a node
   between ribbons of different sizes starts at the node on the side with fewer lines, counted on the
   line's own edges first and then in the ribbons (lines part leaving side by side and close up as
-  they curve out, merge the other way; T-1799 stage 4); any other change is centred on it. A line alone keeps its full
+  they curve out, merge the other way; T-1799 stage 4), except that where the ribbon on that side
+  lasts less than the curve's length (a loop track beside a trunk) and the line's own edges keep
+  their lines, it ends at the node on the side with more, so the line is on its own track all along
+  the short stretch (T-2060); a ribbon change along the way where the line's track comes beside
+  tracks it joins at a node within half a curve's length (or leaves one edge just before) is placed
+  as at that node, so the merging lines are in their places where the tracks meet (T-2059); any
+  other change is centred on it. A line alone keeps its full
   width; a line's band is drawn by knots (`BandProfile`, `bandPoints` cutting the line's segments
   at each); `?perfOff=bandsSmooth` gives T-1848's eases (80 m along the track, 30 m at a node) and
-  per-ribbon order, `?perfOff=bandsOrder` the S-curves with per-ribbon order. Zoomed out the bands fold into one stroke as a line narrows from
+  per-ribbon order, `?perfOff=bandsOrder` the S-curves with per-ribbon order, `?perfOff=bandsPlace`
+  T-2058's placement without those two exceptions. Zoomed out the bands fold into one stroke as a line narrows from
   1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
   centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
   drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same ribbons,

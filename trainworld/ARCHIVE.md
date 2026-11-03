@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2059 [P2] Lines side by side: cost and two misclicks. Done 2026-11-03 (agent t2059): band build on the real save after a path edit ~650 -> ~260 ms, profiles the same to the bit; the Jersey City merge placed as at its node, t1799-bands 58/58. notes/T-2058.md 3c.
+- T-2060 [P3] Lines side by side: Tamachi's drift. Done 2026-11-03 (agent t2059): a 370 m loop track shorter than its S-curve; such a node change now curves on the side with more lines, band within 1 m of its track (was 16 m); kinks 183/17/0 and 6/0/0. notes/T-2058.md 3c.
+
+
 - T-1966 [P2] Trains wait for each other on screen at flat crossings and crossing junction moves. Done 2026-11-03 (agent t1966): from zoom 14, by each train's timetabled time over the point, first come first served, at most 240 s; real save at 1x, 60x and 960x: up to 9 held at a time, waits ~30 s on average, pairs drawn through each other ~0 (thousands without). notes/T-1966.md.
 
 - T-2088 [P3] A standing check of demand on real networks against real ridership. Done 2026-11-03: checks/t2088-ridership.mjs solves the seven real saves (about 18 min) and sets rail trips per resident and metro riders per km beside research/ridership.csv; game high in New York (2.4x trips, 2.7x per km), low in Tokyo (0.36x, 0.45x), 0.7-1.4x elsewhere. notes/T-2088.md; rest filed as T-2093.
