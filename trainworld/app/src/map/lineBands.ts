@@ -21,6 +21,8 @@ import { kAtY } from "./geo";
 export const LINE_VIEW_WIDTH = 1.3;
 /** a band's width as a share of a line's (Anita, 2026-10-29) */
 export const BAND_SHARE = 0.8;
+/** px of casing left between two bands side by side, at every zoom (Anita, T-2126: "a little like ~1px gap") */
+export const BAND_GAP_PX = 1;
 /** line widths a metre across is drawn as, for the gap between the centre lines of tracks side by
  * side (8 m between a four-track trunk's pairs): 0.4 of a line width for 8 m, which is exact near
  * zoom 14.5, 1.4 px of overlap at zoom 13 and 0.9 px of gap at 15, a few px of gap by 16 (a metre is

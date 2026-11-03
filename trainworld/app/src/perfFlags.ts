@@ -73,7 +73,8 @@
 //   bandsSmooth lines side by side move sideways over T-1848's short eases, not long S-curves, and
 //            order each ribbon on its own (before T-2058)
 //   bandsOrder  lines side by side in long S-curves, but each ribbon ordered on its own (T-2058's A alone)
-//   bandsPlace  lines side by side: a change's S-curve placed as in T-2058 stage 2, not fitted to a short
+//   bandGap     lines side by side touching, not a pixel apart (before T-2126)
+//   bandsPlace  lines side by side:a change's S-curve placed as in T-2058 stage 2, not fitted to a short
 //            run nor moved to the node of a merge just ahead (T-2059, T-2060)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
@@ -89,7 +90,7 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandGap") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
 /** T-2058: how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap"));

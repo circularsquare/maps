@@ -140,7 +140,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 - **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], only
   with the Settings checkbox "Lines side by side" on (off by default, T-1886; `display.lineBands`,
   set on `renderer.lineBands` in main.ts, redrawn at once). In the Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
-  colour, the bands touching, one casing round them all (every casing is drawn before any colour).
+  colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour shows between bands at every zoom),
+  one casing round them all (every casing is drawn before any colour).
   Order on each edge, left to right: of two lines, the one turning more to the left where they
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
   number on the left of that line's travel; an edge's order is by how many of the others each line

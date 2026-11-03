@@ -112,6 +112,7 @@ uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple 
                              // stroke widths (px) between which its centre line comes in
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
+uniform float u_band_gap;    // T-2126: px of casing between bands side by side
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -189,6 +190,9 @@ void main() {
       : bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
       : bpLine ? u_bp.x * bandW + extra + cas
       : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * bandW + extra + cas) + grow;
+    // T-2126: a band of shared track a pixel narrower in colour than its slot, the casing showing between
+    // (none for a line easing out of the ribbon to its full width)
+    if (shared && u_casing <= 0.0 && !full) w = max(1.0, w - u_band_gap * clamp(mix(a_band.z, a_band.w, along) / ${(1 - BAND_SHARE).toFixed(2)}, 0.0, 1.0));
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
