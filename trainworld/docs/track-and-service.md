@@ -1051,7 +1051,13 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   the regional market's trips change free. Fare income is the first stretch's base on
   each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the
   line it is counted at (`LineDemand.fareX`, `app/src/game/money.ts`; on a weekend the extra follows
-  each stretch's riders), so demand and income charge the same trips the same fares. Changing the fare
+  each stretch's riders), so demand and income charge the same trips the same fares. **The base's
+  share between lines** [T-2104, `baseTrips`]: the network's base fares a day (every boarding times
+  rail trips over boardings, each at its boarding stop's fare scale) go half by each line's boardings
+  and half by its passenger-km, and no line takes more than one base a boarding, the excess going to
+  the others by the same weights; buses and trains alike. So a short leg (a feeder bus) takes less
+  than an even share of the base and a long line more, and the network's fares are the same as an
+  even share per boarding would give. Each line's base goes over its periods by passenger-km. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

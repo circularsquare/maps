@@ -24,10 +24,11 @@ import { ACTION_KEYS, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } 
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
-import { world } from "./game/world";
+import { stopsById, world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
-import { incomeByDay, lastSaved, moneyState } from "./game/money";
+import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
+import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
@@ -684,6 +685,13 @@ if (DEBUG) {
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,
+    // T-2104: each line's base fare income a day, US$, under a share by boardings of `byBoardings` (1 the even share)
+    baseFares: (dv: Parameters<typeof baseTrips>[1], byBoardings?: number) => {
+      const w = world.peek(), m = moneyState.peek();
+      if (!w || !m) return null;
+      const base = faresOf(m.fares, m.fares).base * m.economy;
+      return Object.fromEntries([...baseTrips(w, dv, m.fares, stopsById(w), byBoardings)].map(([id, t]) => [id, t * base]));
+    },
     frame: () => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; }, packToLngLat, lngLatToPack,
     select: (s: unknown) => (selection.value = s as any),
     // T-729: the save's list of zones started in or reached

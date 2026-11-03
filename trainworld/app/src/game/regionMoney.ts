@@ -12,7 +12,7 @@
 import { computed } from "@preact/signals";
 import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
-import { lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
+import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { groundDist } from "./coords";
 import { hsrFare } from "./fareCurve";
@@ -46,8 +46,7 @@ export const lineShares = computed(() => {
   if (was && was.w === w && was.m === m && was.zl === zl && was.dv === dv) return was.out;
   sharesMemo = { w, m, zl, dv, out };
   const byId = stopsById(w);
-  const boardingsAll = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
-  const tripsPerBoarding = dv && boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
+  const baseOf = baseTrips(w, dv, m.fares, byId);
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id], n = l.stops.length;
     if (!st || st.status !== "running" || n < 2) continue;
@@ -82,11 +81,9 @@ export const lineShares = computed(() => {
       if (byBoarding.length) ride = byBoarding;
       // a bent curve's extra goes with the per-km part, as it is counted on the km ridden (T-1516)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
-      const boarded = dm.boardings.reduce((a, b) => a + b, 0);
-      const baseScale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : 1;
       // T-1626: a high-speed line's rate times its multiplier (its extra came so from demand)
       const mul = st.fast ? hsrFare(m.fares) : 1;
-      const base = m.fares.base * dm.ridersPerDay * tripsPerBoarding * baseScale, perKm = Math.max(0, mul * m.fares.perKm * pkmAll + fx);
+      const base = m.fares.base * (baseOf.get(l.id) ?? 0), perKm = Math.max(0, mul * m.fares.perKm * pkmAll + fx);
       if (base + perKm > 0) {
         const mix = new Map<string, number>();
         for (const [k, v] of byPaid) add(mix, k, v * base);

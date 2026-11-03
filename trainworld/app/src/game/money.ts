@@ -7,8 +7,9 @@
 // hour's trains pick up riders, and its running cost evenly.
 //
 // Fare per ride = base + per km x the ride's length along the line, on the fare curve's first
-// stretch. A ride that changes lines pays the base once: boardings are scaled to trips by the
-// city's rail trips over all boardings. What the rest of a bent curve adds (or takes off) on each
+// stretch. A ride that changes lines pays the base once: the network's base fares (its boardings
+// scaled to trips by rail trips over all boardings) are shared between lines by `baseTrips`
+// (T-2104). What the rest of a bent curve adds (or takes off) on each
 // trip's length is demand's own figure, shared between the lines the trip rides by their km
 // (`LineDemand.fareX`, T-1143, T-1516), so income is what demand charged and no line's is below its
 // base and rate.
@@ -166,6 +167,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
   const byId = stopsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
+  const baseOf = baseTrips(w, dv, m.fares, byId);
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st || st.status !== "running") continue;
@@ -174,8 +176,8 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
     const n = l.stops.length;
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
       const g = lineGeo(w, l, byId), km = g.km;
-      // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
-      const { sc, from } = scalesOf(g, l, byId, m.fares);
+      // T-1277: a stretch pays its starting stop's fare scale (the base its boarding stop's, in `baseOf`)
+      const { from } = scalesOf(g, l, byId, m.fares);
       const pkm: number[] = [], pkmPaid: number[] = [];
       for (const seg of dm.loads) {
         let a = 0, b = 0;
@@ -186,14 +188,12 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       let total = 0;
       for (const v of pkm) total += v;
       const rides = dm.ridersPerDay * tripsPerBoarding;
-      let boarded = 0, scaled = 0;
-      for (let k = 0; k < dm.boardings.length; k++) { boarded += dm.boardings[k]; scaled += dm.boardings[k] * (sc[k] ?? 1); }
-      const baseScale = boarded > 0 ? scaled / boarded : (sc[0] ?? 1);
+      const based = baseOf.get(l.id) ?? 0;
       // T-1626: a high-speed line's rides pay its multiplier on the rate; demand's extra has it already
       const mul = st.fast ? hsrFare(m.fares) : 1;
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
-        const r = (faresFor(fares, rides * share * baseScale, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;
+        const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;
         perPeriod[p] += r;
         linePer[p] += r;
         ridesPeriod[p] += rides * share;
@@ -203,6 +203,62 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
     lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
   }
   return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: ridesPeriod.map((v, p) => v / PERIOD_HOURS[p]), lines };
+}
+
+/** A line's boardings' mean base fare multiplier, by the stop each boards at (T-1277). */
+export function lineBaseScale(boardings: readonly number[], sc: readonly number[]): number {
+  let boarded = 0, scaled = 0;
+  for (let k = 0; k < boardings.length; k++) { boarded += boardings[k]; scaled += boardings[k] * (sc[k] ?? 1); }
+  return boarded > 0 ? scaled / boarded : (sc[0] ?? 1);
+}
+
+/** Half of what the network's base fares are shared out by boardings, half by passenger-km. */
+const BASE_BY_BOARDINGS = 0.5;
+
+/** T-2104: each running line's part of the network's base fares a day, in base fares (each times
+ * its boarding stop's fare scale, T-1277). The pool is what the base comes to over every line
+ * (each boarding times rail trips over boardings), so the network's fares stay the same; it is
+ * shared `byBoardings` by boardings and the rest by passenger-km, and no line takes more than one
+ * base fare a boarding (a trip pays one base whatever it rides), the excess going to the others by
+ * the same weights. Pool and weights are network-wide, since a trip's own legs are not known on
+ * the main thread: a short leg (a feeder bus) gets less than an even share and a long one more.
+ * `byBoardings` 1 is the even share per boarding. */
+export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], byId: Map<string, StationInput>, byBoardings = BASE_BY_BOARDINGS): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!dv) return out;
+  const boardingsAll = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
+  const perBoarding = boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
+  const ids: string[] = [], cap: number[] = [], byB: number[] = [], byKm: number[] = [];
+  let sumB = 0, sumKm = 0, pool = 0;
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
+    if (!st || st.status !== "running" || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
+    const g = lineGeo(w, l, byId), km = g.km;
+    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, fares).sc);
+    let pk = 0;
+    for (const seg of dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
+    // a line with no passenger-km takes no fare in `incomeFor`, so none of the pool either
+    if (!(pk > 0)) continue;
+    const b = dm.ridersPerDay * sc;
+    ids.push(l.id); cap.push(b); byB.push(b); byKm.push(pk * sc);
+    sumB += b; sumKm += pk * sc; pool += b * perBoarding;
+  }
+  const kmPart = sumKm > 0 ? 1 - byBoardings : 0;
+  const wt = ids.map((_, i) => (sumB > 0 ? (1 - kmPart) * byB[i] / sumB : 0) + (kmPart > 0 ? kmPart * byKm[i] / sumKm : 0));
+  // fill to the caps: lines whose share would pass one base a boarding are held there, the rest re-shared
+  const got = ids.map(() => 0), held = ids.map(() => false);
+  let left = pool;
+  for (let round = 0; round < ids.length && left > 0; round++) {
+    let free = 0;
+    for (let i = 0; i < ids.length; i++) if (!held[i]) free += wt[i];
+    if (!(free > 0)) break;
+    const c = left / free;
+    let more = false;
+    for (let i = 0; i < ids.length; i++) if (!held[i] && c * wt[i] > cap[i]) { held[i] = true; got[i] = cap[i]; left -= cap[i]; more = true; }
+    if (!more) { for (let i = 0; i < ids.length; i++) if (!held[i]) got[i] = c * wt[i]; break; }
+  }
+  ids.forEach((id, i) => out.set(id, got[i]));
+  return out;
 }
 
 /** What the figures read of a running line with both runs' stop positions: its stretches' km, run

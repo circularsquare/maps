@@ -43,6 +43,8 @@ const DAY = 0;
 const money = (page) => page.evaluate(([H, LEVEL, di]) => {
   const tw = window.tw, w = tw.world.value, m = tw.moneyState.value, v = window.twDemand.days()[di].view;
   const inc = tw.incomeByDay.value[di];
+  // T-2104: the base fare's share as the game takes it, and the even share per boarding before it
+  const baseNow = tw.baseFares?.(v) ?? {}, baseEven = tw.baseFares?.(v, 1) ?? {};
   const quiet = di === 1 || di === 2;
   const lines = {};
   let boardings = 0;
@@ -59,7 +61,8 @@ const money = (page) => page.evaluate(([H, LEVEL, di]) => {
     const fares = lm ? lm.perHour.reduce((s, x, p) => s + x * H[p], 0) * 1e6 : 0;
     const riders = ld?.ridersPerDay ?? 0;
     boardings += riders;
-    lines[l.id] = { name: l.name, bus: !!st.bus, km: st.km, riders, fares, run, upkeep: st.upkeep, vehKm: busKm, tph, estimate: !!ld?.estimate };
+    const faresEven = fares - (baseNow[l.id] ?? 0) + (baseEven[l.id] ?? 0);
+    lines[l.id] = { name: l.name, bus: !!st.bus, km: st.km, riders, fares, faresEven, run, upkeep: st.upkeep, vehKm: busKm, tph, estimate: !!ld?.estimate };
   }
   return { di, version: v.version, final: v.final, rail: v.railTripsPerDay, trips: v.tripsPerDay, split: v.split, boardings, fares: m.fares, economy: m.economy, runCostBusKm: m.runCostBusKm, lines };
 }, [H, LEVEL, DAY]);
@@ -98,7 +101,7 @@ const errors = [];
 try {
   const page = await b.ctx.newPage();
   collectErrors(page, errors);
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=2&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=${process.env.DEMAND_WORKERS ?? 2}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await importSave(page, await readFile(REAL_SAVE));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
@@ -136,6 +139,7 @@ try {
     const a = totals(after, r.line), z = totals(before);
     const d = {
       busProfit: a.bus?.profit ?? null,
+      busProfitEven: a.bus ? a.bus.faresEven - a.bus.run - a.bus.upkeep : null,
       network: a.all.profit - z.all.profit,
       railProfit: a.rail.profit - z.rail.profit,
       railFares: a.rail.fares - z.rail.fares,
@@ -153,7 +157,7 @@ try {
     const moved = [...lines].sort((x, y) => Math.abs(y.fares) - Math.abs(x.fares)).slice(0, 8);
     const ran = lines.filter((l) => Math.abs(l.run) > 1);
     results.scen.push({ ...sc, pts, add: r, before: z, after: a, d, works, moved, ran, secs: (Date.now() - t0) / 1000 });
-    console.log(sc.id, JSON.stringify({ station: sc.station, km: r.km?.toFixed(2), buses: r.buses, stops: r.stops.length, stations: r.stations, riders: Math.round(a.bus?.riders ?? 0), fares: Math.round(a.bus?.fares ?? 0), run: Math.round(a.bus?.run ?? 0), busProfit: Math.round(d.busProfit), network: Math.round(d.network), railFares: Math.round(d.railFares), railRiders: Math.round(d.railRiders), railTrips: Math.round(d.railTrips), works, ok: r.ok }));
+    console.log(sc.id, JSON.stringify({ station: sc.station, km: r.km?.toFixed(2), buses: r.buses, stops: r.stops.length, stations: r.stations, riders: Math.round(a.bus?.riders ?? 0), fares: Math.round(a.bus?.fares ?? 0), run: Math.round(a.bus?.run ?? 0), busProfit: Math.round(d.busProfit), busProfitEven: Math.round(d.busProfitEven ?? 0), network: Math.round(d.network), railFares: Math.round(d.railFares), railRiders: Math.round(d.railRiders), railTrips: Math.round(d.railTrips), works, ok: r.ok }));
     await writeFile(OUT, JSON.stringify(results, null, 1));
     const v1 = await version(page);
     await page.evaluate((l) => window.tw.client.edit({ op: 'removeLine', line: l }), r.line);
