@@ -36,6 +36,10 @@
     { "id": "sulawesi", "name": "Sulawesi", "units": { "ID": [
       "North Sulawesi", "Gorontalo", "Central Sulawesi", "West Sulawesi", "South Sulawesi", "Southeast Sulawesi"] } },
     { "id": "id-east", "name": "Eastern Indonesia", "units": { "ID": "*" } },
+    { "id": "visayas", "name": "Visayas", "units": { "PH": ["Western Visayas", "Central Visayas", "Eastern Visayas"] } },
+    { "id": "mindanao", "name": "Mindanao", "units": { "PH": [
+      "Zamboanga Peninsula", "Northern Mindanao", "Davao Region", "Soccsksargen", "Caraga", "ARMM"] } },
+    { "id": "luzon", "name": "Luzon", "units": { "PH": "*" } },
     { "id": "australia", "name": "Australia", "countries": ["AU"] },
     { "id": "cn-north", "name": "China north", "units": { "CN": ["Beijing", "Tianjin", "Hebei", "Shanxi", "Inner Mongolia"] } },
     { "id": "cn-northeast", "name": "China northeast", "units": { "CN": ["Liaoning", "Jilin", "Heilongjiang"] } },

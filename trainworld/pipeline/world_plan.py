@@ -150,6 +150,8 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Indonesia's kabupaten as they are, zones held to their island; at the default 20 a km2 the river
               # and coast towns of Kalimantan and Papua were dead space (Sintang, Berau, Bulungan, Sentani; T-1738)
               "IDN": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True, "task": "T-1738"},
+              # the Philippines' municipalities as they are, zones held to their island (T-1738)
+              "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "task": "T-1738"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)

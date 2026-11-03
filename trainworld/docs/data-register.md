@@ -44,6 +44,7 @@ loose checks only since T-636 (Anita, 2026-10-17): no country constant comes fro
 | Cambodia | the country from the world plan (T-1738): phn Phnom Penh (metro row with 2 remnants, tier 0, no module) and 20 zones of geoBoundaries ADM2 districts on the default zone rule; 32 districts dead space (0.83M); 17 rows shipped (bnl with its top-zone jobs share relaxed), the four north-west zones tpe anv phm slk held: GHSL has 3-10x the census people there (T-2000) | D | notes/T-1738.md 11; OSM extract `asia/cambodia` of 2026-11-02 |
 | Malaysia | the country from the world plan (T-1738): kua Kuala Lumpur and joo Johor Bahru (metro rows with their remnants, tier 0, no module) and 27 zones of geoBoundaries ADM3 mukim grouped by district (`group_level`, as Korea; far parts of dissolved same-named mukim split, `GB_SPLIT_FAR`); 200 mukim dead space (1.38M, the interiors); all 29 shipped; Malaysia-Singapore border factor 0.5; kua's origin moved by hand to the centre (Masjid Jamek, T-2036) | D | notes/T-1738.md 11; OSM extract `asia/malaysia-singapore-brunei` of 2026-11-02 |
 | Indonesia | the country from the world plan (T-1738): 22 metro rows (jak Jakarta 37.55M, sur Surabaya, tan Tangerang, bad Bandung, yog Yogyakarta ... pea Pekalongan; tier 0, no module) and 183 zones of geoBoundaries ADM2 kabupaten (rule `IDN`: `contiguous`, density floor 10 a km2); 23 units dead space (1.9M: Kalimantan's far interior, Papua's southern swamps, Sabang and Anambas); 203 shipped, puc held (GHSL's Mulia pixel, T-2038), set parked (T-2039); yai shipped at GHSL 4x the census (T-2038) | D | notes/T-1738.md 12; OSM extracts `asia/indonesia/{java,sumatra,nusa-tenggara,sulawesi,kalimantan,papua,maluku}` of 2026-11-02 |
+| Philippines | the country from the world plan (T-1738): mai Manila 29.9M, ceb Cebu City, ang Angeles, dav Davao City (metro rows with their remnants, tier 0, no module) and 99 zones of geoBoundaries ADM3 municipalities (rule `PHL`: `contiguous`); 29 units dead space (0.24M); 102 shipped (one-town zones' top-zone jobs share, Makati's top job cell and Davao City's FUA ratio relaxed); pti (Sulu, Tawi-Tawi, Basilan) held: GHSL has a quarter of the census (T-2053); Manila's and Angeles's origins moved to their centres | D | notes/T-1738.md 13; OSM extract `asia/philippines` of 2026-11-03 |
 | Brunei | gad, one zone of the whole country (21 geoBoundaries ADM2 mukim, 7 empty ones dead space), shipped with Malaysia (T-1738) | D | notes/T-1738.md 11; OSM extract `asia/malaysia-singapore-brunei` of 2026-11-02 |
 | India | mum | C, curve from bands | notes/T-292.md |
 | Nigeria | lag owe aba abo | D | notes/T-459.md; owe aba abo (plan rows, shipped) share Lagos's country module and its informal jobs blend; OSM extract of 2026-10-17 (notes/T-726.md) |
@@ -93,37 +94,44 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Vietnam | U GHSL alone; ? GSO 2019 census population by district (the completed-results volume; not opened, T-1738) | U OSM relations matched to geoBoundaries ADM2 districts | not recorded |
 | Thailand | U GHSL alone; ? NSO 2020 registration and 2010 census by amphoe, not looked for | U OSM relations matched to geoBoundaries ADM2 amphoe | not recorded |
 | Singapore | U GHSL alone; ? SingStat population by planning area, not looked for | U OSM relations matched to geoBoundaries ADM2 subzones | not recorded |
-| Cambodia | U GHSL alone, wrong in the north-west (3-10x the census in the Thai border districts: four zones held, T-2000); N 2019 census by province with polygons (Open Development Cambodia `final_census2019_en`, CC BY-SA; WFS timed out to scripts); ? districts and communes on citypopulation.de only | U OSM relations matched to geoBoundaries ADM2 districts | not recorded |
+| Cambodia | U GHSL alone, wrong in the north-west (3-10x the census in the Thai border districts: four zones held, T-2000); N 2019 census by province with polygons (Open Development Cambodia `final_census2019_en`, CC BY-SA; WFS timed out to scripts); N districts and communes on citypopulation.de only (household population, NIS codes = COD-AB KHM pcodes; no open table found, NIS microdata a 10% sample behind a download form), T-2000 (T-2075) | U OSM relations matched to geoBoundaries ADM2 districts | not recorded |
 | Malaysia | U GHSL alone; ? DOSM 2020 census mukim totals in releases, no open mukim polygons found | U OSM relations matched to geoBoundaries ADM3 mukim (same-named mukim dissolved into one feature in the file: split, `world_plan.GB_SPLIT_FAR`), Sabah ADM2 | not recorded |
 | Brunei | U GHSL alone; not looked for | U OSM relations matched to geoBoundaries ADM2 mukim | not recorded |
-| Indonesia | U GHSL alone, about 2x the census across Papua (1.3-2.2x by zone, Yalimo 4.7x) and 1.2-1.7x in Riau (T-1738 12); ? BPS 2020 census by kabupaten (citypopulation.de lists it), desa totals with polygons not found open | U OSM relations matched to geoBoundaries ADM2 kabupaten (far islands of a kabupaten split off, `world_plan.GB_SPLIT_FAR`) | not recorded |
-| India | U Census 2011 by sub-district, grown by district to 2020; 2027 census not out | U OSM admin_level 5 and 6 by name; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
+| Indonesia | U GHSL alone, about 2x the census across Papua (1.3-2.2x by zone, Yalimo 4.7x) and 1.2-1.7x in Riau (T-1738 12); N 2020 census (Long Form, mid-2022) by kabupaten with polygons in one file, USCB's Indonesia gdb and xlsx on HDX (CC BY 4.0, BPS code = COD-AB IDN pcode), T-2038 (T-2075); desa totals with polygons not found open | U OSM relations matched to geoBoundaries ADM2 kabupaten (far islands of a kabupaten split off, `world_plan.GB_SPLIT_FAR`) | not recorded |
+| Philippines | U GHSL alone: 1.0-1.5x the 2020 census by province, but 0.1-0.55x in Muslim Mindanao (Basilan 0.10x, Tawi-Tawi 0.24x, Sulu 0.29x, Lanao del Sur 0.55x; T-2053); N 2020 census by barangay with polygons, USCB's Philippines gdb on HDX (CC BY 4.0, 10-digit PSGC; local copy religiondots/data/geo/ph/ph_barangays.gpkg), T-2076 (T-2075); skip COD-PS (88 plain provinces, double counts the HUCs) | U OSM relations matched to geoBoundaries ADM3 municipalities | not recorded |
+| India | U Census 2011 by sub-district, grown by district to 2020 (mum); N the same census by district (PCA, NADA catalog 6191) for the planned rows, T-2078; 2027 census not out (enumeration February 2027, no results announced, T-2075) | U OSM admin_level 5 and 6 by name; N Datameet 2011 districts with `censuscode` (CC BY 4.0), T-2078; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
 | Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 (owe aba abo the same) |
 | Spain | U GHSL alone (GHS-POP E2020 R2023A 100 m); N INE Census 2021 population on the 1 km Eurostat grid, found, not opened (T-719, T-771) | U OSM admin relations matched to NUTS-3 units (`osm_units.py`) | 0.81-0.95 / 0.94-1 |
 | Italy | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.66-1 / 0.62-1 (Naples lowest) |
 | Austria | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Belgium | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Greece | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.98-1 |
-| Poland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.65-1 (Katowice, Lodz lowest) |
-| Hungary | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Poland | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 1 / 0.65-1 (Katowice, Lodz lowest) |
+| Hungary | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Netherlands | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Portugal | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Russia | U GHSL alone; ? not looked for | U OSM relations matched to geoBoundaries ADM2 units | 1 / 0.50-0.82 |
 | Sweden | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.81 / 1 |
-| Romania | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.99 / 0.64 |
+| Romania | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 0.99 / 0.64 |
 | Denmark | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Switzerland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Serbia | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.77 |
 | Norway | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.93 / 0.99 |
 | Finland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
-| Bulgaria | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
-| Czechia | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Bulgaria | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Czechia | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Ireland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Albania | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.98 |
 | Wales | U GHSL alone; ? Census 2021 by LSOA, as England's packs use, not opened for Wales | U OSM relations matched to ONS ITL3 units | 1 / 1 |
 | Scotland | U GHSL alone; ? Census 2022 not looked for | U OSM relations matched to ONS ITL3 units | 0.79 / 0.87 |
 | Northern Ireland | U GHSL alone; ? NISRA Census 2021 not looked for | U OSM relations matched to ONS ITL3 units | 0.81 / 0.85 |
-| Slovakia, Slovenia, Croatia, Bosnia and Herzegovina, Montenegro, North Macedonia, Kosovo, Moldova, Estonia, Latvia, Lithuania, Iceland, Malta, Cyprus, Luxembourg (zones only) | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units (geoBoundaries ADM3 in Bosnia, ADM1 in Moldova) | not recorded |
+| Slovakia, Slovenia, Croatia, Bosnia and Herzegovina, Montenegro, North Macedonia, Kosovo, Moldova, Estonia, Latvia, Lithuania, Iceland, Malta, Cyprus, Luxembourg (zones only) | U GHSL alone; N for the EU members Eurostat's Census 2021 1 km grid, T-2083 (T-2075); others not looked for | U OSM relations matched to NUTS-3 units (geoBoundaries ADM3 in Bosnia, ADM1 in Moldova) | not recorded |
+| New Zealand (not built) | N 2023 census by SA1 and SA2 (Stats NZ ArcGIS services, CC BY 4.0), T-2077 (T-2075) | N the same services' SA1/SA2 polygons | - |
+| Turkey (not built) | N ADNKS register 2022 by ilce (COD-PS TUR, CC BY-IGO; Syrians under temporary protection in a separate table), T-2079 (T-2075); skip TUIK's portals (no table API) | N COD-AB TUR ADM2 by pcode | - |
+| Mexico (not built) | N 2020 census by municipio, locality (ITER) and urban AGEB (INEGI open terms), T-2080 (T-2075) | N INEGI Marco Geoestadistico 2020 by CVEGEO | - |
+| Israel (not built; Middle East pick) | N 2022 census by statistical area (CBS, data.gov.il), T-2082 (T-2075) | N CBS's own statistical-area polygons | - |
+| Saudi Arabia (not built) | ? 2022 census by region only (COD-PS SAU, 13 regions); GHSL alone would do (T-2075) | - COD-AB to region only | - |
+| Ukraine, Belarus (held) | - nothing open and current for Ukraine (census 2001; COD-PS UKR 2026 is marked restricted); ? Belarus 2019 census by raion in Belstat PDF bulletins (T-2075) | ? COD-AB UKR (hromada) and BLR (raion) | - |
 
 ## Jobs
 
@@ -141,8 +149,10 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | India | tier 0 proxy (population 0.5); N 6th Economic Census 2013 by ward, T-388 | - | - |
 | Australia | tier 0 proxy; skip 2021 census place of work (taken in the Sydney, Melbourne and Canberra lockdowns, home workers coded at home); N 2016 census Working Population Profile by destination zone (DataPacks, CC BY 4.0), P3 task to file (T-1857) | U tier 0 | - |
 | Vietnam | tier 0 proxy (`plan_config.job_blend` from the ILO vulnerable-employment share); ? GSO economic census 2021 by district not looked for | U tier 0 | - |
-| Thailand, Singapore, Cambodia, Malaysia, Brunei, Indonesia | tier 0 proxy (`plan_config.job_blend`); not looked for | U tier 0 | - |
+| Thailand, Singapore, Cambodia, Malaysia, Brunei, Indonesia, Philippines | tier 0 proxy (`plan_config.job_blend`); not looked for | U tier 0 | - |
 | Nigeria | tier 0 proxy (population 0.5, land cap) | - | - |
+| New Zealand (not built) | N Business Demography employee count by SA2 (Stats NZ ArcGIS), T-2077; ? 2023 census travel to work by SA2 (datafinder, free account) | ? not looked for | ? not looked for |
+| Mexico (not built) | N INEGI DENUE, every economic unit with coordinates and an employee band, T-2081; ? Censos Economicos 2019 by AGEB; ? census 2020 extended-questionnaire municipio of work | ? DENUE by SCIAN sector | ? not looked for |
 | Taiwan | tier 0 proxy, its jobs per resident and share aged 0-14 from DGBAS's 2024 manpower survey and the Ministry of the Interior's end-2024 registration (`tier0.NATIONAL`: the World Bank has no Taiwan), T-897; ? jobs by township not looked for | U tier 0 | - |
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above), China's Jiangsu rows | tier 0 proxy: population x jobs per resident (World Bank employment ratio, 2025), spread by GHSL built volume, OSM job places and population in the weights `plan_config.job_blend` sets from the ILO vulnerable-employment share (30/50/20 in most, Albania 21/33/46); ? national jobs by small area not looked for | U tier 0: OSM shops and services, restaurants, bars, venues and hotels, blended with the jobs at completeness c | ? not looked for |
 
@@ -168,6 +178,7 @@ days of people with a workplace. Several countries have one figure for both.
 | Thailand, Singapore | ? not looked for; U the borrowed curve for ban and sin, the zone curve for Thailand's zones | ? not looked for | U 0 | U 0 |
 | Cambodia, Malaysia, Brunei | ? not looked for; U the borrowed curve for phn, kua and joo, the zone curve for the zones; Johor Bahru to Singapore about 250,000-400,000 workers a day (news estimates), the border factor 0.5 (borders.json) | ? not looked for | U 0 | U 0 |
 | Indonesia | ? BPS commuter survey (SAKERNAS, Jabodetabek commuter survey 2019) not looked for; U the borrowed curve for the 22 metros, the zone curve for the zones; borders with Malaysia (Kalimantan) and Singapore (Batam) at the national 0.05 | ? not looked for | U 0 | U 0 |
+| Philippines | ? PSA census place of work not looked for; U the borrowed curve for mai ceb ang dav, the zone curve for the zones; no land border (Sabah within 50 km of Tawi-Tawi, national 0.05) | ? MUCEP 2014 (Metro Manila, JICA) not looked for | U 0 | U 0 |
 | Nigeria | - none; U the borrowed curve (T-314) | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
 | Spain | N the transport ministry's "Estudio de movilidad con Big Data" (daily trips between 3,792 districts with home and work ends, open CSV, licence not read; T-719, T-771); U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp, T-765 | U 0, as work at home |
 | Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | ? national flows not looked for; U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
@@ -248,7 +259,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Vietnam | ? not looked for; worldwide (the surveys' median) | worldwide |
 | Australia | ? Sydney HTS and Victoria's VISTA, not checked; worldwide | worldwide |
 | Thailand, Singapore | ? not looked for (Singapore's LTA Household Interview Travel Survey publishes summaries only); worldwide | worldwide |
-| Cambodia, Malaysia, Brunei, Indonesia | ? not looked for; worldwide | worldwide |
+| Cambodia, Malaysia, Brunei, Indonesia, Philippines | ? not looked for; worldwide | worldwide |
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, the zones-only countries (Population above) | ? not looked for; worldwide (the surveys' median) | worldwide |
 | Wales, Scotland, Northern Ireland | U England's rates, NTS0504b (country GB) | worldwide |
 
@@ -270,7 +281,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Australia | U tier 0 OSM; ? ACARA school locations with enrolments, not looked for | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 |
 | Thailand, Singapore | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 (Changi and Suvarnabhumi are hubs; no connecting share set) |
 | Cambodia, Malaysia, Brunei | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 (KLIA is a hub; no connecting share set) |
-| Indonesia | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 |
+| Indonesia, Philippines | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 |
 | Nigeria | U tier 0 OSM; ? GRID3 schools, T-507 | U tier 0 (World Bank rate from 2011) | U OSM, no beds; ? GRID3 health facilities, T-507 | U FAAN via the press |
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9); ? national school registers not looked for | U tier 0 (Wikidata students where tagged, scaled to the World Bank tertiary rate) | U OSM, beds by the World Bank rule below | U OurAirports sites in the pack with Wikidata patronage, O&D share 1 (Tirana: none inside the pack) |
 

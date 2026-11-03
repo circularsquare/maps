@@ -73,8 +73,11 @@ A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` i
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
 figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a
 district (1 km pixels of 20,000-48,000 in villages). Such rows are held (`setbuilt.py <ids> --hold "<reason>"`)
-with a task, the rest of the country built. Hold them on the live plan before the run: a row held after its gate
-is still registered, the join solves it with its group, and the market step then fails on it (Indonesia's yai).
+with a task, the rest of the country built. GHSL can be as wrong the other way (Muslim Mindanao, 0.1-0.55x the
+census): a row under about a third of its census is held too, the rest shipped low with a task. Compare by zone where
+the census has small areas (the Philippines' barangays, T-1738 13), else by province. Hold them on the live plan before
+the run: a row held after its gate is still registered, the join solves it with its group, and the market step then
+fails on it (Indonesia's yai).
 
 Done when: the dry plan's rows look like the country's towns and countryside, with about the people they have.
 
@@ -173,6 +176,7 @@ Read the batch report and `world_run.py status`. For each parked row:
 | `top_zone_jobs_share` up to 0.3 on a zone under 0.2M | relax |
 | `mean_commute_km` on a zone over 20,000 km² | relax |
 | `pop_vs_plan` on a row with a census hook | relax with the census figure |
+| `browser` failing only "no page errors", every row checked in the same few minutes | the app changed under the gate's Vite (a landing, a WASM rebuild): rerun, no relax |
 | `browser` (few riders, a purpose missing) | open `world_run/<batch>/gate/<id>-line.png`. The line leaves the town or crosses a border: move the origin (section 3 item 1), never relax. Otherwise relax with what the picture shows |
 | `register failed ... invalid commute between zones` | `<tc>\stale.py --cmd <kit>\fix.cmd`, start the .cmd as in 5 and wait, then `stale.py` again: 0 |
 | a build step error | an old cache (ZeroDivisionError in `osm_signal_line`): delete it. "Failed to open dataset": memory, rerun with fewer jobs. Else a code fault: leave parked, file a task |
@@ -206,11 +210,19 @@ Done when: `world_run.py status` shows the country's gated rows shipped.
 - Load check on the biggest metro and one rural zone: `ROWS=<kit>\rows.json node <tw>\checks\city-browser.mjs`
   (rows from `world_run/<batch>/gate/<id>.row.json`) on your Vite: PASS, and the `-line.png` opened: the
   line runs through the town.
-- Smoke 20 of 20 on your Vite; the real save's rail trips within 0.1% of the figure in your brief, or the
+- Terrain and routed drives, which the join does not make: `<tw>\pipeline\terrain_fine.py blocks <kit>\blocks.json`,
+  then `terrain_fine.py run <kit>\blocks.json <tw>\data\work\terrain-fine --jobs 1 --fetch 8` (only the blocks its
+  manifest lacks, a new part tar; Southeast Asia's 3.6 GB took 12 minutes from home), then `zone_terrain.py build
+  --jobs N` (zones with no file only) and `market_drives.py build --jobs N` (the new places only); these three run
+  without `-I`. Then `<tw>\checks\build_inputs.py`: no FLAG (the files a production build copies, and a routed-drive
+  place for every zone).
+- Smoke 22 of 22 on your Vite; the real save's rail trips within 0.1% of the figure in your brief, or the
   difference explained.
 - Names: zones named after a rural unit that hold a town take the town's name in
   `app/src/game/zone-names.json`, the unit's name as an alias; the country's line in
-  `app/src/game/realms.json`.
+  `app/src/game/realms.json`. Write the names once the live plan is in (section 4), before the run: the gate's row
+  files take the shown name, and a load check on a row file from before a rename waits for the old name in the top
+  bar and fails after 10 minutes (the Philippines' Passi).
 - Docs: the register row (packs, archetype, extract dates); DECISIONS.md for relaxations of a new kind and
   hand patches; demand-worldwide.md only if a rule changed; ARCHIVE line; task off TASKS.md.
 - Clean: the backups deleted, the kit's sim copy removed with `<tc>\setup_sim.py <kit> remove` (it takes

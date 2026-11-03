@@ -17642,6 +17642,558 @@
       {
         "name": "Tanjung Jabung Barat",
         "regionName": "Tanjung Jabung Barat region"
+      },
+      {
+        "name": "Manila",
+        "regionName": "Manila region"
+      },
+      {
+        "name": "Cebu City",
+        "regionName": "Cebu City region"
+      },
+      {
+        "name": "Angeles",
+        "regionName": "Angeles region"
+      },
+      {
+        "name": "Davao City",
+        "regionName": "Davao City region"
+      },
+      {
+        "name": "Iloilo City",
+        "regionName": "Iloilo City region"
+      },
+      {
+        "name": "City of Tarlac",
+        "regionName": "City of Tarlac region"
+      },
+      {
+        "name": "Cagayan de Oro City",
+        "regionName": "Cagayan de Oro City region"
+      },
+      {
+        "name": "City of Urdaneta",
+        "regionName": "City of Urdaneta region"
+      },
+      {
+        "name": "Legazpi City",
+        "regionName": "Legazpi City region"
+      },
+      {
+        "name": "Roxas City",
+        "regionName": "Roxas City region"
+      },
+      {
+        "name": "Tagbilaran City",
+        "regionName": "Tagbilaran City region"
+      },
+      {
+        "name": "City of Bayugan",
+        "regionName": "City of Bayugan region"
+      },
+      {
+        "name": "General Santos City",
+        "regionName": "General Santos City region"
+      },
+      {
+        "name": "Cabanatuan City",
+        "regionName": "Cabanatuan City region"
+      },
+      {
+        "name": "San Carlos City",
+        "regionName": "San Carlos City region"
+      },
+      {
+        "name": "Naga City",
+        "regionName": "Naga City region"
+      },
+      {
+        "name": "Tacloban City",
+        "regionName": "Tacloban City region"
+      },
+      {
+        "name": "Bacolod City",
+        "regionName": "Bacolod City region"
+      },
+      {
+        "name": "Lopez",
+        "regionName": "Lopez region"
+      },
+      {
+        "name": "Pagadian City",
+        "regionName": "Pagadian City region"
+      },
+      {
+        "name": "Butuan City",
+        "regionName": "Butuan City region"
+      },
+      {
+        "name": "Toledo City",
+        "regionName": "Toledo City region"
+      },
+      {
+        "name": "City of Tagum",
+        "regionName": "City of Tagum region"
+      },
+      {
+        "name": "Calbayog City",
+        "regionName": "Calbayog City region"
+      },
+      {
+        "name": "Aroroy",
+        "regionName": "Aroroy region"
+      },
+      {
+        "name": "San Jose City",
+        "regionName": "San Jose City region"
+      },
+      {
+        "name": "City of Calapan",
+        "regionName": "City of Calapan region"
+      },
+      {
+        "name": "City of Valencia",
+        "regionName": "City of Valencia region"
+      },
+      {
+        "name": "San Miguel",
+        "regionName": "San Miguel region"
+      },
+      {
+        "name": "Iriga City",
+        "regionName": "Iriga City region"
+      },
+      {
+        "name": "City of Passi",
+        "regionName": "City of Passi region"
+      },
+      {
+        "name": "Kalibo",
+        "regionName": "Kalibo region"
+      },
+      {
+        "name": "City of Santiago",
+        "regionName": "City of Santiago region"
+      },
+      {
+        "name": "City of Tabuk",
+        "regionName": "City of Tabuk region"
+      },
+      {
+        "name": "Cotabato City",
+        "regionName": "Cotabato City region"
+      },
+      {
+        "name": "City of Candon",
+        "regionName": "City of Candon region"
+      },
+      {
+        "name": "Iligan City",
+        "regionName": "Iligan City region"
+      },
+      {
+        "name": "Tuguegarao City",
+        "regionName": "Tuguegarao City region"
+      },
+      {
+        "name": "Puerto Princesa City",
+        "regionName": "Puerto Princesa City region"
+      },
+      {
+        "name": "City of Mati",
+        "regionName": "City of Mati region"
+      },
+      {
+        "name": "Sariaya",
+        "regionName": "Sariaya region"
+      },
+      {
+        "name": "Nasugbu",
+        "regionName": "Nasugbu region"
+      },
+      {
+        "name": "City of Bayawan",
+        "regionName": "City of Bayawan region"
+      },
+      {
+        "name": "Zamboanga City",
+        "regionName": "Zamboanga City region"
+      },
+      {
+        "name": "Baguio City",
+        "regionName": "Baguio City region"
+      },
+      {
+        "name": "Malasiqui",
+        "regionName": "Malasiqui region"
+      },
+      {
+        "name": "Lagonoy",
+        "regionName": "Lagonoy region"
+      },
+      {
+        "name": "Ozamis City",
+        "regionName": "Ozamis City region"
+      },
+      {
+        "name": "Dipolog City",
+        "regionName": "Dipolog City region"
+      },
+      {
+        "name": "Quezon",
+        "regionName": "Quezon region"
+      },
+      {
+        "name": "Lebak",
+        "regionName": "Lebak region"
+      },
+      {
+        "name": "Ipil",
+        "regionName": "Ipil region"
+      },
+      {
+        "name": "City of Tabaco",
+        "regionName": "City of Tabaco region"
+      },
+      {
+        "name": "Ilagan City",
+        "regionName": "Ilagan City region"
+      },
+      {
+        "name": "Laoag City",
+        "regionName": "Laoag City region"
+      },
+      {
+        "name": "City of Digos",
+        "regionName": "City of Digos region"
+      },
+      {
+        "name": "Surigao City",
+        "regionName": "Surigao City region"
+      },
+      {
+        "name": "Palimbang",
+        "regionName": "Palimbang region"
+      },
+      {
+        "name": "Daet",
+        "regionName": "Daet region"
+      },
+      {
+        "name": "City of Baybay",
+        "regionName": "City of Baybay region"
+      },
+      {
+        "name": "City of San Fernando",
+        "regionName": "City of San Fernando region"
+      },
+      {
+        "name": "Isulan",
+        "regionName": "Isulan region"
+      },
+      {
+        "name": "Tanay",
+        "regionName": "Tanay region"
+      },
+      {
+        "name": "Pikit",
+        "regionName": "Pikit region"
+      },
+      {
+        "name": "Compostela",
+        "regionName": "Compostela region"
+      },
+      {
+        "name": "City of Koronadal",
+        "regionName": "City of Koronadal region"
+      },
+      {
+        "name": "Cadiz City",
+        "regionName": "Cadiz City region"
+      },
+      {
+        "name": "Gingoog City",
+        "regionName": "Gingoog City region"
+      },
+      {
+        "name": "Aparri",
+        "regionName": "Aparri region"
+      },
+      {
+        "name": "Marawi City",
+        "regionName": "Marawi City region"
+      },
+      {
+        "name": "Kapatagan",
+        "regionName": "Kapatagan region"
+      },
+      {
+        "name": "Bayombong",
+        "regionName": "Bayombong region"
+      },
+      {
+        "name": "San Jose",
+        "regionName": "San Jose region"
+      },
+      {
+        "name": "City of Kidapawan",
+        "regionName": "City of Kidapawan region"
+      },
+      {
+        "name": "Olongapo City",
+        "regionName": "Olongapo City region"
+      },
+      {
+        "name": "Roxas",
+        "regionName": "Roxas region"
+      },
+      {
+        "name": "City of Catbalogan",
+        "regionName": "City of Catbalogan region"
+      },
+      {
+        "name": "Sibalom",
+        "regionName": "Sibalom region"
+      },
+      {
+        "name": "City of Panabo",
+        "regionName": "City of Panabo region"
+      },
+      {
+        "name": "City of Maasin",
+        "regionName": "City of Maasin region"
+      },
+      {
+        "name": "Bago City",
+        "regionName": "Bago City region"
+      },
+      {
+        "name": "Batangas City",
+        "regionName": "Batangas City region"
+      },
+      {
+        "name": "Molave",
+        "regionName": "Molave region"
+      },
+      {
+        "name": "City of Guihulngan",
+        "regionName": "City of Guihulngan region"
+      },
+      {
+        "name": "City of Cauayan",
+        "regionName": "City of Cauayan region"
+      },
+      {
+        "name": "Dumaguete City",
+        "regionName": "Dumaguete City region"
+      },
+      {
+        "name": "Lucena City",
+        "regionName": "Lucena City region"
+      },
+      {
+        "name": "City of Kabankalan",
+        "regionName": "City of Kabankalan region"
+      },
+      {
+        "name": "Naval",
+        "regionName": "Naval region"
+      },
+      {
+        "name": "City of Alaminos",
+        "regionName": "City of Alaminos region"
+      },
+      {
+        "name": "Paniqui",
+        "regionName": "Paniqui region"
+      },
+      {
+        "name": "City of Borongan",
+        "regionName": "City of Borongan region"
+      },
+      {
+        "name": "Lemery",
+        "regionName": "Lemery region"
+      },
+      {
+        "name": "City of Balanga",
+        "regionName": "City of Balanga region"
+      },
+      {
+        "name": "Dalaguete",
+        "regionName": "Dalaguete region"
+      },
+      {
+        "name": "Malita",
+        "regionName": "Malita region"
+      },
+      {
+        "name": "Barili",
+        "regionName": "Barili region"
+      },
+      {
+        "name": "Mariveles",
+        "regionName": "Mariveles region"
+      },
+      {
+        "name": "Siquijor",
+        "regionName": "Siquijor region"
+      },
+      {
+        "name": "Polillo",
+        "regionName": "Polillo region"
+      },
+      {
+        "name": "Mambajao",
+        "regionName": "Mambajao region"
+      },
+      {
+        "name": "San Fernando",
+        "regionName": "San Fernando region"
+      },
+      {
+        "name": "Manila",
+        "regionName": "Manila region"
+      },
+      {
+        "name": "Cebu City",
+        "regionName": "Cebu City region"
+      },
+      {
+        "name": "Angeles",
+        "regionName": "Angeles region"
+      },
+      {
+        "name": "Davao City",
+        "regionName": "Davao City region"
+      },
+      {
+        "name": "Iloilo City",
+        "regionName": "Iloilo City region"
+      },
+      {
+        "name": "City of Tarlac",
+        "regionName": "City of Tarlac region"
+      },
+      {
+        "name": "Cagayan de Oro City",
+        "regionName": "Cagayan de Oro City region"
+      },
+      {
+        "name": "City of Urdaneta",
+        "regionName": "City of Urdaneta region"
+      },
+      {
+        "name": "Legazpi City",
+        "regionName": "Legazpi City region"
+      },
+      {
+        "name": "Roxas City",
+        "regionName": "Roxas City region"
+      },
+      {
+        "name": "Tagbilaran City",
+        "regionName": "Tagbilaran City region"
+      },
+      {
+        "name": "Tacloban City",
+        "regionName": "Tacloban City region"
+      },
+      {
+        "name": "Zamboanga City",
+        "regionName": "Zamboanga City region"
+      },
+      {
+        "name": "Baguio City",
+        "regionName": "Baguio City region"
+      },
+      {
+        "name": "Ozamis City",
+        "regionName": "Ozamis City region"
+      },
+      {
+        "name": "Dipolog City",
+        "regionName": "Dipolog City region"
+      },
+      {
+        "name": "City of Tabaco",
+        "regionName": "City of Tabaco region"
+      },
+      {
+        "name": "Ilagan City",
+        "regionName": "Ilagan City region"
+      },
+      {
+        "name": "Laoag City",
+        "regionName": "Laoag City region"
+      },
+      {
+        "name": "City of Digos",
+        "regionName": "City of Digos region"
+      },
+      {
+        "name": "Surigao City",
+        "regionName": "Surigao City region"
+      },
+      {
+        "name": "Palimbang",
+        "regionName": "Palimbang region"
+      },
+      {
+        "name": "Daet",
+        "regionName": "Daet region"
+      },
+      {
+        "name": "City of Baybay",
+        "regionName": "City of Baybay region"
+      },
+      {
+        "name": "City of San Fernando",
+        "regionName": "City of San Fernando region"
+      },
+      {
+        "name": "Isulan",
+        "regionName": "Isulan region"
+      },
+      {
+        "name": "Tanay",
+        "regionName": "Tanay region"
+      },
+      {
+        "name": "Pikit",
+        "regionName": "Pikit region"
+      },
+      {
+        "name": "City of Kidapawan",
+        "regionName": "City of Kidapawan region"
+      },
+      {
+        "name": "Dumaguete City",
+        "regionName": "Dumaguete City region"
+      },
+      {
+        "name": "City of Balanga",
+        "regionName": "City of Balanga region"
+      },
+      {
+        "name": "Malita",
+        "regionName": "Malita region"
+      },
+      {
+        "name": "Mariveles",
+        "regionName": "Mariveles region"
+      },
+      {
+        "name": "Polillo",
+        "regionName": "Polillo region"
+      },
+      {
+        "name": "Mambajao",
+        "regionName": "Mambajao region"
+      },
+      {
+        "name": "San Fernando",
+        "regionName": "San Fernando region"
       }
     ],
     "rule": {
@@ -75588,6 +76140,2654 @@
       "country": "ID",
       "realm": "sumatra",
       "localTrips": 1863211.0
+    },
+    {
+      "id": "cif",
+      "name": "City of Bayugan",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.7439,
+        "lat": 8.7112
+      },
+      "center": [
+        125.7439,
+        8.7112
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.219,
+        7.876,
+        126.478,
+        8.97
+      ],
+      "place": 4417,
+      "country": "PH",
+      "localTrips": 3270702.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "gel",
+      "name": "General Santos City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.1099,
+        "lat": 6.0661
+      },
+      "center": [
+        125.1099,
+        6.0661
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.814,
+        5.536,
+        125.557,
+        6.559
+      ],
+      "place": 4418,
+      "country": "PH",
+      "localTrips": 3466431.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cbn",
+      "name": "Cabanatuan City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.9586,
+        "lat": 15.4752
+      },
+      "center": [
+        120.9586,
+        15.4752
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.716,
+        15.226,
+        122.262,
+        16.528
+      ],
+      "place": 4419,
+      "country": "PH",
+      "localTrips": 3053165.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "snr",
+      "name": "San Carlos City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.3576,
+        "lat": 15.9266
+      },
+      "center": [
+        120.3576,
+        15.9266
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.863,
+        15.728,
+        120.512,
+        16.16
+      ],
+      "place": 4420,
+      "country": "PH",
+      "localTrips": 3133477.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "nay",
+      "name": "Naga City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.1897,
+        "lat": 13.6326
+      },
+      "center": [
+        123.1897,
+        13.6326
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.534,
+        13.436,
+        123.45,
+        14.148
+      ],
+      "place": 4421,
+      "country": "PH",
+      "localTrips": 3112790.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "bco",
+      "name": "Bacolod City",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.9689,
+        "lat": 10.7037
+      },
+      "center": [
+        122.9689,
+        10.7037
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.877,
+        10.364,
+        123.523,
+        10.876
+      ],
+      "place": 4423,
+      "country": "PH",
+      "localTrips": 3235755.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "lop",
+      "name": "Lopez",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.2661,
+        "lat": 13.8862
+      },
+      "center": [
+        122.2661,
+        13.8862
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.786,
+        13.143,
+        122.812,
+        14.264
+      ],
+      "place": 4424,
+      "country": "PH",
+      "localTrips": 3118469.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "pga",
+      "name": "Pagadian City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.4423,
+        "lat": 7.8261
+      },
+      "center": [
+        123.4423,
+        7.8261
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.761,
+        7.249,
+        123.508,
+        8.024
+      ],
+      "place": 4425,
+      "country": "PH",
+      "localTrips": 3010217.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "bui",
+      "name": "Butuan City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.5474,
+        "lat": 8.9712
+      },
+      "center": [
+        125.5474,
+        8.9712
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.189,
+        8.721,
+        126.348,
+        9.557
+      ],
+      "place": 4426,
+      "country": "PH",
+      "localTrips": 2949840.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "tot",
+      "name": "Toledo City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.6547,
+        "lat": 10.378
+      },
+      "center": [
+        123.6547,
+        10.378
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.506,
+        10.126,
+        124.141,
+        11.542
+      ],
+      "place": 4427,
+      "country": "PH",
+      "localTrips": 2807979.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "cim",
+      "name": "City of Tagum",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.7944,
+        "lat": 7.4609
+      },
+      "center": [
+        125.7944,
+        7.4609
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.356,
+        7.292,
+        126.015,
+        8.083
+      ],
+      "place": 4428,
+      "country": "PH",
+      "localTrips": 2549378.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "clb",
+      "name": "Calbayog City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.5972,
+        "lat": 12.0646
+      },
+      "center": [
+        124.5972,
+        12.0646
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.984,
+        11.923,
+        125.445,
+        12.715
+      ],
+      "place": 4429,
+      "country": "PH",
+      "localTrips": 2807040.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "aro",
+      "name": "Aroroy",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.4019,
+        "lat": 12.5134
+      },
+      "center": [
+        123.4019,
+        12.5134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.838,
+        11.702,
+        124.116,
+        13.192
+      ],
+      "place": 4430,
+      "country": "PH",
+      "localTrips": 2752357.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "snj",
+      "name": "San Jose City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.9835,
+        "lat": 15.7952
+      },
+      "center": [
+        120.9835,
+        15.7952
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.609,
+        15.372,
+        121.304,
+        16.152
+      ],
+      "place": 4431,
+      "country": "PH",
+      "localTrips": 2508419.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "cip",
+      "name": "City of Calapan",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.1806,
+        "lat": 13.4119
+      },
+      "center": [
+        121.1806,
+        13.4119
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.28,
+        12.608,
+        121.577,
+        13.55
+      ],
+      "place": 4432,
+      "country": "PH",
+      "localTrips": 2785822.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "civ",
+      "name": "City of Valencia",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.0932,
+        "lat": 7.9072
+      },
+      "center": [
+        125.0932,
+        7.9072
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.633,
+        7.604,
+        125.463,
+        8.62
+      ],
+      "place": 4433,
+      "country": "PH",
+      "localTrips": 2522475.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "smg",
+      "name": "San Miguel",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.0745,
+        "lat": 15.1718
+      },
+      "center": [
+        121.0745,
+        15.1718
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.762,
+        14.516,
+        121.753,
+        15.653
+      ],
+      "place": 4434,
+      "country": "PH",
+      "localTrips": 2449144.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "iri",
+      "name": "Iriga City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.4111,
+        "lat": 13.4364
+      },
+      "center": [
+        123.4111,
+        13.4364
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.123,
+        13.11,
+        123.624,
+        13.674
+      ],
+      "place": 4435,
+      "country": "PH",
+      "localTrips": 2470925.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "cii",
+      "name": "City of Passi",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.6468,
+        "lat": 11.1027
+      },
+      "center": [
+        122.6468,
+        11.1027
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.221,
+        10.754,
+        122.964,
+        11.255
+      ],
+      "place": 4436,
+      "country": "PH",
+      "localTrips": 2534647.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "klb",
+      "name": "Kalibo",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.3731,
+        "lat": 11.7058
+      },
+      "center": [
+        122.3731,
+        11.7058
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.662,
+        11.299,
+        122.597,
+        12.981
+      ],
+      "place": 4437,
+      "country": "PH",
+      "localTrips": 2858638.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "cty",
+      "name": "City of Santiago",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.55,
+        "lat": 16.6906
+      },
+      "center": [
+        121.55,
+        16.6906
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.204,
+        15.736,
+        122.137,
+        16.972
+      ],
+      "place": 4438,
+      "country": "PH",
+      "localTrips": 2496796.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "cik",
+      "name": "City of Tabuk",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.4411,
+        "lat": 17.4147
+      },
+      "center": [
+        121.4411,
+        17.4147
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.563,
+        16.537,
+        121.667,
+        17.891
+      ],
+      "place": 4439,
+      "country": "PH",
+      "localTrips": 2339693.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctb",
+      "name": "Cotabato City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.2479,
+        "lat": 7.2175
+      },
+      "center": [
+        124.2479,
+        7.2175
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.996,
+        7.01,
+        124.824,
+        7.674
+      ],
+      "place": 4440,
+      "country": "PH",
+      "localTrips": 2588746.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cto",
+      "name": "City of Candon",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.4472,
+        "lat": 17.1924
+      },
+      "center": [
+        120.4472,
+        17.1924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.325,
+        16.971,
+        121.012,
+        17.879
+      ],
+      "place": 4441,
+      "country": "PH",
+      "localTrips": 2527196.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ilg",
+      "name": "Iligan City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.243,
+        "lat": 8.2401
+      },
+      "center": [
+        124.243,
+        8.2401
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.883,
+        7.928,
+        124.586,
+        8.567
+      ],
+      "place": 4442,
+      "country": "PH",
+      "localTrips": 2254776.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "tuo",
+      "name": "Tuguegarao City",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.7182,
+        "lat": 17.6124
+      },
+      "center": [
+        121.7182,
+        17.6124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.287,
+        17.479,
+        122.21,
+        18.136
+      ],
+      "place": 4443,
+      "country": "PH",
+      "localTrips": 2415120.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "pup",
+      "name": "Puerto Princesa City",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.7327,
+        "lat": 9.7434
+      },
+      "center": [
+        118.7327,
+        9.7434
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.91,
+        7.488,
+        119.167,
+        10.329
+      ],
+      "place": 4444,
+      "country": "PH",
+      "localTrips": 2312912.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctf",
+      "name": "City of Mati",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.2007,
+        "lat": 6.966
+      },
+      "center": [
+        126.2007,
+        6.966
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.809,
+        6.251,
+        126.624,
+        7.5
+      ],
+      "place": 4445,
+      "country": "PH",
+      "localTrips": 2149709.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "sry",
+      "name": "Sariaya",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.5305,
+        "lat": 13.968
+      },
+      "center": [
+        121.5305,
+        13.968
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.145,
+        13.636,
+        121.766,
+        14.114
+      ],
+      "place": 4446,
+      "country": "PH",
+      "localTrips": 2076954.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "nab",
+      "name": "Nasugbu",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.6326,
+        "lat": 14.0825
+      },
+      "center": [
+        120.6326,
+        14.0825
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.468,
+        13.75,
+        120.948,
+        14.334
+      ],
+      "place": 4447,
+      "country": "PH",
+      "localTrips": 1886289.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ciw",
+      "name": "City of Bayawan",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.8055,
+        "lat": 9.3613
+      },
+      "center": [
+        122.8055,
+        9.3613
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.57,
+        9.139,
+        123.271,
+        10.159
+      ],
+      "place": 4448,
+      "country": "PH",
+      "localTrips": 2239983.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "maq",
+      "name": "Malasiqui",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.4159,
+        "lat": 15.9184
+      },
+      "center": [
+        120.4159,
+        15.9184
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.125,
+        15.599,
+        120.762,
+        15.995
+      ],
+      "place": 4451,
+      "country": "PH",
+      "localTrips": 1810287.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "lay",
+      "name": "Lagonoy",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.5186,
+        "lat": 13.7389
+      },
+      "center": [
+        123.5186,
+        13.7389
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.296,
+        13.498,
+        124.441,
+        14.117
+      ],
+      "place": 4452,
+      "country": "PH",
+      "localTrips": 1972109.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "quz",
+      "name": "Quezon",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.1003,
+        "lat": 7.7287
+      },
+      "center": [
+        125.1003,
+        7.7287
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.61,
+        7.385,
+        125.406,
+        7.975
+      ],
+      "place": 4455,
+      "country": "PH",
+      "localTrips": 1813108.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "lbx",
+      "name": "Lebak",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.0629,
+        "lat": 6.6335
+      },
+      "center": [
+        124.0629,
+        6.6335
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.992,
+        6.411,
+        124.841,
+        7.259
+      ],
+      "place": 4456,
+      "country": "PH",
+      "localTrips": 1823244.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ipi",
+      "name": "Ipil",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.592,
+        "lat": 7.7855
+      },
+      "center": [
+        122.592,
+        7.7855
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.053,
+        7.448,
+        122.962,
+        8.181
+      ],
+      "place": 4457,
+      "country": "PH",
+      "localTrips": 1928127.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cmp",
+      "name": "Compostela",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.0832,
+        "lat": 7.6719
+      },
+      "center": [
+        126.0832,
+        7.6719
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.874,
+        7.383,
+        126.618,
+        8.008
+      ],
+      "place": 4470,
+      "country": "PH",
+      "localTrips": 1595173.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ctk",
+      "name": "City of Koronadal",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.8406,
+        "lat": 6.4795
+      },
+      "center": [
+        124.8406,
+        6.4795
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.672,
+        6.22,
+        125.139,
+        6.775
+      ],
+      "place": 4471,
+      "country": "PH",
+      "localTrips": 1512963.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cdi",
+      "name": "Cadiz City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.3054,
+        "lat": 10.9561
+      },
+      "center": [
+        123.3054,
+        10.9561
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.928,
+        10.642,
+        123.592,
+        11.063
+      ],
+      "place": 4472,
+      "country": "PH",
+      "localTrips": 1807678.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "gin",
+      "name": "Gingoog City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.1043,
+        "lat": 8.8249
+      },
+      "center": [
+        125.1043,
+        8.8249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.72,
+        8.54,
+        125.325,
+        9.112
+      ],
+      "place": 4473,
+      "country": "PH",
+      "localTrips": 1593910.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "apa",
+      "name": "Aparri",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.6435,
+        "lat": 18.3543
+      },
+      "center": [
+        121.6435,
+        18.3543
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.912,
+        17.818,
+        122.357,
+        18.924
+      ],
+      "place": 4474,
+      "country": "PH",
+      "localTrips": 1661249.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "mrw",
+      "name": "Marawi City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.2884,
+        "lat": 8.0047
+      },
+      "center": [
+        124.2884,
+        8.0047
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.831,
+        7.503,
+        124.847,
+        8.142
+      ],
+      "place": 4475,
+      "country": "PH",
+      "localTrips": 1918596.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "kpa",
+      "name": "Kapatagan",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.7713,
+        "lat": 7.9235
+      },
+      "center": [
+        123.7713,
+        7.9235
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.603,
+        7.678,
+        124.052,
+        8.194
+      ],
+      "place": 4476,
+      "country": "PH",
+      "localTrips": 1376640.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "byo",
+      "name": "Bayombong",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.1523,
+        "lat": 16.4851
+      },
+      "center": [
+        121.1523,
+        16.4851
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.751,
+        15.854,
+        121.54,
+        16.844
+      ],
+      "place": 4477,
+      "country": "PH",
+      "localTrips": 1509597.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "sns",
+      "name": "San Jose",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.074,
+        "lat": 12.342
+      },
+      "center": [
+        121.074,
+        12.342
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.894,
+        11.806,
+        121.604,
+        12.813
+      ],
+      "place": 4478,
+      "country": "PH",
+      "localTrips": 1557864.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "oln",
+      "name": "Olongapo City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.2715,
+        "lat": 14.8276
+      },
+      "center": [
+        120.2715,
+        14.8276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.033,
+        14.719,
+        120.576,
+        15.068
+      ],
+      "place": 4480,
+      "country": "PH",
+      "localTrips": 1423480.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "rxa",
+      "name": "Roxas",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.4615,
+        "lat": 10.378
+      },
+      "center": [
+        119.4615,
+        10.378
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.946,
+        10.007,
+        121.253,
+        12.389
+      ],
+      "place": 4481,
+      "country": "PH",
+      "localTrips": 1332310.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctc",
+      "name": "City of Catbalogan",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.888,
+        "lat": 11.771
+      },
+      "center": [
+        124.888,
+        11.771
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.605,
+        11.445,
+        125.592,
+        12.295
+      ],
+      "place": 4482,
+      "country": "PH",
+      "localTrips": 1480981.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "sbl",
+      "name": "Sibalom",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.0129,
+        "lat": 10.7932
+      },
+      "center": [
+        122.0129,
+        10.7932
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.893,
+        10.388,
+        122.341,
+        11.377
+      ],
+      "place": 4483,
+      "country": "PH",
+      "localTrips": 1552777.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ctn",
+      "name": "City of Panabo",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.6771,
+        "lat": 7.3067
+      },
+      "center": [
+        125.6771,
+        7.3067
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.528,
+        6.874,
+        125.817,
+        7.47
+      ],
+      "place": 4484,
+      "country": "PH",
+      "localTrips": 1177087.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ctm",
+      "name": "City of Maasin",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.8351,
+        "lat": 10.1339
+      },
+      "center": [
+        124.8351,
+        10.1339
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.597,
+        9.877,
+        125.318,
+        10.533
+      ],
+      "place": 4485,
+      "country": "PH",
+      "localTrips": 1561290.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "bgo",
+      "name": "Bago City",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.8357,
+        "lat": 10.5327
+      },
+      "center": [
+        122.8357,
+        10.5327
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.776,
+        9.898,
+        123.175,
+        10.614
+      ],
+      "place": 4486,
+      "country": "PH",
+      "localTrips": 1414490.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "btg",
+      "name": "Batangas City",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.058,
+        "lat": 13.7635
+      },
+      "center": [
+        121.058,
+        13.7635
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.982,
+        13.508,
+        121.379,
+        13.882
+      ],
+      "place": 4487,
+      "country": "PH",
+      "localTrips": 1264636.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "mlv",
+      "name": "Molave",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.4921,
+        "lat": 8.094
+      },
+      "center": [
+        123.4921,
+        8.094
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.125,
+        7.804,
+        123.703,
+        8.387
+      ],
+      "place": 4488,
+      "country": "PH",
+      "localTrips": 1195449.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cih",
+      "name": "City of Guihulngan",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.2696,
+        "lat": 10.1176
+      },
+      "center": [
+        123.2696,
+        10.1176
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.819,
+        9.678,
+        123.355,
+        10.456
+      ],
+      "place": 4489,
+      "country": "PH",
+      "localTrips": 1182615.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ctu",
+      "name": "City of Cauayan",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.7709,
+        "lat": 16.9374
+      },
+      "center": [
+        121.7709,
+        16.9374
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.543,
+        16.598,
+        122.548,
+        17.161
+      ],
+      "place": 4490,
+      "country": "PH",
+      "localTrips": 1258239.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "lui",
+      "name": "Lucena City",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.6113,
+        "lat": 13.9352
+      },
+      "center": [
+        121.6113,
+        13.9352
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.536,
+        13.858,
+        122.057,
+        14.092
+      ],
+      "place": 4492,
+      "country": "PH",
+      "localTrips": 1274424.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctl",
+      "name": "City of Kabankalan",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.8178,
+        "lat": 9.9956
+      },
+      "center": [
+        122.8178,
+        9.9956
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.354,
+        9.426,
+        123.0,
+        10.092
+      ],
+      "place": 4493,
+      "country": "PH",
+      "localTrips": 1313519.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "nva",
+      "name": "Naval",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.407,
+        "lat": 11.5672
+      },
+      "center": [
+        124.407,
+        11.5672
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.235,
+        11.162,
+        124.839,
+        11.836
+      ],
+      "place": 4494,
+      "country": "PH",
+      "localTrips": 1096272.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "cyo",
+      "name": "City of Alaminos",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.9832,
+        "lat": 16.1565
+      },
+      "center": [
+        119.9832,
+        16.1565
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.73,
+        15.859,
+        120.145,
+        16.463
+      ],
+      "place": 4495,
+      "country": "PH",
+      "localTrips": 1215644.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "paq",
+      "name": "Paniqui",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.5838,
+        "lat": 15.6803
+      },
+      "center": [
+        120.5838,
+        15.6803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.233,
+        15.576,
+        120.81,
+        15.884
+      ],
+      "place": 4496,
+      "country": "PH",
+      "localTrips": 961621.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctr",
+      "name": "City of Borongan",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.4366,
+        "lat": 11.5998
+      },
+      "center": [
+        125.4366,
+        11.5998
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.958,
+        10.669,
+        125.988,
+        11.819
+      ],
+      "place": 4497,
+      "country": "PH",
+      "localTrips": 975755.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ler",
+      "name": "Lemery",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.9119,
+        "lat": 13.878
+      },
+      "center": [
+        120.9119,
+        13.878
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.808,
+        13.606,
+        121.04,
+        14.044
+      ],
+      "place": 4498,
+      "country": "PH",
+      "localTrips": 869080.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "dag",
+      "name": "Dalaguete",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.5286,
+        "lat": 9.7597
+      },
+      "center": [
+        123.5286,
+        9.7597
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.278,
+        9.394,
+        123.58,
+        9.931
+      ],
+      "place": 4500,
+      "country": "PH",
+      "localTrips": 675886.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "brl",
+      "name": "Barili",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.5095,
+        "lat": 10.1095
+      },
+      "center": [
+        123.5095,
+        10.1095
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.347,
+        9.879,
+        123.619,
+        10.206
+      ],
+      "place": 4502,
+      "country": "PH",
+      "localTrips": 535098.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "siq",
+      "name": "Siquijor",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.5182,
+        "lat": 9.215
+      },
+      "center": [
+        123.5182,
+        9.215
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.434,
+        9.076,
+        123.721,
+        9.32
+      ],
+      "place": 4504,
+      "country": "PH",
+      "localTrips": 275818.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "mai",
+      "name": "Manila",
+      "origin": {
+        "lon": 120.9836,
+        "lat": 14.599
+      },
+      "center": [
+        120.9836,
+        14.599
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.204,
+        13.749,
+        121.698,
+        15.06
+      ],
+      "place": 4508,
+      "country": "PH",
+      "localTrips": 83249910.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ceb",
+      "name": "Cebu City",
+      "origin": {
+        "lon": 123.8849,
+        "lat": 10.2885
+      },
+      "center": [
+        123.8849,
+        10.2885
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.331,
+        9.408,
+        124.093,
+        11.006
+      ],
+      "place": 4509,
+      "country": "PH",
+      "localTrips": 10063478.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ang",
+      "name": "Angeles",
+      "origin": {
+        "lon": 120.5887,
+        "lat": 15.145
+      },
+      "center": [
+        120.5887,
+        15.145
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.105,
+        14.723,
+        120.93,
+        15.349
+      ],
+      "place": 4510,
+      "country": "PH",
+      "localTrips": 7022892.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "dav",
+      "name": "Davao City",
+      "origin": {
+        "lon": 125.6155,
+        "lat": 7.0634
+      },
+      "center": [
+        125.6155,
+        7.0634
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.047,
+        6.761,
+        125.699,
+        7.896
+      ],
+      "place": 4511,
+      "country": "PH",
+      "localTrips": 5873045.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ili",
+      "name": "Iloilo City",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.5634,
+        "lat": 10.6955
+      },
+      "center": [
+        122.5634,
+        10.6955
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.08,
+        10.312,
+        122.763,
+        10.963
+      ],
+      "place": 4512,
+      "country": "PH",
+      "localTrips": 4001490.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ciy",
+      "name": "City of Tarlac",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.6029,
+        "lat": 15.508
+      },
+      "center": [
+        120.6029,
+        15.508
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.767,
+        15.01,
+        120.784,
+        15.893
+      ],
+      "place": 4513,
+      "country": "PH",
+      "localTrips": 3633607.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "cay",
+      "name": "Cagayan de Oro City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.6309,
+        "lat": 8.4756
+      },
+      "center": [
+        124.6309,
+        8.4756
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.308,
+        7.838,
+        125.137,
+        8.643
+      ],
+      "place": 4514,
+      "country": "PH",
+      "localTrips": 3740928.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "cio",
+      "name": "City of Urdaneta",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.5732,
+        "lat": 15.984
+      },
+      "center": [
+        120.5732,
+        15.984
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.299,
+        15.775,
+        120.94,
+        16.505
+      ],
+      "place": 4515,
+      "country": "PH",
+      "localTrips": 3385516.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "lgp",
+      "name": "Legazpi City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.732,
+        "lat": 13.134
+      },
+      "center": [
+        123.732,
+        13.134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.463,
+        12.505,
+        124.239,
+        13.373
+      ],
+      "place": 4516,
+      "country": "PH",
+      "localTrips": 3768669.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "roi",
+      "name": "Roxas City",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.7542,
+        "lat": 11.5835
+      },
+      "center": [
+        122.7542,
+        11.5835
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.158,
+        11.009,
+        123.379,
+        11.664
+      ],
+      "place": 4517,
+      "country": "PH",
+      "localTrips": 3611503.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "tgb",
+      "name": "Tagbilaran City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.8569,
+        "lat": 9.654
+      },
+      "center": [
+        123.8569,
+        9.654
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.699,
+        9.467,
+        124.638,
+        10.271
+      ],
+      "place": 4518,
+      "country": "PH",
+      "localTrips": 3718751.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "tcl",
+      "name": "Tacloban City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.0055,
+        "lat": 11.2412
+      },
+      "center": [
+        125.0055,
+        11.2412
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.254,
+        10.567,
+        125.119,
+        11.527
+      ],
+      "place": 4519,
+      "country": "PH",
+      "localTrips": 3127765.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "zam",
+      "name": "Zamboanga City",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.0245,
+        "lat": 6.9255
+      },
+      "center": [
+        122.0245,
+        6.9255
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.878,
+        6.84,
+        122.412,
+        7.515
+      ],
+      "place": 4520,
+      "country": "PH",
+      "localTrips": 2526763.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "bgu",
+      "name": "Baguio City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.5977,
+        "lat": 16.4276
+      },
+      "center": [
+        120.5977,
+        16.4276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.425,
+        16.162,
+        120.912,
+        16.711
+      ],
+      "place": 4521,
+      "country": "PH",
+      "localTrips": 2229594.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "oza",
+      "name": "Ozamis City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.8427,
+        "lat": 8.1427
+      },
+      "center": [
+        123.8427,
+        8.1427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.535,
+        7.993,
+        123.888,
+        8.689
+      ],
+      "place": 4522,
+      "country": "PH",
+      "localTrips": 1888684.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "dip",
+      "name": "Dipolog City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.356,
+        "lat": 8.5812
+      },
+      "center": [
+        123.356,
+        8.5812
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.839,
+        7.901,
+        123.583,
+        8.746
+      ],
+      "place": 4523,
+      "country": "PH",
+      "localTrips": 2051244.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ctt",
+      "name": "City of Tabaco",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.7303,
+        "lat": 13.3547
+      },
+      "center": [
+        123.7303,
+        13.3547
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.262,
+        12.97,
+        123.871,
+        13.542
+      ],
+      "place": 4524,
+      "country": "PH",
+      "localTrips": 1788534.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ila",
+      "name": "Ilagan City",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.8746,
+        "lat": 17.1184
+      },
+      "center": [
+        121.8746,
+        17.1184
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.511,
+        16.949,
+        122.338,
+        17.568
+      ],
+      "place": 4525,
+      "country": "PH",
+      "localTrips": 1828151.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "loy",
+      "name": "Laoag City",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.5972,
+        "lat": 18.1976
+      },
+      "center": [
+        120.5972,
+        18.1976
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.381,
+        17.747,
+        120.99,
+        18.67
+      ],
+      "place": 4526,
+      "country": "PH",
+      "localTrips": 1962658.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctd",
+      "name": "City of Digos",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.3559,
+        "lat": 6.7633
+      },
+      "center": [
+        125.3559,
+        6.7633
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.033,
+        6.355,
+        125.601,
+        7.019
+      ],
+      "place": 4527,
+      "country": "PH",
+      "localTrips": 1856983.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "sui",
+      "name": "Surigao City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.4875,
+        "lat": 9.7841
+      },
+      "center": [
+        125.4875,
+        9.7841
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.373,
+        9.307,
+        126.201,
+        10.49
+      ],
+      "place": 4528,
+      "country": "PH",
+      "localTrips": 1872937.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "pli",
+      "name": "Palimbang",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.3471,
+        "lat": 6.1228
+      },
+      "center": [
+        124.3471,
+        6.1228
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.017,
+        5.868,
+        125.082,
+        6.548
+      ],
+      "place": 4529,
+      "country": "PH",
+      "localTrips": 1679177.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "dex",
+      "name": "Daet",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.9515,
+        "lat": 14.1152
+      },
+      "center": [
+        122.9515,
+        14.1152
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.28,
+        13.819,
+        123.133,
+        14.513
+      ],
+      "place": 4530,
+      "country": "PH",
+      "localTrips": 1808658.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "ctx",
+      "name": "City of Baybay",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.8064,
+        "lat": 10.6711
+      },
+      "center": [
+        124.8064,
+        10.6711
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.65,
+        10.42,
+        125.21,
+        11.258
+      ],
+      "place": 4531,
+      "country": "PH",
+      "localTrips": 1630040.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "cts",
+      "name": "City of San Fernando",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.3122,
+        "lat": 16.6166
+      },
+      "center": [
+        120.3122,
+        16.6166
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.258,
+        16.438,
+        120.805,
+        17.136
+      ],
+      "place": 4532,
+      "country": "PH",
+      "localTrips": 1737321.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "isu",
+      "name": "Isulan",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.6039,
+        "lat": 6.6335
+      },
+      "center": [
+        124.6039,
+        6.6335
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.263,
+        6.332,
+        125.027,
+        6.917
+      ],
+      "place": 4533,
+      "country": "PH",
+      "localTrips": 1536932.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "tna",
+      "name": "Tanay",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.3753,
+        "lat": 14.5409
+      },
+      "center": [
+        121.3753,
+        14.5409
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.251,
+        14.023,
+        121.871,
+        14.749
+      ],
+      "place": 4534,
+      "country": "PH",
+      "localTrips": 1401583.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "pki",
+      "name": "Pikit",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.6719,
+        "lat": 7.0552
+      },
+      "center": [
+        124.6719,
+        7.0552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.512,
+        6.928,
+        125.142,
+        7.521
+      ],
+      "place": 4535,
+      "country": "PH",
+      "localTrips": 1470579.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "ctp",
+      "name": "City of Kidapawan",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.0848,
+        "lat": 7.0066
+      },
+      "center": [
+        125.0848,
+        7.0066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.799,
+        6.712,
+        125.333,
+        7.318
+      ],
+      "place": 4536,
+      "country": "PH",
+      "localTrips": 1401896.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "dum",
+      "name": "Dumaguete City",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.3097,
+        "lat": 9.3206
+      },
+      "center": [
+        123.3097,
+        9.3206
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.887,
+        9.02,
+        123.332,
+        9.498
+      ],
+      "place": 4537,
+      "country": "PH",
+      "localTrips": 1364874.0,
+      "realm": "visayas"
+    },
+    {
+      "id": "ctg",
+      "name": "City of Balanga",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.5442,
+        "lat": 14.6719
+      },
+      "center": [
+        120.5442,
+        14.6719
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.4,
+        14.483,
+        120.631,
+        14.776
+      ],
+      "place": 4538,
+      "country": "PH",
+      "localTrips": 822025.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "mli",
+      "name": "Malita",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.612,
+        "lat": 6.4146
+      },
+      "center": [
+        125.612,
+        6.4146
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.314,
+        5.537,
+        125.734,
+        6.535
+      ],
+      "place": 4539,
+      "country": "PH",
+      "localTrips": 642830.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "mri",
+      "name": "Mariveles",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.4844,
+        "lat": 14.4345
+      },
+      "center": [
+        120.4844,
+        14.4345
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.369,
+        14.389,
+        120.63,
+        14.558
+      ],
+      "place": 4540,
+      "country": "PH",
+      "localTrips": 352213.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "pll",
+      "name": "Polillo",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.9434,
+        "lat": 14.7129
+      },
+      "center": [
+        121.9434,
+        14.7129
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.782,
+        14.377,
+        122.458,
+        15.077
+      ],
+      "place": 4541,
+      "country": "PH",
+      "localTrips": 225697.0,
+      "realm": "luzon"
+    },
+    {
+      "id": "mmb",
+      "name": "Mambajao",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.7222,
+        "lat": 9.2475
+      },
+      "center": [
+        124.7222,
+        9.2475
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.614,
+        9.06,
+        124.825,
+        9.277
+      ],
+      "place": 4542,
+      "country": "PH",
+      "localTrips": 256917.0,
+      "realm": "mindanao"
+    },
+    {
+      "id": "sfe",
+      "name": "San Fernando",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.6009,
+        "lat": 12.3012
+      },
+      "center": [
+        122.6009,
+        12.3012
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.404,
+        12.249,
+        122.718,
+        12.524
+      ],
+      "place": 4543,
+      "country": "PH",
+      "localTrips": 155721.0,
+      "realm": "luzon"
     }
   ]
 }
