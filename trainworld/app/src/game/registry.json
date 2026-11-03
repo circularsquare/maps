@@ -18194,6 +18194,30 @@
       {
         "name": "San Fernando",
         "regionName": "San Fernando region"
+      },
+      {
+        "name": "Auckland",
+        "regionName": "Auckland region"
+      },
+      {
+        "name": "Whangarei District",
+        "regionName": "Whangarei District region"
+      },
+      {
+        "name": "Hamilton City",
+        "regionName": "Hamilton City region"
+      },
+      {
+        "name": "Wellington City",
+        "regionName": "Wellington City region"
+      },
+      {
+        "name": "Christchurch City",
+        "regionName": "Christchurch City region"
+      },
+      {
+        "name": "Dunedin City",
+        "regionName": "Dunedin City region"
       }
     ],
     "rule": {
@@ -78788,6 +78812,161 @@
       "country": "PH",
       "localTrips": 155721.0,
       "realm": "luzon"
+    },
+    {
+      "id": "auc",
+      "name": "Auckland",
+      "origin": {
+        "lon": 174.7646,
+        "lat": -36.8513
+      },
+      "center": [
+        174.7646,
+        -36.8513
+      ],
+      "zoom": 11.2,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        174.137,
+        -37.583,
+        175.979,
+        -36.031
+      ],
+      "place": 4544,
+      "country": "NZ",
+      "localTrips": 5616599.0,
+      "realm": "nz-north"
+    },
+    {
+      "id": "whn",
+      "name": "Whangarei District",
+      "kind": "zone",
+      "origin": {
+        "lon": 174.3116,
+        "lat": -35.6927
+      },
+      "center": [
+        174.3116,
+        -35.6927
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        172.62,
+        -36.415,
+        174.833,
+        -34.375
+      ],
+      "place": 4545,
+      "country": "NZ",
+      "localTrips": 468781.0,
+      "realm": "nz-north"
+    },
+    {
+      "id": "hml",
+      "name": "Hamilton City",
+      "kind": "zone",
+      "origin": {
+        "lon": 175.3079,
+        "lat": -37.7864
+      },
+      "center": [
+        175.3079,
+        -37.7864
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        174.59,
+        -40.45,
+        178.574,
+        -36.997
+      ],
+      "place": 4546,
+      "country": "NZ",
+      "localTrips": 2765471.0,
+      "realm": "nz-north"
+    },
+    {
+      "id": "weg",
+      "name": "Wellington City",
+      "kind": "zone",
+      "origin": {
+        "lon": 174.779,
+        "lat": -41.2938
+      },
+      "center": [
+        174.779,
+        -41.2938
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        173.727,
+        -41.632,
+        176.658,
+        -38.532
+      ],
+      "place": 4547,
+      "country": "NZ",
+      "localTrips": 2771521.0,
+      "realm": "nz-north"
+    },
+    {
+      "id": "cri",
+      "name": "Christchurch City",
+      "kind": "zone",
+      "origin": {
+        "lon": 172.6355,
+        "lat": -43.5161
+      },
+      "center": [
+        172.6355,
+        -43.5161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        168.027,
+        -44.96,
+        174.418,
+        -40.479
+      ],
+      "place": 4548,
+      "country": "NZ",
+      "localTrips": 2476269.0,
+      "realm": "nz-south"
+    },
+    {
+      "id": "dun",
+      "name": "Dunedin City",
+      "kind": "zone",
+      "origin": {
+        "lon": 170.509,
+        "lat": -45.862
+      },
+      "center": [
+        170.509,
+        -45.862
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        166.399,
+        -47.309,
+        171.173,
+        -43.77
+      ],
+      "place": 4549,
+      "country": "NZ",
+      "localTrips": 1010475.0,
+      "realm": "nz-south"
     }
   ]
 }

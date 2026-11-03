@@ -2122,5 +2122,11 @@
 "mli": ["Municipality of Malita", "Jose Abad Santos", "JAS", "Trinidad", "Municipality of Jose Abad Santos", "Don Marcelino", "Municipality of Don Marcelino"],
 "pll": ["Burdeos"],
 "mmb": ["Municipality of Mambajao"],
-"sfe": ["Cajidiocan"]
+"sfe": ["Cajidiocan"],
+"auc": ["Pukekohe"],
+"whn": ["Whangārei"],
+"hml": ["Hamilton", "Tauranga", "Napier", "Rotorua", "Hastings", "Karamu"],
+"weg": ["Wellington", "Lower Hutt", "Palmerston North", "Papaioea", "Porirua", "New Plymouth", "Upper Hutt"],
+"cri": ["Christchurch", "Nelson", "Whakatū", "Blenheim", "Timaru", "Rolleston", "Ashburton"],
+"dun": ["Dunedin", "Invercargill"]
 }

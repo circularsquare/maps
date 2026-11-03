@@ -11,7 +11,7 @@ hyphen ("Altai" holds Altai Krai and Altai Republic); the US matches postal code
 
 Writes `realm` on every registry row (from its country, or for a split country from where its centre
 lies), and for each realm holding a zone its land: Natural Earth admin 0 (de facto borders) for whole
-countries, cut along geoBoundaries ADM1 (China, Russia, Malaysia, Indonesia, the Philippines) or the Census states (US) for split ones;
+countries, cut along geoBoundaries ADM1 (China, Russia, Malaysia, Indonesia, the Philippines, New Zealand) or the Census states (US) for split ones;
 parts farther than KEEP_KM from every one of the realm's zones left out (France's overseas
 departments), rings simplified to TOL_M with borders between realms simplified once
 (zone_outlines' shared runs), and a label point, the point deepest inside the largest part.
@@ -33,7 +33,8 @@ US_STATES = ROOT / "data/raw/cb_2020_us_state_500k.zip"
 # a split country's first-level units: the file and the field a unit is named by
 UNITS = {"CN": (GB / "CHN_ADM1.geojson", "shapeName"), "RU": (GB / "RUS_ADM1.geojson", "shapeName"),
          "US": (US_STATES, "STUSPS"), "MY": (GB / "MYS_ADM1.geojson", "shapeName"),
-         "ID": (GB / "IDN_ADM1.geojson", "shapeName"), "PH": (GB / "PHL_ADM1.geojson", "shapeName")}
+         "ID": (GB / "IDN_ADM1.geojson", "shapeName"), "PH": (GB / "PHL_ADM1.geojson", "shapeName"),
+         "NZ": (GB / "NZL_ADM1.geojson", "shapeName")}
 # geoBoundaries names Guangdong after its capital
 SOURCE_NAMES = {"Guangzhou Province": "Guangdong Province"}
 # Natural Earth parts whose alpha-2 is -99, by ADM0_A3 (as world_plan.NE_FIX)

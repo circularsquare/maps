@@ -66,6 +66,7 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 | plan units finer than counties (zones of 100+ units, zones named after a village) | `group_level` as Korea |
 | islands | `contiguous` (10 km of water at most between units) |
 | most land settled, but river or coast towns of 50,000+ dead under the 20 a km2 floor | `min_density` 10, as Indonesia's Kalimantan and Papua |
+| a thin country of coast and valley towns, units finer than districts (New Zealand's wards) | `min_density` 0, `group_level` 1, `join_km` long enough to keep the big towns' zones apart (250 km), as `NZL` |
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
 
@@ -131,7 +132,8 @@ Done when: all eight ticked.
 
 The live rows must match the dry run's (ids may differ if another country took some). Apply item 1-4
 patches if they were made on the dry plan. `world_run.py plan --countries XX --limit 300` lists the
-runner's regions and extracts. Then `<tc>\backup.py T### pre XX,<neighbours>` (`--dry` counts first).
+runner's regions and extracts. Then `<tc>\backup.py T### pre XX,<neighbours>` (`--dry` counts first; it refuses a country with no packs, so with no
+built neighbour either there is nothing to back up before the join).
 
 Done when: the plan holds the rows and the backup exists.
 

@@ -872,5 +872,10 @@
 "ctr": {"name": "Borongan", "aliases": ["City of Borongan"]},
 "ctg": {"name": "Balanga", "aliases": ["City of Balanga"]},
 "mmb": {"name": "Camiguin", "aliases": ["Mambajao"]},
-"sfe": {"name": "Sibuyan", "aliases": ["San Fernando"]}
+"sfe": {"name": "Sibuyan", "aliases": ["San Fernando"]},
+"hml": {"name": "Hamilton", "aliases": ["Hamilton City"]},
+"weg": {"name": "Wellington", "aliases": ["Wellington City"]},
+"cri": {"name": "Christchurch", "aliases": ["Christchurch City"]},
+"dun": {"name": "Dunedin", "aliases": ["Dunedin City"]},
+"whn": {"name": "Whangārei", "aliases": ["Whangarei District", "Whangarei"]}
 }

@@ -15,6 +15,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   <newest>\packs` and `TW_MARKET_DRIVES=<main>\trainworld\data\packs\market-drives.bin` before snapbuild (the commit's
   registry must match the freeze). Normal smoke: new game ~104 s, real save final ~150-200 s.
 - Staging one agent's lines of a shared file: `python <my scratchpad>\stage_without.py <maps root> <path> "<marker>"`.
+  Caution: a line another agent EDITED (not added) is dropped from the staged copy entirely (its old text is gone and the
+  new one is filtered out): check `diff --cached` for unexpected removals (T-2077 nearly vanished 05:xx).
+- 74827d99 T-2059/T-2060 committed (band build 705 -> ~260 ms; Tamachi; Jersey City). TASKS.md's removal of their lines
+  is still uncommitted (goes with NZ's commit).
 - `checks/build_inputs.py` (new): every file a production build copies, 0 flags expected (2,340 rows at 04:00).
 - **LIVE: build 797 (7e730216) on freeze 20261102-230529, R2 `trainworld/2026-11-03`, website f50e733**, verified.
   Publish only on Anita's word. Recipe: `freeze.py build <stamp>` with TW_MARKET_DRIVES set (a freeze lacks

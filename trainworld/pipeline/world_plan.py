@@ -152,6 +152,11 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "IDN": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True, "task": "T-1738"},
               # the Philippines' municipalities as they are, zones held to their island (T-1738)
               "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "task": "T-1738"},
+              # New Zealand's wards by territorial authority with no density floor (at 20 a km2 the wards left 1.19M
+              # dead, Selwyn and Gisborne among them), zones not joining over 250 km (else Christchurch and Dunedin
+              # were one zone of the whole South Island; T-1738)
+              "NZL": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "group_level": 1,
+                      "join_km": 250.0, "task": "T-1738"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
@@ -1932,18 +1937,24 @@ def ground_km(a, b):
 
 def reach_people(pop, pts, km):
     """People within `km` of each Mollweide point: GHS-POP of every country, summed on REACH_CELL_KM
-    cells (T-1191)."""
+    cells (T-1191), by great-circle distance as `ground_km`: Mollweide's own run up to 1.9x long away from
+    longitude 0 (T-1738)."""
     from scipy.spatial import cKDTree
     pts = np.asarray(pts, float)
-    m = km * 1000.0
+    m = 3 * km * 1000.0  # the pixel box in Mollweide metres, wide enough for its stretch
     x, y, p = pop.pixels((pts[:, 0].min() - m, pts[:, 1].min() - m, pts[:, 0].max() + m, pts[:, 1].max() + m))
     if not len(p):
         return np.zeros(len(pts))
     c = REACH_CELL_KM * 1000.0
     _, inv = np.unique(np.floor(x / c) * 1e7 + np.floor(y / c), return_inverse=True)
     s = np.bincount(inv, weights=p)
-    t = cKDTree(np.c_[np.bincount(inv, weights=x * p) / s, np.bincount(inv, weights=y * p) / s])
-    return np.array([s[n].sum() for n in t.query_ball_point(pts, m)])
+
+    def sphere(mx, my):
+        lon, lat = (np.radians(v) for v in INV.transform(mx, my))
+        return np.c_[np.cos(lat) * np.cos(lon), np.cos(lat) * np.sin(lon), np.sin(lat)]
+    t = cKDTree(sphere(np.bincount(inv, weights=x * p) / s, np.bincount(inv, weights=y * p) / s))
+    chord = 2 * math.sin(km / 6371.0 / 2)
+    return np.array([s[n].sum() for n in t.query_ball_point(sphere(pts[:, 0], pts[:, 1]), chord)])
 
 
 def city_units(units, ids, city_pop=None):
