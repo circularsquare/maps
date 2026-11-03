@@ -2,7 +2,7 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandScope, demandSolving, demandView, refiningZone, viewRecomputing } from "../game/demand";
+import { demandScope, demandSolving, demandView, focusZones, refiningZone, viewRecomputing } from "../game/demand";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
@@ -12,6 +12,8 @@ import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting } from "../map/commuterView";
 
 function recomputing(): string {
+  // T-2045: the zone in view being solved alone ahead of a load's whole solve
+  if (focusZones.value.has(activeCity.value)) return "Trips here being recomputed…";
   const scope = demandScope.value;
   const n = scope && !refiningZone.value ? demandSolving.value?.size ?? scope : 0;
   return n > 1 ? `Trips in ${count(n)} cities being recomputed…` : "Trips here being recomputed…";

@@ -140,6 +140,9 @@ export type ToDemand =
       /** T-1533: a rough solve of these zones alone (no market), while the packs a whole solve needs
        * still open: it starts ahead of the opens waiting, which wait for it */
       only?: CityId[];
+      /** T-2045: the focus pool's solve of `only`: kept once solved, though its free flow was
+       * estimated (no whole solve ever reuses it there), so its zone answers after the next solve */
+      keep?: boolean;
       /** T-1538 `?perfOff=estimate`: no period's first figures estimated from another's */
       exact0?: boolean;
       /** T-1543: this solving worker's part k of n: a free-flow round shown before it is solved (a
@@ -166,6 +169,9 @@ export type ToDemand =
    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
+  /** T-2045: a solving worker of the main pool holds its solve and its opening at the next
+   * population (`on`) until let go, while the focus pool solves the zone in view first */
+  | { kind: "pause"; on: boolean }
   /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
   | { kind: "whole"; version: number }
   /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */
@@ -367,6 +373,8 @@ export type FromDemand =
        * solved, against the others' frozen loads, ahead of its whole solve; its lines' figures carry
        * every population's riders, the market's as last solved */
       cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean };
+      /** T-2045: in a solve of `only` zones, the lines it gives figures (indices into the network's) */
+      onlyLines?: Uint32Array;
       /** T-1543: one worker's part k of n of the period's origins (`solve.part`): every figure is the
        * part's, to be added to the other parts', the market's only in the worker holding the period.
        * `fareRaw`: the sums `fareSense`'s local reach is worked out from (rail trips per curve

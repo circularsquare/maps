@@ -65,6 +65,8 @@
 //            round, and a cached result keeps a weekday's alone (before T-1904)
 //   prebuild the bubbles of an end not on show are built only when it is picked, and a newer
 //            result's are waited for with no stand-in (before T-1904)
+//   focus    no focus pool: during a game load the zone in view is solved rough in the main pool
+//            and only until the whole solve starts (before T-2045)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -72,10 +74,12 @@
 //   hoverCursor  hover writes the cursor style only when it changes
 //   idle         (adopted, now default; see perfOff idle)
 //   noDouble     adopted as default in T-075; use perfOff=noDouble for the old behavior
+//   focusFirst   the main pool's solving workers hold their solve and opening while the focus pool
+//                solves the zone in view (T-2045: Tokyo settled 5% sooner, the load's final 37% later)
 
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild") => off.has(part);
-export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus") => off.has(part);
+export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);

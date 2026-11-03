@@ -369,9 +369,33 @@ between. While a whole solve waits for packs still downloading or opening, the z
 open in every worker and with no figures yet, is solved alone with no market (`solve.only`, a
 **rough solve**, `?perfOff=rough` off): it starts ahead of the opens waiting, which wait for its
 free-flow round, and its rounds show as estimates (never final: the card, the held clock and the
-cache wait for the whole solve, whose figures replace them). A cached result shown beats it. After
+cache wait for the whole solve, whose figures replace them). A cached result shown beats it. During
+a game load the focus pool (below) does this instead, to the zone's last round. After
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
 lines their first figures (T-324) without waiting for its last round.
+**The focus pool** (T-2045, `workers/demandFocus.ts`, notes/T-2045.md, `?perfOff=focus` off). A game
+load with built stations starts a second pool of the main pool's shape (as many solving workers,
+dealt the periods alike, and an aux worker), kept for that load alone. It opens the zone in view's
+pack (a copy of the one the main pool is sent, or downloaded again for a zone newly in view) and,
+once the network is in, solves that zone as a rough solve does (no market, the free-flow round from
+one period in parts and estimates), but through every round and the capacity fit, kept as solved
+(`solve.keep`). The main pool goes on solving and opening meanwhile: the pool is sized to half the
+logical cores less one, so the two fit the cores and the zone takes about its own time on the pool's
+worker count, however big the save (`?perfTry=focusFirst` holds the main pool's solving workers at
+their next population and their opening meanwhile, `pause`: little sooner for the zone, the load's
+final much later, notes/T-2045.md). Each round shows as the zone's figures and its lines' (`onlyLines`):
+alone while nothing else is shown, else put in the shown result as a cluster solved ahead is, and
+the load's own estimates keep them wherever the focus solve is as far on or done (`withFocus`). Its
+last round counts as final for the status tag and the clock cap (`focusZones`), not for the card or
+the held clock, which wait for the whole solve. A zone newly in view during the load supersedes the
+solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.
+Questions about a zone shown from it go to its worker at the same index (`ask`, `target`,
+`cellModes`; the cells from its aux while the main pool has not opened the zone). It ends (its
+workers terminated) when the whole solve's final lands, a cached result shows, the network changes
+or a worker of it fails; the main pool makes no rough solve while it runs. The figures it shows leave
+out the regional market's longer trips and the riders other zones put on shared lines, so the whole
+solve's final moves them a little (notes/T-2045.md); that solve itself is untouched and its figures
+are the same to the bit.
 **One period first** (T-1538, `?perfOff=estimate` off). A worker holds two or three of the five
 periods (the pool is at most 3), and on a big network each period's free flow takes seconds. So
 in a rough solve, and in that free-flow round after an edit, a worker solves its first period

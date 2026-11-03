@@ -110,7 +110,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" | "pause" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -470,13 +470,28 @@ function failed(err: unknown) {
   else sendMessage({ kind: "failed", error: String(err) });
 }
 
-/** Yield to the event loop so a waiting message (a newer network) is delivered. */
-function yieldNow(): Promise<void> {
-  return new Promise((resolve) => {
+/** Yield to the event loop so a waiting message (a newer network) is delivered; while `pause` holds
+ * this worker (T-2045), wait there until it lets go or a newer solve comes. */
+async function yieldNow(): Promise<void> {
+  await new Promise<void>((resolve) => {
     const ch = new MessageChannel();
     ch.port1.onmessage = () => resolve();
     ch.port2.postMessage(0);
   });
+  while (pauseGate && !pending) await pauseGate;
+}
+/** T-2045: the focus pool solving the zone in view first: this pool's solving and opening wait */
+let pauseGate: Promise<void> | null = null;
+let pauseEnd: (() => void) | null = null;
+function setPause(on: boolean) {
+  if (on && !pauseGate) pauseGate = new Promise<void>((r) => (pauseEnd = r));
+  else if (!on && pauseGate) { pauseEnd?.(); pauseGate = pauseEnd = null; }
+}
+/** wake the waiters (a newer solve came); still paused for the rest */
+function nudgePause() {
+  if (!pauseGate) return;
+  pauseEnd?.();
+  pauseGate = new Promise<void>((r) => (pauseEnd = r));
 }
 
 /**
@@ -752,7 +767,7 @@ let oneByOne = false;
 function openQueued(epoch: number): Promise<void> {
   // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
   // rough solve of the zone in view runs
-  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => roughRun ?? undefined).then(() => {
+  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => roughRun ?? undefined).then(async () => { while (pauseGate) await pauseGate; }).then(() => {
     let first = openQueue[0];
     // taken up by an earlier batch, or after a close that comes before it in the chain
     if (!first || first.epoch !== epoch) return;
@@ -858,6 +873,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
     pending = pending?.freshParts && !msg.freshParts ? { ...msg, freshParts: true } : msg;
     wake?.();
+    nudgePause();
     if (msg.only) startRough();
     else void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "whole") {
@@ -867,6 +883,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
+  } else if (msg.kind === "pause") {
+    setPause(msg.on);
   } else if (msg.kind === "view") {
     viewDay = msg.day;
     viewZones = new Set(msg.zones);
@@ -1654,7 +1672,10 @@ async function run() {
         }
       }
       const early = job.barrier ? [] : dirty;
-      const ahead = job.barrier && !job.whole && dirty.length > 1 && !!job.first && dirty[0].cities.includes(job.first);
+      // (T-2045: not in a solve of `only` zones, whose clusters are all the zone in view's)
+      const ahead = job.barrier && !job.whole && !only && dirty.length > 1 && !!job.first && dirty[0].cities.includes(job.first);
+      // T-2045: the lines a solve of `only` zones gives figures, so the page puts in only those
+      const onlyLines = only ? () => ({ onlyLines: Uint32Array.from(new Set(jobClusters.flatMap((c) => [...c.lines]))) }) : () => ({});
       const groups = !job.barrier ? [] : ahead ? [[dirty[0]], dirty.slice(1)] : [dirty];
       groupOf.clear();
       ready.clear();
@@ -2029,7 +2050,7 @@ async function run() {
         const ms = performance.now() - t0;
         for (const q of all) {
           const { msg, transfer } = figures(q, 0, ms, figCs, { at: share, noMarket: !mine.includes(q) });
-          sendMessage({ kind: "result", ...msg, ...(cluster ? { cluster: { cities: cluster.cities, market: cluster.market, lines: cluster.lines.slice() } } : {}) }, transfer);
+          sendMessage({ kind: "result", ...msg, ...(cluster ? { cluster: { cities: cluster.cities, market: cluster.market, lines: cluster.lines.slice() } } : onlyLines()) }, transfer);
         }
         drop();
         return true;
@@ -2366,15 +2387,16 @@ async function run() {
             if (q === units[units.length - 1]) answerWaiting();
             if (alone) sendMessage({ kind: "result", ...msg, cluster: { cities: alone.cities, market: alone.market, lines: alone.lines.slice() } }, transfer);
             else {
-              sendMessage({ kind: "result", ...msg }, transfer);
+              sendMessage({ kind: "result", ...msg, ...onlyLines() }, transfer);
               setupMs = 0;
             }
           }
           // T-1533: a rough solve's estimate is out: the opens waiting go on between its populations
           if (only && round === 0) setRough(false);
         }
-        // (a rough solve from estimates is never kept for a whole solve to reuse)
-        if (!stale && !estimated) for (const c of late) solved(c);
+        // (a rough solve from estimates is never kept for a whole solve to reuse; T-2045: in the focus
+        // pool, which has no whole solve, it is, so a zone's questions are answered after the next)
+        if (!stale && (!estimated || job.keep)) for (const c of late) solved(c);
       }
       if (!stale) {
         solvedOnce = true;

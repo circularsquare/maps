@@ -154,8 +154,10 @@ wide so a longer date moves nothing [T-1868].
   way [T-1851, T-1223, T-328, T-421]; when the solve doing it is a whole one over several zones (a
   game's load, an edit's whole solve after its local one) it says **"Trips in 171 cities being
   recomputed…"** instead, the zones that solve has still to finish (`demandScope`, `demandSolving`),
-  since that takes much longer on a big game than the zone in view alone [T-1904]; it goes once the zone in view's figures are final, though other
-  zones still solve [T-392]. The clock cap (below) follows the same rule, so the cap lifts at that
+  since that takes much longer on a big game than the zone in view alone [T-1904], except while a
+  game's load solves the zone in view on its own first, which says "Trips here being recomputed…"
+  [T-2045]; it goes once the zone in view's figures are final, though other zones still solve
+  [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The clock cap (below) follows the same rule, so the cap lifts at that
   moment too. While capped, the tag's hover says "Clock capped at 4x while updating demand". While the
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends

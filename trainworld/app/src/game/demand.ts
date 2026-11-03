@@ -210,8 +210,11 @@ export const demandSolving = signal<Set<CityId> | null>(null);
 export const roughZones = signal<ReadonlySet<CityId>>(new Set());
 /** T-1223: the zone in view, shown rough, being worked out in detail (its fine solve not shown yet) */
 export const refiningZone = signal<CityId | null>(null);
+/** T-2045: the zones shown from their own solve during a game load (the focus pool), true once it
+ * has its last round: settled, which counts as final until the load's whole solve replaces it */
+export const focusZones = signal<ReadonlyMap<CityId, boolean>>(new Map());
 /** A solve is running that will still change the figures of the zone in view. */
-export const viewUpdating = computed(() => demandUpdating.value && (demandSolving.value?.has(activeCity.value) ?? true));
+export const viewUpdating = computed(() => demandUpdating.value && !focusZones.value.get(activeCity.value) && (demandSolving.value?.has(activeCity.value) ?? true));
 /** T-421: the figures shown for the zone in view are final: the shown result is, or (T-402) the
  * zone's cluster has its final while other clusters still solve and the view is not yet the solve's */
 export const viewFinal = computed(() => {

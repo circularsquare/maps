@@ -56,14 +56,16 @@ import {
   demandSolving,
   roughZones,
   refiningZone,
+  focusZones,
 } from "../game/demand";
+import { FocusPool } from "./demandFocus";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
-import { perfOff } from "../perfFlags";
+import { perfOff, perfTry } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
@@ -341,6 +343,8 @@ interface Solve {
   ahead?: { cities: CityId[]; key: string };
   /** T-1543: the parts of a period's result in so far, by cluster key, round and period */
   partsIn?: Map<string, Result[]>;
+  /** T-2045: a focus solve's lines with figures (`result.onlyLines`) */
+  onlyLines?: Uint32Array;
 }
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
@@ -680,6 +684,8 @@ class DemandClient {
 
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
+    // T-2045: a zone newly in view during a game load is solved first, in the focus pool
+    effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.focusSoon(); });
     const n = (this.computeN = this.poolN = poolSize());
     solveWaves = Math.ceil(PERIODS.length / n);
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
@@ -710,6 +716,7 @@ class DemandClient {
     effect(() => {
       const v = this.viewMsg();
       for (const w of this.workers) w.postMessage(v);
+      this.fpool?.postAll(v);
     });
     // T-1533: a game load's first figures for the zone in view show the map behind the card
     effect(() => {
@@ -776,6 +783,8 @@ class DemandClient {
     // T-1223: a game loading: its fine set is made afresh, from the save's list if it has one
     this.lodReset(fine);
     if (this.status.startsWith("failed") || perfOff("openAhead") || xy.length < 2) return;
+    this.endFocus(); // (a game picked while another loaded)
+    this.startFocus();
     const stations: Service["stations"] = [];
     for (let k = 0; k + 1 < xy.length; k += 2) stations.push({ id: "", x: xy[k], y: xy[k + 1] });
     const svc: Service = { frame, fare: { base: 0, perKm: 0 }, stations, lines: [] };
@@ -1372,6 +1381,9 @@ class DemandClient {
     // T-776: the market's rows go with the first market pack, the same way as its bytes
     const rows = open.intercity && !this.rowsSent ? open.rows : undefined;
     if (rows) this.rowsSent = true;
+    // T-2045: the zone in view's pack to the focus pool as well, during a game load
+    const fp = this.fpool;
+    if (open.pack && fp?.alive && open.pack.id === activeCity.peek() && !fp.holds(open.pack.id)) fp.post({ ...open.pack, bin: open.pack.bin.slice(0) });
     this.workers.forEach((w, i) => {
       const last = i === this.workers.length - 1;
       const pack = open.pack && { ...open.pack, bin: last ? open.pack.bin : open.pack.bin.slice(0) };
@@ -1637,7 +1649,8 @@ class DemandClient {
    */
   private roughSoon(svc: Service, need: Set<CityId> | null) {
     const id = activeCity.peek();
-    if (perfOff("rough") || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
+    // (T-2045: during a game load the focus pool solves the zone in view, to its last round)
+    if (this.fpool?.alive || perfOff("rough") || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
     if (this.rough?.svc === svc && this.rough.id === id) return;
     // a zone with figures is solved rough only for lines new since them, which take its free-flow
     // round's figures as a whole solve's would (T-324); its other figures stay
@@ -2021,6 +2034,7 @@ class DemandClient {
     this.cachedModes = stored.modes ?? null;
     this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
+    this.endFocus(); // T-2045: every zone has its final figures
     // T-1533: a rough solve under way gives way, so the packs it holds back open at once (a rough
     // solve of no zone, without the barrier, ends the worker's at its next look)
     if (this.cur?.rough) {
@@ -2193,6 +2207,7 @@ class DemandClient {
     clearInterval(this.progressTick);
     this.progressTick = 0;
     this.hold = null;
+    this.endFocus();
     zoneLoads.value = new Map();
     console.error("demand:", why);
     loadFailed(why);
@@ -2434,6 +2449,221 @@ class DemandClient {
     return this.mem.map((m, i) => ({ worker: i, aux: i === this.computeN, wasm: mb(m?.wasm ?? 0), heap: mb(m?.heap?.[0] ?? 0), peakNow: mb(m?.heap?.[1] ?? 0), solvePeak: mb(m?.solvePeak ?? 0), need: mb(this.needOf(i) ?? 0) }));
   }
 
+  /** A question's answer (from either pool): true if `msg` is one. */
+  private reply(i: number, msg: FromDemand): msg is Reply {
+    if (!(msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares" || msg.kind === "driveRail" || msg.kind === "driveBase")) return false;
+    const w = this.pendingQueries.get(msg.id);
+    if (!w) return true;
+    const t = msg as { qStart?: number; qMs?: number };
+    this.qlog.find((q) => q.id === msg.id)?.replies.push({ w: i, start: t.qStart ?? 0, ms: t.qMs ?? 0, at: performance.timeOrigin + performance.now() });
+    w.replies.push(msg);
+    if (--w.left === 0) {
+      this.pendingQueries.delete(msg.id);
+      w.done(w.replies);
+    }
+    return true;
+  }
+
+  // --- T-2045: the zone in view solved alone, to its last round, while a game load solves ---------
+
+  /** the focus pool of the game loading (`demandFocus.ts`), null outside a load or with ?perfOff=focus */
+  private fpool: FocusPool | null = null;
+  /** its solve in hand */
+  private fsolve: Solve | null = null;
+  /** per zone, the focus solve its figures are shown from and those figures (its lines alone, for
+   * putting in again over the load's own estimates) */
+  private fshown = new Map<CityId, { s: Solve; ests: DayDemand[]; round: number }>();
+  /** the focus pool's bubble sums, as `pushed` */
+  private fpushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
+  private fversions = new Set<number>();
+  /** zones whose pack the focus pool is downloading */
+  private ffetching = new Set<CityId>();
+  /** ?debug=1: when each focus solve was sent, its zone, and each round shown */
+  flog: { version: number; zone: CityId; sentAt: number; openAt?: number; roundAt: number[] }[] = [];
+  /** ?debug=1: when each zone opened in the focus pool */
+  fopened: Map<CityId, number> | null = null;
+
+  /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
+  private startFocus() {
+    if (this.fpool || perfOff("focus") || this.status.startsWith("failed") || this.cacheShown()) return;
+    const n = this.computeN;
+    this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
+      message: (i, msg) => this.focusMessage(i, msg),
+      opened: (id) => { (this.fopened ??= new Map()).set(id, performance.now()); this.focusSoon(); },
+      failed: (why) => { console.warn(`demand: the focus pool stopped (${why})`); this.endFocus(); },
+    }, this.viewMsg());
+  }
+
+  /** The load's whole solve has landed (or a cached result, a new network, a failure): the zones
+   * shown from the focus pool keep their figures until the next publish replaces them. */
+  private endFocus() {
+    this.mainPause(false);
+    if (!this.fpool && !this.fshown.size) return;
+    this.fpool?.end();
+    this.fpool = this.fsolve = null;
+    this.fshown.clear();
+    this.fpushed.clear();
+    this.ffetching.clear();
+    focusZones.value = new Map();
+  }
+
+  /** `?perfTry=focusFirst`: the main pool's solving workers hold their solve and opening while the
+   * focus pool solves the zone in view. Off: the pool is sized to half the cores, so both fit. */
+  private mainPause(on: boolean) {
+    if (on === this.mainPaused || (on && !perfTry("focusFirst"))) return;
+    this.mainPaused = on;
+    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "pause", on } satisfies ToDemand);
+  }
+  private mainPaused = false;
+
+  /** The zone in view, reached and with no settled figures, is solved in the focus pool. */
+  private focusSoon() {
+    const p = this.fpool, id = activeCity.peek();
+    if (!p?.alive || !viewedZone.peek() || !zonesLoadForView.peek()) return;
+    const svc = this.latest();
+    if (!svc || !this.solveNeed(svc)?.has(id)) return;
+    if (focusZones.peek().get(id) || (this.fsolve?.cities[0] === id && this.fsolve.svc === svc)) return;
+    if (!p.holds(id)) {
+      if (this.ffetching.has(id)) return;
+      this.ffetching.add(id);
+      void this.downloadPack(id).then(([header, bin]) => {
+        this.ffetching.delete(id);
+        if (this.fpool !== p) return;
+        const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
+        p.post({ id, header: new TextDecoder().decode(header), bin: own, level: this.levelFor(id) });
+      }, () => this.ffetching.delete(id));
+      return;
+    }
+    if (!p.open.includes(id)) return; // its `opened` comes back here
+    const { net, layout, ids } = packService(svc);
+    const version = ++this.version;
+    const now = performance.now();
+    const s: Solve = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], coarse: this.levelFor(id) === LOD_COARSE ? [id] : [], showEstimates: true, rough: true, barrier: true };
+    this.fsolve = s;
+    this.fversions.add(version);
+    this.log.push(s);
+    if (this.log.length > 50) this.log.shift();
+    this.flog.push({ version, zone: id, sentAt: now, openAt: this.fopened?.get(id), roundAt: [] });
+    this.mainPause(true);
+    p.solve({ kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], keep: true, ids, ...(perfOff("estimate") ? { exact0: true } : {}) }, !perfOff("parts"));
+  }
+
+  private focusMessage(i: number, msg: FromDemand) {
+    if (this.reply(i, msg)) return;
+    if (msg.kind === "sums") {
+      if (!this.fversions.has(msg.version)) return;
+      const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}`;
+      const list = this.fpushed.get(key) ?? [];
+      list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
+      this.fpushed.set(key, list);
+      return;
+    }
+    const s = this.fsolve;
+    if (msg.kind !== "result" || !s || msg.version !== s.version) return;
+    if (msg.onlyLines && !s.onlyLines) s.onlyLines = msg.onlyLines;
+    const round = msg.summary[0];
+    if (msg.part) {
+      // T-1543's parts, added up as the main pool's are
+      const key = `:${round}:${msg.period}`;
+      const m = (s.partsIn ??= new Map());
+      const list = m.get(key) ?? [];
+      m.set(key, list);
+      list[msg.part[0]] = msg;
+      if (list.filter(Boolean).length < msg.part[1]) return;
+      m.delete(key);
+      if (!s.byRound[round]?.[msg.period]) this.focusMessage(i, addParts(list));
+      return;
+    }
+    const results = s.byRound[round];
+    if (!results || round <= s.published) return;
+    results[msg.period] = msg;
+    for (let r = s.published + 1; r <= ROUNDS; r++) {
+      if (!s.byRound[r].every(Boolean)) break;
+      s.results = s.byRound[r];
+      s.published = r;
+      if (r < ROUNDS) this.fpool?.go(s.version, r + 1);
+      else this.mainPause(false);
+      this.publishFocus(s, r);
+      if (r > 0) s.byRound[r - 1] = [];
+    }
+  }
+
+  /** A round of the focus solve: the zone's figures and its lines' shown, alone while nothing else is,
+   * else put in the shown result, as a cluster solved ahead is (T-402). */
+  private publishFocus(s: Solve, round: number) {
+    const id = s.cities[0], final = round >= ROUNDS, res = s.results as Result[];
+    const lines = s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout;
+    this.inOrder(async () => {
+      const w = this.cur;
+      // (the load's own solve further on than a round before the last, or landed)
+      if (!this.fpool || (!final && w && !w.rough && w.svc === s.svc && w.published > round) || (w && this.cityVersion.get(id) === w.version)) return;
+      const ests = await this.daysOf(s, lines, round, false, res, true);
+      if (!this.fpool) return;
+      const shown = demandByDay.peek()[0].view;
+      const alone = !shown || (shown.version === s.version);
+      demandByDay.value = alone ? await this.daysOf(s, s.layout, round, false, res) : this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
+      if (!this.fpool) return;
+      this.fshown.set(id, { s, ests, round });
+      focusZones.value = new Map(focusZones.peek()).set(id, final);
+      const l = this.flog.find((x) => x.version === s.version);
+      if (l) l.roundAt[round] = performance.now();
+      this.lodShown([id], s.coarse);
+      this.progress();
+      this.checkHold();
+    });
+  }
+
+  /** The load's own estimates of a round, with the zones shown from the focus pool put back in where
+   * the focus solve is as far on (or settled). */
+  private withFocus(days: DayDemand[], s: Solve, round: number): DayDemand[] {
+    if (!this.fpool || !this.fshown.size) return days;
+    const ids = new Set(s.layout.map((l) => l.id));
+    for (const [id, f] of this.fshown) {
+      if (f.s.svc !== s.svc) continue;
+      if (f.round < ROUNDS && f.round < round) {
+        this.fshown.delete(id);
+        const z = new Map(focusZones.peek());
+        z.delete(id);
+        focusZones.value = z;
+        continue;
+      }
+      days = this.withZone(days, f.ests, [id], false, ids);
+    }
+    return days;
+  }
+
+  /** `days` with the figures of `ests` put in for `zones` (their views) and for the lines and
+   * stations `ests` has; the market's if `market`. Lines the network no longer has (`ids`) go. */
+  private withZone(days: DayDemand[], ests: DayDemand[], zones: CityId[], market: boolean, ids: Set<string>): DayDemand[] {
+    return days.map((d, k) => {
+      if (!d.view) return d;
+      const est = ests[k];
+      const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
+      for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
+      for (const [id, l] of est.view!.lines) lines.set(id, l);
+      for (const [id, v] of est.view!.stations) stations.set(id, v);
+      let purposes = d.view.purposes;
+      if (est.view!.purposes) {
+        purposes = new Map(purposes);
+        for (const [key, p] of est.view!.purposes) {
+          const old = purposes.get(key);
+          const pl = new Map(old?.lines), ps = new Map(old?.stations);
+          for (const [id, l] of p.lines) pl.set(id, l);
+          for (const [id, v] of p.stations) ps.set(id, v);
+          purposes.set(key, { lines: pl, stations: ps });
+        }
+      }
+      const view = { ...d.view, lines, stations, purposes };
+      const cities = new Map<CityId, DemandView>();
+      for (const [id, v] of d.cities) cities.set(id, { ...v, lines, stations, purposes });
+      for (const id of zones) {
+        const v = est.cities.get(id);
+        if (v) cities.set(id, { ...view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      }
+      return { view, cities, intercity: market ? est.intercity : d.intercity };
+    });
+  }
+
   private receive(i: number, msg: FromDemand) {
     if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`);
     if (msg.kind === "dead") return this.workerDied(i, `${msg.error}${msg.panic ? ` (${msg.panic})` : ""}, ${Math.round(msg.memBytes / 2 ** 20)} MB of WASM memory`);
@@ -2442,18 +2672,7 @@ class DemandClient {
       if (i < this.computeN) this.packAcks.set(item, (this.packAcks.get(item) ?? 0) + 1);
       return this.progressSoon();
     }
-    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares" || msg.kind === "driveRail" || msg.kind === "driveBase") {
-      const w = this.pendingQueries.get(msg.id);
-      if (!w) return;
-      const t = msg as { qStart?: number; qMs?: number };
-      this.qlog.find((q) => q.id === msg.id)?.replies.push({ w: i, start: t.qStart ?? 0, ms: t.qMs ?? 0, at: performance.timeOrigin + performance.now() });
-      w.replies.push(msg);
-      if (--w.left === 0) {
-        this.pendingQueries.delete(msg.id);
-        w.done(w.replies);
-      }
-      return;
-    }
+    if (this.reply(i, msg)) return;
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     if (msg.kind === "loads") {
       // T-1607: on to the worker solving the period's other side
@@ -2659,6 +2878,9 @@ class DemandClient {
     }
     this.lastKey = key;
     this.lastStir = performance.now();
+    // T-2045: the focus pool is a game load's; an edit's network ends it
+    if (!gameLoad) this.endFocus();
+    else if (svc.stations.length) this.startFocus();
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
     // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones
@@ -2673,6 +2895,7 @@ class DemandClient {
       this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since, shares: this.job.shares } : {}) };
     }
     this.send(svc, performance.now());
+    this.focusSoon();
     // T-328: a whole game's network: its last final result may be kept beside the save (shown
     // already if it was found ahead of the network, T-1539)
     if (this.hold && this.cacheOn && !(early?.shown && svc === early.svc)) void this.tryCache(svc);
@@ -2776,19 +2999,30 @@ class DemandClient {
   // --- Demand views (T-078; types and meaning in game/demand.ts) ---------------------------------
 
   /** Send `make(id)` to the given workers (all by default) and collect their replies. */
-  private ask(make: (id: number) => Query, which: number[] = this.workers.slice(0, this.computeN).map((_, i) => i), transfer: Transferable[] = [], zone?: CityId, t?: Target): Promise<Reply[]> {
+  /** T-2045: a question to the focus pool's aux worker */
+  private askFocusAux(make: (id: number) => Query, zone?: CityId): Promise<Reply[]> {
+    return this.ask(make, [this.computeN], [], zone, undefined, true);
+  }
+
+  private ask(make: (id: number) => Query, which: number[] = this.workers.slice(0, this.computeN).map((_, i) => i), transfer: Transferable[] = [], zone?: CityId, t?: Target, toFocus = false): Promise<Reply[]> {
     this.syncFocus();
     const id = this.nextQuery++;
     // `zone`: a nearby zone's question (T-276), about that zone whatever the focus does meanwhile
     const city = zone ?? activeCity.peek(), epoch = this.focusEpoch;
+    const q = make(id);
+    // T-2045: a question about a focus solve goes to the focus pool, the same worker index (the aux's
+    // to its aux, any other to its solving workers)
+    const fp = this.fpool, version = (q as { version?: number }).version;
+    const pool = fp?.alive && (toFocus || (version !== undefined && this.fversions.has(version))) ? fp : null;
+    if (pool) which = which.includes(this.computeN) ? [pool.n] : pool.workers.slice(0, pool.n).map((_, i) => i);
+    const workers = pool?.workers ?? this.workers;
     return new Promise((done) => {
       this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? replies : []) });
-      const q = make(id);
       this.qlog.push({ id, kind: q.kind, sent: performance.timeOrigin + performance.now(), replies: [] });
       if (this.qlog.length > 200) this.qlog.shift();
       // T-260: the kind of day shown; each answer weighs its periods by it
       const round = t?.round ?? demandView.peek()?.round ?? -1;
-      for (const i of which) this.workers[i].postMessage({...q, city, round, day: shownDay.peek(), ...(t?.wait ? { wait: true } : {})}, transfer);
+      for (const i of which) workers[i].postMessage({...q, city, round, day: shownDay.peek(), ...(t?.wait ? { wait: true } : {})}, transfer);
     });
   }
 
@@ -2801,6 +3035,12 @@ class DemandClient {
    */
   private target(): Target | null {
     const dv = demandView.peek();
+    // T-2045: a zone shown from the focus pool is asked about there, as a solve stepping through rounds
+    const f = this.fpool?.alive ? this.fshown.get(activeCity.peek()) : undefined;
+    if (f) {
+      const view = dv?.version ?? f.s.version;
+      return f.round >= ROUNDS ? { version: f.s.version, round: ROUNDS, view, wait: false, solve: f.s } : { version: f.s.version, round: f.round + 1, view, wait: true, solve: f.s, shown: f.round };
+    }
     const s = this.cur;
     // T-402: the zone in view's cluster solved ahead counts its own rounds (the workers tell which
     // rounds a question means by its zone)
@@ -2826,6 +3066,7 @@ class DemandClient {
   /** The answer asked for at `t` still goes with what is shown. */
   private still(t: Target): boolean {
     const v = demandView.peek()?.version;
+    if (this.fversions.has(t.version)) return this.fshown.get(activeCity.peek())?.s.version === t.version;
     return t.wait ? this.cur?.version === t.version && (v === undefined || v === t.view || v === t.version) : v === t.view;
   }
 
@@ -2867,9 +3108,11 @@ class DemandClient {
   cityCells(zone?: CityId): Promise<CityCells | null> {
     this.syncFocus();
     const other = zone !== undefined && zone !== activeCity.peek() ? zone : undefined;
-    const load = (id: CityId) => this.whenOpen(id).then(async (ok): Promise<CityCells | null> => {
+    // T-2045: a zone the focus pool holds and the main pool has not opened yet: its cells from there
+    const viaFocus = (id: CityId) => !this.opened.has(id) && !!this.fpool?.open.includes(id);
+    const load = (id: CityId) => (viaFocus(id) ? Promise.resolve(true) : this.whenOpen(id)).then(async (ok): Promise<CityCells | null> => {
       if (!ok) return null;
-      const [r] = await this.ask((q) => ({ kind: "cells", id: q, frame: frameOf() }), [this.computeN], [], other);
+      const [r] = viaFocus(id) ? await this.askFocusAux((q) => ({ kind: "cells", id: q, frame: frameOf() }), other) : await this.ask((q) => ({ kind: "cells", id: q, frame: frameOf() }), [this.computeN], [], other);
       if (r?.kind !== "cells" || r.xy.length === 0) return null;
       return { n: r.xy.length / 2, xy: r.xy, h3: r.h3, zone: r.zone, zoneM: r.zoneXY[0], zoneXY: r.zoneXY.subarray(1) };
     });
@@ -3035,11 +3278,13 @@ class DemandClient {
     const version = demandView.peek()?.version;
     if (version === undefined) return Promise.resolve(null);
     // cached per solve and crowding round (T-084: the dot map asks again for the refined result)
-    const round = demandView.peek()?.round ?? 0;
     const day = shownDay.peek();
+    // T-2045: a zone shown from the focus pool is asked about there, at the round shown
+    const f = this.fpool?.alive ? this.fshown.get(other ?? activeCity.peek()) : undefined;
+    const round = f ? f.round : demandView.peek()?.round ?? 0;
     // T-392: a zone shown from a cluster solved ahead of its solve's final is asked about there
-    const src = this.cityVersion.get(other ?? activeCity.peek());
-    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
+    const src = f ? f.s.version : this.cityVersion.get(other ?? activeCity.peek());
+    const at: Target = f ? { version: f.s.version, round: f.round, view: version, wait: false } : src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
     if (everydayToo && other === undefined && this.modesP?.version === version && this.modesP.round === round && this.modesP.day === day && this.modesP.src === src) return this.modesP.p;
     // T-328: the cached result's bubbles, when it kept this zone's for this day
     const kept = this.cachedModes;
@@ -3056,8 +3301,8 @@ class DemandClient {
       // every worker sent its sums with the round (no question to a worker busy with the next
       // round); asked for only when one is missing. Another day than a weekday's only for the
       // zones on screen when the round was solved (T-1904)
-      const sent = this.pushed.get(`${at.version}:${at.round}:${city}:${day}`);
-      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
+      const sent = (f ? this.fpushed : this.pushed).get(`${at.version}:${at.round}:${city}:${day}`);
+      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === (f ? this.fpool!.n : this.computeN) ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
       // the bit (T-328: the cached bubbles are compared with the fresh ones)
       for (const r of [...parts].sort((a, b) => a.mask - b.mask)) {
@@ -3580,8 +3825,10 @@ class DemandClient {
       const days = await this.daysOf(s, s.layout, round, final, res);
       // a cache of the same network shown meanwhile (T-328) holds its estimates back
       if (!final && !s.showEstimates) return;
-      demandByDay.value = days;
+      // T-2045: the zones the focus pool has as far on keep its figures until this solve's final
+      demandByDay.value = final ? days : this.withFocus(days, s, round);
       this.lodShown(s.cities, s.coarse);
+      if (final && s === this.cur) this.endFocus();
       if (final) {
         s.refinedAt = performance.now();
         // an older solve's figures are never read again (its svc and layout are); a few MB each
@@ -3715,6 +3962,12 @@ class DemandClient {
       this.lodShown(c.cities, s.coarse);
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
+        // T-2045: a cluster's own final beats the focus pool's figures of its zones
+        if (c.cities.some((id) => this.fshown.has(id))) {
+          const z = new Map(focusZones.peek());
+          for (const id of c.cities) { this.fshown.delete(id); z.delete(id); }
+          focusZones.value = z;
+        }
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
         linesSettled(fresh.map((l) => l.id));
         if (c.local) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
