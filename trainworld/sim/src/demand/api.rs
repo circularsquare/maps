@@ -20,7 +20,7 @@ use super::network::Catch;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
 use super::lod::{self, Lod};
-use super::network::{Network, PERIODS};
+use super::network::{Network, BUS_CARS, PERIODS};
 use super::pack::{self, City};
 use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
 use std::sync::Arc;
@@ -33,9 +33,13 @@ pub const TO_WORK: [f32; PERIODS] = [0.70, 0.12, 0.06, 0.04, 0.08];
 pub const TO_HOME: [f32; PERIODS] = [0.02, 0.18, 0.58, 0.16, 0.06];
 /// Busiest hour of a period against its mean hour (crowding is judged at the busiest hour).
 pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = crate::track::params::PEAK_HOUR_FACTOR;
-/// A 20 m car: seats and riders at crush load (a New York subway car: ~44 seats, ~160 at crush).
+/// A 20 m car (T-2186, notes/T-2147.md): its seats; its rated load, 100%, which crowding is
+/// counted against (a New York car at its planning guideline, Japan's 定員); and its crush load,
+/// 150% of rated, the most it takes (the queue, the wait for room, the boarding account). A bus
+/// is half a car, seats and rated load, and is full at its rated load (`network::BUS_CARS`).
 pub const SEATS_PER_CAR: f32 = 44.0;
-pub const CRUSH_PER_CAR: f32 = 160.0;
+pub const RATED_PER_CAR: f32 = 160.0;
+pub const CRUSH_PER_CAR: f32 = 240.0;
 /// The rail propensity (docs/demand.md 4.3), one worldwide value fitted on six cities' real
 /// networks (T-509), 0 since T-636 (the rail share comes from time and money alone); the everyday
 /// layer adds `Params::everyday_asc_rail`, 0 as well.
@@ -583,7 +587,8 @@ impl DemandApi {
             line_speed_kmh: vec![0.0; nl],
             line_headway_min: vec![],
             line_seats: svc.cars.iter().map(|&c| c * SEATS_PER_CAR).collect(),
-            line_crush: svc.cars.iter().map(|&c| c * CRUSH_PER_CAR).collect(),
+            line_rated: svc.cars.iter().map(|&c| c * RATED_PER_CAR).collect(),
+            line_crush: svc.cars.iter().map(|&c| c * if c == BUS_CARS { RATED_PER_CAR } else { CRUSH_PER_CAR }).collect(),
             st_group: svc.group.clone(),
             stop_x: svc.stop_xy.iter().step_by(2).copied().collect(),
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),

@@ -211,8 +211,9 @@ the same roads (unscaled).
 
 Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known complaint is riders
 waiting 50 minutes for a fast train that arrives one minute earlier. A wait counts its plain
-minutes (T-585) and the crowding loop (4.4) spreads riders, from 70% of a train's crush load.
-After it no line carries more in a period than its trains hold at crush in the busiest hour: the
+minutes (T-585) and the crowding loop (4.4) spreads riders, from 70% of a train's rated load (160
+a car). After it no line carries more in a period than its trains hold at crush (150% of rated,
+240 a car, T-2186) in the busiest hour: the
 riders over that go by car or on foot (T-1070, docs/demand-kernel.md step 7).
 
 **Access and egress.** Riders spread over the ways they could reach a station (walking or riding

@@ -54,7 +54,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   demand bubble, filled with the default Train share ramp's middle purple mixed 38% toward white
   (`.hint-cell .bubble`), no outline [T-1835]; a click folds the row (Folding, below).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
-  same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track")
+  same style, four buttons (Line, Traffic, Level, Speed; [ui-map.md](ui-map.md) "Lines and track")
   after the track icon; no key for the height or speed colours (T-1499), the track hover says.
 - **Station ridership** [T-1448, T-1477, `ui/DemandSelector.tsx`]: below the track display, in the same style, None, Origins, Transfers and Total ("Station ridership circles" below; hovers "Show riders starting a trip at each station", "Show transfers at each station",
   "Show riders at each station"), after the interchange icon (two station boxes crossing, one outline) with a big blue station

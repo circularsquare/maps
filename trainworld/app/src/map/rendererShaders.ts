@@ -1,7 +1,7 @@
 // The network renderer's shaders (map/renderer.ts): the strokes, stations and bridges, the selection's
 // outline, trains and the position probe, with the constants they and the renderer share.
 
-import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
+import { CRUSH_PER_CAR, RATED_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
 import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
@@ -113,7 +113,8 @@ uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple 
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
-uniform float u_band_m;      // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
+uniform int u_band_look;     // T-2223 prototypes (renderer.ts BAND_LOOK), 0 as built
+uniform float u_band_m;     // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -199,7 +200,10 @@ void main() {
       : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * bandW + extra + cas) + grow;
     // T-2126: a band of shared track a pixel narrower in colour than its slot, the casing showing between
     // (none for a line easing out of the ribbon to its full width)
-    if (shared && u_casing <= 0.0 && !full) w = max(1.0, w - u_band_gap * clamp(mix(a_band.z, a_band.w, along) / ${(1 - BAND_SHARE).toFixed(2)}, 0.0, 1.0));
+    if (shared && u_casing <= 0.0 && !full) {
+      float gp = u_band_look == 1 ? 0.0 : u_band_look == 2 ? 2.0 * u_band_gap : u_band_look == 4 ? max(1.5 * u_band_gap, 0.2 * w) : u_band_gap;
+      w = max(1.0, w - gp * clamp(mix(a_band.z, a_band.w, along) / ${(1 - BAND_SHARE).toFixed(2)}, 0.0, 1.0));
+    }
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
@@ -235,7 +239,8 @@ void main() {
   } else if (shared && u_casing <= 0.0 && !full && u_lane_mode == 0) {
     // (half a pixel more each side, for the smoothed edge)
     v_aa = 0.5 * w;
-    w += 1.0;
+    // (T-2223's touching bands abut unsmoothed, tinted inside their edge)
+    if (u_band_look != 1) w += 1.0;
   }
   float side = id < 2 ? -1.0 : 1.0;
   vec4 c0 = project(a_seg.xy);
@@ -323,6 +328,8 @@ flat in float v_aa;
 uniform vec3 u_full_rgb;
 uniform vec3 u_casing_rgb;
 uniform float u_full_out;
+uniform highp int u_band_look;
+uniform vec4 u_band_edge;  // T-2223 look 1: the edge tint's colour and width (px)
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
@@ -337,7 +344,15 @@ void main() {
     c = mix(u_casing_rgb, u_full_rgb, v_inner.w * clamp(v_inner.x + v_inner.y + 0.5 - d, 0.0, 1.0));
     a *= clamp(v_inner.x + v_inner.y + v_inner.z + 0.5 - d, 0.0, 1.0);
   }
-  if (v_aa > 0.0) a *= clamp(v_aa + 0.5 - abs(v_cap.z), 0.0, 1.0);
+  if (v_aa > 0.0) {
+    if (u_band_look == 1) c = mix(c, u_band_edge.rgb, 0.3 * smoothstep(v_aa - u_band_edge.w, v_aa, abs(v_cap.z)));
+    else if (u_band_look >= 2) {
+      // the cap as round as the sides, not half a pixel fatter (it pinched the gap at every joint);
+      // look 3: a sharper ramp, so a gap falling between two pixels still leaves them 70% casing
+      float d = v_aa + 0.5 - (past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z));
+      a = v_alpha * clamp(u_band_look == 3 ? 1.6 * d - 0.5 : d, 0.0, 1.0);
+    } else a *= clamp(v_aa + 0.5 - abs(v_cap.z), 0.0, 1.0);
+  }
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
     c = mix(c, v_stripe.rgb, s);
@@ -924,10 +939,11 @@ void main() {
         aboard = mix(came, aboard, g_stand);
       }
     }
-    float seats = ${SEATS_PER_CAR.toFixed(1)} * cars, crush = ${CRUSH_PER_CAR.toFixed(1)} * cars;
-    v_fill = aboard <= seats ? 0.5 * aboard / seats : min(1.0, 0.5 + 0.5 * (aboard - seats) / (crush - seats));
-    // packed to crush (the account never goes past it: whoever does not fit waits) draws as full
-    // with the over-full red edge, so a full train stands out from one nearly full (T-207)
+    float seats = ${SEATS_PER_CAR.toFixed(1)} * cars, rated = ${RATED_PER_CAR.toFixed(1)} * cars, crush = ${CRUSH_PER_CAR.toFixed(1)} * cars;
+    // T-2186: 1 at the rated load, then the second band to 2 at crush (game/boarding.ts gauge)
+    v_fill = aboard <= seats ? 0.5 * aboard / seats : aboard <= rated ? 0.5 + 0.5 * (aboard - seats) / (rated - seats) : min(1.99, 1.0 + (aboard - rated) / (crush - rated));
+    // packed to crush (the account never goes past it: whoever does not fit waits) draws with the
+    // red edge, so a full train stands out from one nearly full (T-207)
     if (aboard >= crush - 0.5) v_fill = 2.0;
   } else {
     // no account for this train (its line's stops just changed, or demand is not in yet): no
@@ -945,8 +961,9 @@ void main() {
 // A capsule at city scale, or separate rounded cars close up (T-103), with a white edge.
 // With riders known (T-084) the core fills from the back across the whole consist: dark up to
 // how full the train is, a slight tint of the line
-// colour beyond; half way means every seat taken, full means packed to crush; an over-full train
-// is full and has a red edge.
+// colour beyond; half way means every seat taken, full means the rated load. Past it a second band
+// of the dark shade turned towards red fills from the back again, whole at crush, where the train
+// has a red edge (T-2186).
 export const TRAIN_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv;
@@ -994,7 +1011,8 @@ void main() {
   if (v_fill >= 0.0) {
     float back = (p.x + v_consist.y) * v_front + v_consist.x * 0.5;
     core = mix(v_empty, v_color, clamp(min(v_fill, 1.0) * v_consist.x - back + 0.5, 0.0, 1.0));
-    if (v_fill > 1.5) rim = u_bad;
+    if (v_fill > 1.0) core = mix(core, mix(v_color, u_bad, 0.65), clamp((v_fill - 1.0) * v_consist.x - back + 0.5, 0.0, 1.0));
+    if (v_fill > 1.995) rim = u_bad;
   } else if (v_fill < -1.5) {
     // riders not worked out yet (T-324): diagonal stripes of the line colour and white
     float w = max(2.0, 2.0 * u_dpr);
@@ -1007,7 +1025,7 @@ void main() {
   }
   // a full train's red edge is wider than the white one, so it reads at a glance (T-207; T-218,
   // Anita: "not super noticeable", 50% thicker than T-207's 2.6 px)
-  float rimW = v_fill > 1.5 ? 3.9 : 1.7;
+  float rimW = v_fill > 1.995 ? 3.9 : 1.7;
   // the start menu's logo (T-1567): white inside a rim of the line's colour
   if (u_hollow) { core = vec3(1.0); rim = v_color / 0.48; rimW = max(1.7, 0.28 * v_px.y); }
   vec3 col = mix(core, rim, clamp(d + rimW, 0.0, 1.0));

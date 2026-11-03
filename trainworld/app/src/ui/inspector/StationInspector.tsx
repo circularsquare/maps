@@ -236,7 +236,7 @@ export function StationInspector({ id }: { id: string }) {
           complex's list goes back to it from here */}
       {!asComplex && (
         <div class="sub muted">
-          {`Elevation ${levelLabel(s.level)}`}
+          {`Level ${levelLabel(s.level)}`}
           {members.length > 1 && (
             <>
               {" · "}

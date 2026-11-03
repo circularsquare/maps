@@ -82,7 +82,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   // the purpose filter (T-158) says what it counted
   const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
   if (!traffic) return out;
-  // T-2007: the stretch's average load, every purpose's riders against the day's trips at crush
+  // T-2007: the stretch's average load, every purpose's riders against the day's trips at the rated load
   const st = w?.lineStats[l.id];
   const all = purpose === "all" ? day : dailyRiders(dv, l.id, l.stops, k, "all");
   const load = st && w && all !== null ? stretchLoad(num, w.version, st.cars, shownDay.peek(), all) : null;

@@ -190,21 +190,30 @@ export function platformRoom(lengthM: number): number {
   return (Math.max(20, lengthM) * PLATFORM_SIDE_WIDTH_M) / PLATFORM_M2_PER_RIDER;
 }
 
-/** Seats and riders at crush load per car: `SEATS_PER_CAR` and `CRUSH_PER_CAR` in
- * sim/src/demand/api.rs (a New York subway car). */
+/** Seats, riders at the rated load (100%) and at crush (150%, the most a car takes) per car:
+ * `SEATS_PER_CAR`, `RATED_PER_CAR` and `CRUSH_PER_CAR` in sim/src/demand/api.rs (T-2186). */
 export const SEATS_PER_CAR = 44;
-export const CRUSH_PER_CAR = 160;
+export const RATED_PER_CAR = 160;
+export const CRUSH_PER_CAR = 240;
 /** T-1464: a bus holds half a car's riders, 22 seated and 80 at crush (`BUS_CRUSH` in
  * sim/src/track/params.rs). */
 export const BUS_CARS = 0.5;
 /** A car's length, m. */
 export const CAR_M = 20;
 
-/** The train gauge: half full when every seat is taken, full at crush; 2 = over full. */
+/** Seats, riders at the rated load and at crush of a train of `cars` cars, or of a bus
+ * (`BUS_CARS`), which is full at its rated load (T-2186). */
+export function capacity(cars: number): { seats: number; rated: number; crush: number } {
+  return { seats: SEATS_PER_CAR * cars, rated: RATED_PER_CAR * cars, crush: (cars === BUS_CARS ? RATED_PER_CAR : CRUSH_PER_CAR) * cars };
+}
+
+/** The train gauge (T-2186): half full when every seat is taken, 1 at the rated load, then a
+ * second band from 1 to 2 at crush; 2 = packed to crush. */
 export function gauge(aboard: number, cars: number): number {
-  const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
+  const { seats, rated, crush } = capacity(cars);
   if (aboard <= seats) return seats > 0 ? (0.5 * Math.max(0, aboard)) / seats : 0;
-  if (aboard <= crush) return 0.5 + (0.5 * (aboard - seats)) / (crush - seats);
+  if (aboard <= rated) return 0.5 + (0.5 * (aboard - seats)) / (rated - seats);
+  if (aboard < crush - 0.5 && crush > rated) return Math.min(1.99, 1 + (aboard - rated) / (crush - rated));
   return 2;
 }
 

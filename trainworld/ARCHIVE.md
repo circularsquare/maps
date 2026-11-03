@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2227 [P2] Road crossings and placement lag. Done 2026-11-03 (agent t2226): steady ghost and placement no slower; first-pass stalls were the tile decode (2-22 ms a tile), now 0.1-2.8 ms by skipping other layers on their name. Install cost left to T-2230. notes/T-2227.md.
+- T-2226 [P2] Track text. Done 2026-11-03 (agent t2226): the refusal is always a ramp less than a level from the other track, now "Tracks cannot cross on a ramp unless they are a full level apart."; "crossings" in the track tag; "Level" for "Elevation" throughout (DECISIONS).
+- T-2237 [P2] Edit note: train trips instead of line boardings. Done 2026-11-03 (agent t2237): "+20k train trips/day", each trip once (zones' and market's rail trips summed); Tokyo's 大江戸線 doubled +19,797 trips (boardings +46,492), undo −19,831; New York new game +19,749 and −19,749. `checks/old/t2125-edit-note.mjs` new and tyo pass, smoke passes.
+- T-2192 [P2] Ferries F1, water and routes. Done 2026-11-03 (agent t2192): `ferry/route.ts` in its worker; all nine legs, Rockaway and Helsinki-Tallinn route in water, 0.16-0.74 s each in the browser after tiles, Staten Island 24.9 min (real 25), Manly 31.7 (30); disjoint waters refused. notes/T-2177.md "T-2192 results".
 - T-1927 [P3] Passing tracks at stations. Merged 2026-11-03 into T-2228 (Anita asked for passing tracks; design notes/T-2228.md, stages T-2231 to T-2234).
 - T-1849 [P2] The corridor table's first-figures cost. Done 2026-11-03 (agent t1849, tree t1849): 2.7-4.3 s a worker to 1.0-1.25 s (Jakarta, the real save, all of Japan), the table the same to the bit; a pair's two ways share one flight search, direct flights by bits. notes/T-1849.md.
 - T-2180 [P2] Edit note down both ways. Done 2026-11-03 (agent t2180): edit and undo come back within 105 riders of 31.7M on Tokyo; a level-of-detail change mixed into an edit (Tokyo coarse: −11,944) is now held while edits settle. "18 cities" is the whole solve: T-2188. notes/T-2180.md.

@@ -1,21 +1,24 @@
 // "What this edit did" (T-2125, after T-1478's daily rides note): once demand has settled after the
-// player's edits, the change in the network's riders a day and profit a day since the last settled
-// state (ui/EditNote.tsx shows it). Every edit through `edit()` counts but the look, group and loan
-// ops (editCap's NEUTRAL); edits that land while one is settling add up into one note. Both figures
-// are for the day shown (the weekday's for the average day, which has no fares of its own): riders are
-// the train lines' boardings in the demand result (`LineDemand.ridersPerDay`, the riders fares are
-// paid on; the Lines tab counts the boarding account's past 24 hours, which full trains cut), profit is
-// that day's fare income (`incomeByDay`, what the clock pays) minus its running cost and the upkeep.
-// Held on the main thread only and not saved.
+// player's edits, the change in train trips a day and profit a day since the last settled state
+// (ui/EditNote.tsx shows it). Every edit through `edit()` counts but the look, group and loan ops
+// (editCap's NEUTRAL); edits that land while one is settling add up into one note. Both figures are
+// for the day shown (the weekday's for the average day, which has no fares of its own): train trips
+// are the trips taken by rail (`railTrips`, each trip once however many lines it rides, T-2237: a
+// line that saves people a change lowers boardings while trips rise), profit is that day's fare
+// income (`incomeByDay`, what the clock pays) minus its running cost and the upkeep. A one-line
+// edit's line figures are its riders (`LineDemand.ridersPerDay`, its boardings) and its profit.
+// Zones keep their levels of detail while edits settle (`editsSettling`, T-2180), and figures from
+// other levels are never compared. Held on the main thread only and not saved.
 
 import { effect, signal } from "@preact/signals";
-import { demandByDay, demandUpdating, type DemandView } from "./demand";
+import { demandByDay, demandUpdating, editsSettling, roughZones, type DayDemand, type DemandView } from "./demand";
 import { DAY_KINDS, DEMAND_DAY_PHRASE, levelOn } from "./days";
 import { editStamp, lastEdit } from "./editCap";
 import { trainKind } from "./format";
 import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
+import { perfOff } from "../perfFlags";
 import { DEMAND_INDEX, type WorldView } from "./types";
 import { shownDay, shownDayPhrase } from "./ui";
 import { world } from "./world";
@@ -33,10 +36,11 @@ const GIVE_UP_MS = 5 * 60_000;
 
 export interface FromTo { from: number; to: number }
 export interface EditNote {
-  /** the network's riders a day and profit a day (US$), before and after */
-  riders: FromTo;
+  /** train trips a day (each trip once) and the network's profit a day (US$), before and after */
+  trips: FromTo;
   money: FromTo;
-  /** the line, when the edits were about exactly one line (named in them, or new) */
+  /** the line, when the edits were about exactly one line (named in them, or new): its riders (its
+   * boardings) and profit */
   line?: { id: string; riders: FromTo; money: FromTo };
   /** "per weekday": the day the figures are for */
   day: string;
@@ -54,12 +58,14 @@ export function shownChange(delta: number, at: number, now = performance.now()):
 }
 
 interface Figures {
-  riders: number;
+  trips: number;
   money: number;
   lines: Map<string, { riders: number; money: number }>;
   /** the day the figures are for, and the demand result they came from */
   day: number;
   version: number;
+  /** the zones shown from a coarse solve: figures at other levels of detail are not compared (T-2180) */
+  rough: string;
 }
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
@@ -75,14 +81,25 @@ function solvedForNow(w: WorldView, dv: DemandView): boolean {
   return true;
 }
 
-function figuresOf(w: WorldView, dv: DemandView | null, kind: number, inc: Income, m: MoneyState): Figures {
+/** Trips taken by rail a day in `d` (T-2237): every zone's own (its view's `railTripsPerDay`, the
+ * city views' train trips) and the market's between places (longer trips and commutes), each trip
+ * once however many lines it rides. Summed from the zones rather than read off the network view,
+ * whose total a zone's later figures (a local or focus result) put in leave as it was. */
+export function railTrips(d: DayDemand): number {
+  // a solve with no market gives the market's figures as NaN (no summary to add up)
+  const ok = (v: number | undefined) => (v !== undefined && Number.isFinite(v) ? v : 0);
+  let n = ok(d.intercity?.railTripsPerDay);
+  for (const v of d.cities.values()) n += ok(v.railTripsPerDay);
+  return n;
+}
+
+function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income, m: MoneyState): Figures {
+  const dv = d?.view ?? null;
   const lines = new Map<string, { riders: number; money: number }>();
-  let riders = 0;
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st) continue;
     const r = st.status === "running" ? dv?.lines.get(l.id)?.ridersPerDay ?? 0 : 0;
-    if (!st.bus) riders += r;
     let fares = 0, run = 0;
     const lm = inc.lines.get(l.id);
     if (lm) lm.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
@@ -99,7 +116,7 @@ function figuresOf(w: WorldView, dv: DemandView | null, kind: number, inc: Incom
   inc.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p]; });
   PERIODS.forEach((p, i) => { run += m.runningPerHour[levelOn(kind, DEMAND_INDEX[p.demand])] * PERIOD_HOURS[i]; });
   const upkeep = m.upkeep.track + m.upkeep.stations + m.upkeep.buses;
-  return { riders, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1 };
+  return { trips: d ? railTrips(d) : 0, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1, rough: [...roughZones.peek()].sort().join() };
 }
 
 /** Start watching for edits. Call once. */
@@ -107,9 +124,10 @@ export function startEditNote() {
   /** the figures at the last settled state */
   let base: Figures | null = null;
   /** edits since `base`: when the first was made, and the last activity (an edit, demand updating or
-   * a city loading). A city that loads meanwhile is no worry: riders are the lines' boardings, which a
-   * city with none of the lines leaves alone, and track into a new zone loads it as part of the edit. */
+   * a city loading). A city that loads meanwhile is no worry: one no line reaches has no train trips,
+   * and track into a new zone loads it as part of the edit. */
   let pending: { since: number; last: number; lines: Set<number> } | null = null;
+  const setPending = (p: typeof pending) => { pending = p; editsSettling.value = !!p; };
   let hide = 0, wake = 0;
   const tick = signal(0);
   const later = (ms: number) => { clearTimeout(wake); wake = setTimeout(() => { tick.value++; }, ms) as unknown as number; };
@@ -123,28 +141,29 @@ export function startEditNote() {
     const now = performance.now();
     if (!base) return;
     if (pending) pending.last = now;
-    else pending = { since: now, last: now, lines: new Set() };
+    else setPending({ since: now, last: now, lines: new Set() });
     // the line it is about (a copy's source is not: the copy is new)
     const op = lastEdit;
-    if (op && "line" in op && typeof op.line === "number" && op.op !== "copyLine") pending.lines.add(op.line);
+    if (op && "line" in op && typeof op.line === "number" && op.op !== "copyLine") pending!.lines.add(op.line);
     later(NO_SOLVE_MS);
   });
 
   let day = -1;
   effect(() => {
     void tick.value;
+    void roughZones.value;
     const w = world.value, updating = demandUpdating.value, loading = !!loadProgress.value;
     const shown = shownDay.value, kind = shown < DAY_KINDS.length ? shown : 0;
-    const dv = demandByDay.value[kind]?.view ?? null, inc = incomeByDay.value[kind], m = moneyState.value;
-    if (!w) { base = null; pending = null; return; }
+    const dd = demandByDay.value[kind] ?? null, dv = dd?.view ?? null, inc = incomeByDay.value[kind], m = moneyState.value;
+    if (!w) { base = null; setPending(null); return; }
     // another day's figures are other figures
-    if (kind !== day) { day = kind; base = null; pending = null; }
+    if (kind !== day) { day = kind; base = null; setPending(null); }
     const now = performance.now();
     if (pending) {
       if (updating || loading) pending.last = now;
-      if (now - pending.since > GIVE_UP_MS) { pending = null; base = null; }
+      if (now - pending.since > GIVE_UP_MS) { setPending(null); base = null; }
     }
-    // a network with nothing running has nothing for demand to solve: its riders are 0 (a new game's
+    // a network with nothing running has nothing for demand to solve: its train trips are 0 (a new game's
     // first line counts from there)
     const idle = !w.save.lines.some((l) => w.lineStats[l.id]?.status === "running");
     if (updating || loading || !inc || !m || (!idle && (!dv?.final || !solvedForNow(w, dv)))) return;
@@ -153,14 +172,16 @@ export function startEditNote() {
       later(NO_SOLVE_MS - (now - pending.last) + 50);
       return;
     }
-    const after = figuresOf(w, idle ? null : dv, kind, inc, m);
+    const after = figuresOf(w, idle ? null : dd, kind, inc, m);
     const was = pending ? base : null, edited = pending?.lines;
     base = after;
-    pending = null;
-    if (!was || !edited) return;
-    const riders = { from: Math.round(was.riders), to: Math.round(after.riders) };
+    setPending(null);
+    // a zone's level of detail changed between them (a change already under way at the first edit):
+    // coarse and fine figures differ by more than a small edit moves (T-2180)
+    if (!was || !edited || (was.rough !== after.rough && !perfOff("lodHold"))) return;
+    const trips = { from: Math.round(was.trips), to: Math.round(after.trips) };
     const money = { from: was.money, to: after.money };
-    if (riders.from === riders.to && Math.abs(money.to - money.from) < 500) return;
+    if (trips.from === trips.to && Math.abs(money.to - money.from) < 500) return;
     // the lines the edits named, and the new ones; other lines' figures move with them, so it takes the edits
     const touched = w.save.lines.filter((l) => after.lines.has(l.id) && (edited.has(l.num) || !was.lines.has(l.id))).map((l) => l.id);
     let line: EditNote["line"];
@@ -169,7 +190,7 @@ export function startEditNote() {
       line = { id, riders: { from: Math.round(b?.riders ?? 0), to: Math.round(f.riders) }, money: { from: b?.money ?? 0, to: f.money } };
     }
     clearTimeout(hide);
-    editNote.value = { riders, money, line, day: shown < DAY_KINDS.length ? shownDayPhrase.peek() : DEMAND_DAY_PHRASE[0], at: now };
+    editNote.value = { trips, money, line, day: shown < DAY_KINDS.length ? shownDayPhrase.peek() : DEMAND_DAY_PHRASE[0], at: now };
     holdNote(false);
   });
 

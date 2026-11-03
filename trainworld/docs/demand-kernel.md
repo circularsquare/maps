@@ -274,8 +274,9 @@ levels:
    this out; read memory `reference_transit_crowding_assignment.md` (in
    `~/.claude/projects/c--Users-anita-projects-maps/memory/`) first: the penalty never saturates,
    and averaging is what stops it ringing. It is 1 + 2x(1+x)/2, x from the larger of the seats and
-   **70% of crush** to crush (Anita, T-710: riders mind crowding only near full; 3 at crush,
-   5.4 at 120%; `crowd_start`). **At most three rounds**
+   **70% of the rated load** (112 a car) to the rated load (160, 100%), running on past it to
+   crush (240, 150%; T-2186): 3 at 100%, 5.4 at 120%, 10.8 at 150% (Anita, T-710: riders mind
+   crowding only near full; `crowd_start`, `Network::line_rated`). **At most three rounds**
    (T-022; one round leaves the segment that takes the overflow at its worst, notes/T-022.md).
    After them the riders are held to the trains' room (below). **Each period stops early once settled**
    (T-434, `kernel::settled`): a round is skipped when the round before moved the period's summed
@@ -291,7 +292,8 @@ levels:
    line runs the boarding account's rule (docs/track-and-service.md 6.6) on the period's own
    trains: an even headway at the period's frequency, riders arriving at each stop by the
    account's shape for the period (fastest mid-period, the busiest hour at the busiest-hour
-   factor), each train letting off the stop's alighting share and taking riders up to crush, the
+   factor), each train letting off the stop's alighting share and taking riders up to crush (240
+   a car, 150% of rated; a bus 80), the
    rest waiting a headway more for the next train of the same line and direction. A queue left
    at the period's end clears at the trains' average spare room. The rider-minutes waited
    beyond the first train, over the stop's boardings, are that boarding's average extra wait

@@ -23,10 +23,10 @@ use super::service::{LineSvc, Service, Trip};
 use super::span::{self, Mask};
 use std::collections::HashMap;
 
-/// Seats and riders at crush load per 20 m car: the demand kernel's `SEATS_PER_CAR` and
-/// `CRUSH_PER_CAR` (sim/src/demand/api.rs, a New York subway car).
+/// Seats and riders at crush load, 150% of the rated 160 (T-2186), per 20 m car: the demand
+/// kernel's `SEATS_PER_CAR` and `CRUSH_PER_CAR` (sim/src/demand/api.rs).
 pub const SEATS_PER_CAR: f64 = 44.0;
-pub const CRUSH_PER_CAR: f64 = 160.0;
+pub const CRUSH_PER_CAR: f64 = 240.0;
 pub const DAY: f64 = 86400.0;
 pub const PERIODS: usize = PERIOD_HOURS.len();
 /// T-1067: a rider whom full trains have kept this long past the first train they came for goes

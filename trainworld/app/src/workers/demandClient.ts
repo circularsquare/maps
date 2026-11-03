@@ -57,6 +57,7 @@ import {
   roughZones,
   refiningZone,
   focusZones,
+  editsSettling,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, smallDevice } from "./deviceMemory";
@@ -497,8 +498,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     stops: new Uint32Array(nStops),
     times: new Float32Array(6 * nStops),
     tph: new Float32Array(lines.flatMap((l) => l.tph)),
-    // T-2147 measurement only (?perfTry=crush2 / crush15): demand's trains, not buses (BUS_CARS 0.5), hold that many times more
-    cars: new Float32Array(lines.map((l) => (l.cars === 0.5 ? l.cars : l.cars * (perfTry("crush2") ? 2 : perfTry("crush15") ? 1.5 : 1)))),
+    cars: new Float32Array(lines.map((l) => l.cars)),
     fare: svc.fare,
     hopKm: new Float32Array(2 * nStops),
     span: lines.some((l) => l.span) ? new Float32Array(PERIODS.length * 2 * nStops).fill(1) : new Float32Array(0),
@@ -709,6 +709,8 @@ class DemandClient {
       this.lodShown();
       this.lodSoon(VIEW_SETTLE_MS + 50);
     });
+    // T-2180: the level changes held while edits settled go at once after
+    effect(() => { if (!editsSettling.value) this.lodSoon(); });
     // T-1047: zones built track crosses open bare for their figures
     effect(() => { trackZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
@@ -1112,9 +1114,15 @@ class DemandClient {
     this.lodTimer = 0;
     // (a game loading makes its first fine set from its own reach, in `ensure` or `stationsAhead`)
     if (this.lod !== "auto" || this.status.startsWith("failed") || this.hold || gameLoadArmed() || !this.lodZones || (this.ahead && !this.ahead.arrived)) return;
+    const now = Date.now();
+    // T-2180: no level changes while edits settle (the edit note's figures would mix them in), and
+    // that time counts as looked at, so a fine zone's ten minutes left alone start after
+    if (editsSettling.peek() && !perfOff("lodHold")) {
+      for (const id of this.fine) this.touched.set(id, now);
+      return;
+    }
     const zones = this.lodReach();
     if (!zones) return;
-    const now = Date.now();
     const held = this.heldZones(now);
     for (const id of held) this.touched.set(id, now);
     // a zone reached since the last check counts as just made fine (it opened fine)

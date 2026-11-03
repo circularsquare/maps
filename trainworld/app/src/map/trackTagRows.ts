@@ -60,7 +60,7 @@ function icon(path: string, name: string): SVGSVGElement {
 export function elevationFact(level: number, ...also: number[]): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(ELEVATION_PATH, "Elevation"));
+  s.append(icon(ELEVATION_PATH, "Level"));
   for (const v of [level, ...also]) {
     const l = Math.max(-3, Math.min(3, Math.round(v))) as Level;
     s.append(chip(levelLabel(l), LEVEL_COLOURS[l]));
@@ -124,7 +124,7 @@ export function roadFact(ground: ArrayLike<number> | undefined): HTMLSpanElement
   if (!ground || n < 1) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, "road crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
+  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, "crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
   return s;
 }
 

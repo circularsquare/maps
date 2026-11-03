@@ -51,7 +51,7 @@ try {
     await page.waitForTimeout(500);
     await page.keyboard.press('Escape');
     const cost = /cost [\d.]+x, \$([\d.,]+[kMB])/.exec(tag);
-    const roads = /([\d,]+) road crossings? \+\$([\d.,]+[kMB])/.exec(tag);
+    const roads = /([\d,]+) crossings? \+\$([\d.,]+[kMB])/.exec(tag);
     const km = Number(/([\d.]+) km/.exec(tag)?.[1] ?? NaN);
     return { tag, km, cost: cost ? money(cost[1]) : NaN, n: roads ? Number(roads[1].replace(/,/g, '')) : 0, roadCost: roads ? money(roads[2]) : 0 };
   };

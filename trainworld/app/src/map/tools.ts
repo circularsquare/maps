@@ -57,6 +57,7 @@ import { snapBeside, snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { playBuild } from "./buildSound";
+import { perfOff } from "../perfFlags";
 
 /** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
 const TOUCH_GAP_PX = 44;
@@ -223,7 +224,7 @@ export class Tools {
     // asked again when more of them land
     let roadsSent = false;
     const sendRoadTiles = () => {
-      if (!roadsSent) void roadTileTemplate(map).then((t) => {
+      if (!roadsSent && !perfOff("roads")) void roadTileTemplate(map).then((t) => {
         if (t && !roadsSent) client.post({ kind: "roadTiles", template: t });
         roadsSent ||= !!t;
       });

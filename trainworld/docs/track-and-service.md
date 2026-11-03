@@ -436,7 +436,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   set on any line in the game (0 until one is set; the save keeps it, `newCars` in its header) [T-1094]; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
-  (160 a car at crush), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars
+  (160 a car at its rated load, 100%, and 240 at crush, 150%, T-2186), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars
   run. One undoable edit, buying any cars it needs as other fleet growth does (6.4).
 
 ### 6.2 Capacity and junctions
@@ -445,7 +445,11 @@ Full design, numbers and sources: `notes/T-008.md`.
 there) and edges (one alignment between two nodes: its PIs with radius and level, and its track
 count). **Flat crossings are not nodes**: where two edges cross at the same level (two edges of an imported real network, `EdgeData.sep`, never make one, T-1751), the crossing is
 found from their geometry, costs money and loads capacity, but splits nothing, so dragging a PI
-across track never rewrites the graph or line paths. Each edge gives one directed track per
+across track never rewrites the graph or line paths. Track a full level (8 m) or more apart passes
+freely; nearer than that the crossing is refused (`Crossing`, "Tracks cannot cross on a ramp unless
+they are a full level apart."). Since flat track sits at whole levels, a refusal always has a ramp
+at the crossing: a ramp passing track less than a level from it, or two tracks at one level within
+1 m of a ramp's foot (`Network::find_crossings`, `CrossKind::Bad`) [T-2226]. Each edge gives one directed track per
 direction (shared on single track): `(edge, direction)` is the segment in SPEC 2.1's keyframes.
 At a node, every edge end leaves along the node's heading or its reverse; a move is any pair of
 ends on opposite sides. A line's path turns back (arrives and leaves on the same side) only at a
@@ -1167,7 +1171,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   train due within 6 hours at all keeps the plain shape (demand sends it almost nobody).
 - **Each train, in the order it leaves each stop**: the line's share alighting there gets off
   (demand's alightings over the riders it has arriving, per period; everyone at the last stop), then
-  it takes whoever is waiting up to its crush load (160 a car). The rest wait for the next train of
+  it takes whoever is waiting up to its crush load (240 a car, 150% of the rated 160, T-2186). The rest wait for the next train of
   the same line and direction. Lines sharing stops keep separate queues: demand has already split
   the riders between them by frequency (4.4's common lines), and a rider left behind does not
   switch to another line. On a circle (T-798) the last stop lets off only its share; the riders
@@ -1215,8 +1219,8 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   stopped there (its stand before it leaves, the closing stand at a first stop, never before the
   train ahead left; T-1123), its steady arrival rate, its pulses of riders changing lines (below),
   the hour's riders left behind and longest wait, and the stretches at capacity (below). The
-  renderer reads the train's load for the stretch it is drawn on (packed to crush, drawn full with
-  a red edge, T-207, T-218), and a platform's crowd at any moment is what the last train to stop
+  renderer reads the train's load for the stretch it is drawn on (past the rated load a second
+  band, packed to crush with a red edge, T-207, T-218, T-2186), and a platform's crowd at any moment is what the last train to stop
   there left plus, once it has left, who has arrived since. While a train stands at a stop its
   riders move aboard evenly over the stand (T-1785): the platform falls linearly from the crowd it
   found to the one it leaves, and the train's load goes linearly from the stretch it came in on to
@@ -1305,7 +1309,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   street stop (the drawn ones, `plan.street`) the bus stands 20 s (`bus::STREET_DWELL_S`, T-1798), taken out
   of the hop's time (at most 40% of it), so the bus runs faster between stands and arrives when it
   did before: run times and demand do not see the stands. No accelerating, no capacity, no holds.
-- **Riders**: 80 at crush (demand: 0.5 of a 160-rider car, 22 seats); the boarding account keeps no
+- **Riders**: 80, rated and at crush alike (demand: 0.5 of a car's seats and rated 160, 22 seats;
+  a bus takes nobody past its 80, T-2186); the boarding account keeps no
   platform crowd at its stops that are no station.
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
   squares and land, which the clock worker fetches as ranges of the `.bin` with the zone's mask (and
@@ -1318,3 +1323,39 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight.
+
+### 6.8 Ferry routes
+
+The router for ferry lines (T-2192; design notes/T-2177.md, which also holds the format the sim takes,
+"F1 -> F2 route format"). The ferry line kind itself, its tool, ports, boats and money, is not built yet
+(T-2193, T-2194). All in the app (`ferry/route.ts`, in `workers/ferryWater.worker.ts`); the sim never
+searches water.
+
+- **The water** is the basemap's own: the `water` layer of its zoom 12 tiles, fetched from its tile server
+  as the bus tool fetches roads, filled at cell centres (no swimming pools, water in tunnels or intermittent
+  water). OSM's water stops at many canal bridges: along a `transportation` line marked as a bridge, land
+  with water both ways across the line, 60 m or less in all, counts as water (a viaduct along a shore has
+  water on one side only and stays land).
+- **Ports**: a click on land within 150 m of water gives a landing on the shore (where the line from the
+  click first meets water) and a berth, the nearest water with 6 m of room within 300 m of it, where routes
+  start and end. No water within 150 m: refused (`far-from-water`).
+- **A leg** between two berths is searched on a raster of its box (the two ends plus 35% of their distance,
+  at least 800 m round, then 3 km or their distance round if the waters do not meet), its cell the finest
+  of 2.5 m or more that keeps the raster under 1.5M cells. A cell is sailable if its centre is 5 m or more
+  from land's (a channel of 10 m and a cell passes all along). A* over 16 neighbours; a metre costs
+  1 + 2 (1 - room / 15 m)² where the room is under 15 m (narrow water keeps a boat to its middle), plus
+  the 400 m preference: 3 (1 - room / 400 m)² times a weight, fading out within 300 m of either end. First
+  the plain path (weight 0), then weights 3, 1 and 0.3, the first whose path is at most 1.3 times the plain
+  one's taken, else the plain one.
+- **Long legs**: where that cell would be over 5 m, the leg is planned on the coarse raster (its tiles at
+  zoom 11 or 10 where zoom 12 would take over 80) and each end's first 700 m or so searched on a 2.5 m raster
+  of its own, the coarse plan starting and ending where those reach, at their distance by water. Legs over
+  150 km are refused (`too-long`); waters that do not meet, `no-water-path`.
+- **Shape**: the cells are simplified (Douglas-Peucker at 25 m, or a quarter of the room, never off sailable
+  water), then every corner but a port's gets the widest arc that fits its two sides and stays sailable, at
+  most 300 m. Where pieces of a leg meet, two corners either side take the turn so the route passes straight.
+- **Speeds**, one a point: 25 km/h 200 m or more from land, 10 km/h at 20 m or less, straight between, at
+  most √(0.3 m/s² x radius) on a bend; points every 25 m or so where the speed changes. Acceleration (0.15
+  m/s²) and stops are the sim's.
+- **Cost**: 0.2 to 1 s a leg in the browser once its tiles are in (`checks/t2192-ferry-routes.mjs`). Tiles,
+  each leg's search and its rasters are kept, so moving one port searches only its two legs.

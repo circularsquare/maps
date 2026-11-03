@@ -22,6 +22,8 @@ export type RoadKeep = (cls: string, brunnel: string | null) => boolean | number
 export const crossingWeight: RoadKeep = (cls, brunnel) =>
   brunnel === "bridge" || brunnel === "tunnel" ? 0 : cls === "motorway" ? 3 : BUS_CLASSES.has(cls) ? 1 : 0;
 
+const UTF8 = new TextDecoder();
+
 class Reader {
   pos = 0;
   b: Uint8Array;
@@ -52,7 +54,7 @@ class Reader {
     else throw new Error("bad wire type");
   }
   string(end: number): string {
-    const s = new TextDecoder().decode(this.b.subarray(this.pos, end));
+    const s = UTF8.decode(this.b.subarray(this.pos, end));
     this.pos = end;
     return s;
   }
@@ -69,6 +71,16 @@ function valueString(r: Reader, end: number): string | null {
   return out;
 }
 
+/** A layer's name, every other field skipped; the reader is left anywhere in the layer. */
+function layerName(r: Reader, end: number): string {
+  while (r.pos < end) {
+    const tag = r.varint(), f = tag >> 3, w = tag & 7;
+    if (f === 1 && w === 2) return r.string(r.len());
+    r.skip(w);
+  }
+  return "";
+}
+
 /** The lines of a tile's `transportation` layer that `keep` accepts (true or a weight above 0); none
  * when the tile has no such layer. */
 export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSES.has(c)): RoadLines {
@@ -81,8 +93,14 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
       continue;
     }
     const end = t.len();
-    // a layer: its name first, but the keys and values come after its features
+    // T-2227: another layer is skipped on its name alone; decoding the values of the building and
+    // place layers took most of a tile's 2-22 ms
     const r = new Reader(b, end);
+    r.pos = t.pos;
+    if (layerName(r, end) !== "transportation") {
+      t.pos = end;
+      continue;
+    }
     r.pos = t.pos;
     let name = "", extent = 4096;
     const feats: [number, number][] = [], keys: string[] = [], values: (string | null)[] = [];

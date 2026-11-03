@@ -33,7 +33,7 @@ const SECTIONS: [string, [string, string][]][] = [
     ["D, E, Delete", "Disable, enable or remove the picked blueprints"],
   ]],
   ["Keys", [
-    ["Shift 1 to 7", "Draw at elevation +3 down to -3"],
+    ["Shift 1 to 7", "Draw at level +3 down to −3"],
     [tabKeys, "Build, Lines, Stations, Finances and Cities tabs"],
     [toolKeys, "Track, stations, delete and select tools"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],

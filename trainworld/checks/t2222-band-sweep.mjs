@@ -1,0 +1,106 @@
+// T-2222: lines side by side drawn where their bands say, at every zoom. On the real New York save and
+// Anita's Tokyo save (skipped when absent), in the Line view and, once demand is final, the Traffic
+// view: at each zoom from 10.5 to 14.75 by 0.25 the simplified copy the renderer draws there
+// (strokeLod.ts) is compared with the full strokes at every vertex it merged away; and the full
+// strokes' band shifts are checked for jumps between joined segments and for metres past BAND_M_RANGE.
+//   node trainworld/checks/t2222-band-sweep.mjs [url] [--line]     (default http://localhost:6189/)
+// One PASS or FAIL line per save, view and check; figures in artifacts/trainworld/t2222/sweep.json.
+import { existsSync } from 'node:fs';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { ARTIFACTS, REAL_SAVE, launchChrome, importSave, collectErrors, demandFinal, GL } from './lib.mjs';
+
+const URL = process.argv.find((a, i) => i > 1 && !a.startsWith('--')) ?? 'http://localhost:6189/';
+const LINE_ONLY = process.argv.includes('--line');
+const TOKYO = 'C:/Users/anita/Documents/trainworld/Tokyo Seoul Fukuoka Busan (from anita.garden).save';
+const SAVES = [['real', REAL_SAVE], ['tokyo', TOKYO]].filter(([, f]) => existsSync(f));
+const ZOOMS = Array.from({ length: 18 }, (_, i) => 10.5 + i * 0.25);
+// (in the page: a merged vertex may sit at most 1 px off its band; a join may step 0.05 line widths
+// and 1 m in the Line view, 0.2 line widths in the Traffic view)
+const out = {};
+let failed = 0;
+const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
+
+// in the page: the checks on what is drawn now (Line or Traffic view as set)
+const sweep = async ({ zooms, at }) => {
+  const tw = window.tw, r = tw.renderer, src = r.net.lines;
+  const { BAND_RANGE, BAND_M_RANGE, BAND_STRIDE } = await import('/src/map/lineBands.ts');
+  const S = BAND_RANGE / 32767, M = BAND_M_RANGE / 32767, bd = src.band, n = src.count, wm = r.trafficWidths ? r.linesWmul : null;
+  const ll = (x, y) => { const p = tw.toLngLat(x, y); return [+(p.lng ?? p[0]).toFixed(5), +(p.lat ?? p[1]).toFixed(5)]; };
+  const frame = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+  const joined = (i) => src.colour[i] === src.colour[i - 1] && Math.abs(src.seg[i * 4] - src.seg[i * 4 - 2]) + Math.abs(src.seg[i * 4 + 1] - src.seg[i * 4 - 1]) <= 1e-3;
+  const jumps = [];
+  let clamped = 0;
+  for (let i = 0; i < n; i++) {
+    const o = i * BAND_STRIDE;
+    if (Math.abs(bd[o + 4]) >= 32766 || Math.abs(bd[o + 5]) >= 32766) clamped++;
+    if (i === 0 || !joined(i)) continue;
+    const a = o - BAND_STRIDE, ds = Math.abs(bd[o] - bd[a + 1]) * S, dm = Math.abs(bd[o + 4] - bd[a + 5]) * M;
+    const dt = wm ? Math.abs(wm[i * 3 + 1] - wm[(i - 1) * 3 + 2]) : 0;
+    if (ds > 0.05 || dm > 1 || dt > 0.2) jumps.push([src.colour[i], +ds.toFixed(3), +dm.toFixed(1), +dt.toFixed(2), ll(src.seg[i * 4], src.seg[i * 4 + 1])]);
+  }
+  const zs = [];
+  for (const z of zooms) {
+    tw.map.jumpTo({ center: at, zoom: z, bearing: 0, pitch: 0 });
+    tw.overlay.invalidate();
+    for (let k = 0; k < 6; k++) await frame();
+    const st = r.lodOf.get(r.lines), bz = Math.ceil(z + Math.log2(devicePixelRatio) - 1e-6), band = st?.bands.get(bz);
+    const used = band && band.vao.count < r.lines.count ? band : null;
+    const rec = { z, lod: !!used, max: 0, over: 0, worst: [] };
+    if (used && r.bandOn > 0) {
+      const f = used.first, m = f.length, lb = used.strokes.band;
+      for (let k = 0; k < m; k++) {
+        const i = f[k], last = (k + 1 < m ? f[k + 1] : n) - 1;
+        const x0 = src.seg[i * 4], y0 = src.seg[i * 4 + 1], dx = src.seg[last * 4 + 2] - x0, dy = src.seg[last * 4 + 3] - y0, L2 = dx * dx + dy * dy;
+        for (let v = i + 1; v <= last; v++) {
+          const t = L2 > 0 ? Math.max(0, Math.min(1, ((src.seg[v * 4] - x0) * dx + (src.seg[v * 4 + 1] - y0) * dy) / L2)) : 0;
+          const o = k * BAND_STRIDE, ov = v * BAND_STRIDE;
+          const dm = ((lb[o + 4] + (lb[o + 5] - lb[o + 4]) * t) - bd[ov + 4]) * M;
+          const ds = wm && used.wm ? used.wm[k * 3 + 1] + (used.wm[k * 3 + 2] - used.wm[k * 3 + 1]) * t - wm[v * 3 + 1] : ((lb[o] + (lb[o + 1] - lb[o]) * t) - bd[ov]) * S;
+          const e = Math.abs(ds * r.bandPx + dm * r.bandMPx);
+          if (e > rec.max) rec.max = +e.toFixed(2);
+          if (e > 1) { rec.over++; if (rec.worst.length < 10) rec.worst.push([+e.toFixed(2), src.colour[v], ll(src.seg[v * 4], src.seg[v * 4 + 1])]); }
+        }
+      }
+    }
+    zs.push(rec);
+  }
+  return { jumps: jumps.length, jumpsAt: jumps.slice(0, 10), clamped, zooms: zs };
+};
+
+const { ctx, close } = await launchChrome({ prefix: 'tw-t2222-', size: [1400, 900], args: GL });
+const page = ctx.pages()[0] ?? await ctx.newPage();
+const errors = [];
+collectErrors(page, errors);
+try {
+  await page.goto(`${URL}?debug=1&new=1&paused=1&demandWorkers=1`);
+  await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
+  for (const [name, file] of SAVES) {
+    await page.evaluate(() => { window.tw.client.lastLoad = null; window.twPrev = [window.tw.renderer.net, window.tw.client.lastLines]; });
+    await importSave(page, await readFile(file));
+    await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.renderer.net?.lines.count > 0 && window.tw.client.lastLines?.length > 0 && window.tw.renderer.net !== window.twPrev[0] && window.tw.client.lastLines !== window.twPrev[1], undefined, { timeout: 600000 });
+    await new Promise((r) => setTimeout(r, 2000));
+    const at = await page.evaluate(() => { const c = window.tw.map.getCenter(); return [c.lng, c.lat]; });
+    for (const view of LINE_ONLY ? ['line'] : ['line', 'traffic']) {
+      if (view === 'traffic') await demandFinal(page, { polling: 1000, lines: 1 }).catch((e) => console.log(`(${name}) demand wait: ${e.message.split('\n')[0]}`));
+      await page.evaluate((v) => {
+        const tw = window.tw;
+        tw.display.value = { ...tw.display.peek(), lineBands: true, trackColour: v };
+        tw.renderer.lineBands = true;
+        tw.overlay.invalidate();
+      }, view);
+      await new Promise((r) => setTimeout(r, 3000));
+      const r = await page.evaluate(sweep, { zooms: ZOOMS, at });
+      out[`${name}-${view}`] = r;
+      const bad = r.zooms.filter((z) => z.over > 0);
+      line(bad.length === 0, `${name} ${view}: drawn copies on their bands at every zoom`, bad.length ? bad.map((z) => `z${z.z} ${z.over} (max ${z.max} px)`).join(', ') : `max ${Math.max(...r.zooms.map((z) => z.max))} px, ${r.zooms.filter((z) => z.lod).length} of ${r.zooms.length} zooms simplified`);
+      line(r.jumps === 0, `${name} ${view}: no band jumps between joined segments`, r.jumps ? `${r.jumps}, first ${JSON.stringify(r.jumpsAt[0])}` : '');
+      if (view === 'line') line(r.clamped === 0, `${name}: no band metres past the range`, r.clamped ? `${r.clamped} segment ends` : '');
+    }
+  }
+  line(errors.length === 0, 'no console or GL errors', errors.slice(0, 3).join(' | '));
+} finally {
+  await mkdir(`${ARTIFACTS}t2222`, { recursive: true });
+  await writeFile(`${ARTIFACTS}t2222/sweep.json`, JSON.stringify(out, null, 1));
+  await close();
+}
+process.exit(failed ? 1 : 0);

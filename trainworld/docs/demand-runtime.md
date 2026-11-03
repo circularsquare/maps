@@ -117,7 +117,10 @@ first); never one made fine within 5 minutes. The zones of the last two builds (
 a stop added; one edit's zones are one build; `builtKeep`, T-2005, T-2153) are spared both, however
 long ago: they stay fine however long left alone, and go only when nothing else droppable is left
 over the budget, the latest build's last of all. The save keeps them (`demandBuilt`), so a reload
-spares the same zones. A coarse zone goes fine only by entering 1-3. A zone
+spares the same zones. A coarse zone goes fine only by entering 1-3. While the player's edits
+settle for the edit note (`editsSettling`, T-2180, [ui-map.md](ui-map.md) "Edit note") no check
+runs and every fine zone counts as just looked at, so the held changes go at the next check after
+and a zone's ten minutes left alone start from then. A zone
 reached since the last check opens fine (a station was just built there). The budget is the zones'
 memory a solving worker may hold, by T-1197's rate (`memoryCheck.ts`) with a coarse zone at 0.7 of
 a fine one: 1.5 GB on a device reporting 8 GB, less in proportion below (a phone or tablet that

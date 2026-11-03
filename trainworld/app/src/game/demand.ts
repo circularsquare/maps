@@ -210,6 +210,9 @@ export const demandSolving = signal<Set<CityId> | null>(null);
 export const roughZones = signal<ReadonlySet<CityId>>(new Set());
 /** T-1223: the zone in view, shown rough, being worked out in detail (its fine solve not shown yet) */
 export const refiningZone = signal<CityId | null>(null);
+/** T-2180: the player's edits are being solved for the edit note (game/editNote.ts); zones keep their
+ * levels of detail meanwhile, so the note compares like with like */
+export const editsSettling = signal(false);
 /** T-2045: the zones shown from their own solve during a game load (the focus pool), true once it
  * has its last round: settled, which counts as final until the load's whole solve replaces it */
 export const focusZones = signal<ReadonlyMap<CityId, boolean>>(new Map());

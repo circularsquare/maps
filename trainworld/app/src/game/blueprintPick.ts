@@ -247,7 +247,7 @@ export async function levelPicked(level: Level) {
   const p = bpPicked.peek();
   if (p.built || !p.edges.length) return;
   const a = await edit({ op: "edgesLevel", edges: p.edges, level }, true);
-  const n = p.edges.length, skipped = a.skipped ?? 0, to = `elevation ${levelLabel(level)}`;
+  const n = p.edges.length, skipped = a.skipped ?? 0, to = `level ${levelLabel(level)}`;
   if (!a.ok) say(n === 1 ? `This track cannot go to ${to}.` : `None of the ${n} pieces can go to ${to}.`, true);
   else if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
   else say(`${count(n, "piece", "pieces")} set to ${to}.`);

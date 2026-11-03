@@ -262,7 +262,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   shortest platform fits (platform / 20 m; a click on the number types it, and a typed length past
   the cap goes to the cap and offers the platforms' expansion below for the length typed, at most 20
   cars [T-1894]), the buttons with no hover and the
-  number of cars between them hovering "8 cars can carry 1,280 riders" (160 a car, at crush) and
+  number of cars between them hovering "8 cars can carry 1,280 riders, 1,920 at most" (160 a car at
+  the rated load, 240 at crush, T-2186) and
   "Running a train costs $4 per km, plus $2 per car" (the line's train kind, shown unit) [T-1893];
   the label's hover gives the cap ("The 160 m platform at East fits
   8 cars"; the schedule's rows, Trains, Average speed and
@@ -284,8 +285,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   and when the line's day is not a weekday one more line, "Today is a weekend", "Today is a holiday
   (Thanksgiving Day)" (no name when the calendar has none) or "Today is a holiday travel day", so a loss
   on it does not alarm, T-1893 `dayNote` in `game/today.ts`; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
-  aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
-  over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
+  aboard over the seconds each trip is under way times the riders a train holds at its rated load, 160 a car,
+  over every trip of today's kind of day from `linePeriods`, so able to pass 100%, at most crush's 150% [T-2186]; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left at platform as "x/y", x those a full train left behind and y those who
@@ -451,8 +452,10 @@ the Build tab's quote has rows for bus routes and new buses.
 
 - **The train inspector's "On board"** [T-083, T-164, T-230]: this train's own riders on the stretch
   it is running, from the boarding account ([track-and-service.md](track-and-service.md) 6.6),
-  against seats and crush: a bar with a tick at the seats and a state ("Empty", "Seats free",
-  "Standing", "Full"), beside the typical train this hour (the mean of its line's trains in the same
+  against seats and crush: a bar running to crush (240 a car, 150%), with a tick at the seats and
+  one at the rated load (160 a car, 100%), filled in the accent to 100% and in the warning orange (`--warn`)
+  past it, and a state ("Empty", "Seats free", "Standing", "Crowded" past 100%, "Full" at crush)
+  [T-2186]; a bus's bar runs to its 80, with no 100% tick. Beside it the typical train this hour (the mean of its line's trains in the same
   direction drawn this hour, on the same stretch). A train is never over full: whoever does not fit
   waits on the platform. A line with no figures yet says "Calculating" [T-324].
 - **Next stops** [T-868, `ui/inspector/TrainStops.tsx`]: under On board, the train's next four stops
@@ -549,7 +552,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   - **Passages**: each passage touching the complex, its length (price on hover) and Remove.
     The panel has no Trip from here button (the T key starts a trip from any tab) and no
     commuters, "where they live or work" or inter-city trips sections [T-1812].
-- **Station view** (one station opened alone) has its elevation under the name ("Elevation +1"), then in place of the
+- **Station view** (one station opened alone) has its level under the name ("Level +1"), then in place of the
   complex's lines and map the station's own lines, platform settings, and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the

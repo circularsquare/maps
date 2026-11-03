@@ -121,7 +121,7 @@ export function JunctionInspector({ node }: { node: number }) {
         <span class="name">Junction</span>
       </div>
       <div class="sub muted">
-        Elevation {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
+        Level {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
       </div>
       {n.flying ? (!built && (
         <Actions>

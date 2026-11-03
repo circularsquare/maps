@@ -134,8 +134,8 @@ pub struct Params {
     pub period_hours: f32,
     pub peak_hour_factor: f32,
     pub crowd_alpha: f32,
-    /// The crowding penalty starts at this share of crush, or at the seats if they are more
-    /// (T-710, `crowd_factors`).
+    /// The crowding penalty starts at this share of the rated load, or at the seats if they are
+    /// more (T-710, T-2186, `crowd_factors`).
     pub crowd_start: f32,
     /// Zone pairs carrying fewer trips than this are skipped in mode choice.
     pub prune_trips: f32,
@@ -5262,9 +5262,11 @@ pub struct CrowdStats {
     pub p90: f32,
 }
 
-/// Penalty per segment: 1 + alpha x(1+x)/2, x = max(load - start, 0) / (crush - start), per hour
-/// at the peak hour, start the larger of the seats and `crowd_start` x crush (T-710: riders mind
-/// crowding only near full). Never saturates (memory note on crowding).
+/// Penalty per segment: 1 + alpha x(1+x)/2, x = max(load - start, 0) / (rated - start), per hour
+/// at the peak hour, start the larger of the seats and `crowd_start` x the rated load (T-710:
+/// riders mind crowding only near full). The same curve runs on past the rated load to crush,
+/// 1.5 times rated (T-2186): 3 at rated, about 10.8 at crush at the default start. Never saturates
+/// (memory note on crowding).
 pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Vec<f32>, CrowdStats) {
     let nr = g.rn_line.len();
     let mut fac = vec![1.0f32; nr];
@@ -5279,9 +5281,10 @@ pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Ve
         let tph = 60.0 / net.line_headway_min[l][p.period];
         let seats = tph * net.line_seats[l];
         let crush = tph * net.line_crush[l];
-        let start = seats.max(p.crowd_start * crush);
+        let rated = tph * net.rated(l);
+        let start = seats.max(p.crowd_start * rated);
         let hour = loads.seg[r] / p.period_hours * p.peak_hour_factor;
-        let x = ((hour - start) / (crush - start)).max(0.0);
+        let x = ((hour - start) / (rated - start)).max(0.0);
         fac[r] = 1.0 + p.crowd_alpha * x * (1.0 + x) / 2.0;
         if hour > seats {
             st.segs_over_seats += 1;

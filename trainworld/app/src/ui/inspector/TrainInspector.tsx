@@ -9,7 +9,7 @@ import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
-import { BUS_CARS, CRUSH_PER_CAR, SEATS_PER_CAR, tripLoad } from "../../game/boarding";
+import { BUS_CARS, capacity, tripLoad } from "../../game/boarding";
 import { Chip, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
@@ -92,8 +92,11 @@ function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineI
   }
   const average = atEnd || !many ? 0 : sum / many;
   const aboard = atEnd ? 0 : own;
-  const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
-  const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard < crush - 0.5 ? "Standing" : "Full";
+  // T-2186: the bar runs to crush, with a mark at the seats and at the rated load (100%), and past
+  // it a second band to crush
+  const { seats, rated, crush } = capacity(cars);
+  const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard < crush - 0.5 ? (aboard <= rated + 0.5 ? "Standing" : "Crowded") : "Full";
+  const pct = (x: number) => (Math.min(x, crush) / crush) * 100 + "%";
   return (
     <>
       <div class="h">
@@ -105,8 +108,10 @@ function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineI
         <li>
           <span class="grow">
             <span class="board-bar" data-tip={`${exact(aboard)}/${exact(crush)} riders on board`}>
-              <i class="fill" style={{ width: Math.min(100, (aboard / crush) * 100) + "%" }} />
-              <i class="seats" style={{ left: (seats / crush) * 100 + "%" }} />
+              <i class="fill" style={{ width: pct(Math.min(aboard, rated)) }} />
+              {aboard > rated && <i class="fill over" style={{ left: pct(rated), width: `calc(${pct(aboard)} - ${pct(rated)})` }} />}
+              <i class="seats" style={{ left: pct(seats) }} />
+              {rated < crush && <i class="seats" style={{ left: pct(rated) }} />}
             </span>
           </span>
           <span class="val">{state}</span>

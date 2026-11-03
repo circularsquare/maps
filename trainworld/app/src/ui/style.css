@@ -468,6 +468,7 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .moves > li { align-items: flex-start; padding: 3px 0; }
 .board-bar { position: relative; display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); }
 .board-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.board-bar .fill.over { background: var(--warn); }
 .board-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
 .rows .grow.chip-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .moves .what { display: flex; flex-direction: column; gap: 1px; }

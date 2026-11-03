@@ -215,7 +215,7 @@ export function BlueprintBar() {
         {canLevel && <div class="bp-levels"><LevelButtons value={s.level} tip={levelTip} onPick={(l) => void levelPicked(l)} /></div>}
         {canLevel && (
           <button class={"btn bp-level" + (s.level === null ? "" : " lv on")} style={s.level === null ? undefined : { "--lc": LEVEL_COLOURS[s.level], "--lk": inkOn(LEVEL_COLOURS[s.level]) }}
-            data-tip={s.level === null ? "Elevation of the selected track: mixed" : `Elevation ${levelName(s.level)}`} aria-label="Elevation" aria-expanded={levels}
+            data-tip={s.level === null ? "Level of the selected track: mixed" : levelName(s.level)} aria-label="Level" aria-expanded={levels}
             onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
         )}
       {!s.built && s.hsr + s.regular > 0 && (

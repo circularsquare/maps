@@ -592,9 +592,10 @@ notes/T-420.md has the tables.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
-  crowding penalty's shape is from that literature too, but it starts only at 70% of crush (Anita,
-  T-710; the literature starts it where the seats run out, 27.5% of crush at 44 seats and 160
-  places a car); riders in Tokyo or Mumbai tolerate crowding very differently. A change costs a
+  crowding penalty's shape is from that literature too, but it starts only at 70% of a car's rated
+  load of 160 (Anita, T-710, kept by T-2186; the literature starts it where the seats run out, 44
+  a car), counts a minute aboard 3 at the rated load and runs on, the same curve, to about 10.8 at
+  crush (240, 150% of rated); riders in Tokyo or Mumbai tolerate crowding very differently. A change costs a
   fixed 2 perceived minutes beyond its wait and walk (Anita, T-717), where the literature puts
   5-15 perceived minutes on one, wait and walk often included. Why it may not carry over: where trains are
   sparse and timetabled (rural lines; the market's inter-city trips have a planned wait, T-1430) riders plan for the departure and the half
@@ -616,14 +617,15 @@ notes/T-420.md has the tables.
 - **Riders left behind** (T-188, docs/demand-kernel.md step 7). A boarding's cost includes the
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
-  (160 a 20 m car, a New York car), the extra wait in plain minutes like any wait (T-585) and
+  (240 a 20 m car, 150% of its rated 160, T-2186; a bus 80), the extra wait in plain minutes like any wait (T-585) and
   capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
   they left back towards the stop they came from, so nobody rides a full line the other way to
   board upstream (Anita, T-575; a line passing a station twice may be changed onto there towards
   other stops, T-1268), though
   Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
-  not carry over: crush loads differ (Tokyo and Mumbai pack far more than 160 into a car, pushers
-  included, so "full" comes later; many European systems run emptier); where riders are
+  not carry over: crush loads differ (Tokyo's worst lines run at twice the rated load, 320 a car,
+  and Mumbai packs more, pushers included, so "full" comes later; London and Chinese metros reach
+  only about 1.3 times theirs, notes/T-2147.md; many European systems run emptier); where riders are
   routinely left behind (Mumbai suburban, Lagos, Chinese metros with
   queue control at the station entrance) they plan for it, and the perceived weight of that wait
   may be lower, while elsewhere one missed train feels much worse than its minutes; the peak
@@ -633,9 +635,11 @@ notes/T-420.md has the tables.
 - **The trains' room, as a queue** (Anita, T-1070, T-1255, docs/demand-kernel.md step 7). After
   the rounds riders keep their trip only if, arriving at the platform with everyone who would ride
   if the trains had room, they would wait no longer than 30 minutes for a train with room; the rest
-  go by car or on foot. Room is the same 160 a car, the arrivals the US busiest-hour shapes, and
-  the 30 minutes one figure everywhere. Why it may not carry over: where a line runs past crush
-  for real (Tokyo's and Mumbai's peaks, with pushers) the cap holds rail lower than it is; where
+  go by car or on foot. Room is the same crush everywhere, 240 a car (150% of the rated 160, as
+  Japan and Korea publish peak loads and New York's cars reach; T-2186, notes/T-2147.md), the
+  arrivals the US busiest-hour shapes, and the 30 minutes one figure everywhere. Why it may not
+  carry over: where a line runs past 150% for real (Tokyo's worst lines at 200%, Mumbai's peaks,
+  with pushers) the cap holds rail lower than it is; where
   riders shift their trips to the peak's shoulders rather than queue, the shape overstates the
   queue; and patience on a platform differs by place (Indian and Chinese metros queue long at
   security and gates already). Check: peak-hour line loads against the operator's stated

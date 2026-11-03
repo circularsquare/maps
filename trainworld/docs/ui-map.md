@@ -143,7 +143,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour, white in the light theme and dark in
   the dark one, shows between bands at every zoom), its sides smoothed over a pixel so the gap keeps
   its width at every angle (T-2183, `v_aa`), one casing round them all (every casing is drawn
-  before any colour).
+  before any colour). Other looks for the gap are on trial, none the default (T-2223, notes/T-2058.md
+  3g; `?perfTry=bandEdge`, `bandWide`, `bandFine`, `bandSpaced`, renderer.ts `BAND_LOOK`).
   Order on each edge, left to right: of two lines, the one turning more to the left where they
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
   number on the left of that line's travel; an edge's order is by how many of the others each line
@@ -246,10 +247,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
     crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
     and their hover lines.
-  - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
+  - **Level** (`height` in code; hover "Show track level colors"): the track coloured by level, blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
-    the Build tab's elevation buttons, the Settings key and the elevation in the track tags.
+    the Build tab's level buttons, the Settings key and the level in the track tags.
   - **Speed** [T-1271]: built track a running line with trains uses is coloured by the trains'
     speed there, the rest by its speed limit (the geometry's, curve limits included: 160 km/h on
     ordinary track, up to 320 on high-speed track). The trains' speed at a stroke segment's middle
@@ -302,8 +303,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     map's scale as the ridership circles do (halved two zoom levels out), held between 4.5 and 9.5
     px (`quietBadgeRadius`, T-1772). Its ring and glyph are in the
     Elevation colour of the level the meeting is on [T-673]. A junction is built once three of its ends are, a crossing
-    once both tracks are. A crossing the model refuses (under one elevation step apart, or on a
-    ramp) is a red X.
+    once both tracks are. A crossing the model refuses (on a ramp, the tracks less than a level
+    apart; [track-and-service.md](track-and-service.md) "The graph") is a red X, hover "Tracks cross
+    on a ramp less than a level apart" [T-2226].
   - A **ramp** (a triangle) for every change of level along track, 0 to +3, 0 to -3, 1 to 2, -1 to -2
     and the rest. One mark per ramp (a stretch where the height keeps rising or keeps falling), at its
     middle, pointing along the track toward the end that is farther from the ground, filled in the
@@ -449,12 +451,13 @@ change; only links are saved. Riders change between any two stations of a comple
   crossings. The timetable already carries the average wait at each conflict as a hold
   (track-and-service.md 6.2), so the drawn wait changes no run time, boarding or demand.
   `?perfOff=crossWait` or `renderer.guard.crossings` turns it off.
-- **How full** [T-103, T-207, T-218, T-230]: the core fills from its back like a gauge across the
+- **How full** [T-103, T-207, T-218, T-230, T-2186]: the core fills from its back like a gauge across the
   whole consist, in the dark shade of the line colour (48% of the line RGB) over an 18% white tint.
-  Half full is every seat taken, full is packed to crush, from the boarding account
+  Half full is every seat taken, full is the rated load (160 a car, 100%), from the boarding account
   ([track-and-service.md](track-and-service.md) 6.6): this train's riders on the stretch it is
-  drawn on, empty at its last stop. A train at crush has a red rim 3.9 px wide (the white rim is
-  1.7 px).
+  drawn on, empty at its last stop. Past 100% a second band, the dark shade 65% of the way to the
+  warning red, fills from the back again, whole at crush (240 a car, 150%), where the train has a
+  red rim 3.9 px wide (the white rim is 1.7 px).
 - **No figures yet** [T-230, T-324]: a running line demand has no riders for (just after an edit
   changed its stops) is drawn striped in the line colour and white, never solid, and its tag says
   "Calculating demand".
@@ -599,15 +602,16 @@ those who got on, less the load carried on.
   shows no opening days, and one in progress ends with the page.
 - **Edit note** [T-2125, after T-1478; `game/editNote.ts`, `ui/EditNote.tsx`]: once demand has settled
   after the player's edits, the map's upper left, under the view rows and the demand alert (in
-  `.map-top-left`, so it moves up when rows are folded), shows the network's change in riders a day
-  and in profit a day: "+5,226 riders/day", "−$12k profit/day". Plain 12 px text on the map with a
-  halo in the background colour, no box; each row after a 12 px arrow, up in `--good` green or down
-  in `--bad` red; the profit row's text is red when it falls. A row whose change rounds to 0 (riders
-  to 0, money under $500) is left out, and with both out there is no note. The numbers ease up from 0
-  over 0.9 s, fast at first. It stays 8 s, longer while the pointer is on it, and goes at the next
-  edit. Each row's hover gives the before and after for the day shown ("Riders per weekday: 812,400 to
-  817,626"), and when the edits were about exactly one line (the line an edit names, or a new line),
-  that line's before and after too.
+  `.map-top-left`, so it moves up when rows are folded), shows the change in train trips a day and
+  in the network's profit a day: "+5,226 trips/day", "−$12k profit/day". Plain 12 px text on
+  the map with a halo in the background colour, no box; each row after a 12 px arrow, up in `--good`
+  green or down in `--bad` red; the profit row's text is red when it falls. A row whose change rounds
+  to 0 (trips to 0, money under $500) is left out, and with both out there is no note. The numbers
+  ease up from 0 over 0.9 s, fast at first. It stays 8 s, longer while the pointer is on it, and goes
+  at the next edit. Each row's hover gives the before and after for the day shown ("Trips per
+  weekday: 812,400 to 817,626"), and when the edits were about exactly one line (the line an edit
+  names, or a new line), that line's own too: its riders under the trips ("Riders on 大江戸線:
+  1,016,738 to 1,140,493"), its profit under the profit ("大江戸線: $2.03M to −$17.0M").
   - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
     (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
     track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier
@@ -616,11 +620,23 @@ those who got on, less the load carried on.
     and every running line's figures are for its stops as they are; then a newer result than the one
     before the edits, or 8 s with no edit and no demand update (an edit that starts no solve).
     A switch of the shown day, or 5 minutes without settling, makes none. A network with no line
-    running counts as settled with 0 riders, so a new game's first line has a note.
-  - **Figures**: for the day shown (the weekday's for the average day). Riders are the train lines'
-    `ridersPerDay` summed (the demand result's boardings with transfers, the riders fares are paid
-    on; the Lines tab's Riders are the boarding account's past 24 hours, which leave out riders full
-    trains turn away, so the two can move apart); profit is the day's fare
+    running counts as settled with 0 train trips, so a new game's first line has a note.
+  - **Like with like** [T-2180]: while edits settle (`editsSettling`) no zone changes its level of
+    detail ([demand-runtime.md](demand-runtime.md) "Levels of detail"), and when the zones shown
+    coarse (`roughZones`) differ between the two states (a change already under way at the first
+    edit) there is no note: coarse and fine figures differ by more than a small edit moves.
+  - **Figures**: for the day shown (the weekday's for the average day). Train trips [T-2237] are the
+    trips taken by rail, each once however many lines it rides (`railTrips`): every zone's view's
+    `railTripsPerDay` (the city views' train trips) plus the market's between places (longer trips
+    and commutes, `intercity.railTripsPerDay`), summed from the zones because a local or focus
+    result puts in a zone's figures and leaves the network view's total as it was. Until T-2237 the
+    row was riders, the lines' boardings with transfers: doubling 大江戸線's trains on the real Tokyo
+    save put +123,516 riders on it while 54 other lines lost 76,679 (notes/T-2180.md), so a line that
+    saves people a change could show riders falling while trips rose; the same edit is +19,797 train
+    trips against +46,492 boardings, and its undo the same back. A line's own riders in the
+    hover are its `ridersPerDay` (its boardings, the riders fares are paid on; the Lines tab's Riders
+    are the boarding account's past 24 hours, which leave out riders full trains turn away, so the
+    two can move apart); profit is the day's fare
     income (`incomeByDay`, what the clock pays), minus the running cost (`runningPerHour` by period,
     a Saturday's and Sunday's high hours at the medium level) and the upkeep a day. A line's own profit
     is its fares, its trains' running cost and its share of upkeep, as the Lines tab's Money.
@@ -663,11 +679,11 @@ those who got on, less the load carried on.
   lines on it (the tag of Height and Speed, which draw no line strokes) the first row is the
   riders of all those lines on their stretches there together, worded the same [T-1907]. Traffic
   adds "Average load 28%": the stretch's riders (every purpose) over what the
-  day's trips could hold at crush, the line panel's Average load for one stretch, the trips counted
+  day's trips hold at the rated load (160 a car), the line panel's Average load for one stretch, the trips counted
   from the boarding account for the day shown (the average day 5 weekdays, a Saturday and a Sunday
-  over 7), capped at 100%, no row until the account answers or where no trips run [T-2007];
+  over 7), able to pass 100% up to crush's 150% [T-2186], no row until the account answers or where no trips run [T-2007];
   and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries one row
-  for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and
+  for the level at that point (an up and down arrow, then "+1" on its Level colour) and
   the speed limit beside it (two right chevrons, then "120 km/h" on its Speed colour) [T-2007], each colour at
   half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap
   (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what

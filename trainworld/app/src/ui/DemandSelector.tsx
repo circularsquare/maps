@@ -87,7 +87,7 @@ export function DemandSelector() {
 const TRACK_OPTIONS = [
   ["line", "Line", "Show line colors"],
   ["traffic", "Traffic", "Show line colors, thickness by traffic"],
-  ["height", "Elevation", "Show track elevation colors"],
+  ["height", "Level", "Show track level colors"],
   ["speed", "Speed", "Show track speed"],
 ] as const;
 

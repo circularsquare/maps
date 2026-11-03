@@ -1,16 +1,24 @@
 ﻿// T-2125: "what this edit did" at the map's upper left. On the real save and on a new New York game, a
 // train count change, a stop change and a new line each show the note; its figures are printed beside
 // the Lines tab's and the demand result's before and after, and screenshots go to
-// artifacts/trainworld/t2125/ light and dark. From the maps root, with a running dev server:
-//   node trainworld/checks/old/t2125-edit-note.mjs <port> [real|new|both]
+// artifacts/trainworld/t2125/ light and dark. T-2237: the first row is train trips (each trip once,
+// editNote's `railTrips`), not line boardings; an undo gives the opposite figure (new game: the train
+// count change; Tokyo's real save: 大江戸線's trains doubled, which saves people changes, then undone).
+// From the maps root, with a running dev server:
+//   node trainworld/checks/old/t2125-edit-note.mjs <port> [new|tyo|real|both|all] [demand workers]
+// "both" (the default) is new and tyo; "all" adds the New York real save. Tokyo on one demand worker
+// settles in about 6 minutes, past the note's 5 (GIVE_UP_MS, T-2189): give it 3 or more.
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ARTIFACTS, GL, NOISE, REAL_SAVE, buildLine, collectErrors, demandFinal, importSave, launchChrome } from '../lib.mjs';
 
 const OUT = join(ARTIFACTS, 't2125');
 await mkdir(OUT, { recursive: true });
 const BASE = `http://localhost:${process.argv[2] ?? 6168}/`;
 const which = process.argv[3] ?? 'both';
+const WORKERS = Number(process.argv[4] ?? 1);
+const TYO_SAVE = fileURLToPath(new URL('../../data/packs/real/tyo.save', import.meta.url));
 const { ctx, close } = await launchChrome({ prefix: 'tw-t2125-', size: [1400, 900], args: GL, deviceScaleFactor: 2 });
 const errors = [];
 let fails = 0;
@@ -21,6 +29,9 @@ const figures = (page, id) => page.evaluate(async (id) => {
   const w = window.tw.world.value, dv = window.twDemand.view();
   const { today, runningToday } = await import('/src/game/today.ts');
   const { moneyState } = await import('/src/game/money.ts');
+  const { demandByDay } = await import('/src/game/demand.ts');
+  const { railTrips } = await import('/src/game/editNote.ts');
+  const dd = demandByDay.value[0];
   const t = today.value, m = moneyState.value;
   let dvRiders = 0, tabRiders = 0, tabMoney = 0, shares = 0;
   for (const l of w.save.lines) {
@@ -36,6 +47,8 @@ const figures = (page, id) => page.evaluate(async (id) => {
   const l = id && w.save.lines.find((x) => x.id === id), st = l && w.lineStats[id], d = l && t.get(id);
   return {
     dvRiders: Math.round(dvRiders), tabRiders: Math.round(tabRiders), netMoney: Math.round(netMoney),
+    // train trips as the note sums them, and the network view's own total beside them
+    trips: Math.round(dd ? railTrips(dd) : 0), viewTrips: Math.round(dd?.view?.railTripsPerDay ?? 0), market: Math.round(dd?.intercity?.railTripsPerDay ?? 0),
     line: l ? { dv: Math.round(dv?.lines.get(id)?.ridersPerDay ?? 0), tab: d ? Math.round(d.riders) : null, money: d ? Math.round(d.fares - runningToday(l, st) - st.upkeep) : null } : null,
   };
 }, id ?? null);
@@ -62,17 +75,20 @@ async function one(page, tag, what, id, doEdit) {
   await doEdit();
   const { n, s } = await waitNote(page);
   check(`${tag} ${what}: a note shows`, !!n, `after ${s.toFixed(1)} s`);
-  if (!n) return;
+  if (!n) return null;
   await page.waitForTimeout(1200); // the count-up
   const after = await figures(page, id ?? n.line?.id);
   const rows = (await noteNow(page))?.rows ?? [];
   console.log(`      note: ${rows.map((r) => r.text).join(' | ')}`);
   console.log(`      hovers: ${rows.map((r) => JSON.stringify(r.tip)).join(' | ')}`);
-  console.log(`      riders ${fmt(n.riders.from)} -> ${fmt(n.riders.to)}; demand result ${fmt(before.dvRiders)} -> ${fmt(after.dvRiders)}; Lines tab ${fmt(before.tabRiders)} -> ${fmt(after.tabRiders)}`);
+  console.log(`      train trips ${fmt(n.trips.from)} -> ${fmt(n.trips.to)} (${fmt(n.trips.to - n.trips.from)}); summed now ${fmt(before.trips)} -> ${fmt(after.trips)}, network view ${fmt(before.viewTrips)} -> ${fmt(after.viewTrips)}, market ${fmt(before.market)} -> ${fmt(after.market)}`);
+  console.log(`      boardings ${fmt(before.dvRiders)} -> ${fmt(after.dvRiders)} (${fmt(after.dvRiders - before.dvRiders)}); Lines tab ${fmt(before.tabRiders)} -> ${fmt(after.tabRiders)}`);
   console.log(`      profit ${fmt(n.money.from)} -> ${fmt(n.money.to)} (${fmt(n.money.to - n.money.from)}); Lines tab sum ${fmt(before.netMoney)} -> ${fmt(after.netMoney)} (${fmt(after.netMoney - before.netMoney)})`);
   if (n.line) console.log(`      line ${n.line.id}: riders ${fmt(n.line.riders.from)} -> ${fmt(n.line.riders.to)} (tab ${before.line?.tab ?? '-'} -> ${after.line?.tab ?? '-'}), money ${fmt(n.line.money.from)} -> ${fmt(n.line.money.to)} (tab ${before.line?.money ?? '-'} -> ${after.line?.money ?? '-'})`);
-  check(`${tag} ${what}: riders to = the demand result's`, Math.abs(n.riders.to - after.dvRiders) <= Math.max(1, 1e-5 * after.dvRiders), `${n.riders.to} vs ${after.dvRiders}`);
-  check(`${tag} ${what}: texts are signed rates`, rows.length > 0 && rows.every((r) => /^[+−]([\d,]+|\d+(\.\d+)?[kM]) riders\/day$|^[+−]\$\d+(\.\d+)?[kMB]? profit\/day$/.test(r.text)), rows.map((r) => r.text).join(' | '));
+  check(`${tag} ${what}: train trips to = the demand result's`, Math.abs(n.trips.to - after.trips) <= Math.max(1, 1e-5 * after.trips), `${n.trips.to} vs ${after.trips}`);
+  check(`${tag} ${what}: the zones and market add up to the network view's train trips`, Math.abs(after.trips - after.viewTrips) <= Math.max(1, 1e-4 * after.trips), `${after.trips} vs ${after.viewTrips}`);
+  check(`${tag} ${what}: texts are signed rates`, rows.length > 0 && rows.every((r) => /^[+−]([\d,]+|\d+(\.\d+)?[kM]) trips\/day$|^[+−]\$\d+(\.\d+)?[kMB]? profit\/day$/.test(r.text)), rows.map((r) => r.text).join(' | '));
+  check(`${tag} ${what}: a line's hover part says riders under trips`, !n.line || rows.every((r) => !r.text.includes('trips') || /\nRiders on .+: [\d,]+ to [\d,]+$/.test(r.tip ?? '')), rows.map((r) => r.tip).join(' | '));
   check(`${tag} ${what}: arrows follow the signs`, rows.every((r) => r.arrow?.includes(r.text.startsWith('+') ? 'up' : 'down')));
   check(`${tag} ${what}: a fall in profit is red`, rows.every((r) => !r.text.includes('profit') || r.cls.includes('money-neg') === r.text.startsWith('−')));
   const box = await page.locator('.map-top-left').boundingBox();
@@ -83,13 +99,23 @@ async function one(page, tag, what, id, doEdit) {
   }
   if (what === 'trains') await page.screenshot({ path: join(OUT, `${tag}-screen-light.png`) });
   await shade(page, 'light');
+  return { n, before, after };
+}
+
+/** T-2237: undo the last edit; its note's train trips must be the edit's the other way. */
+async function undoBack(page, tag, what, id, done) {
+  if (!done) return check(`${tag} undo ${what}: the edit had a note`, false);
+  const u = await one(page, tag, `undo-${what}`, id, () => page.evaluate(async () => (await import('/src/game/world.ts')).undo()));
+  if (!u) return;
+  const d1 = done.n.trips.to - done.n.trips.from, d2 = u.n.trips.to - u.n.trips.from;
+  check(`${tag} undo ${what}: train trips come back`, Math.sign(d2) === -Math.sign(d1) && Math.abs(d1 + d2) <= Math.max(10, 0.02 * Math.abs(d1)), `edit ${fmt(d1)}, undo ${fmt(d2)}`);
 }
 
 async function realSave() {
   const page = await ctx.newPage();
   collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
   await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await importSave(page, await readFile(REAL_SAVE));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 20, undefined, { timeout: 120000 });
@@ -120,11 +146,41 @@ async function realSave() {
   await page.close();
 }
 
+/** T-2237: Tokyo's real save, 大江戸線's trains doubled and undone. Riders move to it from parallel
+ * lines and change trains less (T-2180: +123,516 boardings on it, 54 other lines −76,679), so the
+ * train trips must rise, and fall back by as much on the undo. Tokyo stays in view: a zone's level
+ * of detail is held while edits settle anyway (T-2180). */
+async function tyoSave() {
+  const page = await ctx.newPage();
+  collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
+  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
+  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=${WORKERS}&perfOff=focus&v=${Date.now()}`);
+  await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
+  await importSave(page, await readFile(TYO_SAVE));
+  await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 20, undefined, { timeout: 180000 });
+  await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [139.75, 35.69], zoom: 11 }));
+  await demandFinal(page, { polling: 1000, lines: 20, timeout: 1200000 });
+  await page.evaluate(async () => { const u = await import('/src/game/ui.ts'); u.tab.value = 'lines'; });
+  await page.waitForTimeout(3000);
+  const o = await page.evaluate(() => {
+    const w = window.tw.world.value, l = w.save.lines.find((x) => x.name === '大江戸線');
+    return l && { id: l.id, num: l.num, trains: w.lineStats[l.id].trainsNeeded };
+  });
+  check('tyo: 大江戸線 is in the save', !!o);
+  if (!o) return page.close();
+  console.log(`tyo: 大江戸線 trains ${o.trains.join('/')} doubled, then undone`);
+  const done = await one(page, 'tyo', 'trains', o.id, () => page.evaluate(async ({ num, trains }) => (await import('/src/game/world.ts')).edit({ op: 'setTrainCount', line: num, trains: trains.map((t) => 2 * t) }), o));
+  if (done) check('tyo trains: a line that saves changes shows train trips up', done.n.trips.to > done.n.trips.from, `${fmt(done.n.trips.to - done.n.trips.from)} train trips, boardings ${fmt(done.after.dvRiders - done.before.dvRiders)}`);
+  await undoBack(page, 'tyo', 'trains', o.id, done);
+  await page.close();
+}
+
 async function newGame() {
   const page = await ctx.newPage();
   collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
   await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.982, 40.752], zoom: 12.5 }));
   await page.evaluate(async () => { const u = await import('/src/game/ui.ts'); u.tab.value = 'lines'; });
@@ -147,7 +203,8 @@ async function newGame() {
   }, pts));
   const id = await page.evaluate(() => window.tw.world.value.save.lines[0]?.id);
   const num = await page.evaluate(() => window.tw.world.value.save.lines[0]?.num);
-  await one(page, 'new', 'trains', id, () => page.evaluate(async (num) => (await import('/src/game/world.ts')).edit({ op: 'setTrainCount', line: num, trains: [12, 8, 4] }), num));
+  const trains = await one(page, 'new', 'trains', id, () => page.evaluate(async (num) => (await import('/src/game/world.ts')).edit({ op: 'setTrainCount', line: num, trains: [12, 8, 4] }), num));
+  await undoBack(page, 'new', 'trains', id, trains);
   await one(page, 'new', 'stops', id, () => page.evaluate(async () => {
     const l = window.tw.world.value.save.lines[0];
     return (await import('/src/game/world.ts')).edit({ op: 'setStops', line: l.num, stops: l.stops.slice(0, -1).map(Number) });
@@ -156,8 +213,9 @@ async function newGame() {
 }
 
 try {
-  if (which !== 'new') await realSave();
-  if (which !== 'real') await newGame();
+  if (which === 'new' || which === 'both' || which === 'all') await newGame();
+  if (which === 'tyo' || which === 'both' || which === 'all') await tyoSave();
+  if (which === 'real' || which === 'all') await realSave();
   check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await close();

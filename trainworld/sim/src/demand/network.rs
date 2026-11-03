@@ -6,8 +6,8 @@
 /// the one definition schedules and demand share.
 pub const PERIODS: usize = crate::track::params::PERIOD_HOURS.len();
 
-/// A bus line's cars in the network: 0.5 of a train car, its 80 riders at crush (the snapshot's
-/// `BUS_DEMAND_CARS`, app/src/workers/clock.worker.ts).
+/// A bus line's cars in the network: 0.5 of a train car's seats and rated load, its 80 riders
+/// both rated and at crush (the snapshot's `BUS_DEMAND_CARS`, app/src/workers/clock.worker.ts).
 pub const BUS_CARS: f32 = 0.5;
 
 #[derive(Clone)]
@@ -27,6 +27,10 @@ pub struct Network {
     pub line_speed_kmh: Vec<f32>,
     pub line_headway_min: Vec<[f32; PERIODS]>,
     pub line_seats: Vec<f32>,
+    /// Riders a train holds at its rated load, 100% (T-2186), which crowding is counted against
+    /// (`kernel::crowd_factors`). Empty: the crush load.
+    pub line_rated: Vec<f32>,
+    /// Riders a train holds at crush, the most it takes (the queue, the wait for room).
     pub line_crush: Vec<f32>,
     /// The station complex of each station (T-161): stations with the same number are one complex
     /// (game/complexes.ts, including the player's links, T-197), and a rider may change between any
@@ -73,6 +77,11 @@ impl Network {
     pub fn ups(&self, s: usize) -> u8 {
         self.st_ups.get(s).copied().unwrap_or(0)
     }
+    /// Line `l`'s riders a train at its rated load (T-2186).
+    #[inline]
+    pub fn rated(&self, l: usize) -> f32 {
+        self.line_rated.get(l).copied().unwrap_or(self.line_crush[l])
+    }
     /// Whether station `s` is a bus stop only (T-1464).
     #[inline]
     pub fn bus_only(&self, s: usize) -> bool {
@@ -83,7 +92,7 @@ impl Network {
     /// bus-only stop), or it has a bus-only stop.
     #[inline]
     pub fn bus_line(&self, l: usize) -> bool {
-        self.line_crush.get(l).is_some_and(|&c| c == BUS_CARS * super::api::CRUSH_PER_CAR)
+        self.line_crush.get(l).is_some_and(|&c| c == BUS_CARS * super::api::RATED_PER_CAR)
             || self.line_stops[self.line_off[l] as usize..self.line_off[l + 1] as usize].iter().any(|&st| self.bus_only(st as usize))
     }
 }
@@ -128,7 +137,7 @@ impl Kind {
             Kind::Orbital => [6.0, 10.0, 6.0, 12.0, 20.0],
         }
     }
-    /// (seats, crush load) per train. Subway: 10 cars x ~44 seats, ~160 at crush.
+    /// (seats, rated load) per train, crush 1.5 times rated. Subway: 10 cars x ~44 seats, ~160 rated.
     fn capacity(self) -> (f32, f32) {
         match self {
             Kind::Subway => (440.0, 1600.0),
@@ -184,6 +193,7 @@ pub fn synth_network() -> Network {
         line_speed_kmh: vec![],
         line_headway_min: vec![],
         line_seats: vec![],
+        line_rated: vec![],
         line_crush: vec![],
         st_group: vec![],
         stop_x: vec![],
@@ -238,9 +248,10 @@ pub fn synth_network() -> Network {
         net.line_off.push(net.line_stops.len() as u32);
         net.line_speed_kmh.push(kind.speed());
         net.line_headway_min.push(kind.headways());
-        let (seats, crush) = kind.capacity();
+        let (seats, rated) = kind.capacity();
         net.line_seats.push(seats);
-        net.line_crush.push(crush);
+        net.line_rated.push(rated);
+        net.line_crush.push(rated * super::api::CRUSH_PER_CAR / super::api::RATED_PER_CAR);
     }
     net.recompute_run_times();
     net

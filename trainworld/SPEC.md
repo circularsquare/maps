@@ -142,7 +142,8 @@ institutions** (prisons, nursing homes and the like, T-234).
   in perceived minutes (25 + 3 a straight km), in four distance bands, the regional layer's trips
   too [T-718]; past 60 minutes it softens further, times sqrt(60 / T) (T the car's perceived
   minutes between cities, the band's length in a city), so a long trip minds a minute less; a
-  train counts as crowded only from 70% of its crush load [T-710]. Each round uses
+  train counts as crowded only from 70% of its rated load, 160 a car [T-710], and takes riders up
+  to 150% of it [T-2186]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
   way is a third mode [T-558], its share from a logit at 0.10 a perceived minute (past 60 perceived
   car-minutes 0.10 x sqrt(60 / T) [T-495]): 1.5 perceived minutes a minute at every length,
@@ -285,9 +286,13 @@ stations it passes and about every 2 km, buses run at 70% of the car's street sp
 most 18 km/h (11.5 in a dense centre), and homes within 300 m of the route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
 bus and US$9 a bus-km to run. Trips by bus count as rail.
 
+Ferry lines are being built (T-2177's design, stages T-2192 to T-2196): so far the router, which finds a
+route over the basemap's water between two ports, at least 5 m off land, keeping 400 m off where that costs
+under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend.
+
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7
-bus lines).
+bus lines, 6.8 ferry routes).
 
 ## 7. Technology
 

@@ -10,7 +10,7 @@ import { andList, clockTime, count, distance, duration, forecast, headway, lengt
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
-import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M } from "../../game/boarding";
+import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -261,8 +261,9 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
 }
 
 
-/** T-820: the day's rider-seconds aboard over what the trips could hold at crush, each trip taken
- * as its level's time from the first stop to the last; null with no trips. */
+/** T-820: the day's rider-seconds aboard over what the trips hold at the rated load (T-2186: so
+ * past 1 up to crush's 1.5), each trip taken as its level's time from the first stop to the last;
+ * null with no trips. */
 function averageLoad(v: Float64Array, st: LineStats): number | null {
   let aboard = 0, room = 0;
   for (let i = 0; i < PERIODS.length; i++) {
@@ -270,9 +271,9 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
     if (!(v[o] > 0)) continue;
     const times = st.fromStartByLevel[DEMAND_INDEX[PERIODS[i].demand]] ?? st.fromStartS;
     aboard += v[o + 5];
-    room += v[o] * (times[times.length - 1] ?? 0) * CRUSH_PER_CAR * st.cars;
+    room += v[o] * (times[times.length - 1] ?? 0) * RATED_PER_CAR * st.cars;
   }
-  return room > 0 ? Math.min(1, aboard / room) : null;
+  return room > 0 ? Math.min(CRUSH_PER_CAR / RATED_PER_CAR, aboard / room) : null;
 }
 
 /** T-477, T-515, T-1255: one dot per demand level, graded by `crowding` of the riders at the
@@ -456,7 +457,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
   // T-1893: the number between the buttons carries the hover; the buttons have none
   const m = moneyState.value;
-  const tip = `${carsText(cars)} can carry ${(cars * CRUSH_PER_CAR).toLocaleString("en-US")} riders` + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
+  const tip = `${carsText(cars)} can carry ${(cars * RATED_PER_CAR).toLocaleString("en-US")} riders, ${(cars * CRUSH_PER_CAR).toLocaleString("en-US")} at most` + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
   // T-751: a + at the cap offers to lengthen the platforms that stop it
   const step = (d: number) => {
     const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);

@@ -16,6 +16,28 @@ Updated: 2026-11-03 12:55 (maps-0f handed everything to maps-1c at 12:55; see "H
   a80cbe682243da006 T-2192 ferries F1 routes (6187); a567603f3dc3fdad7 T-2237 edit note as rail trips (6193).
   If one goes quiet, ask maps-0f to message it (maps-1c can't reach them by id).
 - **India join** (PID 42596) is maps-1c's: details under "In flight" below.
+
+## maps-1c's own (13:15)
+- t2193 smoke rerun in its tree by maps-1c 13:00: PASSED 23/23. Ready to land after the T-2186/T-2180/T-2226 commit.
+- **T-2192 F1 DONE** (report in 13:10, via maps-0f): app/src/ferry/{waterTiles,route,ferryWater}.ts,
+  workers/ferryWater.worker.ts, checks/t2192-ferry-routes.mjs; edited notes/T-2177.md, track-and-service.md 6.8,
+  code-map.md, SPEC.md, DECISIONS, TASKS (T-2209 filed), ARCHIVE; deleted notes/T-2177-route.mjs. Uncommitted. t2193
+  also writes a 6.8 in track-and-service.md: merge them at its landing. No player strings.
+- **T-2237 DONE** (report 13:15 via maps-0f): editNote.ts (`railTrips`), EditNote.tsx, checks/old/t2125-edit-note.mjs,
+  docs ui-map "Edit note", code-map, DECISIONS, ARCHIVE. Uncommitted; strings shown to Anita 13:20 ("train trips/day",
+  "Train trips per weekday", "Riders on <line>"). Commit with the T-2186/T-2180/T-2226 batch (editNote.ts shared with T-2180).
+- Waiting on: t2226 (T-2226/27, Vite 6191) and t2222 (T-2222/23, Vite 6189), maps-0f's subagents, reporting via maps-0f.
+  Then: one commit (T-2186 + T-2180 + T-2226/27 + T-2237 + T-2192), land t2193, then t2217 (BLD1 after LFR1, LEVEL 4),
+  rebuild 8800, and start T-2194 (ferry tool), T-2218 + T-2220 (building tool, 0.8 rule), T-2236 after T-2222.
+- ac4cca2590899fad0 **t2205**: T-2205 diagram spacing, then T-2206 hooks (main tree, app/src/diagram + diagram worker +
+  DiagramButton + checks/t2160*, t2161*; Vite 6194; notes/T-2205.md). Then T-2162 names to the same agent.
+- a2b46e89c23cd6c45 **t2231**: passing tracks sim, tree .tw-trees/t2231 (from ee978151), Vite 6196. Told: bit in the
+  existing upgrades field, no LEVEL bump if room; lands after t2193 and t2217 (rebase).
+- Disk: C: hit 0.5 GB free ~13:00. Deleting two orphaned GDAL temp files (Temp\osm_tmp_nodes_4968_2, _7376_1, dead
+  PIDs, Oct 23/25) was refused by the permission check; NTFS-compressed them instead (10.7 -> 5.8 GB). Something else
+  freed ~18 GB meanwhile; 24 GB free at 13:05. A background watch (scratch lowdisk.ps1) reports if under 3 GB.
+  publish/ holds 10 GB of old local publish builds (only the freeze 20261103-051954 is needed).
+- Background wait on India's PID 42596 (Wait-Process) notifies me when the join ends.
 - **Next to start:** T-2231 passing tracks sim (own tree, Anita said go), T-2218 station building tool + T-2220,
   T-2194 ferry tool (after F1 + F2), T-2236 crowding by load (after T-2222), T-2162/T-2163 diagram.
 
@@ -107,7 +129,10 @@ was run by the agent; the 8800 build typechecks the commit).
 5. Older: T-1863, T-1864 demand speedups; T-2198/T-2199 merge follow-ups; T-2150 sea crossing (own tree).
 
 ## Open questions to Anita (asked, unanswered)
-- T-2207 islands: build it? car ferries ignored or slow roads? the bound? the word ("Stay home" / "No way there")?
+- (none open) Answered 13:40: T-2207 islands go, word "No route"; edit note says "trips/day" / "Trips per weekday"
+  (changed by maps-1c in EditNote.tsx, ui-map.md, the t2125 check); asked whether "train trips" elsewhere (top bar
+  hover, achievements' "1M train trips/day") should become "trips" too. Orphaned temp files: always delete; keep only
+  the current build and the latest published ones (pruned publish/ and data/frozen 13:35, 34 GB free).
 - Answered today: all strings shown so far OK (achievements, merges, edit note, history, ferries with "No water path
   found"); ferries go; big stations dropped for T-2208; upgrade-in-place and signals no; named crossings (hidden until
   built) and maglev yes; capacity 150% with crowding from 70%; diagram: build it, more compact, exposed to everyone.
@@ -127,5 +152,7 @@ was run by the agent; the 8800 build typechecks the commit).
   her. Zone, region and realm names need no review (2026-11-03).
 - TODO.md short-term = prompts: copy her words verbatim into briefs; save batches in notes/todo-<date>.md.
 - Every demand task has a "done when". Buses settled. Thanks to agents in my own reply. Keep the work moving.
+- Disk (2026-11-03): delete orphaned temp files always; keep only the current build and the latest published ones
+  in artifacts/trainworld/publish/ and data/frozen/ (prune after each publish or freeze).
 
 Next free task id: T-2238 (T-2235 = diagram loading bar; unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25 maybe; check before use).

@@ -10,7 +10,7 @@
 //   busiest station's, and says so (T-217).
 // - A ridership circle away from any station: the same count, for the circle's complex.
 
-import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
+import { capacity, crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
@@ -78,7 +78,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   while (seg + 1 < n - 1 && stopS[seg + 1] <= at.s + 1) seg++;
   const atEnd = at.s >= (stopS[n - 1] ?? Infinity) - 1;
   const own = r.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
-  const crush = CRUSH_PER_CAR * st.cars;
+  const { crush } = capacity(st.cars);
   // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
   const est = dv.lines.get(l.id)?.estimate ? " (estimate)" : "";

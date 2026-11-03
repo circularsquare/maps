@@ -78,6 +78,9 @@
 //            run nor moved to the node of a merge just ahead (T-2059, T-2060)
 //   bandsHold   lines side by side: a ribbon whose tracks part for a while and rejoin is not held across the gap (T-2132)
 //   bandsAlign  lines side by side: each line eases at a ribbon change where its own track says, not where the ribbon's other lines do (T-2140)
+//   lodHold  zones change their level of detail while edits settle, and the edit note compares
+//            figures across a change (before T-2180)
+//   roads    no road tiles go to the track model, so no road crossings are counted or priced (before T-1929)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -87,14 +90,15 @@
 //   noDouble     adopted as default in T-075; use perfOff=noDouble for the old behavior
 //   focusFirst   the main pool's solving workers hold their solve and opening while the focus pool
 //                solves the zone in view (T-2045: Tokyo settled 5% sooner, the load's final 37% later)
-//   crush2, crush15  T-2147, measurement only: demand's trains hold 2 or 1.5 times their riders and seats
-//                (the boarding account's do not), the crowding start staying at 0.7 of the larger crush
+//   bandEdge bandWide bandFine bandSpaced  T-2223's looks for the gap between lines side by side
+//                (renderer.ts BAND_LOOK): touching with a tinted inner edge, 2 px, 1 px kept dark at
+//                any phase, a fifth of the band's width
 
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap") => off.has(part);
-export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst" | "crush2" | "crush15") => tries.has(fix);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads") => off.has(part);
+export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst" | "bandEdge" | "bandWide" | "bandFine" | "bandSpaced") => tries.has(fix);
 /** T-2058: how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

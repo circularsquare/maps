@@ -262,7 +262,7 @@ export function markTip(marks: Float32Array, i: number): TipLine[] {
   const out: TipLine[] = [];
   if (shape === M_RAMP) out.push(`Ramp up to ${levelLabel(level)}`);
   else if (shape === M_PORTAL) out.push(`Ramp down to ${levelLabel(level)}`);
-  else if (shape === M_BAD) out.push("Tracks cross less than one elevation step apart");
+  else if (shape === M_BAD) out.push("Tracks cross on a ramp less than a level apart");
   else {
     out.push(shape === M_JUNCTION ? "Flat junction" : "Flat crossing");
     out.push(elevationFact(level));

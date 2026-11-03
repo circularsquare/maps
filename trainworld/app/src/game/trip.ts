@@ -423,7 +423,7 @@ export function routeTotals(t: TripPeriod, r: TripRoute) {
 }
 
 /** What crowded trains add to a route: the rides' perceived minutes beyond their real ones (the
- * crowding factor past 70% of crush), and the minutes waited for a train with room after full ones
+ * crowding factor past 70% of the rated load), and the minutes waited for a train with room after full ones
  * (T-188), both as the sim charges them. */
 export function routeCrowding(r: TripRoute) {
   let crowding = 0, fullWait = 0;

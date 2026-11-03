@@ -24,11 +24,11 @@ function Shape({ edge, version }: { edge: number; version: number }) {
   const setLevel = async (l: Level) => {
     if (pis.length) return void edit({ op: "edgeLevel", edge, level: l });
     const a = await edit({ op: "edgesLevel", edges: [edge], level: l }, true);
-    if (!a.ok) say(`This track cannot go to elevation ${levelLabel(l)}.`, true);
+    if (!a.ok) say(`This track cannot go to level ${levelLabel(l)}.`, true);
   };
   return (
     <>
-      <div class="h">Elevation</div>
+      <div class="h">Level</div>
       <div class="group levels">
         {LEVELS.map((l) => (
           <button class={"btn" + (l === level ? " on" : "")} onClick={() => void setLevel(l)}>
@@ -59,7 +59,7 @@ export function TrackInspector({ edge }: { edge: number }) {
   const e = w?.edges.find((e) => e.id === edge);
   if (!w || !e) return null;
   const lines = w.save.lines.filter((l) => e.lines.includes(l.id));
-  const lv = e.levelMin === e.levelMax ? `Elevation ${levelLabel(e.levelMin)}` : `Elevation ${levelLabel(e.levelMin)} to ${levelLabel(e.levelMax)}`;
+  const lv = e.levelMin === e.levelMax ? `Level ${levelLabel(e.levelMin)}` : `Level ${levelLabel(e.levelMin)} to ${levelLabel(e.levelMax)}`;
   // a crossover is one thing: both diagonals are priced, built and removed together (T-391)
   const other = e.crossover ? w.edges.find((x) => x.id === e.partner) : undefined;
   const cost = e.cost + (other?.cost ?? 0);

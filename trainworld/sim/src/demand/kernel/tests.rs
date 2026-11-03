@@ -18,7 +18,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         line_name: vec![String::new(); lines.len()], line_off: vec![0], line_stops: vec![],
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
-        line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
+        line_seats: vec![100.0; lines.len()], line_rated: vec![], line_crush: vec![200.0; lines.len()],
         st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
     };
     for (l, stops) in lines.iter().enumerate() {
@@ -72,7 +72,7 @@ fn a_bus_line_costs_minutes_to_board() {
 fn a_short_bus_between_two_train_stations_is_a_bus() {
     let p = common_test_params();
     let mut net = common_test_net(&[&[0, 2], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
-    net.line_crush[1] = network::BUS_CARS * 160.0;
+    net.line_crush[1] = network::BUS_CARS * crate::demand::api::RATED_PER_CAR;
     assert!(net.st_bus.is_empty() && net.bus_line(1) && !net.bus_line(0));
     let g = build_graph(&net, &p);
     let nr = g.rn_line.len();
@@ -82,7 +82,7 @@ fn a_short_bus_between_two_train_stations_is_a_bus() {
     }
     // both its stations have the train line too; a bus alone would give them none
     assert_eq!(on_train(&net), vec![true, false, true, false]);
-    net.line_crush[0] = network::BUS_CARS * 160.0;
+    net.line_crush[0] = network::BUS_CARS * crate::demand::api::RATED_PER_CAR;
     assert_eq!(on_train(&net), vec![false; 4]);
 }
 
@@ -185,7 +185,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
-            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
+            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
             st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
         }
     };
@@ -614,7 +614,7 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
             st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
             line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
             hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
-            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
+            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
             st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
         }
     };

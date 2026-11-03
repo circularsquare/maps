@@ -12,16 +12,15 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - **Tools**: draw track (key 1), station (2), delete (3), select (4, [below](#the-select-tool)), in a
   2 by 2 grid [T-1128], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
-  [T-1514]; then the elevation (seven buttons
-  tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
+  [T-1514]; then the level, headed "Level" (seven buttons
+  tinted in their Level colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
   (hover "Ground level (Shift+4)" and so on, with a second line "Upkeep $20k per km per day", that
   elevation's upkeep for one km of the picked track type (both pairs on Quad), `edgeUpkeep` [T-2006, T-2009]: Shift+1 to Shift+7 pick the drawing
   elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
   (below), then the **ramp switch** (track humping over a line seen side on;
-  hover "Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps
-  don't fit, the crossing is flat."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
+  hover "Automatically try to ramp over crossed tracks at the same level."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
   6.1 "Ramping over track"], then the **Terrain** switch (a mountain;
   hover "Show terrain. Steep terrain costs more to build on.", as Settings' Terrain row [T-2158]), the same switch as
   Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394], both left aligned after the price [T-1802]. The price is the picked elevation's price per km and multiplier, "$99M per
@@ -38,7 +37,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   the speed from before [T-817], and the platform
   length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool, and the game
   adds none: the player draws crossing track [T-733, T-1688, [track-and-service.md](track-and-service.md) 6.1].
-  Everything the player reads says elevation, never level (code keeps `level`) [T-526].
+  Everything the player reads says level for the track's seven steps, never elevation ("Level",
+  "Level +1", "Levels go from −3 to +3."; "ground level" is one of them) [T-2226, reversing T-526].
   Beside keep placing, the **snap switch** (a magnet, "Snap to real world network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
@@ -204,8 +204,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track. A third line names the roughest terrain class charged with its
   surcharge ("Mountains +3.0x", "Hills +1.2x", "Hills +0.5x") and "Water +2.5x" when the segment
-  crosses water, and the roads it crosses at ground level with what they add ("12 road crossings
-  +$72M", 6.4), each with an icon; a chip's label and value stay on one line, and when the row is too wide whole chips move to the next line [T-1394, T-1887, T-1890, T-1929, T-2017]. The cost line's price includes
+  crosses water, and the roads it crosses at ground level with what they add ("12 crossings
+  +$72M" beside the road icon, 6.4) [T-2226], each with an icon; a chip's label and value stay on one line, and when the row is too wide whole chips move to the next line [T-1394, T-1887, T-1890, T-1929, T-2017]. The cost line's price includes
   the road crossings; its multiplier does not. Road tiles landing after the ghost was priced ask it
   again.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
@@ -219,7 +219,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
   outline outside the rails (black; the map's ink, near white, in the dark theme; `ghost` in
   `game/shadeTable.ts`) [T-1054]. The middle is coloured
-  by the Elevation or Speed view (the limit) from the preview's fitted geometry; red when invalid. It is never
+  by the Level or Speed view (the limit) from the preview's fitted geometry; red when invalid. It is never
   thinner than 4 px across its rails with 1 px of outline either side, so a route hundreds of km long
   shows in full zoomed out [T-1038]. The same holds
   for every placement ghost: a dragged corner or node, a moved pick, a crossover, a station's own
@@ -496,17 +496,18 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   every button 36 px at least: the tool's icon before the count, one elevation button showing the
   pick's level that opens the seven above the bar, and the four actions as icons with their hovers.
   It sits under the tool notes that share the corner [T-1263].
-- **Elevation** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
-  on that elevation, one undoable edit: each piece's corners as the track inspector's "Elevation of
-  the stretch" does for one, and every node all of whose track is picked (a joint, a loose end, a
+- **Level** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
+  on that level, one undoable edit: each piece's corners as the track inspector's "Level" buttons
+  do for one, and every node all of whose track is picked (a joint, a loose end, a
   junction, a blueprint station with its platform), so a picked run has no ramps at its joints. A
   node with other track keeps its elevation and the picked piece ramps to it. Pieces that cannot
   change are left as they are: a crossover, a piece with no corners whose two ends cannot both
   move, and pieces the track model refuses there (a ramp with no room, a crossing between levels)
   or that would make a flat crossing not there before; those are tried group by group (pieces
   joined through moving nodes), then a refused group's pieces with corners one by one with their
-  ends kept. The message says how many changed ("9 of 12 pieces set to elevation +1. 3 could not
-  change."), or that none could.
+  ends kept. The message says how many changed ("9 of 12 pieces set to level +1. 3 could not
+  change."), or that none could. The phone bar's one button's hover is the level's name ("Viaduct"),
+  or "Level of the selected track: mixed".
 - **Remove** [T-829; `TrackApi.delete_pieces`]: everything picked goes in one edit, with the nodes
   left bare and a crossover whole. Blueprint goes at once (one undo) unless it is big (above);
   constructed asks first, as for one piece ("Remove 3.1 km of built track and 2 built stations?

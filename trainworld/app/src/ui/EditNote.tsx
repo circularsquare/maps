@@ -1,5 +1,5 @@
 // "What this edit did" (T-2125): under the view rows at the map's upper left, for a few seconds after
-// demand settles from the player's edits, the change in riders a day and profit a day, each after a
+// demand settles from the player's edits, the change in train trips a day and profit a day, each after a
 // green up or red down arrow, as plain text on the map; the numbers ease up from 0. game/editNote.ts
 // says when and what the figures are.
 
@@ -31,21 +31,22 @@ export function EditNote() {
   }, [n?.at]);
   if (!n) return null;
   const name = n.line && world.value?.save.lines.find((l) => l.id === n.line!.id)?.name;
-  const dr = n.riders.to - n.riders.from, dm = n.money.to - n.money.from;
-  const r = Math.round(shownChange(dr, n.at)), m = shownChange(dm, n.at);
-  const ridersText = signed(dr, Math.abs(dr) >= 10_000 ? count(Math.abs(r)) : exact(Math.abs(r)));
-  const tip = (what: string, t: FromTo, line: FromTo | undefined, f: (v: number) => string) =>
-    `${what} ${n.day}: ${f(t.from)} to ${f(t.to)}` + (name && line ? `\n${name}: ${f(line.from)} to ${f(line.to)}` : "");
+  const dt = n.trips.to - n.trips.from, dm = n.money.to - n.money.from;
+  const tr = Math.round(shownChange(dt, n.at)), m = shownChange(dm, n.at);
+  const tripsText = signed(dt, Math.abs(dt) >= 10_000 ? count(Math.abs(tr)) : exact(Math.abs(tr)));
+  // the line's part: its riders (its boardings) under the train trips, its profit under the profit
+  const tip = (what: string, t: FromTo, lineWhat: string, line: FromTo | undefined, f: (v: number) => string) =>
+    `${what} ${n.day}: ${f(t.from)} to ${f(t.to)}` + (name && line ? `\n${lineWhat}${name}: ${f(line.from)} to ${f(line.to)}` : "");
   return (
     <div class="edit-note" onPointerEnter={() => holdNote(true)} onPointerLeave={() => holdNote(false)}>
-      {dr !== 0 && (
-        <div class="edit-row" data-tip={tip("Riders", n.riders, n.line?.riders, exact)}>
-          <Arrow up={dr > 0} />
-          <span>{ridersText} riders/day</span>
+      {dt !== 0 && (
+        <div class="edit-row" data-tip={tip("Trips", n.trips, "Riders on ", n.line?.riders, exact)}>
+          <Arrow up={dt > 0} />
+          <span>{tripsText} trips/day</span>
         </div>
       )}
       {Math.abs(dm) >= 500 && (
-        <div class={"edit-row" + (moneyNegative(dm) ? " money-neg" : "")} data-tip={tip("Profit", n.money, n.line?.money, money)}>
+        <div class={"edit-row" + (moneyNegative(dm) ? " money-neg" : "")} data-tip={tip("Profit", n.money, "", n.line?.money, money)}>
           <Arrow up={dm > 0} />
           <span>{signed(dm, money(m))} profit/day</span>
         </div>

@@ -49,7 +49,7 @@ export function BuildTab() {
             <span class="key muted">{BUS_KEY.toUpperCase()}</span>
           </button>
         </div>
-        <div class="h">Elevation</div>
+        <div class="h">Level</div>
         <div class="build-track-row">
           <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})${upkeepTip(l)}`} onPick={(l) => (buildLevel.value = l)} />
         </div>
@@ -59,7 +59,7 @@ export function BuildTab() {
             ${Math.round(perDistance(BASE_M_PER_KM * mult * pairs) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
           </p>
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
-            data-tip="Automatically try to ramp over crossed tracks at the same elevation."
+            data-tip="Automatically try to ramp over crossed tracks at the same level."
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
             data-tip="Show terrain. Steep terrain costs more to build on."

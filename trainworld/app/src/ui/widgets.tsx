@@ -323,7 +323,7 @@ export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPi
     <div class="group levels">
       {LEVELS.map((l) => (
         <button class={"btn lv" + (l === value ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
-          data-tip={tip(l)} aria-label={`Elevation ${levelLabel(l)}`} aria-pressed={l === value} onClick={() => onPick(l)}>
+          data-tip={tip(l)} aria-label={`Level ${levelLabel(l)}`} aria-pressed={l === value} onClick={() => onPick(l)}>
           {levelLabel(l)}
         </button>
       ))}

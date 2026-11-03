@@ -110,8 +110,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   overnight before the first) boarding counts extra: 1 minute if 90% have a train coming, 7 if
   half do, 23 if a tenth do, and with nobody, nobody boards there. The boarding account in the
   timetable spreads riders the same way, so nobody is shown waiting hours for a train.
-- Ride: 1 a minute, stretched once the train is 70% full: at crush load a minute counts 3, at 120%
-  it counts 5.4. Below 70% nobody minds the crowd.
+- Ride: 1 a minute, stretched once the train is 70% full: at 100% (160 a car) a minute counts 3,
+  at 120% 5.4, at 150% (240 a car, as packed as a train gets) 10.8. Below 70% nobody minds the
+  crowd.
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
@@ -124,7 +125,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if
   the trains had room comes to the platform, and stays only if the trains due in the next 30
-  minutes have room for them; going along the line, riders already aboard keep their places. The
+  minutes have room for them (a train takes up to 150%, 240 a car; a bus 80); going along the
+  line, riders already aboard keep their places. The
   rest go by car or on foot instead, and pay no fare. A line short of trains so has full
   platforms and full trains all through the peak.
 - Every rail trip rides at least one train: nobody boards only to walk off to another station
