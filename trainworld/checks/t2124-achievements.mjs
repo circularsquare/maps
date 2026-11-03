@@ -124,9 +124,10 @@ try {
     await p.evaluate(() => { window.tw.shade.value = 'dark'; });
     await p.waitForTimeout(500);
     await shots(p, 'tokyo-dark');
-    // a tick's hover
-    const tick = await p.$('.ach-tick.reached');
-    if (tick) { await tick.hover(); await p.waitForTimeout(600); await (await p.$('#dock')).screenshot({ path: join(OUT, 'panel-tokyo-tick-hover.png') }); }
+    // an earned medal's hover (T-2179: a medal per tier beside each ring)
+    const medal = await p.$('.ach-tier .ach-slot:not(.empty)');
+    say(!!medal && (await p.$$('.ach-tier .ach-ring')).length === 4, 'tokyo view shows four rings and its earned medals');
+    if (medal) { await medal.hover(); await p.waitForTimeout(600); await (await p.$('#dock')).screenshot({ path: join(OUT, 'panel-tokyo-medal-hover.png') }); }
     await p.close();
   }
   if (!ONLY || ONLY === 'new') {
@@ -149,6 +150,7 @@ try {
     r = await readout(p);
     console.log(`new game, second line ${JSON.stringify(second?.ok)}: zones ${JSON.stringify(zones)} -> ${JSON.stringify(zones2)}; earned ${JSON.stringify(r.earned)}; toasts ${JSON.stringify(toast)}`);
     say(r.earned.includes('cities:2') && toast.some((t) => /Cities served/.test(t)), 'a second line into another region earns Cities served 2 with a toast');
+    say(await p.evaluate(() => !!document.querySelector('.ach-toast .ach-medal.m-bronze.r-cities')), "the toast's medal is bronze on Cities served's ribbon");
     const map = await p.$('#main');
     if (map) {
       const box = await map.boundingBox();

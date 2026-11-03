@@ -21,7 +21,6 @@ import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
 import { Icon, SortHead } from "./widgets";
-import { LeaderboardButton } from "./Leaderboard";
 
 /** Move the camera to a region's registry centre and zoom, at once; what search does for a city. */
 export function goToCity(city: City) {
@@ -120,7 +119,6 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   return (
     <li class="total">
       <span class="grow" data-tip={`World\n${rows.length} ${rows.length === 1 ? "city" : "cities"}, ${stations} ${stations === 1 ? "station" : "stations"}`}>World</span>
-      <LeaderboardButton />
       <span class="city-bar" data-tip={splitTip(where, split, sum0?.rides ?? null, "")}>
         <span class="bar">
           <i class="seg seg-train" style={{ width: s.train + "%" }} />

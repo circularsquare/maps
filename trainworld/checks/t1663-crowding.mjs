@@ -22,7 +22,8 @@ try {
   await page.waitForTimeout(3000);
   console.log(await page.evaluate(() => JSON.stringify({ colour: window.tw.display.value.trackColour, marks: window.tw.display.value.fullMarks, keys: window.tw.renderer.fullKeys.size, edges: window.tw.renderer.fullEdges?.size })));
   const spots = await page.evaluate(() => {
-    const tw = window.tw, r = tw.renderer, f = r.linesFull, s = r.net.lines.seg;
+    // (linesFull is two a segment since T-2184: the mark, then where along its run it starts)
+    const tw = window.tw, r = tw.renderer, f = r.linesFull.filter((_, i) => i % 2 === 0), s = r.net.lines.seg;
     const at = (i) => { const [lng, lat] = tw.toLngLat((s[4 * i] + s[4 * i + 2]) / 2, (s[4 * i + 1] + s[4 * i + 3]) / 2); return { lng, lat, v: f[i] }; };
     const pos = [], neg = [];
     for (let i = 0; i < f.length; i++) (f[i] > 0 ? pos : f[i] < 0 ? neg : []).push(i);

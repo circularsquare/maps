@@ -45,7 +45,7 @@ function RidersToday({ line }: { line: string }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
-  if (linesPending.value.has(line)) return <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>;
+  if (linesPending.value.has(line)) return <span class="val w-riders pending muted" data-tip="Calculating riders after your change">constructing...</span>;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in past 24h` : undefined}>{text}</span>;
@@ -92,7 +92,7 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
-      {pending ? <span class="val w-riders muted" data-tip="Calculating riders after your change">constructing...</span>
+      {pending ? <span class="val w-riders pending muted" data-tip="Calculating riders after your change">constructing...</span>
         : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in past 24h in total\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
       {any ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>

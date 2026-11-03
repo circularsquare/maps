@@ -156,8 +156,9 @@ wide so a longer date moves nothing [T-1868].
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
-  text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
-  below, taking no row of its own [T-1704]; the demand row stops short of the day and night picture
+  text is its hover. On a map column under 520 px the tag (and the busy tag after it) goes under the
+  day and night picture at the top right, right-aligned and as wide as its text (`MapSky`), taking no
+  row of its own [T-1704, T-2202]; the demand row stops short of the day and night picture
   at the top right [T-1868], and the demand stopped alert and the selection bar are under the rows
   (the find button's row included). **"Trips here being recomputed…"** shows whenever the trips of the zone in view are rough,
   early, from before an edit or from the last session's cache, or while its detailed solve is on the
@@ -571,9 +572,9 @@ in panels have three significant figures from a million up ("$22.4M", "$1.15B", 
 as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyText.tsx`, `money` in
 `game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
 with its minus when negative; hovers may give more. History
-[T-447, `ui/MoneyHistory.tsx`]: a Linear / Log switch and a Days / Hours switch (Linear and Days by
-default, both kept while the game is open; Days' hover "Every game day so far", Hours' "The last 48
-game hours", Log's "Each line across is ten times the one below") over three charts. The first, "Revenue and expenses" (revenue blue and expenses red in every
+[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is open;
+Days' hover "Every game day so far", Hours' "The last 48 game hours") over three charts, each on a
+linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
 theme, the tokens `--revenue` and `--expense`, T-1111), has fares and running costs with upkeep
 (T-867) as lines, scaled to the larger of the two, and one-off costs (new trains and construction)
 as pale red bars on the same scale, cut at the top with a red cap when larger, so a build day does
@@ -586,9 +587,7 @@ day kept (T-2143); while they span more than 90 days a column is a week (Monday 
 weeks a calendar month, past 90 months a run of months, each column's figures and hovers then a day's
 average over the days it covers ("$22.8M/day", the hover's name "Nov 10-16"), the day now counted as
 far as it has gone, and no holiday ticks. Hours are up to the past 48; a young game's few sit at the
-right of at least 7 days or 12 hours. Log [T-2143] puts revenue and expenses and train rides on a log
-scale from the top figure down to the smallest (at most four powers of ten), a faint line across at
-each power of ten; net stays linear, as it goes below zero. The
+right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
@@ -674,8 +673,7 @@ each country charges the round start curve it would have had as a new game's [T-
 ## Cities tab
 
 [T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
-row "World" that sums them, a faint divider after it [T-857, T-1110, T-1865] (a trophy after its name opens the leaderboards when accounts
-are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
+row "World" that sums them, a faint divider after it [T-857, T-1110, T-1865] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
@@ -695,23 +693,24 @@ tinted, or with no city selected the viewed region's. On a phone the inspector s
 tab, as beside Lines and Stations. With no built station the tab reads "No stations yet." Above the
 list (and above "No stations yet."), at the right, the medal and the count of achievement steps earned,
 "11/27" (hover "Achievements"), opens the achievements view in the inspector and is lit while it is open
-([Achievements](#achievements)); a sandbox has no medal.
+([Achievements](#achievements)); a sandbox has no medal. Before it, when accounts are on (a sandbox
+too), a trophy (hover "Leaderboards") opens the leaderboards ([Account and leaderboards](#account-and-leaderboards)) [T-2179].
 
 ## Achievements
 
 [T-2124, `game/achievements.ts`, `ui/Achievements.tsx`, `ui/inspector/AchievementsView.tsx`; design and
 reasons in notes/T-2124.md] Goals for the whole game, each step kept once earned with the game second
-it landed and never taken back (undo, a closed line or a fall in riders leaves it); the bars show the
-figure now, so a fallen figure sits under a lit tick. A sandbox earns none, and a game made a sandbox
+it landed and never taken back (undo, a closed line or a fall in riders leaves it); the rings show the
+figure now, so a fallen figure can sit beside a medal it no longer meets. A sandbox earns none, and a game made a sandbox
 keeps what it had and earns no more.
 
 - **Running** means a rail line with status running and trains set at some level; buses, blueprints and
   lines with no trains never count. **Demand figures** come from final results on the average day only,
-  so the Day choice changes nothing, and a city's share from no rough zone's (as its goals); Trips a
+  so the Day choice changes nothing, and a city's share from no rough zone's (as its goals); Trips per
   day counts coarse zones too, as the World row does. Network figures are checked as the
   world changes, demand ones on each final, the best line's profit as each game hour turns.
 - **Tiered** (each tier a step): **Cities served** 2, 10, 25, 100 (regions, the Cities tab's rows, with a
-  built station where a running line stops); **Trips a day** 1M, 10M, 100M, 300M, 1B (the World row's
+  built station where a running line stops); **Trips per day** 1M, 10M, 100M, 300M, 1B (the World row's
   train trips a day); **Busiest station** 500k, 1M, 2M, 5M boardings a day at one station complex;
   **Busiest line** 500k, 1M, 3M, 10M riders a day on one line. A jump over several tiers records each
   and toasts the highest.
@@ -726,16 +725,21 @@ keeps what it had and earns no more.
   places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
   hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
   aboard there, and at least 1 a day must be sure to ride that long). Sea crossing comes with T-2150.
-- **The view** (selection `achievements`): the medal and "Achievements"; each tiered one's name, its
-  figure now and the next tier ("17.2M/100M", past the top tier the figure alone; hover, for the
-  busiest station or line, which), a bar of equal parts, one a tier, each filling from the tier before
-  to its own, ticks at each tier (2 px text colour once reached, 1 px muted before; hover the tier and
-  when it was reached, "Monday, day 406, at 14:08" on the game clock), the tiers under it (muted until
-  reached). After a divider "Firsts": a 12 px box (ticked in the accent once earned), the name, "day
-  406" at the right; one not earned is muted with its rule in the hover, an earned one's hover says what
-  earned it and when.
+- **Medals** [T-2179]: a disc in the tier's metal on a ribbon in the achievement's colour. Tiers take
+  bronze, silver, gold, platinum and emerald in order (four-tier ones stop at platinum); every first is
+  gold. Colours (`achievements.css`, a light and a dark value each): Cities served blue, Trips per day
+  red, Busiest station orange, Busiest line green, the firsts purple.
+- **The view** (selection `achievements`): the medal and "Achievements"; each tiered one a row with its
+  name at the top left, under it a place per tier holding the tier's medal once earned or a faint outline
+  where it would go (hover the tier, and once earned when, "10 cities served, reached on Monday, day 406,
+  at 14:08" on the game clock), and at the right a 68 px ring in the achievement's colour on a pale
+  track of it, filling clockwise from the top from zero toward the next tier, the figure now in its
+  middle and "of 100M", the next tier, small under it; past the top tier the ring is full and the figure
+  alone (hover, for the busiest station or line, which). Then, after a gap, the firsts: a gold medal once
+  earned, else an outline in its place, the name, "day 406" at the right; one not earned is muted with
+  its rule in the hover, an earned one's hover says what earned it and when.
 - **The toast**: at the map's bottom left, 10 px in, above the tool notes (`#tools`), at most 280 px
-  wide: the medal in the accent, the name in bold, one muted line of what was reached ("1M riders/day on
+  wide: the step's medal (the highest tier's, or gold for a first; the folded one the accent's medal icon), the name in bold, one muted line of what was reached ("1M riders/day on
   Line 1a"). A 150 ms rise (none with reduced motion), 5 s held (the pointer over it holds it), a 0.6 s
   fade, in real seconds. Up to three stacked, newest at the bottom, the next shown at least 1 s after the
   last; more than three waiting fold into one, "4 more achievements". A click opens the view. They wait

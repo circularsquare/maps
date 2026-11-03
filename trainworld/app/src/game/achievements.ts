@@ -1,5 +1,5 @@
 // T-2124 (notes/T-2124.md; docs/ui-panels.md "Achievements"): goals for the whole game. Four tiered
-// ones, each a bar of tiers, and firsts earned once. The page works out the figures (network ones as
+// ones, each a ladder of tiers, and firsts earned once. The page works out the figures (network ones as
 // the world changes, demand ones from final results on the average day, the best line's profit each
 // game hour) and posts each step met to the clock worker, which keeps it in the save with the game
 // second it landed. Never taken back. A sandbox earns none. An older save works its out quietly
@@ -38,7 +38,7 @@ export interface Tiered { id: TieredId; name: string; tiers: number[] }
 /** Anita, 2026-11-03: the first tier not had with a first line, the top one only by going far. */
 export const TIERED: Tiered[] = [
   { id: "cities", name: "Cities served", tiers: [2, 10, 25, 100] },
-  { id: "trips", name: "Trips a day", tiers: [1e6, 10e6, 100e6, 300e6, 1e9] },
+  { id: "trips", name: "Trips per day", tiers: [1e6, 10e6, 100e6, 300e6, 1e9] },
   { id: "station", name: "Busiest station", tiers: [500e3, 1e6, 2e6, 5e6] },
   { id: "line", name: "Busiest line", tiers: [500e3, 1e6, 3e6, 10e6] },
 ];

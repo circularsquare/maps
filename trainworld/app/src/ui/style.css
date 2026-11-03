@@ -207,6 +207,9 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .sort-btn.grow { min-width: 56px; }
 /* T-1818: a wide bullet takes room from the name, not from the columns, so they stay in line */
 .lines-box .rows .grow.line-name { min-width: 0; }
+/* T-2152: "constructing..." is wider than the riders column: it takes the room from the name, so
+   the right-aligned columns stay in line and Money keeps its place */
+.lines-box .rows .val.w-riders.pending { width: auto; white-space: nowrap; }
 @container lines (max-width: 250px) { .lines-box .w-linemoney { display: none; } }
 @container lines (max-width: 308px) { .lines-box.with-city .w-linemoney { display: none; } }
 @container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
@@ -488,8 +491,6 @@ rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--expense) 28%
 path.hist-oneoff.cap { fill: var(--expense); }
 svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
 .hist-axis { stroke: var(--rule); stroke-width: 1; }
-/* T-2143: the log scale's powers of ten, and its switch beside Days / Hours */
-.hist-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
 .hist-switches { display: inline-flex; gap: 6px; }
 /* T-864: the fare curve and its two draggable nodes */
 svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none; touch-action: none; stroke: none; }
@@ -1452,12 +1453,15 @@ button.save-add:hover { color: var(--text); }
   background: #f2b705; color: #1a1a1a; }
 .trouble-rev svg { width: 13px; height: 13px; stroke-width: 2; }
 .trouble-chips { display: inline-flex; gap: 2px; }
-/* T-349, T-1704, T-1868: this narrow, the status tag floats under the demand buttons over the rows below, so no
-   row is kept for it, and the Select bar sits under the rows (the find button's row included) */
+/* T-349, T-1704, T-1868, T-2202: this narrow, the status tags go under the day and night picture at the
+   top right (TopBar.tsx MapSky), right-aligned and as wide as their text, so no row is kept for them, and
+   the Select bar sits under the rows (the find button's row included) */
+.sky-status { display: none; }
 @container map-column (max-width: 520px) {
-  .map-top-row { position: relative; }
-  .map-top-row .status-tag { position: absolute; left: 0; top: 100%; margin-top: 3px; z-index: 1; }
-  .map-top-row .status-tag ~ .busy-tag { top: calc(100% + 30px); }
+  .map-top-row .status-tag { display: none; }
+  .sky-status { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-top: 4px; }
+  .sky-status .status-tag { width: max-content; max-width: calc(100cqw - 20px); }
+  #map:has(.sky-status .status-tag) .guide { top: 66px; }
   .blueprint-bar { top: 178px; }
 }
 /* T-1868: with no room for the picture beside the demand row, the purpose filter goes first */

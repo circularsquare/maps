@@ -1,18 +1,20 @@
-// T-2124: the medal at the top of the Cities tab that opens the achievements view, and the toasts at
-// the map's bottom left as steps are earned (in `#tools`, above the tool notes). A toast rises, stays
-// 5 s (longer under the pointer), fades; up to three stacked, one on a phone, newest at the bottom; more
-// than three waiting fold into one. They wait while a menu, the saved games or a confirmation is up,
-// or the tab is hidden. A click opens the view. Steps recorded on load (an older save's) never toast.
+// T-2124, T-2179: the medal at the top of the Cities tab that opens the achievements view (the
+// leaderboards' trophy beside it), the medal itself, and the toasts at the map's bottom left as steps
+// are earned (in `#tools`, above the tool notes). A toast rises, stays 5 s (longer under the pointer),
+// fades; up to three stacked, one on a phone, newest at the bottom; more than three waiting fold into
+// one. They wait while a menu, the saved games or a confirmation is up, or the tab is hidden. A click
+// opens the view. Steps recorded on load (an older save's) never toast.
 
 import { effect, signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { earned, FIRSTS, STEPS, TIERED, tierText, type TieredId } from "../game/achievements";
-import { accountOpen, boardsOpen } from "../game/account";
+import { accountOpen, accountState, boardsOpen } from "../game/account";
 import { choosing } from "../game/loading";
 import { moneyState } from "../game/money";
 import { ask, selection, tab } from "../game/ui";
 import { gamesLoaded } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
+import { LeaderboardButton } from "./Leaderboard";
 import { savesOpen } from "./SavesPanel";
 import { Icon } from "./widgets";
 import "./achievements.css";
@@ -24,19 +26,39 @@ export function openAchievements() {
 
 export function AchievementsButton() {
   const m = moneyState.value;
-  if (!m || m.mode === "sandbox") return null;
+  const sandbox = !m || m.mode === "sandbox";
   const on = selection.value?.kind === "achievements";
+  if (sandbox && accountState.value !== "on") return null;
   return (
     <div class="ach-head">
-      <button class={"btn text ach-open" + (on ? " on" : "")} data-tip="Achievements" aria-label="Achievements" aria-pressed={on}
+      <LeaderboardButton />
+      {!sandbox && <button class={"btn text ach-open" + (on ? " on" : "")} data-tip="Achievements" aria-label="Achievements" aria-pressed={on}
         onClick={() => (on ? (selection.value = null) : openAchievements())}>
         <Icon.medal /><span class="num">{earned.value}/{STEPS}</span>
-      </button>
+      </button>}
     </div>
   );
 }
 
-interface Toast { id: number; title: string; line?: string }
+/** A tier's metal by its place in the ladder; a first is gold. */
+export const METALS = ["bronze", "silver", "gold", "platinum", "emerald"] as const;
+export type Metal = (typeof METALS)[number];
+/** whose colour the ribbon takes: a tiered achievement's, or the firsts' */
+export type RibbonOf = TieredId | "first";
+
+/** T-2179: a medal, its disc the tier's metal and its ribbon the achievement's colour (achievements.css). */
+export function Medal({ metal, of }: { metal: Metal; of: RibbonOf }) {
+  return (
+    <svg class={"ach-medal m-" + metal + " r-" + of} viewBox="0 0 16 22" aria-hidden="true">
+      <path class="rib back" d="M14 0h-4L5.6 9.6l3 1.4z" />
+      <path class="rib" d="M2 0h4l4.4 9.6-3 1.4z" />
+      <circle class="face" cx="8" cy="15" r="6.2" />
+      <circle class="inner" cx="8" cy="15" r="3.9" />
+    </svg>
+  );
+}
+
+interface Toast { id: number; title: string; line?: string; medal?: { metal: Metal; of: RibbonOf } }
 const HOLD_MS = 5000, FADE_MS = 600, GAP_MS = 1000, MAX_SHOWN = 3;
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
@@ -48,9 +70,10 @@ function toastsFor(keys: string[], got: Record<string, Achieved>): Toast[] {
   const out: Toast[] = [];
   for (const t of TIERED) {
     const top = t.tiers.filter((x) => keys.includes(`${t.id}:${x}`)).at(-1);
-    if (top !== undefined) out.push({ id: nextId++, title: t.name, line: tierText(t.id as TieredId, top, got[`${t.id}:${top}`], true) });
+    if (top !== undefined) out.push({ id: nextId++, title: t.name, line: tierText(t.id as TieredId, top, got[`${t.id}:${top}`], true),
+      medal: { metal: METALS[t.tiers.indexOf(top)], of: t.id } });
   }
-  for (const f of FIRSTS) if (keys.includes(f.id)) out.push({ id: nextId++, title: f.name, line: f.text(got[f.id]) });
+  for (const f of FIRSTS) if (keys.includes(f.id)) out.push({ id: nextId++, title: f.name, line: f.text(got[f.id]), medal: { metal: "gold", of: "first" } });
   return out;
 }
 
@@ -112,7 +135,7 @@ export function AchievementToasts() {
       {shown.map((s) => (
         <button key={s.id} class={"ach-toast" + (s.out ? " out" : "")} onPointerEnter={() => setOver(s.id)} onPointerLeave={() => setOver(null)}
           onClick={() => { openAchievements(); setShown((l) => l.filter((x) => x.id !== s.id)); setOver(null); }}>
-          <span class="ach-mark"><Icon.medal /></span>
+          {s.medal ? <Medal metal={s.medal.metal} of={s.medal.of} /> : <span class="ach-mark"><Icon.medal /></span>}
           <span class="ach-words">
             <b>{s.title}</b>
             {s.line && <span class="muted">{s.line}</span>}

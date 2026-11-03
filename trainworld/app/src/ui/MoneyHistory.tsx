@@ -16,9 +16,8 @@ import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
 import { Money } from "./MoneyText";
 
-/** Days or hours, and the scale, kept while the game is open. */
+/** Days or hours, kept while the game is open. */
 const span = signal<"day" | "hour">("day");
-const scale = signal<"lin" | "log">("lin");
 
 /** `from`, `to` (game days, `to` not included) and `n` (days counted, today's part so far) for a
  * column of several days, whose figures are then averages per day (T-2143). */
@@ -29,8 +28,6 @@ const W = 300, H = 96, PAD = 3;
 const MIN_SLOTS = { day: 7, hour: 12 };
 /** T-2143: at most this many columns of days; past it a column is a week, then a month, then several months. */
 const MAX_COLS = 90;
-/** The log scale reaches down at most this many powers of ten below its top. */
-const LOG_DECADES = 4;
 
 const oneOff = (e: Entry) => e.trains + e.build;
 /** T-867: the cost line, running trains plus upkeep, and loan payments (T-1661, T-2022) */
@@ -99,7 +96,6 @@ function binDays(list: Entry[]): { cols: Entry[]; binned: boolean } {
 
 export function MoneyHistory({ zone }: { zone: string | null }) {
   const hours = span.value === "hour";
-  const log = scale.value === "log";
   const raw = entries(hours, zone);
   if (!raw.length) return null;
   const { cols: list, binned } = hours ? { cols: raw, binned: false } : binDays(raw);
@@ -113,24 +109,14 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const per = binned ? "/day" : "";
   const name = (e: Entry, i: number) => (binned ? dateRange(e.from!, e.to!) : when(e, hours)) + (i === last ? " so far" : "");
 
-  /** y on a chart from 0 (or the log scale's bottom) up to `top`; and the log scale's gridlines */
-  const yScale = (top: number, values: number[]) => {
-    if (!log) return { y: (v: number) => H - PAD - (v / top) * (H - 2 * PAD), grid: [] as number[] };
-    const hi = Math.log10(top), pos = values.filter((v) => v > 0);
-    const lo = Math.floor(Math.max(pos.length ? Math.log10(Math.min(...pos)) : hi - 1, hi - LOG_DECADES));
-    const bottom = Math.min(lo, Math.ceil(hi) - 1);
-    const y = (v: number) => H - PAD - ((Math.log10(Math.max(v, 10 ** bottom)) - bottom) / (hi - bottom)) * (H - 2 * PAD);
-    const grid: number[] = [];
-    for (let p = bottom + 1; p < hi; p++) grid.push(y(10 ** p));
-    return { y, grid };
-  };
+  /** y on a chart from 0 up to `top` */
+  const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
 
   // fares and running costs as lines, scaled to the larger of the two; one-off costs (new trains,
   // construction) as bars on the same scale, cut at the top with a cap so a build day cannot
   // flatten the lines (T-452)
   const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
-  const s1 = yScale(top, list.flatMap((e) => [e.fares, run(e)]));
-  const y1 = s1.y;
+  const y1 = yScale(top);
   // the day or hour now is drawn dashed: it is still filling
   const pt = (v: (e: Entry) => number, i: number) => `${cx(i).toFixed(1)},${y1(v(list[i])).toFixed(1)}`;
   const path = (v: (e: Entry) => number) => list.slice(0, last).map((_, i) => `${i ? "L" : "M"}${pt(v, i)}`).join("");
@@ -147,7 +133,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
     ...(e.build > 0 ? [`Construction ${usd(-e.build)}${per}`] : []),
   ].join("\n");
 
-  // net: bars up or down from zero, linear whatever the scale (it changes sign)
+  // net: bars up or down from zero
   const hi = Math.max(0, ...list.map(net)), lo = Math.min(0, ...list.map(net));
   const range = hi - lo || 1e-9;
   const y2 = (v: number) => PAD + ((hi - v) / range) * (H - 2 * PAD);
@@ -155,28 +141,18 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
 
   // train rides (T-565): bars up from zero
   const rideTop = Math.max(...list.map(rides), 1e-9);
-  const s3 = yScale(rideTop, list.map(rides));
-  const y3 = s3.y;
+  const y3 = yScale(rideTop);
 
   // T-264: a tick under each day or hour a holiday or a long holiday's day where the player has built
   const only = zone && isCity(zone) ? cityById(zone).country ?? null : null;
   const marks = binned ? [] : list.map((e) => calendarAt(hours ? e.at * 3600 + 1800 : e.at * 86400 + 43200, only));
 
-  const grid = (g: number[]) => g.map((y) => <line class="hist-grid" x1={0} x2={W} y1={y} y2={y} />);
   const first = list[0];
   return (
     <>
       <div class="h">
         History
         <span class="right hist-switches">
-          <Segmented<"lin" | "log">
-            options={[
-              ["lin", <span>Linear</span>],
-              ["log", <span data-tip="Each line across is ten times the one below">Log</span>],
-            ]}
-            value={scale.value}
-            onChange={(v) => { scale.value = v; }}
-          />
           <Segmented<"day" | "hour">
             options={[
               ["day", <span data-tip="Every game day so far">Days</span>],
@@ -189,7 +165,6 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
       </div>
       <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span></span><span class="right muted">{usd(top)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
-        {grid(s1.grid)}
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
           const v = oneOff(e);
@@ -219,7 +194,6 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
       </svg>
       <div class="hist-title small"><span>Train rides</span><span class="right muted">{count(rideTop)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
-        {grid(s3.grid)}
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
           const y = y3(rides(e));

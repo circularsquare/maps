@@ -11,6 +11,8 @@ import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
+import { StatusTag } from "./StatusTag";
+import { BusyTag } from "./BusyTag";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
@@ -151,12 +153,16 @@ function Clock() {
 
 /** T-1868: the day and night picture with its demand band, at the map's top right under the bar (it was
  * in the bar). Its hover lists the holidays in view; the band's gives the demand level. Mounted in the
- * map's container by main.ts. */
+ * map's container by main.ts. T-2202: under it, on a narrow map, the status tags (shown beside the demand
+ * buttons otherwise, style.css). */
 export function MapSky() {
   const minute = NO_CLOCK ? clock.local.peek() : clock.local.value;
   const near = holidaysNear.value, rush = rushNear.value;
   const hols = [...holidayLines(minute, near, true), ...rushLines(minute, rush, near, true)];
-  return <div class="map-sky"><SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} /></div>;
+  return <div class="map-sky">
+    <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
+    <div class="sky-status"><StatusTag /><BusyTag /></div>
+  </div>;
 }
 
 /** T-284: its own component, re-rendered as fares land (several times a wall second while the clock

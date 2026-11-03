@@ -2,6 +2,21 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2202 [P3] The status tag under the day and night picture. Done 2026-11-03 (agent t2179): on a map under 520 px the recomputing and busy tags sit under the picture at the top right (the tutorial card moves down for them); wider maps unchanged. Shots artifacts/trainworld/t2202/.
+- T-2181 [P3] History without a log scale. Done 2026-11-03 (agent t2179): the Linear / Log switch and its code went; week and month columns stay.
+- T-2179 [P2] Achievements as rings and medals. Done 2026-11-03 (agent t2179): a ring per tiered achievement in its colour, tier medals (bronze to emerald) under its name, firsts as gold medals or outlines, "Trips per day", the trophy beside the achievements button. notes/T-2124.md 8.
+- T-2140 [P3] Lines side by side, Shinjuku's Traffic view bulge. Done 2026-11-03 (agent t2140): not the hold; each line placed a ribbon change's curve by its own track, now the lines of one change take one placement; kinks real 134/14/0, Tokyo 0/0/0. notes/T-2058.md 3f.
+- T-2182 [P2] Trains face their way on band nudges. Done 2026-11-03 (agent t2140): both ends shifted by the band there, heading between them. notes/T-2058.md 3f.
+- T-2183 [P3] The 1 px gap between bands at every angle. Done 2026-11-03 (agent t2140): band sides antialiased over a pixel; the casing (white light, dark dark) shows evenly. notes/T-2058.md 3f.
+- T-2184 [P2] One crowding mark, even dashes. Done 2026-11-03 (agent t2140): bands get a line's red side dashes, drawn over neighbours; dashes measured along the line's run, not per segment. notes/T-2058.md 3f.
+- T-2152 [P3] Lines tab "construc$49.7M". Done 2026-11-03 (agent t2140): "constructing..." takes room from the name, Money keeps its place.
+
+- T-2185 [P2] Merges where trains queue are problem spots. Done 2026-11-03 (agent t2185): the wait was the sim's own shared track wait, held at the merge, but its dot sat midway along the trunk; now shared track lines join from two edges is a "Merge" dot on the join, from 75% as before. notes/T-2185.md.
+- T-280 [P3] Ferries as an access leg or line kind. Folded 2026-11-03 into T-2177 (ferries as a line kind, Anita's ask). notes/T-2177.md.
+- T-2167 [P3] Late-game expensive things. Done 2026-11-03 (agent t2167): proposal of twelve ideas; Anita took named crossings (T-2200) and maglev (T-2201), not upgrade in place ("snap next to track" covers it) or signals (assumed modern); big stations asked about (T-2203). research/late-game-spending.md.
+- T-1897 [P2] Track costs and rules. Done 2026-11-02: its four builds T-1928, T-1929 (road crossings, 0238b24d), T-1930, T-1931 landed; archived 2026-11-03. notes/T-1897.md.
+- T-1929 [P2] Ground track pays per road crossed. Done 2026-11-02 (commit 0238b24d), archived 2026-11-03 after a re-check on master: US$6M a crossing at level 0, motorway 3, counted in the clock worker from the basemap's tiles, derived per edge, not saved. notes/T-1929.md.
+- T-2147 [P2] Are trains too small? Done 2026-11-03 (agent): 160 a car is a rated load, not crush; capacity is not what holds Asia low. Anita adopted trains to 150% with crowding still minded from 70% (T-2186). notes/T-2147.md.
 - T-2153 [P2] The last two cities built in stay fine. Done 2026-11-03 (agent t2153): the last two builds' zones are spared however old, the latest last over the budget, and kept in the save (`demandBuilt`); `checks/t2005-recent-builds.mjs` plays sessions against T-2005's rule.
 - T-2166 [P3] The feedback's "sent" note at the upper left. Done 2026-11-03 (agent t2154): under the edit note in its plain look, 5 s (`PassingNote` in `MapTopLeft`). Shots artifacts/trainworld/t2154/.
 - T-2158 [P3] Terrain toggle hover. Done 2026-11-03 (agent t2154): "Show terrain. Steep terrain costs more to build on." on the Build tab's switch and Settings' Terrain row.

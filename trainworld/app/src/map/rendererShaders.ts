@@ -102,7 +102,7 @@ uniform highp sampler2D u_line_colours;
 uniform int u_full_pass;     // T-819: 1 the pass drawing a red band this much (px) wider than the
 uniform float u_full_px;     // casing under the lines on track at capacity, nothing else; 2 (T-1284) the
 uniform float u_full_out;    // casing's colour this much (px) wider again, and the red band in dashes
-uniform float u_full_dash;   // of this period (px), so it reads on a red line
+uniform float u_full_dash;   // of this period (px), so it reads on a red line; 3 (T-2184) a band's red edges after the lines
 uniform vec3 u_full_rgb;
 uniform int u_ghost;         // T-1038: 1 for the preview pass, whose placement strokes are the ghost
 uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outline, 1 its rails, 2 its middle
@@ -123,7 +123,7 @@ in float a_speed;
 in vec3 a_wmul;            // width as a multiple of the line width (riders, T-084), 1 otherwise; the
                            // Traffic view's band shift at its start and end, line widths left (T-1799)
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
-in float a_full;            // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its riders' wait for a train with room (min), 0 none
+in vec2 a_full;             // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its riders' wait for a train with room (min), 0 none; and local units along its run to its start (T-2184)
 in vec4 a_band;             // T-1799: its band's shift left at its start and end (share of ${BAND_RANGE} line widths), 1 - its width share at both
 in vec2 a_band_m;           // T-2132: metres left from its track to its ribbon's middle at its start and end (share of ${BAND_M_RANGE})
 out vec3 v_color;
@@ -132,15 +132,18 @@ out vec4 v_cap;             // px: along from the segment's start, along to its 
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
-flat out vec3 v_inner;      // T-1799, T-2133: red dashes down a band's middle: their width and period (px), strength; 0 none
+out float v_along;          // T-2184: px along the stroke's run, so dashes keep one length round curves
+flat out vec4 v_inner;      // T-2184: a band's red edges over its neighbours: its colour's half width, the red's and the rim's px, strength; 0 none
+flat out float v_aa;        // T-2183: a band's colour's half width (px), its sides smoothed so the gap between bands keeps its width; 0 none
 ${SEL_GLSL}
 void main() {
-  v_inner = vec3(0.0);
+  v_inner = vec4(0.0);
+  v_aa = 0.0;
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
-  v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
+  v_dash = u_full_pass == 1 || u_full_pass == 3 ? u_full_dash : 0.0;
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
@@ -179,12 +182,14 @@ void main() {
   float extra = sel ? u_width.y : 0.0;
   bool muted = u_kind == 1 && u_mute.x > 0.0 && !sel;
   if (muted) bandW *= u_mute.x;
-  bool full = u_full_pass > 0;
+  bool full = u_full_pass == 1 || u_full_pass == 2;
   bool fullOut = u_full_pass == 2;
-  // riders waiting for a train with room on a band of shared track: marked inside that band (below)
-  bool waitIn = shared && tBand && a_full > 0.0;
-  if (full && (!(u_kind == 1 && a_full != 0.0) || waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
+  // riders waiting for a train with room on a band of shared track: its red edges drawn after every
+  // line's colour (pass 3), over the bands beside it, since under the ribbon's casing they would not show
+  bool waitIn = shared && tBand && a_full.x > 0.0;
+  bool late = u_full_pass == 3;
+  if ((full && (!(u_kind == 1 && a_full.x != 0.0) || waitIn)) || (late && !waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float fs = a_full.x < 0.0 ? 1.0 : a_full.x > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full.x - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
   float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
@@ -223,6 +228,15 @@ void main() {
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
   w = max(w, 1.0);
+  if (late) {
+    float hr = 0.5 * (u_full_px + ${FULL_WIDTH_SHARE} * w), ho = 0.5 * u_full_out;
+    v_inner = vec4(0.5 * w, hr, ho, fs);
+    w += 2.0 * (hr + ho);
+  } else if (shared && u_casing <= 0.0 && !full && u_lane_mode == 0) {
+    // (half a pixel more each side, for the smoothed edge)
+    v_aa = 0.5 * w;
+    w += 1.0;
+  }
   float side = id < 2 ? -1.0 : 1.0;
   vec4 c0 = project(a_seg.xy);
   vec4 c1 = project(a_seg.zw);
@@ -252,6 +266,7 @@ void main() {
   // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
   float ext = (along * 2.0 - 1.0) * w * 0.5, ua = along * len + ext;
   v_cap = vec4(ua, len - ua, side * w * 0.5, w * 0.5);
+  v_along = a_full.y * len / max(length(a_seg.zw - a_seg.xy), 1e-9) + ua;
   // Blueprint is solid but lighter (T-311): the colour mixed towards white, opaque, because
   // segments overlap at every joint and see-through blueprint would show a bead there. Lines
   // that do not run (faded) stay see-through.
@@ -287,8 +302,7 @@ void main() {
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
-  if (u_kind == 1 && a_full != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
-  if (waitIn && u_casing <= 0.0 && !full && u_lane_mode == 0 && u_full_dash > 0.0) v_inner = vec3(clamp(0.3 * w, 1.0, 0.5 * w), u_full_dash, fs);
+  if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
@@ -303,7 +317,9 @@ in vec4 v_cap;
 flat in vec4 v_stripe;
 flat in float v_stripe_only;
 flat in float v_dash;
-flat in vec3 v_inner;
+in float v_along;
+flat in vec4 v_inner;
+flat in float v_aa;
 uniform vec3 u_full_rgb;
 uniform vec3 u_casing_rgb;
 uniform float u_full_out;
@@ -311,15 +327,17 @@ out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
-  if (v_dash > 0.0 && mod(v_cap.x, v_dash) > 0.6 * v_dash) discard;
+  if (v_dash > 0.0 && mod(v_along, v_dash) > 0.6 * v_dash) discard;
   vec3 c = v_color;
-  // T-2133: red dashes down a band's middle (two inside its edges read as seams between bands), in
-  // a rim of the casing's colour, so they read on a red line as T-1284's outline does
-  if (v_inner.x > 0.0 && mod(v_cap.x, v_inner.y) <= 0.6 * v_inner.y) {
-    float d = abs(v_cap.z), hw = 0.5 * v_inner.x;
-    c = mix(c, u_casing_rgb, v_inner.z * clamp(hw + 0.5 + min(0.5 * u_full_out, hw) - d, 0.0, 1.0));
-    c = mix(c, u_full_rgb, v_inner.z * clamp(hw + 0.5 - d, 0.0, 1.0));
+  // T-2184: a band's red edges, as a line's own outside its casing, in a rim of the casing's colour
+  if (v_inner.x > 0.0) {
+    // (no round caps: at a run's end, where the band's width changes, they would ring it)
+    float d = abs(v_cap.z);
+    if (d < v_inner.x || past > 0.0) discard;
+    c = mix(u_casing_rgb, u_full_rgb, v_inner.w * clamp(v_inner.x + v_inner.y + 0.5 - d, 0.0, 1.0));
+    a *= clamp(v_inner.x + v_inner.y + v_inner.z + 0.5 - d, 0.0, 1.0);
   }
+  if (v_aa > 0.0) a *= clamp(v_aa + 0.5 - abs(v_cap.z), 0.0, 1.0);
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
     c = mix(c, v_stripe.rgb, s);
@@ -827,6 +845,27 @@ void main() {
   float sl = length(sdir);
   sdir = sl > 1e-6 ? sdir / sl : vec2(1.0, 0.0);
   vec2 nrm = vec2(-sdir.y, sdir.x);
+  // T-2182: its two ends each shifted by the band there, so a train easing sideways with its band
+  // turns with it rather than sliding crabwise
+  float side = (int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0;
+  vec3 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
+  float shB = side * u_lane.y * lbb.x * u_lane.x + lbb.y * u_bands + lbb.z * u_bands_m;
+  float shF = side * u_lane.y * lbf.x * u_lane.x + lbf.y * u_bands + lbf.z * u_bands_m;
+  if (shB != shF) {
+    bs += nrm * shB;
+    fs += nrm * shF;
+    vec2 sd = fs - bs;
+    float sl2 = length(sd);
+    if (sl2 > 1e-6) {
+      sdir = sd / sl2;
+      nrm = vec2(-sdir.y, sdir.x);
+      sl = sl2;
+    }
+    // (the ends back in the frame of the train's own centre, unshifted, for the bend below)
+    float shC0 = side * lane * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
+    bs -= nrm * shC0;
+    fs -= nrm * shC0;
+  }
   // A train as one pill bends with its track (T-189): along the circle through its two ends and
   // its middle, as a station's platform does (SHAPE_GLSL); a car close up is short enough to stay
   // straight. k: curvature, 1/px, towards +nrm; ends: where the ends lie across the frame.

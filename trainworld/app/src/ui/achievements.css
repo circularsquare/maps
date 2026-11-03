@@ -1,32 +1,56 @@
-/* T-2124: the achievements (ui/Achievements.tsx, ui/inspector/AchievementsView.tsx) */
+/* T-2124, T-2179: the achievements (ui/Achievements.tsx, ui/inspector/AchievementsView.tsx) */
 
-/* the medal and count at the top right of the Cities tab */
-.ach-head { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+/* each achievement's colour (its ring and its medals' ribbon), and the firsts' */
+:root { --ach-cities: #3a78c9; --ach-trips: #c8423b; --ach-station: #c97a12; --ach-line: #2f8f5b; --ach-first: #8558c2; }
+:root[data-shade="dark"] { --ach-cities: #6aa2ea; --ach-trips: #ec7b7b; --ach-station: #e9a24a; --ach-line: #5fbf87; --ach-first: #b28ae6; }
+.r-cities { --rib: var(--ach-cities); }
+.r-trips { --rib: var(--ach-trips); }
+.r-station { --rib: var(--ach-station); }
+.r-line { --rib: var(--ach-line); }
+.r-first { --rib: var(--ach-first); }
+
+/* the medal and count at the top right of the Cities tab, the leaderboards' trophy before it */
+.ach-head { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-bottom: 6px; }
 .ach-open { height: 24px; padding: 0 6px; font-size: 12px; }
 .ach-open svg { color: var(--accent); }
+.ach-head .btn.lb-open { width: 24px; height: 24px; border: 1px solid var(--rule); color: var(--accent); }
+.ach-head .btn.lb-open:hover { color: var(--accent); background: var(--tint); }
 .ach-mark { display: inline-flex; color: var(--accent); flex: none; }
 .title .ach-mark svg { width: 20px; height: 20px; }
 
-/* a tiered achievement: name and figure, the bar of equal parts with a tick per tier, the tiers under it */
-.rows > li.ach-tier { display: block; padding: 4px 0 6px; }
-.ach-tier .line { display: flex; align-items: center; gap: 8px; min-height: 22px; }
-.ach-tier .val { font-variant-numeric: tabular-nums; }
-.ach-bar { position: relative; height: 8px; margin-top: 2px; background: var(--tint); }
-.ach-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
-.ach-tick { position: absolute; top: -2px; bottom: -2px; width: 1px; margin-left: -1px; background: var(--muted); }
-.ach-tick::before { content: ""; position: absolute; top: 0; bottom: 0; left: -4px; right: -4px; }
-.ach-tick.reached { width: 2px; margin-left: -2px; background: var(--text); }
-.ach-labels { position: relative; height: 14px; margin-top: 2px; font-size: 11px; font-variant-numeric: tabular-nums; }
-.ach-labels span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
-.ach-labels span:last-child { transform: translateX(-100%); }
+/* a medal: the disc in the tier's metal, the ribbon in the achievement's colour */
+svg.ach-medal { width: 16px; height: 22px; flex: none; stroke: none; overflow: visible; }
+.ach-medal .rib { fill: var(--rib); }
+.ach-medal .rib.back { fill: color-mix(in srgb, var(--rib) 68%, #000); }
+.ach-medal .face { fill: var(--face); stroke: var(--rim); stroke-width: 1.1; }
+.ach-medal .inner { fill: none; stroke: var(--rim); stroke-width: .8; opacity: .6; }
+.m-bronze { --face: #cd8a4e; --rim: #8a5225; }
+.m-silver { --face: #c9ccd1; --rim: #80858d; }
+.m-gold { --face: #efc548; --rim: #a57d14; }
+.m-platinum { --face: #eef7fb; --rim: #5b8fb3; }
+.m-emerald { --face: #3fc68c; --rim: #177a54; }
+/* a medal's place, or a faint outline where one not yet earned would go */
+.ach-slot { flex: none; display: inline-flex; width: 16px; height: 22px; }
+.ach-slot.empty { box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--rule) 70%, var(--bg)); }
 
-/* the firsts after a divider: a box, ticked in the accent once earned */
-.ach-firsts { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule); }
-.ach-firsts > p { margin: 0 0 2px; }
-.ach-firsts .rows > li { min-height: 22px; }
-.ach-box { flex: none; width: 12px; height: 12px; border: 1px solid currentColor; display: grid; place-items: center; }
-.ach-firsts li:not(.muted) .ach-box { color: var(--accent); }
-.ach-box svg { width: 10px; height: 10px; stroke-width: 2.2; }
+/* a tiered achievement: its name, its medals under it, the ring at the right */
+.rows > li.ach-tier { display: flex; align-items: stretch; gap: 10px; padding: 4px 0; }
+.rows > li.ach-tier + li.ach-tier { margin-top: 6px; }
+.ach-left { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0 2px; }
+.ach-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ach-medals { display: flex; gap: 6px; }
+.ach-medals .ach-slot, .ach-medals svg.ach-medal { width: 20px; height: 27px; }
+.ach-dial { position: relative; flex: none; width: 68px; height: 68px; }
+svg.ach-ring { width: 68px; height: 68px; display: block; stroke-width: 6; }
+.ach-ring .track { stroke: color-mix(in srgb, var(--rib) 18%, var(--bg)); }
+.ach-ring .fill { stroke: var(--rib); stroke-linecap: round; }
+.ach-fig { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; }
+.ach-fig b { font-size: 13px; }
+.ach-fig .muted { font-size: 11px; }
+
+/* the firsts: a gold medal once earned, else its place; the day at the right */
+.ach-firsts { margin-top: 12px; }
+.ach-firsts.rows > li { min-height: 28px; }
 .ach-firsts .val { font-size: 12px; color: var(--muted); }
 
 /* the toasts, stacked up from the tool notes at the map's bottom left */

@@ -70,9 +70,10 @@ export const CORRIDORS = true;
  * network; "fit" a change at a node on the side with more lines where the side with fewer is shorter
  * than its curve; "snap" a ribbon change just ahead of a merge's or split's node placed as at the
  * node (T-2059, T-2060); "hold" a ribbon whose tracks part for a while held across the gap (T-2132);
- * "" T-1848's eases and per-ribbon order (`?perfOff=bandsSmooth`, `bandsOrder`, `bandsPlace`,
- * `bandsHold`: `bandTry`) */
-let bandMode = "smooth,order,fit,snap,hold";
+ * "align" the lines of one ribbon change easing at one place (T-2140); "" T-1848's eases and
+ * per-ribbon order (`?perfOff=bandsSmooth`, `bandsOrder`, `bandsPlace`, `bandsHold`, `bandsAlign`:
+ * `bandTry`) */
+let bandMode = "smooth,order,fit,snap,hold,align";
 export function setBandMode(m: string): void {
   if (m === bandMode) return;
   bandMode = m;
@@ -90,6 +91,10 @@ const SMOOTH_KNOTS = 9;
  * SPAN_M across) */
 const HOLD_RUN_M = 2000;
 const HOLD_M = 50;
+/** "align" (T-2140): ribbon changes of one ribbon whose places (on each line's track) are within this
+ * many metres are one change; a line's curve is moved only to a point of its track within ALIGN_NEAR_M */
+const ALIGN_M = 100;
+const ALIGN_NEAR_M = 80;
 
 interface BandLine { id: number; ok: boolean; path: number[]; bus?: unknown }
 interface BandEdge { id: number; a: number; b: number }
@@ -571,8 +576,50 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   };
   let nRecords = 0;
 
+  // ---- T-2140 "align": a ribbon change is a curve per line, each placed by its own track, so a
+  // change at a node on one track can be along the way on the one beside it, and the lines of one
+  // ribbon then ease at different places (in the Traffic view, where bands are wide, a bulge). The
+  // changes of one ribbon within ALIGN_M of each other take one placement: the curve of the line
+  // whose change says most about the place (a line joining its track, then a node, then along the
+  // way; then the lowest id), its middle at the same point on every line's track
+  interface Change { id: number; step: { c: number; L: number }; prio: number; g: number; enter: boolean; at: [number, number]; pointAt: (m: number) => [number, number]; nearM: (P: [number, number], m: number, reach: number) => number }
+  const alignChanges = (all: Map<string, Change[]>) => {
+    for (const list of all.values()) {
+      if (list.length < 2) continue;
+      const used = new Uint8Array(list.length);
+      for (let i = 0; i < list.length; i++) {
+        if (used[i]) continue;
+        used[i] = 1;
+        const a = list[i], grp = [a], ids = new Set([a.id]), reach = ALIGN_M * kAtY(a.at[1]);
+        for (let j = i + 1; j < list.length; j++) {
+          const b = list[j];
+          if (used[j] || ids.has(b.id) || Math.hypot(b.at[0] - a.at[0], b.at[1] - a.at[1]) > reach) continue;
+          used[j] = 1;
+          ids.add(b.id);
+          grp.push(b);
+        }
+        if (grp.length < 2) continue;
+        let lead = grp[0];
+        for (const x of grp) if (x.prio > lead.prio || (x.prio === lead.prio && x.id < lead.id)) lead = x;
+        const P = lead.pointAt(lead.step.c);
+        if (!Number.isFinite(P[0])) continue;
+        for (const x of grp) if (x !== lead) {
+          const m = x.nearM(P, x.g, lead.step.L);
+          // (its track parted from the leader's there: as far from its own change, into or out of
+          // the bigger ribbon alike)
+          x.step.c = Number.isFinite(m) ? m : x.g + (lead.step.c - lead.g) * (lead.enter === x.enter ? 1 : -1);
+          x.step.L = lead.step.L;
+        }
+      }
+    }
+  };
+
   // ---- along each line
   const of = new Map<number, BandProfile>();
+  /** T-2140: every line's ribbon changes by the bigger ribbon's lines; and per line what is left to do
+   * once they are lined up */
+  const changes = new Map<string, Change[]>();
+  const later: (() => void)[] = [];
   for (const l of rail) {
     const n = l.path.length;
     // its samples in travel order: metres along its path, half their spacing, entry, ribbon, slot
@@ -609,6 +656,36 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       }
     }
     if (!any) continue;
+    /** the point at path metre m, local units */
+    const pointAt = (m: number): [number, number] => {
+      let lo = 0, hi = n - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (start[mid] <= m) lo = mid;
+        else hi = mid - 1;
+      }
+      const p = l.path[lo], e = p >> 1, len = start[lo + 1] - start[lo], P = pts.get(e);
+      if (!P || P.length < 6) return P && P.length >= 3 ? [P[0], P[1]] : [NaN, NaN];
+      const f = len > 0 ? Math.max(0, Math.min(1, (m - start[lo]) / len)) : 0;
+      return pointOn(e, (p & 1) === 1 ? 1 - f : f);
+    };
+    /** the path metre within `reach` of `m` nearest point P, or NaN where none is within ALIGN_NEAR_M */
+    const nearM = (P: [number, number], m: number, reach: number) => {
+      const d = (x: number) => {
+        const q = pointAt(x);
+        return Math.hypot(q[0] - P[0], q[1] - P[1]);
+      };
+      let best = m, bd = Infinity;
+      for (let x = Math.max(0, m - reach); x <= Math.min(start[n], m + reach); x += 10) {
+        const v = d(x);
+        if (v < bd) (bd = v), (best = x);
+      }
+      for (let x = Math.max(0, best - 10); x <= Math.min(start[n], best + 10); x += 1) {
+        const v = d(x);
+        if (v < bd) (bd = v), (best = x);
+      }
+      return bd / kAtY(P[1]) <= ALIGN_NEAR_M ? best : NaN;
+    };
     const N = M.length, sgnAt = (j: number) => ((l.path[K[j]] & 1) === 1 ? -1 : 1);
     // per sample its slot (line widths) and its ribbon's middle (m), left of travel, and the two as
     // one value at BAND_LW_PER_M, which decides what is one piece
@@ -748,7 +825,18 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
           c += (fits ? fewer : -fewer) * (L / 2);
         }
         steps.push({ c, L });
+        // T-2140: each line places its curve by its own track (a node on one, along the way on the
+        // other), so the lines of one ribbon change are lined up afterwards (`alignChanges`)
+        if (A.run !== B.run && ra !== rb && bandMode.includes("align")) {
+          const big = [...(ra > rb ? rs[A.run] : rs[B.run]).r.lines].sort((x, y) => x - y).join(",");
+          let v = changes.get(big);
+          if (!v) changes.set(big, (v = []));
+          v.push({ id: l.id, step: steps[steps.length - 1], prio: nodeM >= 0 && oa !== ob ? 3 : node ? 2 : 1, g: (g0 + g1) / 2, enter: rb > ra, at: pointAt((g0 + g1) / 2), pointAt, nearM });
+        }
       }
+      return () => {
+      const dbgL = opts?.debug?.get(l.id) as { steps?: number[][] } | undefined;
+      if (dbgL) dbgL.steps = steps.map((s, i) => [s.c, s.L, val(pl[i].j0), valM(pl[i].j0), val(pl[i + 1].j0), valM(pl[i + 1].j0)]);
       const end = start[n];
       const at: number[] = [0, end];
       for (const s of steps) if (s.L > 0) for (let i = 0; i < SMOOTH_KNOTS; i++) {
@@ -847,6 +935,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
         ko.push(o);
         kn.push((kf.length - o) / 2);
       }
+      };
     };
     /** run u's own samples in pieces of one value: [first, last sample, the samples whose values they take] */
     const piecesOf = (u: Run) => {
@@ -874,7 +963,10 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       }
       return pieces;
     };
-    if (bandMode) smoothKnots(runs.map(piecesOf), runs);
+    // (the rest once every line's changes are lined up)
+    const finish = bandMode ? smoothKnots(runs.map(piecesOf), runs) : undefined;
+    later.push(() => {
+    if (bandMode) finish?.();
     else runs.forEach((u, ui) => {
       const [t0, t1] = ease[ui];
       const pieces = piecesOf(u);
@@ -959,7 +1051,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     if (!nonzero) {
       nRec = recMark;
       nRecords = recCount;
-      continue;
+      return;
     }
     starts.push(knots.length / KNOT);
     const out = new Float32Array(1 + starts.length + knots.length);
@@ -967,7 +1059,10 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     out.set(starts, 1);
     out.set(knots, 1 + starts.length);
     of.set(l.id, out);
+    });
   }
+  alignChanges(changes);
+  for (const f of later) f();
   const corridor = new Float32Array(3 + tRibbons.length + tRecipes.length + nRec);
   corridor[0] = nRibbons;
   corridor.set(tRibbons, 1);

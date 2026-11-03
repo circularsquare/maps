@@ -17,7 +17,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   LIVE still 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on her word.
 - India: run 3 (25240) ended 10:02; its agent restarted as run 4 ~10:07 (cores t2111 pid 25628 "relax rerun", log
   artifacts/trainworld/t2111-run4.log, plus t2111fine terrain fetch pid 11216).
-- Worktrees: .tw-trees/t1734 only (kept on purpose, T-1734).
+- Worktrees: .tw-trees/t1734 (kept on purpose, T-1734), t1849 (agent running).
 - Uncommitted in the main tree (other agents' work in progress, commit with their reports): the census-rebuild agent's
   and India agent's files (pipeline/admin_totals.py, enrich_parks.py, india.py, realms.py, world_plan.py/.json,
   intercity.py, checks/admin_totals_check.py, pack_gate.py?, tools/country/cambodia_census.py, india_census.py, the
@@ -102,6 +102,8 @@ crossing (WASM, own tree); T-2146 network diagram (design); T-2152 Lines tab ove
 3. T-1794 train-count settle. T-2009 Quad upkeep figures.
 
 ## Lessons from this run
+- maps-0f 11-03: before starting an "Open" task, `git log --grep "T-<id>"`: T-1929 was landed a day before with its
+  line never moved.
 - maps-0f 11-03: her TODO.md short-term can repeat an earlier batch line for line (11-03c = 11-02b; T-2154-56 were
   already T-2006-08). Diff new TODO items against the earlier notes/todo-*.md files before filing.
 - "Keep the work moving" (maps/CLAUDE.md): sweep what's not done at every report and start what can go; stale done
@@ -154,6 +156,31 @@ maps-b2's subagent ids can't be messaged from here ("no transcript"); their repo
   saveFile, main.ts onStationsAhead 2 lines, checks/t2005, docs demand-runtime + code-map, DECISIONS, ARCHIVE): new
   save header field `demandBuilt`. Commit with the UI batch (shared main.ts, DECISIONS, ARCHIVE). Not India's files:
   pipeline/tier0.py, world_plan.json, registry.json, market-rows.json, notes/T-2111.md.
+Her notes on build 827 (~11:15, notes/todo-2026-11-03d.md): filed T-2177..T-2186. Answered: shortcut hints fine;
+capacity: trains to 150%, crowding still minded from 70% (T-2186, waits for T-2185 to leave sim/src/track); diagram
+go (T-2159 on); T-1929 was already landed 11-02 (0238b24d, tree removed; T-1897 archived).
+Started ~11:20 (all Opus):
+- a335231643fa865c6 **T-2179 + T-2181** achievements rings/medals redesign, trophy beside it, drop Log (Vite 6181, T-2187).
+- a0aec0944e89e200c **T-2180** edit note down both ways + "18 cities" (Vite 6182, T-2188/89).
+- a94a5886276cee731 **T-2159 + T-2160** diagram graph + layout worker + `?diagram=1` dev view (Vite 6183, T-2190/91).
+- **T-2177 ferries design DONE** ~12:00 (agent adbcd10bae0ea51a9): notes/T-2177.md, review/ferry-mockup.png; stages
+  T-2192 (water+routes, main), T-2193 (sim line kind, own tree), T-2194 (tool/map/Money row), T-2195 (demand),
+  T-2196 (ferry fans, needs her OK), T-2178 (bus over water). Waits on her read of the design.
+- a8194c6cc67c254e2 **T-2185** merges as problem spots (sim/src/track + trouble list, Vite 6184, T-2198/99).
+- **T-2140, T-2152, T-2182, T-2183, T-2184 DONE** ~12:15 (agent a79830eff8e0c8744, 444k tokens: don't resume for
+  more), uncommitted: map/lineBands.ts (align step), renderer.ts, rendererShaders.ts, strokeGather.ts, perfFlags.ts,
+  ui/LinesTab.tsx, style.css (one rule), checks/t1663-crowding.mjs, docs ui-map/code-map, notes/T-2058.md 3f, DECISIONS,
+  ARCHIVE. Smoke 23/23 on its Vite. Band build 380 ms on a loaded machine (target 300). Commit with the next finishers
+  (style.css and docs shared with t2179/t2159/t2180/t2185).
+Started ~11:05 (all Opus):
+- (T-1929 agent: found it already landed; done.)
+- a549624d4ab855dea **T-1849** corridor modes speedup (re-measure after T-2122 first), tree .tw-trees/t1849, Vite 6179,
+  id T-2175.
+- a79830eff8e0c8744 **T-2140 + T-2152** Shinjuku Traffic bulge, Lines tab "construc$", main tree, Vite 6180, id T-2176.
+- **T-2167 DONE** and archived; her answers ~11:40 (notes/todo-2026-11-03e.md): named crossings T-2200, maglev T-2201,
+  big stations T-2203 (explained, waits on her); no upgrade in place, no signals. Also: road crossing strings OK, no
+  saving counts; diagram exposed to all (told t2159); gap line = map background colour (told t2140); T-2202 the
+  "recomputed" note to the top right (queued to t2179).
 - **T-2146 round 2 DONE** ~10:50 (agent a7e46912ec3685dba, resumable): Vignelli-style ribbons, snapped 0/45/90 with
   orthogonal-then-diagonal legs; review/diagram-tokyo-r2.png; stages T-2159..T-2163 + T-2168 boxes, T-2169 water wait
   on her go. Known flaws: fat/tilted pills at big interchanges (T-2161), far names (T-2162).
@@ -164,5 +191,5 @@ maps-b2's subagent ids can't be messaged from here ("no transcript"); their repo
   reported (they hold BuildTab, style.css and the like); T-2153 after T-2122 reports (same memory code).
 - cores.py at 09:32: 13 claimed of cap 10 (a full cap grants 1 each); no new core-using work until it drops.
 
-Next free task id: T-2173 (T-2168/69 t2146 round 2, T-2170/71 t2154, T-2172 t2153; T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
+Next free task id: T-2204 (T-2173-99 handed out 11-03 to agents; T-2173/74 unused; T-2168/69 t2146 round 2, T-2170/71 t2154, T-2172 t2153; T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
 T-2066..2069, T-2072, T-2073, T-2085, T-2121 handed out but unused).

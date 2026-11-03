@@ -140,8 +140,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 - **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], only
   with the Settings checkbox "Lines side by side" on (off by default, T-1886; `display.lineBands`,
   set on `renderer.lineBands` in main.ts, redrawn at once). In the Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
-  colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour shows between bands at every zoom),
-  one casing round them all (every casing is drawn before any colour).
+  colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour, white in the light theme and dark in
+  the dark one, shows between bands at every zoom), its sides smoothed over a pixel so the gap keeps
+  its width at every angle (T-2183, `v_aa`), one casing round them all (every casing is drawn
+  before any colour).
   Order on each edge, left to right: of two lines, the one turning more to the left where they
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
   number on the left of that line's travel; an edge's order is by how many of the others each line
@@ -186,7 +188,13 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   the short stretch (T-2060); a ribbon change along the way where the line's track comes beside
   tracks it joins at a node within half a curve's length (or leaves one edge just before) is placed
   as at that node, so the merging lines are in their places where the tracks meet (T-2059); any
-  other change is centred on it. A line alone keeps its full
+  other change is centred on it. Each line works this out on its own track, where the same change
+  can be at a node on one track and along the way on the one beside, so the changes of one ribbon
+  (by its lines) within 100 m of each other then take one placement (T-2140, `ALIGN_M`; Shinjuku's
+  Traffic view bulged where they did not): that of the line where a line joins its track, else
+  where its change is at a node, else the lowest numbered, its curve's middle at the nearest point
+  of each other line's track (within 80 m, `ALIGN_NEAR_M`), else as far from that line's own change
+  into or out of the ribbon (`?perfOff=bandsAlign`). A line alone keeps its full
   width; a line's band is drawn by knots (`BandProfile`, `bandPoints` cutting the line's segments
   at each); `?perfOff=bandsSmooth` gives T-1848's eases (80 m along the track, 30 m at a node) and
   per-ribbon order, `?perfOff=bandsOrder` the S-curves with per-ribbon order, `?perfOff=bandsPlace`
@@ -217,7 +225,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
     outside its casing, each side 0.875 px at most plus 7.5% of the line's own width (a thin local line
-    and a wide traffic line alike show it, T-1663, T-1676), in dashes a 16 px period, 60% of it drawn (`u_full_dash`); #c0392b, #f0584f in the dark theme; `fullTrack` in
+    and a wide traffic line alike show it, T-1663, T-1676), in dashes a 16 px period, 60% of it drawn (`u_full_dash`), measured along the line's run of segments on one edge so every dash has one length round curves (T-2184, `a_full.y`); #c0392b, #f0584f in the dark theme; `fullTrack` in
     `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
     its casing between and a neighbouring line's casing covers the band where they touch, with
     0.5 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
@@ -230,9 +238,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     of it from 8 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
     mixed from the casing's colour towards the red and the darkening scaled alike, so the real
     save's typical stretch (1.5 min at 08:00) shows at about 60%. Where lines sit side by side
-    the wait marks only that line's band: one line of red dashes down the band's middle, 30% of its
-    width (1 px to half), in a rim of the casing's colour (T-2133: two inside its edges read as
-    seams between bands), and the band darkens; track at
+    the wait marks only that line's band, with the same red dashes along both its sides, outside its
+    colour and as wide as a line's own, in their rim of the casing's colour, drawn after every line's
+    colour so they show over the bands beside it (T-2184, Anita: one crowding mark, "even if that
+    means it draws over nearby lines"; pass 3 of the line strokes), and the band darkens; track at
     capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
     demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
     crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
@@ -404,7 +413,9 @@ change; only links are saved. Riders change between any two stations of a comple
   by side by side without touching. Where double track narrows to single the train drifts back
   to the centre over the taper (`sampleLane`, one value a 50 m sample). A train turning back
   stands on its arrival track and steps across to the other as its next trip starts. Clicks
-  find it where it is drawn (`laneShiftM`).
+  find it where it is drawn (`laneShiftM`). A train's two ends are each shifted by the lane and
+  band there, and it faces along the line between them, so a train easing sideways with its band
+  (lines side by side) or onto its own track turns with it (T-2182).
 - **Never through the train ahead** [T-1965, `map/trainGuard.ts`]: each train is drawn from its
   own line's timetable, which can put a faster train inside a slower one on the same track (an
   edge in one direction). Each frame, for trains in or within 150 px of the view on lines that

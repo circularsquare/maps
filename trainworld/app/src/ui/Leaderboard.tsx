@@ -1,5 +1,5 @@
-// T-973: the leaderboards, a centred modal opened by the trophy on the Cities tab's World row
-// (`LeaderboardButton`). Points only (Anita, 2026-10-23): the world board, then one per city, this
+// T-973: the leaderboards, a centred modal opened by the trophy at the top of the Cities tab, beside
+// the achievements (`LeaderboardButton`, T-2179). Points only (Anita, 2026-10-23): the world board, then one per city, this
 // game's cities first and then the others that have rows. The top 50, the player's own row under
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
 // leaderboards. Each person once per board, with their best normal game (shonei-server's trainworld.go).
@@ -80,7 +80,7 @@ export function Leaderboard() {
   </Modal>;
 }
 
-/** The trophy on the World row; nothing until accounts are on. */
+/** The trophy beside the achievements; nothing until accounts are on. */
 export function LeaderboardButton() {
   if (accountState.value !== "on") return null;
   return <button class="btn icon mini lb-open" data-tip="Leaderboards" aria-label="Leaderboards"

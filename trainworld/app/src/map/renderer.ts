@@ -173,7 +173,7 @@ interface StrokeVao {
   count: number;
   /** the per-segment width multipliers, rewritten by `setLayers` */
   wmulBuf: WebGLBuffer;
-  /** per segment 1 where its track is at capacity, rewritten by `setFull` (T-819) */
+  /** per segment its traffic mark (T-819, `writeFull`) and where along its run it starts (`fullAttr`) */
   fullBuf: WebGLBuffer;
   /** the network's strokes (T-1028): each attribute's buffer and bytes a segment, in `STROKE_ATTRIBS`
    * order, for the next network to copy its unchanged runs from; and what to free with them */
@@ -188,6 +188,21 @@ function plainWmul(n: number): Float32Array {
   const v = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) v[i * 3] = 1;
   return v;
+}
+
+/** `a_full` for `n` segments (2 a segment: the traffic mark, from `marks` or 0, and the local units
+ * from the start of its run of joined segments of one line and edge to its start, which the dashes
+ * are measured along so they keep one length round curves, T-2184) */
+function fullAttr(s: { seg: Float32Array; colour: Uint32Array; edge: Uint32Array }, n: number, marks?: (i: number) => number): Float32Array {
+  const out = new Float32Array(Math.max(1, n) * 2), g = s.seg;
+  let at = 0;
+  for (let i = 0; i < n; i++) {
+    if (i > 0 && (s.colour[i] !== s.colour[i - 1] || s.edge[i] !== s.edge[i - 1] || g[i * 4] !== g[i * 4 - 2] || g[i * 4 + 1] !== g[i * 4 - 1])) at = 0;
+    if (marks) out[i * 2] = marks(i);
+    out[i * 2 + 1] = at;
+    at += Math.hypot(g[i * 4 + 2] - g[i * 4], g[i * 4 + 3] - g[i * 4 + 1]);
+  }
+  return out;
 }
 
 /** The stroke attributes a network's strokes keep on the GPU between edits (T-1028), in order. */
@@ -746,8 +761,8 @@ export class NetworkRenderer {
     this.attrib(p, "a_speed", make(speedOf, 1, 4, new Float32Array(1).fill(160)), 1, gl.FLOAT, 1);
     const wmulBuf = this.buffer(plainWmul(Math.max(1, n)), list);
     this.attrib(p, "a_wmul", wmulBuf, 3, gl.FLOAT, 1);
-    const fullBuf = this.buffer(new Float32Array(Math.max(1, n)), list);
-    this.attrib(p, "a_full", fullBuf, 1, gl.FLOAT, 1);
+    const fullBuf = this.buffer(fullAttr(s, n), list);
+    this.attrib(p, "a_full", fullBuf, 2, gl.FLOAT, 1);
     const lane = s.lane;
     const laneBuf = make(lane ? sub(lane, 2) : (_, count) => new Uint8Array(count * 2).fill(255), 2, 1, new Uint8Array(2).fill(255));
     const loc = gl.getAttribLocation(p, "a_lane");
@@ -836,9 +851,9 @@ export class NetworkRenderer {
             }
             band.wm = out;
           } else band.wm = null;
-          band.fu = fu ? Float32Array.from(f, (i) => fu[i]) : null;
+          band.fu = fullAttr(band.strokes, f.length, fu ? (k) => fu[f[k] * 2] : undefined);
           this.rewrite(band.vao.wmulBuf, band.wm ?? plainWmul(f.length));
-          this.rewrite(band.vao.fullBuf, band.fu ?? new Float32Array(f.length));
+          this.rewrite(band.vao.fullBuf, band.fu);
         }
         vao = band.vao;
         boxes = band.boxes;
@@ -910,7 +925,7 @@ export class NetworkRenderer {
     set("a_band", a[7].buf, 4, gl.SHORT, BAND_STRIDE * 2, false, true, BAND_STRIDE * 2);
     set("a_band_m", a[7].buf, 2, gl.SHORT, BAND_STRIDE * 2, false, true, BAND_STRIDE * 2, 8);
     set("a_wmul", v.wmulBuf, 3, gl.FLOAT, 12);
-    set("a_full", v.fullBuf, 1, gl.FLOAT, 4);
+    set("a_full", v.fullBuf, 2, gl.FLOAT, 8);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
@@ -1009,13 +1024,16 @@ export class NetworkRenderer {
     this.fullDrawn = drawn;
     // the shader's a_full: -1 track at capacity, else the stretch's wait (min); a WASM build without
     // waits gives the share of full trains as a wait, all of it at 75%
-    const out = new Float32Array(l.count), f = this.fullEdges, stretch = n.lines.stretch;
-    for (let i = 0; i < l.count; i++) {
-      if (f?.size && f.has(n.lines.edge[i])) { out[i] = -1; continue; }
+    const f = this.fullEdges, stretch = n.lines.stretch;
+    let any = false;
+    const out = fullAttr(n.lines, l.count, (i) => {
+      if (f?.size && f.has(n.lines.edge[i])) return (any = true), -1;
       const s = keys.size && stretch ? keys.get(n.lines.colour[i] * 4096 + stretch[i]) : undefined;
-      if (s) out[i] = Number.isNaN(s.wait) ? 15 * Math.min(1, s.share / 0.75) : s.wait;
-    }
-    this.anyFull = out.some((v) => v !== 0);
+      const v = s ? (Number.isNaN(s.wait) ? 15 * Math.min(1, s.share / 0.75) : s.wait) : 0;
+      if (v !== 0) any = true;
+      return v;
+    });
+    this.anyFull = any;
     this.rewrite(l.fullBuf, out);
     this.linesFull = out;
     this.perSegV++;
@@ -1525,7 +1543,8 @@ export class NetworkRenderer {
       };
       // [casing px, selected only, T-819's red band under the lines on full track (1), and under it (2) its outline in the casing's colour, T-1284]
       const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
-      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]);
+      // (and T-2184's red edges of bands with riders waiting, over the bands beside them, 3)
+      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]), passes.push([0, 0, 3]);
       if (sel) passes.push(...(cap > 0 ? [[0, 1, 0]] as [number, number, number][] : [[casing, 1, 0], [0, 1, 0]] as [number, number, number][]));
       for (const [cas, only, full] of passes) {
         gl.uniform1f(u.u_casing, cas);
