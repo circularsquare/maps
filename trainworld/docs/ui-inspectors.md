@@ -588,7 +588,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof),
   passing tracks (a through track with a track bowing out each side; hover "Allow faster trains to
-  pass slower trains that are stopped here", Anita's wording; only where the station is on double
+  pass slower trains that are stopped here.", Anita's wording; only where the station is on double
   track or already has them) [T-2232], passage (two platforms and a walkway) and station building (a hall round a platform,
   T-2218, below); in complex view park and ride, the waiting room, the
   passage and the station building, the first two for every station of the complex at once [T-1528]: built at all of them or

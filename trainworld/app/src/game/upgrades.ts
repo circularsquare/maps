@@ -21,7 +21,7 @@ export const UPGRADE_TEXT: UpgradeText[] = [
   { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waiting here for a train feels 20% shorter.",
     doesAll: "Waiting at any station in this complex for a train feels 20% shorter." },
   // T-2232: Anita's wording
-  { bit: UPGRADE.passing, name: "Passing tracks", does: "Allow faster trains to pass slower trains that are stopped here" },
+  { bit: UPGRADE.passing, name: "Passing tracks", does: "Allow faster trains to pass slower trains that are stopped here." },
 ];
 
 /** A passage's price (sim `upgrades::passage_price`), US$M: a base plus a rate a km of the straight line. */

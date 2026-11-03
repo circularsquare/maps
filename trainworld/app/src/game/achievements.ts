@@ -48,7 +48,7 @@ export const tierKey = (id: TieredId, tier: number) => `${id}:${tier}`;
  * the achievement's name, where "served" would repeat it. */
 export function tierText(id: TieredId, tier: number, a?: Achieved | Detail, toast = false): string {
   if (id === "cities") return toast ? `${tier} cities` : `${tier} cities served`;
-  if (id === "trips") return `${short(tier)} train trips/day`;
+  if (id === "trips") return `${short(tier)} trips/day`;
   if (id === "station") return `${short(tier)} boardings/day at ${a?.of ?? "one station"}`;
   return `${short(tier)} riders/day on ${a?.of ?? "one line"}`;
 }

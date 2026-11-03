@@ -244,7 +244,7 @@ function worldShareTip(t: ReturnType<typeof worldTotals>, where: string, note: s
   if (!t.split || !t.rides) return `Train share of the ${world}${note}`;
   const cities = `${t.cities} ${t.cities === 1 ? "city" : "cities"}`;
   return [
-    `${exact(t.rides.train)} train trips/day in ${cities}${note}`,
+    `${exact(t.rides.train)} trips/day in ${cities}${note}`,
     `Trains carry ${smallPct(t.split.train)} of ${world}`,
     splitTip(where.replace(" in the world", ` in the ${cities} with stations`), t.citySplit, t.rides, ""),
   ].join("\n");

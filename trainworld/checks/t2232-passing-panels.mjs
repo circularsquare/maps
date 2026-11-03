@@ -153,7 +153,7 @@ try {
   await page.waitForTimeout(800);
   const up = await page.evaluate(() => { const b = document.querySelector('#inspector button[aria-label="Passing tracks"]'); return b && { tip: b.dataset.tip, pressed: b.getAttribute('aria-pressed') }; });
   console.log('station upgrade', JSON.stringify(up));
-  check(!!up && up.pressed === 'true' && up.tip.startsWith('Passing tracks\nAllow faster trains to pass slower trains that are stopped here\nCosts $'), 'the station panel shows passing tracks built, with its hover');
+  check(!!up && up.pressed === 'true' && up.tip.startsWith('Passing tracks\nAllow faster trains to pass slower trains that are stopped here.\nCosts $'), 'the station panel shows passing tracks built, with its hover');
   await page.evaluate(() => { let s = document.querySelector('#inspector'); while (s && s.scrollHeight <= s.clientHeight + 1) s = s.parentElement; if (s) s.scrollTop = 0; });
   await page.locator('#inspector button[aria-label="Passing tracks"]').hover();
   await page.waitForTimeout(700);

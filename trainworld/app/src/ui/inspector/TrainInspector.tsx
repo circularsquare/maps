@@ -100,7 +100,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   return (
     <>
       <div class="h">
-        <span data-tip={`Counted ${what} by ${what} from the demand forecast: riders board at the forecast's rate until the ${what} is full`}>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
+        <span>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
       </div>
       <ul class="rows">
         <Row label="Riders on board" bold>{exact(aboard)}</Row>

@@ -24,7 +24,7 @@ import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
 import { equation, minText, num1, pctShare, roundTo, type Term } from "./tripText";
 
 const usd = (v: number) => "$" + v.toFixed(2);
-const perKm = (usdPerKm: number) => `${Math.round(100 * perDistance(usdPerKm))} cents a ${distUnit()}`;
+const perKm = (usdPerKm: number) => `${Math.round(100 * perDistance(usdPerKm))} cents per ${distUnit()}`;
 
 /** T-1148: the crossings' rows. */
 const CROSSING: Record<Crossing["kind"], { label: string; tip: (c: Crossing) => string }> = {

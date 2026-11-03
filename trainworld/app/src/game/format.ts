@@ -163,9 +163,9 @@ const perUnitText = (perKm: number) => {
   const v = +perDistance(perKm).toFixed(2);
   return "$" + (Number.isInteger(v) ? v : v.toFixed(2));
 };
-/** T-807: "$9 a train-km plus $2 a car-km", in the shown unit. */
+/** T-807: "$9 per train-km plus $2 per car-km", in the shown unit. */
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
-  return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
+  return `${perUnitText(m.runCostTrainKm)} per train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} per car-${distUnit()}`;
 }
 type UpkeepRates = { upkeepTrackKm: number; upkeepViaductKm: number; upkeepCutKm: number; upkeepBoredKm: number; upkeepStation: number; economy: number };
 /** T-867, T-1931: "$20k per km of ground track per day, $25k on a viaduct, $35k in cut and cover, $40k in a bored tunnel and $50k per station per day", at the game's economy, in the shown unit. */
@@ -203,15 +203,15 @@ export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCost
 }
 
 export const busesText = (n: number) => plural(n, "bus", "buses");
-/** T-1464: "$3 a bus-km", in the shown unit. */
-export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runCostBusKm)} a bus-${distUnit()}`;
+/** T-1464: "$3 per bus-km", in the shown unit. */
+export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runCostBusKm)} per bus-${distUnit()}`;
 /** T-1464: a route's upkeep, "$3k a km of route a day", at the game's economy. */
 export const busUpkeepRule = (m: { upkeepBusKm: number; economy: number }) => `${money(perDistance(m.upkeepBusKm * m.economy))} per ${distUnit()} of route per day`;
-/** T-1464: a route's price on Construct, "$1M a km of route". */
-export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} a ${distUnit()} of route`;
+/** T-1464: a route's price on Construct, "$1M per km of route". */
+export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} per ${distUnit()} of route`;
 export const boatsText = (n: number) => plural(n, "boat");
-/** T-2194: "$40 a boat-km", in the shown unit. */
-export const boatRunRule = (m: { runCostBoatKm: number }) => `${perUnitText(m.runCostBoatKm)} a boat-${distUnit()}`;
+/** T-2194: "$40 per boat-km", in the shown unit. */
+export const boatRunRule = (m: { runCostBoatKm: number }) => `${perUnitText(m.runCostBoatKm)} per boat-${distUnit()}`;
 
 /** Mile, and the metres a ruler marking it stands for (the placing rings). */
 export const unitMetres = () => (us() ? M_PER_MILE : 1000);
