@@ -306,7 +306,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))), ...ferryOf(n, spans.map(([l]) => l)) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
 }
 
@@ -342,6 +342,12 @@ function fareWOf(n: DemandNetwork, nodeGlobal: Uint32Array): { fareW?: Float32Ar
   if (!n.fareW) return {};
   const w = Float32Array.from(nodeGlobal, (r) => n.fareW![r]);
   return w.some((v) => v !== 1) ? { fareW: w } : {};
+}
+
+/** T-2196: the whole network's ferry flags for `lines`, where any of them is a ferry. */
+function ferryOf(n: DemandNetwork, lines: number[]): { ferry?: Uint8Array } {
+  if (!n.ferry || !lines.some((l) => n.ferry![l])) return {};
+  return { ferry: Uint8Array.from(lines, (l) => n.ferry![l]) };
 }
 
 /** T-842: the whole network's span for the route nodes `nodeGlobal` names, period by period. */
@@ -388,10 +394,10 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const span = spanOf(n, nodeGlobal);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.transfer ? `|x${n.fare.transfer}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.ferry ? [net.ferry] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   const levelSig = [0, 1, 2].map((lev) => {

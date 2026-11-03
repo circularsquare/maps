@@ -295,7 +295,8 @@ at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The playe
 the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's and a Ferry fare row in the Money tab. In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base
-times the Ferry multiple, and trips by ferry are the network's.
+times the Ferry multiple, and trips by ferry are the network's. A tenth of visits and attractions
+trips are ferry fans, for whom each minute aboard a ferry counts 0.1 (T-2196, docs/demand-mode.md).
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7

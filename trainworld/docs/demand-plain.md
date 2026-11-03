@@ -249,6 +249,12 @@ There is no extra boarding cost as for a bus. A boat holds two cars' riders, 480
 the ferry is the quickest way across (Staten Island to Manhattan) it wins on these rules alone, and
 its trips count as rail.
 
+Ferry fans (since T-2196): a tenth of the people making a visit or going to an attraction find
+ferries fun, so for them an hour aboard a ferry feels like 6 minutes. Everything else (the walk, the
+wait, the fare, changes, crowding) counts as for anyone, and they still pick between the network and
+the car as anyone does. Commutes, errands, school and the rest have no fans. Fans make no new trips:
+they only move leisure trips that already go between the places a ferry links.
+
 ## Anita's two tests
 
 Both ask what rail could carry if a straight train ran between every pair of places. Walking

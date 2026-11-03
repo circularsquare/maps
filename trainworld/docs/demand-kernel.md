@@ -139,7 +139,10 @@ levels:
    station does, step 2), joined to stations near them in complexes, its hop times the boats' run
    with their acceleration. A boat is 2 cars (`BOAT_DEMAND_CARS`; 88 seats, 320 rated, 480 at crush,
    the track sim's `BOAT_CRUSH`), so it is no bus line and pays no boarding cost. Its route nodes
-   charge the Ferry multiplier (`Fares.ferry`) as a high-speed line's charge theirs.
+   charge the Ferry multiplier (`Fares.ferry`) as a high-speed line's charge theirs. The ferry fans
+   (T-2196, [demand-mode.md](demand-mode.md) "Ferry fans") compose their costs from these tables
+   through the ports, with no search of their own; the everyday layer is told which lines are
+   ferries (`EverydayApi.set_ferry`, `DemandNetwork.ferry`).
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it improves expected trip cost;

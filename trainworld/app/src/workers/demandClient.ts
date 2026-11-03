@@ -502,6 +502,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     fare: svc.fare,
     hopKm: new Float32Array(2 * nStops),
     span: lines.some((l) => l.span) ? new Float32Array(PERIODS.length * 2 * nStops).fill(1) : new Float32Array(0),
+    // T-2196: the ferry fans' lines, only where there are any (`?perfOff=fans`: no fans, for timing)
+    ...(lines.some((l) => l.ferry) && !perfOff("fans") ? { ferry: Uint8Array.from(lines, (l) => (l.ferry ? 1 : 0)) } : {}),
   };
   // T-1626, T-2195: a high-speed or ferry line's route nodes charge its multiplier, only where one is not 1
   const muls = lines.map((l) => lineFareMul(l, svc.fare));

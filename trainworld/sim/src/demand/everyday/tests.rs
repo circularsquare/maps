@@ -2,12 +2,16 @@ use super::*;
 use crate::demand::lod::Sampling;
 use crate::demand::network::{route_nodes, RealNet};
 fn fixture(distance: f32) -> (String, Vec<u8>) {
+    fixture_of(distance, 100.0)
+}
+/// `fixture` with this many residents (a thousand draw social samples, `sample_count`).
+fn fixture_of(distance: f32, residents: f32) -> (String, Vec<u8>) {
     let city = pack::City {
         name: "test".into(),
         h3: vec![1, 2],
         x: vec![0.0, distance],
         y: vec![0.0, 0.0],
-        pop: vec![100.0, 0.0],
+        pop: vec![residents, 0.0],
         jobs: vec![0.0, 100.0],
         region: vec![], gravity: None,
     };
@@ -1018,5 +1022,135 @@ fn every_pack_everyday() {
         println!("  {city} airport: pack {input:.0} outings a day, kept {:.0}", a.totals.get(AIRPORT).copied().unwrap_or(0.0));
         // six since T-142's airports and medical visits (Springfield's airport slot is empty)
         assert_eq!(a.purpose_count(), 6, "{city}");
+    }
+}
+
+fn bits(v: &[f32]) -> Vec<u32> {
+    v.iter().map(|x| x.to_bits()).collect()
+}
+
+/// T-2196: on a line that is a ferry its fans ride it more: visits up, errands as before to the
+/// bit; a network with no ferry (no flags, or all 0) as before to the bit, free flow and crowded.
+#[test]
+fn ferry_fans_ride_visits_only() {
+    CHECK_LANES.with(|c| c.set(true));
+    let (h, b) = fixture_of(4000.0, 1000.0);
+    let solve = |ferry: &[u8], crowd: bool| {
+        let mut a = EverydayApi::new(&h, &b).unwrap();
+        network(&mut a, 4000.0, [12.0; 3]);
+        a.set_ferry(ferry).unwrap();
+        for q in 0..5 {
+            assert!(a.solve(q));
+            if crowd {
+                let shared: Vec<_> = a.seg(q).iter().map(|v| v * 2000.0).collect();
+                assert!(a.crowd_with_external(q, &shared));
+            }
+        }
+        a
+    };
+    assert!(EverydayApi::new(&h, &b).map(|mut a| { network(&mut a, 4000.0, [12.0; 3]); a.set_ferry(&[1, 0]).is_err() }).unwrap());
+    for crowd in [false, true] {
+        let (plain, zero, fans) = (solve(&[], crowd), solve(&[0], crowd), solve(&[1], crowd));
+        let nr = plain.seg(0).len();
+        for q in 0..5 {
+            assert_eq!(bits(&plain.part_loads(q)), bits(&zero.part_loads(q)));
+            // (4 is the solve's ms)
+            let (x, y) = (plain.summary(q), zero.summary(q));
+            assert_eq!((&x[..4], &x[5..]), (&y[..4], &y[5..]));
+            let (a, f) = (plain.part_loads(q), fans.part_loads(q));
+            if !crowd {
+                assert_eq!(bits(&a[..3 * nr]), bits(&f[..3 * nr]), "period {q}: errands");
+            }
+            let visits = |v: &[f32]| v[3 * nr..4 * nr].iter().sum::<f32>();
+            assert!(visits(&f) > visits(&a), "period {q}: visits {} against {}", visits(&f), visits(&a));
+            assert!(fans.summary(q)[2] > plain.summary(q)[2]);
+        }
+    }
+}
+
+/// T-2196: fans ride a ferry with trains to and from its ports: the ride is on the ferry's route
+/// nodes, a trip is one entry and one exit however it changes, and the purposes add up.
+#[test]
+fn ferry_fans_change_to_and_from_the_ferry() {
+    CHECK_LANES.with(|c| c.set(true));
+    let (h, b) = fixture_of(8000.0, 1000.0);
+    let solve = |ferry: &[u8]| {
+        let mut a = EverydayApi::new(&h, &b).unwrap();
+        // a train to a port 1.5 km out, a ferry 5 km on (20 minutes), a train on from its other port
+        let line = |t: f32| [t, 0.0, t, 0.0, t, 0.0, 0.0, t, 0.0, t, 0.0, t];
+        let times: Vec<f32> = [line(120.0), line(1200.0), line(120.0)].concat();
+        a.set_network(&[0.0, 0.0, 1500.0, 0.0, 6500.0, 0.0, 8000.0, 0.0], &[2, 2, 2], &[0, 1, 1, 2, 2, 3], &times, &[12.0; 9], &[4.0, 2.0, 4.0]).unwrap();
+        a.set_fares(1.0, 0.1, &[1.5, 0.0, 0.0, 1.5, 5.0, 0.0, 0.0, 5.0, 1.5, 0.0, 0.0, 1.5]).unwrap();
+        a.set_ferry(ferry).unwrap();
+        for q in 0..5 {
+            assert!(a.solve(q));
+        }
+        a
+    };
+    let (plain, fans) = (solve(&[]), solve(&[0, 1, 0]));
+    let nr = plain.seg(0).len();
+    let (mut rode, mut legs) = (false, false);
+    for q in 0..5 {
+        let (a, f) = (plain.part_loads(q), fans.part_loads(q));
+        assert_eq!(bits(&a[..3 * nr]), bits(&f[..3 * nr]), "period {q}: errands");
+        // the ferry's route nodes are 4..8
+        let ferry = |v: &[f32]| v[3 * nr + 4] + v[3 * nr + 6];
+        rode |= ferry(&f) > ferry(&a) * 1.05;
+        legs |= f[3 * nr] > a[3 * nr] && f[3 * nr + 8] > a[3 * nr + 8];
+        for a in [&plain, &fans] {
+            let entries: f32 = a.entries(q).iter().sum();
+            let rail = a.summary(q)[2] as f32;
+            assert!((entries - rail).abs() <= 1e-3 * rail.max(1.0), "period {q}: entries {entries} against rail trips {rail}");
+            let whole = a.seg(q);
+            let parts = a.part_loads(q);
+            for r in 0..nr {
+                let sum: f32 = (0..a.purpose_count() as usize).map(|k| parts[3 * k * nr + r]).sum();
+                assert!((sum - whole[r]).abs() <= 1e-4 * whole[r].max(1.0));
+            }
+        }
+        // the fans' trains to the port and from the other one carry them
+        assert!(f[3 * nr] >= a[3 * nr] && f[3 * nr + 8] >= a[3 * nr + 8]);
+    }
+    assert!(rode && legs, "the fans ride the ferry, and the trains to and from it");
+}
+
+/// T-2196: the ferry fans' cost on the real New York pack and network, the shortest lines taken as
+/// ferries (about as many ports as five harbour lines; a subway line at the fans' weight is a worst
+/// case, cheaper for them than nearly anything). `cargo test --release --features demand
+/// ferry_fans_real_cost -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn ferry_fans_real_cost() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let (h, b) = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
+    let (RealNet { st_xy, line_n, stops, times, tph, cars }, _) = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json"));
+    let hop_km = route_nodes(&st_xy, &line_n, &stops).2;
+    let mut order: Vec<usize> = (0..line_n.len()).collect();
+    order.sort_by_key(|&l| line_n[l]);
+    let mut ferry = vec![0u8; line_n.len()];
+    let mut ports = 0;
+    for &l in &order {
+        if ports >= 18 {
+            break;
+        }
+        ferry[l] = 1;
+        ports += line_n[l];
+    }
+    for flags in [vec![], ferry] {
+        let mut a = EverydayApi::new(&h, &b).unwrap();
+        a.set_network(&st_xy, &line_n, &stops, &times, &tph, &cars).unwrap();
+        a.set_fares(2.9, 0.1, &hop_km).unwrap();
+        a.set_ferry(&flags).unwrap();
+        let mut ms = 0.0;
+        let mut rail = 0.0;
+        for q in 0..5 {
+            let t = now_ms();
+            a.solve(q);
+            let total: Vec<f32> = a.seg(q).iter().map(|v| v * 3.0).collect();
+            a.crowd_with_external(q, &total);
+            ms += now_ms() - t;
+            rail += a.summary(q)[2];
+        }
+        println!("ferry lines {}: five periods, free flow and a round, {ms:.0} ms; rail {rail:.0}", flags.iter().filter(|&&f| f == 1).count());
     }
 }
