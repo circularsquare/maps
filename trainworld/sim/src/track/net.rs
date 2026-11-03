@@ -303,6 +303,20 @@ pub enum Issue {
     HighSpeed { edge: u32 },
     /// Construct with nothing left to construct (T-849).
     NothingToConstruct,
+    /// A station building (T-2217, `building.rs`) with fewer than 3 or more than 24 corners, two
+    /// corners in one place, or one outside the world.
+    BuildingCorners,
+    /// Two of a building's edges cross.
+    BuildingEdgesCross,
+    /// Two of a building's corners further apart than `building::REACH_M`.
+    BuildingTooWide,
+    /// Less floor than `building::MIN_M2`.
+    BuildingTooSmall,
+    /// A building over another one.
+    BuildingOverlap { building: u32 },
+    /// No constructed station's platform touches the building.
+    BuildingNoStation,
+    NoSuchBuilding { building: u32 },
     /// Track drawn from a station has no room past the platform for its junction (T-1155): a
     /// junction, a station or a crossover is in the way.
     BranchNoRoom { node: u32 },
@@ -447,6 +461,9 @@ pub struct Network {
     /// Not part of the undo history (a setting, like fares); a pair whose node is no longer a
     /// station is ignored (`links_live`) and not saved.
     pub links: Vec<[u32; 2]>,
+    /// The station buildings (T-2217, `building.rs`) by id, None where one was removed. Outside the
+    /// undo history, like the links; saved in `BLD1`, renumbered densely.
+    pub buildings: Vec<Option<super::building::Building>>,
 
     pub crossings: Vec<Crossing>,
     pub grid: Grid,
@@ -715,6 +732,7 @@ impl Network {
             stops: Pool::default(),
             paths: Pool::default(),
             links: vec![],
+            buildings: vec![],
             crossings: vec![],
             grid: Grid::default(),
             edge_lines_off: vec![0],
@@ -2192,7 +2210,7 @@ impl Network {
                 }
             }
         }
-        c + self.passages_cost(false) + self.bus_cost(false)
+        c + self.passages_cost(false) + self.bus_cost(false) + super::building::value(self)
     }
 
     /// `(total_cost(), built_cost())` in one pass: the same sums in the same order, so equal to the
@@ -2246,12 +2264,14 @@ impl Network {
                 }
             }
         }
-        (t + self.passages_cost(false) + self.bus_cost(false), b + self.passages_cost(true) + self.bus_cost(true))
+        let halls = super::building::value(self);
+        (t + self.passages_cost(false) + self.bus_cost(false) + halls, b + self.passages_cost(true) + self.bus_cost(true) + halls)
     }
 
     /// Build cost of what is constructed, US$M (SPEC 6.4): constructed edges and stations, a
     /// junction once three of its edge ends are constructed, a flat crossing once both its edges
-    /// are, a passage once both its stations are. `total_cost() - built_cost()` is what the
+    /// are, a passage once both its stations are, station buildings always (T-2217).
+    /// `total_cost() - built_cost()` is what the
     /// blueprint would cost to construct.
     pub fn built_cost(&self) -> f64 {
         let mut c = 0.0;
@@ -2280,7 +2300,7 @@ impl Network {
                 }
             }
         }
-        c + self.passages_cost(true) + self.bus_cost(true)
+        c + self.passages_cost(true) + self.bus_cost(true) + super::building::value(self)
     }
 
     /// Ground metres between two nodes in a straight line: a passage's length (T-1281).

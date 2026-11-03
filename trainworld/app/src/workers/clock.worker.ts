@@ -31,6 +31,7 @@ import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from 
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
+import { buildingsFrom, withBuildingLinks } from "../game/buildings";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
@@ -1420,6 +1421,7 @@ function buildState(): ClockState {
     nodes,
     lines,
     links: Array.from(a.station_links()),
+    buildings: buildingsOf(a),
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
@@ -2831,7 +2833,13 @@ function stationGeo(a: TrackApi, ni: ArrayLike<number>, i: number): StationGeo {
   const line = platformLineOf(a, ni[i], ni[i + 1], ni[i + 2], ni[i + 7]);
   return { id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7], ...(line ? { line } : {}) };
 }
-function complexesOf(builder: ComplexBuilder, geo: StationGeo[], links: [string, string][]): Complexes {
+/** T-2217: the station buildings as the track model lists them */
+function buildingsOf(a: TrackApi) {
+  return buildingsFrom(a.buildings_info(), (id) => a.building_name(id));
+}
+/** The complexes of `geo` with the player's `links` and the station buildings' members (T-2217). */
+function complexesOf(builder: ComplexBuilder, geo: StationGeo[], playerLinks: [string, string][]): Complexes {
+  const links = withBuildingLinks(playerLinks, buildingsOf(api!), geo, groundK);
   if (patchMode === "0") return buildComplexes(geo, links, groundK);
   const cx = builder.update(geo, links, groundK, frame.kind);
   if (patchMode === "check") {

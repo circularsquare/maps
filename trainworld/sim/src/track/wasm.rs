@@ -83,6 +83,9 @@ pub struct TrackApi {
     route_junctions: Vec<[f64; 2]>,
     /// What the last station trial added to the blueprint, US$M (`station_cost`).
     station_cost: f64,
+    /// The building the last `add_building` made (`u32::MAX` if none) and what the last add or
+    /// reshape paid, US$M (T-2217).
+    building_last: (u32, f64),
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
@@ -294,6 +297,7 @@ impl TrackApi {
             preview_marks: vec![],
             route_junctions: vec![],
             station_cost: 0.0,
+            building_last: (u32::MAX, 0.0),
             rasters: vec![],
             world_water: None,
             preview_ground: [0.0; 7],
@@ -380,7 +384,7 @@ impl TrackApi {
     /// reinterpreted, only converted (`convert_save_frame`).
     pub fn set_empty_frame(&mut self, kind: u8) -> bool {
         let n = &self.w.net;
-        if (0..n.node_count() as u32).any(|i| n.node_ok(i)) || (0..n.line_count() as u32).any(|l| n.line_ok(l)) {
+        if (0..n.node_count() as u32).any(|i| n.node_ok(i)) || (0..n.line_count() as u32).any(|l| n.line_ok(l)) || n.buildings.iter().any(Option::is_some) {
             return false;
         }
         let Some(kind) = FrameKind::from_u8(kind) else { return false };
@@ -654,6 +658,7 @@ mod upgrades;
 mod related;
 mod bus;
 mod ferry;
+mod buildings;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {

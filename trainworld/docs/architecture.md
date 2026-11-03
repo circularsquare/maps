@@ -357,7 +357,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   settle left circling [T-1787], without which a load settles in full, and `LGR1` line groups
   (each grouped line's index and group number, then each named group's number and name) [T-1791],
   `LGL1` group bullets set by hand (group number, text, colour + 1 or 0) and `LOR1` the Lines and
-  Stations tabs' hand order (line indices, then node indices, first first) [T-1813];
+  Stations tabs' hand order (line indices, then node indices, first first) [T-1813], `LPH1` the
+  lines' departure phases [T-1925] and last `BLD1` the station buildings (count, then per building
+  its name, corner count and corners as mm deltas from the previous) [T-2217];
   a save without one loads with none. While a line's trains change over after a service
   edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
   (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops

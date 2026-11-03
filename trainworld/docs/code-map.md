@@ -12,7 +12,7 @@ tests natively.
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity (passing tracks' overtakes beside the following losses: `overtake.rs`,
   T-2231), the boarding account (`boarding.rs`: each train's load and each
-  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
+  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), station buildings (`building.rs`: outlines, their members and refusals, T-2217; `wasm/buildings.rs` adds, reshapes, renames and removes them), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`), `crossings.rs`, `links.rs`,
   `lines.rs` (the gap a stop cannot cross: `gap.rs`, T-1896), `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
@@ -97,7 +97,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
-  links, T-146), `complexBuilder.ts` (`ComplexBuilder`: the same complexes kept up to date from the
+  links, T-146), `buildings.ts` (station buildings' members, the stations whose platform touches
+  the outline, and the pairs that join them into one complex, T-2217), `complexBuilder.ts` (`ComplexBuilder`: the same complexes kept up to date from the
   stations that changed, the world's in `complexView.ts` and the clock worker's snapshot in
   `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
@@ -322,7 +323,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks, the layout's guess and the room snap; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `save_net.py <save> <out>` (a game save's network bytes
   for Rust tests on a real save, given as `T1895_NET`: T-1895's ignored `beside_sweep_real_save`
   counts drawing-beside previews that cross the track followed, by start kind), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t1964-station-joints <url>` (browser: the station tool on every plain joint of two routes drawn as the track tool draws, about a minute), `t144-check` (station geometry, line
-  widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1419-carry` (an edited line's riders carried onto its new stops), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
+  widths), `t145-check` (the route preview contract), `t146-check` (complexes, station buildings joining them), `t2217-buildings` (station buildings in the track model on the real save: price, members agreeing with game/buildings.ts, the save), `t1419-carry` (an edited line's riders carried onto its new stops), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
   `t149-worker-check` (the real demand worker in Node over New York, Philadelphia and Boston, a few

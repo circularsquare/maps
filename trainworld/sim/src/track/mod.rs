@@ -5,6 +5,7 @@
 //! - `geom`: PIs to arcs and straights, heights and ramps, positions, sampling.
 //! - `frame`: the world frames, planar metres to and from longitude and latitude (T-125).
 //! - `bridge`: a ground-level segment across water becomes a bridge with ramps on land (T-656).
+//! - `building`: station buildings (T-2217): outlines round stations, their members and refusals.
 //! - `bus`: bus lines (T-1464): a drawn route with no track, its stops and its trip.
 //! - `ferry`: ferry lines (T-2193): ports, a route on water the app searched, the boats' trip.
 //! - `cost`: build costs and the water mask interface.
@@ -34,6 +35,7 @@
 pub mod bench;
 pub mod boarding;
 pub mod bridge;
+pub mod building;
 pub mod bus;
 pub mod capacity;
 pub mod cost;

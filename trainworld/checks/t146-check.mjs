@@ -2,8 +2,8 @@
 // Station complexes (T-146): grouping by platform gap and the demand-merge rule.
 import assert from 'node:assert/strict';
 import {loadApp} from './lib.mjs';
-const {buildComplexes,membersOf,segmentGap,PLATFORM_GAP_M,DEMAND_MERGE_M}=await loadApp(`
- export * from '@app/src/game/complexes.ts';`);
+const {buildComplexes,membersOf,segmentGap,PLATFORM_GAP_M,DEMAND_MERGE_M,buildingLinks,buildingMembers}=await loadApp(`
+ export * from '@app/src/game/complexes.ts'; export * from '@app/src/game/buildings.ts';`);
 const near=(a,b,m='')=>assert.ok(Math.abs(a-b)<1e-6,`${m} ${a} != ${b}`);
 assert.equal(PLATFORM_GAP_M,50);assert.equal(DEMAND_MERGE_M,100);
 
@@ -55,5 +55,16 @@ assert.deepEqual(groups(buildComplexes(far,[['2','3']])),['1,2,3','4'],'a link j
 assert.deepEqual(groups(buildComplexes(far,[['3','9']])),['1,2','3','4'],'a link to a missing station');
 assert.deepEqual(groups(buildComplexes(far,[['1','2']])),['1,2','3','4'],'a link inside a complex');
 assert.deepEqual(groups(buildComplexes(far,[['4','3'],['2','3']])),['1,2,3,4'],'chained links');
+// T-2217: a station building joins every station whose platform touches it (inside, or within 8 m of
+// its outline): 1,2 and 3 (5 m inside the right edge, half of it past the top) become one complex; 5,
+// 7 m past the top, joins; 6, 9 m past the bottom, does not
+const hall=(...c)=>[{id:0,name:'Hall',corners:c}];
+const site=[...far,S('5',200,92,0,100),S('6',200,-129,0,100)];
+const box=hall(-120,-120, 405,-120, 405,85, -120,85);
+assert.deepEqual(buildingMembers(box,site),[['1','2','3','5']]);
+assert.deepEqual(groups(buildComplexes(site)),['1,2','3','4','5','6'],'apart before');
+assert.deepEqual(groups(buildComplexes(site,buildingLinks(box,site))),['1,2,3,5','4','6'],'a building joins complexes');
+assert.deepEqual(groups(buildComplexes(site,[['4','6'],...buildingLinks(box,site)])),['1,2,3,5','4,6'],'with the player\'s links');
+assert.deepEqual(buildingMembers(hall(1000,-50, 1100,-50, 1100,50, 1000,50),site),[[]],'an empty building');
 
 console.log('t146 ok');

@@ -383,7 +383,23 @@ Full design, numbers and sources: `notes/T-008.md`.
   apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
   `Network::links`, not in the undo history; links from older saves are passages, never charged).
   Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
-  through a passage along the straight line at 2 m/s.
+  through a passage along the straight line at 2 m/s. A **station building** joins stations too
+  (below).
+- **Station buildings** (T-2217, `track/building.rs`, `wasm/buildings.rs`, `game/buildings.ts`;
+  design notes/T-2208.md 3): an outline of 3 to 24 corners the player draws round stations. Its
+  members are every station whose platform touches it, at any level, constructed or not: the
+  platform's centre line (as the complexes see it) inside the outline or within 8 m of an edge
+  (half a drawn box's width). Worked out again whenever stations or outlines change, never saved;
+  a building joins its members into one complex as a passage would, at the plain change pace.
+  US$2,000 a m² of floor, paid at once, no upkeep, counted in the built value; a new outline pays
+  for the floor the old one did not cover and refunds nothing for floor given up; removing it
+  refunds nothing. Not in the undo history (`Network::buildings`, saved in a trailing `BLD1` block
+  after `LFR1`, save level 4, only when there are any, so a save without buildings is as before). Refused
+  (`Building*` issues): fewer than 3 or more than 24 corners or two in one place
+  (`BuildingCorners`), edges that cross (`BuildingEdgesCross`), two corners more than 1 km apart
+  (`BuildingTooWide`), under 1,000 m² (`BuildingTooSmall`), more than 1 m² over another building
+  (`BuildingOverlap`), no constructed station touching it (`BuildingNoStation`). Over water and
+  other track is fine. A station removed leaves its building standing, empty.
 - **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
   panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
   it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is

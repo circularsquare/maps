@@ -24,6 +24,7 @@ use super::params::*;
 /// trains to the bit, and the lines the settle left circling; without it a load settles in full.
 /// A trailing `LFR1` block (T-2193) makes stations ports (their berths) and gives the ferry lines
 /// their routes; without it there are none.
+/// A trailing `BLD1` block (T-2217) carries the station buildings; without it there are none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -36,12 +37,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 12] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1"];
+pub const BLOCKS: [&[u8; 4]; 13] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"BLD1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 3;
+pub const LEVEL: u32 = 4;
 
 struct W(Vec<u8>);
 impl W {
@@ -373,6 +374,23 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-2217: the station buildings, after LFR1 and only when there are any: count, then per building
+    // its name, corner count and corners as mm deltas from the previous (the first from 0, 0)
+    let halls: Vec<&super::building::Building> = net.buildings.iter().flatten().collect();
+    if !halls.is_empty() {
+        w.0.extend_from_slice(b"BLD1");
+        w.u(halls.len() as u64);
+        for b in halls {
+            w.s(&b.name);
+            w.u(b.corners.len() as u64);
+            let (mut px, mut py) = (0.0, 0.0);
+            for p in &b.corners {
+                w.mm(p[0] - px);
+                w.mm(p[1] - py);
+                (px, py) = (p[0], p[1]);
+            }
+        }
+    }
     w.0
 }
 
@@ -434,6 +452,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
     }
     out.next_line_number = net.next_line_number;
     out.links = net.links.clone();
+    out.buildings = net.buildings.iter().map(|b| b.as_ref().map(|b| super::building::Building { name: b.name.clone(), corners: b.corners.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect() })).collect();
     Ok(encode(&out))
 }
 
@@ -668,6 +687,20 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines { net.line_ferry[i] = Some(super::ferry::FerryRoute::new(points, kinds, v, built)); }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"BLD1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let name = r.s()?;
+            let (mut px, mut py) = (0.0, 0.0);
+            let mut corners = vec![];
+            for _ in 0..r.u()? {
+                let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+                (px, py) = (x, y);
+                corners.push([x, y]);
+            }
+            net.buildings.push(Some(super::building::Building { name, corners }));
+        }
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -761,6 +794,25 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (3, 12), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (4, 13), "a new block raises LEVEL: raise it, then update this pin");
+    }
+
+    /// T-2217: buildings come back as they were, in their order; a network without them encodes as
+    /// it did before the block existed (it ends where `sample` always ended).
+    #[test]
+    fn buildings_round_trip_and_leave_a_network_without_them_as_it_was() {
+        let bytes = sample();
+        let mut net = decode(&bytes).unwrap();
+        assert!(net.buildings.is_empty());
+        assert_eq!(encode(&net), bytes, "no buildings: not a byte more");
+        let hall = |name: &str, x: f64| super::super::building::Building { name: name.into(), corners: vec![[x, -40.0], [x + 300.0, -40.0], [x + 300.0, 40.5], [quant(x + 0.001), 40.0]] };
+        net.buildings = vec![Some(hall("West", -150.0)), None, Some(hall("East ✓", 850.0))];
+        let with = encode(&net);
+        assert_eq!(&with[..bytes.len()], &bytes[..], "the block only follows what was there");
+        assert_eq!(&with[bytes.len()..bytes.len() + 4], b"BLD1");
+        let (back, unread) = decode_read(&with).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!(back.buildings, vec![Some(hall("West", -150.0)), Some(hall("East ✓", 850.0))], "renumbered densely");
+        assert_eq!(encode(&back), with);
     }
 }

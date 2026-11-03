@@ -8,7 +8,7 @@
 // model's frame); what the renderer draws comes back in local units (map/geo.ts). Money in
 // messages is US$M, as in the track model.
 
-import type { EdgeId, Level, NodeId } from "../game/types";
+import type { BuildingInput, EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { Loan } from "../game/loan";
 import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
@@ -551,6 +551,8 @@ export interface ClockState {
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
+  /** the station buildings (T-2217, game/buildings.ts) */
+  buildings?: BuildingInput[];
   /** the clock worker only: each node's station complex (0xffffffff none), for drawing one waiting
    * room and car park per complex (T-1528) */
   complexOf?: Uint32Array;

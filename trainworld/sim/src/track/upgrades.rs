@@ -39,6 +39,14 @@ pub fn passage_price(m: f64) -> f64 {
     PASSAGE_BASE + PASSAGE_PER_KM * m / 1000.0
 }
 
+/// A station building (T-2217, `building.rs`): US$2,000 a m² of floor, paid at once, no upkeep.
+pub const BUILDING_PER_M2: f64 = 0.002;
+
+/// A station building's price, US$M, for `m2` of floor.
+pub fn building_price(m2: f64) -> f64 {
+    BUILDING_PER_M2 * m2
+}
+
 /// Sidings a terminal turns trains in, pooled.
 pub const TERMINAL_SIDINGS: f64 = 2.0;
 /// The reversing-partway limiter's hold per train at a station with a terminal: 30 an hour a side.

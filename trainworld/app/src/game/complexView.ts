@@ -6,6 +6,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { buildComplexes, membersOf, type Complexes } from "./complexes";
 import { ComplexBuilder } from "./complexBuilder";
+import { withBuildingLinks } from "./buildings";
 import { PATCH_MODE } from "./patchMode";
 import type { StationId, StationInput } from "./types";
 import { selection } from "./ui";
@@ -30,7 +31,8 @@ const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s)
  * no link (T-197) was made or undone. */
 export const complexes = computed<Complexes>(() => {
   const st = world.value?.save.stations ?? [];
-  const links = world.value?.save.links ?? [];
+  // T-2217: a station building joins its members as a link would
+  const links = withBuildingLinks(world.value?.save.links ?? [], world.value?.save.buildings, st, groundScale);
   if (PATCH_MODE === "0") {
     const k = keyOf(st) + "/" + links.join("|");
     if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, links, groundScale); }
@@ -41,13 +43,13 @@ export const complexes = computed<Complexes>(() => {
   return out;
 });
 
-/** The stations the distance rule groups, the player's links left out: zoomed out each station is
- * its own dot, and each group's dots are joined by the shortest set of connectors, each link by one
- * more between its two stations' dots (T-313, map/renderer.ts `syncGroups`). The same object while
- * no station moved, appeared or changed length. */
+/** The stations the distance rule groups, the player's links and buildings left out: zoomed out each
+ * station is its own dot, and each group's dots are joined by the shortest set of connectors, each
+ * link by one more between its two stations' dots (T-313, map/renderer.ts `syncGroups`). The same
+ * object while no station moved, appeared or changed length. */
 export const dotGroups = computed(() => {
-  // with no links the two are the same grouping: built once (T-496)
-  if (!(world.value?.save.links ?? []).length) return complexes.value;
+  // with no links or buildings the two are the same grouping: built once (T-496)
+  if (!(world.value?.save.links ?? []).length && !world.value?.save.buildings?.length) return complexes.value;
   const st = world.value?.save.stations ?? [];
   if (PATCH_MODE === "0") {
     const k = keyOf(st);

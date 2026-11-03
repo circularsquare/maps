@@ -133,6 +133,16 @@ export interface Save {
   lines: LineInput[];
   /** stations the player linked into one complex (T-197), each pair once */
   links: [StationId, StationId][];
+  /** the station buildings (T-2217, game/buildings.ts) */
+  buildings?: BuildingInput[];
+}
+
+/** A station building as the track model lists it (T-2217, `TrackApi.buildings_info`). */
+export interface BuildingInput {
+  id: number;
+  name: string;
+  /** corners, x, y pairs, world units, in the order drawn */
+  corners: number[];
 }
 
 // ---------- results from the workers ----------
