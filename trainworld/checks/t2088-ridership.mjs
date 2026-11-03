@@ -1,6 +1,8 @@
 // T-2088: a standing check of demand on real networks against real ridership. Information, never a
 // target (CLAUDE.md "Demand is simple on purpose"): a city outside 0.5-2x of the table is a NOTE, not a FAIL.
 //   node trainworld/checks/t2088-ridership.mjs [url] [city ...]     (from the maps root)
+// `jpn7` as a city name (or osa ngo fuk spk hij tyo7 sdj7) runs the jpn7 save instead, T-2093: see "the jpn7 run" below.
+// It takes about 15-25 minutes and 2.5 GB a worker; the seven-city run is unchanged.
 // Each `data/packs/real/<id>.save` (nyc lon par tyo seo tor sdj; name some to run fewer) is imported into
 // a `?new=1&opened=all&demandWorkers=2&paused=1` game, waited to the weekday's demand final, and read:
 // the rail trips a weekday (`view.railTripsPerDay`, a journey counted once), the stations, the network's
@@ -64,10 +66,94 @@ const CITIES = {
   sdj: { csvCity: 'Sendai', metroRow: null, metro: re(/南北線|東西線/) },
 };
 
+// ---- T-2093: the cities of the jpn7 save (all Japan's lines cut to the seven Japanese city packs)
+// They have no save of their own, and the CSV's Japanese rows are MLIT S12 station sums inside a circle round the
+// city's main station. So one jpn7 run is read station by station and each city's stations inside the same circle
+// (same centre, same radius, haversine on the stations' lng/lat) are summed, then set against the CSV rows. The
+// game's "entries" at a station are its boardings minus the riders changing line there (a journey once, as
+// railTripsPerDay is); S12's are each operator's gate entries, so a change between operators counts twice in S12 and
+// the ratio is a floor, as Tokyo's is. "boardings" counts every change too, the ceiling. S12 is an average day (all
+// seven days): the table's main column is the weekday like the other cities, and the average day's is beside it.
+// `tyo7` and `sdj7` are Tokyo and Sendai read out of the same run, to compare with their own saves' rows.
+const JPN7_SAVE = 'trainworld/data/work/realnet/jpn7_real.save';
+const JPN = {
+  osa: { csvCity: 'Osaka', circle: { lng: 135.4959, lat: 34.7025, km: 40 } },
+  ngo: { csvCity: 'Nagoya', circle: { lng: 136.8815, lat: 35.1709, km: 30 } },
+  fuk: { csvCity: 'Fukuoka', circle: { lng: 130.4208, lat: 33.5902, km: 20 } },
+  spk: { csvCity: 'Sapporo', circle: { lng: 141.3508, lat: 43.0687, km: 20 } },
+  hij: { csvCity: 'Hiroshima', circle: { lng: 132.4753, lat: 34.3976, km: 20 } },
+  tyo7: { csvCity: 'Tokyo', circle: { lng: 139.7671, lat: 35.6812, km: 50 } },
+  sdj7: { csvCity: 'Sendai', circle: { lng: 140.8819, lat: 38.2601, km: 20 } },
+};
+const S12_FILE = 'riders/japanriders/data/S12-22/UTF-8/S12-22_NumberOfPassengers.geojson';
+const S12_FIELD = 'S12_041'; // FY2019 boardings plus alightings, an average day; halved it is entries
+
+const hav = (lng1, lat1, lng2, lat2) => {
+  const r = Math.PI / 180, dp = (lat2 - lat1) * r, dl = (lng2 - lng1) * r;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dl / 2) ** 2;
+  return 2 * 6371.0088 * Math.asin(Math.sqrt(a));
+};
+
+/** [lng, lat, entries] of every S12 station line that has a FY2019 count (entries = the count halved) */
+async function readS12() {
+  const d = JSON.parse(await readFile(join(MAPS, S12_FILE), 'utf8'));
+  const out = [];
+  for (const f of d.features) {
+    const v = f.properties[S12_FIELD];
+    if (!(v > 0)) continue;
+    const cs = f.geometry.coordinates;
+    out.push([cs.reduce((s, c) => s + c[0], 0) / cs.length, cs.reduce((s, c) => s + c[1], 0) / cs.length, v / 2]);
+  }
+  return out;
+}
+
+function compareJapan(id, cfg, rows, g, s12) {
+  const { lng, lat, km } = cfg.circle;
+  const inside = (r) => hav(lng, lat, r[1], r[2]) <= km;
+  const sum = (list) => {
+    const mine = (list ?? []).filter(inside);
+    return { stations: mine.length, entries: mine.reduce((s, r) => s + r[3] - r[4], 0), boardings: mine.reduce((s, r) => s + r[3], 0) };
+  };
+  const wd = sum(g.stationRows), av = sum(g.stationRowsAverage);
+  // the S12 stations in the circle that have a game station within about 1 km: the rest are outside the pack's cut
+  const cell = (x, y) => Math.round(x * 100) * 100003 + Math.round(y * 100);
+  const have = new Set(g.stationRows.map((r) => cell(r[1], r[2])));
+  let s12In = 0, s12Matched = 0, s12Lines = 0;
+  for (const [x, y, e] of s12) {
+    if (hav(lng, lat, x, y) > km) continue;
+    s12In += e; s12Lines++;
+    let hit = false;
+    for (let dx = -1; dx <= 1 && !hit; dx++) for (let dy = -1; dy <= 1 && !hit; dy++) hit = have.has(cell(x + dx * 0.01, y + dy * 0.01));
+    if (hit) s12Matched += e;
+  }
+  const cityRows = rows.filter((r) => r.city === cfg.csvCity);
+  const pop = num(cityRows[0].metro_pop_m);
+  const listed = cityRows.reduce((s, r) => s + (num(r.weekday_k) ?? 0), 0) / 1000;
+  const out = {
+    id, city: cfg.csvCity + (id.endsWith('7') ? ' (jpn7 run)' : ''), popM: pop, day: g.day, round: g.round, final: g.final, solveS: g.solveS,
+    circle: cfg.circle,
+    rows: cityRows.map((r) => ({ system: r.system, mode: r.mode, basis: r.count_basis || 'not stated', weekday_k: num(r.weekday_k), length_km: null, stations: null })),
+    unlinkedShare: 0,
+    game: { railTripsM: wd.entries / 1e6, perResident: wd.entries / 1e6 / pop, perResidentAverage: av.entries / 1e6 / pop, perResidentBoardings: wd.boardings / 1e6 / pop,
+      stations: wd.stations, entriesAverageM: av.entries / 1e6, boardingsM: wd.boardings / 1e6, trackKm: null, metro: { perKm: null } },
+    real: { listedM: listed, eqM: listed, perResidentListed: listed / pop, perResident: listed / pop, s12InCircleM: s12In / 1e6, s12Lines, metro: null },
+    s12: { inCircleM: s12In / 1e6, matchedShare: s12In ? s12Matched / s12In : null },
+  };
+  out.ratio = { trips: out.game.perResident / out.real.perResident, tripsAverage: out.game.perResidentAverage / out.real.perResident,
+    tripsBoardings: out.game.perResidentBoardings / out.real.perResident, perKm: null };
+  out.notes = [];
+  for (const [what, r] of [['station entries per resident, weekday', out.ratio.trips], ['station entries per resident, average day', out.ratio.tripsAverage]]) {
+    if (r < BAND[0] || r > BAND[1]) out.notes.push(`NOTE ${id}: ${what} ${r.toFixed(2)}x the table (${r > 1 ? 'game high' : 'game low'}), outside ${BAND[0]}-${BAND[1]}x`);
+  }
+  return out;
+}
+
 // ---- the game side: one page a city
 const pageUrl = (base) => `${base}${base.includes('?') ? '&' : '?'}debug=1&new=1&opened=all&demandWorkers=${WORKERS}&paused=1`;
 
-async function readGame(base, id, log) {
+/** `opt.save`: a save path from the maps root instead of data/packs/real/<id>.save; `opt.stations`: also return every
+ * station's lng, lat and boardings (weekday and average day), for the circle sums (T-2093), and skip the edge list */
+async function readGame(base, id, log, opt = {}) {
   const { ctx, close } = await launchChrome({ prefix: `tw-t2088-${id}-` });
   try {
     const page = ctx.pages()[0] ?? await ctx.newPage();
@@ -78,29 +164,33 @@ async function readGame(base, id, log) {
     await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch { /* none */ } });
     await page.goto(pageUrl(base));
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-    await importSave(page, await readFile(join(MAPS, `trainworld/data/packs/real/${id}.save`)));
+    await importSave(page, await readFile(join(MAPS, opt.save ?? `trainworld/data/packs/real/${id}.save`)));
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 900000 });
     const t = Date.now();
     log(`${id}: save in, waiting for demand`);
     await demandFinal(page, { timeout: 3 * 3600000, polling: 2000, lines: 3 });
     const solveS = (Date.now() - t) / 1000;
-    const g = await page.evaluate(() => {
+    const g = await page.evaluate((withStations) => {
       const w = window.tw.world.value, v = window.twDemand.view(), s = window.twDemand.log.at(-1);
+      // [id, lng, lat, boardings, transfers] a station, for the weekday view and the average day's (day 6)
+      const stationsOf = (view) => view ? w.save.stations.map((st) => { const d = view.stations.get(st.id); return [st.id, st.lng, st.lat, d?.boardings ?? 0, d?.transfers ?? 0]; }) : null;
+      const avg = withStations ? window.twDemand.days()[6]?.view : null;
       const lines = w.save.lines.map((l) => {
         const d = v.lines.get(l.id), st = w.lineStats[l.id];
         const n = l.stops.length;
         return { id: l.id, name: l.name, stops: n, km: st?.stopS?.[0] ? (st.stopS[0][n - 1] - st.stopS[0][0]) / 1000 : 0, riders: d?.ridersPerDay ?? 0 };
       });
       const node = (i) => w.nodes.get(i);
-      const edges = w.edges.filter((e) => e.built && !e.off).map((e) => {
+      const edges = withStations ? [] : w.edges.filter((e) => e.built && !e.off).map((e) => {
         const a = node(e.a), b = node(e.b);
         return a && b ? [a.x, a.y, b.x, b.y, e.lengthM, a.lat, e.lines ?? []] : null;
       }).filter(Boolean);
       return {
         day: v.day, version: v.version, final: v.final, round: v.round, railTripsPerDay: v.railTripsPerDay, tripsPerDay: v.tripsPerDay, split: v.split,
         status: String(window.twDemand.client.status), cities: s?.cities, stations: w.save.stations.length, lines, edges,
+        ...(withStations ? { stationRows: stationsOf(v), stationRowsAverage: stationsOf(avg), averageRailTrips: avg?.railTripsPerDay ?? null } : {}),
       };
-    });
+    }, !!opt.stations);
     return { ...g, solveS, errors };
   } finally {
     await close();
@@ -199,8 +289,11 @@ async function main() {
   const args = process.argv.slice(2);
   const url = args.find((a) => /^https?:/.test(a));
   const ids = args.filter((a) => !/^https?:/.test(a));
-  const todo = ids.length ? ids : Object.keys(CITIES);
-  for (const id of todo) if (!CITIES[id]) throw new Error(`unknown city ${id}; known: ${Object.keys(CITIES).join(' ')}`);
+  // `jpn7` stands for the jpn7 run's cities (T-2093); with no names the seven cities with saves run, as before
+  const named = ids.flatMap((a) => (a === 'jpn7' ? Object.keys(JPN) : [a]));
+  const todo = (named.length ? named : Object.keys(CITIES)).filter((id) => !JPN[id]);
+  const jpn = named.filter((id) => JPN[id]);
+  for (const id of [...todo, ...jpn]) if (!CITIES[id] && !JPN[id]) throw new Error(`unknown city ${id}; known: ${Object.keys(CITIES).join(' ')} jpn7 (= ${Object.keys(JPN).join(' ')})`);
   const rows = parseCsv(await readFile(join(MAPS, 'trainworld/research/ridership.csv'), 'utf8'));
   await mkdir(OUT, { recursive: true });
   const t0 = Date.now();
@@ -208,7 +301,7 @@ async function main() {
   let vite = null;
   let base = url;
   if (!base) { vite = await startVite(Number(process.env.T2088_PORT ?? 6188)); base = vite.url; }
-  const results = [];
+  const results = [], jpnResults = [];
   try {
     for (const id of todo) {
       try {
@@ -224,10 +317,35 @@ async function main() {
         log(`${id}: FAILED ${e.message.split('\n')[0]}`);
       }
     }
+    if (jpn.length) {
+      try {
+        const [g, s12] = [await readGame(base, 'jpn7', log, { save: JPN7_SAVE, stations: true }), await readS12()];
+        if (g.status.startsWith('failed')) throw new Error(`demand ${g.status}`);
+        await writeFile(join(OUT, 'jpn7-stations.json'), JSON.stringify({ at: new Date().toISOString(), day: g.day, railTripsPerDay: g.railTripsPerDay, averageRailTrips: g.averageRailTrips, columns: ['id', 'lng', 'lat', 'boardings', 'transfers'], weekday: g.stationRows, average: g.stationRowsAverage }) + '\n');
+        log(`jpn7: ${f0(g.railTripsPerDay)} rail trips across ${g.stations} stations, final ${g.final} round ${g.round} in ${g.solveS.toFixed(0)} s${g.errors.length ? `, ${g.errors.length} console errors` : ''}`);
+        for (const id of jpn) {
+          const r = compareJapan(id, JPN[id], rows, g, s12);
+          r.errors = g.errors;
+          r.at = new Date().toISOString();
+          await writeFile(join(OUT, `${id}.json`), JSON.stringify(r, null, 1) + '\n');
+          jpnResults.push(r);
+        }
+      } catch (e) {
+        log(`jpn7: FAILED ${e.message.split('\n')[0]}`);
+      }
+    }
   } finally {
     vite?.child.kill();
   }
-  if (!results.length) { console.log('no city finished'); process.exitCode = 1; return; }
+  if (jpnResults.length) {
+    await writeFile(join(OUT, 'summary-jpn7.json'), JSON.stringify({ at: new Date().toISOString(), band: BAND, cities: jpnResults.map(({ id, city, popM, circle, game, real, ratio, s12 }) => ({ id, city, popM, circle, game, real, ratio, s12 })) }, null, 1) + '\n');
+    console.log('\njpn7 run: station entries inside the S12 circle (weekday; a journey once) against the CSV\'s S12 sums (an average day, a change between operators counted twice)');
+    console.log(['city', 'game stations', 'game entries M', 'S12 M', 'ratio weekday', 'ratio average day', 'ratio boardings', 'S12 near a game station'].join(' | '));
+    for (const r of jpnResults) console.log([r.city, r.game.stations, r.game.railTripsM.toFixed(2), r.real.listedM.toFixed(2), f2(r.ratio.trips), f2(r.ratio.tripsAverage), f2(r.ratio.tripsBoardings), `${(100 * r.s12.matchedShare).toFixed(0)}%`].join(' | '));
+    console.log(table(jpnResults));
+    for (const r of jpnResults) for (const n of r.notes) console.log(n);
+  }
+  if (!results.length) { if (!jpnResults.length) { console.log('no city finished'); process.exitCode = 1; } return; }
   await writeFile(join(OUT, 'summary.json'), JSON.stringify({ at: new Date().toISOString(), unlinkedPerEntry: UNLINKED_PER_ENTRY, band: BAND, cities: results.map(({ id, city, popM, game, real, ratio, unlinkedShare }) => ({ id, city, popM, game, real, ratio, unlinkedShare })) }, null, 1) + '\n');
   console.log('\nGame (weekday rail trips, a journey once) against research/ridership.csv; "real" on entries-equivalent counts, * = over half the real rows are unlinked');
   console.log(table(results));
