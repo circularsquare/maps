@@ -14,8 +14,13 @@ const RADIUS_W = 6;
 export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
 /** stop points of one station this many pitches apart or nearer share a pill */
 const PILL_JOIN = 1.6;
-/** a line running along a pill this many pitches off its axis still lies under it */
-const ALONG_SLACK = 0.5;
+/** stops this many pitches apart or nearer share a pill when no line crosses between them */
+const PILL_MERGE = 4;
+/** a line running along a pill this many pitches off its axis still lies under its edge */
+const ALONG_SLACK = 1.25;
+/** a station's axis may pass this many pitches to the side of its place, tried in steps of 1 / AXIS_STEPS
+ * pitches, at this cost (pill length) a pitch, where no axis through its place crosses all its lines */
+const AXIS_SHIFT = 2, AXIS_STEPS = 2, SHIFT_COST = 1;
 /** a passage between pills of one station is this share of a pill wide */
 const PASSAGE = 0.45;
 /** pills are drawn from a pitch this many device px */
@@ -174,26 +179,45 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   };
   const AX: [number, number][] = [0, 1, 2, 3].map((q) => [Math.cos((q * Math.PI) / 4), Math.sin((q * Math.PI) / 4)]);
   const axisOf = new Map<number, [number, number]>();
+  /** per station, the point its axis passes through */
+  const originOf = new Map<number, [number, number]>();
   const dirty = new Set<number>();
   for (const [k, occ] of occAt) {
-    const cx = lay.x[k], cy = lay.y[k];
-    let best = Infinity, bq = 0;
+    let best = Infinity, bq = 0, bo = 0;
+    // A line that turns at the station, or ends along an axis, can miss every axis through its place
+    // (a round stop off the pill, joined by a passage, reads as a hook, T-2206): the axis may also pass
+    // up to AXIS_SHIFT pitches to one side, at a small cost a pitch.
     AX.forEach((ax, q) => {
-      let miss = 0, t0 = Infinity, t1 = -Infinity;
-      for (const o of occ) {
-        const p = o.end >= 0 ? endOn(Vs[o.li][1], o.end as 0 | 1, cx, cy, ax) : stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch).cross;
-        if (!p) {
-          miss++;
-          continue;
+      for (let s = 0; s <= 2 * AXIS_SHIFT * AXIS_STEPS; s++) {
+        const off = ((s % 2 ? 1 : -1) * Math.ceil(s / 2) * pitch) / AXIS_STEPS;
+        const cx = lay.x[k] - ax[1] * off, cy = lay.y[k] + ax[0] * off;
+        let miss = 0, t0 = Infinity, t1 = -Infinity;
+        let beside = 0;
+        for (const o of occ) {
+          const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch);
+          let p = o.end >= 0 ? endOn(Vs[o.li][1], o.end as 0 | 1, cx, cy, ax) : s.cross;
+          if (!p) {
+            // a line beside the axis, close enough to lie under the pill's edge
+            const across = Math.abs((s.near[0] - cx) * ax[1] - (s.near[1] - cy) * ax[0]);
+            if (across > ALONG_SLACK * pitch) {
+              miss++;
+              continue;
+            }
+            p = s.near;
+            beside += across;
+          }
+          const t = (p[0] - cx) * ax[0] + (p[1] - cy) * ax[1];
+          (t0 = Math.min(t0, t)), (t1 = Math.max(t1, t));
         }
-        const t = (p[0] - cx) * ax[0] + (p[1] - cy) * ax[1];
-        (t0 = Math.min(t0, t)), (t1 = Math.max(t1, t));
+        const cost = miss * 1e3 * pitch + (t1 > t0 ? t1 - t0 : 0) + beside + Math.abs(off) * SHIFT_COST + q * 1e-6;
+        if (cost < best) (best = cost), (bq = q), (bo = off);
+        // no miss on the axis through the place: no need to look to the side
+        if (!s && !miss) break;
       }
-      const cost = miss * 1e3 * pitch + (t1 > t0 ? t1 - t0 : 0) + q * 1e-6;
-      if (cost < best) (best = cost), (bq = q);
     });
-    const ax = AX[bq];
+    const ax = AX[bq], cx = lay.x[k] - ax[1] * bo, cy = lay.y[k] + ax[0] * bo;
     axisOf.set(k, ax);
+    originOf.set(k, [cx, cy]);
     for (const o of occ) {
       if (o.end < 0) continue;
       const V = Vs[o.li][1], p = endOn(V, o.end as 0 | 1, cx, cy, ax), at = o.end ? V.length - 1 : 0;
@@ -206,23 +230,26 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   }
   ribs.forEach(({ path }, li) => path && lines.push({ colour: Vs[li][0].colour, path }));
   for (const [k, occ] of occAt) {
-    const ax = axisOf.get(k)!, list: [number, number][] = [];
+    const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!, list: [number, number][] = [];
     for (const o of occ) {
-      const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, lay.x[k], lay.y[k], ax, pitch);
+      const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch);
       list.push(s.cross ?? s.near);
     }
     stopsAt.set(k, list);
   }
   const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [];
   for (const [k, raw] of stopsAt) {
-    const ax = axisOf.get(k)!, cx = lay.x[k], cy = lay.y[k];
+    const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!;
     // along the axis: where each stop is, and how far off it (only a line running along it is)
     const at = raw.map(([px, py]) => [(px - cx) * ax[0] + (py - cy) * ax[1], (px - cx) * ax[1] - (py - cy) * ax[0], px, py]).sort((a, b) => a[0] - b[0]);
     const on = at.filter((p) => Math.abs(p[1]) <= ALONG_SLACK * pitch), off = at.filter((p) => Math.abs(p[1]) > ALONG_SLACK * pitch);
     const centres: [number, number][] = [];
+    // stops a little further apart share a pill too where no line crosses the axis between them, so a
+    // lone stop past the end of a pill is not a dot of its own (T-2206)
+    const clear = (ta: number, tb: number) => !crossesAny(ribs, cx + ax[0] * (ta + 0.3 * pitch), cy + ax[1] * (ta + 0.3 * pitch), cx + ax[0] * (tb - 0.3 * pitch), cy + ax[1] * (tb - 0.3 * pitch));
     for (let i = 0; i < on.length; ) {
       let j = i;
-      while (j + 1 < on.length && on[j + 1][0] - on[j][0] < PILL_JOIN * pitch) j++;
+      while (j + 1 < on.length && (on[j + 1][0] - on[j][0] < PILL_JOIN * pitch || (on[j + 1][0] - on[j][0] < PILL_MERGE * pitch && clear(on[j][0], on[j + 1][0])))) j++;
       const t0 = on[i][0], t1 = on[j][0];
       pills.push([cx + ax[0] * t0, cy + ax[1] * t0, cx + ax[0] * t1, cy + ax[1] * t1, 0]);
       pillOf.push(k);
@@ -251,6 +278,25 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
   return { pitch, stroke: W, lines, pills, pillOf, passages, box: [x0, y0, x1, y1] };
+}
+
+/** whether any ribbon crosses the segment from (x0, y0) to (x1, y1) */
+function crossesAny(ribs: { r: Ribbon }[], x0: number, y0: number, x1: number, y1: number): boolean {
+  if ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) < 1e-18) return false;
+  const lx = Math.min(x0, x1), hx = Math.max(x0, x1), ly = Math.min(y0, y1), hy = Math.max(y0, y1);
+  const side = (ax: number, ay: number, bx: number, by: number, px: number, py: number) => (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+  for (const { r } of ribs) {
+    const p = r.pts;
+    for (let j = 0; j + 3 < p.length; j += 2) {
+      if (Math.max(p[j], p[j + 2]) < lx || Math.min(p[j], p[j + 2]) > hx || Math.max(p[j + 1], p[j + 3]) < ly || Math.min(p[j + 1], p[j + 3]) > hy) continue;
+      const d1 = side(x0, y0, x1, y1, p[j], p[j + 1]), d2 = side(x0, y0, x1, y1, p[j + 2], p[j + 3]);
+      // a ribbon running along the segment does not cross it
+      if (Math.abs(d1 - d2) < 0.2 * Math.hypot(x1 - x0, y1 - y0) * Math.hypot(p[j + 2] - p[j], p[j + 3] - p[j + 1])) continue;
+      const d3 = side(p[j], p[j + 1], p[j + 2], p[j + 3], x0, y0), d4 = side(p[j], p[j + 1], p[j + 2], p[j + 3], x1, y1);
+      if ((d1 > 0) !== (d2 > 0) && (d3 > 0) !== (d4 > 0)) return true;
+    }
+  }
+  return false;
 }
 
 /** a line's drawn ribbon, sampled: x, y pairs, and per point the index in V it belongs to */

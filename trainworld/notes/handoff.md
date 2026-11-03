@@ -1,151 +1,98 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session 6b129d28-dd4c-41cd-a38e-7497bd99e810, name maps-1c, since 2026-11-03 12:49
-Updated: 2026-11-03 12:55 (maps-0f handed everything to maps-1c at 12:55; see "Handed over by maps-0f" below)
-
-## Handed over by maps-0f (12:55): all of it is maps-1c's now
-- master **565f0c59** = T-1849 landed (tree t1849 removed; main WASM rebuilt). 8800 still build 831 (00e3d300).
-- **Unlanded, done:** T-2186 (capacity 150%) + T-2180 (edit note level-of-detail hold): main tree, uncommitted, mixed
-  with t2226's hunks in LineInspector, style.css, trackHover, perfFlags, docs: commit all three together when t2226
-  reports (or untangle with keep_hunks.py in maps-0f's scratchpad). **t2193** (ferries F2): rerun smoke in its tree on a
-  warmed Vite, then land AFTER that commit (it also edits sim/src/track/boarding.rs). **t2217** (station buildings 1):
-  after t2193, put BLD1 after LFR1, save LEVEL 4, save.rs pin (4, 13), tests, land. Then rebuild 8800 (freeze
-  20261103-051954 while India owns data/packs; maps-0f's snapbuild-frozen.cmd).
-- **Still running (my subagents; each told to SendMessage its final report to maps-1c too):**
-  ad82780d44630e96a T-2226/27 track text + lag (Vite 6191); ad948a26ee8f95ddc T-2222/23 band snap + gap looks (6189);
-  a80cbe682243da006 T-2192 ferries F1 routes (6187); a567603f3dc3fdad7 T-2237 edit note as rail trips (6193).
-  If one goes quiet, ask maps-0f to message it (maps-1c can't reach them by id).
-- **India join** (PID 42596) is maps-1c's: details under "In flight" below.
-
-## maps-1c's own (13:15)
-- t2193 smoke rerun in its tree by maps-1c 13:00: PASSED 23/23. Ready to land after the T-2186/T-2180/T-2226 commit.
-- **T-2192 F1 DONE** (report in 13:10, via maps-0f): app/src/ferry/{waterTiles,route,ferryWater}.ts,
-  workers/ferryWater.worker.ts, checks/t2192-ferry-routes.mjs; edited notes/T-2177.md, track-and-service.md 6.8,
-  code-map.md, SPEC.md, DECISIONS, TASKS (T-2209 filed), ARCHIVE; deleted notes/T-2177-route.mjs. Uncommitted. t2193
-  also writes a 6.8 in track-and-service.md: merge them at its landing. No player strings.
-- **T-2237 DONE** (report 13:15 via maps-0f): editNote.ts (`railTrips`), EditNote.tsx, checks/old/t2125-edit-note.mjs,
-  docs ui-map "Edit note", code-map, DECISIONS, ARCHIVE. Uncommitted; strings shown to Anita 13:20 ("train trips/day",
-  "Train trips per weekday", "Riders on <line>"). Commit with the T-2186/T-2180/T-2226 batch (editNote.ts shared with T-2180).
-- Waiting on: t2226 (T-2226/27, Vite 6191) and t2222 (T-2222/23, Vite 6189), maps-0f's subagents, reporting via maps-0f.
-  Then: one commit (T-2186 + T-2180 + T-2226/27 + T-2237 + T-2192), land t2193, then t2217 (BLD1 after LFR1, LEVEL 4),
-  rebuild 8800, and start T-2194 (ferry tool), T-2218 + T-2220 (building tool, 0.8 rule), T-2236 after T-2222.
-- ac4cca2590899fad0 **t2205**: T-2205 diagram spacing, then T-2206 hooks (main tree, app/src/diagram + diagram worker +
-  DiagramButton + checks/t2160*, t2161*; Vite 6194; notes/T-2205.md). Then T-2162 names to the same agent.
-- a2b46e89c23cd6c45 **t2231**: passing tracks sim, tree .tw-trees/t2231 (from ee978151), Vite 6196. Told: bit in the
-  existing upgrades field, no LEVEL bump if room; lands after t2193 and t2217 (rebase).
-- Disk: C: hit 0.5 GB free ~13:00. Deleting two orphaned GDAL temp files (Temp\osm_tmp_nodes_4968_2, _7376_1, dead
-  PIDs, Oct 23/25) was refused by the permission check; NTFS-compressed them instead (10.7 -> 5.8 GB). Something else
-  freed ~18 GB meanwhile; 24 GB free at 13:05. A background watch (scratch lowdisk.ps1) reports if under 3 GB.
-  publish/ holds 10 GB of old local publish builds (only the freeze 20261103-051954 is needed).
-- Background wait on India's PID 42596 (Wait-Process) notifies me when the join ends.
-- **Next to start:** T-2231 passing tracks sim (own tree, Anita said go), T-2218 station building tool + T-2220,
-  T-2194 ferry tool (after F1 + F2), T-2236 crowding by load (after T-2222), T-2162/T-2163 diagram.
+Updated: 2026-11-03 14:30
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
+## Latest (14:30)
+- 8800 = **build 837 (5cd94db2)**, smoke 23/23 light and dark.
+- master **455bef52** = T-2231 passing tracks sim landed (tree removed; express +1.2 min at 10/10, 8 s of it overtakes,
+  the rest existing queues: accepted, follow-ups T-2239/40/41 filed). Its TASKS/ARCHIVE/DECISIONS/notes T-2228 edits
+  are uncommitted in the main tree: commit with the next batch.
+- **T-2217 rebased and tested (352 cargo tests) as branch tw/t2217 commit 9477d889, NOT on master**: the fast-forward
+  was refused because t2194 has uncommitted edits to game/types.ts, workers/clock.worker.ts, clockClient.ts,
+  protocol.ts. When t2194 reports: commit its work, then `git -C .tw-trees/t2217 rebase master` (resolve those four),
+  rerun tests, `land t2217` again, remove the tree. ARCHIVE line for T-2217 has a blank "landed" hash to fill.
+- a15d9b19d67e1affb **t2232** passing tracks panels, tree .tw-trees/t2232 (from 455bef52), Vite 6188.
+- T-2233 (map drawing) after t2194 leaves the renderer; T-2218 + T-2220 after T-2217 lands.
+
 ## State
-- master afda82d7 (handoff, T-2207 notes, merge help; no app change since 8800's 00e3d300 but that one line). Today (maps-0f): 5faa828f (achievements, edit note, profit history, tutorial, bands, phone memory),
-  a273050d (T-2104 fare split), a53f0cd8 (T-2064 real save all `sep`), 48b7ae8b (T-2153 keep last 2 cities, UI batch),
-  57e1e7cc (notes), a5a5ce4b (achievement rings, band fixes T-2140/82/83/84, ferry design, late-game research),
-  90981710 (T-2185 merges marked), 00e3d300 (diagram stages 1-2 for every player).
-- **8800 = build 831 (00e3d300)**, freeze 20261103-051954, smoke 23/23 light and dark. LIVE = 821 (R2
-  `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word (recipe below).
-- Uncommitted: the running agents' files, India's (pipeline/tier0.py, world_plan.json, app/src/game/registry.json +
-  market-rows.json, notes/T-2111.md: never commit those until India lands), TODO.md (Anita's).
-- **Cores cap 15** since ~11:50 (Anita out); `python cores.py cap 10` when she's back at the machine.
-- Worktrees: .tw-trees/t1734 (kept, T-1734), t1849, t2193 (agents running). Land with `checks/agent-tree.mjs land <name>
-  "<sentence>"` then `remove`; a landed sim change: the main tree's WASM is rebuilt by the land script.
+- master **5cd94db2** (T-2193 ferry sim landed), before it 6587f89d (T-2186 150% load, T-2180, T-2237 edit note as
+  "trips/day", T-2226/27 "Level" text + road tile decode, T-2192 ferry router, T-2222/23 band looks behind `perfTry`
+  flags), ee978151 (maps-0f's handoff), 565f0c59 (T-1849). Tree t2193 removed.
+- **8800 = build 831 (00e3d300)**; rebuild to 5cd94db2 STARTED ~13:58 (my scratch snapbuild-frozen.cmd, freeze
+  20261103-051954, log scratch\snapbuild.log); then smoke light + SMOKE_SHADE=dark. LIVE = 821 (R2 `trainworld/2026-11-03b`,
+  website dc49c5f). Publish only on Anita's word.
+- Uncommitted: running agents' files; India's (pipeline/tier0.py, world_plan.json, app/src/game/registry.json +
+  market-rows.json, notes/T-2111.md: never commit until India lands; its DECISIONS line went in with 6587f89d);
+  TODO.md (Anita's).
+- **Cores cap 15** (Anita away); `python cores.py cap 10` when she's back at the machine.
+- Disk: 34 GB free after pruning 13:35. A background watch (scratch lowdisk.ps1, 6 h) reports under 3 GB.
+- Worktrees: .tw-trees/t1734 (kept, T-1734), t2217 (rebase onto master IN PROGRESS, agent t2217b resolving),
+  t2231 (passing tracks agent). Land with `checks/agent-tree.mjs land <name> "<sentence>"` then `remove`.
 
 ## How to
-- 8800: `cmd /c "<scratch>\snapbuild-frozen.cmd <hash> 20261103-051954 > <scratch>\snapbuild.log 2>&1"` (scratch =
-  C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\76ebbfee-75f0-49e0-be85-230cb2ef8d79\scratchpad;
-  it sets TW_PACKS to the freeze and TW_MARKET_DRIVES, needed while India owns data/packs; plain snapbuild.cmd otherwise).
-  The build runs tsc, so it checks the committed tree. Then smoke on http://localhost:8800/trainworld/ light and
-  SMOKE_SHADE=dark. Build number = `git rev-list --count <hash>`.
-- Mixed files: `python <scratch>\keep_hunks.py <maps root> <path> <marker>...` stages only hunks whose added lines carry a
-  marker (-U0). `mark_taking.py <TASKS.md> T-x=agent ...` marks lines taken.
+- Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\6b129d28-dd4c-41cd-a38e-7497bd99e810\scratchpad
+  (snapbuild.cmd, snapbuild-frozen.cmd, keep_hunks.py, mark_taking.py copied from maps-0f's).
+- 8800: `cmd /c "<scratch>\snapbuild-frozen.cmd <hash> 20261103-051954 > <scratch>\snapbuild.log 2>&1"` while India
+  owns data/packs (plain snapbuild.cmd otherwise). The build runs tsc on the committed tree. Then smoke on
+  http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Build number = `git rev-list --count <hash>`.
+- Pre-commit smoke: own Vite (`node trainworld/checks/dev-nowatch.mjs 6197`), warm one page load, then smoke; stop it
+  by its port's PID.
+- A tree whose rebase will conflict: `git -C <tree> add --all -- trainworld`, commit "agent-tree: work in progress",
+  `rebase master`, resolve (or brief an agent), `rebase --continue`, then `land` (it squashes).
+- Mixed files: `python <scratch>\keep_hunks.py <maps root> <path> <marker>...` (-U0).
 - Publish: `freeze.py build <stamp>` with TW_MARKET_DRIVES set, `deploy.py --dist <dist> --version <v> --smoked`, website
   `git add trainsworld/ trainworld/`, commit "anitabuilder", push (her word), `deploy.py --verify --page --version <v>`.
+  Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
 
-## In flight (all Opus; ids are this session's subagents unless noted)
-- **India T-2111 JOIN RUNNING, now mine** (its agent a57accbdda9f839db handed back 12:16): batch 20261103-121621,
-  python PID 42596 (cores t2111, 5), `--jobs 6`, log artifacts/trainworld/t2111-join.log, run logs
-  artifacts/trainworld/world_run/20261103-121621. Liveness `Get-Process -Id 42596`; ~2.5-3 h. Kit (join.cmd, simroot)
-  in maps-b2's scratchpad ...\7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb\scratchpad\t2111. Undo: `restore.py T2111 prejoin
-  --go`. After it ends: `world_run.py status`, then playbook 8 (docs/adding-a-country.md): stale.py, zone_origins.py,
-  load checks (ned, kol, one rural zone), smoke, register row, ARCHIVE; commit India's files (pipeline/tier0.py,
-  world_plan.json, registry.json, market-rows.json, notes/T-2111.md, its DECISIONS line) and a new freeze for 8800.
-  Its sim copy differs from HEAD in intercity.rs (T-2122, to the bit) and capacity.rs (T-2185, track only): fine.
-- **T-1849 DONE** in tree t1849 (sim/src/demand/intercity.rs + tests, docs/demand-market.md, notes/T-1849.md +
-  T-1849/timing.mjs; corridor table 2.7-4.3 s -> 1.0-1.25 s per worker, same to the bit; no WASM interface change).
-  Land after 12:50 (`agent-tree.mjs land t1849 "..."`, rebuilds main WASM), then remove the tree.
-- Cap back to 15 ~12:35 (her game ended early; she said use more cores); t2226 and t2222 told the pause is over.
-- **T-2186 DONE** ~12:35 (report in; smoke 23/23, real save now 11,721,426; gain +1% not +4% because crowding from 112
-  holds lines at 120-130%; asked Anita keep or start crowding at 100%). PLAN: one commit of T-2186 + T-2180 + T-2226/27
-  once t2226 reports (they share LineInspector, style.css, trackHover, perfFlags, docs); then land t1849 and t2193
-  (t2193 after a smoke rerun in its tree), rebuild 8800. T-2186's files (for reference):
-  its files: sim/src/demand api.rs kernel.rs (+tests) network.rs, sim/src/track/boarding.rs (+tests), game/boarding.ts
-  trip.ts demand.ts?, map/stretchLoad.ts trackHover.ts networkTips.ts, LineInspector/TrainInspector, demand-*.md docs,
-  notes/T-2186.md; it holds a t2186 claim (asked to release).
-- **T-2180 DONE** ~12:35, uncommitted (editNote.ts, demand.ts `editsSettling`, demandClient.ts 3 hunks, perfFlags
-  `lodHold`, docs ui-map + demand-runtime, notes/T-2180.md): levels of detail held while edits settle. Commit with
-  T-2186 when it reports (shared demandClient/perfFlags/demand.ts?). Asked Anita: note riders as rail trips, not boardings?
-- Committed ~12:25: T-2161/T-2160 diagram stage 3 + T-2221 achievement tweaks + T-2208 design. Follow-ups T-2205
-  (spacing), T-2206 (hooks), then T-2162 names, T-2163 clicks. T-2186 done per ARCHIVE, report pending: commit + 8800.
-- Started ~12:20: ac12bcf1fcabb49ba **T-2217** station buildings sim + BLD1 save (tree .tw-trees/t2217, Vite 6190,
-  T-2229); ad82780d44630e96a **T-2226 + T-2227** track text ("Level", "crossings", the crossing refusal) + crossing
-  lag (Vite 6191, T-2230); aefb42a10e6d5a67b **T-2228** passing tracks design, incl. her "all stations on a line"
-  button idea (T-2231..34).
-- ad948a26ee8f95ddc T-2222 band snaps to own track at one zoom (her shot5) + T-2223 gap looks to show her (Vite 6189).
-- a80cbe682243da006 T-2192 ferries F1 routes (main, Vite 6187); told: one tool (ports only, no water points),
-  refusal "No water path found"; writes "F1 -> F2 route format" in notes/T-2177.md.
-- **T-2193 F2 DONE** ~12:30 in tree t2193 (ports as stations, ferry lines, LFR1, save level 3, WASM in
-  sim/src/track/wasm/ferry.rs; 338 cargo tests, checks/t2193-ferry.mjs 16/16). Smoke failed twice on Vite cold
-  starts: rerun smoke IN THE TREE on a warmed Vite before landing. It touches sim/src/track/boarding.rs, which T-2186
-  also edits uncommitted in the main tree: commit T-2186 first, then `agent-tree.mjs land t2193` (rebase may need a
-  hand merge in boarding.rs). F3 must save `fleet_ferry` in the header (notes/T-2177.md "F2 -> F3 sim interface").
-- **T-2217 DONE** ~12:40 in tree t2217 (station buildings sim + BLD1, save LEVEL 3; WASM add/reshape/rename/remove
-  _building, building_quote; app game/buildings.ts joins complexes; smoke 23/23 in tree; checks/t2217-buildings.mjs).
-  **Collision with t2193**: both add a block after LPH1 and raise save LEVEL to 3. Land t2193 first; then in t2217
-  put BLD1 after LFR1, LEVEL 4, the save.rs pin (4, 13) (notes/T-2208.md section 5), rerun tests, land. Next: T-2218
-  tool (upgrade row only), T-2220 the 0.8 rule, then T-2219 drawing.
-Everything above is maps-0f's to land (it was told at 12:49; T-1849 landed as 565f0c59). maps-1c's own:
-- ac4cca2590899fad0 **t2205**: T-2205 diagram spacing, then T-2206 hooks (main tree, app/src/diagram + diagram worker +
-  DiagramButton + checks/t2160*, t2161*; Vite 6194; notes/T-2205.md). Then T-2162 names to the same agent.
-Each reports by SubagentHandback; files listed in their reports. Commit each set when it reports (smoke on its Vite
-was run by the agent; the 8800 build typechecks the commit).
+## In flight (all Opus, this session's subagents)
+- **India T-2111 JOIN** (handed back by its agent 12:16): batch 20261103-121621, python PID 42596 (cores t2111, 5),
+  log artifacts/trainworld/t2111-join.log, run logs artifacts/trainworld/world_run/20261103-121621. Background
+  Wait-Process notifies me. Kit in maps-b2's scratchpad ...\7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb\scratchpad\t2111.
+  Undo: `restore.py T2111 prejoin --go`. After: `world_run.py status`, playbook 8 (docs/adding-a-country.md):
+  stale.py, zone_origins.py, load checks (ned, kol, one rural zone), smoke, register row, ARCHIVE; commit India's
+  files and a new freeze for 8800 (then prune the old freeze). Then T-2213 islands step can use data/packs.
+- ac4cca2590899fad0 **t2205**: T-2205 diagram spacing, then T-2206 hooks (main tree, app/src/diagram, diagram
+  worker, DiagramButton, checks/t2160*, t2161*; Vite 6194; notes/T-2205.md). Then give it T-2162 names.
+- a2b46e89c23cd6c45 **t2231**: passing tracks sim, tree .tw-trees/t2231 (from ee978151), Vite 6196. Bit in the
+  existing upgrades field, no LEVEL bump if room. Lands after t2217 (rebase). Then T-2232 panels, T-2233 map.
+- a3f9ae4a7c387b842 **t2217b**: resolving t2217's rebase (save.rs, wasm.rs conflicts): BLD1 after LFR1, LEVEL 4,
+  pin (4, 13); tests, wasm, t2217 + t2193 checks, smoke in tree on Vite 6198. Doesn't land; I do. Then T-2218 tool +
+  T-2220 0.8 rule (main tree, after T-2194 is out of the inspectors or coordinated).
+- a3f8911247aa75454 **t2194**: ferry tool F3 (main tree, Vite 6199; checks/t2194-ferry-tool.mjs). Strings to show Anita.
 
 ## Next
-1. When F1+F2 land: T-2194 (F3 Ferry tool, one button, ports only), then T-2195, T-2196 (fans: visits and
-   attractions, no errands), T-2178. notes/T-2177.md.
-2. After India lands: Turkey (T-2079); T-2213 islands pipeline step (if Anita OKs T-2207); T-2137 Delhi on a phone.
-3. Diagram T-2162 (names), T-2163 (clicks, Save picture), T-2168 boxes, T-2169 water.
-4. Her answers ~12:45: passing tracks GO (T-2231 sim in its own tree next, then T-2232, T-2233; hover "Allow faster
-   trains to pass slower trains that are stopped here"; 400 m price; line button every station); crowding stays from
-   70%; capacity strings OK; T-2237 edit note riders = rail trips (STARTED a567603f3dc3fdad7, Vite 6193); T-2236
-   crowding marks by load past 100% (after T-2222). T-2223 gap look (when shown);
-   T-2228 passing tracks design (when it reports). T-2207 islands approved (car ferries ignored): T-2213 after India.
-   T-2200 named crossings after T-2150, T-2201 maglev design. T-2235 diagram loading bar with T-2163.
-5. Older: T-1863, T-1864 demand speedups; T-2198/T-2199 merge follow-ups; T-2150 sea crossing (own tree).
+1. When t2217b reports: land t2217, then t2231 when it reports (rebase). Rebuild 8800 after each batch.
+2. T-2236 crowding marks by load past 100% (renderer; after T-2194 leaves the renderer). T-2222 waits on an export of
+   her current Tokyo game + view and zoom. T-2223 waits on her pick of a gap look (pictures below).
+3. T-2195, T-2196 ferries in demand (after T-2194); T-2178.
+4. After India lands: T-2213 islands (pipeline, then T-2214, T-2215 "No route", T-2216); Turkey (T-2079); T-2137.
+5. Diagram T-2162 (names), T-2163 (clicks, Save picture, T-2235 loading bar), T-2168 boxes, T-2169 water.
+6. T-2238 the 2 s placement (Ozone Park); T-2230 road tile install; T-2209 narrow canals. Older: T-1863, T-1864,
+   T-2198/T-2199, T-2150 sea crossing (own tree), T-2200 named crossings, T-2201 maglev design.
 
-## Open questions to Anita (asked, unanswered)
-- (none open) Answered 13:40: T-2207 islands go, word "No route"; edit note says "trips/day" / "Trips per weekday"
-  (changed by maps-1c in EditNote.tsx, ui-map.md, the t2125 check); asked whether "train trips" elsewhere (top bar
-  hover, achievements' "1M train trips/day") should become "trips" too. Orphaned temp files: always delete; keep only
-  the current build and the latest published ones (pruned publish/ and data/frozen 13:35, 34 GB free).
-- Answered today: all strings shown so far OK (achievements, merges, edit note, history, ferries with "No water path
-  found"); ferries go; big stations dropped for T-2208; upgrade-in-place and signals no; named crossings (hidden until
-  built) and maglev yes; capacity 150% with crowding from 70%; diagram: build it, more compact, exposed to everyone.
+## Open questions to Anita
+- "train trips/day" in the top bar's hover and the achievement ("1M train trips/day"): become "trips" too? (asked 13:40)
+- T-2223 gap look: now / bandEdge / bandWide / bandFine (agent's pick) / bandSpaced, pictures
+  artifacts/trainworld/t2222/look-*.png. (to ask)
+- T-2222 band snap: not reproduced on her file; needs an export of her current Tokyo game plus the view and zoom. (to ask)
+- Answered 13:40: islands go, word "No route"; edit note "trips"; temp files always delete; keep only the current and
+  latest published builds. Earlier today: passing tracks go (400 m price, every station; hover "Allow faster trains to
+  pass slower trains that are stopped here"), crowding from 70%, capacity 150%, ferries go (ports only, "No water path
+  found"), named crossings and maglev yes, diagram for everyone.
 
 ## Lessons from this run
 - Before starting an "Open" task, `git log --grep "T-<id>"` (T-1929 had landed a day earlier, line never moved).
 - Her TODO.md can repeat an earlier batch word for word (11-03c = 11-02b): diff against notes/todo-*.md before filing.
 - Commit as agents report when their files are separable; untangle shared docs with keep_hunks.py (-U0, not -U3).
-- A full cap grants 1 core each, so many agents can sit at 13-14 of 10; India needs 6 for joins: plan for it.
-- maps-b2's subagents can't be messaged from here; go through maps-b2.
+- India needs 6 cores for joins: plan for it.
+- maps-b2's and maps-0f's subagents can't be messaged from here; go through their session.
 - Her saves per origin: copy `IndexedDB\<origin>.indexeddb.leveldb`/.blob into a throwaway profile (maps-b2's scratch
   scripts listslots.mjs, dumpslot.mjs). Her Tokyo save file: C:\Users\anita\Documents\trainworld\Tokyo Seoul Fukuoka
-  Busan (from anita.garden).save (read only).
+  Busan (from anita.garden).save (read only, older than her live game).
+- C: can fill suddenly (0.5 GB free at 13:00 with a join running): check `Get-PSDrive C` before long runs.
 
 ## Anita's standing asks
 - Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
@@ -155,4 +102,4 @@ was run by the agent; the 8800 build typechecks the commit).
 - Disk (2026-11-03): delete orphaned temp files always; keep only the current build and the latest published ones
   in artifacts/trainworld/publish/ and data/frozen/ (prune after each publish or freeze).
 
-Next free task id: T-2238 (T-2235 = diagram loading bar; unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25 maybe; check before use).
+Next free task id: T-2239 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25; check before use).

@@ -21,13 +21,17 @@ nearest the map's centre, a stroke pitch 7 px. `?diagram=r2` lays it out with ro
 wide), corners rounded with radius 6 stroke widths plus the bundle's half width, plus or minus the
 stroke's offset, so a bundle's bends are concentric. A slot change on a straight run is a 45 degree jog.
 
-**Pills.** Each station's pill lies along an axis through its place: of the four octilinear axes, the
-one every line stopping there crosses, and of those the one giving the shortest pill. A line's stop is
-where its drawn ribbon crosses the axis; a line ending there has its last run carried on, or cut back,
-to the axis. So a pill is always a straight capsule on its lines, white with the ink outline in both
-themes, two pitches across. Stops along the axis more than 1.6 pitches apart make separate pills; a
-line running along the axis more than half a pitch off it gets a round stop on its own ribbon. Pills
-of one station are joined by a passage, 0.45 of a pill wide. Below a pitch of 2.5 device px, no pills.
+**Pills.** Each station's pill lies along an axis: of the four octilinear axes through its place, the
+one every line stopping there crosses, and of those the one giving the shortest pill. Where none
+crosses them all (a line turning at the station, or ending along an axis), the axis may pass up to 2
+pitches to one side of the place, at a pitch of pill length a pitch. A line's stop is where its drawn
+ribbon crosses the axis; a line ending there has its last run carried on, or cut back, to the axis; a
+line running beside the axis within 1.25 pitches lies under the pill's edge. So a pill is always a
+straight capsule on its lines, white with the ink outline in both themes, two pitches across. Stops
+along the axis more than 1.6 pitches apart make separate pills, unless they are within 4 pitches and
+no line crosses the axis between them; a line running along the axis further off gets a round stop
+on its own ribbon. Pills of one station are joined by a passage, 0.45 of a pill wide. Below a pitch
+of 2.5 device px, no pills.
 
 ## The graph
 
@@ -61,6 +65,19 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
   diagonal leg or the reverse, whichever passes nearer its stations, and not leaving a node the way
   another piece does where the other choice avoids it; each station goes where it projects onto the
   drawing, in order, at least half an even share of the piece from the next.
+- **The separation** (3 passes, each drawn again as above): the drawing in terms that keep it
+  octilinear: each piece's ends free, each station a distance along its leg, a bent piece's legs
+  meeting where their directions say. Of two straight pieces leaving a node the same way, all but the
+  one with most stations get a first leg 45 degrees off toward where their stations lay after B. Linear
+  terms: straight pieces stay straight (a station pushed across one moves both its ends alike); stations
+  keep their order along a leg and gaps of half their hop's target or 1.25 times their half widths
+  together, round a bend too; unconnected stations within 1.25 times their spacing are pushed to 1.15
+  times it, and stations within their half width, the leg's and a pitch of another piece's leg are
+  pushed off it. These are linearised about the drawing, 10 rounds a pass. A first layout meets them by
+  sweeps of projections (each term not met moves its variables the least way); a rebuild by Hildreth's
+  method from the last drawing, which finds the drawing nearest it, each term's correction at most 0.3
+  of a hop, so an edit moves little. Drawn after it, a station keeps only its order (a tenth of an even
+  share of its piece).
 - **The spread**: stations still nearer than their spacing slide along their pieces, each the least
   that clears the pair, between its neighbours, only where it leaves fewer close pairs; failing that
   both of the pair part of the way. Key nodes stay, so no angle changes.
@@ -70,6 +87,7 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
 - **A rebuild** starts from the last layout's B places by node key, skipping A, with 10 B rounds held
   to the last layout at 0.05 in place of A's 0.01: a new complex starts
   at its placed neighbours plus its real offset at the hop's scale, or failing any at its real place
-  at the old layout's overall scale.
+  at the old layout's overall scale. Its separation keeps near the last drawing only when at least 90%
+  of its nodes were in it; otherwise it separates as a first layout does.
 
 `LAYOUT_R2` keeps round 2's options (alpha 0.35, pitch the median hop over 12, edges 1.6 half widths).

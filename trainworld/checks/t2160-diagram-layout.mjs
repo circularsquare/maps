@@ -74,7 +74,7 @@ for (const name of which) {
     if (d < want) close++;
   }
   // a rebuild with one more station
-  const last = new Map([...g.key].map((k, i) => [k, [lay.bx[i], lay.by[i]]]));
+  const last = L.lastPlaces(g, lay);
   const g2 = withStation(g);
   const t1 = performance.now();
   const lay2 = L.layoutDiagram(g2, OPTS, last);
