@@ -255,10 +255,14 @@ class Built:
 
 
 _BUILT = None
+_BUILT_PID = None
 
 
 def built_reader() -> Built | None:
-    global _BUILT
+    # a forked worker inherits the parent's open file and would share its read offset: each process opens its own
+    global _BUILT, _BUILT_PID
+    if _BUILT_PID != os.getpid():
+        _BUILT, _BUILT_PID = None, os.getpid()
     if _BUILT is None and BUILT_PATH.exists():
         _BUILT = Built()
     return _BUILT
