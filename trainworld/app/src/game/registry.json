@@ -16258,6 +16258,1390 @@
       {
         "name": "Ban Lung",
         "regionName": "Ban Lung region"
+      },
+      {
+        "name": "Kuala Lumpur",
+        "regionName": "Kuala Lumpur region"
+      },
+      {
+        "name": "Jakarta",
+        "regionName": "Jakarta region"
+      },
+      {
+        "name": "Surabaya",
+        "regionName": "Surabaya region"
+      },
+      {
+        "name": "Tangerang",
+        "regionName": "Tangerang region"
+      },
+      {
+        "name": "Bandung",
+        "regionName": "Bandung region"
+      },
+      {
+        "name": "Yogyakarta",
+        "regionName": "Yogyakarta region"
+      },
+      {
+        "name": "Semarang",
+        "regionName": "Semarang region"
+      },
+      {
+        "name": "Tasikmalaya",
+        "regionName": "Tasikmalaya region"
+      },
+      {
+        "name": "Cirebon",
+        "regionName": "Cirebon region"
+      },
+      {
+        "name": "Tegal",
+        "regionName": "Tegal region"
+      },
+      {
+        "name": "Purwokerto",
+        "regionName": "Purwokerto region"
+      },
+      {
+        "name": "Tarogong",
+        "regionName": "Tarogong region"
+      },
+      {
+        "name": "Pekalongan",
+        "regionName": "Pekalongan region"
+      },
+      {
+        "name": "Jember",
+        "regionName": "Jember region"
+      },
+      {
+        "name": "Indramayu",
+        "regionName": "Indramayu region"
+      },
+      {
+        "name": "Kediri",
+        "regionName": "Kediri region"
+      },
+      {
+        "name": "Subang",
+        "regionName": "Subang region"
+      },
+      {
+        "name": "Lebak",
+        "regionName": "Lebak region"
+      },
+      {
+        "name": "Banyuwangi",
+        "regionName": "Banyuwangi region"
+      },
+      {
+        "name": "Cilacap",
+        "regionName": "Cilacap region"
+      },
+      {
+        "name": "Pandeglang",
+        "regionName": "Pandeglang region"
+      },
+      {
+        "name": "Probolinggo",
+        "regionName": "Probolinggo region"
+      },
+      {
+        "name": "Magelang",
+        "regionName": "Magelang region"
+      },
+      {
+        "name": "Grobogan",
+        "regionName": "Grobogan region"
+      },
+      {
+        "name": "Blitar",
+        "regionName": "Blitar region"
+      },
+      {
+        "name": "Jombang",
+        "regionName": "Jombang region"
+      },
+      {
+        "name": "Pemalang",
+        "regionName": "Pemalang region"
+      },
+      {
+        "name": "Bojonegoro",
+        "regionName": "Bojonegoro region"
+      },
+      {
+        "name": "Lamongan",
+        "regionName": "Lamongan region"
+      },
+      {
+        "name": "Pati",
+        "regionName": "Pati region"
+      },
+      {
+        "name": "Kuningan",
+        "regionName": "Kuningan region"
+      },
+      {
+        "name": "Tuban",
+        "regionName": "Tuban region"
+      },
+      {
+        "name": "Kebumen",
+        "regionName": "Kebumen region"
+      },
+      {
+        "name": "Jepara",
+        "regionName": "Jepara region"
+      },
+      {
+        "name": "Nganjuk",
+        "regionName": "Nganjuk region"
+      },
+      {
+        "name": "Sumenep",
+        "regionName": "Sumenep region"
+      },
+      {
+        "name": "Tulungagung",
+        "regionName": "Tulungagung region"
+      },
+      {
+        "name": "Lumajang",
+        "regionName": "Lumajang region"
+      },
+      {
+        "name": "Bangkalan",
+        "regionName": "Bangkalan region"
+      },
+      {
+        "name": "Sampang",
+        "regionName": "Sampang region"
+      },
+      {
+        "name": "Wonogiri",
+        "regionName": "Wonogiri region"
+      },
+      {
+        "name": "Madiun",
+        "regionName": "Madiun region"
+      },
+      {
+        "name": "Ponorogo",
+        "regionName": "Ponorogo region"
+      },
+      {
+        "name": "Sragen",
+        "regionName": "Sragen region"
+      },
+      {
+        "name": "Blora",
+        "regionName": "Blora region"
+      },
+      {
+        "name": "Pamekasan",
+        "regionName": "Pamekasan region"
+      },
+      {
+        "name": "Ngawi",
+        "regionName": "Ngawi region"
+      },
+      {
+        "name": "Kudus",
+        "regionName": "Kudus region"
+      },
+      {
+        "name": "Batang",
+        "regionName": "Batang region"
+      },
+      {
+        "name": "Bondowoso",
+        "regionName": "Bondowoso region"
+      },
+      {
+        "name": "Wonosobo",
+        "regionName": "Wonosobo region"
+      },
+      {
+        "name": "Gunung Kidul",
+        "regionName": "Gunung Kidul region"
+      },
+      {
+        "name": "Temanggung",
+        "regionName": "Temanggung region"
+      },
+      {
+        "name": "Trenggalek",
+        "regionName": "Trenggalek region"
+      },
+      {
+        "name": "Purworejo",
+        "regionName": "Purworejo region"
+      },
+      {
+        "name": "Situbondo",
+        "regionName": "Situbondo region"
+      },
+      {
+        "name": "Pangandaran",
+        "regionName": "Pangandaran region"
+      },
+      {
+        "name": "Magetan",
+        "regionName": "Magetan region"
+      },
+      {
+        "name": "Rembang",
+        "regionName": "Rembang region"
+      },
+      {
+        "name": "Pacitan",
+        "regionName": "Pacitan region"
+      },
+      {
+        "name": "Kulon Progo",
+        "regionName": "Kulon Progo region"
+      },
+      {
+        "name": "Jakarta",
+        "regionName": "Jakarta region"
+      },
+      {
+        "name": "Surabaya",
+        "regionName": "Surabaya region"
+      },
+      {
+        "name": "Tangerang",
+        "regionName": "Tangerang region"
+      },
+      {
+        "name": "Bandung",
+        "regionName": "Bandung region"
+      },
+      {
+        "name": "Yogyakarta",
+        "regionName": "Yogyakarta region"
+      },
+      {
+        "name": "Semarang",
+        "regionName": "Semarang region"
+      },
+      {
+        "name": "Tasikmalaya",
+        "regionName": "Tasikmalaya region"
+      },
+      {
+        "name": "Cirebon",
+        "regionName": "Cirebon region"
+      },
+      {
+        "name": "Tegal",
+        "regionName": "Tegal region"
+      },
+      {
+        "name": "Purwokerto",
+        "regionName": "Purwokerto region"
+      },
+      {
+        "name": "Tarogong",
+        "regionName": "Tarogong region"
+      },
+      {
+        "name": "Pekalongan",
+        "regionName": "Pekalongan region"
+      },
+      {
+        "name": "Jember",
+        "regionName": "Jember region"
+      },
+      {
+        "name": "Indramayu",
+        "regionName": "Indramayu region"
+      },
+      {
+        "name": "Kediri",
+        "regionName": "Kediri region"
+      },
+      {
+        "name": "Subang",
+        "regionName": "Subang region"
+      },
+      {
+        "name": "Lebak",
+        "regionName": "Lebak region"
+      },
+      {
+        "name": "Banyuwangi",
+        "regionName": "Banyuwangi region"
+      },
+      {
+        "name": "Cilacap",
+        "regionName": "Cilacap region"
+      },
+      {
+        "name": "Pandeglang",
+        "regionName": "Pandeglang region"
+      },
+      {
+        "name": "Probolinggo",
+        "regionName": "Probolinggo region"
+      },
+      {
+        "name": "Magelang",
+        "regionName": "Magelang region"
+      },
+      {
+        "name": "Grobogan",
+        "regionName": "Grobogan region"
+      },
+      {
+        "name": "Blitar",
+        "regionName": "Blitar region"
+      },
+      {
+        "name": "Jombang",
+        "regionName": "Jombang region"
+      },
+      {
+        "name": "Pemalang",
+        "regionName": "Pemalang region"
+      },
+      {
+        "name": "Bojonegoro",
+        "regionName": "Bojonegoro region"
+      },
+      {
+        "name": "Lamongan",
+        "regionName": "Lamongan region"
+      },
+      {
+        "name": "Pati",
+        "regionName": "Pati region"
+      },
+      {
+        "name": "Kuningan",
+        "regionName": "Kuningan region"
+      },
+      {
+        "name": "Tuban",
+        "regionName": "Tuban region"
+      },
+      {
+        "name": "Kebumen",
+        "regionName": "Kebumen region"
+      },
+      {
+        "name": "Jepara",
+        "regionName": "Jepara region"
+      },
+      {
+        "name": "Nganjuk",
+        "regionName": "Nganjuk region"
+      },
+      {
+        "name": "Sumenep",
+        "regionName": "Sumenep region"
+      },
+      {
+        "name": "Tulungagung",
+        "regionName": "Tulungagung region"
+      },
+      {
+        "name": "Lumajang",
+        "regionName": "Lumajang region"
+      },
+      {
+        "name": "Bangkalan",
+        "regionName": "Bangkalan region"
+      },
+      {
+        "name": "Sampang",
+        "regionName": "Sampang region"
+      },
+      {
+        "name": "Wonogiri",
+        "regionName": "Wonogiri region"
+      },
+      {
+        "name": "Madiun",
+        "regionName": "Madiun region"
+      },
+      {
+        "name": "Ponorogo",
+        "regionName": "Ponorogo region"
+      },
+      {
+        "name": "Sragen",
+        "regionName": "Sragen region"
+      },
+      {
+        "name": "Blora",
+        "regionName": "Blora region"
+      },
+      {
+        "name": "Pamekasan",
+        "regionName": "Pamekasan region"
+      },
+      {
+        "name": "Ngawi",
+        "regionName": "Ngawi region"
+      },
+      {
+        "name": "Kudus",
+        "regionName": "Kudus region"
+      },
+      {
+        "name": "Batang",
+        "regionName": "Batang region"
+      },
+      {
+        "name": "Bondowoso",
+        "regionName": "Bondowoso region"
+      },
+      {
+        "name": "Wonosobo",
+        "regionName": "Wonosobo region"
+      },
+      {
+        "name": "Gunung Kidul",
+        "regionName": "Gunung Kidul region"
+      },
+      {
+        "name": "Temanggung",
+        "regionName": "Temanggung region"
+      },
+      {
+        "name": "Trenggalek",
+        "regionName": "Trenggalek region"
+      },
+      {
+        "name": "Purworejo",
+        "regionName": "Purworejo region"
+      },
+      {
+        "name": "Situbondo",
+        "regionName": "Situbondo region"
+      },
+      {
+        "name": "Pangandaran",
+        "regionName": "Pangandaran region"
+      },
+      {
+        "name": "Magetan",
+        "regionName": "Magetan region"
+      },
+      {
+        "name": "Rembang",
+        "regionName": "Rembang region"
+      },
+      {
+        "name": "Pacitan",
+        "regionName": "Pacitan region"
+      },
+      {
+        "name": "Kulon Progo",
+        "regionName": "Kulon Progo region"
+      },
+      {
+        "name": "Surabaya",
+        "regionName": "Surabaya region"
+      },
+      {
+        "name": "Tangerang",
+        "regionName": "Tangerang region"
+      },
+      {
+        "name": "Bandung",
+        "regionName": "Bandung region"
+      },
+      {
+        "name": "Yogyakarta",
+        "regionName": "Yogyakarta region"
+      },
+      {
+        "name": "Semarang",
+        "regionName": "Semarang region"
+      },
+      {
+        "name": "Tasikmalaya",
+        "regionName": "Tasikmalaya region"
+      },
+      {
+        "name": "Cirebon",
+        "regionName": "Cirebon region"
+      },
+      {
+        "name": "Tegal",
+        "regionName": "Tegal region"
+      },
+      {
+        "name": "Purwokerto",
+        "regionName": "Purwokerto region"
+      },
+      {
+        "name": "Tarogong",
+        "regionName": "Tarogong region"
+      },
+      {
+        "name": "Pekalongan",
+        "regionName": "Pekalongan region"
+      },
+      {
+        "name": "Jember",
+        "regionName": "Jember region"
+      },
+      {
+        "name": "Indramayu",
+        "regionName": "Indramayu region"
+      },
+      {
+        "name": "Kediri",
+        "regionName": "Kediri region"
+      },
+      {
+        "name": "Subang",
+        "regionName": "Subang region"
+      },
+      {
+        "name": "Lebak",
+        "regionName": "Lebak region"
+      },
+      {
+        "name": "Banyuwangi",
+        "regionName": "Banyuwangi region"
+      },
+      {
+        "name": "Cilacap",
+        "regionName": "Cilacap region"
+      },
+      {
+        "name": "Pandeglang",
+        "regionName": "Pandeglang region"
+      },
+      {
+        "name": "Probolinggo",
+        "regionName": "Probolinggo region"
+      },
+      {
+        "name": "Magelang",
+        "regionName": "Magelang region"
+      },
+      {
+        "name": "Grobogan",
+        "regionName": "Grobogan region"
+      },
+      {
+        "name": "Blitar",
+        "regionName": "Blitar region"
+      },
+      {
+        "name": "Jombang",
+        "regionName": "Jombang region"
+      },
+      {
+        "name": "Pemalang",
+        "regionName": "Pemalang region"
+      },
+      {
+        "name": "Bojonegoro",
+        "regionName": "Bojonegoro region"
+      },
+      {
+        "name": "Lamongan",
+        "regionName": "Lamongan region"
+      },
+      {
+        "name": "Pati",
+        "regionName": "Pati region"
+      },
+      {
+        "name": "Kuningan",
+        "regionName": "Kuningan region"
+      },
+      {
+        "name": "Tuban",
+        "regionName": "Tuban region"
+      },
+      {
+        "name": "Kebumen",
+        "regionName": "Kebumen region"
+      },
+      {
+        "name": "Jepara",
+        "regionName": "Jepara region"
+      },
+      {
+        "name": "Nganjuk",
+        "regionName": "Nganjuk region"
+      },
+      {
+        "name": "Sumenep",
+        "regionName": "Sumenep region"
+      },
+      {
+        "name": "Tulungagung",
+        "regionName": "Tulungagung region"
+      },
+      {
+        "name": "Lumajang",
+        "regionName": "Lumajang region"
+      },
+      {
+        "name": "Bangkalan",
+        "regionName": "Bangkalan region"
+      },
+      {
+        "name": "Sampang",
+        "regionName": "Sampang region"
+      },
+      {
+        "name": "Wonogiri",
+        "regionName": "Wonogiri region"
+      },
+      {
+        "name": "Madiun",
+        "regionName": "Madiun region"
+      },
+      {
+        "name": "Ponorogo",
+        "regionName": "Ponorogo region"
+      },
+      {
+        "name": "Sragen",
+        "regionName": "Sragen region"
+      },
+      {
+        "name": "Blora",
+        "regionName": "Blora region"
+      },
+      {
+        "name": "Pamekasan",
+        "regionName": "Pamekasan region"
+      },
+      {
+        "name": "Ngawi",
+        "regionName": "Ngawi region"
+      },
+      {
+        "name": "Kudus",
+        "regionName": "Kudus region"
+      },
+      {
+        "name": "Batang",
+        "regionName": "Batang region"
+      },
+      {
+        "name": "Bondowoso",
+        "regionName": "Bondowoso region"
+      },
+      {
+        "name": "Wonosobo",
+        "regionName": "Wonosobo region"
+      },
+      {
+        "name": "Gunung Kidul",
+        "regionName": "Gunung Kidul region"
+      },
+      {
+        "name": "Temanggung",
+        "regionName": "Temanggung region"
+      },
+      {
+        "name": "Trenggalek",
+        "regionName": "Trenggalek region"
+      },
+      {
+        "name": "Purworejo",
+        "regionName": "Purworejo region"
+      },
+      {
+        "name": "Situbondo",
+        "regionName": "Situbondo region"
+      },
+      {
+        "name": "Pangandaran",
+        "regionName": "Pangandaran region"
+      },
+      {
+        "name": "Magetan",
+        "regionName": "Magetan region"
+      },
+      {
+        "name": "Rembang",
+        "regionName": "Rembang region"
+      },
+      {
+        "name": "Pacitan",
+        "regionName": "Pacitan region"
+      },
+      {
+        "name": "Kulon Progo",
+        "regionName": "Kulon Progo region"
+      },
+      {
+        "name": "Medan",
+        "regionName": "Medan region"
+      },
+      {
+        "name": "Palembang",
+        "regionName": "Palembang region"
+      },
+      {
+        "name": "Batam City",
+        "regionName": "Batam City region"
+      },
+      {
+        "name": "Pekanbaru",
+        "regionName": "Pekanbaru region"
+      },
+      {
+        "name": "Padang",
+        "regionName": "Padang region"
+      },
+      {
+        "name": "Bandar Lampung",
+        "regionName": "Bandar Lampung region"
+      },
+      {
+        "name": "Lampung Tengah",
+        "regionName": "Lampung Tengah region"
+      },
+      {
+        "name": "Bengkalis",
+        "regionName": "Bengkalis region"
+      },
+      {
+        "name": "Agam",
+        "regionName": "Agam region"
+      },
+      {
+        "name": "Langkat",
+        "regionName": "Langkat region"
+      },
+      {
+        "name": "Kota Bengkulu",
+        "regionName": "Kota Bengkulu region"
+      },
+      {
+        "name": "Aceh Utara",
+        "regionName": "Aceh Utara region"
+      },
+      {
+        "name": "Ogan Komering Ulu Timur",
+        "regionName": "Ogan Komering Ulu Timur region"
+      },
+      {
+        "name": "Indragiri Hilir",
+        "regionName": "Indragiri Hilir region"
+      },
+      {
+        "name": "Tapanuli Tengah",
+        "regionName": "Tapanuli Tengah region"
+      },
+      {
+        "name": "Kota Jambi",
+        "regionName": "Kota Jambi region"
+      },
+      {
+        "name": "Serdang Bedagai",
+        "regionName": "Serdang Bedagai region"
+      },
+      {
+        "name": "Kampar",
+        "regionName": "Kampar region"
+      },
+      {
+        "name": "Ogan Komering Ilir",
+        "regionName": "Ogan Komering Ilir region"
+      },
+      {
+        "name": "Lampung Timur",
+        "regionName": "Lampung Timur region"
+      },
+      {
+        "name": "Simalungun",
+        "regionName": "Simalungun region"
+      },
+      {
+        "name": "Lampung Utara",
+        "regionName": "Lampung Utara region"
+      },
+      {
+        "name": "Lampung Selatan",
+        "regionName": "Lampung Selatan region"
+      },
+      {
+        "name": "Labuhan Batu Utara",
+        "regionName": "Labuhan Batu Utara region"
+      },
+      {
+        "name": "Indragiri Hulu",
+        "regionName": "Indragiri Hulu region"
+      },
+      {
+        "name": "Tanggamus",
+        "regionName": "Tanggamus region"
+      },
+      {
+        "name": "Aceh Selatan",
+        "regionName": "Aceh Selatan region"
+      },
+      {
+        "name": "Mandailing Natal",
+        "regionName": "Mandailing Natal region"
+      },
+      {
+        "name": "Muara Enim",
+        "regionName": "Muara Enim region"
+      },
+      {
+        "name": "Karo",
+        "regionName": "Karo region"
+      },
+      {
+        "name": "Asahan",
+        "regionName": "Asahan region"
+      },
+      {
+        "name": "Rokan Hilir",
+        "regionName": "Rokan Hilir region"
+      },
+      {
+        "name": "Pesawaran",
+        "regionName": "Pesawaran region"
+      },
+      {
+        "name": "Merangin",
+        "regionName": "Merangin region"
+      },
+      {
+        "name": "Solok",
+        "regionName": "Solok region"
+      },
+      {
+        "name": "Rokan Hulu",
+        "regionName": "Rokan Hulu region"
+      },
+      {
+        "name": "Bungo",
+        "regionName": "Bungo region"
+      },
+      {
+        "name": "Musi Rawas",
+        "regionName": "Musi Rawas region"
+      },
+      {
+        "name": "Lahat",
+        "regionName": "Lahat region"
+      },
+      {
+        "name": "Pasaman Barat",
+        "regionName": "Pasaman Barat region"
+      },
+      {
+        "name": "Aceh Besar",
+        "regionName": "Aceh Besar region"
+      },
+      {
+        "name": "Pelalawan",
+        "regionName": "Pelalawan region"
+      },
+      {
+        "name": "Tulangbawang",
+        "regionName": "Tulangbawang region"
+      },
+      {
+        "name": "Pesisir Selatan",
+        "regionName": "Pesisir Selatan region"
+      },
+      {
+        "name": "Sarolangun",
+        "regionName": "Sarolangun region"
+      },
+      {
+        "name": "Musi Banyuasin",
+        "regionName": "Musi Banyuasin region"
+      },
+      {
+        "name": "Bengkulu Utara",
+        "regionName": "Bengkulu Utara region"
+      },
+      {
+        "name": "Lima Puluh Kota",
+        "regionName": "Lima Puluh Kota region"
+      },
+      {
+        "name": "Bintan",
+        "regionName": "Bintan region"
+      },
+      {
+        "name": "Pidie",
+        "regionName": "Pidie region"
+      },
+      {
+        "name": "Padang Lawas Utara",
+        "regionName": "Padang Lawas Utara region"
+      },
+      {
+        "name": "Siak",
+        "regionName": "Siak region"
+      },
+      {
+        "name": "Bireuen",
+        "regionName": "Bireuen region"
+      },
+      {
+        "name": "Banyu Asin",
+        "regionName": "Banyu Asin region"
+      },
+      {
+        "name": "Simeulue",
+        "regionName": "Simeulue region"
+      },
+      {
+        "name": "Natuna",
+        "regionName": "Natuna region"
+      },
+      {
+        "name": "Kepulauan Mentawai",
+        "regionName": "Kepulauan Mentawai region"
+      },
+      {
+        "name": "Denpasar",
+        "regionName": "Denpasar region"
+      },
+      {
+        "name": "Mataram",
+        "regionName": "Mataram region"
+      },
+      {
+        "name": "Lombok Timur",
+        "regionName": "Lombok Timur region"
+      },
+      {
+        "name": "Buleleng",
+        "regionName": "Buleleng region"
+      },
+      {
+        "name": "Sikka",
+        "regionName": "Sikka region"
+      },
+      {
+        "name": "Lombok Tengah",
+        "regionName": "Lombok Tengah region"
+      },
+      {
+        "name": "Manggarai",
+        "regionName": "Manggarai region"
+      },
+      {
+        "name": "Bima",
+        "regionName": "Bima region"
+      },
+      {
+        "name": "Sumba Barat Daya",
+        "regionName": "Sumba Barat Daya region"
+      },
+      {
+        "name": "Kota Kupang",
+        "regionName": "Kota Kupang region"
+      },
+      {
+        "name": "Karang Asem",
+        "regionName": "Karang Asem region"
+      },
+      {
+        "name": "Timor Tengah Utara",
+        "regionName": "Timor Tengah Utara region"
+      },
+      {
+        "name": "Flores Timur",
+        "regionName": "Flores Timur region"
+      },
+      {
+        "name": "Sumbawa",
+        "regionName": "Sumbawa region"
+      },
+      {
+        "name": "Timor Tengah Selatan",
+        "regionName": "Timor Tengah Selatan region"
+      },
+      {
+        "name": "Lombok Utara",
+        "regionName": "Lombok Utara region"
+      },
+      {
+        "name": "Rote Ndao",
+        "regionName": "Rote Ndao region"
+      },
+      {
+        "name": "Sabu Raijua",
+        "regionName": "Sabu Raijua region"
+      },
+      {
+        "name": "Makassar",
+        "regionName": "Makassar region"
+      },
+      {
+        "name": "Wajo",
+        "regionName": "Wajo region"
+      },
+      {
+        "name": "Luwu",
+        "regionName": "Luwu region"
+      },
+      {
+        "name": "Bone",
+        "regionName": "Bone region"
+      },
+      {
+        "name": "Kota Kendari",
+        "regionName": "Kota Kendari region"
+      },
+      {
+        "name": "Kota Palu",
+        "regionName": "Kota Palu region"
+      },
+      {
+        "name": "Minahasa",
+        "regionName": "Minahasa region"
+      },
+      {
+        "name": "Polewali Mandar",
+        "regionName": "Polewali Mandar region"
+      },
+      {
+        "name": "Parigi Moutong",
+        "regionName": "Parigi Moutong region"
+      },
+      {
+        "name": "Muna",
+        "regionName": "Muna region"
+      },
+      {
+        "name": "Kota Manado",
+        "regionName": "Kota Manado region"
+      },
+      {
+        "name": "Bulukumba",
+        "regionName": "Bulukumba region"
+      },
+      {
+        "name": "Kolaka",
+        "regionName": "Kolaka region"
+      },
+      {
+        "name": "Mamuju",
+        "regionName": "Mamuju region"
+      },
+      {
+        "name": "Gorontalo",
+        "regionName": "Gorontalo region"
+      },
+      {
+        "name": "Bolaang Mongondow",
+        "regionName": "Bolaang Mongondow region"
+      },
+      {
+        "name": "Kota Gorontalo",
+        "regionName": "Kota Gorontalo region"
+      },
+      {
+        "name": "Luwu Utara",
+        "regionName": "Luwu Utara region"
+      },
+      {
+        "name": "Jeneponto",
+        "regionName": "Jeneponto region"
+      },
+      {
+        "name": "Banggai",
+        "regionName": "Banggai region"
+      },
+      {
+        "name": "Poso",
+        "regionName": "Poso region"
+      },
+      {
+        "name": "Pangkajene Dan Kepulauan",
+        "regionName": "Pangkajene Dan Kepulauan region"
+      },
+      {
+        "name": "Banggai Kepulauan",
+        "regionName": "Banggai Kepulauan region"
+      },
+      {
+        "name": "Kepulauan Sangihe",
+        "regionName": "Kepulauan Sangihe region"
+      },
+      {
+        "name": "Kepulauan Talaud",
+        "regionName": "Kepulauan Talaud region"
+      },
+      {
+        "name": "Wakatobi",
+        "regionName": "Wakatobi region"
+      },
+      {
+        "name": "Samarinda",
+        "regionName": "Samarinda region"
+      },
+      {
+        "name": "Hulu Sungai Tengah",
+        "regionName": "Hulu Sungai Tengah region"
+      },
+      {
+        "name": "Kapuas",
+        "regionName": "Kapuas region"
+      },
+      {
+        "name": "Kota Balikpapan",
+        "regionName": "Kota Balikpapan region"
+      },
+      {
+        "name": "Sanggau",
+        "regionName": "Sanggau region"
+      },
+      {
+        "name": "Kota Pontianak",
+        "regionName": "Kota Pontianak region"
+      },
+      {
+        "name": "Banjar",
+        "regionName": "Banjar region"
+      },
+      {
+        "name": "Kota Banjarmasin",
+        "regionName": "Kota Banjarmasin region"
+      },
+      {
+        "name": "Sambas",
+        "regionName": "Sambas region"
+      },
+      {
+        "name": "Kotawaringin Timur",
+        "regionName": "Kotawaringin Timur region"
+      },
+      {
+        "name": "Kota Tarakan",
+        "regionName": "Kota Tarakan region"
+      },
+      {
+        "name": "Bangka Tengah",
+        "regionName": "Bangka Tengah region"
+      },
+      {
+        "name": "Bangka",
+        "regionName": "Bangka region"
+      },
+      {
+        "name": "Kutai Kartanegara",
+        "regionName": "Kutai Kartanegara region"
+      },
+      {
+        "name": "Kubu Raya",
+        "regionName": "Kubu Raya region"
+      },
+      {
+        "name": "Kota Baru",
+        "regionName": "Kota Baru region"
+      },
+      {
+        "name": "Kutai Timur",
+        "regionName": "Kutai Timur region"
+      },
+      {
+        "name": "Ketapang",
+        "regionName": "Ketapang region"
+      },
+      {
+        "name": "Kutai Barat",
+        "regionName": "Kutai Barat region"
+      },
+      {
+        "name": "Paniai",
+        "regionName": "Paniai region"
+      },
+      {
+        "name": "Tolikara",
+        "regionName": "Tolikara region"
+      },
+      {
+        "name": "Kota Jayapura",
+        "regionName": "Kota Jayapura region"
+      },
+      {
+        "name": "Mimika",
+        "regionName": "Mimika region"
+      },
+      {
+        "name": "Yalimo",
+        "regionName": "Yalimo region"
+      },
+      {
+        "name": "Kota Sorong",
+        "regionName": "Kota Sorong region"
+      },
+      {
+        "name": "Yahukimo",
+        "regionName": "Yahukimo region"
+      },
+      {
+        "name": "Puncak Jaya",
+        "regionName": "Puncak Jaya region"
+      },
+      {
+        "name": "Merauke",
+        "regionName": "Merauke region"
+      },
+      {
+        "name": "Biak Numfor",
+        "regionName": "Biak Numfor region"
+      },
+      {
+        "name": "Manokwari",
+        "regionName": "Manokwari region"
+      },
+      {
+        "name": "Kota Ambon",
+        "regionName": "Kota Ambon region"
+      },
+      {
+        "name": "Maluku Tengah",
+        "regionName": "Maluku Tengah region"
+      },
+      {
+        "name": "Halmahera Utara",
+        "regionName": "Halmahera Utara region"
+      },
+      {
+        "name": "Kepulauan Sula",
+        "regionName": "Kepulauan Sula region"
+      },
+      {
+        "name": "Buru",
+        "regionName": "Buru region"
+      },
+      {
+        "name": "Maluku Tenggara",
+        "regionName": "Maluku Tenggara region"
+      },
+      {
+        "name": "Maluku Tenggara Barat",
+        "regionName": "Maluku Tenggara Barat region"
+      },
+      {
+        "name": "Kepulauan Aru",
+        "regionName": "Kepulauan Aru region"
+      },
+      {
+        "name": "Pulau Morotai",
+        "regionName": "Pulau Morotai region"
+      },
+      {
+        "name": "Maluku Barat Daya",
+        "regionName": "Maluku Barat Daya region"
+      },
+      {
+        "name": "Tangerang",
+        "regionName": "Tangerang region"
+      },
+      {
+        "name": "Tasikmalaya",
+        "regionName": "Tasikmalaya region"
+      },
+      {
+        "name": "Pekalongan",
+        "regionName": "Pekalongan region"
+      },
+      {
+        "name": "Jakarta",
+        "regionName": "Jakarta region"
+      },
+      {
+        "name": "Tolikara",
+        "regionName": "Tolikara region"
+      },
+      {
+        "name": "Yahukimo",
+        "regionName": "Yahukimo region"
+      },
+      {
+        "name": "Merauke",
+        "regionName": "Merauke region"
+      },
+      {
+        "name": "Manokwari",
+        "regionName": "Manokwari region"
+      },
+      {
+        "name": "Aceh Selatan",
+        "regionName": "Aceh Selatan region"
+      },
+      {
+        "name": "Nias Selatan",
+        "regionName": "Nias Selatan region"
+      },
+      {
+        "name": "Tanjung Jabung Barat",
+        "regionName": "Tanjung Jabung Barat region"
+      },
+      {
+        "name": "Siak",
+        "regionName": "Siak region"
+      },
+      {
+        "name": "Bireuen",
+        "regionName": "Bireuen region"
+      },
+      {
+        "name": "Halmahera Selatan",
+        "regionName": "Halmahera Selatan region"
+      },
+      {
+        "name": "Kota Ambon",
+        "regionName": "Kota Ambon region"
+      },
+      {
+        "name": "Kepulauan Sula",
+        "regionName": "Kepulauan Sula region"
+      },
+      {
+        "name": "Maluku Tenggara",
+        "regionName": "Maluku Tenggara region"
+      },
+      {
+        "name": "Maluku Tenggara Barat",
+        "regionName": "Maluku Tenggara Barat region"
+      },
+      {
+        "name": "Kepulauan Aru",
+        "regionName": "Kepulauan Aru region"
+      },
+      {
+        "name": "Pulau Morotai",
+        "regionName": "Pulau Morotai region"
+      },
+      {
+        "name": "Maluku Barat Daya",
+        "regionName": "Maluku Barat Daya region"
+      },
+      {
+        "name": "Kutai Barat",
+        "regionName": "Kutai Barat region"
+      },
+      {
+        "name": "Banggai Kepulauan",
+        "regionName": "Banggai Kepulauan region"
+      },
+      {
+        "name": "Kepulauan Talaud",
+        "regionName": "Kepulauan Talaud region"
+      },
+      {
+        "name": "Tanjung Jabung Barat",
+        "regionName": "Tanjung Jabung Barat region"
       }
     ],
     "rule": {
@@ -68146,31 +69530,6 @@
       "realm": "cambodia"
     },
     {
-      "id": "kua",
-      "name": "Kuala Lumpur",
-      "origin": {
-        "lon": 101.763,
-        "lat": 3.1427
-      },
-      "center": [
-        101.763,
-        3.1427
-      ],
-      "zoom": 11.2,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        101.2,
-        2.576,
-        101.988,
-        3.485
-      ],
-      "place": 4029,
-      "country": "MY",
-      "localTrips": 27632038.0,
-      "realm": "malaysia"
-    },
-    {
       "id": "joo",
       "name": "Johor Bahru",
       "origin": {
@@ -68192,7 +69551,7 @@
       ],
       "place": 4030,
       "country": "MY",
-      "localTrips": 5440280.0,
+      "localTrips": 5436178.0,
       "realm": "malaysia"
     },
     {
@@ -68218,7 +69577,7 @@
       ],
       "place": 4031,
       "country": "MY",
-      "localTrips": 4914507.0,
+      "localTrips": 4914651.0,
       "realm": "malaysia"
     },
     {
@@ -68244,7 +69603,7 @@
       ],
       "place": 4032,
       "country": "MY",
-      "localTrips": 4844519.0,
+      "localTrips": 4844652.0,
       "realm": "malaysia"
     },
     {
@@ -68270,7 +69629,7 @@
       ],
       "place": 4033,
       "country": "MY",
-      "localTrips": 4010605.0,
+      "localTrips": 4010642.0,
       "realm": "malaysia"
     },
     {
@@ -68296,7 +69655,7 @@
       ],
       "place": 4034,
       "country": "MY",
-      "localTrips": 3965810.0,
+      "localTrips": 3965366.0,
       "realm": "malaysia"
     },
     {
@@ -68323,7 +69682,7 @@
       "place": 4035,
       "country": "MY",
       "localTrips": 3485601.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "kut",
@@ -68348,7 +69707,7 @@
       ],
       "place": 4036,
       "country": "MY",
-      "localTrips": 3346742.0,
+      "localTrips": 3346771.0,
       "realm": "malaysia"
     },
     {
@@ -68374,7 +69733,7 @@
       ],
       "place": 4037,
       "country": "MY",
-      "localTrips": 3155186.0,
+      "localTrips": 3155418.0,
       "realm": "malaysia"
     },
     {
@@ -68401,7 +69760,7 @@
       "place": 4038,
       "country": "MY",
       "localTrips": 3148726.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "koe",
@@ -68426,7 +69785,7 @@
       ],
       "place": 4039,
       "country": "MY",
-      "localTrips": 3221899.0,
+      "localTrips": 3221992.0,
       "realm": "malaysia"
     },
     {
@@ -68452,7 +69811,7 @@
       ],
       "place": 4040,
       "country": "MY",
-      "localTrips": 2614158.0,
+      "localTrips": 2613910.0,
       "realm": "malaysia"
     },
     {
@@ -68478,7 +69837,7 @@
       ],
       "place": 4041,
       "country": "MY",
-      "localTrips": 2672813.0,
+      "localTrips": 2672631.0,
       "realm": "malaysia"
     },
     {
@@ -68505,7 +69864,7 @@
       "place": 4042,
       "country": "MY",
       "localTrips": 2574156.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "sna",
@@ -68531,7 +69890,7 @@
       "place": 4043,
       "country": "MY",
       "localTrips": 1795001.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "baf",
@@ -68556,7 +69915,7 @@
       ],
       "place": 4044,
       "country": "MY",
-      "localTrips": 1661541.0,
+      "localTrips": 1661459.0,
       "realm": "malaysia"
     },
     {
@@ -68582,7 +69941,7 @@
       ],
       "place": 4045,
       "country": "MY",
-      "localTrips": 1318540.0,
+      "localTrips": 1318557.0,
       "realm": "malaysia"
     },
     {
@@ -68608,7 +69967,7 @@
       ],
       "place": 4046,
       "country": "MY",
-      "localTrips": 1630801.0,
+      "localTrips": 1630886.0,
       "realm": "malaysia"
     },
     {
@@ -68635,7 +69994,7 @@
       "place": 4047,
       "country": "MY",
       "localTrips": 1601682.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "lru",
@@ -68660,7 +70019,7 @@
       ],
       "place": 4048,
       "country": "MY",
-      "localTrips": 1488755.0,
+      "localTrips": 1488794.0,
       "realm": "malaysia"
     },
     {
@@ -68687,7 +70046,7 @@
       "place": 4049,
       "country": "MY",
       "localTrips": 1352793.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "tua",
@@ -68713,7 +70072,7 @@
       "place": 4050,
       "country": "MY",
       "localTrips": 1225404.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "hik",
@@ -68738,7 +70097,7 @@
       ],
       "place": 4051,
       "country": "MY",
-      "localTrips": 1072590.0,
+      "localTrips": 1072588.0,
       "realm": "malaysia"
     },
     {
@@ -68764,7 +70123,7 @@
       ],
       "place": 4052,
       "country": "MY",
-      "localTrips": 682340.0,
+      "localTrips": 681868.0,
       "realm": "malaysia"
     },
     {
@@ -68791,7 +70150,7 @@
       "place": 4053,
       "country": "MY",
       "localTrips": 809022.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "mnj",
@@ -68816,7 +70175,7 @@
       ],
       "place": 4054,
       "country": "MY",
-      "localTrips": 686308.0,
+      "localTrips": 686290.0,
       "realm": "malaysia"
     },
     {
@@ -68843,7 +70202,7 @@
       "place": 4055,
       "country": "MY",
       "localTrips": 527170.0,
-      "realm": "malaysia"
+      "realm": "borneo"
     },
     {
       "id": "pnt",
@@ -68868,7 +70227,7 @@
       ],
       "place": 4056,
       "country": "MY",
-      "localTrips": 303695.0,
+      "localTrips": 303241.0,
       "realm": "malaysia"
     },
     {
@@ -68894,7 +70253,7 @@
       ],
       "place": 4057,
       "country": "MY",
-      "localTrips": 230633.0,
+      "localTrips": 230637.0,
       "realm": "malaysia"
     },
     {
@@ -68921,7 +70280,7 @@
       "place": 4058,
       "country": "BN",
       "localTrips": 1192657.0,
-      "realm": "brunei"
+      "realm": "borneo"
     },
     {
       "id": "bnl",
@@ -68948,6 +70307,5287 @@
       "country": "KH",
       "localTrips": 433856.0,
       "realm": "cambodia"
+    },
+    {
+      "id": "kua",
+      "name": "Kuala Lumpur",
+      "origin": {
+        "lon": 101.6958,
+        "lat": 3.1494
+      },
+      "center": [
+        101.6958,
+        3.1494
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        101.2,
+        2.576,
+        101.988,
+        3.485
+      ],
+      "place": 4060,
+      "country": "MY",
+      "realm": "malaysia",
+      "localTrips": 27631105.0
+    },
+    {
+      "id": "sur",
+      "name": "Surabaya",
+      "origin": {
+        "lon": 112.7333,
+        "lat": -7.258
+      },
+      "center": [
+        112.7333,
+        -7.258
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.269,
+        -8.482,
+        113.119,
+        -5.697
+      ],
+      "place": 4181,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 38540184.0
+    },
+    {
+      "id": "bad",
+      "name": "Bandung",
+      "origin": {
+        "lon": 107.6103,
+        "lat": -6.9174
+      },
+      "center": [
+        107.6103,
+        -6.9174
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.163,
+        -7.328,
+        108.239,
+        -6.56
+      ],
+      "place": 4183,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 29809002.0
+    },
+    {
+      "id": "yog",
+      "name": "Yogyakarta",
+      "origin": {
+        "lon": 110.3895,
+        "lat": -7.7855
+      },
+      "center": [
+        110.3895,
+        -7.7855
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.186,
+        -8.047,
+        111.213,
+        -7.121
+      ],
+      "place": 4184,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 20427823.0
+    },
+    {
+      "id": "sem",
+      "name": "Semarang",
+      "origin": {
+        "lon": 110.4085,
+        "lat": -6.9985
+      },
+      "center": [
+        110.4085,
+        -6.9985
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.904,
+        -7.515,
+        110.858,
+        -6.688
+      ],
+      "place": 4185,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 13674066.0
+    },
+    {
+      "id": "cir",
+      "name": "Cirebon",
+      "origin": {
+        "lon": 108.5653,
+        "lat": -6.7227
+      },
+      "center": [
+        108.5653,
+        -6.7227
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.024,
+        -7.092,
+        108.867,
+        -6.498
+      ],
+      "place": 4187,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 11131033.0
+    },
+    {
+      "id": "teg",
+      "name": "Tegal",
+      "origin": {
+        "lon": 109.0367,
+        "lat": -6.8687
+      },
+      "center": [
+        109.0367,
+        -6.8687
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.674,
+        -7.37,
+        109.37,
+        -6.734
+      ],
+      "place": 4188,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 9455469.0
+    },
+    {
+      "id": "pur",
+      "name": "Purwokerto",
+      "origin": {
+        "lon": 109.6959,
+        "lat": -7.396
+      },
+      "center": [
+        109.6959,
+        -7.396
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.873,
+        -7.682,
+        109.936,
+        -7.143
+      ],
+      "place": 4189,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 9305625.0
+    },
+    {
+      "id": "tar",
+      "name": "Tarogong",
+      "origin": {
+        "lon": 107.9041,
+        "lat": -7.2175
+      },
+      "center": [
+        107.9041,
+        -7.2175
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.402,
+        -7.759,
+        108.155,
+        -6.927
+      ],
+      "place": 4190,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 7823926.0
+    },
+    {
+      "id": "jem",
+      "name": "Jember",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.6976,
+        "lat": -8.1751
+      },
+      "center": [
+        113.6976,
+        -8.1751
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.246,
+        -8.577,
+        114.062,
+        -7.95
+      ],
+      "place": 4192,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 7088842.0
+    },
+    {
+      "id": "inm",
+      "name": "Indramayu",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.323,
+        "lat": -6.3336
+      },
+      "center": [
+        108.323,
+        -6.3336
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.832,
+        -6.683,
+        108.562,
+        -6.201
+      ],
+      "place": 4193,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 5181066.0
+    },
+    {
+      "id": "ked",
+      "name": "Kediri",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1917,
+        "lat": -7.7611
+      },
+      "center": [
+        112.1917,
+        -7.7611
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.778,
+        -8.031,
+        112.441,
+        -7.574
+      ],
+      "place": 4194,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 4999161.0
+    },
+    {
+      "id": "sub",
+      "name": "Subang",
+      "kind": "zone",
+      "origin": {
+        "lon": 107.7629,
+        "lat": -6.5687
+      },
+      "center": [
+        107.7629,
+        -6.5687
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.507,
+        -6.833,
+        107.944,
+        -6.164
+      ],
+      "place": 4195,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 4355145.0
+    },
+    {
+      "id": "lek",
+      "name": "Lebak",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.2529,
+        "lat": -6.3579
+      },
+      "center": [
+        106.2529,
+        -6.3579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.844,
+        -7.018,
+        106.545,
+        -6.27
+      ],
+      "place": 4196,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3987894.0
+    },
+    {
+      "id": "baw",
+      "name": "Banyuwangi",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.3761,
+        "lat": -8.2076
+      },
+      "center": [
+        114.3761,
+        -8.2076
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.818,
+        -8.799,
+        114.624,
+        -7.866
+      ],
+      "place": 4197,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 4754417.0
+    },
+    {
+      "id": "cia",
+      "name": "Cilacap",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.0017,
+        "lat": -7.7043
+      },
+      "center": [
+        109.0017,
+        -7.7043
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.537,
+        -7.803,
+        109.414,
+        -7.12
+      ],
+      "place": 4198,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 4349289.0
+    },
+    {
+      "id": "pan",
+      "name": "Pandeglang",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.1065,
+        "lat": -6.3092
+      },
+      "center": [
+        106.1065,
+        -6.3092
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.081,
+        -7.035,
+        106.198,
+        -6.202
+      ],
+      "place": 4199,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3686043.0
+    },
+    {
+      "id": "pro",
+      "name": "Probolinggo",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.416,
+        "lat": -7.7611
+      },
+      "center": [
+        113.416,
+        -7.7611
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.909,
+        -8.046,
+        113.662,
+        -7.657
+      ],
+      "place": 4200,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3864832.0
+    },
+    {
+      "id": "mln",
+      "name": "Magelang",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.225,
+        "lat": -7.5096
+      },
+      "center": [
+        110.225,
+        -7.5096
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.025,
+        -7.725,
+        110.465,
+        -7.302
+      ],
+      "place": 4201,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3608643.0
+    },
+    {
+      "id": "grg",
+      "name": "Grobogan",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.9128,
+        "lat": -7.0877
+      },
+      "center": [
+        110.9128,
+        -7.0877
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.523,
+        -7.363,
+        111.266,
+        -6.891
+      ],
+      "place": 4202,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3495035.0
+    },
+    {
+      "id": "bli",
+      "name": "Blitar",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1917,
+        "lat": -8.1183
+      },
+      "center": [
+        112.1917,
+        -8.1183
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.937,
+        -8.37,
+        112.498,
+        -7.892
+      ],
+      "place": 4203,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3538538.0
+    },
+    {
+      "id": "jom",
+      "name": "Jombang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.2364,
+        "lat": -7.542
+      },
+      "center": [
+        112.2364,
+        -7.542
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.044,
+        -7.798,
+        112.475,
+        -7.325
+      ],
+      "place": 4204,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3348598.0
+    },
+    {
+      "id": "pem",
+      "name": "Pemalang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.3909,
+        "lat": -6.893
+      },
+      "center": [
+        109.3909,
+        -6.893
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.167,
+        -7.267,
+        109.618,
+        -6.755
+      ],
+      "place": 4205,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3276242.0
+    },
+    {
+      "id": "boj",
+      "name": "Bojonegoro",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.885,
+        "lat": -7.1526
+      },
+      "center": [
+        111.885,
+        -7.1526
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.405,
+        -7.488,
+        112.185,
+        -6.968
+      ],
+      "place": 4206,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3124846.0
+    },
+    {
+      "id": "lmo",
+      "name": "Lamongan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.4215,
+        "lat": -7.1201
+      },
+      "center": [
+        112.4215,
+        -7.1201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.054,
+        -7.403,
+        112.571,
+        -6.843
+      ],
+      "place": 4207,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3113510.0
+    },
+    {
+      "id": "pax",
+      "name": "Pati",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.0349,
+        "lat": -6.7552
+      },
+      "center": [
+        111.0349,
+        -6.7552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.784,
+        -7.022,
+        111.29,
+        -6.392
+      ],
+      "place": 4208,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3287490.0
+    },
+    {
+      "id": "kui",
+      "name": "Kuningan",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.4815,
+        "lat": -6.9822
+      },
+      "center": [
+        108.4815,
+        -6.9822
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.364,
+        -7.212,
+        108.81,
+        -6.762
+      ],
+      "place": 4209,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2960668.0
+    },
+    {
+      "id": "tub",
+      "name": "Tuban",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.9131,
+        "lat": -6.8687
+      },
+      "center": [
+        111.9131,
+        -6.8687
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.551,
+        -7.184,
+        112.241,
+        -6.736
+      ],
+      "place": 4210,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3059916.0
+    },
+    {
+      "id": "keb",
+      "name": "Kebumen",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.6588,
+        "lat": -7.6719
+      },
+      "center": [
+        109.6588,
+        -7.6719
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.361,
+        -7.849,
+        109.858,
+        -7.439
+      ],
+      "place": 4211,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3226942.0
+    },
+    {
+      "id": "jep",
+      "name": "Jepara",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.6716,
+        "lat": -6.593
+      },
+      "center": [
+        110.6716,
+        -6.593
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.162,
+        -6.815,
+        110.996,
+        -5.707
+      ],
+      "place": 4212,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2961498.0
+    },
+    {
+      "id": "ngj",
+      "name": "Nganjuk",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.8957,
+        "lat": -7.6069
+      },
+      "center": [
+        111.8957,
+        -7.6069
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.707,
+        -7.855,
+        112.188,
+        -7.375
+      ],
+      "place": 4213,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2749009.0
+    },
+    {
+      "id": "sue",
+      "name": "Sumenep",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.8579,
+        "lat": -7.0066
+      },
+      "center": [
+        113.8579,
+        -7.0066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.56,
+        -7.27,
+        116.289,
+        -5.024
+      ],
+      "place": 4214,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 3047623.0
+    },
+    {
+      "id": "tuu",
+      "name": "Tulungagung",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.9009,
+        "lat": -8.0615
+      },
+      "center": [
+        111.9009,
+        -8.0615
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.693,
+        -8.331,
+        112.141,
+        -7.815
+      ],
+      "place": 4215,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2765396.0
+    },
+    {
+      "id": "luj",
+      "name": "Lumajang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.2186,
+        "lat": -8.1346
+      },
+      "center": [
+        113.2186,
+        -8.1346
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.882,
+        -8.37,
+        113.398,
+        -7.877
+      ],
+      "place": 4216,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2868486.0
+    },
+    {
+      "id": "bnn",
+      "name": "Bangkalan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.7489,
+        "lat": -7.0309
+      },
+      "center": [
+        112.7489,
+        -7.0309
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        112.654,
+        -7.231,
+        113.166,
+        -6.861
+      ],
+      "place": 4217,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2427856.0
+    },
+    {
+      "id": "smp",
+      "name": "Sampang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.2447,
+        "lat": -7.1931
+      },
+      "center": [
+        113.2447,
+        -7.1931
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.021,
+        -7.333,
+        113.502,
+        -6.868
+      ],
+      "place": 4218,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2513552.0
+    },
+    {
+      "id": "woi",
+      "name": "Wonogiri",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.9139,
+        "lat": -7.8017
+      },
+      "center": [
+        110.9139,
+        -7.8017
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.737,
+        -8.231,
+        111.338,
+        -7.694
+      ],
+      "place": 4219,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2368366.0
+    },
+    {
+      "id": "mdu",
+      "name": "Madiun",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.5236,
+        "lat": -7.6637
+      },
+      "center": [
+        111.5236,
+        -7.6637
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.431,
+        -7.833,
+        111.866,
+        -7.391
+      ],
+      "place": 4220,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2279350.0
+    },
+    {
+      "id": "pno",
+      "name": "Ponorogo",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.4679,
+        "lat": -7.8748
+      },
+      "center": [
+        111.4679,
+        -7.8748
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.255,
+        -8.194,
+        111.805,
+        -7.748
+      ],
+      "place": 4221,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2410709.0
+    },
+    {
+      "id": "srn",
+      "name": "Sragen",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.0248,
+        "lat": -7.4284
+      },
+      "center": [
+        111.0248,
+        -7.4284
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.75,
+        -7.556,
+        111.174,
+        -7.229
+      ],
+      "place": 4222,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2207191.0
+    },
+    {
+      "id": "blr",
+      "name": "Blora",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.4161,
+        "lat": -6.966
+      },
+      "center": [
+        111.4161,
+        -6.966
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.088,
+        -7.393,
+        111.649,
+        -6.827
+      ],
+      "place": 4223,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2213627.0
+    },
+    {
+      "id": "pme",
+      "name": "Pamekasan",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.4803,
+        "lat": -7.1607
+      },
+      "center": [
+        113.4803,
+        -7.1607
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.338,
+        -7.273,
+        113.669,
+        -6.869
+      ],
+      "place": 4224,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2298272.0
+    },
+    {
+      "id": "ngw",
+      "name": "Ngawi",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.4435,
+        "lat": -7.4122
+      },
+      "center": [
+        111.4435,
+        -7.4122
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.1,
+        -7.639,
+        111.69,
+        -7.226
+      ],
+      "place": 4225,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2061155.0
+    },
+    {
+      "id": "kud",
+      "name": "Kudus",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.8426,
+        "lat": -6.8119
+      },
+      "center": [
+        110.8426,
+        -6.8119
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.74,
+        -6.998,
+        110.996,
+        -6.597
+      ],
+      "place": 4226,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2160211.0
+    },
+    {
+      "id": "btn",
+      "name": "Batang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.734,
+        "lat": -6.9093
+      },
+      "center": [
+        109.734,
+        -6.9093
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.654,
+        -7.215,
+        110.072,
+        -6.85
+      ],
+      "place": 4227,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2054408.0
+    },
+    {
+      "id": "bow",
+      "name": "Bondowoso",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.8233,
+        "lat": -7.9154
+      },
+      "center": [
+        113.8233,
+        -7.9154
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.604,
+        -8.152,
+        114.268,
+        -7.738
+      ],
+      "place": 4228,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2049386.0
+    },
+    {
+      "id": "wos",
+      "name": "Wonosobo",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.9015,
+        "lat": -7.3635
+      },
+      "center": [
+        109.9015,
+        -7.3635
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.719,
+        -7.631,
+        110.093,
+        -7.169
+      ],
+      "place": 4229,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2094757.0
+    },
+    {
+      "id": "gun",
+      "name": "Gunung Kidul",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.5995,
+        "lat": -7.9641
+      },
+      "center": [
+        110.5995,
+        -7.9641
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.312,
+        -8.223,
+        110.857,
+        -7.764
+      ],
+      "place": 4230,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1833626.0
+    },
+    {
+      "id": "tea",
+      "name": "Temanggung",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.1849,
+        "lat": -7.3148
+      },
+      "center": [
+        110.1849,
+        -7.3148
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.914,
+        -7.421,
+        110.349,
+        -7.059
+      ],
+      "place": 4231,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1823773.0
+    },
+    {
+      "id": "trl",
+      "name": "Trenggalek",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.6571,
+        "lat": -8.0452
+      },
+      "center": [
+        111.6571,
+        -8.0452
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.373,
+        -8.402,
+        111.866,
+        -7.87
+      ],
+      "place": 4232,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1902302.0
+    },
+    {
+      "id": "puo",
+      "name": "Purworejo",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.0164,
+        "lat": -7.7124
+      },
+      "center": [
+        110.0164,
+        -7.7124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.779,
+        -7.915,
+        110.16,
+        -7.501
+      ],
+      "place": 4233,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1856266.0
+    },
+    {
+      "id": "sio",
+      "name": "Situbondo",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.0086,
+        "lat": -7.7043
+      },
+      "center": [
+        114.0086,
+        -7.7043
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.554,
+        -8.012,
+        114.486,
+        -7.586
+      ],
+      "place": 4234,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1855132.0
+    },
+    {
+      "id": "png",
+      "name": "Pangandaran",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.6593,
+        "lat": -7.6962
+      },
+      "center": [
+        108.6593,
+        -7.6962
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.294,
+        -7.839,
+        108.82,
+        -7.313
+      ],
+      "place": 4235,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1526645.0
+    },
+    {
+      "id": "mta",
+      "name": "Magetan",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.3217,
+        "lat": -7.6556
+      },
+      "center": [
+        111.3217,
+        -7.6556
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.163,
+        -7.819,
+        111.532,
+        -7.489
+      ],
+      "place": 4236,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1526138.0
+    },
+    {
+      "id": "rem",
+      "name": "Rembang",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.3387,
+        "lat": -6.7065
+      },
+      "center": [
+        111.3387,
+        -6.7065
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        111.215,
+        -6.938,
+        111.71,
+        -6.602
+      ],
+      "place": 4237,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1636004.0
+    },
+    {
+      "id": "pac",
+      "name": "Pacitan",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.0998,
+        "lat": -8.1914
+      },
+      "center": [
+        111.0998,
+        -8.1914
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.88,
+        -8.303,
+        111.445,
+        -7.9
+      ],
+      "place": 4238,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1526090.0
+    },
+    {
+      "id": "kuo",
+      "name": "Kulon Progo",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.1605,
+        "lat": -7.8585
+      },
+      "center": [
+        110.1605,
+        -7.8585
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.985,
+        -8.001,
+        110.293,
+        -7.623
+      ],
+      "place": 4239,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 862892.0
+    },
+    {
+      "id": "med",
+      "name": "Medan",
+      "origin": {
+        "lon": 98.6548,
+        "lat": 3.5878
+      },
+      "center": [
+        98.6548,
+        3.5878
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.422,
+        3.023,
+        98.964,
+        3.927
+      ],
+      "place": 4240,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 14056094.0
+    },
+    {
+      "id": "pal",
+      "name": "Palembang",
+      "origin": {
+        "lon": 104.7389,
+        "lat": -2.9727
+      },
+      "center": [
+        104.7389,
+        -2.9727
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.595,
+        -3.135,
+        104.879,
+        -2.836
+      ],
+      "place": 4241,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 6113219.0
+    },
+    {
+      "id": "bat",
+      "name": "Batam City",
+      "origin": {
+        "lon": 104.0265,
+        "lat": 1.1606
+      },
+      "center": [
+        104.0265,
+        1.1606
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.73,
+        0.456,
+        104.376,
+        1.218
+      ],
+      "place": 4242,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 4343089.0
+    },
+    {
+      "id": "pek",
+      "name": "Pekanbaru",
+      "origin": {
+        "lon": 101.4416,
+        "lat": 0.5136
+      },
+      "center": [
+        101.4416,
+        0.5136
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.305,
+        0.402,
+        101.624,
+        0.709
+      ],
+      "place": 4243,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3016515.0
+    },
+    {
+      "id": "pad",
+      "name": "Padang",
+      "origin": {
+        "lon": 100.36,
+        "lat": -0.9503
+      },
+      "center": [
+        100.36,
+        -0.9503
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.272,
+        -1.154,
+        100.704,
+        -0.708
+      ],
+      "place": 4244,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3602114.0
+    },
+    {
+      "id": "bap",
+      "name": "Bandar Lampung",
+      "origin": {
+        "lon": 105.2607,
+        "lat": -5.4097
+      },
+      "center": [
+        105.2607,
+        -5.4097
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.16,
+        -5.536,
+        105.369,
+        -5.308
+      ],
+      "place": 4245,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2814784.0
+    },
+    {
+      "id": "lmp",
+      "name": "Lampung Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.7065,
+        "lat": -4.5593
+      },
+      "center": [
+        105.7065,
+        -4.5593
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.529,
+        -5.283,
+        105.839,
+        -4.462
+      ],
+      "place": 4246,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 4056175.0
+    },
+    {
+      "id": "bnk",
+      "name": "Bengkalis",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.195,
+        "lat": 1.2738
+      },
+      "center": [
+        101.195,
+        1.2738
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.914,
+        0.667,
+        103.178,
+        2.29
+      ],
+      "place": 4247,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3862192.0
+    },
+    {
+      "id": "aga",
+      "name": "Agam",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.4122,
+        "lat": -0.3114
+      },
+      "center": [
+        100.4122,
+        -0.3114
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.73,
+        -0.836,
+        100.868,
+        -0.012
+      ],
+      "place": 4248,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 4118772.0
+    },
+    {
+      "id": "lnt",
+      "name": "Langkat",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.286,
+        "lat": 4.0249
+      },
+      "center": [
+        98.286,
+        4.0249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        97.71,
+        3.2,
+        98.682,
+        4.582
+      ],
+      "place": 4249,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3840032.0
+    },
+    {
+      "id": "ktb",
+      "name": "Kota Bengkulu",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.2556,
+        "lat": -3.7901
+      },
+      "center": [
+        102.2556,
+        -3.7901
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.18,
+        -4.943,
+        103.8,
+        -3.25
+      ],
+      "place": 4250,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3937445.0
+    },
+    {
+      "id": "ace",
+      "name": "Aceh Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.4583,
+        "lat": 5.1181
+      },
+      "center": [
+        97.4583,
+        5.1181
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        96.238,
+        4.137,
+        98.037,
+        5.281
+      ],
+      "place": 4251,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3918868.0
+    },
+    {
+      "id": "oga",
+      "name": "Ogan Komering Ulu Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.6487,
+        "lat": -4.1139
+      },
+      "center": [
+        104.6487,
+        -4.1139
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.387,
+        -4.943,
+        104.948,
+        -3.597
+      ],
+      "place": 4252,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3679985.0
+    },
+    {
+      "id": "inl",
+      "name": "Indragiri Hilir",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.1562,
+        "lat": -0.3195
+      },
+      "center": [
+        103.1562,
+        -0.3195
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.512,
+        -1.147,
+        103.999,
+        1.16
+      ],
+      "place": 4253,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3217138.0
+    },
+    {
+      "id": "tal",
+      "name": "Tapanuli Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.8313,
+        "lat": 1.6864
+      },
+      "center": [
+        98.8313,
+        1.6864
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.113,
+        1.405,
+        99.605,
+        2.918
+      ],
+      "place": 4254,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3461060.0
+    },
+    {
+      "id": "koj",
+      "name": "Kota Jambi",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.5799,
+        "lat": -1.6217
+      },
+      "center": [
+        103.5799,
+        -1.6217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.201,
+        -2.198,
+        104.381,
+        -1.216
+      ],
+      "place": 4255,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3368199.0
+    },
+    {
+      "id": "seg",
+      "name": "Serdang Bedagai",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.9534,
+        "lat": 3.5716
+      },
+      "center": [
+        98.9534,
+        3.5716
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.717,
+        2.997,
+        99.777,
+        3.699
+      ],
+      "place": 4256,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3257396.0
+    },
+    {
+      "id": "kmp",
+      "name": "Kampar",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.021,
+        "lat": 0.3356
+      },
+      "center": [
+        101.021,
+        0.3356
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.411,
+        -0.408,
+        101.706,
+        1.049
+      ],
+      "place": 4257,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2699281.0
+    },
+    {
+      "id": "ogn",
+      "name": "Ogan Komering Ilir",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.8352,
+        "lat": -3.3935
+      },
+      "center": [
+        104.8352,
+        -3.3935
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.254,
+        -4.285,
+        106.239,
+        -2.372
+      ],
+      "place": 4258,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3091800.0
+    },
+    {
+      "id": "lmu",
+      "name": "Lampung Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.7061,
+        "lat": -5.1748
+      },
+      "center": [
+        105.7061,
+        -5.1748
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.243,
+        -5.64,
+        106.128,
+        -4.601
+      ],
+      "place": 4259,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3035834.0
+    },
+    {
+      "id": "sil",
+      "name": "Simalungun",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.0967,
+        "lat": 2.9727
+      },
+      "center": [
+        99.0967,
+        2.9727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.516,
+        2.579,
+        99.584,
+        3.323
+      ],
+      "place": 4260,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2972147.0
+    },
+    {
+      "id": "lmn",
+      "name": "Lampung Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.8815,
+        "lat": -4.8265
+      },
+      "center": [
+        104.8815,
+        -4.8265
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.267,
+        -5.108,
+        105.146,
+        -4.171
+      ],
+      "place": 4261,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2942475.0
+    },
+    {
+      "id": "lmg",
+      "name": "Lampung Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.2938,
+        "lat": -5.3449
+      },
+      "center": [
+        105.2938,
+        -5.3449
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.096,
+        -5.99,
+        105.846,
+        -5.156
+      ],
+      "place": 4262,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2581572.0
+    },
+    {
+      "id": "lbu",
+      "name": "Labuhan Batu Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.6549,
+        "lat": 2.5682
+      },
+      "center": [
+        99.6549,
+        2.5682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.369,
+        1.429,
+        100.453,
+        2.875
+      ],
+      "place": 4263,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 3024691.0
+    },
+    {
+      "id": "inu",
+      "name": "Indragiri Hulu",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.5479,
+        "lat": -0.3761
+      },
+      "center": [
+        102.5479,
+        -0.3761
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.01,
+        -1.115,
+        102.739,
+        0.124
+      ],
+      "place": 4264,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2683043.0
+    },
+    {
+      "id": "tng",
+      "name": "Tanggamus",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.629,
+        "lat": -5.4907
+      },
+      "center": [
+        104.629,
+        -5.4907
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.572,
+        -5.962,
+        105.215,
+        -4.772
+      ],
+      "place": 4265,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2928064.0
+    },
+    {
+      "id": "mdn",
+      "name": "Mandailing Natal",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.5602,
+        "lat": 0.8614
+      },
+      "center": [
+        99.5602,
+        0.8614
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.798,
+        0.21,
+        99.983,
+        2.144
+      ],
+      "place": 4267,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2622275.0
+    },
+    {
+      "id": "mre",
+      "name": "Muara Enim",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.8012,
+        "lat": -3.7497
+      },
+      "center": [
+        103.8012,
+        -3.7497
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.297,
+        -4.396,
+        104.693,
+        -2.993
+      ],
+      "place": 4268,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2669156.0
+    },
+    {
+      "id": "kxx",
+      "name": "Karo",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.4949,
+        "lat": 3.1022
+      },
+      "center": [
+        98.4949,
+        3.1022
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        97.094,
+        2.015,
+        98.649,
+        3.349
+      ],
+      "place": 4269,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2573431.0
+    },
+    {
+      "id": "asx",
+      "name": "Asahan",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.646,
+        "lat": 2.9727
+      },
+      "center": [
+        99.646,
+        2.9727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.057,
+        2.513,
+        100.011,
+        3.192
+      ],
+      "place": 4270,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2505020.0
+    },
+    {
+      "id": "ron",
+      "name": "Rokan Hilir",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.8049,
+        "lat": 2.1637
+      },
+      "center": [
+        100.8049,
+        2.1637
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.253,
+        1.204,
+        101.352,
+        2.902
+      ],
+      "place": 4271,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2176866.0
+    },
+    {
+      "id": "pew",
+      "name": "Pesawaran",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.0971,
+        "lat": -5.3773
+      },
+      "center": [
+        105.0971,
+        -5.3773
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.753,
+        -5.859,
+        105.352,
+        -5.098
+      ],
+      "place": 4272,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2211906.0
+    },
+    {
+      "id": "mrg",
+      "name": "Merangin",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.2786,
+        "lat": -2.0747
+      },
+      "center": [
+        102.2786,
+        -2.0747
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.112,
+        -2.787,
+        102.648,
+        -1.631
+      ],
+      "place": 4273,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2251075.0
+    },
+    {
+      "id": "sok",
+      "name": "Solok",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.7816,
+        "lat": -1.0797
+      },
+      "center": [
+        100.7816,
+        -1.0797
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.407,
+        -1.714,
+        101.911,
+        -0.293
+      ],
+      "place": 4274,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2118988.0
+    },
+    {
+      "id": "rox",
+      "name": "Rokan Hulu",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.5258,
+        "lat": 0.7077
+      },
+      "center": [
+        100.5258,
+        0.7077
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.006,
+        0.354,
+        100.975,
+        1.454
+      ],
+      "place": 4275,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1999866.0
+    },
+    {
+      "id": "bno",
+      "name": "Bungo",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.1189,
+        "lat": -1.4922
+      },
+      "center": [
+        102.1189,
+        -1.4922
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.419,
+        -1.928,
+        102.843,
+        -0.857
+      ],
+      "place": 4276,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2135426.0
+    },
+    {
+      "id": "msi",
+      "name": "Musi Rawas",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.1821,
+        "lat": -3.1589
+      },
+      "center": [
+        103.1821,
+        -3.1589
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.045,
+        -3.616,
+        103.662,
+        -2.296
+      ],
+      "place": 4277,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2127055.0
+    },
+    {
+      "id": "lht",
+      "name": "Lahat",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.5344,
+        "lat": -3.7901
+      },
+      "center": [
+        103.5344,
+        -3.7901
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.615,
+        -4.286,
+        103.792,
+        -3.391
+      ],
+      "place": 4278,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2030349.0
+    },
+    {
+      "id": "psa",
+      "name": "Pasaman Barat",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.5539,
+        "lat": 0.2709
+      },
+      "center": [
+        99.5539,
+        0.2709
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.149,
+        -0.195,
+        100.372,
+        0.925
+      ],
+      "place": 4279,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1927777.0
+    },
+    {
+      "id": "acb",
+      "name": "Aceh Besar",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.2773,
+        "lat": 5.5312
+      },
+      "center": [
+        95.2773,
+        5.5312
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        94.992,
+        5.033,
+        95.859,
+        5.772
+      ],
+      "place": 4280,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1962473.0
+    },
+    {
+      "id": "pen",
+      "name": "Pelalawan",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.8595,
+        "lat": 0.3842
+      },
+      "center": [
+        101.8595,
+        0.3842
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.477,
+        -0.426,
+        103.375,
+        0.741
+      ],
+      "place": 4281,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1581020.0
+    },
+    {
+      "id": "tuw",
+      "name": "Tulangbawang",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.2225,
+        "lat": -4.284
+      },
+      "center": [
+        105.2225,
+        -4.284
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.895,
+        -4.745,
+        105.933,
+        -3.705
+      ],
+      "place": 4282,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1758746.0
+    },
+    {
+      "id": "pee",
+      "name": "Pesisir Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.5781,
+        "lat": -1.3466
+      },
+      "center": [
+        100.5781,
+        -1.3466
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.327,
+        -2.497,
+        101.685,
+        -0.94
+      ],
+      "place": 4283,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1729706.0
+    },
+    {
+      "id": "srl",
+      "name": "Sarolangun",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.7174,
+        "lat": -2.3012
+      },
+      "center": [
+        102.7174,
+        -2.3012
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.045,
+        -2.789,
+        103.487,
+        -1.341
+      ],
+      "place": 4284,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1428826.0
+    },
+    {
+      "id": "msb",
+      "name": "Musi Banyuasin",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.6373,
+        "lat": -2.7381
+      },
+      "center": [
+        103.6373,
+        -2.7381
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.996,
+        -3.285,
+        104.71,
+        -1.697
+      ],
+      "place": 4285,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1543366.0
+    },
+    {
+      "id": "bet",
+      "name": "Bengkulu Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.1908,
+        "lat": -3.434
+      },
+      "center": [
+        102.1908,
+        -3.434
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.003,
+        -5.533,
+        102.519,
+        -2.27
+      ],
+      "place": 4286,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1504951.0
+    },
+    {
+      "id": "lia",
+      "name": "Lima Puluh Kota",
+      "kind": "zone",
+      "origin": {
+        "lon": 100.661,
+        "lat": -0.1658
+      },
+      "center": [
+        100.661,
+        -0.1658
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.246,
+        -0.389,
+        100.883,
+        0.443
+      ],
+      "place": 4287,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1491578.0
+    },
+    {
+      "id": "bix",
+      "name": "Bintan",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.4724,
+        "lat": 1.015
+      },
+      "center": [
+        104.4724,
+        1.015
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.195,
+        0.081,
+        108.063,
+        1.248
+      ],
+      "place": 4288,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1424732.0
+    },
+    {
+      "id": "pix",
+      "name": "Pidie",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.9634,
+        "lat": 5.3854
+      },
+      "center": [
+        95.9634,
+        5.3854
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        95.705,
+        4.641,
+        96.497,
+        5.588
+      ],
+      "place": 4289,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1500322.0
+    },
+    {
+      "id": "paw",
+      "name": "Padang Lawas Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.6244,
+        "lat": 1.5084
+      },
+      "center": [
+        99.6244,
+        1.5084
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        99.341,
+        0.738,
+        100.356,
+        2.061
+      ],
+      "place": 4290,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1297063.0
+    },
+    {
+      "id": "bnu",
+      "name": "Banyu Asin",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.7755,
+        "lat": -2.9161
+      },
+      "center": [
+        104.7755,
+        -2.9161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.126,
+        -3.18,
+        105.597,
+        -1.607
+      ],
+      "place": 4293,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 761203.0
+    },
+    {
+      "id": "sme",
+      "name": "Simeulue",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.3761,
+        "lat": 2.4792
+      },
+      "center": [
+        96.3761,
+        2.4792
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        95.366,
+        2.039,
+        96.707,
+        3.005
+      ],
+      "place": 4294,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 237083.0
+    },
+    {
+      "id": "nax",
+      "name": "Natuna",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.381,
+        "lat": 3.9277
+      },
+      "center": [
+        108.381,
+        3.9277
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.705,
+        2.461,
+        109.183,
+        4.794
+      ],
+      "place": 4295,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 192380.0
+    },
+    {
+      "id": "kem",
+      "name": "Kepulauan Mentawai",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.2178,
+        "lat": -1.5974
+      },
+      "center": [
+        99.2178,
+        -1.5974
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        98.578,
+        -3.368,
+        100.591,
+        -0.887
+      ],
+      "place": 4296,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 196916.0
+    },
+    {
+      "id": "den",
+      "name": "Denpasar",
+      "origin": {
+        "lon": 115.2284,
+        "lat": -8.6381
+      },
+      "center": [
+        115.2284,
+        -8.6381
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.897,
+        -8.868,
+        115.647,
+        -8.221
+      ],
+      "place": 4297,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 8645628.0
+    },
+    {
+      "id": "mat",
+      "name": "Mataram",
+      "origin": {
+        "lon": 116.1235,
+        "lat": -8.5893
+      },
+      "center": [
+        116.1235,
+        -8.5893
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.802,
+        -8.923,
+        116.357,
+        -8.392
+      ],
+      "place": 4298,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 3358335.0
+    },
+    {
+      "id": "lob",
+      "name": "Lombok Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.5262,
+        "lat": -8.6462
+      },
+      "center": [
+        116.5262,
+        -8.6462
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.356,
+        -8.94,
+        116.759,
+        -8.227
+      ],
+      "place": 4299,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 3665018.0
+    },
+    {
+      "id": "bul",
+      "name": "Buleleng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.0933,
+        "lat": -8.1183
+      },
+      "center": [
+        115.0933,
+        -8.1183
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.413,
+        -8.486,
+        115.476,
+        -8.043
+      ],
+      "place": 4300,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2914678.0
+    },
+    {
+      "id": "skk",
+      "name": "Sikka",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.2187,
+        "lat": -8.6218
+      },
+      "center": [
+        122.2187,
+        -8.6218
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.792,
+        -8.975,
+        122.706,
+        -8.088
+      ],
+      "place": 4301,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2763910.0
+    },
+    {
+      "id": "lok",
+      "name": "Lombok Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.2773,
+        "lat": -8.7112
+      },
+      "center": [
+        116.2773,
+        -8.7112
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.073,
+        -8.975,
+        116.465,
+        -8.39
+      ],
+      "place": 4302,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2475880.0
+    },
+    {
+      "id": "mra",
+      "name": "Manggarai",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.4688,
+        "lat": -8.6137
+      },
+      "center": [
+        120.4688,
+        -8.6137
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.352,
+        -8.934,
+        120.969,
+        -8.222
+      ],
+      "place": 4303,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2617296.0
+    },
+    {
+      "id": "bim",
+      "name": "Bima",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.9823,
+        "lat": -8.565
+      },
+      "center": [
+        118.9823,
+        -8.565
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.672,
+        -8.908,
+        119.258,
+        -8.062
+      ],
+      "place": 4304,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2563060.0
+    },
+    {
+      "id": "suy",
+      "name": "Sumba Barat Daya",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.2377,
+        "lat": -9.4263
+      },
+      "center": [
+        119.2377,
+        -9.4263
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.908,
+        -10.353,
+        120.866,
+        -9.258
+      ],
+      "place": 4305,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2401400.0
+    },
+    {
+      "id": "ktk",
+      "name": "Kota Kupang",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.6582,
+        "lat": -10.142
+      },
+      "center": [
+        123.6582,
+        -10.142
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.251,
+        -10.389,
+        124.247,
+        -9.236
+      ],
+      "place": 4306,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2291165.0
+    },
+    {
+      "id": "krn",
+      "name": "Karang Asem",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.614,
+        "lat": -8.4431
+      },
+      "center": [
+        115.614,
+        -8.4431
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.213,
+        -8.569,
+        115.73,
+        -8.123
+      ],
+      "place": 4307,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 1856642.0
+    },
+    {
+      "id": "tio",
+      "name": "Timor Tengah Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.4772,
+        "lat": -9.4588
+      },
+      "center": [
+        124.4772,
+        -9.4588
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.074,
+        -9.81,
+        125.209,
+        -8.939
+      ],
+      "place": 4308,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1968805.0
+    },
+    {
+      "id": "flo",
+      "name": "Flores Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.1668,
+        "lat": -8.3863
+      },
+      "center": [
+        123.1668,
+        -8.3863
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.629,
+        -8.656,
+        125.161,
+        -7.76
+      ],
+      "place": 4309,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1680819.0
+    },
+    {
+      "id": "suw",
+      "name": "Sumbawa",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.4227,
+        "lat": -8.5
+      },
+      "center": [
+        117.4227,
+        -8.5
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.697,
+        -9.128,
+        118.352,
+        -8.11
+      ],
+      "place": 4310,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1701497.0
+    },
+    {
+      "id": "tit",
+      "name": "Timor Tengah Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.2862,
+        "lat": -9.8573
+      },
+      "center": [
+        124.2862,
+        -9.8573
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.036,
+        -10.192,
+        124.84,
+        -9.454
+      ],
+      "place": 4311,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1442358.0
+    },
+    {
+      "id": "lmb",
+      "name": "Lombok Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.16,
+        "lat": -8.3538
+      },
+      "center": [
+        116.16,
+        -8.3538
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.009,
+        -8.499,
+        116.513,
+        -8.192
+      ],
+      "place": 4312,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 601153.0
+    },
+    {
+      "id": "rte",
+      "name": "Rote Ndao",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.0456,
+        "lat": -10.7281
+      },
+      "center": [
+        123.0456,
+        -10.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.621,
+        -11.026,
+        123.461,
+        -10.412
+      ],
+      "place": 4313,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 399809.0
+    },
+    {
+      "id": "sbu",
+      "name": "Sabu Raijua",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.8376,
+        "lat": -10.492
+      },
+      "center": [
+        121.8376,
+        -10.492
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.5,
+        -10.661,
+        122.027,
+        -10.4
+      ],
+      "place": 4314,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 250166.0
+    },
+    {
+      "id": "maa",
+      "name": "Makassar",
+      "origin": {
+        "lon": 119.4173,
+        "lat": -5.1505
+      },
+      "center": [
+        119.4173,
+        -5.1505
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.171,
+        -5.626,
+        120.05,
+        -4.701
+      ],
+      "place": 4315,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 8676954.0
+    },
+    {
+      "id": "waj",
+      "name": "Wajo",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.0304,
+        "lat": -4.1301
+      },
+      "center": [
+        120.0304,
+        -4.1301
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.413,
+        -4.305,
+        120.46,
+        -3.252
+      ],
+      "place": 4316,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 3599264.0
+    },
+    {
+      "id": "luw",
+      "name": "Luwu",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.3662,
+        "lat": -3.3774
+      },
+      "center": [
+        120.3662,
+        -3.3774
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.351,
+        -3.845,
+        120.439,
+        -2.568
+      ],
+      "place": 4317,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 3525867.0
+    },
+    {
+      "id": "box",
+      "name": "Bone",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.3209,
+        "lat": -4.5431
+      },
+      "center": [
+        120.3209,
+        -4.5431
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.562,
+        -5.159,
+        120.477,
+        -4.048
+      ],
+      "place": 4318,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 3359954.0
+    },
+    {
+      "id": "kod",
+      "name": "Kota Kendari",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.5837,
+        "lat": -3.9682
+      },
+      "center": [
+        122.5837,
+        -3.9682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.342,
+        -4.555,
+        123.278,
+        -2.875
+      ],
+      "place": 4319,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 3026936.0
+    },
+    {
+      "id": "ktu",
+      "name": "Kota Palu",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.857,
+        "lat": -0.8937
+      },
+      "center": [
+        119.857,
+        -0.8937
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.408,
+        -2.074,
+        120.374,
+        0.77
+      ],
+      "place": 4320,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2904332.0
+    },
+    {
+      "id": "mih",
+      "name": "Minahasa",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.9066,
+        "lat": 1.2981
+      },
+      "center": [
+        124.9066,
+        1.2981
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.279,
+        0.743,
+        125.082,
+        1.485
+      ],
+      "place": 4321,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2509207.0
+    },
+    {
+      "id": "pow",
+      "name": "Polewali Mandar",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.2094,
+        "lat": -3.4016
+      },
+      "center": [
+        119.2094,
+        -3.4016
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.756,
+        -3.589,
+        119.656,
+        -2.642
+      ],
+      "place": 4322,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2544997.0
+    },
+    {
+      "id": "pag",
+      "name": "Parigi Moutong",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.1748,
+        "lat": -0.8128
+      },
+      "center": [
+        120.1748,
+        -0.8128
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.881,
+        -1.208,
+        122.214,
+        1.374
+      ],
+      "place": 4323,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2453084.0
+    },
+    {
+      "id": "mxx",
+      "name": "Muna",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.7209,
+        "lat": -4.8265
+      },
+      "center": [
+        122.7209,
+        -4.8265
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.914,
+        -6.232,
+        123.243,
+        -4.348
+      ],
+      "place": 4324,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2450379.0
+    },
+    {
+      "id": "ktm",
+      "name": "Kota Manado",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.8417,
+        "lat": 1.4518
+      },
+      "center": [
+        124.8417,
+        1.4518
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        124.663,
+        1.267,
+        125.312,
+        1.906
+      ],
+      "place": 4325,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2414788.0
+    },
+    {
+      "id": "bum",
+      "name": "Bulukumba",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.1956,
+        "lat": -5.5474
+      },
+      "center": [
+        120.1956,
+        -5.5474
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.91,
+        -7.514,
+        121.859,
+        -5.02
+      ],
+      "place": 4326,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2305651.0
+    },
+    {
+      "id": "klk",
+      "name": "Kolaka",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.6026,
+        "lat": -4.0573
+      },
+      "center": [
+        121.6026,
+        -4.0573
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.846,
+        -5.447,
+        122.16,
+        -2.755
+      ],
+      "place": 4327,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 2159080.0
+    },
+    {
+      "id": "mmu",
+      "name": "Mamuju",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.8907,
+        "lat": -2.6814
+      },
+      "center": [
+        118.8907,
+        -2.6814
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.738,
+        -2.981,
+        119.893,
+        -0.829
+      ],
+      "place": 4328,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1840054.0
+    },
+    {
+      "id": "gon",
+      "name": "Gorontalo",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.0448,
+        "lat": 0.5783
+      },
+      "center": [
+        123.0448,
+        0.5783
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        121.143,
+        0.391,
+        123.294,
+        1.059
+      ],
+      "place": 4329,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1702584.0
+    },
+    {
+      "id": "boa",
+      "name": "Bolaang Mongondow",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.9826,
+        "lat": 0.5702
+      },
+      "center": [
+        123.9826,
+        0.5702
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.094,
+        0.273,
+        124.718,
+        1.029
+      ],
+      "place": 4330,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1660058.0
+    },
+    {
+      "id": "ktg",
+      "name": "Kota Gorontalo",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.0543,
+        "lat": 0.5459
+      },
+      "center": [
+        123.0543,
+        0.5459
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.976,
+        0.288,
+        123.571,
+        0.825
+      ],
+      "place": 4331,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1633391.0
+    },
+    {
+      "id": "lur",
+      "name": "Luwu Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.3308,
+        "lat": -2.552
+      },
+      "center": [
+        120.3308,
+        -2.552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.658,
+        -3.036,
+        121.809,
+        -1.872
+      ],
+      "place": 4332,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1729750.0
+    },
+    {
+      "id": "jen",
+      "name": "Jeneponto",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.7518,
+        "lat": -5.6771
+      },
+      "center": [
+        119.7518,
+        -5.6771
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.466,
+        -5.721,
+        120.121,
+        -5.335
+      ],
+      "place": 4333,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1603996.0
+    },
+    {
+      "id": "bni",
+      "name": "Banggai",
+      "kind": "zone",
+      "origin": {
+        "lon": 122.7823,
+        "lat": -0.9665
+      },
+      "center": [
+        122.7823,
+        -0.9665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.868,
+        -1.642,
+        123.478,
+        -0.103
+      ],
+      "place": 4334,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1450404.0
+    },
+    {
+      "id": "pso",
+      "name": "Poso",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.7581,
+        "lat": -1.3952
+      },
+      "center": [
+        120.7581,
+        -1.3952
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.071,
+        -3.659,
+        123.201,
+        -1.089
+      ],
+      "place": 4335,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 1407489.0
+    },
+    {
+      "id": "paj",
+      "name": "Pangkajene Dan Kepulauan",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.5519,
+        "lat": -4.8346
+      },
+      "center": [
+        119.5519,
+        -4.8346
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.019,
+        -7.559,
+        119.829,
+        -4.537
+      ],
+      "place": 4336,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 953940.0
+    },
+    {
+      "id": "kee",
+      "name": "Kepulauan Sangihe",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.5089,
+        "lat": 3.604
+      },
+      "center": [
+        125.5089,
+        3.604
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        125.141,
+        2.051,
+        125.755,
+        4.764
+      ],
+      "place": 4338,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 416338.0
+    },
+    {
+      "id": "wak",
+      "name": "Wakatobi",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.5402,
+        "lat": -5.3287
+      },
+      "center": [
+        123.5402,
+        -5.3287
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        123.444,
+        -6.054,
+        124.371,
+        -5.226
+      ],
+      "place": 4340,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 261514.0
+    },
+    {
+      "id": "sma",
+      "name": "Samarinda",
+      "origin": {
+        "lon": 117.1367,
+        "lat": -0.4893
+      },
+      "center": [
+        117.1367,
+        -0.4893
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.035,
+        -0.735,
+        117.317,
+        -0.296
+      ],
+      "place": 4341,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3654410.0
+    },
+    {
+      "id": "hul",
+      "name": "Hulu Sungai Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.3806,
+        "lat": -2.5843
+      },
+      "center": [
+        115.3806,
+        -2.5843
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.781,
+        -3.215,
+        115.911,
+        -1.294
+      ],
+      "place": 4342,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3954005.0
+    },
+    {
+      "id": "kpu",
+      "name": "Kapuas",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.3885,
+        "lat": -3.0213
+      },
+      "center": [
+        114.3885,
+        -3.0213
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        113.139,
+        -3.488,
+        115.868,
+        -0.027
+      ],
+      "place": 4343,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3613726.0
+    },
+    {
+      "id": "ktl",
+      "name": "Kota Balikpapan",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.8424,
+        "lat": -1.2658
+      },
+      "center": [
+        116.8424,
+        -1.2658
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.598,
+        -2.428,
+        117.041,
+        -0.779
+      ],
+      "place": 4344,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3524460.0
+    },
+    {
+      "id": "sgg",
+      "name": "Sanggau",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.5988,
+        "lat": 0.1254
+      },
+      "center": [
+        110.5988,
+        0.1254
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.824,
+        -1.339,
+        113.462,
+        1.219
+      ],
+      "place": 4345,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3340591.0
+    },
+    {
+      "id": "ktp",
+      "name": "Kota Pontianak",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.2915,
+        "lat": -0.004
+      },
+      "center": [
+        109.2915,
+        -0.004
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.722,
+        -0.117,
+        110.273,
+        1.06
+      ],
+      "place": 4346,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3125246.0
+    },
+    {
+      "id": "bnj",
+      "name": "Banjar",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.631,
+        "lat": -3.3531
+      },
+      "center": [
+        114.631,
+        -3.3531
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.48,
+        -4.196,
+        115.615,
+        -2.812
+      ],
+      "place": 4347,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3139205.0
+    },
+    {
+      "id": "kom",
+      "name": "Kota Banjarmasin",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.5987,
+        "lat": -3.3207
+      },
+      "center": [
+        114.5987,
+        -3.3207
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.328,
+        -3.538,
+        114.888,
+        -2.505
+      ],
+      "place": 4348,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3013993.0
+    },
+    {
+      "id": "smb",
+      "name": "Sambas",
+      "kind": "zone",
+      "origin": {
+        "lon": 108.9765,
+        "lat": 1.1768
+      },
+      "center": [
+        108.9765,
+        1.1768
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.674,
+        0.51,
+        110.162,
+        2.1
+      ],
+      "place": 4349,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 3093168.0
+    },
+    {
+      "id": "kow",
+      "name": "Kotawaringin Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.9626,
+        "lat": -2.552
+      },
+      "center": [
+        112.9626,
+        -2.552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        110.714,
+        -3.561,
+        113.288,
+        -0.679
+      ],
+      "place": 4350,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 2934170.0
+    },
+    {
+      "id": "ktt",
+      "name": "Kota Tarakan",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.5934,
+        "lat": 3.2964
+      },
+      "center": [
+        117.5934,
+        3.2964
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.52,
+        0.966,
+        118.971,
+        4.427
+      ],
+      "place": 4351,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 2550951.0
+    },
+    {
+      "id": "bne",
+      "name": "Bangka Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.9855,
+        "lat": -2.3821
+      },
+      "center": [
+        105.9855,
+        -2.3821
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.731,
+        -3.434,
+        108.567,
+        -2.121
+      ],
+      "place": 4352,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2269478.0
+    },
+    {
+      "id": "bnx",
+      "name": "Bangka",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.1131,
+        "lat": -1.8562
+      },
+      "center": [
+        106.1131,
+        -1.8562
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.09,
+        -2.367,
+        106.205,
+        -1.483
+      ],
+      "place": 4353,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2156107.0
+    },
+    {
+      "id": "kuk",
+      "name": "Kutai Kartanegara",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.9863,
+        "lat": -0.4165
+      },
+      "center": [
+        116.9863,
+        -0.4165
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.214,
+        -1.159,
+        117.646,
+        1.55
+      ],
+      "place": 4354,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 1661890.0
+    },
+    {
+      "id": "kub",
+      "name": "Kubu Raya",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.4315,
+        "lat": -0.1577
+      },
+      "center": [
+        109.4315,
+        -0.1577
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.036,
+        -1.033,
+        109.992,
+        0.292
+      ],
+      "place": 4355,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 1650702.0
+    },
+    {
+      "id": "ktr",
+      "name": "Kota Baru",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.2216,
+        "lat": -3.2479
+      },
+      "center": [
+        116.2216,
+        -3.2479
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.231,
+        -4.856,
+        116.625,
+        -2.287
+      ],
+      "place": 4356,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 1876722.0
+    },
+    {
+      "id": "kuu",
+      "name": "Kutai Timur",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.5263,
+        "lat": 0.5297
+      },
+      "center": [
+        117.5263,
+        0.5297
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.949,
+        0.004,
+        119.007,
+        1.887
+      ],
+      "place": 4357,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 1629383.0
+    },
+    {
+      "id": "kep",
+      "name": "Ketapang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.9754,
+        "lat": -1.8482
+      },
+      "center": [
+        109.9754,
+        -1.8482
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        108.659,
+        -3.057,
+        111.36,
+        -0.305
+      ],
+      "place": 4358,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 1632555.0
+    },
+    {
+      "id": "pai",
+      "name": "Paniai",
+      "kind": "zone",
+      "origin": {
+        "lon": 136.3793,
+        "lat": -3.9277
+      },
+      "center": [
+        136.3793,
+        -3.9277
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        134.567,
+        -4.421,
+        137.376,
+        -2.728
+      ],
+      "place": 4360,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2851788.0
+    },
+    {
+      "id": "koy",
+      "name": "Kota Jayapura",
+      "kind": "zone",
+      "origin": {
+        "lon": 140.699,
+        "lat": -2.5682
+      },
+      "center": [
+        140.699,
+        -2.5682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        139.32,
+        -3.975,
+        141.019,
+        -2.301
+      ],
+      "place": 4362,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1782137.0
+    },
+    {
+      "id": "mmi",
+      "name": "Mimika",
+      "kind": "zone",
+      "origin": {
+        "lon": 136.8871,
+        "lat": -4.5512
+      },
+      "center": [
+        136.8871,
+        -4.5512
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        134.867,
+        -5.069,
+        137.968,
+        -4.01
+      ],
+      "place": 4363,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1390321.0
+    },
+    {
+      "id": "yai",
+      "name": "Yalimo",
+      "kind": "zone",
+      "origin": {
+        "lon": 139.3815,
+        "lat": -3.7739
+      },
+      "center": [
+        139.3815,
+        -3.7739
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        138.511,
+        -4.133,
+        140.144,
+        -3.149
+      ],
+      "place": 4364,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1306771.0
+    },
+    {
+      "id": "kts",
+      "name": "Kota Sorong",
+      "kind": "zone",
+      "origin": {
+        "lon": 131.252,
+        "lat": -0.8694
+      },
+      "center": [
+        131.252,
+        -0.8694
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        130.662,
+        -2.303,
+        132.742,
+        -0.539
+      ],
+      "place": 4365,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1547241.0
+    },
+    {
+      "id": "biu",
+      "name": "Biak Numfor",
+      "kind": "zone",
+      "origin": {
+        "lon": 136.0692,
+        "lat": -1.1606
+      },
+      "center": [
+        136.0692,
+        -1.1606
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        134.306,
+        -1.981,
+        137.075,
+        0.946
+      ],
+      "place": 4369,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1091568.0
+    },
+    {
+      "id": "mlu",
+      "name": "Maluku Tengah",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.9603,
+        "lat": -3.3045
+      },
+      "center": [
+        128.9603,
+        -3.3045
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.878,
+        -7.009,
+        131.779,
+        -2.754
+      ],
+      "place": 4372,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1422390.0
+    },
+    {
+      "id": "hla",
+      "name": "Halmahera Utara",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.0058,
+        "lat": 1.7268
+      },
+      "center": [
+        128.0058,
+        1.7268
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.378,
+        0.397,
+        128.777,
+        2.313
+      ],
+      "place": 4373,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1312994.0
+    },
+    {
+      "id": "bbc",
+      "name": "Buru",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.1,
+        "lat": -3.2721
+      },
+      "center": [
+        127.1,
+        -3.2721
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.977,
+        -3.923,
+        127.287,
+        -3.038
+      ],
+      "place": 4375,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 531662.0
+    },
+    {
+      "id": "tan",
+      "name": "Tangerang",
+      "origin": {
+        "lon": 106.5779,
+        "lat": -6.1552
+      },
+      "center": [
+        106.5779,
+        -6.1552
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.806,
+        -6.381,
+        106.799,
+        -5.789
+      ],
+      "place": 4381,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 28483532.0
+    },
+    {
+      "id": "tak",
+      "name": "Tasikmalaya",
+      "origin": {
+        "lon": 108.2118,
+        "lat": -7.3311
+      },
+      "center": [
+        108.2118,
+        -7.3311
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.886,
+        -7.836,
+        108.742,
+        -7.019
+      ],
+      "place": 4382,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 12337611.0
+    },
+    {
+      "id": "pea",
+      "name": "Pekalongan",
+      "origin": {
+        "lon": 109.6415,
+        "lat": -6.893
+      },
+      "center": [
+        109.6415,
+        -6.893
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        109.465,
+        -7.263,
+        109.818,
+        -6.821
+      ],
+      "place": 4383,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 2810685.0
+    },
+    {
+      "id": "jak",
+      "name": "Jakarta",
+      "origin": {
+        "lon": 106.8022,
+        "lat": -6.1876
+      },
+      "center": [
+        106.8022,
+        -6.1876
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        106.352,
+        -7.524,
+        107.663,
+        -5.902
+      ],
+      "place": 4384,
+      "country": "ID",
+      "realm": "java",
+      "localTrips": 104885211.0
+    },
+    {
+      "id": "toi",
+      "name": "Tolikara",
+      "kind": "zone",
+      "origin": {
+        "lon": 138.6734,
+        "lat": -3.6849
+      },
+      "center": [
+        138.6734,
+        -3.6849
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        137.55,
+        -4.784,
+        139.381,
+        -3.088
+      ],
+      "place": 4385,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 2206440.0
+    },
+    {
+      "id": "yah",
+      "name": "Yahukimo",
+      "kind": "zone",
+      "origin": {
+        "lon": 139.4855,
+        "lat": -4.867
+      },
+      "center": [
+        139.4855,
+        -4.867
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        138.815,
+        -5.283,
+        141.019,
+        -3.651
+      ],
+      "place": 4386,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1140865.0
+    },
+    {
+      "id": "mru",
+      "name": "Merauke",
+      "kind": "zone",
+      "origin": {
+        "lon": 140.398,
+        "lat": -8.5
+      },
+      "center": [
+        140.398,
+        -8.5
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        137.622,
+        -9.146,
+        141.038,
+        -6.439
+      ],
+      "place": 4387,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1129701.0
+    },
+    {
+      "id": "maw",
+      "name": "Manokwari",
+      "kind": "zone",
+      "origin": {
+        "lon": 134.0657,
+        "lat": -0.8614
+      },
+      "center": [
+        134.0657,
+        -0.8614
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        133.311,
+        -2.041,
+        134.298,
+        -0.695
+      ],
+      "place": 4388,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 887798.0
+    },
+    {
+      "id": "acs",
+      "name": "Aceh Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.1755,
+        "lat": 3.256
+      },
+      "center": [
+        97.1755,
+        3.256
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        95.283,
+        2.376,
+        98.048,
+        5.273
+      ],
+      "place": 4389,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2855187.0
+    },
+    {
+      "id": "nis",
+      "name": "Nias Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.8201,
+        "lat": 0.5702
+      },
+      "center": [
+        97.8201,
+        0.5702
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        97.039,
+        -0.657,
+        98.951,
+        1.725
+      ],
+      "place": 4390,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 2304307.0
+    },
+    {
+      "id": "skx",
+      "name": "Siak",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.6232,
+        "lat": 0.6915
+      },
+      "center": [
+        101.6232,
+        0.6915
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.888,
+        0.389,
+        102.921,
+        1.267
+      ],
+      "place": 4392,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1155036.0
+    },
+    {
+      "id": "bbb",
+      "name": "Bireuen",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.7058,
+        "lat": 5.1991
+      },
+      "center": [
+        96.7058,
+        5.1991
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        96.308,
+        4.871,
+        96.944,
+        5.295
+      ],
+      "place": 4393,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1248585.0
+    },
+    {
+      "id": "hlm",
+      "name": "Halmahera Selatan",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.4758,
+        "lat": -0.6268
+      },
+      "center": [
+        127.4758,
+        -0.6268
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.109,
+        -1.885,
+        129.676,
+        1.37
+      ],
+      "place": 4394,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1892787.0
+    },
+    {
+      "id": "kto",
+      "name": "Kota Ambon",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.1848,
+        "lat": -3.7011
+      },
+      "center": [
+        128.1848,
+        -3.7011
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.01,
+        -3.813,
+        128.32,
+        -3.555
+      ],
+      "place": 4395,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 1514215.0
+    },
+    {
+      "id": "keu",
+      "name": "Kepulauan Sula",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.975,
+        "lat": -2.0666
+      },
+      "center": [
+        125.975,
+        -2.0666
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.264,
+        -2.496,
+        126.505,
+        -1.56
+      ],
+      "place": 4396,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 465404.0
+    },
+    {
+      "id": "mle",
+      "name": "Maluku Tenggara",
+      "kind": "zone",
+      "origin": {
+        "lon": 132.7388,
+        "lat": -5.6528
+      },
+      "center": [
+        132.7388,
+        -5.6528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        131.914,
+        -6.057,
+        133.211,
+        -5.135
+      ],
+      "place": 4397,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 432165.0
+    },
+    {
+      "id": "mlg",
+      "name": "Maluku Tenggara Barat",
+      "kind": "zone",
+      "origin": {
+        "lon": 131.3003,
+        "lat": -7.9803
+      },
+      "center": [
+        131.3003,
+        -7.9803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        130.737,
+        -8.364,
+        132.027,
+        -6.634
+      ],
+      "place": 4398,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 307051.0
+    },
+    {
+      "id": "kpl",
+      "name": "Kepulauan Aru",
+      "kind": "zone",
+      "origin": {
+        "lon": 134.2352,
+        "lat": -5.7581
+      },
+      "center": [
+        134.2352,
+        -5.7581
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        134.033,
+        -6.961,
+        134.927,
+        -5.307
+      ],
+      "place": 4399,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 231563.0
+    },
+    {
+      "id": "pua",
+      "name": "Pulau Morotai",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.3,
+        "lat": 2.0504
+      },
+      "center": [
+        128.3,
+        2.0504
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.106,
+        1.962,
+        128.712,
+        2.664
+      ],
+      "place": 4400,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 187649.0
+    },
+    {
+      "id": "mlb",
+      "name": "Maluku Barat Daya",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.3726,
+        "lat": -7.5907
+      },
+      "center": [
+        127.3726,
+        -7.5907
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.704,
+        -8.363,
+        130.113,
+        -7.043
+      ],
+      "place": 4401,
+      "country": "ID",
+      "realm": "id-east",
+      "localTrips": 169977.0
+    },
+    {
+      "id": "kti",
+      "name": "Kutai Barat",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.8276,
+        "lat": -0.2305
+      },
+      "center": [
+        115.8276,
+        -0.2305
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.206,
+        -1.191,
+        116.551,
+        0.348
+      ],
+      "place": 4402,
+      "country": "ID",
+      "realm": "borneo",
+      "localTrips": 508560.0
+    },
+    {
+      "id": "bgg",
+      "name": "Banggai Kepulauan",
+      "kind": "zone",
+      "origin": {
+        "lon": 123.2904,
+        "lat": -1.3143
+      },
+      "center": [
+        123.2904,
+        -1.3143
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        122.766,
+        -2.242,
+        124.2,
+        -1.127
+      ],
+      "place": 4403,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 443066.0
+    },
+    {
+      "id": "kex",
+      "name": "Kepulauan Talaud",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.6837,
+        "lat": 4.0006
+      },
+      "center": [
+        126.6837,
+        4.0006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        126.557,
+        3.709,
+        127.182,
+        5.585
+      ],
+      "place": 4404,
+      "country": "ID",
+      "realm": "sulawesi",
+      "localTrips": 315759.0
+    },
+    {
+      "id": "tnj",
+      "name": "Tanjung Jabung Barat",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.4611,
+        "lat": -0.8209
+      },
+      "center": [
+        103.4611,
+        -0.8209
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.625,
+        -1.678,
+        105.02,
+        0.529
+      ],
+      "place": 4405,
+      "country": "ID",
+      "realm": "sumatra",
+      "localTrips": 1863211.0
     }
   ]
 }

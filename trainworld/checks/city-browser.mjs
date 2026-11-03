@@ -349,9 +349,17 @@ async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
   // T-928: the line goes, so the next zone's solve does not carry it (its track and stations stay,
   // unserved); not after a page's last zone (T-925: that removal's solve hung a gate for 90 minutes)
   if (clearAfter) {
-    const v = await page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; });
-    // the solve without it, before the next zone counts versions
-    await page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 });
+    // the zone's checks are in: a removal that never settles (Jakarta's 37.5M solve hung the gate for 90
+    // minutes, T-1738) only costs the page, which the next zone replaces
+    try {
+      const edit = page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; });
+      const v = await Promise.race([edit, new Promise((_, no) => setTimeout(() => no(Error('removeLine took over 300 s')), 300000))]);
+      // the solve without it, before the next zone counts versions
+      await page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 });
+    } catch (e) {
+      console.log(`note ${id}: line not cleared (${String(e).split('\n')[0]}), a fresh page for the next zone`);
+      page.__twStale = true;
+    }
   }
 }
 
@@ -363,7 +371,7 @@ for (const z of zones) {
   for (let tries = 1; tries <= 2; tries++) {
     result = { city: z.id, checks: [], tries };
     try {
-      if (!cur || onPage >= ZONES_PER_PAGE) {
+      if (!cur || onPage >= ZONES_PER_PAGE || cur.page.__twStale) {
         if (cur) await cur.page.close().catch(() => {});
         cur = await openPage();
         onPage = 0;

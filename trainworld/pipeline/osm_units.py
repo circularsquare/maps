@@ -234,7 +234,7 @@ def _people_many(parts):
     wins = []
     for p in parts:  # ghsl_window's own window arithmetic, per part
         w, s, e, n = p.bounds
-        xs, ys = fwd.transform([w, w, e, e, (w + e) / 2, (w + e) / 2], [s, n, s, n, s, n])
+        xs, ys = tier0.moll_corners(fwd, w, s, e, n)
         X0 = tier0.MOLL_X0 + math.floor((min(xs) - tier0.MOLL_X0) / P) * P
         Y0 = tier0.MOLL_Y0 - math.floor((tier0.MOLL_Y0 - max(ys)) / P) * P
         wins.append((X0, Y0, math.ceil((max(xs) - X0) / P), math.ceil((Y0 - min(ys)) / P)))

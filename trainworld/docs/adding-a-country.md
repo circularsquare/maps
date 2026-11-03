@@ -65,6 +65,7 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 | most of the land empty, towns of 50,000+ inside dead space or zones over 100,000 km² | `reach` as Canada and Australia |
 | plan units finer than counties (zones of 100+ units, zones named after a village) | `group_level` as Korea |
 | islands | `contiguous` (10 km of water at most between units) |
+| most land settled, but river or coast towns of 50,000+ dead under the 20 a km2 floor | `min_density` 10, as Indonesia's Kalimantan and Papua |
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
 
@@ -72,7 +73,8 @@ A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` i
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
 figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a
 district (1 km pixels of 20,000-48,000 in villages). Such rows are held (`setbuilt.py <ids> --hold "<reason>"`)
-with a task, the rest of the country built.
+with a task, the rest of the country built. Hold them on the live plan before the run: a row held after its gate
+is still registered, the join solves it with its group, and the market step then fails on it (Indonesia's yai).
 
 Done when: the dry plan's rows look like the country's towns and countryside, with about the people they have.
 
@@ -95,7 +97,9 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
    the far unit to dead space. But when the flagged units are ordinary small units with parts hundreds of km
    apart (Malaysia's mukim: Pulai in Johor Bahru and in Kelantan), the geoBoundaries file has dissolved
    same-named units into one feature: add the country to `world_plan.GB_SPLIT_FAR` (each far cluster its own
-   unit, T-1738) and dry run again.
+   unit, T-1738) and dry run again. A unit's own islands holding under half its people (Gresik's Bawean) are a
+   NOTE and stay: the planner keeps them too (`far_towns`, `FAR_SHARE`), and OSM's relation holds them anyway, so
+   never split real islands.
 3. **Lone tiny zones** (FLAG lone): a zone under 50,000 people parks on its own values. The planner makes
    them dead space in every country (`world_plan.ZONE_ALONE_MIN`, T-1984); a FLAG means a country figure
    in `ALONE_MIN` let one through.
@@ -140,7 +144,9 @@ Write `<kit>\run.cmd`:
     set PATH=%USERPROFILE%\.cargo\bin;%PATH%
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --countries XX --limit 300 --jobs N --port 63xx --no-join > artifacts\trainworld\t###-run.log 2>&1
 
-with N the cores granted. Regions over 100 rows: `set TW_QUIET_S=3600` in the .cmd. Start it with
+with N the cores granted. Regions over 100 rows: `set TW_QUIET_S=3600` in the .cmd. A metro over about 20M
+(Jakarta) hangs the gate's browser step when other rows share its page (T-2040): run the country with
+`--rows` for every row but it, and that metro alone in a second run (its gate then takes a minute). Start it with
 `powershell -File <tc>\start_hidden.ps1 <kit>\run.cmd`; it prints the cmd's PID and, three seconds
 later, its children (the cmd's own python.exe child is venv's launcher, alive as long as the run: `cores.py claim
 ... --pid` and the wait take that one).

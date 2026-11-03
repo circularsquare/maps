@@ -126,13 +126,19 @@ def main(argv):
         holders = sorted({units[u][0] for u in r["units"][iso] if u in units
                           for _, p in far if units[u][1].buffer(1e-6).contains(p.representative_point())})
         people = sum(float(pop.inside(wp.to_moll(p))[2].sum()) for _, p in far)
-        town = people >= SCATTER_PEOPLE
+        # a unit's own islands holding under FAR_SHARE of its people (Gresik's Bawean): as world_plan.far_towns keeps them
+        own = sum(float(pop.inside(wp.to_moll(units[u][1]))[2].sum()) for u in r["units"][iso] if u in units
+                  and any(units[u][1].buffer(1e-6).contains(p.representative_point()) for _, p in far))
+        islands = people >= SCATTER_PEOPLE and own > 0 and people < wp.FAR_SHARE * own
+        town = people >= SCATTER_PEOPLE and not islands
         (flags if town else notes).append(
             f"{'FLAG' if town else 'NOTE'} scattered: {r['id']} {r['name']}: {len(far)} parts {min(d for d, _ in far):,.0f}-"
             f"{max(d for d, _ in far):,.0f} km from its main part, over {SCATTER_KM:g} km from any other "
             f"({sum(m(p).area for _, p in far) / 1e6:,.0f} km2, {people:,.0f} people)"
             + (f", in {', '.join(holders)}" if holders else "")
-            + (". Fix: that unit to dead space" if town else ": islets with next to no one, left as they are"))
+            + (". Fix: that unit to dead space" if town else
+               f": the unit's own islands, {people / own:.0%} of its people, left as they are (T-1738)" if islands else
+               ": islets with next to no one, left as they are"))
         if town:
             red.add(r["id"])
         circles += [p.representative_point() for _, p in far]

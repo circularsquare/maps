@@ -206,12 +206,20 @@ def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None, dtype=np
     return out
 
 
+def moll_corners(fwd, w, s, e, n):
+    """Mollweide x and y of a lon/lat box's corners and edge midpoints; across the equator its edges at the
+    equator too, where a meridian lies farthest out (T-1738: Nias, Halmahera)."""
+    lats = [s, n] + ([0.0] if s < 0.0 < n else [])
+    lons = [w, e, (w + e) / 2]
+    return fwd.transform([x for x in lons for _ in lats], [y for _ in lons for y in lats])
+
+
 def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0, dtype=np.float64):
     """A GHSL 100 m grid over a lon/lat box (plus pad_m), mosaicked from as many 1,000 km tiles as
     it touches: (array, west edge x, north edge y) in Mollweide metres, row 0 north."""
     fwd, _ = _moll()
     w, s, e, n = bbox_ll
-    xs, ys = fwd.transform([w, w, e, e, (w + e) / 2, (w + e) / 2], [s, n, s, n, s, n])
+    xs, ys = moll_corners(fwd, w, s, e, n)
     xmin, xmax = min(xs) - pad_m, max(xs) + pad_m
     ymin, ymax = min(ys) - pad_m, max(ys) + pad_m
     X0 = MOLL_X0 + math.floor((xmin - MOLL_X0) / PIX_M) * PIX_M

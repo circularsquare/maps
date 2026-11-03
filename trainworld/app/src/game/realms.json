@@ -25,8 +25,17 @@
     { "id": "thailand", "name": "Thailand", "countries": ["TH"] },
     { "id": "singapore", "name": "Singapore", "countries": ["SG"] },
     { "id": "cambodia", "name": "Cambodia", "countries": ["KH"] },
-    { "id": "malaysia", "name": "Malaysia", "countries": ["MY"] },
-    { "id": "brunei", "name": "Brunei", "countries": ["BN"] },
+    { "id": "malaysia", "name": "Peninsular Malaysia", "units": { "MY": "*" } },
+    { "id": "borneo", "name": "Borneo", "countries": ["BN"], "units": {
+      "MY": ["Sabah", "Sarawak", "Labuan"],
+      "ID": ["West Kalimantan", "Central Kalimantan", "South Kalimantan", "East Kalimantan", "North Kalimantan"] } },
+    { "id": "java", "name": "Java and Bali", "units": { "ID": [
+      "Banten", "Jakarta", "West Java", "Central Java", "Special Region of Yogyakarta", "East Java", "Bali"] } },
+    { "id": "sumatra", "name": "Sumatra", "units": { "ID": [
+      "Aceh", "North Sumatra", "West Sumatra", "Riau", "Jambi", "Bengkulu", "South Sumatra", "Bangka-Belitung Islands", "Lampung"] } },
+    { "id": "sulawesi", "name": "Sulawesi", "units": { "ID": [
+      "North Sulawesi", "Gorontalo", "Central Sulawesi", "West Sulawesi", "South Sulawesi", "Southeast Sulawesi"] } },
+    { "id": "id-east", "name": "Eastern Indonesia", "units": { "ID": "*" } },
     { "id": "australia", "name": "Australia", "countries": ["AU"] },
     { "id": "cn-north", "name": "China north", "units": { "CN": ["Beijing", "Tianjin", "Hebei", "Shanxi", "Inner Mongolia"] } },
     { "id": "cn-northeast", "name": "China northeast", "units": { "CN": ["Liaoning", "Jilin", "Heilongjiang"] } },

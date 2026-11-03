@@ -147,6 +147,9 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
                       "task": "T-1191"},
               # Malaysia's mukim (1,859) by their district, as Korea's (T-1738: zones of up to 288 mukim)
               "MYS": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "group_level": 1, "task": "T-1738"},
+              # Indonesia's kabupaten as they are, zones held to their island; at the default 20 a km2 the river
+              # and coast towns of Kalimantan and Papua were dead space (Sintang, Berau, Bulungan, Sentani; T-1738)
+              "IDN": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True, "task": "T-1738"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
@@ -182,6 +185,7 @@ FUA_CUT_SHARE = 0.2
 # zone is dead space (T-1984: "Unincorporated NT" put Yulara, Nhulunbuy and Alyangula in Darwin's zone, T-1857)
 SCATTER_KM = 100.0
 SCATTER_PEOPLE = 1_000
+FAR_SHARE = 0.5  # and this share of the unit's own people
 # a country's joint commute solve split by first-level unit (T-897: one China group would pass
 # intercity.MAX_GROUP_ZONES); first-level names as geoBoundaries gives them, to the solve region's
 # name; a first-level unit not listed is its own region, named by its first word
@@ -580,6 +584,7 @@ GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each fi
 # geoBoundaries files that dissolve same-named units into one feature (Malaysia's ADM3: 40 mukim such as
 # Pulai, in Johor and three other states, 135-589 km apart; T-1738): each cluster of parts over FAR_PART_KM
 # from the biggest part is a unit of its own, "<shapeID>~<k>". Not every country: far islands are real elsewhere
+# (Indonesia's 25 far kabupaten parts are islands, and OSM's kabupaten relation holds them anyway; T-1738)
 GB_SPLIT_FAR = {"MYS"}
 FAR_PART_KM = 50.0
 
@@ -2008,7 +2013,10 @@ def far_towns(by, ids):
         far = [parts[k] for k in range(len(parts)) if k not in seen]
         if far and by[i].px is not None:
             x, y, p = by[i].px
-            if sum(float(p[contains_xy(f, x, y)].sum()) for f in far) >= SCATTER_PEOPLE:
+            n = sum(float(p[contains_xy(f, x, y)].sum()) for f in far)
+            # a unit mostly near its zone keeps its far islets (Kota Ternate, 248,000, with 2,200 on islands
+            # 110 km off; T-1738)
+            if n >= SCATTER_PEOPLE and n >= FAR_SHARE * float(p.sum()):
                 out.append(i)
     return out
 

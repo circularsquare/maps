@@ -132,7 +132,8 @@ Three rules after the merge, in every country (T-1984):
   Red River and Mekong deltas' big FUAs are countryside round smaller centres and stay in several zones.
 - **No far towns**: a unit, not its zone's most populous, with 1,000 people in pieces over **100 km**
   from the rest of the zone is dead space (`SCATTER_KM`: geoBoundaries' "Unincorporated NT" put Yulara,
-  Nhulunbuy and Alyangula in Darwin's zone).
+  Nhulunbuy and Alyangula in Darwin's zone), when those pieces hold at least half its people (`FAR_SHARE`:
+  Kota Ternate keeps its Batang Dua islands, 1% of its people).
 - **No tiny zones**: a zone under **50,000** people is dead space (`ZONE_ALONE_MIN`; `ALONE_MIN` for a
   country's own figure): such zones parked on their own figures (Muong Nhe, Con Dao, Whyalla).
 A replan of the metros keeps zone rows as
@@ -148,7 +149,9 @@ whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin
 with no zone within 10 km, are dead space. **Malaysia** (T-1738) zones its mukim the same way, by
 district, with the floor, cap and no-exclaves rule but the usual density floor (the interiors of Pahang,
 Sabah and Sarawak dead space); its geoBoundaries ADM3 joins same-named mukim of different states into one
-feature, so `world_plan.GB_SPLIT_FAR` makes each part over 50 km away a unit of its own. **Canada zones its cities and the corridors
+feature, so `world_plan.GB_SPLIT_FAR` makes each part over 50 km away a unit of its own. **Indonesia**
+(T-1738) zones its kabupaten with the floor, cap and no-exclaves rule and a density floor of **10** a km2
+(Kalimantan's river towns are zones; its far interior and Papua's southern swamps dead space). **Canada zones its cities and the corridors
 between**: a census subdivision whose own centre has fewer than **100,000** people within **150 km**
 (GHS-POP, the US's included) is dead space (`reach`), which leaves out the north, Labrador, the
 territories and the empty land between distant cities; and two zones whose people centres lie more
@@ -472,7 +475,8 @@ show their figures, nobody on them (T-845). One helper answers it, `placeAt` in 
 notes/T-975.md]: zones are grouped into country-sized realms, a hand list in
 `app/src/game/realms.json` (each an id, a name and its countries, or for a country split between
 realms its first-level units: China in seven, Russia in two, the US in four by Census region with
-Delaware, Maryland and DC in the south, and Puerto Rico a realm of its own). Players see only a realm's
+Delaware, Maryland and DC in the south, and Puerto Rico a realm of its own; Indonesia in five by island
+group and Malaysia in two, with Borneo one realm across Brunei, Sabah, Sarawak and Kalimantan, T-1738). Players see only a realm's
 name; the code word is "realm" because "region" already means a zone in the code.
 `pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
