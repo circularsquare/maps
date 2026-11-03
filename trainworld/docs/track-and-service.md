@@ -387,13 +387,21 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
   panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
   it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is
-  final and refunds nothing. Saved as bits 4 to 6 of the station's node flags (old readers ignore
-  them), on `StationData::upgrades`, so undo, renames and platform changes keep them. No upkeep.
+  final and refunds nothing. Saved as bits 4 to 7 of the station's node flags (old readers ignore
+  them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
+  changes keep them. No upkeep.
   - **Terminal** (turnback sidings): a line turning there holds its platforms only for the dwell
     and turns in two sidings past the platform (6.2): 30 an hour at the default turnaround. The
     map draws the two sidings between the running tracks past each platform end with track
     beyond, from where the tracks part (zoom 14), and the box's two ends as thick dark bars
     reaching a little past its sides, like buffer stops (T-1416).
+  - **Passing tracks** (T-2231, notes/T-2228.md; bit 8): a second platform track each way, the
+    outer one for trains that stop, the inner one for trains that pass and a second train stopping.
+    Slower lines that stop there wait for faster ones to pass (6.2, "Behind slower trains"). Priced
+    as the platform plus 0.4 km of double track at the station's level, 1.5 times on high-speed
+    track, twice over water (`upgrades::price`): US$22.5M for a 200 m ground station, US$45M for a
+    400 m high-speed one. Works on double track only. `TrackApi::passing_spots(line)`: the
+    stations where a line's trains get passed or would pass a slower line's, without them yet.
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
     `kernel::ride_fixed`); a P after the station's name. Drawn as a car park beside the complex (below).
   - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
@@ -471,7 +479,9 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 - single-track section between passing points: run time + 60 s, counting both directions
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
-  single-track platform shares both directions.
+  single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train
+  holds one of two platform tracks, (dwell + 60 s) / 2 pooled, and a train that does not stop
+  holds none.
 - dead-end terminus: max(layover + 60 s, 200 s) / constructed platform tracks (a two-track
   terminus with 3 min turnaround: 30/h; never more than 18 an hour on one track or 36 on two,
   the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Unused
@@ -513,8 +523,8 @@ One line alone has no queueing delay (its trains are evenly spaced) until it is 
 90 s junction shared by two equal lines: 27 s at 75%, 81 s at 90%, ~3 min at 100%, ~7 min at 110%.
 
 **Behind slower trains** (T-1924, notes/T-1900.md N1; Anita 2026-11-02). A faster line on a stretch
-of track it shares with a slower one in the same direction catches it up and follows it: there are
-no passing tracks (T-1927 is the someday reach goal). A shared stretch is a run of path entries both
+of track it shares with a slower one in the same direction catches it up and follows it, unless the
+slower one stops at a station with passing tracks inside the stretch (below). A shared stretch is a run of path entries both
 lines take one after the other (same edge, same direction), cut where either turns back or they part.
 Quad track is two edges, so lines on its two pairs share nothing and an express on its own pair keeps
 its speed. Over the stretch the slower line takes `D` longer than the faster one from their free
@@ -544,6 +554,33 @@ its_time`): the local takes 33.3 min one way, the express 8.4 min free and 31.3 
 formula alone, the note's 80 km/h figures (16.5 min longer, a local every 6 min, 1m47s spacing) give
 a 14.4 min loss. A line's following losses are built again whenever any edge it runs over is (the
 slower line's path and stops change its `D`), and solved again when a line on them is rescheduled.
+
+**Waiting for faster trains** (T-2231, `track/overtake.rs`, notes/T-2228.md 5). Where the slower run
+stops at a station with passing tracks strictly inside the stretch (a passing point), the timetable
+makes it wait there instead, and the stretch is never locked behind. Per demand level, from the two
+lines' rates and free profiles, train by train over one cycle of departures (the shortest whole number
+of the slower headway that is a whole number of the faster one, at most 12 of them and 2 hours, else
+2 hours), after a warm-up: at every place either run stops, each train keeps `s` behind the one ahead
+(only `PASS_CLEAR_S`, 60 s, behind a slower train stepping aside at a passing point); at each passing
+point a slower train waits for every faster train that would otherwise come within `s` of it before
+its next passing point, leaving 60 s after the last of them passes, unless the wait would pass its own
+headway less `s` (it would block the next one; the faster one then follows it). The faster line's
+trains are placed at the one of 24 offsets a faster headway that gives the least waiting and loss an
+hour (`Plan::outcome`). Averaged over the cycle, the slower line's wait at each passing point is a
+hold at that stop (`stop_holds`; `ResKind::Wait`, wire kind 13, `Resource::node` the station, one per
+faster run and passing point, with no utilisation, so no map dot, and it neither fills nor caps
+track), and the faster line's remaining loss is its following loss (kind 11) for that slower line;
+behind several slower lines the largest loss counts, as above. The departures placement (6.3) puts
+the faster line's trains at that offset behind the slower one's, as it places a locked pair; the two
+directions each take their own best offset, so where one phase cannot give both, the figures can be
+better than what the drawn trains do. When the headways are multiples of each other every slower trip
+waits at the same stations. Stretches with no passing point are worked out as above, to the bit.
+Worked example (180 km of high-speed track, stations every 30 km, high-speed locals at all seven and
+expresses at three, passing tracks at the five between, `passing_tracks_let_the_express_by`): free,
+49.3 and 38.6 min one way; every 10 minutes each, the express loses 8 s to overtakes (it trails the
+local by 11 min without them) and the local waits 89 s and 249 s at two stations, 6.7 min more in
+all; locals every 30 minutes, the express loses nothing and the local 6.2 min. Both still pay the
+queue on track two lines share (about a minute at 12 trains an hour).
 
 **No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
 on every resource but a station crossover (whose load counts through trains that never meet),
@@ -756,7 +793,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   headway from the other line's nearest there, squared, summed; 24 phases tried a headway). A pair
 locked behind (6.2) is placed the other way (T-1965): each of the faster line's trains as near as
 it can be to the spacing `s` behind one of the slower line's, so it is drawn following it rather
-than catching it up midway (the share of half the smaller headway it is off, squared). Greedy on
+than catching it up midway (the share of half the smaller headway it is off, squared). A pair that
+passes at passing stations (6.2, T-2231) is placed the same way, at its overtake plan's offset
+instead of `s`. Greedy on
   edits: only the lines an edit changes directly are placed, in id order, against the others as they
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
@@ -904,8 +943,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
-  1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water), park and
-  ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
+  1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water), passing
+  tracks the platform plus 0.4 km of it, 1.5x on high-speed track (US$22.5M for a 200 m station at
+  grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The

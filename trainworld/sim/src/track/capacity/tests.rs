@@ -16,6 +16,44 @@ fn spec_delay_table() {
     assert!((kingman(0.75, 0.5, s) - 38.0).abs() < 1.0);
 }
 
+/// T-2231: every line's figures on the real save (trainworld/T-007-real-nyc.save), on synthetic
+/// networks and on the following fixtures, written to `T2231_OUT` so two builds can be compared to
+/// the bit. On request, on the save's track bytes (gunzipped, after its JSON header):
+/// `T2231_TRACK=<file> T2231_OUT=<file> cargo test --manifest-path sim/Cargo.toml real_save_figures -- --ignored`.
+#[test]
+#[ignore]
+fn real_save_figures() {
+    use std::fmt::Write;
+    use super::super::tests::line;
+    let mut worlds = vec![TrackWorld::new(super::super::save::decode(&std::fs::read(std::env::var("T2231_TRACK").unwrap()).unwrap()).unwrap())];
+    for seed in 1..=3u64 {
+        worlds.push(TrackWorld::new(synth(250.0, 70, 12, seed)));
+    }
+    let (mut w, n, _) = twenty_km();
+    line(&mut w, &n, [10.0, 4.0, 0.0]);
+    line(&mut w, &[n[1], n[20]], [6.0, 2.0, 2.0]);
+    line(&mut w, &[n[0], n[20]], [2.0, 1.0, 1.0]);
+    worlds.push(w);
+    let mut s = String::new();
+    for w in &worlds {
+        writeln!(s, "world").unwrap();
+        for (l, ls) in w.svc.lines.iter().enumerate() {
+            let bits = |v: &[f64]| v.iter().map(|x| format!("{:x}", x.to_bits())).collect::<Vec<_>>().join(",");
+            writeln!(s, "line {l} {} {} rt {} trains {:?} delay {} tph {:?} phase {:?}", ls.ok, ls.running, bits(&ls.round_trip), ls.trains, bits(&ls.delay), w.net.line_tph.get(l), w.net.line_phase_of(l as u32)).unwrap();
+            for (r, run) in ls.runs.iter().enumerate() {
+                for lev in 0..LEVELS {
+                    let h: Vec<f64> = run.holds[lev].iter().flat_map(|h| [h.s, h.delay, h.span]).collect();
+                    writeln!(s, "  {r} {lev} dur {} holds {} stops {}", bits(&[run.prof[lev].duration]), bits(&h), bits(&run.stop_holds[lev])).unwrap();
+                }
+            }
+        }
+        for x in w.svc.cap.canonical() {
+            writeln!(s, "{x:?}").unwrap();
+        }
+    }
+    std::fs::write(std::env::var("T2231_OUT").unwrap(), s).unwrap();
+}
+
 use super::super::bench::synth;
 use super::super::net::StationData;
 use super::super::service::Service;
@@ -525,12 +563,12 @@ fn following_loss_formula() {
         User { line: f, run: 0, owner: true, occ: 0.0, at: 100.0, stop: -1 },
         User { line: s, run: 0, owner: false, occ: 990.0, at: 107.0, stop: -1 },
     ];
-    let (high, who) = follow_loss(&us, &w.net, 0);
+    let (high, who) = follow_loss(&us, &w.net, 0, &[]);
     assert!((high - (990.0 - (360.0 - 107.0) / 2.0)).abs() < 1e-9, "{high}");
     assert_eq!(who, s);
-    let (rare, _) = follow_loss(&us, &w.net, 1);
+    let (rare, _) = follow_loss(&us, &w.net, 1, &[]);
     assert!((rare - 990.0 * 990.0 / (2.0 * (3600.0 - 107.0))).abs() < 1e-9, "{rare}");
-    assert_eq!(follow_loss(&us, &w.net, 2).0, 0.0, "no express trains, no loss");
+    assert_eq!(follow_loss(&us, &w.net, 2, &[]).0, 0.0, "no express trains, no loss");
 }
 
 /// A straight 20 km double track with a station every km (stops `n[0..=20]`), and a second

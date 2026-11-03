@@ -39,7 +39,30 @@ impl TrackApi {
             return 0.0;
         }
         let i = node as usize;
-        upgrades::price(bit, net.node_level[i], net.water_mask.is_water(net.node_x[i], net.node_y[i]))
+        upgrades::price(bit, net.node_level[i], net.water_mask.is_water(net.node_x[i], net.node_y[i]), net.node_platform[i], net.node_hsr(node))
+    }
+
+    /// T-2231: the stations where `line`'s trains get passed or would pass a slower line's, with no
+    /// passing tracks yet (`overtake::passing_spots`), in the line's order: what the line panel's
+    /// button adds passing tracks at (one `set_station_upgrade` with `upgrades::PASSING`).
+    pub fn passing_spots(&self, line: u32) -> Vec<u32> {
+        crate::track::overtake::passing_spots(&self.w.net, &self.w.svc.lines, line)
+    }
+
+    /// T-2231: where `line` waits for faster trains at passing stations at a demand level (resource
+    /// kind 13): per station, direction and faster line, `[station, faster line, wait per train s]`,
+    /// flat, largest first.
+    pub fn line_waits(&self, line: u32, level: usize) -> Vec<f64> {
+        let cap = &self.w.svc.cap;
+        let lev = level.min(crate::track::params::LEVELS - 1);
+        let mut v: Vec<[f64; 3]> = (0..cap.res.len())
+            .filter_map(|r| {
+                let f = cap.wait_for(r)?;
+                (cap.delay[r][lev] > 0.0 && cap.users_of(r).iter().any(|u| u.owner && u.line == line)).then(|| [cap.res[r].node as f64, f as f64, cap.delay[r][lev]])
+            })
+            .collect();
+        v.sort_by(|a, b| b[2].total_cmp(&a[2]));
+        v.into_iter().flatten().collect()
     }
 
     /// Stations with upgrades: node, upgrade bits, flat.

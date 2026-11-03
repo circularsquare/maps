@@ -13,6 +13,7 @@
 //!   validity, routing, split planning.
 //! - `profile`: minimum-time run profiles as constant-acceleration phases, holds.
 //! - `capacity`: resources, utilisation, Kingman delay, holds per line.
+//! - `overtake`: passing tracks (T-2231): where slower lines wait for faster ones to pass.
 //! - `service`: per line and direction: runs, profiles per demand level, stop times, round trip,
 //!   trains needed, the trips to draw.
 //! - `streets`: the car's street speed by place, for a bus's speed (T-1577).
@@ -43,6 +44,7 @@ pub mod geom;
 pub mod localtime;
 pub mod names;
 pub mod net;
+pub mod overtake;
 pub mod params;
 pub mod profile;
 pub mod related;

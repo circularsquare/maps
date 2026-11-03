@@ -10,7 +10,8 @@ tests natively.
 
 - `src/track/`: the track model (T-040): geometry, costs, crossings, world frames (`frame.rs`,
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
-  run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
+  run-time profiles, capacity (passing tracks' overtakes beside the following losses: `overtake.rs`,
+  T-2231), the boarding account (`boarding.rs`: each train's load and each
   platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`), `crossings.rs`, `links.rs`,

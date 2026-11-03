@@ -5,7 +5,7 @@
 //! an edit changed are placed, against every other line as it runs, so the rest keep their times.
 //! Waits are by headway, so demand does not move.
 
-use super::capacity::{ResKind, FOLLOW_LOCKED};
+use super::capacity::ResKind;
 use super::net::Network;
 use super::params::LEVELS;
 use super::profile;
@@ -26,7 +26,8 @@ struct Meet {
     b: f64,
     hb: f64,
     /// T-1965: the two lines are a following pair that can never part (`capacity::FOLLOW_LOCKED`):
-    /// the faster one's trains belong right behind the slower one's, this far (s) after them;
+    /// the faster one's trains belong right behind the slower one's, this far (s) after them; or
+    /// (T-2231) a pair that passes at passing stations, this far after at their plan's best phase;
     /// positive when this line follows, negative when it leads, 0 for any other pair
     behind: f64,
 }
@@ -99,23 +100,16 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             }
         }
     }
-    // T-1965: following pairs that never part: (faster line, its run), (slower line, its run), spacing s
-    let mut locked: Vec<((u32, u8), (u32, u8), f64)> = vec![];
-    for r in 0..cap.res.len() {
-        if cap.res[r].kind != ResKind::Follow {
-            continue;
-        }
-        let us = cap.users_of(r);
-        let Some(f) = us.iter().find(|u| u.owner) else { continue };
-        for u in us.iter().filter(|u| !u.owner && u.stop == FOLLOW_LOCKED) {
-            if want[f.line as usize] || want[u.line as usize] {
-                locked.push(((f.line, f.run), (u.line, u.run), u.at));
-            }
-        }
-    }
+    // T-1965: following pairs that never part, and (T-2231) pairs that pass at passing stations, by
+    // level: (faster line, its run), (slower line, its run), how far behind it belongs (s)
+    let locked: [Vec<((u32, u8), (u32, u8), f64)>; LEVELS] = std::array::from_fn(|lev| {
+        let mut v = cap.follow_targets(net, lev);
+        v.retain(|x| want[x.0 .0 as usize] || want[x.1 .0 as usize]);
+        v
+    });
     // this line's run `ur` against line `v`'s run `vr`: how far behind (+) or ahead (-) it belongs
-    let behind = |l: u32, ur: u8, v: u32, vr: u8| {
-        locked.iter().find_map(|x| if (x.0, x.1) == ((l, ur), (v, vr)) { Some(x.2) } else if (x.0, x.1) == ((v, vr), (l, ur)) { Some(-x.2) } else { None }).unwrap_or(0.0)
+    let behind = |lev: usize, l: u32, ur: u8, v: u32, vr: u8| {
+        locked[lev].iter().find_map(|x| if (x.0, x.1) == ((l, ur), (v, vr)) { Some(x.2) } else if (x.0, x.1) == ((v, vr), (l, ur)) { Some(-x.2) } else { None }).unwrap_or(0.0)
     };
     let time = |l: u32, run: u8, lev: usize, at: f64| profile::time_at(&svc.lines[l as usize].runs[run as usize].prof[lev].phases, at.max(0.0));
     // each line's pattern, worked out once
@@ -168,7 +162,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             if first.is_empty() {
                 continue;
             }
-            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(l, x.0 .2, x.0 .0, x.0 .1) }).collect();
+            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1) }).collect();
             let cur = (p[lev] as f64).rem_euclid(h);
             let now = crowding(&meets, h, cur);
             let (mut best, mut at) = (now, cur);

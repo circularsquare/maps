@@ -2,7 +2,7 @@
 //! the turning rules they change. Bought on a blueprint station with it, or paid at once on a
 //! constructed one; removing a constructed one refunds nothing.
 
-use super::params::{level_mult, BASE_COST_PER_KM, WATER_COST};
+use super::params::{level_mult, BASE_COST_PER_KM, HSR_COST, WATER_COST};
 
 /// Turnback sidings past the platform: a line turning here holds its platforms only for the dwell.
 pub const TERMINAL: u8 = 1;
@@ -10,10 +10,17 @@ pub const TERMINAL: u8 = 1;
 pub const PARK_RIDE: u8 = 2;
 /// Waits at the station count at `WAITING_ROOM_WAIT` of their minutes in mode choice.
 pub const WAITING_ROOM: u8 = 4;
-pub const ALL: u8 = TERMINAL | PARK_RIDE | WAITING_ROOM;
+/// Passing tracks (T-2231, notes/T-2228.md 5): a second platform track each way, so a train that
+/// does not stop runs past one that does, and slower lines wait here for faster ones (`overtake`).
+/// Saved as bit 7 of the node flags, which older readers mask off.
+pub const PASSING: u8 = 8;
+pub const ALL: u8 = TERMINAL | PARK_RIDE | WAITING_ROOM | PASSING;
 
 /// The terminal's price: this much double track at the station's level.
 pub const TERMINAL_KM: f64 = 1.0;
+/// Passing tracks' price: the platform plus this much double track at the station's level (the
+/// turnouts and run-out either side).
+pub const PASSING_EXTRA_KM: f64 = 0.4;
 pub const PARK_RIDE_COST: f64 = 20.0;
 pub const WAITING_ROOM_COST: f64 = 5.0;
 pub const PARK_RIDE_MIN: f32 = 10.0;
@@ -47,10 +54,12 @@ pub fn pooled_turn_s(turnaround_s: f64, margin_s: f64, tracks: f64) -> f64 {
     (turnaround_s + margin_s).max(POOLED_TURN_MIN_S) / tracks.max(1.0)
 }
 
-/// One upgrade's price, US$M.
-pub fn price(bit: u8, level: i8, wet: bool) -> f64 {
+/// One upgrade's price, US$M, at a station of `platform` m on high-speed track or not (`hsr`).
+pub fn price(bit: u8, level: i8, wet: bool, platform: u16, hsr: bool) -> f64 {
+    let km = |km: f64| km * BASE_COST_PER_KM * level_mult(level) * if wet { WATER_COST } else { 1.0 };
     match bit {
-        TERMINAL => TERMINAL_KM * BASE_COST_PER_KM * level_mult(level) * if wet { WATER_COST } else { 1.0 },
+        TERMINAL => km(TERMINAL_KM),
+        PASSING => km(platform as f64 / 1000.0 + PASSING_EXTRA_KM) * if hsr { HSR_COST } else { 1.0 },
         PARK_RIDE => PARK_RIDE_COST,
         WAITING_ROOM => WAITING_ROOM_COST,
         _ => 0.0,
@@ -58,6 +67,6 @@ pub fn price(bit: u8, level: i8, wet: bool) -> f64 {
 }
 
 /// All of a station's upgrades, US$M.
-pub fn cost(bits: u8, level: i8, wet: bool) -> f64 {
-    [TERMINAL, PARK_RIDE, WAITING_ROOM].iter().filter(|&&b| bits & b != 0).map(|&b| price(b, level, wet)).sum()
+pub fn cost(bits: u8, level: i8, wet: bool, platform: u16, hsr: bool) -> f64 {
+    [TERMINAL, PARK_RIDE, WAITING_ROOM, PASSING].iter().filter(|&&b| bits & b != 0).map(|&b| price(b, level, wet, platform, hsr)).sum()
 }

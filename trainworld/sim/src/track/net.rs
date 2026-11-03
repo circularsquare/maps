@@ -1122,6 +1122,15 @@ impl Network {
         let p = &self.node_ports[n as usize];
         p.ends().iter().map(|&c| self.edge_tracks[(c >> 1) as usize]).max().unwrap_or(2)
     }
+    /// High-speed track meets the node (T-2231: passing tracks there are priced as it).
+    pub fn node_hsr(&self, n: u32) -> bool {
+        self.node_ports[n as usize].ends().iter().any(|&c| self.edge_hsr[(c >> 1) as usize])
+    }
+    /// A station's upgrades, US$M (`upgrades::cost` at its level, water, platform and track).
+    pub fn station_upgrades_price(&self, n: u32, bits: u8, wet: bool) -> f64 {
+        let i = n as usize;
+        super::upgrades::cost(bits, self.node_level[i], wet, self.node_platform[i], self.node_hsr(n))
+    }
     /// The speed limit an edge puts on every piece of it, m/s: `V_CROSSOVER` on a crossover, 320
     /// km/h on high-speed track, 160 on any other (T-817).
     pub fn v_cap(&self, e: u32) -> f64 {
@@ -2105,7 +2114,7 @@ impl Network {
                 add(1, level, tracks, wet, 0, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
                 let ups = self.node_upgrades[n];
                 if ups != 0 {
-                    add(8, level, 0, wet, 0, ups.count_ones() as f64, super::upgrades::cost(ups, level, wet));
+                    add(8, level, 0, wet, 0, ups.count_ones() as f64, self.station_upgrades_price(n as u32, ups, wet));
                 }
             }
             let nn = n as u32;
@@ -2297,7 +2306,7 @@ impl Network {
         if ups == 0 {
             return 0.0;
         }
-        super::upgrades::cost(ups, self.node_level[n], self.water_mask.is_water(self.node_x[n], self.node_y[n]))
+        self.station_upgrades_price(n as u32, ups, self.water_mask.is_water(self.node_x[n], self.node_y[n]))
     }
 
     /// Edge ends at a node whose edge is constructed.
