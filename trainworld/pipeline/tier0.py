@@ -10,7 +10,8 @@ census or registers then upgrade single inputs by replacing one function. What e
   neighbourhood's (bounded_population, T-1150), each pixel split over four 50 m points (points on
   water dropped, the pixel's people kept on its land points), summed into the H3 cells and scaled
   to GHS-POP's own total over them, then scaled to admin totals where the config gives them (any
-  census publishes district totals). No institutions taken off.
+  census publishes district totals): each unit's cells take its total times the share of the
+  unit's GHSL people they hold (scale_to_units). No institutions taken off.
 - Jobs (the jobs proxy, T-012): a total of population x jobs per resident (World Bank: ILO's
   employment-to-population ratio 15+ x the share aged 15+), spread over cells by a blend of three
   normalised signals: GHSL non-residential built-up volume (GHS-BUILT-V NRES) times the cell's
@@ -57,7 +58,8 @@ boundary_drawn (callable -> (shapely geometry, source text), optional: the pack'
 given, where the footprint boundary_file is clipped to the shore), cell_points (callable boundary ->
 (lat, lon) arrays, optional: points that each get a cell, a census's small areas), regions
 (callable (lat, lon) of the pack's cells -> (u8 region per cell, the header's regions block),
-optional), admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
+optional), admin_totals (callable boundary -> [(name, shapely geometry, population)] for the units
+touching it, optional; admin_totals.hook(iso2) reads them from a country's config), wfh (share
 working at home, optional, or a callable returning it; or per cell: at_home, callable (lat, lon) -> census at-home share, with
 telework, the share of the rest teleworking on a day), jobs (callable (city, boundary, signals, proxy weight per cell) ->
 (jobs per signal cell, source name), optional: a country's workplace counts by small area, spread
@@ -129,6 +131,9 @@ INTRAZONAL_KM = 1.04                  # the game's same-zone distance
 # China are old and coarse enough to step 10-30x between neighbours; each pixel's figure is held
 # within POP_BOUND of its neighbourhood's, a Gaussian of POP_BOUND_SIGMA_M (T-1150).
 POP_BOUND, POP_BOUND_SIGMA_M = 2.0, 2000.0
+# A census unit with over this times GHSL's people, or under its inverse, is printed FLAG: GHSL's
+# phantoms and gaps, or a bad join (research/next-countries-data.md "The general fix" 3).
+ADMIN_FLAG = 2.0
 
 
 def raw(*p):
@@ -225,6 +230,12 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0, dtype=np.float64):
     X0 = MOLL_X0 + math.floor((xmin - MOLL_X0) / PIX_M) * PIX_M
     Y0 = MOLL_Y0 - math.floor((MOLL_Y0 - ymax) / PIX_M) * PIX_M
     W, H = math.ceil((xmax - X0) / PIX_M), math.ceil((Y0 - ymin) / PIX_M)
+    return moll_window(kind, X0, Y0, W, H, epoch, dtype), X0, Y0
+
+
+def moll_window(kind, X0, Y0, W, H, epoch=2020, dtype=np.float64):
+    """A GHSL 100 m grid of H x W pixels from the pixel corner (X0, Y0) in Mollweide metres, row 0
+    north, mosaicked from as many 1,000 km tiles as it touches."""
     out = np.zeros((H, W), dtype)
     r_first, r_last = int((MOLL_Y0 - Y0) // TILE_M) + 1, int((MOLL_Y0 - (Y0 - H * PIX_M) - 1) // TILE_M) + 1
     c_first, c_last = int((X0 - MOLL_X0) // TILE_M) + 1, int((X0 + W * PIX_M - 1 - MOLL_X0) // TILE_M) + 1
@@ -242,7 +253,47 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0, dtype=np.float64):
             win = _read_tile_window(path, r_a, r_b, c_a, c_b, tx0, ty0, dtype)
             wr, wc = round((Y0 - ty0) / PIX_M) + r_a, round((tx0 - X0) / PIX_M) + c_a
             out[wr:wr + win.shape[0], wc:wc + win.shape[1]] = win
-    return out, X0, Y0
+    return out
+
+
+def ghsl_people(geoms, epoch=2020, inside=None, block=5000):
+    """GHS-POP people whose pixel centre lies in each lon/lat geometry (they must not overlap), and
+    with `inside` (a lon/lat geometry) also those of them whose centre lies in it: (whole, part)
+    arrays. Read in blocks of the tile grid, so each block decodes one tile."""
+    from affine import Affine
+    from rasterio import features
+    fwd, _ = _moll()
+    geoms = np.asarray(geoms, dtype=object)
+    to_moll = lambda xy: np.column_stack(fwd.transform(xy[:, 0], xy[:, 1]))  # noqa: E731
+    moll = shapely.transform(geoms, to_moll)
+    whole, part = np.zeros(len(geoms)), np.zeros(len(geoms))
+    live = np.flatnonzero(~shapely.is_empty(moll))
+    if not len(live):
+        return (whole, part) if inside is not None else whole
+    tree = shapely.STRtree(moll[live])
+    ins = shapely.transform(inside, to_moll) if inside is not None else None
+    xmin, ymin, xmax, ymax = shapely.total_bounds(moll[live])
+    c0, c1 = math.floor((xmin - MOLL_X0) / PIX_M), math.ceil((xmax - MOLL_X0) / PIX_M)  # global pixel columns
+    r0, r1 = math.floor((MOLL_Y0 - ymax) / PIX_M), math.ceil((MOLL_Y0 - ymin) / PIX_M)
+    for ca in range(c0 - c0 % block, c1, block):
+        for ra in range(r0 - r0 % block, r1, block):
+            cs, ce, rs, rend = max(ca, c0), min(ca + block, c1), max(ra, r0), min(ra + block, r1)
+            bx, by = MOLL_X0 + cs * PIX_M, MOLL_Y0 - rs * PIX_M
+            hit = live[tree.query(shapely.box(bx, MOLL_Y0 - rend * PIX_M, MOLL_X0 + ce * PIX_M, by))]
+            if not len(hit):
+                continue
+            pop = moll_window("pop", bx, by, ce - cs, rend - rs, epoch, np.float32)
+            if not pop.any():
+                continue
+            tf = Affine(PIX_M, 0.0, bx, 0.0, -PIX_M, by)
+            lab = features.rasterize(((moll[i], int(i) + 1) for i in hit), out_shape=pop.shape, transform=tf,
+                                     fill=0, dtype="int32").ravel()
+            w = pop.ravel().astype(np.float64)
+            whole += np.bincount(lab, weights=w, minlength=len(geoms) + 1)[1:]
+            if ins is not None:
+                m = features.rasterize([(ins, 1)], out_shape=pop.shape, transform=tf, fill=0, dtype="uint8").ravel()
+                part += np.bincount(lab, weights=w * m, minlength=len(geoms) + 1)[1:]
+    return (whole, part) if inside is not None else whole
 
 
 def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2, near=None):
@@ -530,19 +581,57 @@ def signals(city, cfg, boundary, mask):
         np.add.at(out["osm_" + kind], rows[rows >= 0], w[rows >= 0])
     out["pop_ghsl"] = out["pop"].copy()
     if cfg.get("admin_totals"):
-        units = cfg["admin_totals"](boundary)
-        pts = shapely.points(out["lon"], out["lat"])
-        for name, geom, total in units:
-            shapely.prepare(geom)
-            sel = shapely.contains(geom, pts)
-            have = out["pop"][sel].sum()
-            if have > 0:
-                out["pop"][sel] *= total / have
-            print(f"  admin total {name}: GHSL {have:,.0f} -> {total:,.0f} ({total / max(have, 1) - 1:+.1%})", flush=True)
+        scale_to_units(out, boundary, cfg["admin_totals"](boundary), epoch)
     os.makedirs(b.WORK, exist_ok=True)
     np.savez_compressed(cache, **out)
     print(f"signals: {len(cells):,} cells, {time.time() - t0:.0f} s", flush=True)
     return out
+
+
+def scale_to_units(out, boundary, units, epoch=2020, people=None):
+    """out["pop"] scaled by census unit (T-2084): the cells whose centre is in a unit take its total
+    times the share of GHSL's people over the whole unit that they hold (GHS-POP as published,
+    pop_ghs), so a unit the outline cuts brings only its part (the factor census / GHSL over the whole
+    unit); a unit with no GHSL people outside the outline (by pixel centre) takes its whole total.
+    `units` are (name, lon/lat geometry, total); `people(geoms, inside)` gives GHSL's (whole, part
+    inside) people (ghsl_people). A unit GHSL puts no one in counts as wholly inside or out by its
+    representative point. Returns one row per unit."""
+    if not units:
+        return []
+    names = [u[0] for u in units]
+    geoms = np.array([make_valid(u[1]) for u in units], dtype=object)
+    totals = np.array([float(u[2]) for u in units])
+    whole, part = (people or (lambda g, i: ghsl_people(g, epoch, inside=i)))(geoms, boundary)
+    shapely.prepare(boundary)
+    tree = shapely.STRtree(shapely.points(out["lon"], out["lat"]))
+    ghs = out.get("pop_ghs", out["pop"])
+    rows, flagged, lost = [], 0, 0.0
+    for name, geom, total, gw, gp in zip(names, geoms, totals, whole, part):
+        sel = tree.query(geom, predicate="contains")
+        have = out["pop"][sel].sum()
+        # the cells' own GHSL people, not the pixel centres inside the outline: a shore clipped tighter
+        # than the census polygon leaves coastal pixels outside that the cells still gather (Jolo, 85%)
+        if gw <= 0:
+            share = float(shapely.contains(boundary, geom.representative_point()))
+        else:
+            share = 1.0 if gp >= 0.999 * gw else min(ghs[sel].sum() / gw, 1.0)
+        target = total * share
+        if have > 0:
+            out["pop"][sel] *= target / have
+        else:
+            lost += target
+        factor = total / gw if gw > 0 else math.inf
+        flag = not (1.0 / ADMIN_FLAG <= factor <= ADMIN_FLAG)
+        flagged += flag
+        rows.append({"name": name, "census": total, "ghsl": gw, "share": share, "before": have,
+                     "after": target if have > 0 else 0.0, "flag": flag})
+        if flag or share < 0.999 or len(units) <= 50:
+            print(f"  admin total {name}: census {total:,.0f}, GHSL {gw:,.0f} over the unit ({factor:.2f}x), "
+                  f"{share:.0%} of it here: {have:,.0f} -> {target:,.0f}{'  FLAG' if flag else ''}", flush=True)
+    print(f"  admin totals: {len(units)} units, {sum(r['before'] for r in rows):,.0f} -> {sum(r['after'] for r in rows):,.0f} "
+          f"people in their cells; {sum(0.02 < r['share'] < 0.98 for r in rows)} cut by the outline; {flagged} FLAG "
+          f"(census over {ADMIN_FLAG:g}x GHSL either way); {lost:,.0f} people of units with no cell left out", flush=True)
+    return rows
 
 
 def nres_signal(sig, height_pow=HEIGHT_POW, height_cap=HEIGHT_CAP_M):
@@ -972,7 +1061,8 @@ def main(city):
     mask, mask_info = build_water(cfg, boundary)
     sig = signals(city, cfg, boundary, mask)
     jpr, kids, wb_year = worldbank(cfg["iso2"])
-    pop_name = ghsl_pop_name(sig, cfg.get("epoch", 2020)) + (", scaled to admin totals" if cfg.get("admin_totals") else "")
+    at = cfg.get("admin_totals")
+    pop_name = ghsl_pop_name(sig, cfg.get("epoch", 2020)) + (f", scaled to {getattr(at, 'source', 'admin totals')}" if at else "")
     if cfg.get("population"):
         sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())

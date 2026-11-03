@@ -324,7 +324,7 @@ real pack in notes/T-287.md):
 
 | Input | US | Canada | Tier 0 (any country) |
 |---|---|---|---|
-| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), its people per residential m³ held within 2x of the 2 km neighbourhood's (T-1150), each pixel over four 50 m points off water, into cells; scaled to district totals where the config gives them |
+| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), its people per residential m³ held within 2x of the 2 km neighbourhood's (T-1150), each pixel over four 50 m points off water, into cells; scaled to census totals by unit where the config gives them (`admin_totals`: each unit's cells take its total times the share of the unit's GHSL people they hold) |
 | Institutions | PL 94-171 P5 off homes | none (no small-area figure) | none |
 | Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 30% by GHSL non-residential built-up volume (GHS-BUILT-V NRES) x height^2, 50% OSM job places, 20% population; or a country's workplace counts by small area spread by that blend (`jobs` hook) |
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
@@ -387,7 +387,21 @@ and runs `read_pack.py`'s water test places for that id (add them to `WATER_TEST
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
 input at a time (the upgrades table in research/world-sampler.md), in a module per country
-(`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks. London (`lon`,
+(`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks, and its
+`admin_totals` hook: a callable boundary -> [(name, polygon, census total)] for the units touching
+the outline. tier0 (`scale_to_units`) gives the cells whose centre is in a unit the unit's total
+times the share of GHSL's people over the whole unit that those cells hold (the whole total when GHSL
+has no one of it outside the outline), so a unit the outline cuts brings only its part, and prints a
+FLAG for a unit over 2x GHSL either way. Census units in a file with a code
+need no code: one entry in `pipeline/admin_totals.py`'s CONFIGS (polygon file, layer, code and name
+fields; totals file, sheet or layer, code and population fields; the parent code's regex; mode
+"factor", or "shares" for an old count, which holds GHSL's people over each parent and spreads them
+by the census shares) and `admin_totals.hook("<ISO2>")` in the module's `plan_hooks` (a country with
+no module takes `"module": "admin_totals"` in its `world_plan.ZONE_RULES` row and `("C",
+"admin_totals")` in `ARCHETYPE`); `admin_totals.py check <ISO2>` checks
+the join and `dry <ISO2>` shows what it would do to built packs. Units much smaller than a 0.1 km²
+cell (Manila's barangays) lose their totals where no cell centre falls in them: take the level above.
+London (`lon`,
 T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL3 units (ONS),
 Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
 WU01EW flows (`pipeline/curves/t360_curve.py`), work from home one national share. The chain: read the

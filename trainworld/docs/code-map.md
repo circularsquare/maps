@@ -319,7 +319,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   links, T-375; from trainworld/), `runner_fixes.py` (the world runner's market file picking, cache
   clearing, market heal and busy-port refusal, T-1976, T-1986; the gate's stuck-session handling,
   network retries and the region pipeline with stand-ins, T-2040, T-1979, T-1978, T-1980; nothing live
-  written, about a minute),
+  written, about a minute), `admin_totals_check.py` (tier 0's census totals by unit: a unit cut by
+  the outline, the old-census shares, a config's join on made-up files and the Indonesian and
+  Philippine joins, T-2084; about a minute),
   and in pipeline/ `test_education_sources.py` and
   `test_university_sources.py` (`python -m unittest test_university_sources test_education_sources`
   from pipeline/, no network).
@@ -714,7 +716,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
 - `tier0.py`: the adapter from global sources only (T-287), its borrowed curve read from
-  `fitted_curves.json` (written by `pipeline/curves/t314_loo.py table`, T-314); `canada.py`: Canada's adapters;
+  `fitted_curves.json` (written by `pipeline/curves/t314_loo.py table`, T-314; `scale_to_units` the
+  census totals by unit, `ghsl_people` GHSL's people per polygon); `admin_totals.py`: the generic
+  `admin_totals` reader, one CONFIGS entry per country (Indonesia, the Philippines; `check`, `ghsl`,
+  `dry`; T-2084); `canada.py`: Canada's adapters;
   `england.py`: England's inputs for a tier 0 city (ITL3 outline, Census 2021 district totals;
   T-288; England's census upgrades go here, T-360); `france.py`: France's (départements
   dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289);

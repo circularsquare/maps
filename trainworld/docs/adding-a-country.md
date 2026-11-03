@@ -44,7 +44,13 @@ Take the first that holds; never take a source from memory.
    open endpoint with no account; a hook of the same shape exists to copy (`canada.py`'s dissemination
    areas, `australia.py`'s SA1s); it is written and tried in an hour. Try it on one metro and one zone in
    a scratch tree (docs/world-run.md "A scratch tree") and read its census-against-GHSL line before the run.
-3. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
+3. **Census totals by unit** where the census gives people by district or finer in a file with a code that
+   joins a polygon file's (COD-PS beside COD-AB, USCB's HDX geodatabases, an office's own geography
+   service): one `CONFIGS` entry in `pipeline/admin_totals.py`, no code; `admin_totals.py check <ISO2>`
+   must pass (codes unique, every unit a total, parents' sums exact) and `dry <ISO2>` shows each zone's
+   people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
+   or province, spread by the census shares). Indonesia and the Philippines have configs (T-2084).
+4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
    Record what you found in the register (N, G or ?) and file a P3 task for anything usable.
 
 An official server that refuses scripts: look for a mirror for 15 minutes, then put the URL in the notes
