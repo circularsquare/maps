@@ -1,8 +1,8 @@
 # The network diagram
 
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
-graph (T-2159), the layout (T-2160) and the view and its drawing (T-2161); names, clicks, city boxes
-and water are T-2162, T-2163, T-2168 and T-2169.
+graph (T-2159), the layout (T-2160), the view and its drawing (T-2161) and names (T-2162); clicks,
+city boxes and water are T-2163, T-2168 and T-2169.
 
 ## The button and key M
 
@@ -32,6 +32,37 @@ along the axis more than 1.6 pitches apart make separate pills, unless they are 
 no line crosses the axis between them; a line running along the axis further off gets a round stop
 on its own ribbon. Pills of one station are joined by a passage, 0.45 of a pill wide. Below a pitch
 of 2.5 device px, no pills.
+
+The drawing is made in the layout worker and posted with the layout: each line's path as commands,
+made a Path2D on the page when first painted.
+
+## Names
+
+`diagram/names.ts`, placed in the layout worker after the drawing. A station's name is its complex's:
+of its members' names, the one with the most lines stopping, cut at the first "/". The page measures
+each name in the interface font at 12 px times the interface scale (the map's station names' size)
+and sends the widths with the graph. Drawn in the map's ink (`--map-ink`) with a 3 px halo of the
+diagram's background, over everything else.
+
+- **Order**: interchanges (two line colours or more stopping) by lines stopping, then line ends, then
+  the rest by lines stopping. A station with no pill (passed, never stopped at) has no name.
+- **Places**: eight round each of the station's pills, east first, then west, then the rest, each
+  starting 3 px off the pill's outline at the point farthest that way; east, west, north and south
+  also slid to be flush with that point either way. Off the pill's ends cost least (the lines cross
+  its sides), then the corners. A name of 12 characters or more may go over two lines, broken at the
+  space or hyphen nearest its middle.
+- **One side along a run**: a station inside a piece's straight leg prefers the side of the leg with
+  fewer other stations' pills within 6 pitches (east, else north, when even).
+- **Two distances**: at the pill, or 1.5 pitches further out (over a line beside it). An interchange
+  may also go 3 or 4.5 pitches out where lines meet all round it, but never over 32 px out.
+- **Kept off**: a line's middle by half a pitch plus a px; other pills and passages; names already
+  placed (`BoxGrid`, in px); and no name nearer another station's pill than its own. The box tested
+  runs from the pill (or the lifted point) to the far side of the name.
+- **Zoom levels**: placed afresh for a pitch of 7 px times 2^(k/4), k from -3 to 12 (4.2 to 56 px); a
+  level's names are drawn at every zoom from it to the next, none below the first. Since text keeps its
+  px size while the drawing scales, a name past its level only shrinks toward its pill, inside the box
+  tested, so nothing it was clear of comes nearer. Each level favours the last level's place for a name
+  (by 1.2 of cost), so names move little across levels.
 
 ## The graph
 

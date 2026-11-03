@@ -1,18 +1,25 @@
-// The network diagram's view (T-2160, T-2161): the button at the map's
-// upper left and key M swap the map for a 2D canvas of the laid-out diagram (ribbons, rounded bends,
-// pills, no names yet), drag to pan, wheel to zoom. While it is up the clock worker posts the graph
-// after each network state; the layout worker lays it out, one at a time, the newest waiting next,
-// and the last drawing stays up meanwhile. `?diagram=r2` lays out with round 2's options.
+// The network diagram's view (T-2160, T-2161, T-2162): the button and key M swap the map for a 2D
+// canvas of the laid-out diagram (ribbons, rounded bends, pills, names), drag to pan, wheel to zoom.
+// While it is up the clock worker posts the graph after each network state; the page names its
+// stations and measures the names, and the layout worker lays it out, draws it and places the names,
+// one at a time, the newest waiting next, the last drawing staying up meanwhile. `?diagram=r2` lays
+// out with round 2's options.
 
 import { signal } from "@preact/signals";
 import type { ClockClient } from "../workers/clockClient";
 import type { DiagramGraph } from "./graph";
-import type { FromDiagram, ToDiagram } from "../workers/diagram.worker";
-import { drawing, paint, type Drawing } from "./draw";
+import type { DiagramNames, FromDiagram, ToDiagram } from "../workers/diagram.worker";
+import { paint, type Drawing } from "./draw";
+import { paintNames, pickName, splitName, type NamePlan } from "./names";
 import { keyIsTheirs } from "../ui/keys";
 import { live } from "../map/live";
 import { toLocal } from "../map/geo";
 import { hideBusy, showBusy } from "../game/busy";
+import { world } from "../game/world";
+import { complexes } from "../game/complexView";
+
+/** station names are this many CSS px, as the map's, times the interface scale */
+const NAME_PX = 12;
 
 /** whether the diagram is up instead of the map */
 export const diagramShown = signal(false);
@@ -31,6 +38,47 @@ function nearest(g: DiagramGraph, lng: number, lat: number): number {
   return best;
 }
 
+/** the names' font: the interface's family at NAME_PX times its scale */
+function nameFont(): { px: number; family: string } {
+  const ui = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ui")) || 1;
+  return { px: NAME_PX * ui, family: getComputedStyle(document.body).fontFamily };
+}
+
+let measure: CanvasRenderingContext2D | null = null;
+const widths = new Map<string, number>();
+/** each graph node's name (its complex's, `pickName`) and widths in the names' font */
+function namesOf(g: DiagramGraph): DiagramNames {
+  const w = world.peek(), cx = complexes.peek(), f = nameFont();
+  const byId = new Map((w?.save.stations ?? []).map((s) => [s.id, s]));
+  const stops = new Map<string, number>();
+  for (const l of w?.save.lines ?? []) for (const s of l.stops) stops.set(s, (stops.get(s) ?? 0) + 1);
+  const text = Array.from(g.key, (key) => {
+    const id = String(key), c = cx.of.get(id), members = c === undefined ? [id] : cx.members[c];
+    return pickName(members.flatMap((m) => {
+      const s = byId.get(m);
+      return s ? [{ name: s.name, lines: stops.get(m) ?? 0 }] : [];
+    }));
+  });
+  measure ??= document.createElement("canvas").getContext("2d");
+  const font = `${f.px}px ${f.family}`;
+  const wOf = (t: string) => {
+    const k = font + "\u0000" + t;
+    let v = widths.get(k);
+    if (v === undefined) {
+      measure!.font = font;
+      widths.set(k, (v = measure!.measureText(t).width));
+    }
+    return v;
+  };
+  const width = new Float32Array(text.length), width2 = new Float32Array(text.length);
+  text.forEach((t, i) => {
+    width[i] = t ? wOf(t) : 0;
+    const p = splitName(t);
+    width2[i] = p ? Math.max(wOf(p[0]), wOf(p[1])) : 0;
+  });
+  return { text, width, width2, fontPx: f.px };
+}
+
 export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void {
   const options = new URLSearchParams(location.search).get("diagram") === "r2" ? "r2" : undefined;
   const canvas = document.createElement("canvas");
@@ -39,7 +87,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   mapEl.appendChild(canvas);
   let worker: Worker | null = null;
   let busy = false, waiting: DiagramGraph | null = null, seq = 0;
-  let shown: { graph: DiagramGraph; d: Drawing; x: Float64Array; y: Float64Array } | null = null;
+  let shown: { graph: DiagramGraph; d: Drawing; names: NamePlan; x: Float64Array; y: Float64Array } | null = null;
   let cx = 0, cy = 0, scale = 0, placed = false;
   const send = (g: DiagramGraph) => {
     if (busy) {
@@ -47,7 +95,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     busy = true;
-    worker!.postMessage({ kind: "graph", graph: g, seq: ++seq, options } satisfies ToDiagram);
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options } satisfies ToDiagram);
   };
   client.onDiagram = (g) => {
     if (!diagramShown.peek()) return;
@@ -55,10 +103,10 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       worker = new Worker(new URL("../workers/diagram.worker.ts", import.meta.url), { type: "module" });
       worker.onmessage = (e: MessageEvent<FromDiagram>) => {
         busy = false;
-        const { graph, layout } = e.data;
-        shown = { graph, d: drawing(graph, layout), x: layout.x, y: layout.y };
+        const { graph, layout, drawing: d, names } = e.data;
+        shown = { graph, d, names, x: layout.x, y: layout.y };
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: layout.ms, complexes: graph.key.length, pieces: layout.pieces.length, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; } };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), centreOn: (name: string, pitchPx: number) => { const stops = new Map<number, number>(); for (const l of graph.lines) l.chain.forEach((k, j) => l.stop[j] && names.text[k] === name && stops.set(k, (stops.get(k) ?? 0) + 1)); const i = [...stops].sort((a, b) => b[1] - a[1])[0]?.[0] ?? -1; if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; } };
         if (busyToken >= 0) (hideBusy(busyToken), (busyToken = -1));
         if (!placed) place(graph, layout.x, layout.y, shown.d.pitch);
         draw();
@@ -82,7 +130,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const s = getComputedStyle(document.body);
     const v = (k: string, d: string) => s.getPropertyValue(k).trim() || d;
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them
-    return { bg: v("--bg", "#fbf5ef"), ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff" };
+    return { bg: v("--bg", "#fbf5ef"), ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", text: v("--map-ink", "#2b2b2b"), font: s.fontFamily };
   };
   // pans and zooms draw once a frame
   let frame = 0;
@@ -103,6 +151,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     paint(ctx, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, t);
+    // the map's station names: its ink with a halo of the background
+    paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font });
   };
   new ResizeObserver(() => draw()).observe(canvas);
   // the first layout is a few seconds; the busy tag says so until it is up

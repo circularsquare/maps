@@ -30,7 +30,11 @@ export interface Drawing {
   /** a pitch, stroke width, layout units */
   pitch: number;
   stroke: number;
-  lines: { colour: string; path: Path2D }[];
+  /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
+   * on the page when first painted */
+  lines: { colour: string; cmds: Float64Array; path?: Path2D }[];
+  /** per line, its drawn ribbon sampled: x, y pairs (the names keep off them) */
+  ribbons: Float64Array[];
   /** per pill: its two ends and how far its points lie off its axis */
   pills: [number, number, number, number, number][];
   /** per pill, the graph node (station) it is for */
@@ -152,7 +156,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   // ribbon crosses the axis, and a line ending there has its last run carried on, or cut back, to it.
   const ribs = Vs.map(([, V]) => {
     const r: Ribbon = { pts: [], vi: [] };
-    return { r, path: filleted(V, R0, r) };
+    return { r, cmds: filleted(V, R0, r) };
   });
   type Occ = { li: number; i0: number; i1: number; end: -1 | 0 | 1 };
   const occAt = new Map<number, Occ[]>();
@@ -226,9 +230,14 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   }
   for (const li of dirty) {
     const r: Ribbon = { pts: [], vi: [] };
-    ribs[li] = { r, path: filleted(Vs[li][1], R0, r) };
+    ribs[li] = { r, cmds: filleted(Vs[li][1], R0, r) };
   }
-  ribs.forEach(({ path }, li) => path && lines.push({ colour: Vs[li][0].colour, path }));
+  const ribbons: Float64Array[] = [];
+  ribs.forEach(({ r, cmds }, li) => {
+    if (!cmds) return;
+    lines.push({ colour: Vs[li][0].colour, cmds });
+    ribbons.push(Float64Array.from(r.pts));
+  });
   for (const [k, occ] of occAt) {
     const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!, list: [number, number][] = [];
     for (const o of occ) {
@@ -277,7 +286,18 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, pills, pillOf, passages, box: [x0, y0, x1, y1] };
+  return { pitch, stroke: W, lines, ribbons, pills, pillOf, passages, box: [x0, y0, x1, y1] };
+}
+
+/** a line's commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy to x, y */
+function toPath(c: Float64Array): Path2D {
+  const p = new Path2D();
+  for (let i = 0; i < c.length; ) {
+    const op = c[i];
+    if (op === 2) p.quadraticCurveTo(c[i + 1], c[i + 2], c[i + 3], c[i + 4]), (i += 5);
+    else (op ? p.lineTo(c[i + 1], c[i + 2]) : p.moveTo(c[i + 1], c[i + 2])), (i += 3);
+  }
+  return p;
 }
 
 /** whether any ribbon crosses the segment from (x0, y0) to (x1, y1) */
@@ -305,13 +325,18 @@ const CURVE_SAMPLES = 8;
 
 /** a path through V with each corner rounded, its radius by offset so a bundle's bends are concentric;
  * `out` gets the same path sampled */
-function filleted(V: V[], R0: number, out: Ribbon): Path2D | null {
+function filleted(V: V[], R0: number, out: Ribbon): Float64Array | null {
   const P: V[] = [], src: number[] = [];
   V.forEach((v, i) => {
     if (!P.length || Math.hypot(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v), src.push(i);
   });
   if (P.length < 2) return null;
-  const path = new Path2D();
+  const cmd: number[] = [];
+  const path = {
+    moveTo: (x: number, y: number) => cmd.push(0, x, y),
+    lineTo: (x: number, y: number) => cmd.push(1, x, y),
+    quadraticCurveTo: (cx: number, cy: number, x: number, y: number) => cmd.push(2, cx, cy, x, y),
+  };
   const at = (x: number, y: number, i: number) => {
     out.pts.push(x, y);
     out.vi.push(src[i]);
@@ -339,7 +364,7 @@ function filleted(V: V[], R0: number, out: Ribbon): Path2D | null {
   }
   path.lineTo(P[P.length - 1][0], P[P.length - 1][1]);
   at(P[P.length - 1][0], P[P.length - 1][1], P.length - 1);
-  return path;
+  return Float64Array.from(cmd);
 }
 
 /** where a ribbon's points from V index `i0` to `i1` cross the line through (cx, cy) along `ax`,
@@ -375,21 +400,28 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   // casings first, so neighbours sit a gap apart and bundles read as one ribbon
   ctx.strokeStyle = theme.bg;
   ctx.lineWidth = d.pitch;
-  for (const l of d.lines) ctx.stroke(l.path);
+  for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
   ctx.lineWidth = d.stroke;
   for (const l of d.lines) {
     ctx.strokeStyle = l.colour;
-    ctx.stroke(l.path);
+    ctx.stroke(l.path!);
   }
   // far out a pill is a speck on its lines: none
   if (d.pitch * scale < PILL_MIN_PX) return;
   const rp = PILL_R * d.stroke, ol = PILL_OUTLINE * d.stroke;
   const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string) => {
+    ctx.beginPath();
+    // a round stop: a zero-length stroke's caps are not drawn
+    if (x0 === x1 && y0 === y1) {
+      ctx.fillStyle = colour;
+      ctx.arc(x0, y0, width / 2, 0, 2 * Math.PI);
+      ctx.fill();
+      return;
+    }
     ctx.strokeStyle = colour;
     ctx.lineWidth = width;
-    ctx.beginPath();
     ctx.moveTo(x0, y0);
-    ctx.lineTo(x1 + (x0 === x1 && y0 === y1 ? 1e-6 : 0), y1);
+    ctx.lineTo(x1, y1);
     ctx.stroke();
   };
   for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * PASSAGE * 2 + 2 * ol, theme.ink);

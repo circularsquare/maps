@@ -66,5 +66,5 @@ export function openSave(name) {
     const t2 = performance.now();
     return { g, ms: t2 - t1, besideMs: t1 - t0 };
   };
-  return { api, lines, edges, pts, complexOf, stations, graph, name: (n) => api.node_name(n) };
+  return { api, lines, edges, pts, complexOf, cx, stations, graph, name: (n) => api.node_name(n) };
 }
