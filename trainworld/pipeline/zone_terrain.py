@@ -136,7 +136,9 @@ class Fine:
         from terrain_fine import decode_block
         self.decode = decode_block
         self.index = {}
-        for p in sorted(root.glob("part*.tar")):
+        # TW_FINE_OVER: a folder of a test run's part tars whose blocks stand in for the intermediate's
+        over = [Path(os.environ["TW_FINE_OVER"])] if os.environ.get("TW_FINE_OVER") else []
+        for p in sorted(root.glob("part*.tar")) + [q for o in over for q in sorted(o.glob("part*.tar"))]:
             with tarfile.open(p) as tf:
                 for m in tf.getmembers():
                     self.index[m.name] = (p, m.offset_data, m.size)

@@ -133,7 +133,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/map/: the map and what is drawn on it
 
 - `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
-  labels in Zen Maru Gothic from `public/fonts/`; the Terrain hillshade, T-1270), `terrainTint.ts` (the terrain classes' wash while building, from `game/terrain.ts`'s grids, T-1270), `realNetwork.ts` (the Real network reference layer: noritetsu's
+  labels in Zen Maru Gothic from `public/fonts/`; the Terrain hillshade, T-1270), `demFlat.ts` (the hillshade's tiles with the relief over flat-class ground blurred away, in `workers/demFlat.worker.ts`, T-1881), `terrainTint.ts` (the terrain classes' wash while building, from `game/terrain.ts`'s grids, T-1270), `realNetwork.ts` (the Real network reference layer: noritetsu's
   PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
   `styleReady.ts` (`styleUp`: MapLibre style calls are skipped while it has no style, a lost context, and reapplied on `style.load`, T-957),
   `moving.ts` (what runs at most every 100 ms while the camera moves: `PlaceThrottle`, `PanPlane`, T-1207), `lite.ts` (the lighter map and its auto switch, T-1207),
@@ -366,7 +366,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
   `t1177-cross-everyday.mjs` (Node, the real demand worker: Boston and Providence with made-up everyday pairs across their zone line written into Boston's market pack in memory (`t1177-data.mjs`), and a line joining the zones; the per-purpose parts, nothing counted twice, loads under their own purposes, a selection's blocks by purpose and far zone with a Saturday's own factors, the trip explorer's legs, rail and walking, and the weekend scaling (`workers/marketParts.ts`); `IDS=gua,fos` runs the market-pack checks on registered neighbours whose packs carry the pairs; about 40 s) and `old/t1177-cross-everyday-page.mjs` (the same pairs in a new game on `BASE` through a Playwright route: the page's selection, explorer figures and panel with its walking row, the walking column, the far-end labels under each purpose filter, and the days; about 3 minutes; screenshots in `artifacts/trainworld/t1177/`),
-  `t1854-valley.mjs <label> [url] [spots]` (the terrain tint over Wuppertal, Innsbruck and the centres of Tokyo, Nagoya and Shanghai, screenshots to `artifacts/trainworld/t1854/`), `t1270-terrain.mjs` (a new game: track on flat ground in Brooklyn at 45 US$M a km, on mountain ground above Innsbruck at 112.5 and a bored tunnel there at 99, spots found in the zones' terrain files; Construct charges the quote; the hillshade in both themes and the track tool's terrain chip, screenshots in `artifacts/trainworld/t1270/`; about a minute, port 6184 by default),
+  `t1854-valley.mjs <label> [url] [spots]` (the terrain tint over Wuppertal, Innsbruck and the centres of Tokyo, Nagoya and Shanghai, screenshots to `artifacts/trainworld/t1854/`), `t1881-shade.mjs <label> [url] [spots]` (the hillshade, the relief alone and the tint in a new game in Tokyo, Nagoya, Shanghai, Midtown, Hong Kong, San Francisco and Seoul; `?rawdem=1` for the shade as it comes; screenshots to `artifacts/trainworld/t1881/`), `t1270-terrain.mjs` (a new game: track on flat ground in Brooklyn at 45 US$M a km, on mountain ground above Innsbruck at 112.5 and a bored tunnel there at 99, spots found in the zones' terrain files; Construct charges the quote; the hillshade in both themes and the track tool's terrain chip, screenshots in `artifacts/trainworld/t1270/`; about a minute, port 6184 by default),
   `old/t1161-copy-delete.mjs` (a new game: a copied line starts with no trains, removing the piece past a station or between two keeps each station in place with track to its platform's end, and auto elevation draws on from +2 track at +2 by real clicks; about a minute, port 6125 by default),
   `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `old/t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
@@ -677,9 +677,13 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `terrain_fine.py` (T-1854): the fine terrain intermediate, built once on AWS (`--kind terrain`):
   per one-degree block, the mean slope of GEDTM30's 30 m pixels per 1/960 degree cell and the mean
   elevation per 1/240 cell, read by HTTP range from OpenGeoHub's 432 GB file, only the tiles under the
-  zone boxes, the plan's unbuilt metros and `NEXT_BOXES` (format in its docstring). Kept at home as
-  `data/work/terrain-fine/part*.tar` and `manifest.json` (3.1 GB, never unpacked); `blocks`,
-  `run`, `check` (a block against rasterio's read).
+  zone boxes, the plan's unbuilt metros and `NEXT_BOXES` (format in its docstring), with tower fields
+  cut out first (`tower_ground`, GHSL's 1 km built volume, T-1881; `run` fetches it to
+  `data/raw/ghsl/`, `TW_GHSL_30SS` another copy). Kept at home as
+  `data/work/terrain-fine/part*.tar` and `manifest.json` (3.1 GB, never unpacked); `blocks [lat_lon ...]`,
+  `run`, `check` (a block against rasterio's read). `zone_terrain.py` reads a test run's tars before
+  the intermediate's with `TW_FINE_OVER=<dir>`, and the dev server serves `.terrain` files from
+  `TW_TERRAIN=<dir>` before `data/terrain` (`vite.config.ts`).
 - `zone_terrain.py` (T-1270, T-1854): each registered zone's terrain classes from that intermediate
   (thresholds, filter and cap in its docstring), written gzip to `data/terrain/<id>.terrain` (never
   `data/packs`, so joins do not see them); `build [ids] [--force] [--jobs n]` skips files already made

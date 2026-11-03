@@ -12,6 +12,8 @@ const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json")
 const CITIES = REGISTRY.cities.map((c) => c.id);
 /** T-1270: each zone's terrain classes (pipeline/zone_terrain.py), served at `packs/terrain/<id>.terrain`, so they publish with the packs. */
 const TERRAIN = resolve(here, "../data/terrain");
+/** TW_TERRAIN: a folder of test `.terrain` files the dev server serves before data/terrain's. */
+const TERRAIN_OVER = process.env.TW_TERRAIN ? resolve(process.env.TW_TERRAIN) : null;
 /** T-1285: the world's coarse water (pipeline/world_water.py), served at `packs/world.water`; TW_WORLD_WATER: another copy. */
 const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
 /** T-279: the market's routed drives (pipeline/market_drives.py), served at `packs/market-drives.bin`; TW_MARKET_DRIVES: another copy. */
@@ -69,9 +71,11 @@ function packs(): Plugin {
         createReadStream(WORLD_WATER).pipe(res);
       });
       server.middlewares.use("/packs/terrain", (req, res) => {
-        const file = join(TERRAIN, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
+        const name = (req.url ?? "").split("?")[0].replace(/^\/+/, "");
+        const over = TERRAIN_OVER ? join(TERRAIN_OVER, name) : null;
+        const file = over && over.startsWith(TERRAIN_OVER!) && existsSync(over) ? over : join(TERRAIN, name);
         // a zone without a file is a 404, never the page (the clock worker reads it as no terrain)
-        if (!file.startsWith(TERRAIN) || !existsSync(file)) {
+        if (!(file.startsWith(TERRAIN) || (TERRAIN_OVER && file.startsWith(TERRAIN_OVER))) || !existsSync(file)) {
           res.statusCode = 404;
           res.end();
           return;

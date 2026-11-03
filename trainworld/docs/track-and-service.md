@@ -851,7 +851,14 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   degree (about 115 m north-south), classed, a 3 x 3 majority filter (drops single-cell specks, keeps
   a valley floor two cells wide), then capped at the class of the ground round it: the slope between
   the 1/240 degree mean elevations, about 920 m apart (second row), since 30 m bare earth still
-  carries towers and raised roads that would read as hills in dense centres. One gzip file per zone
+  carries towers and raised roads that would read as hills in dense centres. Before any of that, tower
+  fields are cut out of the 30 m surface (`terrain_fine.tower_ground`, T-1881): built-up land (GHSL
+  built volume at 1 km, CC BY 4.0, at least 5 m of building over the cell's area) whose 30 m surface
+  is rough (the rms about a 60 m smoothing, over about 150 m: from nothing at 5.5 m to all at 8.5 m),
+  on ground whose low envelope (an opening of 600 m half-width, smoothed) slopes under 3-6°, takes
+  that envelope's height. Midtown Manhattan stood 50-100 m above its streets in GEDTM30 and Chicago's
+  Loop the same; built hillsides (San Francisco, Seoul, Wellington) are smooth or steep and keep
+  their ground. One gzip file per zone
   (`data/terrain/<id>.terrain`, a median of 43 KB, 299 MB for all 1,988 zones, the largest 5.3 MB;
   `cost::ClassGrid`, two bits a cell in memory, at most about 23 MB). The clock worker fetches a zone's
   file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it

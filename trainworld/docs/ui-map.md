@@ -47,7 +47,16 @@ sea floor's relief stays hidden. Shadow and highlight follow the theme (light: w
 white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
 them with the rest. A terrain tile is held back until the basemap's vector tile over the same ground has loaded (a
 `twdem://` protocol in `basemap.ts`; 3 s at most), so the shade and the water and land appear
-together [T-1552]. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
+together [T-1552]. **Flat ground is drawn flat** [T-1881]: the Terrain Tiles are a surface model in
+much of the world (SRTM in Asia: towers, raised roads and radar speckle read as hills in dense
+centres), so from tile zoom 10 (`FLAT_MIN_Z`) a tile that meets loaded class grids goes to a worker
+(`map/demFlat.ts`, `workers/demFlat.worker.ts`) and comes back with its heights over flat-class ground
+blurred (sigma 400 m, the 3 x 3 tiles round it giving the blur its reach), blended by how flat the
+ground is: each class cell the share of flat cells within two cells of it, bilinear between cell
+centres, so a lone hilly cell in flat ground is mostly drawn flat. What the shade shows as relief is
+then what the track pays for. A tile waits up to 1.5 s for the grids of the zones under it (zones in
+the game's realms only) and is drawn again when a late grid comes; a tile where no grid is loaded is
+drawn as it comes. `?rawdem=1` draws every tile as it comes. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
 terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were left aside: no terms
 for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
 cut from GEDTM30 (notes/T-1270.md).

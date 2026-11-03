@@ -14,6 +14,7 @@ import * as maplibregl from "maplibre-gl";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
+import { demBytes, flattenDem, onRedraw } from "./demFlat";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
@@ -165,6 +166,15 @@ function vectorWait(z: number, x: number, y: number, signal: AbortSignal): Promi
 }
 
 let demProtocolAdded = false;
+const terrainUrl = (z: number, x: number, y: number) => TERRAIN_TILES.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`);
+/** the clock worker loads the class grids of the zones in view below this width (clock.worker.ts VIEW_SPAN_M) */
+const GRID_VIEW_M = 400_000;
+let demMap: maplibregl.Map | null = null;
+const viewLoadsGrids = () => {
+  if (!demMap) return false;
+  const b = demMap.getBounds();
+  return (b.getEast() - b.getWest()) * 111_320 * Math.cos((b.getCenter().lat * Math.PI) / 180) < GRID_VIEW_M;
+};
 function addDemProtocol() {
   if (demProtocolAdded) return;
   demProtocolAdded = true;
@@ -172,16 +182,18 @@ function addDemProtocol() {
     const m = /^[a-z]+:\/\/(\d+)\/(\d+)\/(\d+)/.exec(params.url);
     if (!m) throw new Error(`bad terrain tile url ${params.url}`);
     const [z, x, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
-    const bytes = fetch(TERRAIN_TILES.replace("{z}", m[1]).replace("{x}", m[2]).replace("{y}", m[3]), { signal: abort.signal })
-      .then((r) => { if (!r.ok) throw new Error(`terrain tile ${r.status}`); return r.arrayBuffer(); });
+    const bytes = demBytes(terrainUrl, z, x, y).then((b) => { if (!b) throw new Error("terrain tile missing"); return b; });
     await Promise.all([bytes, vectorWait(z, x, y, abort.signal)]);
-    return { data: await bytes };
+    // T-1881: relief over ground priced flat taken out (towers and raised roads in the surface model)
+    return { data: await flattenDem(terrainUrl, z, x, y, await bytes, abort.signal, viewLoadsGrids()) };
   });
 }
 
 /** Loads Positron into the map, restyled. Call once, right after creating the map. */
 export function loadBasemap(map: maplibregl.Map) {
+  demMap = map;
   addDemProtocol();
+  onRedraw((tiles) => { if (styleUp(map) && map.getSource(DEM)) map.refreshTiles(DEM, tiles); });
   map.on("sourcedataloading", (e) => { if (e.sourceId === VECTOR_SOURCE && e.coord) vectorZ = e.coord.canonical.z; });
   map.on("sourcedata", (e) => {
     const c = e.sourceId === VECTOR_SOURCE && e.tile?.state === "loaded" ? e.coord?.canonical : null;
