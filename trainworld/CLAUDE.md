@@ -92,6 +92,8 @@ Briefs carry only the task; these hold for every agent.
   orchestrator builds and commits. `npm run wasm --prefix app` is fine when Rust changed.
 - **Rust**: `CARGO_BUILD_JOBS=3`; keep the crate compiling between edits, since others build it
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
+  After any sim/ change run both `cargo test --release` and `cargo test --release --features demand --lib`
+  from trainworld/sim: the demand kernel's tests run only with the feature (two broke unseen, T-2250).
 - **CPU**: at most 10 of 16 cores in all, every agent together, while Anita is using the machine;
   12-15 overnight or while she is away (Anita, 2026-10-22). Long jobs claim their cores in the
   shared ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
