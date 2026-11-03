@@ -307,19 +307,19 @@ fn a_line_with_too_few_trains_loses_riders_to_the_wait() {
     let (b_full, _, rail_full, _, lb_full) = run(true, 12.0, 64.0);
     assert_eq!(lb_full, 0.0);
     assert_eq!((b_full, rail_full), (b_full_off, rail_full_off));
-    // cut to 6 trains of 24 cars (under a fifth of the room): crowding alone takes some
-    // riders off; the wait for full trains takes visibly more. (Cut harder, T-710's steep
-    // penalty past 70% of crush empties line b in every crowded round by itself, and what is
-    // left is the free-flow pass's quarter of the average, which no wait can move.)
-    let (b_off, a_off, rail_off, _, lb_off) = run(false, 6.0, 24.0);
-    let (b_on, a_on, rail_on, la_on, lb_on) = run(true, 6.0, 24.0);
+    // cut to 6 trains of 12 cars: crowding alone takes many riders off; the wait for full trains
+    // takes a few more. Trains fill to 1.5 times the rated load that crowding counts against
+    // (T-2186), so crowding holds most riders off before trains leave anyone behind: 24 cars
+    // leave them under a minute's wait, and even 12 lose only about 1% more to the wait.
+    let (b_off, a_off, rail_off, _, lb_off) = run(false, 6.0, 12.0);
+    let (b_on, a_on, rail_on, la_on, lb_on) = run(true, 6.0, 12.0);
     println!("line b full {b_full:.0}; cut, crowding only {b_off:.0}, with the wait {b_on:.0} riders (worst extra wait {lb_on:.1} min); line a {a_off:.0} -> {a_on:.0}; rail {rail_off:.0} -> {rail_on:.0}");
     assert_eq!(lb_off, 0.0, "no waits priced with the switch off");
     assert!(lb_on > 5.0, "line b's riders wait {lb_on} minutes more at worst");
     assert_eq!(la_on, 0.0, "line a has room: {la_on}");
     assert!(b_off < b_full, "crowding alone: {b_off:.0} of {b_full:.0}");
-    // 7.7% fewer here
-    assert!(b_on < 0.97 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
+    // 1.0% fewer here
+    assert!(b_on < 0.995 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
     // line a loses the riders who changed from b; the rest drive
     assert!(rail_on < rail_off, "and some drive: rail {rail_on:.0} against {rail_off:.0}");
 }
@@ -354,7 +354,9 @@ fn riders_are_held_to_the_trains_room() {
     let (b, a, worst) = run(12.0, 64.0, 1.0);
     assert!(worst <= 1.0, "{worst}");
     assert_eq!(b, a);
-    let (b, a, worst) = run(6.0, 24.0, 1.0);
+    // cut to 3 trains of 12 cars: trains fill to 1.5 times the rated load that crowding counts
+    // against (T-2186), so crowding holds riders short of crush unless a line is cut this hard
+    let (b, a, worst) = run(3.0, 12.0, 1.0);
     println!("rail {:.0} -> {:.0}, boardings {:.0} -> {:.0}, entries {:.0} -> {:.0}; worst load {worst:.3} of crush", b.0, a.0, b.1, a.1, b.2, a.2);
     // the busiest hour at crush is `peak_hour_factor` times the mean hour's; trains full all period
     // carry that much
@@ -362,7 +364,7 @@ fn riders_are_held_to_the_trains_room() {
     assert!(a.1 < b.1 && a.0 < b.0, "{b:?} {a:?}");
     // rail trips and entries fall by the same share
     assert!((a.0 / b.0 - a.2 / b.2).abs() < 1e-4, "{b:?} {a:?}");
-    let (_, a3, _) = run(6.0, 24.0, 3.0);
+    let (_, a3, _) = run(3.0, 12.0, 3.0);
     println!("with three times the riders coming: boardings {:.0}", a3.1);
     assert!(a3.1 < a.1, "{a3:?} {a:?}");
 }
