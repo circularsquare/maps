@@ -34,7 +34,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
     <>
       <div class="title">
         <Chip line={l} size="lg" />
-        <span class="name">{l.name} {st.bus ? "bus" : "train"}</span>
+        <span class="name">{l.name} {st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"}</span>
       </div>
       <div class="sub muted">Towards {name.get(stops[stops.length - 1])}</div>
       {at ? (
@@ -45,9 +45,10 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
           </Row>
         </ul>
       ) : (
-        <p class="muted">This {st.bus ? "bus" : "train"} finished its trip and left service.</p>
+        <p class="muted">This {st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"} finished its trip and left service.</p>
       )}
-      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus ? BUS_CARS : st.cars} bus={!!st.bus} profile={profile} dep={dep} />}
+      {/* T-2194: no riders board a boat until ferries join demand (T-2195) */}
+      {at && !st.bus?.ferry && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus ? BUS_CARS : st.cars} bus={!!st.bus} profile={profile} dep={dep} />}
     </>
   );
 }

@@ -18,7 +18,7 @@ import { quietBadgeRadius, STATIONS_ZOOM } from "./stationGeometry";
 /** the most trains an hour reversing at one side of a station (sim `REVERSAL_LIMIT_S`) */
 const REVERSALS_AN_HOUR = 12;
 
-const PLACING = new Set<string>(["track", "station", "line", "blueprint", "bus"]);
+const PLACING = new Set<string>(["track", "station", "line", "blueprint", "bus", "ferry"]);
 /** how much larger the icon is with a placing tool on (T-1581) */
 const PLACING_SCALE = 1.6;
 

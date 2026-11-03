@@ -4,8 +4,8 @@ import { demandAt, lineSeconds } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
-import { createLine, newBusLine } from "../game/lineActions";
-import { busesText, count, money } from "../game/format";
+import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
+import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
 import { edit, stationsById } from "../game/world";
@@ -58,7 +58,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, !!st.bus, dayNote(l, st))}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, st.bus?.ferry ? "boats" : !!st.bus, dayNote(l, st))}>
       <Money dollars={net} />
     </span>
   );
@@ -67,12 +67,12 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
 /** T-472, T-491, T-1677, T-1684: a line's trains now, coloured by its riders' wait for a train with
  * room in the period now, hovered with the weekday's figures for the level now as the line panel's
  * ring is (`crowdLevel`). */
-function TrainsNow({ line, n, period, bus, v, lev, stops }: { line: string; n: number; period: string; bus?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
+function TrainsNow({ line, n, period, bus, ferry, v, lev, stops }: { line: string; n: number; period: string; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
   const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops) : null;
   const d = today.value.get(line);
   const now = d && n > 0 ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = now ? crowdClass(now.score) : "";
-  const tip = bus ? `${period}: ${busesText(n)} on the line` : c?.tip;
+  const tip = bus ? `${period}: ${ferry ? boatsText(n) : busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
 
@@ -321,7 +321,7 @@ export function LinesTab() {
           <>
             <RidersToday line={l.id} />
             <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} bus={!!st.bus} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
+            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
           </>
         )}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
@@ -367,6 +367,7 @@ export function LinesTab() {
         <span style={{ display: "flex", gap: "6px" }}>
           <button class="btn text" data-guide="line" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
           <button class="btn icon new-bus" data-tip="Draw a new bus line (U)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
+          <button class="btn icon new-ferry" data-tip="Draw a new ferry line (O)" aria-label="New ferry line" onClick={() => newFerryLine()}><Icon.ferry /></button>
         </span>
         <ScopeToggle />
       </div>

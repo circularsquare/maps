@@ -177,25 +177,37 @@ const next = (f: (d?: IdleDeadline) => void) => (typeof requestIdleCallback === 
 export const BUS_CORNER = 0.18;
 export const bulletRadius = (h: number, square: boolean) => (square ? h * BUS_CORNER : h / 2);
 
-/** Whether line `id` is a bus line, read as the world stands now. */
+/** Whether line `id` is a bus line, read as the world stands now (a ferry line is too: its row is a bus row). */
 export const isBusLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus;
+/** T-2194: whether line `id` is a ferry line, whose bullet is a pill. */
+export const isFerryLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus?.ferry;
+
+/** T-2194: a ferry line's bullet: at least this many times as wide as it is tall, fully rounded. */
+const PILL_W = 1.5;
+/** A bullet's box as drawn: a pill widens a narrow one, its text centred in it. */
+export function bulletShape<B extends { w: number; h: number; x: number }>(b: B, pill: boolean): B {
+  if (!pill || b.w >= PILL_W * b.h) return b;
+  const w = PILL_W * b.h;
+  return { ...b, w, x: b.x + (w - b.w) / 2 };
+}
 
 const SVG = "http://www.w3.org/2000/svg";
 
 /** The bullet as a DOM node (for the map's tags, which are not Preact and not zoomed); `square` for
- * a bus line's (`isBusLine`). */
-export function bulletNode(text: string, size: BulletSize, square = false): Node {
-  const b = bulletText(text, size);
-  if (!b) {
+ * a bus line's (`isBusLine`), `pill` for a ferry line's. */
+export function bulletNode(text: string, size: BulletSize, square = false, pill = false): Node {
+  const b0 = bulletText(text, size);
+  if (!b0) {
     const s = document.createElement("span");
     s.textContent = text;
     return s;
   }
+  const b = bulletShape(b0, pill);
   const svg = document.createElementNS(SVG, "svg");
   svg.style.width = b.w + "px";
   svg.style.height = b.h + "px";
   const r = document.createElementNS(SVG, "rect");
-  for (const [a, v] of [["y", b.top], ["width", b.w], ["height", b.h], ["rx", bulletRadius(b.h, square)]] as const) r.setAttribute(a, String(v));
+  for (const [a, v] of [["y", b.top], ["width", b.w], ["height", b.h], ["rx", bulletRadius(b.h, square && !pill)]] as const) r.setAttribute(a, String(v));
   const t = document.createElementNS(SVG, "text");
   t.setAttribute("x", String(b.x));
   t.setAttribute("y", String(b.y));

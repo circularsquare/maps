@@ -1,14 +1,15 @@
 // T-1464: a bus line's panel, the rail line panel cut down (notes/T-1445.md): its schedule in buses,
 // its stops with the street stops folded into a row, and the past 24 hours with the riders changing to
 // trains. No train kind, length, stop editor or related-lines diagram. LineInspector.tsx hands a bus
-// line over to it.
+// line over to it. T-2194: a ferry line too (its row is a bus row with `ferry` set), in boats, its
+// stops its ports; no riders change to trains or fill its boats until ferries join demand (T-2195).
 
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { lineMoneyTip } from "../MoneyText";
-import { busesText, count, distance, headway, money, plural, speed } from "../../game/format";
+import { boatsText, busesText, count, distance, headway, money, plural, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { dayNote, runningToday, today, useToday } from "../../game/today";
@@ -17,8 +18,9 @@ import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, renameLinePrompt, selection, tool } from "../../game/ui";
 import { liveMoney, moneyState } from "../../game/money";
-import { editBusRoute } from "../../game/lineActions";
+import { editBusRoute, editFerryRoute } from "../../game/lineActions";
 import { busDraft } from "../../map/busDraw";
+import { ferryDraft } from "../../map/ferryDraw";
 import { ColourPicker } from "../ColourPicker";
 import { autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesById, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
@@ -129,17 +131,19 @@ function useEndNames(bus: ClockBus | undefined, stationsTaken: Set<string>): Map
 /** What a stepper's button leads to: the bus count, and for a running line the buses it needs beyond
  * its busiest level, bought unless the depot has spare ones, or the buses it frees. */
 function changeTip(counts: [number, number, number], lev: number, to: number, st: LineStats): string {
-  const head = busesText(to);
+  const ferry = !!st.bus?.ferry, text = ferry ? boatsText : busesText;
+  const head = text(to);
   const m = moneyState.value;
   if (!m || st.status !== "running") return head;
   const next = [...counts];
   next[lev] = to;
   const more = Math.max(...next) - Math.max(...counts);
+  const [owned, needed, price] = ferry ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : [m.fleetBus, m.busesNeeded, m.busPrice];
   if (more > 0) {
-    const bought = Math.max(0, more - Math.max(0, m.fleetBus - m.busesNeeded));
-    return head + "\n" + (bought > 0 ? `Buys ${busesText(bought)} for ${money(bought * m.busPrice * 1e6)}` : `Uses ${busesText(more)} from the depot`);
+    const bought = Math.max(0, more - Math.max(0, owned - needed));
+    return head + "\n" + (bought > 0 ? `Buys ${text(bought)} for ${money(bought * price * 1e6)}` : `Uses ${text(more)} from the depot`);
   }
-  return more < 0 ? head + `\nFrees ${busesText(-more)}, which stay in the depot` : head;
+  return more < 0 ? head + `\nFrees ${text(-more)}, ${-more === 1 ? "which stays" : "which stay"} in the depot` : head;
 }
 
 /** One demand level's bus count and headway cells: a count stepper and the headway it gives, or the
@@ -163,7 +167,7 @@ function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand
     return (
       <>
         <td>
-          {wrap(<Stepper value={n} label="buses on the line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
+          {wrap(<Stepper value={n} label={st.bus?.ferry ? "boats on the line" : "buses on the line"} jump onStep={(s) => stepTrainCount(l.id, d, s)}
             tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />)}
         </td>
         <td>{headway(tph)}</td>
@@ -174,7 +178,7 @@ function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand
   return (
     <>
       <td>
-        <span class={"num" + (broke ? " bad" : "")} data-tip={`${busesText(counts[lev])} on the line keep the headway over its round trip`}>{counts[lev]}</span>
+        <span class={"num" + (broke ? " bad" : "")} data-tip={`${(st.bus?.ferry ? boatsText : busesText)(counts[lev])} on the line keep the headway over its round trip`}>{counts[lev]}</span>
       </td>
       <td>
         {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
@@ -243,7 +247,8 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
   const d = today.value.get(l.id);
   const changing = useChangesToTrains(l, bus);
   if (!d) return null;
-  const load = periods ? averageLoad(periods, st) : null;
+  const ferry = !!bus.ferry;
+  const load = periods && !ferry ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
   return (
     <>
@@ -253,13 +258,13 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
           <span class="grow">Riders</span>
           <span class="val">{count(d.riders)}</span>
         </li>
-        {changing !== null && (
+        {changing !== null && !ferry && (
           <li data-tip="Riders per day who change between this bus and a train">
             <span class="grow">Changing to trains</span>
             <span class="val">{count(changing)}</span>
           </li>
         )}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, true, dayNote(l, st))}>
+        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, ferry ? "boats" : true, dayNote(l, st))}>
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
@@ -269,7 +274,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
             <span class="val">{Math.round(load * 100)}%</span>
           </li>
         )}
-        {d.fullTrains > 0 && <Row label="Buses leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} buses departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        {d.fullTrains > 0 && !ferry && <Row label="Buses leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} buses departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
       </ul>
     </>
   );
@@ -321,13 +326,21 @@ export function BusInspector({ id }: { id: string }) {
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const auto = headwayShown(l.id);
   const rows = stopRows(bus);
-  const drawing = tool.value === "bus" && busDraft.value?.line === l.num;
+  const ferry = !!bus.ferry;
+  const drawing = ferry ? tool.value === "ferry" && ferryDraft.value?.line === l.num : tool.value === "bus" && busDraft.value?.line === l.num;
 
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
-    if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its buses start with the next departure.`);
+    if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its ${ferry ? "boats" : "buses"} start with the next departure.`);
   };
+  const removeNow = () => void edit({ op: "removeLine", line: l.num }).then((a) => {
+    if (!a.ok) return;
+    const selected = selection.peek();
+    if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
+  });
   const remove = () => {
+    // T-2194: a ferry line leaves its ports and its boats go to the depot, so it goes at once (undoable)
+    if (ferry) return removeNow();
     ask.value = { text: bus.built ? `Delete ${l.name}? Nothing is refunded for the route.` : `Delete ${l.name}?`, yes: "Delete line", no: "Keep line", run: () => {
       ask.value = null;
       void edit({ op: "removeLine", line: l.num }).then((a) => {
@@ -378,17 +391,19 @@ export function BusInspector({ id }: { id: string }) {
       )}
       <LineGroup l={l} />
       <div class="sub muted">
-        {plural(stopCount(bus), "stop")}, {distance(bus.roadM)}
+        {plural(stopCount(bus), ferry ? "port" : "stop")}, {distance(bus.roadM)}
       </div>
       {st.status === "planned" && (
         <div class="callout">
           <p>Planned</p>
-          <ConstructButton num={l.num} build={build} what="Route" vehicles="buses" runs="Buses run" />
+          {ferry
+            ? <ConstructButton num={l.num} build={build} what="Ports" vehicles="boats" runs="Boats run" />
+            : <ConstructButton num={l.num} build={build} what="Route" vehicles="buses" runs="Buses run" />}
         </div>
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? "Save the route (Enter)" : bus.built ? "Change the route. The old route is not refunded" : "Change the route"} onClick={() => editBusRoute(l)}><Icon.pencil />{drawing ? "Save route" : "Edit route"}</button>
+        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? "Save the route (Enter)" : bus.built && !ferry ? "Change the route. The old route is not refunded" : "Change the route"} onClick={() => (ferry ? editFerryRoute(l) : editBusRoute(l))}><Icon.pencil />{drawing ? "Save route" : "Edit route"}</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>
@@ -398,7 +413,7 @@ export function BusInspector({ id }: { id: string }) {
         <span class="right">
           <Segmented<boolean>
             options={[
-              [false, "Buses"],
+              [false, ferry ? "Boats" : "Buses"],
               [true, "Headway"],
             ]}
             value={auto !== null}
@@ -409,7 +424,7 @@ export function BusInspector({ id }: { id: string }) {
       <table class="sched">
         <tr>
           <th>Demand</th>
-          <th>Buses</th>
+          <th>{ferry ? "Boats" : "Buses"}</th>
           <th>Headway</th>
         </tr>
         {DEMANDS.map((d) => (
@@ -423,7 +438,7 @@ export function BusInspector({ id }: { id: string }) {
         <AverageSpeed st={st} lev={lev} />
       </ul>
 
-      <div class="h divided">Stops</div>
+      <div class="h divided">{ferry ? "Ports" : "Stops"}</div>
       <ul class="bus-stops" style={{ "--c": shown }}>
         {rows.map((r) => r.kind === "street" ? (
           <li class="street" data-tip={between(r)}>

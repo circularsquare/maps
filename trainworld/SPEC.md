@@ -291,8 +291,9 @@ with a landing on the shore and a berth in the water. The route is free, found i
 basemap's water between two ports (T-2192): at least 5 m off land, keeping 400 m off where that costs
 under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. Boats
 (one kind, 320 riders) run at most 25 km/h as room allows and accelerate at 0.15 m/s²; US$10M a port,
-US$8M a boat and US$40 a boat-km to run. The router and the sim's side are built; the Ferry tool, map and
-panel (T-2194) and demand's side (T-2195) are not yet.
+US$8M a boat and US$40 a boat-km to run. The player places ports only with the Ferry tool (beside Bus,
+key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel like a bus line's and a
+Ferry fare row in the Money tab. Ferries are not in demand yet (T-2195): they carry no riders.
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7

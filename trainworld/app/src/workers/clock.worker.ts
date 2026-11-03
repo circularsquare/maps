@@ -37,7 +37,7 @@ import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFo
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
-import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, stampAll, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
 
@@ -48,6 +48,9 @@ const SNAPSHOT_DEBOUNCE_MS = 500;
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
 const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
+/** T-2193: a new ferry line's headways, s (a boat every 15, 20 and 30 minutes), dwell and turnaround, s (`ferry::FERRY_*`) */
+const NEW_FERRY_HEADWAYS: [number, number, number] = [900, 1200, 1800];
+const NEW_FERRY_DWELL_S = 60, NEW_FERRY_TURNAROUND_S = 300;
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
 /** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city); every
  * other country charges them by its income over that country's until the player sets a scale. */
@@ -70,9 +73,10 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = tidyOwn(c, scales[c], scales);
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
+  const ferry = typeof f.ferry === "number" && Number.isFinite(f.ferry) ? { ferry: tidyHsr(f.ferry) } : {};
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);
-  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...(transfer > 0 ? { transfer } : {}) };
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -669,11 +673,11 @@ const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
 
 /** the network, cash and fleet after the last load or edit */
-let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number } | null = null;
+let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number } | null = null;
 function keep() {
   try {
     const a = api!;
-    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus() };
+    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry() };
   } catch { /* the model is down; the next panic recovery says so */ }
 }
 
@@ -716,7 +720,7 @@ async function rebuildModel(fromKept: boolean) {
   const old = api!;
   let k = kept;
   if (!fromKept) {
-    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast(), fleetBus: old.fleet_bus() }; } catch { /* held: use what was kept */ }
+    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast(), fleetBus: old.fleet_bus(), fleetFerry: old.fleet_ferry() }; } catch { /* held: use what was kept */ }
   }
   if (!k) throw new Error("no network was kept");
   (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
@@ -728,6 +732,7 @@ async function rebuildModel(fromKept: boolean) {
   api!.set_fleet(k.fleet);
   api!.set_fleet_fast(k.fleetFast);
   api!.set_fleet_bus(k.fleetBus);
+  api!.set_fleet_ferry(k.fleetFerry);
   api!.set_cash(k.cash);
   setMode(mode);
   restart(gameNow(), "autosave");
@@ -1619,7 +1624,7 @@ function upkeepPerHour(): number {
 }
 function upkeepNow(): MoneyState["upkeep"] {
   const u = api!.upkeep();
-  return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0 };
+  return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0, ports: u[7] ?? 0, portCount: u[8] ?? 0 };
 }
 
 function moneyState(): MoneyState {
@@ -1639,6 +1644,12 @@ function moneyState(): MoneyState {
     runCostBusKm: moneyParams[12],
     upkeepBusKm: moneyParams[13],
     busRouteKm: moneyParams[14],
+    fleetFerry: a.fleet_ferry(),
+    boatsNeeded: a.boats_needed(),
+    boatPrice: moneyParams[18],
+    runCostBoatKm: moneyParams[19],
+    upkeepPort: moneyParams[20],
+    portPrice: moneyParams[21],
     hsCarPrice: moneyParams[4],
     hsRunCostCarKm: moneyParams[5],
     hsRunCostTrainKm: moneyParams[6],
@@ -1939,7 +1950,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2307,6 +2318,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
   api!.set_fleet_bus(h.fleetBus ?? 0);
+  api!.set_fleet_ferry(h.fleetFerry ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
@@ -2378,6 +2390,7 @@ async function newGame(spec?: NewGameSpec) {
   api!.set_fleet(0);
   api!.set_fleet_fast(0);
   api!.set_fleet_bus(0);
+  api!.set_fleet_ferry(0);
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);
@@ -2857,6 +2870,8 @@ function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
+    if (a.is_ferry(id)) continue; // T-2194: ferries join demand with T-2195; their ports stay stations
+
     const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
     const span = a.line_span(id);
@@ -2887,6 +2902,7 @@ function buildSnapshot(): NetworkSnapshot {
 /** T-1464: a bus line's row (`ClockBus`); its stops that are no station join `nodes` once each,
  * flagged `bus`, so every stop of every line has a node row. */
 function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
+  if (a.is_ferry(id)) return ferryRow(a, id);
   const r = a.bus_route(id), st = a.bus_stops(id);
   const stops: ClockBus["stops"] = [];
   for (let k = 0; k + 7 < st.length; k += 8) {
@@ -2913,13 +2929,65 @@ function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
 /** a bus route's longitude, latitude pairs by line, until the route changes */
 const busRouteLL = new Map<number, { route: number[]; ll: number[] }>();
 
-/** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number. */
-function nextBusName(a: TrackApi): string {
+/** T-2194: a ferry line's row: a bus line's (`ClockBus`), its kinds the ferry's, with its speeds and
+ * each port's landing and berth (`FerryRow`). Its ports are stations, so no node joins `nodes`. */
+function ferryRow(a: TrackApi, id: number): ClockBus {
+  const r = a.ferry_route(id), st = a.bus_stops(id), stops: ClockBus["stops"] = [];
+  for (let k = 0; k + 7 < st.length; k += 8) {
+    const [lng, lat] = packLngLat(st[k + 1], st[k + 2]);
+    stops.push({ id: st[k], x: st[k + 1], y: st[k + 2], lng, lat, kind: st[k + 4], station: st[k + 5] });
+  }
+  const route: number[] = [], kinds: number[] = [], speeds: number[] = [];
+  for (let k = 1; k + 3 < r.length; k += 4) {
+    route.push(r[k], r[k + 1]);
+    kinds.push(r[k + 2]);
+    speeds.push(r[k + 3]);
+  }
+  const had = busRouteLL.get(id);
+  const same = had && had.route.length === route.length && had.route.every((v, i) => v === route[i]);
+  let routeLL = had?.ll ?? [];
+  if (!same) {
+    routeLL = [];
+    for (let k = 0; k + 1 < route.length; k += 2) routeLL.push(...packLngLat(route[k], route[k + 1]));
+    busRouteLL.set(id, { route, ll: routeLL });
+  }
+  // each port's landing is its stop (`ferry::plan`, in route order); its berth the kind 1 point
+  const ports: FerryRow["ports"] = [];
+  const nodes = a.line_stops(id);
+  let p = 0;
+  kinds.forEach((kd, i) => {
+    if (kd !== 1 || p >= nodes.length) return;
+    const node = nodes[p], s = stops[p++];
+    const berth: [number, number] = [routeLL[2 * i], routeLL[2 * i + 1]];
+    ports.push({ node, landing: s && s.id === node ? [s.lng, s.lat] : berth, berth });
+  });
+  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], routeLL, streetLL: [], ferry: { speeds, ports } };
+}
+
+/** T-2194: a ferry line's ports as the network's nodes, new ones added first as blueprint ports; null
+ * when one is refused (those added before it are taken back). */
+function addPorts(a: TrackApi, ports: FerryPortIn[]): Uint32Array | null {
+  const out: number[] = [];
+  let added = 0;
+  for (const p of ports) {
+    if ("node" in p) { out.push(p.node); continue; }
+    if (a.add_port(p.x, p.y, p.bx, p.by, p.name) !== 0) {
+      for (; added > 0; added--) a.undo();
+      return null;
+    }
+    added++;
+    out.push(a.last_port());
+  }
+  return Uint32Array.from(out);
+}
+
+/** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number (T-2194: "Ferry n"). */
+function nextBusName(a: TrackApi, word = "Bus "): string {
   const taken = new Set<string>();
   const info = a.lines_info();
   for (let i = 0; i < info.length; i += 22) taken.add(a.line_name(info[i]));
   for (;;) {
-    const name = a.next_line_name().replace(/^Line /, "Bus ");
+    const name = a.next_line_name().replace(/^Line /, word);
     if (!taken.has(name)) return name;
   }
 }
@@ -3122,6 +3190,17 @@ function apply(op: EditOp): Applied {
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
+    case "addFerryLine": {
+      const ports = addPorts(a, op.ports);
+      if (!ports) return { r: 1 };
+      const id = a.new_line_id();
+      const [h, m, l] = NEW_FERRY_HEADWAYS;
+      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, NEW_FERRY_DWELL_S, NEW_FERRY_TURNAROUND_S, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id };
+    }
+    case "ferryRoute": {
+      const ports = addPorts(a, op.ports);
+      return ports ? { r: a.set_ferry_route(op.line, ports, Float64Array.from(op.route)) } : { r: 1 };
+    }
     case "addLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_LINE_TRAINS;
@@ -3207,11 +3286,15 @@ function apply(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
       return { r: 0 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
       fares = { ...fares, hsr: tidyHsr(op.mul) };
+      return { r: 0 };
+    case "fareFerry":
+      if (!Number.isFinite(op.mul)) return { r: 1 };
+      fares = { ...fares, ferry: tidyHsr(op.mul) };
       return { r: 0 };
     case "fareTransfer": {
       if (!Number.isFinite(op.usd)) return { r: 1 };
@@ -3531,11 +3614,12 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareTransfer") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareTransfer") {
       apply(msg.op);
       dirty = edited = true; editAt = Date.now();
       sendMoney();
-      scheduleSnapshot();
+      // T-2194: ferries are not in demand yet (T-2195), so their multiple changes nothing it solves
+      if (msg.op.op !== "fareFerry") scheduleSnapshot();
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
       return;
     }

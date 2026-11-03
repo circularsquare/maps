@@ -52,6 +52,8 @@ export interface StationInput {
   /** its platform's centre line along its track, as drawn: x, y offsets from x, y in world units
    * (T-1859, workers/platformLines.ts); absent: straight along `heading` */
   line?: ArrayLike<number>;
+  /** T-2194: a port, for ferries (no track or platform), and its berth, longitude and latitude */
+  port?: [number, number];
 }
 
 export interface LineInput {
@@ -116,6 +118,8 @@ export interface TrackNode {
   platform: number;
   /** T-1464: a bus stop that is no station: no track, never picked or snapped to */
   bus?: true;
+  /** T-2194: a port: a station with no track, so no place to snap track to */
+  port?: true;
 }
 
 export interface Save {

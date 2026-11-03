@@ -373,6 +373,10 @@ export function setFareScale(country: string, scale: number | null) {
 export function setFareHsr(mul: number) {
   return edit({ op: "fareHsr", mul });
 }
+/** T-2194: the fare multiplier on ferry lines. */
+export function setFareFerry(mul: number) {
+  return edit({ op: "fareFerry", mul });
+}
 /** T-1801: the transfer fare, in the curve's units. */
 export function setFareTransfer(usd: number) {
   return edit({ op: "fareTransfer", usd });

@@ -176,7 +176,7 @@ export function runningToday(l: LineInput, st: LineStats): number {
     // T-1720: a weekend day by the line's calendar runs the medium level's trains in the high hours
     const lev = levelOn(kindIn(country, Math.floor(h / 24)), LEVEL_INDEX[PERIODS[periodAt(h * 3600)].demand]);
     // T-1464: a bus line's buses cost a bus-km each
-    const perKm = st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
+    const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
     cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;

@@ -2,6 +2,7 @@ import { edit, lineById, say, stationsById, world } from "./world";
 import { lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
+import { ferryDraft } from "../map/ferryDraw";
 import { money } from "./format";
 import { viewedZone, type CityId } from "./cities";
 import { stationZone } from "./listScope";
@@ -111,6 +112,25 @@ export function editBusRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
   t.exit();
   selection.value = { kind: "line", line: l.id };
   t.bus.begin(l.num, route, l.colour, bus.kinds);
+}
+
+/** T-2194: draw a new ferry line (the O key, the Lines tab's ferry button, the Build tab's Ferry tool):
+ * place ports, then finish (map/ferryDraw.ts). */
+export function newFerryLine() {
+  const t = live.tools;
+  if (!t || !world.peek()) return;
+  t.exit();
+  t.ferry.begin(null);
+}
+
+/** T-2194: the ferry line's Edit route button, as the bus line's. */
+export function editFerryRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
+  const t = live.tools, ferry = world.peek()?.lineStats[l.id]?.bus?.ferry;
+  if (!t || !ferry) return;
+  if (tool.peek() === "ferry" && ferryDraft.peek()?.line === l.num) return void t.ferry.finish();
+  t.exit();
+  selection.value = { kind: "line", line: l.id };
+  t.ferry.begin(l.num, l.colour);
 }
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */

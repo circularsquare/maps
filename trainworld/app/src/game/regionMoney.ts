@@ -149,9 +149,9 @@ export const upkeepShares = computed<Shares>(() => {
     const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
     if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
-  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", stationUpkeep(m));
+  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeep(m));
   for (const l of w.save.lines) {
-    if (!w.lineStats[l.id]?.bus?.built) continue;
+    if (!w.lineStats[l.id]?.bus?.built || w.lineStats[l.id]?.bus?.ferry) continue; // T-2194: a ferry route has no upkeep
     for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * (m.upkeepBusKm ?? 0) * m.economy);
   }
   const next = norm(out);
@@ -172,7 +172,7 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
   }
   const perKm = (moneyState.peek()?.busRouteKm ?? 0) * 1e6;
   for (const l of after.save.lines) {
-    if (!after.lineStats[l.id]?.bus?.built || before?.lineStats[l.id]?.bus?.built) continue;
+    if (!after.lineStats[l.id]?.bus?.built || before?.lineStats[l.id]?.bus?.built || after.lineStats[l.id]?.bus?.ferry) continue;
     for (const [z, km] of busKmByRegion(after, l.id)) add(cost, z, km * perKm);
   }
   if (!cost.size) {

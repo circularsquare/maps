@@ -198,6 +198,9 @@ export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runC
 export const busUpkeepRule = (m: { upkeepBusKm: number; economy: number }) => `${money(perDistance(m.upkeepBusKm * m.economy))} per ${distUnit()} of route per day`;
 /** T-1464: a route's price on Construct, "$1M a km of route". */
 export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} a ${distUnit()} of route`;
+export const boatsText = (n: number) => plural(n, "boat");
+/** T-2194: "$40 a boat-km", in the shown unit. */
+export const boatRunRule = (m: { runCostBoatKm: number }) => `${perUnitText(m.runCostBoatKm)} a boat-${distUnit()}`;
 
 /** Mile, and the metres a ruler marking it stands for (the placing rings). */
 export const unitMetres = () => (us() ? M_PER_MILE : 1000);

@@ -59,8 +59,9 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
     return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "built " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "bus") {
-    const l = linesByNum(w).get(r.line), built = l ? w.lineStats[l.id]?.bus?.built : undefined;
-    return l && built !== undefined ? { what: l.name, built } : null;
+    const l = linesByNum(w).get(r.line), b = l ? w.lineStats[l.id]?.bus : undefined;
+    // T-2194: removing a ferry line keeps its ports and is undoable, so it asks nothing
+    return l && b ? { what: l.name, built: b.built && !b.ferry } : null;
   }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);

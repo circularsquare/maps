@@ -942,7 +942,6 @@ button.save-add:hover { color: var(--text); }
 .tool-pick { display: grid; grid-template-columns: 1fr 1fr; }
 .group.tool-pick > .btn:nth-child(n+3) { margin-top: -1px; }
 .group.tool-pick > .btn:nth-child(odd) { margin-left: 0; }
-.group.tool-pick > .tool-bus { grid-column: 1 / -1; }
 #tool-notes .bus-acts { display: flex; gap: 4px; }
 .pane .price { margin-top: 4px; }
 .price-row { flex-wrap: nowrap; margin-top: 4px; }
@@ -953,9 +952,9 @@ button.save-add:hover { color: var(--text); }
 .tool-pick > .btn { padding: 0 6px; gap: 4px; }
 /* T-1802: the construct icons a tad bigger than the 14 px text-button glyph and the 16 px icon-button one */
 .tool-pick > .btn svg { width: 17px; height: 17px; }
-.build-track-row > .btn.icon svg, .btn.icon.new-bus svg { width: 19px; height: 19px; }
+.build-track-row > .btn.icon svg, .btn.icon.new-bus svg, .btn.icon.new-ferry svg { width: 19px; height: 19px; }
 .tool-pick .key { margin-left: 2px; }
-#tool-notes .bad, .tool-tag.bad { color: var(--bad); }
+#tool-notes .bad, .tool-tag.bad, .tool-tag .bad { color: var(--bad); }
 
 /* drawing tool markers on the map */
 .tool-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }

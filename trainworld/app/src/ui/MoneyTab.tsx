@@ -1,11 +1,11 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
-import { borrow, repay, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
+import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
+import { borrow, repay, setFareFerry, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
+import { FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
 import { FARE_BASELINE, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
@@ -25,6 +25,12 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.l
 /** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
 function upkeepTip(m: MoneyState): string {
   return upkeepLines(m); // T-1838: Anita's three lines, nothing else
+}
+
+/** The New trains row's hover once the network has buses or boats (T-1464, T-2194). */
+function vehiclesTip(m: MoneyState): string | undefined {
+  const bus = m.fleetBus > 0 || m.busesNeeded > 0, boat = m.fleetFerry > 0 || m.boatsNeeded > 0;
+  return bus && boat ? "Cars, buses and boats bought" : bus ? "Cars and buses bought" : boat ? "Cars and boats bought" : undefined;
 }
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
@@ -121,6 +127,22 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   );
 }
 
+/** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7). */
+function FerryFareRow({ mul }: { mul: number }) {
+  const set = (v: number) => void setFareFerry(tidyHsr(v));
+  const text = (v: number) => `${v.toFixed(2)}x`;
+  return (
+    <li>
+      <span class="fr-what" data-tip="Fare multiple for rides on ferries.">Ferry</span>
+      <Stepper value={text(mul)} wide label="ferry fare" onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip: "Fare multiple for rides on ferries." }} />
+      {mul !== FERRY_FARE
+        ? <button class="btn icon" aria-label="Back to the usual multiple" data-tip={`Back to ${text(FERRY_FARE)}`} onClick={() => set(FERRY_FARE)}><Icon.undo /></button>
+        : <span />}
+    </li>
+  );
+}
+
 /** T-1801: the transfer fare as charged where the panel looks (times its scale): a stepper by
  * $0.25, typed on a click, as the base fare. */
 function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
@@ -174,6 +196,8 @@ export function MoneyTab() {
   const f = farePreview.value ?? shown;
   // T-1626: shown once a line runs high-speed trains
   const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
+  // T-2194: shown once a ferry line exists
+  const ferry = w.save.lines.some((l) => w.lineStats[l.id]?.bus?.ferry) ? ferryFare(m.fares) : null;
   return (
     <>
       <ul class="rows">
@@ -194,7 +218,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? `\nBuses cost ${busRunRule(m)}` : "")}>Running trains</td>
+          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? `\nBuses cost ${busRunRule(m)}` : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? `\nBoats cost ${boatRunRule(m)}` : "")}>Running trains</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
@@ -211,7 +235,7 @@ export function MoneyTab() {
           </tr>
         )}
         <tr>
-          <td data-tip={m.fleetBus > 0 || m.busesNeeded > 0 ? "Cars and buses bought" : undefined}>New trains</td>
+          <td data-tip={vehiclesTip(m)}>New trains</td>
           {cell(prev, (d) => -d.trains)}
           <TodayCell zone={zone} v={(d) => -d.trains} />
         </tr>
@@ -231,6 +255,7 @@ export function MoneyTab() {
       <FareNodeRows nodes={f} scale={scale}
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
+          {ferry !== null && <FerryFareRow mul={ferry} />}
           <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
           <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} />
         </>} />
@@ -267,6 +292,19 @@ export function MoneyTab() {
             </Row>
             <Row label="Spare buses">
               {Math.max(0, m.fleetBus - m.busesNeeded)}
+            </Row>
+          </>
+        )}
+        {(m.fleetFerry > 0 || m.boatsNeeded > 0) && (
+          <>
+            <Row label={<span data-tip={`A boat costs ${money(m.boatPrice * 1e6)}. Running costs ${boatRunRule(m)}. A port costs ${money(m.portPrice * 1e6)} to construct.`}>Boats owned</span>}>
+              <span data-tip={`${boatsText(m.fleetFerry)} bought at ${money(m.boatPrice * 1e6)} each, ${money(m.fleetFerry * m.boatPrice * 1e6)} in all`}>{m.fleetFerry}</span>
+            </Row>
+            <Row label="Boats the lines need">
+              {m.boatsNeeded}
+            </Row>
+            <Row label="Spare boats">
+              {Math.max(0, m.fleetFerry - m.boatsNeeded)}
             </Row>
           </>
         )}

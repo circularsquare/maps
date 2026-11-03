@@ -232,8 +232,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 
 ## Drawing a bus line
 
-[T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, full
-width, key U), the Lines tab's bus button beside New line, or U from any tab starts the bus tool for a
+[T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, beside
+Ferry, key U), the Lines tab's bus button beside New line, or U from any tab starts the bus tool for a
 new line; the Build tab's button again, while it is on, leaves it. Each click adds a
 point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
 shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
@@ -273,6 +273,37 @@ the tag by the pointer gives the road length and the price.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
   nothing waiting finishes, on the other end makes it active. Dragging and deleting points take a
   mouse.
+
+## Drawing a ferry line
+
+[T-2194; `map/ferryDraw.ts`; design notes/T-2177.md 3.2] The Build tab's Ferry button (beside Bus,
+each half the row, key O), the Lines tab's ferry button beside the bus one, or O from any tab starts
+the ferry tool for a new line. The player places **ports only**; between two consecutive ports the
+route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
+
+- **A click** on land by the water puts a new port on the shore: its landing where the click's line
+  first meets water, its berth in the water where boats stop, named as a new station is. A click on
+  a port the network has (within 10 px or 30 m) stops there, so lines share ports. A click on water
+  is refused ("Place ports on land by the water"), and on land more than 150 m from water ("Too far
+  from water"); the tag over the pointer says which before the click, "Place port" or "Stop at
+  <port>" where a click works.
+- **While drawing** each port is a circle on its landing with a short line to its berth, the active
+  end larger; the route between is dashed in the line's colour, grey and straight while it is
+  searched, red and straight where no water joins two ports. The tag gives the route's length and the
+  price of the ports not yet constructed (US$10M each; the route is free), and how many ports; a leg
+  with no route says "No water path found", and the line cannot be made until a port is taken out.
+- **Ports as handles**: new ports join at the active end; a click on the other end makes it the
+  active one; a right click on a port or Backspace takes one out. No dragging: a port is moved by
+  taking it out and placing another.
+- **Finishing** as the bus tool: a click on the active end, a double click, Enter, or Make line (Save
+  route) in the tool's bar; fewer than two ports is refused, and so is a leg with no route ("No water
+  path found between A and B."). New ports are added with the line as blueprint ports. Escape drops a
+  new line's ports, a second leaves.
+- **Edit route** in the ferry panel reopens the tool on the line's ports and its saved route, which is
+  searched again only once a port changes. Redrawing is free; a constructed line pays for its new
+  ports at once.
+- **By touch**: a tap places a port at once (a port is a place, not a point to adjust); the check
+  finishes.
 
 ## Snapping to the real network
 

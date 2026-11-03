@@ -31,7 +31,7 @@ export function nodesNear(w: WorldView, lx: number, ly: number, reach: number): 
   let g = nodeGrids.get(w.nodes);
   if (!g || g.anchor !== anchor().version) {
     // T-1464: a bus stop that is no station is no place to snap to
-    const nodes = [...w.nodes.values()].filter((n) => !n.bus), a = anchor();
+    const nodes = [...w.nodes.values()].filter((n) => !n.bus && !n.port), a = anchor();
     const box = () => {
       const b = new Float64Array(nodes.length * 4);
       nodes.forEach((n, i) => {

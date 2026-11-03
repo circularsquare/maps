@@ -1403,8 +1403,16 @@ searches water.
 
 A ferry line (T-2193; design notes/T-2177.md) is a line on water between ports, with no track. The app
 searches the route on the basemap's water (T-2192) and hands the sim its points; the sim never sees the
-water. The player's tool, map and panel are T-2194, demand's side T-2195. Code: `track/ferry.rs`,
-exports `wasm/ferry.rs`.
+water. The player's tool and panel are ui-building.md "Drawing a ferry line" and ui-inspectors.md
+(T-2194), demand's side T-2195 (until then ferry lines are left out of demand's network; their ports
+are stations in it). Code: `track/ferry.rs`, exports `wasm/ferry.rs`.
+
+- **On the map** (T-2194, `map/busLayer.ts`, whose rows a ferry line shares: the app's line row for a
+  ferry is a bus row with `ferry` set): the route dashed in the line's colour on a continuous casing,
+  half a rail line's width, under the track; a solid stroke from each port's landing to its berth; no
+  corridor. Ports draw as stations. Boats are pointed hulls 35 m by 8 m in the line's colour, run 0's
+  bow ahead (`BOAT_CAR`, network.ts). A ferry line's bullet is a pill.
+- **The boat fleet** is in the game header (`fleetFerry`, absent for none), as `fleetBus`.
 
 - **Ports** are stations of their own kind (`Network::is_port`): a node with no track, at level 0,
   with a name, walking access, the boarding account's waiting crowd, passages to stations and bus

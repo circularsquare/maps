@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2194 [P2] Ferries F3: the Ferry tool, map and panels. Done 2026-11-03 (agent t2194): ports only (key O), dashed routes, pointed boats, the bus panel in boats, Lines tab, Ferry fare row and boat rows, `fleetFerry` saved; `checks/t2194-ferry-tool.mjs`. ui-building.md "Drawing a ferry line".
+- T-2232 [P2] Passing tracks in the panels (T-2228 stage 2). Done 2026-11-03 (agent t2232, tree t2232): station icon, the line button (one edit, tracks' price shown), "Waiting for faster trains" with its places; `checks/t2232-passing-panels.mjs`. notes/T-2228.md 5, 8.
 - T-2205 Network diagram spacing (2026-11-03): a separation stage after routing, octilinear by construction, projections on a first layout and capped Hildreth from the last drawing on a rebuild; close pairs 128 to 0 (New York), 181 to 7 (Tokyo), pill overlaps 45 to 2, 82 to 5. notes/T-2205.md
 - T-2206 Network diagram hooks (2026-11-03): axes may pass beside a station's place, lines within 1.25 pitches lie under the pill, near stops share a pill; Shinjuku and Times Sq show none (2 hooks left in New York, 1 in Tokyo). notes/T-2205.md
 - T-2217 [P2] Station buildings 1, the sim and the save. Built 2026-11-03 (agents t2217, t2217b, tree t2217), landed after the ferry merge (landed ): `Network::buildings`, members by platform touch (8 m), US$2,000 a m², the refusals, `building_quote`; BLD1 after LFR1 at save level 4, a building-free save unchanged; 347 cargo tests, `checks/t2217-buildings.mjs` (21 stations round Times Sq). notes/T-2208.md 5.

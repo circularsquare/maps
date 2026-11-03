@@ -805,6 +805,7 @@ out float v_front;
 out vec2 v_consist;
 out float v_detail;
 out float v_cab;
+flat out float v_boat;
 
 /** How far apart the two tracks are at distance d along run 0 (laneAt in network.ts), and the
  * line's band's shift and metres there (bandAt). */
@@ -824,10 +825,13 @@ void main() {
   bool chosen = u_sel_trip.x >= 0.0 && abs(a_trip.x - u_sel_trip.x) < 0.5 && abs(a_trip.y - u_sel_trip.y) < 0.01;
   if ((u_pass == 0) == chosen || !trainDist(L, d, line)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rawCars = texelFetch(u_cars, tc(line, ${LINES_W}), 0).x;
-  // a bus (T-1464): one car under a full car's length, which is its value here; narrower than a train
-  bool bus = rawCars < 0.99;
-  float cars = max(1.0, rawCars);
-  float carM = bus ? rawCars * 20.0 : 20.0;
+  // a bus (T-1464): one car under a full car's length, which is its value here; narrower than a train.
+  // A boat (T-2194): below 0, its length in cars; one hull, 8 m across
+  bool boat = rawCars < 0.0;
+  bool bus = !boat && rawCars < 0.99;
+  float cars = boat ? 1.0 : max(1.0, rawCars);
+  float carM = boat ? -rawCars * 20.0 : bus ? rawCars * 20.0 : 20.0;
+  v_boat = boat ? 1.0 : 0.0;
   int car = u_detail ? gl_VertexID / 6 : 0;
   if (float(car) >= cars) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float totalM = min(cars * carM, L.z);
@@ -840,7 +844,7 @@ void main() {
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
   // a bus (T-1798) is drawn 1.4 times its size from a distance and 1.2 times its real one close up
-  vec2 px = max(bus ? u_min_px * 0.77 : u_min_px, vec2(cars * carM, bus ? 2.5 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
+  vec2 px = max(bus ? u_min_px * 0.77 : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
   if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
@@ -977,6 +981,7 @@ in vec2 v_consist;
 in float v_detail;
 in float v_cab;
 in float v_alpha;
+flat in float v_boat;
 uniform float u_dpr;
 uniform vec3 u_bad;
 uniform highp int u_pass;
@@ -988,9 +993,15 @@ ${SHAPE_GLSL}
 void main() {
   // along the train's bend and across it (T-189)
   vec2 p = arc(v_uv, v_k);
-  float r = v_detail > 0.5 ? min(2.0 * u_dpr, v_px.y * 0.22) : v_px.y * 0.5;
+  float r = v_detail > 0.5 || v_boat > 0.5 ? min(2.0 * u_dpr, v_px.y * 0.22) : v_px.y * 0.5;
   vec2 q = abs(p) - (v_px * 0.5 - r);
   float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+  if (v_boat > 0.5) {
+    // a boat's hull (T-2194): its front third narrows to a point
+    float hx = v_px.x * 0.5, hy = v_px.y * 0.5, bow = hx - min(0.66 * v_px.x, 1.6 * v_px.y);
+    vec2 n = normalize(vec2(hy, hx - bow));
+    d = max(d, dot(vec2(p.x * v_front - bow, abs(p.y) - hy), n));
+  }
   if (u_pass == 1) {
     // the selected train's halo (T-242), from the train out: an outline in the map ink as a
     // selected station has (T-189), a band in the casing's colour, a ring of the same shape in the

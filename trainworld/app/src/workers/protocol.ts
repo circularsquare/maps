@@ -84,6 +84,12 @@ export type EditOp =
   | { op: "addBusLine"; route: number[]; name: string; colour: string }
   /** T-1464: a bus line's route drawn again (final and charged when it is constructed) */
   | { op: "busRoute"; line: number; route: number[] }
+  /** T-2194: a planned ferry line over its ports in route order (a port's node, or a new one added
+   * first) and its route (world metres, x, y, kind, m/s per point, flat: notes/T-2177.md "F2 -> F3");
+   * answered with its `line` */
+  | { op: "addFerryLine"; ports: FerryPortIn[]; route: number[]; name: string; colour: string }
+  /** T-2194: a ferry line's ports and route drawn again (free; new ports on a constructed line are paid now) */
+  | { op: "ferryRoute"; line: number; ports: FerryPortIn[]; route: number[] }
   | { op: "constructAll" }
   /** switch blueprint track and stations off or on (T-333): Construct and the quote skip what is off; one undoable edit */
   | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
@@ -121,6 +127,8 @@ export type EditOp =
   | { op: "fareScale"; country: string; scale: number | null }
   /** T-1626: the fare multiplier on high-speed lines */
   | { op: "fareHsr"; mul: number }
+  /** T-2194: the fare multiplier on ferry lines */
+  | { op: "fareFerry"; mul: number }
   | { op: "fareTransfer"; usd: number }
   /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or pay off what is left of it; refused otherwise */
   | { op: "borrow"; amount: number }
@@ -293,7 +301,7 @@ export interface MoneyState {
   upkeepHsr: number;
   /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations
    * behind it; T-1464: bus routes' upkeep, US$M, and their road-km */
-  upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number };
+  upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number; ports: number; portCount: number };
   /** T-1464: buses owned and needed; a bus's price US$M, its running cost a bus-km and a route's
    * upkeep a road-km a day (real US$), a route's price a road-km US$M */
   fleetBus: number;
@@ -302,11 +310,19 @@ export interface MoneyState {
   runCostBusKm: number;
   upkeepBusKm: number;
   busRouteKm: number;
+  /** T-2193: boats owned and needed; a boat's price US$M, its running cost a boat-km (real US$), a
+   * port's upkeep a day (real US$) and its price US$M */
+  fleetFerry: number;
+  boatsNeeded: number;
+  boatPrice: number;
+  runCostBoatKm: number;
+  upkeepPort: number;
+  portPrice: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; hsr?: number; transfer?: number };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; hsr?: number; ferry?: number; transfer?: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -374,6 +390,8 @@ export interface ClockNode {
   /** T-1464: a bus stop that is no station (`ClockBus.stops`), listed so a line's stops all have a
    * row; no track, no platform, never picked or snapped to */
   bus?: true;
+  /** T-2194: a port (a station for ferries, no track) and its berth, longitude and latitude */
+  port?: [number, number];
 }
 
 export interface ClockLine {
@@ -449,7 +467,23 @@ export interface ClockBus {
   /** `route` and `street` as longitude, latitude pairs, flat */
   routeLL: number[];
   streetLL: number[];
+  /** T-2194: a ferry line, which has a bus line's row so that everything treating a bus as no rail
+   * treats a ferry so too: `kinds` are then `ferry::K_*` (0 route, 1 a port's berth, 2 a waypoint),
+   * `roadM` its route's ground metres, `stops` its ports and `street` empty */
+  ferry?: FerryRow;
 }
+
+/** T-2194: what a ferry line's row adds to a bus line's */
+export interface FerryRow {
+  /** per route point, the most a boat may do there, m/s */
+  speeds: number[];
+  /** per port in route order: its node and its landing, longitude and latitude, then its berth's */
+  ports: { node: number; landing: [number, number]; berth: [number, number] }[];
+}
+
+/** T-2194: a ferry line's port as the tool sends it: a port the network has, or a new one (its landing
+ * on the shore and its berth in the water, world metres) added before the line */
+export type FerryPortIn = { node: number } | { x: number; y: number; bx: number; by: number; name: string };
 
 /** Everything drawn, in local units (map/geo.ts). */
 export interface ClockRender {

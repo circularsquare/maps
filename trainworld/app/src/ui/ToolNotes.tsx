@@ -6,6 +6,7 @@ import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { linesByNum, notice, world } from "../game/world";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
+import { ferryDraft } from "../map/ferryDraw";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
@@ -21,6 +22,7 @@ const HINT: Record<Tool, string> = {
   trip: "Click where a trip starts, or a station.",
   blueprint: "",
   bus: "",
+  ferry: "",
 };
 
 /** T-1649: a removal that breaks dozens of lines lists the first few and counts the rest. */
@@ -88,7 +90,10 @@ function Notice() {
   // T-1464: the bus line tool: which line, how many points, and the way to finish (also on touch)
   const bus = t === "bus" ? busDraft.value : null;
   const busLine = bus && bus.line !== null && world.value ? linesByNum(world.value).get(bus.line) : undefined;
-  if (!show && !hint && !bus) return null;
+  // T-2194: the ferry tool's the same, counting ports
+  const ferry = t === "ferry" ? ferryDraft.value : null;
+  const ferryLine = ferry && ferry.line !== null && world.value ? linesByNum(world.value).get(ferry.line) : undefined;
+  if (!show && !hint && !bus && !ferry) return null;
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = t === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
   return (
@@ -99,6 +104,15 @@ function Notice() {
           <span class="bus-acts">
             <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
             <button class="btn text" data-tip="Enter" disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>{busLine ? "Save route" : "Make line"}</button>
+          </span>
+        </p>
+      )}
+      {ferry && (
+        <p class="stop-edit-head">
+          <span>{ferryLine ? `Route of ${ferryLine.name}` : "New ferry line"}: {plural(ferry.points, "port")}</span>
+          <span class="bus-acts">
+            <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
+            <button class="btn text" data-tip="Enter" disabled={ferry.points < 2} onClick={() => void live.tools?.ferry.finish()}>{ferryLine ? "Save route" : "Make line"}</button>
           </span>
         </p>
       )}

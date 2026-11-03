@@ -169,7 +169,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     .map((n) => {
       let v = stationViews.get(n);
       if (!v) stationViews.set(n, v = {
-        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.line ? { line: n.line } : {}),
+        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}),
       });
       return v;
     });
@@ -225,7 +225,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
   const nodes = new Map<number, TrackNode>(
-    s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}) }]),
+    s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}) }]),
   );
   return {
     version: s.version,

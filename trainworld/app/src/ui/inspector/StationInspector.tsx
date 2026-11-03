@@ -236,7 +236,7 @@ export function StationInspector({ id }: { id: string }) {
           complex's list goes back to it from here */}
       {!asComplex && (
         <div class="sub muted">
-          {`Level ${levelLabel(s.level)}`}
+          {s.port ? "Port" : `Level ${levelLabel(s.level)}`}
           {members.length > 1 && (
             <>
               {" · "}
@@ -248,9 +248,10 @@ export function StationInspector({ id }: { id: string }) {
         </div>
       )}
       {linking.value === id && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
-      {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>Construct station</button></Actions>}
-      <div class="h">Station upgrades</div>
-      <StationUpgrades s={s} members={asComplex ? members : undefined} />
+      {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{s.port ? "Construct port" : "Construct station"}</button></Actions>}
+      {/* T-2194: a port has no platform to upgrade */}
+      {!s.port && <div class="h">Station upgrades</div>}
+      {!s.port && <StationUpgrades s={s} members={asComplex ? members : undefined} />}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
@@ -258,7 +259,7 @@ export function StationInspector({ id }: { id: string }) {
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
-      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>Remove station</button></Actions>}
+      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{s.port ? "Remove port" : "Remove station"}</button></Actions>}
     </>
   );
 }
@@ -317,17 +318,19 @@ function StationDetails({ s, lines, props }: {
     <>
       <Built built={s.built} />
       <ul class="rows">
-        <li>
+        {!s.port && <li>
           <span class="grow">Platforms</span>
           <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => {
             const to = stepPlatform(s.length, d);
             if (to === s.length) return false;
             return props(to);
           }} />
-        </li>
+        </li>}
         {s.built && m && (
           <Row label="Upkeep">
-            <span class="money-neg" data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>
+            {s.port
+              ? <span class="money-neg" data-tip={`Port upkeep is ${money(m.upkeepPort * m.economy)} per day.`}>{money(m.upkeepPort * m.economy)}/day</span>
+              : <span class="money-neg" data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>}
           </Row>
         )}
       </ul>

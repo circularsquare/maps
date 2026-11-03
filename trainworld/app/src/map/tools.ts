@@ -56,6 +56,7 @@ import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapBeside, snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
+import { FerryDraw } from "./ferryDraw";
 import { playBuild } from "./buildSound";
 import { perfOff } from "../perfFlags";
 
@@ -164,6 +165,8 @@ export class Tools {
   readonly real: RealSnap;
   /** the bus line tool (T-1464) */
   readonly bus: BusDraw;
+  /** the ferry line tool (T-2194) */
+  readonly ferry: FerryDraw;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
   /** the newest request asked for; an older one's answer landing late is dropped (T-830) */
@@ -206,6 +209,8 @@ export class Tools {
     // T-1464: drawing a bus line (map/busDraw.ts); it uses this tag, and the touch bar below
     this.bus = new BusDraw(map, this.box, this.tag, client, overlay, { exit: () => this.exit() });
     effect(() => { if (tool.value !== "bus") this.bus.clear(); });
+    this.ferry = new FerryDraw(map, this.box, this.tag, overlay, { exit: () => this.exit() });
+    effect(() => { if (tool.value !== "ferry") this.ferry.clear(); });
     overlay.afterMapFrame.push(() => this.place());
     // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was (a run's segment stays)
     map.getContainer().addEventListener("mouseleave", () => {
@@ -333,7 +338,7 @@ export class Tools {
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], edgePx * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
-      if (node.bus) continue; // a bus stop is no track to build on (T-1464)
+      if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -454,6 +459,7 @@ export class Tools {
     if (t === "select") return;
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "bus") return this.bus.move(e);
+    if (t === "ferry") return this.ferry.move(e);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
     this.ghostSpent = false;
@@ -476,6 +482,7 @@ export class Tools {
     else if (t === "line") this.lineClick(e);
     else if (t === "delete") this.deleteClick(e);
     else if (t === "bus") this.bus.click(e);
+    else if (t === "ferry") this.ferry.click(e);
   }
 
   // ---------------------------------------------------------------- touch (T-1260)
@@ -487,6 +494,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "line") return this.click(e);
     if (t === "bus") return this.bus.tap(e);
+    if (t === "ferry") return this.ferry.tap(e);
     if (this.touchAt && this.nearTouch(e.point.x, e.point.y)) return void this.touchConfirm();
     const ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (t === "track") {
@@ -531,6 +539,7 @@ export class Tools {
   private async touchConfirm() {
     const t = tool.peek(), at = this.touchAt;
     if (t === "bus") return this.bus.confirm();
+    if (t === "ferry") return this.ferry.confirm();
     if (t === "track") {
       const from = this.start;
       if (!from || !at || this.placing) return;
@@ -562,6 +571,7 @@ export class Tools {
    * tool staying on (T-1703); else the last segment is taken back (Backspace), else the start goes. */
   private touchBack() {
     if (tool.peek() === "bus") return this.bus.touchBack();
+    if (tool.peek() === "ferry") return this.ferry.touchBack();
     if (tool.peek() !== "track") return this.touchStop();
     if (this.touchAt && this.start) {
       this.hover = null;
@@ -573,7 +583,7 @@ export class Tools {
   /** The bar's stop button: the run ends (its placed track stays) or the placement is dropped; the tool stays on. */
   private touchStop() {
     const t = tool.peek();
-    if (t === "bus") return this.exit();
+    if (t === "bus" || t === "ferry") return this.exit();
     if (t === "track") return this.reset();
     this.touchAt = null;
     this.hover = null;
@@ -617,6 +627,7 @@ export class Tools {
     if (!touchInput.peek()) return null;
     const t = tool.peek();
     if (t === "bus") return this.bus.touchState();
+    if (t === "ferry") return this.ferry.touchState();
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
       const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
@@ -638,7 +649,7 @@ export class Tools {
       touchCtl.value = ctl;
     }
     const host = this.touchHost, t = tool.peek();
-    const at = t === "bus" ? this.bus.touchPoint() : this.touchAt ?? (t === "track" && this.start ? this.start : null);
+    const at = t === "bus" ? this.bus.touchPoint() : t === "ferry" ? this.ferry.touchPoint() : this.touchAt ?? (t === "track" && this.start ? this.start : null);
     if (!ctl || !at) {
       host.style.display = "none";
       this.handle.style.display = "none";
@@ -677,6 +688,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "select") return false;
     if (t === "bus") return this.bus.key(e);
+    if (t === "ferry") return this.ferry.key(e);
     if (e.key === "Escape") {
       if (t === "track" && this.start) this.reset();
       else this.exit();
@@ -1650,6 +1662,11 @@ export class Tools {
     if (t === "bus") {
       this.ring.style.display = "none";
       this.bus.place();
+      return;
+    }
+    if (t === "ferry") {
+      this.ring.style.display = "none";
+      this.ferry.place();
       return;
     }
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor

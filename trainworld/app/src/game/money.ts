@@ -59,7 +59,7 @@ export function trainShortfall(id: LineId, trains: readonly number[]): { need: n
 export function carShortfall(id: LineId, more: number): { need: number; have: number } | null {
   const m = moneyState.peek(), st = world.peek()?.lineStats[id];
   if (!m || !st || st.status !== "running" || m.mode === "sandbox" || !(more > 0)) return null;
-  const [owned, needed, price] = st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
+  const [owned, needed, price] = st.bus?.ferry ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
     : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
   const need = Math.max(0, needed + more - owned) * price, have = liveMoney.peek().cash;
   return need > 1e-9 && need > have + 1e-6 ? { need, have } : null;
@@ -88,12 +88,12 @@ export interface Income {
 
 /** What the money, points and region figures read of `moneyState`: the same object while these are
  * the same, so a state or an hour's money that leaves them alone redoes no sums (T-1209). */
-export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm">;
+export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm" | "upkeepPort">;
 let termsKey = "", terms: MoneyTerms | null = null;
 export const moneyTerms = computed<MoneyTerms | null>(() => {
   const m = moneyState.value;
   if (!m) return (termsKey = "", terms = null);
-  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm };
+  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm, upkeepPort: m.upkeepPort };
   const key = JSON.stringify(t);
   if (key !== termsKey || !terms) { termsKey = key; terms = t; }
   return terms;

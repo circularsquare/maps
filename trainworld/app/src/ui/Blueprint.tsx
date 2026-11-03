@@ -23,7 +23,7 @@ const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
-const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "road crossing", "station upgrade", "passage", "route", "bus"];
+const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "road crossing", "station upgrade", "passage", "route", "bus", "port", "boat", "ferry route"];
 const levelWords = (r: BlueprintItem) => `${levelName(r.level).toLowerCase()} (${levelLabel(r.level)})`;
 
 /** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
@@ -31,6 +31,10 @@ function rowName(r: BlueprintItem) {
   if (r.kind === 5) return plural(r.quantity, "new car");
   if (r.kind === 10) return distance(r.quantity);
   if (r.kind === 11) return plural(r.quantity, "new bus", "new buses");
+  // T-2193: ports, boats and a ferry route's metres (free)
+  if (r.kind === 12) return plural(r.quantity, "port");
+  if (r.kind === 13) return plural(r.quantity, "new boat");
+  if (r.kind === 14) return `${distance(r.quantity)} ferry route`;
   if (r.kind === 9) return plural(r.quantity, "passage");
   if (r.kind === 7) return plural(r.quantity, "road crossing");
   if (r.kind === 0) return `${distance(r.quantity)} ${levelWords(r)}`;
@@ -96,6 +100,8 @@ function rowTip(r: BlueprintItem) {
   } else if (r.kind === 10) {
     base = `Base cost ${mil(perDistance(BUS_ROUTE_M_PER_KM))} per ${distUnit()}`;
     factors.push(["Length", `${num(n / 1000 / perDistance(1))} ${unitShort()}`, 1]);
+  } else if (r.kind === 14) {
+    base = "Ferry routes are free";
   } else {
     // cars, buses, upgrades and passages: the average price of one, times how many
     base = `Base cost ${money(r.cost / Math.max(1, n))} per ${NOUN[r.kind] || "item"}`;
@@ -116,8 +122,9 @@ export function BlueprintControls() {
   let upkeep = 0;
   if (w && m && total > 0) {
     for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
-    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += stationUpkeep(m);
-    for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built) upkeep += (st.bus.roadM / 1000) * m.upkeepBusKm * m.economy;
+    // T-2194: a port's upkeep is its own, a fifth of a station's
+    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += s.port ? m.upkeepPort * m.economy : stationUpkeep(m);
+    for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built && !st.bus.ferry) upkeep += (st.bus.roadM / 1000) * m.upkeepBusKm * m.economy;
   }
   return (
     <div class="blueprint-controls">
@@ -149,7 +156,7 @@ const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st
 function OffCost({ items }: { items: BlueprintItem[] }) {
   const w = world.value, off = offTotals.value;
   if (!w || !(off.edges + off.stations)) return null;
-  const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 ? 0 : r.cost), 0);
+  const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 || r.kind === 13 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
   return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyCash(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;

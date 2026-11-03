@@ -6,7 +6,7 @@ import { levelLabel } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { IDLE_TIP, isIdleLine } from "../game/lineRunning";
 import { PLANE_PATH } from "../map/glyphs";
-import { bulletEpoch, bulletRadius, bulletTextSoon, isBusLine } from "./bullet";
+import { bulletEpoch, bulletRadius, bulletShape, bulletTextSoon, isBusLine, isFerryLine } from "./bullet";
 import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import { knock } from "../game/world";
@@ -60,6 +60,8 @@ export const Icon = {
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
   bus: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>,
+  // T-2194: a boat on waves
+  ferry: () => <svg viewBox="0 0 16 16"><path d="M2.5 8.5h11l-1.8 3H4.3zM5 8.5V6h5.5l1 2.5M7 6V4" /><path d="M1.5 13.8c1.1-.7 2.1-.7 3.2 0s2.1.7 3.3 0 2.1-.7 3.2 0 2.1.7 3.3 0" /></svg>,
   bin: () => <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6.5 4.5V2.5h3v2M4 4.5l.8 9h6.4l.8-9M6.8 7v4M9.2 7v4" /></svg>,
   // the blueprint selection tool (a dashed box), and switching the selection off or on
   marquee: () => <svg viewBox="0 0 16 16"><path d="M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3M7 7l5 2-2 .8L9 12z" /></svg>,
@@ -125,8 +127,9 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
   };
   void bulletEpoch.value;
   const zoom = useCssZoom();
-  const b = bulletTextSoon(line.letter, size, zoom.value);
-  const bus = isBusLine(line.id);
+  const ferry = isFerryLine(line.id);
+  const b0 = bulletTextSoon(line.letter, size, zoom.value), b = b0 && bulletShape(b0, ferry);
+  const bus = isBusLine(line.id) && !ferry;
   const idle = isIdleLine(line.id);
   return (
     <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (bus ? " bus" : "") + (idle ? " idle" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}

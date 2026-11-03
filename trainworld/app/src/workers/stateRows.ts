@@ -220,12 +220,16 @@ export class StateRows {
       const platform = ni[i + 7];
       const stationBuilt = ni[i + 8] === 1, stationOff = offStations.has(id), upgrades = ups.get(id) ?? 0, flying = ni[i + 6] === 1;
       const name = platform > 0 ? this.name(a, id) : "";
-      const line = platform > 0 ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
+      // T-2194: a port has no track, so no platform line
+      const port = platform > 0 && a.is_port(id);
+      const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || r.platform !== platform
-        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !Object.is(r.heading, ni[i + 9]) || r.line !== line) {
+        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(line ? { line } : {}) };
+        const berth = port ? a.port_berth(id) : null;
+        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(line ? { line } : {}),
+          ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
       }
       seen.add(id);
@@ -254,7 +258,7 @@ export class StateRows {
       const id = li[i];
       seen.add(id);
       const ok = li[i + 2] === 1, running = li[i + 3] === 1;
-      const bus = a.is_bus(id);
+      const bus = a.is_bus(id) || a.is_ferry(id);
       const prev = kept.get(id);
       const fresh = all || bus || !prev || dirty.has(id) || prev.row.ok !== ok || prev.row.running !== running;
       if (fresh) refresh.add(id);

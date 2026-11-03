@@ -9,8 +9,8 @@ import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, displa
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
-import { BUS_KEY, levelKeyName, pickTool, TOOLS } from "./toolKeys";
-import { newBusLine } from "../game/lineActions";
+import { BUS_KEY, FERRY_KEY, levelKeyName, pickTool, TOOLS } from "./toolKeys";
+import { newBusLine, newFerryLine } from "../game/lineActions";
 import { live } from "../map/live";
 import { costBackground } from "../map/trackTagRows";
 
@@ -47,6 +47,13 @@ export function BuildTab() {
             <Icon.bus />
             <span class="tool-label">Bus</span>
             <span class="key muted">{BUS_KEY.toUpperCase()}</span>
+          </button>
+          {/* T-2194: the ferry tool beside it, placing ports */}
+          <button class={"btn text tool-ferry" + (t === "ferry" ? " on" : "")} data-tip={`Draw a ferry line (${FERRY_KEY.toUpperCase()})`}
+            onClick={() => (t === "ferry" ? live.tools?.exit() : newFerryLine())}>
+            <Icon.ferry />
+            <span class="tool-label">Ferry</span>
+            <span class="key muted">{FERRY_KEY.toUpperCase()}</span>
           </button>
         </div>
         <div class="h">Level</div>

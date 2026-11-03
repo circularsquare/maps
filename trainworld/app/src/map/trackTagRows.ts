@@ -2,7 +2,7 @@
 // placing tag write them the same way, an icon then the value on its display colour.
 
 import { levelLabel, moneyShort, plural, speed } from "../game/format";
-import { bulletNode, isBusLine } from "../ui/bullet";
+import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
@@ -134,7 +134,7 @@ export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
   c.className = (small ? "chip sm" : "chip") + (idleLines.peek().has(l.id) ? " idle" : "");
   c.style.setProperty("--c", l.colour);
   c.style.setProperty("--ct", inkOn(l.colour));
-  c.append(bulletNode(l.letter, small ? "sm" : "", isBusLine(l.id)));
+  c.append(bulletNode(l.letter, small ? "sm" : "", isBusLine(l.id), isFerryLine(l.id)));
   return c;
 }
 

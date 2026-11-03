@@ -16,6 +16,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   rerun tests, `land t2217` again, remove the tree. ARCHIVE line for T-2217 has a blank "landed" hash to fill.
 - a15d9b19d67e1affb **t2232** passing tracks panels, tree .tw-trees/t2232 (from 455bef52), Vite 6188.
 - T-2233 (map drawing) after t2194 leaves the renderer; T-2218 + T-2220 after T-2217 lands.
+- 14:50: master **a1d96f2f** = T-2205/T-2206 diagram spacing + hooks (agent t2205 done at 465k tokens, retired);
+  follow-ups T-2242 close pairs, T-2243 Shinjuku loop, T-2244 three hooks. a0318770f8f80a8ca **t2162** diagram names
+  (fresh agent, main tree, Vite 6194). 8800 still 837; rebuild after t2194 + T-2217 land.
+- 15:10: **T-2232 DONE in tree .tw-trees/t2232** (13/13 check, smoke 23/23 in tree; strings shown to Anita). It edits
+  protocol.ts and clock.worker.ts too, so it lands with T-2217 after t2194 is committed (rebase both). T-2245 filed
+  (local waits look long on its test line). Sub-row order fixed 15:20 (each delay row's places under it; check 14/14).
 
 ## State
 - master **5cd94db2** (T-2193 ferry sim landed), before it 6587f89d (T-2186 150% load, T-2180, T-2237 edit note as

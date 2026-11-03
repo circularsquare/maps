@@ -28,6 +28,8 @@ export interface Fares {
   basis?: "usd";
   /** T-1626: the fare multiplier on high-speed lines; absent for `HSR_FARE` */
   hsr?: number;
+  /** T-2194: the fare multiplier on ferry lines; absent for `FERRY_FARE` */
+  ferry?: number;
   /** T-1801: the transfer fare, paid on each boarding after a trip's first, in the curve's units
    * (times a country's scale where charged); absent for 0 */
   transfer?: number;
@@ -57,6 +59,15 @@ export function hsrFare(f: { hsr?: number } | undefined): number {
 /** A multiplier the player typed or stepped to: 0 to `HSR_FARE_MAX`, in hundredths. */
 export function tidyHsr(v: number): number {
   return Math.min(HSR_FARE_MAX, Math.max(0, Math.round(v * 100) / 100));
+}
+
+/** T-2194: a ferry line's fares are the curve's part above the base times this (notes/T-2177.md 3.7);
+ * demand and income take it with T-2195. */
+export const FERRY_FARE = 1;
+/** The ferry multiplier of `f`, or the default. */
+export function ferryFare(f: { ferry?: number } | undefined): number {
+  const v = f?.ferry;
+  return v !== undefined && Number.isFinite(v) && v >= 0 ? v : FERRY_FARE;
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */

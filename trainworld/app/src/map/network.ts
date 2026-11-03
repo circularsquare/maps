@@ -20,6 +20,9 @@ import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type St
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
 export const BUS_CAR = 0.6;
+/** T-2194: a ferry line's: below 0, a boat of this many train cars' 20 m (35 m, `ferry::BOAT_LEN_M`),
+ * drawn as one pointed hull. */
+export const BOAT_CAR = -1.75;
 
 /** Colour index of bare track (not a line). */
 export const TRACK = 0xffffff;
@@ -936,7 +939,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
-  for (const l of s.lines) lineCars[l.id] = l.bus ? BUS_CAR : Math.max(1, l.cars);
+  for (const l of s.lines) lineCars[l.id] = l.bus?.ferry ? BOAT_CAR : l.bus ? BUS_CAR : Math.max(1, l.cars);
   const lineParts: LineEntry[] = [];
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();
@@ -1328,7 +1331,7 @@ function rightOf(n: NetworkBuffers, line: number, d: number, y: number, dx: numb
 /** A close-up car's centre and bogies, matching the GPU's terminal clamp and 20 m pitch. */
 export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof tripAt>>, car: number) {
   const raw = n.lineCars?.[at.line] ?? 8, cars = Math.max(1, raw);
-  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 1 ? raw * 20 : 20), len);
+  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), len);
   const d = at.run === 0 ? at.s : len - at.s;
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;
