@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2203 [P3] Big stations. Dropped 2026-11-03 (Anita: a bigger station would overlap the parallel stations players build, since stations don't collide); replaced by T-2208's drawn station buildings.
 - T-2159 [P3] Network diagram stage 1, the graph. Done 2026-11-03 (agent t2159): `diagram/graph.ts` in the clock worker while the diagram is shown; New York 855 complexes, 940 edges, 34 ms; the 2 and 3 on the 1's edges 96 St to Times Sq. notes/T-2146.md.
 
 - T-2202 [P3] The status tag under the day and night picture. Done 2026-11-03 (agent t2179): on a map under 520 px the recomputing and busy tags sit under the picture at the top right (the tutorial card moves down for them); wider maps unchanged. Shots artifacts/trainworld/t2202/.

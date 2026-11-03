@@ -39,7 +39,7 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
   { name: "Reversing partway", short: "trains reversing", title: "Reversing", prep: "at", ways: "", cause: "Trains reverse here partway along their line, at most 12 an hour on each side of a station or at a track end, or 30 at a station with a terminal.", help: "Build a terminal at the station, route the line through without reversing, or split it into two lines that end here." },
   { name: "Terminal sidings", short: "terminal sidings", title: "Terminal sidings", prep: "at", ways: "", cause: "Each train turning here stands in one of two sidings past the platform for its turnaround and a minute more.", help: "Turn some trains at another station, or end the line at a dead end with more platform tracks." },
 ];
-CAPACITY_KINDS[12] = { name: "Merge", short: "merge", title: "Merge", prep: "near", ways: "", cause: "Trains of several lines join one track here and wait for a gap on it.", help: "Give some of the lines their own track past the merge, or run fewer trains." };
+CAPACITY_KINDS[12] = { name: "Merge", short: "merge", title: "Merge", prep: "near", ways: "", cause: "Trains of several lines join one track here and wait for a gap on it.", help: "Place the merge farther away from other merges, junctions and stations, or run fewer trains." };
 
 const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
 
