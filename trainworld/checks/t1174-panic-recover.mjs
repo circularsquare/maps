@@ -45,7 +45,7 @@ try {
   const more = line.trains.map((n) => n + 2);
   const edit = (trains) => page.evaluate(([id, trains]) => window.tw.client.edit({ op: 'setTrainCount', line: id, trains }).then((r) => r.ok), [line.id, trains]);
   const settle = (after) => page.waitForFunction((after) => {
-    const d = window.twDemand, s = d.log.at(-1), v = d.view();
+    const d = window.twDemand, s = d.log.findLast((x) => !d.client.fversions?.has(x.version)), v = d.view();
     return String(d.client.status).startsWith('failed') || (!!v && s && v.version === s.version && v.final && !d.client.waiting && v.version > after);
   }, after, { timeout: 300000, polling: 250 });
   let last = first;

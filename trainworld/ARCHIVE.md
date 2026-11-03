@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2105 [P3] `demandFinal` waited for ever on the real save. Done 2026-11-03 (agent t2105): the focus pool's solve is logged after the whole solve with a higher version (log `1 2 3F`, view v2) at every worker count; checks now take the newest log entry not in `client.fversions` (lib.mjs and six checks that copy the pattern); 3 runs each of 1, 2 and default workers pass; no app change. T-2045.
 - T-1880 [P2] Do buses act as feeders? Done 2026-11-03 (measurement): yes, narrowly; of six real-save buses none at 8 minutes, Throgs Neck at 12 minutes loses $19k/day itself and adds $98k/day to the network; rail gains at most ~$170k. checks/t1880-bus-feeders.mjs, notes/T-1880.md.
 - T-2059 [P2] Lines side by side: cost and two misclicks. Done 2026-11-03 (agent t2059): band build on the real save after a path edit ~650 -> ~260 ms, profiles the same to the bit; the Jersey City merge placed as at its node, t1799-bands 58/58. notes/T-2058.md 3c.
 - T-2060 [P3] Lines side by side: Tamachi's drift. Done 2026-11-03 (agent t2059): a 370 m loop track shorter than its S-curve; such a node change now curves on the side with more lines, band within 1 m of its track (was 16 m); kinks 183/17/0 and 6/0/0. notes/T-2058.md 3c.

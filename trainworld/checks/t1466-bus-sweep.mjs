@@ -89,7 +89,7 @@ const corridor = (page, route, store) => page.evaluate(async ({ route, store }) 
 }, { route, store });
 
 const finalWith =(page, line, afterVersion, tmo = 420000) => page.waitForFunction(({ line, afterVersion }) => {
-  const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
+  const d = window.twDemand, s = d?.log?.findLast((x) => !d.client.fversions?.has(x.version)), v = d?.view?.();
   if (!v || !s || v.version !== s.version || v.version === 0 || !v.final || d.client.waiting || v.version <= afterVersion) return false;
   if (line === null) return true;
   const l = v.lines.get(String(line));

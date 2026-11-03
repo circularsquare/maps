@@ -153,7 +153,7 @@ async function run(BASE) {
     if (process.env.NOSOLVE !== '1') {
       while (Date.now() < deadline) {
         const s = await page.evaluate(() => {
-          const d = window.twDemand, l = d?.log?.at(-1), v = d?.view?.();
+          const d = window.twDemand, l = d?.log?.findLast((x) => !d.client.fversions?.has(x.version)), v = d?.view?.();
           return { t: Math.round(performance.now()), final: !!(l && v && v.version === l.version && v.final && !d.client.waiting), round: v?.round ?? null,
             workers: (d.start?.workers ?? []).map((w) => Math.round((w.memBytes ?? 0) / 1048576)), opened: [...(d.client.opened ?? [])].length,
             solveMem: (l?.memBytes ?? []).map((b) => Math.round(b / 1048576)), heap: Math.round((performance.memory?.usedJSHeapSize ?? 0) / 1048576) };

@@ -28,7 +28,7 @@ async function checkZone(ctx, base, city) {
     const line = await acrossLine(page, city.center);
     if (line === null) return { ok: false, step: 'build', detail: 'no line built' };
     await page.waitForFunction(() => {
-      const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
+      const d = window.twDemand, s = d?.log?.findLast((x) => !d.client.fversions?.has(x.version)), v = d?.view?.();
       if (String(d.client.status).startsWith('failed')) return true;
       return s && v && v.version === s.version && v.final && !d.client.waiting && v.lines.size > 0;
     }, undefined, { timeout: 240000, polling: 250 });
@@ -90,7 +90,7 @@ async function checkBroken(ctx, base, kind, bad, good) {
     const line = await acrossLine(page, good.center);
     if (line === null) return { ok: false, step: 'build', detail: 'no line built' };
     await page.waitForFunction(() => {
-      const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
+      const d = window.twDemand, s = d?.log?.findLast((x) => !d.client.fversions?.has(x.version)), v = d?.view?.();
       return String(d.client.status).startsWith('failed') || (s && v && v.version === s.version && v.final && !d.client.waiting && v.lines.size > 0);
     }, undefined, { timeout: 240000, polling: 250 });
     let s = await state();

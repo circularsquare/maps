@@ -11,7 +11,8 @@
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
 // bubbles in the bare new game and on the real save (T-994); a click on a station
-// and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor).
+// and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor), and the others in the list
+// below; t2022-loan-schedule runs with --experimental-strip-types (it imports app .ts).
 import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -30,9 +31,9 @@ const report = (name, ok, detail = '') => {
 const t0 = Date.now();
 const secs = () => ((Date.now() - t0) / 1000).toFixed(0) + ' s';
 
-function runNode(file) {
+function runNode(file, flags = []) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [join(HERE, file)], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [...flags, join(HERE, file)], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
@@ -132,7 +133,7 @@ async function browserChecks(BASE) {
         if ((await acrossLine(far, at)) === null) throw new Error(`no line built in ${name}`);
         const want = got.length + 1;
         await far.waitForFunction((want) => {
-          const d = window.twDemand, s = d.log.at(-1), v = d.view();
+          const d = window.twDemand, s = d.log.findLast((x) => !d.client.fversions?.has(x.version)), v = d.view();
           return String(d.client.status).startsWith('failed') || (s && v && v.version === s.version && v.final && v.lines.size === want);
         }, want, { timeout: 90000, polling: 250 });
         const v = await far.evaluate(() => { const d = window.twDemand, v = d.view(); return { status: String(d.client.status), riders: [...v.lines.values()].map((l) => Math.round(l.ridersPerDay)) }; });
@@ -260,9 +261,10 @@ try {
   // T-1213: Chrome profiles an older check left in the temp folder (23.9 GB once filled the disk)
   const stale = await staleTempProfiles();
   if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
-  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs']) {
-    const r = await runNode(f);
-    report(f.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
+  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types']]) {
+    const [file, ...flags] = [f].flat();
+    const r = await runNode(file, flags);
+    report(file.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
   }
   if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));
   const base = given ?? vite.url;

@@ -111,11 +111,14 @@ export const importSave = (page, bytes) => page.evaluate((data) => { const b = U
  * Wait for a demand final. Strict: the newest solve's final, none waiting, never a cached result's
  * (version 0: shown before the network arrives, it can be the only entry, T-1539). `strict: false` takes the
  * view as it is; `after` wants a version above it; `held` also waits for the clock to start;
- * `lines` wants more lines than that.
+ * `lines` wants more lines than that. "The newest solve" leaves out the focus pool's solves (T-2105, T-2045):
+ * during a game load each is logged with `rough` set and a version above the whole solve's when it is
+ * sent after it, and the view never takes its version, so the log's last entry stays one the view never reaches.
+ * A check that reads the log the same way takes `d.log.findLast((x) => !d.client.fversions?.has(x.version))`.
  */
 export const demandFinal = (page, { timeout = 300000, polling = 500, strict = true, after = null, held = false, lines = null } = {}) =>
   page.waitForFunction(({ strict, after, held, lines }) => {
-    const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
+    const d = window.twDemand, s = d?.log?.findLast((x) => !d.client.fversions?.has(x.version)), v = d?.view?.();
     return !!v && (!strict || (s && v.version === s.version && v.version !== 0)) && v.final && !d.client.waiting
       && (after === null || v.version > after) && (!held || !window.tw.clock.held.peek()) && (lines === null || v.lines.size > lines);
   }, { strict, after, held, lines }, { timeout, polling });

@@ -56,7 +56,7 @@ try {
   await importSave(page, await readFile(SAVE));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 180000 });
   const final = (after) => page.waitForFunction((after) => {
-    const d = window.twDemand, s = d.log.at(-1), v = d.view();
+    const d = window.twDemand, s = d.log.findLast((x) => !d.client.fversions?.has(x.version)), v = d.view();
     return String(d.client.status).startsWith('failed') || (!!v && s && v.version === s.version && v.final && !d.client.waiting && v.version > after);
   }, after, { timeout: 1800000, polling: 1000 });
   const state = async (where) => {
