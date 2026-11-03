@@ -8,8 +8,14 @@ to adopt. Their SubagentHandback still lands in maps-b2's session, so if a repor
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 73d722a2. **8800 = build 821 (8212d530)** on freeze 20261103-051954; LIVE also 821 (R2 `trainworld/2026-11-03b`,
-  website dc49c5f). Since 821: 78e80f51 (band 1 px gap), 73d722a2 (achievement design note). Smoke has 23 checks.
+- master a273050d (10:05): 5faa828f = T-2124, T-2125, T-2143-45, T-2123, T-2142, T-2132/33, T-2122, T-2146 design (smoke
+  23/23 on my Vite 6175 first); a273050d = T-2104 landed from its tree (removed). T-2147's `crush2/crush15` measurement
+  hunks went in with 5faa828f (demandClient packService, perfFlags): T-2147's report says whether they stay.
+  **8800 rebuild to a273050d running** (my scratchpad snapbuild-frozen.cmd, freeze 20261103-051954, log snapbuild.log);
+  then smoke light + dark on 8800. LIVE still 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Smoke has 23 checks.
+- **India run 3 process 25240 ended ~10:02, no STOP file**, 221 rows planned in all. Its agent (maps-b2's
+  a57accbdda9f839db, can't be messaged from here) waits on that PID and should restart or report; check by ~10:45
+  (`world_run.py status`, the log artifacts/trainworld/t2111-run3.log, cores.py for a new t2111 claim).
 - Worktrees: .tw-trees/t1734 only (kept on purpose, T-1734).
 - Uncommitted in the main tree (other agents' work in progress, commit with their reports): the census-rebuild agent's
   and India agent's files (pipeline/admin_totals.py, enrich_parks.py, india.py, realms.py, world_plan.py/.json,
@@ -74,10 +80,10 @@ real save's flat crossings that are really grade-separated); T-2054, T-2095, T-2
 crossing (WASM, own tree); T-2146 network diagram (design); T-2152 Lines tab overlap; T-2106/T-2107 more census zones.
 
 ## Open questions to Anita (asked, unanswered)
-- India's 188 names (notes/T-2111.md) and NZ's 5 names + 2 realms, Cambodia's 3 renames: acknowledge.
-- T-2147 capacity proposal and T-2104 fare split results: hers when they report.
-- Achievement strings: hers when T-2124 reports.
-- Late-game expensive things: not filed; asked if she wants it.
+- T-2147 capacity proposal: hers when it reports. T-2104 fare split numbers shown 11-03; landed (a273050d).
+- Answered ~10:15 11-03: all text so far acknowledged (T-2123, T-2125, T-2142, T-2143-45, T-2124 achievements, T-2146
+  diagram strings, T-2158); feedback note moves too (T-2166); zone/region names need no review (trainworld/CLAUDE.md);
+  late-game expensive things filed as a brainstorm (T-2167); diagram design to round 2 (her words in TASKS T-2146).
 - Test on 8800: Settings "Lines side by side"; muted lines; crossing waits at Broadway-Lafayette (zoom 14+).
 - maps/CLAUDE.md "Keep the work moving" bullet: uncommitted root file, hers to commit.
 - Answered today: publish 821 (done); Israel lower prio than Turkey, Mexico, Brazil; default start New York; flatter
@@ -137,11 +143,15 @@ so their hunks need no untangling; T-2147's `crush2/crush15` hunks (demandClient
 measurement code, ask its report whether they stay. Patch of shared files: my scratchpad t2122-shared.patch.
 maps-b2's subagent ids can't be messaged from here ("no transcript"); their reports come through maps-b2.
 
-## Queued (maps-0f)
+- a2fc803621d80181c (Opus) **T-2154-58 + T-2166** UI batch (Vite 6176, scratchpad t2154, ids T-2170/71).
+- af9f1ee67c248dbfc (Opus) **T-2153** keep the last two cities built in fine (Vite 6177, scratchpad t2153, id T-2172).
+- a7e46912ec3685dba **T-2146 round 2** resumed with Anita's notes (ids T-2168/69).
+
+## Queued (maps-0f), older
 - Her third 11-03 batch (notes/todo-2026-11-03c.md): T-2153 to T-2158, filed 09:32, lines uncommitted in TASKS.md.
   Start one UI agent for T-2154-T-2158 once the T-2123/T-2142/T-2125 commit is in and the UI agents above have
   reported (they hold BuildTab, style.css and the like); T-2153 after T-2122 reports (same memory code).
 - cores.py at 09:32: 13 claimed of cap 10 (a full cap grants 1 each); no new core-using work until it drops.
 
-Next free task id: T-2166 (T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
+Next free task id: T-2173 (T-2168/69 t2146 round 2, T-2170/71 t2154, T-2172 t2153; T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
 T-2066..2069, T-2072, T-2073, T-2085, T-2121 handed out but unused).

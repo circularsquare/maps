@@ -123,7 +123,9 @@ Briefs carry only the task; these hold for every agent.
   her approval (2026-10-29): check the style rules, land, and make sure she sees the strings; she
   answers "text acknowledged" or names the lines to change (any she doesn't mention are fine).
   Agents propose wording; never ask her to write it from scratch. A string no one has listed has
-  not been reviewed. Watch hardest for an object or colour as the
+  not been reviewed. **Zone, region and realm names are the exception** (Anita, 2026-11-03: "lets not require my
+  confirmation for region name text, i dont know much about specific places"): agents decide them and list
+  none for her. Watch hardest for an object or colour as the
   subject ("grey fills", "red when"), telegraphic phrases with words dropped ("from street zooms"),
   and hovers that describe what the player can already see.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write

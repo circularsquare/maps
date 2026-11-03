@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2064 [P2] The real save's 340 flat crossings. Done 2026-11-03 (agent t2064): T-007-real-nyc.save predated `EdgeData.sep` (0 of 1,647 edges), none of the 340 real; every edge marked by `notes/T-2064-mark-sep.mjs`. Round trips 2.5% shorter, rail trips 11,297,375 to about 11,590,441. Japan saves: T-2165. notes/T-2064.md.
 - T-2124 [P2] Achievements, stages 1-2. Done 2026-11-03 (agent t2124b): four tiered and ten firsts (27 steps), a medal on the Cities tab opening the view, toasts at the map's bottom left, kept in the save; real NYC save 7, Tokyo 11; Sea crossing is T-2150. `checks/t2124-achievements.mjs`, notes/T-2124.md.
 
 - T-2104 [P3] A trip's base fare between lines. Done 2026-11-03 (agent t2104): half by boardings, half by passenger-km, at most one base a boarding; network fares unchanged to the cent. Subway lines lose base, commuter and high-speed lines gain; feeders show their own loss. notes/T-2104.md.
