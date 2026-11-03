@@ -665,6 +665,12 @@ impl PairRule {
             _ => Alt { drive: car_m, rest: 1., air: 0., car: car_m },
         }
     }
+    /// The share of the trips not by rail from place `p` to `q` that fly, over `p`'s income groups
+    /// by their trips (T-1431).
+    fn flown(&self, p: &Place, q: &Place, mp: &Params) -> f32 {
+        let (split, w) = (self.split_car(p, q), p.w());
+        p.groups().iter().map(|&(t, f)| t * self.alt(split, split, w * f, mp).air).sum()
+    }
     /// The reference mode's perceived minutes between the two places for a rider of average income
     /// from the first (the car's centre to centre, or with no car the plane's).
     fn refm(&self, p: &Place, q: &Place) -> f32 {
@@ -698,7 +704,21 @@ fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, 
 /// fly, over i's income groups by their trips (T-1431).
 #[inline]
 #[allow(clippy::too_many_arguments)]
-fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &Drives, i: usize, j: usize, near: bool, km: f64, mut r: PairRule) -> PairRule {
+fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &Drives, i: usize, j: usize, near: bool, km: f64, r: PairRule) -> PairRule {
+    let (p, q) = (&places[i], &places[j]);
+    // (the airports' direct places are sorted)
+    let direct = |x: usize, y: usize| p.air[x].1.binary_search(&(j as u32)).is_ok() || q.air[y].1.binary_search(&(i as u32)).is_ok();
+    let mut r = pair_ways(places, countries, drives, i, j, near, km, r, direct);
+    r.air = r.flown(p, q, mp);
+    r
+}
+/// `pair_mode_rule` but the share that flies: the car, the flight, the crossings, the routed drive
+/// and the car's running cost, each the same both ways to the bit (T-1849), so a corridor works
+/// them out once for its two ways. `direct(x, y)`: whether i's airport x and j's airport y have a
+/// direct flight between them.
+#[inline]
+#[allow(clippy::too_many_arguments)]
+fn pair_ways(places: &[Place], countries: &[String], drives: &Drives, i: usize, j: usize, near: bool, km: f64, mut r: PairRule, direct: impl Fn(usize, usize) -> bool) -> PairRule {
     let (p, q) = (&places[i], &places[j]);
     // T-378: a car within a landmass; a plane between far places each with an airport;
     // both by place, the same whoever builds what (very far pairs coarse, T-362)
@@ -707,10 +727,9 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &
     // the same for every pair, so the least minutes)
     r.fl = Cost::NONE;
     if i != j && !near {
-        for (x, xd) in &p.air {
-            for (y, yd) in &q.air {
-                let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
-                let c = air_cost(km, x + y, direct);
+        for (kx, (x, _)) in p.air.iter().enumerate() {
+            for (ky, (y, _)) in q.air.iter().enumerate() {
+                let c = air_cost(km, x + y, direct(kx, ky));
                 if c.min < r.fl.min {
                     r.fl = c;
                 }
@@ -721,8 +740,6 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &
     r.cross = if r.car && i != j { crossing_cost((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
     (r.rt, r.rk) = (d.rt, d.rk);
     r.cu = 0.5 * (p.car_usd() + q.car_usd());
-    let (split, w) = (r.split_car(p, q), p.w());
-    r.air = p.groups().iter().map(|&(t, f)| t * r.alt(split, split, w * f, mp).air).sum();
     r
 }
 struct Zone {
@@ -844,6 +861,8 @@ struct Corridors {
     daily: f64,
     leaving: f64,
     place_pairs: usize,
+    /// T-1849: how many corridors have trips or commutes (`IntercityApi::table_rows`), once counted
+    rows: std::cell::OnceCell<usize>,
 }
 
 /// A longer trips' zone pair, both ways apart: the modes but rail come from its place pair's rule
@@ -1448,6 +1467,49 @@ const AIR_USD_PER_KM: f64 = 0.05;
 /// T-1430: the wait for a flight, whose frequency is not modelled: rail's planned first wait
 /// (`kernel::planned_board_cost`) at a flight every 2 hours.
 const AIR_WAIT_MIN: f64 = 25.;
+/// An airport's direct places sorted, so a pair's flight finds its place by halves (`pair_mode_rule`;
+/// the rows and packs write them sorted already).
+fn sorted(mut v: Vec<u32>) -> Vec<u32> {
+    v.sort_unstable();
+    v
+}
+/// T-1849: every place's airports' direct places as bits, for a pass over millions of pairs
+/// (`corridor_rows_modes`), where searching the lists was most of the time; about 2.5 MB for the
+/// world's 4,500 places, made for the pass and dropped.
+struct Directs {
+    words: usize,
+    /// per place its first airport's row, then the rows' count
+    first: Vec<u32>,
+    bits: Vec<u64>,
+}
+impl Directs {
+    fn of(places: &[Place]) -> Directs {
+        let (np, words) = (places.len(), places.len().div_ceil(64));
+        let mut first = Vec::with_capacity(np + 1);
+        let mut n = 0u32;
+        for p in places {
+            first.push(n);
+            n += p.air.len() as u32;
+        }
+        first.push(n);
+        let mut bits = vec![0u64; n as usize * words];
+        for (i, p) in places.iter().enumerate() {
+            for (k, (_, d)) in p.air.iter().enumerate() {
+                let row = &mut bits[(first[i] as usize + k) * words..][..words];
+                // (a place past the market's never matches a pair's)
+                for &j in d.iter().filter(|&&j| (j as usize) < np) {
+                    row[j as usize / 64] |= 1 << (j % 64);
+                }
+            }
+        }
+        Directs { words, first, bits }
+    }
+    /// Whether place `i`'s airport `k` flies directly to place `j`.
+    #[inline]
+    fn has(&self, i: usize, k: usize, j: usize) -> bool {
+        self.bits[(self.first[i] as usize + k) * self.words + j / 64] >> (j % 64) & 1 != 0
+    }
+}
 /// A flight over `km` with `access` minutes of driving at the two ends: its minutes and its fare.
 fn air_cost(km: f64, access: f64, direct: bool) -> Cost {
     let min = access + AIR_TERMINAL_MIN + AIR_WAIT_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN };
@@ -1493,28 +1555,27 @@ impl Place {
 impl Market {
     /// T-378: corridor (a, b)'s shares of its longer trips not by rail that fly and that drive
     /// (`IntercityApi::corridor_modes`). A pair of open places from the table; the others' modes
-    /// alone worked out (T-1204). T-1277: a plane's fare weighs the departing country's, so the two
-    /// ways can differ; the split is their mean.
-    fn corridor_mode(&self, a: usize, b: usize) -> [f32; 2] {
-        let way = |a: usize, b: usize| -> (bool, f32) {
-            if self.rules.slot[a] != u32::MAX && self.rules.slot[b] != u32::MAX {
-                let r = self.pr(a, b);
-                (r.car, r.air)
+    /// alone worked out (T-1204), what the two ways share once (`pair_ways`, T-1849), the direct
+    /// flights from `directs`. T-1277: a plane's fare weighs the departing country's, so the two ways
+    /// can differ; the split is their mean.
+    fn corridor_mode(&self, directs: &Directs, a: usize, b: usize) -> [f32; 2] {
+        let (car, x, y) = if self.rules.slot[a] != u32::MAX && self.rules.slot[b] != u32::MAX {
+            let r = self.pr(a, b);
+            (r.car, r.air, self.pr(b, a).air)
+        } else {
+            let (p, q) = (&self.places[a], &self.places[b]);
+            let km = if a == b {
+                0.
+            } else if self.ground {
+                chord_km(&p.u, &q.u)
             } else {
-                let (p, q) = (&self.places[a], &self.places[b]);
-                let km = if a == b {
-                    0.
-                } else if self.ground {
-                    chord_km(&p.u, &q.u)
-                } else {
-                    ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
-                };
-                let near = km < self.rule.near_km;
-                let r = pair_mode_rule(&self.places, &self.countries, &self.mp, &self.drives, a, b, near, km, PairRule { near, km, ..PairRule::default() });
-                (r.car, r.air)
-            }
+                ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
+            };
+            let near = km < self.rule.near_km;
+            let direct = |x: usize, y: usize| directs.has(a, x, b) || directs.has(b, y, a);
+            let r = pair_ways(&self.places, &self.countries, &self.drives, a, b, near, km, PairRule { near, km, ..PairRule::default() }, direct);
+            (r.car, r.flown(p, q, &self.mp), r.flown(q, p, &self.mp))
         };
-        let ((car, x), (_, y)) = (way(a, b), way(b, a));
         let air = 0.5 * (x + y);
         [air, if car { 1. - air } else { 0. }]
     }
@@ -1818,7 +1879,7 @@ impl Market {
         let leaving_by: Vec<f64> = (0..np).map(|p| if self.places[p].has { (self.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
         at.shrink_to_fit();
         ct.shrink_to_fit();
-        Corridors { id: next_corridors_id(), daily: ct.iter().fold(0., |s, &t| s + t), leaving: leaving_by.iter().sum(), trips_at: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs }
+        Corridors { id: next_corridors_id(), daily: ct.iter().fold(0., |s, &t| s + t), leaving: leaving_by.iter().sum(), trips_at: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs, rows: Default::default() }
     }
     /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
     fn place_spans(&self) -> Vec<(usize, usize, usize)> {
@@ -2166,7 +2227,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
                 .map(|(k, a)| {
                     let u = unit(a[0], a[1]);
                     let s: f64 = zs.iter().map(|z| z.pop * drive_min(chord_km(&z.u, &u) as f32) as f64).sum();
-                    (if w > 0. { s / w } else { drive_min(0.) as f64 }, zin.air_direct.get(k).cloned().unwrap_or_default())
+                    (if w > 0. { s / w } else { drive_min(0.) as f64 }, sorted(zin.air_direct.get(k).cloned().unwrap_or_default()))
                 })
                 .collect()
         };
@@ -2231,7 +2292,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
                 pl.pop = r.pop;
                 pl.dep = r.dep;
                 pl.zone = r.zone.clone();
-                pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).cloned().collect();
+                pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).map(|a| (a.0, sorted(a.1.clone()))).collect();
                 pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
                 pl.fw = if r.fw.is_finite() && r.fw > 0. { r.fw } else { 0. };
                 pl.cu = if r.cu.is_finite() && r.cu > 0. { r.cu } else { 0. };
@@ -2337,7 +2398,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         e_home: (vec![], vec![]),
         e_act: (vec![], vec![]),
         e_base: vec![],
-        cw: Rc::new(Corridors { id: 0, trips_at: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0 }),
+        cw: Rc::new(Corridors { id: 0, trips_at: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0, rows: Default::default() }),
     };
     for (c, z) in m.zones.iter().enumerate() {
         m.comp_of_gid[z.gid as usize] = c as u32;
@@ -4791,8 +4852,9 @@ impl IntercityApi {
     pub fn corridor_modes(&self) -> Vec<f32> {
         let m = &self.m;
         let mut out = Vec::with_capacity(2 * m.n_corridors());
+        let directs = Directs::of(&m.places);
         for (a, b) in m.each_corridor() {
-            out.extend(m.corridor_mode(a, b));
+            out.extend(m.corridor_mode(&directs, a, b));
         }
         out
     }
@@ -4801,17 +4863,17 @@ impl IntercityApi {
     /// The four whole-world arrays they replace (`corridor_pairs` and the like) are a few hundred
     /// MB once the world has thousands of places, nearly all of it pairs with neither.
     pub fn corridor_rows(&self) -> Vec<u32> {
-        let mut out = Vec::with_capacity(self.table_rows().count());
+        let mut out = Vec::with_capacity(self.n_rows());
         out.extend(self.table_rows().map(|(i, ..)| i as u32));
         out
     }
     pub fn corridor_rows_pairs(&self) -> Vec<u32> {
-        let mut out = Vec::with_capacity(2 * self.table_rows().count());
+        let mut out = Vec::with_capacity(2 * self.n_rows());
         out.extend(self.table_rows().flat_map(|(_, a, b, _)| [a as u32, b as u32]));
         out
     }
     pub fn corridor_rows_trips(&self) -> Vec<f64> {
-        let mut out = Vec::with_capacity(self.table_rows().count());
+        let mut out = Vec::with_capacity(self.n_rows());
         out.extend(self.table_rows().map(|(.., t)| t));
         out
     }
@@ -4822,7 +4884,7 @@ impl IntercityApi {
             return vec![];
         }
         let mut k = 0;
-        let mut out = Vec::with_capacity(self.table_rows().count());
+        let mut out = Vec::with_capacity(self.n_rows());
         out.extend(self.table_rows().map(|(i, ..)| {
             while k < cw.commute.len() && (cw.commute[k].0 as usize) < i {
                 k += 1;
@@ -4834,8 +4896,9 @@ impl IntercityApi {
     /// As `corridor_modes` on the rows.
     pub fn corridor_rows_modes(&self) -> Vec<f32> {
         let m = &self.m;
-        let mut out = Vec::with_capacity(2 * self.table_rows().count());
-        out.extend(self.table_rows().flat_map(|(_, a, b, _)| m.corridor_mode(a, b)));
+        let mut out = Vec::with_capacity(2 * self.n_rows());
+        let directs = Directs::of(&m.places);
+        out.extend(self.table_rows().flat_map(|(_, a, b, _)| m.corridor_mode(&directs, a, b)));
         out
     }
     /// T-378: per place, its longer trips in period `q` with places that have no zone, each way.
@@ -4951,25 +5014,34 @@ impl IntercityApi {
     }
 }
 impl IntercityApi {
+    /// How many `table_rows` there are (each column is sized to them exactly, T-2122).
+    fn n_rows(&self) -> usize {
+        *self.m.cw.rows.get_or_init(|| self.table_rows().count())
+    }
     /// T-2122: the corridors `corridor_trips` or `commute_base` gives more than 0, as (corridor, its
-    /// two places, its trips), in corridor order (`trips` and `commute` are sorted by corridor).
+    /// two places, its trips), in corridor order: `trips_at` and `commute` merged (each sorted by
+    /// corridor), not every corridor of the world walked (T-1849).
     fn table_rows(&self) -> impl Iterator<Item = (usize, usize, usize, f64)> + '_ {
         let cw = &*self.m.cw;
-        let with_c = cw.commuters > 0.;
-        let (mut k, mut kt) = (0, 0);
-        self.m.each_corridor().enumerate().filter_map(move |(i, (a, b))| {
-            while kt < cw.trips_at.len() && (cw.trips_at[kt] as usize) < i {
-                kt += 1;
+        let np = self.m.places.len();
+        let commute: &[(u32, f64)] = if cw.commuters > 0. { &cw.commute } else { &[] };
+        // (a: the first place of the corridor last given)
+        let (mut kt, mut kc, mut a) = (0, 0, 0);
+        std::iter::from_fn(move || loop {
+            let ti = cw.trips_at.get(kt).map_or(usize::MAX, |&i| i as usize);
+            let ci = commute.get(kc).map_or(usize::MAX, |e| e.0 as usize);
+            let i = ti.min(ci);
+            if i == usize::MAX {
+                return None;
             }
-            let t = if kt < cw.trips_at.len() && cw.trips_at[kt] as usize == i { cw.trips[kt] } else { 0. };
-            let mut c = false;
-            if with_c {
-                while k < cw.commute.len() && (cw.commute[k].0 as usize) < i {
-                    k += 1;
+            let t = if ti == i { kt += 1; cw.trips[kt - 1] } else { 0. };
+            let c = ci == i && { kc += 1; commute[kc - 1].1 > 0. };
+            if t > 0. || c {
+                while a + 1 < np && tri(np, a + 1, a + 1) <= i {
+                    a += 1;
                 }
-                c = k < cw.commute.len() && cw.commute[k].0 as usize == i && cw.commute[k].1 > 0.;
+                return Some((i, a, a + i - tri(np, a, a), t));
             }
-            (t > 0. || c).then_some((i, a, b, t))
         })
     }
     fn selection(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32, with_rail: bool) -> Vec<f64> {

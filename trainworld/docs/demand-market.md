@@ -31,7 +31,11 @@ place pair's longer trips and commutes a day, kept for the pairs with any, the d
 `MarketPacks` for every later one, since with the world's rows they are the same whichever packs
 are open; the market's parts and compositions share them (`corridors_id`), so the worker makes the
 corridor table once. The table holds only the corridors with longer trips or commutes (`corridor_rows*`,
-3.9M of the world's 12.7M place pairs in 2026-11, about 120 MB), its split by plane and car included;
+3.9M of the world's 12.7M place pairs in 2026-11, about 120 MB, read off the corridors' sorted lists), its
+split by plane and car included, worked out for those rows alone: what a pair's two ways share (the car,
+the flight, the crossings, the routed drive) once, each way's share that flies over its own income groups
+(T-1849; the pass looks the airports' direct flights up in a bit table made for it, 2.5 MB, where
+searching each airport's list was most of its time);
 the worker keeps their corridor numbers alone and sends the columns to the main thread, making them
 again if it asks (T-2122: the whole-world arrays it was made from, the kept copy and the dense trips
 were 0.5-0.6 GB in each solving worker). The bubbles' split for the zone in view's place comes from its rows; a pair

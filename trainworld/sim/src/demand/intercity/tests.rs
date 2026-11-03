@@ -926,6 +926,29 @@ fn far_line(a: &mut IntercityApi, hours: f32) {
     a.set_network_ll(&[0., 50., 11., 50.], &[2], &[0, 1], &times, &[6., 6., 6.], &[8.]).unwrap();
     a.set_fares(2., 0.15, &[900., 0., 0., 900.]).unwrap();
 }
+/// T-1849: a corridor's modes worked out once for its two ways (`pair_ways`, the direct flights from
+/// `Directs`) are each way's whole pair rule's, to the bit, with places open and not, direct
+/// flights and none, and an island.
+#[test]
+fn corridor_modes_are_each_ways_pair_rule() {
+    let mut nod = air_packs(false);
+    nod[3] = with_air(&world_packs()[3], &[(0., 49.05)], &[0, 2], None);
+    for packs in [air_packs(false), air_packs(true), nod] {
+        let rows = rows_json(&packs);
+        let none: &[String] = &[];
+        for open in [&packs[..], &packs[1..2], &packs[..1], none] {
+            let a = IntercityApi::new(&composition(open, Some(&rows))).unwrap();
+            let modes = a.corridor_modes();
+            let mut flies = 0;
+            for (i, (x, y)) in a.m.each_corridor().enumerate() {
+                let want = corridor_mode_two_ways(&a.m, x, y);
+                assert_eq!([modes[2 * i].to_bits(), modes[2 * i + 1].to_bits()], [want[0].to_bits(), want[1].to_bits()], "places {x} {y}");
+                flies += (want[0] > 0.) as usize;
+            }
+            assert!(flies > 0);
+        }
+    }
+}
 #[test]
 fn the_car_pays_the_channel_and_the_tsugaru_ferry() {
     let (lon, par, man) = (("GB", 51.5), ("FR", 48.9), ("GB", 53.5));
@@ -2510,4 +2533,110 @@ fn sparse_corridors_are_the_dense_table() {
         assert_eq!(sparse.get(i).to_bits(), x.to_bits(), "corridor {i}");
     }
     assert_eq!(sparse.get(2), 0.);
+}
+
+/// Corridor (a, b)'s modes as `Market::corridor_mode` gave them before T-1849, each way's whole pair
+/// rule worked out on its own with the airports' direct places searched in a line: the reference
+/// `t1849_rows` checks against.
+fn corridor_mode_two_ways(m: &Market, a: usize, b: usize) -> [f32; 2] {
+    let way = |i: usize, j: usize| -> (bool, f32) {
+        if m.rules.slot[i] != u32::MAX && m.rules.slot[j] != u32::MAX {
+            let r = m.pr(i, j);
+            return (r.car, r.air);
+        }
+        let (p, q) = (&m.places[i], &m.places[j]);
+        let km = if i == j { 0. } else if m.ground { chord_km(&p.u, &q.u) } else { ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64 };
+        let near = km < m.rule.near_km;
+        let mut r = PairRule { near, km, ..PairRule::default() };
+        r.car = p.road == q.road;
+        r.fl = Cost::NONE;
+        if i != j && !near {
+            for (x, xd) in &p.air {
+                for (y, yd) in &q.air {
+                    let c = air_cost(km, x + y, xd.contains(&(j as u32)) || yd.contains(&(i as u32)));
+                    if c.min < r.fl.min {
+                        r.fl = c;
+                    }
+                }
+            }
+        }
+        let d = if r.car { m.drives.get(i, j) } else { Drive::RULE };
+        r.cross = if r.car && i != j { crossing_cost((&m.countries[p.country as usize], p.lat), (&m.countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
+        (r.rt, r.rk) = (d.rt, d.rk);
+        r.cu = 0.5 * (p.car_usd() + q.car_usd());
+        let (split, w) = (r.split_car(p, q), p.w());
+        (r.car, p.groups().iter().map(|&(t, f)| t * r.alt(split, split, w * f, &m.mp).air).sum())
+    };
+    let ((car, x), (_, y)) = (way(a, b), way(b, a));
+    let air = 0.5 * (x + y);
+    [air, if car { 1. - air } else { 0. }]
+}
+/// T-1849: the corridor table's columns on the world composition with `TW_T1849_IDS`'s packs
+/// (default Jakarta) and the routed drives: each `corridor_rows*` function's time, and every column
+/// against the whole-world arrays and each way's whole pair rule, to the bit.
+/// `cargo test --release --features demand t1849_rows -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1849_rows() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let ids = std::env::var("TW_T1849_IDS").unwrap_or("jak".into());
+    let ids: Vec<&str> = ids.split(',').filter(|s| !s.is_empty()).collect();
+    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
+    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/market-rows.json")).unwrap()).unwrap();
+    let m = &reg["market"];
+    let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| by_id.get(c["id"].as_str()?).cloned()).collect();
+    let world = serde_json::json!({"frame": m["frame"], "rule": m["rule"], "places": m["places"].as_array().unwrap().len(), "rows": rows}).to_string();
+    let mut h = MarketPacks::new(&world).unwrap();
+    let drives = h.set_drives(&std::fs::read(format!("{root}/data/packs/market-drives.bin")).unwrap()).unwrap();
+    for id in &ids {
+        h.add(&std::fs::read_to_string(format!("{root}/data/packs/{id}.market.json")).unwrap()).unwrap();
+    }
+    let t = now_ms();
+    let a = h.market().unwrap();
+    eprintln!("places {}, drives {drives}, composition {:.0} ms", a.m.places.len(), now_ms() - t);
+    // (the best of three: the machine is shared)
+    let time = |name: &str, f: &dyn Fn() -> usize| {
+        let (mut best, mut n) = (f64::MAX, 0);
+        for _ in 0..3 {
+            let t = now_ms();
+            n = f();
+            best = best.min(now_ms() - t);
+        }
+        eprintln!("{name}: {best:.0} ms ({n})");
+    };
+    time("corridor_rows", &|| a.corridor_rows().len());
+    time("corridor_rows_pairs", &|| a.corridor_rows_pairs().len());
+    time("corridor_rows_trips", &|| a.corridor_rows_trips().len());
+    time("corridor_rows_commutes", &|| a.corridor_rows_commutes().len());
+    time("corridor_rows_modes", &|| a.corridor_rows_modes().len());
+    let rp = a.corridor_rows_pairs();
+    time("the modes as before T-1849", &|| rp.chunks_exact(2).map(|c| corridor_mode_two_ways(&a.m, c[0] as usize, c[1] as usize)).filter(|m| m[0] > 0.).count());
+    let (rows, rp, rt, rc, rm) = (a.corridor_rows(), a.corridor_rows_pairs(), a.corridor_rows_trips(), a.corridor_rows_commutes(), a.corridor_rows_modes());
+    let (trips, base) = (a.corridor_trips(), a.commute_base());
+    let want: Vec<u32> = (0..trips.len()).filter(|&i| trips[i] > 0. || base.get(i).is_some_and(|&b| b > 0.)).map(|i| i as u32).collect();
+    assert_eq!(rows, want);
+    assert_eq!(rc.is_empty(), base.is_empty());
+    let np = a.m.places.len();
+    let t = now_ms();
+    let mut j = 0;
+    for x in 0..np {
+        for y in x..np {
+            let i = tri(np, x, y);
+            if j < rows.len() && rows[j] as usize == i {
+                assert_eq!([rp[2 * j], rp[2 * j + 1]], [x as u32, y as u32]);
+                assert_eq!(rt[j].to_bits(), trips[i].to_bits());
+                if !base.is_empty() {
+                    assert_eq!(rc[j].to_bits(), base[i].to_bits());
+                }
+                let r = corridor_mode_two_ways(&a.m, x, y);
+                assert_eq!([rm[2 * j].to_bits(), rm[2 * j + 1].to_bits()], [r[0].to_bits(), r[1].to_bits()], "places {x} {y}");
+                j += 1;
+            }
+        }
+    }
+    assert_eq!(j, rows.len());
+    eprintln!("rows {} checked to the bit; the reference's modes {:.0} ms", rows.len(), now_ms() - t);
+    let open = a.m.rules.open.len();
+    let nd: usize = a.m.places.iter().map(|p| p.air.iter().map(|x| x.1.len()).sum::<usize>()).sum();
+    eprintln!("open places {open}; airports' direct places {:.0} a place", nd as f64 / np as f64);
 }
