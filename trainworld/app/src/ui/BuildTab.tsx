@@ -26,8 +26,10 @@ export function BuildTab() {
   const lv = buildLevel.value;
   const hsrF = trackType.value === "hsr" ? HSR_COST : 1;
   const mult = MULT[lv] * hsrF;
+  // T-2009: quad is two double tracks side by side, so its price and upkeep are two doubles'
+  const pairs = trackType.value === 4 ? 2 : 1;
   const m = moneyState.value;
-  const upkeepTip = (l: Level) => (m ? "\n" + levelUpkeepLine(edgeUpkeep({ built: true, tracks: 2, hsr: hsrF !== 1, lengthM: 1000, levelMin: l, levelMax: l }, m)) : "");
+  const upkeepTip = (l: Level) => (m ? "\n" + levelUpkeepLine(pairs * edgeUpkeep({ built: true, tracks: 2, hsr: hsrF !== 1, lengthM: 1000, levelMin: l, levelMax: l }, m)) : "");
   return (
     <>
       <div class="build-options">
@@ -53,14 +55,14 @@ export function BuildTab() {
         </div>
         {/* T-1394: the Terrain switch beside the price it changes; T-1802: the ramp switch left of it */}
         <div class="build-track-row price-row">
-          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}${upkeepTip(lv)}`}>
-            ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
+          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF !== 1 ? ", high-speed track" : pairs > 1 ? ", quad track" : ""}${upkeepTip(lv)}`}>
+            ${Math.round(perDistance(BASE_M_PER_KM * mult * pairs) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
           </p>
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
             data-tip="Automatically try to ramp over crossed tracks at the same elevation."
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
-            data-tip="Steep ground costs more to build on."
+            data-tip="Show terrain. Steep terrain costs more to build on."
             onClick={() => setDisplay("hillshade", !display.peek().hillshade)}><Icon.terrain /></button>
         </div>
         <div class="h">Track</div>

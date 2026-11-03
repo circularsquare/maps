@@ -115,9 +115,9 @@ export function onNetworkSnapshot(f: (s: NetworkSnapshot) => void) {
   if (networkSnapshot.peek()) f(networkSnapshot.peek()!);
 }
 
-let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array, fine: string[] | null) => void) | null = null;
+let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array, fine: string[] | null, built: string[][] | null) => void) | null = null;
 /** T-889: call `f` with a loading save's built stations, before its first snapshot. */
-export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array, fine: string[] | null) => void) {
+export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array, fine: string[] | null, built: string[][] | null) => void) {
   stationsAheadSink = f;
 }
 const roadsListeners: (() => void)[] = [];
@@ -482,7 +482,7 @@ export class ClockClient {
     this.cityId = cityId;
     setEditSink((op, early) => this.edit(op, early));
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
-    setDemandFineSink((zones) => this.post({ kind: "demandFine", zones }));
+    setDemandFineSink((zones, built) => this.post({ kind: "demandFine", zones, built }));
     setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
@@ -852,7 +852,7 @@ export class ClockClient {
         takeHandOrder(msg.lines, msg.stations);
         break;
       case "stationsAhead":
-        stationsAheadSink?.(msg.frame, msg.xy, msg.fine);
+        stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built);
         break;
       case "netAhead":
         netAheadSink?.(msg.key);

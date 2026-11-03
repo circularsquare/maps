@@ -2,6 +2,15 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2153 [P2] The last two cities built in stay fine. Done 2026-11-03 (agent t2153): the last two builds' zones are spared however old, the latest last over the budget, and kept in the save (`demandBuilt`); `checks/t2005-recent-builds.mjs` plays sessions against T-2005's rule.
+- T-2166 [P3] The feedback's "sent" note at the upper left. Done 2026-11-03 (agent t2154): under the edit note in its plain look, 5 s (`PassingNote` in `MapTopLeft`). Shots artifacts/trainworld/t2154/.
+- T-2158 [P3] Terrain toggle hover. Done 2026-11-03 (agent t2154): "Show terrain. Steep terrain costs more to build on." on the Build tab's switch and Settings' Terrain row.
+- T-2157 [P3] Key hints faded. Done 2026-11-03 (agent t2154): key letters on buttons and bracketed keys in hovers at 0.7 opacity; the Help panel's keys stay full.
+- T-2009 [P3] Quad's price and upkeep in the Build tab. Done 2026-11-03 (agent t2154, with T-2154): with Quad picked, the price per km and both upkeep hovers are two double tracks'; the multiplier stays the elevation's.
+- T-2156 [P3] No tangent on a straight first segment. Closed 2026-11-03 (agent t2154): already done as T-2008 (11-02, in 8800's build); checked again, none on a first segment from open ground, one on the next.
+- T-2155 [P2] Track hover load and one-row facts. Closed 2026-11-03 (agent t2154): already done as T-2007 (11-02): bullet then name, "Average load 12%" in Traffic, elevation and speed on one row; checked again.
+- T-2154 [P2] Each level's upkeep on its hover. Closed 2026-11-03 (agent t2154): already there as T-2006 (11-02, "Upkeep $25k per km per day" on each elevation button and the price line); Quad's figures fixed as T-2009.
+
 - T-2064 [P2] The real save's 340 flat crossings. Done 2026-11-03 (agent t2064): T-007-real-nyc.save predated `EdgeData.sep` (0 of 1,647 edges), none of the 340 real; every edge marked by `notes/T-2064-mark-sep.mjs`. Round trips 2.5% shorter, rail trips 11,297,375 to about 11,590,441. Japan saves: T-2165. notes/T-2064.md.
 - T-2124 [P2] Achievements, stages 1-2. Done 2026-11-03 (agent t2124b): four tiered and ten firsts (27 steps), a medal on the Cities tab opening the view, toasts at the map's bottom left, kept in the save; real NYC save 7, Tokyo 11; Sea crossing is T-2150. `checks/t2124-achievements.mjs`, notes/T-2124.md.
 

@@ -25,18 +25,19 @@ export function addOpened(ids: Iterable<CityId>) {
   sink?.([...next]);
 }
 
-let fineSink: ((zones: CityId[]) => void) | null = null;
+let fineSink: ((zones: CityId[], built: CityId[][]) => void) | null = null;
 let lastFine = "";
-/** T-1223: where demand's fine set goes (the clock worker, for the save's `demandFine`). */
-export function setDemandFineSink(f: (zones: CityId[]) => void) {
+/** T-1223: where demand's fine set goes (the clock worker, for the save's `demandFine`), with the
+ * last two builds' zones (T-2153, `demandBuilt`). */
+export function setDemandFineSink(f: (zones: CityId[], built: CityId[][]) => void) {
   fineSink = f;
 }
-/** T-1223: demand's fine set, sent when it changed. */
-export function reportDemandFine(zones: CityId[]) {
-  const key = zones.join(",");
+/** T-1223: demand's fine set and last two builds, sent when they changed. */
+export function reportDemandFine(zones: CityId[], built: CityId[][]) {
+  const key = `${zones.join(",")}|${built.map((b) => b.join(",")).join(";")}`;
   if (key === lastFine) return;
   lastFine = key;
-  fineSink?.(zones);
+  fineSink?.(zones, built);
 }
 
 /** The list of the game just loaded or started; null for a save from before T-729, which starts with

@@ -111,7 +111,7 @@ export function SettingsTab() {
           Real world network
         </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
-          <span data-tip="Steep ground costs more to build on.">Terrain</span>
+          <span data-tip="Show terrain. Steep terrain costs more to build on.">Terrain</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>

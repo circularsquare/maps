@@ -78,7 +78,6 @@ import { MapSky, TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startTroubleList } from "./ui/TroubleList";
-import { startPassingNote } from "./ui/PassingNote";
 import { mountGuide } from "./ui/Guide";
 import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
@@ -154,7 +153,6 @@ const skyRoot = document.createElement("div");
 map.getContainer().appendChild(skyRoot);
 render(h(MapSky, null), skyRoot); // T-1868: the day and night picture at the map's top right
 startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
-startPassingNote(map.getContainer()); // T-1709: the feedback's "sent" at the top centre
 mountGuide(map.getContainer()); // T-1822: the Getting started card under the day and night picture
 mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();
@@ -573,8 +571,8 @@ render(h(ToolNotes, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
-onStationsAhead((frame, xy, fine) => {
-  stationsAhead(frame, xy, fine);
+onStationsAhead((frame, xy, fine, built) => {
+  stationsAhead(frame, xy, fine, built);
   // T-1539: the camera on the loading save's network now, so its cached figures can show before it is worked out
   if (perfOff("cacheAhead")) return;
   if (client.fitPending) fitAhead(frame, xy);

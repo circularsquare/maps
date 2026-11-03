@@ -614,8 +614,8 @@ those who got on, less the load carried on.
     a Saturday's and Sunday's high hours at the medium level) and the upkeep a day. A line's own profit
     is its fares, its trains' running cost and its share of upkeep, as the Lines tab's Money.
   Hidden with the rest of the interface (F2). Not saved.
-- **Passing note** [T-1709; `ui/PassingNote.tsx`]: a line of words in a small box at the map's top
-  centre, under the Select tool's bar, for 5 s (the sent feedback's).
+- **Passing note** [T-1709, T-2166; `ui/PassingNote.tsx`]: a line of words at the map's upper left,
+  under the edit note and in its look (plain text with a halo, no box), for 5 s (the sent feedback's).
 - **Capacity dots** [T-184, T-224, T-256, T-1772; `map/capacityMarkers.ts`; what they mean and
   how they look in [track-and-service.md](track-and-service.md) 6.2]: a 16 px dot centred on its
   resource's point, a 1.5 px ring in the casing colour (white, near-black in the dark theme). Dots

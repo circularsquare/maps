@@ -22,7 +22,7 @@ const STRIP = /^\u0004([^\u0005]*)\u0005$/;
 export const tipStrip = (colours: string[]) => `\u0004${colours.join(";")}\u0005`;
 
 /** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
- * "Keep placing (Caps Lock)", is lettered in the theme's accent. */
+ * "Keep placing (Caps Lock)", is lettered in the theme's accent, the brackets and all faded as a hint (T-2157). */
 const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
 /** T-1851: a negative amount of money in a hover ("−$1.2M", the minus `money()` writes) is red, as in the panels. */
 const NEG_MONEY = /(−\$[\d.,]+[KMBT]?)/;
@@ -41,10 +41,12 @@ function appendWithKeys(d: HTMLElement, text: string) {
   const parts = text.split(KEY_HINT);
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 0) { appendText(d, parts[i]); continue; }
-    const k = document.createElement("span");
+    const hint = document.createElement("span"), k = document.createElement("span");
+    hint.className = "tip-hint";
     k.className = "tip-key";
     k.textContent = parts[i];
-    d.append("(", k, ")");
+    hint.append("(", k, ")");
+    d.append(hint);
   }
 }
 

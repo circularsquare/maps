@@ -26,7 +26,7 @@
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
 import { effect } from "@preact/signals";
-import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
 import { display, selection, shownDay, tool } from "../game/ui";
@@ -782,9 +782,9 @@ class DemandClient {
    * `ensure` opens them once the network arrives. They count as prefetched, so no solve covers one
    * the network turns out not to reach; a market it does not want is closed (`settleAhead`).
    */
-  stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null) {
+  stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null, built: string[][] | null = null) {
     // T-1223: a game loading: its fine set is made afresh, from the save's list if it has one
-    this.lodReset(fine);
+    this.lodReset(fine, built);
     if (this.status.startsWith("failed") || perfOff("openAhead") || xy.length < 2) return;
     this.endFocus(); // (a game picked while another loaded)
     this.startFocus();
@@ -1030,7 +1030,8 @@ class DemandClient {
   private touched = new Map<CityId, number>();
   private madeFine = new Map<CityId, number>();
   private edited = new Map<CityId, number>();
-  /** T-2005: wall ms each zone last had a station placed or a stop added (never pruned) */
+  /** T-2005: wall ms each zone last had a station placed or a stop added (never pruned); a loaded
+   * save's last two builds (`demandBuilt`) start at 2 and 1, before any build of this session */
   private built = new Map<CityId, number>();
   private viewAt: { id: CityId | null; at: number } = { id: null, at: 0 };
   private lodTimer = 0;
@@ -1079,8 +1080,9 @@ class DemandClient {
     return r ? [...this.withoutBroken(new Set(r))] : null;
   }
 
-  /** A game is loading: its fine set is made afresh once its reach is known (`saved`: its save's list). */
-  private lodReset(saved: string[] | null) {
+  /** A game is loading: its fine set is made afresh once its reach is known (`saved`: its save's list;
+   * `built`: its save's last two builds, latest first). */
+  private lodReset(saved: string[] | null, built: string[][] | null = null) {
     this.lodZones = null;
     this.savedFine = saved;
     this.fine = new Set();
@@ -1088,6 +1090,7 @@ class DemandClient {
     this.madeFine.clear();
     this.edited.clear();
     this.built.clear();
+    (built ?? []).slice(0, 2).forEach((ids, i) => { for (const id of ids) if (isCity(id) && !this.built.has(id as CityId)) this.built.set(id as CityId, 2 - i); });
   }
 
   /** A game's first fine set (`firstFine`), from the save's list or the budget. */
@@ -1117,14 +1120,14 @@ class DemandClient {
     // a zone reached since the last check counts as just made fine (it opened fine)
     const fresh = zones.filter((id) => !this.lodZones!.has(id));
     for (const id of fresh) { this.fine.add(id); this.touched.set(id, now); this.madeFine.set(id, now); }
-    const keep = builtKeep(this.built, now, new Set(zones));
+    const keep = builtKeep(this.built, new Set(zones));
     const next = planFine({ zones, held, near: nearbyZones.peek(), fine: this.fine, touched: this.touched, madeFine: this.madeFine, now, budget: lodBudgetGB(), keep });
     for (const id of next) if (!this.fine.has(id)) this.madeFine.set(id, now);
     for (const id of [...this.edited.keys()]) if (now - this.edited.get(id)! >= EDIT_KEEP_MS) this.edited.delete(id);
     for (const id of [...this.touched.keys()]) if (!next.has(id) && now - this.touched.get(id)! >= LEFT_ALONE_MS) this.touched.delete(id);
     this.fine = next;
     this.lodZones = new Set(zones);
-    reportDemandFine(zones.filter((id) => next.has(id)));
+    reportDemandFine(zones.filter((id) => next.has(id)), keep);
     this.lodApply();
   }
 
@@ -4069,8 +4072,8 @@ export function startDemand(city = HOME_CITY, newGame = false) {
 }
 
 /** T-889: a loading save's built stations (clockClient's onStationsAhead). */
-export function stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null) {
-  if (!TEST) client?.stationsAhead(frame, xy, fine);
+export function stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null, built: string[][] | null = null) {
+  if (!TEST) client?.stationsAhead(frame, xy, fine, built);
 }
 
 /** T-1539: a loading save's network key (clockClient's onNetAhead). */

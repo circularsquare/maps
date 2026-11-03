@@ -96,7 +96,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   Money tab's ledger and fare rows put each name on its own line with the figures or stepper under
   it. The width handle is gone
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
-  (landscape) screen. Every key hint is in the theme's accent (the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835, T-1852].
+  (landscape) screen. Every key hint is in the theme's accent (the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835, T-1852]; on buttons and in hovers it is at 0.7 opacity, brackets and all, as a hint (the Help panel's list stays full) [T-2157].
   On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
   `ui/tip.ts`]. The Select tool's selection bar leaves the top of the map for its bottom edge
@@ -518,7 +518,7 @@ out, delete; [Account and leaderboards](#account-and-leaderboards)), and Submit 
 ("Email (optional)") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
-Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's top centre, "sent! thank you for feedback" (in a small box, 5 s; `showPassingNote` in `ui/PassingNote.tsx`) [T-1709]; a failure says why (no server for this copy,
+Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's upper left under the edit note, "sent! thank you for feedback" (plain text as the edit note's, 5 s; `showPassingNote` in `ui/PassingNote.tsx`) [T-1709, T-2166]; a failure says why (no server for this copy,
 not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
 sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].

@@ -266,8 +266,9 @@ let switching = false;
 let mode: GameMode = "normal";
 let startZone: string | undefined;
 let opened: string[] | undefined = [];
-/** T-1223: the zones demand holds fine, from the page */
+/** T-1223: the zones demand holds fine, from the page; T-2153 the last two builds' zones */
 let demandFine: string[] | undefined;
+let demandBuilt: string[][] | undefined;
 function setMode(m: GameMode) {
   mode = m;
   api!.set_unlimited(m === "sandbox");
@@ -1936,7 +1937,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2295,7 +2296,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // T-889: the demand pool opens the zones the built stations reach while the network is worked out
   const st = TrackApi.save_stations(net);
   demandFine = h.demandFine;
-  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null });
+  demandBuilt = h.demandBuilt;
+  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null, built: demandBuilt ?? null });
   // T-1539: the demand result kept for this save's network can show while the network is worked out
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
@@ -2334,8 +2336,8 @@ function startClock(spec?: NewGameSpec): number {
 }
 
 /** A new game's mode, start and opened zones (T-728). */
-function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened" | "demandFine"> {
-  return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [], demandFine: undefined };
+function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened" | "demandFine" | "demandBuilt"> {
+  return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [], demandFine: undefined, demandBuilt: undefined };
 }
 function sendOpened() {
   send({ kind: "opened", zones: opened ? [...opened] : null, start: startZone });
@@ -2346,6 +2348,7 @@ function setNewGame(spec?: NewGameSpec) {
   startZone = g.start;
   opened = g.opened;
   demandFine = undefined;
+  demandBuilt = undefined;
   guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0, ...(g.start ? {} : { zoom: true as const }) } : undefined;
   fares = startFares(spec);
 }
@@ -3496,6 +3499,7 @@ async function handle(msg: ToClock) {
     dirty = true;
   } else if (msg.kind === "demandFine") {
     demandFine = [...msg.zones];
+    demandBuilt = msg.built.map((b) => [...b]);
     dirty = true;
   } else if (msg.kind === "listOrder") {
     api.set_list_order(msg.list, new Uint32Array(msg.ids));

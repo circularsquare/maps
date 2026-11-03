@@ -15,7 +15,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   [T-1514]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
   (hover "Ground level (Shift+4)" and so on, with a second line "Upkeep $20k per km per day", that
-  elevation's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006]: Shift+1 to Shift+7 pick the drawing
+  elevation's upkeep for one km of the picked track type (both pairs on Quad), `edgeUpkeep` [T-2006, T-2009]: Shift+1 to Shift+7 pick the drawing
   elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
@@ -23,12 +23,14 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   hover "Ramp over track you cross at the same elevation, or under it from -1 down. Where the ramps
   don't fit, the crossing is flat."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
   6.1 "Ramping over track"], then the **Terrain** switch (a mountain;
-  hover "Show terrain. Track costs more on slopes, hills and mountains."), the same switch as
+  hover "Show terrain. Steep terrain costs more to build on.", as Settings' Terrain row [T-2158]), the same switch as
   Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394], both left aligned after the price [T-1802]. The price is the picked elevation's price per km and multiplier, "$99M per
-  km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
+  km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground; with Quad
+  picked, both pairs': the price and the upkeep lines are two double tracks', the multiplier stays
+  the elevation's [T-2009]), the
   multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
   it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
-  [T-1159] and gives the same upkeep line as the elevation buttons [T-2006]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
+  [T-1159] (with ", high-speed track" or ", quad track" after it) [T-2009] and gives the same upkeep line as the elevation buttons [T-2006]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
   the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
   6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High

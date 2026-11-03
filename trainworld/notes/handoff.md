@@ -1,7 +1,7 @@
 ﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session 76ebbfee-75f0-49e0-be85-230cb2ef8d79, name maps-0f, since 2026-11-03 09:32
-Updated: 2026-11-03 ~10:30 (local time, -0500; maps-b2's "~15:00" stamps below were not local time). maps-b2 handed
+Updated: 2026-11-03 10:15 (local time, -0500; maps-b2's "~15:00" stamps below were not local time). maps-b2 handed
 back 09:35: every running agent below was told to send its final report to maps-0f too (SendMessage); they are maps-0f's
 to adopt. Their SubagentHandback still lands in maps-b2's session, so if a report seems missing, ask the agent by id.
 
@@ -11,11 +11,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master a273050d (10:05): 5faa828f = T-2124, T-2125, T-2143-45, T-2123, T-2142, T-2132/33, T-2122, T-2146 design (smoke
   23/23 on my Vite 6175 first); a273050d = T-2104 landed from its tree (removed). T-2147's `crush2/crush15` measurement
   hunks went in with 5faa828f (demandClient packService, perfFlags): T-2147's report says whether they stay.
-  **8800 rebuild to a273050d running** (my scratchpad snapbuild-frozen.cmd, freeze 20261103-051954, log snapbuild.log);
-  then smoke light + dark on 8800. LIVE still 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Smoke has 23 checks.
-- **India run 3 process 25240 ended ~10:02, no STOP file**, 221 rows planned in all. Its agent (maps-b2's
-  a57accbdda9f839db, can't be messaged from here) waits on that PID and should restart or report; check by ~10:45
-  (`world_run.py status`, the log artifacts/trainworld/t2111-run3.log, cores.py for a new t2111 claim).
+  a53f0cd8 (10:15) = T-2064, T-007-real-nyc.save all `sep` (smoke's real save now 11,590,441 rail trips).
+  **8800 = build 825 (a273050d)** on freeze 20261103-051954 (my scratchpad snapbuild-frozen.cmd <hash> <freeze>), smoke
+  light 22/23 (t2005 failed on T-2153's mid-edit main-tree demandLod.ts; passes from .tw-snap) and dark 23/23.
+  LIVE still 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on her word.
+- India: run 3 (25240) ended 10:02; its agent restarted as run 4 ~10:07 (cores t2111 pid 25628 "relax rerun", log
+  artifacts/trainworld/t2111-run4.log, plus t2111fine terrain fetch pid 11216).
 - Worktrees: .tw-trees/t1734 only (kept on purpose, T-1734).
 - Uncommitted in the main tree (other agents' work in progress, commit with their reports): the census-rebuild agent's
   and India agent's files (pipeline/admin_totals.py, enrich_parks.py, india.py, realms.py, world_plan.py/.json,
@@ -144,7 +145,10 @@ measurement code, ask its report whether they stay. Patch of shared files: my sc
 maps-b2's subagent ids can't be messaged from here ("no transcript"); their reports come through maps-b2.
 
 - a2fc803621d80181c (Opus) **T-2154-58 + T-2166** UI batch (Vite 6176, scratchpad t2154, ids T-2170/71).
-- af9f1ee67c248dbfc (Opus) **T-2153** keep the last two cities built in fine (Vite 6177, scratchpad t2153, id T-2172).
+- **T-2153 DONE** ~10:35, uncommitted (demandLod, demandClient, openedZones, clockClient, protocol, clock.worker,
+  saveFile, main.ts onStationsAhead 2 lines, checks/t2005, docs demand-runtime + code-map, DECISIONS, ARCHIVE): new
+  save header field `demandBuilt`. Commit with the UI batch (shared main.ts, DECISIONS, ARCHIVE). Not India's files:
+  pipeline/tier0.py, world_plan.json, registry.json, market-rows.json, notes/T-2111.md.
 - a7e46912ec3685dba **T-2146 round 2** resumed with Anita's notes (ids T-2168/69).
 
 ## Queued (maps-0f), older

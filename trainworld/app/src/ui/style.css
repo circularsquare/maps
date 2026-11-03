@@ -16,6 +16,8 @@
 :root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; --good: #7cc576; }
 /* T-1835, T-1852: every hotkey hint (key letters on buttons, bracketed keys in hovers, the Help panel's keys) is in the theme's accent */
 .key, .key.muted, .tip-key, .help-panel dt { color: var(--accent); }
+/* T-2157: a hint, not a figure: the keys on buttons and in hovers (brackets and all) at 0.7; the Help panel's list keeps full ink */
+.key, .tip-hint { opacity: 0.7; }
 /* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
 :root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
 :root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }
@@ -1421,14 +1423,8 @@ button.save-add:hover { color: var(--text); }
 .trouble { position: absolute; right: 10px; bottom: 34px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
-/* T-1709: a passing note (the feedback's "sent"), under the Select tool's bar at the map's top centre */
-.rides-notes { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); z-index: 4; zoom: var(--ui, 1);
-  display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: calc(100% - 520px); pointer-events: none; }
-.choosing .rides-notes { visibility: hidden; }
-.rides-note { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; box-sizing: border-box; pointer-events: auto;
-  background: var(--bg); border: 1px solid var(--rule); font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* T-2125: what the last edit did, under the view rows at the upper left: text on the map with a halo,
-   no box, each figure after a green up or red down arrow */
+   no box, each figure after a green up or red down arrow; the passing note (the feedback's "sent", T-2166) in the same look */
 .edit-note { display: flex; flex-direction: column; gap: 2px; padding: 2px 0; font-size: 12px; color: var(--text);
   font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 2px var(--bg), 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 4px var(--bg); }
 .edit-row { display: flex; align-items: center; gap: 4px; width: fit-content; }
@@ -1510,7 +1506,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

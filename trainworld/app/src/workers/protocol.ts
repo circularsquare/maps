@@ -236,8 +236,8 @@ export type ToClock =
   | { kind: "sandbox" }
   /** T-729: the zones this game has opened, the whole list in order (game/openedZones.ts) */
   | { kind: "opened"; zones: string[] }
-  /** T-1223: the zones demand holds fine, for the save's header */
-  | { kind: "demandFine"; zones: string[] }
+  /** T-1223: the zones demand holds fine, and T-2153 the last two builds' zones, for the save's header */
+  | { kind: "demandFine"; zones: string[]; built: string[][] }
   /** T-1813: the Lines (0) or Stations (1) tab's hand order, ids first first; empty for none */
   | { kind: "listOrder"; list: 0 | 1; ids: number[] }
   /** `restore`: `key` is a backup's (T-744) */
@@ -606,8 +606,8 @@ export type FromClock =
   /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
   | { kind: "left"; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
-  /** `fine` (T-1223): the save's `demandFine`, null where it has none */
-  | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null }
+  /** `fine` (T-1223), `built` (T-2153): the save's `demandFine` and `demandBuilt`, null where it has none */
+  | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null; built: string[][] | null }
   /** T-1539: the save being loaded: the key of its network's inputs (demandCache.ts `saveNetKey`) */
   | { kind: "netAhead"; key: string }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */

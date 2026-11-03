@@ -109,6 +109,9 @@ export interface SaveHeader {
   /** T-1223: the zones demand held fine (the rest coarse, notes/T-1206.md), so a reload solves the
    * same levels and shows the same figures; absent: every zone fine that fits */
   demandFine?: string[];
+  /** T-2153: the zones of the last two builds (a station placed or a stop added), latest first, which
+   * demand keeps fine (`builtKeep`); absent in older saves */
+  demandBuilt?: string[][];
   /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
   newCars?: number;
   /** T-1826: the save level of the build that wrote it (`TrackApi.save_level`, sim/src/track/save.rs
@@ -135,7 +138,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
-  opened: true, demandFine: true, newCars: true, level: true, guide: true, achievements: true,
+  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true,
 };
 
 /** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher
@@ -187,6 +190,7 @@ export function currentZones(h: SaveHeader, now: (id: string) => string | null =
   if (h.cities) out.cities = list(h.cities);
   if (h.opened) out.opened = list(h.opened);
   if (h.demandFine) out.demandFine = list(h.demandFine);
+  if (h.demandBuilt) out.demandBuilt = h.demandBuilt.map(list).filter((b) => b.length);
   if (h.start !== undefined) out.start = now(h.start) ?? undefined;
   if (h.regions) {
     const regions: NonNullable<SaveHeader["regions"]> = {};
