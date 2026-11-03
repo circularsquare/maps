@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1927 [P3] Passing tracks at stations. Merged 2026-11-03 into T-2228 (Anita asked for passing tracks; design notes/T-2228.md, stages T-2231 to T-2234).
+- T-1849 [P2] The corridor table's first-figures cost. Done 2026-11-03 (agent t1849, tree t1849): 2.7-4.3 s a worker to 1.0-1.25 s (Jakarta, the real save, all of Japan), the table the same to the bit; a pair's two ways share one flight search, direct flights by bits. notes/T-1849.md.
+- T-2180 [P2] Edit note down both ways. Done 2026-11-03 (agent t2180): edit and undo come back within 105 riders of 31.7M on Tokyo; a level-of-detail change mixed into an edit (Tokyo coarse: −11,944) is now held while edits settle. "18 cities" is the whole solve: T-2188. notes/T-2180.md.
 - T-2186 [P2] Trains fill to 150%. Done 2026-11-03 (agent t2186): rated 160 a car, crush 240; crowding still from 112, 3 at 100%, 10.8 at 150%; gauge's second band. Rail +1.2% nyc, +0.06% tyo, +0.9% Anita's save (T-2147 measured about +4% with crowding from 168). notes/T-2186.md.
 - T-2221 [P3] Achievements view tweaks. Done 2026-11-03 (agent t2179): rings 54 px and lower, "/100M" under the figure, which sits 1 px lower, medals 16 px, rows tighter; the toast fades over 1.2 s (the general no-animation rule had cut it). Shots artifacts/trainworld/t2179/*-v6.png.
 - T-2161 [P3] Network diagram stage 3, the view and its drawing. Done 2026-11-03 (agent t2161): pills along an octilinear axis through each station, stops where the ribbons cross it, so every pill is a clean capsule (widest 1.98 pitches); the button on the Cities tab's top row; paint under 1 ms. Hooks left: T-2206. notes/T-2146.md.
