@@ -76,6 +76,7 @@ import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
+import { startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startTroubleList } from "./ui/TroubleList";
 import { mountGuide } from "./ui/Guide";
@@ -224,6 +225,7 @@ if (urlChoice) {
   client.start(urlChoice);
 }
 startSaveSafety();
+startDiagramView(client, document.getElementById("map")!); // T-2160
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
   renderer.setNetwork(s);

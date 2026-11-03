@@ -4,6 +4,7 @@
 // with `onNetworkSnapshot` (the demand pool, T-026).
 
 import { effect, signal } from "@preact/signals";
+import type { DiagramGraph } from "../diagram/graph";
 import { clock } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
@@ -394,6 +395,8 @@ export class ClockClient {
   lastLoad: { from: "autosave" | "file" | "new"; converted: boolean } | null = null;
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
+  /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
+  onDiagram: (g: DiagramGraph) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
   onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
@@ -839,6 +842,9 @@ export class ClockClient {
       }
       case "money":
         setMoneyState(msg.money);
+        break;
+      case "diagramGraph":
+        this.onDiagram(msg.graph);
         break;
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };

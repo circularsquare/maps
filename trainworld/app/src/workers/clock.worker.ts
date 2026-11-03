@@ -25,6 +25,8 @@ import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains, shiftNetCache, type NetworkBuffers } from "../map/network";
 import { setBandMode } from "../map/lineBands";
+import { besideSamples } from "../map/corridors";
+import { bandEdges, diagramGraph } from "../diagram/graph";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
@@ -2486,7 +2488,24 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
   if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
   timing.post = performance.now() - t2;
+  diagramIn = { lines: s.lines, edges: s.edges, pts: n.edgePts };
+  if (diagramOn) postDiagram();
   if (trips) sendTrips(split);
+}
+
+// ---------------------------------------------------------------- the network diagram's graph (T-2159)
+
+/** whether the page shows the diagram, and the last network's lines, edges and polylines */
+let diagramOn = false;
+let diagramIn: { lines: ClockLine[]; edges: ClockEdge[]; pts: ReadonlyMap<number, Float32Array> } | null = null;
+/** the graph, after the network state it is of; the beside table is the one the bands just built */
+function postDiagram() {
+  if (!diagramIn) return;
+  const t0 = performance.now();
+  const { lines, edges, pts } = diagramIn;
+  const beside = besideSamples(bandEdges(lines), pts, new Map(edges.map((e) => [e.id, e])));
+  const graph = diagramGraph(lines, edges, pts, complexOfNodes(), beside);
+  send({ kind: "diagramGraph", graph, ms: performance.now() - t0 }, [graph.key.buffer, graph.x.buffer, graph.y.buffer, graph.ea.buffer, graph.eb.buffer, graph.first.buffer, graph.on.buffer]);
 }
 
 // ---------------------------------------------------------------- posting only what changed (T-1029)
@@ -3773,6 +3792,9 @@ async function handle(msg: ToClock) {
     // the client could not take a state as changes to the last (T-1029)
     postWhole();
     if (api) sendState();
+  } else if (msg.kind === "diagram") {
+    diagramOn = msg.on;
+    if (diagramOn && api) postDiagram();
   } else if (msg.kind === "anchor") {
     // the view travelled far (T-307): every drawn position again, relative to the new anchor
     if (msg.version !== anchor().version) {

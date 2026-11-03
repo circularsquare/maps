@@ -14,6 +14,7 @@ import type { Loan } from "../game/loan";
 import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
+import type { DiagramGraph } from "../diagram/graph";
 
 export type { DayLedger, HourLedger };
 
@@ -147,6 +148,8 @@ export type ToClock =
   | { kind: "guide"; guide: GuideSave }
   /** T-1029: the client could not take a state as changes to the last: post the next whole */
   | { kind: "wholeState" }
+  /** T-2159: the network diagram is shown (its graph follows every network state) or hidden */
+  | { kind: "diagram"; on: boolean }
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
    * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
   | { kind: "leave"; pending?: PendingLoad }
@@ -593,6 +596,8 @@ export type FromClock =
    * lines worked out again since the last, and the ms spent stepping through them (all, longest) */
   | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
+  /** T-2159: the network diagram's graph, after a network state while the diagram is shown */
+  | { kind: "diagramGraph"; graph: DiagramGraph; ms: number }
   /** money changed without a network change (an hour settled, fares set) */
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
