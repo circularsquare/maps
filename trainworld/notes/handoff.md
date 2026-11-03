@@ -56,6 +56,43 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - abe19b070fec1727d (Opus) **T-2075 next-country data**: census admin totals + joining boundaries for NZ, India, Turkey,
   E. Europe, a Middle East pick, Mexico, Brazil, and Indonesia/Cambodia/Philippines (for T-2038, T-2000) ->
   research/next-countries-data.md, data-register cells, may file T-2076..2085.
+- T-2058 stage 1 COMMITTED 419b165d (flags bandsSmooth, muteThin, muteThinPale; default unchanged). Agent
+  a49f9cff5f5f759a0 resumed ~01:00 for stage 2 on its own pick (A proper + C prototype as `bandsOrder`, defaults
+  unchanged) and the t1799-bands click check. Anita picked ~01:10: "lets try A then C, and thin and faded": sent;
+  muteThinPale becomes the default muting; side by side stays off in Settings until she sees A+C.
+- Anita ~01:00 "lets do both exploration": ac175af5aa716ea9f (Opus) **T-2086 ridership benchmarks** ->
+  research/ridership.csv + .md (may file T-2088); aa68e9bf0d0f1ed41 (Opus) **T-2087 first ten minutes** ->
+  research/first-ten-minutes.md (3 cores for a walkthrough). Uncommitted outside trainworld/: maps/CLAUDE.md's "Keep the
+  work moving" bullet (root file, hers to commit).
+- a7287a1c25e0066ee **T-2040/T-1979/T-1978/T-1980 DONE in tree .tw-trees/t2040**, uncommitted (checks city-browser.mjs,
+  pack_gate.py, runner_fixes.py; pipeline world_run.py, tier0.py, plan_config.py, nocar.py, arcgis.py, build_city.py,
+  netget.py new; docs world-run.md, adding-a-country.md, code-map.md; notes/T-2040.md; main-tree TASKS/ARCHIVE/
+  DECISIONS lines already written). Jakarta's hang = the headless renderer dying out of memory on removeLine's solve.
+  runner_fixes 9/9, smoke 22/22 in the tree. **Land only after the Philippines reports** (the runner runs from the main
+  tree). Watch: the main tree's checks/pack_gate.py has an uncommitted Philippines edit (18 lines): commit that first,
+  then land, resolving if both touched the same lines. Filed T-2070 (confirm chunks/read-ahead on a real run: NZ),
+  T-2071 [P2] (removing a line in a 20M+ zone crashes the page out of memory: maybe T-1891's cause too).
+- T-2074 player voices DONE, research/player-voices.md committed (its ARCHIVE line is in the working copy, goes with the
+  next commit). 18 ranked ideas, none filed: Anita picks. Top: a demand tutorial card, goals per city/world, "what this
+  edit did" note, one plain reason for a quiet line.
+- T-2075 next-country data DONE, research/next-countries-data.md committed; data-register cells and TASKS T-2076..T-2084
+  in the working copy (commit with the next round). T-2084 [P3, do first among them]: tier0 `admin_totals` bug (whole unit
+  total into the part inside the outline) + one generic reader; edits tier0.py, which the t2040 tree also changed: start
+  it in a tree after t2040 lands. Then T-2038 (Indonesia, USCB HDX kabupaten), T-2000 (Cambodia, by hand), T-2076
+  (Philippines barangays; BARMM GHSL 0.1-0.55x, told the Philippines agent). Question for Anita: Middle East = Israel (her
+  territory call first) or Saudi Arabia.
+- T-2087 first ten minutes DONE, research/first-ten-minutes.md committed 3d956ced (ARCHIVE line in working copy).
+  13 ideas; worst stalls: default start lands on the world map; a new line's trains only at High so it stops at 20:00;
+  game opens on Lines not Build. Her calls listed in the report (default schedule, step 1 wording, tutorial telemetry,
+  hiding Build rows, the 10% tick on the top bar). Idea 1 (pre-pick a start city) left for her.
+- T-2086 ridership DONE, research/ridership.csv + .md committed (ARCHIVE line + T-2088 in working copy). Finding: the
+  game gives 0.4-0.7 rail trips/resident on every big real network; real cities 0.006 (Houston) to 1.13 (Tokyo). T-2088
+  (a check script: real saves vs the table, 0.5-2x band, notes only) is next when 2 cores free. Any demand change from
+  it is Anita's (she ruled out a per-place rail factor, T-1750).
+- aa8b947bb8932ff73 (Opus) **T-2071 + T-1891 big-zone out of memory** (main tree, workers/demand*; Vite 6160; scratchpad
+  t2071; ids T-2089..2091; 2 cores). Started ~01:45.
+- a0281d35a107d9c64 (Sonnet) **T-2092 tutorial start fixes**: open on Build with the card; a brand-new line's first
+  train setting fills the other 0 levels (my call, rail only). Vite 6161, scratchpad t2092, id T-2093, 1 core.
 - **After the Philippines** (Anita 2026-11-03: anything; speedups, India, or smaller countries first): commit it, rebuild
   8800; land the t2040 speedup tree (smoke in tree), then New Zealand as the first real run with the speedups (and
   T-1981's CPU poll during its join), then India with T-2075's admin totals. Turkey alongside if cores allow.
@@ -69,7 +106,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-1979 (World Bank fetch once). Indonesia took ~8 h wall (Java 53 min to build, join 48 min).
 - Anita 2026-11-02 answers: keep "cities" in the status tag; save by hand is not a game change (fine as is); the loading
   card stays until the whole world finishes (T-2049 abandoned).
-- Next free task id: T-2086 (T-2041, T-2042, T-2047, T-2048, T-2050..2052 were handed out but unused).
+- Next free task id: T-2094 (T-2041, T-2042, T-2047, T-2048, T-2050..2052 were handed out but unused).
 
 ## Open questions to Anita (asked, unanswered)
 - (Older) Settings label "Lines side by side" vs "Draw lines side by side" (T-1886).

@@ -2,12 +2,14 @@
 // real one: the bands' order crosses nowhere a pair of lines runs on together (only where they part
 // or meet, which the pairwise rule leaves to its routes), a click on each band of the busiest shared
 // edges picks that band's line, and each train is drawn on its line's band.
-//   node trainworld/checks/t1799-bands.mjs [url]     (default http://localhost:6197/)
+//   node trainworld/checks/t1799-bands.mjs [url] [more query]     (default http://localhost:6197/)
 // One PASS or FAIL line per check; figures in artifacts/trainworld/t1799/check.json.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { ARTIFACTS, REAL_SAVE, launchChrome, importSave, collectErrors, GL } from './lib.mjs';
 
 const URL = process.argv[2] ?? 'http://localhost:6197/';
+/** more of the page's query, e.g. `perfOff=bandsOrder` (T-2058) */
+const MORE = process.argv[3] ? `&${process.argv[3]}` : '';
 const SAVES = [['shared', `${ARTIFACTS}t1305-shared/nyc_real.save`], ['real', REAL_SAVE]];
 const out = {};
 let failed = 0;
@@ -17,15 +19,19 @@ const { ctx, close } = await launchChrome({ prefix: 'tw-t1799c-', size: [1400, 9
 const page = ctx.pages()[0] ?? await ctx.newPage();
 const errors = [];
 collectErrors(page, errors);
-await page.goto(`${URL}?debug=1&new=1&paused=1&demandWorkers=1`);
+await page.goto(`${URL}?debug=1&new=1&paused=1&demandWorkers=1${MORE}`);
 await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
 for (const [name, file] of SAVES) {
-  await page.evaluate(() => { window.tw.client.lastLoad = null; });
+  // (the network and lines of this save, not the last one's: a build can land after the load does)
+  await page.evaluate(() => { window.tw.client.lastLoad = null; window.twPrev = [window.tw.renderer.net, window.tw.client.lastLines]; });
   await importSave(page, await readFile(file));
-  await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.renderer.net?.lines.count > 0 && window.tw.client.lastLines?.length > 0, undefined, { timeout: 600000 });
+  await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.renderer.net?.lines.count > 0 && window.tw.client.lastLines?.length > 0 && window.tw.renderer.net !== window.twPrev[0] && window.tw.client.lastLines !== window.twPrev[1], undefined, { timeout: 600000 });
   await new Promise((r) => setTimeout(r, 2000));
   const r = await page.evaluate(async () => {
     const tw = window.tw, n = tw.renderer.net, lines = tw.client.lastLines, edges = tw.client.lastEdges;
+    // the Settings checkbox "Lines side by side" is off by default (T-1886): on, as the bands are what this checks
+    tw.renderer.lineBands = true;
+    tw.overlay.invalidate();
     const { lineBands, BAND_RANGE } = await import('/src/map/lineBands.ts');
     const t0 = performance.now();
     const b = lineBands(lines, edges, n.edgePts);

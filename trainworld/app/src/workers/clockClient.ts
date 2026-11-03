@@ -460,7 +460,7 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     this.patchMode = q.get("patch") ?? "1";
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), ...(bandTry() ? { bandMode: bandTry() } : {}) } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }

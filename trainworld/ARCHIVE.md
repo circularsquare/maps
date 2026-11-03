@@ -2,6 +2,20 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1873 [P2] Muting other lines looked like a worm. Done 2026-11-03 by T-2058: muted lines are drawn thin (45% width), faded toward the casing and solid (Anita's pick); `?perfOff=muteThin` for the old look.
+
+- T-2092 [P2] Two fixes to a new player's start. Done 2026-11-03 (agent): a new game with the tutorial card opens on the Build tab; a rail line's first trains or headway at one level go to every level still at 0, so a new line runs all day and all week. `checks/t2092-first-service.mjs`; artifacts/trainworld/t2092/.
+- T-2086 [P3] A worldwide table of real rail ridership to check demand against. Done 2026-11-03: 165 systems in 110 cities, 49 countries (53 rows from primary sources: NTD, MTA, TfL, ORR, IDFM, MLIT S12, LTA, MTR), with riders per km and per station and rail trips per resident by region; the game's narrow 0.4-0.7 a resident against real 0.006-1.1 (T-1742) is the shape to watch; check proposed as T-2088. research/ridership.md, research/ridership.csv.
+
+- T-2087 [P3] Research: a new player's first ten minutes. Done 2026-11-03 (agent): ten games' onboarding and two studies, a headless walk of the live start (8 stall points with screenshots), 13 ranked ideas; none filed, Anita picks. research/first-ten-minutes.md.
+- T-2075 [P3] Research: open census totals and boundaries for the next countries, against GHSL's phantom people. Done 2026-11-03 (agent): coded joins found for Indonesia, the Philippines, New Zealand, India, Turkey, Mexico, Israel; Cambodia only on citypopulation.de; tasks T-2076 to T-2084. research/next-countries-data.md.
+- T-2074 [P3] Research: what players love and hate in comparable transit games, and ideas for trainsworld. Done 2026-11-03 (agent): 18 ranked ideas and 7 pitfalls from Steam reviews, threads, changelogs and devblogs; none filed, Anita picks. research/player-voices.md.
+- T-2040 [P3] The gate's browser hang on Jakarta. Done 2026-11-03 (agent t2040): the line's removal crashed the page out of memory and Playwright's waits outlived their timeouts; a zone over 20M now gets its own session, every wait has a Node timer, a silent session is stopped after 10 min. notes/T-2040.md.
+- T-1979 [P2] Country inputs fetched once before a run's builds; network requests retried in place (`pipeline/netget.py`). Done 2026-11-03 (agent t2040). notes/T-2040.md.
+- T-1978 [P2] (= T-964) A region's built rows gated in chunks of 10 while it builds. Done 2026-11-03 (agent t2040), checked with stand-ins; a real run confirms (T-2070). notes/T-2040.md.
+- T-964 [P2] Gate in chunks while the region builds. Done 2026-11-03 as T-1978. notes/T-2040.md.
+- T-1980 [P3] The next region downloads and reads while this one builds, one ahead. Done 2026-11-03 (agent t2040), checked with stand-ins; a real run confirms (T-2070). notes/T-2040.md.
+
 - T-1445 [P2] Buses, design. Closed 2026-11-03: built already as T-1464 (bus lines drawn by clicks, stops placed by the sim), T-1465 and T-1514 (routes along the basemap's roads); the TASKS line was stale (Anita asked whether it was done). docs/ui-building.md "Drawing a bus line".
 
 - T-1974 [P1] Build time speedups, design. Done 2026-11-02 (agent t1974): ranked speedups filed as T-1976..T-1981; T-1976, T-1977 done. notes/T-1974.md.

@@ -114,10 +114,19 @@ function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number
   if (!base) return true;
   const t: [number, number, number] = [...base] as [number, number, number];
   const k = trainStep(id);
-  t[DEMAND_INDEX[demand]] = to(t[DEMAND_INDEX[demand]], k);
-  if (t[DEMAND_INDEX[demand]] === base[DEMAND_INDEX[demand]]) return false;
+  const lev = DEMAND_INDEX[demand];
+  t[lev] = to(t[lev], k);
+  if (t[lev] === base[lev]) return false;
+  if (firstService(id, base)) t.fill(t[lev]);
   setTrainCounts(id, t);
   return true;
+}
+
+/** T-2092: a rail line with no trains at any level, whose first trains or headway are being set at
+ * one level: the other levels get the same, so a new line runs all day and all week. After that the
+ * levels are the player's (bus lines start with buses at every level). */
+function firstService(id: LineId, now: readonly number[]): boolean {
+  return !world.value?.lineStats[id]?.bus && now.every((n) => !(n > 0));
 }
 
 /** The step of a line's train count: 2 on a loop, whose trains are half each way (T-798). */
@@ -275,6 +284,7 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
   if (!base) return;
   const h: [number, number, number] = [...base] as [number, number, number];
   h[DEMAND_INDEX[demand]] = seconds;
+  if (seconds > 0 && firstService(id, base)) h.fill(seconds);
   queueHeadway(id, h);
 }
 

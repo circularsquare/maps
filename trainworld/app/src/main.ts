@@ -79,6 +79,7 @@ import { BlueprintBar } from "./ui/Blueprint";
 import { startTroubleList } from "./ui/TroubleList";
 import { startRidesNotes } from "./ui/RidesNotes";
 import { mountGuide } from "./ui/Guide";
+import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
@@ -215,7 +216,10 @@ startOpenFit(); // T-895
 const client = new ClockClient();
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
-if (urlChoice) client.start(urlChoice);
+if (urlChoice) {
+  guideNewGame(!!urlChoice.newGame);
+  client.start(urlChoice);
+}
 startSaveSafety();
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
@@ -580,6 +584,7 @@ if (!urlChoice) showStartMenu((choice) => {
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
   startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
+  guideNewGame(!!choice.newGame);
   client.start(choice);
 });
 

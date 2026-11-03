@@ -688,8 +688,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on a weekday and a superholiday's days; a Saturday,
   a Sunday and a holiday that runs as a Sunday (by the line's country, docs/world.md "Calendar") run
   medium 6-24 and low 0-6 (`QUIET_LEVEL`, T-1720, [demand-timing.md](demand-timing.md) "Kinds of
-  day"), so a line with no medium trains runs none on a weekend day. New lines start at 0 / 0 / 0;
-  zero means no new departures. The panel shows the integer allocation and resulting headway.
+  day"), so a line with no medium trains runs none on a weekend day. New rail lines start at 0 / 0 / 0, and the first
+  count or headway the player sets at one level goes to every level still at 0 (the panel's rule,
+  T-2092); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
   within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,

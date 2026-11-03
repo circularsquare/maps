@@ -3273,7 +3273,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
     if (msg.patch) patchMode = msg.patch;
-    if (msg.bandMode) setBandMode(msg.bandMode);
+    if (msg.bandMode !== undefined) setBandMode(msg.bandMode);
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
     packBase = msg.pack;

@@ -69,6 +69,9 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
+  A new game that shows the tutorial card opens on Build, where step 1's Track tool is [T-2092,
+  `guideNewGame` in `game/guide.ts`, set by `main.ts`]; a saved game, or a new game with no card
+  (a sandbox, a `?new=1` page, a browser that finished the guide), opens on the tab the browser last had.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes. By
   default it is 36% of the dock but at least 440 px (the inspector keeps 160 px), which holds the

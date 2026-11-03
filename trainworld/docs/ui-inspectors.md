@@ -215,7 +215,9 @@ purpose filter the purpose drawn is ringed in the bar.
   shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
   length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
   counts rounded up to even; paste is off until something is copied, its hover naming the line
-  copied from; a Trains / Headway switch in the heading
+  copied from; on a rail line with no trains at any level, the first train count or headway set at one level
+  goes to every level still at 0, so a new line runs all day and all week; after that the levels are
+  independent [T-2092, `firstService` in `game/world.ts`]; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 120
   minutes; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872,
@@ -418,8 +420,8 @@ line panel's own remove button works as before.
   place, moved out to the side where another line runs through); while a line's top bullet is
   scrolled away, it floats at the top of the visible panel over the line. A line with no trains at
   its level now is drawn at 40%, its bullets too (hover adds "No trains at high demand"). While the
-  pointer is on a line the map draws that line full and every other line at 30%, as stop editing
-  does. Names are cut with an ellipsis; a click on one selects the station.
+  pointer is on a line the map draws that line full and every other line muted (ui-map.md "Lines
+  and track"), as stop editing does. Names are cut with an ellipsis; a click on one selects the station.
 - **Editing stops**, every edit keeping the line's path and a normal service edit (demand
   re-solves, one undo each; sim `drop_stop`, `end_line_at`, `stop_passed`, track-and-service.md).
   Each line has its own click target at each of its places, half way to its neighbours (at most

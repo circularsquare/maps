@@ -5,7 +5,7 @@
 
 import { effect } from "@preact/signals";
 import { moneyState } from "./money";
-import { guideFinished } from "./ui";
+import { guideFinished, tab } from "./ui";
 import { trainsShown, world } from "./world";
 import type { WorldView } from "./types";
 import { saveGuide } from "../workers/clockClient";
@@ -76,12 +76,23 @@ export function guideShown(g: GuideSave | undefined, sandbox: boolean): boolean 
   return !!g && !sandbox && !g.hidden && !g.closed;
 }
 
+/** T-2092: this page opens a new game, so its card (if it has one) starts the dock on the Build tab,
+ * where step 1's Track tool is. A saved game keeps the tab it had. Set by main.ts from the game choice. */
+let newGameOpening = false;
+export function guideNewGame(on: boolean) {
+  newGameOpening = on;
+}
+
 /** Tick steps as they are met, and remember in this browser that the guide was finished. */
 export function startGuide() {
   let sent = -1;
   effect(() => {
     const m = moneyState.value, w = world.value;
     const g = m?.guide;
+    if (newGameOpening && m) {
+      newGameOpening = false;
+      if (g && guideShown(g, m.mode === "sandbox")) tab.value = "build";
+    }
     if (!g || !w || m.mode === "sandbox") return;
     const steps = guideSteps(w);
     let mask = g.done;

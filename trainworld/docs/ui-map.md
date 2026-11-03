@@ -86,8 +86,11 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   scales its widths by 0.85 / 1.3, so they stay where they were); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
   the dark theme [T-039]; line colours are the same in both), drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
-  still, and a selected line or group [T-1812] draws every other line's stroke and train at 55%
-  (30% while stops are edited or the pointer is on a column of the group view), all of a selected
+  still, and a selected line or group [T-1812, T-2058] draws every other line muted: solid, 45% of
+  its width inside its usual casing, its colour mixed halfway to the casing's (Anita: "thin and
+  faded"; solid, so overlapping muted lines do not build up), and their trains at 55% (30%
+  while stops are edited or the pointer is on a column of the group view; `?perfOff=muteThin` draws
+  the lines at those strengths instead, as before T-2058), all of a selected
   group's lines drawn selected together (`selLines`, at most 16; bus lines take the one line only). A stroke thinner than a device pixel is drawn a pixel wide and that much fainter. Line and
   track ends, and the joints between a stroke's segments, are round, casing included [T-673].
 - **Double track as its two tracks, close in** [T-658, `laneState` in `map/renderer.ts`, design
@@ -142,23 +145,33 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   way (`HOLD`), and not the next stretch of its own track where the two meet at a node; each
   record is mirrored, so both tracks see each other at the same places. The ribbon at a place is
   every track linked there, track to track (a line in it once), unless it is over 70 m across (a
-  throat or yard, `SPAN_M`) or over 32 tracks, when each track is left as it is. Its tracks are in
-  their order on the ground, from each pair's offset averaged over all the places the two are side by
-  side, left to right of the travel of its lowest numbered line; tracks within 6 m of each other
-  (`COINCIDE_M`: single tracks, or the real New York save's lines each on its own edge) by line
-  number; each edge's own lines in its order. The ribbon is centred on its tracks' middle at that
+  throat or yard, `SPAN_M`) or over 32 tracks, when each track is left as it is. Its tracks' order
+  is decided once for the whole network, pair by pair (T-2058, so two lines never swap sides where
+  their tracks do not): of two tracks, by their lowest numbered lines, the one whose track is on the
+  left over all the places the two are beside each other (offsets summed along the way, in the lower
+  numbered line's travel), and where that averages under 6 m (`COINCIDE_M`: single tracks, or the real
+  New York save's lines each on its own edge) the lower number on the left of its own travel; a pair
+  never beside each other directly takes its order on the ground there; the ribbon's order is by how
+  many of the others each track is left of; each edge's own lines in its order. The ribbon is centred on its tracks' middle at that
   place; each track's centre line is a few metres off it, turned into line widths at a fixed 0.05 a
   metre (`BAND_LW_PER_M`) so the bands of two tracks touch: exact near zoom 14.5, 1.4 px of overlap at
   13, 0.9 px of gap at 15 and a few px of gap by 16 (a metre is fixed on the ground, a line width is
   not; more on wide bundles). **Along each line** the ribbon it is in changes only where the lines
   beside it change for at least 200 m (`CORRIDOR_MIN_M`, a platform's length: a neighbour splaying
   round a platform or touching at a junction is smoothed over), unless a line on the line's own
-  edge would go missing from the ribbon (lines on one edge are always side by side). A change along
-  the track eases over 80 m centred on it (`CORRIDOR_EASE_M`); a change at a node over 30 m
-  (`BAND_RAMP_M`, half a short stretch at most) on the side with fewer lines: lines part leaving side
-  by side and close up as they curve out, and merge the other way (T-1799 stage 4); between equal
-  counts half way. A line alone keeps its full width; a line's band is drawn by knots (`BandProfile`,
-  `bandPoints` cutting the line's segments at each). Zoomed out the bands fold into one stroke as a line narrows from
+  edge would go missing from the ribbon (lines on one edge are always side by side). **Every change
+  of a band's shift is a long S-curve** (T-2058, Anita: lines "never like suddenly turn or translate
+  if they don't suddenly turn in the actual track"): a smoothstep 250 m long for ribbons of up to two
+  lines and 50 m more per line beyond, at most 800 m (`SMOOTH_M`, `SMOOTH_PER_LINE_M`,
+  `SMOOTH_MAX_M`), every line of the two ribbons there taking the same length so a ribbon moves as
+  one; changes closer than that are added together into one curve (each knot a mix of the pieces
+  round it, the Traffic view's widths mixed by the same weights). Where it sits: a change at a node
+  between ribbons of different sizes starts at the node on the side with fewer lines, counted on the
+  line's own edges first and then in the ribbons (lines part leaving side by side and close up as
+  they curve out, merge the other way; T-1799 stage 4); any other change is centred on it. A line alone keeps its full
+  width; a line's band is drawn by knots (`BandProfile`, `bandPoints` cutting the line's segments
+  at each); `?perfOff=bandsSmooth` gives T-1848's eases (80 m along the track, 30 m at a node) and
+  per-ribbon order, `?perfOff=bandsOrder` the S-curves with per-ribbon order. Zoomed out the bands fold into one stroke as a line narrows from
   1.75 to 1.25 px (`BAND_FOLD_PX`, about zoom 10 to 9.5), and close in they close up onto the
   centre line as double track grows to its two tracks (from about zoom 16.5), where the lines are
   drawn over each other on the real tracks again. In the **Traffic view** (stage 2) the same ribbons,

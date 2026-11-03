@@ -25,7 +25,7 @@ import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -91,9 +91,9 @@ const LANE_NARROW = 0.2, LANE_NARROW_PX = 16;
 /** T-1799 (Anita, 2026-10-29): lines sharing track fold into one stroke as a line's width falls
  * through these CSS px zoomed out (about zoom 9.5 to 10) */
 const BAND_FOLD_PX = [1.25, 1.75] as const;
-/** T-2058 prototype: with a line picked, the others' width share and how far their colour is mixed
- * towards the casing's, drawn solid; null: at `dimOthers` opacity as built */
-const MUTE: readonly [number, number] | null = perfTry("muteThinPale") ? [0.45, 0.5] : perfTry("muteThin") ? [0.45, 0] : null;
+/** T-2058: with a line picked, the others' width share and how far their colour is mixed towards the
+ * casing's, drawn solid (Anita: "thin and faded"); `?perfOff=muteThin`: at `dimOthers` opacity instead */
+const MUTE: readonly [number, number] | null = perfOff("muteThin") ? null : [0.45, 0.5];
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -1419,7 +1419,7 @@ export class NetworkRenderer {
     setSelLines(gl, u, opt.selLines);
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
     gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
-    // T-2058 prototype: the other lines thinner and solid (`?perfTry=muteThin`, `muteThinPale`)
+    // T-2058: the other lines thinner, faded and solid
     const mute = MUTE && (opt.dimOthers ?? 1) < 1 ? MUTE : null;
     gl.uniform1f(u.u_dim, mute ? 1 : opt.dimOthers ?? 1);
     gl.uniform2f(u.u_mute, mute?.[0] ?? 0, mute?.[1] ?? 0);
