@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2088 [P3] A standing check of demand on real networks against real ridership. Done 2026-11-03: checks/t2088-ridership.mjs solves the seven real saves (about 18 min) and sets rail trips per resident and metro riders per km beside research/ridership.csv; game high in New York (2.4x trips, 2.7x per km), low in Tokyo (0.36x, 0.45x), 0.7-1.4x elsewhere. notes/T-2088.md; rest filed as T-2093.
 - T-2071 [P2] Removing a line in Jakarta crashed the page out of memory. Done 2026-11-03 (agent t2071): not size but an endless zero-stride loop in the market window's `toWhole` (T-1735) on any 20-minute edit leaving or starting from no route nodes; fixed, figures unchanged to the bit. notes/T-2071.md.
 - T-1891 [P1] "Demand ran out of memory" on a new New York game after one line. Done 2026-11-03 (agent t2071): the same loop, through a first line on stations already built, grows the page to 16 GB until an array allocation fails; fixed with T-2071. notes/T-2071.md, notes/T-1891.md.
 

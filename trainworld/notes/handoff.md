@@ -93,6 +93,21 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   t2071; ids T-2089..2091; 2 cores). Started ~01:45.
 - a0281d35a107d9c64 (Sonnet) **T-2092 tutorial start fixes**: open on Build with the card; a brand-new line's first
   train setting fills the other 0 levels (my call, rail only). Vite 6161, scratchpad t2092, id T-2093, 1 core.
+- ~02:40: COMMITTED 082f7632 (T-2058 stage 2 A+C, muting thin+faded default, T-2092, bookkeeping). **8800 = build 803
+  (082f7632)**, built on freeze 20261102-230529 (TW_PACKS + TW_MARKET_DRIVES env set before snapbuild, since the
+  Philippines owns data/packs), smoke 22/22 light and dark. T-2058 filed T-2059 (band build 705 ms vs 240 after a path
+  edit; 2 Jersey City misclicks) and T-2060 (Tamachi drift). Settings "Lines side by side" still off: Anita to look.
+- a16dcf08738642b86 **T-1881/T-1889/T-1944 DONE in tree .tw-trees/t1881**, uncommitted (basemap.ts, vite.config.ts,
+  terrain_fine.py tower_ground, zone_terrain.py, demFlat.ts + demFlat.worker.ts new, checks t1881-shade/prices, docs,
+  notes/T-1881.md; main-tree TASKS/DECISIONS lines written). Land after the Philippines reports (pipeline files). Then
+  the world terrain rebuild on AWS (~40 min, < US$1): steps 1-6 in notes/T-1881.md "rebuild" (launch.py t1881-terrain-1
+  --kind terrain ...; back up data/work/terrain-fine + data/terrain to data/work/pre-T1881/; zone_terrain.py build
+  --force --jobs 8; mix ~59.8/14.3/10.7/15.1; smoke; 8800). Midtown ground track ~130 -> 37.5 US$M/km. T-1856 hexagons:
+  designed (notes/T-1881.md last section), build after the rebuild lands (~1 day).
+- T-2071 + T-1891 FIXED, committed ef971553: an endless loop in demand.worker.ts `toWhole` (zero stride when a view has
+  no route nodes), not size. **8800 = build 804 (ef971553)**, smoke 22/22 light and dark. The live site (797) has the bug:
+  asked Anita whether to publish a fix. T-2040's 20M-session rule (t2040 tree) rests on a wrong premise; harmless.
+- a49770f23fedc9e39 T-2088 ridership check: Sonnet agent started ~02:45 (Vite 6162, 3 cores, scratchpad t2088).
 - **After the Philippines** (Anita 2026-11-03: anything; speedups, India, or smaller countries first): commit it, rebuild
   8800; land the t2040 speedup tree (smoke in tree), then New Zealand as the first real run with the speedups (and
   T-1981's CPU poll during its join), then India with T-2075's admin totals. Turkey alongside if cores allow.

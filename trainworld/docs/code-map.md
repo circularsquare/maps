@@ -288,6 +288,11 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, so 7 to 8 hours for all 1,700; name the zones to run).
+- `t2088-ridership.mjs [url] [city ...]`: the seven real saves in `data/packs/real/` (nyc lon par tyo
+  seo tor sdj) each solved to a weekday final (`opened=all`, 2 demand workers), their rail trips per
+  resident and metro riders per km set beside the matching rows of `research/ridership.csv`; prints a
+  table and a NOTE (never a FAIL) outside 0.5-2x; json to `artifacts/trainworld/t2088/`. About 10
+  minutes; not in smoke (T-2088, notes/T-2088.md).
 - `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
@@ -581,6 +586,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   dry plan (docs/adding-a-country.md 3): FLAG lines for scattered rows, far origins, zones under
   50,000 and big FUAs' centres split between rows; NOTE lines for built neighbours within 50 km,
   reused ids' old terrain files and empty far islets; a picture of the rows. Exit 1 on a FLAG.
+- `build_inputs.py [--list]` (Python, T-1738): the files a production build copies for the registry
+  (vite.config.ts `writeBundle`) checked without a build, and a routed-drive place for every zone; a FLAG
+  line per gap, by country. Exit 1 on a FLAG.
 - `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
   the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
   number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
