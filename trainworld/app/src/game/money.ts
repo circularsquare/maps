@@ -22,7 +22,7 @@ import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
-import { faresFor, faresOf, hsrFare, type Fares } from "./fareCurve";
+import { faresFor, faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { roundedDefault } from "./fareDefault";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
@@ -189,8 +189,8 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       for (const v of pkm) total += v;
       const rides = dm.ridersPerDay * tripsPerBoarding;
       const based = baseOf.get(l.id) ?? 0;
-      // T-1626: a high-speed line's rides pay its multiplier on the rate; demand's extra has it already
-      const mul = st.fast ? hsrFare(m.fares) : 1;
+      // T-1626, T-2195: a high-speed or ferry line's rides pay its multiplier on the rate; demand's extra has it already
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, m.fares);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
         const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;

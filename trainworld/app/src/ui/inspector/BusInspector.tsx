@@ -2,7 +2,7 @@
 // its stops with the street stops folded into a row, and the past 24 hours with the riders changing to
 // trains. No train kind, length, stop editor or related-lines diagram. LineInspector.tsx hands a bus
 // line over to it. T-2194: a ferry line too (its row is a bus row with `ferry` set), in boats, its
-// stops its ports; no riders change to trains or fill its boats until ferries join demand (T-2195).
+// stops its ports.
 
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
@@ -13,7 +13,7 @@ import { boatsText, busesText, count, distance, headway, money, plural, speed } 
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { dayNote, runningToday, today, useToday } from "../../game/today";
-import { accountVersion } from "../../game/boarding";
+import { accountVersion, BOAT_CARS, capacity } from "../../game/boarding";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, renameLinePrompt, selection, tool } from "../../game/ui";
@@ -36,8 +36,9 @@ import { DEMAND_LABEL, levelTimes, StopTransfers, useLiveColour, useSymbolBox } 
 import { LineGroup } from "./LineGroup";
 import { afterCopy } from "../../game/lineGroups";
 
-/** A bus holds this many riders at crush (`BUS_CRUSH`, sim/src/track/params.rs). */
+/** A bus and a boat hold this many riders at crush (`BUS_CRUSH`, `BOAT_CRUSH`, sim/src/track/params.rs). */
 const BUS_CRUSH = 80;
+const BOAT_CRUSH = capacity(BOAT_CARS).crush;
 /** How long a refused edit's control shakes, ms (style.css `.shake`). */
 const SHAKE_MS = 300;
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
@@ -232,13 +233,14 @@ function useChangesToTrains(l: LineInput, bus: ClockBus): number | null {
 
 /** The day's rider-seconds aboard over what the trips could hold at crush; null with no trips. */
 function averageLoad(v: Float64Array, st: LineStats): number | null {
+  const crush = st.bus?.ferry ? BOAT_CRUSH : BUS_CRUSH;
   let aboard = 0, room = 0;
   for (let i = 0; i < PERIODS.length; i++) {
     const o = i * PERIOD_STRIDE;
     if (!(v[o] > 0)) continue;
     const times = st.fromStartByLevel[DEMAND_INDEX[PERIODS[i].demand]] ?? st.fromStartS;
     aboard += v[o + 5];
-    room += v[o] * (times[times.length - 1] ?? 0) * BUS_CRUSH;
+    room += v[o] * (times[times.length - 1] ?? 0) * crush;
   }
   return room > 0 ? Math.min(1, aboard / room) : null;
 }
@@ -248,7 +250,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
   const changing = useChangesToTrains(l, bus);
   if (!d) return null;
   const ferry = !!bus.ferry;
-  const load = periods && !ferry ? averageLoad(periods, st) : null;
+  const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
   return (
     <>
@@ -258,8 +260,8 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
           <span class="grow">Riders</span>
           <span class="val">{count(d.riders)}</span>
         </li>
-        {changing !== null && !ferry && (
-          <li data-tip="Riders per day who change between this bus and a train">
+        {changing !== null && (
+          <li data-tip={`Riders per day who change between this ${ferry ? "boat" : "bus"} and a train`}>
             <span class="grow">Changing to trains</span>
             <span class="val">{count(changing)}</span>
           </li>
@@ -274,7 +276,7 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
             <span class="val">{Math.round(load * 100)}%</span>
           </li>
         )}
-        {d.fullTrains > 0 && !ferry && <Row label="Buses leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} buses departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        {d.fullTrains > 0 && <Row label={ferry ? "Boats leaving full" : "Buses leaving full"}><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} ${ferry ? "boats" : "buses"} departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
       </ul>
     </>
   );

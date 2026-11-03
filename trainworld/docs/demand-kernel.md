@@ -133,6 +133,13 @@ levels:
    of a bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop; `BUS_BOARD_MIN`, `Graph::rn_bus`, carried in `rn_left` like
    `rn_span`), at its first boarding and at a change from a train or another bus onto it; not
    real minutes, so the trip explorer's real wait leaves it out.
+   **Ferries** (T-2195, design notes/T-2177.md 3.6): a ferry line is a line like any other in the
+   snapshot (`SnapshotLine.ferry`), its stops its ports, which are stations: walked to as any station
+   (a landing the pack's walk grid calls water starts its walks from the nearest land pixels, as any
+   station does, step 2), joined to stations near them in complexes, its hop times the boats' run
+   with their acceleration. A boat is 2 cars (`BOAT_DEMAND_CARS`; 88 seats, 320 rated, 480 at crush,
+   the track sim's `BOAT_CRUSH`), so it is no bus line and pays no boarding cost. Its route nodes
+   charge the Ferry multiplier (`Fares.ferry`) as a high-speed line's charge theirs.
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it improves expected trip cost;
@@ -293,7 +300,7 @@ levels:
    trains: an even headway at the period's frequency, riders arriving at each stop by the
    account's shape for the period (fastest mid-period, the busiest hour at the busiest-hour
    factor), each train letting off the stop's alighting share and taking riders up to crush (240
-   a car, 150% of rated; a bus 80), the
+   a car, 150% of rated; a bus 80; a boat 480), the
    rest waiting a headway more for the next train of the same line and direction. A queue left
    at the period's end clears at the trains' average spare room. The rider-minutes waited
    beyond the first train, over the stop's boardings, are that boarding's average extra wait

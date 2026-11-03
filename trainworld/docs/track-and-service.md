@@ -1106,7 +1106,8 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   fare a km on that line's km, and no line's fares go below zero. **High-speed fares** [T-1626]: a
   line with high-speed trains charges its rate and its share of the curve's extra times the
   high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.5, 0 to 5, saved in the header; a save
-  without one charges 1.5); the base stays once a trip. So a trip pays base + (curve(km) - base) x
+  without one charges 1.5); the base stays once a trip; a ferry line likewise with the Ferry multiplier
+  (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195). So a trip pays base + (curve(km) - base) x
   (1 + (m - 1) x its share of km on high-speed lines). Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,
@@ -1421,8 +1422,8 @@ searches water.
 A ferry line (T-2193; design notes/T-2177.md) is a line on water between ports, with no track. The app
 searches the route on the basemap's water (T-2192) and hands the sim its points; the sim never sees the
 water. The player's tool and panel are ui-building.md "Drawing a ferry line" and ui-inspectors.md
-(T-2194), demand's side T-2195 (until then ferry lines are left out of demand's network; their ports
-are stations in it). Code: `track/ferry.rs`, exports `wasm/ferry.rs`.
+(T-2194), demand's side docs/demand-kernel.md step 4, "Ferries" (T-2195: a line like any other, its
+ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs`.
 
 - **On the map** (T-2194, `map/busLayer.ts`, whose rows a ferry line shares: the app's line row for a
   ferry is a bus row with `ferry` set): the route dashed in the line's colour on a continuous casing,
@@ -1445,7 +1446,8 @@ are stations in it). Code: `track/ferry.rs`, exports `wasm/ferry.rs`.
 - **Run**: between two points the boat runs at most the lower of their two speeds; it accelerates and
   brakes at 0.15 m/s² (`ferry::BOAT_A`, 46 s and 160 m to reach 25 km/h), stops at every port, stands
   the line's dwell at the ports between its ends and the turnaround at the ends. Out and back like a
-  bus line. No capacity holds. A boat takes 320 riders at crush (`BOAT_CRUSH`, two of demand's cars).
+  bus line. No capacity holds. A boat is two train cars: 320 riders at the rated load, 480 at crush
+(`BOAT_CRUSH`; demand's 2 cars, T-2195).
 - **Money**: a port US$10M, paid on Construct (a constructed line redrawn to a new port pays for it
   then), upkeep US$100 a day (US$10k a game day); boats US$8M, a fleet of their own (the fourth,
   `fleet_ferry`) with spares shared between ferry lines; running US$40 a boat-km (real, `ECONOMY`

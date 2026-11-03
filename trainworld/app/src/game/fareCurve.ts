@@ -61,13 +61,18 @@ export function tidyHsr(v: number): number {
   return Math.min(HSR_FARE_MAX, Math.max(0, Math.round(v * 100) / 100));
 }
 
-/** T-2194: a ferry line's fares are the curve's part above the base times this (notes/T-2177.md 3.7);
- * demand and income take it with T-2195. */
+/** T-2194: a ferry line's fares are the curve's part above the base times this (notes/T-2177.md 3.7),
+ * in demand and income alike (T-2195), as the high-speed one. */
 export const FERRY_FARE = 1;
 /** The ferry multiplier of `f`, or the default. */
 export function ferryFare(f: { ferry?: number } | undefined): number {
   const v = f?.ferry;
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : FERRY_FARE;
+}
+/** The multiplier a line's rides pay on the part of the fare above the base: a ferry's, a
+ * high-speed line's, else 1. */
+export function lineFareMul(line: { fast?: boolean; ferry?: boolean }, f: { hsr?: number; ferry?: number } | undefined): number {
+  return line.ferry ? ferryFare(f) : line.fast ? hsrFare(f) : 1;
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */

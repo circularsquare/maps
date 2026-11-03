@@ -1498,3 +1498,18 @@ fn empty_network_is_all_road_and_walk() {
     assert!(s[3] > 0.0);
     assert!(api.set_network(&[0.0, 0.0], &[2], &[0, 1], &[0.0; 12], &[1.0, 1.0, 1.0], &[1.0]).is_err());
 }
+
+/// T-2195: a ferry line comes as a line of two cars (`BOAT_DEMAND_CARS` in the app): two cars'
+/// seats, rated load and crush, the track sim's `BOAT_CRUSH`, and no bus boarding cost.
+#[test]
+fn a_boat_is_two_cars_and_boards_as_a_train() {
+    let (mut api, xy, n, stops, times, tph, mut cars) = small();
+    cars[1] = 2.0;
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let net = DemandApi::period_net(api.svc.as_ref().unwrap(), 0);
+    assert_eq!((net.line_seats[1], net.line_rated[1], net.line_crush[1]), (2.0 * SEATS_PER_CAR, 2.0 * RATED_PER_CAR, 2.0 * CRUSH_PER_CAR));
+    assert_eq!(net.line_crush[1] as f64, crate::track::params::BOAT_CRUSH);
+    assert!(!net.bus_line(1));
+    let g = kernel::build_graph(&net, &Params::default());
+    assert!(g.rn_bus.iter().all(|&b| b == 0.0));
+}

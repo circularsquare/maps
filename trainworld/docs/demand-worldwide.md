@@ -572,6 +572,7 @@ notes/T-420.md has the tables.
   and China's high-speed fares sit at a similar premium over conventional ones. Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
+  Ferry lines take the player's Ferry multiplier the same way (default 1.00, T-2195; "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line, times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At
   $0 it is a free change everywhere; a player who sets one models a system that charges each
@@ -910,6 +911,19 @@ notes/T-420.md has the tables.
   the one fare curve and the free change to rail overstate the feeder; a 300 m corridor is short
   where blocks are huge or long where people walk further to a bus (low car ownership). Check: a
   city's bus ridership per route-km against the model's on a similar drawn network.
+- **Ferries as lines** (T-2195, design notes/T-2177.md 3.6; docs/demand-kernel.md step 4). A ferry
+  line is a line like any other: its ports are stations walked to as any station, the minutes aboard
+  are the boats' run (25 km/h in open water, 10 in narrow channels, 0.15 m/s² at each port), the
+  wait half the headway, a change to or from it a change like any other, and no boarding cost (a
+  ferry is boarded from a waiting room, as a train is). A boat holds two train cars (480 at crush).
+  Its kilometres pay the one fare curve, the part above the base times the player's Ferry multiple
+  (1.00 by default), and its trips are the network's. One rule everywhere, no constant. Why it may not
+  carry over: real ferries are priced every which way (Staten Island's is free, NYC Ferry's and
+  Sydney's apart from the metro, Istanbul's the metro's), so one curve and one multiple stand for all
+  of them; a real boat holds 150 to 4,500 riders; demand's walks over water (three times a metre on
+  land, standing for small ferries and bikes) stay, so a water crossing has its walk beside the
+  player's ferry. Check: a drawn harbour ferry's weekday riders against the real one's at a similar
+  headway (Staten Island about 70,000 a weekday before 2020 at a boat every 15-30 minutes).
 
 ## Intercity
 

@@ -2879,8 +2879,7 @@ function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
-    if (a.is_ferry(id)) continue; // T-2194: ferries join demand with T-2195; their ports stay stations
-
+    const ferry = a.is_ferry(id);
     const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
     const span = a.line_span(id);
@@ -2896,8 +2895,9 @@ function buildSnapshot(): NetworkSnapshot {
     lines.push({
       id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
-      ...(!bus && a.line_fast(id) ? { fast: true } : {}),
-      turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : li[i + 21],
+      ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
+      ...(ferry ? { ferry: true } : {}),
+      turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : ferry ? BOAT_DEMAND_CARS : li[i + 21],
       ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
       ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
@@ -3016,6 +3016,8 @@ function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64Array {
 
 /** T-1464: a bus as demand's cars: 0.5 of a 160-rider car, its 80 at crush. */
 const BUS_DEMAND_CARS = 0.5;
+/** T-2195: a boat as demand's cars, two train cars (`BOAT_CRUSH`, sim/src/track/params.rs). */
+const BOAT_DEMAND_CARS = 2;
 
 /** T-1464: a running bus line's stops that are no station, added to the snapshot's stations once
  * (two lines' stops at one crossing are two stations, merged by demand), and each stop's stretch of
@@ -3643,8 +3645,7 @@ async function handle(msg: ToClock) {
       apply(msg.op);
       dirty = edited = true; editAt = Date.now();
       sendMoney();
-      // T-2194: ferries are not in demand yet (T-2195), so their multiple changes nothing it solves
-      if (msg.op.op !== "fareFerry") scheduleSnapshot();
+      scheduleSnapshot();
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
       return;
     }

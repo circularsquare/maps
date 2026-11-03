@@ -201,6 +201,8 @@ export const CRUSH_PER_CAR = 240;
 /** T-1464: a bus holds half a car's riders, 22 seated and 80 at crush (`BUS_CRUSH` in
  * sim/src/track/params.rs). */
 export const BUS_CARS = 0.5;
+/** T-2195: a boat holds two train cars' riders (`BOAT_CRUSH` in sim/src/track/params.rs). */
+export const BOAT_CARS = 2;
 /** A car's length, m. */
 export const CAR_M = 20;
 

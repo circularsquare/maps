@@ -125,7 +125,7 @@ There is no built-in liking for the train. Rail and the car are compared on time
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if
   the trains had room comes to the platform, and stays only if the trains due in the next 30
-  minutes have room for them (a train takes up to 150%, 240 a car; a bus 80); going along the
+  minutes have room for them (a train takes up to 150%, 240 a car; a bus 80; a boat 480); going along the
   line, riders already aboard keep their places. The
   rest go by car or on foot instead, and pay no fare. A line short of trains so has full
   platforms and full trains all through the peak.
@@ -241,6 +241,13 @@ train is free: one fare for the whole trip on the same curve. Every time someone
 including changing from a train to one, it costs them 6 perceived minutes on top of the wait. A home
 1.5 km from a station walks 29 perceived minutes to it, or about 24 by bus. Trips by bus alone count
 as rail.
+
+A ferry line (since T-2195) is a line like any other: people walk to its ports as to stations, wait
+half its headway, ride at the boats' own speed, change to and from trains as anywhere, and pay the
+same fare curve, its part above the base times the Ferry multiple (1.00 unless the player sets it).
+There is no extra boarding cost as for a bus. A boat holds two cars' riders, 480 at the most. Where
+the ferry is the quickest way across (Staten Island to Manhattan) it wins on these rules alone, and
+its trips count as rail.
 
 ## Anita's two tests
 

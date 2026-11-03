@@ -165,8 +165,8 @@ pub const UPKEEP_PORT: f64 = 100.0;
 pub const BOAT_PRICE: f64 = 8.0;
 /// Running cost per boat-km, real US$.
 pub const RUN_COST_BOAT_KM: f64 = 40.0;
-/// A boat's riders at crush: two of demand's 160-rider cars.
-pub const BOAT_CRUSH: f64 = 320.0;
+/// A boat's riders at crush: two train cars (T-2195; demand's `BOAT_DEMAND_CARS`), 320 at the rated load.
+pub const BOAT_CRUSH: f64 = 2.0 * super::boarding::CRUSH_PER_CAR;
 
 pub fn level_mult(level: i8) -> f64 {
     LEVEL_MULT[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize]

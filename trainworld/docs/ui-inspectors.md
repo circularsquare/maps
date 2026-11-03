@@ -458,14 +458,16 @@ the Build tab's quote has rows for bus routes and new buses.
 **A ferry line's panel** (T-2194) is the same panel in boats: Edit route opens the ferry tool on its
 ports (ui-building.md, "Drawing a ferry line"); Delete line removes it at once (its ports stay, its
 boats go to the depot, and it is undoable); while planned, Construct's hover gives the ports and the
-boats. Schedule in boats; the stops list is headed Ports. Until ferries join demand (T-2195) its
-riders read 0 and it has no Changing to trains, average load or boats leaving full rows. A boat's
-panel is a train's, named "boat", without On board. A port's panel is a station's: "Port" under its
+boats. Schedule in boats; the stops list is headed Ports. Its counts block is the bus line's
+(T-2195): riders, Changing to trains (between this boat and any rail line at its ports' complexes),
+profit, average load (against 480 a boat at crush) and Boats leaving full. A boat's panel is a train's,
+named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
+boat this hour" (a bus's "Typical bus this hour"). A port's panel is a station's: "Port" under its
 name, no platform length or upgrades, its upkeep a port's (US$10k a game day), Construct port and
 Remove port. The Money tab shows boats owned, needed and spare once there are any, and a **Ferry**
 fare row under High speed once a ferry line exists (a stepper by 0.05, 1.00x by default, a button back
-to 1.00x once set, saved with the game; ferries are not in demand yet, so it changes no fare until
-T-2195). The Build tab's quote has rows for ports, new boats and the ferry route (free).
+to 1.00x once set, saved with the game; a change solves demand again, T-2195). The Build tab's quote
+has rows for ports, new boats and the ferry route (free).
 ## Trains
 
 - **The train inspector's "On board"** [T-083, T-164, T-230]: this train's own riders on the stretch

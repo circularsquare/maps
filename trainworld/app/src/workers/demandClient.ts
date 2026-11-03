@@ -86,7 +86,7 @@ import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
-import { hsrFare } from "../game/fareCurve";
+import { lineFareMul } from "../game/fareCurve";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -194,11 +194,11 @@ export function poolSize(): number {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; transfer?: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; transfer?: number };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
+  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
 }
@@ -473,7 +473,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(s.passages?.length ? { passages: s.passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
   };
 }
@@ -503,15 +503,15 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     hopKm: new Float32Array(2 * nStops),
     span: lines.some((l) => l.span) ? new Float32Array(PERIODS.length * 2 * nStops).fill(1) : new Float32Array(0),
   };
-  // T-1626: a high-speed line's route nodes charge its multiplier, only where it is not 1
-  const hsr = hsrFare(svc.fare);
-  if (hsr !== 1 && lines.some((l) => l.fast)) {
+  // T-1626, T-2195: a high-speed or ferry line's route nodes charge its multiplier, only where one is not 1
+  const muls = lines.map((l) => lineFareMul(l, svc.fare));
+  if (muls.some((m) => m !== 1)) {
     const w = new Float32Array(2 * nStops).fill(1);
     let o = 0;
-    for (const l of lines) {
-      if (l.fast) w.fill(hsr, 2 * o, 2 * (o + l.stops.length));
+    lines.forEach((l, i) => {
+      if (muls[i] !== 1) w.fill(muls[i], 2 * o, 2 * (o + l.stops.length));
       o += l.stops.length;
-    }
+    });
     net.fareW = w;
   }
   const span = net.span!;

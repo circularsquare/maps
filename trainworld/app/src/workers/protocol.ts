@@ -761,6 +761,8 @@ export interface SnapshotLine {
   hopKm?: number[][];
   /** T-1626: high-speed trains, whose fares are times the high-speed multiplier */
   fast?: boolean;
+  /** T-2195: a ferry line, whose fares are times the ferry multiplier; its stops are ports */
+  ferry?: boolean;
   /** dwell at each stop, s, per run and level, in the run's own stop order (0 at both ends) */
   dwellS: number[][][];
   /** layover at each end, s */
@@ -768,7 +770,7 @@ export interface SnapshotLine {
   /** a circle line (T-798): its last stop is its first and trains ride on round, standing this
    * long there, s; absent otherwise */
   wrapS?: number;
-  /** cars per train (20 m each); a bus line's 0.5, its 80 riders at crush */
+  /** cars per train (20 m each); a bus line's 0.5, its 80 riders at crush; a ferry line's 2 */
   cars: number;
   /** T-1464, a bus line: per stop, the stretch of route whose homes walk to the route and ride
    * from that stop, x, y flat in the snapshot's frame (empty at a station) */

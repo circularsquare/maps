@@ -9,7 +9,7 @@ import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
-import { BUS_CARS, capacity, tripLoad } from "../../game/boarding";
+import { BOAT_CARS, BUS_CARS, capacity, tripLoad } from "../../game/boarding";
 import { Chip, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
@@ -47,8 +47,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
       ) : (
         <p class="muted">This {st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"} finished its trip and left service.</p>
       )}
-      {/* T-2194: no riders board a boat until ferries join demand (T-2195) */}
-      {at && !st.bus?.ferry && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus ? BUS_CARS : st.cars} bus={!!st.bus} profile={profile} dep={dep} />}
+      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus?.ferry ? BOAT_CARS : st.bus ? BUS_CARS : st.cars} what={st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"} profile={profile} dep={dep} />}
     </>
   );
 }
@@ -58,7 +57,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
  * from the boarding account (game/boarding.ts), against seats and crush load; and the typical
  * train of the period, demand's riders on the stretch shared among the trains then.
  */
-function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; bus: boolean; profile: number; dep: number }) {
+function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; what: "train" | "bus" | "boat"; profile: number; dep: number }) {
   const dm = lineDemand(line.id);
   const n = line.stops.length;
   // T-309: the period in the line's own local time
@@ -101,11 +100,11 @@ function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineI
   return (
     <>
       <div class="h">
-        <span data-tip={`Counted ${bus ? "bus" : "train"} by ${bus ? "bus" : "train"} from the demand forecast: riders board at the forecast's rate until the ${bus ? "bus" : "train"} is full`}>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
+        <span data-tip={`Counted ${what} by ${what} from the demand forecast: riders board at the forecast's rate until the ${what} is full`}>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
       </div>
       <ul class="rows">
         <Row label="Riders on board" bold>{exact(aboard)}</Row>
-        <Row label="Typical train this hour">{exact(average)}</Row>
+        <Row label={`Typical ${what} this hour`}>{exact(average)}</Row>
         <li>
           <span class="grow">
             <span class="board-bar" data-tip={`${exact(aboard)}/${exact(crush)} riders on board`}>

@@ -15,7 +15,7 @@ import { stationZone } from "./listScope";
 import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { groundDist, packToLngLat } from "./coords";
-import { hsrFare } from "./fareCurve";
+import { lineFareMul } from "./fareCurve";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
@@ -81,8 +81,8 @@ export const lineShares = computed(() => {
       if (byBoarding.length) ride = byBoarding;
       // a bent curve's extra goes with the per-km part, as it is counted on the km ridden (T-1516)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
-      // T-1626: a high-speed line's rate times its multiplier (its extra came so from demand)
-      const mul = st.fast ? hsrFare(m.fares) : 1;
+      // T-1626, T-2195: a high-speed or ferry line's rate times its multiplier (its extra came so from demand)
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, m.fares);
       const base = m.fares.base * (baseOf.get(l.id) ?? 0), perKm = Math.max(0, mul * m.fares.perKm * pkmAll + fx);
       if (base + perKm > 0) {
         const mix = new Map<string, number>();

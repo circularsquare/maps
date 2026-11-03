@@ -204,6 +204,6 @@ fn riders_wait_at_ports() {
     let q0 = 5 + 2 * trips + loads;
     let nodes: Vec<u32> = (0..queues).map(|k| h[q0 + k * QUEUE_STRIDE] as u32).collect();
     assert!(nodes.contains(&p) && nodes.contains(&q), "{nodes:?}");
-    // a boat takes 320 riders
-    assert_eq!(a.w.svc.lines[l as usize].crush(), 320.0);
+    // a boat takes two cars' riders
+    assert_eq!(a.w.svc.lines[l as usize].crush(), 480.0);
 }
