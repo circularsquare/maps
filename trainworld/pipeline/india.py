@@ -171,7 +171,9 @@ def census_population(city, boundary, sig):
 def plan_hooks(row):
     """T-555: none for a planned Indian row. Mumbai's Census 2011 sub-district totals, A-2 growth and
     B-28 bands (the curve, work from home) are typed in for its four districts alone; the informal
-    jobs blend comes from plan_config's rule."""
+    jobs blend comes from plan_config's rule. The 2011 district shares (admin_totals "IN") agree with
+    GHSL's within each state and only move people back from the districts grown since, so they stay
+    off (T-2111)."""
     return {}
 
 

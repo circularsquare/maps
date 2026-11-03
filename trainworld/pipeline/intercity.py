@@ -140,7 +140,7 @@ def country_of(reg, root=ROOT):
 
 
 # packs made by hand, which have no plan row to carry a `solve_region` (T-897, T-1014)
-SOLVE_REGION_PACKS = {"sha": "jiangsu",
+SOLVE_REGION_PACKS = {"sha": "jiangsu", "mum": "maharashtra",
                       **{i: "northeast" for i in ("nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "spf", "wor")}}
 
 

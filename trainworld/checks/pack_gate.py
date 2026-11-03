@@ -411,7 +411,8 @@ def figures(city, reg, logs):
     out["header"] = header
     src = {s.get("what"): s.get("name", "") for s in header.get("sources", [])}
     out["proxy_jobs"] = src.get("jobs", "").startswith("tier 0 proxy")
-    out["ghsl_pop"] = src.get("population", "").startswith("GHSL")
+    # GHSL scaled to census totals by unit (tier0's admin_totals) is census-built (T-2038)
+    out["ghsl_pop"] = src.get("population", "").startswith("GHSL") and ", scaled to " not in src.get("population", "")
     out["osm_mask"] = "OpenStreetMap" in (header.get("water") or {}).get("source", "")
     pop = a["pop"].astype(np.float64)
     jobs = a["jobs"].astype(np.float64)

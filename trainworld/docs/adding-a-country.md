@@ -49,7 +49,11 @@ Take the first that holds; never take a source from memory.
    service): one `CONFIGS` entry in `pipeline/admin_totals.py`, no code; `admin_totals.py check <ISO2>`
    must pass (codes unique, every unit a total, parents' sums exact) and `dry <ISO2>` shows each zone's
    people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
-   or province, spread by the census shares). Indonesia and the Philippines have configs (T-2084).
+   or province, spread by the census shares). A config may cover part of a country (`only`, a code regex: Cambodia's
+   north-west) or a file with no parent rows (`parent` None, `national_total` the published figure and how near the
+   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN. Switch a country on with `"module": "admin_totals"`
+   in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
+   signal cache), and its `pop_vs_plan` is relaxed with the census figure.
 4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
    Record what you found in the register (N, G or ?) and file a P3 task for anything usable.
 

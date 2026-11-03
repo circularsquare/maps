@@ -149,14 +149,22 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "MYS": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "group_level": 1, "task": "T-1738"},
               # Indonesia's kabupaten as they are, zones held to their island; at the default 20 a km2 the river
               # and coast towns of Kalimantan and Papua were dead space (Sintang, Berau, Bulungan, Sentani; T-1738)
-              "IDN": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True, "task": "T-1738"},
-              # the Philippines' municipalities as they are, zones held to their island (T-1738)
-              "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "task": "T-1738"},
+              # people scaled to the 2020 census by kabupaten (`admin_totals`, T-2038)
+              "IDN": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True,
+                      "module": "admin_totals", "task": "T-1738"},
+              # the Philippines' municipalities as they are, zones held to their island; people scaled to the 2020
+              # census by municipality (T-2053)
+              "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "module": "admin_totals", "task": "T-1738"},
+              # the default rule; the north-west's people scaled to the 2019 census by district (T-2000)
+              "KHM": {"module": "admin_totals", "task": "T-2000"},
               # New Zealand's wards by territorial authority with no density floor (at 20 a km2 the wards left 1.19M
               # dead, Selwyn and Gisborne among them), zones not joining over 250 km (else Christchurch and Dunedin
               # were one zone of the whole South Island; T-1738)
               "NZL": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "group_level": 1,
-                      "join_km": 250.0, "task": "T-1738"},
+                      "join_km": 250.0, "module": "admin_totals", "task": "T-1738"},  # people by 2023 SA2 (T-2077)
+              # India's sub-districts by China's numbers: at the default 0.5M floor the plan had 1,318 zones (T-2111)
+              "IND": {"floor": 1_000_000, "cap": 2_500_000, "contiguous": True, "module": "india", "city_pop": 200_000,
+                      "task": "T-2111"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
@@ -200,6 +208,11 @@ SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipal
                          "Hebei Province": "jingjinji", "Shanghai Municipality": "jiangsu",
                          "Guangzhou Province": "guangdong", "Ningxia Ningxia Hui Autonomous Region": "ningxia",
                          "Inner Mongolia Autonomous Region": "innermongolia"},
+                 # India by state, the small ones with a neighbour (T-2111)
+                 "IND": {"Delhi": "ncr", "Haryāna": "ncr", "Chandīgarh": "punjab", "Ladākh": "jammu",
+                         "Puducherry": "tamil", "Dādra and Nagar Haveli and Damān and Diu": "gujarat", "Goa": "maharashtra",
+                         "Lakshadweep": "kerala", "Sikkim": "west", **{s: "assam" for s in (
+                             "Nāgāland", "Manipur", "Mizoram", "Tripura", "Meghālaya", "Arunāchal Pradesh")}},
                  # Census divisions, Delaware, Maryland and DC with the Northeast so the 13 built packs
                  # solve together (T-1004)
                  "USA": {**{s: "northeast" for s in (
@@ -221,7 +234,9 @@ SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipal
 ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germany"),
              "CAN": ("A", "canada"), "JPN": ("A", "japan"), "BRA": ("C", "brazil"),
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
-             "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia")}
+             "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
+             "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
+             "NZL": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)

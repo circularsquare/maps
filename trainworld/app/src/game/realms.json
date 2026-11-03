@@ -59,7 +59,15 @@
     { "id": "puerto-rico", "name": "Puerto Rico", "countries": ["PR"] },
     { "id": "canada", "name": "Canada", "countries": ["CA"] },
     { "id": "brazil", "name": "Brazil", "countries": ["BR"] },
-    { "id": "india", "name": "India", "countries": ["IN"] },
+    { "id": "in-north", "name": "North India", "units": { "IN": [
+      "Jammu and Kashmir", "Ladakh", "Himachal Pradesh", "Punjab", "Chandigarh", "Haryana", "Delhi", "Rajasthan"] } },
+    { "id": "in-central", "name": "Central India", "units": { "IN": ["Uttar Pradesh", "Uttarakhand", "Madhya Pradesh", "Chhattisgarh"] } },
+    { "id": "in-east", "name": "East India", "units": { "IN": ["Bihar", "Jharkhand", "Odisha", "West Bengal"] } },
+    { "id": "in-northeast", "name": "Northeast India", "units": { "IN": [
+      "Assam", "Arunachal Pradesh", "Nagaland", "Manipur", "Mizoram", "Tripura", "Meghalaya", "Sikkim"] } },
+    { "id": "in-south", "name": "South India", "units": { "IN": [
+      "Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Kerala", "Puducherry", "Lakshadweep", "Andaman and Nicobar Islands"] } },
+    { "id": "india", "name": "West India", "units": { "IN": "*" } },
     { "id": "nigeria", "name": "Nigeria", "countries": ["NG"] }
   ]
 }

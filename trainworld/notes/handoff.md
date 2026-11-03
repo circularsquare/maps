@@ -54,8 +54,9 @@ Data writers take turns, in this order: census rebuilds -> terrain half 2 -> Ind
    census OFF (2011 shares moved only 2.6%, mostly undoing growth; one line in india.plan_hooks to switch on), realms by
    zonal council ("India" renamed "West India", id kept), ~9-10 h (stops before the join if slow). 188 names listed in
    notes/T-2111.md for Anita. Its go message: "go" (plus "switch it on" only if Anita wants the census).
-4. aa607bfc796d24bb2 (Sonnet) **T-2093 part 1**: jpn7 cities (Osaka, Nagoya, Fukuoka, Sapporo, Hiroshima) in the
-   ridership check; read-only; Vite 6162, 3 cores.
+4. T-2093 part 1 DONE (committed): Osaka 0.35, Nagoya 0.42, Fukuoka 0.49, Sapporo 0.43, Hiroshima 0.52 of real (S12
+   entries, floors); jpn7 itself runs ~0.73x the dedicated saves (not looked into; not filed). Japan reads low throughout,
+   NY high: a demand question for Anita (she ruled out a per-place factor, T-1750). Part 2 (US car city) open.
 - After India: Turkey (T-2079, COD-PS ilce), Mexico (T-1978 chunked gates done; T-2080/T-2081), T-1856 hexagons after
   the terrain rebuild (design in notes/T-1881.md, ~1 day), T-2064 (the real save's flat crossings that are really
   grade-separated), T-2054 (join builds terrain + drives), T-2095 (first register after a join rebuilds every place),

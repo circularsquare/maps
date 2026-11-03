@@ -2,6 +2,13 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2038 [P3] Papua's GHSL people. Done 2026-11-03 (agent t2038): Papua's seven zones moving over 10% rebuilt on the 2020 census by kabupaten (`admin_totals` ID): yai 480,001 -> 164,698, puc held -> 337,214 shipped, pai, mmi, mru, biu, maw down 0.61-0.79x. notes/T-1738.md 15.
+- T-2053 [P3] Muslim Mindanao under GHSL. Done 2026-11-03 (agent t2038): pti shipped at 1,632,241 (held at 466k GHSL), mrw 713,135 -> 1,149,319, lbx -> 1,062,529, ctb -> 1,174,297, on the 2020 census by municipality; pti's shore-clip gap stays T-2099. notes/T-1738.md 15.
+- T-2076 [P3] Philippines' municipal census hook. Done 2026-11-03 with T-2053 (municipalities, not barangays, per T-2084). notes/T-1738.md 15.
+- T-2000 [P2] Cambodia's north-west. Done 2026-11-03 (agent t2038): citypopulation.de's 2019 district figures for five provinces (config `KH`, partial); tpe anv phm slk shipped at 159,393, 180,131, 228,964, 72,491 (3.3M in the plan). Rest of Cambodia T-2107. notes/T-1738.md 15.
+- T-2077 [P3] New Zealand on the 2023 census. Done 2026-11-03 (agent t2038) for people: all six rows rebuilt on SA2 totals (auc 1.83M -> 1.72M, whn 163k -> 191k, the rest within 5%); jobs filed as T-2108. notes/T-1738.md 15.
+- T-2039 [P3] set's park check. Done 2026-11-03 (agent t2038): `enrich_parks` fails only when more than 3 parks are off the cells; set (194,869) and tpe built. lel (7 of 28 off) stays T-1376. notes/T-1738.md 15.
+
 - T-2105 [P3] `demandFinal` waited for ever on the real save. Done 2026-11-03 (agent t2105): the focus pool's solve is logged after the whole solve with a higher version (log `1 2 3F`, view v2) at every worker count; checks now take the newest log entry not in `client.fversions` (lib.mjs and six checks that copy the pattern); 3 runs each of 1, 2 and default workers pass; no app change. T-2045.
 - T-1880 [P2] Do buses act as feeders? Done 2026-11-03 (measurement): yes, narrowly; of six real-save buses none at 8 minutes, Throgs Neck at 12 minutes loses $19k/day itself and adds $98k/day to the network; rail gains at most ~$170k. checks/t1880-bus-feeders.mjs, notes/T-1880.md.
 - T-2059 [P2] Lines side by side: cost and two misclicks. Done 2026-11-03 (agent t2059): band build on the real save after a path edit ~650 -> ~260 ms, profiles the same to the bit; the Jersey City merge placed as at its node, t1799-bands 58/58. notes/T-2058.md 3c.

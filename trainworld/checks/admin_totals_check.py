@@ -10,8 +10,8 @@ without writing anything live.
 3. The old-census mode: each unit takes GHSL's parent total times its census share of the parent.
 4. A config's join on made-up files (a temp GeoPackage and CSV): a good one passes, a repeated code
    and a unit missing from its parent's sum fail; the shares mode hands the hook held totals.
-5. The two real configs' joins, Indonesia and the Philippines: codes unique, every unit a total,
-   parents' sums exact.
+5. The real configs' joins (ID, PH, KH a partial config, NZ's SA2s against the published total, IN): codes
+   unique, every unit a total, parents' sums exact.
 One PASS or FAIL line each.
 """
 import contextlib
@@ -156,7 +156,7 @@ def join_configs():
 
 def real_joins():
     import admin_totals as A
-    for iso in ("ID", "PH"):
+    for iso in ("ID", "PH", "KH", "NZ", "IN"):
         try:
             ok, lines = A.join_check(iso)
         except (SystemExit, Exception) as e:  # a missing source file
