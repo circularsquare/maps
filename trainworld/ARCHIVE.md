@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1881 [P2] The hillshade drew dense centres as hills. Done 2026-11-03: shade drawn flat where the classes are flat (map/demFlat.ts). notes/T-1881.md.
+- T-1889 [P2] Riverbanks priced as hills or mountains (East River at 42nd St). Done 2026-11-03: cause was the UN and Tudor City towers; flat after the tower cut (42nd St ghost 2.05x, Water +2.5x only). notes/T-1881.md.
+- T-1944 [P2] Midtown priced as mountains. Done 2026-11-03: tower fields cut from GEDTM30 (`terrain_fine.tower_ground`), world terrain rebuilt on AWS (US$0.38) and all 2,353 zone grids redone; 6th Ave 0.50x US$199M, 45th St 0.50x US$168M. notes/T-1881.md.
+
 - T-2038 [P3] Papua's GHSL people. Done 2026-11-03 (agent t2038): Papua's seven zones moving over 10% rebuilt on the 2020 census by kabupaten (`admin_totals` ID): yai 480,001 -> 164,698, puc held -> 337,214 shipped, pai, mmi, mru, biu, maw down 0.61-0.79x. notes/T-1738.md 15.
 - T-2053 [P3] Muslim Mindanao under GHSL. Done 2026-11-03 (agent t2038): pti shipped at 1,632,241 (held at 466k GHSL), mrw 713,135 -> 1,149,319, lbx -> 1,062,529, ctb -> 1,174,297, on the 2020 census by municipality; pti's shore-clip gap stays T-2099. notes/T-1738.md 15.
 - T-2076 [P3] Philippines' municipal census hook. Done 2026-11-03 with T-2053 (municipalities, not barangays, per T-2084). notes/T-1738.md 15.
