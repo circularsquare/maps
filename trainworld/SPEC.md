@@ -268,8 +268,16 @@ using it [T-867]. The fare is a curve of trip length through three points, never
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
 T-694]. A city's goals are train shares of 10%, 20%, 30% and 40%, each kept once reached: the 10%
-one is a star in the Cities list [T-685], and all are ticks on the trips bar in the city view, where they are also listed as
-goals reached [T-1437, T-1438, T-1551].
+one is a star in the Cities list [T-685], 10% and 20% are ticks on the trips bar in the city view, and all are listed there as
+goals reached once reached [T-1437, T-1438, T-1551, T-2145]. In the seven cities with a real network save the bar also marks
+the train share that real network gets in this game [T-2145].
+**Achievements** are goals for the whole game, each kept once earned: four tiered ones (Cities served
+2/10/25/100, Trips a day 1M to 1B, Busiest station 500k to 5M boardings a day, Busiest line 500k to 10M
+riders a day, the last three on the average day) and ten firsts (a line in two countries, on two
+continents, 1,000 km long, with $200M profit in a day, a train at 300 km/h, a circle of 10 stops, one
+change per trip, a city at 20% of its own trips and of its trips to other places by train, a rider 12
+hours on one train). A small toast at the map's bottom left says each one earned; the medal at the
+top of the Cities tab opens them. A sandbox earns none [T-2124; docs/ui-panels.md "Achievements"].
 
 Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between
 clicks (straight where they do not serve), stops place themselves at the train
@@ -308,9 +316,10 @@ a moving sky and a band in the demand level's colours (T-861), pause and three s
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. Motion is allowed where it helps, never
 slowing a control (Anita 2026-10-29). A new normal game shows a **Tutorial card**, a post-it
-under the search button with six steps ticked as the player does them (track, stations, construct,
-a line, stops, a train), until the player has finished it once in the browser [T-1822;
-docs/ui-panels.md "Tutorial card"]; a browser's first elevation is +1. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
+under the search button with steps ticked as the player does them (a zoom into a city on a world
+start, track, stations, construct, a line, stops, a train, the crowding dot, trains at every level, unpausing: a new game starts paused, T-2142),
+then a second card on reading demand (Homes, a bubble, a trip, a star), until the player has finished
+the first once in the browser [T-1822, T-2123; docs/ui-panels.md "Tutorial card"]; a browser's first elevation is +1. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account (labelled "today", the profit "expected profit today" [T-1893]), while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
 biggest car flows as arcs [T-1435]) show demand's

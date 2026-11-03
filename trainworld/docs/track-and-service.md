@@ -688,9 +688,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on a weekday and a superholiday's days; a Saturday,
   a Sunday and a holiday that runs as a Sunday (by the line's country, docs/world.md "Calendar") run
   medium 6-24 and low 0-6 (`QUIET_LEVEL`, T-1720, [demand-timing.md](demand-timing.md) "Kinds of
-  day"), so a line with no medium trains runs none on a weekend day. New rail lines start at 0 / 0 / 0, and the first
-  count or headway the player sets at one level goes to every level still at 0 (the panel's rule,
-  T-2092); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
+  day"), so a line with no medium trains runs none on a weekend day. New rail lines start at 0 / 0 / 0 and each level is
+  set on its own, so a line given trains at high alone stops at 20:00 (T-2123; the tutorial's last
+  steps ask for trains at every level); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
   within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,
@@ -963,7 +963,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   blueprint total (the pieces switched off left out); each hover states the rule. The panels' upkeep
   figures (station, track and the Build tab's) are in the alert red, as a cost [T-1893].
 - Running costs, upkeep and **fares**
-  are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
+  are settled by the clock worker into the cash and a ledger per day (every day kept, T-2143) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
   hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
   back: a clock set behind the time already settled adds nothing until it passes it, and a charge
@@ -972,8 +972,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the load it follows, and the worker ignores one sent before the main thread saw the latest load,
   which still holds the previous game's time (T-715). A load settles again from the save's clock, so
   ledger entries after it are dropped and their net returned to the cash (the running cost worked
-  out again on the loaded network at the rate the kept whole days show, since the day ledger keeps
-  30 days); edits' charges in them stay, on the clock's day. After a load the main thread sends the
+  out again on the loaded network at the rate the kept whole days show); edits' charges in them stay, on the clock's day. After a load the main thread sends the
   income, region shares and points again even when they match the last game's. **How much each
   game hour gets** (T-736, `app/src/game/moneyTiming.ts`): demand gives fares and rides per hour of
   each period and kind of day, the timetable a running cost per hour of each level, by country so

@@ -2,6 +2,8 @@
 // a set by ranges (strokeLod.ts) rebinds its ten attribute buffers for every range, in every pass, and
 // zoomed in that is hundreds of ranges a pass. Gathered, a pass is one draw of a few thousand instances.
 
+import { BAND_STRIDE } from "./lineBands";
+
 /** one stroke set's per-instance values, as its attribute buffers hold them; `wmul` and `full` null: all 1 and all 0 */
 export interface StrokeCpu {
   seg: Float32Array;
@@ -11,7 +13,7 @@ export interface StrokeCpu {
   flags: Float32Array;
   speed: Float32Array;
   lane: Uint8Array | undefined;
-  /** T-1799: absent, all 0 */
+  /** T-1799: `Strokes.band`, BAND_STRIDE an instance; absent, all 0 */
   band: Int16Array | undefined;
   /** 3 an instance (width, the Traffic view's band shift at its start and end); null: 1, 0, 0 */
   wmul: Float32Array | null;
@@ -43,14 +45,14 @@ export class StrokeGather {
   constructor(private gl: WebGL2RenderingContext, loc: (name: string) => number) {
     this.vao = gl.createVertexArray()!;
     gl.bindVertexArray(this.vao);
-    const attrib = (name: string, size: number, type: number, integer = false, norm = false) => {
+    const attrib = (name: string, size: number, type: number, integer = false, norm = false, stride = 0) => {
       const l = loc(name), b = gl.createBuffer()!;
       this.bufs.push(b);
       if (l < 0) return b;
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.enableVertexAttribArray(l);
-      if (integer) gl.vertexAttribIPointer(l, size, type, 0, 0);
-      else gl.vertexAttribPointer(l, size, type, norm, 0, 0);
+      if (integer) gl.vertexAttribIPointer(l, size, type, stride, 0);
+      else gl.vertexAttribPointer(l, size, type, norm, stride, 0);
       gl.vertexAttribDivisor(l, 1);
       return b;
     };
@@ -63,7 +65,14 @@ export class StrokeGather {
     attrib("a_lane", 2, gl.UNSIGNED_BYTE, false, true);
     this.wmulBuf = attrib("a_wmul", 3, gl.FLOAT);
     this.fullBuf = attrib("a_full", 1, gl.FLOAT);
-    attrib("a_band", 4, gl.SHORT, false, true);
+    // (Strokes.band's BAND_STRIDE: the shifts and widths, then the metres, from one buffer)
+    const bb = attrib("a_band", 4, gl.SHORT, false, true, BAND_STRIDE * 2), lm = loc("a_band_m");
+    if (lm >= 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, bb);
+      gl.enableVertexAttribArray(lm);
+      gl.vertexAttribPointer(lm, 2, gl.SHORT, true, BAND_STRIDE * 2, 8);
+      gl.vertexAttribDivisor(lm, 1);
+    }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -82,8 +91,8 @@ export class StrokeGather {
     this.lane = new Uint8Array(cap * 2);
     this.wmul = new Float32Array(cap * 3);
     this.full = new Float32Array(cap);
-    this.band = new Int16Array(cap * 4);
-    const bytes = [16, 4, 4, 4, 4, 4, 2, 12, 4, 8];
+    this.band = new Int16Array(cap * BAND_STRIDE);
+    const bytes = [16, 4, 4, 4, 4, 4, 2, 12, 4, BAND_STRIDE * 2];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferData(gl.ARRAY_BUFFER, cap * bytes[i], gl.DYNAMIC_DRAW);
@@ -107,7 +116,7 @@ export class StrokeGather {
       if (cpu.lane) copy(lane, at * 2, cpu.lane, start * 2, n * 2);
       if (cpu.wmul) copy(wmul, at * 3, cpu.wmul, start * 3, n * 3);
       if (cpu.full) copy(full, at, cpu.full, start, n);
-      if (cpu.band) copy(band, at * 4, cpu.band, start * 4, n * 4);
+      if (cpu.band) copy(band, at * BAND_STRIDE, cpu.band, start * BAND_STRIDE, n * BAND_STRIDE);
       at += n;
     }
     if (!cpu.lane) lane.fill(255, 0, total * 2);
@@ -116,9 +125,9 @@ export class StrokeGather {
       for (let i = 0; i < total; i++) wmul[i * 3] = 1;
     }
     if (!cpu.full) full.fill(0, 0, total);
-    if (!cpu.band) band.fill(0, 0, total * 4);
+    if (!cpu.band) band.fill(0, 0, total * BAND_STRIDE);
     const data: ArrayBufferView[] = [seg, colour, edge, level, flags, speed, lane, wmul, full, band];
-    const per = [4, 1, 1, 1, 1, 1, 2, 3, 1, 4];
+    const per = [4, 1, 1, 1, 1, 1, 2, 3, 1, BAND_STRIDE];
     this.bufs.forEach((b, i) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, data[i], 0, total * per[i]);

@@ -79,8 +79,8 @@ purpose filter the purpose drawn is ringed in the bar.
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
   run or more those in a window of zones round it re-solved, T-1735) or the whole solve [T-1665,
   `game/lineFigures.ts`]; a game load shows none.
-  The "+N daily rides" after a stop edit is not in this tab: it is on the map
-  ([ui-map.md](ui-map.md) "Opening day").
+  What an edit did to riders and profit is not in this tab: it is on the map
+  ([ui-map.md](ui-map.md) "Edit note").
 - **Trains to add** [T-472, T-491, T-818, T-1255, T-1677]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted (a 0 is muted and has no hover). The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
@@ -215,9 +215,8 @@ purpose filter the purpose drawn is ringed in the bar.
   shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
   length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
   counts rounded up to even; paste is off until something is copied, its hover naming the line
-  copied from; on a rail line with no trains at any level, the first train count or headway set at one level
-  goes to every level still at 0, so a new line runs all day and all week; after that the levels are
-  independent [T-2092, `firstService` in `game/world.ts`]; a Trains / Headway switch in the heading
+  copied from; each level's count or headway is set on its own, a new line's included (T-2123 took
+  back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 120
   minutes; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872,
@@ -817,7 +816,7 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   period, or the way to and from the trains over `pair_walk_max` (80 felt minutes together), named
   by what holds it back: on a trip under `ride_min_km` (5 km) "too far to walk to, and the trip is
   too short to drive to one"; with no station within a drive, "none is within a drive of the start";
-  else the bigger end, "The walk from the nearest station to the end is too long" or "The stations
+  else the bigger end: the end's, "No train trip found" [T-2144], or the start's, "The stations
   near the start are too far, even by car". Its hover gives the two ends' felt minutes and the limit.
   **When the headline counts train trips anyway** [T-1902] (at least one whole trip; the headline
   counts the homes and places around the two points, and the views deal a zone's commuters over

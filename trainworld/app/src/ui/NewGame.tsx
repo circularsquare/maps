@@ -78,7 +78,8 @@ async function realNetwork(id: string): Promise<ArrayBuffer> {
 /** The sheet. `onStart` gets the new game, with its real network downloaded when chosen. */
 export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (spec: NewGameSpec) => void; onBack: () => void; heading?: boolean }) {
   const [mode, setMode] = useState<GameMode>("normal");
-  const [start, setStart] = useState<string | null>(null);
+  // T-2123: New York is lit to begin with (the first suggestion); Choose on map is the world start
+  const [start, setStart] = useState<string | null>(START_CITIES[0]);
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(0);
   const [real, setReal] = useState(false);
@@ -152,7 +153,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         <span class="start-head">Start in</span>
         <div class="new-game-cities">
           {START_CITIES.map((id) => (
-            <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(start === id ? null : id)}>{cityById(id).name}</button>
+            <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(id)}>{cityById(id).name}</button>
           ))}
           {CAN_LOCATE && <button class={"btn text new-game-here" + (located ? " on" : "") + (here === "failed" ? " muted" : "")} aria-pressed={!!located} data-state={located ? "located" : here} disabled={here === "asking"} onClick={locate}>
             {here === "asking" ? "Locating" : here === "failed" ? "Location unavailable" : "Current location"}

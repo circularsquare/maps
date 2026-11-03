@@ -9,6 +9,7 @@ import { busDraft } from "../map/busDraw";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
+import { AchievementToasts } from "./Achievements";
 
 // The build tools carry no hint (Anita, T-1159).
 const HINT: Record<Tool, string> = {
@@ -116,6 +117,7 @@ function Notice() {
 export function ToolNotes() {
   return (
     <div id="tools">
+      <AchievementToasts />
       {ask.value ? <Ask /> : <Notice />}
     </div>
   );

@@ -66,7 +66,7 @@ import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
 import { startLineFigures } from "./game/lineFigures";
-import { startRidesNote } from "./game/ridesNote";
+import { startEditNote } from "./game/editNote";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -77,7 +77,7 @@ import { MapSky, TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startTroubleList } from "./ui/TroubleList";
-import { startRidesNotes } from "./ui/RidesNotes";
+import { startPassingNote } from "./ui/PassingNote";
 import { mountGuide } from "./ui/Guide";
 import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
@@ -153,7 +153,7 @@ const skyRoot = document.createElement("div");
 map.getContainer().appendChild(skyRoot);
 render(h(MapSky, null), skyRoot); // T-1868: the day and night picture at the map's top right
 startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
-startRidesNotes(map.getContainer()); // T-1499: "+N daily rides" at the top centre after a line's stops change
+startPassingNote(map.getContainer()); // T-1709: the feedback's "sent" at the top centre
 mountGuide(map.getContainer()); // T-1822: the Getting started card under the day and night picture
 mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();
@@ -216,7 +216,11 @@ startOpenFit(); // T-895
 const client = new ClockClient();
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
+// T-2142: a new game starts paused, a sandbox too (the tutorial's last step is the play button); a
+// `?new=1` check page keeps running as before
+const pauseNewGame = (newGame: boolean | undefined) => { if (newGame && params.get("new") !== "1") clock.setRunning(false); };
 if (urlChoice) {
+  pauseNewGame(urlChoice.newGame || params.get("load") === "new"); // a real network's new game too
   guideNewGame(!!urlChoice.newGame);
   client.start(urlChoice);
 }
@@ -357,7 +361,7 @@ effect(() => {
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 startOpeningDay(); // T-1434
 startLineFigures(); // T-1665
-startRidesNote(); // T-1478
+startEditNote(); // T-2125
 effect(() => {
   openings.value;
   const w = world.peek();
@@ -584,6 +588,7 @@ if (!urlChoice) showStartMenu((choice) => {
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
   startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
+  pauseNewGame(choice.newGame);
   guideNewGame(!!choice.newGame);
   client.start(choice);
 });

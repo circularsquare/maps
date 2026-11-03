@@ -328,10 +328,6 @@ export type FromDemand =
       corridorShares?: [number, number];
       /** the pairs with rail as (index in the table, rail trips, commute rail legs) */
       corridorRail?: Float64Array;
-      /** T-378: per market pair, every one in `IntercityApi.corridor_summary` order (`corridorOf`),
-       * the shares of its longer trips not by rail that fly and that drive (the same every period);
-       * sent with `corridorTable` */
-      corridorModes?: Float32Array;
       /** T-378: per place, its longer trips in the period with places that have no zone, each way */
       elsewhere?: number[];
       /** per route node (line by line, run 0 stops then run 1 stops): riders in the period */

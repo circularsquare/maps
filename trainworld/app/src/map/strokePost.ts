@@ -12,13 +12,14 @@
 // network's arrays are views of the same buffers: so the last network is not to be read once its
 // successor is merged (`planStrokes`).
 
+import { BAND_STRIDE } from "./lineBands";
 import type { Strokes } from "./network";
 
 export type StrokeKind = "track" | "lines";
 export type StrokeMode = "whole" | "same" | "patch";
 
 /** values per segment of each array of a set */
-const WIDTH = { seg: 4, colour: 1, edge: 1, level: 1, flags: 1, dist: 1, lane: 2, stretch: 1, band: 4, speed: 1, trainSpeed: 1 } as const;
+const WIDTH = { seg: 4, colour: 1, edge: 1, level: 1, flags: 1, dist: 1, lane: 2, stretch: 1, band: BAND_STRIDE, speed: 1, trainSpeed: 1 } as const;
 type Field = keyof typeof WIDTH;
 type TypedArray = Float32Array | Uint32Array | Uint8Array | Int16Array;
 const FIELDS: Record<StrokeKind, readonly Field[]> = {

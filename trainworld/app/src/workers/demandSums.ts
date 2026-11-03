@@ -323,7 +323,6 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     corridorTable: market.corridorTable,
     corridorShares: market.corridorShares,
     corridorRail: market.corridorRail,
-    corridorModes: market.corridorModes,
     elsewhere: market.elsewhere,
     seg: sum((r) => r.seg)!,
     board,

@@ -6,7 +6,7 @@ import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { ApiError, sendFeedback } from "../game/account";
 import { Modal } from "./Modal";
-import { showPassingNote } from "./RidesNotes";
+import { showPassingNote } from "./PassingNote";
 import "./account.css";
 
 declare const __TW_BUILD__: string | undefined;

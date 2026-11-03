@@ -4,6 +4,7 @@
 // Plain functions of their inputs, so a check can run them without a page.
 
 import { cityById, isCity, type CityId } from "../game/cities";
+import { deviceGB } from "./deviceMemory";
 
 export const LOD_FINE = 0;
 export const LOD_COARSE = 1;
@@ -42,11 +43,10 @@ export function zonesGB(zones: Iterable<CityId>, fine: ReadonlySet<CityId>): num
 }
 
 /** The zones' memory each solving worker may hold (notes/T-1206.md section 3): about 1.5 GB on a
- * device reporting 8 GB (`navigator.deviceMemory`, which never reports more), less below, as much
- * as 8 GB where it is not reported (desktop Firefox and Safari) */
+ * device reporting 8 GB (`deviceGB`, which never reports more), less below, as much as 8 GB where it
+ * is not reported (desktop Firefox and Safari) */
 export function lodBudgetGB(): number {
-  const dm = (navigator as { deviceMemory?: number }).deviceMemory;
-  return 1.5 * Math.min(8, dm ?? 8) / 8;
+  return 1.5 * Math.min(8, deviceGB() ?? 8) / 8;
 }
 
 /** T-2005: the zone built in before the last one is kept from the memory drops this long after its build */

@@ -1,14 +1,15 @@
 ﻿# Orchestrator handoff, trainworld
 
-Orchestrator: session 7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb, name maps-b2, since 2026-11-02 13:52
-Updated: 2026-11-03 ~10:30 (context past 500k: a fresh orchestrator can take over any time)
+Orchestrator: session 76ebbfee-75f0-49e0-be85-230cb2ef8d79, name maps-0f, since 2026-11-03 09:32
+Updated: 2026-11-03 ~10:30 (local time, -0500; maps-b2's "~15:00" stamps below were not local time). maps-b2 handed
+back 09:35: every running agent below was told to send its final report to maps-0f too (SendMessage); they are maps-0f's
+to adopt. Their SubagentHandback still lands in maps-b2's session, so if a report seems missing, ask the agent by id.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 57a1a157. **8800 = build 815 (7b5a08ee)** on freeze 20261103-034613 (NZ), smoke 22/22 light and dark (~07:20).
-  Commits since 815 (bdbfc79f terrain_fine fork fix, e9a82a7e T-1880 check, 57a1a157 T-2105 checks) change no app
-  code; rebuild 8800 after the terrain rebuild lands. Smoke now has 23 checks (t2022 loan schedule added).
+- master 73d722a2. **8800 = build 821 (8212d530)** on freeze 20261103-051954; LIVE also 821 (R2 `trainworld/2026-11-03b`,
+  website dc49c5f). Since 821: 78e80f51 (band 1 px gap), 73d722a2 (achievement design note). Smoke has 23 checks.
 - Worktrees: .tw-trees/t1734 only (kept on purpose, T-1734).
 - Uncommitted in the main tree (other agents' work in progress, commit with their reports): the census-rebuild agent's
   and India agent's files (pipeline/admin_totals.py, enrich_parks.py, india.py, realms.py, world_plan.py/.json,
@@ -16,7 +17,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   app/src/game json files, docs adding-a-country/data-register/code-map?, notes/T-1738.md, notes/T-2111.md, DECISIONS,
   TASKS). TASKS.md also holds T-2104/T-2105/T-1880 line changes (T-1880 agent) not yet committed. TODO.md is Anita's.
 - 8800 rebuild: `cmd /c "<my scratchpad>\snapbuild.cmd <hash> > <my scratchpad>\snapbuild.log 2>&1"` (my scratchpad:
-  C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\7ae5a6d2-b46c-4f33-9114-37a1eedcfcdb\scratchpad),
+  C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\76ebbfee-75f0-49e0-be85-230cb2ef8d79\scratchpad;
+  copies of maps-b2's, whose scratchpad still holds listslots/dumpslot/dumpsync.mjs),
   then smoke on http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Never pass HEAD. Build number =
   `git rev-list --count <hash>`. **While a country run owns data/packs**: set `TW_PACKS=<main>\trainworld\data\frozen\
   <newest>\packs` and `TW_MARKET_DRIVES=<main>\trainworld\data\packs\market-drives.bin` before snapbuild (the commit's
@@ -24,13 +26,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Staging one agent's lines of a shared file: `python <my scratchpad>\stage_without.py <maps root> <path> "<marker>"`.
   Caution: a line another agent EDITED is dropped entirely; check `diff --cached` for unexpected removals.
 - `checks/build_inputs.py`: every file a production build copies; 0 flags expected.
-- **LIVE: build 797 (7e730216) on freeze 20261102-230529, R2 `trainworld/2026-11-03`, website f50e733**, verified.
-  Publish only on Anita's word. Recipe: `freeze.py build <stamp>` with TW_MARKET_DRIVES set (a freeze lacks
+- Publish only on Anita's word. Recipe: `freeze.py build <stamp>` with TW_MARKET_DRIVES set (a freeze lacks
   market-drives.bin), `deploy.py --dist <dist> --version <v> --smoked`, website `git add trainsworld/ trainworld/`,
   commit "anitabuilder", push, `deploy.py --verify --page --version <v>`. Leave her pages/thoughts/cities.md alone.
-  Live 797 has the T-2071 out-of-memory bug: I proposed publishing once the terrain rebuild and census fixes are on 8800.
-- World: Philippines (102 of 103, pti held) and New Zealand (6 of 6) shipped 2026-11-03; every zone has terrain and drives.
-- Cores cap 15 (Anita asleep overnight; back to 10, `python cores.py cap 10`, when she's around).
+- World: Philippines (103 of 103) and New Zealand (6 of 6) shipped 2026-11-03; every zone has terrain and drives.
+- Cores cap 10 while Anita is at the machine (12-15 when she's away: `python cores.py cap <n>`).
 
 ## Landed 2026-11-02 evening to 11-03 (maps-b2)
 T-2058 lines side by side A+C (still off in Settings), muting thin+faded default, T-2059/T-2060 (band build ~260 ms,
@@ -39,43 +39,50 @@ T-1881 hillshade flat where priced flat + tower_ground code (prices wait for the
 runner, T-2084 census totals (admin_totals.py), Philippines, New Zealand, T-1880 bus feeders (check), T-2105 checks,
 research: player-voices, next-countries-data, first-ten-minutes, ridership (+ checks/t2088-ridership.mjs).
 
-## In flight (maps-b2), ~10:30 2026-11-03
-Data writers take turns, in this order: census rebuilds -> terrain half 2 -> India.
-1. aea244d3f3bcf163b (Opus) **census rebuilds** (notes/T-1738.md 15, kit t2038, Vite 6152, ids T-2106..2110): T-2038
-   Papua, T-2053/T-2076 BARMM + pti, T-2000 Cambodia NW (typed citypopulation.de districts), T-2077 NZ if time. Its join
-   was running ~10:00 (claim t2038, 9 cores). Owns data/packs and data/terrain until it reports. On report: commit its
-   files, then step 2.
-2. ae84ece4d2ab0afec (Sonnet) **T-1881 terrain half 2**: parts staged and checked in data/work/t1881-staging/ (AWS run 2:
-   19 min, US$0.38, torn down clean). Waiting for my "data/terrain is free". Resume it with that after step 1; it backs
-   up, swaps parts, `zone_terrain.py build --force --jobs 8`, mix, build_inputs, t1881-prices.mjs, smoke, cleans up,
-   archives T-1881/T-1889/T-1944. Then rebuild 8800 (normal build if no one writes data).
-3. a57accbdda9f839db (Opus) **India** (T-2111, notes/T-2111.md, kit t2111, Vite 6165, ports 6388/6389): prep DONE,
-   waiting for my go after step 2. Plan: 74 metros + 709 zones (782 rows), China's zone numbers (floor 1M, cap 2.5M),
-   census OFF (2011 shares moved only 2.6%, mostly undoing growth; one line in india.plan_hooks to switch on), realms by
-   zonal council ("India" renamed "West India", id kept), ~9-10 h (stops before the join if slow). 188 names listed in
-   notes/T-2111.md for Anita. Its go message: "go" (plus "switch it on" only if Anita wants the census).
-4. T-2093 part 1 DONE (committed): Osaka 0.35, Nagoya 0.42, Fukuoka 0.49, Sapporo 0.43, Hiroshima 0.52 of real (S12
-   entries, floors); jpn7 itself runs ~0.73x the dedicated saves (not looked into; not filed). Japan reads low throughout,
-   NY high: a demand question for Anita (she ruled out a per-place factor, T-1750). Part 2 (US car city) open.
-- After India: Turkey (T-2079, COD-PS ilce), Mexico (T-1978 chunked gates done; T-2080/T-2081), T-1856 hexagons after
-  the terrain rebuild (design in notes/T-1881.md, ~1 day), T-2064 (the real save's flat crossings that are really
-  grade-separated), T-2054 (join builds terrain + drives), T-2095 (first register after a join rebuilds every place),
-  T-2094 (world_plan's other Mollweide distances), T-2099 (shore clip loses coastal people).
+## In flight (maps-0f, adopted from maps-b2 09:35 2026-11-03)
+LIVE = build 821 (8212d530) on freeze 20261103-051954, R2 `trainworld/2026-11-03b`, website dc49c5f, verified 6/6.
+8800 = build 821 too; master has more since (78e80f51 band gap, 73d722a2 achievement design note); rebuild 8800 after
+the next landings. Cap 10 (Anita at the machine). Her batches today: notes/todo-2026-11-03.md and todo-2026-11-03b.md.
+
+Running agents (all main tree unless noted; each claims 1-2 cores):
+- a57accbdda9f839db (Opus) **India** (T-2111, notes/T-2111.md, kit t2111, Vite 6165, ports 6388/6389): told ~12:00 to
+  STOP and restart at --jobs 5 (cap 10). Owns data/packs and data/terrain until it reports (~9-10 h from its start).
+  Census off (its call). Its notes have batch ids, PIDs, restart. Check `cores.py list` that its claim fell to 5.
+- **UNCOMMITTED, waiting**: T-2123 tutorial batch (a1e21311d532ee817, done; files guide.ts, world.ts (T-2092 fill
+  reverted), Guide.tsx, ripple.ts, NewGame.tsx, BuildTab/Blueprint/LinesTab/Search.tsx, saveFile.ts, clock.worker.ts,
+  DemandSelector.tsx SHARED with T-2125, LineInspector.tsx, checks/t2123-tutorial.mjs, t2092 check, docs, SPEC).
+  **T-2142 DONE** too (~15:20; adds main.ts `pauseNewGame` and TopBar.tsx's play `data-guide`; t2123 check 46/46,
+  smoke 23/23). New string: step "Unpause the game". Commit T-2123+T-2142+T-2125 together once T-2125 reports (shared
+  DemandSelector.tsx; main.ts/TopBar.tsx may hold others' hunks: check diffs).
+- aece7ca3711268182 (Opus) **T-2125** "what this edit did" note top left (Vite 6168, ids T-2130/31).
+- a1ed1934fdce63416 (Opus) **T-2132 + T-2133** bands: weave/split from the zoom-fixed ribbon correction, crowding marks
+  (Vite 6156, scratchpad t2132, ids T-2140/41). "Lines side by side" stays off by default.
+- af2ef23e7fb203080 (Opus) **T-2104** fare split middle ground (tree .tw-trees/t2104, Vite 6169, ids T-2134/35).
+- a4f37e8b845c63f4a (Opus) **T-2122** Jakarta playable on a phone's memory (Vite 6160, ids T-2136..2138).
+- ac23a9b30c1ddf26a (Opus) **T-2143** profit history all time, **T-2144** explorer "No train trip found", **T-2145**
+  share bar ticks 10/20 + real-network mark (Vite 6171, ids T-2148/49).
+- ac6227143084a837b (Opus) **T-2124 achievements stages 1-2** with her tiers (cities 2/10/25/100; trips 1M/10M/100M/
+  300M/1B; station 500k/1M/2M/5M; line 500k/1M/3M/10M; Bicontinental, Longest road 1,000 km, + 20% inter-city, 20% of a
+  city ("Monopoly?"), a 12 h trip; sandbox none; average day). Vite 6170, ids T-2150/51 (sea crossing = T-2150 later).
+- aec7e76708c801d8f (Opus) **T-2147** train capacity research + proposal (160 per car is crush in the game, about
+  Japan's rated load; Tokyo runs 150-200%). Vite 6172. A proposal for Anita, no default change.
+Done today and committed: census rebuilds (ea66c3b7), terrain rebuild (8212d530), T-2093 jpn7 (2b4a4ad9), T-2124 design
+(73d722a2), T-2126 gap (78e80f51), publish 821.
+
+Next after these: Turkey (T-2079) when India's data is free; T-1856 hexagons (design in notes/T-1881.md); T-2064 (the
+real save's flat crossings that are really grade-separated); T-2054, T-2095, T-2094, T-2099 (pipeline); T-2150 sea
+crossing (WASM, own tree); T-2146 network diagram (design); T-2152 Lines tab overlap; T-2106/T-2107 more census zones.
 
 ## Open questions to Anita (asked, unanswered)
-- Publish to live (build 815+, with the out-of-memory fix), ideally after the terrain rebuild and census rebuilds.
-- Middle East country: Israel (her territory call first) or Saudi Arabia (T-2082).
-- T-2104: split each trip's base fare between lines by km instead of per boarding (totals unchanged; feeders and
-  crosstown buses read truthfully). I said I'd do it.
-- Start menu: pre-pick a start city instead of "Choose on map" (T-2087 idea 1); her calls in research/first-ten-minutes.md
-  (default schedule, tutorial telemetry, hiding Build rows).
-- Which research/player-voices.md ideas to file (I suggested a demand tutorial card and a "what this edit did" note).
-- NY 2.4x / Tokyo 0.36x real ridership (T-2088): I said wait for jpn7 (running) + a US car city (T-2093 part 2).
-- Text to acknowledge: Philippines 3 realms + 64 names, NZ 2 realms + 5 names, India's 188 names (notes/T-2111.md).
-- Test on 8800: Settings "Lines side by side" on the NY and Tokyo saves; muted lines thin+faded; crossing waits at
-  Broadway-Lafayette (zoom 14+).
+- India's 188 names (notes/T-2111.md) and NZ's 5 names + 2 realms, Cambodia's 3 renames: acknowledge.
+- T-2147 capacity proposal and T-2104 fare split results: hers when they report.
+- Achievement strings: hers when T-2124 reports.
+- Late-game expensive things: not filed; asked if she wants it.
+- Test on 8800: Settings "Lines side by side"; muted lines; crossing waits at Broadway-Lafayette (zoom 14+).
 - maps/CLAUDE.md "Keep the work moving" bullet: uncommitted root file, hers to commit.
-- (Older) Settings label "Lines side by side" vs "Draw lines side by side" (T-1886).
+- Answered today: publish 821 (done); Israel lower prio than Turkey, Mexico, Brazil; default start New York; flatter
+  demand than real is fine (0.4-0.7); "Confirm?" kept; Philippines and tutorial text acknowledged; no daily challenges,
+  no riders estimate before paying, no music yet, showing off later.
 
 ## Open problems
 - T-2064 [P2]: most of the real save's 340 flat crossings are lines that really pass over/under (L under Broadway), so
@@ -108,5 +115,33 @@ Data writers take turns, in this order: census rebuilds -> terrain half 2 -> Ind
 - Every demand task (loosely perf) has a "done when"; stop once met. Approximations welcome when invisible.
 - Buses settled unless she asks. Thanks to agents in my own reply. Someday tasks are real open tasks.
 
-Next free task id: T-2122 (T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
+Started by maps-0f:
+- a50434fcc8ab5819c (Opus) **T-2064** stage 1, the real save's grade-separated "flat" crossings: cause + fix, code
+  only if small (no pipeline/ or data/ writes while India runs); notes/T-2064.md, Vite 6174, ids T-2164/65.
+- T-2146 design DONE ~10:30 (archived): option B octilinear least squares; stages T-2159..T-2163 wait on Anita's
+  look (review/diagram-tokyo.png); strings proposed: "Show network diagram (M)" / "Show map (M)", "Calculating
+  diagram", "Save picture", file "<game name> diagram.png".
+
+Reported done to maps-0f, uncommitted: **T-2122** (09:50; ARCHIVE entry added by me), **T-2125** (09:55; strings
+for Anita in its report: "+20k riders/day", "−$856k profit/day", hovers "Riders per weekday: X to Y" / "Profit per
+weekday: X to Y" + line row; asks: feedback "sent" note to upper left too? 8 s right?). **T-2132 + T-2133** reported
+~10:00 (files map/lineBands, network, pick, renderer, rendererShaders, strokeGather, strokeLod, strokePost, perfFlags
+bandsHold, checks/t1799-bands.mjs, docs/ui-map.md; no strings; re-time the band build on a quiet machine vs 300 ms). **T-2143/44/45** reported ~10:05 (strings listed in its report: shown to Anita).
+**T-2104** reported ~10:40, done in tree t2104 (money.ts, regionMoney.ts, main.ts debug hook, SPEC, code-map,
+track-and-service, checks t2104-fare-share.mjs + t1880; no strings, no WASM); its DECISIONS/ARCHIVE lines are in the
+main tree. Land it (`agent-tree.mjs land t2104 "..."`, then remove) right AFTER the main-tree commit: the ff stops
+while main.ts/SPEC/code-map/track-and-service hold uncommitted main-tree edits. Results for Anita in its report.
+Plan: one commit of the done set once T-2124 reports (its hunks sit in types.ts, Dock, ToolNotes, Inspector, widgets,
+clock.worker, clockClient, protocol, saveFile, shared with T-2123/T-2143),
+so their hunks need no untangling; T-2147's `crush2/crush15` hunks (demandClient.ts packService, perfFlags.ts) are
+measurement code, ask its report whether they stay. Patch of shared files: my scratchpad t2122-shared.patch.
+maps-b2's subagent ids can't be messaged from here ("no transcript"); their reports come through maps-b2.
+
+## Queued (maps-0f)
+- Her third 11-03 batch (notes/todo-2026-11-03c.md): T-2153 to T-2158, filed 09:32, lines uncommitted in TASKS.md.
+  Start one UI agent for T-2154-T-2158 once the T-2123/T-2142/T-2125 commit is in and the UI agents above have
+  reported (they hold BuildTab, style.css and the like); T-2153 after T-2122 reports (same memory code).
+- cores.py at 09:32: 13 claimed of cap 10 (a full cap grants 1 each); no new core-using work until it drops.
+
+Next free task id: T-2166 (T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
 T-2066..2069, T-2072, T-2073, T-2085, T-2121 handed out but unused).

@@ -834,6 +834,9 @@ struct Rules {
 struct Corridors {
     /// distinct for each set worked out (`IntercityApi::corridors_id`)
     id: u32,
+    /// the corridors with longer trips, ascending, and their trips a day (T-2122: dense, it was 8
+    /// bytes for each of the world's 12.7M corridors in every solving worker, two thirds of them 0)
+    trips_at: Vec<u32>,
     trips: Vec<f64>,
     commute: Vec<(u32, f64)>,
     commuters: f64,
@@ -1488,6 +1491,33 @@ impl Place {
 }
 
 impl Market {
+    /// T-378: corridor (a, b)'s shares of its longer trips not by rail that fly and that drive
+    /// (`IntercityApi::corridor_modes`). A pair of open places from the table; the others' modes
+    /// alone worked out (T-1204). T-1277: a plane's fare weighs the departing country's, so the two
+    /// ways can differ; the split is their mean.
+    fn corridor_mode(&self, a: usize, b: usize) -> [f32; 2] {
+        let way = |a: usize, b: usize| -> (bool, f32) {
+            if self.rules.slot[a] != u32::MAX && self.rules.slot[b] != u32::MAX {
+                let r = self.pr(a, b);
+                (r.car, r.air)
+            } else {
+                let (p, q) = (&self.places[a], &self.places[b]);
+                let km = if a == b {
+                    0.
+                } else if self.ground {
+                    chord_km(&p.u, &q.u)
+                } else {
+                    ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
+                };
+                let near = km < self.rule.near_km;
+                let r = pair_mode_rule(&self.places, &self.countries, &self.mp, &self.drives, a, b, near, km, PairRule { near, km, ..PairRule::default() });
+                (r.car, r.air)
+            }
+        };
+        let ((car, x), (_, y)) = (way(a, b), way(b, a));
+        let air = 0.5 * (x + y);
+        [air, if car { 1. - air } else { 0. }]
+    }
     /// T-1373: the lean of trips from place `i` to place `j` on a going-out day: positive from the
     /// larger to the smaller (`Place::lean_size`), the opposite of `j` to `i`'s; their trips are
     /// times `1 + lean` going out and `1 - lean` coming back, so a pair's trips in all are kept.
@@ -1746,7 +1776,10 @@ impl Market {
             };
             (b, rel)
         };
-        let mut ct = vec![0f64; self.n_corridors()];
+        // (corridor order is this loop's order, so the lists come sorted; sized for every pair of places
+        // with zones, nearly all of which have trips, so they never grow by doubling)
+        let has = self.places.iter().filter(|p| p.has).count();
+        let (mut at, mut ct) = (Vec::with_capacity(has * (has + 1) / 2), Vec::with_capacity(has * (has + 1) / 2));
         let mut to_places = vec![0f64; np];
         let mut pairs = 0usize;
         for i in 0..np {
@@ -1773,7 +1806,8 @@ impl Market {
                     (self.directed_by(bi, ri, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, q.g, q.t, p.a, p.ta, km)) * 0.5
                 };
                 if t > 0. {
-                    ct[tri(np, i, j)] += 2. * t;
+                    at.push(tri(np, i, j) as u32);
+                    ct.push(2. * t);
                     // a place's own pairs both start there
                     to_places[i] += t;
                     to_places[j] += t;
@@ -1782,7 +1816,9 @@ impl Market {
             }
         }
         let leaving_by: Vec<f64> = (0..np).map(|p| if self.places[p].has { (self.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
-        Corridors { id: next_corridors_id(), daily: ct.iter().sum(), leaving: leaving_by.iter().sum(), trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs }
+        at.shrink_to_fit();
+        ct.shrink_to_fit();
+        Corridors { id: next_corridors_id(), daily: ct.iter().fold(0., |s, &t| s + t), leaving: leaving_by.iter().sum(), trips_at: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs }
     }
     /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
     fn place_spans(&self) -> Vec<(usize, usize, usize)> {
@@ -2301,7 +2337,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         e_home: (vec![], vec![]),
         e_act: (vec![], vec![]),
         e_base: vec![],
-        cw: Rc::new(Corridors { id: 0, trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0 }),
+        cw: Rc::new(Corridors { id: 0, trips_at: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0 }),
     };
     for (c, z) in m.zones.iter().enumerate() {
         m.comp_of_gid[z.gid as usize] = c as u32;
@@ -4740,7 +4776,10 @@ impl IntercityApi {
     pub fn corridor_summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
             let m = &self.m;
-            let mut out: Vec<f64> = m.each_corridor().enumerate().flat_map(|(i, (a, b))| [a as f64, b as f64, m.cw.trips[i] * SHARES[q] as f64, 0.]).collect();
+            let mut out: Vec<f64> = m.each_corridor().flat_map(|(a, b)| [a as f64, b as f64, 0., 0.]).collect();
+            for (&c, &t) in m.cw.trips_at.iter().zip(&m.cw.trips) {
+                out[4 * c as usize + 2] = t * SHARES[q] as f64;
+            }
             for (k, c) in m.open_corridors() {
                 out[4 * c + 3] = s.corridors.get(k);
             }
@@ -4750,34 +4789,53 @@ impl IntercityApi {
     /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
     /// (neither: near places on two landmasses). The same whatever the network.
     pub fn corridor_modes(&self) -> Vec<f32> {
-        // (a pair of open places from the table; the others' modes alone worked out, T-1204)
         let m = &self.m;
         let mut out = Vec::with_capacity(2 * m.n_corridors());
-        // T-1277: a plane's fare weighs the departing country's, so the two ways can differ; a
-        // corridor's split is their mean
-        let way = |a: usize, b: usize| -> (bool, f32) {
-            if m.rules.slot[a] != u32::MAX && m.rules.slot[b] != u32::MAX {
-                let r = m.pr(a, b);
-                (r.car, r.air)
-            } else {
-                let (p, q) = (&m.places[a], &m.places[b]);
-                let km = if a == b {
-                    0.
-                } else if m.ground {
-                    chord_km(&p.u, &q.u)
-                } else {
-                    ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
-                };
-                let near = km < m.rule.near_km;
-                let r = pair_mode_rule(&m.places, &m.countries, &m.mp, &m.drives, a, b, near, km, PairRule { near, km, ..PairRule::default() });
-                (r.car, r.air)
-            }
-        };
         for (a, b) in m.each_corridor() {
-            let ((car, x), (_, y)) = (way(a, b), way(b, a));
-            let air = 0.5 * (x + y);
-            out.extend([air, if car { 1. - air } else { 0. }]);
+            out.extend(m.corridor_mode(a, b));
         }
+        out
+    }
+    /// T-2122: the corridors with longer trips or commutes (the main thread's corridor table,
+    /// T-1008), their corridor indices ascending; the `corridor_rows_*` columns come in this order.
+    /// The four whole-world arrays they replace (`corridor_pairs` and the like) are a few hundred
+    /// MB once the world has thousands of places, nearly all of it pairs with neither.
+    pub fn corridor_rows(&self) -> Vec<u32> {
+        let mut out = Vec::with_capacity(self.table_rows().count());
+        out.extend(self.table_rows().map(|(i, ..)| i as u32));
+        out
+    }
+    pub fn corridor_rows_pairs(&self) -> Vec<u32> {
+        let mut out = Vec::with_capacity(2 * self.table_rows().count());
+        out.extend(self.table_rows().flat_map(|(_, a, b, _)| [a as u32, b as u32]));
+        out
+    }
+    pub fn corridor_rows_trips(&self) -> Vec<f64> {
+        let mut out = Vec::with_capacity(self.table_rows().count());
+        out.extend(self.table_rows().map(|(.., t)| t));
+        out
+    }
+    /// As `commute_base` on the rows: empty where it is.
+    pub fn corridor_rows_commutes(&self) -> Vec<f64> {
+        let cw = &self.m.cw;
+        if cw.commuters <= 0. {
+            return vec![];
+        }
+        let mut k = 0;
+        let mut out = Vec::with_capacity(self.table_rows().count());
+        out.extend(self.table_rows().map(|(i, ..)| {
+            while k < cw.commute.len() && (cw.commute[k].0 as usize) < i {
+                k += 1;
+            }
+            if k < cw.commute.len() && cw.commute[k].0 as usize == i { cw.commute[k].1 } else { 0. }
+        }));
+        out
+    }
+    /// As `corridor_modes` on the rows.
+    pub fn corridor_rows_modes(&self) -> Vec<f32> {
+        let m = &self.m;
+        let mut out = Vec::with_capacity(2 * self.table_rows().count());
+        out.extend(self.table_rows().flat_map(|(_, a, b, _)| m.corridor_mode(a, b)));
         out
     }
     /// T-378: per place, its longer trips in period `q` with places that have no zone, each way.
@@ -4793,7 +4851,11 @@ impl IntercityApi {
     }
     /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
     pub fn corridor_trips(&self) -> Vec<f64> {
-        self.m.cw.trips.clone()
+        let mut out = vec![0f64; self.m.n_corridors()];
+        for (&c, &t) in self.m.cw.trips_at.iter().zip(&self.m.cw.trips) {
+            out[c as usize] = t;
+        }
+        out
     }
     /// T-1008: per corridor, the commutes between zones that `commute_corridors` counts, before the
     /// period's legs (`corridor_shares(q)[1]`); empty where it gives none.
@@ -4889,6 +4951,27 @@ impl IntercityApi {
     }
 }
 impl IntercityApi {
+    /// T-2122: the corridors `corridor_trips` or `commute_base` gives more than 0, as (corridor, its
+    /// two places, its trips), in corridor order (`trips` and `commute` are sorted by corridor).
+    fn table_rows(&self) -> impl Iterator<Item = (usize, usize, usize, f64)> + '_ {
+        let cw = &*self.m.cw;
+        let with_c = cw.commuters > 0.;
+        let (mut k, mut kt) = (0, 0);
+        self.m.each_corridor().enumerate().filter_map(move |(i, (a, b))| {
+            while kt < cw.trips_at.len() && (cw.trips_at[kt] as usize) < i {
+                kt += 1;
+            }
+            let t = if kt < cw.trips_at.len() && cw.trips_at[kt] as usize == i { cw.trips[kt] } else { 0. };
+            let mut c = false;
+            if with_c {
+                while k < cw.commute.len() && (cw.commute[k].0 as usize) < i {
+                    k += 1;
+                }
+                c = k < cw.commute.len() && cw.commute[k].0 as usize == i && cw.commute[k].1 > 0.;
+            }
+            (t > 0. || c).then_some((i, a, b, t))
+        })
+    }
     fn selection(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32, with_rail: bool) -> Vec<f64> {
         let m = &self.m;
         let day = day as usize;

@@ -137,7 +137,7 @@ export function BlueprintControls() {
           {money(upkeep)} / day upkeep
         </p>
       )}
-      <button class="btn text blueprint-construct" data-guide="3" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
+      <button class="btn text blueprint-construct" data-guide="construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
     </div>
   );
 }

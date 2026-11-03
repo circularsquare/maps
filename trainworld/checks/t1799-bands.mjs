@@ -32,7 +32,7 @@ for (const [name, file] of SAVES) {
     // the Settings checkbox "Lines side by side" is off by default (T-1886): on, as the bands are what this checks
     tw.renderer.lineBands = true;
     tw.overlay.invalidate();
-    const { lineBands, BAND_RANGE } = await import('/src/map/lineBands.ts');
+    const { lineBands, BAND_RANGE, BAND_M_RANGE, BAND_STRIDE: S } = await import('/src/map/lineBands.ts');
     const t0 = performance.now();
     const b = lineBands(lines, edges, n.edgePts);
     const ms = performance.now() - t0;
@@ -98,7 +98,9 @@ for (const [name, file] of SAVES) {
       const ll = tw.toLngLat(mx, my);
       tw.map.jumpTo({ center: ll, zoom: 15 });
       await new Promise((r) => setTimeout(r, 800));
-      const bandPx = tw.renderer.bandPx;
+      const bandPx = tw.renderer.bandPx, mPx = tw.renderer.bandMPx;
+      // a segment's band's shift at its start (0) or end (1), px: the slot plus the metres to the ribbon's middle (T-2132)
+      const shiftPx = (i, e) => L.band[i * S + e] * BAND_RANGE / 32767 * bandPx + L.band[i * S + 4 + e] * BAND_M_RANGE / 32767 * mPx;
       for (const id of ids) {
         let i = -1, bd = Infinity;
         for (let k = 0; k < L.count; k++) {
@@ -107,7 +109,7 @@ for (const [name, file] of SAVES) {
           if (d < bd) { bd = d; i = k; }
         }
         const [x0, y0] = tw.overlay.toScreen(L.seg[i * 4], L.seg[i * 4 + 1]), [x1, y1] = tw.overlay.toScreen(L.seg[i * 4 + 2], L.seg[i * 4 + 3]);
-        const s = (L.band[i * 4] + L.band[i * 4 + 1]) / 2 * BAND_RANGE / 32767 * bandPx, dl = Math.hypot(x1 - x0, y1 - y0) || 1;
+        const s = (shiftPx(i, 0) + shiftPx(i, 1)) / 2, dl = Math.hypot(x1 - x0, y1 - y0) || 1;
         const px = (x0 + x1) / 2 + (y1 - y0) / dl * s, py = (y0 + y1) / 2 - (x1 - x0) / dl * s;
         const hit = tw.pick(tw.overlay, px, py, false, null, true);
         // a band of a parallel edge's ribbon drawn over this one (four-track trunks, stage 3's corridors) is not this edge's fault
@@ -120,7 +122,7 @@ for (const [name, file] of SAVES) {
       const r = tw.renderer, t = tw.clock.now();
       for (let k = 0; k < r.tripCount; k++) {
         const prof = r.trips[k * 2], dep = r.trips[k * 2 + 1] + r.tripsEpoch;
-        const at = tw.tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[k] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM);
+        const at = tw.tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[k] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn);
         if (!at) continue;
         const [sx, sy] = tw.overlay.toScreen(at.x, at.y);
         if (sx < 0 || sy < 0 || sx > tw.overlay.cssW || sy > tw.overlay.cssH) continue;
@@ -130,7 +132,7 @@ for (const [name, file] of SAVES) {
           if (L.colour[q] !== at.line) continue;
           const [a0, b0] = tw.overlay.toScreen(L.seg[q * 4], L.seg[q * 4 + 1]), [a1, b1] = tw.overlay.toScreen(L.seg[q * 4 + 2], L.seg[q * 4 + 3]);
           const dl2 = Math.hypot(a1 - a0, b1 - b0) || 1, nx = (b1 - b0) / dl2, ny = -(a1 - a0) / dl2;
-          const s0 = L.band[q * 4] * BAND_RANGE / 32767 * bandPx, s1 = L.band[q * 4 + 1] * BAND_RANGE / 32767 * bandPx;
+          const s0 = shiftPx(q, 0), s1 = shiftPx(q, 1);
           const ax = a0 + nx * s0, ay = b0 + ny * s0, bx = a1 + nx * s1, by = b1 + ny * s1;
           const vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy;
           const u = l2 ? Math.max(0, Math.min(1, ((sx - ax) * vx + (sy - ay) * vy) / l2)) : 0;

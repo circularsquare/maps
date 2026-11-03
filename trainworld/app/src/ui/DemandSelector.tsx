@@ -5,6 +5,7 @@ import { loadProgress } from "../game/loading";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay, type MapRow } from "../game/ui";
+import { guideFolding, guideOpened } from "../game/guide";
 import type { JSX } from "preact";
 import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
@@ -12,11 +13,12 @@ import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
 import { Search } from "./Search";
 import { KeepDot } from "./KeepDot";
+import { EditNote } from "./EditNote";
 import { live, mapBearing } from "../map/live";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
- * "Saved only in this browser" dot beside it) and the demand alert. */
+ * "Saved only in this browser" dot beside it), the demand alert and what the last edit did (T-2125). */
 export function MapTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
@@ -32,6 +34,7 @@ export function MapTopLeft() {
       <KeepDot />
     </div>
     <DemandStopped />
+    <EditNote />
   </div>;
 }
 
@@ -62,7 +65,7 @@ export function DemandSelector() {
   return <div class="demand-selector" role="group" aria-label="Demand on the map">
     <FoldCell row="bubbles" />
     {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"], ["both", "Total"] ] as const).map(([value, label]) =>
-      <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value}
+      <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value} data-guide={value === "home" ? "homes" : undefined}
         aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : undefined}
         onClick={() => {
           if (!ready && value !== "none") return;
@@ -86,12 +89,14 @@ const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   stations: { icon: Icon.stationDisplay, what: "station ridership" },
   track: { icon: Icon.trackDisplay, what: "track color" },
 };
-const folded = (row: MapRow) => display.value.foldedRows.includes(row);
+/** T-2123: the tutorial's first card folds every row the player has not opened since */
+const folded = (row: MapRow) => display.value.foldedRows.includes(row) || (guideFolding.value && !guideOpened.value.includes(row));
 function FoldCell({ row }: { row: MapRow }) {
   const shut = folded(row), f = FOLDS[row];
-  return <button type="button" class="hint-cell" aria-expanded={!shut} data-tip={`${shut ? "Show" : "Hide"} ${f.what} choices`}
+  return <button type="button" class="hint-cell" data-fold={row} aria-expanded={!shut} data-tip={`${shut ? "Show" : "Hide"} ${f.what} choices`}
     onClick={() => {
       const rows = display.peek().foldedRows;
+      if (shut && guideFolding.peek() && !guideOpened.peek().includes(row)) guideOpened.value = [...guideOpened.peek(), row];
       setDisplay("foldedRows", shut ? rows.filter((r) => r !== row) : [...rows, row]);
     }}><f.icon /></button>;
 }

@@ -486,6 +486,9 @@ rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--expense) 28%
 path.hist-oneoff.cap { fill: var(--expense); }
 svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
 .hist-axis { stroke: var(--rule); stroke-width: 1; }
+/* T-2143: the log scale's powers of ten, and its switch beside Days / Hours */
+.hist-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
+.hist-switches { display: inline-flex; gap: 6px; }
 /* T-864: the fare curve and its two draggable nodes */
 svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none; touch-action: none; stroke: none; }
 .fg-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
@@ -692,6 +695,10 @@ rect.now { fill-opacity: .45; }
 .goal-tick.reached .goal-star { color: var(--accent); }
 .goal-bar { position: relative; }
 .zone-trips.with-goals { padding-bottom: 12px; }
+/* T-2145: the real network's share, a pointer above the bar and a line through it */
+.real-mark { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--text); z-index: 1; }
+.real-mark::before { content: ""; position: absolute; bottom: 100%; left: -3px; border: 3.5px solid transparent; border-bottom: 0; border-top: 4px solid var(--text); }
+.real-mark::after { content: ""; position: absolute; top: -5px; bottom: 0; left: -4px; right: -4px; }
 .goals-reached { display: inline-flex; gap: 8px; }
 .goal-mark { display: inline-flex; align-items: center; gap: 2px; }
 .goal-mark svg { width: 12px; height: 12px; color: var(--accent); }
@@ -1414,14 +1421,22 @@ button.save-add:hover { color: var(--text); }
 .trouble { position: absolute; right: 10px; bottom: 34px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
-/* T-1499 (from T-1478): a line's "+N daily rides" for a few seconds after its stops changed, under the
-   Select tool's bar at the map's top centre */
+/* T-1709: a passing note (the feedback's "sent"), under the Select tool's bar at the map's top centre */
 .rides-notes { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: calc(100% - 520px); pointer-events: none; }
 .choosing .rides-notes { visibility: hidden; }
 .rides-note { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; box-sizing: border-box; pointer-events: auto;
   background: var(--bg); border: 1px solid var(--rule); font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.rides-note.down { color: var(--muted); }
+/* T-2125: what the last edit did, under the view rows at the upper left: text on the map with a halo,
+   no box, each figure after a green up or red down arrow */
+.edit-note { display: flex; flex-direction: column; gap: 2px; padding: 2px 0; font-size: 12px; color: var(--text);
+  font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 2px var(--bg), 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 4px var(--bg); }
+.edit-row { display: flex; align-items: center; gap: 4px; width: fit-content; }
+.edit-row.money-neg { color: var(--bad); }
+.edit-arrow { width: 12px; height: 12px; flex: none; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 1px var(--bg)) drop-shadow(0 0 1.5px var(--bg)) drop-shadow(0 0 2px var(--bg)); }
+.edit-arrow.up { stroke: var(--good); }
+.edit-arrow.down { stroke: var(--bad); }
 .trouble-btn { grid-auto-flow: column; gap: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .trouble-btn svg { width: 14px; height: 14px; }
 .trouble-btn.on { color: var(--text); }

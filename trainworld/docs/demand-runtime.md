@@ -119,7 +119,8 @@ only when nothing else droppable is left over the budget. So is the zone built i
 that build is under 10 minutes old. A coarse zone goes fine only by entering 1-3. A zone
 reached since the last check opens fine (a station was just built there). The budget is the zones'
 memory a solving worker may hold, by T-1197's rate (`memoryCheck.ts`) with a coarse zone at 0.7 of
-a fine one: 1.5 GB on a device reporting 8 GB, less in proportion below. A game's first fine set is
+a fine one: 1.5 GB on a device reporting 8 GB, less in proportion below (a phone or tablet that
+reports nothing counts as 4 GB, `deviceGB`). A game's first fine set is
 the save's (`demandFine` in its header, kept current by the page), else every zone that fits the
 budget, the zone in view first, then the zones on screen, then the nearest. A level change is a
 close and reopen: the pack downloads again (the browser's cache) and each solving worker opens it at
@@ -374,7 +375,10 @@ a game load the focus pool (below) does this instead, to the zone's last round. 
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
 lines their first figures (T-324) without waiting for its last round.
 **The focus pool** (T-2045, `workers/demandFocus.ts`, notes/T-2045.md, `?perfOff=focus` off). A game
-load with built stations starts a second pool, kept for that load alone: the main pool's solving
+load with built stations starts a second pool, kept for that load alone (not on a phone, a tablet or a
+device of 4 GB or less, `smallDevice`, where its workers would be a few hundred MB more in a tab of about
+2 GB, T-2122):
+the main pool's solving
 workers but at most two (`FOCUS_WORKERS`, `?focusWorkers=n`; each worker is memory of its own),
 dealt the periods as a pool of that size is, and an aux worker. It opens the zone in view's
 pack (a copy of the one the main pool is sent, or downloaded again for a zone newly in view) and,

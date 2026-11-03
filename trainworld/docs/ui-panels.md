@@ -130,13 +130,20 @@ wide so a longer date moves nothing [T-1868].
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
   **The zone's goals** [T-1437, `ui/GoalTicks.tsx`; on the city panel's "Within" bar only, not on
-  this one, T-1551] are ticks over the bar at train shares of 10%,
-  20%, 30% and 40% (`GOAL_SHARES`), laid over it so nothing moves, 1 px past the bar at either side: a reached goal's tick is 2 px in
+  this one, T-1551] are at train shares of 10%, 20%, 30% and 40% (`GOAL_SHARES`); only 10% and 20%
+  are drawn, as ticks over the bar [T-2145], laid over it so nothing moves, 1 px past the bar at either side: a reached goal's tick is 2 px in
   the text colour, an unreached one 1 px muted; under the 10% tick is the star, 7 px, filled in the
   accent colour once earned, an outline before. Each tick's hover names the goal and, once reached,
   when ("Goal: 20% train share, reached on Monday, day 71, at 14:08", the zone's local time). A
   goal is reached the first time the zone's train share on the average day reaches it in a final
-  result, and kept from then (the save's `stars` for 10%, `goals` for the rest).
+  result, and kept from then (the save's `stars` for 10%, `goals` for the rest); 30% and 40% are
+  still reached and kept, and shown in the city view's Goals reached row. **The real network**
+  [T-2145, `game/realShare.ts`]: in the seven cities with a real network save (New York, London,
+  Paris, Tokyo, Seoul, Toronto, Sendai) a 1 px line in the text colour through the bar with a 7 px
+  pointer above it, at the train share that city's real network gets in this game's demand on the
+  day shown (a holiday's days take the plain day they stand in for); its hover "Real world network:
+  22.7% train share in Paris" (with " on a weekday" and the like off the average day). A fixed
+  table, measured on each save in a new game with every zone open (notes/T-2145.md).
   **Zoomed out below zoom 7** (a country or a few regions on screen) [T-1865] the bar names "World" instead [T-1110]:
   the train rides summed over every city with a built station and a demand view, as the Cities
   tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
@@ -245,6 +252,8 @@ wide so a longer date moves nothing [T-1868].
   with no trains at any level. The status still shows "Trips here being recomputed…" (or the cities form) meanwhile, its hover without
   the clock line. One edit that would cap holds the clock until demand settles; every other edit
   (track, stations, new lines, train length or type, fares, undo) caps as before. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  **A new game starts paused** [T-2142, `pauseNewGame` in `main.ts`], a sandbox and a real network's
+  too (from the start menu or the saves panel; a `?new=1` page runs as before); a saved game opens running.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
@@ -295,62 +304,91 @@ the button is gone.
 
 ## Tutorial card
 
-[T-1822; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` in `game/guide.ts`] A flat
+[T-1822, T-2123; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` in `game/guide.ts`] A flat
 post-it at the map's upper right under the day and night picture, 240 px wide, not tilted: a pale yellow
 (`--yellow` at 24% over the background; 14% in the dark theme), no shadow. Heading "Tutorial" (14 px,
-bold) and an x (no hover; screen readers get "Hide the tutorial"), then six rows of 12 px type: a
+bold) and an x (no hover; screen readers get "Close the tutorial"), then a row of 12 px type per step: a
 12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
 carry a tick; the step in hand (the first not done) is in the text colour, steps after it muted. Ticks
-show at once. The search results open over it.
+show at once. The search results open over it. Two cards, one after the other.
 
-| # | Step | Counter | Counts |
-|---|---|---|---|
-| 1 | Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off |
-| 2 | Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart |
-| 3 | Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart |
-| 4 | Create a line | none | any line |
-| 5 | Assign stops for the line | 1/3 | stops of the line with most, goal the lesser of 3 and the built stations |
-| 6 | Add trains to the line | 0/1 | any line with a train at any demand level |
+**The first card**, building a running line:
+
+| Step | Counter | Counts |
+|---|---|---|
+| Zoom into a city | none | only in a game started on the world map (Choose on map, or a location far from every zone): a zone in view at city zoom (not the zoomed-out bubbles) with its demand drawn |
+| Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off |
+| Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart |
+| Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart |
+| Create a line | none | any line |
+| Assign stops for the line by clicking them on the map | 1/3 | stops of the line with most, goal the lesser of 3 and the built stations |
+| Add trains to the line | 0/1 | any line with a train at any demand level |
+| Hover the dot by High to see if there are enough trains | none | the pointer on a line panel's crowding dot (any level's) in this page |
+| Add trains at high, medium and low demand | 1/3 | the demand levels with at least one train, on the rail line with most |
+| Unpause the game | none | the clock running (a new game starts paused [T-2142]) |
+
+**The second card**, reading demand:
+
+| Step | Counter | Counts |
+|---|---|---|
+| Show Homes on the map | none | the demand view on Homes |
+| Click a red bubble to see where its trips go | none | a bubble selection |
+| Click one of its destinations to see that trip | none | the trip explorer with both ends |
+| Reach 10% train share in New York (the zone in focus) | 0.6/10% | the zone's train share on the average day; ticks at any region's star |
 
 A step ticks the first time its check holds and stays ticked (undo never unticks it); counters keep
-following the world and cap at their goal. A later step can tick before an earlier one. After the
-sixth, a Done! button appears under the steps (closes the card for good in this game).
+following the world and cap at their goal. A later step can tick before an earlier one. Once every
+step of the first card is ticked, a Continue button appears under the steps and opens the second
+card; the second card's last tick gives a Done! button (closes the card for good in this game).
 
-- **Who sees it**: a new Normal game in a browser that has not finished the guide once; not a
+- **Who sees it**: a new Normal game in a browser that has not finished the first card once; not a
   sandbox, a real-network start or a `?new=1` page, and not a save made before it existed. Finishing
-  (all six ticked) is remembered in the browser's UI settings (`guide`); a game started after it has
+  (every step of the first card ticked) is remembered in the browser's UI settings (`guide`); a game started after it has
   no card. Switching a game to sandbox takes the card away.
-- **Kept in the save**: the header's `guide` (ticked steps as bits, `hidden`, `closed`), set by the
-  clock worker on a new game and updated by the page's `guide` message. A reload picks up where it
-  was.
-- **Hidden and back**: the x hides it in this game; Game in Settings has a row "Tutorial" with
-  Start again in every normal game: it clears the ticks and the hidden and closed marks and shows the
-  card, whether it was hidden, finished or never there (a game saved before the card) [T-1835]; steps
+- **Kept in the save**: the header's `guide` (ticked steps as bits, `GUIDE_BITS`; `hidden`, `closed`,
+  `card` 2 for the second card, `zoom` for a world-map start), set by the clock worker on a new game
+  and updated by the page's `guide` message. A reload picks up where it was.
+- **Closing and back**: the x asks first (the confirmation: "You can restart the tutorial in
+  Settings.", Keep going and Close tutorial), then hides it in this game; Game in Settings has a row "Tutorial" with
+  Start again in every normal game: it clears the ticks and the hidden, closed and card marks and shows the
+  first card, whether it was hidden, finished or never there (a game saved before the card) [T-1835]; steps
   the world already meets tick at once.
+- **The view rows fold**: while the first card is up, the map's three view rows (demand bubbles,
+  station ridership, track colour; ui-demand-views.md) show only their fold icons, as if folded, without
+  changing the remembered folds; a row the player opens stays open for the page. The second card
+  shows them as remembered.
 - **Out of the way**: it hides while a confirmation or the saved games panel is open, and with F2.
 - **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
-  hand; a tap on the heading opens all six.
+  hand; a tap on the heading opens every step.
 
 ### The ripple
 
-[T-1822 stage 2; `ui/ripple.ts`] A rectangle round the control the step in hand uses: 2 px in the
-accent colour, starting on the control's edge and growing 16 px out over 0.7 s while it fades; three
-rings 0.25 s apart make a pulse. One fixed canvas over everything with no pointer events, drawn by its
-own `requestAnimationFrame` loop (no CSS transition) and placed from `getBoundingClientRect()` every
-frame, so a scrolling dock keeps it on target. With reduced motion asked for: one still outline 8 px
-out, held 1.5 s.
+[T-1822 stage 2, T-2123; `ui/ripple.ts`] Rectangles round the control the step in hand uses: 2 px in
+the accent colour, each starting on the control's edge and growing 16 px out over 1.4 s while it
+fades, one every 0.5 s, on and on until the player presses that control. One fixed canvas over
+everything with no pointer events, drawn by its own `requestAnimationFrame` loop (no CSS transition)
+and placed from `getBoundingClientRect()` every frame, so a scrolling dock keeps it on target. Nothing
+is drawn while the card is out of sight, the pointer is held or the stop editor is open on the stops
+step. With reduced motion asked for: one still outline 8 px out, held until the press.
 
-- **Targets** carry `data-guide="<step 1-6>"`: 1 the Track tool and 2 the Station tool (Build tab),
-  3 Construct blueprints, 4 New line (Lines tab), 5 Edit stops (the line panel; the attribute is off
-  while the stops are being edited), 6 the stepper in the first demand row of the Schedule (the trains
-  count or the headway, whichever the line's schedule uses). The tab icons carry `data-guide-tab`.
-- **When**: 0.35 s after a step becomes the step in hand; after 20 s without a click, key or wheel
-  while it is open (at most 3 times per step); on a click on any row of the card (the step's own
-  control, so a done or later step can be pointed at too). Never while the pointer is held (a drag)
-  or the stop editor is open on step 5; a pulse that is due then waits for it to end.
-- **Out of view**: a target whose tab is closed ripples the tab icon (Build for 1-3, Lines for 4-6);
-  steps 5 and 6 with no line picked ripple the first row of the Lines list when that tab is open. A
-  target scrolled out of its pane is scrolled into view (instantly) first, then ripples.
+- **Targets** carry `data-guide="<step id>"`: zoom the find button, track the Track tool and
+  stations the Station tool (Build tab), construct Construct blueprints, line New line (Lines tab),
+  stops Edit stops (the line panel; the attribute is off while the stops are being edited), trains
+  the stepper in the High row of the Schedule (the trains count or the headway, whichever the line's
+  schedule uses), crowd the High row's crowding dot, levels the stepper of the first row with no
+  train, play the top bar's Normal speed button, homes the Homes button. The bubble, trip and train share steps point at nothing. The tab
+  icons carry `data-guide-tab`, the view rows' fold icons `data-fold`.
+- **When**: from 0.35 s after a step becomes the step in hand until its control is pressed; on a
+  click on any row of the card (the step's own control, so a done or later step can be pointed at
+  too), likewise until pressed. Once pressed, three rings 0.5 s apart come again after 20 s without a click, key or wheel while it is open (at most 3 times per step).
+  A pulse that is due while the pointer is held (a drag) or the stop editor is open on the stops step
+  waits for it to end.
+- **Out of view**: a target whose tab is closed ripples the tab icon (Build for track, stations and
+  construct, Lines for the line and line panel steps); the line panel steps with no line picked
+  ripple the first row of the Lines list when that tab is open; Homes in a folded row ripples the
+  row's fold icon. The ripple moves to the target itself as soon as it shows (the tab opened, the
+  dot drawn), and back to the stand-in if it goes. A target scrolled out of its pane is scrolled into
+  view (instantly) first, then ripples.
 
 ## Saved only in this browser dot
 
@@ -480,7 +518,7 @@ out, delete; [Account and leaderboards](#account-and-leaderboards)), and Submit 
 ("Email (optional)") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
-Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's top centre, "sent! thank you for feedback" (the daily rides note's place and look, 5 s; `showPassingNote` in `ui/RidesNotes.tsx`) [T-1709]; a failure says why (no server for this copy,
+Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's top centre, "sent! thank you for feedback" (in a small box, 5 s; `showPassingNote` in `ui/PassingNote.tsx`) [T-1709]; a failure says why (no server for this copy,
 not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
 sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].
@@ -533,8 +571,9 @@ in panels have three significant figures from a million up ("$22.4M", "$1.15B", 
 as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyText.tsx`, `money` in
 `game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
 with its minus when negative; hovers may give more. History
-[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
-open) over three charts. The first, "Revenue and expenses" (revenue blue and expenses red in every
+[T-447, `ui/MoneyHistory.tsx`]: a Linear / Log switch and a Days / Hours switch (Linear and Days by
+default, both kept while the game is open; Days' hover "Every game day so far", Hours' "The last 48
+game hours", Log's "Each line across is ten times the one below") over three charts. The first, "Revenue and expenses" (revenue blue and expenses red in every
 theme, the tokens `--revenue` and `--expense`, T-1111), has fares and running costs with upkeep
 (T-867) as lines, scaled to the larger of the two, and one-off costs (new trains and construction)
 as pale red bars on the same scale, cut at the top with a red cap when larger, so a build day does
@@ -542,8 +581,14 @@ not flatten the lines [T-452]; the top's figure at the right. Then net as bars u
 (gains blue, losses red). Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides
-are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), up to the past 30;
-hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
+are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), every
+day kept (T-2143); while they span more than 90 days a column is a week (Monday to Sunday), past 90
+weeks a calendar month, past 90 months a run of months, each column's figures and hovers then a day's
+average over the days it covers ("$22.8M/day", the hover's name "Nov 10-16"), the day now counted as
+far as it has gone, and no holiday ticks. Hours are up to the past 48; a young game's few sit at the
+right of at least 7 days or 12 hours. Log [T-2143] puts revenue and expenses and train rides on a log
+scale from the top figure down to the smallest (at most four powers of ten), a faint line across at
+each power of ten; net stays linear, as it goes below zero. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
@@ -647,7 +692,59 @@ column (name, train share, rides, profit, points) as in the Lines tab. A click o
 city view ([ui-inspectors.md](ui-inspectors.md#the-city-view)) and a double click moves the camera
 to the region as search does, as the Stations tab's rows do [T-1438]; the selected city's row is
 tinted, or with no city selected the viewed region's. On a phone the inspector stands beside the
-tab, as beside Lines and Stations. With no built station the tab reads "No stations yet."
+tab, as beside Lines and Stations. With no built station the tab reads "No stations yet." Above the
+list (and above "No stations yet."), at the right, the medal and the count of achievement steps earned,
+"11/27" (hover "Achievements"), opens the achievements view in the inspector and is lit while it is open
+([Achievements](#achievements)); a sandbox has no medal.
+
+## Achievements
+
+[T-2124, `game/achievements.ts`, `ui/Achievements.tsx`, `ui/inspector/AchievementsView.tsx`; design and
+reasons in notes/T-2124.md] Goals for the whole game, each step kept once earned with the game second
+it landed and never taken back (undo, a closed line or a fall in riders leaves it); the bars show the
+figure now, so a fallen figure sits under a lit tick. A sandbox earns none, and a game made a sandbox
+keeps what it had and earns no more.
+
+- **Running** means a rail line with status running and trains set at some level; buses, blueprints and
+  lines with no trains never count. **Demand figures** come from final results on the average day only,
+  so the Day choice changes nothing, and a city's share from no rough zone's (as its goals); Trips a
+  day counts coarse zones too, as the World row does. Network figures are checked as the
+  world changes, demand ones on each final, the best line's profit as each game hour turns.
+- **Tiered** (each tier a step): **Cities served** 2, 10, 25, 100 (regions, the Cities tab's rows, with a
+  built station where a running line stops); **Trips a day** 1M, 10M, 100M, 300M, 1B (the World row's
+  train trips a day); **Busiest station** 500k, 1M, 2M, 5M boardings a day at one station complex;
+  **Busiest line** 500k, 1M, 3M, 10M riders a day on one line. A jump over several tiers records each
+  and toasts the highest.
+- **Firsts**, in this order: **Over the border** (a line with stops in two countries, each stop's zone's
+  country), **Bicontinental** (two continents, `game/continents.ts`: UN M49, the Americas split at
+  Panama, Russia at 60°E, Kazakhstan at 51.5°E, Egypt at Suez, Turkey at the Bosporus and Dardanelles),
+  **Longest road** (a line 1,000 km long), **Money train** (a line's profit over the past 24 hours, the
+  Lines tab's Money figure, of $200M), **Bullet train** (a train reaching 300 km/h), **Round and round**
+  (a circle line of 10 stops), **Change here** (changes of trains per trip at least 1, over at least
+  100k trips a day), **Train town** (a region whose trips within it are 20% by train: its 20% goal),
+  **Grounded** (a region whose trips to and from other places, both ways as the city view's "To other
+  places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
+  hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
+  aboard there, and at least 1 a day must be sure to ride that long). Sea crossing comes with T-2150.
+- **The view** (selection `achievements`): the medal and "Achievements"; each tiered one's name, its
+  figure now and the next tier ("17.2M/100M", past the top tier the figure alone; hover, for the
+  busiest station or line, which), a bar of equal parts, one a tier, each filling from the tier before
+  to its own, ticks at each tier (2 px text colour once reached, 1 px muted before; hover the tier and
+  when it was reached, "Monday, day 406, at 14:08" on the game clock), the tiers under it (muted until
+  reached). After a divider "Firsts": a 12 px box (ticked in the accent once earned), the name, "day
+  406" at the right; one not earned is muted with its rule in the hover, an earned one's hover says what
+  earned it and when.
+- **The toast**: at the map's bottom left, 10 px in, above the tool notes (`#tools`), at most 280 px
+  wide: the medal in the accent, the name in bold, one muted line of what was reached ("1M riders/day on
+  Line 1a"). A 150 ms rise (none with reduced motion), 5 s held (the pointer over it holds it), a 0.6 s
+  fade, in real seconds. Up to three stacked, newest at the bottom, the next shown at least 1 s after the
+  last; more than three waiting fold into one, "4 more achievements". A click opens the view. They wait
+  while the start menu, the saved games, a confirmation, the leaderboards or the account panel is up, or
+  the tab is hidden, and go with F2. A phone held upright shows one at a time, its line cut to one.
+- **Saves**: the header's `achievements`, by key (`cities:10`, `trips:1000000`, `border`), each with
+  `at` and what earned it (`of` a name, `v` the figure, `in` the countries or continents). An older
+  save without the field works its out quietly once its first final result and the first profit answer
+  are in: everything met then is recorded at that game second with no toast.
 
 ## Saved games
 
@@ -780,8 +877,9 @@ registry centre and zoom, or over New York with none [T-310].
   means. A sandbox is the normal game with nothing refused for money and the cash hidden; demand,
   fares, running costs, line money, the Money tab, points and stars are worked out as in normal.
 - **Start in**, three ways separated by a small muted "or" [T-1132]. First New York, London, Paris,
-  Tokyo and Toronto (`START_CITIES`, a fixed list) and Current location, one lit at most, a second
-  click unlighting it. Current location shows only where the browser can give a location (a secure
+  Tokyo and Toronto (`START_CITIES`, a fixed list) and Current location, one lit at most; New York
+  is lit to begin with, so Start reads "Start in New York" [T-2123]. A click on a lit city keeps it
+  (Choose on map is the way to no city); a second click on Current location unlights it. Current location shows only where the browser can give a location (a secure
   page with geolocation); the browser asks the player itself. While it waits the button says
   Locating; a refusal, an error or no answer in 15 s leaves the sheet as it was with the button
   saying "Location unavailable" (a click asks again; an answer after the 15 s still counts). A
@@ -793,7 +891,7 @@ registry centre and zoom, or over New York with none [T-310].
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
   a pick of one of the five lights its button. Then Choose on map, lit while nothing else
-  is picked: the game starts on the world map with Homes on and every realm shown (zones.md
+  is picked: the game starts on the world map (its tutorial card begins with "Zoom into a city") with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
 - **Real world network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,

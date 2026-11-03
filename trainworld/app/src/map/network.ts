@@ -12,7 +12,7 @@ import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
-import { BAND_RANGE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
+import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
@@ -64,9 +64,10 @@ export interface Strokes {
   /** 2 per segment (T-658): how far apart its two tracks are drawn at its start and end, 0 (single
    * track, one track on the centre line) to 255 (double track); absent: all double */
   lane?: Uint8Array;
-  /** line strokes, 4 per segment (T-1799, map/lineBands.ts): its band's shift left of its direction
-   * at its start and end, as a share of BAND_RANGE line widths, and `1 - its width share` at both,
-   * all Int16 normalised; absent or 0: one stroke on the centre line */
+  /** line strokes, BAND_STRIDE per segment (T-1799, map/lineBands.ts): its band's shift left of its
+   * direction at its start and end, as a share of BAND_RANGE line widths, `1 - its width share` at
+   * both, and the metres from its track to its ribbon's middle at both as a share of BAND_M_RANGE
+   * (T-2132), all Int16 normalised; absent or 0: one stroke on the centre line */
   band?: Int16Array;
   count: number;
 }
@@ -121,8 +122,8 @@ export interface NetworkBuffers {
   /** per sample of `samples`: how far apart its track's two tracks are drawn there (T-658), 0
    * single track to 1 double, as `Strokes.lane`; absent: 1 */
   sampleLane?: Float32Array;
-  /** per sample of `samples` (T-1799): its line's band's shift there, line widths left of run 0's
-   * direction (`lineBands`); absent: 0 */
+  /** per sample of `samples`, 2 (T-1799): its line's band's shift there, line widths left of run 0's
+   * direction, and metres from its track to its ribbon's middle (T-2132; `lineBands`); absent: 0 */
   sampleBand?: Float32Array;
   /** the edges that run side by side as one ribbon (T-1799 stage 3): `CORRIDOR_STRIDE` numbers each (`LineBands.corridor`) */
   corridor?: Float32Array;
@@ -210,12 +211,12 @@ class StrokeBuilder {
     this.dist = g(this.dist, 1);
     this.lane = g(this.lane, 2);
     if (this.withStretch) this.stretch = g(this.stretch, 1);
-    if (this.withStretch) this.band = g(this.band, 4);
+    if (this.withStretch) this.band = g(this.band, BAND_STRIDE);
     this.cap = cap;
   }
   /** pts: x, y, z triples; `stretch` as `Strokes.stretch`, for every segment added; `lane`: per point of
    * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all; `band`: per point, its
-   * shift (line widths) and `1 - width share` (`Strokes.band`) */
+   * shift (line widths), `1 - width share` and metres (`Strokes.band`) */
   add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255, band?: ArrayLike<number>, ease?: Uint8Array): number {
     const n = pts.length / 3;
     let d = dist0;
@@ -237,11 +238,13 @@ class StrokeBuilder {
       this.lane[c * 2] = typeof lane === "number" ? lane : lane[i];
       this.lane[c * 2 + 1] = typeof lane === "number" ? lane : lane[j];
       if (band && this.withStretch) {
-        const S = 32767 / BAND_RANGE;
-        this.band[c * 4] = Math.round(band[i * 2] * S);
-        this.band[c * 4 + 1] = Math.round(band[j * 2] * S);
-        this.band[c * 4 + 2] = Math.round(band[i * 2 + 1] * 32767);
-        this.band[c * 4 + 3] = Math.round(band[j * 2 + 1] * 32767);
+        const S = 32767 / BAND_RANGE, o = c * BAND_STRIDE;
+        this.band[o] = Math.round(band[i * 3] * S);
+        this.band[o + 1] = Math.round(band[j * 3] * S);
+        this.band[o + 2] = Math.round(band[i * 3 + 1] * 32767);
+        this.band[o + 3] = Math.round(band[j * 3 + 1] * 32767);
+        this.band[o + 4] = Math.round(Math.max(-1, Math.min(1, band[i * 3 + 2] / BAND_M_RANGE)) * 32767);
+        this.band[o + 5] = Math.round(Math.max(-1, Math.min(1, band[j * 3 + 2] / BAND_M_RANGE)) * 32767);
       }
       d += Math.hypot(x1 - x0, y1 - y0);
     }
@@ -257,7 +260,7 @@ class StrokeBuilder {
       flags: this.flags.slice(0, n),
       dist: this.dist.slice(0, n),
       lane: this.lane.slice(0, n * 2),
-      ...(this.withStretch ? { stretch: this.stretch.slice(0, n), band: this.band.slice(0, n * 4) } : {}),
+      ...(this.withStretch ? { stretch: this.stretch.slice(0, n), band: this.band.slice(0, n * BAND_STRIDE) } : {}),
       count: n,
     };
   }
@@ -649,7 +652,7 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: num
     let j = 1;
     while (j < c - 1 && b[o + j * KNOT] < t) j++;
     const x = o + (j - 1) * KNOT, y = o + j * KNOT;
-    ease[i] = c > 1 && (b[x + 1] !== b[y + 1] || b[x + 2] !== b[y + 2] || b[x + 3] !== b[y + 3] || b[x + 3] < 0) ? 1 : 0;
+    ease[i] = c > 1 && (b[x + 1] !== b[y + 1] || b[x + 2] !== b[y + 2] || b[x + 3] !== b[y + 3] || b[x + 3] < 0 || b[x + 4] !== b[y + 4]) ? 1 : 0;
   }
   return { pts: out.length === p.length ? p : new Float32Array(out), lane: typeof dr.lane === "number" && out.length === p.length ? dr.lane : Uint8Array.from(lane), band: new Float32Array(band), ease };
 }
@@ -945,7 +948,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const nSamples = r.samples.length / 2;
   const sampleStroke = new Int32Array(nSamples).fill(-1);
   const sampleLane = new Float32Array(nSamples).fill(1);
-  const sampleBand = new Float32Array(nSamples);
+  const sampleBand = new Float32Array(nSamples * 2);
   const sampleStretch = new Float32Array(Math.max(1, nSamples)).fill(-1);
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
   // lines sharing track side by side (T-1799)
@@ -995,7 +998,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
       const firstStroke = c.firstStroke;
       // a bus has one centre line, not two tracks (T-1464)
-      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count : 0);
+      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count * 2 : 0);
       let j = 0, end = lens[0] ?? 0;
       for (let k = 0; k < count; k++) {
         const at = k * step;
@@ -1007,8 +1010,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
           lane[k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
         }
-        // its band's shift (T-1799), left of run 0
-        if (c.band) bandOf[k] = profileAt(c.band, j, len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0)[0];
+        // its band's shift (T-1799) and metres (T-2132), left of run 0
+        if (c.band) {
+          const v = profileAt(c.band, j, len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0);
+          bandOf[k * 2] = v[0];
+          bandOf[k * 2 + 1] = v[2];
+        }
       }
       sm = { c, count, step, lens, rel, lane, band: bandOf };
     }
@@ -1020,7 +1027,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       if (f >= 0) sampleStretch[first + k] = stretchOf[f];
     }
     sampleLane.set(sm.lane, first);
-    if (sm.band.length) sampleBand.set(sm.band, first);
+    if (sm.band.length) sampleBand.set(sm.band, first * 2);
   }
   cache.lines = linesSeen;
   cache.samples = samplesSeen;
@@ -1271,8 +1278,9 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
  * run 0's direction there. `shiftM`: metres to the right of its direction of travel on double
  * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`); `bandM`:
  * metres a line width is drawn, where its line's band shifts it (T-1799, `NetworkRenderer.bandShiftM`),
- * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array } | null {
+ * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
+ * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). */
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -1281,11 +1289,11 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d, run, shiftM, bandM, band), s, run, line, shiftM, bandM, band };
+  return { ...pointAt(n, line, d, run, shiftM, bandM, band, bandOn), s, run, line, shiftM, bandM, band, bandOn };
 }
 
 /** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
-function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand) {
+function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0) {
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
   const dx = fx - bx, dy = fy - by;
@@ -1293,19 +1301,20 @@ function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0
   const len = Math.hypot(dx, dy);
   if (bandM && band && len > 1e-9) {
     // left of run 0's direction (local y points south, so left of (dx, dy) is (dy, -dx))
-    const k = bandAt(n, band, line, d) * bandM * kAtY(y, n.anchor ?? anchor()) / len;
+    const [lw, m] = bandAt(n, band, line, d);
+    const k = (lw * bandM + m * bandOn) * kAtY(y, n.anchor ?? anchor()) / len;
     ox += dy * k;
     oy -= dx * k;
   }
   return { x: x + ox, y: y + oy, dx, dy };
 }
 
-/** A line's band's shift at offset `d` along run 0, line widths left of it (`b` per sample). */
-function bandAt(n: NetworkBuffers, b: Float32Array, line: number, d: number): number {
+/** A line's band at offset `d` along run 0 (`b`, 2 per sample): [shift, line widths left of it; metres to its ribbon's middle]. */
+function bandAt(n: NetworkBuffers, b: Float32Array, line: number, d: number): [number, number] {
   const first = n.lineTable[line * 4];
-  if (n.lineTable[line * 4 + 1] < 2) return b[first] ?? 0;
+  if (n.lineTable[line * 4 + 1] < 2) return [b[first * 2] ?? 0, b[first * 2 + 1] ?? 0];
   const [si, f] = sampleSegment(n, line, d);
-  return b[si] + (b[si + 1] - b[si]) * f;
+  return [b[si * 2] + (b[si * 2 + 2] - b[si * 2]) * f, b[si * 2 + 1] + (b[si * 2 + 3] - b[si * 2 + 1]) * f];
 }
 
 /** The shift to the right of travel (local y points south, so right of (dx, dy) is (-dy, dx)). */
@@ -1324,7 +1333,7 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM, at.band);
+  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM, at.band, at.bandOn);
   const [cx, cy] = lineAt(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
   const [bx, by] = lineAt(n, at.line, carD - half), [fx, fy] = lineAt(n, at.line, carD + half);
   return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };

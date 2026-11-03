@@ -150,7 +150,7 @@ export function Search() {
   if (!expanded)
     return (
       <div class="map-search closed">
-        <button class="btn icon search-open" aria-label="Find a place" data-tip="Find a place (/ or Ctrl+F)"
+        <button class="btn icon search-open" data-guide="zoom" aria-label="Find a place" data-tip="Find a place (/ or Ctrl+F)"
           onClick={expand}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <circle cx="5.75" cy="5.75" r="4.25" />

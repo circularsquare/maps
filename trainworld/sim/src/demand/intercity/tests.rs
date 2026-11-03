@@ -62,6 +62,30 @@ fn intercity_market_is_symmetric_and_conserved() {
     }
     assert!((SHARES.iter().sum::<f32>() - 1.).abs() < 1e-6);
 }
+/// T-2122: the table's rows are the corridors with trips or commutes, their columns the whole-world
+/// arrays' at those corridors, to the bit.
+#[test]
+fn corridor_rows_are_the_corridors_with_trips() {
+    let mut a = api();
+    network(&mut a, 6., 1.);
+    a.solve(0);
+    let (pairs, trips, base, modes) = (a.corridor_pairs(), a.corridor_trips(), a.commute_base(), a.corridor_modes());
+    let want: Vec<u32> = (0..trips.len()).filter(|&i| trips[i] > 0. || base.get(i).is_some_and(|&b| b > 0.)).map(|i| i as u32).collect();
+    let rows = a.corridor_rows();
+    assert!(!rows.is_empty());
+    assert_eq!(rows, want);
+    let (rp, rt, rc, rm) = (a.corridor_rows_pairs(), a.corridor_rows_trips(), a.corridor_rows_commutes(), a.corridor_rows_modes());
+    assert_eq!(rc.is_empty(), base.is_empty());
+    for (j, &i) in rows.iter().enumerate() {
+        let i = i as usize;
+        assert_eq!([rp[2 * j], rp[2 * j + 1]], [pairs[2 * i], pairs[2 * i + 1]]);
+        assert_eq!(rt[j].to_bits(), trips[i].to_bits());
+        if !base.is_empty() {
+            assert_eq!(rc[j].to_bits(), base[i].to_bits());
+        }
+        assert_eq!([rm[2 * j].to_bits(), rm[2 * j + 1].to_bits()], [modes[2 * i].to_bits(), modes[2 * i + 1].to_bits()]);
+    }
+}
 /// T-1008: the corridors sent once (pairs, trips a day) and per period (shares, the pairs with
 /// rail) give `corridor_summary` and `commute_corridors` back.
 #[test]
@@ -583,8 +607,9 @@ fn world_rows_add_up_and_open_as_the_game_opens_them() {
     assert_eq!((w.info()[3], no.info()[3]), (1., 0.));
     // the same market from the rows as from the zones
     assert!((w.m.cw.daily - no.m.cw.daily).abs() < 1e-9 * no.m.cw.daily, "{} {}", w.m.cw.daily, no.m.cw.daily);
-    assert_eq!(w.m.cw.trips.len(), 15);
-    for (a, b) in w.m.cw.trips.iter().zip(&no.m.cw.trips) {
+    let (wt, nt) = (w.corridor_trips(), no.corridor_trips());
+    assert_eq!((wt.len(), nt.len()), (15, 15));
+    for (a, b) in wt.iter().zip(&nt) {
         assert!((a - b).abs() <= 1e-9 * b.max(1.));
     }
     assert!(w.m.cw.daily > 0. && w.m.cw.leaving > 0.);

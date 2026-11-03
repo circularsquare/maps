@@ -116,17 +116,26 @@ export interface SaveHeader {
   level?: number;
   /** T-1822: the Getting started card's progress; absent where the game has none (older saves, sandboxes) */
   guide?: GuideSave;
+  /** T-2124: the achievement steps earned, by key (game/achievements.ts); absent in older saves,
+   * which work theirs out quietly on load */
+  achievements?: Record<string, Achieved>;
 }
 
-/** T-1822: `done` is a bit per ticked step (bit 0 the first); `hidden`: closed with the x, brought back
- * in Settings; `closed`: finished and dismissed with Done. */
-export interface GuideSave { done: number; hidden?: true; closed?: true }
+/** T-2124: when a step was earned (game seconds) and what earned it, for the hovers: `of` the name of
+ * the line, station or city, `v` the figure, `in` the countries or continents. Names are kept as they
+ * were, so a later rename leaves them. */
+export interface Achieved { at: number; of?: string; v?: number; in?: string[] }
+
+/** T-1822: `done` is a bit per ticked step (`GUIDE_BITS` in game/guide.ts); `hidden`: closed with the
+ * x, brought back in Settings; `closed`: finished and dismissed with Done; `card`: the second card is
+ * up (T-2123); `zoom`: the game started on the world map, so the first card begins with a zoom step. */
+export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 2; zoom?: true }
 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
-  opened: true, demandFine: true, newCars: true, level: true, guide: true,
+  opened: true, demandFine: true, newCars: true, level: true, guide: true, achievements: true,
 };
 
 /** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher

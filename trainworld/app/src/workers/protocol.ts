@@ -11,7 +11,7 @@
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { Loan } from "../game/loan";
-import type { DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
+import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
 
@@ -204,6 +204,9 @@ export type ToClock =
   /** T-685: region `zone`'s rail share has reached the star's mark, or with `share` (T-1437) that
    * higher goal; kept from the first time */
   | { kind: "star"; zone: string; share?: number }
+  /** T-2124: achievement steps met (game/achievements.ts keys), each kept from the first time at the
+   * game second it lands; the first of an older save marks its achievements worked out */
+  | { kind: "achieve"; got: Record<string, Omit<Achieved, "at">> }
   /** T-706: notes chosen for lines that had none; kept from the first time */
   | { kind: "lineNotes"; notes: Record<string, [number, string]> }
   /** T-531: how edit `seq`'s charge divides between regions */
@@ -314,6 +317,8 @@ export interface MoneyState {
   stars: Record<string, number>;
   /** T-1437: the higher goals reached, per region and share (%) the game second it was reached */
   goals: Record<string, Record<string, number>>;
+  /** T-2124: the achievement steps earned; absent until an older save's have been worked out */
+  achievements?: Record<string, Achieved>;
   /** T-706: each line's station note and the city it was chosen in (see `SaveHeader.notes`) */
   notes: Record<string, [number, string]>;
   /** T-1822: the Getting started card's progress; absent where the game has no card */

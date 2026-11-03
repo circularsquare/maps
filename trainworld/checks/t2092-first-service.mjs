@@ -1,7 +1,8 @@
-// T-2092: a new game with the tutorial card opens on the Build tab; a new rail line's first trains
-// (or first headway) at one level go to every level still at 0, after which levels are independent.
-// A new game from the start menu in New York, a line built, then train counts set through the same
-// functions the line panel's steppers call (game/world.ts). Screenshots in artifacts/trainworld/t2092/.
+// T-2092, T-2123: a new game with the tutorial card opens on the Build tab; a new rail line's trains
+// (or headway) set at one level stay at that level alone (T-2123 took back T-2092's fill of every
+// level: the tutorial's last steps ask for trains at each level instead). A new game from the start
+// menu in New York, a line built, then train counts set through the same functions the line panel's
+// steppers call (game/world.ts). Screenshots in artifacts/trainworld/t2092/.
 //   node trainworld/checks/t2092-first-service.mjs [url]     (about 2 minutes)
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -42,26 +43,15 @@ try {
   await mod((w, id) => w.setTrainCount(id, 'high', 4), A);
   await settle();
   const t1 = await trains(A);
-  check(JSON.stringify(t1) === '[4,4,4]', `4 trains at High gives 4 at every level (${t1})`);
-
-  // it runs at 21:00 on a Saturday (the screenshot): low is in force then, and has trains
-  await page.evaluate(() => { const c = window.tw.clock; const day = Math.floor(c.now() / 86400); const toSat = (6 - (day % 7) + 7) % 7; c.set((day + toSat) * 86400 + 21 * 3600); c.setRunning(true); });
-  await settle(6000);
-  await page.evaluate(() => window.tw.clock.setRunning(false));
-  await page.evaluate(() => { document.querySelector('[data-guide-tab="lines"]').click(); });
-  await settle(500);
-  await page.click('#dock .pane .rows li').catch(() => {});
-  await settle(1500);
-  await page.screenshot({ path: join(OUT, 'after-line-A.png') });
-
-  // levels are independent after that
-  await mod((w, id) => w.setTrainCount(id, 'low', 0), A);
-  await settle();
-  check(JSON.stringify(await trains(A)) === '[4,4,0]', `Low set to 0 stays 0 (${await trains(A)})`);
+  check(JSON.stringify(t1) === '[4,0,0]', `4 trains at High leaves Medium and Low at 0 (${t1})`);
   await mod((w, id) => w.stepTrainCount(id, 'high', 1), A);
   await settle();
   const t2 = await trains(A);
-  check(JSON.stringify(t2) === '[5,4,0]', `an existing line with 0 at Low keeps 0 when High changes (${t2})`);
+  check(JSON.stringify(t2) === '[5,0,0]', `a step at High changes High alone (${t2})`);
+  await mod((w, id) => w.setTrainCount(id, 'low', 2), A);
+  await settle();
+  const t3 = await trains(A);
+  check(JSON.stringify(t3) === '[5,0,2]', `Low set on its own (${t3})`);
 
   // line B: a new line gets a headway first
   const b = await buildLine(page, [[-73.99, 40.72], [-73.995, 40.70], [-74.0, 40.69]], { name: 'B', wait: { route: 400, station: 300, settle: 700 } });
@@ -72,10 +62,9 @@ try {
   await settle();
   await mod((w, id) => w.setHeadway(id, 'high', 600), B);
   await settle();
-  const t3 = await trains(B);
+  const t4 = await trains(B);
   const auto = await page.evaluate((id) => window.tw.world.value.lineStats[id]?.autoS, B);
-  check(t3.every((n) => n > 0), `a headway at High on a new line starts trains at every level (${t3}, headways ${auto})`);
-  check(auto && auto.every((s) => s === 600), `the headway is the same at every level (${auto})`);
+  check(t4[0] > 0 && t4[1] === 0 && t4[2] === 0, `a headway at High on a new line starts trains at High alone (${t4}, headways ${auto})`);
 
   check(errors.length === 0, 'no console errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));
 } finally {

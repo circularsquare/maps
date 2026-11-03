@@ -59,6 +59,7 @@ import {
   focusZones,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
+import { deviceGB, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
@@ -126,8 +127,8 @@ function cityOfPlace(place: number) {
 
 /**
  * Workers in the pool (T-361, T-381). By threads: 12 or more get 3, 6 to 11 get 2, fewer 1; then
- * by memory (each worker's WASM is a few hundred MB, notes/T-361.md): 4 GB or less (`navigator.deviceMemory`, Chrome
- * and Edge only) gets 1, and where it is not reported (Firefox, Safari) at most 2. The "Use more
+ * by memory (each worker's WASM is a few hundred MB, notes/T-361.md): a phone or tablet, or 4 GB or less
+ * (`smallDevice`), gets 1, and where memory is not reported (desktop Firefox, Safari) at most 2. The "Use more
  * cores" setting restores the older rule, half the threads less one, 1 to 5 (one per period).
  * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
  * the next load.
@@ -184,10 +185,9 @@ export function poolSize(): number {
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
   const hc = navigator.hardwareConcurrency || 4;
   if (display.peek().moreCores) return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
+  if (smallDevice()) return 1;
   const byThreads = hc >= 12 ? 3 : hc >= 6 ? 2 : 1;
-  const mem = (navigator as { deviceMemory?: number }).deviceMemory;
-  if (mem === undefined) return Math.min(byThreads, 2);
-  return mem <= 4 ? 1 : byThreads;
+  return deviceGB() === undefined ? Math.min(byThreads, 2) : byThreads;
 }
 
 /** The service demand reads, with the UI's ids. */
@@ -216,22 +216,23 @@ type Query = WithoutCity<QueryMessage>;
 interface Target { version: number; round: number; view: number; wait: boolean; solve?: Solve; shown?: number }
 const ALL_PERIODS = (1 << PERIODS.length) - 1;
 const frameOf = (): FrameSpec => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; };
-/** T-378: the index of the corridor between places `a` and `b` (`IntercityApi.corridor_summary`
- * order: (0, 0), (0, 1) .. (1, 1) ..). */
-function corridorOf(a: number, b: number): number {
-  const n = INTERCITY_PLACES.length, i = Math.min(a, b), j = Math.max(a, b);
-  return i * n - (i * (i - 1)) / 2 + (j - i);
-}
 /** T-378: the shares of the longer trips not by rail that fly and that drive on each corridor with
- * place `own`, 2 per place (`SumsCtx.modes`): NaN where `modes` has no entry (near places on two
- * landmasses); null with no place or before any are known (all by car). */
-function ownModes(modes: Float32Array | null, own: number): Float64Array | null {
-  if (!modes || own < 0) return null;
-  const out = new Float64Array(2 * INTERCITY_PLACES.length);
-  for (let p = 0; p < INTERCITY_PLACES.length; p++) {
-    const c = corridorOf(own, p);
-    if (2 * c + 1 >= modes.length) out[2 * p] = out[2 * p + 1] = NaN;
-    else (out[2 * p] = modes[2 * c]), (out[2 * p + 1] = modes[2 * c + 1]);
+ * place `own`, 2 per place (`SumsCtx.modes`), from the corridor table's rows: NaN where the table has
+ * none (a corridor with no trips, whose bubbles carry none either, T-2122) or the shares are NaN (near
+ * places on two landmasses); null with no place or before any are known (all by car). */
+const ownModesMade = new WeakMap<CorridorTable, Map<number, Float64Array>>();
+function ownModes(t: CorridorTable | null, own: number): Float64Array | null {
+  if (!t || own < 0) return null;
+  const made = ownModesMade.get(t) ?? ownModesMade.set(t, new Map()).get(t)!;
+  let out = made.get(own);
+  if (!out) {
+    out = new Float64Array(2 * INTERCITY_PLACES.length).fill(NaN);
+    const { from, to, air, car } = t;
+    for (let j = 0; j < t.n; j++) {
+      const p = from[j] === own ? to[j] : to[j] === own ? from[j] : -1;
+      if (p >= 0 && p < INTERCITY_PLACES.length) (out[2 * p] = air[j]), (out[2 * p + 1] = car[j]);
+    }
+    made.set(own, out);
   }
   return out;
 }
@@ -391,9 +392,9 @@ const MEM_OTHER = 0.6 * 2 ** 30;
 const MEM_WORKER = 0.7 * 2 ** 30;
 const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
 /** T-1205: what a game may take in all: about 8 GB (Anita, T-1199), less on a device with less
- * (`navigator.deviceMemory` reports at most 8) */
+ * (`deviceGB` reports at most 8) */
 function memBudget(): number {
-  const dm = (navigator as { deviceMemory?: number }).deviceMemory;
+  const dm = deviceGB();
   return (dm === undefined ? 6 : dm >= 8 ? 8 : dm * 0.75) * 2 ** 30;
 }
 const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
@@ -496,7 +497,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     stops: new Uint32Array(nStops),
     times: new Float32Array(6 * nStops),
     tph: new Float32Array(lines.flatMap((l) => l.tph)),
-    cars: new Float32Array(lines.map((l) => l.cars)),
+    // T-2147 measurement only (?perfTry=crush2 / crush15): demand's trains, not buses (BUS_CARS 0.5), hold that many times more
+    cars: new Float32Array(lines.map((l) => (l.cars === 0.5 ? l.cars : l.cars * (perfTry("crush2") ? 2 : perfTry("crush15") ? 1.5 : 1)))),
     fare: svc.fare,
     hopKm: new Float32Array(2 * nStops),
     span: lines.some((l) => l.span) ? new Float32Array(PERIODS.length * 2 * nStops).fill(1) : new Float32Array(0),
@@ -575,8 +577,9 @@ class DemandClient {
   /** T-392: zones whose shown figures come from a cluster published ahead of a newer solve's final
    * (the version they came from); questions about them go to that solve */
   private cityVersion = new Map<CityId, number>();
-  /** T-378: the market's per-corridor shares of the longer trips not by rail by plane and by car */
-  private corridorModes: Float32Array | null = null;
+  /** T-378: the corridor table last sent, whose rows hold the shares of the longer trips not by rail
+   * by plane and by car (`ownModes`) */
+  private modesTable: CorridorTable | null = null;
   /** T-1208, T-1210: the sums worker (`inSums`), started on first use, and its questions waiting */
   private sumsWorker: Worker | null = null;
   private sumsNext = 1;
@@ -2485,7 +2488,8 @@ class DemandClient {
 
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
-    if (this.fpool || perfOff("focus") || this.status.startsWith("failed") || this.cacheShown()) return;
+    // (none on a small device: its workers would be a second copy of the zone in the tab's memory, T-2122)
+    if (this.fpool || perfOff("focus") || smallDevice() || this.status.startsWith("failed") || this.cacheShown()) return;
     // (at most FOCUS_WORKERS solving workers: each worker is memory of its own, T-2045's follow-up)
     const n = Math.max(1, Math.min(this.computeN, Number(new URLSearchParams(location.search).get("focusWorkers")) || FOCUS_WORKERS));
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
@@ -2750,7 +2754,7 @@ class DemandClient {
       this.tableAsked.delete(t.key);
       // more than one is in use only while the market changes (`dayCorridors` keeps its own newest)
       if (this.corridorTables.size > 3) this.corridorTables.delete(this.corridorTables.keys().next().value!);
-      if (msg.corridorModes?.length) this.corridorModes = msg.corridorModes;
+      this.modesTable = t;
     }
     const s = this.cur;
     if (!s || msg.version !== s.version) return; // superseded
@@ -3684,7 +3688,7 @@ class DemandClient {
 
   /** The frames and tables a longer-trip answer is read with (`SumsCtx`). */
   private sumsCtx(own = -1): SumsCtx {
-    return { market: MARKET_SPEC, world: frameOf(), places: INTERCITY_PLACES.length, own, modes: ownModes(this.corridorModes, own), centres: centresOfPlaces() };
+    return { market: MARKET_SPEC, world: frameOf(), places: INTERCITY_PLACES.length, own, modes: ownModes(this.modesTable, own), centres: centresOfPlaces() };
   }
 
   /** The longer trips of a bubble selection (game/demand.ts `IntercitySelection`, T-118). */

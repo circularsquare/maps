@@ -1,12 +1,14 @@
 // A region's goals (T-1437) as ticks over a mode split bar, at their train shares, the star's small
-// star under its tick. Laid over the bar, so nothing around it moves. Used by the city panel;
-// the bar's parent is `position: relative`.
+// star under its tick, and the real network's share where the city has one (T-2145). Laid over the
+// bar, so nothing around it moves. Used by the city panel; the bar's parent is `position: relative`.
 
 import type { City } from "../game/cities";
 import { clockTime, dayOf } from "../game/format";
-import { weekdayOf } from "../game/days";
+import { AVERAGE_DAY, weekdayOf } from "../game/days";
 import { shiftAt } from "../game/localTime";
 import { GOAL_SHARES, goalsReached, STAR_SHARE } from "../game/points";
+import { realShare } from "../game/realShare";
+import { shownDay, shownDayOn } from "../game/ui";
 import { Icon } from "./widgets";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -22,15 +24,24 @@ export function goalTip(city: City, share: number, at: number | undefined): stri
   return at === undefined ? `${what} in ${city.name}` : `${what}, reached on ${goalWhen(city, at)}`;
 }
 
+/** T-2145 (Anita: "the bars at 10%, 20%, etc are a bit much"): the goals drawn as ticks; the higher
+ * ones are still reached and kept (`GOAL_SHARES`), listed in the city view's Goals reached row. */
+const DRAWN = [STAR_SHARE, 20];
+
 export function GoalTicks({ city }: { city: City }) {
   const at = goalsReached(city.id);
+  const real = realShare(city.id, shownDay.value);
+  const day = shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value;
   return (
     <>
-      {GOAL_SHARES.map((g, k) => (
+      {GOAL_SHARES.map((g, k) => DRAWN.includes(g) && (
         <i class={"goal-tick" + (at[k] !== undefined ? " reached" : "")} style={{ left: g + "%" }} data-tip={goalTip(city, g, at[k])}>
           {g === STAR_SHARE && <span class="goal-star"><Icon.star /></span>}
         </i>
       ))}
+      {real !== null && (
+        <i class="real-mark" style={{ left: real + "%" }} data-tip={`Real world network: ${real.toFixed(1)}% train share in ${city.name}${day}`} />
+      )}
     </>
   );
 }

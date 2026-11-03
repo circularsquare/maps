@@ -12,6 +12,7 @@ import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
 import { BuildTab } from "./BuildTab";
 import { CitiesList } from "./Cities";
+import { AchievementsButton } from "./Achievements";
 import { LinesTab } from "./LinesTab";
 import { MoneyTab } from "./MoneyTab";
 import { StationsTab } from "./StationsTab";
@@ -36,7 +37,7 @@ const PANES: Record<Tab, () => JSX.Element | null> = {
   lines: LinesTab,
   stations: StationsTab,
   money: MoneyTab,
-  cities: () => <CitiesList empty={<p class="muted">No stations yet.</p>} />,
+  cities: () => <><AchievementsButton /><CitiesList empty={<p class="muted">No stations yet.</p>} /></>,
   settings: SettingsTab,
 };
 

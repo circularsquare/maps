@@ -26,11 +26,16 @@ at the longer trips' work-end stations unless a fare factor is set. **What is ke
 pair** (T-1204, T-1558): a composition keeps the rules of the pairs between two open places (a
 table of the open places by the open places); any other pair's is worked out when asked, as
 `corridor_modes`, the trip explorer and the rows' near lists do. The corridors' figures that depend on the places alone (each
-place pair's longer trips and commutes a day, the departures to places with no zone, the totals:
+place pair's longer trips and commutes a day, kept for the pairs with any, the departures to places with no zone, the totals:
 `Corridors`) are worked out at a worker's first composition, about 0.3 s natively, and kept by
 `MarketPacks` for every later one, since with the world's rows they are the same whichever packs
 are open; the market's parts and compositions share them (`corridors_id`), so the worker makes the
-corridor table once. Each period keeps its rail by corridor for the open places' corridors alone.
+corridor table once. The table holds only the corridors with longer trips or commutes (`corridor_rows*`,
+3.9M of the world's 12.7M place pairs in 2026-11, about 120 MB), its split by plane and car included;
+the worker keeps their corridor numbers alone and sends the columns to the main thread, making them
+again if it asks (T-2122: the whole-world arrays it was made from, the kept copy and the dense trips
+were 0.5-0.6 GB in each solving worker). The bubbles' split for the zone in view's place comes from its rows; a pair
+with no row has no trips to split. Each period keeps its rail by corridor for the open places' corridors alone.
 Before, every composition built all 6.6 million pair rules and dense corridor tables again: 450 MB
 and 3-13 s in each solving worker, and 50 MB more for each period held. The figures are the same
 to the bit (`t1204_signature` over four sets of places); a composition now takes 15-90 ms and

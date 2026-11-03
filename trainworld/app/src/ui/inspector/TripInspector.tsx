@@ -41,7 +41,7 @@ function NoRail({ t }: { t: TripPeriod }) {
   const near = Number.isFinite(a) ? "The nearest stations are too far to walk to" : "No station is within a walk of the start";
   const text = t.rideToStation === "short" ? `${near}, and the trip is too short to drive to one.`
     : t.rideToStation === "none" ? `${near}, and none is within a drive of the start.`
-    : b >= a ? "The walk from the nearest station to the end is too long."
+    : b >= a ? "No train trip found"
     : "The stations near the start are too far, even by car.";
   const to = Number.isFinite(a) ? `Getting to a station counts as ${minText(a)}${t.rideToStation === "tried" ? " on foot or by car" : " on foot"}` : "No station is within a walk of the start";
   const tip = `${to}, getting from one ${minText(b)} on foot. The train is offered when the two come to ${Math.round(t.pairWalkMax)} min or less.` +

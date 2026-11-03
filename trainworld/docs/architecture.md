@@ -203,8 +203,11 @@ Web first, so it can be shared as a link.
   The router worker's route search and fit stop at their next look (every 20,000 states, every 25 ms)
   when a newer route is asked or the pointer leaves real track.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
-  logical threads, 2 on 6 to 11, 1 on fewer; then `navigator.deviceMemory` 4 GB or less gives 1, and
-  unreported memory at most 2; a big game may then drop some by memory [T-1205, below]. The Settings "Use more cores" restores half the threads less one, 1 to 5
+  logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
+  of 4 GB or less, gets 1 (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
+  less than the phone, an iPhone's killed near 2 GB), and unreported memory (desktop Firefox, Safari)
+  at most 2; a big game may then drop some by memory [T-1205, below]. Such a small device runs no
+  focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). The Settings "Use more cores" restores half the threads less one, 1 to 5
   (one per period), at the next load; `?demandWorkers=N` overrides both. Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
@@ -314,8 +317,8 @@ Web first, so it can be shared as a link.
   final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
   each solve the pool drops solving workers while 0.6 GB for the page, each worker's need plus 0.7 GB
   for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of
-  everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), `deviceMemory`
-  x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
+  everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), the device's
+  memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
   between solves) and every worker composes afresh; no figure changes. It never grows back in a page
   (T-1366). `?perfOff=restart,cap` turns either off; check `t1205-memory.mjs`.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
@@ -338,7 +341,7 @@ Web first, so it can be shared as a link.
 ## 11. Saves
 
 A save is the player's inputs only: track, stations, lines, schedules, fares, each line's station
-note [T-706], money (cash, cars owned of each kind, the ledgers' last 30 days and 48 hours, for the network and for each region, which are the
+note [T-706], money (cash, cars owned of each kind, the ledgers' every day [T-2143] and last 48 hours, for the network and for each region, which are the
 Money tab's history charts: fares, costs, net and train rides; T-447, T-531, T-565, T-567), clock,
 empty line drafts, custom badge symbols, the line-name counter, and the player's station links. Population, jobs and travel come from versioned packs;
 all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
@@ -366,9 +369,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for outside every
   zone) hold the history charts' data, loaded back as they were, so a reload keeps the charts; money
   is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the
-  header's `stars` keeps each region's star, the game second it was earned. A field a save lacks
+  header's `stars` keeps each region's star, the game second it was earned; `achievements` each
+  achievement step earned, by key, with its game second and what earned it (T-2124,
+  [ui-panels.md](ui-panels.md) "Achievements"). A field a save lacks
   reads as empty: no `rides` or `points` as 0, no `hours`, `regions` or `stars` as none, no
-  `fleetFast` as no high-speed cars. A header `points` block (per region totals, written by builds
+  `fleetFast` as no high-speed cars; no `achievements` as not yet worked out, which the page does
+  quietly once the loaded game's first final result is in. A header `points` block (per region totals, written by builds
   between T-684 and T-694) is ignored. Ledger entries after the header's clock are dropped on load
   and their net returned to the cash ([track-and-service.md](track-and-service.md) 6.4, T-715).
   `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on the world map)

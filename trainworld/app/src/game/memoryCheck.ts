@@ -9,6 +9,7 @@
 import { cityById, isCity } from "./cities";
 import { decodeSave, readStored, type SaveHeader } from "../workers/saveFile";
 import { poolSize } from "../workers/demandClient";
+import { deviceGB } from "../workers/deviceMemory";
 import { COARSE_SHARE, GB_PER_MTRIPS } from "../workers/demandLod";
 
 /** GB a solving worker takes outside its WebAssembly memory (its JS heap, T-1205); the browser's 4 GB
@@ -41,7 +42,7 @@ const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));
 export function memoryRefusal(zones: readonly string[]): string | null {
   const need = memoryNeed(zones);
   if (need.wasmGB > WORKER_CAP_GB) return `This game covers ${need.zones} zones. Each demand calculation needs about ${gb(need.wasmGB)} GB and browsers allow 4.`;
-  const device = (navigator as { deviceMemory?: number }).deviceMemory;
+  const device = deviceGB();
   if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return `This game needs about ${gb(need.totalGB)} GB of memory and this device has about ${gb(device)} GB.`;
   return null;
 }

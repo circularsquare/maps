@@ -217,7 +217,7 @@ function Speed() {
       <button class={"btn icon" + (!running ? " on" : "")} data-tip="Pause (Space)" aria-label="Pause" onClick={() => clock.setRunning(!running)}>
         <Icon.pause />
       </button>
-      {btn(0, <Icon.play1 />, "Normal speed")}
+      {btn(0, <Icon.play1 />, "Normal speed", { "data-guide": "play" })}
       {btn(1, <Icon.play2 />, `${times(SPEEDS[1] / SPEEDS[0])} speed`)}
       {btn(2, <Icon.play3 />, `${times(custom ?? SPEEDS[2] / SPEEDS[0])} speed\nDouble-click to pick a speed`, { onDblClick: () => setOpen((o) => !o) })}
       {open && (

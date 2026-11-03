@@ -1,0 +1,47 @@
+/* T-2124: the achievements (ui/Achievements.tsx, ui/inspector/AchievementsView.tsx) */
+
+/* the medal and count at the top right of the Cities tab */
+.ach-head { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.ach-open { height: 24px; padding: 0 6px; font-size: 12px; }
+.ach-open svg { color: var(--accent); }
+.ach-mark { display: inline-flex; color: var(--accent); flex: none; }
+.title .ach-mark svg { width: 20px; height: 20px; }
+
+/* a tiered achievement: name and figure, the bar of equal parts with a tick per tier, the tiers under it */
+.rows > li.ach-tier { display: block; padding: 4px 0 6px; }
+.ach-tier .line { display: flex; align-items: center; gap: 8px; min-height: 22px; }
+.ach-tier .val { font-variant-numeric: tabular-nums; }
+.ach-bar { position: relative; height: 8px; margin-top: 2px; background: var(--tint); }
+.ach-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.ach-tick { position: absolute; top: -2px; bottom: -2px; width: 1px; margin-left: -1px; background: var(--muted); }
+.ach-tick::before { content: ""; position: absolute; top: 0; bottom: 0; left: -4px; right: -4px; }
+.ach-tick.reached { width: 2px; margin-left: -2px; background: var(--text); }
+.ach-labels { position: relative; height: 14px; margin-top: 2px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.ach-labels span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.ach-labels span:last-child { transform: translateX(-100%); }
+
+/* the firsts after a divider: a box, ticked in the accent once earned */
+.ach-firsts { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule); }
+.ach-firsts > p { margin: 0 0 2px; }
+.ach-firsts .rows > li { min-height: 22px; }
+.ach-box { flex: none; width: 12px; height: 12px; border: 1px solid currentColor; display: grid; place-items: center; }
+.ach-firsts li:not(.muted) .ach-box { color: var(--accent); }
+.ach-box svg { width: 10px; height: 10px; stroke-width: 2.2; }
+.ach-firsts .val { font-size: 12px; color: var(--muted); }
+
+/* the toasts, stacked up from the tool notes at the map's bottom left */
+.ach-toasts { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 0 0 10px 10px; }
+.ach-toast { display: flex; align-items: center; gap: 8px; max-width: 280px; padding: 6px 10px 6px 8px; text-align: left; cursor: pointer;
+  background: var(--bg); border: 1px solid var(--rule); color: var(--text); font-size: 12px; line-height: 1.3;
+  animation: ach-rise 150ms ease-out; transition: opacity 600ms linear; }
+.ach-toast.out { opacity: 0; }
+.ach-toast .ach-mark svg { width: 16px; height: 16px; }
+.ach-words { display: flex; flex-direction: column; min-width: 0; }
+@keyframes ach-rise { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
+/* a phone held upright: one toast, its second line cut to one */
+@media (max-width: 600px) and (min-height: 560px) {
+  .ach-toasts { margin-right: 10px; }
+  .ach-toast { max-width: calc(100vw - 20px); }
+  .ach-words .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

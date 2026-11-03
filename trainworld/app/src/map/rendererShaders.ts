@@ -4,7 +4,7 @@
 import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
 import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
-import { BAND_RANGE, BAND_SHARE } from "./lineBands";
+import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_FLIP, ST_BUFFER, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
@@ -113,6 +113,7 @@ uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple 
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
+uniform float u_band_m;      // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -124,13 +125,14 @@ in vec3 a_wmul;            // width as a multiple of the line width (riders, T-0
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
 in float a_full;            // T-819, T-1160: in the traffic view, the line segment's mark: below 0 track at capacity, above 0 its riders' wait for a train with room (min), 0 none
 in vec4 a_band;             // T-1799: its band's shift left at its start and end (share of ${BAND_RANGE} line widths), 1 - its width share at both
+in vec2 a_band_m;           // T-2132: metres left from its track to its ribbon's middle at its start and end (share of ${BAND_M_RANGE})
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
-flat out vec3 v_inner;      // T-1799: red dashes inside both edges of a band: their width and period (px), strength; 0 none
+flat out vec3 v_inner;      // T-1799, T-2133: red dashes down a band's middle: their width and period (px), strength; 0 none
 ${SEL_GLSL}
 void main() {
   v_inner = vec3(0.0);
@@ -238,9 +240,13 @@ void main() {
   float lv = along < 0.5 ? a_lane.x : a_lane.y;
   if (turnback) lv = 2.0 * lv - 1.0;
   if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * lv * lane_off;
-  // through a station's box (u_cap) the bands close up as they narrow to fit
-  if (bandOn > 0.0) off += nrm * bandOn * u_width.x * (tBand ? mix(a_wmul.y, a_wmul.z, along)
-    : mix(a_band.x, a_band.y, along) * ${BAND_RANGE.toFixed(1)} * (u_cap > 0.0 ? min(1.0, u_cap / (${BAND_SHARE.toFixed(2)} * u_width.x)) : 1.0));
+  // the slot in line widths from the ribbon's middle, and the middle in metres from the track, each
+  // at the zoom in view (T-2132); through a station's box (u_cap) the bands close up as they narrow to fit
+  if (bandOn > 0.0) {
+    float toMid = mix(a_band_m.x, a_band_m.y, along) * ${BAND_M_RANGE.toFixed(1)} * u_band_m;
+    off += nrm * bandOn * (tBand ? u_width.x * mix(a_wmul.y, a_wmul.z, along) + toMid
+      : (u_width.x * mix(a_band.x, a_band.y, along) * ${BAND_RANGE.toFixed(1)} + toMid) * (u_cap > 0.0 ? min(1.0, u_cap / (${BAND_SHARE.toFixed(2)} * u_width.x)) : 1.0));
+  }
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
@@ -282,7 +288,7 @@ void main() {
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
   if (u_kind == 1 && a_full != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
-  if (waitIn && u_casing <= 0.0 && !full && u_lane_mode == 0 && u_full_dash > 0.0) v_inner = vec3(max(0.5, 0.18 * w), u_full_dash, fs);
+  if (waitIn && u_casing <= 0.0 && !full && u_lane_mode == 0 && u_full_dash > 0.0) v_inner = vec3(clamp(0.3 * w, 1.0, 0.5 * w), u_full_dash, fs);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
@@ -307,12 +313,12 @@ void main() {
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
   if (v_dash > 0.0 && mod(v_cap.x, v_dash) > 0.6 * v_dash) discard;
   vec3 c = v_color;
-  // T-1799: red dashes inside a band's edges, with a line of the casing's colour inside them, so
-  // they read on a red line as T-1284's outline does
+  // T-2133: red dashes down a band's middle (two inside its edges read as seams between bands), in
+  // a rim of the casing's colour, so they read on a red line as T-1284's outline does
   if (v_inner.x > 0.0 && mod(v_cap.x, v_inner.y) <= 0.6 * v_inner.y) {
-    float e = abs(v_cap.z) - (v_cap.w - v_inner.x);
-    c = mix(c, u_casing_rgb, v_inner.z * clamp(e + 0.5 + min(0.5 * u_full_out, 0.5 * v_inner.x), 0.0, 1.0));
-    c = mix(c, u_full_rgb, v_inner.z * clamp(e + 0.5, 0.0, 1.0));
+    float d = abs(v_cap.z), hw = 0.5 * v_inner.x;
+    c = mix(c, u_casing_rgb, v_inner.z * clamp(hw + 0.5 + min(0.5 * u_full_out, hw) - d, 0.0, 1.0));
+    c = mix(c, u_full_rgb, v_inner.z * clamp(hw + 0.5 - d, 0.0, 1.0));
   }
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
@@ -746,9 +752,10 @@ uniform float u_dim;               // the others' share of full strength
 uniform vec2 u_sel_trip;           // the selected train (T-242): profile, departure - epoch; x < 0 none
 uniform highp int u_pass;          // 0 every train but the selected, 1 the selected's halo, 2 the selected
 uniform float u_psi0;              // the anchor's isometric latitude (T-307): k = cosh(u_psi0 - y * PSI_PER_UNIT)
-uniform highp sampler2D u_lane_tex; // RG32F per sample: how far apart its track's two tracks are, 0-1 (T-658), and its line's band's shift (T-1799, line widths left of run 0)
+uniform highp sampler2D u_lane_tex; // RGBA32F per sample: how far apart its track's two tracks are, 0-1 (T-658), its line's band's shift (T-1799, line widths left of run 0) and metres to its ribbon's middle (T-2132)
 uniform vec2 u_lane;               // px from the centre line to a track's once parted, how far parted (0-1)
 uniform float u_bands;             // px a band's shift of one line width is drawn, 0 none (T-1799)
+uniform float u_bands_m;           // and of a metre to its ribbon's middle (T-2132)
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
@@ -767,13 +774,13 @@ out float v_detail;
 out float v_cab;
 
 /** How far apart the two tracks are at distance d along run 0 (laneAt in network.ts), and the
- * line's band's shift there (bandAt). */
-vec2 laneAt(vec4 L, float d) {
+ * line's band's shift and metres there (bandAt). */
+vec3 laneAt(vec4 L, float d) {
   float dd = clamp(d, 0.0, L.z);
   float i0 = clamp(floor(dd / L.w), 0.0, max(L.y - 2.0, 0.0));
   float f = clamp((dd - i0 * L.w) / max(min(L.w, L.z - i0 * L.w), 1e-3), 0.0, 1.0);
   int si = int(L.x + i0);
-  return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0).xy, texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0).xy, f);
+  return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0).xyz, texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0).xyz, f);
 }
 
 void main() {
@@ -804,7 +811,7 @@ void main() {
   if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
-  vec2 lb = laneAt(L, carD);
+  vec3 lb = laneAt(L, carD);
   float lane = u_lane.y * lb.x;
   px.y = mix(px.y, 3.0 * kM * u_px_per_unit, lane);
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
@@ -843,7 +850,7 @@ void main() {
     k = clamp(k, -0.8 / halfq.y, 0.8 / halfq.y);
   }
   vec2 q = vec2(corner.x * halfq.x * (1.0 + halfq.y * abs(k)), corner.y < 0.0 ? min(0.0, ends) - halfq.y : max(0.0, ends) + halfq.y);
-  float shift = ((int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0) * lane * u_lane.x + lb.y * u_bands;
+  float shift = ((int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0) * lane * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
   c.xy += (sdir * q.x + nrm * (q.y + shift)) / half_vp * c.w;
   gl_Position = c;
   v_uv = q;

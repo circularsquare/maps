@@ -30,7 +30,7 @@ import { ParkingLots } from "./parkingLots";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
-import { BAND_GAP_PX, BAND_RANGE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
+import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
 
 /** The render epoch moves to the start of each game hour. */
@@ -513,6 +513,10 @@ export class NetworkRenderer {
    * where lines sharing track are drawn as one stroke (picking); the same in metres for trains */
   bandPx = 0;
   bandShiftM = 0;
+  /** T-2132: how far lines are side by side at the last draw (0-1), which scales a band's metres to
+   * its ribbon's middle; and CSS px those metres are drawn, a metre each (picking) */
+  bandOn = 0;
+  bandMPx = 0;
   /** T-1799: the bands picked against (`Strokes.band`'s layout) and CSS px a unit of their shift is
    * drawn at the last draw; the Traffic view's own (`TrafficBands.pick`) while it is shown */
   get pickBand(): Int16Array | undefined {
@@ -618,7 +622,7 @@ export class NetworkRenderer {
       }
     }
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
-    for (const a of ["a_seg", "a_colour", "a_edge", "a_level", "a_flags", "a_speed", "a_lane", "a_wmul", "a_full", "a_band"]) this.strokeLoc[a] = gl.getAttribLocation(this.strokeProg, a);
+    for (const a of ["a_seg", "a_colour", "a_edge", "a_level", "a_flags", "a_speed", "a_lane", "a_wmul", "a_full", "a_band", "a_band_m"]) this.strokeLoc[a] = gl.getAttribLocation(this.strokeProg, a);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
     this.lots.init(gl);
@@ -626,14 +630,14 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_mute"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -755,12 +759,14 @@ export class NetworkRenderer {
     }
     // lines side by side (T-1799): none on track and the other stroke sets
     const band = s.band;
-    const bandBuf = make(band ? sub(band, 4) : (_, count) => new Int16Array(count * 4), 4, 2, new Int16Array(4));
-    const bloc = gl.getAttribLocation(p, "a_band");
-    if (bloc >= 0) {
+    const bandBuf = make(band ? sub(band, BAND_STRIDE) : (_, count) => new Int16Array(count * BAND_STRIDE), BAND_STRIDE, 2, new Int16Array(BAND_STRIDE));
+    // the shifts and widths, then the metres to the ribbon's middle (T-2132), from one buffer
+    for (const [name, size, off] of [["a_band", 4, 0], ["a_band_m", 2, 8]] as const) {
+      const bloc = gl.getAttribLocation(p, name);
+      if (bloc < 0) continue;
       gl.bindBuffer(gl.ARRAY_BUFFER, bandBuf);
       gl.enableVertexAttribArray(bloc);
-      gl.vertexAttribPointer(bloc, 4, gl.SHORT, true, 0, 0);
+      gl.vertexAttribPointer(bloc, size, gl.SHORT, true, BAND_STRIDE * 2, off);
       gl.vertexAttribDivisor(bloc, 1);
     }
     gl.bindVertexArray(null);
@@ -776,7 +782,7 @@ export class NetworkRenderer {
   private checkStrokes(name: string, v: StrokeVao | null, s: Strokes) {
     if (!v?.attribs || !s.count) return;
     const gl = this.gl, n = s.count;
-    const want: ArrayBufferView[] = [s.seg, s.colour, s.edge, s.level, s.flags, s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(n).fill(160), s.lane ?? new Uint8Array(n * 2).fill(255), s.band ?? new Int16Array(n * 4)];
+    const want: ArrayBufferView[] = [s.seg, s.colour, s.edge, s.level, s.flags, s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(n).fill(160), s.lane ?? new Uint8Array(n * 2).fill(255), s.band ?? new Int16Array(n * BAND_STRIDE)];
     const bad: string[] = [];
     v.attribs.forEach(({ buf, bytes }, i) => {
       const got = new Uint8Array(n * bytes), w = want[i];
@@ -887,12 +893,12 @@ export class NetworkRenderer {
    * first instance. */
   private bindAt(v: StrokeVao, start: number) {
     const gl = this.gl, a = v.attribs!;
-    const set = (name: string, buf: WebGLBuffer, size: number, type: number, bytes: number, int = false, norm = false) => {
+    const set = (name: string, buf: WebGLBuffer, size: number, type: number, bytes: number, int = false, norm = false, stride = 0, off = 0) => {
       const loc = this.strokeLoc[name];
       if (loc < 0) return;
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      if (int) gl.vertexAttribIPointer(loc, size, type, 0, start * bytes);
-      else gl.vertexAttribPointer(loc, size, type, norm, 0, start * bytes);
+      if (int) gl.vertexAttribIPointer(loc, size, type, stride, start * bytes + off);
+      else gl.vertexAttribPointer(loc, size, type, norm, stride, start * bytes + off);
     };
     set("a_seg", a[0].buf, 4, gl.FLOAT, 16);
     set("a_colour", a[1].buf, 1, gl.UNSIGNED_INT, 4, true);
@@ -901,7 +907,8 @@ export class NetworkRenderer {
     set("a_flags", a[4].buf, 1, gl.FLOAT, 4);
     set("a_speed", a[5].buf, 1, gl.FLOAT, 4);
     set("a_lane", a[6].buf, 2, gl.UNSIGNED_BYTE, 2, false, true);
-    set("a_band", a[7].buf, 4, gl.SHORT, 8, false, true);
+    set("a_band", a[7].buf, 4, gl.SHORT, BAND_STRIDE * 2, false, true, BAND_STRIDE * 2);
+    set("a_band_m", a[7].buf, 2, gl.SHORT, BAND_STRIDE * 2, false, true, BAND_STRIDE * 2, 8);
     set("a_wmul", v.wmulBuf, 3, gl.FLOAT, 12);
     set("a_full", v.fullBuf, 1, gl.FLOAT, 4);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -947,7 +954,7 @@ export class NetworkRenderer {
     if (tb !== this.trafficBands) {
       this.trafficBands = tb;
       this.trafficReach = 0;
-      if (tb) for (const v of tb.sample) this.trafficReach = Math.max(this.trafficReach, Math.abs(v));
+      if (tb) for (let i = 0; i < tb.sample.length; i += 2) this.trafficReach = Math.max(this.trafficReach, Math.abs(tb.sample[i]));
       this.putLane(n);
     }
     this.perSegV++;
@@ -1148,14 +1155,16 @@ export class NetworkRenderer {
   /** each network texture's GL object, freed when it is replaced (T-1028: kept across edits while its
    * data is the same) */
   private texRes: Partial<Record<TexName, { del: () => void }[]>> = {};
-  /** per sample: how far apart its tracks are (T-658) and its line's band's shift as drawn (T-1799) */
+  /** per sample: how far apart its tracks are (T-658) and its line's band's shift as drawn (T-1799),
+   * line widths and metres (T-2132) */
   private putLane(n: NetworkBuffers) {
-    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane, band = this.trafficBands?.sample ?? n.sampleBand, v = new Float32Array(m * 2);
+    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane, band = this.trafficBands?.sample ?? n.sampleBand, v = new Float32Array(m * 4);
     for (let k = 0; k < m; k++) {
-      v[k * 2] = lane?.length ? lane[k] ?? 1 : 1;
-      v[k * 2 + 1] = band?.[k] ?? 0;
+      v[k * 4] = lane?.length ? lane[k] ?? 1 : 1;
+      v[k * 4 + 1] = band?.[k * 2] ?? 0;
+      v[k * 4 + 2] = band?.[k * 2 + 1] ?? 0;
     }
-    this.putTexture("lane", v, "rg32f", TEX_W);
+    this.putTexture("lane", v, "rgba32f", TEX_W);
   }
 
   private putTexture(name: TexName, data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number) {
@@ -1441,7 +1450,10 @@ export class NetworkRenderer {
     const bandOn = !this.lineBands || opt.byLevel || opt.bySpeed || (this.trafficWidths && !this.trafficBands) ? 0 : smoothstep(BAND_FOLD_PX[0], BAND_FOLD_PX[1], wLine / dpr) * (1 - lanes.grow);
     this.bandPx = bandOn * wLine / dpr;
     this.bandShiftM = this.bandPx / (pxPerUnitAt(zoom) * kAtY(0));
+    this.bandOn = bandOn;
+    this.bandMPx = bandOn * pxPerUnitAt(zoom) * kAtY(0);
     gl.uniform1f(u.u_band, bandOn);
+    gl.uniform1f(u.u_band_m, pxPerUnitAt(zoom) * kAtY(0) * dpr);
     gl.uniform1i(u.u_band_traffic, this.trafficWidths ? 1 : 0);
     gl.uniform1f(u.u_band_gap, BAND_GAP ? BAND_GAP_PX * dpr : 0);
     gl.uniform3fv(u.u_level_colours, this.levelColours);
@@ -1819,6 +1831,7 @@ export class NetworkRenderer {
       gl.uniform2f(this.trainU.u_lane, lanes.gap * dpr * 0.5, lanes.t);
       // on its line's band (T-1799)
       gl.uniform1f(this.trainU.u_bands, this.bandPx * dpr);
+      gl.uniform1f(this.trainU.u_bands_m, this.bandMPx * dpr);
       gl.bindVertexArray(this.trainVao);
       // every train but the selected; then the selected one's halo, round the whole consist as one
       // pill; then the selected train over it (T-242)

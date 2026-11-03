@@ -31,7 +31,7 @@ import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
@@ -77,8 +77,9 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
 const AUTOSAVE_MS = 60_000;
 /** T-744, T-1826: the backup tiers' steps (`BACKUP_STEPS`), scaled down by `?backupMs=` for checks */
 let backupSteps = BACKUP_STEPS;
-/** Days of money kept in the ledger, and hours in the hourly one (T-447). */
-const LEDGER_DAYS = 30;
+/** Days of money kept in the ledger (every one, for the History chart's all time: T-2143), and hours
+ * in the hourly one (T-447). */
+const LEDGER_DAYS = Infinity;
 const LEDGER_HOURS = 48;
 const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
 /** T-867: hours a day at each demand level, which weigh each line's trains a day for its upkeep share */
@@ -196,6 +197,8 @@ let linePoints = new Map<number, [string, number[][]][]>();
 let stars = new Map<string, number>();
 /** T-1437: each region's higher goals, by share (%), the game second each was reached */
 let goals = new Map<string, Record<string, number>>();
+/** T-2124: the achievement steps earned; null for an older save until the page has worked them out */
+let achievements: Map<string, Achieved> | null = new Map();
 /** T-706: each line's station note and the city it was chosen in */
 let lineNotes = new Map<string, [number, string]>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
@@ -1558,9 +1561,9 @@ function mergeLedger<T extends { fares: number; running: number; trains: number;
 /** A load settles again from the save's clock, so what the loaded ledgers hold after it leaves them
  * and its net comes back into the cash; edits' charges stay, on the clock's day and hour. Such
  * entries come from a clock pulled back (T-488, minutes) or, before T-715, a clock of the game open
- * before (up to a year of running costs with no fares, charged again by each such load). The day
- * ledger keeps 30 days, so the running cost is worked out again on the loaded network up to where the
- * hour ledger ends, times the whole days kept over the same worked out again. Returns US$M. */
+ * before (up to a year of running costs with no fares, charged again by each such load). The running
+ * cost is worked out again on the loaded network up to where the hour ledger ends, times the whole
+ * days kept over the same worked out again. Returns US$M. */
 function unsettleAfter(clockT: number): number {
   const D = Math.floor(clockT / 86400), H = Math.floor(clockT / 3600);
   const last = hourLedger[hourLedger.length - 1];
@@ -1658,6 +1661,7 @@ function moneyState(): MoneyState {
     goals: Object.fromEntries(goals),
     notes: Object.fromEntries(lineNotes),
     ...(guide ? { guide } : {}),
+    ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}),
   };
 }
 
@@ -1932,7 +1936,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars, ...(guide ? { guide } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2276,7 +2280,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -2305,6 +2309,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   loadRegions(h.regions);
   stars = new Map(Object.entries(h.stars ?? {}));
   goals = new Map(Object.entries(h.goals ?? {}));
+  achievements = h.achievements ? new Map(Object.entries(h.achievements)) : null;
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   newLineCars = h.newCars ?? 0;
   guide = h.mode === "sandbox" ? undefined : h.guide;
@@ -2341,7 +2346,7 @@ function setNewGame(spec?: NewGameSpec) {
   startZone = g.start;
   opened = g.opened;
   demandFine = undefined;
-  guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0 } : undefined;
+  guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0, ...(g.start ? {} : { zoom: true as const }) } : undefined;
   fares = startFares(spec);
 }
 
@@ -2373,6 +2378,7 @@ async function newGame(spec?: NewGameSpec) {
   loadRegions(undefined);
   stars = new Map();
   goals = new Map();
+  achievements = new Map();
   lineNotes = new Map();
   newLineCars = 0;
   restart(startClock(spec), "new");
@@ -3608,6 +3614,17 @@ async function handle(msg: ToClock) {
       stars.set(msg.zone, Math.floor(gameNow()));
       dirty = true;
       sendMoney();
+    }
+  } else if (msg.kind === "achieve") {
+    // T-2124: a sandbox earns none
+    if (mode !== "sandbox") {
+      const fresh = !achievements, before = achievements?.size ?? 0;
+      const now = (achievements ??= new Map()), at = Math.floor(gameNow());
+      for (const [k, v] of Object.entries(msg.got)) if (!now.has(k)) now.set(k, { ...v, at });
+      if (fresh || now.size !== before) {
+        dirty = true;
+        sendMoney();
+      }
     }
   } else if (msg.kind === "guide") {
     if (mode !== "sandbox") { // T-1835: Settings can start the guide in a game saved without one

@@ -3,7 +3,15 @@
 // them by less than a fraction of a pixel; closer in, only the chunks whose box touches the view are
 // drawn. Both keep the segments' order, which decides which line is drawn over which (T-190).
 
-import type { Strokes } from "./network";
+import { BAND_STRIDE } from "./lineBands";
+import { F_EASE, type Strokes } from "./network";
+
+/** whether segment b's band differs from a's, or a's changes along it (an ease, T-1799) */
+function bandDiffers(bd: Int16Array, a: number, b: number): boolean {
+  const oa = a * BAND_STRIDE, ob = b * BAND_STRIDE;
+  for (let x = 0; x < BAND_STRIDE; x++) if (bd[ob + x] !== bd[oa + x]) return true;
+  return bd[oa] !== bd[oa + 1] || bd[oa + 2] !== bd[oa + 3] || bd[oa + 4] !== bd[oa + 5];
+}
 
 /** instances per culled chunk, and boxes per box of the next level up */
 export const CHUNK = 16;
@@ -115,7 +123,8 @@ export function significance(s: Strokes, speed: Float32Array | null, sig: Float3
       if (s.colour[b] !== s.colour[a] || s.edge[b] !== s.edge[a] || s.level[b] !== s.level[a] || s.flags[b] !== s.flags[a]) break;
       if (st && st[b] !== st[a]) break;
       // a band's shift easing at a node (T-1799) is never merged away
-      if (bd && (bd[b * 4] !== bd[a * 4] || bd[b * 4 + 1] !== bd[a * 4 + 1] || bd[b * 4 + 2] !== bd[a * 4 + 2] || bd[b * 4 + 3] !== bd[a * 4 + 3] || bd[a * 4] !== bd[a * 4 + 1] || bd[a * 4 + 2] !== bd[a * 4 + 3])) break;
+      // (nor one where only the Traffic view's shift eases, T-2132: merged, its S-curve became a chord)
+      if (bd && (bandDiffers(bd, a, b) || (s.flags[a] & F_EASE) !== 0)) break;
       if (speed && Math.abs(speed[b] - speed[a]) > SPEED_STEP) break;
     }
     sig[a] = Infinity;
@@ -153,7 +162,7 @@ export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Fl
   const first = new Uint32Array(m);
   for (let i = 0, k = 0; i < n; i++) if (sig[i] > tol) first[k++] = i;
   const seg = new Float32Array(m * 4), colour = new Uint32Array(m), edge = new Uint32Array(m), level = new Float32Array(m), flags = new Float32Array(m);
-  const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined, band = s.band ? new Int16Array(m * 4) : undefined;
+  const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined, band = s.band ? new Int16Array(m * BAND_STRIDE) : undefined;
   for (let k = 0; k < m; k++) {
     const i = first[k], last = (k + 1 < m ? first[k + 1] : n) - 1;
     seg[k * 4] = s.seg[i * 4];
@@ -171,11 +180,13 @@ export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Fl
       lane[k * 2 + 1] = s.lane![last * 2 + 1];
     }
     if (band) {
-      const b = s.band!;
-      band[k * 4] = b[i * 4];
-      band[k * 4 + 1] = b[last * 4 + 1];
-      band[k * 4 + 2] = b[i * 4 + 2];
-      band[k * 4 + 3] = b[last * 4 + 3];
+      const b = s.band!, o = k * BAND_STRIDE, oi = i * BAND_STRIDE, ol = last * BAND_STRIDE;
+      band[o] = b[oi];
+      band[o + 1] = b[ol + 1];
+      band[o + 2] = b[oi + 2];
+      band[o + 3] = b[ol + 3];
+      band[o + 4] = b[oi + 4];
+      band[o + 5] = b[ol + 5];
     }
   }
   return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, band, count: m }, first };

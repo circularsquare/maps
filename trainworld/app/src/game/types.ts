@@ -263,6 +263,8 @@ export type Selection =
   | { kind: "commuters"; end: BubbleEnd; cells: number[]; areas: number }
   /** a city's longer-trips bubble picked zoomed far out (T-186): the registry's city id */
   | { kind: "city"; city: string }
+  /** T-2124: the achievements, opened from the Cities tab */
+  | { kind: "achievements" }
   /** the trip explorer (T-195): where a trip starts and ends, world metres; `to` null until the
    * second click. An end picked by clicking a station (T-221) is at the station's position and
    * names it. */

@@ -117,8 +117,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1906: the start country's income scale (`START`), each country's default over it, and the panel's scale as a multiple of the default; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
-  (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
-  (the track model's refusals in plain words), `ridesNote.ts` (the "+N daily rides" the map shows after a line's stops change, T-1478; drawn by ui/RidesNotes.tsx, T-1499), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
+  (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `achievements.ts` (the achievements' tiers, firsts, their figures and words, posting the steps met to the clock worker, T-2124) and `continents.ts` (each country's continent, T-2124; their panel `ui/inspector/AchievementsView.tsx`, the medal and toasts `ui/Achievements.tsx`, styles `ui/achievements.css`, check `checks/t2124-achievements.mjs`), `realShare.ts` (the real networks' train shares the city view's Within bar marks, a table from `checks/t2145-real-share.mjs`, T-2145), `issues.ts`
+  (the track model's refusals in plain words), `editNote.ts` (what the last edits did to riders and profit a day, shown under the view rows at the map's upper left once demand settles, T-2125; drawn by ui/EditNote.tsx; `checks/old/t2125-edit-note.mjs`), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
   stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195;
   the time left's count and text, T-1479),
@@ -225,7 +225,7 @@ kept between edits and read from the track model again only where `take_changed_
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, conflicts split off as versions; used by the clock worker and the main thread), `versions.ts` (T-2037: a save's origin and latest player change, the origin rule for older saves, saves grouped into one card per game), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
-`demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandLod.ts` (which zones are held fine and which coarse, T-1223; the zones built in last are spared, T-2005), `demandFocus.ts` (the focus pool: a game load's zone in view solved alone to its last round, T-2045), `demandClusters.ts` (the network split into clusters that share no rider,
+`demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandLod.ts` (which zones are held fine and which coarse, T-1223; the zones built in last are spared, T-2005), `demandFocus.ts` (the focus pool: a game load's zone in view solved alone to its last round, T-2045), `deviceMemory.ts` (the device's memory the pool sizes itself by, and whether it is a phone, tablet or 4 GB device, T-2122), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889; `atZero`, whether a place is in an outline, from a grid of cells each crossed by an edge or wholly in or out, so `placeAt` and `cityWithin` find the zone holding a place before measuring any distance, T-1348), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
@@ -293,6 +293,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   resident and metro riders per km set beside the matching rows of `research/ridership.csv`; prints a
   table and a NOTE (never a FAIL) outside 0.5-2x; json to `artifacts/trainworld/t2088/`. About 10
   minutes; not in smoke (T-2088, notes/T-2088.md).
+- `t2145-real-share.mjs [url] [id ...]`: the same seven saves solved to an average-day final on one
+  worker, each city's train share of its trips within (weekday, Saturday, Sunday, average day), printed
+  as the rows of `REAL_SHARE` in `app/src/game/realShare.ts`; json to `artifacts/trainworld/t2143/`.
+  About 25 minutes; rerun after a demand change that moves shares (T-2145).
 - `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
@@ -440,6 +444,11 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   player change on top, the conflict and idle-tab rules through `settleSlot` against a fake account
   server in the page, pictures of the start menu and saves panel light and dark, collapsed and
   open, into artifacts/trainworld/t2037/; about three minutes),
+  `t2123-tutorial.mjs [url]` (the tutorial in a fresh profile: New York by default, the folded view
+  rows, the ripple repeating until its control is pressed and following the tabs, the close
+  confirmation, both cards' steps and Continue, a new game paused until the play step (T-2142), Start again, and a Choose on map start's zoom step,
+  into artifacts/trainworld/t2123/; about four minutes), `t2092-first-service.mjs [url]` (a new game
+  opens on Build; a new line's levels set one at a time; about two minutes),
   `t1826-saves.mjs [url]` (backup tiers simulated and live with `?backupMs=50`, a pull's backup, a
   newer save with an extra block or a higher level opened read-only and left byte for byte through
   an edit and a minute, Download and Make a copy of it, the leave-page question only with an

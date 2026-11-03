@@ -1,27 +1,32 @@
-// The Getting started ripple (T-1822 stage 2, notes/T-1822.md "The ripple"): a rectangle grown round
-// the control the step in hand uses. One fixed canvas over everything, no pointer events, its own
-// requestAnimationFrame loop (no CSS transitions), the target's box read from getBoundingClientRect
-// every frame so a scrolling dock keeps it on target. Targets carry `data-guide="<step 1-6>"`; the
-// tab icons carry `data-guide-tab`. A target out of view is replaced by what brings it into view.
+// The tutorial's ripple (T-1822 stage 2, T-2123; notes/T-1822.md "The ripple"): rectangles grown
+// round the control the step in hand uses, one every RING_GAP_MS until the player clicks that control.
+// One fixed canvas over everything, no pointer events, its own requestAnimationFrame loop (no CSS
+// transitions), the target's box read from getBoundingClientRect every frame so a scrolling dock
+// keeps it on target. Targets carry `data-guide="<step id>"`; the tab icons carry `data-guide-tab`.
+// A target out of view is replaced by what brings it into view, and the ripple moves to the target
+// once it shows (the tab opened).
 
 import { effect } from "@preact/signals";
-import { guideShown, guideSteps, guideTicks } from "../game/guide";
+import { guideShown, guideSteps, guideTicks, type GuideId } from "../game/guide";
 import { moneyState } from "../game/money";
 import { stopEditing, tab } from "../game/ui";
 import { world } from "../game/world";
 
-/** a pulse is three rings, RING_GAP_MS apart, each growing GROW_PX over RING_MS while it fades */
-const RINGS = 3, RING_GAP_MS = 250, RING_MS = 700, GROW_PX = 16, LINE_PX = 2;
-/** reduced motion: one still outline, STILL_PX out, held STILL_MS */
+/** a ring grows GROW_PX over RING_MS while it fades; rings start RING_GAP_MS apart (T-2123: half
+ * T-1822's speed), RINGS of them in an idle reminder, without end while a step waits for its click */
+const RINGS = 3, RING_GAP_MS = 500, RING_MS = 1400, GROW_PX = 16, LINE_PX = 2;
+/** reduced motion: one still outline, STILL_PX out, held STILL_MS (or until the click) */
 const STILL_PX = 8, STILL_MS = 1500;
-/** a step in hand pulses again after this long without input, at most IDLE_MAX times per step */
+/** once its control was clicked, a step in hand pulses again after this long without input, at most
+ * IDLE_MAX times per step */
 const IDLE_MS = 20000, IDLE_MAX = 3;
 /** a step that becomes the step in hand waits this long, so the card's tick lands first */
 const SETTLE_MS = 350;
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)");
 
-interface Pulse { step: number; at: number; colour: string; el: Element | null; sel: string }
+/** `loop`: rings keep coming until the step's own control is clicked */
+interface Pulse { step: GuideId; at: number; colour: string; el: Element | null; sel: string; loop: boolean }
 
 let canvas: HTMLCanvasElement | null = null;
 let pulse: Pulse | null = null;
@@ -31,18 +36,22 @@ let looping = false;
 let held = false;
 let lastInput = performance.now();
 /** a step waiting to pulse once nothing blocks it, and when it may */
-let pending: { step: number; from: number } | null = null;
-let idleStep = -1, idleCount = 0;
+let pending: { step: GuideId; from: number } | null = null;
+let idleStep: GuideId | null = null, idleCount = 0;
 
-/** The selector of the target of a step, tried in order: the first one on the page that can be seen. */
-function selectors(step: number): string[] {
-  const own = `[data-guide="${step + 1}"]`;
-  const t = tab.peek();
+/** The selectors of the target of a step, tried in order: the first one on the page that can be seen. */
+function selectors(step: GuideId): string[] {
+  const own = `[data-guide="${step}"]`;
   switch (step) {
-    case 0: case 1: case 2: return [own, '[data-guide-tab="build"]'];
-    case 3: return [own, '[data-guide-tab="lines"]'];
+    case "zoom": return [own, ".map-search input"];
+    case "track": case "stations": case "construct": return [own, '[data-guide-tab="build"]'];
+    case "line": return [own, '[data-guide-tab="lines"]'];
+    case "homes": return [own, '[data-fold="bubbles"]'];
+    case "play": return [own];
+    // on the map itself, nothing to point at
+    case "bubble": case "trip": case "star": return [];
     // the line panel's controls need a line picked: the Lines tab's first row, or the tab itself
-    default: return t === "lines" ? [own, "#dock .pane .rows li"] : [own, '[data-guide-tab="lines"]'];
+    default: return tab.peek() === "lines" ? [own, "#dock .pane .rows li"] : [own, '[data-guide-tab="lines"]'];
   }
 }
 
@@ -60,7 +69,7 @@ function inView(el: Element): "yes" | "scrolled" | "no" {
 }
 
 /** The element to ripple for a step, scrolling a target that sits scrolled out of its pane into view. */
-function findTarget(step: number): { el: Element; sel: string } | null {
+function findTarget(step: GuideId): { el: Element; sel: string } | null {
   for (const sel of selectors(step)) {
     const el = document.querySelector(sel);
     if (!el) continue;
@@ -75,11 +84,15 @@ function findTarget(step: number): { el: Element; sel: string } | null {
   return null;
 }
 
-/** Whether a pulse may start now: the card is up, and the player is not mid-drag or in the stop editor on step 5. */
-function blocked(step: number): boolean {
+/** Whether the card is out of sight (hidden behind a dialog, F2, or a hidden page). */
+function cardAway(): boolean {
   const card = document.querySelector(".guide");
-  if (!card || getComputedStyle(card).visibility === "hidden" || document.hidden) return true;
-  return held || (step === 4 && stopEditing.peek());
+  return !card || getComputedStyle(card).visibility === "hidden" || document.hidden;
+}
+
+/** Whether a pulse may start now: the card is up, and the player is not mid-drag or in the stop editor on the stops step. */
+function blocked(step: GuideId): boolean {
+  return cardAway() || held || (step === "stops" && stopEditing.peek());
 }
 
 function ensureCanvas(): HTMLCanvasElement {
@@ -101,9 +114,9 @@ function frame(now: number) {
   g.clearRect(0, 0, w, h);
   const p = pulse;
   const total = reduced.matches ? STILL_MS : (RINGS - 1) * RING_GAP_MS + RING_MS;
-  if (!p || now - p.at > total) { pulse = null; looping = false; return; }
-  if (!p.el || !p.el.isConnected) p.el = document.querySelector(p.sel);
-  if (p.el) {
+  if (!p || (!p.loop && now - p.at > total)) { pulse = null; looping = false; return; }
+  if (p.el && !p.el.isConnected) p.el = p.sel ? document.querySelector(p.sel) : null;
+  if (p.el && !blocked(p.step)) {
     const r = p.el.getBoundingClientRect();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.strokeStyle = p.colour;
@@ -114,8 +127,10 @@ function frame(now: number) {
     };
     if (reduced.matches) ring(STILL_PX, 1);
     else {
-      for (let k = 0; k < RINGS; k++) {
-        const t = (now - p.at - k * RING_GAP_MS) / RING_MS;
+      const since = now - p.at;
+      const last = p.loop ? Math.floor(since / RING_GAP_MS) : RINGS - 1;
+      for (let k = Math.max(0, Math.floor((since - RING_MS) / RING_GAP_MS)); k <= last; k++) {
+        const t = (since - k * RING_GAP_MS) / RING_MS;
         if (t < 0 || t >= 1) continue;
         ring(GROW_PX * (1 - (1 - t) * (1 - t)), 1 - t);
       }
@@ -124,23 +139,42 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 
-function start(step: number, found: { el: Element; sel: string }) {
+function start(step: GuideId, found: { el: Element; sel: string } | null, loop: boolean) {
   const colour = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#d9788e";
-  pulse = { step, at: performance.now(), colour, el: found.el, sel: found.sel };
+  pulse = { step, at: performance.now(), colour, el: found?.el ?? null, sel: found?.sel ?? "", loop };
   if (!looping) { looping = true; requestAnimationFrame(frame); }
 }
 
-/** Ripple the control a step uses, now, unless the player is busy with a drag or the stop editor. */
-export function ripple(step: number) {
-  if (blocked(step)) return;
-  const found = findTarget(step);
-  if (found) start(step, found);
+/** Ripple the control a step uses, from now until it is clicked, unless the player is busy with a
+ * drag or the stop editor. A step with nothing to point at does nothing. */
+export function ripple(step: GuideId) {
+  if (blocked(step) || selectors(step).length === 0) return;
+  start(step, findTarget(step), true);
+}
+
+/** A looping pulse on a stand-in (a tab icon) or on nothing moves to the step's own control once it
+ * shows; one whose control went away falls back to the stand-in. */
+function retarget(p: Pulse) {
+  const own = `[data-guide="${p.step}"]`;
+  const ok = p.el && p.el.isConnected && inView(p.el) !== "no";
+  if (ok && p.sel === own) return;
+  const ownEl = document.querySelector(own);
+  if (ok && !(ownEl && inView(ownEl) !== "no")) return;
+  const found = findTarget(p.step);
+  if (found && found.el !== p.el) { p.el = found.el; p.sel = found.sel; }
+  else if (!found) { p.el = null; p.sel = ""; }
 }
 
 /** Watch the step in hand and the player's input, and pulse by the timing rules. */
 export function startRipple() {
   const touch = () => { lastInput = performance.now(); };
-  addEventListener("pointerdown", () => { held = true; touch(); }, true);
+  addEventListener("pointerdown", (e) => {
+    held = true;
+    touch();
+    // the step's own control clicked: its rings stop
+    const p = pulse;
+    if (p?.loop && (e.target as Element | null)?.closest?.(`[data-guide="${p.step}"]`)) pulse = null;
+  }, true);
   const up = () => { held = false; touch(); };
   addEventListener("pointerup", up, true);
   addEventListener("pointercancel", up, true);
@@ -148,19 +182,23 @@ export function startRipple() {
   addEventListener("keydown", touch, true);
   addEventListener("wheel", touch, { capture: true, passive: true });
 
-  // the step in hand changes: pulse once the card's tick has landed
-  let seen = -2;
+  // the step in hand changes: the last one's rings stop, and the new one's start once the card's tick has landed
+  let seen: GuideId | null | undefined;
   effect(() => {
     const m = moneyState.value, w = world.value, g = m?.guide;
-    if (!m || !w || !g || !guideShown(g, m.mode === "sandbox")) { seen = -2; pending = null; return; }
-    const now = guideTicks(guideSteps(w), g).now;
+    if (!m || !w || !g || !guideShown(g, m.mode === "sandbox")) { seen = undefined; pending = null; pulse = null; return; }
+    const steps = guideSteps(w, g);
+    const i = guideTicks(steps, g).now;
+    const now = i >= 0 ? steps[i].id : null;
     if (now === seen) return;
     seen = now;
-    pending = now >= 0 ? { step: now, from: performance.now() + SETTLE_MS } : null;
+    if (pulse && pulse.step !== now) pulse = null;
+    pending = now ? { step: now, from: performance.now() + SETTLE_MS } : null;
     if (now !== idleStep) { idleStep = now; idleCount = 0; }
   });
 
-  // pending pulses wait for nothing to block them; an open step pulses again when the player has been idle
+  // pending pulses wait for nothing to block them; a looping pulse follows its target; once its
+  // control was clicked, an open step pulses again when the player has been idle
   setInterval(() => {
     const t = performance.now();
     if (pending && t >= pending.from && !blocked(pending.step)) {
@@ -169,10 +207,12 @@ export function startRipple() {
       ripple(s);
       return;
     }
-    if (idleStep >= 0 && idleCount < IDLE_MAX && !pending && t - lastInput >= IDLE_MS && (!pulse || t - pulse.at >= IDLE_MS) && !blocked(idleStep)) {
+    if (pulse?.loop) { retarget(pulse); return; }
+    if (idleStep && idleCount < IDLE_MAX && !pending && t - lastInput >= IDLE_MS && (!pulse || t - pulse.at >= IDLE_MS) && !blocked(idleStep)) {
+      const found = selectors(idleStep).length ? findTarget(idleStep) : null;
       idleCount++;
       lastInput = t;
-      ripple(idleStep);
+      if (found) start(idleStep, found, false);
     }
   }, 250);
 }

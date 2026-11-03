@@ -2,6 +2,21 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2124 [P2] Achievements, stages 1-2. Done 2026-11-03 (agent t2124b): four tiered and ten firsts (27 steps), a medal on the Cities tab opening the view, toasts at the map's bottom left, kept in the save; real NYC save 7, Tokyo 11; Sea crossing is T-2150. `checks/t2124-achievements.mjs`, notes/T-2124.md.
+
+- T-2104 [P3] A trip's base fare between lines. Done 2026-11-03 (agent t2104): half by boardings, half by passenger-km, at most one base a boarding; network fares unchanged to the cent. Subway lines lose base, commuter and high-speed lines gain; feeders show their own loss. notes/T-2104.md.
+- T-2146 [P3] A diagram of the network, design. Done 2026-11-03 (agent t2146): option B, an octilinear full-map view laid out by least squares (Wang and Chi) in its own worker, local re-solve on edits; prototype NYC 3.4 s, all Japan 39 s in Python. Stages T-2159 to T-2163. notes/T-2146.md, artifacts/trainworld/t2146/.
+- T-2145 [P2] Real network on the city view's Within bar. Done 2026-11-03 (agent t2143): only the 10% and 20% goal ticks drawn (30% and 40% still goals); a mark at the real network's train share in the seven cities with a real save (New York 15.7%), a table from `checks/t2145-real-share.mjs`. notes/T-2145.md.
+- T-2144 [P2] Trip explorer: "The walk from the nearest station to the end is too long." is now "No train trip found" (hover kept). Done 2026-11-03 (agent t2143).
+- T-2143 [P2] Finances History all time. Done 2026-11-03 (agent t2143): day ledgers keep every day (network and regions); past 90 days a column is a week, then a month, a day's average; a Linear / Log switch. Save size follow-up T-2148.
+
+- T-2122 [P2] Jakarta playable on a phone's memory. Done 2026-11-03 (agent): the corridor table kept as rows with trips only, trips stored sparse, a phone or 4 GB device gets 1 solving worker and no focus pool; emulated phone peaks 1.10-1.29 GB (from 1.82-1.94), desktop figures identical. notes/T-2122.md.
+- T-2133 [P3] Crowding marks on lines side by side. Done 2026-11-03 (agent t2132): the Traffic view's waits are one dashed red line down each band's middle, not two inside its edges. notes/T-2058.md 3e.
+- T-2132 [P2] Lines side by side stable across zoom. Done 2026-11-03 (agent t2132): the metres to a ribbon's middle drawn at the zoom in view, and a ribbon left and rejoined held across gaps up to 2 km within 50 m; kinks real 140/14/0, Tokyo 1/0/0. Shinjuku Traffic left: T-2140. notes/T-2058.md 3e.
+- T-2126 [P2] Lines side by side after Anita's look. Done 2026-11-03: the 1 px gap (agent t2059), the rest as T-2132 and T-2133. notes/T-2058.md 3d.
+- T-2125 [P2] "What this edit did". Done 2026-11-03 (agent): once demand settles after edits, the network's change in riders/day and profit/day under the view rows at the upper left, plain text with green or red arrows, 8 s; replaces T-1478's top-centre note. docs/ui-map.md "Edit note"; `checks/old/t2125-edit-note.mjs`; artifacts/trainworld/t2125/.
+- T-2142 [P2] New games start paused. Done 2026-11-03 (agent): every new game from the menu or saves panel (sandbox too) opens paused; the first tutorial card ends with "Unpause the game" on the play button. `checks/t2123-tutorial.mjs`.
+- T-2123 [P2] Anita's tutorial notes. Done 2026-11-03 (agent): ripple repeats until pressed at half speed and follows tabs; zoom step for map starts; rows folded on card 1; close asks; T-2092's level fill reverted for crowding and every-level steps; New York by default; Continue to a demand card. `checks/t2123-tutorial.mjs`; artifacts/trainworld/t2123/.
 - T-1881 [P2] The hillshade drew dense centres as hills. Done 2026-11-03: shade drawn flat where the classes are flat (map/demFlat.ts). notes/T-1881.md.
 - T-1889 [P2] Riverbanks priced as hills or mountains (East River at 42nd St). Done 2026-11-03: cause was the UN and Tudor City towers; flat after the tower cut (42nd St ghost 2.05x, Water +2.5x only). notes/T-1881.md.
 - T-1944 [P2] Midtown priced as mountains. Done 2026-11-03: tower fields cut from GEDTM30 (`terrain_fine.tower_ground`), world terrain rebuilt on AWS (US$0.38) and all 2,353 zone grids redone; 6th Ave 0.50x US$199M, 45th St 0.50x US$168M. notes/T-1881.md.

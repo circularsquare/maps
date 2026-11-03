@@ -65,6 +65,8 @@ export function onAccountGone(f: () => void) { accountGone = f; }
 export const clockRunning = () => !!current?.running;
 
 export const clockWorkerStatus = signal("loading");
+/** T-2124: counts the games loaded into the worker (each `loaded`), so per-game page state starts again */
+export const gamesLoaded = signal(0);
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
 export const networkSnapshot = signal<NetworkSnapshot | null>(null);
 
@@ -344,6 +346,10 @@ export function makeSandbox() {
 /** T-1822: keep the Getting started card's progress in the save. */
 export function saveGuide(guide: GuideSave) {
   current?.post({ kind: "guide", guide });
+}
+/** T-2124: achievement steps met (game/achievements.ts); the worker keeps each from the first time. */
+export function postAchievements(got: Record<string, Omit<import("./saveFile").Achieved, "at">>) {
+  current?.post({ kind: "achieve", got });
 }
 /** Ask the clock worker an inspector question (T-031); null before the worker is there. */
 export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array | null> {
@@ -876,6 +882,7 @@ export class ClockClient {
         // T-715: the clock the hold above sent is the old game's, which the worker ignores
         this.game = msg.game;
         this.forgetSent();
+        gamesLoaded.value++;
         clock.set(msg.clock);
         if (msg.from === "file") say(`Game loaded, day ${Math.floor(msg.clock / 86400)}.`);
         if (msg.from === "new" && !msg.error) say("New game started.");

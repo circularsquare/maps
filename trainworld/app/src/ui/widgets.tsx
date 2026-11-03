@@ -103,6 +103,8 @@ export const Icon = {
   download: () => <svg viewBox="0 0 16 16"><path d="M8 2.5v7.5M4.8 7l3.2 3.2L11.2 7M2.5 11v2.5h11V11" /></svg>,
   history: () => <svg viewBox="0 0 16 16"><path d="M2.9 9.2a5.2 5.2 0 1 0 .9-4.6M3 2.5v2.6h2.6M8 5.2V8.3l2.1 1.4" /></svg>,
   person: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.9" /><path d="M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6" /></svg>,
+  // T-2124: the achievements, a medal on its ribbon
+  medal: () => <svg viewBox="0 0 16 16"><path d="M4.5 1.5h7L9.3 6.6M4.5 1.5l2.2 5.1" /><circle cx="8" cy="10.3" r="3.9" /><circle class="solid" cx="8" cy="10.3" r="1.4" /></svg>,
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   gear: () => (
     <svg viewBox="0 0 16 16">

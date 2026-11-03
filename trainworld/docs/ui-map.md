@@ -163,13 +163,15 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   New York save's lines each on its own edge) the lower number on the left of its own travel; a pair
   never beside each other directly takes its order on the ground there; the ribbon's order is by how
   many of the others each track is left of; each edge's own lines in its order. The ribbon is centred on its tracks' middle at that
-  place; each track's centre line is a few metres off it, turned into line widths at a fixed 0.05 a
-  metre (`BAND_LW_PER_M`) so the bands of two tracks touch: exact near zoom 14.5, 1.4 px of overlap at
-  13, 0.9 px of gap at 15 and a few px of gap by 16 (a metre is fixed on the ground, a line width is
-  not; more on wide bundles). **Along each line** the ribbon it is in changes only where the lines
+  place at every zoom: a band's shift is its slot in line widths plus the metres from its track to
+  the ribbon's middle, which the shaders draw at the zoom in view (T-2132; `a_band_m`, trains and
+  picking alike). **Along each line** the ribbon it is in changes only where the lines
   beside it change for at least 200 m (`CORRIDOR_MIN_M`, a platform's length: a neighbour splaying
   round a platform or touching at a junction is smoothed over), unless a line on the line's own
-  edge would go missing from the ribbon (lines on one edge are always side by side). **Every change
+  edge would go missing from the ribbon (lines on one edge are always side by side); and a ribbon
+  left and rejoined with the same lines is held across a gap of up to 2 km while the line's track
+  stays within 50 m of a track of each other line in it (`HOLD_RUN_M`, `HOLD_M`; T-2132, so two
+  pairs of tracks 20-50 m apart do not close up and spread again zoomed out; `?perfOff=bandsHold`). **Every change
   of a band's shift is a long S-curve** (T-2058, Anita: lines "never like suddenly turn or translate
   if they don't suddenly turn in the actual track"): a smoothstep 250 m long for ribbons of up to two
   lines and 50 m more per line beyond, at most 800 m (`SMOOTH_M`, `SMOOTH_PER_LINE_M`,
@@ -228,8 +230,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     of it from 8 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
     mixed from the casing's colour towards the red and the darkening scaled alike, so the real
     save's typical stretch (1.5 min at 08:00) shows at about 60%. Where lines sit side by side
-    the wait marks only that line's band: its red dashes run inside both edges of the band, 20% of
-    its width each, with the casing colour's outline inside them, and the band darkens; track at
+    the wait marks only that line's band: one line of red dashes down the band's middle, 30% of its
+    width (1 px to half), in a rim of the casing's colour (T-2133: two inside its edges read as
+    seams between bands), and the band darkens; track at
     capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
     demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
     crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
@@ -583,14 +586,36 @@ those who got on, less the load carried on.
   Lines tab counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
   with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
   shows no opening days, and one in progress ends with the page.
-- **Daily rides note** [T-1478, T-1499; `game/ridesNote.ts`, `ui/RidesNotes.tsx`]: after a line's
-  stops change and demand has answered with final figures for the new stops, a small label at the
-  map's top centre, under the Select tool's bar, shows the line's chip and "+5,226 daily rides" (in the
-  panel's text colour; a fall: "−1,920 daily rides", muted) [T-1693] for 5 s, the number easing up from 0 over
-  0.9 s, fast at first and slowing to the end. Lines edited together stack. The hover gives the
-  line's riders a day before and after. It is the change in the line's `ridersPerDay` (the day
-  shown), nothing new summed; a change that rounds to 0, a line with no earlier figure and a switch
-  of the shown day make none. Hidden with the rest of the interface (F2). Not saved. The same place and look carry other one-line passing notes (the sent feedback's, T-1709).
+- **Edit note** [T-2125, after T-1478; `game/editNote.ts`, `ui/EditNote.tsx`]: once demand has settled
+  after the player's edits, the map's upper left, under the view rows and the demand alert (in
+  `.map-top-left`, so it moves up when rows are folded), shows the network's change in riders a day
+  and in profit a day: "+5,226 riders/day", "−$12k profit/day". Plain 12 px text on the map with a
+  halo in the background colour, no box; each row after a 12 px arrow, up in `--good` green or down
+  in `--bad` red; the profit row's text is red when it falls. A row whose change rounds to 0 (riders
+  to 0, money under $500) is left out, and with both out there is no note. The numbers ease up from 0
+  over 0.9 s, fast at first. It stays 8 s, longer while the pointer is on it, and goes at the next
+  edit. Each row's hover gives the before and after for the day shown ("Riders per weekday: 812,400 to
+  817,626"), and when the edits were about exactly one line (the line an edit names, or a new line),
+  that line's before and after too.
+  - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
+    (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
+    track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier
+    ones add up: the note is the change since the last settled state.
+  - **Settled**: the day shown's demand result is final, demand is not updating, no city is loading,
+    and every running line's figures are for its stops as they are; then a newer result than the one
+    before the edits, or 8 s with no edit and no demand update (an edit that starts no solve).
+    A switch of the shown day, or 5 minutes without settling, makes none. A network with no line
+    running counts as settled with 0 riders, so a new game's first line has a note.
+  - **Figures**: for the day shown (the weekday's for the average day). Riders are the train lines'
+    `ridersPerDay` summed (the demand result's boardings with transfers, the riders fares are paid
+    on; the Lines tab's Riders are the boarding account's past 24 hours, which leave out riders full
+    trains turn away, so the two can move apart); profit is the day's fare
+    income (`incomeByDay`, what the clock pays), minus the running cost (`runningPerHour` by period,
+    a Saturday's and Sunday's high hours at the medium level) and the upkeep a day. A line's own profit
+    is its fares, its trains' running cost and its share of upkeep, as the Lines tab's Money.
+  Hidden with the rest of the interface (F2). Not saved.
+- **Passing note** [T-1709; `ui/PassingNote.tsx`]: a line of words in a small box at the map's top
+  centre, under the Select tool's bar, for 5 s (the sent feedback's).
 - **Capacity dots** [T-184, T-224, T-256, T-1772; `map/capacityMarkers.ts`; what they mean and
   how they look in [track-and-service.md](track-and-service.md) 6.2]: a 16 px dot centred on its
   resource's point, a 1.5 px ring in the casing colour (white, near-black in the dark theme). Dots
