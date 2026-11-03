@@ -2069,6 +2069,9 @@ async function run() {
       // T-1735: blocks of three per route node `map` gives (NONE: dropped) onto the whole network's
       const toWhole = (v: ArrayLike<number>, map: Uint32Array): Float32Array[] => {
         const N = jobNodes, m = map.length, out: Float32Array[] = [];
+        // (a view with no route nodes, as after its cluster's last line goes, carries nothing; its
+        // zero stride would loop until the worker's heap ran out, T-2071)
+        if (m === 0) return out;
         for (let at = 0; at + 3 * m <= v.length; at += 3 * m) {
           const t = new Float32Array(3 * N);
           for (let b = 0; b < 3; b++) for (let k = 0; k < m; k++) if (map[k] !== NONE) t[b * N + map[k]] += v[at + b * m + k];

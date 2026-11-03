@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2071 [P2] Removing a line in Jakarta crashed the page out of memory. Done 2026-11-03 (agent t2071): not size but an endless zero-stride loop in the market window's `toWhole` (T-1735) on any 20-minute edit leaving or starting from no route nodes; fixed, figures unchanged to the bit. notes/T-2071.md.
+- T-1891 [P1] "Demand ran out of memory" on a new New York game after one line. Done 2026-11-03 (agent t2071): the same loop, through a first line on stations already built, grows the page to 16 GB until an array allocation fails; fixed with T-2071. notes/T-2071.md, notes/T-1891.md.
+
 - T-1873 [P2] Muting other lines looked like a worm. Done 2026-11-03 by T-2058: muted lines are drawn thin (45% width), faded toward the casing and solid (Anita's pick); `?perfOff=muteThin` for the old look.
 
 - T-2092 [P2] Two fixes to a new player's start. Done 2026-11-03 (agent): a new game with the tutorial card opens on the Build tab; a rail line's first trains or headway at one level go to every level still at 0, so a new line runs all day and all week. `checks/t2092-first-service.mjs`; artifacts/trainworld/t2092/.
