@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2196 Ferries F5, the ferry fans (2026-11-03, agent t2196): a tenth of visits and attractions trips weigh minutes aboard a ferry at 0.1, composed through the ports; Staten Island ferry weekday visits 6,364 to 6,580, ferry-free saves to the bit, solve +1%. notes/T-2177.md "T-2196 results"
+- T-2220 Station buildings 4, the 0.8 rule (2026-11-03, agent t2220): a change in a building pays 1.6 fixed minutes, the walk whole (`IN_BUILDING` snapshot bit; walk at 0.8 swung the S shuttle 83%). New York, Times Sq's offered building: transfers there +12.7%, every line within 3.2%; no building: to the bit as before. notes/T-2208.md 5
 - T-2250 Two demand tests failing since T-2186 (2026-11-03, agent t2250): the code was right; both tests assumed crush at 160 a car and now cut line b harder (6x12, 3x12 cars) so the wait and the hold still bite. No game figures change.
 - T-2111 India (2026-11-03, agent a57accbdda9f839db, after-join checks t2111c): 73 metro rows and 709 sub-district zones from the world plan, 1,426M people, all 782 shipped and joined (21 state groups, 249 min); load checks and smoke clean. notes/T-2111.md
 - T-2078 India's census district shares (2026-11-03, in T-2111): compared in the dry run, 2.6% of people moved, mostly growth since 2011; left off, the `IN` config ready to switch on. notes/T-2111.md "Sources"

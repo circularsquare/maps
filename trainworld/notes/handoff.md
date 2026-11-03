@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6b129d28-dd4c-41cd-a38e-7497bd99e810, name maps-1c, since 2026-11-03 12:49
-Updated: 2026-11-03 15:45
+Updated: 2026-11-03 17:15
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -48,6 +48,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   light and dark. Filed T-2248 (second stopping line on the inner track, short edges), T-2249 (platform crowd with
   outer tracks). Started af25dc1d4819a3f3d **t2236** crowding by load (Vite 6187) and a95e57756862f26bc **t2219**
   building drawing (Vite 6189), both main tree, both told to keep renderer edits local.
+- ~18:00: T-2220 built in tree t2220; with the walk at 0.8 the S shuttle moved +83% on a Times Sq building (outline
+  left 5 Av/7 out). My call: fixed minutes only (all lines within 3.1%, transfers +12.7%); agent resumed to make it so,
+  then land t2220 (rebase if t2196 lands first). Hover adds "Changing trains inside it feels 20% shorter." Tell Anita.
+- ~17:15: **India landed** 04dd3ef5 (782/782 shipped, 0 parked, 1,426M people; load checks ned/kol/gya/swr/uji
+  PASS; T-2251 uji's centre inside haj). 65562660 T-2250 (two demand tests fixed; tests were wrong after T-2186),
+  6a1b4f2a (CLAUDE.md: run `--features demand` tests too). **8800 = build 849 (04dd3ef5), built from data/packs
+  directly (no freeze needed now)**, smoke 23/23 light and dark. Current freeze: data/frozen/20261103-162459 (the
+  join's own, post-India); 051954 deleted; pre-T2111, pre-T1015, pre-T1854 and older join group backups deleted (49.6 GB
+  free). Running: ae9ef97572a488ce0 **t2196** ferry fans (tree t2196), ac96bd2e3246f935c **t2220** 0.8 rule (tree
+  t2220, Vite 6196), aff494fb99488aab4 **t2213** islands parts in packs (main tree pipeline, writes data/packs:
+  freeze-build 8800 while it runs: `snapbuild-frozen.cmd <hash> 20261103-162459`).
 - ~16:45: master **5249035a**: 27cad2f7 (T-2236 crowding by load + T-2219 building drawing), 6329c909 (T-2195 ferries
   in demand, landed, tree removed), 5249035a (Anita's phone answers: "trips/day" everywhere, rates "per", period on
   the passing hover, On board hover cut). **8800 = build 848**, smoke 23/23 light and dark.
