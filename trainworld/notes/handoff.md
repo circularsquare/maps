@@ -48,7 +48,16 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   light and dark. Filed T-2248 (second stopping line on the inner track, short edges), T-2249 (platform crowd with
   outer tracks). Started af25dc1d4819a3f3d **t2236** crowding by load (Vite 6187) and a95e57756862f26bc **t2219**
   building drawing (Vite 6189), both main tree, both told to keep renderer edits local.
-- ~15:55: **T-2236 DONE, uncommitted** (crowding by busiest hour's load past rated; Rust boarding.rs changed in the
+- ~16:45: master **5249035a**: 27cad2f7 (T-2236 crowding by load + T-2219 building drawing), 6329c909 (T-2195 ferries
+  in demand, landed, tree removed), 5249035a (Anita's phone answers: "trips/day" everywhere, rates "per", period on
+  the passing hover, On board hover cut). **8800 = build 848**, smoke 23/23 light and dark.
+- **India join ENDED ~16:20.** a25ac2bd39ea3f416 **t2111c** runs playbook 8 (status, stale, zone_origins, load
+  checks on Vite 6165, register row, ARCHIVE, clean); then I commit India's files and make a new freeze for 8800
+  (`freeze.py build <stamp>`, then snapbuild with the new stamp; prune the old freeze).
+- a18380cd794b3e76e **t2250** two failing demand tests (`--features demand`), tree .tw-trees/t2250. Likely T-2186.
+- ae9ef97572a488ce0 **t2196** ferry fans, tree .tw-trees/t2196 (from 5249035a), Vite 6191.
+- Main tree has no agent in the app right now except t2111c's page loads.
+- (done) ~15:55: **T-2236 DONE, uncommitted** (crowding by busiest hour's load past rated; Rust boarding.rs changed in the
   main tree, main WASM rebuilt by it; check t2236-crowding.mjs PASS, smoke 23/23; strings shown to Anita). Its
   renderer.ts, rendererShaders.ts, trackHover.ts hunks sit beside t2219's in-progress ones: commit T-2236 + T-2219
   together when t2219 reports, then land t2195 (rebase; expect the gauge line in rendererShaders.ts and boarding).

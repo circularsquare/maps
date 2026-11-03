@@ -656,7 +656,9 @@ def place_keys(pl):
     """One key per OSM place of a job-place table: the area's ref when the row has one (a land area's
     spread rows share it), else its point."""
     ref = pl["ref"].fillna("").astype(str).to_numpy() if "ref" in pl else np.full(len(pl), "")
-    own = np.char.add(np.char.add(pl.lat.round(5).astype(str).to_numpy(), ","), pl.lon.round(5).astype(str).to_numpy())
+    # astype(float): an empty table's columns come as object (T-2111, Maker)
+    own = np.char.add(np.char.add(pl.lat.astype(float).round(5).astype(str).to_numpy(), ","),
+                      pl.lon.astype(float).round(5).astype(str).to_numpy())
     return np.where(ref != "", ref, own)
 
 
@@ -719,14 +721,12 @@ def osm_signal_line(city, sig, jobs, blend=None):
         pl = pd.read_csv(path, keep_default_na=False)
         cells = set(sig["h3"].tolist())
         pid = [int(h3.str_to_int(h3.latlng_to_cell(la, lo, 9))) for la, lo in zip(pl.lat, pl.lon)]
-        pl = pl[[c in cells for c in pid]].reset_index(drop=True)
-        ref = pl["ref"].astype(str) if "ref" in pl else pd.Series([""] * len(pl))
-        key = np.where(ref.to_numpy() != "", ref.to_numpy(), np.char.add(np.char.add(pl.lat.round(5).astype(str).to_numpy(), ","),
-                                                                    pl.lon.round(5).astype(str).to_numpy()))
+        pl = pl.loc[np.array([c in cells for c in pid], dtype=bool)].reset_index(drop=True)  # an empty list would select no columns
+        key = place_keys(pl)
         w = pl.groupby(key, sort=False).w.sum()
         if "osm_w0" in sig:  # signals capped each place at osm_wcap, against the weight before capping
             w = w.clip(upper=float(sig["osm_wcap"]))
-            total = float(sig["osm_w0"])
+            total = max(float(sig["osm_w0"]), 1e-9)  # a zone with no OSM job place at all (T-2111, Maker)
         if len(w):
             top["id"], top["w"] = str(w.idxmax()), float(w.max())
             if "name" in pl:
