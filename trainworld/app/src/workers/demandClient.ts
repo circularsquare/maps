@@ -35,6 +35,7 @@ import {
   type DayDemand,
   type DemandView,
   demandStep,
+  demandScope,
   demandUpdating,
   demandView,
   setDemandQueries,
@@ -705,6 +706,11 @@ class DemandClient {
     effect(() => { tool.value; this.prefetchViewed(); });
     // T-1373: a superholiday's rush days near or gone redo the shown views with them or without
     effect(() => { rushRun.value; this.refreshDays(); });
+    // T-1904: the day shown and the zones with bubbles, for the sums a solve sends unasked
+    effect(() => {
+      const v = this.viewMsg();
+      for (const w of this.workers) w.postMessage(v);
+    });
     // T-1533: a game load's first figures for the zone in view show the map behind the card
     effect(() => {
       const seq = gameLoadSeq.value;
@@ -718,6 +724,11 @@ class DemandClient {
 
   private figSeq = -1;
   private figDays: unknown = null;
+  /** T-1904: the `view` message for the day and zones on screen now (read in an effect) */
+  private viewMsg(): ToDemand {
+    // (none with the bubbles off: Tokyo's take a worker about 0.3 s a round)
+    return { kind: "view", day: perfOff("daySums") ? 0 : shownDay.value, zones: display.value.commuters ? [activeCity.value, ...nearbyZones.value] : [] };
+  }
 
   /** Worker `i`, its WASM started at once; packs follow as they arrive (T-149). Messages from a
    * worker replaced (T-1174) or retired (T-1205) since are dropped; the aux worker's index moves
@@ -1641,6 +1652,7 @@ class DemandClient {
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
+    demandScope.value = 0;
     const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], ids, ...(perfOff("estimate") ? { exact0: true } : {}) };
     this.postSolve(msg);
   }
@@ -2039,15 +2051,15 @@ class DemandClient {
     const canon = canonical(s.svc);
     const stored = toStored(days, s.cities, canon);
     const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.markets, s.coarse ?? [])]);
-    // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
+    // the bubbles, when they were asked for this result (the day shown, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
-    const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
+    const cm = m && m.version === s.version && (m.day === 0 || !perfOff("daySums")) ? await m.p : null;
     // T-1539: the network the loaded save worked out, so the next load of it shows this at once
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === JSON.stringify(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
     // the result shown at load is the same one, unless it can now add its bubbles or its network
     if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
-    const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]) };
+    const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
     const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}) } satisfies StoredDemand);
@@ -2450,9 +2462,10 @@ class DemandClient {
       return;
     }
     if (msg.kind === "sums") {
-      const list = this.pushed.get(`${msg.version}:${msg.round}:${msg.city}`);
+      const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}`;
+      const list = this.pushed.get(key);
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
-      else if (this.cur && msg.version === this.cur.version) this.pushed.set(`${msg.version}:${msg.round}:${msg.city}`, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
+      else if (this.cur && msg.version === this.cur.version) this.pushed.set(key, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
       return;
     }
     if (msg.kind === "ready") {
@@ -2464,7 +2477,10 @@ class DemandClient {
         console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_LEVEL", msg.periods);
       if (!this.periodTable.length && i < this.computeN) this.periodTable = msg.periods;
       if (!this.dayTable.length && i < this.computeN) this.dayTable = msg.days;
-      if (this.respawn.has(i)) return void this.reopen(i);
+      if (this.respawn.has(i)) {
+        this.workers[i].postMessage(this.viewMsg()); // a replacement's (T-1904; outside any effect)
+        return void this.reopen(i);
+      }
       for (const id of Object.keys(msg.cityInfo)) this.openedBy(id, i);
       this.isReady.add(i);
       if (++this.ready === this.workers.length) {
@@ -2546,7 +2562,10 @@ class DemandClient {
       const n = this.computeN, all = plans.slice(0, n);
       if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
         if (all.some((v) => !v)) this.wholeGo(s);
-        else if (s === this.cur && !s.barrier) demandStep.value = { done: 0, of: 2 };
+        else if (s === this.cur && !s.barrier) {
+          demandStep.value = { done: 0, of: 2 };
+          demandScope.value = 0;
+        }
       }
       return;
     }
@@ -2738,6 +2757,7 @@ class DemandClient {
     // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
     // whole one (`plan` says whether there is a local one), not rounds
     demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
+    demandScope.value = cities.length;
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
@@ -3023,7 +3043,7 @@ class DemandClient {
     if (everydayToo && other === undefined && this.modesP?.version === version && this.modesP.round === round && this.modesP.day === day && this.modesP.src === src) return this.modesP.p;
     // T-328: the cached result's bubbles, when it kept this zone's for this day
     const kept = this.cachedModes;
-    if (version === CACHE_VERSION && everydayToo && other === undefined && day === 0 && kept?.city === activeCity.peek()) {
+    if (version === CACHE_VERSION && everydayToo && other === undefined && day === (kept?.day ?? 0) && kept?.city === activeCity.peek()) {
       const n = kept.data.length / 6, b = (k: number) => kept.data.slice(k * n, (k + 1) * n);
       return Promise.resolve({ version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) });
     }
@@ -3034,8 +3054,9 @@ class DemandClient {
       let sums: Float32Array | null = null;
       let extra: Float32Array | null = null;
       // every worker sent its sums with the round (no question to a worker busy with the next
-      // round); asked for only when one is missing. A weekend's are always asked for (T-260).
-      const sent = day === 0 ? this.pushed.get(`${at.version}:${at.round}:${city}`) : undefined;
+      // round); asked for only when one is missing. Another day than a weekday's only for the
+      // zones on screen when the round was solved (T-1904)
+      const sent = this.pushed.get(`${at.version}:${at.round}:${city}:${day}`);
       const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
       // the bit (T-328: the cached bubbles are compared with the fresh ones)
@@ -3698,7 +3719,10 @@ class DemandClient {
         linesSettled(fresh.map((l) => l.id));
         if (c.local) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
         // T-1790: an edit's step 2 (the whole solve) once every local result is in
-        if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) demandStep.value = { done: 1, of: 2 };
+        if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) {
+          demandStep.value = { done: 1, of: 2 };
+          demandScope.value = s.cities.length;
+        }
         const left = new Set(demandSolving.peek() ?? []);
         for (const id of c.cities) { left.delete(id); this.unsettled?.delete(id); }
         demandSolving.value = left;

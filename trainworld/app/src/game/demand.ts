@@ -198,6 +198,10 @@ export const demandUpdating = signal(false);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
+/** T-1904: how many zones the running solve covers (a load's, or an edit's whole solve), or 0 for
+ * a solve of the zone in view alone (a rough solve, an edit's local solve): the status tag says
+ * which, since a whole solve of a big game takes much longer */
+export const demandScope = signal(0);
 /** T-392: the zones the running solve has still to finish (each cluster's land as it is solved);
  * null until the workers say, then read as every zone */
 export const demandSolving = signal<Set<CityId> | null>(null);

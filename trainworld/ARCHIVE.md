@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-1904 [P2] Bubble switching, demand in view while the world solves, global against local label. Done 2026-11-02 (agent t1904): bubbles no longer a round behind the figures on the average day (real save's load 61 s to 8.6 s, cached 95 s to 3.2 s), every end built ahead (switch 150-190 ms to 7-32 ms), status names the solve; the world-solve change proposed as T-2045. notes/T-1904.md.
+
 - T-2037 [P2] Saves: one card per game, no forks. Done 2026-11-02: every save carries its game's origin and latest player change; one card per origin, the latest change on top, "N other versions" opens a row each; conflicts split off as versions. checks/t2037-versions.mjs.
 - T-2030 [P3] Idle tab won Anita's Tokyo. Done 2026-11-02 with T-2037: the clock's own saves no longer go up or count in a conflict; an elsewhere from an idle writer is saved over.
 - T-2031 [P2] Rotate the map with a right drag. Done 2026-11-02 (agent t2031): right or Ctrl drag turns it (not in the blueprint or bus tool), Settings "Rotate map with right drag" on by default, a north needle beside find while turned; ramp marks now follow the turn. Frame cost within noise (+4-7% median).

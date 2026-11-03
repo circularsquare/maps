@@ -30,6 +30,7 @@ import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercityView";
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
+import { perfOff } from "../perfFlags";
 import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
@@ -230,11 +231,43 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   // ---- the city's bubbles ----
   type ZoneShown = { dv: DemandView; end: BubbleEnd; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
+  /** A zone's legs per cell for one result and purpose, and each end's bubbles built from them
+   * (T-1904: kept per end, so Homes, Destinations and Total switch without a worker round trip) */
+  type Built = { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<BubbleEnd, Promise<Bubbles>>; done: Map<BubbleEnd, Bubbles> };
+  const newBuilt = (dv: DemandView, purpose: PurposeFilter, modes: CellModes): Built => ({ dv, purpose, modes, ends: new Map(), done: new Map() });
+  /** `b`'s bubbles of one end, built in worker `w` once per draw anchor */
+  function endBubbles(b: Built, end: BubbleEnd, w: Worker): Promise<Bubbles> {
+    const p = b.ends.get(end);
+    if (p) return p.then((r) => (r.anchor.version === anchor().version ? r : (b.ends.get(end) === p && (b.ends.delete(end), b.done.delete(end)), endBubbles(b, end, w))));
+    const t0 = performance.now();
+    const q = buildOn(w, end, endCells(b.modes, end)).then((r) => {
+      if (b.ends.get(end) === q) b.done.set(end, r);
+      if (w !== worker) return r; // a nearby zone's (its own counts below)
+      commuterStats.workerMs = r.ms;
+      commuterStats.roundTripMs = performance.now() - t0;
+      commuterStats.builds++;
+      return r;
+    });
+    b.ends.set(end, q);
+    return q;
+  }
+  /** T-1904: while the result on show is a final one (no estimate, which the next round replaces), the
+   * ends not on show are built too, one after another */
+  const ENDS: BubbleEnd[] = ["home", "work", "both"];
+  function buildRest(b: Built, w: Worker, live: () => boolean) {
+    if (perfOff("prebuild")) return;
+    void (async () => {
+      for (const e of ENDS) {
+        if (!live() || !demandView.peek()?.final) return;
+        if (!b.ends.has(e)) await endBubbles(b, e, w);
+      }
+    })();
+  }
   /** whether bubbles already shown are the ones the current result, end and purpose would build */
   const isCurrent = (s: ZoneShown, dv: DemandView, end: BubbleEnd, purpose: PurposeFilter, updating: boolean) =>
     s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version;
   let shown: ZoneShown | null = null;
-  let built: { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
+  let built: Built | null = null;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
   // T-1493: an ask that ended without bubbles, and is still the newest, is made again after a wait
@@ -266,7 +299,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     }
     return b;
   };
-  const zones = new Map<CityId, { worker: Worker | null; city: Ready | null; cellsWorld: Float32Array | null; start?: Promise<boolean> | null; ask: number; shown: ZoneShown | null }>();
+  const zones = new Map<CityId, { worker: Worker | null; city: Ready | null; cellsWorld: Float32Array | null; start?: Promise<boolean> | null; ask: number; shown: ZoneShown | null; built: Built | null }>();
   const dropZone = (id: CityId) => {
     zones.get(id)?.worker?.terminate();
     zones.delete(id);
@@ -288,7 +321,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const old = focusSeen, was = shown;
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
         const keep = was ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
-        zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep });
+        zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep, built });
         if (keep) view.setNearbyBubbles(old, painted(keep.bubbles).levels.map((l) => l.discs), keep.bubbles.anchor);
       } else worker?.terminate();
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
@@ -302,7 +335,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         workerReady = Promise.resolve(true);
         const a = adopted.shown;
         if (a) {
-          built = { dv: a.dv, purpose: a.purpose, modes: a.modes, ends: new Map([[a.end, a.bubbles]]) };
+          if (adopted.built?.modes === a.modes) built = adopted.built;
+          else {
+            built = newBuilt(a.dv, a.purpose, a.modes);
+            built.ends.set(a.end, Promise.resolve(a.bubbles));
+            built.done.set(a.end, a.bubbles);
+          }
           showBubbles(a);
         }
       } else adopted?.worker?.terminate();
@@ -329,7 +367,20 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (!d.commuters || !dv) return;
     const end = d.commuterEnd;
     // a solve's first estimate, and its refined result once the crowding rounds are done
-    if (shown && isCurrent(shown, dv, end, purpose, updating)) return;
+    const settled = !!dv?.final;
+    if (shown && isCurrent(shown, dv, end, purpose, updating)) {
+      // T-1904: the other ends, once the figures on show are final
+      if (settled && built && built.dv === shown.dv && worker) {
+        const entry = built, w = worker, epoch = focusEpoch;
+        buildRest(entry, w, () => built === entry && worker === w && epoch === focusEpoch);
+      }
+      return;
+    }
+    // T-1904: a switch to an end already built for the result on show takes it at once, also while a
+    // newer result's legs are on their way (which then replace it as they would the other end's)
+    if (shown && shown.end !== end) tries = 0; // a pick starts its retries at the shortest pause
+    const stand = shown && shown.end !== end && built?.purpose === purpose && !perfOff("prebuild") && built.dv === shown.dv ? built.done.get(end) : undefined;
+    if (stand && stand.anchor.version === anchor().version) showBubbles({ dv: built!.dv, end, purpose, bubbles: stand, modes: built!.modes });
     retry.value; // T-1493: asked again after an answer that did not come
     const ask = ++wanted, epoch = focusEpoch;
     // T-1533: an answer overtaken by a newer ask still shows while the zone has no bubbles at all, so
@@ -345,25 +396,20 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         // the zone is not in the result yet, or a worker was replaced meanwhile: asked again soon
         if (!modes) return again(ask);
         if (overtaken()) return;
-        built = { dv, purpose, modes, ends: new Map() };
+        // the same legs (a result whose zone kept its figures) keep the ends already built
+        built = built?.modes === modes && built.purpose === purpose ? { ...built, dv } : newBuilt(dv, purpose, modes);
       }
-      let b = built?.modes === modes ? built.ends.get(end) : undefined;
-      if (b && b.anchor.version !== anchor().version) b = undefined;
-      if (!b) {
-        if (!(await startWorker())) return again(ask);
-        // T-1544: the focus can move between the worker being ready and this, in the same task (a
-        // loaded game's first state moves the draw anchor, then fits the camera): its worker is gone
-        if (epoch !== focusEpoch || !worker) return;
-        const t0 = performance.now();
-        b = await buildOn(worker, end, endCells(modes, end));
-        commuterStats.workerMs = b.ms;
-        commuterStats.roundTripMs = performance.now() - t0;
-        commuterStats.builds++;
-        if (built?.modes === modes && b.anchor.version === anchor().version) built.ends.set(end, b);
-      }
+      const entry = built!;
+      if (!(await startWorker())) return again(ask);
+      // T-1544: the focus can move between the worker being ready and this, in the same task (a
+      // loaded game's first state moves the draw anchor, then fits the camera): its worker is gone
+      if (epoch !== focusEpoch || !worker) return;
+      const w = worker;
+      const b = await endBubbles(entry, end, w);
       if (overtaken() || display.peek().commuterEnd !== end) return;
       showBubbles({ dv, end, purpose, bubbles: b, modes });
       if (selection.peek()?.kind === "commuters") refreshPick();
+      buildRest(entry, w, () => built === entry && worker === w && epoch === focusEpoch);
     })();
   });
 
@@ -387,6 +433,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const d = display.value;
     const dv = demandView.value;
     const updating = demandUpdating.value;
+    const settled = !!dv?.final;
     const purpose = purposeFilter.value;
     anchorVersion.value; // again at a new draw anchor (T-317)
     // the focused zone's own entry is left for the focus change to take over (above)
@@ -396,13 +443,24 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     for (const id of ids) {
       if (id === focus) continue;
       let z = zones.get(id);
-      if (!z) zones.set(id, (z = { worker: null, city: null, cellsWorld: null, ask: 0, shown: null }));
+      if (!z) zones.set(id, (z = { worker: null, city: null, cellsWorld: null, ask: 0, shown: null, built: null }));
       const s = z.shown;
-      if (s && isCurrent(s, dv, end, purpose, updating)) continue;
+      if (s && isCurrent(s, dv, end, purpose, updating)) {
+        const b = z.built, w = z.worker, entry = z;
+        if (settled && b && b.dv === s.dv && w) buildRest(b, w, () => zones.get(id) === entry && entry.built === b && entry.worker === w);
+        continue;
+      }
       // another purpose's or end's bubbles would mislead: none meanwhile (a new result keeps the last)
+      // (T-1904: an end already built for the result on show stands in at once)
       if (s && (s.purpose !== purpose || s.end !== end)) {
-        z.shown = null;
-        view.setNearbyBubbles(id, null);
+        const st = s.purpose === purpose && z.built?.dv === s.dv && !perfOff("prebuild") ? z.built.done.get(end) : undefined;
+        if (st && st.anchor.version === anchor().version) {
+          z.shown = { ...s, end, bubbles: st };
+          view.setNearbyBubbles(id, painted(st).levels.map((l) => l.discs), st.anchor);
+        } else {
+          z.shown = null;
+          view.setNearbyBubbles(id, null);
+        }
       }
       const entry = z, ask = ++entry.ask;
       const live = () => zones.get(id) === entry && entry.ask === ask;
@@ -419,11 +477,19 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
           return true;
         })();
         if (!(await entry.start) || !live() || !entry.city) return;
-        // null: the zone is not in the solve shown yet (opened since); the next result asks again
-        const modes = await cellModes(purpose, id);
-        if (!modes || !live() || !entry.worker) return;
-        const b = await buildOn(entry.worker, end, endCells(modes, end));
+        let kept = entry.built?.dv === dv && entry.built.purpose === purpose ? entry.built : null;
+        if (!kept) {
+          // null: the zone is not in the solve shown yet (opened since); the next result asks again
+          const modes = await cellModes(purpose, id);
+          if (!modes || !live() || !entry.worker) return;
+          kept = entry.built = newBuilt(dv, purpose, modes);
+        }
+        const w = entry.worker, mine = kept;
+        if (!w) return;
+        const b = await endBubbles(mine, end, w);
         if (!live()) return;
+        const modes = mine.modes;
+        buildRest(mine, w, () => zones.get(id) === entry && entry.built === mine && entry.worker === w);
         entry.shown = { dv, end, purpose, bubbles: b, modes };
         view.setNearbyBubbles(id, painted(b).levels.map((l) => l.discs), b.anchor);
         commuterStats.nearbyMs = performance.now() - t0;

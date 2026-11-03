@@ -176,7 +176,10 @@ commuters by mode right after a round is published, when every worker is already
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
 periods had that round and ahead of its last result for it; the client adds them up when the
-round is published. The commuters by mode per cell (`cell_modes`) read only those sums and the
+round is published. They are a weekday's; for the zone in view and the nearby zones (`view`, sent
+by the page whenever they or the day shown change) the day shown's too (`sub_sums_day`, T-1904),
+since the average day is the default and without them its bubbles waited a round behind the
+figures (notes/T-1904.md). The commuters by mode per cell (`cell_modes`) read only those sums and the
 network's subzones, so the worker with no periods answers them whatever round the others are in.
 Stations, selections, transfers, trips and longer-trip queries read a period's state, so a worker
 answers them only at a round all its periods hold; a selection's far end spread (`flows`) reads
@@ -393,6 +396,6 @@ estimates; after an edit every one), so the rounds after and the final are the s
 its own round-0 figures stand in for a period whose parts did not all come (a worker that kept a
 period sends none) and change nothing once the parts are shown. Each part still finds every
 station's strategies, so a part costs a little over half a whole period, not a third. While a solve steps through
-its rounds, the bubbles' sums for a weekend or one purpose, which only the live state holds, are
-asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
+its rounds, the bubbles' sums for a day not sent with the round or for one purpose, which only the
+live state holds, are asked of the next round and answered on reaching it (T-327), and bubbles overtaken by a newer
 round still show while the zone has none.

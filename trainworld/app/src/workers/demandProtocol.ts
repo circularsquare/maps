@@ -170,6 +170,10 @@ export type ToDemand =
   | { kind: "whole"; version: number }
   /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */
   | { kind: "first"; id: CityId }
+  /** T-1904: the kind of day shown (`day` as a query's) and the zones whose bubbles are drawn (the
+   * zone in view and the nearby zones; none while the bubbles are off): a solve's `sums` for those
+   * zones carry that day's too */
+  | { kind: "view"; day: number; zones: CityId[] }
   /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
   | { kind: "corridorsAgain" }
   /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
@@ -384,7 +388,7 @@ export type FromDemand =
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
-  | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
+  | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
   /** `mask`: bit q set for each period included; null sums: no network, or not `version` */
   | { kind: "subSums"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null; everyday: Float32Array | null }

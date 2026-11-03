@@ -83,12 +83,34 @@ const roundsHeld: number[] = [];
  * the answer is kept from when it was whole.
  */
 const sumsByRound = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }>();
+type Sums = { mask: number; sums: Float32Array; everyday: Float32Array | null };
+/** T-1904: the kind of day the page shows and the zones whose bubbles it draws (`view`) */
+let viewDay = 0;
+let viewZones = new Set<CityId>();
+/**
+ * A city's bubble sums for `rounds` of a solve, kept for `subSums` and sent unasked with the last
+ * round (`kept`: the weekday's, already worked out). The weekday's always (other zones' bubbles and
+ * the cache read them); the day shown as well for the zones on screen, since a day other than a
+ * weekday is otherwise read from the live state, which is a round ahead by the time it is asked
+ * (T-1904: the average day's bubbles waited a whole round, the cached result's for the final).
+ */
+function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Sums) {
+  const days = viewDay !== 0 && viewZones.has(id) ? [0, viewDay] : [0];
+  for (const day of days) {
+    const k: Sums = day === 0 ? kept ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null }
+      : { mask: a.solved_mask(), sums: a.sub_sums_day(day), everyday: everyday.get(id)?.cell_modes_day(day) ?? null };
+    for (const r of rounds) sumsByRound.set(day === 0 ? `${id}:${r}` : `${id}:${r}:${day}`, k);
+    const copy = k.sums.slice();
+    const extra = k.everyday?.slice() ?? null;
+    sendMessage({ kind: "sums", version, round: rounds[rounds.length - 1], city: id, mask: k.mask, sums: copy, everyday: extra, ...(day ? { day } : {}) }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
+  }
+}
 /** the round the solve in hand is working on or last finished */
 let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "loads" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -845,6 +867,9 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
+  } else if (msg.kind === "view") {
+    viewDay = msg.day;
+    viewZones = new Set(msg.zones);
   } else if (msg.kind === "first") {
     const i = openQueue.findIndex((q) => q.msg.packs.some((p) => p.id === msg.id));
     if (i > 0) {
@@ -973,9 +998,11 @@ function query(msg: Query) {
     } else if (msg.kind === "subSums" && day !== 0) {
       // T-260: a weekend's sums are not kept per round (nobody asks while the weekday shows); they
       // are worked out from the state now, so only while every period holds the round asked about
-      const sums = live ? a!.sub_sums_day(day) : null;
-      const extra = live ? everyday.get(msg.city)?.cell_modes_day(day) ?? null : null;
-      sendMessage({ kind: "subSums", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, sums, everyday: extra }, [...(sums ? [sums.buffer] : []), ...(extra ? [extra.buffer] : [])]);
+      // (T-1904: or from the copy kept for the zones on screen when the round was whole)
+      const copy = a && msg.version === current ? sumsByRound.get(`${msg.city}:${msg.round}:${day}`) : undefined;
+      const sums = copy ? copy.sums.slice() : live ? a!.sub_sums_day(day) : null;
+      const extra = copy ? copy.everyday?.slice() ?? null : live ? everyday.get(msg.city)?.cell_modes_day(day) ?? null : null;
+      sendMessage({ kind: "subSums", id: msg.id, version: msg.version, mask: copy ? copy.mask : live ? a!.solved_mask() : 0, sums, everyday: extra }, [...(sums ? [sums.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "subSums") {
       // from the copy taken when the round was whole, not from the state now (see sumsByRound)
       // (or, for a cluster held to its last round, from its state, which has not moved since)
@@ -1998,13 +2025,7 @@ async function run() {
           if (!ok || pending) drop();
         }
         for (const c of cs) for (const a of c.pops) { const b = boardsOf(a); for (const q of all) { b.free[q] = a.board(q); b.rounds[q] = undefined; } }
-        for (const [id, a] of sums) {
-          const kept = { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
-          sumsByRound.set(`${id}:0`, kept);
-          const copy = kept.sums.slice();
-          const extra = kept.everyday?.slice() ?? null;
-          sendMessage({ kind: "sums", version: job.version, round: 0, city: id, mask: kept.mask, sums: copy, everyday: extra }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
-        }
+        for (const [id, a] of sums) keepSums(job.version, [0], id, a);
         const ms = performance.now() - t0;
         for (const q of all) {
           const { msg, transfer } = figures(q, 0, ms, figCs, { at: share, noMarket: !mine.includes(q) });
@@ -2267,13 +2288,8 @@ async function run() {
         stageRound = job.rounds;
         for (const q of mine) roundsHeld[q] = job.rounds;
         if (mine.length) {
-          for (const [id, a] of jobLocal) {
-            const kept = keptSums.get(id) ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
-            for (let r = 0; r <= job.rounds; r++) sumsByRound.set(`${id}:${r}`, kept);
-            const copy = kept.sums.slice();
-            const extra = kept.everyday?.slice() ?? null;
-            sendMessage({ kind: "sums", version: job.version, round: job.rounds, city: id, mask: kept.mask, sums: copy, everyday: extra }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
-          }
+          const rounds = Array.from({ length: job.rounds + 1 }, (_, r) => r);
+          for (const [id, a] of jobLocal) keepSums(job.version, rounds, id, a, keptSums.get(id));
         }
         answerWaiting();
         for (const q of [...mine, ...mq]) {
@@ -2339,16 +2355,10 @@ async function run() {
             roundsHeld[q] = round;
             // (after the parts, round 0's sums are theirs: every worker's must be of the same kind)
             if (q === mine[mine.length - 1] && !parted) {
-              for (const [id, a] of sumsFor) {
-                const kept = { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
-                sumsByRound.set(`${id}:${round}`, kept);
-                // and sent unasked, ahead of this round's last result: the client holds every
-                // worker's by the time it publishes the round, and the bubbles need no query to a
-                // worker that is busy with the next round
-                const copy = kept.sums.slice();
-                const extra = kept.everyday?.slice() ?? null;
-                sendMessage({ kind: "sums", version: job.version, round, city: id, mask: kept.mask, sums: copy, everyday: extra }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
-              }
+              // sent unasked, ahead of this round's last result: the client holds every worker's by
+              // the time it publishes the round, and the bubbles need no query to a worker that is
+              // busy with the next round
+              for (const [id, a] of sumsFor) keepSums(job.version, [round], id, a);
             }
             const { msg, transfer } = figures(q, round, performance.now() - t0, alone ? [alone] : jobClusters, sharing && shared(q) ? { at: mine.includes(q) ? [0, 2] : [1, 2], noMarket: mine.includes(q), side: mine.includes(q) ? "cities" : "market" } : undefined);
             // T-327: ahead of the result, so the client holds every worker's answer for a round by

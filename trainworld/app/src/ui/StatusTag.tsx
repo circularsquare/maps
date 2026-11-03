@@ -1,14 +1,21 @@
-// T-349: the demand status ("Trips being recomputed…", "Loading data") as a
+// T-349: the demand status ("Trips here being recomputed…", "Loading data") as a
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandView, viewRecomputing } from "../game/demand";
+import { demandScope, demandSolving, demandView, refiningZone, viewRecomputing } from "../game/demand";
+import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting } from "../map/commuterView";
+
+function recomputing(): string {
+  const scope = demandScope.value;
+  const n = scope && !refiningZone.value ? demandSolving.value?.size ?? scope : 0;
+  return n > 1 ? `Trips in ${count(n)} cities being recomputed…` : "Trips here being recomputed…";
+}
 
 export function StatusTag() {
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
@@ -30,7 +37,8 @@ export function StatusTag() {
     : bubblesWaiting.value ? "Loading data…"
     // T-1851: every case where the trips in view are rough, early, from before an edit or on their way
     // say one thing; once the zone in view is final, other zones still solving show nothing
-    : viewRecomputing.value ? "Trips being recomputed…" : null;
+    // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
+    : viewRecomputing.value ? recomputing() : null;
   if (!busy) return null;
   const base = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy

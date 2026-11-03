@@ -149,9 +149,12 @@ wide so a longer date moves nothing [T-1868].
   text is its hover. On a map column under 520 px the tag floats under the buttons over the rows
   below, taking no row of its own [T-1704]; the demand row stops short of the day and night picture
   at the top right [T-1868], and the demand stopped alert and the selection bar are under the rows
-  (the find button's row included). **"Trips being recomputed…"** shows whenever the trips of the zone in view are rough,
+  (the find button's row included). **"Trips here being recomputed…"** shows whenever the trips of the zone in view are rough,
   early, from before an edit or from the last session's cache, or while its detailed solve is on the
-  way [T-1851, T-1223, T-328, T-421]; it goes once the zone in view's figures are final, though other
+  way [T-1851, T-1223, T-328, T-421]; when the solve doing it is a whole one over several zones (a
+  game's load, an edit's whole solve after its local one) it says **"Trips in 171 cities being
+  recomputed…"** instead, the zones that solve has still to finish (`demandScope`, `demandSolving`),
+  since that takes much longer on a big game than the zone in view alone [T-1904]; it goes once the zone in view's figures are final, though other
   zones still solve [T-392]. The clock cap (below) follows the same rule, so the cap lifts at that
   moment too. While capped, the tag's hover says "Clock capped at 4x while updating demand". While the
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
@@ -234,7 +237,7 @@ wide so a longer date moves nothing [T-1868].
   `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
   less than half of what it was (counted from before the edits since demand last settled, in trains
   for a count and trains an hour for a headway; from or to 0 is never small), or a stop edit on a line
-  with no trains at any level. The status still shows "Trips being recomputed…" meanwhile, its hover without
+  with no trains at any level. The status still shows "Trips here being recomputed…" (or the cities form) meanwhile, its hover without
   the clock line. One edit that would cap holds the clock until demand settles; every other edit
   (track, stations, new lines, train length or type, fares, undo) caps as before. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
@@ -978,7 +981,7 @@ registry centre and zoom, or over New York with none [T-310].
   too. Under 5 s "A few seconds left", under 55 s "About 40 s left" in tens of seconds, under 90 s
   "About 1 min left", then whole minutes.
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
-  refine it with the clock running; the status says "Trips being recomputed…" until the zone in view's cluster has its final [T-421].
+  refine it with the clock running; the status says "Trips here being recomputed…" until the zone in view's cluster has its final [T-421].
 - **After an edit** nothing changes until a final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
   demand 1/2…" (Status, above), then each changes in one step [T-232]: the zones the local solve

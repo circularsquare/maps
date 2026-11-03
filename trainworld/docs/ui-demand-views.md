@@ -46,7 +46,11 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **None / Homes / Destinations / Total** [T-132, T-1903, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101]; starting a new game turns Destinations on, a start on the world map included [T-801, T-1441], and opening a saved game leaves the setting as it is. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical, attractions); Total is both ends summed per bubble, trips to and from
-  the place (`commuterEnd` "both"), no hover on the button, like Homes and Destinations. Before the buttons, joined to them, the row's icon [T-1137]: a selected
+  the place (`commuterEnd` "both"), no hover on the button, like Homes and Destinations. While the
+  figures on show are final (not a solve's estimate), the bubbles of the two choices not on show are
+  built too, for the zone in view and the nearby zones, and kept while those figures stand; a switch
+  shows them at once, also while a newer result's bubbles are on their way, which then replace them
+  (T-1904, `buildRest` in map/commuterView.ts). Before the buttons, joined to them, the row's icon [T-1137]: a selected
   demand bubble, filled with the default Train share ramp's middle purple mixed 38% toward white
   (`.hint-cell .bubble`), no outline [T-1835]; a click folds the row (Folding, below).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the

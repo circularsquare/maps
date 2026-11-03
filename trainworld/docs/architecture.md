@@ -537,8 +537,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   slot in the same IndexedDB store (`demand:<slot>:<network hash>`, one per slot; a deleted slot
   takes its cache along; sizes and timings in notes/T-328.md). It holds what
   the page shows from a final solve (every kind of day's lines, stations, purposes, each solved
-  zone's split, the market's trips, and the viewed zone's weekday bubbles of every purpose when they
-  were on show), not worker state; lines and stations by their place in the network, since a load
+  zone's split, the market's trips, and the viewed zone's bubbles of every purpose for the day shown
+  when they were on show, T-1904), not worker state; lines and stations by their place in the network, since a load
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
   and of the market, the app build, the worker count and the perfOff flags; the zones must be the
   ones the new solve covers. When a whole game loads and the key matches, the result shows at once

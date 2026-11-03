@@ -49,9 +49,10 @@ interface StoredView {
 }
 type CityFigures = Pick<DemandView, "split" | "trainShareByPeriod" | "tripsPerDay" | "railTripsPerDay">;
 interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; intercity: Omit<IntercityDemand, "version"> | null }
-/** `modes`: the viewed zone's bubbles on a weekday, all purposes (`CellModes`' six arrays one after
- * another, pack cell order), when they were on show as the result landed */
-export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array }; ahead?: CacheAhead }
+/** `modes`: the viewed zone's bubbles on the kind of day shown (`day`, a weekday when absent), all
+ * purposes (`CellModes`' six arrays one after another, pack cell order), when they were on show as
+ * the result landed */
+export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array; day?: number }; ahead?: CacheAhead }
 /** T-1539: the network a load of a save works out, when this result is that network's: `save` the
  * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
 export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
