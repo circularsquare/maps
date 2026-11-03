@@ -154,6 +154,20 @@ pub const UPKEEP_BUS_KM: f64 = 30.0;
 /// A bus's riders at crush.
 pub const BUS_CRUSH: f64 = 80.0;
 
+// ---- ferries (T-2193, notes/T-2177.md 3.1, 3.4, 3.5) ----
+
+/// Price of a port, US$M, paid on Construct (a NYC Ferry landing barge).
+pub const PORT_COST: f64 = 10.0;
+/// Upkeep a day per constructed port, real US$ (US$10k a game day at `ECONOMY`, a fifth of a station's).
+pub const UPKEEP_PORT: f64 = 100.0;
+/// Price of one boat, US$M (a NYC Ferry 350-seat boat is US$7-9M); boats are a fleet of their own,
+/// spares shared between ferry lines.
+pub const BOAT_PRICE: f64 = 8.0;
+/// Running cost per boat-km, real US$.
+pub const RUN_COST_BOAT_KM: f64 = 40.0;
+/// A boat's riders at crush: two of demand's 160-rider cars.
+pub const BOAT_CRUSH: f64 = 320.0;
+
 pub fn level_mult(level: i8) -> f64 {
     LEVEL_MULT[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize]
 }

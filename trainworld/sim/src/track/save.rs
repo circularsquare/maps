@@ -22,6 +22,8 @@ use super::params::*;
 /// `LBS1`, T-1464, is the same without a kind per point) gives the bus lines their routes; without
 /// it there are none. A trailing `LRT1` block (T-1787) carries the settled rates of the lines with
 /// trains to the bit, and the lines the settle left circling; without it a load settles in full.
+/// A trailing `LFR1` block (T-2193) makes stations ports (their berths) and gives the ferry lines
+/// their routes; without it there are none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -34,12 +36,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 11] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1"];
+pub const BLOCKS: [&[u8; 4]; 12] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 2;
+pub const LEVEL: u32 = 3;
 
 struct W(Vec<u8>);
 impl W {
@@ -341,6 +343,36 @@ pub fn encode(net: &Network) -> Vec<u8> {
             for x in p { w.u(x.to_bits() as u64); }
         }
     }
+    // T-2193: the ports and the ferry lines, after LPH1 and only when there are any: count, then per
+    // port its node index and its berth's mm deltas from the node; count, then per ferry line its
+    // index, constructed (1/0), point count and per point its mm deltas from the previous, its
+    // `ferry::K_*` kind and its speed in mm/s
+    let ports: Vec<(usize, [f64; 2])> = nodes.iter().enumerate().filter_map(|(i, &n)| net.node_berth[n as usize].filter(|_| net.is_station(n)).map(|b| (i, b))).collect();
+    let ferries: Vec<(usize, &super::ferry::FerryRoute)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_ferry[l as usize].as_ref().map(|r| (i, r))).collect();
+    if !ports.is_empty() || !ferries.is_empty() {
+        w.0.extend_from_slice(b"LFR1");
+        w.u(ports.len() as u64);
+        for (i, b) in ports {
+            let n = nodes[i] as usize;
+            w.u(i as u64);
+            w.mm(b[0] - net.node_x[n]);
+            w.mm(b[1] - net.node_y[n]);
+        }
+        w.u(ferries.len() as u64);
+        for (i, r) in ferries {
+            w.u(i as u64);
+            w.u(r.built as u64);
+            w.u(r.points.len() as u64);
+            let (mut px, mut py) = (0.0, 0.0);
+            for ((p, &k), &v) in r.points.iter().zip(&r.kinds).zip(&r.v) {
+                w.mm(p[0] - px);
+                w.mm(p[1] - py);
+                w.u(k as u64);
+                w.u(super::ferry::v_mm(v));
+                (px, py) = (p[0], p[1]);
+            }
+        }
+    }
     w.0
 }
 
@@ -372,7 +404,8 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
         let (x, y) = at(net.node_x[i], net.node_y[i]);
         out.set_node(id, Some(NodeData { x, y, level: net.node_level[i], flying: net.node_flying[i] })).map_err(|e| format!("{e:?}"))?;
         if net.node_platform[i] > 0 {
-            out.set_station(id, net.station_data(n)).map_err(|e| format!("{e:?}"))?;
+            let d = net.station_data(n).map(|d| StationData { berth: d.berth.map(|b| { let (x, y) = at(b[0], b[1]); [x, y] }), ..d });
+            out.set_station(id, d).map_err(|e| format!("{e:?}"))?;
         }
     }
     let moved = |p: &Pi| {
@@ -390,6 +423,9 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
         let id = out.alloc_line();
         if let Some(mut d) = net.line_data(l) {
             if let Some(r) = d.bus.as_mut() {
+                r.points = r.points.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect();
+            }
+            if let Some(r) = d.ferry.as_mut() {
                 r.points = r.points.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect();
             }
             out.set_line(id, Some(d)).map_err(|e| format!("{e:?}"))?;
@@ -436,7 +472,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -492,7 +528,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -606,6 +642,32 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         net.line_phase = phase;
         net.phases_placed = true;
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LFR1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let (dx, dy) = (r.mm()?, r.mm()?);
+            if i < net.node_count() && net.is_station(i as u32) {
+                let b = [quant(net.node_x[i] + dx), quant(net.node_y[i] + dy)];
+                let d = super::net::StationData { berth: Some(b), ..net.station_data(i as u32).unwrap() };
+                net.set_station(i as u32, Some(d)).map_err(|e| format!("{e:?}"))?;
+            }
+        }
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let built = r.u()? != 0;
+            let (mut px, mut py) = (0.0, 0.0);
+            let (mut points, mut kinds, mut v) = (vec![], vec![], vec![]);
+            for _ in 0..r.u()? {
+                let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+                (px, py) = (x, y);
+                points.push([x, y]);
+                kinds.push(r.u()? as u8);
+                v.push(r.u()? as f64 / 1000.0);
+            }
+            if i < n_lines { net.line_ferry[i] = Some(super::ferry::FerryRoute::new(points, kinds, v, built)); }
+        }
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -620,12 +682,12 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), built: true, off: false, upgrades: 0 })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), built: true, off: false, upgrades: 0, berth: None })).unwrap();
         }
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() })).unwrap();
+        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).unwrap();
         encode(&net)
     }
 
@@ -699,6 +761,6 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (2, 11), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (3, 12), "a new block raises LEVEL: raise it, then update this pin");
     }
 }

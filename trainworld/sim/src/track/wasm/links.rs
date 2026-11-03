@@ -165,7 +165,7 @@ impl TrackApi {
         self.construct_with_buses(edges, stations, &[])
     }
 
-    /// `construct`, with bus routes too (T-1464).
+    /// `construct`, with bus routes (T-1464) and ferry routes (T-2193) too: `buses` are the lines.
     pub fn construct_with_buses(&mut self, edges: &[u32], stations: &[u32], buses: &[u32]) -> u32 {
         let ops = self.construct_ops(edges, stations, buses);
         if ops.is_empty() {
@@ -191,6 +191,10 @@ impl TrackApi {
             let r = net.line_bus[line as usize].as_ref().unwrap();
             let stops = crate::track::bus::plan(net, line, &r.points, &r.kinds, false).stops.iter().filter_map(|s| s.station).collect();
             return Some((vec![], stops, vec![line]));
+        }
+        // a ferry line: its route (free) and its ports (T-2193)
+        if net.is_ferry(line) {
+            return Some((vec![], net.line_stops(line).to_vec(), vec![line]));
         }
         Some((net.line_path(line).iter().map(|&p| p >> 1).collect(), net.line_stops(line).to_vec(), vec![]))
     }
@@ -228,6 +232,9 @@ impl TrackApi {
                 if let Some(r) = d.bus.as_mut().filter(|r| !r.built) {
                     r.built = true;
                     ops.push(Op::Line { id: l, data: Some(d) });
+                } else if let Some(r) = d.ferry.as_mut().filter(|r| !r.built) {
+                    r.built = true;
+                    ops.push(Op::Line { id: l, data: Some(d) });
                 }
             }
         }
@@ -249,7 +256,8 @@ impl TrackApi {
         let net = &self.w.net;
         let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
         let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
-        let buses = net.bus_lines();
+        let mut buses = net.bus_lines();
+        buses.extend(net.ferry_lines());
         self.construct_with_buses(&edges, &stations, &buses)
     }
 

@@ -1327,8 +1327,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 ### 6.8 Ferry routes
 
 The router for ferry lines (T-2192; design notes/T-2177.md, which also holds the format the sim takes,
-"F1 -> F2 route format"). The ferry line kind itself, its tool, ports, boats and money, is not built yet
-(T-2193, T-2194). All in the app (`ferry/route.ts`, in `workers/ferryWater.worker.ts`); the sim never
+"F1 -> F2 route format"); the lines themselves are 6.9, the player's tool T-2194. All in the app (`ferry/route.ts`, in `workers/ferryWater.worker.ts`); the sim never
 searches water.
 
 - **The water** is the basemap's own: the `water` layer of its zoom 12 tiles, fetched from its tile server
@@ -1359,3 +1358,36 @@ searches water.
   m/s²) and stops are the sim's.
 - **Cost**: 0.2 to 1 s a leg in the browser once its tiles are in (`checks/t2192-ferry-routes.mjs`). Tiles,
   each leg's search and its rasters are kept, so moving one port searches only its two legs.
+
+### 6.9 Ferry lines
+
+A ferry line (T-2193; design notes/T-2177.md) is a line on water between ports, with no track. The app
+searches the route on the basemap's water (T-2192) and hands the sim its points; the sim never sees the
+water. The player's tool, map and panel are T-2194, demand's side T-2195. Code: `track/ferry.rs`,
+exports `wasm/ferry.rs`.
+
+- **Ports** are stations of their own kind (`Network::is_port`): a node with no track, at level 0,
+  with a name, walking access, the boarding account's waiting crowd, passages to stations and bus
+  stops like any station (a bus route within 200 m stops there). Two points: the **landing** on the
+  shore (the node, where riders walk to) and the **berth** in the water (`StationData::berth`, within
+  320 m of it), where routes start, stop and end. No platform, track or upgrades (refused as
+  `NotAtPort`; a berth out of reach as `PortBerth`). Any number of ferry lines share a port; a port a
+  line stops at cannot be removed.
+- **The route** is points in the network frame, each with a kind (0 route, 1 a port's berth, 2 a
+  waypoint passed without stopping) and the most the boat may do there, m/s (kept on a mm/s grid,
+  0.25 to 6.944). Its stops are the line's ports, in order, one per kind 1 point, each within 50 m of
+  that port's berth; the first and last points are ports. At most 8,000 points, at least 100 m.
+- **Run**: between two points the boat runs at most the lower of their two speeds; it accelerates and
+  brakes at 0.15 m/s² (`ferry::BOAT_A`, 46 s and 160 m to reach 25 km/h), stops at every port, stands
+  the line's dwell at the ports between its ends and the turnaround at the ends. Out and back like a
+  bus line. No capacity holds. A boat takes 320 riders at crush (`BOAT_CRUSH`, two of demand's cars).
+- **Money**: a port US$10M, paid on Construct (a constructed line redrawn to a new port pays for it
+  then), upkeep US$100 a day (US$10k a game day); boats US$8M, a fleet of their own (the fourth,
+  `fleet_ferry`) with spares shared between ferry lines; running US$40 a boat-km (real, `ECONOMY`
+  times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
+  ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
+  metres (free) as kind 14. A new ferry line starts at a boat every 15, 20 and 30 minutes by level,
+  60 s dwell, 300 s turnaround (`ferry::FERRY_*`, which the app passes).
+- **Saves**: a trailing `LFR1` block (save level 3) holds the ports' berths (as mm deltas from their
+  landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
+  without it has no ports or ferries and loads as before.

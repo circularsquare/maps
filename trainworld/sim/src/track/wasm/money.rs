@@ -43,6 +43,17 @@ impl TrackApi {
     pub fn buses_needed(&self) -> u32 {
         cars_needed(&self.w)[2]
     }
+    /// Boats owned (T-2193).
+    pub fn fleet_ferry(&self) -> u32 {
+        self.fleet[3]
+    }
+    pub fn set_fleet_ferry(&mut self, boats: u32) {
+        self.fleet[3] = boats;
+    }
+    /// Boats the running ferry lines need now (T-2193).
+    pub fn boats_needed(&self) -> u32 {
+        cars_needed(&self.w)[3]
+    }
     /// Ordinary cars the running lines need now.
     pub fn cars_needed(&self) -> u32 {
         cars_needed(&self.w)[0]
@@ -66,6 +77,9 @@ impl TrackApi {
             // T-1931: upkeep a day per km of double track on a viaduct, in cut and cover and in a
             // bored tunnel, US$ (index 7 is the ground rate)
             UPKEEP_VIADUCT_KM, UPKEEP_CUT_KM, UPKEEP_BORED_KM,
+            // T-2193: a boat's price US$M, running cost per boat-km US$, a port's upkeep a day US$
+            // and its price US$M
+            BOAT_PRICE, RUN_COST_BOAT_KM, UPKEEP_PORT, PORT_COST,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
@@ -76,7 +90,7 @@ impl TrackApi {
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
-        let (mut train_km, mut car_km) = ([0.0; 3], [0.0; 3]);
+        let (mut train_km, mut car_km) = ([0.0; FLEETS], [0.0; FLEETS]);
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0;
@@ -88,10 +102,12 @@ impl TrackApi {
         let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
         let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
         let bus = train_km[2] * RUN_COST_BUS_KM;
-        (ordinary + fast + bus) * ECONOMY / 1e6
+        let boats = train_km[3] * RUN_COST_BOAT_KM;
+        (ordinary + fast + bus + boats) * ECONOMY / 1e6
     }
     /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
-    /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464)].
+    /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464), ports
+    /// US$M, constructed ports (T-2193)]. Ports are not among the stations.
     pub fn upkeep(&self) -> Vec<f64> {
         let n = &self.w.net;
         let (mut km, mut track) = (0.0, 0.0);
@@ -105,7 +121,9 @@ impl TrackApi {
         let stations = count * station_upkeep();
         let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
         let buses = bus_km * UPKEEP_BUS_KM * ECONOMY / 1e6;
-        vec![track + stations + buses, track, stations, km, count, buses, bus_km]
+        let port_count = (0..n.node_alive.len()).filter(|&i| upkept_port(n, i)).count() as f64;
+        let ports = port_count * port_upkeep();
+        vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count]
     }
     /// Each running line's share of the upkeep a game day, US$M, as `[line, share]` pairs, then
     /// `[-1, rest]` for the track and stations no running line uses (T-867). Each edge's upkeep is
@@ -142,9 +160,8 @@ impl TrackApi {
                 e.1.push(l);
             }
         }
-        let u = station_upkeep();
         for i in 0..n.node_alive.len() {
-            if !upkept_station(n, i) { continue }
+            let u = if upkept_station(n, i) { station_upkeep() } else if upkept_port(n, i) { port_upkeep() } else { continue };
             match stopping.get(&(i as u32)) {
                 Some((total, lines)) => for &l in lines { share[l as usize] += u * weight(l) / total },
                 None => rest += u,
@@ -245,13 +262,14 @@ impl TrackApi {
             let net = &self.w.net;
             let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
             let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
-            let buses = net.bus_lines();
+            let mut buses = net.bus_lines();
+            buses.extend(net.ferry_lines());
             let ops = self.construct_ops(&edges, &stations, &buses);
             let fleet = self.fleet;
             // Starting several lines together can change junction delays and their fleet needs.
             // Quote the derived constructed service, not a sum of the planned lines' estimates.
-            let need = self.w.trial_with(Op::Batch(ops), cars_needed).map_or([0; 3], |(_, c)| c);
-            let buy: [u32; 3] = std::array::from_fn(|k| need[k].saturating_sub(fleet[k]));
+            let need = self.w.trial_with(Op::Batch(ops), cars_needed).map_or([0; FLEETS], |(_, c)| c);
+            let buy: [u32; FLEETS] = std::array::from_fn(|k| need[k].saturating_sub(fleet[k]));
             let cost = buy[0] as f64 * CAR_PRICES[0] + buy[1] as f64 * CAR_PRICES[1];
             if cost > 0.0 {
                 rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, (buy[0] + buy[1]) as f64, cost]);
@@ -259,6 +277,10 @@ impl TrackApi {
             // T-1464: buses, kind 11
             if buy[2] > 0 {
                 rows.extend([11.0, 0.0, 0.0, 0.0, 0.0, buy[2] as f64, buy[2] as f64 * CAR_PRICES[2]]);
+            }
+            // T-2193: boats, kind 13 (ports are kind 12)
+            if buy[3] > 0 {
+                rows.extend([13.0, 0.0, 0.0, 0.0, 0.0, buy[3] as f64, buy[3] as f64 * CAR_PRICES[3]]);
             }
         }
         rows

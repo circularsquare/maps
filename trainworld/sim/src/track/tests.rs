@@ -26,13 +26,13 @@ pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -
 }
 
 pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
-    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true, off: false, upgrades: 0 }) }).unwrap();
+    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true, off: false, upgrades: 0, berth: None }) }).unwrap();
 }
 
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }

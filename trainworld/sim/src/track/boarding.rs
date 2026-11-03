@@ -600,8 +600,8 @@ impl Boarding {
             let h0 = epoch.rem_euclid(DAY);
             let hour = ((h0 / 3600.0).floor() as usize).min(23);
             let ls = &svc.lines[l];
-            // a bus stop has no platform (T-1464)
-            if ls.is_bus() {
+            // a bus stop has no platform (T-1464); a port has (T-2193)
+            if ls.is_bus() && !ls.ferry {
                 continue;
             }
             for (r, ra) in acc.runs.iter().enumerate() {
@@ -649,7 +649,7 @@ impl Boarding {
                     for e in a0 + 1..arrive.len() {
                         arrive[e] = arrive[e].max(events[(e - 1) * 2]).min(events[e * 2]);
                     }
-                    let node = run.nodes[run.stop_idx[k] as usize];
+                    let Some(node) = ls.stop_node(r, k) else { continue };
                     let d0 = if r == 0 { ls.runs[0].stop_s[k] } else { ls.runs[0].stop_s[ra.n - 1 - k] };
                     let mid = epoch + 1800.0;
                     let p0 = pulses.len();
@@ -735,7 +735,7 @@ impl Boarding {
         let mut trains: Vec<(f64, f64)> = vec![];
         for f in fs {
             let fl = f.line as usize;
-            let Some(fls) = svc.lines.get(fl).filter(|x| !x.is_bus()) else { continue };
+            let Some(fls) = svc.lines.get(fl).filter(|x| !x.is_bus() || x.ferry) else { continue };
             let fe = epoch + fls.shift;
             let Some(Some(acc)) = self.accounts[self.kind_at(fe, fl)].get(fl) else { continue };
             let ra = &acc.runs[(f.run as usize).min(1)];
@@ -745,7 +745,8 @@ impl Boarding {
                 continue;
             }
             let run = &fls.runs[(f.run as usize).min(1)];
-            let fnode = run.nodes[run.stop_idx[kf] as usize] as usize;
+            let Some(fnode) = fls.stop_node((f.run as usize).min(1), kf) else { continue };
+            let fnode = fnode as usize;
             let d = (net.node_x[fnode] - x0).hypot(net.node_y[fnode] - y0) / net.k_at(y0);
             let walk = d * XFER_DETOUR / XFER_MPS;
             let ts = &ra.order_t[kf * m..(kf + 1) * m];

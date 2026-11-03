@@ -286,13 +286,17 @@ stations it passes and about every 2 km, buses run at 70% of the car's street sp
 most 18 km/h (11.5 in a dense centre), and homes within 300 m of the route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
 bus and US$9 a bus-km to run. Trips by bus count as rail.
 
-Ferry lines are being built (T-2177's design, stages T-2192 to T-2196): so far the router, which finds a
-route over the basemap's water between two ports, at least 5 m off land, keeping 400 m off where that costs
-under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend.
+Ferry lines (T-2193, design notes/T-2177.md) run on water between ports, stations of their own kind
+with a landing on the shore and a berth in the water. The route is free, found in the app over the
+basemap's water between two ports (T-2192): at least 5 m off land, keeping 400 m off where that costs
+under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. Boats
+(one kind, 320 riders) run at most 25 km/h as room allows and accelerate at 0.15 m/s²; US$10M a port,
+US$8M a boat and US$40 a boat-km to run. The router and the sim's side are built; the Ferry tool, map and
+panel (T-2194) and demand's side (T-2195) are not yet.
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7
-bus lines, 6.8 ferry routes).
+bus lines, 6.8 ferry routes, 6.9 ferry lines).
 
 ## 7. Technology
 

@@ -40,7 +40,7 @@ pub struct TrackApi {
     /// Cars the network owns (T-028). Running lines need `cars_needed`; an edit that needs more
     /// buys them, spare cars stay for later. Ordinary cars, then high-speed ones (T-817): spares of
     /// one kind never serve the other.
-    fleet: [u32; 3],
+    fleet: [u32; FLEETS],
     /// What the last edit paid for trains, US$M.
     last_trains: f64,
     /// The last route the drawing tool asked about: (cost, length, issues), and its vertices.
@@ -106,6 +106,8 @@ pub struct TrackApi {
     skipped: u32,
     /// What the last `link_stations` paid, US$M (T-1281).
     link_charge: f64,
+    /// The node of the port the last `add_port` added (T-2193), `u32::MAX` if refused.
+    last_port: u32,
 }
 
 /// T-1071: the end of a track save that carries the service's eras (`Service::encode_eras`):
@@ -155,9 +157,9 @@ fn pack_mask_in(frame: super::frame::Frame, mask: &Arc<RunMask>, lon: f64, lat: 
 }
 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
-/// Ordinary cars, then high-speed ones (T-817), then buses (T-1464).
-fn cars_needed(w: &TrackWorld) -> [u32; 3] {
-    let mut out = [0; 3];
+/// Ordinary cars, then high-speed ones (T-817), then buses (T-1464), then boats (T-2193).
+fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
+    let mut out = [0; FLEETS];
     for (i, l) in w.svc.lines.iter().enumerate() {
         if l.running {
             out[fleet_kind(&w.net, i)] += l.trains.iter().copied().max().unwrap_or(0) * l.cars;
@@ -166,13 +168,16 @@ fn cars_needed(w: &TrackWorld) -> [u32; 3] {
     out
 }
 
-/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses.
+/// The fleets: ordinary cars, high-speed cars, buses, boats.
+const FLEETS: usize = 4;
+
+/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses, 3 boats.
 fn fleet_kind(n: &Network, l: usize) -> usize {
-    if n.line_bus[l].is_some() { 2 } else { n.line_fast[l] as usize }
+    if n.line_bus[l].is_some() { 2 } else if n.line_ferry[l].is_some() { 3 } else { n.line_fast[l] as usize }
 }
 
-/// Price of a car of each kind (a bus counting as one), US$M.
-const CAR_PRICES: [f64; 3] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE];
+/// Price of a car of each kind (a bus or a boat counting as one), US$M.
+const CAR_PRICES: [f64; FLEETS] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE, BOAT_PRICE];
 
 /// A constructed edge's upkeep a game day, US$M; None for blueprint, and for crossovers, which cost
 /// nothing on top of their track (T-867).
@@ -190,7 +195,14 @@ fn edge_upkeep_km(n: &Network, e: usize) -> f64 {
     super::cost::track_upkeep_km(lo, hi)
 }
 fn upkept_station(n: &Network, i: usize) -> bool {
-    n.node_alive[i] && n.node_platform[i] > 0 && n.node_built[i]
+    n.node_alive[i] && n.node_platform[i] > 0 && n.node_built[i] && n.node_berth[i].is_none()
+}
+/// A constructed port (T-2193), upkept at `UPKEEP_PORT`.
+fn upkept_port(n: &Network, i: usize) -> bool {
+    n.node_alive[i] && n.node_platform[i] > 0 && n.node_built[i] && n.node_berth[i].is_some()
+}
+fn port_upkeep() -> f64 {
+    UPKEEP_PORT * ECONOMY / 1e6
 }
 /// A constructed bus route's upkeep a game day, US$M; None for a planned one (T-1464).
 fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
@@ -261,7 +273,7 @@ impl TrackApi {
             money_short: None,
             cash: 6000.0,
             unlimited: false,
-            fleet: [0, 0, 0],
+            fleet: [0; FLEETS],
             last_trains: 0.0,
             route_vertices: vec![],
             route_express: vec![],
@@ -292,6 +304,7 @@ impl TrackApi {
             edit_at: f64::NAN,
             skipped: 0,
             link_charge: 0.0,
+            last_port: u32::MAX,
         }
     }
 
@@ -640,11 +653,12 @@ mod service;
 mod upgrades;
 mod related;
 mod bus;
+mod ferry;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
-fn trains_to_buy(w: &TrackWorld, fleet: [u32; 3]) -> f64 {
+fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {
     let need = cars_needed(w);
-    (0..3).map(|k| need[k].saturating_sub(fleet[k]) as f64 * CAR_PRICES[k]).sum()
+    (0..FLEETS).map(|k| need[k].saturating_sub(fleet[k]) as f64 * CAR_PRICES[k]).sum()
 }
 
 /// An edge's vertices: its a node, its PIs, its b node; `moved` puts one node somewhere else.
@@ -1445,7 +1459,7 @@ impl TrackApi {
         self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false, upgrades: 0 }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false, upgrades: 0, berth: None }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).
@@ -1502,7 +1516,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })
@@ -1517,6 +1531,8 @@ impl TrackApi {
 mod tests;
 #[cfg(test)]
 mod bus_tests;
+#[cfg(test)]
+mod ferry_tests;
 /// T-656: ground track across water becomes a bridge by itself.
 #[cfg(test)]
 mod bridge_tests;

@@ -7,6 +7,7 @@
 //! parts. `world.rs` builds undoable operations on top.
 
 pub use super::bus::BusRoute;
+pub use super::ferry::FerryRoute;
 use super::cost::{self, NoWater, Terrain, WaterMask};
 use super::cross::{self, Grid};
 use super::frame::{Frame, FrameKind};
@@ -173,6 +174,9 @@ pub struct StationData {
     pub off: bool,
     /// Station upgrades, `upgrades::TERMINAL` and the like (T-1281); built when the station is.
     pub upgrades: u8,
+    /// A port (T-2193, `ferry.rs`): its berth, where boats stop, in the water near the node (the
+    /// landing). None for a station on track.
+    pub berth: Option<[f64; 2]>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -199,6 +203,8 @@ pub struct LineData {
     pub fast: bool,
     /// A bus line (T-1464): its route; its stops and path stay empty (`bus::plan` places the stops).
     pub bus: Option<BusRoute>,
+    /// A ferry line (T-2193): its route on water; its stops are its ports, its path stays empty.
+    pub ferry: Option<FerryRoute>,
     /// The player's line group (T-1791), 0 for none: a grouping for the Lines tab only, which
     /// the service never reads. Kept on the line so a copy, an undo and a delete carry it.
     pub group: u32,
@@ -300,6 +306,10 @@ pub enum Issue {
     /// Track drawn from a station has no room past the platform for its junction (T-1155): a
     /// junction, a station or a crossover is in the way.
     BranchNoRoom { node: u32 },
+    /// Track or a station upgrade at a port (T-2193): a port has neither.
+    NotAtPort { node: u32 },
+    /// A port's berth missing, outside the world or too far from its landing (T-2193).
+    PortBerth { node: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.
@@ -346,6 +356,8 @@ pub struct Network {
     pub node_off: Vec<bool>,
     /// The station's upgrades (`StationData::upgrades`).
     pub node_upgrades: Vec<u8>,
+    /// A port's berth (`StationData::berth`, T-2193); None for every other node.
+    pub node_berth: Vec<Option<[f64; 2]>>,
     pub node_ports: Vec<Ports>,
     /// Derived: the track heading through the node.
     pub node_heading: Vec<f64>,
@@ -409,6 +421,8 @@ pub struct Network {
     pub line_fast: Vec<bool>,
     /// Per line: its bus route (T-1464), None for a rail line.
     pub line_bus: Vec<Option<BusRoute>>,
+    /// Per line: its ferry route (T-2193), None for any other line.
+    pub line_ferry: Vec<Option<FerryRoute>>,
     pub line_group: Vec<u32>,
     pub line_group_name: Vec<String>,
     pub line_group_look: Vec<GroupLook>,
@@ -577,8 +591,8 @@ impl Network {
         if !self.time_zones.set || !self.line_ok(l) {
             return 0.0;
         }
-        if let Some(r) = self.line_bus[l as usize].as_ref() {
-            return r.points.first().map_or(0.0, |p| self.line_shift_at(p[0], p[1]));
+        if let Some(p) = self.route_points(l) {
+            return p.first().map_or(0.0, |p| self.line_shift_at(p[0], p[1]));
         }
         let Some(&s) = self.line_stops(l).first() else { return 0.0 };
         self.line_shift_at(self.node_x[s as usize], self.node_y[s as usize])
@@ -640,6 +654,7 @@ impl Network {
             node_built: vec![],
             node_off: vec![],
             node_upgrades: vec![],
+            node_berth: vec![],
             node_ports: vec![],
             node_heading: vec![],
             node_free: vec![],
@@ -687,6 +702,7 @@ impl Network {
             line_cars: vec![],
             line_fast: vec![],
             line_bus: vec![],
+            line_ferry: vec![],
             line_group: vec![],
             line_group_name: vec![],
             line_group_look: vec![],
@@ -849,6 +865,7 @@ impl Network {
         self.node_built.push(false);
         self.node_off.push(false);
         self.node_upgrades.push(0);
+        self.node_berth.push(None);
         self.node_ports.push(Ports::default());
         self.node_heading.push(0.0);
     }
@@ -889,6 +906,7 @@ impl Network {
         self.line_cars.push(0);
         self.line_fast.push(false);
         self.line_bus.push(None);
+        self.line_ferry.push(None);
         self.line_group.push(0);
         self.line_group_name.push(String::new());
         self.line_group_look.push(GroupLook::default());
@@ -941,7 +959,7 @@ impl Network {
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -960,6 +978,7 @@ impl Network {
                 cars: self.line_cars[i],
                 fast: self.line_fast[i],
                 bus: self.line_bus[i].clone(),
+                ferry: self.line_ferry[i].clone(),
                 group: self.line_group[i],
                 group_name: self.line_group_name[i].clone(),
                 group_look: self.line_group_look[i].clone(),
@@ -982,6 +1001,46 @@ impl Network {
     /// The live bus lines.
     pub fn bus_lines(&self) -> Vec<u32> {
         (0..self.line_count() as u32).filter(|&l| self.is_bus(l)).collect()
+    }
+    /// A port (T-2193): a station with a berth, on no track.
+    pub fn is_port(&self, n: u32) -> bool {
+        self.is_station(n) && self.node_berth[n as usize].is_some()
+    }
+    /// A live ferry line (T-2193).
+    pub fn is_ferry(&self, l: u32) -> bool {
+        self.line_ok(l) && self.line_ferry[l as usize].is_some()
+    }
+    /// The live ferry lines.
+    pub fn ferry_lines(&self) -> Vec<u32> {
+        (0..self.line_count() as u32).filter(|&l| self.is_ferry(l)).collect()
+    }
+    /// A line with no track, a bus or a ferry line: the drawn route's points.
+    pub fn route_points(&self, l: u32) -> Option<&[[f64; 2]]> {
+        let i = l as usize;
+        if !self.line_ok(l) {
+            return None;
+        }
+        match (self.line_bus.get(i).and_then(|b| b.as_ref()), self.line_ferry.get(i).and_then(|f| f.as_ref())) {
+            (Some(r), _) => Some(&r.points),
+            (None, Some(r)) => Some(&r.points),
+            _ => None,
+        }
+    }
+    /// A ferry route's length, ground m (0 for any other line).
+    pub fn ferry_m(&self, l: u32) -> f64 {
+        match self.line_ferry.get(l as usize).and_then(|f| f.as_ref()) {
+            Some(r) if self.line_ok(l) => super::ferry::ground_cum(self, &r.points).last().copied().unwrap_or(0.0),
+            _ => 0.0,
+        }
+    }
+    /// A station's price, US$M: a port's flat price, any other by its level, platform, tracks and the
+    /// water under it (`wet`, asked only for those).
+    fn station_price(&self, n: usize, wet: impl FnOnce() -> bool) -> f64 {
+        if self.node_berth[n].is_some() {
+            PORT_COST
+        } else {
+            cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet())
+        }
     }
     /// A bus route's road length, m (its drawn length, times `bus::ROAD_FACTOR` where it is straight).
     pub fn bus_road_m(&self, l: u32) -> f64 {
@@ -1211,6 +1270,7 @@ impl Network {
                 self.node_built[i] = false;
                 self.node_off[i] = false;
                 self.node_upgrades[i] = 0;
+                self.node_berth[i] = None;
             }
             Some(d) => {
                 self.node_platform[i] = d.platform;
@@ -1218,6 +1278,7 @@ impl Network {
                 self.node_built[i] = d.built;
                 self.node_off[i] = d.off && !d.built;
                 self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;
+                self.node_berth[i] = d.berth;
             }
         }
         self.touch.stations.push(node);
@@ -1253,6 +1314,7 @@ impl Network {
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
                 self.line_bus[i] = d.bus;
+                self.line_ferry[i] = d.ferry;
                 self.line_group[i] = d.group;
                 self.line_group_name[i] = if d.group == 0 { String::new() } else { d.group_name };
                 self.line_group_look[i] = if d.group == 0 { GroupLook::default() } else { d.group_look };
@@ -1264,6 +1326,7 @@ impl Network {
                 let i = id as usize;
                 self.line_alive[i] = false;
                 self.line_bus[i] = None;
+                self.line_ferry[i] = None;
                 self.line_group[i] = 0;
                 self.line_group_look[i] = GroupLook::default();
                 self.stops.free(self.line_stops[i]);
@@ -1845,6 +1908,16 @@ impl Network {
 
     fn check_station(&self, n: u32, out: &mut Vec<Issue>) {
         let i = n as usize;
+        if let Some(b) = self.node_berth[i] {
+            // a port's landing is on the shore, which the coarse masks may call water
+            if self.node_ports[i].n > 0 || self.node_upgrades[i] != 0 || self.node_level[i] != 0 {
+                out.push(Issue::NotAtPort { node: n });
+            }
+            if !super::ferry::berth_ok(self, [self.node_x[i], self.node_y[i]], b) {
+                out.push(Issue::PortBerth { node: n });
+            }
+            return;
+        }
         let plat = self.node_platform[i];
         if !(PLATFORM_MIN..=PLATFORM_MAX).contains(&plat) || plat % PLATFORM_STEP != 0 {
             out.push(Issue::PlatformLength { node: n });
@@ -1893,6 +1966,9 @@ impl Network {
     pub fn check_line(&self, l: u32) -> Result<Vec<u32>, Issue> {
         if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
             return if super::bus::route_ok(self, &r.points, &r.kinds) { Ok(vec![]) } else { Err(Issue::LinePath { line: l }) };
+        }
+        if let Some(r) = self.line_ferry.get(l as usize).and_then(|f| f.as_ref()) {
+            return super::ferry::check(self, l, self.line_stops(l), r).map(|_| vec![]);
         }
         let path = self.line_path(l);
         let stops = self.line_stops(l);
@@ -2021,7 +2097,10 @@ impl Network {
             // asked only where a price needs it: most nodes need none
             let is_wet = || self.node_is_wet(n);
             let level = self.node_level[n];
-            if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
+            // kind 12: ports (T-2193), a flat price
+            if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] && self.node_berth[n].is_some() {
+                add(12, 0, 0, false, 0, 1.0, PORT_COST);
+            } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
                 add(1, level, tracks, wet, 0, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
                 let ups = self.node_upgrades[n];
@@ -2066,6 +2145,12 @@ impl Network {
                 add(10, 0, 0, false, 0, m, m / 1000.0 * BUS_ROUTE_COST_PER_KM);
             }
         }
+        // kind 14: ferry routes still to be constructed (T-2193): ground metres, free
+        for l in self.ferry_lines() {
+            if self.line_ferry[l as usize].as_ref().is_some_and(|r| !r.built) {
+                add(14, 0, 0, false, 0, self.ferry_m(l), 0.0);
+            }
+        }
         rows.into_iter().flat_map(|((kind, level, tracks, wet, ramp), (qty, cost))|
             [kind as f64, level as f64, tracks as f64, wet as u8 as f64, ramp as u8 as f64, qty, cost]).collect()
     }
@@ -2084,7 +2169,7 @@ impl Network {
             }
             let wet = || self.water_mask.is_water(self.node_x[n], self.node_y[n]);
             if self.node_platform[n] > 0 {
-                c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                c += self.station_price(n, wet);
                 c += self.upgrades_cost(n);
             }
             if self.priced_ends(n as u32, |_| true) >= 3 {
@@ -2121,7 +2206,7 @@ impl Network {
             }
             let wet = || self.node_is_wet(n);
             if self.node_platform[n] > 0 {
-                let station =cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                let station = self.station_price(n, wet);
                 let upgrades = self.upgrades_cost(n);
                 t += station;
                 t += upgrades;
@@ -2172,7 +2257,7 @@ impl Network {
             }
             let wet = || self.water_mask.is_water(self.node_x[n], self.node_y[n]);
             if self.node_platform[n] > 0 && self.node_built[n] {
-                c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                c += self.station_price(n, wet);
                 c += self.upgrades_cost(n);
             }
             if self.priced_ends(n as u32, |e| self.edge_built[e]) >= 3 {
@@ -2224,6 +2309,9 @@ impl Network {
     pub fn line_constructed(&self, l: u32) -> bool {
         if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
             return r.built;
+        }
+        if let Some(r) = self.line_ferry.get(l as usize).and_then(|f| f.as_ref()) {
+            return r.built && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize]);
         }
         self.line_path(l).iter().all(|&p| self.edge_ok(path_edge(p)) && self.edge_built[path_edge(p) as usize])
             && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize])

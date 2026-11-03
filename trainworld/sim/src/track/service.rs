@@ -71,15 +71,28 @@ pub struct LineSvc {
     /// A bus line (T-1464): its runs have no path (empty `segs`, `nodes`, `stop_idx`), `stops`
     /// holds its stops' ids (`bus::BusStop::id`), and `bus` its plan in run 0's order.
     pub bus: Option<super::bus::Plan>,
+    /// A ferry line (T-2193): run like a bus line (`bus` holds its ports as stops), every stop a port.
+    pub ferry: bool,
 }
 
 impl LineSvc {
+    /// A line with no track: a bus or a ferry line.
     pub fn is_bus(&self) -> bool {
         self.bus.is_some()
     }
-    /// Riders a train or bus takes at crush.
+    /// Riders a train, bus or boat takes at crush.
     pub fn crush(&self) -> f64 {
-        if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
+        if self.ferry { BOAT_CRUSH } else if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
+    }
+    /// The station node of stop `k` of run `run`, where its riders wait: a rail line's or a ferry line's
+    /// (a port); None for a bus line, whose stops have no platform.
+    pub fn stop_node(&self, run: usize, k: usize) -> Option<u32> {
+        if let Some(plan) = self.bus.as_ref() {
+            let n = plan.stops.len();
+            return if self.ferry && k < n { plan.stops[if run == 0 { k } else { n - 1 - k }].station } else { None };
+        }
+        let r = self.runs.get(run)?;
+        r.nodes.get(*r.stop_idx.get(k)? as usize).copied()
     }
 }
 
@@ -538,6 +551,9 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     if let Some(r) = net.line_bus[l as usize].as_ref() {
         return build_bus(net, l, r);
     }
+    if let Some(r) = net.line_ferry[l as usize].as_ref() {
+        return build_ferry(net, l, r);
+    }
     ls.stops = net.line_stops(l).to_vec();
     if ls.stops.len() < 2 { return ls; }
     ls.kind = net.line_loop(l);
@@ -604,8 +620,53 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     ls
 }
 
+/// A ferry line's service (T-2193): its ports in order, the boat accelerating and braking at
+/// `ferry::BOAT_A` under the route's speeds, standing the line's dwell at the ports between its ends,
+/// with no capacity holds.
+fn build_ferry(net: &Network, l: u32, r: &super::ferry::FerryRoute) -> LineSvc {
+    use super::ferry;
+    let mut ls = LineSvc::default();
+    let ports = net.line_stops(l);
+    let plan = ferry::plan(net, ports, r);
+    if plan.stops.len() < 2 {
+        return ls;
+    }
+    let (n, len) = (plan.stops.len(), plan.len);
+    let dwell = net.line_dwell[l as usize] as f64;
+    let fwd_s: Vec<f64> = plan.stops.iter().map(|s| s.s).collect();
+    let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
+    let dw: Vec<f64> = (0..n).map(|i| if i == 0 || i + 1 == n { 0.0 } else { dwell }).collect();
+    let fwd = ferry::limits(r, &plan.cum);
+    let rev = ferry::reversed(&fwd, len);
+    let make = |s: Vec<f64>, iv: &[(f64, f64, f64)]| {
+        let p = ferry::profile(iv, &s, &dw);
+        Run {
+            len,
+            turn: vec![false; n],
+            jump: vec![0.0; n],
+            limits: iv.iter().map(|x| [x.0, x.2]).collect(),
+            free: p.clone(),
+            holds: Default::default(),
+            stop_holds: std::array::from_fn(|_| vec![0.0; n]),
+            prof: std::array::from_fn(|_| p.clone()),
+            stop_s: s,
+            ..Default::default()
+        }
+    };
+    ls.stops = ports.to_vec();
+    ls.runs = [make(fwd_s, &fwd), make(rev_s, &rev)];
+    ls.cars = 1;
+    ls.train_len = ferry::BOAT_LEN_M;
+    ls.ok = true;
+    ls.running = net.line_constructed(l);
+    ls.shift = net.line_shift(l);
+    ls.bus = Some(plan);
+    ls.ferry = true;
+    ls
+}
+
 fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
-    if net.line_bus[l as usize].is_some() {
+    if net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() {
         return run.free.clone();
     }
     let turn = net.line_turn[l as usize] as f64;
@@ -1244,9 +1305,9 @@ impl Service {
 
     /// World position of a run's offset.
     pub fn position(&self, net: &Network, line: u32, run: usize, s: f64) -> (f64, f64) {
-        if let (Some(r), Some(plan)) = (net.line_bus.get(line as usize).and_then(|b| b.as_ref()), self.lines[line as usize].bus.as_ref()) {
+        if let (Some(pts), Some(plan)) = (net.route_points(line), self.lines[line as usize].bus.as_ref()) {
             let road = if run == 0 { s } else { plan.len - s };
-            return super::bus::at_road(&r.points, &plan.cum, road);
+            return super::bus::at_road(pts, &plan.cum, road);
         }
         let (e, _, d) = self.segment_at(net, line, run, s);
         let (x, y, _) = geom::pos_at(net.edge_pieces(e), d);

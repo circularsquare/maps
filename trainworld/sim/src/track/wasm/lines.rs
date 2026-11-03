@@ -11,7 +11,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -80,6 +80,9 @@ impl TrackApi {
         d.name = name;
         // a bus line's copy is a planned route, paid for on Construct (T-1464)
         if let Some(r) = d.bus.as_mut() {
+            r.built = false;
+        }
+        if let Some(r) = d.ferry.as_mut() {
             r.built = false;
         }
         d.trains = Some([0; 3]);
@@ -427,7 +430,7 @@ fn path_node_list(net: &Network, path: &[u32]) -> Vec<u32> {
 /// stop that goes, for a loop's ends, below two stops, or for a bus route.
 fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32>, Vec<u32>)> {
     let n = d.stops.len();
-    if d.bus.is_some() || lo > hi || hi >= n || !(lo == hi || lo == 0 || hi == n - 1) || n - (hi - lo + 1) < 2 {
+    if d.bus.is_some() || d.ferry.is_some() || lo > hi || hi >= n || !(lo == hi || lo == 0 || hi == n - 1) || n - (hi - lo + 1) < 2 {
         return None;
     }
     if closed(&d.stops) && (lo == 0 || hi == n - 1 || n - (hi - lo + 1) < 3) {
@@ -448,7 +451,7 @@ fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32
 /// T-1791: a line's stops with a station its path passes put in, the path untouched. None if it is
 /// a stop already, not on the path, or the path would turn back where no stop is.
 fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
-    if d.bus.is_some() || d.stops.contains(&station) || !net.is_station(station) {
+    if d.bus.is_some() || d.ferry.is_some() || d.stops.contains(&station) || !net.is_station(station) {
         return None;
     }
     let nodes = path_node_list(net, &d.path);
