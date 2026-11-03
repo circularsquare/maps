@@ -37,7 +37,26 @@ demand.worker.ts `toWhole`, the "out of memory"), afbae2d8 Philippines, d550ab27
 17dbab9d T-1881 hillshade flat where priced flat + tower_ground code, b9411c52 T-1966 crossing waits from zoom 14
 (main WASM rebuilt), research: player-voices, next-countries-data, first-ten-minutes, ridership (+ checks/t2088).
 
-## In flight (maps-b2)
+## In flight (maps-b2), as of ~06:15 2026-11-03
+- Landed since 04:15: 74827d99 T-2059/T-2060, 97cb5438 New Zealand (6 rows; T-2070 findings and T-1981 CPU in
+  notes/T-1738.md 14; T-2094, T-2095 filed), 5ce85598 + 7b5a08ee T-2084 census totals. 8800 still build 811: rebuild after
+  the terrain rebuild lands (and include NZ + T-2059).
+- **8800 = build 815 (7b5a08ee)** on freeze 20261103-034613 (NZ), smoke 22/22 light and dark (~07:20).
+- ae84ece4d2ab0afec terrain rebuild: AWS attempt 1 failed in 17 s (BrokenProcessPool: forked workers share the GHSL
+  reader's file handle). Allowed it to fix pipeline/terrain_fine.py (per-process reader), check locally, relaunch
+  (~US$0.35, 8,100 blocks incl. NZ), stage parts, then STOP again. Half 2 (writing data/terrain) only after the census
+  rebuild agent reports; then India gets its go (I told India to wait for my message).
+  UPDATE ~09:30: attempt 2 ran 19 min, US$0.38, torn down clean; parts staged and checked in
+  data/work/t1881-staging/ (part0 2.01 GB, part1 1.26 GB, 8,100 blocks incl. SE Asia and NZ). Fix committed. Agent
+  stopped, waiting for my "data/terrain is free" (after the census agent aea244d3f3bcf163b reports).
+- aea244d3f3bcf163b (Opus) **census rebuilds**: T-2038 Papua, T-2053/T-2076 BARMM + pti, T-2000 Cambodia NW (typed
+  citypopulation.de districts), T-2077 NZ if time. Waits for t1881r to clear before writing data. Notes T-1738.md 15, kit
+  t2038, ids T-2106..2110, Vite 6152.
+- a57accbdda9f839db (Opus) **India** (T-2111, notes/T-2111.md, kit t2111, ids T-2112..2120, Vite 6165, ports 6388/6389):
+  prep now (2011 district shares via admin_totals shares mode, dry runs, preflight); run only after the census rebuild
+  agent's `t2038*` claims and t1881r are gone.
+- a1c6f7b238b0d5208 T-1880 bus feeders: still running.
+- Below: older lines from before 04:15, kept until each is closed.
 - a8236098de3c50a7c (Opus) **New Zealand** (T-1738 section 14, kit t1738e, Vite 6152, ports 6386/6387, ids T-2094..2098,
   up to 9 cores). First real run of the new runner (T-2070 findings) and T-1981's join CPU poll. Owns data/packs and
   data/terrain until it reports.
@@ -101,5 +120,5 @@ demand.worker.ts `toWhole`, the "out of memory"), afbae2d8 Philippines, d550ab27
 - Every demand task (loosely perf) has a "done when"; stop once met. Approximations welcome when invisible.
 - Buses settled unless she asks. Thanks to agents in my own reply. Someday tasks are real open tasks.
 
-Next free task id: T-2106 (T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
+Next free task id: T-2121 (T-2041, T-2042, T-2047, T-2048, T-2050..2052, T-2055..2057, T-2061, T-2062, T-2065,
 T-2066..2069, T-2072, T-2073, T-2085 handed out but unused).
