@@ -221,9 +221,11 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 built in the clock worker while the diagram is shown, T-2159), `layout.ts` (A, B, segments, the snap,
 routing, line order; `LAYOUT`, `LAYOUT_R2`; run in `workers/diagram.worker.ts`, T-2160), `lsqr.ts`
 (sparse least squares), `draw.ts` (ribbons, rounded bends and pills, made in the layout worker, painted
-on a 2D canvas), `names.ts` (station names placed per zoom level in the layout worker, and painted,
-T-2162), `view.ts` (key M, the canvas, pan and zoom, the names picked and measured, the layout worker;
-`ui/DiagramButton.tsx` its button).
+on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level
+in the layout worker, painted, and `nameAt`, T-2162), `view.ts` (key M, the canvas, pan and zoom, clicks,
+hovers and the camera, the picture, the names picked and measured, the layout worker and its progress;
+`ui/DiagramButton.tsx` its button and `DiagramTopLeft`, the save button and loading bar, T-2163, T-2235;
+the station tag is `complexTip` in `map/networkTips.ts`).
 
 ### src/ui/: Preact components
 

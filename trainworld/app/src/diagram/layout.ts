@@ -65,6 +65,8 @@ const SEP_NEAR = 1.25, SEP_OVER = 1.15, NL_GAP = 1;
 /** stations along a leg keep the larger of this share of their hop's target and ADJ_GAP times their
  * half widths together (so their pills do not touch) */
 const SEP_GAP = 0.5, ADJ_GAP = 1.25;
+/** a first layout's loading bar: where A ends and B ends, as shares of the layout's time */
+const PROGRESS_A = 0.2, PROGRESS_B = 0.7;
 /** a rebuild's spacing terms each move the drawing at most this many hops from the last drawing */
 const SEP_CAP = 0.3;
 /** a rebuild keeps to the last drawing when at least this share of its nodes were in it */
@@ -219,11 +221,12 @@ function closePairs(P: Prep, pos: Float64Array, out: number[], over = 1): void {
 }
 
 /** rounds of least squares from `start`: option A (real directions) or B (octilinear) */
-function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx: number, wGeo: number, wOct: number, iters: number): Float64Array {
+function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx: number, wGeo: number, wOct: number, iters: number, tick?: (done: number) => void): Float64Array {
   let pos: Float64Array = Float64Array.from(start);
   const pairs: number[] = [];
   const I4 = [0, 0, 0, 0], C4 = [0, 0, 0, 0];
   for (let r = 0; r < rounds; r++) {
+    tick?.(r / rounds);
     const T = new Terms(2 * P.n);
     const K = octi ? chooseDirs(P, pos) : null;
     for (let e = 0; e < P.ea.length; e++) {
@@ -330,7 +333,7 @@ function segments(g: DiagramGraph): number[][] {
 
 interface Routed { pieces: Piece[]; x: Float64Array; y: Float64Array; straight: number; bent: number; bases: Base[] }
 
-function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, prev: Float64Array | null): Routed {
+function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, prev: Float64Array | null, tick?: (done: number) => void): Routed {
   const n = g.key.length;
   const hops: number[] = [];
   for (let e = 0; e < g.ea.length; e++) hops.push(Math.hypot(bx[g.eb[e]] - bx[g.ea[e]], by[g.eb[e]] - by[g.ea[e]]));
@@ -397,6 +400,7 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
     for (let k = 0; k < pairs.length; k += 2) pushed.add(pairs[k] * n + pairs[k + 1]);
   }
   for (let pass = 0; pass < SEP_PASSES; pass++) {
+    tick?.((pass + 1) / (SEP_PASSES + 1));
     const s = separate(g, P, pieces0, drawn!, bx, by, prev);
     drawn = draw(pieces0, s.q, n, s.bends);
   }
@@ -1062,21 +1066,22 @@ export function lastPlaces(g: DiagramGraph, lay: DiagramLayout): LastPlaces {
 
 /** The layout of a graph; `last` the last layout's places: a rebuild starts from its B positions,
  * and its separation keeps to the drawing nearest the last one. */
-export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?: LastPlaces | null): DiagramLayout {
+export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?: LastPlaces | null, progress?: (share: number) => void): DiagramLayout {
   const t0 = performance.now();
   const n = g.key.length;
   const P = prep(g, o);
   const geo = new Float64Array(n * 2);
   for (let i = 0; i < n; i++) geo[i * 2] = g.x[i], (geo[i * 2 + 1] = g.y[i]);
+  const step = (from: number, to: number) => progress && ((d: number) => progress(from + (to - from) * d));
   let start: Float64Array;
   let warm = false;
   if (last && last.size) {
     start = warmStart(g, P, last);
     warm = true;
-  } else start = lsq(P, false, o.roundsA, geo, 0.02, 0.001, 1, o.iters);
+  } else start = lsq(P, false, o.roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, PROGRESS_A));
   const t1 = performance.now();
   // a rebuild starts near where B ended: fewer rounds, held closer to the last layout
-  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters);
+  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(PROGRESS_A, PROGRESS_B));
   const t2 = performance.now();
   const bx = new Float64Array(n), by = new Float64Array(n);
   for (let i = 0; i < n; i++) bx[i] = B[i * 2], (by[i] = B[i * 2 + 1]);
@@ -1092,7 +1097,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
     }
     if (known < PREV_SHARE * n) prev = null;
   }
-  const r = route(g, P, bx, by, prev);
+  const r = route(g, P, bx, by, prev, step(PROGRESS_B, 1));
   spread(P, r);
   const t3 = performance.now();
   order(g, r.pieces, r.x, r.y);

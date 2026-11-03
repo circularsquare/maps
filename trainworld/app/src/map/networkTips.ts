@@ -151,6 +151,21 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   return out;
 }
 
+/** T-2163: the network diagram's tag for a complex, `ids` its stations, as `stationTip` says a station:
+ * its name, the lines stopping at any of them, and its ridership circle's riders (the platforms' crowds
+ * are each station's, so none). */
+export function complexTip(ov: Overlay, w: WorldView, ids: readonly string[], name: string): TipLine[] {
+  const at = new Set(ids), out: TipLine[] = [name];
+  const serving = [...new Map(w.save.lines.filter((l) => l.stops.some((s) => at.has(s))).map((l) => [l.letter + l.colour, l])).values()];
+  if (serving.length) out.push(lineBullets(serving));
+  if (!w.save.stations.some((s) => at.has(s.id) && s.built)) out.push("Blueprint");
+  else if (display.peek().stationUse !== "none") {
+    const c = circleOf(ov, w, ids[0]);
+    out.push(...(c ? circleLines(c) : ["Calculating demand"]));
+  }
+  return out;
+}
+
 /** The tag for an upgrade drawn on station `i`'s box or beside it (T-1416, T-1528): its name and the
  * station's, how many of the complex's stations share it; a waiting room's riders too, as it is
  * drawn filled with them. */

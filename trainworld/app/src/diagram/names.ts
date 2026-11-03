@@ -177,7 +177,7 @@ class SegGrid {
 
 /** The names placed at every level. `text`, `width` and `width2` (CSS px at `fontPx`, on one line and
  * the wider of two, 0 for none) are per graph node. */
-export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text: string[], width: ArrayLike<number>, width2: ArrayLike<number>, fontPx: number, why?: (level: number, k: number, dir: number, lifted: number, what: string) => void): NamePlan {
+export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text: string[], width: ArrayLike<number>, width2: ArrayLike<number>, fontPx: number, why?: (level: number, k: number, dir: number, lifted: number, what: string) => void, tick?: (done: number) => void): NamePlan {
   const t0 = performance.now();
   const n = g.key.length, pitch = d.pitch, h = fontPx * NAME_LINE, h2 = fontPx * (NAME_LINE + NAME_LINE2);
   const R = (PILL_R + PILL_OUTLINE) * d.stroke, rPass = (PILL_R * 0.45 + PILL_OUTLINE) * d.stroke;
@@ -289,6 +289,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
   let prev = new Map<number, Cand>();
   const T = [0, 0, 0, 0];
   for (let lv = LEVEL_LO; lv <= LEVEL_HI; lv++) {
+    tick?.((lv - LEVEL_LO) / (LEVEL_HI - LEVEL_LO + 1));
     const P = LEVEL_BASE * LEVEL_STEP ** lv, s = P / pitch, boxes = new BoxGrid();
     const clear = CLEAR * pitch + 1 / s;
     const now = new Map<number, Cand>();
@@ -358,7 +359,7 @@ export function levelAt(plan: NamePlan, pitchPx: number): number {
   return i;
 }
 
-export interface NameTheme { ink: string; halo: string; font: string }
+export interface NameTheme { ink: string; halo: string; font: string; faded?: (k: number) => boolean; fadeAlpha?: number }
 
 /** the names over a painted drawing, at `scale` device px a layout unit, (cx, cy) in the middle */
 export function paintNames(ctx: CanvasRenderingContext2D, plan: NamePlan, d: Drawing, w: number, h: number, cx: number, cy: number, scale: number, dpr: number, theme: NameTheme): void {
@@ -371,8 +372,8 @@ export function paintNames(ctx: CanvasRenderingContext2D, plan: NamePlan, d: Dra
   ctx.lineJoin = "round";
   ctx.lineWidth = 3 * dpr;
   const sx = (x: number) => w / 2 + (x - cx) * scale, sy = (y: number) => h / 2 - (y - cy) * scale;
-  // per line of text: where, aligned which way
-  const shown: [number, number, string, CanvasTextAlign][] = [];
+  // per line of text: where, aligned which way, and whether faded (T-2163)
+  const shown: [number, number, string, CanvasTextAlign, boolean][] = [];
   for (let i = 0; i < L.node.length; i++) {
     const k = L.node[i], b = placedBox(plan, li, i, s);
     const x0 = sx(b[0]), x1 = sx(b[2]), y0 = sy(b[3]), y1 = sy(b[1]);
@@ -381,14 +382,28 @@ export function paintNames(ctx: CanvasRenderingContext2D, plan: NamePlan, d: Dra
     const dx = DIR8[L.dir[i]][0], sl = Math.abs(dx) > 0.3 ? 0 : L.slide[i];
     const align: CanvasTextAlign = dx > 0.3 || sl > 0 ? "left" : dx < -0.3 || sl < 0 ? "right" : "center";
     const x = align === "left" ? x0 : align === "right" ? x1 : (x0 + x1) / 2;
-    const parts = L.wrap[i] ? splitName(plan.text[k]) : null;
+    const parts = L.wrap[i] ? splitName(plan.text[k]) : null, dim = !!theme.faded?.(k);
     if (parts) {
       const lead = (NAME_LINE / 2) * f;
-      shown.push([x, y0 + lead, parts[0], align], [x, y0 + lead + NAME_LINE2 * f, parts[1], align]);
-    } else shown.push([x, (y0 + y1) / 2, plan.text[k], align]);
+      shown.push([x, y0 + lead, parts[0], align, dim], [x, y0 + lead + NAME_LINE2 * f, parts[1], align, dim]);
+    } else shown.push([x, (y0 + y1) / 2, plan.text[k], align, dim]);
   }
   ctx.strokeStyle = theme.halo;
   for (const [x, y, t, a] of shown) (ctx.textAlign = a), ctx.strokeText(t, x, y);
   ctx.fillStyle = theme.ink;
-  for (const [x, y, t, a] of shown) (ctx.textAlign = a), ctx.fillText(t, x, y);
+  for (const [x, y, t, a, dim] of shown) (ctx.globalAlpha = dim ? theme.fadeAlpha ?? 1 : 1), (ctx.textAlign = a), ctx.fillText(t, x, y);
+  ctx.globalAlpha = 1;
+}
+
+/** the name drawn at a point (CSS px from the canvas's middle), as `paintNames` places them: its
+ * graph node, or -1 */
+export function nameAt(plan: NamePlan, d: Drawing, px: number, py: number, cx: number, cy: number, s: number): number {
+  const li = levelAt(plan, d.pitch * s);
+  if (li < 0) return -1;
+  const L = plan.at[li], x = cx + px / s, y = cy - py / s;
+  for (let i = 0; i < L.node.length; i++) {
+    const b = placedBox(plan, li, i, s);
+    if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]) return L.node[i];
+  }
+  return -1;
 }

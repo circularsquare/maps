@@ -16,6 +16,7 @@ import { KeepDot } from "./KeepDot";
 import { EditNote } from "./EditNote";
 import { PassingNote } from "./PassingNote";
 import { diagramShown } from "../diagram/view";
+import { DiagramTopLeft } from "./DiagramButton";
 import { live, mapBearing } from "../map/live";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
@@ -23,10 +24,8 @@ import { live, mapBearing } from "../map/live";
  * "Saved only in this browser" dot beside it), the demand alert, what the last edit did (T-2125)
  * and a passing note (T-2166). */
 export function MapTopLeft() {
-  // T-2161: the map's rows say nothing about the network diagram; only the busy tag stays over it
-  if (diagramShown.value) return <div class="map-top-left">
-    <div class="map-top-row"><BusyTag /></div>
-  </div>;
+  // T-2161: the map's rows say nothing about the network diagram; its own take their place
+  if (diagramShown.value) return <DiagramTopLeft />;
   return <div class="map-top-left">
     <div class="map-top-row">
       <DemandSelector />

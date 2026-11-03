@@ -33,14 +33,20 @@ export interface Drawing {
   /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
    * on the page when first painted */
   lines: { colour: string; cmds: Float64Array; path?: Path2D }[];
+  /** per line, its index in the graph's lines */
+  lineOf: number[];
   /** per line, its drawn ribbon sampled: x, y pairs (the names keep off them) */
   ribbons: Float64Array[];
+  /** per ribbon point, the index in its line's chain of the last node passed (a click's stretch) */
+  chainAt: Int32Array[];
   /** per pill: its two ends and how far its points lie off its axis */
   pills: [number, number, number, number, number][];
   /** per pill, the graph node (station) it is for */
   pillOf: number[];
   /** joins between pills of one station: two centres */
   passages: [number, number, number, number][];
+  /** per passage, its station */
+  passageOf: number[];
   box: [number, number, number, number];
 }
 
@@ -232,11 +238,16 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     const r: Ribbon = { pts: [], vi: [] };
     ribs[li] = { r, cmds: filleted(Vs[li][1], R0, r) };
   }
-  const ribbons: Float64Array[] = [];
+  const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
     if (!cmds) return;
     lines.push({ colour: Vs[li][0].colour, cmds });
     ribbons.push(Float64Array.from(r.pts));
+    lineOf.push(li);
+    const V = Vs[li][1], at = new Int32Array(r.vi.length);
+    let c = 0;
+    r.vi.forEach((v, j) => (at[j] = c = V[v][4] >= 0 ? V[v][4] : c));
+    chainAt.push(at);
   });
   for (const [k, occ] of occAt) {
     const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!, list: [number, number][] = [];
@@ -246,8 +257,9 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     }
     stopsAt.set(k, list);
   }
-  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [];
+  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [], passageOf: number[] = [];
   for (const [k, raw] of stopsAt) {
+    const firstPassage = passages.length;
     const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!;
     // along the axis: where each stop is, and how far off it (only a line running along it is)
     const at = raw.map(([px, py]) => [(px - cx) * ax[0] + (py - cy) * ax[1], (px - cx) * ax[1] - (py - cy) * ax[0], px, py]).sort((a, b) => a[0] - b[0]);
@@ -281,12 +293,13 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
       if (bq >= 0) passages.push([centres[bq][0], centres[bq][1], px, py]);
       else centres.push([px, py]);
     }
+    for (let q = firstPassage; q < passages.length; q++) passageOf.push(k);
   }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, ribbons, pills, pillOf, passages, box: [x0, y0, x1, y1] };
+  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, box: [x0, y0, x1, y1] };
 }
 
 /** a line's commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy to x, y */
@@ -387,29 +400,69 @@ function stopOn(r: Ribbon, i0: number, i1: number, cx: number, cy: number, ax: [
   return { cross: best && bd < nd + 2 * reach ? best : null, near };
 }
 
-export interface DiagramTheme { bg: string; ink: string; pill: string }
+export interface DiagramTheme { bg: string; ink: string; pill: string; selected: string }
+
+/** What is picked (T-2163): its lines drawn full and the rest muted, as the map draws a picked line's
+ * others; its stations' pills and names full and the rest faded. */
+export interface DiagramFocus {
+  /** drawn lines (indices into `lines`) drawn full, null for all */
+  lines: Set<number> | null;
+  /** stations (graph nodes) drawn full, null for all */
+  stations: Set<number> | null;
+  /** stations outlined as selected */
+  selected: Set<number>;
+  /** a drawn line under the pointer, drawn full over the rest; -1 none */
+  hot: number;
+}
+/** the muted lines: their width's share and opacity over the background (the map's, renderer.ts MUTE) */
+export const MUTE_WIDTH = 0.45, MUTE_ALPHA = 0.5;
+/** faded pills' outlines and names: their opacity */
+export const FADE_ALPHA = 0.35;
 
 /** the drawing on `ctx` at `scale` px per layout unit, (cx, cy) in the canvas's middle */
-export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: number, cx: number, cy: number, scale: number, theme: DiagramTheme): void {
+export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: number, cx: number, cy: number, scale: number, theme: DiagramTheme, focus?: DiagramFocus): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
   ctx.fillStyle = theme.bg;
   ctx.fillRect(0, 0, w, h);
   ctx.setTransform(scale, 0, 0, -scale, w / 2 - cx * scale, h / 2 + cy * scale);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   // casings first, so neighbours sit a gap apart and bundles read as one ribbon
+  const full = (i: number) => !focus?.lines || focus.lines.has(i);
+  const ribbon = (i: number, casing: boolean) => {
+    const l = d.lines[i];
+    if (casing) {
+      ctx.strokeStyle = theme.bg;
+      ctx.lineWidth = d.pitch;
+      ctx.stroke((l.path ??= toPath(l.cmds)));
+    }
+    ctx.strokeStyle = l.colour;
+    ctx.lineWidth = d.stroke;
+    ctx.stroke((l.path ??= toPath(l.cmds)));
+  };
   ctx.strokeStyle = theme.bg;
   ctx.lineWidth = d.pitch;
   for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
-  ctx.lineWidth = d.stroke;
-  for (const l of d.lines) {
-    ctx.strokeStyle = l.colour;
-    ctx.stroke(l.path!);
-  }
+  if (focus?.lines) {
+    ctx.globalAlpha = MUTE_ALPHA;
+    ctx.lineWidth = d.stroke * MUTE_WIDTH;
+    d.lines.forEach((l, i) => {
+      if (full(i) || i === focus.hot) return;
+      ctx.strokeStyle = l.colour;
+      ctx.stroke(l.path!);
+    });
+    ctx.globalAlpha = 1;
+    for (const i of focus.lines) if (i !== focus.hot && d.lines[i]) ribbon(i, true);
+  } else for (let i = 0; i < d.lines.length; i++) if (i !== focus?.hot) ribbon(i, false);
+  if (focus && focus.hot >= 0 && d.lines[focus.hot]) ribbon(focus.hot, true);
   // far out a pill is a speck on its lines: none
   if (d.pitch * scale < PILL_MIN_PX) return;
   const rp = PILL_R * d.stroke, ol = PILL_OUTLINE * d.stroke;
-  const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string) => {
+  const faded = (k: number) => !!focus?.stations && !focus.stations.has(k) && !focus.selected.has(k);
+  const outline = (k: number) => (focus?.selected.has(k) ? theme.selected : theme.ink);
+  const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string, alpha = 1) => {
+    ctx.globalAlpha = alpha;
     ctx.beginPath();
     // a round stop: a zero-length stroke's caps are not drawn
     if (x0 === x1 && y0 === y1) {
@@ -424,8 +477,47 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.lineTo(x1, y1);
     ctx.stroke();
   };
-  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * PASSAGE * 2 + 2 * ol, theme.ink);
-  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * PASSAGE * 2, theme.pill);
-  for (const p of d.pills) bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * ol + 2 * p[4], theme.ink);
-  for (const p of d.pills) bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * p[4], theme.pill);
+  // a selected station's outline is half again as thick
+  const olOf = (k: number) => (focus?.selected.has(k) ? 1.5 * ol : ol);
+  d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp * PASSAGE * 2 + 2 * olOf(d.passageOf[q]), outline(d.passageOf[q]), faded(d.passageOf[q]) ? FADE_ALPHA : 1));
+  // a faded pill's white over the background, so it recedes in the dark theme too
+  const fill = (x0: number, y0: number, x1: number, y1: number, width: number, k: number) => {
+    if (faded(k)) bar(x0, y0, x1, y1, width, theme.bg);
+    bar(x0, y0, x1, y1, width, theme.pill, faded(k) ? FADE_ALPHA : 1);
+  };
+  d.passages.forEach(([x0, y0, x1, y1], q) => fill(x0, y0, x1, y1, rp * PASSAGE * 2, d.passageOf[q]));
+  d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * olOf(d.pillOf[i]) + 2 * p[4], outline(d.pillOf[i]), faded(d.pillOf[i]) ? FADE_ALPHA : 1));
+  d.pills.forEach((p, i) => fill(p[0], p[1], p[2], p[3], 2 * rp + 2 * p[4], d.pillOf[i]));
+  ctx.globalAlpha = 1;
+}
+
+/** what is under a point (layout units) at `scale` px a layout unit, `slop` px of reach: a station
+ * (graph node) by its pill, else a drawn line and where along its ribbon (the point's index) */
+export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: number): { station: number } | { line: number; at: number } | null {
+  const reach = slop / scale;
+  if (d.pitch * scale >= PILL_MIN_PX) {
+    const R = (PILL_R + PILL_OUTLINE) * d.stroke + reach;
+    let best = -1, bd = Infinity;
+    d.pills.forEach((p, i) => {
+      const dd = segDist(x, y, p[0], p[1], p[2], p[3]) - p[4];
+      if (dd < R && dd < bd) (bd = dd), (best = d.pillOf[i]);
+    });
+    if (best >= 0) return { station: best };
+  }
+  let line = -1, at = -1, bd = d.stroke / 2 + reach;
+  d.ribbons.forEach((r, i) => {
+    for (let j = 0; j + 3 < r.length; j += 2) {
+      // a cheap box test before the distance
+      if (Math.min(r[j], r[j + 2]) - bd > x || Math.max(r[j], r[j + 2]) + bd < x || Math.min(r[j + 1], r[j + 3]) - bd > y || Math.max(r[j + 1], r[j + 3]) + bd < y) continue;
+      const dd = segDist(x, y, r[j], r[j + 1], r[j + 2], r[j + 3]);
+      if (dd < bd) (bd = dd), (line = i), (at = j / 2);
+    }
+  });
+  return line >= 0 ? { line, at } : null;
+}
+
+function segDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+  return Math.hypot(px - ax - dx * t, py - ay - dy * t);
 }

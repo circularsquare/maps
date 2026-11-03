@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2163 Network diagram stage 5, clicks and a picture (2026-11-03, agent t2163): clicks and hovers as the map's, the rest faded, the camera carried both ways, build keys back to the map, "Save picture" (New York 7,516 x 6,882 px, names read); `checks/t2163-diagram-clicks.mjs`. notes/T-2163.md
+- T-2235 Network diagram loading bar (2026-11-03, agent t2163): "Calculating diagram" with the bunny's train and a thin loading bar fed by the layout worker's progress, 0 to 98% in 51 steps over 4 s on New York. notes/T-2163.md
+
+- T-2195 [P2] Ferries F4: ferries in demand as lines. Done 2026-11-03 (agent t2195, tree t2195): ports as stations, boats two cars (480 at crush), Ferry multiple in demand and income, panel rows back; Staten Island 37,500 a weekday, solve +8% on 3 workers, ferry-free to the bit. notes/T-2177.md "T-2195 results".
 - T-2233 [P2] Passing tracks on the map. Done 2026-11-03 (agent t2233): outer tracks bowing round the platform from zoom 14 in a wider box, stopping trains drawn on them, the guard letting through trains pass there; test line 50 passes, all at passing stations, none through a train. notes/T-2228.md 9.
 - T-2218 Station buildings 2 (2026-11-03, agent t2218): the tool from the upgrade row (the complex's rectangle, snaps, Edit outline's handles), the panel section, delete, floor hover and refusals, a plain floor and rim; worker ops and ledger. `checks/t2218-building-tool.mjs`; ui-inspectors.md "Station buildings".
 

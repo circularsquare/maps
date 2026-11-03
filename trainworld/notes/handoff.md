@@ -44,14 +44,21 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   `world_run.py status`, playbook 8 (docs/adding-a-country.md): stale.py, zone_origins.py, load checks (ned, kol, one
   rural zone), smoke, register row, ARCHIVE; commit India's files and a new freeze for 8800 (prune the old freeze).
   Then T-2213 islands can use data/packs.
-- **T-2218 DONE ~17:10, uncommitted** (building tool: buildingView.ts, buildingDraw.ts, buildingFloors.ts, check
+- 17:45: master **5a7a76e5** = T-2218 building tool + T-2233 passing stations drawn; **8800 = build 844**, smoke 23/23
+  light and dark. Filed T-2248 (second stopping line on the inner track, short edges), T-2249 (platform crowd with
+  outer tracks). Started af25dc1d4819a3f3d **t2236** crowding by load (Vite 6187) and a95e57756862f26bc **t2219**
+  building drawing (Vite 6189), both main tree, both told to keep renderer edits local.
+- 18:05: **T-2195 DONE in tree .tw-trees/t2195** (Staten Island 37,547 riders/weekday, capacity-bound; solve +8% on 3
+  workers; ferry-free save to the bit; 352 cargo tests; check t2195-ferry-demand.mjs 8/8; smoke 23/23 in tree). Changes
+  BOAT_CRUSH in sim (main WASM rebuilt by land). It shares boarding.ts, rendererShaders.ts, clock.worker.ts,
+  protocol.ts and four docs with main-tree agents' uncommitted edits (t2236, t2219, t2163): land right after the next
+  main-tree commit (rebase, wasm, typecheck, smoke in tree, land). Strings shown to Anita 18:10. Then T-2196 fans and
+  T-2220 (0.8 rule).
+- (superseded) **T-2218 DONE ~17:10, uncommitted** (building tool: buildingView.ts, buildingDraw.ts, buildingFloors.ts, check
   t2218-building-tool.mjs 27/27, smoke 23/23; strings to show Anita). Its renderer.ts, pick.ts, tools.ts hunks sit
   beside t2233's in-progress ones: commit T-2218 + T-2233 together when t2233 reports. Follow-ups for T-2219: the
   Room row with the hall crowd, the dark floor rim (#8f8b85) faint; touch dragging of handles not built.
 - af43a0646696e53af **t2163** diagram clicks, Save picture, loading bar (T-2163 + T-2235; main tree, Vite 6194).
-- af2aca4951f7d73f6 **t2233** passing tracks on the map (main tree, Vite 6187; trainGuard.ts, station shapes).
-- a285a0d99fbb3a25c **t2218** station building tool (main tree, Vite 6189; worker messages, StationInspector row,
-  own floor/outline layer). Strings to show Anita.
 - aa9e665d3b5427c97 **t2195** ferries in demand (tree .tw-trees/t2195 from e715556b, Vite 6191; sim/src/demand,
   clock.worker buildSnapshot, BusInspector rows). Its app edits will meet t2218's in clock.worker.ts at landing.
 

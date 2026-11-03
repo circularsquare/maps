@@ -1,8 +1,8 @@
 # The network diagram
 
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
-graph (T-2159), the layout (T-2160), the view and its drawing (T-2161) and names (T-2162); clicks,
-city boxes and water are T-2163, T-2168 and T-2169.
+graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
+camera and the picture (T-2163); city boxes and water are T-2168 and T-2169.
 
 ## The button and key M
 
@@ -10,10 +10,34 @@ A button at the top left of the Cities tab, on the row with the leaderboards' tr
 achievements' medal at its right (`ui/DiagramButton.tsx`, placed by `AchievementsButton`; Anita,
 2026-11-03), and key **M** (`diagram/view.ts`) swap the map for the diagram, and back. Hover: "Show
 network diagram (M)", and while the diagram is up "Show map (M)". The diagram is a 2D canvas over the
-map; the dock and top bar stay, and of the map's upper left only the busy tag, which says
-"Calculating diagram" until the first layout is up.
-Drag pans, the wheel zooms about the pointer, drawn once a frame. It opens centred on the complex
-nearest the map's centre, a stroke pitch 7 px. `?diagram=r2` lays it out with round 2's options.
+map; the dock and top bar stay, and the map's upper left gives way to the diagram's own row
+(`DiagramTopLeft`): the save button once a drawing is up, the busy tag, and during the first layout
+the demand status's tag: the bunny's train, "Calculating diagram" and a thin loading bar (hover: its
+percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
+the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
+Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` lays it out with round
+2's options.
+
+- **The camera** (T-2163): each time it opens it is centred on the selection (a station's complex; for
+  a line or group, of its stops the one nearest the map's centre), else on the complex nearest the
+  map's centre; at a pitch of 7 px the first time, as left after. Going back moves the map, keeping its
+  zoom, the same way (the selection's node nearest the diagram's middle, else the complex nearest it),
+  only if the diagram was panned, zoomed or the selection changed while it was up.
+- **Clicks and hovers** are the map's: a pill or a name selects its station (the complex key's
+  station, so the complex view), a line selects the line, a press moving under 4 px is a click,
+  nothing clears the selection. Picked within 3 px. Hovers show the map's tags: a station's
+  (`stationTip`), a line's bullet and name, status, and riders on the stretch under the pointer
+  (`dailyRiders`, the stretch from the ribbon's chain index).
+- **The focus**: a selected line, train's line or group draws full and the other lines muted as the
+  map does (0.45 of the width at half opacity); with a station selected its lines are the full ones and
+  its pills outlined in the accent colour, half again as thick. Pills and names of stations off the
+  full lines fade to 0.35. A line under the pointer is drawn full over the rest.
+- **Build keys** (1 to 4, N, S, C, G, U, O, T) and any build tool picked go back to the map first.
+- **Save picture**: an icon button (download) with the hover "Save picture" saves the whole diagram,
+  unselected, in the current theme, as "<game name> diagram.png" ("Network diagram.png" without a
+  name), the busy tag saying "Saving picture" meanwhile. Its pitch is the largest names level of at
+  most 10 px (9.9 px) that keeps it within 16,000 px a side and 120 million px; failing all, the lines
+  alone as large as fits.
 
 ## The drawing
 
