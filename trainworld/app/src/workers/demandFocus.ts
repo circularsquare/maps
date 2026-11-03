@@ -1,7 +1,7 @@
 // T-2045: the zone in view solved alone and to its last round while a game load's whole solve runs,
-// in a pool of its own (docs/demand-runtime.md "The zone in view first", notes/T-2045.md). The pool has
-// the main pool's shape (n solving workers dealt the periods as the main pool's are, then one aux
-// worker), so a question about a zone shown from it goes to the same worker index here. It holds only
+// in a pool of its own (docs/demand-runtime.md "The focus pool", notes/T-2045.md): n solving workers
+// (the main pool's count, at most FOCUS_WORKERS) dealt the periods as a pool of n is, then one aux
+// worker, which a question for the main pool's aux goes to here. It holds only
 // the zones it solves, at most MAX_ZONES, and is ended when the load's whole solve lands.
 
 import type { CityId } from "../game/cities";
@@ -9,6 +9,8 @@ import type { FromDemand, ToDemand } from "./demandProtocol";
 
 /** zones the pool holds at once: each is a fine city in every one of its workers */
 export const FOCUS_MAX_ZONES = 3;
+/** solving workers at most (`?focusWorkers=n` for another), fewer when the main pool is smaller */
+export const FOCUS_WORKERS = 2;
 
 export interface FocusHooks {
   /** anything the main client handles for this pool: results, sums, query replies */
@@ -29,6 +31,8 @@ export class FocusPool {
   readonly opening = new Set<CityId>();
   private acks = new Map<CityId, number>();
   private ended = false;
+  /** each worker's WebAssembly memory, bytes, as it last reported it (?debug=1's `memory()`) */
+  readonly mem: number[] = [];
 
   constructor(readonly n: number, periodsOf: number[][], private hooks: FocusHooks, view: ToDemand) {
     for (let i = 0; i <= n; i++) {
@@ -94,6 +98,8 @@ export class FocusPool {
 
   private receive(i: number, msg: FromDemand) {
     if (this.ended) return;
+    const mem = (msg as { memBytes?: number }).memBytes;
+    if (mem) this.mem[i] = mem;
     if (msg.kind === "failed" || msg.kind === "dead") return this.fail(`focus worker ${i}: ${msg.error}`);
     if (msg.kind === "opened") {
       for (const r of msg.rejected ?? []) if (!r.market) return this.fail(`focus worker ${i}: ${r.id} did not open`);

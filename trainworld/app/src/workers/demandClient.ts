@@ -58,7 +58,7 @@ import {
   refiningZone,
   focusZones,
 } from "../game/demand";
-import { FocusPool } from "./demandFocus";
+import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
@@ -2486,7 +2486,8 @@ class DemandClient {
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
     if (this.fpool || perfOff("focus") || this.status.startsWith("failed") || this.cacheShown()) return;
-    const n = this.computeN;
+    // (at most FOCUS_WORKERS solving workers: each worker is memory of its own, T-2045's follow-up)
+    const n = Math.max(1, Math.min(this.computeN, Number(new URLSearchParams(location.search).get("focusWorkers")) || FOCUS_WORKERS));
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
       message: (i, msg) => this.focusMessage(i, msg),
       opened: (id) => { (this.fopened ??= new Map()).set(id, performance.now()); this.focusSoon(); },
