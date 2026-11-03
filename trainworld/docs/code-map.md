@@ -317,7 +317,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - Python: `token_usage.py <transcript.jsonl> ...` (an agent's token use from its transcript,
   CLAUDE.md "Token counts"), `world_field_check.py` (the world field's country totals and fixed
   links, T-375; from trainworld/), `runner_fixes.py` (the world runner's market file picking, cache
-  clearing, market heal and busy-port refusal, T-1976, T-1986; nothing live written, about a minute),
+  clearing, market heal and busy-port refusal, T-1976, T-1986; the gate's stuck-session handling,
+  network retries and the region pipeline with stand-ins, T-2040, T-1979, T-1978, T-1980; nothing live
+  written, about a minute),
   and in pipeline/ `test_education_sources.py` and
   `test_university_sources.py` (`python -m unittest test_university_sources test_education_sources`
   from pipeline/, no network).
@@ -738,12 +740,16 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
   each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/world-run.md
   "Running the pipeline"). The gate's rates test is built once at a run's start (`build_everyday`,
-  T-931). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
+  T-931). Regions overlap one deep, each in its own thread (`run_regions`, T-1980), and a region's
+  built rows are gated in chunks while it builds (`gate_chunks`, T-1978), builds, reads and gate
+  chunks sharing the run's `Slots`. `--root` points every step at a scratch tree (`Redirect`). `RunFault`
   stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
   Several runs at once (T-786): `--no-join` then `join`; row claims, extract, packs, registry and
   plan locks through `shared_lock.py` (re-entrant cross-process file locks, `write_atomic`), which
   register.py, market_zones.py, zones.py, zone_boxes.py and world_plan.py take too. A clean join
   ends with `freeze.py`.
+- `netget.py [ISO2...]`: a build's network requests retried in place (`request`, `cached_json`), and the
+  national figures a run fetches once before its builds (`country_inputs`, T-1979).
 - `tools/aws/` (T-1064, rules and flow in docs/aws.md): long builds on a rented spot machine in a
   friend's AWS account. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
   `userdata/<kind>.sh`; `--az` when the cheapest zone has no spot capacity), `bucket.py` (our bucket

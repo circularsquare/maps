@@ -22,8 +22,9 @@ to 7 and 11 of `docs/adding-a-city-by-hand.md` for it, with the gate (its sectio
 `--rows a,b` or `--countries GB,PT` instead of `--limit`; `--jobs N` the cores in all (default 2,
 up to 12 on an overnight run Anita approves). A run builds `--workers` rows at once (default N),
 each step of a build on one thread, since a build step keeps about 0.9 of a core busy whatever
-threads it is given (T-966); the gate, the downloads and reads, and the join's steps, which run
-while the run's builds are idle, take all N. `--port` its own Vite
+threads it is given (T-966). The workers are the run's slots: a gate chunk takes 2 of them and an
+extract's read 1 while builds go on, builds waiting meanwhile (T-1978, T-1980); the join's steps,
+which run with no build, take all N. `--port` its own Vite
 for the browser check (default 6360); a run stops at its start, and before each gate, when
 something already answers on that port (T-1079, T-1986). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR` when the tree's
 `sim/` may be mid-edit (`docs/adding-a-city-by-hand.md` 4); the run prints, and reports as a problem, every file where that
@@ -81,9 +82,19 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   it (T-1113). The old units' joint and everyday files stay in data/work, read by nothing; once the
   join is done, `pipeline\pair_files.py unused` lists them and `--move` puts them in
   `data/work/retired/` (T-1976).
+- **Country inputs** (T-1979): at the run's start `pipeline/netget.py <ISO2>...` caches the national
+  figures every planned row's build reads (World Bank employment and age shares, tertiary
+  enrolment, vulnerable employment; nocar's GDP and income groups), seconds when cached; a failure
+  only goes in the report's problems. Every network request a build makes (those, GHSL tiles,
+  `build_city.fetch`, ArcGIS layers, Wikidata) goes through `netget.request`: a reset connection, a
+  timeout, a 429 or a 5xx waits 5, 20, 60, 120 and 240 s and asks again, so a server's bad minute
+  costs seconds, not the row.
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
-  read once into the caches (`osm_features`, inland water, roads, admin relations).
+  read once into the caches (`osm_features`, inland water, roads, admin relations). Regions overlap
+  one deep (T-1980): each runs in its own thread holding its extracts' locks; region k+1 downloads
+  and reads once region k's builds have started (never two reads ahead: each GDAL read commits about
+  6 GB, T-1080), and builds once region k's builds are done, while k's last gate chunk runs.
 - **Per row**: a `planned` row (new, or its units changed) first loses the per-city caches named
   after its id, which an earlier row of that id or its old outline left (T-1743, T-891):
   `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `osm_*_<id>.json` in `data/raw/t142b` and
@@ -106,9 +117,18 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   worked out again, T-929, and only the joint and everyday files with pairs from the new packs
   read, T-1976), a snapshot of every registered pack taken first, and
   gated with `--browser --since` on the runner's own Vite, started after the registration (it
-  reads the registry once): every row's figures first, then the region's rows split in plan order
-  over three browser sessions at once (T-928, T-965; `city-browser.mjs` with `ROWS`, 8 zones a page
-  load, a 180 s solve wait, a zone whose wait timed out tried once more in a fresh page). A pack that ships stays registered; one that parks is taken out again
+  reads the registry once): every row's figures first, then the rows split in plan order over
+  three browser sessions at once (T-928, T-965; `city-browser.mjs` with `ROWS`, 8 zones a page
+  load, a 180 s solve wait, a zone whose wait timed out or whose page crashed tried once more in a
+  fresh page). A zone over 20M people gets a session of its own (`pack_gate.BIG_ZONE_PEOPLE`): the
+  removal of Jakarta's test line for the next zone crashed its page out of memory, and Playwright's
+  waits on a crashed page never end (T-2040). A session whose log has not grown for 10 minutes
+  (`BROWSER_STALL_S`; each wait in `city-browser.mjs` prints first and is at most 300 s) is stopped:
+  its stuck zone is tried once alone (failed if it sticks alone too) and its later zones go on in a
+  fresh session. **In chunks** (T-1978): while the region builds, its built rows are gated whenever
+  `GATE_CHUNK` (10, `TW_GATE_CHUNK`; 0 gates once after the builds) wait, each chunk with its own
+  snapshot, register and Vite (logs `region<k>.<n>.*`, the first `region<k>.*`), one chunk at a
+  time; the rest once the builds end. A pack that ships stays registered; one that parks is taken out again
   with its market pack, its market place left unused (place ids are positions), and its failing
   checks are its reason. Whenever the runner takes packs out of the registry, every registered
   market pack still naming their places is rewritten, however far away (`market_zones.py <ids>`,
@@ -149,7 +169,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
 - **Status** is each row's `status` in `pipeline/world_plan.json` (`planned`, `built`, `gated`,
   `shipped`, `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's
   reason, the claiming run while one runs it (`claim`). A
-  batch's report (shipped, parked with reasons, warnings, times) and every log go to
+  batch's report (shipped, parked with reasons, warnings, times: a region's download, read,
+  builds, gate and `gate_after_builds`, the gate's wall after its builds) and every log go to
   `../artifacts/trainworld/world_run/<batch>/`.
 - **Stopping**: ctrl-c, or the file `trainworld\data\work\world_run\STOP` (the run's first line and
   `status` print its path; with `--root`, that tree's); the city under way finishes its

@@ -87,12 +87,12 @@ import zipfile
 import h3
 import numpy as np
 import pandas as pd
-import requests
 import shapely
 from shapely import make_valid, union_all
 from shapely.geometry import Point, mapping, shape
 
 import build_city as b
+import netget
 import packio
 
 GHSL = "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/{group}/{product}/V1-0/tiles/{product}_V1_0_R{r}_C{c}.zip"
@@ -154,7 +154,7 @@ def _tile_path(kind, epoch, r, c):
         return None
     os.makedirs(os.path.dirname(path), exist_ok=True)
     print(f"  downloading {url}", flush=True)
-    resp = requests.get(url, headers=b.UA, timeout=600)
+    resp = netget.request(url, timeout=600, ok=(404,))
     if resp.status_code == 404:  # GHSL has no tile over open ocean
         open(path + ".none", "w").close()
         return None
@@ -353,13 +353,7 @@ def worldbank(iso2):
     if iso2 in NATIONAL:
         emp, kids, year, _ = NATIONAL[iso2]
         return emp * (1 - kids), kids, year
-    path = raw(f"worldbank_{iso2}.json")
-    if not os.path.exists(path):
-        r = requests.get(WORLDBANK.format(iso2=iso2), headers=b.UA, timeout=60)
-        r.raise_for_status()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            json.dump(r.json(), f)
+    path = netget.cached_json(WORLDBANK.format(iso2=iso2), raw(f"worldbank_{iso2}.json"), timeout=60)
     with open(path) as f:
         rows = json.load(f)[1]
     by = {}
@@ -368,12 +362,7 @@ def worldbank(iso2):
             by.setdefault(x["date"], {})[x["indicator"]["id"]] = x["value"] / 100.0
     if not any(len(v) == 2 for v in by.values()):
         # no ILO modelled ratio (Kosovo, T-788): the national estimate in its place
-        path = raw(f"worldbank_ne_{iso2}.json")
-        if not os.path.exists(path):
-            r = requests.get(WORLDBANK_NE.format(iso2=iso2), headers=b.UA, timeout=60)
-            r.raise_for_status()
-            with open(path, "w") as f:
-                json.dump(r.json(), f)
+        path = netget.cached_json(WORLDBANK_NE.format(iso2=iso2), raw(f"worldbank_ne_{iso2}.json"), timeout=60)
         with open(path) as f:
             for x in json.load(f)[1] or []:
                 if x["value"] is not None and x["date"] in by:
@@ -392,12 +381,7 @@ def tertiary_share(iso2):
     both; (share, year), or (None, None) where UNESCO has no figure (T-288)."""
     by = {}
     for ind in ("SE.TER.ENRL", "SP.POP.TOTL"):
-        path = raw(f"worldbank_{iso2}_{ind}.json")
-        if not os.path.exists(path):
-            r = requests.get(WB_TERTIARY.format(iso2=iso2, ind=ind), headers=b.UA, timeout=60)
-            r.raise_for_status()
-            with open(path, "w") as f:
-                json.dump(r.json(), f)
+        path = netget.cached_json(WB_TERTIARY.format(iso2=iso2, ind=ind), raw(f"worldbank_{iso2}_{ind}.json"), timeout=60)
         with open(path) as f:
             for x in json.load(f)[1] or []:
                 if x["value"] is not None:
@@ -1137,13 +1121,8 @@ def wikidata_students(qids):
         q = ("SELECT ?item ?v ?t WHERE { VALUES ?item { " + " ".join(f"wd:{x}" for x in part) + " } "
              "?item p:P2196 ?s. ?s ps:P2196 ?v. OPTIONAL { ?s pq:P585 ?t } }")
         # 429 when several builds query at once (T-420 stage 3), and for minutes at a time (T-788)
-        for wait in (10, 30, 60, 120, 300, 600, 0):
-            r = requests.post(WIKIDATA, data={"query": q, "format": "json"}, headers=b.UA, timeout=120)
-            if r.status_code != 429 or not wait:
-                break
-            after = r.headers.get("Retry-After", "")
-            time.sleep(max(wait, int(after)) if after.isdigit() else wait)
-        r.raise_for_status()
+        r = netget.request(WIKIDATA, method="post", data={"query": q, "format": "json"}, timeout=120,
+                           waits=(10, 30, 60, 120, 300, 600))
         best = {}
         for row in r.json()["results"]["bindings"]:
             qid = row["item"]["value"].rsplit("/", 1)[1]

@@ -147,9 +147,9 @@ Write `<kit>\run.cmd`:
     set PATH=%USERPROFILE%\.cargo\bin;%PATH%
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --countries XX --limit 300 --jobs N --port 63xx --no-join > artifacts\trainworld\t###-run.log 2>&1
 
-with N the cores granted. Regions over 100 rows: `set TW_QUIET_S=3600` in the .cmd. A metro over about 20M
-(Jakarta) hangs the gate's browser step when other rows share its page (T-2040): run the country with
-`--rows` for every row but it, and that metro alone in a second run (its gate then takes a minute). Start it with
+with N the cores granted. Regions over 100 rows: `set TW_QUIET_S=3600` in the .cmd. One run takes the whole
+country, a metro over 20M included: the gate checks such a zone in a browser session of its own, and stops a
+stuck session after 10 minutes (T-2040). Start it with
 `powershell -File <tc>\start_hidden.ps1 <kit>\run.cmd`; it prints the cmd's PID and, three seconds
 later, its children (the cmd's own python.exe child is venv's launcher, alive as long as the run: `cores.py claim
 ... --pid` and the wait take that one).

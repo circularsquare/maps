@@ -9,8 +9,6 @@ row (`kind` "zone", T-723) gives a zone's config: its kind and name, and the zon
 import json
 import os
 
-import requests
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 PLAN = os.path.join(HERE, "world_plan.json")
 WB_VULN = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.VULN.ZS?format=json&date=2010:2025&per_page=100"
@@ -37,21 +35,9 @@ def load(path=PLAN):
 def vulnerable_share(iso2):
     """ILO's modelled vulnerable employment (own-account and family workers) as a share of all
     employment, World Bank SL.EMP.VULN.ZS, the latest year; cached per country."""
-    import build_city as b
+    import netget
     import tier0
-    path = tier0.raw(f"worldbank_{iso2}_SL.EMP.VULN.ZS.json")
-    if not os.path.exists(path):
-        for attempt in range(4):
-            try:
-                r = requests.get(WB_VULN.format(iso2=iso2), headers=b.UA, timeout=60)
-                r.raise_for_status()
-                break
-            except requests.RequestException:
-                if attempt == 3:
-                    raise
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            json.dump(r.json(), f)
+    path = netget.cached_json(WB_VULN.format(iso2=iso2), tier0.raw(f"worldbank_{iso2}_SL.EMP.VULN.ZS.json"), timeout=60)
     with open(path) as f:
         rows = [x for x in (json.load(f)[1] or []) if x["value"] is not None]
     return (max(rows, key=lambda x: x["date"])["value"] / 100.0) if rows else None

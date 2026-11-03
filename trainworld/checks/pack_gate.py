@@ -12,7 +12,8 @@ pack ships when nothing FAILs and parks otherwise. One summary line a pack, and 
 in <out>/<id>.json (default ../artifacts/trainworld/pack_gate/), which the runner (T-540) reads.
 `--browser` runs checks/city-browser.mjs on a row made here (BASE: the Vite to use, default
 http://localhost:6125); with several ids, the packs' rows split over BROWSER_SESSIONS (3) browser
-sessions at once (T-928, T-965), after all the figures. Thresholds are THRESHOLDS below; how they were set, notes/T-538.md.
+sessions at once (T-928, T-965), after all the figures; a zone over 20M people alone, a stuck session
+stopped after BROWSER_STALL_S (T-2040). Thresholds are THRESHOLDS below; how they were set, notes/T-538.md.
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -825,68 +826,133 @@ def browser_row(city, header, a, f, reg, out_dir):
     rp = os.path.join(out_dir, f"{city}.row.json")
     with open(rp, "w", encoding="utf-8") as fh:
         json.dump(row, fh, ensure_ascii=False)
-    return ({"id": city, "row": rp, "out": os.path.join(out_dir, f"{city}-"), "json": os.path.join(out_dir, f"{city}.browser.json")},
+    return ({"id": city, "row": rp, "out": os.path.join(out_dir, f"{city}-"), "json": os.path.join(out_dir, f"{city}.browser.json"),
+             "people": float(f.get("pop") or 0)},
             {"line_from": how, "stations": len(line), "unreached": unreached})
 
 
 BROWSER_SESSIONS = int(os.environ.get("BROWSER_SESSIONS", 3))  # T-965: a zone's check slows with each zone open in its page
+# T-2040: a zone this big gets a session of its own. Jakarta (37.5M) passed its checks, then its
+# page never let the next zone start, twice; alone it passed in 18 s.
+BIG_ZONE_PEOPLE = 20e6
+# T-2040: a session whose log has not grown this long is stopped (its zone retried alone, or failed
+# if it was alone) and its other zones go on in a fresh one. city-browser.mjs prints before each
+# wait, and no wait there is over 300 s.
+BROWSER_STALL_S = int(os.environ.get("BROWSER_STALL_S", 600))
 
 
-def browser_run(rows, out_dir):
-    """city-browser.mjs on the rows, split in plan order over BROWSER_SESSIONS sessions at once
-    (T-928, T-965): {id: its result}. city-browser.mjs tries a zone whose wait timed out once more
-    in a fresh page (the machine busy, T-788)."""
+def browser_parts(rows):
+    """The sessions to run: each zone over BIG_ZONE_PEOPLE alone, the rest split in plan order over
+    BROWSER_SESSIONS."""
+    big = [[r] for r in rows if r.get("people", 0) > BIG_ZONE_PEOPLE]
+    rest = [r for r in rows if r.get("people", 0) <= BIG_ZONE_PEOPLE]
+    k = max(1, min(BROWSER_SESSIONS, len(rest)))
+    size = -(-len(rest) // k)
+    return big + [p for p in (rest[n * size:(n + 1) * size] for n in range(k)) if p]
+
+
+def _kill_tree(p):
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"], capture_output=True)
+    else:
+        p.kill()
+    try:
+        p.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        pass
+
+
+def browser_run(rows, out_dir, stall_s=None, script=None):
+    """city-browser.mjs on the rows, BROWSER_SESSIONS sessions at once (T-928, T-965; browser_parts):
+    {id: its result}. city-browser.mjs tries a zone whose wait timed out once more in a fresh page
+    (the machine busy, T-788); a session silent for BROWSER_STALL_S is stopped (T-2040)."""
+    stall_s = BROWSER_STALL_S if stall_s is None else stall_s
     maps = os.path.dirname(ROOT)
     for r in rows:
         if os.path.exists(r["json"]):
             os.remove(r["json"])
-    k = max(1, min(BROWSER_SESSIONS, len(rows)))
-    size = -(-len(rows) // k)
-    runs = []
-    for n in range(k):
-        part = rows[n * size:(n + 1) * size]
-        if not part:
-            continue
-        lst = os.path.join(out_dir, f"browser-rows-{os.getpid()}-{n}.json")
-        with open(lst, "w", encoding="utf-8") as fh:
-            json.dump(part, fh, ensure_ascii=False)
-        env = dict(os.environ, ROWS=lst, WORKERS=os.environ.get("WORKERS", "1"))
-        log = open(os.path.join(out_dir, f"browser-{os.getpid()}-{n}.log"), "w+", encoding="utf-8", errors="replace")
-        p = subprocess.Popen(["node", os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
-                             stdout=log, stderr=subprocess.STDOUT)
-        runs.append((part, lst, log, p))
+    queue = [(p, len(p) == 1) for p in browser_parts(rows)]
+    running, said, n = [], {}, 0
     # each row's result printed as it lands, so the gate's log keeps growing for the runner's quiet watch (T-1308)
     seen, beat = set(), time.time()
-    while any(p.poll() is None for *_, p in runs):
-        for part, *_ in runs:
-            for r in part:
+
+    def finish(s, stalled=False):
+        s["log"].seek(0)
+        text = s["log"].read()
+        s["log"].close()
+        if stalled:
+            with open(os.path.join(out_dir, f"browser-stalled-{s['part'][0]['id']}-{s['n']}.log"), "w", encoding="utf-8") as fh:
+                fh.write(text)
+        for f in (s["lst"], s["log"].name):
+            with contextlib.suppress(OSError):
+                os.remove(f)
+        for r in s["part"]:
+            said.setdefault(r["id"], text)
+
+    while queue or running:
+        while queue and len(running) < BROWSER_SESSIONS:
+            part, alone = queue.pop(0)
+            lst = os.path.join(out_dir, f"browser-rows-{os.getpid()}-{n}.json")
+            with open(lst, "w", encoding="utf-8") as fh:
+                json.dump(part, fh, ensure_ascii=False)
+            env = dict(os.environ, ROWS=lst, WORKERS=os.environ.get("WORKERS", "1"))
+            log = open(os.path.join(out_dir, f"browser-{os.getpid()}-{n}.log"), "w+", encoding="utf-8", errors="replace")
+            p = subprocess.Popen(["node", script or os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
+                                 stdout=log, stderr=subprocess.STDOUT)
+            running.append({"part": part, "alone": alone, "lst": lst, "log": log, "p": p, "n": n, "size": -1, "still": time.time()})
+            n += 1
+        time.sleep(1 if stall_s < 60 else 5)
+        for s in list(running):
+            for r in s["part"]:
                 if r["id"] not in seen and os.path.exists(r["json"]):
                     seen.add(r["id"])
                     print(f"  browser {r['id']}: result in ({len(seen)} of {len(rows)})", flush=True)
+            if s["p"].poll() is not None:
+                finish(s)
+                running.remove(s)
+                continue
+            size, now = os.path.getsize(s["log"].name), time.time()
+            if size != s["size"]:
+                s["size"], s["still"] = size, now
+                continue
+            if now - s["still"] < stall_s:
+                continue
+            # T-2040: stuck (Jakarta's page after its checks, its timers never firing)
+            _kill_tree(s["p"])
+            running.remove(s)
+            left = [r for r in s["part"] if not os.path.exists(r["json"])]
+            if not left:
+                finish(s)
+                continue
+            stuck, rest = left[0], left[1:]
+            finish(s, stalled=True)
+            said.pop(stuck["id"], None)
+            if s["alone"]:
+                with open(stuck["json"], "w", encoding="utf-8") as fh:
+                    json.dump({"city": stuck["id"], "checks": [], "stalled": True,
+                               "error": f"browser session made no progress for {stall_s / 60:.0f} min, alone in it; stopped"}, fh)
+                print(f"  browser {stuck['id']}: no progress for {stall_s / 60:.0f} min alone in its session; FAIL", flush=True)
+            else:
+                queue.insert(0, ([stuck], True))
+                print(f"  browser {stuck['id']}: no progress for {stall_s / 60:.0f} min; tried again alone", flush=True)
+            if rest:
+                queue.insert(1 if not s["alone"] else 0, (rest, len(rest) == 1))
         if time.time() - beat > 300:
             beat = time.time()
             print(f"  browser: {len(seen)} of {len(rows)} rows in", flush=True)
-        time.sleep(5)
     out = {}
-    for part, lst, log, p in runs:
-        p.wait()
-        log.seek(0)
-        said = log.read()
-        log.close()
-        os.remove(lst)
-        os.remove(log.name)
-        for r in part:
-            got = {}
-            if os.path.exists(r["json"]):
-                with open(r["json"], encoding="utf-8") as fh:
-                    got = json.load(fh)
-            checks = got.get("checks", [])
-            res = {"pass": len(checks) == 8 and all(c["ok"] for c in checks), "checks": checks}
-            if got.get("tries", 1) > 1:
-                res["tries"] = got["tries"]
-            if not res["pass"] and all(c["ok"] for c in checks):  # died after passing checks (T-788)
-                res["error"] = (got.get("error") or said or "no result")[-400:]
-            out[r["id"]] = res
+    for r in rows:
+        got = {}
+        if os.path.exists(r["json"]):
+            with open(r["json"], encoding="utf-8") as fh:
+                got = json.load(fh)
+        checks = got.get("checks", [])
+        res = {"pass": len(checks) == 8 and all(c["ok"] for c in checks), "checks": checks}
+        if got.get("tries", 1) > 1:
+            res["tries"] = got["tries"]
+        if not res["pass"] and all(c["ok"] for c in checks):  # died after passing checks (T-788)
+            res["error"] = (got.get("error") or said.get(r["id"]) or "no result")[-400:]
+        out[r["id"]] = res
     return out
 
 

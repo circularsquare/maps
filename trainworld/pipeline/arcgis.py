@@ -4,7 +4,7 @@ lon/lat; delete them to refetch."""
 import json
 import os
 
-import requests
+import netget
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "data", "raw")
@@ -28,9 +28,7 @@ def features(name, layer_url, where="1=1", fields="*", geometry=True, bbox=None,
                 q.update(geometry=",".join(str(v) for v in bbox), geometryType="esriGeometryEnvelope",
                          inSR=4326, spatialRel="esriSpatialRelIntersects")
             q.update(params or {})
-            r = requests.post(layer_url + "/query", data=q, headers=UA, timeout=300)
-            r.raise_for_status()
-            data = r.json()
+            data = netget.request(layer_url + "/query", method="post", data=q, headers=UA, timeout=300).json()
             if "error" in data:
                 raise RuntimeError(f"{name}: {data['error']}")
             os.makedirs(os.path.dirname(path), exist_ok=True)

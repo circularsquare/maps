@@ -12,9 +12,10 @@
 //
 // ROWS (T-928): a JSON list of {id, row, out, json} (a row file, the screenshot prefix, the result
 // file), every zone checked in turn in one sandbox game, ZONES_PER_PAGE (8) to a page load: each
-// zone's test line is removed after its checks, so the next zone's solve does not carry it; a zone
-// that throws closes the page and the rest go on in a fresh one, and a zone whose wait timed out
-// (the solve's SOLVE_WAIT_S, 180) is tried once more in it. Exit 0 when every zone passes.
+// zone's test line is removed after its result is written, so the next zone's solve does not carry
+// it; a zone that throws closes the page and the rest go on in a fresh one, and a zone whose wait
+// timed out (the solve's SOLVE_WAIT_S, 180; the whole zone's ZONE_LIMIT_S, 1500) or whose page
+// crashed is tried once more in it (T-2040). Exit 0 when every zone passes.
 //
 // Needs a Vite dev server (BASE, default http://localhost:6125) and Playwright (PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache). Screenshots artifacts/trainworld/<task>-<id>-homes.png and
@@ -246,21 +247,43 @@ const settle = (page, fn, arg, ms) => page.waitForFunction(fn, arg, { timeout: m
 // the map drawn with its tiles, for a screenshot, at most `ms`
 const idle = (page, ms) => page.evaluate(ms => new Promise(r => { const m = window.tw.map, t = setTimeout(r, ms); m.once('idle', () => { clearTimeout(t); r(); }); m.triggerRepaint(); }), ms);
 
+// T-2040: a waiting step says so first, so a session whose log stops growing is stuck (the gate
+// stops a session silent for 10 minutes; no wait here is over 300 s)
+const say = (id, what) => console.log(`.. ${id}: ${what}`);
+// p, or a TimeoutError after ms, or the page's crash, whichever comes first. A crashed page leaves
+// Playwright's waits pending past their own timeouts (Jakarta's page after its line's removal, T-2040).
+function within(p, dead, ms, what) {
+  let t;
+  p.catch(() => {});
+  const late = new Promise((_, no) => { t = setTimeout(() => no(Object.assign(Error(`${what} took over ${ms / 1000} s`), { name: 'TimeoutError' })), ms); });
+  return Promise.race([p, dead, late]).finally(() => clearTimeout(t));
+}
+const never = new Promise(() => {});
+const ZONE_LIMIT_MS = 1000 * Number(process.env.ZONE_LIMIT_S ?? 1500);
+
 /** A new game (a sandbox when checking several zones, so later zones' lines are not short of money). */
 async function openPage() {
   const page = await ctx.newPage(), errors = [];
+  let crashed;
+  const dead = new Promise((_, no) => { crashed = no; });
+  dead.catch(() => {});
+  page.on('crash', () => { page.__twStale = true; console.log('note: the page crashed'); crashed(Error('the page crashed')); });
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
   await page.goto(`${BASE}/?debug=1&new=1${multi ? '&mode=sandbox' : ''}&opened=all&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
-  await page.waitForFunction(() => window.tw?.world.value && window.twDemand?.client && window.twDemand.view()?.round >= 0, undefined, { timeout: 240000 });
-  return { page, errors };
+  await within(page.waitForFunction(() => window.tw?.world.value && window.twDemand?.client && window.twDemand.view()?.round >= 0, undefined, { timeout: 240000 }), dead, 250000, 'a new game');
+  return { page, errors, dead };
 }
 
-async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
+/** A page closed, at most 30 s: a crashed page's close can hang too. */
+const closePage = (cur) => within(cur.page.close(), never, 30000, 'closing the page').catch(() => {});
+
+async function checkZone(page, errors, id, C, out, result) {
   errors.length = 0;
   const check = (name, ok, detail) => { result.checks.push({ name, ok: !!ok, detail }); console.log(ok ? 'ok  ' : 'FAIL', multi ? `${id}:` : '', name, JSON.stringify(detail ?? '')); };
 
   // 1. jump to the city: its pack opens, it becomes the active city, its boundary layer exists
+  say(id, 'opening its pack');
   const t0 = await page.evaluate(ll => { window.tw.map.jumpTo({ center: ll, zoom: 11.2 }); return performance.now(); }, C.centre);
   await page.waitForFunction(id => window.twDemand.client.start.loads.find(l => l.item === id)?.openedAt, id, { timeout: 300000 });
   result.opening = await page.evaluate(([id, t0]) => { const l = window.twDemand.client.start.loads.find(l => l.item === id); return { download: Math.round(l.downloadedAt - l.requestedAt), open: Math.round(l.openedAt - l.downloadedAt), fromPan: Math.round(l.openedAt - t0) }; }, [id, t0]);
@@ -278,6 +301,7 @@ async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
   check(`${C.name} is the active city and its boundary layer exists`, layer, { layer });
   await page.evaluate(() => { const d = document.querySelector('#debug'); if (d) d.style.display = 'none'; window.tw.display.value = { ...window.tw.display.value, commuters: true, commuterEnd: 'home' }; });
   // the no-rail split: wait until the top bar has the city's own figures
+  say(id, 'waiting for its split');
   await page.waitForFunction(name => /Train .*Walking .*Driving/.test(document.querySelector('.split-row')?.getAttribute('data-tip') ?? '') && (document.querySelector('.split-row')?.getAttribute('data-tip') ?? '').includes(name) && !/–/.test(document.querySelector('.split-row .pct')?.textContent ?? '–'), C.name, { timeout: 300000 });
   await settle(page, () => window.twDemand.view()?.final, undefined, 6000);
   await idle(page, 6000);
@@ -300,6 +324,7 @@ async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
   // several zones in one game: each line its own name, so no lookup finds an earlier zone's
   const lineName = multi ? `${C.lineName} ${id}` : C.lineName;
   const before = await page.evaluate(() => window.twDemand.view()?.version ?? 0);
+  say(id, 'building its test line');
   await page.evaluate(async ([stops, name, colour]) => {
     const t = window.tw, run = async op => { const r = await t.client.edit(op); if (!r.ok) throw Error(JSON.stringify({ op, r })); return r; };
     // a 300 m tail beyond each end, so every platform sits on a through node
@@ -321,6 +346,7 @@ async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
     await run({ op: 'setTrainCount', line, trains: [10, 10, 5] });
     await run({ op: 'constructAll' });
   }, [C.line, lineName, C.colour]);
+  say(id, 'waiting for the solve with its line');
   await page.waitForFunction(([v, name]) => {
     const dv = window.twDemand.view(), l = window.tw.world.value.save.lines.find(l => l.name === name);
     return dv?.version > v && dv.round === 3 && dv.final && l && dv.lines.has(l.id);
@@ -346,46 +372,50 @@ async function checkZone(page, errors, id, C, out, result, clearAfter = multi) {
   await page.screenshot({ path: out + 'line.png' });
   result.errors = [...errors];
   check('no page errors', errors.length === 0, result.errors);
-  // T-928: the line goes, so the next zone's solve does not carry it (its track and stations stay,
-  // unserved); not after a page's last zone (T-925: that removal's solve hung a gate for 90 minutes)
-  if (clearAfter) {
-    // the zone's checks are in: a removal that never settles (Jakarta's 37.5M solve hung the gate for 90
-    // minutes, T-1738) only costs the page, which the next zone replaces
-    try {
-      const edit = page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; });
-      const v = await Promise.race([edit, new Promise((_, no) => setTimeout(() => no(Error('removeLine took over 300 s')), 300000))]);
-      // the solve without it, before the next zone counts versions
-      await page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 });
-    } catch (e) {
-      console.log(`note ${id}: line not cleared (${String(e).split('\n')[0]}), a fresh page for the next zone`);
-      page.__twStale = true;
-    }
+  return lineName;
+}
+
+/** T-928: the zone's line goes, so the next zone's solve does not carry it (its track and stations
+ * stay, unserved). Its result is already written: a removal that never settles (Jakarta's, T-2040)
+ * costs only the page, which the next zone replaces. */
+async function clearLine(cur, id, lineName) {
+  const { page, dead } = cur;
+  try {
+    say(id, 'removing its line');
+    const v = await within(page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; }), dead, 300000, 'removeLine');
+    say(id, 'waiting for the solve without its line');
+    // the solve without it, before the next zone counts versions
+    await within(page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 }), dead, 305000, 'the solve without the line');
+  } catch (e) {
+    console.log(`note ${id}: line not cleared (${String(e).split('\n')[0]}), a fresh page for the next zone`);
+    page.__twStale = true;
   }
 }
 
 let pass = true, cur = null, onPage = 0;
 for (const z of zones) {
-  let result;
+  let result, lineName = null;
   const t = Date.now();
-  // a wait that timed out (the machine busy, T-788) is tried once more in a fresh page
+  // a wait that timed out (the machine busy, T-788) or a crashed page is tried once more in a fresh page
   for (let tries = 1; tries <= 2; tries++) {
     result = { city: z.id, checks: [], tries };
     try {
       if (!cur || onPage >= ZONES_PER_PAGE || cur.page.__twStale) {
-        if (cur) await cur.page.close().catch(() => {});
-        cur = await openPage();
+        if (cur) await closePage(cur);
+        cur = null;
+        cur = await within(openPage(), never, 300000, 'opening a page');
         onPage = 0;
       }
       onPage++;
-      await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result, multi && z !== zones[zones.length - 1] && onPage < ZONES_PER_PAGE);
+      lineName = await within(checkZone(cur.page, cur.errors, z.id, z.C, z.out, result), cur.dead, ZONE_LIMIT_MS, `${z.id}'s checks`);
       break;
     } catch (e) {
       // the page may be half way through an edit: the next try or zone gets a fresh one
       result.error = String(e?.stack ?? e).slice(0, 2000);
       console.log('FAIL', z.id, result.error.split('\n')[0]);
-      if (cur) await cur.page.close().catch(() => {});
+      if (cur) await closePage(cur);
       cur = null;
-      if (!(e?.name === 'TimeoutError' || /TimeoutError/.test(result.error))) break;
+      if (!(e?.name === 'TimeoutError' || /TimeoutError|page crashed/.test(result.error))) break;
     }
   }
   result.seconds = Math.round((Date.now() - t) / 100) / 10;
@@ -393,6 +423,8 @@ for (const z of zones) {
   const ok = result.checks.length === 8 && result.checks.every(c => c.ok);
   pass &&= ok;
   console.log(ok ? `PASS city-browser ${z.id}` : `FAIL city-browser ${z.id}`, `${result.seconds} s`);
+  // not after a page's last zone (T-925: that removal's solve hung a gate for 90 minutes)
+  if (multi && lineName && cur && z !== zones[zones.length - 1] && onPage < ZONES_PER_PAGE) await clearLine(cur, z.id, lineName);
 }
 await close();
 process.exit(pass ? 0 : 1);

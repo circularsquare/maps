@@ -601,8 +601,8 @@ def fetch(url, name=None):
         return path
     print(f"  downloading {url}", flush=True)
     tmp = f"{path}.{os.getpid()}.part"  # builds at once may fetch the same file (T-1065)
-    with requests.get(url, headers=UA, timeout=300, stream=True) as r:
-        r.raise_for_status()
+    import netget
+    with netget.request(url, headers=UA, timeout=300, stream=True) as r:
         with open(tmp, "wb") as f:
             for chunk in r.iter_content(1 << 20):
                 f.write(chunk)

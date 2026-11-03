@@ -143,14 +143,13 @@ def plan_country(row):
 def _cached(name, url):
     path = os.path.join(T562, name)
     if not os.path.exists(path):
-        import requests
-        import build_city as bc
+        import netget
         os.makedirs(T562, exist_ok=True)
-        r = requests.get(url, headers=bc.UA, timeout=600)
-        r.raise_for_status()
-        with open(path + ".part", "wb") as f:
+        r = netget.request(url, timeout=600)
+        tmp = f"{path}.{os.getpid()}.part"  # builds at once may fetch the same file
+        with open(tmp, "wb") as f:
             f.write(r.content)
-        os.replace(path + ".part", path)
+        netget.settle(tmp, path)
     return path
 
 

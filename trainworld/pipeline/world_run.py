@@ -32,9 +32,10 @@ see the solve's changes.
 
 A run goes a region at a time: rows sharing a Geofabrik extract, chained, in plan order. For each:
 download (or reuse) and read its extracts, then per row build_city, places, routes, merge_cells,
-nocar, everyday_rates (status "built"); then the gate on every built row, registered with its
-market pack against a snapshot taken before the region (status "shipped", or "parked" with the
-failing checks, unregistered again); then the region's downloads are deleted. After the last
+nocar, everyday_rates (status "built"); meanwhile the gate on the built rows in chunks (T-1978),
+each registered with its market pack against a snapshot taken before the chunk (status "shipped",
+or "parked" with the failing checks, unregistered again); then the region's downloads are deleted.
+The next region downloads and reads while this one builds (T-1980, one ahead). After the last
 region, the joint gravity groups the batch's gated packs joined, one solve a group for the whole
 batch (T-723), the group re-gated after it (a FAIL restores the group and parks its new packs);
 then market_zones and local trips, and a freeze of the data for publishing (pipeline/freeze.py,
@@ -90,10 +91,40 @@ MODULE_OUTLINES = {"england", "france", "germany", "usa"}  # plan_hooks giving a
 # over BIG_PEOPLE): the longest seen, a 20M pack's build, takes under an hour on 3 cores.
 STEP_LIMIT_S = {"build_city": 5400, "routes": 3600, "pack_gate": 5400, "intercity": 7200, None: 1800}
 BIG_PEOPLE = 15e6
+# T-1978: while a region builds, its built rows are gated in chunks of at least this many (each
+# chunk pays a snapshot, a register and a Vite start, about 2 minutes); the rest once its builds
+# end. 0: one gate after the builds. A chunk takes GATE_SLOTS of the run's build slots.
+GATE_CHUNK = int(os.environ.get("TW_GATE_CHUNK", 10))
+GATE_SLOTS = 2
 
 
 class RunFault(Exception):
     """A fault of the run, not of a row (T-764, T-773): the run stops and parks nothing for it."""
+
+
+class Slots:
+    """A run's build slots (T-1978). A taker marked `first` keeps builds from starting until it has
+    its slots: a builder gives its slot back and takes the next at once, so a gate would wait out
+    every build of the region otherwise."""
+
+    def __init__(self, n):
+        self.n, self.free, self.first = n, n, 0
+        self.cond = threading.Condition()
+
+    def take(self, k, first=False):
+        k = max(0, min(k, self.n))
+        with self.cond:
+            self.first += first
+            while self.free < k or (not first and self.first):
+                self.cond.wait()
+            self.first -= first
+            self.free -= k
+        return k
+
+    def give(self, k):
+        with self.cond:
+            self.free += k
+            self.cond.notify_all()
 
 
 def shared():
@@ -315,6 +346,10 @@ class Run:
         self.browser = not opts.get("no_browser") and not self.scratch
         self.port = int(opts.get("port", 6360))
         self.lock = threading.Lock()
+        # T-1978, T-1980: builds, a gate chunk during builds (GATE_SLOTS) and a region's read ahead
+        # (one) share the run's `workers` slots; gate chunks go one at a time
+        self.slots = Slots(self.workers)
+        self.gate_turn = threading.Lock()
         self.streak = (None, 0)  # T-775: the last park's reason, as compared, and how many in a row
         self.stopping = False
         self.vite = None
@@ -613,10 +648,8 @@ class Run:
         gated = []
         try:
             self.everyday = None if self.o.get("build_only") else self.build_everyday()
-            for k, reg in enumerate(regs, 1):
-                if self.stop_asked():
-                    break
-                gated += self.region(k, reg)
+            self.country_inputs(rows)
+            gated = self.run_regions(regs)
             if self.o.get("build_only"):
                 built = [i for i in self.report["rows"] if self.status(i) == "built"]
                 print(f"  built, for a run to gate: {' '.join(built) or 'none'}", flush=True)
@@ -808,6 +841,19 @@ class Run:
         print(f"  the gate's rates test built from {sim} in {time.time() - t0:.0f} s", flush=True)
         return out
 
+    def country_inputs(self, rows):
+        """T-1979: the national figures every planned row's build reads (pipeline/netget.py), fetched
+        once for the run's countries before any build: 9 builds asking the World Bank at once had it
+        reset them (Australia, 8 rows rebuilt). A failure only says so; each build asks again, with
+        retries."""
+        isos = sorted({r["iso2"] for r in rows if r.get("iso2")})
+        if not isos:
+            return
+        ok, secs, tail = self.step("netget", isos, self.logs / "country-inputs.log", threads=1, quiet=True)
+        print(f"  country inputs for {' '.join(isos)}: {'ok' if ok else 'not all fetched, the builds ask again'} {secs:.0f} s", flush=True)
+        if not ok:
+            self.report.setdefault("problems", []).append(f"country inputs not all fetched: {str(tail)[-300:]}")
+
     def on_ctrl_c(self, *_):
         if not self.stopping:
             print("\nctrl-c: stopping once the city under way is done (the steps keep running)", flush=True)
@@ -816,15 +862,58 @@ class Run:
     def rec(self, cid, **kv):
         self.report["rows"].setdefault(cid, {}).update(kv)
 
-    def region(self, k, reg):
+    def run_regions(self, regs):
+        """The regions as a pipeline, each in its own thread holding its extracts throughout (T-786).
+        Region k+1 downloads and reads while region k builds and gates (T-1980), one region ahead at
+        most (a GDAL read commits about 6 GB, T-1080): it reads once region k's builds have started,
+        and builds once region k's builds are done, while k's last gate chunk runs (T-1978). A fault
+        in one region stops the others at their next stage, and is raised here."""
+        n = len(regs)
+        may_read = [threading.Event() for _ in range(n + 1)]
+        may_build = [threading.Event() for _ in range(n + 1)]
+        may_read[0].set()
+        may_build[0].set()
+        out, errors, threads = [[] for _ in regs], [None] * n, []
+
+        def go(i):
+            try:
+                out[i] = self.region(i + 1, regs[i], (may_read[i], may_read[i + 1], may_build[i], may_build[i + 1]))
+            except BaseException as x:  # noqa: BLE001 (raised again in the main thread)
+                errors[i] = x
+                self.stopping = True
+            finally:
+                may_read[i + 1].set()
+                may_build[i + 1].set()
+
+        for i in range(n):
+            while not self.wait_or_stop(may_read[i]):
+                pass
+            if self.stop_asked():
+                break
+            t = threading.Thread(target=go, args=(i,), name=f"region{i + 1}", daemon=True)
+            t.start()
+            threads.append(t)
+        for t in threads:
+            while t.is_alive():
+                t.join(1)  # a join with a timeout lets ctrl-c reach the main thread
+        for x in errors:
+            if x is not None:
+                raise x
+        return [i for o in out for i in o]
+
+    def wait_or_stop(self, ev, secs=2.0):
+        """Wait for an event a while; True once it is set or the run is stopping."""
+        return ev.wait(secs) or self.stop_asked()
+
+    def region(self, k, reg, turns):
         """One region, holding its extracts (T-786: another run sharing one waits, since a region
         deletes its downloads and caches at the end; data/raw is this tree's in a scratch run too)."""
         with contextlib.ExitStack() as st:
             for e in sorted({e for r in reg for e in r["extracts"]}):
                 st.enter_context(self.held("extract-" + e.replace("/", "_"), f"region {k}", root=REAL))
-            return self.region_held(k, reg)
+            return self.region_held(k, reg, *turns)
 
-    def region_held(self, k, reg):
+    def region_held(self, k, reg, may_read, next_read, may_build, next_build):
         ids = [r["id"] for r in reg]
         exs = sorted({e for r in reg for e in r["extracts"]})
         rr = {"n": k, "extracts": exs, "rows": ids, "seconds": {}}
@@ -836,9 +925,13 @@ class Run:
         if stale:
             print(f"  unregistering {stale}: not shipped", flush=True)
             self.unregister(stale)
-        # downloads and reads, once a region
+        # downloads and reads, once a region, while the region before builds (T-1980)
         todo = [r for r in reg if not (r["status"] == "built" and self.built_ok(r["id"]))]
         if todo:
+            while not self.wait_or_stop(may_read):
+                pass
+            if self.stop_asked():
+                return []
             t = time.time()
             # osm_units' outline reads the admin relations, unless the country module draws its own
             admin = {e for r in todo if r.get("module") not in MODULE_OUTLINES for e in r["extracts"]}
@@ -849,7 +942,8 @@ class Run:
             for e in exs:
                 if e in failed:
                     continue
-                ok, _, tail = self.step("@read_extract", [e] + (["--admin"] if e in admin else []), f"{L}.read.log")
+                with self.slots_held(1, first=True):  # a read is one core, taken from the builds under way
+                    ok, _, tail = self.step("@read_extract", [e] + (["--admin"] if e in admin else []), f"{L}.read.log", threads=2)
                 if not ok:
                     failed[e] = tail
             self.made({e: sorted(set(self.caches(e)) - set(before[e])) for e in exs})
@@ -859,21 +953,87 @@ class Run:
                 if bad:
                     self.park(r["id"], f"extract {bad[0]}: {str(failed[bad[0]])[-300:]}")
             todo = [r for r in todo if not any(e in failed for e in r["extracts"])]
-            # builds, `workers` at a time
-            with ThreadPoolExecutor(self.workers) as pool:
-                list(pool.map(self.build_row, todo))
-        if self.stop_asked():
-            print("  stopped: the built rows are gated by the next run", flush=True)
-            return []
-        built = [r["id"] for r in reg if self.status(r["id"]) == "built"]
-        shipped = []
-        if built and not self.o.get("build_only"):
+        # builds once the region before has built, its gate's last chunk meanwhile (T-1978)
+        while not self.wait_or_stop(may_build):
+            pass
+        next_read.set()
+        built, done, kick = [r["id"] for r in reg if r not in todo and r["status"] == "built"], threading.Event(), threading.Event()
+        gater = None
+        if not self.o.get("build_only") and not self.stop_asked():
+            gater = ThreadPoolExecutor(1, thread_name_prefix=f"gate{k}")
+            gating = gater.submit(self.gate_chunks, k, ids, built, done, kick, rr)
+        try:
+            if todo and not self.stop_asked():
+                t = time.time()
+
+                def build(r):
+                    with self.slots_held(1):
+                        ok = self.build_row(r)
+                    if ok:
+                        with self.lock:
+                            built.append(r["id"])
+                        kick.set()
+                with ThreadPoolExecutor(self.workers) as pool:
+                    list(pool.map(build, todo))
+                rr["seconds"]["builds"] = round(time.time() - t)
+        finally:
+            done.set()
+            kick.set()
+            next_build.set()
             t = time.time()
-            shipped = self.gate(built, L)
-            rr["seconds"]["gate"] = round(time.time() - t)
+            shipped = gating.result() if gater else []
+            if gater:
+                gater.shutdown()
+                rr["seconds"]["gate_after_builds"] = round(time.time() - t)
+        if self.stop_asked():
+            print("  stopped: the region's built rows not gated yet are gated by the next run", flush=True)
+            return shipped
         if not self.o.get("keep_downloads"):
             rr["deleted"] = self.clean(exs)
         return shipped
+
+    def gate_chunks(self, k, ids, built, done, kick, rr):
+        """T-1978: the region's built rows gated in chunks (plan order within each) while its later
+        rows build: a chunk once GATE_CHUNK rows wait, the rest when the builds are done (`kick` is
+        set at each build's end). Returns the rows that ship."""
+        try:
+            return self._gate_chunks(k, ids, built, done, kick, rr)
+        except BaseException:
+            self.stopping = True  # a run fault: the builds under way finish, no new one starts
+            raise
+
+    def _gate_chunks(self, k, ids, built, done, kick, rr):
+        gated, shipped, n = set(), [], 0
+        rr["seconds"]["gate"] = 0
+        while True:
+            finished = done.is_set()
+            with self.lock:
+                ready = [i for i in ids if i in built and i not in gated]
+            if self.stop_asked() or (finished and not ready):
+                return shipped
+            if ready and (finished or (GATE_CHUNK and len(ready) >= GATE_CHUNK)):
+                n += 1
+                L = self.logs / (f"region{k}" if n == 1 else f"region{k}.{n}")
+                t = time.time()
+                with self.gate_turn, self.slots_held(GATE_SLOTS, first=True):
+                    print(f"  region {k} gate{'' if n == 1 else ' ' + str(n)}: {len(ready)} rows{'' if finished else ' (builds go on)'}", flush=True)
+                    shipped += self.gate(ready, L)
+                gated |= set(ready)
+                rr["seconds"]["gate"] += round(time.time() - t)
+                rr["gate_chunks"] = n
+                continue
+            kick.wait(5)
+            kick.clear()
+
+    @contextlib.contextmanager
+    def slots_held(self, n, first=False):
+        """n of the run's build slots (fewer when the run has fewer), held for the block; `first`
+        (a gate chunk, a read ahead) goes before builds waiting for one."""
+        n = self.slots.take(n, first)
+        try:
+            yield
+        finally:
+            self.slots.give(n)
 
     @staticmethod
     def caches(e):
@@ -966,6 +1126,7 @@ class Run:
             self.streak = (None, 0)
         self.rec(cid, name=r["name"], build_s=round(time.time() - t0), steps=steps)
         print(f"  {cid}: built in {time.time() - t0:.0f} s", flush=True)
+        return True
 
     # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern; the
     # terrain grid too, which zone_terrain.py makes only where none is (T-1986: Australia's lnc)
