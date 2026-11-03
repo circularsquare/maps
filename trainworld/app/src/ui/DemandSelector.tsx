@@ -15,16 +15,19 @@ import { Search } from "./Search";
 import { KeepDot } from "./KeepDot";
 import { EditNote } from "./EditNote";
 import { PassingNote } from "./PassingNote";
-import { DiagramButton } from "./DiagramButton";
+import { diagramShown } from "../diagram/view";
 import { live, mapBearing } from "../map/live";
 
-/** The map's upper left: the network diagram's button (T-2160), the demand buttons with the status tag to their right (T-349), and under
+/** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
  * "Saved only in this browser" dot beside it), the demand alert, what the last edit did (T-2125)
  * and a passing note (T-2166). */
 export function MapTopLeft() {
+  // T-2161: the map's rows say nothing about the network diagram; only the busy tag stays over it
+  if (diagramShown.value) return <div class="map-top-left">
+    <div class="map-top-row"><BusyTag /></div>
+  </div>;
   return <div class="map-top-left">
-    <DiagramButton />
     <div class="map-top-row">
       <DemandSelector />
       <StatusTag />

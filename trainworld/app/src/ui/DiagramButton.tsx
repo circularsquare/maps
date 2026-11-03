@@ -1,6 +1,6 @@
 import { diagramShown } from "../diagram/view";
 
-/** T-2160: the network diagram in place of the map, and back (key M); the rough view until T-2161. */
+/** T-2160: the network diagram in place of the map, and back (key M). */
 export function DiagramButton() {
   const on = diagramShown.value;
   const tip = on ? "Show map (M)" : "Show network diagram (M)";

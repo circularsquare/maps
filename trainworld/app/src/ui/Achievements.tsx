@@ -15,6 +15,7 @@ import { ask, selection, tab } from "../game/ui";
 import { gamesLoaded } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 import { LeaderboardButton } from "./Leaderboard";
+import { DiagramButton } from "./DiagramButton";
 import { savesOpen } from "./SavesPanel";
 import { Icon } from "./widgets";
 import "./achievements.css";
@@ -28,9 +29,11 @@ export function AchievementsButton() {
   const m = moneyState.value;
   const sandbox = !m || m.mode === "sandbox";
   const on = selection.value?.kind === "achievements";
-  if (sandbox && accountState.value !== "on") return null;
+  // T-2161: the network diagram's button at the row's left, in every mode (Anita, 2026-11-03)
+  if (sandbox && accountState.value !== "on") return <div class="ach-head"><DiagramButton /></div>;
   return (
     <div class="ach-head">
+      <DiagramButton />
       <LeaderboardButton />
       {!sandbox && <button class={"btn text ach-open" + (on ? " on" : "")} data-tip="Achievements" aria-label="Achievements" aria-pressed={on}
         onClick={() => (on ? (selection.value = null) : openAchievements())}>
@@ -59,7 +62,7 @@ export function Medal({ metal, of }: { metal: Metal; of: RibbonOf }) {
 }
 
 interface Toast { id: number; title: string; line?: string; medal?: { metal: Metal; of: RibbonOf } }
-const HOLD_MS = 5000, FADE_MS = 600, GAP_MS = 1000, MAX_SHOWN = 3;
+const HOLD_MS = 5000, FADE_MS = 1200, GAP_MS = 1000, MAX_SHOWN = 3;
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
 const waiting = signal<Toast[]>([]);

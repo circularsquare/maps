@@ -1,7 +1,7 @@
-// The network diagram drawn (T-2160's rough view, before T-2161's): each line one continuous ribbon
-// through its pieces, at its slot's offset, corners rounded so a bundle's bends are concentric; a
-// white pill with an ink outline across the lines stopping at a station. Paths are in layout units
-// (y north), drawn through one canvas transform. Port of the round 2 mockups' draw2.py.
+// The network diagram drawn (T-2160, T-2161; docs/ui-diagram.md): each line one continuous ribbon
+// through its pieces, at its slot's offset, corners rounded so a bundle's bends are concentric; each
+// station a white pill with an ink outline along an axis its lines cross, its stops where they cross it.
+// Paths are in layout units (y north), drawn through one canvas transform.
 
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout, Piece } from "./layout";
@@ -11,9 +11,15 @@ export const STROKE_SHARE = 5 / 6.4;
 /** a corner's radius is this many stroke widths, plus the bundle's half width and the offset */
 const RADIUS_W = 6;
 /** a pill's half width and its outline, in stroke widths */
-const PILL_R = 0.95, PILL_OUTLINE = 0.32;
+export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
 /** stop points of one station this many pitches apart or nearer share a pill */
 const PILL_JOIN = 1.6;
+/** a line running along a pill this many pitches off its axis still lies under it */
+const ALONG_SLACK = 0.5;
+/** a passage between pills of one station is this share of a pill wide */
+const PASSAGE = 0.45;
+/** pills are drawn from a pitch this many device px */
+const PILL_MIN_PX = 2.5;
 
 export interface Drawing {
   /** a pitch, stroke width, layout units */
@@ -22,6 +28,8 @@ export interface Drawing {
   lines: { colour: string; path: Path2D }[];
   /** per pill: its two ends and how far its points lie off its axis */
   pills: [number, number, number, number, number][];
+  /** per pill, the graph node (station) it is for */
+  pillOf: number[];
   /** joins between pills of one station: two centres */
   passages: [number, number, number, number][];
   box: [number, number, number, number];
@@ -81,6 +89,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   }
   const lines: Drawing["lines"] = [];
   const stopsAt = new Map<number, [number, number][]>();
+  const Vs: [DiagramGraph["lines"][number], V[]][] = [];
   for (const ln of g.lines) {
     const ch = ln.chain, c = ln.colour;
     const V: V[] = [];
@@ -131,90 +140,180 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
       V.push(...run);
       i = j;
     }
-    const path = filleted(V, R0);
-    if (path) lines.push({ colour: c, path });
-    V.forEach((v) => {
-      if (v[4] < 0 || !ln.stop[v[4]]) return;
-      const k = ch[v[4]];
-      let s = stopsAt.get(k);
-      if (!s) stopsAt.set(k, (s = []));
-      s.push([v[0], v[1]]);
-    });
+    Vs.push([ln, V]);
   }
-  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [];
-  for (const raw of stopsAt.values()) {
-    const seen = new Set<string>(), pts: [number, number][] = [];
-    for (const p of raw) {
-      const key = `${p[0].toFixed(3)},${p[1].toFixed(3)}`;
-      if (!seen.has(key)) seen.add(key), pts.push(p);
-    }
-    const left = new Set(pts.map((_, i) => i)), centres: [number, number][] = [];
-    while (left.size) {
-      const g0 = [left.values().next().value as number];
-      left.delete(g0[0]);
-      for (let grew = true; grew; ) {
-        grew = false;
-        for (const j of [...left]) if (g0.some((i) => Math.hypot(pts[j][0] - pts[i][0], pts[j][1] - pts[i][1]) < PILL_JOIN * pitch)) g0.push(j), left.delete(j), (grew = true);
+  // Each station's pill lies along an axis through its place, of the four octilinear ones the one
+  // every line stopping there crosses, with the shortest pill; a line's stop is where its drawn
+  // ribbon crosses the axis, and a line ending there has its last run carried on, or cut back, to it.
+  const ribs = Vs.map(([, V]) => {
+    const r: Ribbon = { pts: [], vi: [] };
+    return { r, path: filleted(V, R0, r) };
+  });
+  type Occ = { li: number; i0: number; i1: number; end: -1 | 0 | 1 };
+  const occAt = new Map<number, Occ[]>();
+  Vs.forEach(([ln, V], li) => {
+    const seenAt = new Set<number>();
+    V.forEach((v, i) => {
+      if (v[4] < 0 || !ln.stop[v[4]] || seenAt.has(v[4])) return;
+      seenAt.add(v[4]);
+      let i1 = i;
+      while (i1 + 1 < V.length && V[i1 + 1][4] === v[4]) i1++;
+      const k = ln.chain[v[4]];
+      let o = occAt.get(k);
+      if (!o) occAt.set(k, (o = []));
+      o.push({ li, i0: i, i1, end: V.length < 2 ? -1 : i === 0 ? 0 : i1 === V.length - 1 ? 1 : -1 });
+    });
+  });
+  /** where a line's end leg, carried on or cut back, meets an axis */
+  const endOn = (V: V[], end: 0 | 1, cx: number, cy: number, ax: [number, number]): [number, number] | null => {
+    const v = V[end ? V.length - 1 : 0], o = V[end ? V.length - 2 : 1];
+    const dx = v[0] - o[0], dy = v[1] - o[1], cr = dx * ax[1] - dy * ax[0];
+    if (Math.abs(cr) < 0.2 * Math.hypot(dx, dy)) return null;
+    const t = ((cx - o[0]) * ax[1] - (cy - o[1]) * ax[0]) / cr;
+    return t > 0.3 && Math.abs(t - 1) * Math.hypot(dx, dy) < 3 * pitch ? [o[0] + dx * t, o[1] + dy * t] : null;
+  };
+  const AX: [number, number][] = [0, 1, 2, 3].map((q) => [Math.cos((q * Math.PI) / 4), Math.sin((q * Math.PI) / 4)]);
+  const axisOf = new Map<number, [number, number]>();
+  const dirty = new Set<number>();
+  for (const [k, occ] of occAt) {
+    const cx = lay.x[k], cy = lay.y[k];
+    let best = Infinity, bq = 0;
+    AX.forEach((ax, q) => {
+      let miss = 0, t0 = Infinity, t1 = -Infinity;
+      for (const o of occ) {
+        const p = o.end >= 0 ? endOn(Vs[o.li][1], o.end as 0 | 1, cx, cy, ax) : stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch).cross;
+        if (!p) {
+          miss++;
+          continue;
+        }
+        const t = (p[0] - cx) * ax[0] + (p[1] - cy) * ax[1];
+        (t0 = Math.min(t0, t)), (t1 = Math.max(t1, t));
       }
-      const cap = capsule(g0.map((i) => pts[i]));
-      pills.push(cap);
-      centres.push([(cap[0] + cap[2]) / 2, (cap[1] + cap[3]) / 2]);
+      const cost = miss * 1e3 * pitch + (t1 > t0 ? t1 - t0 : 0) + q * 1e-6;
+      if (cost < best) (best = cost), (bq = q);
+    });
+    const ax = AX[bq];
+    axisOf.set(k, ax);
+    for (const o of occ) {
+      if (o.end < 0) continue;
+      const V = Vs[o.li][1], p = endOn(V, o.end as 0 | 1, cx, cy, ax), at = o.end ? V.length - 1 : 0;
+      if (p) (V[at] = [p[0], p[1], V[at][2], V[at][3], V[at][4]]), dirty.add(o.li);
     }
-    for (let k = 1; k < centres.length; k++) passages.push([centres[0][0], centres[0][1], centres[k][0], centres[k][1]]);
+  }
+  for (const li of dirty) {
+    const r: Ribbon = { pts: [], vi: [] };
+    ribs[li] = { r, path: filleted(Vs[li][1], R0, r) };
+  }
+  ribs.forEach(({ path }, li) => path && lines.push({ colour: Vs[li][0].colour, path }));
+  for (const [k, occ] of occAt) {
+    const ax = axisOf.get(k)!, list: [number, number][] = [];
+    for (const o of occ) {
+      const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, lay.x[k], lay.y[k], ax, pitch);
+      list.push(s.cross ?? s.near);
+    }
+    stopsAt.set(k, list);
+  }
+  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [];
+  for (const [k, raw] of stopsAt) {
+    const ax = axisOf.get(k)!, cx = lay.x[k], cy = lay.y[k];
+    // along the axis: where each stop is, and how far off it (only a line running along it is)
+    const at = raw.map(([px, py]) => [(px - cx) * ax[0] + (py - cy) * ax[1], (px - cx) * ax[1] - (py - cy) * ax[0], px, py]).sort((a, b) => a[0] - b[0]);
+    const on = at.filter((p) => Math.abs(p[1]) <= ALONG_SLACK * pitch), off = at.filter((p) => Math.abs(p[1]) > ALONG_SLACK * pitch);
+    const centres: [number, number][] = [];
+    for (let i = 0; i < on.length; ) {
+      let j = i;
+      while (j + 1 < on.length && on[j + 1][0] - on[j][0] < PILL_JOIN * pitch) j++;
+      const t0 = on[i][0], t1 = on[j][0];
+      pills.push([cx + ax[0] * t0, cy + ax[1] * t0, cx + ax[0] * t1, cy + ax[1] * t1, 0]);
+      pillOf.push(k);
+      centres.push([cx + ax[0] * (t0 + t1) / 2, cy + ax[1] * (t0 + t1) / 2]);
+      i = j + 1;
+    }
+    for (let q = 1; q < centres.length; q++) passages.push([centres[q - 1][0], centres[q - 1][1], centres[q][0], centres[q][1]]);
+    // a line running along the axis, off it: a round stop on its own ribbon, joined to the nearest pill
+    const dots: [number, number][] = [];
+    for (const [, , px, py] of off) {
+      if (dots.some((d) => Math.hypot(d[0] - px, d[1] - py) < 0.5 * pitch)) continue;
+      dots.push([px, py]);
+      pills.push([px, py, px, py, 0]);
+      pillOf.push(k);
+      let bq = -1, bd = Infinity;
+      centres.forEach((c, q) => {
+        const d = Math.hypot(c[0] - px, c[1] - py);
+        if (d < bd) (bd = d), (bq = q);
+      });
+      if (bq >= 0) passages.push([centres[bq][0], centres[bq][1], px, py]);
+      else centres.push([px, py]);
+    }
   }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, pills, passages, box: [x0, y0, x1, y1] };
+  return { pitch, stroke: W, lines, pills, pillOf, passages, box: [x0, y0, x1, y1] };
 }
 
-/** a path through V with each corner rounded, its radius by offset so a bundle's bends are concentric */
-function filleted(V: V[], R0: number): Path2D | null {
-  const P: V[] = [];
-  for (const v of V) if (!P.length || Math.hypot(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v);
+/** a line's drawn ribbon, sampled: x, y pairs, and per point the index in V it belongs to */
+interface Ribbon { pts: number[]; vi: number[] }
+const CURVE_SAMPLES = 8;
+
+/** a path through V with each corner rounded, its radius by offset so a bundle's bends are concentric;
+ * `out` gets the same path sampled */
+function filleted(V: V[], R0: number, out: Ribbon): Path2D | null {
+  const P: V[] = [], src: number[] = [];
+  V.forEach((v, i) => {
+    if (!P.length || Math.hypot(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v), src.push(i);
+  });
   if (P.length < 2) return null;
   const path = new Path2D();
+  const at = (x: number, y: number, i: number) => {
+    out.pts.push(x, y);
+    out.vi.push(src[i]);
+  };
   path.moveTo(P[0][0], P[0][1]);
+  at(P[0][0], P[0][1], 0);
   for (let i = 1; i < P.length - 1; i++) {
     let ax = P[i][0] - P[i - 1][0], ay = P[i][1] - P[i - 1][1], bx = P[i + 1][0] - P[i][0], by = P[i + 1][1] - P[i][1];
     const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
     ax /= la, ay /= la, bx /= lb, by /= lb;
     const th = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
-    if (Math.abs(th) < Math.PI / 180) continue;
+    if (Math.abs(th) < Math.PI / 180) {
+      at(P[i][0], P[i][1], i);
+      continue;
+    }
     const r = R0 + P[i][3] + (th > 0 ? -P[i][2] : P[i][2]);
     const t = Math.min(Math.max(0, r) * Math.tan(Math.abs(th) / 2), 0.49 * la, 0.49 * lb);
-    path.lineTo(P[i][0] - ax * t, P[i][1] - ay * t);
-    path.quadraticCurveTo(P[i][0], P[i][1], P[i][0] + bx * t, P[i][1] + by * t);
+    const x0 = P[i][0] - ax * t, y0 = P[i][1] - ay * t, x2 = P[i][0] + bx * t, y2 = P[i][1] + by * t;
+    path.lineTo(x0, y0);
+    path.quadraticCurveTo(P[i][0], P[i][1], x2, y2);
+    for (let k = 0; k <= CURVE_SAMPLES; k++) {
+      const u = k / CURVE_SAMPLES, a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u;
+      at(a * x0 + b * P[i][0] + c * x2, a * y0 + b * P[i][1] + c * y2, i);
+    }
   }
   path.lineTo(P[P.length - 1][0], P[P.length - 1][1]);
+  at(P[P.length - 1][0], P[P.length - 1][1], P.length - 1);
   return path;
 }
 
-/** a pill over points: the ends of their main axis, and how far the rest lie off it */
-function capsule(pts: [number, number][]): [number, number, number, number, number] {
-  if (pts.length === 1) return [pts[0][0], pts[0][1], pts[0][0], pts[0][1], 0];
-  let cx = 0, cy = 0;
-  for (const p of pts) (cx += p[0]), (cy += p[1]);
-  cx /= pts.length;
-  cy /= pts.length;
-  let sxx = 0, sxy = 0, syy = 0;
-  for (const p of pts) {
-    const dx = p[0] - cx, dy = p[1] - cy;
-    sxx += dx * dx;
-    sxy += dx * dy;
-    syy += dy * dy;
+/** where a ribbon's points from V index `i0` to `i1` cross the line through (cx, cy) along `ax`,
+ * nearest that place; failing a crossing, its point nearest the line */
+function stopOn(r: Ribbon, i0: number, i1: number, cx: number, cy: number, ax: [number, number], reach: number): { cross: [number, number] | null; near: [number, number] } {
+  const side = (j: number) => (r.pts[j * 2] - cx) * ax[1] - (r.pts[j * 2 + 1] - cy) * ax[0];
+  let best: [number, number] | null = null, bd = Infinity, near: [number, number] = [cx, cy], nd = Infinity;
+  for (let j = 0; j < r.vi.length; j++) {
+    if (r.vi[j] < i0 || r.vi[j] > i1) continue;
+    const s0 = side(j), dc = Math.hypot(r.pts[j * 2] - cx, r.pts[j * 2 + 1] - cy);
+    if (dc < nd) (nd = dc), (near = [r.pts[j * 2], r.pts[j * 2 + 1]]);
+    if (j + 1 >= r.vi.length || r.vi[j + 1] > i1) continue;
+    const s1 = side(j + 1);
+    if ((s0 > 0) === (s1 > 0) && s0 !== 0) continue;
+    const f = s0 === s1 ? 0 : s0 / (s0 - s1), px = r.pts[j * 2] + (r.pts[j * 2 + 2] - r.pts[j * 2]) * f, py = r.pts[j * 2 + 1] + (r.pts[j * 2 + 3] - r.pts[j * 2 + 1]) * f;
+    const d = Math.hypot(px - cx, py - cy);
+    if (d < bd) (bd = d), (best = [px, py]);
   }
-  const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy), ux = Math.cos(ang), uy = Math.sin(ang);
-  let t0 = Infinity, t1 = -Infinity, s0 = Infinity, s1 = -Infinity, sm = 0;
-  for (const p of pts) {
-    const dx = p[0] - cx, dy = p[1] - cy, t = dx * ux + dy * uy, s = -dx * uy + dy * ux;
-    t0 = Math.min(t0, t), t1 = Math.max(t1, t), s0 = Math.min(s0, s), s1 = Math.max(s1, s);
-    sm += s;
-  }
-  sm /= pts.length;
-  const ox = -uy * sm, oy = ux * sm;
-  return [cx + ux * t0 + ox, cy + uy * t0 + oy, cx + ux * t1 + ox, cy + uy * t1 + oy, pts.length > 2 ? Math.max(sm - s0, s1 - sm) : 0];
+  // a crossing much farther off than the ribbon's nearest point is another stretch of it
+  return { cross: best && bd < nd + 2 * reach ? best : null, near };
 }
 
 export interface DiagramTheme { bg: string; ink: string; pill: string }
@@ -236,6 +335,8 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.strokeStyle = l.colour;
     ctx.stroke(l.path);
   }
+  // far out a pill is a speck on its lines: none
+  if (d.pitch * scale < PILL_MIN_PX) return;
   const rp = PILL_R * d.stroke, ol = PILL_OUTLINE * d.stroke;
   const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string) => {
     ctx.strokeStyle = colour;
@@ -245,8 +346,8 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.lineTo(x1 + (x0 === x1 && y0 === y1 ? 1e-6 : 0), y1);
     ctx.stroke();
   };
-  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * 0.9 * 2 + 2 * ol, theme.ink);
-  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * 0.9 * 2, theme.pill);
+  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * PASSAGE * 2 + 2 * ol, theme.ink);
+  for (const [x0, y0, x1, y1] of d.passages) bar(x0, y0, x1, y1, rp * PASSAGE * 2, theme.pill);
   for (const p of d.pills) bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * ol + 2 * p[4], theme.ink);
   for (const p of d.pills) bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * p[4], theme.pill);
 }

@@ -6,14 +6,13 @@ Updated: 2026-11-03 11:55 (context past 500k: a fresh orchestrator can take over
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master 00e3d300. Today (maps-0f): 5faa828f (achievements, edit note, profit history, tutorial, bands, phone memory),
+- master afda82d7 (handoff, T-2207 notes, merge help; no app change since 8800's 00e3d300 but that one line). Today (maps-0f): 5faa828f (achievements, edit note, profit history, tutorial, bands, phone memory),
   a273050d (T-2104 fare split), a53f0cd8 (T-2064 real save all `sep`), 48b7ae8b (T-2153 keep last 2 cities, UI batch),
   57e1e7cc (notes), a5a5ce4b (achievement rings, band fixes T-2140/82/83/84, ferry design, late-game research),
   90981710 (T-2185 merges marked), 00e3d300 (diagram stages 1-2 for every player).
 - **8800 = build 831 (00e3d300)**, freeze 20261103-051954, smoke 23/23 light and dark. LIVE = 821 (R2
   `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word (recipe below).
-- Uncommitted: capacityKinds.ts merge help (mine: "Place the merge farther away ... or run fewer trains."), notes/T-2207.md
-  (design done), the running agents' files, India's (pipeline/tier0.py, world_plan.json, app/src/game/registry.json +
+- Uncommitted: the running agents' files, India's (pipeline/tier0.py, world_plan.json, app/src/game/registry.json +
   market-rows.json, notes/T-2111.md: never commit those until India lands), TODO.md (Anita's).
 - **Cores cap 15** since ~11:50 (Anita out); `python cores.py cap 10` when she's back at the machine.
 - Worktrees: .tw-trees/t1734 (kept, T-1734), t1849, t2193 (agents running). Land with `checks/agent-tree.mjs land <name>
@@ -38,13 +37,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - a0aec0944e89e200c T-2180 edit note down both ways + "18 cities" (Vite 6182); long-running, ask if quiet.
 - a164858ef4917b379 T-2161 + T-2160 spacing: diagram interchanges, view; also move the diagram button to the Cities
   tab's top row, left (Vite 6186).
-- a335231643fa865c6 T-2221 achievement tweaks: smaller rings set lower, "/100M", smaller medals, toast fades (Vite 6181).
+- T-2221 DONE ~12:15 (string "of 100M" -> "/100M"); its hunks of Achievements.tsx/achievements.css are STAGED (not
+  the T-2161 DiagramButton hunks). ARCHIVE also shows T-2186, T-2161, T-2160 done (reports pending): commit all together.
 - ad948a26ee8f95ddc T-2222 band snaps to own track at one zoom (her shot5) + T-2223 gap looks to show her (Vite 6189).
 - a80cbe682243da006 T-2192 ferries F1 routes (main, Vite 6187); told: one tool (ports only, no water points),
   refusal "No water path found"; writes "F1 -> F2 route format" in notes/T-2177.md.
 - a7f9db866e5028da9 T-2193 ferries F2 sim line kind, tree t2193 (WASM + LFR1 save block).
 - a549624d4ab855dea T-1849 corridor modes speedup, tree t1849 (re-measuring after T-2122 first).
-- ad297ba0d90ddda72 T-2208 station buildings design (notes/T-2208.md, mockups artifacts/trainworld/t2208/).
+- T-2208 station buildings design DONE ~12:10 (notes/T-2208.md, review/station-building-shinjuku.png, uncommitted):
+  stages T-2217 (sim+save BLD1, own tree), T-2218 tool, T-2219 drawing, T-2220 the 0.8 change rule. Waits on her read;
+  her calls: hall room drawing-only or a real limit; $2,000/m2. I suggested dropping the hover line "Click, then draw
+  its outline on the map." (an interaction instruction).
 Each reports by SubagentHandback; files listed in their reports. Commit each set when it reports (smoke on its Vite
 was run by the agent; the 8800 build typechecks the commit).
 

@@ -1,4 +1,4 @@
-// The network diagram's view, rough (T-2160; T-2161 builds the real one): the button at the map's
+// The network diagram's view (T-2160, T-2161): the button at the map's
 // upper left and key M swap the map for a 2D canvas of the laid-out diagram (ribbons, rounded bends,
 // pills, no names yet), drag to pan, wheel to zoom. While it is up the clock worker posts the graph
 // after each network state; the layout worker lays it out, one at a time, the newest waiting next,
@@ -12,6 +12,7 @@ import { drawing, paint, type Drawing } from "./draw";
 import { keyIsTheirs } from "../ui/keys";
 import { live } from "../map/live";
 import { toLocal } from "../map/geo";
+import { hideBusy, showBusy } from "../game/busy";
 
 /** whether the diagram is up instead of the map */
 export const diagramShown = signal(false);
@@ -57,7 +58,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         const { graph, layout } = e.data;
         shown = { graph, d: drawing(graph, layout), x: layout.x, y: layout.y };
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: layout.ms, complexes: graph.key.length, pieces: layout.pieces.length, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); } };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: layout.ms, complexes: graph.key.length, pieces: layout.pieces.length, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; } };
+        if (busyToken >= 0) (hideBusy(busyToken), (busyToken = -1));
         if (!placed) place(graph, layout.x, layout.y, shown.d.pitch);
         draw();
         const next = waiting;
@@ -79,10 +81,16 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const theme = () => {
     const s = getComputedStyle(document.body);
     const v = (k: string, d: string) => s.getPropertyValue(k).trim() || d;
-    const dark = document.documentElement.dataset.shade === "dark";
-    return { bg: v("--bg", "#fbf5ef"), ink: v("--net-ink", "#2b2b2b"), pill: dark ? v("--bg", "#2b2428") : "#ffffff" };
+    // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them
+    return { bg: v("--bg", "#fbf5ef"), ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff" };
   };
+  // pans and zooms draw once a frame
+  let frame = 0;
   const draw = () => {
+    if (!frame) frame = requestAnimationFrame(paintNow);
+  };
+  const paintNow = () => {
+    frame = 0;
     if (!diagramShown.peek()) return;
     const dpr = devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) (canvas.width = Math.round(w * dpr)), (canvas.height = Math.round(h * dpr));
@@ -97,9 +105,13 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     paint(ctx, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, t);
   };
   new ResizeObserver(() => draw()).observe(canvas);
+  // the first layout is a few seconds; the busy tag says so until it is up
+  let busyToken = -1;
   diagramShown.subscribe((on) => {
     canvas.style.display = on ? "block" : "none";
     client.post({ kind: "diagram", on });
+    if (on && !shown && busyToken < 0) busyToken = showBusy("Calculating diagram");
+    if (!on && busyToken >= 0) (hideBusy(busyToken), (busyToken = -1));
     if (on) draw();
   });
   // drag to pan, wheel to zoom about the pointer

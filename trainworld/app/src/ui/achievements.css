@@ -15,6 +15,8 @@
 .ach-open svg { color: var(--accent); }
 .ach-head .btn.lb-open { width: 24px; height: 24px; border: 1px solid var(--rule); color: var(--accent); }
 .ach-head .btn.lb-open:hover { color: var(--accent); background: var(--tint); }
+/* T-2161: the network diagram's button at the row's left */
+.ach-head .map-diagram { margin-right: auto; width: 24px; height: 24px; }
 .ach-mark { display: inline-flex; color: var(--accent); flex: none; }
 .title .ach-mark svg { width: 20px; height: 20px; }
 
@@ -34,18 +36,18 @@ svg.ach-medal { width: 16px; height: 22px; flex: none; stroke: none; overflow: v
 .ach-slot.empty { box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--rule) 70%, var(--bg)); }
 
 /* a tiered achievement: its name, its medals under it, the ring at the right */
-.rows > li.ach-tier { display: flex; align-items: stretch; gap: 10px; padding: 4px 0; }
-.rows > li.ach-tier + li.ach-tier { margin-top: 6px; }
-.ach-left { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0 2px; }
+.rows > li.ach-tier { display: flex; align-items: flex-start; gap: 10px; padding: 2px 0; }
+.rows > li.ach-tier + li.ach-tier { margin-top: 2px; }
+.ach-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-top: 3px; }
 .ach-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ach-medals { display: flex; gap: 6px; }
-.ach-medals .ach-slot, .ach-medals svg.ach-medal { width: 20px; height: 27px; }
-.ach-dial { position: relative; flex: none; width: 68px; height: 68px; }
-svg.ach-ring { width: 68px; height: 68px; display: block; stroke-width: 6; }
+.ach-medals { display: flex; gap: 5px; }
+.ach-dial { position: relative; flex: none; width: 54px; height: 54px; margin-top: 4px; }
+svg.ach-ring { width: 54px; height: 54px; display: block; stroke-width: 6; }
 .ach-ring .track { stroke: color-mix(in srgb, var(--rib) 18%, var(--bg)); }
 .ach-ring .fill { stroke: var(--rib); stroke-linecap: round; }
-.ach-fig { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; }
-.ach-fig b { font-size: 13px; }
+/* 1 px below the middle: the figures' line boxes sit high for their digits */
+.ach-fig { position: absolute; inset: 1px 0 -1px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.ach-fig b { font-size: 12px; }
 .ach-fig .muted { font-size: 11px; }
 
 /* the firsts: a gold medal once earned, else its place; the day at the right */
@@ -57,12 +59,13 @@ svg.ach-ring { width: 68px; height: 68px; display: block; stroke-width: 6; }
 .ach-toasts { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 0 0 10px 10px; }
 .ach-toast { display: flex; align-items: center; gap: 8px; max-width: 280px; padding: 6px 10px 6px 8px; text-align: left; cursor: pointer;
   background: var(--bg); border: 1px solid var(--rule); color: var(--text); font-size: 12px; line-height: 1.3;
-  animation: ach-rise 150ms ease-out; transition: opacity 600ms linear; }
+  animation: ach-rise 150ms ease-out !important; transition: opacity 1200ms ease-in !important; }
+/* the !important rules above outrank style.css's general no-animation rule, as .spin's does */
 .ach-toast.out { opacity: 0; }
 .ach-toast .ach-mark svg { width: 16px; height: 16px; }
 .ach-words { display: flex; flex-direction: column; min-width: 0; }
 @keyframes ach-rise { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ach-toast { animation: none !important; } }
 /* a phone held upright: one toast, its second line cut to one */
 @media (max-width: 600px) and (min-height: 560px) {
   .ach-toasts { margin-right: 10px; }

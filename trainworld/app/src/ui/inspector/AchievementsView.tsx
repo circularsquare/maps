@@ -53,7 +53,7 @@ function TierRow({ t, got }: { t: Tiered; got: Record<string, Achieved> }) {
         <Ring p={p} />
         <span class="ach-fig">
           <b class="num">{f ? label(f.v) : "–"}</b>
-          {f && next !== undefined && <span class="muted num">of {label(next)}</span>}
+          {f && next !== undefined && <span class="muted num">/{label(next)}</span>}
         </span>
       </div>
     </li>

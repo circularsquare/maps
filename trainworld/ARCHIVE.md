@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2186 [P2] Trains fill to 150%. Done 2026-11-03 (agent t2186): rated 160 a car, crush 240; crowding still from 112, 3 at 100%, 10.8 at 150%; gauge's second band. Rail +1.2% nyc, +0.06% tyo, +0.9% Anita's save (T-2147 measured about +4% with crowding from 168). notes/T-2186.md.
+- T-2221 [P3] Achievements view tweaks. Done 2026-11-03 (agent t2179): rings 54 px and lower, "/100M" under the figure, which sits 1 px lower, medals 16 px, rows tighter; the toast fades over 1.2 s (the general no-animation rule had cut it). Shots artifacts/trainworld/t2179/*-v6.png.
+- T-2161 [P3] Network diagram stage 3, the view and its drawing. Done 2026-11-03 (agent t2161): pills along an octilinear axis through each station, stops where the ribbons cross it, so every pill is a clean capsule (widest 1.98 pitches); the button on the Cities tab's top row; paint under 1 ms. Hooks left: T-2206. notes/T-2146.md.
+- T-2160 [P3] Network diagram stage 2, the layout worker. Done 2026-11-03 (agents t2159, t2161): angles within 0.5 degrees, New York 3.2 s, Tokyo 5.4 s, rebuild 0.03 hops; close pairs 623 to 128 (New York), 902 to 181 (Tokyo), the rest T-2205. notes/T-2146.md.
 - T-2203 [P3] Big stations. Dropped 2026-11-03 (Anita: a bigger station would overlap the parallel stations players build, since stations don't collide); replaced by T-2208's drawn station buildings.
 - T-2159 [P3] Network diagram stage 1, the graph. Done 2026-11-03 (agent t2159): `diagram/graph.ts` in the clock worker while the diagram is shown; New York 855 complexes, 940 edges, 34 ms; the 2 and 3 on the 1's edges 96 St to Times Sq. notes/T-2146.md.
 

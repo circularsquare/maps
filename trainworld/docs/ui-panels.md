@@ -732,16 +732,16 @@ keeps what it had and earns no more.
 - **The view** (selection `achievements`): the medal and "Achievements"; each tiered one a row with its
   name at the top left, under it a place per tier holding the tier's medal once earned or a faint outline
   where it would go (hover the tier, and once earned when, "10 cities served, reached on Monday, day 406,
-  at 14:08" on the game clock), and at the right a 68 px ring in the achievement's colour on a pale
+  at 14:08" on the game clock), and at the right a 54 px ring in the achievement's colour on a pale
   track of it, filling clockwise from the top from zero toward the next tier, the figure now in its
-  middle and "of 100M", the next tier, small under it; past the top tier the ring is full and the figure
+  middle and "/100M", the next tier, small under it; past the top tier the ring is full and the figure
   alone (hover, for the busiest station or line, which). Then, after a gap, the firsts: a gold medal once
   earned, else an outline in its place, the name, "day 406" at the right; one not earned is muted with
   its rule in the hover, an earned one's hover says what earned it and when.
 - **The toast**: at the map's bottom left, 10 px in, above the tool notes (`#tools`), at most 280 px
   wide: the step's medal (the highest tier's, or gold for a first; the folded one the accent's medal icon), the name in bold, one muted line of what was reached ("1M riders/day on
-  Line 1a"). A 150 ms rise (none with reduced motion), 5 s held (the pointer over it holds it), a 0.6 s
-  fade, in real seconds. Up to three stacked, newest at the bottom, the next shown at least 1 s after the
+  Line 1a"). A 150 ms rise (none with reduced motion), 5 s held (the pointer over it holds it), a 1.2 s
+  fade [T-2221], in real seconds. Up to three stacked, newest at the bottom, the next shown at least 1 s after the
   last; more than three waiting fold into one, "4 more achievements". A click opens the view. They wait
   while the start menu, the saved games, a confirmation, the leaderboards or the account panel is up, or
   the tab is hidden, and go with F2. A phone held upright shows one at a time, its line cut to one.

@@ -37,17 +37,23 @@ export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room
 export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, roundsA: 10, roundsB: 30, iters: 400 };
 
 /** a segment this near a 45 degree direction is snapped onto it */
-const SNAP_DEG = 14;
+const SNAP_DEG = 11;
 /** a segment this near is drawn straight; others get two legs */
 const STRAIGHT_DEG = 0.5;
 /** a segment's stations may lie this share of the median hop off its drawing before it is split */
-const TOL_SHARE = 0.9;
-const W_LEN = 0.6, W_STR = 0.6, W_PUSH = 0.8, W_SNAP = 30;
+const TOL_SHARE = 0.5;
+const W_LEN = 0.6, W_STR = 0.6, W_PUSH = 3.5, W_SNAP = 30;
+/** B pushes apart pairs nearer than this share of their spacing, toward this share of it */
+const B_NEAR = 1.2, B_AIM = 1.12;
 /** the snap: passes (each drawn, its pairs still too close pushed in the next), solves a pass,
  * LSQR iterations a solve, the push's weight and how far past the spacing it aims */
 const SNAP_PASSES = 1, SNAP_ROUNDS = 4, SNAP_ITERS = 600, W_SNAP_PUSH = 2, PUSH_OVER = 1.05;
 /** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
+/** the spread after drawing: passes, and how far past the spacing a move aims */
+const SPREAD_PASSES = 4, SPREAD_OVER = 1.02;
+/** a bent piece leaving a node the way another piece does costs this share of its length */
+const PORT_COST = 1;
 const DIRS: [number, number][] = Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)]);
 
 export interface Piece {
@@ -170,11 +176,11 @@ function chooseDirs(P: Prep, pos: Float64Array): Int8Array {
 }
 
 /** unconnected pairs closer than their half widths plus `dmin` */
-function closePairs(P: Prep, pos: Float64Array, out: number[]): void {
+function closePairs(P: Prep, pos: Float64Array, out: number[], over = 1): void {
   out.length = 0;
   let hmax = 0;
   for (let i = 0; i < P.n; i++) hmax = Math.max(hmax, P.hw[i]);
-  const cell = P.dmin + 2 * hmax;
+  const cell = (P.dmin + 2 * hmax) * over;
   const grid = new Map<number, number[]>();
   const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
   for (let i = 0; i < P.n; i++) {
@@ -191,7 +197,7 @@ function closePairs(P: Prep, pos: Float64Array, out: number[]): void {
       for (const j of v) {
         if (j <= i || P.adj.has(i * P.n + j)) continue;
         const d = Math.hypot(pos[j * 2] - pos[i * 2], pos[j * 2 + 1] - pos[i * 2 + 1]);
-        if (d < P.dmin + P.hw[i] + P.hw[j]) out.push(i, j);
+        if (d < (P.dmin + P.hw[i] + P.hw[j]) * over) out.push(i, j);
       }
     }
   }
@@ -226,14 +232,14 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
       T.add([2 * v + c], [1], pos[2 * v + c], wProx);
       T.add([2 * v + c], [1], start[2 * v + c], wGeo);
     }
-    closePairs(P, pos, pairs);
+    closePairs(P, pos, pairs, B_NEAR);
     for (let k = 0; k < pairs.length; k += 2) {
       const a = pairs[k], b = pairs[k + 1];
       let ux = pos[b * 2] - pos[a * 2], uy = pos[b * 2 + 1] - pos[a * 2 + 1];
       const dl = Math.hypot(ux, uy);
       if (dl > 1e-6) ux /= dl, uy /= dl;
       else ux = 1, uy = 0;
-      T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], P.dmin + P.hw[a] + P.hw[b], W_PUSH);
+      if (dl < (P.dmin + P.hw[a] + P.hw[b]) * B_AIM) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], (P.dmin + P.hw[a] + P.hw[b]) * B_AIM, W_PUSH);
     }
     pos = T.solve(pos, iters);
   }
@@ -307,7 +313,7 @@ function segments(g: DiagramGraph): number[][] {
   return segs;
 }
 
-interface Routed { pieces: Piece[]; x: Float64Array; y: Float64Array; straight: number; bent: number }
+interface Routed { pieces: Piece[]; x: Float64Array; y: Float64Array; straight: number; bent: number; bases: Base[] }
 
 function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array): Routed {
   const n = g.key.length;
@@ -389,21 +395,36 @@ const interleave = (x: Float64Array, y: Float64Array) => {
 function draw(raw: number[][], q: Float64Array, n: number): Routed {
   const x = new Float64Array(n), y = new Float64Array(n);
   for (const p of raw) for (const k of [p[0], p[p.length - 1]]) (x[k] = q[k * 2]), (y[k] = q[k * 2 + 1]);
-  const pieces: Piece[] = [];
+  const pieces: Piece[] = [], bases: Base[] = [];
   let straight = 0, bent = 0;
+  // each piece leaves a node in one of eight directions; two pieces leaving it the same way would be
+  // drawn over each other, so a bent piece takes the legs whose ends are free where it can
+  const port = (dx: number, dy: number) => ((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
+  const taken = new Set<number>();
+  const ends = (l: number[], a: number, b: number) => {
+    const m = l.length;
+    return [a * 8 + port(l[2] - l[0], l[3] - l[1]), b * 8 + port(l[m - 4] - l[m - 2], l[m - 3] - l[m - 1])];
+  };
+  const isStraight = (p: number[]) => {
+    const vx = x[p[p.length - 1]] - x[p[0]], vy = y[p[p.length - 1]] - y[p[0]];
+    return Math.hypot(vx, vy) >= 1e-9 && octiDev(vx, vy) <= STRAIGHT_DEG;
+  };
+  for (const p of raw) if (isStraight(p)) for (const t of ends([x[p[0]], y[p[0]], x[p[p.length - 1]], y[p[p.length - 1]]], p[0], p[p.length - 1])) taken.add(t);
   for (const p of raw) {
     const ax = x[p[0]], ay = y[p[0]], cx = x[p[p.length - 1]], cy = y[p[p.length - 1]];
     const vx = cx - ax, vy = cy - ay;
     let line: number[];
     if (Math.hypot(vx, vy) < 1e-9) line = [ax, ay, cx, cy];
-    else if (octiDev(vx, vy) <= STRAIGHT_DEG) {
+    else if (isStraight(p)) {
       line = [ax, ay, cx, cy];
       straight++;
     } else {
       const inner: number[] = [];
       for (let i = 1; i < p.length - 1; i++) inner.push(q[p[i] * 2], q[p[i] * 2 + 1]);
       const [l1, l2] = twoLegs(ax, ay, cx, cy);
-      line = inner.length && polyDev(inner, l2) < polyDev(inner, l1) ? l2 : l1;
+      const cost = (l: number[]) => (inner.length ? polyDev(inner, l) : 0) + ends(l, p[0], p[p.length - 1]).filter((t) => taken.has(t)).length * PORT_COST * Math.hypot(vx, vy);
+      line = cost(l2) < cost(l1) ? l2 : l1;
+      for (const t of ends(line, p[0], p[p.length - 1])) taken.add(t);
       bent++;
     }
     const nl = line.length / 2;
@@ -426,22 +447,130 @@ function draw(raw: number[][], q: Float64Array, n: number): Routed {
     s.push(total);
     for (let i = 1; i < k; i++) s[i] = Math.max(s[i], s[i - 1] + gap);
     for (let i = k - 1; i >= 1; i--) s[i] = Math.min(s[i], s[i + 1] - gap);
-    const verts = [line[0], line[1]], at = [0];
-    let j = 1;
-    for (let i = 1; i < k; i++) {
-      while (j < nl - 1 && Ls[j] <= s[i]) verts.push(line[j * 2], line[j * 2 + 1]), j++;
-      const kk = j - 1, f = (s[i] - Ls[kk]) / Math.max(1e-9, Ls[kk + 1] - Ls[kk]);
-      const px = line[kk * 2] + (line[kk * 2 + 2] - line[kk * 2]) * f, py = line[kk * 2 + 1] + (line[kk * 2 + 3] - line[kk * 2 + 1]) * f;
-      at.push(verts.length / 2);
-      verts.push(px, py);
-      x[p[i]] = px;
-      y[p[i]] = py;
-    }
-    while (j < nl) verts.push(line[j * 2], line[j * 2 + 1]), j++;
-    at.push(verts.length / 2 - 1);
-    pieces.push({ nodes: Int32Array.from(p), verts: Float64Array.from(verts), at: Int32Array.from(at), cols: [] });
+    const pc: Piece = { nodes: Int32Array.from(p), verts: new Float64Array(0), at: new Int32Array(0), cols: [] };
+    const b: Base = { line, Ls, s, gap };
+    placeOn(pc, b, x, y);
+    pieces.push(pc);
+    bases.push(b);
   }
-  return { pieces, x, y, straight, bent };
+  return { pieces, x, y, straight, bent, bases };
+}
+
+/** a piece's drawing (one or two legs), its legs' arc lengths, its stations' arcs, their least gap */
+interface Base { line: number[]; Ls: number[]; s: number[]; gap: number }
+
+/** a piece's vertices and its stations' places from its base */
+function placeOn(pc: Piece, b: Base, x: Float64Array, y: Float64Array): void {
+  const { line, Ls, s } = b, nl = line.length / 2, p = pc.nodes, k = p.length - 1;
+  const verts = [line[0], line[1]], at = [0];
+  let j = 1;
+  for (let i = 1; i < k; i++) {
+    while (j < nl - 1 && Ls[j] <= s[i]) verts.push(line[j * 2], line[j * 2 + 1]), j++;
+    const [px, py] = arcAt(b, s[i]);
+    at.push(verts.length / 2);
+    verts.push(px, py);
+    x[p[i]] = px;
+    y[p[i]] = py;
+  }
+  while (j < nl) verts.push(line[j * 2], line[j * 2 + 1]), j++;
+  at.push(verts.length / 2 - 1);
+  pc.verts = Float64Array.from(verts);
+  pc.at = Int32Array.from(at);
+}
+
+/** the place `a` along a base's drawing, and its direction there */
+function arcAt(b: Base, a: number): [number, number, number, number] {
+  const { line, Ls } = b, nl = line.length / 2;
+  let kk = 0;
+  while (kk < nl - 2 && Ls[kk + 1] < a) kk++;
+  const l = Math.max(1e-9, Ls[kk + 1] - Ls[kk]), f = (a - Ls[kk]) / l;
+  const dx = line[kk * 2 + 2] - line[kk * 2], dy = line[kk * 2 + 3] - line[kk * 2 + 1];
+  return [line[kk * 2] + dx * f, line[kk * 2 + 1] + dy * f, dx / l, dy / l];
+}
+
+/** Stations still too close once drawn, slid along their pieces apart: each move the least that
+ * clears the pair, kept between its neighbours on the piece and taken only if it makes no new close
+ * pair. Angles are untouched; key nodes stay. */
+function spread(P: Prep, r: Routed): void {
+  const n = P.n, onPiece = new Int32Array(n).fill(-1), idx = new Int32Array(n);
+  r.pieces.forEach((pc, q) => {
+    for (let i = 1; i < pc.nodes.length - 1; i++) (onPiece[pc.nodes[i]] = q), (idx[pc.nodes[i]] = i);
+  });
+  const want = (a: number, b: number) => P.dmin + P.hw[a] + P.hw[b];
+  const pos = interleave(r.x, r.y), pairs: number[] = [];
+  /** how many stations `v` would be too close to at (px, py) */
+  const crowd = (v: number, px: number, py: number) => {
+    let c = 0;
+    for (let o = 0; o < n; o++) {
+      if (o === v || P.adj.has(Math.min(o, v) * n + Math.max(o, v))) continue;
+      const w = want(v, o), dx = pos[o * 2] - px, dy = pos[o * 2 + 1] - py;
+      if (Math.abs(dx) < w && Math.abs(dy) < w && dx * dx + dy * dy < w * w) c++;
+    }
+    return c;
+  };
+  for (let pass = 0; pass < SPREAD_PASSES; pass++) {
+    closePairs(P, pos, pairs);
+    if (!pairs.length) return;
+    const touched = new Set<number>();
+    let moved = 0;
+    for (let k = 0; k < pairs.length; k += 2) {
+      const a = pairs[k], b = pairs[k + 1];
+      const w = want(a, b) * SPREAD_OVER;
+      let best: [number, number, number] | null = null;
+      for (const [v, o] of [[a, b], [b, a]]) {
+        const q = onPiece[v];
+        if (q < 0 || touched.has(v)) continue;
+        const base = r.bases[q], i = idx[v], s0 = base.s[i];
+        const lo = base.s[i - 1] + base.gap, hi = base.s[i + 1] - base.gap;
+        // along the leg it is on: |v + t u - o| = w, the root of least size within its room
+        const [px, py, ux, uy] = arcAt(base, s0), rx = px - pos[o * 2], ry = py - pos[o * 2 + 1];
+        const pr = rx * ux + ry * uy, disc = pr * pr - (rx * rx + ry * ry) + w * w;
+        if (disc < 0) continue;
+        const now = crowd(v, px, py);
+        for (const t of [-pr + Math.sqrt(disc), -pr - Math.sqrt(disc)]) {
+          const s1 = s0 + t;
+          if (s1 < lo || s1 > hi || (best && Math.abs(t) >= Math.abs(best[2]))) continue;
+          const [nx, ny] = arcAt(base, s1);
+          if (crowd(v, nx, ny) >= now) continue;
+          best = [v, s1, t];
+        }
+      }
+      const apply = (v: number, s1: number) => {
+        const q = onPiece[v];
+        r.bases[q].s[idx[v]] = s1;
+        placeOn(r.pieces[q], r.bases[q], r.x, r.y);
+        for (const u of r.pieces[q].nodes) (pos[u * 2] = r.x[u]), (pos[u * 2 + 1] = r.y[u]);
+        touched.add(v);
+        moved++;
+      };
+      if (best) {
+        apply(best[0], best[1]);
+        continue;
+      }
+      // neither alone has room: both, part of the way each, along their own pieces
+      if (onPiece[a] < 0 || onPiece[b] < 0 || onPiece[a] === onPiece[b] || touched.has(a) || touched.has(b)) continue;
+      const room = (v: number) => {
+        const base = r.bases[onPiece[v]], i = idx[v];
+        return [base, base.s[i], base.s[i - 1] + base.gap, base.s[i + 1] - base.gap] as const;
+      };
+      const [ba, sa, loa, hia] = room(a), [bb, sb, lob, hib] = room(b);
+      const before = crowd(a, pos[a * 2], pos[a * 2 + 1]) + crowd(b, pos[b * 2], pos[b * 2 + 1]);
+      let pick: [number, number] | null = null;
+      for (const f of [0.6, 0.9]) for (const da of [-1, 1]) for (const db of [-1, 1]) {
+        if (pick) break;
+        const s1a = Math.max(loa, Math.min(hia, sa + da * f * w)), s1b = Math.max(lob, Math.min(hib, sb + db * f * w));
+        const [ax, ay] = arcAt(ba, s1a), [bx2, by2] = arcAt(bb, s1b);
+        if (Math.hypot(ax - bx2, ay - by2) < want(a, b)) continue;
+        const ox = pos[a * 2], oy = pos[a * 2 + 1];
+        (pos[a * 2] = ax), (pos[a * 2 + 1] = ay);
+        const after = crowd(a, ax, ay) + crowd(b, bx2, by2);
+        (pos[a * 2] = ox), (pos[a * 2 + 1] = oy);
+        if (after < before) pick = [s1a, s1b];
+      }
+      if (pick) (apply(a, pick[0]), apply(b, pick[1]));
+    }
+    if (!moved) return;
+  }
 }
 
 /** per piece, its strokes (one per colour) left to right looking from its first node to its last:
@@ -541,6 +670,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const bx = new Float64Array(n), by = new Float64Array(n);
   for (let i = 0; i < n; i++) bx[i] = B[i * 2], (by[i] = B[i * 2 + 1]);
   const r = route(g, P, bx, by);
+  spread(P, r);
   const t3 = performance.now();
   order(g, r.pieces, r.x, r.y);
   const t4 = performance.now();

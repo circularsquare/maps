@@ -160,7 +160,7 @@ try {
       await p.screenshot({ path: join(OUT, 'toast-dark.png'), clip: { x: box.x, y: box.y + box.height - 160, width: 420, height: 160 } });
       console.log(`shot ${join(OUT, 'toast-light.png')}`);
     }
-    // gone after about 5.6 s
+    // gone after about 6.2 s (5 s held, a 1.2 s fade)
     await p.waitForTimeout(6500);
     say(await p.evaluate(() => !document.querySelector('.ach-toast')), 'the toast fades after about 5 s');
     say(errors.length === 0, `new game no errors${errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''}`);
