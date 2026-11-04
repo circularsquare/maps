@@ -34,6 +34,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - a93f41b475e25b962 **t2255** diagram on the game's own layouts (hairpins at 125 St, Woodhaven, hook at Grand
   Central; checks on the game's graphs). Main tree, Vite 6194.
 
+- a7a0c49c5970ac78a **t2222b**: T-2223 bandFine as the look (her pick), T-2258 the rounded prong in the curve
+  picture, T-2222 the band snap on her export (artifacts/trainworld/anita-2026-11-03e/tokyo-day-414.save, default
+  zoom, Yamanote north of Shinjuku). Main tree renderer, Vite 6189.
+
 ## Next
 1. When t2257 and t2215 report: commit t2257, land t2214, rebuild 8800 (plain snapbuild once nobody writes packs).
 2. T-2216 the market across parts (rebuild the 901 zone files then; Sunshine Coast lie, notes/T-2213.md), T-2256.
@@ -65,12 +69,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
 
 ## Open questions to Anita (asked, unanswered)
-- Station buildings: OK with only the change minutes at 0.8 and walks in full (T-2220; with the walk, S +83%)?
-- T-2223 gap look: now / fine (pick) / wide / edge / spaced, artifacts/trainworld/review/gap-*.png.
-- T-2222 band snap: needs an export of her current Tokyo game plus the view and zoom.
 - Strings to acknowledge: Ferry tool (T-2194), station building tool (T-2218), crowding (T-2236), diagram (T-2163),
   ferry demand rows (T-2195), building hover "Changing trains inside it feels a little quicker." (T-2220).
-- Answered today: islands go, word "No route"; edit note and everywhere "trips/day"; rates "per"; period on the
+- Answered 22:30: buildings fixed minutes only OK; gap look = fine; band snap at default zoom, Yamanote north of Shinjuku, export copied. Earlier: islands go, word "No route"; edit note and everywhere "trips/day"; rates "per"; period on the
   passing hover; On board hover cut; temp files always delete; keep only current and latest published builds;
   passing tracks go (400 m price, every station); crowding from 70%; capacity 150%; ferries go (ports only, "No water
   path found"); named crossings and maglev yes; diagram for everyone.
@@ -97,4 +98,4 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Disk: delete orphaned temp files always; keep only the current build and the latest published ones in
   artifacts/trainworld/publish/ and data/frozen/; delete superseded backups once a later state checks clean.
 
-Next free task id: T-2258 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25, T-2252..54; check before use).
+Next free task id: T-2259 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25, T-2252..54; check before use).
