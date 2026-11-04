@@ -581,15 +581,21 @@ slower line's path and stops change its `D`), and solved again when a line on th
 **Waiting for faster trains** (T-2231, `track/overtake.rs`, notes/T-2228.md 5). Where the slower run
 stops at a station with passing tracks strictly inside the stretch (a passing point), the timetable
 makes it wait there instead, and the stretch is never locked behind. Per demand level, from the two
-lines' rates and free profiles, train by train over one cycle of departures (the shortest whole number
-of the slower headway that is a whole number of the faster one, at most 12 of them and 2 hours, else
-2 hours), after a warm-up: at every place either run stops, each train keeps `s` behind the one ahead
-(only `PASS_CLEAR_S`, 60 s, behind a slower train stepping aside at a passing point); at each passing
-point a slower train waits for every faster train that would otherwise come within `s` of it before
-its next passing point, leaving 60 s after the last of them passes, unless the wait would pass its own
-headway less `s` (it would block the next one; the faster one then follows it). The faster line's
-trains are placed at the one of 24 offsets a faster headway that gives the least waiting and loss an
-hour (`Plan::outcome`). Averaged over the cycle, the slower line's wait at each passing point is a
+lines' headways and free profiles, train by train over one cycle of departures (the shortest whole
+number of the slower headway that is a whole number of the faster one, at most 12 of them and 2 hours,
+else 2 hours), after a warm-up. The headways are those the timetable runs to (T-2245,
+`overtake::pattern_tph`): a line keeping a headway the player set is timetabled at it, though its
+whole trains run a little more often (two lines set to 10 minutes run 580 and 571 s apart on the test
+line below, which would drift past each other so no placement fits for long); other lines at their
+rates. At every place either run stops, each train keeps `s` behind the one ahead (only
+`PASS_CLEAR_S`, 60 s, behind a slower train stepping aside at a passing point); at each passing point
+a slower train waits for every faster train that would otherwise come within `s` of it before its next
+passing point, leaving 60 s after the last of them passes and late enough to be `s` behind it at the
+next place either run stops (T-2245), unless the wait would pass its own headway less `s` (it would
+block the next one; the faster one then follows it). The faster line's trains are placed at the one of
+24 offsets a faster headway that gives the least waiting, loss and time the slower trains are held
+behind faster ones an hour (`Plan::outcome`; time held behind is not charged, and is nil at the best
+offset on the test line). Averaged over the cycle, the slower line's wait at each passing point is a
 hold at that stop (`stop_holds`; `ResKind::Wait`, wire kind 13, `Resource::node` the station, one per
 faster run and passing point, with no utilisation, so no map dot, and it neither fills nor caps
 track), and the faster line's remaining loss is its following loss (kind 11) for that slower line;
@@ -601,9 +607,11 @@ waits at the same stations. Stretches with no passing point are worked out as ab
 Worked example (180 km of high-speed track, stations every 30 km, high-speed locals at all seven and
 expresses at three, passing tracks at the five between, `passing_tracks_let_the_express_by`): free,
 49.3 and 38.6 min one way; every 10 minutes each, the express loses 8 s to overtakes (it trails the
-local by 11 min without them) and the local waits 89 s and 249 s at two stations, 6.7 min more in
-all; locals every 30 minutes, the express loses nothing and the local 6.2 min. Both still pay the
-queue on track two lines share (about a minute at 12 trains an hour).
+local by 11 min without them) and the local waits 117 s and 277 s at two stations, 7.7 min more in
+all; locals every 30 minutes, the express loses nothing and the local 7.1 min. Both still pay the
+queue on track two lines share (about a minute at 12 trains an hour). The same with both lines
+keeping a 10 minute headway (`passing_tracks_on_headway_lines`): the same waits, 12 locals and 9
+expresses.
 
 **No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
 on every resource but a station crossover (whose load counts through trains that never meet),

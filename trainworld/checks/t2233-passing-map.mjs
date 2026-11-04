@@ -2,8 +2,10 @@
 // track, 7 stations 30 km apart, a local at all of them and an express at A, D and G, both every 10
 // minutes) with passing tracks at B to F, run 2 game hours at 60x with the whole line in view. Every
 // frame each train is placed as drawn (its lag included). An express may pass a local only where the
-// local stands on a passing station's outer track (one it stops at and the express runs through, as
-// the guard's rule), and two trains on one run are never drawn overlapping anywhere else. Then zoom 15
+// local stands on a passing station's outer track (one it stops at and the express runs through or,
+// faster, stops at on the running track beside it, T-2248, as the guard's rule), and two trains on one
+// run are never drawn overlapping anywhere else. A spur 280 m past E shortens E's outer track's lead
+// there (T-2248): every outer track ends back on the running track. Then zoom 15
 // shots of E, light and dark, with an express passing a local standing there, in
 // artifacts/trainworld/t2233/. From the maps root:
 //   node trainworld/checks/t2233-passing-map.mjs [url] [hours]
@@ -23,8 +25,10 @@ const PTS = Array.from({ length: N }, (_, k) => [LNG0 + k * STEP_KM * KM, LAT]);
 /** as trainGuard.ts: a stopping train is on the outer track from its back this much of the lead short
  * of the platform to its front past the lead */
 const PASS_IN = 0.2, PASS_LEAD_M = 100;
+/** as network.ts: NetworkBuffers.passing's stride, and where a line's trains are */
+const STRIDE = 7, OUTER = 1, INNER = 2;
 
-const chrome = await launchChrome({ prefix: 'tw-t2233-', size: [3000, 700] });
+const chrome = await launchChrome({ prefix: 'tw-t2233-', size: [3700, 700] });
 const errors = [];
 try {
   const page = await chrome.ctx.newPage();
@@ -47,9 +51,15 @@ try {
     }
     await pause(500);
     for (const [k, p] of xy.entries()) { log.push((await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 400, name: 'ABCDEFG'[k] }))?.ok); await pause(150); }
+    const stops = xy.map(near);
+    // T-2248: a spur leaving 280 m past E towards F, so E's outer track there has 80 m past its
+    // 400 m platform to join the running track, short of the 100 m lead
+    const ef = tw.world.value.edges.find((e) => (e.a === stops[4] && e.b === stops[5]) || (e.a === stops[5] && e.b === stops[4]));
+    const perM = 1 / Math.cos((PTS[4][1] * Math.PI) / 180), E = tw.world.value.nodes.get(stops[4]);
+    log.push(!!ef && (await c.edit({ op: 'route', from: { kind: 'edge', edge: ef.id, x: E.x + 280 * perM, y: E.y }, to: { kind: 'free', x: E.x + 280 * perM, y: E.y - 3000 * perM, level: 0 }, pis: [], single: false, hsr: false, design: 160 }))?.ok);
+    await pause(300);
     log.push((await c.edit({ op: 'constructAll' }))?.ok);
     await pause(600);
-    const stops = xy.map(near);
     const local = (await c.edit({ op: 'addLine', stops, name: 'Local', colour: '#0a7d3b', autoFast: true })).line;
     await c.edit({ op: 'lineFast', line: local, fast: true });
     const express = (await c.edit({ op: 'copyLine', line: local })).line;
@@ -60,22 +70,38 @@ try {
     await c.edit({ op: 'setHeadway', line: express, seconds: [600, 600, 0] });
     log.push((await c.edit({ op: 'stationUpgrade', nodes: stops.slice(1, 6), bit: 8, on: true }))?.ok);
     await pause(2500);
-    const n = tw.renderer.net;
-    return { log, stops, local, express, passing: n.passing ? Array.from(n.passing) : [], cars: [n.lineCars?.[local] ?? 8, n.lineCars?.[express] ?? 8] };
+    const n = tw.renderer.net, T = n.turnbacks;
+    // the outer tracks' polylines (F_PASSING), each with the lane at its far end (0: back on the running track)
+    const outerEnds = [];
+    for (let i = 0; T && i < T.count; i++) {
+      if (!(T.flags[i] & 1024)) continue;
+      const last = i + 1 >= T.count || !(T.flags[i + 1] & 1024) || T.seg[i * 4 + 2] !== T.seg[i * 4 + 4] || T.seg[i * 4 + 3] !== T.seg[i * 4 + 5];
+      if (last) outerEnds.push([T.edge[i], T.lane ? T.lane[i * 2 + 1] : -1]);
+    }
+    return { log, stops, local, express, passing: n.passing ? Array.from(n.passing) : [], outerEnds, cars: [n.lineCars?.[local] ?? 8, n.lineCars?.[express] ?? 8] };
   }, [PTS]);
-  console.log('built', JSON.stringify({ ...built, passing: built.passing.length / 5 }));
-  check(built.log.every(Boolean), 'the test line was built, passing tracks at B to F');
-  // the passing stations each line stops at and runs through, along run 0 (m), half the platform
-  const stopsOf = new Map(), through = new Map();
-  for (let k = 0; k + 5 <= built.passing.length; k += 5) {
-    const [line, d, ph, node, stops] = built.passing.slice(k, k + 5);
-    const m = stops ? stopsOf : through;
+  console.log('built', JSON.stringify({ ...built, passing: built.passing.length / STRIDE }));
+  check(built.log.every(Boolean), 'the test line was built, a spur 280 m past E, passing tracks at B to F');
+  // where each line's trains are at passing stations, along run 0 (m): on the outer track (stopsOf) or
+  // the running track (through: running through, or stopping beside a slower line, T-2248)
+  const stopsOf = new Map(), through = new Map(), innerOf = new Map();
+  for (let k = 0; k + STRIDE <= built.passing.length; k += STRIDE) {
+    const [line, d, ph, node, where, lin, lout] = built.passing.slice(k, k + STRIDE);
+    const m = where === OUTER ? stopsOf : through;
     if (!m.has(line)) m.set(line, []);
-    m.get(line).push([d, ph, node]);
+    m.get(line).push([d, ph, node, lin, lout]);
+    if (where === INNER) innerOf.set(line, [...(innerOf.get(line) ?? []), node]);
   }
-  check((stopsOf.get(built.local)?.length ?? 0) === 5 && (through.get(built.express)?.length ?? 0) === 4, `the local stops at 5 passing stations, the express runs through 4 (${stopsOf.get(built.local)?.length ?? 0}, ${through.get(built.express)?.length ?? 0})`);
+  check((stopsOf.get(built.local)?.length ?? 0) === 5 && (through.get(built.express)?.length ?? 0) === 5, `the local stands on the outer track at 5 passing stations, the express is on the running track at 5 (${stopsOf.get(built.local)?.length ?? 0}, ${through.get(built.express)?.length ?? 0})`);
+  check(JSON.stringify(innerOf.get(built.express) ?? []) === JSON.stringify([built.stops[3]]) && !innerOf.has(built.local), `T-2248: the express stops on the running track at D, beside the local (${JSON.stringify(innerOf.get(built.express) ?? [])})`);
+  const eLeads = (stopsOf.get(built.local) ?? []).find((p) => p[2] === built.stops[4]);
+  check(!!eLeads && Math.abs(eLeads[3] - PASS_LEAD_M) < 1e-3 && Math.abs(eLeads[4] - 80) < 2, `T-2248: E's outer track joins 100 m out towards D and ${eLeads?.[4]?.toFixed(1)} m out towards the spur 280 m away`);
+  const loose = built.outerEnds.filter((x) => x[1] !== 0);
+  check(built.outerEnds.length === 20 && !loose.length, `every outer track ends back on the running track (${built.outerEnds.length} ends, ${loose.length} not: ${JSON.stringify(loose)})`);
 
-  await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 10.05 }), PTS[3]);
+  await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 10.0 }), PTS[3]);
+  // (the whole line in the guard's view: it holds only trains in or near it)
+  check(await page.evaluate(([a, b]) => { const m = window.tw.map, w = m.getContainer().clientWidth, pa = m.project(a), pb = m.project(b); return [pa.x, pb.x, w, window.innerWidth]; }, [PTS[0], PTS[6]]).then((v) => (console.log('view', JSON.stringify(v)), v[0] > 0 && v[1] < v[2])), 'the whole line is in view');
   await page.waitForTimeout(1500);
   const run = await page.evaluate(async ([HOURS, LINES]) => {
     const tw = window.tw, r = tw.renderer, c = tw.clock;
@@ -117,9 +143,9 @@ try {
   // the passing station whose outer track a train is on, or null
   const outer = (x) => {
     const [, line, rn, s, , L] = x, h = halfOf(line);
-    for (const [d, ph, node] of stopsOf.get(line) ?? []) {
-      const at = rn === 0 ? d : L - d;
-      if (s - h >= at - ph - PASS_IN * PASS_LEAD_M && s + h <= at + ph + PASS_LEAD_M) return node;
+    for (const [d, ph, node, lb, la] of stopsOf.get(line) ?? []) {
+      const at = rn === 0 ? d : L - d, [lin, lout] = rn === 0 ? [lb, la] : [la, lb];
+      if (s - h >= at - ph - PASS_IN * lin && s + h <= at + ph + lout) return node;
     }
     return null;
   };
@@ -164,7 +190,7 @@ try {
   await writeFile(join(OUT, 'passing-map.json'), JSON.stringify(res));
   check(res.gameHours >= HOURS * 0.95, `${res.gameHours} game hours sampled over ${f.length} frames`);
   check(passes > 0, `expresses passed locals ${passes} times (${Object.entries(where).map(([k, v]) => `${k} ${v}`).join(', ')})`);
-  check(passesBad === 0, `every pass was at a passing station the local stops at and the express runs through (${passesBad} elsewhere)`);
+  check(passesBad === 0, `every pass was at a passing station where the local stands on the outer track and the express is on the running track (${passesBad} elsewhere)`);
   check(overlaps === 0, `no two trains on a run drawn through each other (${overlaps} frame pairs; ${besideFrames} beside each other at passing stations)`);
 
   // zoom 15 at E with an express passing a local standing there: run on until one is
@@ -203,6 +229,12 @@ try {
     await page.waitForTimeout(1200);
     await page.screenshot({ path: join(OUT, `passing-z15-${sh}.png`), clip: { x: 300, y: 250, width: 1100, height: 400 } });
   }
+  // D close in (T-2248, T-2249): the express stops on the running track, riders on the islands
+  // between it and the outer tracks
+  await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, 'light');
+  await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 16 }), PTS[3]);
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: join(OUT, 'passing-d-z16-light.png'), clip: { x: 200, y: 250, width: 1000, height: 400 } });
   check(errors.length === 0, `no console errors${errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''}`);
 } finally {
   await chrome.close();

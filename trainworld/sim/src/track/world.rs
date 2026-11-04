@@ -47,7 +47,7 @@ const AUTO_ROUNDS: usize = 5;
 
 /// How far over the chosen headway the real one may run: a line's round trip moves a little with
 /// its own train count, and a train more for a few seconds would be noise (T-625).
-const AUTO_SLACK: f64 = 1.005;
+pub(crate) const AUTO_SLACK: f64 = 1.005;
 
 /// The fewest whole trains that keep a headway of `headway_s` over a round trip of `trip_s`
 /// (T-625); a headway of 0 is no service.

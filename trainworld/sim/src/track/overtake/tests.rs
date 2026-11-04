@@ -128,6 +128,69 @@ fn passing_tracks_let_the_express_by() {
     assert_eq!(over(&w, express, 0), with);
 }
 
+/// T-2245: the same line run as the game runs it, both lines keeping a 10 minute headway with the
+/// fewest whole trains (T-2232's panel check): the overtakes are timetabled at the 10 minutes, so
+/// every local waits at the same stations as on the frequency line above, the local keeps its
+/// headway, and nothing is lost behind faster trains that the plan does not charge.
+#[test]
+fn passing_tracks_on_headway_lines() {
+    let (mut w, n, local, express) = shinkansen();
+    for (id, k) in [(local, 11), (express, 8)] {
+        w.apply(Op::AutoTrains { id, auto: Some([600, 600, 0]), trains: Some([k, k, 0]) }).unwrap();
+    }
+    set_passing(&mut w, &n[1..6], true);
+    same_as_global(&w, "headway lines, passing B to F");
+    let headway = |w: &TrackWorld, l: u32| 3600.0 / w.net.line_tph[l as usize][0] as f64;
+    eprintln!("trains {:?} {:?}, headways {:.0} {:.0} s", w.net.line_trains[local as usize], w.net.line_trains[express as usize], headway(&w, local), headway(&w, express));
+    assert!(headway(&w, local) <= 600.0 * 1.005 && headway(&w, express) <= 600.0 * 1.005, "both keep their headway");
+    let cap = &w.svc.cap;
+    let r = (0..cap.res.len()).find(|&r| cap.res[r].kind == ResKind::Follow && cap.users_of(r).iter().any(|u| u.owner && u.line == express && u.run == 0)).unwrap();
+    let plan = &cap.plans_of(r)[0];
+    let o = plan.outcome(&w.net, 0);
+    let (at10, each) = plan.trains_at(600.0, 600.0);
+    eprintln!("plan: offset {:.0} s, loss {:.0} s, waits {:.0?}, behind {:.0} s", o.offset, o.loss, o.waits, o.behind);
+    assert!(o.waits.iter().zip(&at10.waits).all(|(a, b)| (a - b).abs() < 1e-6), "timetabled at the 10 minutes, not at the trains' rates: {:?}", o.waits);
+    assert!(each.iter().all(|t| t.iter().zip(&each[0]).all(|(a, b)| (a - b).abs() < 1e-6)), "every local waits the same: {each:?}");
+    assert!(o.behind < 1.0, "the local is not held behind an express it does not wait for: {} s", o.behind);
+    let (lo, ex) = (over(&w, local, 0), over(&w, express, 0));
+    eprintln!("local +{lo:.1?} express +{ex:.1?} min");
+    assert!(lo.iter().all(|&m| (5.0..=12.0).contains(&m)), "the local 5-12 minutes slower: {lo:?}");
+    assert!(ex.iter().all(|&m| m < 2.0), "the express within 2 minutes of free: {ex:?}");
+    // a new headway re-times the plan as an edit, as a fresh solve would
+    let k = w.net.line_trains[local as usize];
+    w.apply(Op::AutoTrains { id: local, auto: Some([900, 900, 0]), trains: k }).unwrap();
+    same_as_global(&w, "local every 15 minutes");
+    assert_ne!(cap_waits(&w, local), o.waits.iter().sum::<f64>());
+}
+
+/// The local's waits at level 0 per train, summed over its run 0 (s).
+fn cap_waits(w: &TrackWorld, l: u32) -> f64 {
+    w.svc.lines[l as usize].runs[0].stop_holds[0].iter().sum()
+}
+
+/// T-2245: a save's overtake plans, for looking into one: `T2245_TRACK=<the save's track bytes,
+/// gunzipped, after its JSON header> cargo test --release --lib plans_of_a_save -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn plans_of_a_save() {
+    let w = TrackWorld::new(super::super::save::decode(&std::fs::read(std::env::var("T2245_TRACK").unwrap()).unwrap()).unwrap());
+    for (l, ls) in w.svc.lines.iter().enumerate() {
+        let run = &ls.runs[0];
+        eprintln!("line {l}: trains {:?} tph {:?} pattern {:?}, free {:.1} min, level 0 {:.1} min, stop holds {:.0?}", w.net.line_trains[l], w.net.line_tph[l], pattern_tph(&w.net, l as u32, 0), run.free.duration / 60.0, run.prof[0].duration / 60.0, run.stop_holds[0]);
+    }
+    let cap = &w.svc.cap;
+    for r in (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Follow) {
+        for plan in cap.plans_of(r) {
+            let o = plan.outcome(&w.net, 0);
+            eprintln!("resource {r}: fast {:?} slow {:?}, spacing {:.0} s; level 0: offset {:.0} loss {:.0} behind {:.0} waits {:.0?}", plan.fast, plan.slow, plan.spacing, o.offset, o.loss, o.behind, o.waits);
+            for p in &plan.points {
+                eprintln!("  node {} stop {} passing {} slow {:.0?} fast {:.0?}", p.node, p.stop, p.passing, p.slow, p.fast);
+            }
+        }
+    }
+}
+
+
 /// T-2231: a station with passing tracks gives each direction two platform tracks: a stop is pooled
 /// over them, and a train that does not stop holds none.
 #[test]

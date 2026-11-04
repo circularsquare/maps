@@ -34,7 +34,24 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - abb1ccd32095e266b **countries** (Opus): Turkey T-2079/T-2294 (74 rows built), then Russia (unheld; 13 rows + Minsk;
   4 Siberian towns held: suk xaf gub xag) and Belarus; Ukraine if data. geoBoundaries RUS stops at the recognised
   border. Ids T-2294..99.
-- **Turkey 74/74 gated; join running**: batch 20261104-033213 (`join --countries TR --jobs 6`, log
+- replan2 (abaa9dba7f94a9a7b) handed back at a clean point (~300k tokens): nothing landed or retired; its .cmd kit
+  and "State at hand-back" in notes/T-1189.md list steps 1-7. **Resume it with SendMessage for the go** (it keeps
+  its context). T-2326 filed (AWS seed carries world_field and sea polygons).
+- **~05:05 US wave home**: t2301-us-3 built 155/155 (inbox artifacts/trainworld/aws/inbox/t2301-us-3, 2.25 GB); all
+  three AWS runs $0.74, NOTHING RUNNING OR BILLING (bucket still holds us-3's 13 objects until landed). PR 4 built at
+  home. **Plan**: when countries' RU/BY gate and Turkey's terrain chain end, I commit the game json and rebuild 8800
+  from packs (keeps 8800 whole), then go to replan2 for: backup prejoin-us, land.py, retire (163 ids), gate PR,US
+  (8 cores), join PR,US (12 cores, 1.5-3 h), terrain/drives, names, successors, smoke. Never rebuild 8800 from packs
+  between the retire and the join. RU/BY join after the US join.
+- **~04:58 Russia + Belarus 181/181 built** (batch 20261104-024516); **gate run go given** (pack lock: countries).
+  Order after: US land/retire/gate/join (replan2), then RU+BY join, then market_drives once for all.
+- **Turkey 74/74 SHIPPED** (join ended 04:31, 58.5 min, 0 parked; not frozen). ~04:35 go for its terrain grids and
+  routed drives (T-2054 by hand, data/terrain + drive files, 20-40 min), then stale.py, zone_origins, load check.
+  Then: commit Turkey's game json, rebuild 8800 from packs. market_drives reads market-rows.json and writes only
+  data/packs/market-drives.bin: rerun it after the US join (and after Russia's) for their new places. Terrain
+  fetch keeps no tiles (disk fine). Queue: US land/retire/gate/join (~05:30), then Russia
+  + Belarus gate/join.
+- (earlier) Turkey 74/74 gated; join was: batch 20261104-033213 (`join --countries TR --jobs 6`, log
   artifacts/trainworld/countries/t2294-join.log, python 32828; backup data/work/pre-T2294/prejoin 932 MB, undo
   `restore.py T2294 prejoin --go`). Census check: packs match ADNKS (Adana 2.28M census vs 2.30M pack); the plan was
   low because GHSL undercounts Adana's urban ilce (0.84M vs 2.01M registered); only Adana's shape is affected (one
@@ -49,6 +66,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   once countries confirms its gate counts); the US retire waits until the 159 rows are built (hours at 1-4 cores;
   AWS suggested), then retire, gate and join back to back, so data/packs never sits for hours with the US
   half-removed.** Don't rebuild 8800 from packs between a retire and its join.
+- AWS: t2301-us-2 parked on a missing data/work/world_field.npz (torn down, $0.06). **t2301-us-3 running** (seed has
+  world_field.* and outside.json): check row fab built; go 04:19; 154 rows done ~05:15-05:30; timer ~08:15. PR's 4
+  built at home. Then land + retire + gate + join on my go.
 - ~04:30 AWS: t2301-us-1 built nothing (osmdata.openstreetmap.de, the coastline water polygons, unreachable from AWS
   and home); torn down 0.54 h, $0.20. **t2301-us-2 running**, same machine, seeded with home's cached water
   polygons clipped to the US (301 MB); timer ends 08:00. replan2 confirms the check row (fab) before `go`.
@@ -62,8 +82,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   side-by-side; 1% sliver lie, +161 rail trips on the real save), rest T-2324 [P2]; T-2308 greyed toggle; ferry
   constant; $10B comment. Not on 8800 yet.
 - acfe7114188110530 **passing** (Opus, ~04:20): T-2245, T-2248, T-2249. Port 6181. Ids T-2330, T-2331.
-- a07a81b0fd2e0605c **colours** (Sonnet, ~04:20): T-2291 auto line colour avoids near-duplicates beside it. Port
-  6182. Id T-2332.
+- **colours DONE, committed 784f0a82** (retired): T-2291 (re-pick after stop edits while the line is new; beside =
+  shared edge/station or stop within 300 m; under 19 CIEDE2000); T-2332 filed (copied, bus and ferry lines). Not on
+  8800 yet. Undo may step through the recolour first (unchecked).
 - Uncommitted on purpose: registry.json, market-rows.json, zone-names.json, world_plan.json (Turkey's join and the
   replans write them; commit after Turkey's join ends, then rebuild 8800 from packs).
 - **Done tonight** (agents retired): audit (3ecdc51c); replan Taiwan (11405b29; tig "Taitung" 1.29M Central Range

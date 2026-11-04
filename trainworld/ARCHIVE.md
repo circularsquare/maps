@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2249 Passing stations' riders (2026-11-04, agent passing): the crowd fills an island between the running track and the outer track's inner edge (`u_pass_in`). notes/T-2228.md 10.
+- T-2248 Passing stations on the map (2026-11-04, agent passing): a faster line stopping where a slower one does stops on the running track beside it (`innerStops`); outer tracks run on through plain nodes and are shortened before a junction (`passLead`). `t2233-passing-map.mjs`. notes/T-2228.md 10.
+- T-2245 The local's waits on T-2232's line (2026-11-04, agent passing): not right. The lines' trains ran 580/571 s, not 10/10, and a local held behind an express went uncounted; overtakes now timetabled at the set headways, the hold counted. 18m27s a round trip to 13m07s. notes/T-2228.md 10.
+
 - T-2291 The automatic line colour avoids a near-duplicate beside it (2026-11-04, agent colours): while a line is new, each stop edit re-picks its game-picked colour if under 19 CIEDE2000 from a line sharing a track edge or station, or a stop within 300 m; the palette has no near pairs (closest 19.1). `colourPick.ts`, `lineColour.ts`; checks t2291-*; follow-up T-2332.
 - T-2307 The walking rule's cost after T-2265 (2026-11-04, agent solvespeed): exact row tests and one lookup per everyday pair, and refused slivers (at most 1% of a trip's weight) let be; New York's calib +10.5% over T-1059 became +7.8%, rail +165 a day. The rest is T-2324. notes/T-2307.md.
 - T-2308 Waiting room greyed in a station building (2026-11-04, agent solvespeed): the toggle is greyed at a building's members, hover "The station building already counts as a waiting room.", unless already bought.

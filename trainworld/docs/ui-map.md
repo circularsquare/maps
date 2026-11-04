@@ -121,7 +121,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   `map/renderer.ts`]: from zoom 14, a station with passing tracks on double track has an outer
   track either side in bare-track grey, along the platform and bowing back onto the running track
   over 100 m past each end (eased both ends), through the box and outside it, faded on a blueprint
-  station. The outer tracks are 6 m from the centre line on the ground, or further out where trains
+  station. The bow follows the track on through plain nodes; where a junction, a track end or
+  another passing station's outer track comes sooner, it is shortened to end there (at least 10 m;
+  half the room each where two passing stations face each other) [T-2248, `passLead`]. The outer tracks are 6 m from the centre line on the ground, or further out where trains
   are drawn wider than they are: a train's drawn width and 1.5 px from it, so a train on one never
   touches one passing (10.5 px at zoom 15). The box is at least wide enough for a train on each outer
   track (about 36 px at zoom 15 against 11.25 for others); clicks, the selection outline and the
@@ -399,7 +401,11 @@ number) and shows n as its symbol.
   buffer), as the two tracks part ("Lines and track") each direction's riders stand on their own
   platform, from the outer edge of its track out to the rim [T-1121], instead of filling half the box:
   the + side's trains travel along the platform axis and keep right, so their track and their
-  platform are on the + side. A single-track station is unchanged.
+  platform are on the + side. At a station with passing tracks the platform is an island between
+  the running track and the outer track (where trains on both stop, T-2248), so its riders stand
+  from the running track's outer edge to the outer track's inner edge [T-2249, `u_pass_in`]; from
+  zoom 14 to where the tracks part, from the middle to the outer track. A single-track station is
+  unchanged.
 - **A player link's bridge** [T-197]: a straight white band 3 px wide at zoom 15 (fixed on the
   ground) with the 2 px rim along both sides, between the nearest points of the two platforms'
   centre lines, at least 6 px inside each platform's ends; overlapping platforms get one inside
@@ -481,10 +487,13 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   (lines side by side) or onto its own track turns with it (T-2182).
 - **On the outer track at a passing station** [T-2233]: from zoom 14 a train of a line that stops
   at a station with passing tracks (not at its run's ends) moves out to the outer track on its right
-  as it comes through the 100 m lead, stands there, and comes back over the far lead, following
+  as it comes through the lead, stands there, and comes back over the far lead, following
   the drawn track (`samplePass`: per 50 m sample, metres past the nearest such platform's end).
-  Trains of lines running through stay on the running track. Two lines' trains that both stop
-  there share the outer track.
+  Trains of lines running through stay on the running track, and so do those of a faster line
+  stopping there beside a slower one [T-2248, `innerStops`]: of two lines that stop at the station
+  and share the track through it, the one stopping at fewer of the stations on the stretch they run
+  together stops on the running track, so an express calling where a local stands stops beside it.
+  Lines stopping at as many stations share the outer track.
 - **Never through the train ahead** [T-1965, `map/trainGuard.ts`]: each train is drawn from its
   own line's timetable, which can put a faster train inside a slower one on the same track (an
   edge in one direction). Each frame, for trains in or within 150 px of the view on lines that
@@ -492,8 +501,9 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   its track (their true lengths; zoomed out, lines sharing track are drawn side by side), and a
   train does not move onto a merge while another is on it. Order on a track never changes from one
   frame to the next, but at a station with passing tracks [T-2233]: a train standing on its outer
-  track (its back no more than 20 m of the lead short of the platform, its front no further than
-  past the lead) and a train of a line running through that station hold neither of each other, at
+  track (its back no more than 20% of the lead short of the platform, its front no further than
+  past the lead) and a train of a line on the running track there (running through, or stopping
+  beside it, T-2248) hold neither of each other, at
   every zoom, so the faster one is drawn passing. Each direction of a line has one phase while the
   timetable's holds assume each direction's own (track-and-service.md 6.2), so in one direction a
   drawn express can catch a local between stations; it is then held behind it to the next station
@@ -546,7 +556,7 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
 [T-164, T-219, T-236, T-553] From zoom 14 the white of each platform box fills with a dark warm grey
 (#77726d, right up to the rim, T-1121) as riders wait. Each direction of travel
 has its half of the box along its length (close in on double track, its own platform beside its
-track, "Stations", T-658c); a platform whose trains all use one side (a terminal)
+track, "Stations", T-658c; at a passing station the island inside its outer track, T-2249); a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
 both ends at that or more. A side is red instead of grey once it is full [T-559]; the red stays inside the box like the grey (T-713). A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd

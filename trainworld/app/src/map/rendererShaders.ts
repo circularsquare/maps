@@ -397,7 +397,7 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and y axes point, as
                          // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
-flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658)
+flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249)
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
 flat out float v_hot;
@@ -420,7 +420,8 @@ void main() {
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
-  v_lane = (flags & 16) != 0 ? 1.0 : 0.0;
+  // 2: double track with passing tracks (T-2249)
+  v_lane = (flags & 16) != 0 ? ((flags & ${ST_PASSING}) != 0 ? 2.0 : 1.0) : 0.0;
   v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
@@ -590,6 +591,7 @@ uniform highp int u_layer;
 uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
 uniform vec3 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1), their narrowing close in (T-713)
+uniform float u_pass_in; // T-2249: px from the centre line to a passing station's outer track's inner edge, 0 none drawn
 in vec2 v_p;
 flat in vec3 v_size;
 flat in float v_dot;
@@ -651,10 +653,13 @@ void main() {
     // close in on double track (T-658) each side's riders stand on their own platform, from its
     // track out to the rim: the + side's trains travel along the axis, keeping right, so their
     // track and platform are on the + side
-    float tl = u_lanes.y * v_lane;
+    float tl = u_lanes.y * min(v_lane, 1.0);
     float yin = tl * (0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x;
-    float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
-    float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    // at a passing station (T-2249) on the island between the running track and the outer one,
+    // where trains on both stop
+    float yout = v_lane > 1.5 && u_pass_in > 0.0 ? max(u_pass_in, yin + 1.0) : 1e9;
+    float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(yout - p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(yout + p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
     o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);
   }
 }`;

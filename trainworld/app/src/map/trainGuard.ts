@@ -19,10 +19,9 @@
 //
 // T-2233: at a station with passing tracks a train that stops is drawn on the outer track and one that
 // does not on the running track beside it, so there neither holds the other: the one place order on a
-// track may change.
+// track may change. A faster line stopping there stops on the running track beside it (T-2248).
 
-import { PASS_STRIDE, profileS, type NetworkBuffers } from "./network";
-import { PASS_LEAD_M } from "./stationGeometry";
+import { PASS_OUTER, PASS_STRIDE, profileS, type NetworkBuffers } from "./network";
 import { perfOff } from "../perfFlags";
 
 /** Room left between a held train's front and the back of the train ahead, m. */
@@ -128,8 +127,9 @@ export class TrainGuard {
   private seen = new Uint8Array(0);
   /** checks: when an array, each train let over at CONFLICT_WAIT_MAX is noted in it */
   log: unknown[] | null = null;
-  /** T-2233, per line: the passing stations it stops at (offset along run 0, half the platform, node,
-   * as `NetworkBuffers.passing`), and those it runs through */
+  /** T-2233, per line: the passing stations where it stands on the outer track (offset along run 0,
+   * half the platform, node, the leads before and after, as `NetworkBuffers.passing`), and those it is
+   * on the running track at, running through or stopping beside a slower line (T-2248) */
   private passStops = new Map<number, number[]>();
   private passThrough = new Map<number, Set<number>>();
   /** since the last `resetCounts`: train pairs found beside each other at a passing station, summed
@@ -154,10 +154,11 @@ export class TrainGuard {
     const P = n.passing;
     if (P) for (let k = 0; k + PASS_STRIDE <= P.length; k += PASS_STRIDE) {
       const line = P[k];
-      if (P[k + 4]) {
+      if (P[k + 4] === PASS_OUTER) {
+        const at = [P[k + 1], P[k + 2], P[k + 3], P[k + 5], P[k + 6]];
         const v = this.passStops.get(line);
-        if (v) v.push(P[k + 1], P[k + 2], P[k + 3]);
-        else this.passStops.set(line, [P[k + 1], P[k + 2], P[k + 3]]);
+        if (v) v.push(...at);
+        else this.passStops.set(line, at);
       } else {
         const v = this.passThrough.get(line);
         if (v) v.add(P[k + 3]);
@@ -682,9 +683,10 @@ export class TrainGuard {
       const p = f.trips[cand[c] * 2], st = this.passStops.get(Math.floor(p / 6));
       if (!st) continue;
       const run0 = Math.floor(p / 3) % 2 === 0, L = meta[p * 4 + 3], s = cs[c], h = half[c];
-      for (let k = 0; k < st.length; k += 3) {
-        const at = run0 ? st[k] : L - st[k], ph = st[k + 1];
-        if (s - h >= at - ph - PASS_IN * PASS_LEAD_M && s + h <= at + ph + PASS_LEAD_M) { out[c] = st[k + 2]; break; }
+      for (let k = 0; k < st.length; k += 5) {
+        // the outer track's leads in its travel direction: in before the platform, out after it
+        const at = run0 ? st[k] : L - st[k], ph = st[k + 1], [lin, lout] = run0 ? [st[k + 3], st[k + 4]] : [st[k + 4], st[k + 3]];
+        if (s - h >= at - ph - PASS_IN * lin && s + h <= at + ph + lout) { out[c] = st[k + 2]; break; }
       }
     }
     return out;

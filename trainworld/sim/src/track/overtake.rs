@@ -2,7 +2,8 @@
 //! tracks inside a stretch of track a faster line shares with it (`capacity::stretches`), the
 //! timetable has its trains wait there for every faster train that would otherwise catch them before
 //! the next such station. Worked out train by train over one cycle of both lines' departures, at the
-//! relative phase with the least waiting and loss an hour (`Plan::outcome`): the slower line's mean
+//! relative phase with the least waiting, loss and time held behind faster trains an hour, at the
+//! headways the lines keep (`pattern_tph`, `Plan::outcome`): the slower line's mean
 //! wait at each passing station becomes a hold at that stop (resource kind 13), the faster line's
 //! remaining loss its following loss (kind 11).
 
@@ -12,6 +13,7 @@ use super::capacity::{self, active_node_tracks, leave_at, reach_at};
 use super::net::{path_edge, Network};
 use super::service::{LineSvc, Run};
 use super::upgrades;
+use super::world::AUTO_SLACK;
 
 /// A slower train standing at a passing station leaves this long after a faster one has passed (s):
 /// the faster one clears the far turnout. Behind a slower train stepping aside there, a faster one
@@ -54,6 +56,9 @@ pub struct Outcome {
     pub loss: f64,
     /// The slower run's mean wait at each point per train (s).
     pub waits: Vec<f64>,
+    /// The slower run's mean loss per train over the stretch besides its waits (s): keeping the
+    /// spacing behind a train ahead.
+    pub behind: f64,
     /// How long after a slower train a faster one reaches the stretch's start (s, under its headway).
     pub offset: f64,
 }
@@ -115,6 +120,18 @@ pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run,
     Some(Plan { fast, slow, start: [leave_at(sr, sa) - s0, leave_at(fr, fa) - f0], points, next, spacing, memo: Mutex::new(vec![]) })
 }
 
+/// T-2245: the rate a line's overtakes are timetabled at: the headway the player set where the line
+/// keeps one (its trains, a whole number, run it a little more often, the rest taken up at the ends),
+/// else its rate. Two lines both set to 10 minutes then meet at the same stations every trip; at
+/// their rates (580 and 571 s on the 180 km test line) they drift past each other and no phase fits.
+pub fn pattern_tph(net: &Network, l: u32, lev: usize) -> f32 {
+    let tph = net.line_tph[l as usize][lev];
+    match net.line_auto[l as usize] {
+        Some(a) if a[lev] > 0 && tph as f64 * a[lev] as f64 * AUTO_SLACK >= 3600.0 - 1e-6 => (3600.0 / a[lev] as f64) as f32,
+        _ => tph,
+    }
+}
+
 /// The cycle the two headways repeat over: the shortest whole number of slower headways that is a
 /// whole number of faster ones, or as many slower headways as fit `CYCLE_MAX_S`.
 fn cycle(hs: f64, hf: f64) -> f64 {
@@ -142,9 +159,9 @@ struct Train {
 }
 
 impl Plan {
-    /// The outcome at level `lev`, at the rates `net` holds now.
+    /// The outcome at level `lev`, at the headways the lines keep now (`pattern_tph`).
     pub fn outcome(&self, net: &Network, lev: usize) -> Arc<Outcome> {
-        let (tf, ts) = (net.line_tph[self.fast.0 as usize][lev], net.line_tph[self.slow.0 as usize][lev]);
+        let (tf, ts) = (pattern_tph(net, self.fast.0, lev), pattern_tph(net, self.slow.0, lev));
         let key = [tf.to_bits(), ts.to_bits()];
         if let Some(o) = self.memo.lock().unwrap().iter().find(|m| m.0 == key) {
             return o.1.clone();
@@ -158,18 +175,19 @@ impl Plan {
         o
     }
 
-    /// The relative phase (of `PHASES` a faster headway) with the least waiting and loss an hour.
+    /// The relative phase (of `PHASES` a faster headway) with the least waiting, loss and time the
+    /// slower trains are held behind faster ones (`Outcome::behind`) an hour.
     fn best(&self, tf: f64, ts: f64) -> Outcome {
         let n = self.points.len();
         if !(tf > 0.0 && ts > 0.0) {
-            return Outcome { loss: 0.0, waits: vec![0.0; n], offset: 0.0 };
+            return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0 };
         }
         let (hf, hs) = (3600.0 / tf, 3600.0 / ts);
         let c = cycle(hs, hf);
         let mut best: Option<(f64, Outcome)> = None;
         for k in 0..PHASES {
             let (o, _) = self.sweep(hs, hf, hf * k as f64 / PHASES as f64, c);
-            let cost = o.loss * tf + o.waits.iter().sum::<f64>() * ts;
+            let cost = o.loss * tf + (o.waits.iter().sum::<f64>() + o.behind) * ts;
             if best.as_ref().map_or(true, |b| cost < b.0 - 1e-9) {
                 best = Some((cost, o));
             }
@@ -222,35 +240,39 @@ impl Plan {
                 ahead = Some((arr, t.slow));
             }
             if pt.passing {
-                let b = self.points[self.next[p]];
+                let (b, q) = (self.points[self.next[p]], self.points[p + 1]);
                 let (run_s, run_f) = (b.slow[0] - pt.slow[1], b.fast[0] - pt.fast[1]);
+                // T-2245: a slower train stepping out behind a faster one leaves late enough to be the
+                // spacing behind it at the next point, where it would otherwise be held on the line
+                let lead = PASS_CLEAR_S.max(q.fast[0] - pt.fast[1] + self.spacing - (q.slow[0] - pt.slow[1]));
                 fast.clear();
                 fast.extend(tr.iter().filter(|t| !t.slow).map(|t| t.dep));
                 fast.sort_by(f64::total_cmp);
                 for t in tr.iter_mut().filter(|t| t.slow) {
                     let normal = t.dep;
                     for &xa in &fast {
-                        if xa + PASS_CLEAR_S <= t.dep {
+                        if xa + lead <= t.dep {
                             continue;
                         }
-                        if xa + run_f >= t.dep + run_s + self.spacing || xa + PASS_CLEAR_S - normal > hs - self.spacing {
+                        if xa + run_f >= t.dep + run_s + self.spacing || xa + lead - normal > hs - self.spacing {
                             break;
                         }
-                        t.dep = xa + PASS_CLEAR_S;
+                        t.dep = xa + lead;
                     }
                     t.wait[p] = t.dep - normal;
                 }
             }
             (prev_s, prev_f) = (pt.slow[1], pt.fast[1]);
         }
-        let end = self.points[n - 1].fast[0];
+        let (end, end_s) = (self.points[n - 1].fast[0], self.points[n - 1].slow[0]);
         let (mut loss, mut nf) = (0.0f64, 0.0f64);
-        let (mut waits, mut ns) = (vec![0.0f64; n], 0.0f64);
+        let (mut waits, mut ns, mut behind) = (vec![0.0f64; n], 0.0f64, 0.0f64);
         let mut each = vec![];
         for t in tr.iter().filter(|t| t.measured) {
             if t.slow {
                 ns += 1.0;
                 waits.iter_mut().zip(&t.wait).for_each(|(a, w)| *a += w);
+                behind += t.arr - t.t0 - end_s - t.wait.iter().sum::<f64>();
                 each.push(t.wait.clone());
             } else {
                 nf += 1.0;
@@ -258,7 +280,7 @@ impl Plan {
             }
         }
         waits.iter_mut().for_each(|w| *w /= ns.max(1.0));
-        (Outcome { loss: loss / nf.max(1.0), waits, offset: x }, each)
+        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / ns.max(1.0), offset: x }, each)
     }
 }
 

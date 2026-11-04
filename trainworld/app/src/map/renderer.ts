@@ -668,7 +668,7 @@ export class NetworkRenderer {
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -1709,6 +1709,15 @@ export class NetworkRenderer {
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
       gl.uniform2f(su.u_fixed, (boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) - (opt.boxShrinkPx ?? 0)) * dpr, unitAtBox);
       gl.uniform1f(su.u_pass_half, (pass ? pass.half - (opt.boxShrinkPx ?? 0) : 0) * dpr);
+      // T-2249: a passing station's riders stand between its running track and the outer track's
+      // inner edge (the outer track as the track strokes draw it)
+      let passIn = 0;
+      if (pass) {
+        const G = lanes.gap * dpr, lt = lanes.share * G * wTrack / wLine;
+        const wl = lanes.t > 0 ? 0.5 * (Math.max(wTrack, G + lt) - lanes.t * (G - lt)) : wTrack;
+        passIn = Math.max(0, pass.off * dpr - 0.5 * Math.max(wl, dpr));
+      }
+      gl.uniform1f(su.u_pass_in, passIn);
       gl.bindVertexArray(this.stationVao);
       gl.uniform1f(su.u_pixel, dpr);
       gl.uniform1i(su.u_layer, 0);

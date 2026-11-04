@@ -141,12 +141,14 @@ export interface NetworkBuffers {
    * passing stations' outer tracks (T-2233, `F_PASSING`) */
   turnbacks?: Strokes;
   /** T-2233: per train sample, m past the nearest end of a platform with passing tracks where its line
-   * stops (below 0 along the platform), where its trains move out to the outer track (`passBow`
-   * over PASS_LEAD_M); absent or large: none near */
+   * stops on the outer track (below 0 along the platform), where its trains move out to it (`passBow`
+   * over PASS_LEAD_M; past the end scaled by PASS_LEAD_M over that side's lead, T-2248); absent or
+   * large: none near */
   samplePass?: Float32Array;
   /** T-2233, for the train guard: every passing station on each line's path, PASS_STRIDE numbers
-   * each, by line then along run 0: line, offset along run 0 (m), half the platform (m), node, 1
-   * where the line stops there */
+   * each, by line then along run 0: line, offset along run 0 (m), half the platform (m), node, where
+   * its trains are there (PASS_THROUGH, PASS_OUTER, PASS_INNER), and the outer track's lead before
+   * and after the platform along run 0 (m, `passLead`) */
   passing?: Float32Array;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
   edgePts: Map<number, Float32Array>;
@@ -679,16 +681,17 @@ function terminalSidings(b: StrokeBuilder, s: ClockState, ways: (node: number) =
  * its end. The renderer sets how far out the outer track is (`passingState`); lane values say how
  * far along the bow (`passBow`) a point is.
  */
-function passingTracks(b: StrokeBuilder, at: readonly ClockState["nodes"][number][], ways: (node: number) => [number, Float32Array][]) {
+function passingTracks(b: StrokeBuilder, at: readonly ClockState["nodes"][number][], ways: (node: number) => [number, Float32Array][], leadOf: (node: number, edge: number) => number) {
   const LEAD_CUTS = 8;
   for (const n of at) {
     const ws = ways(n.id);
     if (ws.length < 2) continue;
     const perM = 1 / Math.cos(n.lat * Math.PI / 180);
     const flags = F_PASSING | (n.stationBuilt ? 0 : F_FADED);
-    const d0 = n.platform / 2 * perM, d1 = d0 + PASS_LEAD_M * perM;
-    const cuts = Array.from({ length: LEAD_CUTS + 1 }, (_, j) => d0 + (d1 - d0) * j / LEAD_CUTS);
+    const d0 = n.platform / 2 * perM;
     for (const [edge, p] of ws) {
+      const d1 = d0 + leadOf(n.id, edge) * perM;
+      const cuts = Array.from({ length: LEAD_CUTS + 1 }, (_, j) => d0 + (d1 - d0) * j / LEAD_CUTS);
       const pts: number[] = [p[0], p[1], p[2]], lane: number[] = [255];
       let d = 0;
       for (let k = 0; k + 1 < p.length / 3 && d < d1; k++) {
@@ -711,27 +714,82 @@ function passingTracks(b: StrokeBuilder, at: readonly ClockState["nodes"][number
 }
 
 /** Where each line's trains are at passing stations (T-2233), from the stations in `at`: per line, for
- * every one on its path, `PASS_STRIDE` numbers (`NetworkBuffers.passing`); and per train sample, how far
- * past the nearest platform's end where the line stops, m (`NetworkBuffers.samplePass`). */
-export const PASS_STRIDE = 5;
-function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, ClockState["nodes"][number]>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, lens: readonly number[], out: number[]): number[] {
+ * every one on its path, `PASS_STRIDE` numbers (`NetworkBuffers.passing`); and per station where its
+ * trains stand on the outer track: offset, half the platform, the leads before and after (`mine`,
+ * for `NetworkBuffers.samplePass`). `inner`: the stations where the line stops on the running track
+ * (`innerStops`). */
+export const PASS_STRIDE = 7;
+export const PASS_THROUGH = 0, PASS_OUTER = 1, PASS_INNER = 2;
+function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, ClockState["nodes"][number]>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, lens: readonly number[], inner: ReadonlySet<number> | undefined, leadOf: (node: number, edge: number) => number, out: number[]): number[] {
   const stops = new Set(l.stops.slice(1, -1));
   const mine: number[] = [];
   let d = 0;
-  const visit = (node: number, off: number) => {
-    const n = at.get(node);
-    if (!n || !n.stationBuilt) return;
-    const stop = stops.has(node);
-    out.push(l.id, off, n.platform / 2, node, stop ? 1 : 0);
-    if (stop) mine.push(off, n.platform / 2);
-  };
   // (a run's ends are where its trains turn, on the running track)
   l.path.forEach((p, k) => {
     const e = edgeEnds.get(p >> 1);
     d += lens[k] ?? 0;
-    if (e && k + 1 < l.path.length) visit((p & 1) ? e.a : e.b, d);
+    if (!e || k + 1 >= l.path.length) return;
+    const node = (p & 1) ? e.a : e.b, n = at.get(node);
+    if (!n || !n.stationBuilt) return;
+    const where = !stops.has(node) ? PASS_THROUGH : inner?.has(node) ? PASS_INNER : PASS_OUTER;
+    const before = leadOf(node, p >> 1), after = leadOf(node, l.path[k + 1] >> 1);
+    out.push(l.id, d, n.platform / 2, node, where, before, after);
+    if (where === PASS_OUTER) mine.push(d, n.platform / 2, before, after);
   });
   return mine;
+}
+
+/** T-2248: how far past a passing station's platform end (`half`, m) its outer track joins the running
+ * track along an edge of `lenM`: PASS_LEAD_M, or what the edge has room for past the platform, shared
+ * with the far end's outer track where that is a passing station too (`otherHalf`, else below 0). */
+export const PASS_LEAD_MIN_M = 10;
+export function passLead(lenM: number, half: number, otherHalf: number): number {
+  const room = otherHalf >= 0 ? (lenM - half - otherHalf) / 2 : lenM - half;
+  return Math.max(PASS_LEAD_MIN_M, Math.min(PASS_LEAD_M, room));
+}
+
+/** T-2248: per line, the passing stations in `at` where its trains stop on the running track: beside a
+ * slower line's train standing on the outer track (passing-tracks design, notes/T-2228.md 5). Of two
+ * lines stopping at a station and sharing the track through it, the slower is the one that stops at
+ * more of the stations on the stretch they run together; equal, both stand on the outer track. */
+function innerStops(lines: ClockState["lines"], at: ReadonlyMap<number, unknown>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>): Map<number, Set<number>> {
+  const seq = new Map<number, number[]>(), stopsOf = new Map<number, Set<number>>(), by = new Map<number, number[]>();
+  for (const l of lines) {
+    if (!l.ok || l.bus || !l.path.length) continue;
+    const nodes: number[] = [];
+    for (const [k, p] of l.path.entries()) {
+      const e = edgeEnds.get(p >> 1);
+      if (!e) break;
+      if (k === 0) nodes.push((p & 1) ? e.b : e.a);
+      nodes.push((p & 1) ? e.a : e.b);
+    }
+    seq.set(l.id, nodes);
+    stopsOf.set(l.id, new Set(l.stops));
+    for (const n of new Set(l.stops.slice(1, -1))) if (at.has(n)) by.set(n, [...(by.get(n) ?? []), l.id]);
+  }
+  const out = new Map<number, Set<number>>();
+  for (const [st, ls] of by) {
+    for (const a of ls) for (const b of ls) {
+      if (a === b) continue;
+      const A = seq.get(a)!, B = seq.get(b)!, i = A.indexOf(st), j = B.indexOf(st);
+      if (i < 0 || j < 0) continue;
+      const meets = (x: number | undefined, y: number | undefined) => x !== undefined && x === y;
+      const dir = meets(A[i + 1], B[j + 1]) || meets(A[i - 1], B[j - 1]) ? 1 : meets(A[i + 1], B[j - 1]) || meets(A[i - 1], B[j + 1]) ? -1 : 0;
+      if (!dir) continue;
+      const sa = stopsOf.get(a)!, sb = stopsOf.get(b)!;
+      let na = 0, nb = 0;
+      for (const step of [1, -1]) for (let d = step === 1 ? 0 : -1; meets(A[i + d], B[j + d * dir]); d += step) {
+        if (sa.has(A[i + d])) na++;
+        if (sb.has(A[i + d])) nb++;
+      }
+      if (na < nb) {
+        const v = out.get(a);
+        if (v) v.add(st);
+        else out.set(a, new Set([st]));
+      }
+    }
+  }
+  return out;
 }
 
 /**
@@ -1074,6 +1132,33 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   for (const e of s.edges) if (e.tracks === 2) doubleAt.add(e.a).add(e.b);
   const passingAt = new Map<number, ClockState["nodes"][number]>();
   for (const n of s.nodes) if (n.platform > 0 && hasUpgrade(n.upgrades, UPGRADE.passing) && doubleAt.has(n.id)) passingAt.set(n.id, n);
+  const innerAt = passingAt.size ? innerStops(s.lines, passingAt, edgeEnds) : null;
+  // T-2248: a passing station's way out along an edge, carried on through plain nodes (two edges) until
+  // its outer track's lead fits, and the lead it has room for
+  const edgesAt = new Map<number, number[]>();
+  if (passingAt.size) for (const e of s.edges) for (const x of [e.a, e.b]) edgesAt.set(x, [...(edgesAt.get(x) ?? []), e.id]);
+  const passWays = new Map<number, { edges: number[]; lead: number }>();
+  const passWay = (node: number, edge: number) => {
+    const key = node * 2 ** 26 + edge;
+    let w = passWays.get(key);
+    if (w) return w;
+    const half = (passingAt.get(node)?.platform ?? 0) / 2, want = half + PASS_LEAD_M, edges = [edge];
+    let e = edgeEnds.get(edge), len = e?.lengthM ?? 0, far = e ? (e.a === node ? e.b : e.a) : -1;
+    while (e && len < want && !passingAt.has(far)) {
+      const from: number = e.id, next = (edgesAt.get(far) ?? []).filter((id) => id !== from);
+      const ne = next.length === 1 ? edgeEnds.get(next[0]) : undefined;
+      if (!ne) break;
+      edges.push(ne.id);
+      len += ne.lengthM;
+      far = ne.a === far ? ne.b : ne.a;
+      e = ne;
+    }
+    const o = far !== node ? passingAt.get(far) : undefined;
+    w = { edges, lead: passLead(len, half, o ? o.platform / 2 : -1) };
+    passWays.set(key, w);
+    return w;
+  };
+  const leadOf = (node: number, edge: number) => (passingAt.has(node) ? passWay(node, edge).lead : PASS_LEAD_M);
   const passing: number[] = [];
   const nSamples = r.samples.length / 2;
   const samplePass = new Float32Array(passingAt.size ? nSamples : 0).fill(1e9);
@@ -1160,10 +1245,13 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     sampleLane.set(sm.lane, first);
     if (sm.band.length) sampleBand.set(sm.band, first * 2);
     if (passingAt.size && !l.bus) {
-      const mine = linePassing(l, passingAt, edgeEnds, lens, passing);
+      const mine = linePassing(l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, passing);
       for (let k = 0; k < count && mine.length; k++) {
         let v = 1e9;
-        for (let j = 0; j < mine.length; j += 2) v = Math.min(v, Math.abs(k * step - mine[j]) - mine[j + 1]);
+        for (let j = 0; j < mine.length; j += 4) {
+          const x = k * step - mine[j], past = Math.abs(x) - mine[j + 1];
+          v = Math.min(v, past > 0 ? past * PASS_LEAD_M / mine[x < 0 ? j + 2 : j + 3] : past);
+        }
         samplePass[first + k] = v;
       }
     }
@@ -1228,7 +1316,20 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => {
     const ways = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => [id, way(n, id)]);
     terminalSidings(b, s, ways);
-    passingTracks(b, [...passingAt.values()], ways);
+    // a passing station's ways, carried on as far as `passWay` goes
+    const waysOut = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => {
+      const parts: Float32Array[] = [];
+      let at = n;
+      for (const e of passWay(n, id).edges) {
+        const p = way(at, e), ends = edgeEnds.get(e);
+        parts.push(parts.length ? p.subarray(3) : p);
+        if (ends) at = ends.a === at ? ends.b : ends.a;
+      }
+      const out = new Float32Array(parts.reduce((m, p) => m + p.length, 0));
+      parts.reduce((o, p) => (out.set(p, o), o + p.length), 0);
+      return [id, out];
+    });
+    passingTracks(b, [...passingAt.values()], waysOut, leadOf);
   });
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.

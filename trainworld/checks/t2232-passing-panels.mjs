@@ -127,7 +127,8 @@ try {
   const after = await readPanel(page);
   console.log('express after', JSON.stringify(after.rows));
   const behind1 = after.rows.find((r) => r[0] === 'Behind slower trains');
-  check(!behind1, `"Behind slower trains" is gone from the express${behind1 ? ' (' + behind1[1] + ')' : ''}`);
+  // (the plan's best phase can leave the express a few seconds behind, 8 s a trip at 10/10, T-2245)
+  check(!behind1 || /^\d+s$/.test(behind1[1]) && parseInt(behind1[1]) <= 30, `"Behind slower trains" is gone from the express or under 30 s${behind1 ? ' (' + behind1[1] + ')' : ''}`);
   check(!after.buttons.some((b) => b.text.startsWith('Add passing tracks')), 'the button is gone');
   await shot(page, 'express-after-light.png');
 
@@ -139,6 +140,10 @@ try {
   const waitRow = local.rows.find((r) => r[0] === 'Waiting for faster trains');
   const places = local.rows.filter((r) => /^At .+, for Express trains$/.test(r[0]));
   check(!!waitRow, `the local shows "Waiting for faster trains" (${waitRow?.[1]})`);
+  // T-2245: timetabled at the headways set (10/10 by default), the local waits as on T-2231's test line,
+  // about 13 minutes a round trip at two stations each way (18m27s at the trains' own 580/571 s)
+  const mins = (v) => { const m = /(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?/.exec(v ?? ''); return m ? (Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0) + Number(m[3] ?? 0) / 60) : NaN; };
+  if (HL === 600 && HX === 600) check(mins(waitRow?.[1]) > 8 && mins(waitRow?.[1]) < 15, `T-2245: the local waits ${waitRow?.[1]} a round trip, 8-15 minutes`);
   check(places.length > 0, `and where: ${places.map((r) => r[0] + ' ' + r[1]).join('; ')}`);
   const wi = local.rows.indexOf(waitRow);
   check(wi >= 0 && local.rows.slice(wi + 1).every((r) => /, for Express trains$/.test(r[0])), 'only its own places sit under "Waiting for faster trains"');
