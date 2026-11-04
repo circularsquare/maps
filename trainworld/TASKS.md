@@ -191,6 +191,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1791 [P3] Line groups, stage 4 only (stages 1-3 landed, ARCHIVE): boardings in the group view; left out of stage 2 as a later stage if wanted. Open; notes/T-1791.md.
 
 ## Track and trains
+- T-2430 [P2] The station tool's "n trips within 1km" tag no longer shows (Anita 2026-11-04); its code (`tripsNear`, `helpLines` in map/tools.ts) is unchanged since 8c965a29, so a landing around it broke it. Open; taking, 2026-11-04, agent neartrips (tree .tw-trees/neartrips).
 - T-2429 [P3] On track at capacity (two lines of 40 trains), a count edit to one line of a following pair makes a train standing at a terminal vanish at the edit's instant; predates T-2419 (fails on its base too). notes/T-2413.md. Open.
 - T-2063 [P3] Watch the T-1966 waits at a crossing junction move on screen. Neither New York save has a crossing pair of junction moves (the real save's lines share no node's moves; the shared save has none), and `checks/t1966-cross.mjs ... test` builds a Y with one pair but too few trains meet there to see a wait. Open; notes/T-1966.md. notes/T-2063.md.
 - T-2164 [P3] After T-2064 the real save has no flat crossing, so `checks/t1966-cross.mjs` and `t1966-pics.mjs` find no waits on it: give them a save with drawn crossings that trains meet at (like the check's `test` Y). Open; notes/T-2064.md.

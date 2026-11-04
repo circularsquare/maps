@@ -1,157 +1,101 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5f661fa7-7343-4c77-9e53-f444fc8a7bd5, name maps-5c, since 2026-11-04 09:05
-Updated: 2026-11-04 13:30 (maps-c9 wound down ~13:15; its lines folded in below)
+Updated: 2026-11-04 ~15:10 local clock (context past 500k: a fresh orchestrator can take over any time)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **314776ed** (maps-c9's last: US/PR replan T-2301 shipped; it also swept in tidy-docs/tidy-checks' staged
-  `git mv`s of notes/ and checks/old/, ~466 paths: they were final, nothing lost). Before: eac6f326 panels2, 5b825d59
-  crowd, e1076e5a trackbar, 695a441b countries2's plans, 7c7b87b5 morning notes.
-- **8800 = build 891 (1debc265)**, plain from data/packs, smoke 23/23 light and dark; real save 12,517,619 rail
-  trips. LIVE = 821. Publish only on Anita's word (release "later this week").
-- **Cores cap 15** (Anita 08:05: "using lots of cores is fine"). Disk ~25 GB free.
-- Worktrees: t1734 (kept), reach, bldgalign, home (all done, rebased on 314776ed, to land), panels3 (agent working).
-- **Pack lock: maps-5c's**, held by agent countries3 once it gets "go".
+- master **dad3c5e6** (records) after 1fbe042b hsrfix T-2419. Today's landings, newest first: 1fbe042b T-2419 fast
+  behind slow, 861369d9 T-2365 trip graph, a2eb391f T-2414 bridge ramps, f4977dd7 RU/BY shipped, 184937ae T-2420
+  profit map, 67468b83 T-2407 diagram blocks, beec2537 uismall, adf36414 trip kernel, 83dee708 T-2405/T-2408 diagram
+  strokes, d295f405 T-2403 lag, 441780dc panels3, 3cf52fc0 home, 3b795c19 T-2363, 6039c1b0 T-1920, 401fd11d cleanup.
+- **8800 = build 907 (dad3c5e6)**, plain from data/packs. Light smoke failed once (53 console "pE") while
+  waterroute's parts rerun rewrote 2,971 packs during the build's copy; rerun PASSED, dark PASSED. **Rebuild 8800
+  once waterroute's re-route is written**, so its packs are one consistent state. LIVE = 821. Publish only on
+  Anita's word (release "later this week").
+- Cores cap 15 (Anita: "using lots of cores is fine"). Disk ~28 GB free.
+- Worktrees: t1734 (solveend's), neartrips, waterroute.
+- **Pack lock: waterroute's** (order: waterroute -> countries3 Jakarta T-2341 -> Ukraine T-2344 -> T-2302 Europe).
+- Uncommitted in main tree, not mine to commit until their agent says: waterroute's pipeline/market_drives.py,
+  parts_run.py, routes.py, notes/T-2424*; countries3's Ukraine code pipeline/world_plan.py, docs/zones.md,
+  notes/T-2344.md, notes/t2344/; solveend's notes/T-1734*, T-2409.md, T-2410.md; TODO.md (Anita's).
 
 ## Anita today (2026-11-04), in her words where it matters
-- 09:05 cleanup: "we might be overdue for a code and documentation cleanup ... have some agents look around the
-  project and plan this out"; ~10:30 "feel free to make decisions among yourselves regarding reorg".
-- T-1920 yes ("ah yes, lets do it"). Drives: "yes we can remove drives and close it" (T-2384). One Average-load basis
-  for train/bus/boat (T-2373). Split bar: measure first, "report both trip count and by km", goal ticks stay a share
-  of trips (T-2364). Home/All cities strings: "yup text fine".
-- Her batches: notes/todo-2026-11-04a.md (morning, T-2333..47), -04b.md (T-2363..65), -04c.md (T-2386..95).
+- Cleanup: "we might be overdue for a code and documentation cleanup"; "feel free to make decisions among yourselves
+  regarding reorg" (T-2359 stages T-2366..T-2384; T-2366/67 done).
+- Drives removed (T-2384), one Average-load basis (T-2373), T-1920 yes, home strings "yup text fine".
+- Split bar: bar/ticks/star stay on trips; trip graph built as she picked ("i like the log graph", other places on
+  the same chart, "Trip count"); T-2365 done.
+- Diagram: "one unified view ... city/region blocks is nice"; faint real-shaped city borders inside blocks (T-2168),
+  water across blocks (T-2169), thin lines fade (done).
+- Demand behind the clock: "yes lets stop at 4x"; "time capped", "calculation 1 day behind" (T-2409).
+- Fast behind slow: "we can go with proposed fix" as long as the 7 express+local on one double track stays bad (done).
+- Water: "yeah lets do road detours ... keep the osm car ferries and just make ferries quite expensive" (T-2424).
+- Batches: notes/todo-2026-11-04a.md .. -04f.md.
 
-## In flight (all maps-5c's)
-- **countries3** a98664e86d75b14a3 (Opus, port 6194, ids T-2398..T-2402): RU/BY join + T-2054 chain, then T-2341
-  Jakarta, then T-2344 Ukraine (its uncommitted: pipeline/world_plan.py, docs/zones.md, docs/data-register.md,
-  notes/T-2295.md, notes/t2344/). Ready to write RU/BY; **waits on my "go"** (after the three landings below). Claim
-  8 cores at go. Its join re-gates without a browser, so app landings don't disturb it.
-- **Landed ~13:45**: 401fd11d cleanup + mixed docs; 6039c1b0 reach (T-1920, main WASM rebuilt); 3b795c19 bldgalign
-  (T-2363); 3cf52fc0 home (T-2389/T-2395). Trees removed; typecheck clean on master. **Not yet**: smoke on master
-  (machine at 100% CPU: four measuring/UI pages over their claims plus the join; asked them to keep to claims) and
-  the 8800 rebuild (wait for the RU/BY join to finish writing packs, or use the freeze).
-- countries3's RU/BY join running since ~13:30: cmd 35764, python 37000, --jobs 8, log
-  artifacts/trainworld/countries/t2295-join.log, prejoin backup done (1.7 GB).
-- **panels3** a67f7bd7841ce0a23 (Opus, tree, port 6192): T-2392 Loading..., T-2387, T-2391, T-2397, T-2390, T-2394.
-- Done, retired: splitkm (T-2364 archived; T-2365 design shown to Anita, review/split-by-length.png, waits on her),
-  lagblue (T-2388 archived; fixes T-2403 running, T-2404 later).
-- af04bc3536fc3910f **lagdemand** T-2386 (6190): one more Japan run at 4 cores when free, then reports.
-- a7f3f79599d445573 **lagfix** (Opus, tree .tw-trees/lagfix, port 6195): T-2403 blueprint lag fixes 1-3, 5.
-- Anita ~14:30 on the diagram (notes/todo-2026-11-04d.md): ac3669604eb2d8174 **diagpar** (Opus, tree .tw-trees/diagpar,
-  port 6196) T-2405 no line hidden under another, parallel strokes. diagscale done (T-2406 archived; T-2407 stage 1
-  waits on Anita's pick; review/diagram-blocks.png, diagram-today.png, diagram-country-level.png).
-- **8800 = build 891 (1debc265)** ~15:30: has panels3 (441780dc), home, bldgalign, reach; smoke 23/23 light and dark on
-  8800 and on master's Vite. Built mid-RU/BY join: the join writes only new RU/BY packs (not in the committed
-  registry) and global files at its end, so the build's packs are the committed set.
-- Anita ~16:00 (notes/todo-2026-11-04e.md): diagram = one unified view with city blocks (T-2407 go), faint real-shaped
-  city borders inside blocks (T-2168), water across blocks (T-2169), thin lines fade not vanish (T-2408, queued to
-  diagpar). Split bar: Other cities own row; hover with small mode bars; by-length as a graph (area = trips; x or y,
-  linear if legible); rename "Within". Launched a614e73f8869f042b **diagblocks** (Opus, tree, port 6199, T-2407) and
-  a0701e43d8c50c68d **tripgraph** (Opus, tree, port 6188, T-2365 stage 1: kernel bins by length + mockups, WASM change
-  OK in its tree; UI after her look).
-- Later: lagfix landed d295f405 (T-2403: ~450 -> ~190 ms freeze); **8800 = build 893 (8621b7dd)**, smoke 23/23 light
-  and dark. lagdemand done (T-2386 archived): launched a6dd5545d2de795d1 **solveend** (Opus, tree .tw-trees/t1734
-  rebased by it, port 6187): T-1734 land-ready, then T-2410 new line skips the local solve. T-2409 (estimate + clock
-  caps + strings) waits on Anita's 1x-or-4x call. RU/BY join: in `step intercity --solve` (pid 41468) since ~11:14
-  local clock, no log output while it solves.
-- diagpar landed 83dee708 (T-2405, T-2408); **8800 = build 895 (61c7dd29)**, smoke 23/23 light and dark. diagblocks told
-  to rebase. Anita: T-2409 caps at 4x only, strings "Calculation 1 day behind", "Time capped at 4x while updating
-  demand"; queued to solveend after T-1734 and T-2410.
-- tripgraph done (T-2365 stage 1 landed adf36414: kernel `trip_lengths_day`, main WASM rebuilt; retired at 471k).
-  Stage 2 (UI) waits on Anita's pick: review/trips-by-length-log.png (its pick), -vertical, -bars, split-hover.png.
-- Anita evening notes (notes/todo-2026-11-04f.md, T-2411..T-2418). Running: a99a2b6b0ed498dee **uismall** (Opus, tree,
-  6190: T-2415 wrench, T-2416 diagram exit button + Esc, T-2412 track-under-station removal); a1cf37636d38484e7
-  **ramps** (Opus, tree, 6191: T-2414 bridge ramps); a1a42c71ac616cd89 **carwater** (Opus, read-only, 6193: T-2418
-  Liberty/Governors driving + car across water; islands fix waits on my go); abda6df47a7705c4e **hsrdelay** (Opus,
-  read-only, 6192: T-2413); a27d271723090d34a **profit** (Opus, read-only, 6195: T-2411 design). T-2417 (diagram
-  stretched to Philadelphia) queued for diagblocks after T-2407. Islands T-2256/T-2216 after carwater reports.
-- hsrdelay done (T-2413 archived): fix T-2419 waits on Anita (overtake plan for every shared stretch).
-- Evening landings: beec2537 uismall (T-2415 wrench, T-2416 diagram close + Esc, T-2412), 67468b83 diagblocks (T-2407
-  blocks, T-2417 fallback; follow-up T-2425 Japan stretches). **8800 = build 900 (1d43acf2)**, smoke 23/23 light/dark.
-  carwater done (T-2418 archived): T-2421 Liberty islets (pack write: between countries3 jobs; carwater knows it),
-  T-2422 Governors tunnel (next data batch), T-2423 NI bug (after RU/BY chain: market_drives.py in use), T-2424
-  water detours + ferries (waits on Anita).
-- profit landed 184937ae (T-2411/T-2420 Profit track display); not on 8800 yet (next rebuild).
-- Running now: abda6df47a7705c4e **hsrfix** (resumed hsrdelay, tree .tw-trees/hsrfix, 6192, T-2419, Anita's go: the 7 express+local
-  case must stay bad); a3452676b4ab063f5 **tripui** (Opus, tree .tw-trees/tripui, 6189, T-2365 stage 2: log graph with
-  other places on it, polish, "Trips within New York", hover with "Trip count"); a1cf37636d38484e7 **ramps** (tree,
-  6191, T-2414); a6dd5545d2de795d1 **solveend** (t1734 tree, 6187); countries3 (RU/BY chain).
-- Anita: road detours yes, keep OSM car ferries but make ferries quite expensive. aaf4ca522c7b5427c **waterroute** (Opus,
-  tree .tw-trees/waterroute, 6196; ids T-2426..T-2428): T-2424 A+B, T-2423 NI, T-2421 Liberty. Rust in its tree now;
-  pipeline edits and pack writes wait on my "go" after countries3's RU/BY chain; countries3 told to pause before
-  Jakarta. **Pack-lock order: RU/BY chain -> waterroute (re-route ~2h + parts ~11 min) -> Jakarta -> Ukraine -> T-2302.**
-- RU/BY shipped and committed f4977dd7 (181 rows); pre-T2295 backup deleted after 8800 passed. ramps landed a2eb391f
-  (T-2414, main WASM rebuilt), tripui landed 861369d9 (T-2365 done). **8800 = build 905 (a8b7bbcd)**: Russia/Belarus,
-  profit map, trip graph, bridge ramps; smoke 23/23 light/dark. waterroute has the pack lock (pipeline edits under
-  way, uncommitted: market_drives.py, parts_run.py, routes.py); countries3 paused before Jakarta (its Ukraine code
-  uncommitted: world_plan.py, zones.md, T-2344.md, t2344/).
-- hsrfix landed 1fbe042b (T-2419; main WASM rebuilt; both cargo runs pass on master after ramps + hsrfix: 360, 532).
-  Not on 8800 yet. Filed T-2429 (terminal train vanishes on a count edit at capacity, older bug).
-- Next free id **T-2430**.
-- Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
-  (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
-  T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).
+## In flight
+- **waterroute** aaf4ca522c7b5427c (Opus, tree .tw-trees/waterroute, 6196, ids T-2426..T-2428): T-2421 Liberty islets
+  DONE in packs (parts rerun, checks pass); T-2424 market drives re-route restarted 14:46 on 7 workers, done
+  ~16:00-16:30, log artifacts/trainworld/t2424-market-drives.log; T-2423 NI fix in it. Then: its Rust (intercity.rs
+  zone detours, ferry cost) lands from its tree, pipeline + notes committed, 8800 rebuilt, then tell countries3 go.
+- **countries3** a98664e86d75b14a3 (Opus, 6194, ids T-2398..T-2402): paused before Jakarta; asks "go" before each pack
+  write. Ukraine dry run ready (27 zones + kyi/kha/ode; Crimea as 3 zones to RUS; 959 councils left out). Tell Anita
+  after: Sukabumi+Cianjur one zone, Karawang out of Jakarta; ISW line not an open licence (only whole units dropped).
+- **solveend** a6dd5545d2de795d1 (Opus, tree .tw-trees/t1734, 6187): T-1734 rebased and re-measured, then T-2410 (new
+  line skips local solve), then T-2409 (4x cap, status tag strings above; "how wrong" estimate only if useful).
+  Told about all landings since; it rebases before reporting.
+- **neartrips** ac66e591d8883cf7f (Opus, tree .tw-trees/neartrips, 6192): T-2430 the station tool's "n trips within
+  1km" tag no longer shows; bisect today's landings, fix, check.
+- Next free id **T-2431**.
 
 ## Next
-1. Land reach, bldgalign, home (agent-tree land each; reach rebuilds main WASM), smoke, commit docs, "go" to
-   countries3, 8800.
-2. File replan2's follow-ups: TASKS header's "US replan waits for Anita" line; `pair_files.py unused --move` for old
-   US units' joint files; its gates used the 11405b29 sim copy.
-3. As reports come: panels3 land; splitkm/lagdemand/lagblue designs to Anita; countries3 commits per job.
-4. Cleanup stages as files free up (above). Then T-2302 Europe replan (after countries3's queue).
-5. Others when cores allow: T-2324 walk-rule cost, T-2300 Taiwan Central Range, T-2296 census plan, T-2321 diagram,
-   T-2332 colours, T-2326 AWS seed, T-2216/T-2256 islands, T-2396 dock height.
+1. As agents report: land trees (rebase, both cargo runs if sim changed, typecheck, smoke), commit records by path,
+   rebuild 8800, smoke light and dark, show Anita strings old -> new.
+2. Pack lock: waterroute -> countries3 Jakarta -> Ukraine -> T-2302 Europe replan.
+3. Waiting: T-2404 (blueprint follow-up), T-2425 (diagram Japan stretches), T-2429 (terminal train vanishes),
+   T-2256/T-2216 islands (after waterroute), T-2422 Governors tunnel (next data batch), cleanup stages T-2368..T-2384
+   (T-2368 code-map, T-2369 app dead code, T-2370 flags, T-2376 docs, T-2379 sim, T-2384 drives removal, T-2298),
+   T-2168/T-2169 diagram borders and water, T-2396 dock height, T-2393 scheduler idea.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\5f661fa7-7343-4c77-9e53-f444fc8a7bd5\scratchpad
   (snapbuild.cmd, snapbuild-frozen.cmd, keep_hunks.py, mark_taking.py `<tasks.md> T-x=agent ...`,
   common-brief-tree.md for tree agents, lowdisk.ps1). A new orchestrator copies these and fixes the path inside
   snapbuild-frozen.cmd.
-- 8800: `cmd /c "<scratch>\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"` (or `snapbuild-frozen.cmd <hash>
-  20261103-162459` while packs are being written). Then smoke on http://localhost:8800/trainworld/ light and
-  SMOKE_SHADE=dark (claim 4 cores). Build number = `git rev-list --count <hash>`.
-- Pre-commit smoke: own Vite (`node trainworld/checks/dev-nowatch.mjs 6197`), smoke; stop it by its port's PID.
-- Landing a tree: `git -C <tree> add --all -- trainworld`, commit "agent-tree: work in progress", `rebase master`;
-  for sim changes both cargo runs and `npm run wasm` in the tree; typecheck and smoke; then `agent-tree.mjs land
-  <name> "<sentence>"` and `remove`. ff fails if the main tree has uncommitted edits in a file the commit touches:
-  commit those first.
-- **Commit with a pathspec**: `git commit -m "..." -- <paths>` (other sessions and agents stage too).
-- Mixed files: `python <scratch>\keep_hunks.py <maps root> <path> <marker>...` (-U0).
-- Docs lint: `venv\Scripts\python.exe trainworld\checks\doc_lint.py` (exit 1 on findings).
+- 8800: `cmd /c "<scratch>\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"`, then claim 4 cores, smoke on
+  http://localhost:8800/trainworld/ light and with `$env:SMOKE_SHADE='dark'`. Build number = `git rev-list --count`.
+- Landing a tree: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"` (rebases itself; rebuilds the
+  main WASM when sim changed), then `remove <name>`. ff fails if the main tree has uncommitted edits in a file the
+  commit touches: commit those first.
+- **Commit by path**: `git commit -m "..." -- <paths>` (other sessions stage too).
+- Docs lint: `venv\Scripts\python.exe trainworld\checks\doc_lint.py`.
 - Publish: `freeze.py build <stamp>` with TW_MARKET_DRIVES set, `deploy.py --dist <dist> --version <v> --smoked`,
   website `git add trainsworld/ trainworld/`, commit "anitabuilder", push (her word), `deploy.py --verify --page
-  --version <v>`. Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
+  --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
 - T-2267/T-2270 design leftovers: optional cross "Stop (Esc)", 3 px coloured bar edge, T-2285 Shift+1-7, mode
   colours (notes/for-anita.md "Open now").
 - Fares: optional hover "Riders pay the old fares until demand has settled"?
-- Strings maps-1c listed (Ferry tool T-2194, building tool T-2218, crowding T-2236, diagram T-2163, ferry demand rows
-  T-2195, building hover T-2220): not acknowledged as far as known.
-- Tell her after countries3: Sukabumi+Cianjur one zone (could be two); Karawang out of Jakarta; ISW line not an open
-  licence (only whole units left out, nothing of it drawn) before publish.
+- Profit map calls she may change: half base fare by boardings, blue for profit, no key.
 
 ## Lessons from this run
-- `git add <paths>` then `git commit` also commits whatever another session already staged (314776ed swept in ~466
-  staged moves). Commit with a pathspec.
-- A gate's browser checks run on a Vite over the main tree: an app edit or `npm run wasm` mid-gate makes every page
-  throw. Hold app/WASM landings while a browser gate runs (joins re-gate without a browser), or T-2298.
-- Tree agents' pages read the main data junction: a tree made before a replan's game json is committed asks for
-  retired packs ("New York could not load", packs served as HTML). Not a code fault.
-- `world_run.py step <x> --help` may run the step for real (seams rewrote borders.json once).
-- Before starting an "Open" task, `git log --grep "T-<id>"`. Her TODO.md can repeat an earlier batch: diff first.
-- Any new save block goes after BLD1 at LEVEL 5. `cargo test` without `--features demand` skips the demand tests.
-- C: can fill suddenly: check `Get-PSDrive C` before long runs.
-- Agents near 450-550k tokens: retire after their report. An agent "waiting on its own background work" re-sends
-  its report when that work ends: ignore repeats.
-- When Anita asks for cores free, check the real load (Get-Counter), not only the ledger.
+- Commit with a pathspec; another session's staged moves get swept in otherwise (314776ed).
+- Headless pages run over their core claims (a page took 7-8 cores on a 3-4 claim); briefs must say "cap the page's
+  demand workers to the claim, claim with --pid, release between runs".
+- An 8800 build during a pack rewrite can serve a mixed set (console errors); rebuild after pack writes end.
+- A gate's browser checks run on a Vite over the main tree; joins re-gate without a browser, so app/WASM landings
+  are fine during a join but not during a browser gate.
+- Tree agents' pages read the main data junction: a tree made before a replan's game json commit asks for retired
+  packs ("New York could not load").
+- `world_run.py step <x> --help` may run the step for real (T-2398).
+- Agents near 450-550k tokens: retire after their report; give follow-ups to a fresh agent.
 
 ## Anita's standing asks
 - Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
   her. Zone, region and realm names need no review.
 - TODO.md short-term = prompts: copy her words verbatim into briefs; save batches in notes/todo-<date>.md.
 - Every demand task has a "done when". Buses settled. Thanks to agents in my own reply. Keep the work moving.
-- Disk: delete orphaned temp files always; keep only the current build and the latest published ones in
-  artifacts/trainworld/publish/ and data/frozen/; delete superseded backups once a later state checks clean.
+- Disk: delete orphaned temp files always; keep only the current build and the latest published ones; delete
+  superseded backups once a later state checks clean.
