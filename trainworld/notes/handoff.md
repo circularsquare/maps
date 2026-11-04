@@ -31,6 +31,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Design T-2267/T-2270 (T-2282..T-2285): not answered yet; don't build.
 
 ## In flight
+- ~08:10 US join: the South Atlantic unit (atl, 42 packs) re-gate failed other_packs_unchanged on old member brv
+  (built 10-23): group restored, 30 new rows parked (FL, GA, Carolinas, VA, WV are holes until fixed). Other units
+  going on (Northeast shipped). replan2 will settle brv (hint: T-2213's parts fields in old headers), re-gate the
+  30, re-join that unit alone: +30-45 min after the join.
+- **US join running since 07:33** at 12 jobs (159/159 gated; python 23116, log artifacts/trainworld/t1189-us-join.log;
+  1.5-3 h). It can't change jobs mid-run: if Anita needs cores before it ends, tell her it holds 12 until ~09:00-10:30.
+  Then: T-2054 chain, names, successors, smoke, real save; then commit + 8800; then the RU/BY join.
+- ~07:40 US gate 152/159; 7 parked (6 mean_commute_km 25.1-27.9 countryside zones, fab jobs share), relaxed with
+  reasons, re-gating (log artifacts/trainworld/t1189-us-gate2.log); join straight after.
+- ~06:40 replan2: 155 landed, **163 old US ids retired (the US is half-removed until the join ships)**, market heal
+  20 packs; retire.py's stale-file move briefly took the 159 rows' files, all put back and the kit fixed. **US gate
+  running** (python 21884, port 6373, log artifacts/trainworld/t1189-us-gate.log), 8 cores.
 - **Pack lock: replan2** (abaa9dba7f94a9a7b, Opus), go given ~06:20 for T-2301's steps 1-6: backup prejoin-us,
   land.py t2301-us-3 (155 rows from AWS), retire_us.cmd (163 old ids), gate_us.cmd (159 rows, 8 cores, port 6373),
   join_us.cmd (1.5-3 h), T-2054 chain, names.py --write, zone_successors --set, smoke, real save; then
@@ -44,8 +56,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   UI batch T-2271/T-2269/T-2273..75/T-2286, demand T-2265/T-2278/T-2276, diagram T-2272/T-2289, walk-rule speed
   T-2307 (rest T-2324), T-2308, line colours T-2291, passing T-2245/48/49, Taiwan T-1189 part, Turkey T-2294 (74
   shipped), Russia/Belarus T-2295 (181 gated). Strings and pictures: notes/for-anita.md "Open now".
-- a0dfdec9a399fb405 **phone** (Sonnet, ~06:25): T-2137 Delhi on the emulated phone, measurement only (no app/sim
-  edits while the US gate runs). Port 6183. Id T-2333.
+- **phone DONE, committed 20a6e867**: T-2137 met (Delhi renderer 1.22 GB at worst, both emulated phones; T-2333 unused).
 - Not started, could go next: T-2324 rest of the walk-rule cost, T-2302 Europe
   replan after the US (628 zones to 462), T-2296 plan on census totals, T-2300 Taiwan's Central Range split,
   T-2321 diagram overlaps, T-2332 copied/bus/ferry colours, T-2326 AWS seed, T-2298 gate on a frozen app.
