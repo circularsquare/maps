@@ -39,7 +39,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   DONE in packs (parts rerun, checks pass); T-2424 market drives re-route restarted 14:46 on 7 workers, done
   ~16:00-16:30, log artifacts/trainworld/t2424-market-drives.log; T-2423 NI fix in it. Then: its Rust (intercity.rs
   zone detours, ferry cost) lands from its tree, pipeline + notes committed, 8800 rebuilt, then tell countries3 go.
-- waterroute ~16:05: market-drives.bin re-routed and checked (679,457 pairs, 2,507 with OSM car ferries, 2.68M zone
+- **waterroute landed 367be52f** (Rust) + 698d3954 (pipeline, docs, notes); worktree removed. **8800 = build 917
+  (698d3954)**: everything from today incl. T-1734/T-2410/T-2409, T-2430, water detours. Smoke: all browser checks
+  pass light and dark; only `t1053-zone-ids` fails, because Jakarta's replan is mid-way in the main tree (jak retired,
+  successors not yet written by countries3's chain): rerun smoke once countries3 commits Jakarta. Kept the 5% zone
+  detour threshold (11.5 MB, 6.7 gz) over `--zone-q 6` (8.1 MB, Toronto-Buffalo 0.94-1.08). Filed T-2426 (Bohai
+  ferries untagged for cars). Backup data/work/pre-T2418/ can go once Jakarta's state checks clean.
+- (earlier) waterroute ~16:05: market-drives.bin re-routed and checked (679,457 pairs, 2,507 with OSM car ferries, 2.68M zone
   detours, 11.5 MB; Toronto-Buffalo 0.96/1.00/1.04 of land path; Detroit-Windsor and Kutch no ferry; Belfast-Dublin
   by road). Its smoke and final report pending; then land its tree (intercity.rs), commit its pipeline files and
   notes, rebuild 8800, smoke light/dark.
