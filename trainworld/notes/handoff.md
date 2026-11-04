@@ -28,16 +28,24 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Jakarta, then T-2344 Ukraine (its uncommitted: pipeline/world_plan.py, docs/zones.md, docs/data-register.md,
   notes/T-2295.md, notes/t2344/). Ready to write RU/BY; **waits on my "go"** (after the three landings below). Claim
   8 cores at go. Its join re-gates without a browser, so app landings don't disturb it.
-- **To land now, in order**: reach (T-1920, sim: rebuilds main WASM), bldgalign (T-2363), home (T-2389/T-2395, new save
-  header field `home`). Then smoke on own Vite, commit the mixed docs, rebuild 8800 (from packs before the join
-  writes; else the freeze), show Anita.
+- **Landed ~13:45**: 401fd11d cleanup + mixed docs; 6039c1b0 reach (T-1920, main WASM rebuilt); 3b795c19 bldgalign
+  (T-2363); 3cf52fc0 home (T-2389/T-2395). Trees removed; typecheck clean on master. **Not yet**: smoke on master
+  (machine at 100% CPU: four measuring/UI pages over their claims plus the join; asked them to keep to claims) and
+  the 8800 rebuild (wait for the RU/BY join to finish writing packs, or use the freeze).
+- countries3's RU/BY join running since ~13:30: cmd 35764, python 37000, --jobs 8, log
+  artifacts/trainworld/countries/t2295-join.log, prejoin backup done (1.7 GB).
 - **panels3** a67f7bd7841ce0a23 (Opus, tree, port 6192): T-2392 Loading..., T-2387, T-2391, T-2397, T-2390, T-2394.
-- Measuring, read-only, design to Anita: a82ebcce4bd8bfb61 **splitkm** T-2364/T-2365 (port 6189; told her answer);
-  af04bc3536fc3910f **lagdemand** T-2386 (6190); a5ebe9306d132ae68 **lagblue** T-2388 (6191).
+- Done, retired: splitkm (T-2364 archived; T-2365 design shown to Anita, review/split-by-length.png, waits on her),
+  lagblue (T-2388 archived; fixes T-2403 running, T-2404 later).
+- af04bc3536fc3910f **lagdemand** T-2386 (6190): one more Japan run at 4 cores when free, then reports.
+- a7f3f79599d445573 **lagfix** (Opus, tree .tw-trees/lagfix, port 6195): T-2403 blueprint lag fixes 1-3, 5.
+- Anita ~14:30 on the diagram (notes/todo-2026-11-04d.md): ac3669604eb2d8174 **diagpar** (Opus, tree .tw-trees/diagpar,
+  port 6196) T-2405 no line hidden under another, parallel strokes; af44f88dffad9d614 **diagscale** (Opus, read-only,
+  port 6198) T-2406 large-scale distortion: research + design to Anita.
+- Next free id **T-2407**.
 - Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
   (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
   T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).
-- Next free id **T-2403**.
 
 ## Next
 1. Land reach, bldgalign, home (agent-tree land each; reach rebuilds main WASM), smoke, commit docs, "go" to

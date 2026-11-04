@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2364 The split bar by distance, measured and designed (2026-11-04, agent splitkm): train share by trips -> by km, New York 17.8% -> 26.5%, London 21.4% -> 37.6%; walking under 2 km is 72-87%. Bar stays on trips; km share and a by-length section are T-2365. notes/T-2364.md.
+- T-2388 Blueprint lag after the click, measured (2026-11-04, agent lagblue): New York freezes the ghost ~0.3-0.4 s a click (worker state 115-180 ms, achievements' figures 112-191 ms, a LOD frame later); fixes T-2403, T-2404. notes/T-2388.md.
+- T-2394 Save preview's whole network panel (2026-11-04, agent panels3): with more than 3 cities to show (each at least 8% of the biggest's stations), the fourth panel frames everything built, named "Whole network" with all its stations. docs/ui-panels.md, DECISIONS.
+- T-2390 Edit note names the lines most affected (2026-11-04, agent panels3): under the trips and profit rows, up to 5 bullets of the lines whose riders moved most (100 a day or more), hover before and after, click selects. docs/ui-map.md.
 - T-2391 Unopened zone dots rimmed medium grey (2026-11-04, agent panels3): #8c8c8c in both themes (`UNBUILT_RIM`, its own shader colour), and the light theme's realm circles to match. docs/ui-demand-views.md, DECISIONS.
 - T-2397 Selection bar hovers while plain selecting (2026-11-04, agent panels3): E and Delete work on the pick with the Select tool only, so plain selecting's Disable, Enable and Remove hovers name no key; Clear keeps Esc, which works in both. docs/ui-building.md.
 - T-2395 Home city (2026-11-04, agent home): a house icon in the city view and the new all cities view (the Cities tab's first row, totals only) sets the game's home, kept in the save header's `home`; a saved game opens there, all cities zoomed out on the network. docs/ui-inspectors.md.
