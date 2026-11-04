@@ -25,7 +25,7 @@ import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
-import { capInside, perfOff } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
@@ -97,8 +97,6 @@ const BAND_FOLD_PX = [1.25, 1.75] as const;
 const MUTE: readonly [number, number] | null = perfOff("muteThin") ? null : [0.45, 0.5];
 /** T-2126: bands side by side with a pixel between (`?perfOff=bandGap`: touching, as before) */
 const BAND_GAP = !perfOff("bandGap");
-/** T-2347 mockup: the red marks inside the line's colour (perfFlags.ts `capInside`); 0 in play */
-const CAP_INSIDE = capInside();
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -1648,7 +1646,6 @@ export class NetworkRenderer {
     gl.uniform1f(u.u_full_out, 1 * fullScale);
     gl.uniform1f(u.u_full_dash, 16 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));
-    gl.uniform1i(u.u_full_inside, CAP_INSIDE);
     gl.uniform1i(u.u_ghost, 0);
     gl.uniform3fv(u.u_ghost_rgb, rgbf(shades.ghost));
     gl.uniform1i(u.u_ghost_layer, -1);
@@ -1703,8 +1700,8 @@ export class NetworkRenderer {
       };
       // [casing px, selected only, T-819's red band under the lines on full track (1), and under it (2) its outline in the casing's colour, T-1284]
       const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
-      // (and T-2184's red edges of bands with riders waiting, over the bands beside them, 3)
-      if (kind === 1 && fullPass && cap === 0 && !CAP_INSIDE) passes.unshift([casing, 0, 2], [casing, 0, 1]), passes.push([0, 0, 3]);
+      // (T-2184's red edges of bands with riders waiting are drawn by the colour pass, in the line's order, T-2347)
+      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]);
       if (sel) passes.push(...(cap > 0 ? [[0, 1, 0]] as [number, number, number][] : [[casing, 1, 0], [0, 1, 0]] as [number, number, number][]));
       for (const [cas, only, full] of passes) {
         gl.uniform1f(u.u_casing, cas);

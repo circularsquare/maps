@@ -41,7 +41,7 @@ function TrackBar() {
   const toggle = (k: "level" | "type" | "speed") => setOpen(open === k ? null : k);
   return (
     <>
-      <div class="tool-bar track-bar" role="group" aria-label="Track">
+      <div class="tool-bar track-bar" role="group" aria-label="Track" style={{ "--mode": CLICK_MODE_COLOURS.track }}>
         <div class="tb-row">
           <span class="muted tb-wide">Level</span>
           <div class="tb-wide"><LevelButtons value={lv} tip={(l) => levelTip(l, tt, m)} onPick={(l) => (buildLevel.value = l)} /></div>
@@ -101,7 +101,7 @@ function TrackBar() {
 
 function StationBar() {
   return (
-    <div class="tool-bar station-bar" role="group" aria-label="Station">
+    <div class="tool-bar station-bar" role="group" aria-label="Station" style={{ "--mode": CLICK_MODE_COLOURS.station }}>
       <div class="tb-row">
         <span>Platform length</span>
         <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => {

@@ -975,7 +975,7 @@ button.save-add:hover { color: var(--text); }
 @container map-column (max-width: 680px) { .blueprint-bar, .tool-bar { top: 148px; } }
 /* T-2282: the track and station tools' bars in the selection bar's box and place; the track bar's two
    rows, the level buttons as the Build tab had them */
-.tool-bar { flex-direction: column; align-items: stretch; padding: 6px 10px; }
+.tool-bar { flex-direction: column; align-items: stretch; padding: 6px 10px; border-top: 2px solid var(--mode); } /* T-2446: the mode's colour, 2 px */
 .tool-bar .tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .tool-bar .tb-speed { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
 .tool-bar .price { margin: 0; }

@@ -52,8 +52,6 @@ const PROFIT_BLEND = rampBlend(PROFIT_STOPS, "pv");
 export const FULL_FLOOR = 0.5, CROWD_LOAD_FROM = 1, CROWD_LOAD_STRONG = 1.5;
 /** T-1663: the red band is this share of the line's own width on top of the zoom-scaled base, so it reads on thin and thick lines alike. */
 const FULL_WIDTH_SHARE = "0.15";
-/** T-2347 mockup (`?capInside`): the red stripe's share of the line's colour width, and how far it mixes toward red */
-const INSIDE_SHARE = "0.6", INSIDE_MIX = "0.6";
 const HOT_RIM_MIX = "0.6";
 export const HOT_STATIONS = 16;
 /** T-1812: lines a selected group can draw selected */
@@ -110,9 +108,8 @@ uniform highp sampler2D u_line_colours;
 uniform int u_full_pass;     // T-819: 1 the pass drawing a red band this much (px) wider than the
 uniform float u_full_px;     // casing under the lines on track at capacity, nothing else; 2 (T-1284) the
 uniform float u_full_out;    // casing's colour this much (px) wider again, and the red band in dashes
-uniform float u_full_dash;   // of this period (px), so it reads on a red line; 3 (T-2184) a band's red edges after the lines
+uniform float u_full_dash;   // of this period (px), so it reads on a red line; a crowded band's red edges (T-2184) are drawn with its colour pass
 uniform vec3 u_full_rgb;
-uniform int u_full_inside;   // T-2347 mockup: 1 the marks a stripe inside the line's colour, 2 the same dashed; 0 as above
 uniform int u_ghost;         // T-1038: 1 for the preview pass, whose placement strokes are the ghost
 uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outline, 1 its rails, 2 its middle
 uniform vec3 u_ghost_rgb;    // the outline
@@ -144,17 +141,15 @@ flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for ev
 out float v_along;          // T-2184: px along the stroke's run, so dashes keep one length round curves
 flat out vec4 v_inner;      // T-2184: a band's red edges over its neighbours: its colour's half width, the red's and the rim's px, strength; 0 none
 flat out float v_aa;        // T-2183: a band's colour's half width (px), its sides smoothed so the gap between bands keeps its width; 0 none
-flat out vec3 v_mark;       // T-2347 mockup: the red stripe's half width (px), strength, dash period (px, 0 solid); 0 none
 ${SEL_GLSL}
 void main() {
   v_inner = vec4(0.0);
   v_aa = 0.0;
-  v_mark = vec3(0.0);
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
-  v_dash = u_full_pass == 1 || u_full_pass == 3 ? u_full_dash : 0.0;
+  v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
@@ -201,8 +196,10 @@ void main() {
   // a crowded stretch on a band of shared track: its red edges drawn after every
   // line's colour (pass 3), over the bands beside it, since under the ribbon's casing they would not show
   bool waitIn = shared && tBand && a_full.x > 0.0;
-  bool late = u_full_pass == 3;
-  if ((full && (!(u_kind == 1 && a_full.x != 0.0) || waitIn)) || (late && !waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // (T-2347: drawn with the line's colour, in the line's own order, so no line's edges lie over a line above it)
+  bool late = waitIn && u_kind == 1 && u_casing <= 0.0 && u_only_sel == 0 && u_full_pass == 0;
+  if (late) v_dash = u_full_dash;
+  if (full && (!(u_kind == 1 && a_full.x != 0.0) || waitIn)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float fs = a_full.x < 0.0 ? 1.0 : a_full.x > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full.x - ${CROWD_LOAD_FROM.toFixed(3)}) / ${(CROWD_LOAD_STRONG - CROWD_LOAD_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
   float cas = full ? u_casing + u_full_px + ${FULL_WIDTH_SHARE} * u_width.x * wmul + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
@@ -244,8 +241,6 @@ void main() {
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
   w = max(w, 1.0);
-  bool inside = u_full_inside > 0 && u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full && !late;
-  if (inside) v_mark = vec3(${INSIDE_SHARE} * 0.5 * w, fs, u_full_inside == 2 ? u_full_dash : 0.0);
   if (late) {
     float hr = 0.5 * (u_full_px + ${FULL_WIDTH_SHARE} * w), ho = 0.5 * u_full_out;
     v_inner = vec4(0.5 * w, hr, ho, fs);
@@ -329,7 +324,7 @@ void main() {
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
-  if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full && !inside) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
+  if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
@@ -347,21 +342,24 @@ flat in float v_dash;
 in float v_along;
 flat in vec4 v_inner;
 flat in float v_aa;
-flat in vec3 v_mark;
 uniform vec3 u_full_rgb;
 uniform vec3 u_casing_rgb;
 uniform float u_full_out;
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
-  float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
-  if (v_dash > 0.0 && mod(v_along, v_dash) > 0.6 * v_dash) discard;
+  // T-2184, T-2347: a crowded band's quad is its colour's width plus its red edges (v_inner.x the colour's half width)
+  bool edge = v_inner.x > 0.0 && abs(v_cap.z) >= v_inner.x;
+  float hw = v_inner.x > 0.0 ? v_inner.x : v_cap.w;
+  float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - hw), 0.0, 1.0) * v_alpha : v_alpha;
+  if (v_dash > 0.0 && (v_inner.x <= 0.0 || edge) && mod(v_along, v_dash) > 0.6 * v_dash) discard;
   vec3 c = v_color;
-  // T-2184: a band's red edges, as a line's own outside its casing, in a rim of the casing's colour
-  if (v_inner.x > 0.0) {
+  // the red edges, as a line's own outside its casing, in a rim of the casing's colour
+  if (edge) {
     // (no round caps: at a run's end, where the band's width changes, they would ring it)
     float d = abs(v_cap.z);
-    if (d < v_inner.x || past > 0.0) discard;
+    if (past > 0.0) discard;
+    a = v_alpha;
     c = mix(u_casing_rgb, u_full_rgb, v_inner.w * clamp(v_inner.x + v_inner.y + 0.5 - d, 0.0, 1.0));
     a *= clamp(v_inner.x + v_inner.y + v_inner.z + 0.5 - d, 0.0, 1.0);
   }
@@ -370,11 +368,6 @@ void main() {
     // joint), and a sharp ramp, so a gap falling between two pixels still leaves them 70% casing
     float d = v_aa + 0.5 - (past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z));
     a = v_alpha * clamp(1.6 * d - 0.5, 0.0, 1.0);
-  }
-  if (v_mark.x > 0.0 && (v_mark.z <= 0.0 || mod(v_along, v_mark.z) <= 0.6 * v_mark.z)) {
-    // straight across a round cap too: a round stripe end where segments overlap at a joint would bead it
-    float m = clamp(v_mark.x + 0.5 - abs(v_cap.z), 0.0, 1.0);
-    c = mix(c, u_full_rgb, ${INSIDE_MIX} * v_mark.y * m);
   }
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);

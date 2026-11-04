@@ -505,7 +505,7 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | Key | Does | From |
 |---|---|---|
 | 1, 2, 3, 4 | tool: draw track, place stations, delete, select; opens Build (`TOOLS`) | any tab |
-| Shift+1 to Shift+7 | draw at elevation +3 down to -3 (Shift+4 is ground level); by key code, digit row only | any tab |
+| Shift+1 to Shift+7 | draw at elevation +3 down to -3 (Shift+4 is ground level); by key code, digit row only; with a blueprint pick in the selection bar, put the pick at that level instead [T-2285] | any tab |
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
 | U, O | start a new bus line, a new ferry line (`BUS_KEY`, `FERRY_KEY`) | any tab |
 | M | swap the map for the network diagram, and back (`DIAGRAM_KEY`, `diagram/view.ts`) | any tab |
@@ -780,13 +780,13 @@ keeps what it had and earns no more.
   gold. Colours (`achievements.css`, a light and a dark value each): Cities served blue, Trips per day
   red, Busiest station orange, Busiest line green, the firsts purple.
 - **The view** (selection `achievements`): the medal and "Achievements"; each tiered one a row with its
-  name at the top left, under it a place per tier holding the tier's medal once earned or a faint outline
-  where it would go (hover the tier, and once earned when, "10 cities served, reached on Monday, day 406,
+  name at the top left, under it a place per tier holding the tier's medal once earned or blank space
+  where it would go, no outline [T-2431], so the earned medals keep their places (hover the tier, and once earned when, "10 cities served, reached on Monday, day 406,
   at 14:08" on the game clock), and at the right a 54 px ring in the achievement's colour on a pale
   track of it, filling clockwise from the top from zero toward the next tier, the figure now in its
   middle and "/100M", the next tier, small under it; past the top tier the ring is full and the figure
-  alone (hover, for the busiest station or line, which). Then, after a gap, the firsts: a gold medal once
-  earned, else an outline in its place, the name, "day 406" at the right; one not earned is muted with
+  alone (hover, for the busiest station or line, which); the figure sits 2 px below the ring's middle [T-2431]. Then, after a gap, the firsts, earned ones first and the rest after them, each group in the
+  list's order [T-2431]: a gold medal once earned, else an outline in its place, the name, "day 406" at the right; one not earned is muted with
   its rule in the hover, an earned one's hover says what earned it and when.
 - **The toast**: at the map's bottom left, 10 px in, above the tool notes (`#tools`), at most 280 px
   wide: the step's medal (the highest tier's, or gold for a first; the folded one the accent's medal icon), the name in bold, one muted line of what was reached ("1M riders/day on

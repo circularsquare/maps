@@ -72,7 +72,7 @@ export function AchievementsView() {
         {TIERED.map((t) => <TierRow t={t} got={got} />)}
       </ul>
       <ul class="rows ach-firsts">
-        {FIRSTS.map((f) => {
+        {[...FIRSTS.filter((f) => got[f.id]), ...FIRSTS.filter((f) => !got[f.id])].map((f) => {
           const a = got[f.id];
           return (
             <li class={a ? "" : "muted"} data-tip={a ? `${f.text(a)}\nReached on ${when(a.at)}` : f.rule()}>

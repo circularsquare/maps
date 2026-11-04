@@ -35,6 +35,9 @@ svg.ach-medal { width: 16px; height: 22px; flex: none; stroke: none; overflow: v
 .ach-slot { flex: none; display: inline-flex; width: 16px; height: 22px; }
 .ach-slot.empty { box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--rule) 70%, var(--bg)); }
 
+/* a tier not yet reached leaves its place blank (the hover stays) */
+.ach-tier .ach-slot.empty { border-color: transparent; }
+
 /* a tiered achievement: its name, its medals under it, the ring at the right */
 .rows > li.ach-tier { display: flex; align-items: flex-start; gap: 10px; padding: 2px 0; }
 .rows > li.ach-tier + li.ach-tier { margin-top: 2px; }
@@ -45,8 +48,8 @@ svg.ach-medal { width: 16px; height: 22px; flex: none; stroke: none; overflow: v
 svg.ach-ring { width: 54px; height: 54px; display: block; stroke-width: 6; }
 .ach-ring .track { stroke: color-mix(in srgb, var(--rib) 18%, var(--bg)); }
 .ach-ring .fill { stroke: var(--rib); stroke-linecap: round; }
-/* 1 px below the middle: the figures' line boxes sit high for their digits */
-.ach-fig { position: absolute; inset: 1px 0 -1px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+/* 2 px below the middle: the figures' line boxes sit high for their digits */
+.ach-fig { position: absolute; inset: 2px 0 -2px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
 .ach-fig b { font-size: 12px; }
 .ach-fig .muted { font-size: 11px; }
 

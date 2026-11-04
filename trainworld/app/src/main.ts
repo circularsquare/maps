@@ -55,7 +55,7 @@ import { TouchBar } from "./ui/TouchBar";
 import { StopMarkers } from "./map/stopMarkers";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
-import { bpPicked, clearBpPicked } from "./game/blueprintPick";
+import { bpPicked, clearBpPicked, levelPicked, pickedState } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
@@ -521,7 +521,11 @@ window.addEventListener("keydown", (e) => {
   const lvKey = e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey ? levelOfKeyCode(e.code) : null;
   if (lvKey !== null) {
     e.preventDefault();
-    if (!e.repeat) buildLevel.value = lvKey;
+    if (e.repeat) return;
+    // T-2285: while the selection bar shows a blueprint pick with its level buttons, the keys re-level the pick
+    const ps = pickedState.peek(), t = tool.peek();
+    if ((t === "blueprint" || t === "select") && !ps.built && ps.edges > 0) void levelPicked(lvKey);
+    else buildLevel.value = lvKey;
     return;
   }
   // B, L, A, F, Y: the dock's tabs (T-1819), from any tab; a half-drawn route stays

@@ -267,9 +267,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     room (trains at crush) are not a map mark: the station panel's platforms and the trouble list
     say them. Where lines sit side by side
     the crowding marks only that line's band, with the same red dashes along both its sides, outside its
-    colour and as wide as a line's own, in their rim of the casing's colour, drawn after every line's
-    colour so they show over the bands beside it (T-2184, Anita: one crowding mark, "even if that
-    means it draws over nearby lines"; pass 3 of the line strokes), and the band darkens; track at
+    colour and as wide as a line's own, in their rim of the casing's colour, drawn in the same stroke as
+    the line's colour and so in that line's order: a line above it covers them, and they lie over only
+    the lines beneath (T-2184; T-2347, Anita: the dashes stay as they are, but in the line's draw order),
+    and the band darkens; track at
     capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
     demand" in red, or "Peak load 132% at 08:00" (that busiest hour, the line's local time) with the
     load on its crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Crowded trains" (on by default) shows or hides both marks

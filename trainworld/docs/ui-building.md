@@ -78,7 +78,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-2282; `ui/ToolBar.tsx`; design notes/T-2267.md] The track and station tools' options are in a bar
 on the map while the tool is on, in the selection bar's box and place: top centre, lower on narrower
 maps as the selection bar goes (`.blueprint-bar` rules), and on a phone the map's bottom edge. Only one
-of the three bars shows at a time; the other modes have none.
+of the three bars shows at a time; the other modes have none. The track and station bars have a 2 px top
+edge in their mode's colour (`CLICK_MODE_COLOURS`, as the aura's) [T-2446].
 
 - **The track bar**, two rows. First "Level" (muted), the seven level buttons, the size they had in
   the Build tab, tinted in their Level colours, the chosen one solid with a dark outline, a light one
@@ -86,7 +87,8 @@ of the three bars shows at a time; the other modes have none.
   per km", that level's multiplier and price as the price gives them [T-2271], then "Upkeep $20k per
   km per day", that level's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006] (the
   three lines are `levelTip` in `ui/trackPrice.ts`). Shift+1 to Shift+7 pick the drawing level from
-  any tab, by key code, 4 being 0 [T-1701, T-1834]; every segment's open-ground end takes the level
+  any tab, by key code, 4 being 0 [T-1701, T-1834], except that while the selection bar shows a blueprint pick
+  with its level buttons they put the pick at that level, as the buttons do, and leave the drawing level alone [T-2285]; every segment's open-ground end takes the level
   picked (`Tools.freeLevel`). Then the **ramp switch** (track humping over a line seen side on; hover
   "Automatically try to ramp over crossed tracks at the same level."; on by default) [T-1615,
   [track-and-service.md](track-and-service.md) 6.1 "Ramping over track"], then the price: the picked
