@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2418 Islands and cars across water, investigated (2026-11-04, agent carwater): Liberty is under the 0.1 km² islet size, Governors joined by the Battery Tunnel; local drives are already routed, market pairs routed per place pair (Toronto-Buffalo 1.68x). Fixes T-2421 to T-2424. notes/T-2418.md.
+- T-2407 Diagram city blocks (2026-11-04, agent diagblocks): cities move as rigid blocks placed by a solve between A and B; coast-to-coast mock line 41,612 -> 891 pitches; one-block New York unchanged; Japan a seventh the area but stretches +19%, overlaps 4 -> 9 (follow-up proposed). notes/T-2407.md.
 - T-2412 Track under a station takes the station (2026-11-04, agent uismall): the delete tool snapped to a station's node or on its platform's stretch removes the station with its own question; the track stays. DECISIONS 2026-11-04.
 - T-2416 Diagram exit (2026-11-04, agent uismall): a cross at the top left, hover "Show map (M)"; Esc leaves once the question, drag and selection are cleared.
 - T-2415 Build tab icon back to the wrench (2026-11-04, agent uismall), replacing T-2271's hammer.
