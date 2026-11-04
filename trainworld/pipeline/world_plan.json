@@ -3774,7 +3774,7 @@
    "order": 39,
    "id": "min",
    "name": "Minsk",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -3835,7 +3835,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:10"
+    "gated": "2026-11-04T05:23:10",
+    "shipped": "2026-11-04T13:10:43"
    }
   },
   {
@@ -4274,7 +4275,7 @@
    "order": 47,
    "id": "nov",
    "name": "Novosibirsk",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4344,7 +4345,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:14"
+    "gated": "2026-11-04T05:23:14",
+    "shipped": "2026-11-04T13:10:43"
    }
   },
   {
@@ -4898,7 +4900,7 @@
    "order": 57,
    "id": "yek",
    "name": "Yekaterinburg",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4971,7 +4973,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:50",
-    "gated": "2026-11-04T05:52:52"
+    "gated": "2026-11-04T05:52:52",
+    "shipped": "2026-11-04T13:10:44"
    }
   },
   {
@@ -5150,7 +5153,7 @@
    "order": 61,
    "id": "vol",
    "name": "Volgograd",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5219,7 +5222,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:51",
-    "gated": "2026-11-04T05:53:09"
+    "gated": "2026-11-04T05:53:09",
+    "shipped": "2026-11-04T13:10:44"
    }
   },
   {
@@ -5350,7 +5354,7 @@
    "order": 64,
    "id": "niz",
    "name": "Nizhny Novgorod",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5410,14 +5414,15 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:51",
-    "gated": "2026-11-04T05:52:53"
+    "gated": "2026-11-04T05:52:53",
+    "shipped": "2026-11-04T13:10:45"
    }
   },
   {
    "order": 65,
    "id": "sam",
    "name": "Samara",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5482,14 +5487,15 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:52",
-    "gated": "2026-11-04T05:52:53"
+    "gated": "2026-11-04T05:52:53",
+    "shipped": "2026-11-04T13:10:45"
    }
   },
   {
    "order": 66,
    "id": "ros",
    "name": "Rostov-on-Don",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5557,7 +5563,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:52",
-    "gated": "2026-11-04T05:53:09"
+    "gated": "2026-11-04T05:53:09",
+    "shipped": "2026-11-04T13:10:46"
    }
   },
   {
@@ -5627,7 +5634,7 @@
    "order": 68,
    "id": "che",
    "name": "Chelyabinsk",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5692,14 +5699,15 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:53",
-    "gated": "2026-11-04T05:52:54"
+    "gated": "2026-11-04T05:52:54",
+    "shipped": "2026-11-04T13:10:46"
    }
   },
   {
    "order": 69,
    "id": "kaz",
    "name": "Kazan",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5767,7 +5775,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:53",
-    "gated": "2026-11-04T05:52:54"
+    "gated": "2026-11-04T05:52:54",
+    "shipped": "2026-11-04T13:10:47"
    }
   },
   {
@@ -6186,7 +6195,7 @@
    "order": 77,
    "id": "oms",
    "name": "Omsk",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -6252,14 +6261,15 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:54",
-    "gated": "2026-11-04T05:53:13"
+    "gated": "2026-11-04T05:53:13",
+    "shipped": "2026-11-04T13:10:48"
    }
   },
   {
    "order": 78,
    "id": "sar",
    "name": "Saratov",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -6336,14 +6346,15 @@
      ]
     },
     "parked": "2026-11-04T05:12:54",
-    "gated": "2026-11-04T05:52:54"
+    "gated": "2026-11-04T05:52:54",
+    "shipped": "2026-11-04T13:10:48"
    }
   },
   {
    "order": 79,
    "id": "ufa",
    "name": "Ufa",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -6406,7 +6417,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:54",
-    "gated": "2026-11-04T05:52:55"
+    "gated": "2026-11-04T05:52:55",
+    "shipped": "2026-11-04T13:10:49"
    }
   },
   {
@@ -6663,7 +6675,7 @@
    "order": 84,
    "id": "krs",
    "name": "Krasnoyarsk",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -6739,14 +6751,15 @@
      ]
     },
     "parked": "2026-11-04T05:12:55",
-    "gated": "2026-11-04T05:53:13"
+    "gated": "2026-11-04T05:53:13",
+    "shipped": "2026-11-04T13:10:49"
    }
   },
   {
    "order": 85,
    "id": "mak",
    "name": "Makhachkala",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -6814,7 +6827,8 @@
       "top_school_cell_pupils 5340.599609375"
      ]
     },
-    "gated": "2026-11-04T05:23:46"
+    "gated": "2026-11-04T05:23:46",
+    "shipped": "2026-11-04T13:10:50"
    }
   },
   {
@@ -244310,7 +244324,7 @@
    "id": "spl",
    "name": "Sarapul",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244423,7 +244437,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:55",
-    "gated": "2026-11-04T05:52:55"
+    "gated": "2026-11-04T05:52:55",
+    "shipped": "2026-11-04T13:10:50"
    }
   },
   {
@@ -244431,7 +244446,7 @@
    "id": "keo",
    "name": "Kemerovo",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244531,7 +244546,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:56",
-    "gated": "2026-11-04T05:53:13"
+    "gated": "2026-11-04T05:53:13",
+    "shipped": "2026-11-04T13:10:51"
    }
   },
   {
@@ -244539,7 +244555,7 @@
    "id": "anb",
    "name": "Anapa Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244610,7 +244626,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:56",
-    "gated": "2026-11-04T05:53:10"
+    "gated": "2026-11-04T05:53:10",
+    "shipped": "2026-11-04T13:10:51"
    }
   },
   {
@@ -244618,7 +244635,7 @@
    "id": "buy",
    "name": "Buinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244734,7 +244751,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:57",
-    "gated": "2026-11-04T05:52:56"
+    "gated": "2026-11-04T05:52:56",
+    "shipped": "2026-11-04T13:10:52"
    }
   },
   {
@@ -244742,7 +244760,7 @@
    "id": "krc",
    "name": "Krasnodar Municipality",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244807,7 +244825,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:57",
-    "gated": "2026-11-04T05:53:10"
+    "gated": "2026-11-04T05:53:10",
+    "shipped": "2026-11-04T13:10:52"
    }
   },
   {
@@ -244815,7 +244834,7 @@
    "id": "prm",
    "name": "Permsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -244890,7 +244909,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:58",
-    "gated": "2026-11-04T05:52:56"
+    "gated": "2026-11-04T05:52:56",
+    "shipped": "2026-11-04T13:10:53"
    }
   },
   {
@@ -244898,7 +244918,7 @@
    "id": "veh",
    "name": "Verkhnesaldinsky Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245011,7 +245031,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:58",
-    "gated": "2026-11-04T05:52:56"
+    "gated": "2026-11-04T05:52:56",
+    "shipped": "2026-11-04T13:10:53"
    }
   },
   {
@@ -245019,7 +245040,7 @@
    "id": "pez",
    "name": "Penza",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245130,7 +245151,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:59",
-    "gated": "2026-11-04T05:52:57"
+    "gated": "2026-11-04T05:52:57",
+    "shipped": "2026-11-04T13:10:54"
    }
   },
   {
@@ -245138,7 +245160,7 @@
    "id": "kov",
    "name": "Kovrov",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245233,7 +245255,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:12:59",
-    "gated": "2026-11-04T05:52:57"
+    "gated": "2026-11-04T05:52:57",
+    "shipped": "2026-11-04T13:10:54"
    }
   },
   {
@@ -245241,7 +245264,7 @@
    "id": "pyt",
    "name": "Pyatigorsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245317,7 +245340,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:46"
+    "gated": "2026-11-04T05:23:46",
+    "shipped": "2026-11-04T13:10:55"
    }
   },
   {
@@ -245325,7 +245349,7 @@
    "id": "stv",
    "name": "Stavropol",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245399,7 +245423,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:47"
+    "gated": "2026-11-04T05:23:47",
+    "shipped": "2026-11-04T13:10:55"
    }
   },
   {
@@ -245407,7 +245432,7 @@
    "id": "tve",
    "name": "Tver",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245545,7 +245570,8 @@
      ]
     },
     "parked": "2026-11-04T05:12:59",
-    "gated": "2026-11-04T05:52:57"
+    "gated": "2026-11-04T05:52:57",
+    "shipped": "2026-11-04T13:10:56"
    }
   },
   {
@@ -245553,7 +245579,7 @@
    "id": "yar",
    "name": "Yaroslavl",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245642,7 +245668,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:00",
-    "gated": "2026-11-04T05:52:58"
+    "gated": "2026-11-04T05:52:58",
+    "shipped": "2026-11-04T13:10:56"
    }
   },
   {
@@ -245650,7 +245677,7 @@
    "id": "msx",
    "name": "Miass",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245751,7 +245778,8 @@
       "area_km2 42693.198567882064"
      ]
     },
-    "gated": "2026-11-04T05:23:14"
+    "gated": "2026-11-04T05:23:14",
+    "shipped": "2026-11-04T13:10:57"
    }
   },
   {
@@ -245759,7 +245787,7 @@
    "id": "tye",
    "name": "Tyumensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245827,7 +245855,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:15"
+    "gated": "2026-11-04T05:23:15",
+    "shipped": "2026-11-04T13:10:58"
    }
   },
   {
@@ -245835,7 +245864,7 @@
    "id": "mto",
    "name": "Magnitogorsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -245927,7 +245956,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:15"
+    "gated": "2026-11-04T05:23:15",
+    "shipped": "2026-11-04T13:10:58"
    }
   },
   {
@@ -245935,7 +245965,7 @@
    "id": "bya",
    "name": "Bryansk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246049,7 +246079,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:16"
+    "gated": "2026-11-04T05:23:16",
+    "shipped": "2026-11-04T13:10:59"
    }
   },
   {
@@ -246057,7 +246088,7 @@
    "id": "nok",
    "name": "Novokuznetsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246127,7 +246158,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:16"
+    "gated": "2026-11-04T05:23:16",
+    "shipped": "2026-11-04T13:11:00"
    }
   },
   {
@@ -246135,7 +246167,7 @@
    "id": "prz",
    "name": "Partizansk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246215,7 +246247,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:52"
+    "gated": "2026-11-04T05:23:52",
+    "shipped": "2026-11-04T13:11:00"
    }
   },
   {
@@ -246223,7 +246256,7 @@
    "id": "pev",
    "name": "Pervomaysky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246308,7 +246341,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:17"
+    "gated": "2026-11-04T05:23:17",
+    "shipped": "2026-11-04T13:11:01"
    }
   },
   {
@@ -246316,7 +246350,7 @@
    "id": "rya",
    "name": "Ryazansky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246422,7 +246456,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:17"
+    "gated": "2026-11-04T05:23:17",
+    "shipped": "2026-11-04T13:11:01"
    }
   },
   {
@@ -246430,7 +246465,7 @@
    "id": "bey",
    "name": "Belokalitvinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246535,7 +246570,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:18"
+    "gated": "2026-11-04T05:23:18",
+    "shipped": "2026-11-04T13:11:02"
    }
   },
   {
@@ -246543,7 +246579,7 @@
    "id": "kus",
    "name": "Kursk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246657,7 +246693,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:18"
+    "gated": "2026-11-04T05:23:18",
+    "shipped": "2026-11-04T13:11:02"
    }
   },
   {
@@ -246665,7 +246702,7 @@
    "id": "tav",
    "name": "Tambov",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246773,7 +246810,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:18"
+    "gated": "2026-11-04T05:23:18",
+    "shipped": "2026-11-04T13:11:03"
    }
   },
   {
@@ -246781,7 +246819,7 @@
    "id": "ish",
    "name": "Ishimbaysky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246861,7 +246899,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:19"
+    "gated": "2026-11-04T05:23:19",
+    "shipped": "2026-11-04T13:11:04"
    }
   },
   {
@@ -246869,7 +246908,7 @@
    "id": "kgr",
    "name": "Kaliningrad",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -246961,7 +247000,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:57"
+    "gated": "2026-11-04T05:23:57",
+    "shipped": "2026-11-04T13:11:04"
    }
   },
   {
@@ -246969,7 +247009,7 @@
    "id": "iva",
    "name": "Ivanovo",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247071,7 +247111,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:19"
+    "gated": "2026-11-04T05:23:19",
+    "shipped": "2026-11-04T13:11:05"
    }
   },
   {
@@ -247079,7 +247120,7 @@
    "id": "kiv",
    "name": "Kirovo-Chepetsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247202,7 +247243,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:20"
+    "gated": "2026-11-04T05:23:20",
+    "shipped": "2026-11-04T13:11:05"
    }
   },
   {
@@ -247210,7 +247252,7 @@
    "id": "chv",
    "name": "Cherepovets",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247301,7 +247343,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:20"
+    "gated": "2026-11-04T05:23:20",
+    "shipped": "2026-11-04T13:11:06"
    }
   },
   {
@@ -247309,7 +247352,7 @@
    "id": "top",
    "name": "Tomsk municipal region",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247386,7 +247429,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:21"
+    "gated": "2026-11-04T05:23:21",
+    "shipped": "2026-11-04T13:11:07"
    }
   },
   {
@@ -247394,7 +247438,7 @@
    "id": "ask",
    "name": "Astrakhan",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247465,7 +247509,8 @@
       "drive_factor_median 2.117000016612675"
      ]
     },
-    "gated": "2026-11-04T05:23:21"
+    "gated": "2026-11-04T05:23:21",
+    "shipped": "2026-11-04T13:11:07"
    }
   },
   {
@@ -247473,7 +247518,7 @@
    "id": "irk",
    "name": "Irkutsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247540,7 +247585,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:22"
+    "gated": "2026-11-04T05:23:22",
+    "shipped": "2026-11-04T13:11:08"
    }
   },
   {
@@ -247548,7 +247594,7 @@
    "id": "kvk",
    "name": "Kavkazsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247618,7 +247664,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:22"
+    "gated": "2026-11-04T05:23:22",
+    "shipped": "2026-11-04T13:11:09"
    }
   },
   {
@@ -247626,7 +247673,7 @@
    "id": "grz",
    "name": "Groznensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247690,7 +247737,8 @@
       "top_zone_jobs_share 0.1448594114544102"
      ]
     },
-    "gated": "2026-11-04T05:23:47"
+    "gated": "2026-11-04T05:23:47",
+    "shipped": "2026-11-04T13:11:09"
    }
   },
   {
@@ -247698,7 +247746,7 @@
    "id": "stb",
    "name": "Starooskolsky Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247772,7 +247820,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:23"
+    "gated": "2026-11-04T05:23:23",
+    "shipped": "2026-11-04T13:11:10"
    }
   },
   {
@@ -247780,7 +247829,7 @@
    "id": "naz",
    "name": "Naberezhnye Chelny",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247844,7 +247893,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:23"
+    "gated": "2026-11-04T05:23:23",
+    "shipped": "2026-11-04T13:11:11"
    }
   },
   {
@@ -247852,7 +247902,7 @@
    "id": "lii",
    "name": "Liskinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -247944,7 +247994,8 @@
       "top_zone_jobs_share 0.1026715125804501"
      ]
     },
-    "gated": "2026-11-04T05:23:23"
+    "gated": "2026-11-04T05:23:23",
+    "shipped": "2026-11-04T13:11:11"
    }
   },
   {
@@ -247952,7 +248003,7 @@
    "id": "dze",
    "name": "Dzerzhinsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248026,7 +248077,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:24"
+    "gated": "2026-11-04T05:23:24",
+    "shipped": "2026-11-04T13:11:12"
    }
   },
   {
@@ -248034,7 +248086,7 @@
    "id": "ceg",
    "name": "Chegemsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248108,7 +248160,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:48"
+    "gated": "2026-11-04T05:23:48",
+    "shipped": "2026-11-04T13:11:12"
    }
   },
   {
@@ -248116,7 +248169,7 @@
    "id": "ore",
    "name": "Orenburgsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248186,7 +248239,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:24"
+    "gated": "2026-11-04T05:23:24",
+    "shipped": "2026-11-04T13:11:13"
    }
   },
   {
@@ -248194,7 +248248,7 @@
    "id": "tli",
    "name": "Talitsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248293,7 +248347,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:25"
+    "gated": "2026-11-04T05:23:25",
+    "shipped": "2026-11-04T13:11:13"
    }
   },
   {
@@ -248301,7 +248356,7 @@
    "id": "lix",
    "name": "Lipetsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248369,7 +248424,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:25"
+    "gated": "2026-11-04T05:23:25",
+    "shipped": "2026-11-04T13:11:14"
    }
   },
   {
@@ -248377,7 +248433,7 @@
    "id": "toy",
    "name": "Tolyatti",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248433,7 +248489,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:26"
+    "gated": "2026-11-04T05:23:26",
+    "shipped": "2026-11-04T13:11:15"
    }
   },
   {
@@ -248441,7 +248498,7 @@
    "id": "vok",
    "name": "Voskresensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248505,7 +248562,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:26"
+    "gated": "2026-11-04T05:23:26",
+    "shipped": "2026-11-04T13:11:15"
    }
   },
   {
@@ -248513,7 +248571,7 @@
    "id": "nos",
    "name": "Novocheboksarsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248580,7 +248638,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:13",
-    "gated": "2026-11-04T05:52:58"
+    "gated": "2026-11-04T05:52:58",
+    "shipped": "2026-11-04T13:11:16"
    }
   },
   {
@@ -248588,7 +248647,7 @@
    "id": "alk",
    "name": "Aleksinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248667,7 +248726,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:14",
-    "gated": "2026-11-04T05:52:59"
+    "gated": "2026-11-04T05:52:59",
+    "shipped": "2026-11-04T13:11:16"
    }
   },
   {
@@ -248675,7 +248735,7 @@
    "id": "srb",
    "name": "Saransk Urban District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248770,7 +248830,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:14",
-    "gated": "2026-11-04T05:52:59"
+    "gated": "2026-11-04T05:52:59",
+    "shipped": "2026-11-04T13:11:17"
    }
   },
   {
@@ -248778,7 +248839,7 @@
    "id": "kgn",
    "name": "Kurgan",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248883,7 +248944,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:15",
-    "gated": "2026-11-04T05:52:59"
+    "gated": "2026-11-04T05:52:59",
+    "shipped": "2026-11-04T13:11:18"
    }
   },
   {
@@ -248891,7 +248953,7 @@
    "id": "khv",
    "name": "Khabarovsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -248952,7 +249014,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:52"
+    "gated": "2026-11-04T05:23:52",
+    "shipped": "2026-11-04T13:11:18"
    }
   },
   {
@@ -248960,7 +249023,7 @@
    "id": "sml",
    "name": "Smolensk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249051,7 +249114,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:15",
-    "gated": "2026-11-04T05:53:00"
+    "gated": "2026-11-04T05:53:00",
+    "shipped": "2026-11-04T13:11:19"
    }
   },
   {
@@ -249059,7 +249123,7 @@
    "id": "blk",
    "name": "Belgorodsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249126,7 +249190,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:15",
-    "gated": "2026-11-04T05:53:00"
+    "gated": "2026-11-04T05:53:00",
+    "shipped": "2026-11-04T13:11:19"
    }
   },
   {
@@ -249134,7 +249199,7 @@
    "id": "ses",
    "name": "Sergiyevo-Posadsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249193,7 +249258,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:16",
-    "gated": "2026-11-04T05:53:01"
+    "gated": "2026-11-04T05:53:01",
+    "shipped": "2026-11-04T13:11:20"
    }
   },
   {
@@ -249201,7 +249267,7 @@
    "id": "gus",
    "name": "Gudermessky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249271,7 +249337,8 @@
       "top_zone_jobs_share 0.11668027673156195"
      ]
     },
-    "gated": "2026-11-04T05:23:48"
+    "gated": "2026-11-04T05:23:48",
+    "shipped": "2026-11-04T13:11:21"
    }
   },
   {
@@ -249279,7 +249346,7 @@
    "id": "msk",
    "name": "Minusinsk Urban District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249367,7 +249434,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:16",
-    "gated": "2026-11-04T05:53:14"
+    "gated": "2026-11-04T05:53:14",
+    "shipped": "2026-11-04T13:11:21"
    }
   },
   {
@@ -249375,7 +249443,7 @@
    "id": "kry",
    "name": "Kurganinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249442,7 +249510,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:17",
-    "gated": "2026-11-04T05:53:10"
+    "gated": "2026-11-04T05:53:10",
+    "shipped": "2026-11-04T13:11:22"
    }
   },
   {
@@ -249450,7 +249519,7 @@
    "id": "dyu",
    "name": "Dyurtyulinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249541,7 +249610,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:17",
-    "gated": "2026-11-04T05:53:01"
+    "gated": "2026-11-04T05:53:01",
+    "shipped": "2026-11-04T13:11:23"
    }
   },
   {
@@ -249549,7 +249619,7 @@
    "id": "ory",
    "name": "Oryol",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249652,7 +249722,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:18",
-    "gated": "2026-11-04T05:53:01"
+    "gated": "2026-11-04T05:53:01",
+    "shipped": "2026-11-04T13:11:23"
    }
   },
   {
@@ -249660,7 +249731,7 @@
    "id": "pls",
    "name": "Plesetsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249736,7 +249807,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:18",
-    "gated": "2026-11-04T05:53:18"
+    "gated": "2026-11-04T05:53:18",
+    "shipped": "2026-11-04T13:11:24"
    }
   },
   {
@@ -249744,7 +249816,7 @@
    "id": "kba",
    "name": "Kabansky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249824,7 +249896,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:19",
-    "gated": "2026-11-04T05:53:14"
+    "gated": "2026-11-04T05:53:14",
+    "shipped": "2026-11-04T13:11:25"
    }
   },
   {
@@ -249832,7 +249905,7 @@
    "id": "zal",
    "name": "Zalari municipal region",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -249924,7 +249997,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:19",
-    "gated": "2026-11-04T05:53:15"
+    "gated": "2026-11-04T05:53:15",
+    "shipped": "2026-11-04T13:11:25"
    }
   },
   {
@@ -249932,7 +250006,7 @@
    "id": "lyd",
    "name": "Lyudinovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250023,7 +250097,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:19",
-    "gated": "2026-11-04T05:53:02"
+    "gated": "2026-11-04T05:53:02",
+    "shipped": "2026-11-04T13:11:26"
    }
   },
   {
@@ -250031,7 +250106,7 @@
    "id": "yos",
    "name": "Yoshkar-Ola",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250112,7 +250187,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:20",
-    "gated": "2026-11-04T05:53:02"
+    "gated": "2026-11-04T05:53:02",
+    "shipped": "2026-11-04T13:11:26"
    }
   },
   {
@@ -250120,7 +250196,7 @@
    "id": "vld",
    "name": "Vladikavkaz City District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250186,7 +250262,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:49"
+    "gated": "2026-11-04T05:23:49",
+    "shipped": "2026-11-04T13:11:27"
    }
   },
   {
@@ -250194,7 +250271,7 @@
    "id": "shs",
    "name": "Shakhty City District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250263,7 +250340,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:20",
-    "gated": "2026-11-04T05:53:11"
+    "gated": "2026-11-04T05:53:11",
+    "shipped": "2026-11-04T13:11:28"
    }
   },
   {
@@ -250271,7 +250349,7 @@
    "id": "res",
    "name": "Resort Town of Sochi (municipal formation)",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250328,7 +250406,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:21",
-    "gated": "2026-11-04T05:53:11"
+    "gated": "2026-11-04T05:53:11",
+    "shipped": "2026-11-04T13:11:28"
    }
   },
   {
@@ -250336,7 +250415,7 @@
    "id": "gak",
    "name": "Gatchinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250395,7 +250474,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:21",
-    "gated": "2026-11-04T05:53:19"
+    "gated": "2026-11-04T05:53:19",
+    "shipped": "2026-11-04T13:11:29"
    }
   },
   {
@@ -250403,7 +250483,7 @@
    "id": "urb",
    "name": "urban okrug of Derbent",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250476,7 +250556,8 @@
      ]
     },
     "parked": "2026-11-04T05:19:19",
-    "gated": "2026-11-04T05:53:21"
+    "gated": "2026-11-04T05:53:21",
+    "shipped": "2026-11-04T13:11:29"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell"
@@ -250487,7 +250568,7 @@
    "id": "krb",
    "name": "Karabudakhkentsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250563,7 +250644,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:49"
+    "gated": "2026-11-04T05:23:49",
+    "shipped": "2026-11-04T13:11:30"
    }
   },
   {
@@ -250571,7 +250653,7 @@
    "id": "sov",
    "name": "Sarov",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250668,7 +250750,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:22",
-    "gated": "2026-11-04T05:53:03"
+    "gated": "2026-11-04T05:53:03",
+    "shipped": "2026-11-04T13:11:31"
    }
   },
   {
@@ -250676,7 +250759,7 @@
    "id": "tuk",
    "name": "Tuymazinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250747,7 +250830,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:22",
-    "gated": "2026-11-04T05:53:03"
+    "gated": "2026-11-04T05:53:03",
+    "shipped": "2026-11-04T13:11:31"
    }
   },
   {
@@ -250755,7 +250839,7 @@
    "id": "alv",
    "name": "Almetyevsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250822,7 +250906,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:23",
-    "gated": "2026-11-04T05:53:03"
+    "gated": "2026-11-04T05:53:03",
+    "shipped": "2026-11-04T13:11:32"
    }
   },
   {
@@ -250830,7 +250915,7 @@
    "id": "kmu",
    "name": "Kolomna urban okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250895,7 +250980,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:23",
-    "gated": "2026-11-04T05:53:04"
+    "gated": "2026-11-04T05:53:04",
+    "shipped": "2026-11-04T13:11:33"
    }
   },
   {
@@ -250903,7 +250989,7 @@
    "id": "sug",
    "name": "Surgut",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -250968,7 +251054,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:23",
-    "gated": "2026-11-04T05:53:04"
+    "gated": "2026-11-04T05:53:04",
+    "shipped": "2026-11-04T13:11:34"
    }
   },
   {
@@ -250976,7 +251063,7 @@
    "id": "zel",
    "name": "Zelenodolsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251062,7 +251149,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:27"
+    "gated": "2026-11-04T05:23:27",
+    "shipped": "2026-11-04T13:11:34"
    }
   },
   {
@@ -251070,7 +251158,7 @@
    "id": "grl",
    "name": "Gorno-Altaysk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251177,7 +251265,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:27"
+    "gated": "2026-11-04T05:23:27",
+    "shipped": "2026-11-04T13:11:35"
    }
   },
   {
@@ -251185,7 +251274,7 @@
    "id": "vog",
    "name": "Volgodonsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251259,7 +251348,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:28"
+    "gated": "2026-11-04T05:23:28",
+    "shipped": "2026-11-04T13:11:35"
    }
   },
   {
@@ -251267,7 +251357,7 @@
    "id": "rjo",
    "name": "Rajon Nischnekamsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251333,7 +251423,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:28"
+    "gated": "2026-11-04T05:23:28",
+    "shipped": "2026-11-04T13:11:36"
    }
   },
   {
@@ -251341,7 +251432,7 @@
    "id": "kls",
    "name": "Klinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251415,7 +251506,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:29"
+    "gated": "2026-11-04T05:23:29",
+    "shipped": "2026-11-04T13:11:37"
    }
   },
   {
@@ -251423,7 +251515,7 @@
    "id": "bly",
    "name": "Balakovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251508,7 +251600,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:29"
+    "gated": "2026-11-04T05:23:29",
+    "shipped": "2026-11-04T13:11:37"
    }
   },
   {
@@ -251516,7 +251609,7 @@
    "id": "bok",
    "name": "Borisoglebsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251605,7 +251698,8 @@
       "area_km2 40215.193631159"
      ]
     },
-    "gated": "2026-11-04T05:23:30"
+    "gated": "2026-11-04T05:23:30",
+    "shipped": "2026-11-04T13:11:38"
    }
   },
   {
@@ -251613,7 +251707,7 @@
    "id": "khy",
    "name": "Khasavyurtovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251679,7 +251773,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T06:13:31"
+    "gated": "2026-11-04T06:13:31",
+    "shipped": "2026-11-04T13:11:38"
    }
   },
   {
@@ -251687,7 +251782,7 @@
    "id": "psk",
    "name": "Pskov",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251790,7 +251885,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:30"
+    "gated": "2026-11-04T05:23:30",
+    "shipped": "2026-11-04T13:11:39"
    }
   },
   {
@@ -251798,7 +251894,7 @@
    "id": "vei",
    "name": "Veliky Novgorod",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251893,7 +251989,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T06:13:32"
+    "gated": "2026-11-04T06:13:32",
+    "shipped": "2026-11-04T13:11:40"
    }
   },
   {
@@ -251901,7 +251998,7 @@
    "id": "cek",
    "name": "Cherkessk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -251973,7 +252070,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:50"
+    "gated": "2026-11-04T05:23:50",
+    "shipped": "2026-11-04T13:11:40"
    }
   },
   {
@@ -251981,7 +252079,7 @@
    "id": "yed",
    "name": "Yeysky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252043,7 +252141,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:31"
+    "gated": "2026-11-04T05:23:31",
+    "shipped": "2026-11-04T13:11:41"
    }
   },
   {
@@ -252051,7 +252150,7 @@
    "id": "ors",
    "name": "Orsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252123,7 +252222,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:31"
+    "gated": "2026-11-04T05:23:31",
+    "shipped": "2026-11-04T13:11:41"
    }
   },
   {
@@ -252131,7 +252231,7 @@
    "id": "boy",
    "name": "Botlikhsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252205,7 +252305,8 @@
       "drive_factor_median 2.325069660277121"
      ]
     },
-    "gated": "2026-11-04T05:23:50"
+    "gated": "2026-11-04T05:23:50",
+    "shipped": "2026-11-04T13:11:42"
    }
   },
   {
@@ -252213,7 +252314,7 @@
    "id": "naf",
    "name": "Naro-Fominsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252281,7 +252382,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:31"
+    "gated": "2026-11-04T05:23:31",
+    "shipped": "2026-11-04T13:11:42"
    }
   },
   {
@@ -252289,7 +252391,7 @@
    "id": "sps",
    "name": "Spassk-Dalny",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252369,7 +252471,8 @@
       "area_km2 41209.50430766781"
      ]
     },
-    "gated": "2026-11-04T05:23:53"
+    "gated": "2026-11-04T05:23:53",
+    "shipped": "2026-11-04T13:11:43"
    }
   },
   {
@@ -252377,7 +252480,7 @@
    "id": "bez",
    "name": "Berezniki",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252461,7 +252564,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:32"
+    "gated": "2026-11-04T05:23:32",
+    "shipped": "2026-11-04T13:11:43"
    }
   },
   {
@@ -252469,7 +252573,7 @@
    "id": "nih",
    "name": "Nizhnevartovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252542,7 +252646,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:32"
+    "gated": "2026-11-04T05:23:32",
+    "shipped": "2026-11-04T13:11:44"
    }
   },
   {
@@ -252550,7 +252655,7 @@
    "id": "sek",
    "name": "Seryshevsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252637,7 +252742,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:53"
+    "gated": "2026-11-04T05:23:53",
+    "shipped": "2026-11-04T13:11:45"
    }
   },
   {
@@ -252645,7 +252751,7 @@
    "id": "noy",
    "name": "Novomoskovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252715,7 +252821,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:33"
+    "gated": "2026-11-04T05:23:33",
+    "shipped": "2026-11-04T13:11:45"
    }
   },
   {
@@ -252723,7 +252830,7 @@
    "id": "bgs",
    "name": "Buguruslan",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252816,7 +252923,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:33"
+    "gated": "2026-11-04T05:23:33",
+    "shipped": "2026-11-04T13:11:46"
    }
   },
   {
@@ -252824,7 +252932,7 @@
    "id": "cbb",
    "name": "Chita",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252890,7 +252998,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:34"
+    "gated": "2026-11-04T05:23:34",
+    "shipped": "2026-11-04T13:11:46"
    }
   },
   {
@@ -252898,7 +253007,7 @@
    "id": "tys",
    "name": "Tayshetsky Rayon",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -252966,7 +253075,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:34"
+    "gated": "2026-11-04T05:23:34",
+    "shipped": "2026-11-04T13:11:47"
    }
   },
   {
@@ -252974,7 +253084,7 @@
    "id": "nzr",
    "name": "Nazranovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253042,7 +253152,8 @@
       "top_zone_jobs_share 0.13352234876322017"
      ]
     },
-    "gated": "2026-11-04T05:23:51"
+    "gated": "2026-11-04T05:23:51",
+    "shipped": "2026-11-04T13:11:47"
    }
   },
   {
@@ -253050,7 +253161,7 @@
    "id": "mrs",
    "name": "Murmansk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253115,7 +253226,8 @@
       "road_snap_median_m 310.9"
      ]
     },
-    "gated": "2026-11-04T05:23:35"
+    "gated": "2026-11-04T05:23:35",
+    "shipped": "2026-11-04T13:11:48"
    }
   },
   {
@@ -253123,7 +253235,7 @@
    "id": "siy",
    "name": "Shipunovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253214,7 +253326,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:35"
+    "gated": "2026-11-04T05:23:35",
+    "shipped": "2026-11-04T13:11:48"
    }
   },
   {
@@ -253222,7 +253335,7 @@
    "id": "syz",
    "name": "Syzran",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253292,7 +253405,8 @@
       "top_zone_jobs_share 0.10585933201453208"
      ]
     },
-    "gated": "2026-11-04T05:23:35"
+    "gated": "2026-11-04T05:23:35",
+    "shipped": "2026-11-04T13:11:49"
    }
   },
   {
@@ -253300,7 +253414,7 @@
    "id": "ngi",
    "name": "Noginsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253354,7 +253468,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:36"
+    "gated": "2026-11-04T05:23:36",
+    "shipped": "2026-11-04T13:11:50"
    }
   },
   {
@@ -253362,7 +253477,7 @@
    "id": "bsk",
    "name": "Balashovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253436,7 +253551,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:36"
+    "gated": "2026-11-04T05:23:36",
+    "shipped": "2026-11-04T13:11:50"
    }
   },
   {
@@ -253444,7 +253560,7 @@
    "id": "yee",
    "name": "Yelets",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253520,7 +253636,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:37"
+    "gated": "2026-11-04T05:23:37",
+    "shipped": "2026-11-04T13:11:51"
    }
   },
   {
@@ -253528,7 +253645,7 @@
    "id": "buv",
    "name": "Budyonnovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253590,7 +253707,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:51"
+    "gated": "2026-11-04T05:23:51",
+    "shipped": "2026-11-04T13:11:51"
    }
   },
   {
@@ -253598,7 +253716,7 @@
    "id": "bch",
    "name": "Belorechensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253658,7 +253776,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:37"
+    "gated": "2026-11-04T05:23:37",
+    "shipped": "2026-11-04T13:11:52"
    }
   },
   {
@@ -253666,7 +253785,7 @@
    "id": "kst",
    "name": "Kostroma",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253735,7 +253854,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:36",
-    "gated": "2026-11-04T05:53:04"
+    "gated": "2026-11-04T05:53:04",
+    "shipped": "2026-11-04T13:11:52"
    }
   },
   {
@@ -253743,7 +253863,7 @@
    "id": "sec",
    "name": "Sergiyevsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253828,7 +253948,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:37",
-    "gated": "2026-11-04T05:53:05"
+    "gated": "2026-11-04T05:53:05",
+    "shipped": "2026-11-04T13:11:53"
    }
   },
   {
@@ -253836,7 +253957,7 @@
    "id": "pto",
    "name": "Petroskoi District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -253907,7 +254028,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:37",
-    "gated": "2026-11-04T05:53:19"
+    "gated": "2026-11-04T05:53:19",
+    "shipped": "2026-11-04T13:11:53"
    }
   },
   {
@@ -253915,7 +254037,7 @@
    "id": "skh",
    "name": "Shakhunya Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254030,7 +254152,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:38",
-    "gated": "2026-11-04T05:53:05"
+    "gated": "2026-11-04T05:53:05",
+    "shipped": "2026-11-04T13:11:54"
    }
   },
   {
@@ -254038,7 +254161,7 @@
    "id": "kmy",
    "name": "Kamyshin",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254107,7 +254230,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:38",
-    "gated": "2026-11-04T05:53:11"
+    "gated": "2026-11-04T05:53:11",
+    "shipped": "2026-11-04T13:11:54"
    }
   },
   {
@@ -254115,7 +254239,7 @@
    "id": "tga",
    "name": "Taganrog City District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254172,7 +254296,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:39",
-    "gated": "2026-11-04T05:53:12"
+    "gated": "2026-11-04T05:53:12",
+    "shipped": "2026-11-04T13:11:55"
    }
   },
   {
@@ -254180,7 +254305,7 @@
    "id": "kms",
    "name": "Komsomolsk-on-Amur",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254241,7 +254366,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:54"
+    "gated": "2026-11-04T05:23:54",
+    "shipped": "2026-11-04T13:11:55"
    }
   },
   {
@@ -254249,7 +254375,7 @@
    "id": "olh",
    "name": "Olhava District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254310,7 +254436,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:39",
-    "gated": "2026-11-04T05:53:20"
+    "gated": "2026-11-04T05:53:20",
+    "shipped": "2026-11-04T13:11:56"
    }
   },
   {
@@ -254318,7 +254445,7 @@
    "id": "yak",
    "name": "Yakutsk Urban District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254384,7 +254511,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:54"
+    "gated": "2026-11-04T05:23:54",
+    "shipped": "2026-11-04T13:11:56"
    }
   },
   {
@@ -254392,7 +254520,7 @@
    "id": "uzh",
    "name": "Uzhursky Rayon",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254467,7 +254595,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:40",
-    "gated": "2026-11-04T05:53:15"
+    "gated": "2026-11-04T05:53:15",
+    "shipped": "2026-11-04T13:11:57"
    }
   },
   {
@@ -254475,7 +254604,7 @@
    "id": "nvo",
    "name": "Novolyalinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254550,7 +254679,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:40",
-    "gated": "2026-11-04T05:53:06"
+    "gated": "2026-11-04T05:53:06",
+    "shipped": "2026-11-04T13:11:58"
    }
   },
   {
@@ -254558,7 +254688,7 @@
    "id": "krt",
    "name": "Karasuksky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254642,7 +254772,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:41",
-    "gated": "2026-11-04T05:53:15"
+    "gated": "2026-11-04T05:53:15",
+    "shipped": "2026-11-04T13:11:58"
    }
   },
   {
@@ -254650,7 +254781,7 @@
    "id": "glz",
    "name": "Glazov",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254733,7 +254864,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:41",
-    "gated": "2026-11-04T05:53:06"
+    "gated": "2026-11-04T05:53:06",
+    "shipped": "2026-11-04T13:11:59"
    }
   },
   {
@@ -254741,7 +254873,7 @@
    "id": "syk",
    "name": "Syktyvkar Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254809,7 +254941,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:42",
-    "gated": "2026-11-04T05:53:20"
+    "gated": "2026-11-04T05:53:20",
+    "shipped": "2026-11-04T13:11:59"
    }
   },
   {
@@ -254817,7 +254950,7 @@
    "id": "isi",
    "name": "Ishimsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254896,7 +255029,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:42",
-    "gated": "2026-11-04T05:53:06"
+    "gated": "2026-11-04T05:53:06",
+    "shipped": "2026-11-04T13:12:00"
    }
   },
   {
@@ -254904,7 +255038,7 @@
    "id": "khd",
    "name": "Kholmsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -254972,7 +255106,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:54"
+    "gated": "2026-11-04T05:23:54",
+    "shipped": "2026-11-04T13:12:00"
    }
   },
   {
@@ -254980,7 +255115,7 @@
    "id": "ryi",
    "name": "Rybinsky Rayon",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255055,7 +255190,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:43",
-    "gated": "2026-11-04T05:53:16"
+    "gated": "2026-11-04T05:53:16",
+    "shipped": "2026-11-04T13:12:01"
    }
   },
   {
@@ -255063,7 +255199,7 @@
    "id": "kuv",
    "name": "Kuybyshevsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255139,7 +255275,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:43",
-    "gated": "2026-11-04T05:53:16"
+    "gated": "2026-11-04T05:53:16",
+    "shipped": "2026-11-04T13:12:01"
    }
   },
   {
@@ -255147,7 +255284,7 @@
    "id": "lgk",
    "name": "Lagansky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255232,7 +255369,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:44",
-    "gated": "2026-11-04T05:53:12"
+    "gated": "2026-11-04T05:53:12",
+    "shipped": "2026-11-04T13:12:02"
    }
   },
   {
@@ -255240,7 +255378,7 @@
    "id": "svt",
    "name": "Sovetsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255302,7 +255440,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:44",
-    "gated": "2026-11-04T05:53:07"
+    "gated": "2026-11-04T05:53:07",
+    "shipped": "2026-11-04T13:12:02"
    }
   },
   {
@@ -255310,7 +255449,7 @@
    "id": "vyb",
    "name": "Vyborgsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255365,7 +255504,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:45",
-    "gated": "2026-11-04T05:53:20"
+    "gated": "2026-11-04T05:53:20",
+    "shipped": "2026-11-04T13:12:03"
    }
   },
   {
@@ -255373,7 +255513,7 @@
    "id": "try",
    "name": "Troitsky district",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255436,7 +255576,8 @@
      "warn": []
     },
     "parked": "2026-11-04T05:13:45",
-    "gated": "2026-11-04T05:53:07"
+    "gated": "2026-11-04T05:53:07",
+    "shipped": "2026-11-04T13:12:03"
    }
   },
   {
@@ -255444,7 +255585,7 @@
    "id": "dzn",
    "name": "Dzun-Khemchiksky Kozhuun",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255527,7 +255668,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:46",
-    "gated": "2026-11-04T05:53:16"
+    "gated": "2026-11-04T05:53:16",
+    "shipped": "2026-11-04T13:12:04"
    }
   },
   {
@@ -255535,7 +255677,7 @@
    "id": "pep",
    "name": "Petropavlovsk-Kamchatsky",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255595,7 +255737,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:55"
+    "gated": "2026-11-04T05:23:55",
+    "shipped": "2026-11-04T13:12:04"
    }
   },
   {
@@ -255603,7 +255746,7 @@
    "id": "nii",
    "name": "Nizhneingashsky Rayon",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255686,7 +255829,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T06:13:32"
+    "gated": "2026-11-04T06:13:32",
+    "shipped": "2026-11-04T13:12:05"
    }
   },
   {
@@ -255694,7 +255838,7 @@
    "id": "ksn",
    "name": "Krasnokamsk District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255761,7 +255905,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:46",
-    "gated": "2026-11-04T05:53:08"
+    "gated": "2026-11-04T05:53:08",
+    "shipped": "2026-11-04T13:12:06"
    }
   },
   {
@@ -255769,7 +255914,7 @@
    "id": "bzi",
    "name": "Borzinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255842,7 +255987,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:47",
-    "gated": "2026-11-04T05:53:17"
+    "gated": "2026-11-04T05:53:17",
+    "shipped": "2026-11-04T13:12:06"
    }
   },
   {
@@ -255850,7 +255996,7 @@
    "id": "kme",
    "name": "Kamensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255927,7 +256073,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:47",
-    "gated": "2026-11-04T05:53:17"
+    "gated": "2026-11-04T05:53:17",
+    "shipped": "2026-11-04T13:12:07"
    }
   },
   {
@@ -255935,7 +256082,7 @@
    "id": "src",
    "name": "Serpukhovsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -255994,7 +256141,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:48",
-    "gated": "2026-11-04T05:53:08"
+    "gated": "2026-11-04T05:53:08",
+    "shipped": "2026-11-04T13:12:07"
    }
   },
   {
@@ -256002,7 +256150,7 @@
    "id": "knh",
    "name": "Kantalahti District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256066,7 +256214,8 @@
       "top_zone_jobs_share 0.11164157888440204"
      ]
     },
-    "gated": "2026-11-04T05:23:38"
+    "gated": "2026-11-04T05:23:38",
+    "shipped": "2026-11-04T13:12:08"
    }
   },
   {
@@ -256074,7 +256223,7 @@
    "id": "vot",
    "name": "Vorkuta Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256135,7 +256284,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:38"
+    "gated": "2026-11-04T05:23:38",
+    "shipped": "2026-11-04T13:12:08"
    }
   },
   {
@@ -256143,7 +256293,7 @@
    "id": "jac",
    "name": "Jaama District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256197,7 +256347,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:39"
+    "gated": "2026-11-04T05:23:39",
+    "shipped": "2026-11-04T13:12:09"
    }
   },
   {
@@ -256205,7 +256356,7 @@
    "id": "tvr",
    "name": "Tavrichesky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256271,7 +256422,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:39"
+    "gated": "2026-11-04T05:23:39",
+    "shipped": "2026-11-04T13:12:09"
    }
   },
   {
@@ -256279,7 +256431,7 @@
    "id": "iss",
    "name": "Isilkulsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256345,7 +256497,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:40"
+    "gated": "2026-11-04T05:23:40",
+    "shipped": "2026-11-04T13:12:10"
    }
   },
   {
@@ -256353,7 +256506,7 @@
    "id": "tsk",
    "name": "Tarsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256424,7 +256577,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:51",
-    "gated": "2026-11-04T05:53:18"
+    "gated": "2026-11-04T05:53:18",
+    "shipped": "2026-11-04T13:12:10"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell"
@@ -256435,7 +256589,7 @@
    "id": "vey",
    "name": "Velikoustyugsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256502,7 +256656,8 @@
       "fleet_range 2"
      ]
     },
-    "gated": "2026-11-04T05:23:40"
+    "gated": "2026-11-04T05:23:40",
+    "shipped": "2026-11-04T13:12:11"
    }
   },
   {
@@ -256510,7 +256665,7 @@
    "id": "nik",
    "name": "Nizhneudinsky Rayon",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256570,7 +256725,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:41"
+    "gated": "2026-11-04T05:23:41",
+    "shipped": "2026-11-04T13:12:12"
    }
   },
   {
@@ -256578,7 +256734,7 @@
    "id": "bbz",
    "name": "Birobidzhan",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256640,7 +256796,8 @@
       "top_zone_jobs_share 0.18194879186817464"
      ]
     },
-    "gated": "2026-11-04T05:23:55"
+    "gated": "2026-11-04T05:23:55",
+    "shipped": "2026-11-04T13:12:12"
    }
   },
   {
@@ -256648,7 +256805,7 @@
    "id": "sld",
    "name": "Shilkinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256712,7 +256869,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:41"
+    "gated": "2026-11-04T05:23:41",
+    "shipped": "2026-11-04T13:12:13"
    }
   },
   {
@@ -256720,7 +256878,7 @@
    "id": "skv",
    "name": "Skovorodinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256792,7 +256950,8 @@
       "fleet_range 2"
      ]
     },
-    "gated": "2026-11-04T05:23:56"
+    "gated": "2026-11-04T05:23:56",
+    "shipped": "2026-11-04T13:12:13"
    }
   },
   {
@@ -256800,7 +256959,7 @@
    "id": "poy",
    "name": "Pozharsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256869,7 +257028,8 @@
       "fleet_range 2"
      ]
     },
-    "gated": "2026-11-04T05:23:56"
+    "gated": "2026-11-04T05:23:56",
+    "shipped": "2026-11-04T13:12:14"
    }
   },
   {
@@ -256877,7 +257037,7 @@
    "id": "ktc",
    "name": "Kotlassky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256937,7 +257097,8 @@
       "top_zone_jobs_share 0.1469704689861739"
      ]
     },
-    "gated": "2026-11-04T05:23:41"
+    "gated": "2026-11-04T05:23:41",
+    "shipped": "2026-11-04T13:12:14"
    }
   },
   {
@@ -256945,7 +257106,7 @@
    "id": "ukh",
    "name": "Ukhta Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -256999,7 +257160,8 @@
       "road_snap_median_m 303.5"
      ]
     },
-    "gated": "2026-11-04T05:23:42"
+    "gated": "2026-11-04T05:23:42",
+    "shipped": "2026-11-04T13:12:15"
    }
   },
   {
@@ -257007,7 +257169,7 @@
    "id": "kkm",
    "name": "Kukmorsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257065,7 +257227,8 @@
       "top_zone_jobs_share 0.11944475996111932"
      ]
     },
-    "gated": "2026-11-04T05:23:42"
+    "gated": "2026-11-04T05:23:42",
+    "shipped": "2026-11-04T13:12:15"
    }
   },
   {
@@ -257073,7 +257236,7 @@
    "id": "okt",
    "name": "Oktyabrsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257132,7 +257295,8 @@
       "osm_land_share 0.805"
      ]
     },
-    "gated": "2026-11-04T05:23:43"
+    "gated": "2026-11-04T05:23:43",
+    "shipped": "2026-11-04T13:12:16"
    }
   },
   {
@@ -257140,7 +257304,7 @@
    "id": "akh",
    "name": "Akhtubinsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257198,7 +257362,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:43"
+    "gated": "2026-11-04T05:23:43",
+    "shipped": "2026-11-04T13:12:16"
    }
   },
   {
@@ -257206,7 +257371,7 @@
    "id": "tbo",
    "name": "Tobolsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257260,7 +257425,8 @@
       "top_zone_jobs_share 0.20175656115501214"
      ]
     },
-    "gated": "2026-11-04T06:13:33"
+    "gated": "2026-11-04T06:13:33",
+    "shipped": "2026-11-04T13:12:17"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell"
@@ -257271,7 +257437,7 @@
    "id": "kre",
    "name": "Krasnokamensky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257331,7 +257497,8 @@
       "top_zone_jobs_share 0.14035023791211249"
      ]
     },
-    "gated": "2026-11-04T05:23:44"
+    "gated": "2026-11-04T05:23:44",
+    "shipped": "2026-11-04T13:12:17"
    }
   },
   {
@@ -257339,7 +257506,7 @@
    "id": "vex",
    "name": "Velsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257402,7 +257569,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:56",
-    "gated": "2026-11-04T05:53:21"
+    "gated": "2026-11-04T05:53:21",
+    "shipped": "2026-11-04T13:12:18"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell"
@@ -257413,7 +257581,7 @@
    "id": "sez",
    "name": "Segezhsky District",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257475,7 +257643,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:44"
+    "gated": "2026-11-04T05:23:44",
+    "shipped": "2026-11-04T13:12:18"
    }
   },
   {
@@ -257483,7 +257652,7 @@
    "id": "kny",
    "name": "Khanty-Mansiysk Urban Okrug",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257540,7 +257709,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:45"
+    "gated": "2026-11-04T05:23:45",
+    "shipped": "2026-11-04T13:12:19"
    }
   },
   {
@@ -257548,7 +257718,7 @@
    "id": "nyb",
    "name": "Noyabrsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257603,7 +257773,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:57",
-    "gated": "2026-11-04T05:53:08"
+    "gated": "2026-11-04T05:53:08",
+    "shipped": "2026-11-04T13:12:20"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell",
@@ -257615,7 +257786,7 @@
    "id": "xaa",
    "name": "Нижнеилимский район",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257670,7 +257841,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:45"
+    "gated": "2026-11-04T05:23:45",
+    "shipped": "2026-11-04T13:12:20"
    }
   },
   {
@@ -257678,7 +257850,7 @@
    "id": "xac",
    "name": "городской округ Новый Урен",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257731,7 +257903,8 @@
       "fleet_range 1"
      ]
     },
-    "gated": "2026-11-04T05:23:45"
+    "gated": "2026-11-04T05:23:45",
+    "shipped": "2026-11-04T13:12:21"
    }
   },
   {
@@ -257739,7 +257912,7 @@
    "id": "xad",
    "name": "городской округ Норильск",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -257796,7 +257969,8 @@
      ]
     },
     "parked": "2026-11-04T05:13:59",
-    "gated": "2026-11-04T05:53:18"
+    "gated": "2026-11-04T05:53:18",
+    "shipped": "2026-11-04T13:12:21"
    },
    "gate_relax": {
     "top_zone_jobs_share": "one town in its countryside: its centre is the zone's top job cell"
@@ -257975,7 +258149,7 @@
    "id": "gme",
    "name": "Gomel",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258067,7 +258241,8 @@
       "area_km2 40303.30417591023"
      ]
     },
-    "gated": "2026-11-04T05:23:11"
+    "gated": "2026-11-04T05:23:11",
+    "shipped": "2026-11-04T13:12:22"
    }
   },
   {
@@ -258075,7 +258250,7 @@
    "id": "vik",
    "name": "Vitebsk",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258169,7 +258344,8 @@
       "area_km2 41927.436666582405"
      ]
     },
-    "gated": "2026-11-04T05:23:11"
+    "gated": "2026-11-04T05:23:11",
+    "shipped": "2026-11-04T13:12:23"
    }
   },
   {
@@ -258177,7 +258353,7 @@
    "id": "bbo",
    "name": "Brest",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258251,7 +258427,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:11"
+    "gated": "2026-11-04T05:23:11",
+    "shipped": "2026-11-04T13:12:23"
    }
   },
   {
@@ -258259,7 +258436,7 @@
    "id": "mgv",
    "name": "Mogilev",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258347,7 +258524,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:12"
+    "gated": "2026-11-04T05:23:12",
+    "shipped": "2026-11-04T13:12:24"
    }
   },
   {
@@ -258355,7 +258533,7 @@
    "id": "bys",
    "name": "Barysaw",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258433,7 +258611,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:12"
+    "gated": "2026-11-04T05:23:12",
+    "shipped": "2026-11-04T13:12:25"
    }
   },
   {
@@ -258441,7 +258620,7 @@
    "id": "bnc",
    "name": "Baranovichy",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258519,7 +258698,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:13"
+    "gated": "2026-11-04T05:23:13",
+    "shipped": "2026-11-04T13:12:25"
    }
   },
   {
@@ -258527,7 +258707,7 @@
    "id": "gdn",
    "name": "Grodno",
    "kind": "zone",
-   "status": "gated",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BLR"
@@ -258589,7 +258769,8 @@
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-04T05:23:13"
+    "gated": "2026-11-04T05:23:13",
+    "shipped": "2026-11-04T13:12:26"
    }
   },
   {

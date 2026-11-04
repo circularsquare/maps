@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2295 Russia and Belarus (2026-11-04, agents countries, countries2, countries3): 181 rows shipped (173 RU: cities and corridors on Canada's rule, east of the Urals too; 8 BY), joint groups mos-ru and min-by, terrain and routed drives; Crimea and Ukraine under T-2344. notes/T-2295.md.
+- T-2414 Bridge ramps more persistent (2026-11-04, agent ramps, tree .tw-trees/ramps): ramps placed one by one, bridges stay up between close crossings, new ends and blueprint dead ends go up when short; synthetic sweep 33/91 refused -> 5/96 (all real), NYC water 127/143 -> 0/159. notes/T-2414.md.
+- T-2420 Profit track display, stage 1 rail (2026-11-04, agent profit, tree .tw-trees/profit): fifth track button, stretches coloured by profit per km a day; real save's lines sum exactly (`checks/t2411-profit-map.mjs`). Buses and ferries later. docs/ui-map.md; notes/T-2411.md.
+- T-2411 Which stretch of track is profitable, designed (2026-11-04, agent profit): fares by passenger-km plus half the base by boardings, running by train-km, upkeep as shared; mockup artifacts/trainworld/t2411/. Built as T-2420. notes/T-2411.md.
 - T-2418 Islands and cars across water, investigated (2026-11-04, agent carwater): Liberty is under the 0.1 km² islet size, Governors joined by the Battery Tunnel; local drives are already routed, market pairs routed per place pair (Toronto-Buffalo 1.68x). Fixes T-2421 to T-2424. notes/T-2418.md.
 - T-2407 Diagram city blocks (2026-11-04, agent diagblocks): cities move as rigid blocks placed by a solve between A and B; coast-to-coast mock line 41,612 -> 891 pitches; one-block New York unchanged; Japan a seventh the area but stretches +19%, overlaps 4 -> 9 (follow-up proposed). notes/T-2407.md.
 - T-2412 Track under a station takes the station (2026-11-04, agent uismall): the delete tool snapped to a station's node or on its platform's stretch removes the station with its own question; the track stays. DECISIONS 2026-11-04.
