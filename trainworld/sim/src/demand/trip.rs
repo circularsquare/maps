@@ -262,18 +262,31 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     let rule = p.walk_rule_at(walk_on) && sk.walk.len() == s * s && !apart;
     let keep = |ka: usize, kb: usize| !rule || walk_ok(walked(sz, p, u, ka), sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], walked(sz, p, v, kb), walk_on);
     let logsum = |a: &std::ops::Range<usize>, ma: f32, out: &mut Vec<(usize, usize, f32)>| {
-        let (mut sum, mut all) = (0.0f32, 0.0f32);
+        let w = |ka: usize, kb: usize| acc_e(ka, ma) * acc_e(kb, m_v) * er(sz.acc_st[ka] as usize, sz.acc_st[kb] as usize);
+        let at = out.len();
+        let mut all = 0.0f32;
         for ka in a.clone() {
             for kb in rv.clone() {
-                let w = acc_e(ka, ma) * acc_e(kb, m_v) * er(sz.acc_st[ka] as usize, sz.acc_st[kb] as usize);
-                all += w;
-                if !keep(ka, kb) {
-                    out.push((ka, kb, 0.0));
-                    continue;
-                }
-                sum += w;
-                out.push((ka, kb, w));
+                let c = w(ka, kb);
+                all += c;
+                out.push((ka, kb, c));
             }
+        }
+        // T-2307: a sliver refused is let be, as the pass has it (`WALK_SLIVER`)
+        let (mut sum, mut bad) = (0.0f32, 0.0f32);
+        for e in &mut out[at..] {
+            if keep(e.0, e.1) {
+                sum += e.2;
+            } else {
+                bad += e.2;
+                e.2 = 0.0;
+            }
+        }
+        if bad <= WALK_SLIVER * all {
+            for e in &mut out[at..] {
+                e.2 = w(e.0, e.1);
+            }
+            sum = all;
         }
         (sum, all)
     };

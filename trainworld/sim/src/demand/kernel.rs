@@ -240,7 +240,10 @@ pub struct Params {
 /// Walks longer than this straight line (km, round water where the routes say) are not offered
 /// (T-558): a computational bound, past which walking takes under one trip in a million.
 pub const WALK_REACH_KM: f32 = 10.0;
-/// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
+/// T-2307: the walking rule leaves a trip whole when the station pairs it would refuse carry at
+/// most this share of the trip's station-pair weight: worth under 0.1 perceived minutes of rail,
+/// and loading and taking off such slivers was most of the rule's cost.
+pub const WALK_SLIVER: f32 = 0.01;/// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
 /// (market US$) below this and not above it, and a dollar weighs GDP^-0.7 minutes (the fares'
 /// rule, app game/income.ts), so paid parking's minutes go as GDP^0.3 below it.
 pub const PARK_INCOME_KNEE_USD: f32 = 35_000.0;
@@ -4573,7 +4576,8 @@ pub fn walked(sz: &Subzones, p: &Params, u: usize, k: usize) -> f32 {
     if k < sz.acc_mid[u] as usize { sz.acc_d[k] } else { p.walk_eq_m(sz.acc_t[k]) }
 }
 
-/// The share of a trip's station-pair weight on pairs `walk_ok` keeps: over access and egress
+/// The share of a trip's station-pair weight on pairs `walk_ok` keeps (all of it where the refused
+/// are a sliver, `WALK_SLIVER`): over access and egress
 /// entries (station, weight, metres walked, `Subzones` entry) and `er(a, t)`. `mode_choice`
 /// reaches the same share from its lanes.
 pub(crate) fn walk_kept(acc: &[(u32, f32, f32, u32)], eg: &[(u32, f32, f32, u32)], er: impl Fn(usize, usize) -> f32, walk_tab: &[u16], s: usize, direct: f32) -> f32 {
@@ -4591,7 +4595,7 @@ pub(crate) fn walk_kept(acc: &[(u32, f32, f32, u32)], eg: &[(u32, f32, f32, u32)
         }
     }
     // the kept part summed alone, so a trip that keeps a sliver keeps it exactly
-    if tot > 0.0 { (kept / tot).min(1.0) } else { 1.0 }
+    if tot > 0.0 && tot - kept > WALK_SLIVER * tot { (kept / tot).min(1.0) } else { 1.0 }
 }
 
 pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail) -> ModeOut {
@@ -4619,6 +4623,16 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     // the refused station pairs of a block's lanes: access station, egress station, weight,
     // access entry, egress step
     let mut lane_bad: Vec<(u32, u32, f32, u32, u8)> = vec![];
+    // T-2307: per station t, what each of an origin's access entries takes before alighting there
+    // (its way to the station and the real minutes on to t, `walk_ok`'s first sum), its entries
+    // side by side so a lane tests every one against an egress entry in one pass; a row is filled
+    // when an origin's lane first reaches its station (`till_gen`)
+    let till_w = if rule { (0..sz.n).map(|u| sz.acc_off[u + 1] - sz.acc_off[u]).max().unwrap_or(0) as usize } else { 0 };
+    assert!(till_w <= 64, "the walking rule's masks hold 64 access entries");
+    let mut till = vec![0f32; s * till_w];
+    let mut till_at = vec![0u32; if rule { s } else { 0 }];
+    let mut till_gen = 0u32;    // each access entry's distance band, for the refused pairs' take-off
+    let acc_band: Vec<u8> = if rule { sz.acc_d.iter().map(|&d| dist_band(d) as u8).collect() } else { vec![] };
     // T-710: the station choice's scale and offset by distance band (`er` holds a table per band)
     let nb = p.n_bands();
     let bands: Vec<(f32, f32)> = (0..nb).map(|b| p.band(b)).collect();
@@ -4887,6 +4901,10 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             // egress walks keep within its distance on top of that keeps every station pair, the
             // common case, and only the rest are taken pair by pair
             let mw = if rule { acc_from[walk.start..ride.end].iter().copied().fold(0.0, f32::max) } else { 0.0 };
+            // T-2307: this origin's rows of `till` are filled afresh as its lanes need them
+            till_gen += 1;
+            let n_all = ride.end - walk.start;
+            debug_assert!(n_all <= till_w);
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
             let (mut d_sum, mut dk_sum, mut rk_sum) = (0.0f32, 0.0f32, 0.0f32);
@@ -4999,9 +5017,10 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let d = (dx * dx + dy * dy).sqrt();
                 // T-1059: a lane some of whose station pairs take longer than walking there keeps
                 // only the other pairs' part of the logsum. Its station pairs are first passed by
-                // the most their stations take on (`Skims::walk_max`) and by walking's reach,
-                // and only the rest read the tables: the refused ones are kept to take off its
-                // loads below, or where most are refused (`whole`), the kept ones to load alone.
+                // the most their stations take on (`Skims::walk_max`) and by walking's reach; the
+                // rest are tested against the origin's real minutes to each egress station
+                // (`till`), and only the refused ones read the tables: kept to take off its loads
+                // below, or where most are refused (`whole`), the kept ones to load alone.
                 let (mut slow, mut whole) = (0u32, 0u32);
                 let mut bad_at = [(0u32, 0u32); 8];
                 // (no walk to compare with between two land parts, T-2214)
@@ -5020,20 +5039,43 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         if !p.walk_rule_at(direct) {
                             continue;
                         }
+                        // per egress entry, a bit per access entry whose station pair into it
+                        // takes longer than walking (`walk_ok`; no route takes 65,535 m, past
+                        // every walk the rule compares with)
+                        let ne = eg_n[qd] as usize;
+                        let nk = if rr[l] != 0 { n_all } else { walk.len() };
+                        let mut slow_k = [0u64; KE];
+                        let mut any = 0u64;
+                        for kk in 0..ne {
+                            let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
+                            let row = &mut till[t * till_w..t * till_w + n_all];
+                            if till_at[t] != till_gen {
+                                till_at[t] = till_gen;
+                                for (c, k) in row.iter_mut().zip(walk.start..ride.end) {
+                                    *c = acc_walk[k] + walk_tab[sz.acc_st[k] as usize * s + t] as f32;
+                                }
+                            }
+                            let m = row[..nk].iter().enumerate().fold(0u64, |m, (j, &c)| m | (!(c + wt <= direct) as u64) << j);
+                            slow_k[kk] = m;
+                            any |= m;
+                        }
+                        if any == 0 {
+                            continue;
+                        }
                         let (b, c_b) = (bl[l], if rr[l] != 0 { c_u[bl[l]] } else { 1.0 });
                         let er_b = &er[b * ss..(b + 1) * ss];
                         let lo = lane_bad.len() as u32;
                         let mut bad = 0f32;
-                        for k in walk.start..if rr[l] != 0 { ride.end } else { walk.end } {
-                            if acc_from[k] + eg_far[qd] <= direct {
+                        for (j, k) in (walk.start..walk.start + nk).enumerate() {
+                            if any >> j & 1 == 0 {
                                 continue;
                             }
-                            let (a, wa) = (sz.acc_st[k] as usize, acc_walk[k]);
-                            for kk in 0..eg_n[qd] as usize {
-                                let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
-                                if acc_from[k] + wt <= direct || walk_ok(wa, walk_tab[a * s + t], wt, direct) {
+                            let a = sz.acc_st[k] as usize;
+                            for kk in 0..ne {
+                                if slow_k[kk] >> j & 1 == 0 {
                                     continue;
                                 }
+                                let t = eg_st[qd][kk] as usize;
                                 let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
                                 let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
                                 if cw > 0.0 {
@@ -5042,18 +5084,23 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                                 }
                             }
                         }
+                        // T-2307: a sliver refused is let be (`WALK_SLIVER`)
+                        if bad <= WALK_SLIVER * s_lane[l] {
+                            lane_bad.truncate(lo as usize);
+                            continue;
+                        }
                         if bad > 0.5 * s_lane[l] {
                             // most of the lane refused: taking that off a spread at the kept rate
                             // would cancel too far for f32, so its kept pairs are loaded one by one
                             lane_bad.truncate(lo as usize);
                             let mut kept = 0f32;
-                            for k in walk.start..if rr[l] != 0 { ride.end } else { walk.end } {
-                                let (a, wa) = (sz.acc_st[k] as usize, acc_walk[k]);
+                            for (j, k) in (walk.start..walk.start + nk).enumerate() {
+                                let a = sz.acc_st[k] as usize;
                                 let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
-                                for kk in 0..eg_n[qd] as usize {
-                                    let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
+                                for kk in 0..ne {
+                                    let t = eg_st[qd][kk] as usize;
                                     let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
-                                    if cw > 0.0 && (acc_from[k] + wt <= direct || walk_ok(wa, walk_tab[a * s + t], wt, direct)) {
+                                    if cw > 0.0 && slow_k[kk] >> j & 1 == 0 {
                                         kept += cw;
                                         lane_bad.push((a as u32, t as u32, cw, k as u32, kk as u8));
                                     }
@@ -5061,13 +5108,11 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                             }
                             keep[l] = kept / s_lane[l];
                             whole |= 1 << l;
-                        } else if bad > 0.0 {
+                        } else {
                             keep[l] = 1.0 - bad / s_lane[l];
                         }
-                        if bad > 0.0 {
-                            bad_at[l] = (lo, lane_bad.len() as u32);
-                            slow |= 1 << l;
-                        }
+                        bad_at[l] = (lo, lane_bad.len() as u32);
+                        slow |= 1 << l;
                     }
                     if slow != 0 {
                         ssum = ssum * F8::new(keep);
@@ -5208,7 +5253,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                             out.od[a as usize * s + t as usize] += f;
                             acc_q[q[l]][kk as usize / 4][kk as usize % 4] += f;
                             out.acc_home[k as usize] += f;
-                            out.rail_band[dist_band(sz.acc_d[k as usize])] += f as f64;
+                            out.rail_band[acc_band[k as usize] as usize] += f as f64;
                         }
                     }
                 }

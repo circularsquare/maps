@@ -266,17 +266,20 @@ levels:
    times the pack's walk factor over water. The refused pairs leave the logsum, so rail costs
    more there, and a trip with none left has no rail (`WALK_FURTHER`: the trip explorer says
    walking is quicker, with the quickest pair's real minutes from head slot 44). A trip with no
-   refused pair keeps its whole share. The commutes keep their lanes: each origin knows the most
-   its trips can take before their last station (its way to a station and the most its station
-   takes on to any destination, `Skims::walk_max`), and a lane whose distance is past that and its
-   destination's longest egress walk, or past walking's reach, is taken as before. Only the rest
-   look at their station pairs one by one, scale the lane's logsum by the share kept, load as
-   usual and take the refused pairs off again, or, where most are refused, load the kept pairs
-   alone (f32 would lose too much in the taking off). Since the rule counts rides and waits,
-   `walk_max` passes few lanes under 10 km (the New York calib's solve about 20% slower than with
-   T-1059's metres, T-2307). The everyday pass, the pair choice (`walk_kept`) and the trip explorer
-   skip the refused pairs in their own loops. Long trips between cities and the everyday outings
-   across a zone line do not apply it.
+   refused pair keeps its whole share, and so does one whose refused pairs carry at most 1% of its
+   station-pair weight (`WALK_SLIVER`, T-2307: under about 0.1 perceived minutes of rail; New
+   York's rail figures move by 1 in 70,000). The commutes keep their lanes: each origin knows the
+   most its trips can take before their last station (its way to a station and the most its
+   station takes on to any destination, `Skims::walk_max`), and a lane whose distance is past that
+   and its destination's longest egress walk, or past walking's reach, is taken as before. The rest
+   test each egress entry against the origin's real minutes to its station from every access entry
+   (`till`, a row per station filled when a lane first reaches it), with no table read where all
+   pass; only the refused pairs are read, the lane's logsum scaled by the share kept, loaded as
+   usual and the refused pairs taken off again, or, where most are refused, the kept pairs loaded
+   alone (f32 would lose too much in the taking off). The everyday pass looks each pair's station
+   pairs up once into a bit each for its three passes; the pair choice (`walk_kept`) and the trip
+   explorer skip the refused pairs in their own loops. Long trips between cities and the everyday
+   outings across a zone line do not apply it.
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,

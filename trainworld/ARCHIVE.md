@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2307 The walking rule's cost after T-2265 (2026-11-04, agent solvespeed): exact row tests and one lookup per everyday pair, and refused slivers (at most 1% of a trip's weight) let be; New York's calib +10.5% over T-1059 became +7.8%, rail +165 a day. The rest is T-2324. notes/T-2307.md.
+- T-2308 Waiting room greyed in a station building (2026-11-04, agent solvespeed): the toggle is greyed at a building's members, hover "The station building already counts as a waiting room.", unless already bought.
 - T-2289 Diagram intercity stretches condensed (2026-11-04, agent diagram): lonely single-line hops 0.4 of their target, A up to 40 rounds on big networks; all Japan's longest stretch 1,111 to 587 pitches, under its longest city block. notes/T-2289.md; follow-up T-2321.
 - T-2272 Diagram stations, high-speed lines and far names (2026-11-04, agent diagram): a light rim round dark-theme pills, local stops small, a centre stripe on high-speed lines, pills to 0.625 px, faint names for big stations below the names levels. notes/T-2272.md.
 - T-1999 Islands, exclaves and dead-ringed towns keep their zone under the 50,000 floor (2026-11-04, agent replan): `world_plan.cut_off`, from 10,000 people (`CUT_OFF_MIN`); Vieques, Nantucket, Aland, Ceuta, Gorazde, Trebinje kept in the dry replans. notes/T-1189.md.

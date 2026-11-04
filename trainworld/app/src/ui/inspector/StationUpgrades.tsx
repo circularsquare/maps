@@ -6,7 +6,7 @@
 import { money, perArea, roughDistance } from "../../game/format";
 import { LINK_MAX_M } from "../../game/complexes";
 import { BUILDING_PER_M2, offeredRectangle } from "../../game/buildings";
-import { buildingDraft, buildingOf } from "../../game/buildingView";
+import { buildingDraft, buildingMembersById, buildingOf } from "../../game/buildingView";
 import { complexOf } from "../../game/complexView";
 import { groundScale } from "../../game/coords";
 import { tool } from "../../game/ui";
@@ -28,8 +28,14 @@ const ICONS: Record<number, () => preact.JSX.Element> = {
 };
 // two platforms and the walkway between them
 const PassageIcon = () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 3.5h3v9h-3zM11.5 3.5h3v9h-3z" /><path d="M4.5 8h7" /></svg>;
+const HOUSED = "The station building already counts as a waiting room.";
+/** Whether any of `ids` (`every`: each of them) is a station building's member. */
+function inBuilding(ids: readonly string[], every = false): boolean {
+  const housed = new Set([...buildingMembersById.value.values()].flat());
+  return every ? ids.every((id) => housed.has(id)) : ids.some((id) => housed.has(id));
+}
 // a hall round a platform
-const BuildingIcon = () => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z" /><path class="solid" d="M4 7h8v2H4z" /></svg>;
+const BuildingIcon =() => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z" /><path class="solid" d="M4 7h8v2H4z" /></svg>;
 
 /** `members`: the complex's stations in complex view, where park and ride and the waiting room are
  * built for all of them at once as one shared facility (T-1528), and the passage. */
@@ -50,6 +56,8 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   );
   // T-2231: passing tracks work on double track only
   const double = !!world.value?.edges.some((e) => (e.a === s.num || e.b === s.num) && e.tracks === 2);
+  // T-2308: a station building is its members' waiting room (T-2276), so one bought there adds nothing
+  const housed = inBuilding([s.id]);
   return (
     <div class="upgrades" role="group" aria-label="Station upgrades">
       {UPGRADE_TEXT.filter((u) => u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit)).map((u) => {
@@ -60,6 +68,11 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
           ? s.built ? "Built. Click to remove it; nothing is refunded" : "In the blueprint. Click to take it out"
           : s.built ? "Click to build" : "Click to add it to the blueprint";
         const Ic = ICONS[u.bit];
+        if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
+          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does}\n${HOUSED}`}>
+            <Ic />
+          </button>
+        );
         return (
           <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
             data-tip={`${u.name}\n${u.does}\nCosts ${money(price * 1e6)}\n${act}`}
@@ -110,6 +123,12 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
   const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "";
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";
+  const Ic = ICONS[u.bit];
+  if (u.bit === UPGRADE.waitingRoom && !all && st.length && inBuilding(st.map((x) => x.id), true)) return (
+    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.doesAll}\n${HOUSED}`}>
+      <Ic />
+    </button>
+  );
   const cost = (all ? st.length : missing.length) * price;
   const act = all
     ? built ? `Built. Click to remove it from all ${st.length} stations; nothing is refunded` : "In the blueprint. Click to take it out"
@@ -121,7 +140,6 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
     if (!all) say(a.charge > 0 ? `${u.name} built at ${name} for ${money(a.charge * 1e6)}.` : `${u.name} added to the blueprint.`);
     else if (built) say(`${u.name} removed from ${name}. Nothing is refunded.`);
   };
-  const Ic = ICONS[u.bit];
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
       data-tip={`${u.name}\n${u.doesAll}\nCosts ${money(cost * 1e6)}\n${act}`} onClick={() => void click()}>

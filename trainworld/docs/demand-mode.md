@@ -36,7 +36,8 @@ between regions) keeps its damped logit (docs/regional.md 5.1). The ceiling test
 `Params::walk_rule`, docs/demand-kernel.md step 5): the curve alone never compares the train with
 walking, so within walking's reach a station pair whose real minutes (walks or drive, waits, rides;
 no fare, crowding or weights) are more than walking the whole way's is no option, and a trip with
-none left has no train. A trip with a quicker pair keeps its whole share. **No rail propensity**:
+none left has no train. A trip with a quicker pair keeps its whole share; refused pairs carrying
+at most 1% of a trip's station-pair weight are let be (T-2307). **No rail propensity**:
 `asc_rail` is 0 in every country and does not enter the ratio, so rail and the car are judged on
 time and money alone (`everyday_asc_rail` and `api::COUNTRY_ASC_RAIL` remain, at 0 and empty,
 moving only the walking share). The game aims at sensible, with a clear effect from building a

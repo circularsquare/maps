@@ -968,6 +968,9 @@ fn the_walking_rule_reads_the_real_minutes_between_stations() {
         let kept = walk_kept(&acc, &eg, |_, _| 1.0, &sk.walk, s, direct);
         let want = if 250.0 + w <= direct { 1.0 } else { 2.0 / 3.0 };
         assert!((kept - want).abs() < 1e-6, "y {y}: {kept}");
+        // T-2307: the same pair from 2 refused at a thousandth of the weight is a sliver, let be
+        let acc = [(2u32, 0.002f32, 150.0f32, 0u32), (0, 2.0, 100.0, 1)];
+        assert_eq!(walk_kept(&acc, &eg, |_, _| 1.0, &sk.walk, s, direct), 1.0, "y {y}");
     }
     // platforms: a change at station 3 walks from line 0's platform to line 1's
     let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);

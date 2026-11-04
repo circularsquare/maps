@@ -111,7 +111,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Hungary | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Netherlands | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Portugal | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
-| Russia | U GHSL alone; ? not looked for | U OSM relations matched to geoBoundaries ADM2 units | 1 / 0.50-0.82 |
+| Russia | U GHSL alone; ? Rosstat's 2021 census (VPN-2021) by municipal district and okrug on rosstat.gov.ru, not opened (T-2297; it needs a polygon file with OKTMO codes, which geoBoundaries ADM2 lacks) | U OSM relations matched to geoBoundaries ADM2 units | 1 / 0.50-0.82 |
 | Sweden | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.81 / 1 |
 | Romania | U GHSL alone; N Eurostat's Census 2021 1 km grid, T-2083 | U OSM relations matched to NUTS-3 units | 0.99 / 0.64 |
 | Denmark | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
@@ -132,7 +132,8 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Mexico (not built) | N 2020 census by municipio, locality (ITER) and urban AGEB (INEGI open terms), T-2080 (T-2075) | N INEGI Marco Geoestadistico 2020 by CVEGEO | - |
 | Israel (not built; Middle East pick) | N 2022 census by statistical area (CBS, data.gov.il), T-2082 (T-2075) | N CBS's own statistical-area polygons | - |
 | Saudi Arabia (not built) | ? 2022 census by region only (COD-PS SAU, 13 regions); GHSL alone would do (T-2075) | - COD-AB to region only | - |
-| Ukraine, Belarus (held) | - nothing open and current for Ukraine (census 2001; COD-PS UKR 2026 is marked restricted); ? Belarus 2019 census by raion in Belstat PDF bulletins (T-2075) | ? COD-AB UKR (hromada) and BLR (raion) | - |
+| Ukraine (held) | - nothing open and current (census 2001; COD-PS UKR 2026 is marked restricted) | ? COD-AB UKR (hromada) | - |
+| Belarus | U GHSL alone; ? 2019 census by raion in Belstat PDF bulletins (T-2075, not taken: GHSL is sound in Belarus and a PDF table is past the playbook's hour) | U OSM relations matched to geoBoundaries ADM2 raions; ? COD-AB BLR (raion) | - |
 
 ## Jobs
 
@@ -155,7 +156,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | New Zealand | U tier 0 proxy (`plan_config.job_blend`); N Business Demography employee count by SA2 (Stats NZ ArcGIS), T-2077; ? 2023 census travel to work by SA2 (datafinder, free account) | ? not looked for | ? not looked for |
 | Mexico (not built) | N INEGI DENUE, every economic unit with coordinates and an employee band, T-2081; ? Censos Economicos 2019 by AGEB; ? census 2020 extended-questionnaire municipio of work | ? DENUE by SCIAN sector | ? not looked for |
 | Taiwan | tier 0 proxy, its jobs per resident and share aged 0-14 from DGBAS's 2024 manpower survey and the Ministry of the Interior's end-2024 registration (`tier0.NATIONAL`: the World Bank has no Taiwan), T-897; ? jobs by township not looked for | U tier 0 | - |
-| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above), China's Jiangsu rows | tier 0 proxy: population x jobs per resident (World Bank employment ratio, 2025), spread by GHSL built volume, OSM job places and population in the weights `plan_config.job_blend` sets from the ILO vulnerable-employment share (30/50/20 in most, Albania 21/33/46); ? national jobs by small area not looked for | U tier 0: OSM shops and services, restaurants, bars, venues and hotels, blended with the jobs at completeness c | ? not looked for |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above), China's Jiangsu rows | tier 0 proxy: population x jobs per resident (World Bank employment ratio, 2025), spread by GHSL built volume, OSM job places and population in the weights `plan_config.job_blend` sets from the ILO vulnerable-employment share (30/50/20 in most, Albania 21/33/46); ? national jobs by small area not looked for | U tier 0: OSM shops and services, restaurants, bars, venues and hotels, blended with the jobs at completeness c | ? not looked for |
 
 ## Commuting
 
@@ -182,7 +183,7 @@ days of people with a workplace. Several countries have one figure for both.
 | Philippines | ? PSA census place of work not looked for; U the borrowed curve for mai ceb ang dav, the zone curve for the zones; no land border (Sabah within 50 km of Tawi-Tawi, national 0.05) | ? MUCEP 2014 (Metro Manila, JICA) not looked for | U 0 | U 0 |
 | Nigeria | - none; U the borrowed curve (T-314) | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
 | Spain | N the transport ministry's "Estudio de movilidad con Big Data" (daily trips between 3,792 districts with home and work ends, open CSV, licence not read; T-719, T-771); U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp, T-765 | U 0, as work at home |
-| Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | ? national flows not looked for; U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
+| Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | ? national flows not looked for; U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
 
 ## Car ownership
 
@@ -261,7 +262,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Australia | ? Sydney HTS and Victoria's VISTA, not checked; worldwide | worldwide |
 | Thailand, Singapore | ? not looked for (Singapore's LTA Household Interview Travel Survey publishes summaries only); worldwide | worldwide |
 | Cambodia, Malaysia, Brunei, Indonesia, Philippines | ? not looked for; worldwide | worldwide |
-| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, the zones-only countries (Population above) | ? not looked for; worldwide (the surveys' median) | worldwide |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, the zones-only countries (Population above) | ? not looked for; worldwide (the surveys' median) | worldwide |
 | Wales, Scotland, Northern Ireland | U England's rates, NTS0504b (country GB) | worldwide |
 
 ## Destinations
@@ -284,7 +285,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Cambodia, Malaysia, Brunei | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 (KLIA is a hub; no connecting share set) |
 | Indonesia, Philippines | U tier 0 OSM | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 |
 | Nigeria | U tier 0 OSM; ? GRID3 schools, T-507 | U tier 0 (World Bank rate from 2011) | U OSM, no beds; ? GRID3 health facilities, T-507 | U FAAN via the press |
-| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9); ? national school registers not looked for | U tier 0 (Wikidata students where tagged, scaled to the World Bank tertiary rate) | U OSM, beds by the World Bank rule below | U OurAirports sites in the pack with Wikidata patronage, O&D share 1 (Tirana: none inside the pack) |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Turkey, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above) | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9); ? national school registers not looked for | U tier 0 (Wikidata students where tagged, scaled to the World Bank tertiary rate) | U OSM, beds by the World Bank rule below | U OurAirports sites in the pack with Wikidata patronage, O&D share 1 (Tirana: none inside the pack) |
 
 Everywhere: places and parks from OSM, water from OSM (TIGER and StatCan in the US and Canada),
 world market from the packs. U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,

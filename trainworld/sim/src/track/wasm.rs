@@ -33,7 +33,7 @@ pub struct TrackApi {
     issues: Vec<Issue>,
     /// Set when the last refusal was for money: (need, have).
     money_short: Option<(f64, f64)>,
-    /// Cash, US$M (SPEC 6.4: $6B to start).
+    /// Cash, US$M (SPEC 6.4: $10B to start).
     cash: f64,
     /// A sandbox game (T-728): nothing is refused for money; the cash still pays and may go negative.
     unlimited: bool,

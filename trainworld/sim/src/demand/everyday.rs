@@ -1373,6 +1373,9 @@ impl EverydayApi {
             let fans = fan_costs.as_ref();
             let mut fan_rides = vec![[0f32; 3]; fans.map_or(0, |fc| kinds * fc.np() * fc.np())];
             let mut fan_e: Vec<f32> = vec![];
+            // per access entry of a pair's start, a bit per entry at its end the walking rule keeps
+            let mut kept_rows: Vec<u32> = vec![];
+            let mut pair_c: Vec<f32> = vec![];
             for (i, pair) in self.pairs.iter().enumerate() {
                 if parts > 1 && i as u32 % parts != part {
                     continue;
@@ -1416,21 +1419,48 @@ impl EverydayApi {
                         continue;
                     }
                     let (u, v) = if direction == 0 { (h, x) } else { (x, h) };
-                    // T-1059: station pairs taking longer than walking there are no option
+                    // T-1059: station pairs taking longer than walking there are no option, looked
+                    // up once into a bit per pair for the passes below (T-2307)
                     let check = rule && rule_from[u] + rule_to[v] > walk_on && !apart && p.walk_rule_at(walk_on);
-                    let keep = |ka: usize, kb: usize| {
-                        !check || acc_from[ka] + rule_to[v] <= walk_on || walk_ok(acc_walk[ka], sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], acc_walk[kb], walk_on)
-                    };
-                    let mut sum = 0.0;
+                    // every station pair's weight, and their sum as with the rule off
+                    pair_c.clear();
+                    let mut all_sum = 0.0;
                     for ka in a.clone() {
                         for kb in b.clone() {
-                            if keep(ka, kb) {
-                                sum += wa[ka]
-                                    * wb[kb]
-                                    * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
-                            }
+                            let c = wa[ka] * wb[kb] * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
+                            all_sum += c;
+                            pair_c.push(c);
                         }
                     }
+                    kept_rows.clear();
+                    kept_rows.resize(a.len(), u32::MAX);
+                    debug_assert!(b.len() <= 32);
+                    let mut sum = all_sum;
+                    if check {
+                        // T-2307: a sliver refused is let be (`WALK_SLIVER`)
+                        let (mut kept, mut bad) = (0.0, 0.0);
+                        let mut n = 0;
+                        for (ka, m) in a.clone().zip(kept_rows.iter_mut()) {
+                            let all = acc_from[ka] + rule_to[v] <= walk_on;
+                            for (j, kb) in b.clone().enumerate() {
+                                let c = pair_c[n];
+                                n += 1;
+                                if all || walk_ok(acc_walk[ka], sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], acc_walk[kb], walk_on) {
+                                    kept += c;
+                                } else {
+                                    *m &= !(1 << j);
+                                    bad += c;
+                                }
+                            }
+                        }
+                        if bad > WALK_SLIVER * all_sum {
+                            sum = kept;
+                        } else {
+                            kept_rows.fill(u32::MAX);
+                        }
+                    }
+                    let (a0, b0) = (a.start, b.start);
+                    let keep = |ka: usize, kb: usize| kept_rows[ka - a0] >> (kb - b0) & 1 != 0;
                     if sum < 1e-30 {
                         continue;
                     }

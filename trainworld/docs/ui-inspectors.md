@@ -615,7 +615,10 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
   in a sentence, its price and what a click does ("Click to build" on a built station, no ", paid at once"; none of the click lines ends in a period) [T-1893]. A click adds it to the blueprint, or on a built
   station builds it at once for its price (a notice says so), or takes it away again (nothing
-  refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
+  refunded once built); the passage's click starts picking the other station (below). At a station
+  building's member (in complex view, a complex whose every station is one) the waiting room is
+  greyed unless already bought, its hover the name, what it does and "The station building already
+  counts as a waiting room." [T-2308]. A track has Construct for its price (a blueprint
   only) and Remove track (Remove blueprint on a blueprint) [T-1669]; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
   or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has an icon button (the crosshair, hover "Go to Philadelphia") [T-1439]; a trip
   opened from a selection has Back.

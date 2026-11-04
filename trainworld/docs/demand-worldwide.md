@@ -906,8 +906,9 @@ notes/T-420.md has the tables.
   (the walk or drive to the first station, the waits at half the headway, the rides, the walks
   between stations and platforms, the walk from the last) are more than walking the whole way's
   real minutes (over water at its cost where the pack routes walks). No fare, crowding, weights or
-  fixed change minutes on either side, and a trip with any quicker pair keeps its whole share. A
-  rule of sense rather than a fitted number, and it holds anywhere: nobody takes a train that takes
+  fixed change minutes on either side, and a trip with any quicker pair keeps its whole share.
+  Refused pairs carrying at most 1% of a trip's station-pair weight are let be (T-2307, for speed;
+  the same everywhere). A rule of sense rather than a fitted number, and it holds anywhere: nobody takes a train that takes
   longer than walking there. What can differ by place: straight lines stand for both walks, so where
   streets are far from straight on one side only (a station across a motorway or rail yard, a gated
   campus, hill towns with long stairs) the rule can keep or refuse a pair a real rider would not;
