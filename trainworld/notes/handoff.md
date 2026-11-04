@@ -82,7 +82,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   tree .tw-trees/waterroute, 6196; ids T-2426..T-2428): T-2424 A+B, T-2423 NI, T-2421 Liberty. Rust in its tree now;
   pipeline edits and pack writes wait on my "go" after countries3's RU/BY chain; countries3 told to pause before
   Jakarta. **Pack-lock order: RU/BY chain -> waterroute (re-route ~2h + parts ~11 min) -> Jakarta -> Ukraine -> T-2302.**
-- Next free id **T-2429**.
+- RU/BY shipped and committed f4977dd7 (181 rows); pre-T2295 backup deleted after 8800 passed. ramps landed a2eb391f
+  (T-2414, main WASM rebuilt), tripui landed 861369d9 (T-2365 done). **8800 = build 905 (a8b7bbcd)**: Russia/Belarus,
+  profit map, trip graph, bridge ramps; smoke 23/23 light/dark. waterroute has the pack lock (pipeline edits under
+  way, uncommitted: market_drives.py, parts_run.py, routes.py); countries3 paused before Jakarta (its Ukraine code
+  uncommitted: world_plan.py, zones.md, T-2344.md, t2344/).
+- hsrfix landed 1fbe042b (T-2419; main WASM rebuilt; both cargo runs pass on master after ramps + hsrfix: 360, 532).
+  Not on 8800 yet. Filed T-2429 (terminal train vanishes on a count edit at capacity, older bug).
+- Next free id **T-2430**.
 - Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
   (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
   T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).

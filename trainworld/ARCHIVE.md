@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2419 Fast trains timetabled ahead of slow ones (2026-11-04, agent hsrdelay, tree .tw-trees/hsrfix): behind one slower line with no passing tracks the loss is max(0, D + 2s - H), not all of D; 180 km same ends at 30/30 37 -> 12 min. The 7's case stays bad (express loses all its gain, track 142% full). notes/T-2413.md.
 - T-2365 Split by trip length and km share (2026-11-04, agents tripgraph, tripui; trees .tw-trees/tripgraph, tripui): kernel bins by length; city view "By trip length" log graph with trips to other places stacked in, "Trips within New York", top bar hover as a Trip count and Distance table. notes/T-2365.md.
 - T-2295 Russia and Belarus (2026-11-04, agents countries, countries2, countries3): 181 rows shipped (173 RU: cities and corridors on Canada's rule, east of the Urals too; 8 BY), joint groups mos-ru and min-by, terrain and routed drives; Crimea and Ukraine under T-2344. notes/T-2295.md.
 - T-2414 Bridge ramps more persistent (2026-11-04, agent ramps, tree .tw-trees/ramps): ramps placed one by one, bridges stay up between close crossings, new ends and blueprint dead ends go up when short; synthetic sweep 33/91 refused -> 5/96 (all real), NYC water 127/143 -> 0/159. notes/T-2414.md.
