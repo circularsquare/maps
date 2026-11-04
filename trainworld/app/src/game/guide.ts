@@ -1,8 +1,8 @@
-// The tutorial's two cards (T-1822, T-2123; notes/T-1822.md): the first builds a running line, the
-// second reads demand. Steps are checked from the world and the page whenever they change. A step
-// ticks once and stays ticked (undo never unticks it); the counters keep following the world.
-// Progress is kept in the save through the clock worker (`SaveHeader.guide`), the browser remembers
-// only that the first card was finished once.
+// The tutorial's two cards (T-1822, T-2123, T-2263; notes/T-1822.md): the first reads demand and
+// lays a line, the second runs it. Steps are checked from the world and the page whenever they
+// change. A step ticks once and stays ticked (undo never unticks it); the counters keep following the
+// world. Progress is kept in the save through the clock worker (`SaveHeader.guide`), the browser
+// remembers only that the first card was finished once.
 
 import { computed, effect, signal } from "@preact/signals";
 import { activeCity, cityById, viewedZone } from "./cities";
@@ -10,8 +10,7 @@ import { clock } from "./clock";
 import { AVERAGE_DAY } from "./days";
 import { cityDemandViews, demandByDay } from "./demand";
 import { moneyState } from "./money";
-import { STAR_SHARE } from "./points";
-import { display, guideFinished, selection, tab, type MapRow } from "./ui";
+import { display, guideFinished, guideVerbose, selection, tab, type MapRow } from "./ui";
 import { trainsShown, world } from "./world";
 import { zoomedOut } from "../map/intercityView";
 import type { WorldView } from "./types";
@@ -19,17 +18,19 @@ import { saveGuide } from "../workers/clockClient";
 import type { GuideSave } from "../workers/saveFile";
 
 export type GuideId = "zoom" | "track" | "stations" | "construct" | "line" | "stops" | "trains" | "crowd" | "levels"
-  | "play" | "homes" | "bubble" | "trip" | "star";
+  | "play" | "homes" | "bubble" | "trip" | "star" | "split" | "traffic";
 
 /** Each step's bit in `GuideSave.done`: the first six are T-1822's, so older saves keep their ticks. */
 export const GUIDE_BITS: Record<GuideId, number> = {
   track: 0, stations: 1, construct: 2, line: 3, stops: 4, trains: 5,
-  zoom: 6, crowd: 7, levels: 8, homes: 9, bubble: 10, trip: 11, star: 12, play: 13,
+  zoom: 6, crowd: 7, levels: 8, homes: 9, bubble: 10, trip: 11, star: 12, play: 13, split: 14, traffic: 15,
 };
 
 export interface GuideStep {
   id: GuideId;
   words: string;
+  /** T-2263: a line under the step while it is the step in hand */
+  note?: string;
   /** a counter: what there is now and the goal; none for a step with nothing to count */
   count?: { have: number; goal: number; unit?: "km" | "%" };
   met: boolean;
@@ -37,24 +38,39 @@ export interface GuideStep {
 
 /** track to lay, m, and its stations apart from each other, m (step 1, 2) */
 export const GUIDE_TRACK_M = 5000, GUIDE_STATIONS = 3, GUIDE_APART_M = 500;
+/** the last step's train share, % (Anita, T-2263: the region star's 10% was too far for a tutorial) */
+export const GUIDE_SHARE = 2;
 const WORDS: Record<Exclude<GuideId, "star">, string> = {
   zoom: "Zoom into a city",
+  split: "Hover the red and green bar at the top of the screen to see how people travel",
+  homes: "Show Homes on the map",
+  bubble: "Click a red bubble to see where its trips go",
+  trip: "Click one of its destinations to see that trip",
   track: "Place 5km of track",
   stations: "Place stations on the track (space them ~1km apart)",
   construct: "Construct your blueprints",
   line: "Create a line",
   stops: "Assign stops for the line by clicking them on the map",
   trains: "Add trains to the line",
+  play: "Unpause the game",
   crowd: "Hover the dot by High to see if there are enough trains",
   levels: "Add trains at high, medium and low demand",
-  play: "Unpause the game",
-  homes: "Show Homes on the map",
-  bubble: "Click a red bubble to see where its trips go",
-  trip: "Click one of its destinations to see that trip",
+  traffic: "Show line traffic on the map",
 };
+const NOTES: Partial<Record<GuideId, string>> = {
+  split: "Green is walking, red is cars and other modes, blue is your trains.",
+  homes: "A bubble shows trips from homes there. Red bubbles mostly drive and green bubbles mostly walk.",
+  crowd: "If trains are crowded, they will show as >100% capacity, and people will be less likely to ride. To carry more, you can increase train length.",
+  levels: "If only a short stretch is crowded, adding more trains can end up costing more than they earn.",
+  traffic: "Thicker lines represent more riders. Red borders indicate track at full capacity.",
+};
+const step = (id: Exclude<GuideId, "star">, met: boolean, count?: GuideStep["count"]): GuideStep => ({ id, words: WORDS[id], note: NOTES[id], count, met });
 
-/** a crowding dot in the line panel has been hovered in this page (step "crowd") */
-const crowdSeen = signal(false);
+/** a crowding dot in the line panel, or the top bar's mode split, has been hovered in this page
+ * (steps "crowd", "split") */
+const crowdSeen = signal(false), splitSeen = signal(false);
+/** the top bar's mode split (ui/TopBar.tsx), the "split" step's target */
+export const GUIDE_SPLIT = "#topbar .split-row";
 
 /** How many stations stand at least GUIDE_APART_M from each other (taken in order, a station within
  * reach of one already taken counts as part of it), so three side by side count as one. */
@@ -64,8 +80,8 @@ function spaced(list: readonly { x: number; y: number }[]): number {
   return kept.length;
 }
 
-/** The first card's steps as the world has them now. `trains`: a line's trains per demand level. */
-function buildSteps(w: WorldView, g: GuideSave, trains: (line: string) => readonly number[] | null): GuideStep[] {
+/** The first card's steps as the world has them now (T-2263: reading demand, then laying a line). */
+function firstSteps(w: WorldView, g: GuideSave): GuideStep[] {
   let laid = 0, built = 0;
   for (const e of w.edges) {
     if (e.off || e.crossover) continue;
@@ -78,44 +94,47 @@ function buildSteps(w: WorldView, g: GuideSave, trains: (line: string) => readon
   const lines = w.save.lines;
   const mostStops = lines.reduce((m, l) => Math.max(m, l.stops.length), 0);
   const stopGoal = Math.max(1, Math.min(3, stationsBuilt.length));
-  const anyTrain = lines.some((l) => Math.max(0, ...(trains(l.id) ?? [])) >= 1);
-  // levels with a train on the rail line with most (bus lines start with buses at every level)
-  const levels = lines.reduce((m, l) => (w.lineStats[l.id]?.bus ? m : Math.max(m, (trains(l.id) ?? []).filter((n) => n >= 1).length)), 0);
+  const d = display.value, s = selection.value;
   const km = (m: number) => Math.min(m, GUIDE_TRACK_M) / 1000;
   const steps: GuideStep[] = [];
-  if (g.zoom) steps.push({ id: "zoom", words: WORDS.zoom, met: !zoomedOut.value && !!viewedZone.value && cityDemandViews.value.has(activeCity.value) });
+  if (g.zoom) steps.push(step("zoom", !zoomedOut.value && !!viewedZone.value && cityDemandViews.value.has(activeCity.value)));
   steps.push(
-    { id: "track", words: WORDS.track, count: { have: km(laid), goal: GUIDE_TRACK_M / 1000, unit: "km" }, met: laid >= GUIDE_TRACK_M },
-    { id: "stations", words: WORDS.stations, count: { have: Math.min(stationsOn, GUIDE_STATIONS), goal: GUIDE_STATIONS }, met: stationsOn >= GUIDE_STATIONS },
-    { id: "construct", words: WORDS.construct, met: built >= GUIDE_TRACK_M && builtCount >= GUIDE_STATIONS },
-    { id: "line", words: WORDS.line, met: lines.length > 0 },
-    { id: "stops", words: WORDS.stops, count: { have: Math.min(mostStops, stopGoal), goal: stopGoal }, met: mostStops >= stopGoal },
-    { id: "trains", words: WORDS.trains, count: { have: anyTrain ? 1 : 0, goal: 1 }, met: anyTrain },
-    { id: "crowd", words: WORDS.crowd, met: crowdSeen.value },
-    { id: "levels", words: WORDS.levels, count: { have: levels, goal: 3 }, met: levels >= 3 },
-    // T-2142: a new game starts paused
-    { id: "play", words: WORDS.play, met: clock.running.value },
+    step("split", splitSeen.value),
+    step("homes", d.commuters && d.commuterEnd === "home"),
+    step("bubble", s?.kind === "commuters"),
+    step("trip", s?.kind === "trip" && s.to !== null),
+    step("track", laid >= GUIDE_TRACK_M, { have: km(laid), goal: GUIDE_TRACK_M / 1000, unit: "km" }),
+    step("stations", stationsOn >= GUIDE_STATIONS, { have: Math.min(stationsOn, GUIDE_STATIONS), goal: GUIDE_STATIONS }),
+    step("construct", built >= GUIDE_TRACK_M && builtCount >= GUIDE_STATIONS),
+    step("line", lines.length > 0),
+    step("stops", mostStops >= stopGoal, { have: Math.min(mostStops, stopGoal), goal: stopGoal }),
   );
   return steps;
 }
 
-/** The second card's steps: reading demand (T-2123). */
-function demandSteps(): GuideStep[] {
-  const d = display.value, s = selection.value, m = moneyState.value;
+/** The second card's steps: running the line. `trains`: a line's trains per demand level. */
+function secondSteps(w: WorldView, trains: (line: string) => readonly number[] | null): GuideStep[] {
+  const lines = w.save.lines;
+  const anyTrain = lines.some((l) => Math.max(0, ...(trains(l.id) ?? [])) >= 1);
+  // levels with a train on the rail line with most (bus lines start with buses at every level)
+  const levels = lines.reduce((m, l) => (w.lineStats[l.id]?.bus ? m : Math.max(m, (trains(l.id) ?? []).filter((n) => n >= 1).length)), 0);
   const city = activeCity.value;
   const share = demandByDay.value[AVERAGE_DAY]?.cities.get(city)?.split.train ?? 0;
-  const starred = Object.keys(m?.stars ?? {}).length > 0;
+  const starred = Object.keys(moneyState.value?.stars ?? {}).length > 0;
   return [
-    { id: "homes", words: WORDS.homes, met: d.commuters && d.commuterEnd === "home" },
-    { id: "bubble", words: WORDS.bubble, met: s?.kind === "commuters" },
-    { id: "trip", words: WORDS.trip, met: s?.kind === "trip" && s.to !== null },
-    { id: "star", words: `Reach ${STAR_SHARE}% train share in ${cityById(city)?.name ?? "a city"}`, count: { have: starred ? STAR_SHARE : Math.min(share, STAR_SHARE), goal: STAR_SHARE, unit: "%" }, met: starred },
+    step("trains", anyTrain, { have: anyTrain ? 1 : 0, goal: 1 }),
+    // T-2142: a new game starts paused; T-2263: unpaused before the crowding is read
+    step("play", clock.running.value),
+    step("crowd", crowdSeen.value),
+    step("levels", levels >= 3, { have: levels, goal: 3 }),
+    step("traffic", display.value.trackColour === "traffic"),
+    { id: "star", words: `Reach ${GUIDE_SHARE}% train share in ${cityById(city)?.name ?? "a city"}`, count: { have: starred ? GUIDE_SHARE : Math.min(share, GUIDE_SHARE), goal: GUIDE_SHARE, unit: "%" }, met: starred || share >= GUIDE_SHARE },
   ];
 }
 
 /** The steps of the card in hand. */
 export function guideSteps(w: WorldView, g: GuideSave, trains: (line: string) => readonly number[] | null = trainsShown): GuideStep[] {
-  return g.card === 2 ? demandSteps() : buildSteps(w, g, trains);
+  return g.card === 2 ? secondSteps(w, trains) : firstSteps(w, g);
 }
 
 /** Which steps are ticked (met now, or ticked before), and the step in hand: the first unticked, -1
@@ -131,11 +150,12 @@ export function guideShown(g: GuideSave | undefined, sandbox: boolean): boolean 
   return !!g && !sandbox && !g.hidden && !g.closed;
 }
 
-/** T-2123: while the first card is up, the map's view rows (demand bubbles, station ridership, track
- * colour) are folded, unless the player opened one in this page (`guideOpened`). */
-export const guideFolding = computed(() => {
+/** T-2123: while the first card is up, the map's station ridership and track colour rows are folded,
+ * unless the player opened one in this page (`guideOpened`); T-2263: the demand bubbles' row stays
+ * open, since the card starts with it. */
+export const guideFolding = computed((): readonly MapRow[] => {
   const m = moneyState.value, g = m?.guide;
-  return !!m && guideShown(g, m.mode === "sandbox") && g!.card !== 2;
+  return !!m && guideShown(g, m.mode === "sandbox") && g!.card !== 2 ? ["stations", "track"] : [];
 });
 export const guideOpened = signal<MapRow[]>([]);
 
@@ -149,12 +169,15 @@ export function guideNewGame(on: boolean) {
 /** Tick steps as they are met, and remember in this browser that the first card was finished. */
 export function startGuide() {
   addEventListener("pointerover", (e) => {
-    if (!crowdSeen.peek() && (e.target as Element | null)?.closest?.(".crowd-dot")) crowdSeen.value = true;
+    const t = e.target as Element | null;
+    if (!crowdSeen.peek() && t?.closest?.(".crowd-dot")) crowdSeen.value = true;
+    if (!splitSeen.peek() && t?.closest?.(GUIDE_SPLIT)) splitSeen.value = true;
   }, { capture: true, passive: true });
   let sent = -1;
   effect(() => {
     const m = moneyState.value, w = world.value;
     const g = m?.guide;
+    guideVerbose.value = !!m && guideShown(g, m.mode === "sandbox");
     if (newGameOpening && m) {
       newGameOpening = false;
       if (g && guideShown(g, m.mode === "sandbox")) tab.value = "build";

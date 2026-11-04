@@ -28,7 +28,8 @@ import { stopsById, world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
-import { faresOf } from "./game/fareCurve";
+import { faresOf, type Fares } from "./game/fareCurve";
+import { markSolveFares } from "./game/fareInEffect";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
@@ -131,9 +132,23 @@ const urlChoice = choiceFromUrl();
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
 // network instead.
+const startDemandPool = (newGame: boolean) => {
+  const c = startDemand(HOME_CITY, newGame);
+  // T-2266: every view the client makes carries the fares of its solve (until T-2286 puts this in `daysOf`)
+  const client = c as any;
+  if (!client.fareMarked) {
+    client.fareMarked = true;
+    const daysOf = client.daysOf;
+    client.daysOf = async function (this: unknown, s: { svc: { fare: unknown } }, ...rest: unknown[]) {
+      const days = await daysOf.call(this, s, ...rest);
+      markSolveFares(days, s.svc.fare as Fares | undefined);
+      return days;
+    };
+  }
+};
 if (urlChoice) {
   startGameWait(urlChoice.slot ?? (urlChoice.newGame ? "new" : "last"));
-  startDemand(HOME_CITY, !!urlChoice.newGame);
+  startDemandPool(!!urlChoice.newGame);
 }
 
 // ---- map and overlay ----
@@ -588,7 +603,7 @@ if (!urlChoice) showStartMenu((choice) => {
   if (choice.game) viewStart(choice.game.start);
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
-  startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
+  startDemandPool(!!choice.newGame && !choice.game?.real);
   pauseNewGame(choice.newGame);
   guideNewGame(!!choice.newGame);
   client.start(choice);

@@ -108,6 +108,10 @@ and names use no maths beyond `+ - * /` and square roots (`diagram/fmath.ts` has
 those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 - **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds.
+- **Sides** (in A and B, each round): two stations that share no edge and lie nearer in reality than 1.5 times
+  either one's mean real hop keep at least their spacing (their half widths plus half the median hop) between
+  them along their real bearing (weight 3), so a line of short hops beside one of long hops cannot carry its
+  stations past the other's to the wrong side (T-2290).
 - **B**: 30 rounds of octilinear least squares from A: each edge toward the nearest free 45 degree
   direction at both ends, straight through two-edge stations, near the last round (0.1) and A (0.01),
   unconnected stations nearer than 1.12 times their spacing (their half widths plus half the median

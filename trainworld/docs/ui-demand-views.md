@@ -76,8 +76,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **Folding** [T-1448]: each row's icon is a button that folds the row down to the icon and opens it
   again (its hover "Hide demand bubble choices" or "Show ...", likewise "station ridership" and
   "track colour"); folded rows are remembered per browser (`foldedRows`) and the choices in them
-  stay in force. While the tutorial's first card is up every row shows folded (ui-panels.md
-  "Tutorial card") [T-2123].
+  stay in force. While the tutorial's first card is up the station ridership and track
+  colour rows show folded (ui-panels.md "Tutorial card") [T-2123, T-2263].
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade

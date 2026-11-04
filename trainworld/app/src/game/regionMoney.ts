@@ -16,6 +16,7 @@ import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scal
 import { placeAt, zonesLoaded } from "./zones";
 import { groundDist, packToLngLat } from "./coords";
 import { lineFareMul } from "./fareCurve";
+import { lineFares } from "./fareInEffect";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
@@ -69,7 +70,8 @@ export const lineShares = computed(() => {
         for (let k = 0; k + 1 < n; k++) ends.push([zz[k], zz[k + 1], Math.abs(s[k + 1] - s[k]) / 1000]);
       }
       // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
-      const { sc, from } = scalesOf(g, l, byId, m.fares);
+      const lf = lineFares(dm, m.fares); // T-2266: its riders pay the fares they were solved with
+      const { sc, from } = scalesOf(g, l, byId, lf);
       const pkm = new Map<string, number>(), board = new Map<string, number>(), paid = new Map<string, number>();
       let pkmAll = 0;
       for (const per of dm.loads) {
@@ -82,8 +84,8 @@ export const lineShares = computed(() => {
       // a bent curve's extra goes with the per-km part, as it is counted on the km ridden (T-1516)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rate times its multiplier (its extra came so from demand)
-      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, m.fares);
-      const base = m.fares.base * (baseOf.get(l.id) ?? 0), perKm = Math.max(0, mul * m.fares.perKm * pkmAll + fx);
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, lf);
+      const base = lf.base * (baseOf.get(l.id) ?? 0), perKm = Math.max(0, mul * lf.perKm * pkmAll + fx);
       if (base + perKm > 0) {
         const mix = new Map<string, number>();
         for (const [k, v] of byPaid) add(mix, k, v * base);

@@ -96,14 +96,14 @@ const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   stations: { icon: Icon.stationDisplay, what: "station ridership" },
   track: { icon: Icon.trackDisplay, what: "track color" },
 };
-/** T-2123: the tutorial's first card folds every row the player has not opened since */
-const folded = (row: MapRow) => display.value.foldedRows.includes(row) || (guideFolding.value && !guideOpened.value.includes(row));
+/** T-2123: the tutorial's first card folds its rows the player has not opened since */
+const folded = (row: MapRow) => display.value.foldedRows.includes(row) || (guideFolding.value.includes(row) && !guideOpened.value.includes(row));
 function FoldCell({ row }: { row: MapRow }) {
   const shut = folded(row), f = FOLDS[row];
   return <button type="button" class="hint-cell" data-fold={row} aria-expanded={!shut} data-tip={`${shut ? "Show" : "Hide"} ${f.what} choices`}
     onClick={() => {
       const rows = display.peek().foldedRows;
-      if (shut && guideFolding.peek() && !guideOpened.peek().includes(row)) guideOpened.value = [...guideOpened.peek(), row];
+      if (shut && guideFolding.peek().includes(row) && !guideOpened.peek().includes(row)) guideOpened.value = [...guideOpened.peek(), row];
       setDisplay("foldedRows", shut ? rows.filter((r) => r !== row) : [...rows, row]);
     }}><f.icon /></button>;
 }
@@ -134,7 +134,7 @@ function TrackDisplay() {
   return <div class="demand-selector" role="group" aria-label="Track display">
     <FoldCell row="track" />
     {!folded("track") && TRACK_OPTIONS.map(([value, label, tip]) =>
-      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
+      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip} data-guide={value === "traffic" ? "traffic" : undefined}
         onClick={() => setDisplay("trackColour", value)}>{label}</button>)}
   </div>;
 }

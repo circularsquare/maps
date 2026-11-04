@@ -262,6 +262,9 @@ export const buildPlatform = signal(200);
 export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
 /** T-1822: this browser has finished the Getting started guide once, so new games start without it. */
 export const guideFinished = signal(saved.guide === true);
+/** T-2263: the tutorial card is up in this game, so a few hovers it leads to give a longer wording
+ * (the road crossings chip, the crowding dot). Set by game/guide.ts. */
+export const guideVerbose = signal(false);
 /** T-1615: track drawn across other track at its own elevation ramps over it (under it from -1
  * down) where that fits; on unless turned off. */
 export const autoRamp = signal(saved.build?.ramp !== false);

@@ -471,8 +471,9 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string, alpha = 1) => {
     ctx.globalAlpha = alpha;
     ctx.beginPath();
-    // a round stop: a zero-length stroke's caps are not drawn
-    if (x0 === x1 && y0 === y1) {
+    // a round stop: a zero-length stroke's caps are not drawn, nor a stroke whose ends differ in the last
+    // bits (T-2290: West Mount Vernon and Melrose drew no pill)
+    if (hyp(x1 - x0, y1 - y0) < 1e-6 * width) {
       ctx.fillStyle = colour;
       ctx.arc(x0, y0, width / 2, 0, 2 * Math.PI);
       ctx.fill();

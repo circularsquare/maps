@@ -305,37 +305,41 @@ the button is gone.
 
 ## Tutorial card
 
-[T-1822, T-2123; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` in `game/guide.ts`] A flat
+[T-1822, T-2123, T-2263; `ui/Guide.tsx`, `game/guide.ts`; the step words are `WORDS` and the notes
+`NOTES` in `game/guide.ts`] A flat
 post-it at the map's upper right under the day and night picture, 240 px wide, not tilted: a pale yellow
 (`--yellow` at 24% over the background; 14% in the dark theme), no shadow. Heading "Tutorial" (14 px,
 bold) and an x (no hover; screen readers get "Close the tutorial"), then a row of 12 px type per step: a
 12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
 carry a tick; the step in hand (the first not done) is in the text colour, steps after it muted. Ticks
-show at once. The search results open over it. Two cards, one after the other.
+show at once. Some steps have a note, shown in the muted colour under the step's words only while it is
+the step in hand. The search results open over it. Two cards, one after the other.
 
-**The first card**, building a running line:
+**The first card**, reading demand, then laying a line:
 
-| Step | Counter | Counts |
-|---|---|---|
-| Zoom into a city | none | only in a game started on the world map (Choose on map, or a location far from every zone): a zone in view at city zoom (not the zoomed-out bubbles) with its demand drawn |
-| Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off |
-| Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart |
-| Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart |
-| Create a line | none | any line |
-| Assign stops for the line by clicking them on the map | 1/3 | stops of the line with most, goal the lesser of 3 and the built stations |
-| Add trains to the line | 0/1 | any line with a train at any demand level |
-| Hover the dot by High to see if there are enough trains | none | the pointer on a line panel's crowding dot (any level's) in this page |
-| Add trains at high, medium and low demand | 1/3 | the demand levels with at least one train, on the rail line with most |
-| Unpause the game | none | the clock running (a new game starts paused [T-2142]) |
+| Step | Counter | Counts | Note |
+|---|---|---|---|
+| Zoom into a city | none | only in a game started on the world map (Choose on map, or a location far from every zone): a zone in view at city zoom (not the zoomed-out bubbles) with its demand drawn | |
+| Hover the red and green bar at the top of the screen to see how people travel | none | the pointer on the top bar's mode split in this page | Green is walking, red is cars and other modes, blue is your trains. |
+| Show Homes on the map | none | the demand view on Homes | A bubble shows trips from homes there. Red bubbles mostly drive and green bubbles mostly walk. |
+| Click a red bubble to see where its trips go | none | a bubble selection | none |
+| Click one of its destinations to see that trip | none | the trip explorer with both ends | |
+| Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off | |
+| Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart | |
+| Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart | |
+| Create a line | none | any line | |
+| Assign stops for the line by clicking them on the map | 1/3 | stops of the line with most, goal the lesser of 3 and the built stations | |
 
-**The second card**, reading demand:
+**The second card**, running the line:
 
-| Step | Counter | Counts |
-|---|---|---|
-| Show Homes on the map | none | the demand view on Homes |
-| Click a red bubble to see where its trips go | none | a bubble selection |
-| Click one of its destinations to see that trip | none | the trip explorer with both ends |
-| Reach 10% train share in New York (the zone in focus) | 0.6/10% | the zone's train share on the average day; ticks at any region's star |
+| Step | Counter | Counts | Note |
+|---|---|---|---|
+| Add trains to the line | 0/1 | any line with a train at any demand level | |
+| Unpause the game | none | the clock running (a new game starts paused [T-2142]) | |
+| Hover the dot by High to see if there are enough trains | none | the pointer on a line panel's crowding dot (any level's) in this page | If trains are crowded, they will show as >100% capacity, and people will be less likely to ride. To carry more, you can increase train length. |
+| Add trains at high, medium and low demand | 1/3 | the demand levels with at least one train, on the rail line with most | If only a short stretch is crowded, adding more trains can end up costing more than they earn. |
+| Show line traffic on the map | none | the track display on Traffic | Thicker lines represent more riders. Red borders indicate track at full capacity. |
+| Reach 2% train share in New York (the zone in focus) | 0.6/2% | the zone's train share on the average day at 2% (`GUIDE_SHARE`), or any region's star | |
 
 A step ticks the first time its check holds and stays ticked (undo never unticks it); counters keep
 following the world and cap at their goal. A later step can tick before an earlier one. Once every
@@ -354,19 +358,25 @@ card; the second card's last tick gives a Done! button (closes the card for good
   Start again in every normal game: it clears the ticks and the hidden, closed and card marks and shows the
   first card, whether it was hidden, finished or never there (a game saved before the card) [T-1835]; steps
   the world already meets tick at once.
-- **The view rows fold**: while the first card is up, the map's three view rows (demand bubbles,
-  station ridership, track colour; ui-demand-views.md) show only their fold icons, as if folded, without
-  changing the remembered folds; a row the player opens stays open for the page. The second card
-  shows them as remembered.
+- **The view rows fold**: while the first card is up, the map's station ridership and track colour
+  rows (ui-demand-views.md) show only their fold icons, as if folded, without changing the remembered
+  folds; a row the player opens stays open for the page. The demand bubbles' row shows as remembered,
+  since the card starts with Homes. The second card shows every row as remembered.
+- **Longer hovers** [T-2263]: while the card is up in a game (`guideVerbose` in `game/ui.ts`), the
+  track tool's road chip reads "85 road crossings +$12.0M" (afterwards "85 crossings +$12.0M"), and the
+  line panel's crowding dots and the Lines list's crowding add "Maximum crowding in the busiest
+  hour of the busiest segment of the line." after the peak load, and, when
+  at most half the line's stretches are past 100%, "Only a short stretch is crowded. More trains
+  would run mostly empty, and may cost more than they earn." after the stretch count.
 - **Out of the way**: it hides while a confirmation or the saved games panel is open, and with F2.
 - **A phone held upright** (the dock under the map): 184 px wide, only the heading and the step in
   hand; a tap on the heading opens every step.
 
 ### The ripple
 
-[T-1822 stage 2, T-2123; `ui/ripple.ts`] Rectangles round the control the step in hand uses: 2 px in
-the accent colour, each starting on the control's edge and growing 16 px out over 1.4 s while it
-fades, one every 0.5 s, on and on until the player presses that control. One fixed canvas over
+[T-1822 stage 2, T-2123, T-2263; `ui/ripple.ts`] Rectangles round the control the step in hand uses: 2 px in
+the accent colour, each starting on the control's edge and growing 16 px out over 2.8 s while it
+fades, one every second, on and on until the player presses that control. One fixed canvas over
 everything with no pointer events, drawn by its own `requestAnimationFrame` loop (no CSS transition)
 and placed from `getBoundingClientRect()` every frame, so a scrolling dock keeps it on target. Nothing
 is drawn while the card is out of sight, the pointer is held or the stop editor is open on the stops
@@ -377,8 +387,10 @@ step. With reduced motion asked for: one still outline 8 px out, held until the 
   stops Edit stops (the line panel; the attribute is off while the stops are being edited), trains
   the stepper in the High row of the Schedule (the trains count or the headway, whichever the line's
   schedule uses), crowd the High row's crowding dot, levels the stepper of the first row with no
-  train, play the top bar's Normal speed button, homes the Homes button. The bubble, trip and train share steps point at nothing. The tab
-  icons carry `data-guide-tab`, the view rows' fold icons `data-fold`.
+  train, play the top bar's Normal speed button, homes the Homes button, traffic the track display's
+  Traffic button, and "end" the card's Continue or Done! button once every step is ticked. The split
+  step points at the top bar's mode split by its class (`GUIDE_SPLIT`). The bubble, trip and train
+  share steps point at nothing. The tab icons carry `data-guide-tab`, the view rows' fold icons `data-fold`.
 - **When**: from 0.35 s after a step becomes the step in hand until its control is pressed; on a
   click on any row of the card (the step's own control, so a done or later step can be pointed at
   too), likewise until pressed. Once pressed, three rings 0.5 s apart come again after 20 s without a click, key or wheel while it is open (at most 3 times per step).
@@ -386,8 +398,8 @@ step. With reduced motion asked for: one still outline 8 px out, held until the 
   waits for it to end.
 - **Out of view**: a target whose tab is closed ripples the tab icon (Build for track, stations and
   construct, Lines for the line and line panel steps); the line panel steps with no line picked
-  ripple the first row of the Lines list when that tab is open; Homes in a folded row ripples the
-  row's fold icon. The ripple moves to the target itself as soon as it shows (the tab opened, the
+  ripple the first row of the Lines list when that tab is open; Homes or Traffic in a folded row
+  ripples the row's fold icon. The ripple moves to the target itself as soon as it shows (the tab opened, the
   dot drawn), and back to the stand-in if it goes. A target scrolled out of its pane is scrolled into
   view (instantly) first, then ripples.
 

@@ -21,6 +21,8 @@ export const SAVES = {
   nyc: { file: REAL_SAVE, lon: -73.985, lat: 40.758 },
   tyo: { file: new URL('data/packs/real/tyo.save', TW), lon: 139.7, lat: 35.7 },
   jpn: { file: new URL('data/work/realnet/jpn_real.save', TW), lon: 139.7, lat: 35.7 },
+  // T-2290: Anita's line 8 game as t2290-line8-game.mjs builds it
+  l8: { file: new URL('../artifacts/trainworld/t2290/line8.save', TW), lon: -73.985, lat: 40.758 },
 };
 
 /** the save `name` opened: its model, the inputs the clock worker has, and a `graph()` that builds

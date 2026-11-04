@@ -6,7 +6,7 @@
 // the page sends its layout worker, the names' measured widths, and what the worker sent back (its times,
 // and a hash of its places and pills, which the checks compare with their own layout of the same graph:
 // the layout uses no engine-dependent maths, diagram/fmath.ts, so the two agree bit for bit).
-//   node trainworld/checks/diagram-game.mjs [url] [nyc,tyo]      (about 30 s a city; writes
+//   node trainworld/checks/diagram-game.mjs [url] [nyc,tyo,l8]      (about 30 s a city; writes
 //   artifacts/trainworld/diagram-game/<city>.json)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { ARTIFACTS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave } from './lib.mjs';
 
 const OUT = `${ARTIFACTS}diagram-game/`;
-const FILES = { nyc: REAL_SAVE, tyo: fileURLToPath(new URL('../data/packs/real/tyo.save', import.meta.url)) };
+const FILES = { nyc: REAL_SAVE, tyo: fileURLToPath(new URL('../data/packs/real/tyo.save', import.meta.url)), l8: fileURLToPath(new URL('../../artifacts/trainworld/t2290/line8.save', import.meta.url)) };
 /** the code a layout, drawing and names depend on: a capture made before it changed has no page figures to compare */
 const LAYOUT_SRC = ['layout.ts', 'lsqr.ts', 'fmath.ts', 'draw.ts', 'names.ts'];
 const GRAPH_SRC = ['graph.ts'];
@@ -95,7 +95,7 @@ async function capture(base, city) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const base = process.argv[2] ?? 'http://localhost:6194/';
-  const cities = (process.argv[3] ?? 'nyc,tyo').split(',');
+  const cities = (process.argv[3] ?? 'nyc,tyo,l8').split(',');
   mkdirSync(OUT, { recursive: true });
   for (const city of cities) {
     const t0 = Date.now();

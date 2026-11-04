@@ -24,6 +24,7 @@ import { demandByDay, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { roundedDefault } from "./fareDefault";
+import { lineFares } from "./fareInEffect";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
@@ -162,7 +163,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
   const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
-  const fares = faresOf(m.fares, m.fares);
+  const curves = new Map<Fares, Fares>();
   const x = m.economy;
   const byId = stopsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
@@ -177,7 +178,11 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
       const g = lineGeo(w, l, byId), km = g.km;
       // T-1277: a stretch pays its starting stop's fare scale (the base its boarding stop's, in `baseOf`)
-      const { from } = scalesOf(g, l, byId, m.fares);
+      // T-2266: its riders pay the fares they were solved with
+      const lf = lineFares(dm, m.fares);
+      let fares = curves.get(lf);
+      if (!fares) curves.set(lf, (fares = faresOf(lf, lf)));
+      const { from } = scalesOf(g, l, byId, lf);
       const pkm: number[] = [], pkmPaid: number[] = [];
       for (const seg of dm.loads) {
         let a = 0, b = 0;
@@ -190,7 +195,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       const rides = dm.ridersPerDay * tripsPerBoarding;
       const based = baseOf.get(l.id) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rides pay its multiplier on the rate; demand's extra has it already
-      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, m.fares);
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, lf);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
         const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;
@@ -234,7 +239,7 @@ export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms
     const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
     if (!st || st.status !== "running" || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
     const g = lineGeo(w, l, byId), km = g.km;
-    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, fares).sc);
+    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lineFares(dm, fares as Fares)).sc);
     let pk = 0;
     for (const seg of dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
     // a line with no passenger-km takes no fare in `incomeFor`, so none of the pool either

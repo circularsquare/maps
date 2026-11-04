@@ -1,5 +1,41 @@
 # For Anita
 
+## Open now (2026-11-04, maps-c9)
+
+Answer "text acknowledged" per block, or name the lines to change.
+
+### Tutorial (T-2263, done, on 8800 after the next build)
+Shot: artifacts/trainworld/review/tutorial-card.png
+- Step, new: "Hover the bar at the top to see how people travel"
+- Step, new: "Show Traffic on the map"
+- Step: "Reach 10% train share in New York" -> "Reach 2% train share in New York"
+- Note on the bar step: "Green is walking, red is cars and other ways, blue will be your trains."
+- Note on Show Homes: "Each bubble is the trips from homes there. Red ones mostly drive, green ones mostly walk, blue ones take your trains."
+- Note on Click a red bubble: "Green bubbles still take trains once there are some. People there walk when it's dense, or a car and its parking cost too much." (I'd look at "once there are some")
+- Note on Hover the dot by High: "Over 100% is crowded. To carry more, add cars under Train length."
+- Note on Add trains: "If only a short stretch is crowded, more trains can cost more than they earn."
+- Note on Show Traffic: "Lines get thicker with more riders. Where they're crowded, build more lines."
+- Road chip, tutorial only: "85 crossings +$12.0M" -> "85 road crossings +$12.0M"
+- Crowding dot hover, tutorial only, new line: "How full the trains get in the busiest hour, on the line's fullest stretch. Over 100% is crowded."
+- Crowding dot hover, tutorial only, when at most half the stretches are past 100%: "Only a short stretch is crowded. More trains would run mostly empty, and may cost more than they earn."
+
+### Track and station bars, mode frame (T-2267 + T-2270, design only)
+Note: notes/T-2267.md. Shots: artifacts/trainworld/review/track-bar.png, mode-colours.png.
+Questions: build it as T-2282 to T-2284? the optional cross "Stop (Esc)", the bars' 3 px top edge in the mode
+colour, and Shift+1-7 re-levelling (T-2285)? keep the mode colours though they sit only 11-15 dE from the game's
+own? (I'd say yes to all.)
+- Track type: "Double / Quad / High speed" -> "Regular / High speed"
+- Build tab Terrain button and its hover "Show terrain. Steep terrain costs more to build on." -> gone
+- New descriptors: "Placing track", "Placing stations", "Deleting", "Selecting track and stations", "Exploring a trip", "New passage from Bedford Av"
+- Kept descriptors, gaining a colour square: "New bus line: 3 points", "Route of Bus 3: 3 points", "New ferry line: 2 ports", "Editing stops on Z: 22 stops", "New station building: 4 corners", "Station building outline: 4 corners"
+- Optional cross, hover: "Stop (Esc)"
+- Level hover (T-2271's): "Viaduct (Shift+3)" / "1.0x cost, $75M per km" / "Upkeep $20k per km per day", 1x on light yellow
+
+### Fares (T-2266, done)
+- Optional hover on the fare controls, not built: "Riders pay the old fares until demand has settled". Want it?
+
+## From 2026-10-26 (may be stale)
+
 What we could work on next, from the tidied TASKS.md (2026-10-26). Tell me what to keep, cut or
 move up; the agent that gets your answer updates TASKS.md and this file.
 

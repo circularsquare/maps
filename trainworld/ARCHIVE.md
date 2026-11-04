@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2290 A station on the wrong side of its neighbours: Fleetwood and line 8 (2026-11-04, agent t2290): near stations sharing no edge keep their real side in A and B (wrong-side pairs drawn 42-71 a city -> 10-18); line 8 game reproduction in t2160; last-bit round pills painted. notes/T-2290.md; follow-up T-2293.
+
+- T-2266 Fare changes take effect when demand settles (2026-11-03, agent t2266): a line's riders pay the fares they were solved with, so a 10x rise no longer pays 10x on the old riders (checks/t2266-fare-lag.mjs: 148.7M/game hour held until riders at the new fares show, 270.5M at the final; the old rule would show 1,487M). Follow-up T-2286.
+
 - T-2257 Rikers Island's false land part (2026-11-03, agent t2257): its bridge is access=no, bus=yes; closed roads letting some road vehicles through now join land, and stale pre-T-2213 way caches are no longer used. 9 packs rerun; links scan finds no other false split. notes/T-2257.md.
 - T-2263 Tutorial pass from the friend playtest (2026-11-03, agent t2263): first card reads demand (top bar split, Homes, bubble, trip) then lays the line; second runs it (trains, unpause, crowding, levels, Traffic, 2%). Notes under the step in hand, slower ripples, Continue rippled, two longer hovers while the card is up.
 - T-2222 A band snapping to its own track (2026-11-03, agent t2222b): same fault as T-2258, seen on her day 414 save north of Shinjuku in the Traffic view; gone at zoom 10-15 in both views. Sweep check covers the save at its opened zoom. notes/T-2058.md 3h

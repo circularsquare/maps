@@ -6,6 +6,7 @@ import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
+import { guideVerbose } from "../game/ui";
 
 const WATER_COLOUR = "#7fb3e0";
 import type { Level, LineInput } from "../game/types";
@@ -124,7 +125,8 @@ export function roadFact(ground: ArrayLike<number> | undefined): HTMLSpanElement
   if (!ground || n < 1) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, "crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
+  // T-2263: the tutorial's longer wording
+  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, guideVerbose.peek() ? "road crossing" : "crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
   return s;
 }
 

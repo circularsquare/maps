@@ -13,6 +13,7 @@ import { saveGuide } from "../workers/clockClient";
 import { ripple, startRipple } from "./ripple";
 import { savesOpen } from "./SavesPanel";
 import { Icon } from "./widgets";
+import "./guide.css";
 
 /** the phone layout shows every step after a tap on the heading */
 const opened = signal(false);
@@ -42,14 +43,15 @@ function Guide() {
             <span class="guide-box">{done[i] && <Icon.check />}</span>
             <span class="guide-words">{s.words}</span>
             {s.count && <span class="guide-count">{counter(s.count)}</span>}
+            {s.note && i === now && <span class="guide-note">{s.note}</span>}
           </li>
         ))}
       </ol>
       {finished && (
         <div class="guide-end">
           {g.card === 2
-            ? <button class="btn text" onClick={() => saveGuide({ ...g, closed: true })}>Done!</button>
-            : <button class="btn text" onClick={() => saveGuide({ ...g, card: 2 })}>Continue</button>}
+            ? <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, closed: true })}>Done!</button>
+            : <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, card: 2 })}>Continue</button>}
         </div>
       )}
     </div>

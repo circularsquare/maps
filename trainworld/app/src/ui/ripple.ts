@@ -7,14 +7,19 @@
 // once it shows (the tab opened).
 
 import { effect } from "@preact/signals";
-import { guideShown, guideSteps, guideTicks, type GuideId } from "../game/guide";
+import { GUIDE_SPLIT, guideShown, guideSteps, guideTicks, type GuideId } from "../game/guide";
 import { moneyState } from "../game/money";
 import { stopEditing, tab } from "../game/ui";
 import { world } from "../game/world";
 
-/** a ring grows GROW_PX over RING_MS while it fades; rings start RING_GAP_MS apart (T-2123: half
- * T-1822's speed), RINGS of them in an idle reminder, without end while a step waits for its click */
-const RINGS = 3, RING_GAP_MS = 500, RING_MS = 1400, GROW_PX = 16, LINE_PX = 2;
+/** What a pulse points at: a step's control, or "end", the card's Continue or Done! once every step
+ * is ticked (T-2263). */
+type Target = GuideId | "end";
+
+/** a ring grows GROW_PX over RING_MS while it fades; rings start RING_GAP_MS apart (T-2123 halved
+ * T-1822's speed, T-2263 halved it again), RINGS of them in an idle reminder, without end while a
+ * step waits for its click */
+const RINGS = 3, RING_GAP_MS = 1000, RING_MS = 2800, GROW_PX = 16, LINE_PX = 2;
 /** reduced motion: one still outline, STILL_PX out, held STILL_MS (or until the click) */
 const STILL_PX = 8, STILL_MS = 1500;
 /** once its control was clicked, a step in hand pulses again after this long without input, at most
@@ -26,7 +31,7 @@ const SETTLE_MS = 350;
 const reduced = matchMedia("(prefers-reduced-motion: reduce)");
 
 /** `loop`: rings keep coming until the step's own control is clicked */
-interface Pulse { step: GuideId; at: number; colour: string; el: Element | null; sel: string; loop: boolean }
+interface Pulse { step: Target; at: number; colour: string; el: Element | null; sel: string; loop: boolean }
 
 let canvas: HTMLCanvasElement | null = null;
 let pulse: Pulse | null = null;
@@ -36,18 +41,20 @@ let looping = false;
 let held = false;
 let lastInput = performance.now();
 /** a step waiting to pulse once nothing blocks it, and when it may */
-let pending: { step: GuideId; from: number } | null = null;
-let idleStep: GuideId | null = null, idleCount = 0;
+let pending: { step: Target; from: number } | null = null;
+let idleStep: Target | null = null, idleCount = 0;
 
 /** The selectors of the target of a step, tried in order: the first one on the page that can be seen. */
-function selectors(step: GuideId): string[] {
+function selectors(step: Target): string[] {
   const own = `[data-guide="${step}"]`;
   switch (step) {
     case "zoom": return [own, ".map-search input"];
+    case "split": return [GUIDE_SPLIT];
     case "track": case "stations": case "construct": return [own, '[data-guide-tab="build"]'];
     case "line": return [own, '[data-guide-tab="lines"]'];
     case "homes": return [own, '[data-fold="bubbles"]'];
-    case "play": return [own];
+    case "traffic": return [own, '[data-fold="track"]'];
+    case "play": case "end": return [own];
     // on the map itself, nothing to point at
     case "bubble": case "trip": case "star": return [];
     // the line panel's controls need a line picked: the Lines tab's first row, or the tab itself
@@ -69,7 +76,7 @@ function inView(el: Element): "yes" | "scrolled" | "no" {
 }
 
 /** The element to ripple for a step, scrolling a target that sits scrolled out of its pane into view. */
-function findTarget(step: GuideId): { el: Element; sel: string } | null {
+function findTarget(step: Target): { el: Element; sel: string } | null {
   for (const sel of selectors(step)) {
     const el = document.querySelector(sel);
     if (!el) continue;
@@ -91,7 +98,7 @@ function cardAway(): boolean {
 }
 
 /** Whether a pulse may start now: the card is up, and the player is not mid-drag or in the stop editor on the stops step. */
-function blocked(step: GuideId): boolean {
+function blocked(step: Target): boolean {
   return cardAway() || held || (step === "stops" && stopEditing.peek());
 }
 
@@ -139,7 +146,7 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 
-function start(step: GuideId, found: { el: Element; sel: string } | null, loop: boolean) {
+function start(step: Target, found: { el: Element; sel: string } | null, loop: boolean) {
   const colour = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#d9788e";
   pulse = { step, at: performance.now(), colour, el: found?.el ?? null, sel: found?.sel ?? "", loop };
   if (!looping) { looping = true; requestAnimationFrame(frame); }
@@ -147,7 +154,7 @@ function start(step: GuideId, found: { el: Element; sel: string } | null, loop: 
 
 /** Ripple the control a step uses, from now until it is clicked, unless the player is busy with a
  * drag or the stop editor. A step with nothing to point at does nothing. */
-export function ripple(step: GuideId) {
+export function ripple(step: Target) {
   if (blocked(step) || selectors(step).length === 0) return;
   start(step, findTarget(step), true);
 }
@@ -183,13 +190,13 @@ export function startRipple() {
   addEventListener("wheel", touch, { capture: true, passive: true });
 
   // the step in hand changes: the last one's rings stop, and the new one's start once the card's tick has landed
-  let seen: GuideId | null | undefined;
+  let seen: Target | undefined;
   effect(() => {
     const m = moneyState.value, w = world.value, g = m?.guide;
     if (!m || !w || !g || !guideShown(g, m.mode === "sandbox")) { seen = undefined; pending = null; pulse = null; return; }
     const steps = guideSteps(w, g);
     const i = guideTicks(steps, g).now;
-    const now = i >= 0 ? steps[i].id : null;
+    const now: Target = i >= 0 ? steps[i].id : "end";
     if (now === seen) return;
     seen = now;
     if (pulse && pulse.step !== now) pulse = null;

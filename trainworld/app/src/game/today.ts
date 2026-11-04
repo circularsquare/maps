@@ -21,7 +21,7 @@ import { crowdColour } from "./palette";
 import { tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
-import { cameraMoving } from "./ui";
+import { cameraMoving, guideVerbose } from "./ui";
 
 export interface LineToday {
   /** riders boarded in the past 24 hours, or yesterday (a change of line boards again), the line's own stops */
@@ -94,8 +94,12 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { lo
   if (!(trains > 0)) return null;
   const over = per.filter((x) => x >= CROWD_GRADES[0]).length;
   const text = over === 0 || s === 1 ? "" : over === s ? `Past 100% on all ${s} intervals` : `Past 100% on ${over} of ${s} intervals`;
+  // T-2263: the tutorial's longer wording says what the load is, and warns where only a short stretch is full
+  const verbose = guideVerbose.value;
   const tip = `Peak load ${loadText(peak)}`
+    + (verbose ? "\nMaximum crowding in the busiest hour of the busiest segment of the line." : "")
     + (over > 0 ? `\n${tipStrip(per.map(crowdColour))}` + (text ? `\n${text}` : "") : "")
+    + (verbose && over > 0 && over * 2 <= s ? "\nOnly a short stretch is crowded. More trains would run mostly empty, and may cost more than they earn." : "")
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "");
   return { load: peak, tip, phrase: `peak load ${loadText(peak)}` };
 }

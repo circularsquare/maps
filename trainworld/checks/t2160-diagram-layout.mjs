@@ -7,6 +7,8 @@
 // where it turns 45 to 90 is counted as a sharp corner, not failed). `nyc-game` and `tyo-game` are the graphs
 // the game itself builds from those saves, captured by diagram-game.mjs (T-2255): Node lays them out exactly
 // as the page's worker does, which is checked against the capture, and their time is the page worker's.
+// T-2290: few near stations drawn on the wrong side of each other, and `l8`, Anita's line 8 game
+// (t2290-line8-game.mjs builds it), with line 8 east of Fleetwood and no loop round it.
 //   node trainworld/checks/diagram-game.mjs http://localhost:6194/      (first, after any change to the layout)
 //   node trainworld/checks/t2160-diagram-layout.mjs [nyc,tyo,nyc-game,tyo-game] [r2]      (about two minutes;
 //   `r2` lays out with round 2's options instead of the game's; figures in artifacts/trainworld/t2160/check.json)
@@ -16,9 +18,11 @@ import { gameGraph, splitCity, bitsHash } from './diagram-game.mjs';
 import { ARTIFACTS } from './lib.mjs';
 
 const L = await layoutApp();
-const which = (process.argv[2] ?? 'nyc,tyo,nyc-game,tyo-game').split(',');
+const which = (process.argv[2] ?? 'nyc,tyo,nyc-game,tyo-game,l8,l8-game').split(',');
 const OPTS = process.argv[3] === 'r2' ? L.LAYOUT_R2 : L.LAYOUT;
-const LIMIT = { nyc: 5000, tyo: 8000 };
+const LIMIT = { nyc: 5000, tyo: 8000, l8: 1000 };
+/** at most this many near pairs drawn on the wrong side of each other (T-2290: 42 to 71 before, 10 to 18 after) */
+const WRONG_MAX = { nyc: 30, tyo: 30, l8: 0 };
 let failed = 0;
 const out = {};
 const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
@@ -57,6 +61,61 @@ function doublings(g, lay) {
     }
   });
   return out;
+}
+
+/** T-2290: stations on the wrong side of their neighbours. Each station's 6 nearest in reality that it shares no
+ * edge with; a pair counts when its bearing in the drawing is more than 135 degrees off the real one. */
+export function wrongSide(g, px, py, names) {
+  const n = g.key.length, adj = new Set(), seen = new Set(), out = [];
+  for (let e = 0; e < g.ea.length; e++) adj.add(g.ea[e] * n + g.eb[e]);
+  const cell = 2000, grid = new Map(), key = (cx, cy) => `${cx},${cy}`;
+  for (let i = 0; i < n; i++) {
+    const k = key(Math.floor(g.x[i] / cell), Math.floor(g.y[i] / cell));
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(i);
+  }
+  let pairs = 0;
+  for (let i = 0; i < n; i++) {
+    const cx = Math.floor(g.x[i] / cell), cy = Math.floor(g.y[i] / cell), near = [];
+    for (let r = 1; near.length < 6 && r < 64; r *= 2) {
+      near.length = 0;
+      for (let gx = cx - r; gx <= cx + r; gx++) for (let gy = cy - r; gy <= cy + r; gy++) for (const j of grid.get(key(gx, gy)) ?? []) {
+        if (j !== i && !adj.has(Math.min(i, j) * n + Math.max(i, j))) near.push([Math.hypot(g.x[j] - g.x[i], g.y[j] - g.y[i]), j]);
+      }
+    }
+    near.sort((a, b) => a[0] - b[0]);
+    for (const [rd, j] of near.slice(0, 6)) {
+      const k = Math.min(i, j) * n + Math.max(i, j);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      pairs++;
+      const dx = px[j] - px[i], dy = py[j] - py[i], rx = g.x[j] - g.x[i], ry = g.y[j] - g.y[i];
+      const cos = (dx * rx + dy * ry) / (Math.hypot(dx, dy) * Math.hypot(rx, ry) || 1);
+      if (cos < -Math.SQRT1_2) out.push([cos, `${names[i]} | ${names[j]} (${Math.round(Math.acos(cos) * 180 / Math.PI)} degrees, ${(rd / 1000).toFixed(1)} km)`]);
+    }
+  }
+  return { pairs, wrong: out.sort((a, b) => a[0] - b[0]).map((x) => x[1]) };
+}
+
+/** T-2290, the line 8 game: Fleetwood west of every stop of line 8 after West Mount Vernon, and on the side of
+ * line 8's drawing (its nearest stretch) that it is of the real line, so the line does not loop round it */
+function line8(g, lay, names) {
+  const f = names.indexOf('Fleetwood'), l8 = g.lines.find((l) => l.colour === '#b5122e');
+  if (f < 0 || !l8) return { ok: false, info: 'no Fleetwood or line 8' };
+  const after = [...l8.chain].filter((k) => names[k] !== 'West Mount Vernon');
+  const west = after.filter((k) => lay.x[k] <= lay.x[f]).map((k) => names[k]);
+  const side = (X, Y) => {
+    let best = Infinity, s = 0;
+    for (let i = 1; i < l8.chain.length; i++) {
+      const a = l8.chain[i - 1], b = l8.chain[i], dx = X[b] - X[a], dy = Y[b] - Y[a], l2 = dx * dx + dy * dy;
+      const t = Math.max(0, Math.min(1, ((X[f] - X[a]) * dx + (Y[f] - Y[a]) * dy) / l2));
+      const d = Math.hypot(X[a] + dx * t - X[f], Y[a] + dy * t - Y[f]);
+      if (d < best) (best = d), (s = Math.sign(dx * (Y[f] - Y[a]) - dy * (X[f] - X[a])));
+    }
+    return s;
+  };
+  const same = side(lay.x, lay.y) === side(g.x, g.y);
+  return { ok: !west.length && same, info: `${west.length ? 'drawn west of Fleetwood: ' + west.join(', ') : 'Fleetwood west of all of them'}; Fleetwood ${same ? 'on' : 'off'} its real side of the line` };
 }
 
 /** the graph with one more complex halfway along its longest hop among lines (each line on it stops there) */
@@ -151,6 +210,13 @@ for (const name of which) {
   line(close === 0, `${name}: no stations closer than their half widths plus half a hop`, `${close} pairs closer; the closest at ${worstShare.toFixed(2)} of its distance`);
   line(ms < LIMIT[city], `${name}: laid out in under ${LIMIT[city] / 1000} s${pageOk ? " in the page's worker" : ''}`, `${(ms / 1000).toFixed(2)} s (A ${(phases.a / 1000).toFixed(2)}, B ${(phases.b / 1000).toFixed(2)}, routing ${(phases.route / 1000).toFixed(2)}, order ${(phases.order / 1000).toFixed(2)}); ${n} complexes; ${size.map(Math.round).join(' x ')} pitches across`);
   line(back.length === 0, `${name}: no line doubles back at a station`, `${back.length} lines at ${backAt.length} stations${backAt.length ? ': ' + backAt.slice(0, 6).join(', ') : ''}; sharp corners (135 drawn, 45 to 90 real) ${sharp.length} at ${sharpAt.length}${sharpAt.length ? ': ' + sharpAt.slice(0, 6).join(', ') : ''}`);
+  const ws = wrongSide(g, lay.x, lay.y, names);
+  r.wrongSide = ws.wrong;
+  line(ws.wrong.length <= WRONG_MAX[city], `${name}: at most ${WRONG_MAX[city]} near stations drawn on the wrong side of each other`, `${ws.wrong.length} of ${ws.pairs} pairs more than 135 degrees off their real bearing${ws.wrong.length ? ': ' + ws.wrong.slice(0, 4).join('; ') : ''}`);
+  if (city === 'l8') {
+    const l = line8(g, lay, names);
+    line(l.ok, `${name}: line 8 runs east of Fleetwood, with no loop round it`, l.info);
+  }
   line(r.movedMedian < 0.1, `${name}: one added station moves the median complex under a tenth of a hop`, `median ${r.movedMedian.toFixed(3)} hops (B ${r.movedBMedian.toFixed(3)}), 90th percentile ${r.movedP90.toFixed(3)}; rebuild ${(ms2 / 1000).toFixed(2)} s`);
 }
 mkdirSync(`${ARTIFACTS}t2160`, { recursive: true });

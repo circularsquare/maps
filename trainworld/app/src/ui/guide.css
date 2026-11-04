@@ -1,0 +1,2 @@
+/* T-2263: the step in hand's note, under its words; the card's other rules are in style.css (.guide) */
+.guide-steps .guide-note { grid-column: 2 / -1; color: var(--muted); }

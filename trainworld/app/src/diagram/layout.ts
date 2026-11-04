@@ -58,6 +58,9 @@ const SNAP_PASSES = 1, SNAP_ROUNDS = 4, SNAP_ITERS = 600, W_SNAP_PUSH = 2, PUSH_
 const W_HOLD = 30, HOLD_MIN = 0.5, W_SNAP_TURN = 20;
 /** B: a line through a junction keeps its real turn there with this weight (T-2243) */
 const W_TURN = 1;
+/** A and B (T-2290): two stations that share no edge and are nearer in reality than this many of their own mean
+ * hop (the longer reach of the two) stay their spacing apart along their real bearing, with this weight */
+const SIDE_HOPS = 1.5, W_SIDE = 3;
 /** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
@@ -142,6 +145,9 @@ interface Prep {
   /** per node, its pairs of edges that a line runs on through it from one to the other, turning less
    * than a right angle there in reality: edge * m + edge */
   through: Set<number>[];
+  /** pairs of stations near each other in reality that share no edge, and the unit real bearing from
+   * the first to the second: a, b, ux, uy per pair */
+  side: Float64Array;
 }
 
 function prep(g: DiagramGraph, o: LayoutOptions): Prep {
@@ -184,7 +190,46 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       through[v].add(e1 * m + e2).add(e2 * m + e1);
     }
   }
-  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through };
+  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj) };
+}
+
+/** Stations that share no edge and lie within SIDE_HOPS of either one's mean real hop of each other. Hops
+ * are evened per line, so a line of short hops beside one of long hops outruns it, and with nothing
+ * between them a station can end up on the far side of its neighbour (T-2290: Fleetwood east of Port Chester). */
+function sidePairs(g: DiagramGraph, adj: Set<number>): Float64Array {
+  const n = g.key.length, m = g.ea.length;
+  const reach = new Float64Array(n), cnt = new Float64Array(n), len = new Float64Array(m);
+  for (let e = 0; e < m; e++) {
+    const a = g.ea[e], b = g.eb[e];
+    len[e] = hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]);
+    (reach[a] += len[e]), (reach[b] += len[e]), cnt[a]++, cnt[b]++;
+  }
+  for (let i = 0; i < n; i++) reach[i] = cnt[i] ? (SIDE_HOPS * reach[i]) / cnt[i] : 0;
+  const cell = Math.max(1, 2 * median(len));
+  const grid = new Map<number, number[]>();
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  for (let i = 0; i < n; i++) {
+    const k = key(Math.floor(g.x[i] / cell), Math.floor(g.y[i] / cell));
+    const v = grid.get(k);
+    if (v) v.push(i);
+    else grid.set(k, [i]);
+  }
+  const out: number[] = [], had = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    const r = reach[i], rc = Math.ceil(r / cell), cx = Math.floor(g.x[i] / cell), cy = Math.floor(g.y[i] / cell);
+    for (let gx = cx - rc; gx <= cx + rc; gx++) for (let gy = cy - rc; gy <= cy + rc; gy++) {
+      const v = grid.get(key(gx, gy));
+      if (!v) continue;
+      for (const j of v) {
+        if (j === i) continue;
+        const a = Math.min(i, j), b = Math.max(i, j), dx = g.x[b] - g.x[a], dy = g.y[b] - g.y[a], d = hyp(dx, dy);
+        if (!(d > 0) || d >= r || had.has(a * n + b) || adj.has(a * n + b)) continue;
+        had.add(a * n + b);
+        out.push(a, b, dx / d, dy / d);
+      }
+    }
+  }
+  return Float64Array.from(out);
 }
 
 /** each edge's octilinear direction: at each node its edges take distinct directions nearest their
@@ -302,6 +347,12 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
     for (let v = 0; v < P.n; v++) for (let c = 0; c < 2; c++) {
       T.add([2 * v + c], [1], pos[2 * v + c], wProx);
       T.add([2 * v + c], [1], start[2 * v + c], wGeo);
+    }
+    // near stations that share no edge on the side of each other they are in reality (T-2290)
+    const S = P.side;
+    for (let k = 0; k < S.length; k += 4) {
+      const a = S[k], b = S[k + 1], ux = S[k + 2], uy = S[k + 3], want = P.dmin + P.hw[a] + P.hw[b];
+      if ((pos[b * 2] - pos[a * 2]) * ux + (pos[b * 2 + 1] - pos[a * 2 + 1]) * uy < want) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], want, W_SIDE);
     }
     closePairs(P, pos, pairs, B_NEAR);
     for (let k = 0; k < pairs.length; k += 2) {
