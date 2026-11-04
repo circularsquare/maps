@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2408 Diagram lines never vanish far out (2026-11-04, agent diagpar): a stroke under a device px draws a px wide at its width's share of opacity, at least 0.25; high-speed stripe dropped then.
+- T-2405 Diagram lines never drawn under another (2026-11-04, agent diagpar): cause was pieces drawn on one place and one stroke per colour; now a stroke per line (same colour on same track shared) and overlapping pieces drawn side by side. New York hidden stretches 10 -> 0. notes/T-2405.md.
+
+- T-2386 Demand falling behind the clock, measured (2026-11-04, agent lagdemand): solves never queue but can starve (edits faster than a whole solve); Japan's whole solve 21 min = 12.6 game days at 16x. Fixes: T-1734 land, T-2409 estimate and caps, T-2410. notes/T-2386.md.
 - T-2403 Blueprint lag after a click, fixes 1-3 and 5 (2026-11-04, agent lagfix): New York ghost freeze in the first 100 ms 449-460 -> 187-203 ms p50, the second stutter gone; achievements, complex passages, LOD band and fullAttr off the click. notes/T-2403.md.
 - T-2406 Diagram large-scale distortion, researched and designed (2026-11-04, agent diagscale): cities as rigid blocks recommended (mock NY-LA 41,612 -> 877 pitches), a two-level country view and a fisheye weighed; stage 1 is T-2407. notes/T-2406.md.
 - T-2364 The split bar by distance, measured and designed (2026-11-04, agent splitkm): train share by trips -> by km, New York 17.8% -> 26.5%, London 21.4% -> 37.6%; walking under 2 km is 72-87%. Bar stays on trips; km share and a by-length section are T-2365. notes/T-2364.md.

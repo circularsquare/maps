@@ -51,7 +51,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   linear if legible); rename "Within". Launched a614e73f8869f042b **diagblocks** (Opus, tree, port 6199, T-2407) and
   a0701e43d8c50c68d **tripgraph** (Opus, tree, port 6188, T-2365 stage 1: kernel bins by length + mockups, WASM change
   OK in its tree; UI after her look).
-- Next free id **T-2409**.
+- Later: lagfix landed d295f405 (T-2403: ~450 -> ~190 ms freeze); **8800 = build 893 (8621b7dd)**, smoke 23/23 light
+  and dark. lagdemand done (T-2386 archived): launched a6dd5545d2de795d1 **solveend** (Opus, tree .tw-trees/t1734
+  rebased by it, port 6187): T-1734 land-ready, then T-2410 new line skips the local solve. T-2409 (estimate + clock
+  caps + strings) waits on Anita's 1x-or-4x call. RU/BY join: in `step intercity --solve` (pid 41468) since ~11:14
+  local clock, no log output while it solves.
+- Next free id **T-2411**.
 - Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
   (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
   T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).
