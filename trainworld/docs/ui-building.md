@@ -485,6 +485,9 @@ switch on, the track tool follows the real network the layer draws.
   over a thin bar of its size on a log scale, empty at 1,000 and full at 1M, ticks at 10k and 100k
   (`NEAR_BAR_*` in `map/tools.ts`) [T-2271]. The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
   are inside the circle, from the zone in view only; a trip with both ends inside counts twice.
+  The legs are asked for when the station tool is picked and again whenever the demand shown
+  changes, so the count is there when the pointer reaches track; while a newer solve's legs are
+  on their way the last ones received stay in use, and a failed ask is repeated 2 s later [T-2430].
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).

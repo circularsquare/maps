@@ -236,6 +236,9 @@ export class Tools {
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
+    // T-2430: the trips near are asked for when the tool is picked and when the demand shown changes,
+    // so the figure is in hand when the pointer gets to the track
+    effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
     effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
@@ -1004,31 +1007,45 @@ export class Tools {
   }
 
   /** Local trip legs a day per cell, homes and destinations together (T-412), for the demand shown. */
-  private legs: { key: string; xy: Float32Array; legs: Float32Array } | null = null;
+  private legs: { key: string; xy: Float32Array; legs: Float32Array; seq: number } | null = null;
   private legsAsked = "";
+  private legsSeq = 0;
+
+  /** Ask for the legs of the demand shown, unless held or asked already (T-412). T-2430: an answer
+   * for a demand shown before is kept while nothing newer is held (a big zone's answer can take
+   * longer than a solve's round, and dropping it left the tag without trips until the solve ended),
+   * and one that fails is asked again 2 s later while the station tool is in hand. */
+  private askLegs() {
+    const dv = demandView.peek();
+    if (!dv) return;
+    const city = activeCity.peek(), key = `${dv.version}:${dv.round}:${dv.day}:${city}:${worldFrameEpoch.peek()}`;
+    if (this.legs?.key === key || this.legsAsked === key) return;
+    this.legsAsked = key;
+    const seq = ++this.legsSeq;
+    void Promise.all([cityCells(), cellModes("all")]).then(([cells, m]) => {
+      if (!cells || !m) {
+        setTimeout(() => {
+          if (this.legsAsked !== key) return;
+          this.legsAsked = "";
+          if (tool.peek() === "station") this.askLegs();
+        }, 2000);
+        return;
+      }
+      // a newer answer is held already, or the zone or frame has changed (its cells are another set)
+      if ((this.legs && this.legs.seq > seq) || activeCity.peek() !== city || !key.endsWith(`:${worldFrameEpoch.peek()}`)) return;
+      const legs = new Float32Array(cells.n);
+      for (const a of [m.homeRail, m.homeWalk, m.homeDrive, m.workRail, m.workWalk, m.workDrive, m.homeNone, m.workNone])
+        if (a.length === cells.n) for (let i = 0; i < cells.n; i++) legs[i] += a[i];
+      this.legs = { key, xy: cells.xy, legs, seq };
+      if (tool.peek() === "station") this.place();
+    });
+  }
 
   /** "12k trips within 1km" of the spot (T-412, T-1058; 1 mile in US units), from the cells behind
    * the Homes and Destinations bubbles; null until they are in. A trip with both ends inside counts
    * twice, and a spot near a zone's edge counts the viewed zone's cells only. */
   private tripsNear(lng: number, lat: number): { text: string; legs: number } | null {
-    const dv = demandView.peek();
-    if (!dv) return null;
-    const key = `${dv.version}:${dv.round}:${dv.day}:${activeCity.peek()}:${worldFrameEpoch.peek()}`;
-    if (this.legs?.key !== key && this.legsAsked !== key) {
-      this.legsAsked = key;
-      void Promise.all([cityCells(), cellModes("all")]).then(([cells, m]) => {
-        if (this.legsAsked !== key) return;
-        if (!cells || !m) {
-          setTimeout(() => { if (this.legsAsked === key) this.legsAsked = ""; }, 2000); // asked again then
-          return;
-        }
-        const legs = new Float32Array(cells.n);
-        for (const a of [m.homeRail, m.homeWalk, m.homeDrive, m.workRail, m.workWalk, m.workDrive, m.homeNone, m.workNone])
-          if (a.length === cells.n) for (let i = 0; i < cells.n; i++) legs[i] += a[i];
-        this.legs = { key, xy: cells.xy, legs };
-        if (tool.peek() === "station") this.place();
-      });
-    }
+    this.askLegs();
     const L = this.legs;
     if (!L) return null;
     // the radius in world metres each way, so any frame's scale is right here
