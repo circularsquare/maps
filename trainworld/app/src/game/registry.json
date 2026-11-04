@@ -21702,6 +21702,1410 @@
       {
         "name": "Yilan City",
         "regionName": "Yilan City region"
+      },
+      {
+        "name": "Istanbul",
+        "regionName": "Istanbul region"
+      },
+      {
+        "name": "Ankara",
+        "regionName": "Ankara region"
+      },
+      {
+        "name": "Izmir",
+        "regionName": "Izmir region"
+      },
+      {
+        "name": "Bursa",
+        "regionName": "Bursa region"
+      },
+      {
+        "name": "Gaziantep",
+        "regionName": "Gaziantep region"
+      },
+      {
+        "name": "Antalya",
+        "regionName": "Antalya region"
+      },
+      {
+        "name": "Sincan",
+        "regionName": "Sincan region"
+      },
+      {
+        "name": "Konya",
+        "regionName": "Konya region"
+      },
+      {
+        "name": "İpekyolu",
+        "regionName": "İpekyolu region"
+      },
+      {
+        "name": "Ağrı merkez",
+        "regionName": "Ağrı merkez region"
+      },
+      {
+        "name": "İlkadım",
+        "regionName": "İlkadım region"
+      },
+      {
+        "name": "Ortahisar",
+        "regionName": "Ortahisar region"
+      },
+      {
+        "name": "Çorum merkez",
+        "regionName": "Çorum merkez region"
+      },
+      {
+        "name": "Yunusemre",
+        "regionName": "Yunusemre region"
+      },
+      {
+        "name": "Akdeniz",
+        "regionName": "Akdeniz region"
+      },
+      {
+        "name": "Efeler",
+        "regionName": "Efeler region"
+      },
+      {
+        "name": "Adapazarı",
+        "regionName": "Adapazarı region"
+      },
+      {
+        "name": "Ereğli",
+        "regionName": "Ereğli region"
+      },
+      {
+        "name": "Antakya",
+        "regionName": "Antakya region"
+      },
+      {
+        "name": "Pamukkale",
+        "regionName": "Pamukkale region"
+      },
+      {
+        "name": "Salihli",
+        "regionName": "Salihli region"
+      },
+      {
+        "name": "Odunpazarı",
+        "regionName": "Odunpazarı region"
+      },
+      {
+        "name": "Bodrum",
+        "regionName": "Bodrum region"
+      },
+      {
+        "name": "İskenderun",
+        "regionName": "İskenderun region"
+      },
+      {
+        "name": "Kapaklı",
+        "regionName": "Kapaklı region"
+      },
+      {
+        "name": "Seyhan",
+        "regionName": "Seyhan region"
+      },
+      {
+        "name": "Altınordu",
+        "regionName": "Altınordu region"
+      },
+      {
+        "name": "Kızıltepe",
+        "regionName": "Kızıltepe region"
+      },
+      {
+        "name": "Yeşilyurt",
+        "regionName": "Yeşilyurt region"
+      },
+      {
+        "name": "Aksaray merkez",
+        "regionName": "Aksaray merkez region"
+      },
+      {
+        "name": "Palandöken",
+        "regionName": "Palandöken region"
+      },
+      {
+        "name": "Elazığ merkez",
+        "regionName": "Elazığ merkez region"
+      },
+      {
+        "name": "Alanya",
+        "regionName": "Alanya region"
+      },
+      {
+        "name": "Batman Merkez",
+        "regionName": "Batman Merkez region"
+      },
+      {
+        "name": "Edirne merkez",
+        "regionName": "Edirne merkez region"
+      },
+      {
+        "name": "İnegöl",
+        "regionName": "İnegöl region"
+      },
+      {
+        "name": "Silopi",
+        "regionName": "Silopi region"
+      },
+      {
+        "name": "Afyonkarahisar (Merkez İlçe)",
+        "regionName": "Afyonkarahisar (Merkez İlçe) region"
+      },
+      {
+        "name": "Kütahya merkez",
+        "regionName": "Kütahya merkez region"
+      },
+      {
+        "name": "Süleymanpaşa",
+        "regionName": "Süleymanpaşa region"
+      },
+      {
+        "name": "Sivas merkez",
+        "regionName": "Sivas merkez region"
+      },
+      {
+        "name": "Muş merkez",
+        "regionName": "Muş merkez region"
+      },
+      {
+        "name": "Yumurtalık",
+        "regionName": "Yumurtalık region"
+      },
+      {
+        "name": "Çanakkale merkez",
+        "regionName": "Çanakkale merkez region"
+      },
+      {
+        "name": "Yalova merkez",
+        "regionName": "Yalova merkez region"
+      },
+      {
+        "name": "Tokat merkez",
+        "regionName": "Tokat merkez region"
+      },
+      {
+        "name": "Tarsus",
+        "regionName": "Tarsus region"
+      },
+      {
+        "name": "Düzce merkez",
+        "regionName": "Düzce merkez region"
+      },
+      {
+        "name": "Siirt (merkez)",
+        "regionName": "Siirt (merkez) region"
+      },
+      {
+        "name": "Uşak merkez",
+        "regionName": "Uşak merkez region"
+      },
+      {
+        "name": "Bafra",
+        "regionName": "Bafra region"
+      },
+      {
+        "name": "Torbalı",
+        "regionName": "Torbalı region"
+      },
+      {
+        "name": "Arnavutköy",
+        "regionName": "Arnavutköy region"
+      },
+      {
+        "name": "Kilis (merkez)",
+        "regionName": "Kilis (merkez) region"
+      },
+      {
+        "name": "Polatlı",
+        "regionName": "Polatlı region"
+      },
+      {
+        "name": "Altıeylül",
+        "regionName": "Altıeylül region"
+      },
+      {
+        "name": "Siverek",
+        "regionName": "Siverek region"
+      },
+      {
+        "name": "Kayseri",
+        "regionName": "Kayseri region"
+      },
+      {
+        "name": "Kocaeli",
+        "regionName": "Kocaeli region"
+      },
+      {
+        "name": "Onikişubat",
+        "regionName": "Onikişubat region"
+      },
+      {
+        "name": "Bingöl merkez",
+        "regionName": "Bingöl merkez region"
+      },
+      {
+        "name": "Şanlıurfa",
+        "regionName": "Şanlıurfa region"
+      },
+      {
+        "name": "Diyarbakir",
+        "regionName": "Diyarbakir region"
+      },
+      {
+        "name": "Isparta merkez",
+        "regionName": "Isparta merkez region"
+      },
+      {
+        "name": "Osmaniye (merkez)",
+        "regionName": "Osmaniye (merkez) region"
+      },
+      {
+        "name": "Adıyaman merkez",
+        "regionName": "Adıyaman merkez region"
+      },
+      {
+        "name": "Kırşehir merkez",
+        "regionName": "Kırşehir merkez region"
+      },
+      {
+        "name": "Niğde (merkez)",
+        "regionName": "Niğde (merkez) region"
+      },
+      {
+        "name": "Bolu Merkez",
+        "regionName": "Bolu Merkez region"
+      },
+      {
+        "name": "Kastamonu merkez",
+        "regionName": "Kastamonu merkez region"
+      },
+      {
+        "name": "Seydikemer",
+        "regionName": "Seydikemer region"
+      },
+      {
+        "name": "Develi",
+        "regionName": "Develi region"
+      },
+      {
+        "name": "Karaman merkez",
+        "regionName": "Karaman merkez region"
+      },
+      {
+        "name": "Çankırı merkez",
+        "regionName": "Çankırı merkez region"
+      },
+      {
+        "name": "Gaziantep",
+        "regionName": "Gaziantep region"
+      },
+      {
+        "name": "Antalya",
+        "regionName": "Antalya region"
+      },
+      {
+        "name": "Seyhan",
+        "regionName": "Seyhan region"
+      },
+      {
+        "name": "Sivas merkez",
+        "regionName": "Sivas merkez region"
+      },
+      {
+        "name": "Yumurtalık",
+        "regionName": "Yumurtalık region"
+      },
+      {
+        "name": "Siirt (merkez)",
+        "regionName": "Siirt (merkez) region"
+      },
+      {
+        "name": "Torbalı",
+        "regionName": "Torbalı region"
+      },
+      {
+        "name": "Arnavutköy",
+        "regionName": "Arnavutköy region"
+      },
+      {
+        "name": "Kilis (merkez)",
+        "regionName": "Kilis (merkez) region"
+      },
+      {
+        "name": "Osmaniye (merkez)",
+        "regionName": "Osmaniye (merkez) region"
+      },
+      {
+        "name": "Konya",
+        "regionName": "Konya region"
+      },
+      {
+        "name": "Palandöken",
+        "regionName": "Palandöken region"
+      },
+      {
+        "name": "Konya",
+        "regionName": "Konya region"
+      },
+      {
+        "name": "Minsk",
+        "regionName": "Minsk region"
+      },
+      {
+        "name": "Gomel",
+        "regionName": "Gomel region"
+      },
+      {
+        "name": "Vitebsk",
+        "regionName": "Vitebsk region"
+      },
+      {
+        "name": "Brest",
+        "regionName": "Brest region"
+      },
+      {
+        "name": "Mogilev",
+        "regionName": "Mogilev region"
+      },
+      {
+        "name": "Barysaw",
+        "regionName": "Barysaw region"
+      },
+      {
+        "name": "Baranovichy",
+        "regionName": "Baranovichy region"
+      },
+      {
+        "name": "Grodno",
+        "regionName": "Grodno region"
+      },
+      {
+        "name": "Novosibirsk",
+        "regionName": "Novosibirsk region"
+      },
+      {
+        "name": "Yekaterinburg",
+        "regionName": "Yekaterinburg region"
+      },
+      {
+        "name": "Volgograd",
+        "regionName": "Volgograd region"
+      },
+      {
+        "name": "Nizhny Novgorod",
+        "regionName": "Nizhny Novgorod region"
+      },
+      {
+        "name": "Samara",
+        "regionName": "Samara region"
+      },
+      {
+        "name": "Rostov-on-Don",
+        "regionName": "Rostov-on-Don region"
+      },
+      {
+        "name": "Chelyabinsk",
+        "regionName": "Chelyabinsk region"
+      },
+      {
+        "name": "Kazan",
+        "regionName": "Kazan region"
+      },
+      {
+        "name": "Omsk",
+        "regionName": "Omsk region"
+      },
+      {
+        "name": "Saratov",
+        "regionName": "Saratov region"
+      },
+      {
+        "name": "Ufa",
+        "regionName": "Ufa region"
+      },
+      {
+        "name": "Krasnoyarsk",
+        "regionName": "Krasnoyarsk region"
+      },
+      {
+        "name": "Sarapul",
+        "regionName": "Sarapul region"
+      },
+      {
+        "name": "Kemerovo",
+        "regionName": "Kemerovo region"
+      },
+      {
+        "name": "Anapa Urban Okrug",
+        "regionName": "Anapa Urban Okrug region"
+      },
+      {
+        "name": "Buinsky District",
+        "regionName": "Buinsky District region"
+      },
+      {
+        "name": "Krasnodar Municipality",
+        "regionName": "Krasnodar Municipality region"
+      },
+      {
+        "name": "Permsky District",
+        "regionName": "Permsky District region"
+      },
+      {
+        "name": "Verkhnesaldinsky Urban Okrug",
+        "regionName": "Verkhnesaldinsky Urban Okrug region"
+      },
+      {
+        "name": "Penza",
+        "regionName": "Penza region"
+      },
+      {
+        "name": "Kovrov",
+        "regionName": "Kovrov region"
+      },
+      {
+        "name": "Tver",
+        "regionName": "Tver region"
+      },
+      {
+        "name": "Yaroslavl",
+        "regionName": "Yaroslavl region"
+      },
+      {
+        "name": "Miass",
+        "regionName": "Miass region"
+      },
+      {
+        "name": "Tyumensky District",
+        "regionName": "Tyumensky District region"
+      },
+      {
+        "name": "Magnitogorsk",
+        "regionName": "Magnitogorsk region"
+      },
+      {
+        "name": "Bryansk",
+        "regionName": "Bryansk region"
+      },
+      {
+        "name": "Novokuznetsk",
+        "regionName": "Novokuznetsk region"
+      },
+      {
+        "name": "Pervomaysky District",
+        "regionName": "Pervomaysky District region"
+      },
+      {
+        "name": "Ryazansky District",
+        "regionName": "Ryazansky District region"
+      },
+      {
+        "name": "Belokalitvinsky District",
+        "regionName": "Belokalitvinsky District region"
+      },
+      {
+        "name": "Kursk",
+        "regionName": "Kursk region"
+      },
+      {
+        "name": "Tambov",
+        "regionName": "Tambov region"
+      },
+      {
+        "name": "Ishimbaysky District",
+        "regionName": "Ishimbaysky District region"
+      },
+      {
+        "name": "Ivanovo",
+        "regionName": "Ivanovo region"
+      },
+      {
+        "name": "Kirovo-Chepetsk",
+        "regionName": "Kirovo-Chepetsk region"
+      },
+      {
+        "name": "Cherepovets",
+        "regionName": "Cherepovets region"
+      },
+      {
+        "name": "Tomsk municipal region",
+        "regionName": "Tomsk municipal region region"
+      },
+      {
+        "name": "Astrakhan",
+        "regionName": "Astrakhan region"
+      },
+      {
+        "name": "Irkutsky District",
+        "regionName": "Irkutsky District region"
+      },
+      {
+        "name": "Kavkazsky District",
+        "regionName": "Kavkazsky District region"
+      },
+      {
+        "name": "Starooskolsky Urban Okrug",
+        "regionName": "Starooskolsky Urban Okrug region"
+      },
+      {
+        "name": "Naberezhnye Chelny",
+        "regionName": "Naberezhnye Chelny region"
+      },
+      {
+        "name": "Liskinsky District",
+        "regionName": "Liskinsky District region"
+      },
+      {
+        "name": "Dzerzhinsk",
+        "regionName": "Dzerzhinsk region"
+      },
+      {
+        "name": "Orenburgsky District",
+        "regionName": "Orenburgsky District region"
+      },
+      {
+        "name": "Talitsky District",
+        "regionName": "Talitsky District region"
+      },
+      {
+        "name": "Lipetsk",
+        "regionName": "Lipetsk region"
+      },
+      {
+        "name": "Tolyatti",
+        "regionName": "Tolyatti region"
+      },
+      {
+        "name": "Voskresensky District",
+        "regionName": "Voskresensky District region"
+      },
+      {
+        "name": "Novocheboksarsk",
+        "regionName": "Novocheboksarsk region"
+      },
+      {
+        "name": "Aleksinsky District",
+        "regionName": "Aleksinsky District region"
+      },
+      {
+        "name": "Saransk Urban District",
+        "regionName": "Saransk Urban District region"
+      },
+      {
+        "name": "Kurgan",
+        "regionName": "Kurgan region"
+      },
+      {
+        "name": "Smolensk",
+        "regionName": "Smolensk region"
+      },
+      {
+        "name": "Belgorodsky District",
+        "regionName": "Belgorodsky District region"
+      },
+      {
+        "name": "Sergiyevo-Posadsky District",
+        "regionName": "Sergiyevo-Posadsky District region"
+      },
+      {
+        "name": "Minusinsk Urban District",
+        "regionName": "Minusinsk Urban District region"
+      },
+      {
+        "name": "Kurganinsky District",
+        "regionName": "Kurganinsky District region"
+      },
+      {
+        "name": "Dyurtyulinsky District",
+        "regionName": "Dyurtyulinsky District region"
+      },
+      {
+        "name": "Oryol",
+        "regionName": "Oryol region"
+      },
+      {
+        "name": "Plesetsky District",
+        "regionName": "Plesetsky District region"
+      },
+      {
+        "name": "Kabansky District",
+        "regionName": "Kabansky District region"
+      },
+      {
+        "name": "Zalari municipal region",
+        "regionName": "Zalari municipal region region"
+      },
+      {
+        "name": "Lyudinovsky District",
+        "regionName": "Lyudinovsky District region"
+      },
+      {
+        "name": "Yoshkar-Ola",
+        "regionName": "Yoshkar-Ola region"
+      },
+      {
+        "name": "Shakhty City District",
+        "regionName": "Shakhty City District region"
+      },
+      {
+        "name": "Resort Town of Sochi (municipal formation)",
+        "regionName": "Resort Town of Sochi (municipal formation) region"
+      },
+      {
+        "name": "Gatchinsky District",
+        "regionName": "Gatchinsky District region"
+      },
+      {
+        "name": "Sarov",
+        "regionName": "Sarov region"
+      },
+      {
+        "name": "Tuymazinsky District",
+        "regionName": "Tuymazinsky District region"
+      },
+      {
+        "name": "Almetyevsky District",
+        "regionName": "Almetyevsky District region"
+      },
+      {
+        "name": "Kolomna urban okrug",
+        "regionName": "Kolomna urban okrug region"
+      },
+      {
+        "name": "Surgut",
+        "regionName": "Surgut region"
+      },
+      {
+        "name": "Zelenodolsky District",
+        "regionName": "Zelenodolsky District region"
+      },
+      {
+        "name": "Gorno-Altaysk",
+        "regionName": "Gorno-Altaysk region"
+      },
+      {
+        "name": "Volgodonsk",
+        "regionName": "Volgodonsk region"
+      },
+      {
+        "name": "Rajon Nischnekamsk",
+        "regionName": "Rajon Nischnekamsk region"
+      },
+      {
+        "name": "Klinsky District",
+        "regionName": "Klinsky District region"
+      },
+      {
+        "name": "Balakovsky District",
+        "regionName": "Balakovsky District region"
+      },
+      {
+        "name": "Borisoglebsky District",
+        "regionName": "Borisoglebsky District region"
+      },
+      {
+        "name": "Pskov",
+        "regionName": "Pskov region"
+      },
+      {
+        "name": "Veliky Novgorod",
+        "regionName": "Veliky Novgorod region"
+      },
+      {
+        "name": "Yeysky District",
+        "regionName": "Yeysky District region"
+      },
+      {
+        "name": "Orsk",
+        "regionName": "Orsk region"
+      },
+      {
+        "name": "Naro-Fominsky District",
+        "regionName": "Naro-Fominsky District region"
+      },
+      {
+        "name": "Berezniki",
+        "regionName": "Berezniki region"
+      },
+      {
+        "name": "Nizhnevartovsky District",
+        "regionName": "Nizhnevartovsky District region"
+      },
+      {
+        "name": "Novomoskovsky District",
+        "regionName": "Novomoskovsky District region"
+      },
+      {
+        "name": "Buguruslan",
+        "regionName": "Buguruslan region"
+      },
+      {
+        "name": "Chita",
+        "regionName": "Chita region"
+      },
+      {
+        "name": "Tayshetsky Rayon",
+        "regionName": "Tayshetsky Rayon region"
+      },
+      {
+        "name": "Murmansk",
+        "regionName": "Murmansk region"
+      },
+      {
+        "name": "Shipunovsky District",
+        "regionName": "Shipunovsky District region"
+      },
+      {
+        "name": "Syzran",
+        "regionName": "Syzran region"
+      },
+      {
+        "name": "Noginsky District",
+        "regionName": "Noginsky District region"
+      },
+      {
+        "name": "Balashovsky District",
+        "regionName": "Balashovsky District region"
+      },
+      {
+        "name": "Yelets",
+        "regionName": "Yelets region"
+      },
+      {
+        "name": "Belorechensky District",
+        "regionName": "Belorechensky District region"
+      },
+      {
+        "name": "Kostroma",
+        "regionName": "Kostroma region"
+      },
+      {
+        "name": "Sergiyevsky District",
+        "regionName": "Sergiyevsky District region"
+      },
+      {
+        "name": "Petroskoi District",
+        "regionName": "Petroskoi District region"
+      },
+      {
+        "name": "Shakhunya Urban Okrug",
+        "regionName": "Shakhunya Urban Okrug region"
+      },
+      {
+        "name": "Kamyshin",
+        "regionName": "Kamyshin region"
+      },
+      {
+        "name": "Taganrog City District",
+        "regionName": "Taganrog City District region"
+      },
+      {
+        "name": "Olhava District",
+        "regionName": "Olhava District region"
+      },
+      {
+        "name": "Uzhursky Rayon",
+        "regionName": "Uzhursky Rayon region"
+      },
+      {
+        "name": "Novolyalinsky District",
+        "regionName": "Novolyalinsky District region"
+      },
+      {
+        "name": "Karasuksky District",
+        "regionName": "Karasuksky District region"
+      },
+      {
+        "name": "Glazov",
+        "regionName": "Glazov region"
+      },
+      {
+        "name": "Syktyvkar Urban Okrug",
+        "regionName": "Syktyvkar Urban Okrug region"
+      },
+      {
+        "name": "Ishimsky District",
+        "regionName": "Ishimsky District region"
+      },
+      {
+        "name": "Rybinsky Rayon",
+        "regionName": "Rybinsky Rayon region"
+      },
+      {
+        "name": "Kuybyshevsky District",
+        "regionName": "Kuybyshevsky District region"
+      },
+      {
+        "name": "Lagansky District",
+        "regionName": "Lagansky District region"
+      },
+      {
+        "name": "Sovetsky District",
+        "regionName": "Sovetsky District region"
+      },
+      {
+        "name": "Vyborgsky District",
+        "regionName": "Vyborgsky District region"
+      },
+      {
+        "name": "Troitsky district",
+        "regionName": "Troitsky district region"
+      },
+      {
+        "name": "Dzun-Khemchiksky Kozhuun",
+        "regionName": "Dzun-Khemchiksky Kozhuun region"
+      },
+      {
+        "name": "Nizhneingashsky Rayon",
+        "regionName": "Nizhneingashsky Rayon region"
+      },
+      {
+        "name": "Krasnokamsk District",
+        "regionName": "Krasnokamsk District region"
+      },
+      {
+        "name": "Borzinsky District",
+        "regionName": "Borzinsky District region"
+      },
+      {
+        "name": "Kamensky District",
+        "regionName": "Kamensky District region"
+      },
+      {
+        "name": "Serpukhovsky District",
+        "regionName": "Serpukhovsky District region"
+      },
+      {
+        "name": "Kantalahti District",
+        "regionName": "Kantalahti District region"
+      },
+      {
+        "name": "Vorkuta Urban Okrug",
+        "regionName": "Vorkuta Urban Okrug region"
+      },
+      {
+        "name": "Jaama District",
+        "regionName": "Jaama District region"
+      },
+      {
+        "name": "Tavrichesky District",
+        "regionName": "Tavrichesky District region"
+      },
+      {
+        "name": "Isilkulsky District",
+        "regionName": "Isilkulsky District region"
+      },
+      {
+        "name": "Tarsky District",
+        "regionName": "Tarsky District region"
+      },
+      {
+        "name": "Velikoustyugsky District",
+        "regionName": "Velikoustyugsky District region"
+      },
+      {
+        "name": "Nizhneudinsky Rayon",
+        "regionName": "Nizhneudinsky Rayon region"
+      },
+      {
+        "name": "Shilkinsky District",
+        "regionName": "Shilkinsky District region"
+      },
+      {
+        "name": "Kotlassky District",
+        "regionName": "Kotlassky District region"
+      },
+      {
+        "name": "Ukhta Urban Okrug",
+        "regionName": "Ukhta Urban Okrug region"
+      },
+      {
+        "name": "Kukmorsky District",
+        "regionName": "Kukmorsky District region"
+      },
+      {
+        "name": "Oktyabrsky District",
+        "regionName": "Oktyabrsky District region"
+      },
+      {
+        "name": "Akhtubinsky District",
+        "regionName": "Akhtubinsky District region"
+      },
+      {
+        "name": "Tobolsky District",
+        "regionName": "Tobolsky District region"
+      },
+      {
+        "name": "Krasnokamensky District",
+        "regionName": "Krasnokamensky District region"
+      },
+      {
+        "name": "Velsky District",
+        "regionName": "Velsky District region"
+      },
+      {
+        "name": "Segezhsky District",
+        "regionName": "Segezhsky District region"
+      },
+      {
+        "name": "Khanty-Mansiysk Urban Okrug",
+        "regionName": "Khanty-Mansiysk Urban Okrug region"
+      },
+      {
+        "name": "Noyabrsk",
+        "regionName": "Noyabrsk region"
+      },
+      {
+        "name": "Нижнеилимский район",
+        "regionName": "Нижнеилимский район region"
+      },
+      {
+        "name": "городской округ Новый Урен",
+        "regionName": "городской округ Новый Урен region"
+      },
+      {
+        "name": "городской округ Норильск",
+        "regionName": "городской округ Норильск region"
+      },
+      {
+        "name": "Makhachkala",
+        "regionName": "Makhachkala region"
+      },
+      {
+        "name": "Pyatigorsk",
+        "regionName": "Pyatigorsk region"
+      },
+      {
+        "name": "Stavropol",
+        "regionName": "Stavropol region"
+      },
+      {
+        "name": "Groznensky District",
+        "regionName": "Groznensky District region"
+      },
+      {
+        "name": "Chegemsky District",
+        "regionName": "Chegemsky District region"
+      },
+      {
+        "name": "Gudermessky District",
+        "regionName": "Gudermessky District region"
+      },
+      {
+        "name": "Vladikavkaz City District",
+        "regionName": "Vladikavkaz City District region"
+      },
+      {
+        "name": "urban okrug of Derbent",
+        "regionName": "urban okrug of Derbent region"
+      },
+      {
+        "name": "Karabudakhkentsky District",
+        "regionName": "Karabudakhkentsky District region"
+      },
+      {
+        "name": "Khasavyurtovsky District",
+        "regionName": "Khasavyurtovsky District region"
+      },
+      {
+        "name": "Cherkessk",
+        "regionName": "Cherkessk region"
+      },
+      {
+        "name": "Botlikhsky District",
+        "regionName": "Botlikhsky District region"
+      },
+      {
+        "name": "Nazranovsky District",
+        "regionName": "Nazranovsky District region"
+      },
+      {
+        "name": "Budyonnovsky District",
+        "regionName": "Budyonnovsky District region"
+      },
+      {
+        "name": "Partizansk",
+        "regionName": "Partizansk region"
+      },
+      {
+        "name": "Khabarovsk",
+        "regionName": "Khabarovsk region"
+      },
+      {
+        "name": "Spassk-Dalny",
+        "regionName": "Spassk-Dalny region"
+      },
+      {
+        "name": "Seryshevsky District",
+        "regionName": "Seryshevsky District region"
+      },
+      {
+        "name": "Komsomolsk-on-Amur",
+        "regionName": "Komsomolsk-on-Amur region"
+      },
+      {
+        "name": "Yakutsk Urban District",
+        "regionName": "Yakutsk Urban District region"
+      },
+      {
+        "name": "Kholmsky District",
+        "regionName": "Kholmsky District region"
+      },
+      {
+        "name": "Petropavlovsk-Kamchatsky",
+        "regionName": "Petropavlovsk-Kamchatsky region"
+      },
+      {
+        "name": "Birobidzhan",
+        "regionName": "Birobidzhan region"
+      },
+      {
+        "name": "Skovorodinsky District",
+        "regionName": "Skovorodinsky District region"
+      },
+      {
+        "name": "Pozharsky District",
+        "regionName": "Pozharsky District region"
+      },
+      {
+        "name": "Kaliningrad",
+        "regionName": "Kaliningrad region"
+      },
+      {
+        "name": "Yekaterinburg",
+        "regionName": "Yekaterinburg region"
+      },
+      {
+        "name": "Nizhny Novgorod",
+        "regionName": "Nizhny Novgorod region"
+      },
+      {
+        "name": "Samara",
+        "regionName": "Samara region"
+      },
+      {
+        "name": "Chelyabinsk",
+        "regionName": "Chelyabinsk region"
+      },
+      {
+        "name": "Kazan",
+        "regionName": "Kazan region"
+      },
+      {
+        "name": "Saratov",
+        "regionName": "Saratov region"
+      },
+      {
+        "name": "Ufa",
+        "regionName": "Ufa region"
+      },
+      {
+        "name": "Sarapul",
+        "regionName": "Sarapul region"
+      },
+      {
+        "name": "Buinsky District",
+        "regionName": "Buinsky District region"
+      },
+      {
+        "name": "Permsky District",
+        "regionName": "Permsky District region"
+      },
+      {
+        "name": "Verkhnesaldinsky Urban Okrug",
+        "regionName": "Verkhnesaldinsky Urban Okrug region"
+      },
+      {
+        "name": "Penza",
+        "regionName": "Penza region"
+      },
+      {
+        "name": "Kovrov",
+        "regionName": "Kovrov region"
+      },
+      {
+        "name": "Tver",
+        "regionName": "Tver region"
+      },
+      {
+        "name": "Yaroslavl",
+        "regionName": "Yaroslavl region"
+      },
+      {
+        "name": "Novocheboksarsk",
+        "regionName": "Novocheboksarsk region"
+      },
+      {
+        "name": "Aleksinsky District",
+        "regionName": "Aleksinsky District region"
+      },
+      {
+        "name": "Saransk Urban District",
+        "regionName": "Saransk Urban District region"
+      },
+      {
+        "name": "Kurgan",
+        "regionName": "Kurgan region"
+      },
+      {
+        "name": "Smolensk",
+        "regionName": "Smolensk region"
+      },
+      {
+        "name": "Belgorodsky District",
+        "regionName": "Belgorodsky District region"
+      },
+      {
+        "name": "Sergiyevo-Posadsky District",
+        "regionName": "Sergiyevo-Posadsky District region"
+      },
+      {
+        "name": "Dyurtyulinsky District",
+        "regionName": "Dyurtyulinsky District region"
+      },
+      {
+        "name": "Oryol",
+        "regionName": "Oryol region"
+      },
+      {
+        "name": "Lyudinovsky District",
+        "regionName": "Lyudinovsky District region"
+      },
+      {
+        "name": "Yoshkar-Ola",
+        "regionName": "Yoshkar-Ola region"
+      },
+      {
+        "name": "Sarov",
+        "regionName": "Sarov region"
+      },
+      {
+        "name": "Tuymazinsky District",
+        "regionName": "Tuymazinsky District region"
+      },
+      {
+        "name": "Almetyevsky District",
+        "regionName": "Almetyevsky District region"
+      },
+      {
+        "name": "Kolomna urban okrug",
+        "regionName": "Kolomna urban okrug region"
+      },
+      {
+        "name": "Surgut",
+        "regionName": "Surgut region"
+      },
+      {
+        "name": "Kostroma",
+        "regionName": "Kostroma region"
+      },
+      {
+        "name": "Sergiyevsky District",
+        "regionName": "Sergiyevsky District region"
+      },
+      {
+        "name": "Shakhunya Urban Okrug",
+        "regionName": "Shakhunya Urban Okrug region"
+      },
+      {
+        "name": "Novolyalinsky District",
+        "regionName": "Novolyalinsky District region"
+      },
+      {
+        "name": "Glazov",
+        "regionName": "Glazov region"
+      },
+      {
+        "name": "Ishimsky District",
+        "regionName": "Ishimsky District region"
+      },
+      {
+        "name": "Sovetsky District",
+        "regionName": "Sovetsky District region"
+      },
+      {
+        "name": "Troitsky district",
+        "regionName": "Troitsky district region"
+      },
+      {
+        "name": "Krasnokamsk District",
+        "regionName": "Krasnokamsk District region"
+      },
+      {
+        "name": "Serpukhovsky District",
+        "regionName": "Serpukhovsky District region"
+      },
+      {
+        "name": "Tobolsky District",
+        "regionName": "Tobolsky District region"
+      },
+      {
+        "name": "Noyabrsk",
+        "regionName": "Noyabrsk region"
+      },
+      {
+        "name": "Volgograd",
+        "regionName": "Volgograd region"
+      },
+      {
+        "name": "Rostov-on-Don",
+        "regionName": "Rostov-on-Don region"
+      },
+      {
+        "name": "Anapa Urban Okrug",
+        "regionName": "Anapa Urban Okrug region"
+      },
+      {
+        "name": "Krasnodar Municipality",
+        "regionName": "Krasnodar Municipality region"
+      },
+      {
+        "name": "Kurganinsky District",
+        "regionName": "Kurganinsky District region"
+      },
+      {
+        "name": "Shakhty City District",
+        "regionName": "Shakhty City District region"
+      },
+      {
+        "name": "Resort Town of Sochi (municipal formation)",
+        "regionName": "Resort Town of Sochi (municipal formation) region"
+      },
+      {
+        "name": "Kamyshin",
+        "regionName": "Kamyshin region"
+      },
+      {
+        "name": "Taganrog City District",
+        "regionName": "Taganrog City District region"
+      },
+      {
+        "name": "Lagansky District",
+        "regionName": "Lagansky District region"
+      },
+      {
+        "name": "Omsk",
+        "regionName": "Omsk region"
+      },
+      {
+        "name": "Krasnoyarsk",
+        "regionName": "Krasnoyarsk region"
+      },
+      {
+        "name": "Kemerovo",
+        "regionName": "Kemerovo region"
+      },
+      {
+        "name": "Minusinsk Urban District",
+        "regionName": "Minusinsk Urban District region"
+      },
+      {
+        "name": "Kabansky District",
+        "regionName": "Kabansky District region"
+      },
+      {
+        "name": "Zalari municipal region",
+        "regionName": "Zalari municipal region region"
+      },
+      {
+        "name": "Uzhursky Rayon",
+        "regionName": "Uzhursky Rayon region"
+      },
+      {
+        "name": "Karasuksky District",
+        "regionName": "Karasuksky District region"
+      },
+      {
+        "name": "Rybinsky Rayon",
+        "regionName": "Rybinsky Rayon region"
+      },
+      {
+        "name": "Kuybyshevsky District",
+        "regionName": "Kuybyshevsky District region"
+      },
+      {
+        "name": "Dzun-Khemchiksky Kozhuun",
+        "regionName": "Dzun-Khemchiksky Kozhuun region"
+      },
+      {
+        "name": "Nizhneingashsky Rayon",
+        "regionName": "Nizhneingashsky Rayon region"
+      },
+      {
+        "name": "Borzinsky District",
+        "regionName": "Borzinsky District region"
+      },
+      {
+        "name": "Kamensky District",
+        "regionName": "Kamensky District region"
+      },
+      {
+        "name": "Tarsky District",
+        "regionName": "Tarsky District region"
+      },
+      {
+        "name": "городской округ Норильск",
+        "regionName": "городской округ Норильск region"
+      },
+      {
+        "name": "Plesetsky District",
+        "regionName": "Plesetsky District region"
+      },
+      {
+        "name": "Gatchinsky District",
+        "regionName": "Gatchinsky District region"
+      },
+      {
+        "name": "Veliky Novgorod",
+        "regionName": "Veliky Novgorod region"
+      },
+      {
+        "name": "Petroskoi District",
+        "regionName": "Petroskoi District region"
+      },
+      {
+        "name": "Olhava District",
+        "regionName": "Olhava District region"
+      },
+      {
+        "name": "Syktyvkar Urban Okrug",
+        "regionName": "Syktyvkar Urban Okrug region"
+      },
+      {
+        "name": "Vyborgsky District",
+        "regionName": "Vyborgsky District region"
+      },
+      {
+        "name": "Velsky District",
+        "regionName": "Velsky District region"
+      },
+      {
+        "name": "urban okrug of Derbent",
+        "regionName": "urban okrug of Derbent region"
+      },
+      {
+        "name": "Khasavyurtovsky District",
+        "regionName": "Khasavyurtovsky District region"
+      },
+      {
+        "name": "Khasavyurtovsky District",
+        "regionName": "Khasavyurtovsky District region"
+      },
+      {
+        "name": "Veliky Novgorod",
+        "regionName": "Veliky Novgorod region"
+      },
+      {
+        "name": "Nizhneingashsky Rayon",
+        "regionName": "Nizhneingashsky Rayon region"
+      },
+      {
+        "name": "Tobolsky District",
+        "regionName": "Tobolsky District region"
       }
     ],
     "rule": {
@@ -102995,6 +104399,6252 @@
       "country": "TW",
       "localTrips": 1160293.0,
       "realm": "taiwan"
+    },
+    {
+      "id": "ist",
+      "name": "Istanbul",
+      "origin": {
+        "lon": 28.8675,
+        "lat": 41.0597
+      },
+      "center": [
+        28.8675,
+        41.0597
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.046,
+        40.505,
+        29.778,
+        41.602
+      ],
+      "place": 5421,
+      "country": "TR",
+      "localTrips": 48044944.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ank",
+      "name": "Ankara",
+      "origin": {
+        "lon": 32.8977,
+        "lat": 39.9383
+      },
+      "center": [
+        32.8977,
+        39.9383
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.217,
+        38.342,
+        33.595,
+        40.565
+      ],
+      "place": 5422,
+      "country": "TR",
+      "localTrips": 12294322.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "izm",
+      "name": "Izmir",
+      "origin": {
+        "lon": 27.1485,
+        "lat": 38.362
+      },
+      "center": [
+        27.1485,
+        38.362
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.207,
+        38.085,
+        27.857,
+        38.969
+      ],
+      "place": 5423,
+      "country": "TR",
+      "localTrips": 10437351.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "bur",
+      "name": "Bursa",
+      "origin": {
+        "lon": 29.0127,
+        "lat": 40.1978
+      },
+      "center": [
+        29.0127,
+        40.1978
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.492,
+        39.575,
+        29.479,
+        40.586
+      ],
+      "place": 5424,
+      "country": "TR",
+      "localTrips": 7160613.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "sic",
+      "name": "Sincan",
+      "origin": {
+        "lon": 32.6179,
+        "lat": 39.9472
+      },
+      "center": [
+        32.6179,
+        39.9472
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.925,
+        39.6,
+        32.898,
+        40.391
+      ],
+      "place": 5427,
+      "country": "TR",
+      "localTrips": 3199200.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ipe",
+      "name": "İpekyolu",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.3899,
+        "lat": 38.5039
+      },
+      "center": [
+        43.3899,
+        38.5039
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.639,
+        36.944,
+        44.839,
+        39.39
+      ],
+      "place": 5429,
+      "country": "TR",
+      "localTrips": 3862094.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "agm",
+      "name": "Ağrı merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.0517,
+        "lat": 39.7238
+      },
+      "center": [
+        43.0517,
+        39.7238
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.768,
+        38.826,
+        44.842,
+        41.619
+      ],
+      "place": 5430,
+      "country": "TR",
+      "localTrips": 3206511.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ilk",
+      "name": "İlkadım",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.3392,
+        "lat": 41.2758
+      },
+      "center": [
+        36.3392,
+        41.2758
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.854,
+        40.803,
+        37.194,
+        41.464
+      ],
+      "place": 5431,
+      "country": "TR",
+      "localTrips": 3248822.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "orh",
+      "name": "Ortahisar",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.6891,
+        "lat": 40.9967
+      },
+      "center": [
+        39.6891,
+        40.9967
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.726,
+        39.423,
+        42.617,
+        41.543
+      ],
+      "place": 5432,
+      "country": "TR",
+      "localTrips": 4661956.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "cok",
+      "name": "Çorum merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.9651,
+        "lat": 40.5475
+      },
+      "center": [
+        34.9651,
+        40.5475
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.935,
+        38.967,
+        36.536,
+        41.366
+      ],
+      "place": 5433,
+      "country": "TR",
+      "localTrips": 3424953.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "yun",
+      "name": "Yunusemre",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.4164,
+        "lat": 38.6105
+      },
+      "center": [
+        27.4164,
+        38.6105
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.745,
+        38.435,
+        28.984,
+        39.426
+      ],
+      "place": 5434,
+      "country": "TR",
+      "localTrips": 2835078.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "akd",
+      "name": "Akdeniz",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.6361,
+        "lat": 36.8249
+      },
+      "center": [
+        34.6361,
+        36.8249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.514,
+        35.998,
+        34.878,
+        37.225
+      ],
+      "place": 5435,
+      "country": "TR",
+      "localTrips": 4951897.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "efe",
+      "name": "Efeler",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.8477,
+        "lat": 37.8394
+      },
+      "center": [
+        27.8477,
+        37.8394
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.98,
+        37.315,
+        28.902,
+        38.148
+      ],
+      "place": 5436,
+      "country": "TR",
+      "localTrips": 3160047.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "adp",
+      "name": "Adapazarı",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.4307,
+        "lat": 40.7899
+      },
+      "center": [
+        30.4307,
+        40.7899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.943,
+        40.276,
+        31.037,
+        41.198
+      ],
+      "place": 5437,
+      "country": "TR",
+      "localTrips": 3024580.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "erg",
+      "name": "Ereğli",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.4269,
+        "lat": 41.2668
+      },
+      "center": [
+        31.4269,
+        41.2668
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.258,
+        40.779,
+        33.18,
+        41.868
+      ],
+      "place": 5438,
+      "country": "TR",
+      "localTrips": 2896456.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "atk",
+      "name": "Antakya",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.1542,
+        "lat": 36.2185
+      },
+      "center": [
+        36.1542,
+        36.2185
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.797,
+        35.787,
+        36.728,
+        36.472
+      ],
+      "place": 5439,
+      "country": "TR",
+      "localTrips": 2784545.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "pmu",
+      "name": "Pamukkale",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.0917,
+        "lat": 37.7775
+      },
+      "center": [
+        29.0917,
+        37.7775
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.546,
+        36.828,
+        30.107,
+        38.493
+      ],
+      "place": 5440,
+      "country": "TR",
+      "localTrips": 2916324.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "slh",
+      "name": "Salihli",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.1535,
+        "lat": 38.4862
+      },
+      "center": [
+        28.1535,
+        38.4862
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.441,
+        37.931,
+        29.142,
+        38.944
+      ],
+      "place": 5441,
+      "country": "TR",
+      "localTrips": 2337152.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "odu",
+      "name": "Odunpazarı",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.5623,
+        "lat": 39.7506
+      },
+      "center": [
+        30.5623,
+        39.7506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.964,
+        39.046,
+        31.439,
+        40.206
+      ],
+      "place": 5442,
+      "country": "TR",
+      "localTrips": 2465076.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "bdm",
+      "name": "Bodrum",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.4092,
+        "lat": 37.0362
+      },
+      "center": [
+        27.4092,
+        37.0362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.202,
+        36.416,
+        29.335,
+        37.62
+      ],
+      "place": 5443,
+      "country": "TR",
+      "localTrips": 2719509.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "isn",
+      "name": "İskenderun",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.17,
+        "lat": 36.5874
+      },
+      "center": [
+        36.17,
+        36.5874
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.757,
+        36.234,
+        36.695,
+        37.053
+      ],
+      "place": 5444,
+      "country": "TR",
+      "localTrips": 2409636.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kpk",
+      "name": "Kapaklı",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.9765,
+        "lat": 41.3299
+      },
+      "center": [
+        27.9765,
+        41.3299
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.546,
+        40.943,
+        28.42,
+        41.635
+      ],
+      "place": 5445,
+      "country": "TR",
+      "localTrips": 2745252.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ato",
+      "name": "Altınordu",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.8967,
+        "lat": 40.9697
+      },
+      "center": [
+        37.8967,
+        40.9697
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.657,
+        39.902,
+        39.207,
+        41.166
+      ],
+      "place": 5447,
+      "country": "TR",
+      "localTrips": 3286957.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kzl",
+      "name": "Kızıltepe",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.5902,
+        "lat": 37.1948
+      },
+      "center": [
+        40.5902,
+        37.1948
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.861,
+        36.893,
+        41.921,
+        37.757
+      ],
+      "place": 5448,
+      "country": "TR",
+      "localTrips": 2566640.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "yes",
+      "name": "Yeşilyurt",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.3031,
+        "lat": 38.3354
+      },
+      "center": [
+        38.3031,
+        38.3354
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.237,
+        37.868,
+        39.19,
+        39.121
+      ],
+      "place": 5449,
+      "country": "TR",
+      "localTrips": 2098258.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "aks",
+      "name": "Aksaray merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.0209,
+        "lat": 38.3709
+      },
+      "center": [
+        34.0209,
+        38.3709
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.147,
+        37.958,
+        35.19,
+        39.402
+      ],
+      "place": 5450,
+      "country": "TR",
+      "localTrips": 2037839.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "elz",
+      "name": "Elazığ merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.2182,
+        "lat": 38.6726
+      },
+      "center": [
+        39.2182,
+        38.6726
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.334,
+        38.222,
+        40.375,
+        39.39
+      ],
+      "place": 5452,
+      "country": "TR",
+      "localTrips": 1772090.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "aay",
+      "name": "Alanya",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.1067,
+        "lat": 36.4819
+      },
+      "center": [
+        32.1067,
+        36.4819
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        30.794,
+        36.074,
+        32.649,
+        37.476
+      ],
+      "place": 5453,
+      "country": "TR",
+      "localTrips": 2217587.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "btm",
+      "name": "Batman Merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.1402,
+        "lat": 37.8925
+      },
+      "center": [
+        41.1402,
+        37.8925
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.963,
+        37.477,
+        41.845,
+        38.561
+      ],
+      "place": 5454,
+      "country": "TR",
+      "localTrips": 1777596.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "edi",
+      "name": "Edirne merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.5957,
+        "lat": 41.6637
+      },
+      "center": [
+        26.5957,
+        41.6637
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.278,
+        40.972,
+        28.171,
+        42.09
+      ],
+      "place": 5455,
+      "country": "TR",
+      "localTrips": 1738140.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ino",
+      "name": "İnegöl",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.5119,
+        "lat": 40.0814
+      },
+      "center": [
+        29.5119,
+        40.0814
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.218,
+        39.641,
+        30.688,
+        40.633
+      ],
+      "place": 5456,
+      "country": "TR",
+      "localTrips": 1732315.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "spx",
+      "name": "Silopi",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.4702,
+        "lat": 37.2477
+      },
+      "center": [
+        42.4702,
+        37.2477
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.522,
+        37.088,
+        43.523,
+        37.788
+      ],
+      "place": 5457,
+      "country": "TR",
+      "localTrips": 1554315.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "afy",
+      "name": "Afyonkarahisar (Merkez İlçe)",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.5384,
+        "lat": 38.7615
+      },
+      "center": [
+        30.5384,
+        38.7615
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.635,
+        37.759,
+        31.756,
+        39.289
+      ],
+      "place": 5458,
+      "country": "TR",
+      "localTrips": 2030188.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kuy",
+      "name": "Kütahya merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.9794,
+        "lat": 39.4203
+      },
+      "center": [
+        29.9794,
+        39.4203
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.584,
+        38.772,
+        30.489,
+        39.897
+      ],
+      "place": 5459,
+      "country": "TR",
+      "localTrips": 1536966.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "sly",
+      "name": "Süleymanpaşa",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.5025,
+        "lat": 40.9787
+      },
+      "center": [
+        27.5025,
+        40.9787
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.012,
+        40.022,
+        27.733,
+        41.383
+      ],
+      "place": 5460,
+      "country": "TR",
+      "localTrips": 1378587.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "msm",
+      "name": "Muş merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.5014,
+        "lat": 38.7437
+      },
+      "center": [
+        41.5014,
+        38.7437
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.081,
+        37.951,
+        43.225,
+        39.391
+      ],
+      "place": 5462,
+      "country": "TR",
+      "localTrips": 1687932.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "cnk",
+      "name": "Çanakkale merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.414,
+        "lat": 40.1351
+      },
+      "center": [
+        26.414,
+        40.1351
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        25.641,
+        39.435,
+        27.573,
+        40.494
+      ],
+      "place": 5464,
+      "country": "TR",
+      "localTrips": 1330401.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "yae",
+      "name": "Yalova merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.2786,
+        "lat": 40.6552
+      },
+      "center": [
+        29.2786,
+        40.6552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.755,
+        40.293,
+        29.55,
+        40.721
+      ],
+      "place": 5465,
+      "country": "TR",
+      "localTrips": 1168682.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "tom",
+      "name": "Tokat merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.5517,
+        "lat": 40.3412
+      },
+      "center": [
+        36.5517,
+        40.3412
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.415,
+        39.844,
+        37.715,
+        40.929
+      ],
+      "place": 5466,
+      "country": "TR",
+      "localTrips": 1610504.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "tsu",
+      "name": "Tarsus",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.057,
+        "lat": 36.9745
+      },
+      "center": [
+        35.057,
+        36.9745
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.51,
+        36.71,
+        35.175,
+        37.447
+      ],
+      "place": 5467,
+      "country": "TR",
+      "localTrips": 953593.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "duz",
+      "name": "Düzce merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.1582,
+        "lat": 40.8438
+      },
+      "center": [
+        31.1582,
+        40.8438
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        30.776,
+        40.603,
+        31.874,
+        41.131
+      ],
+      "place": 5468,
+      "country": "TR",
+      "localTrips": 1118376.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "usa",
+      "name": "Uşak merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.3977,
+        "lat": 38.6726
+      },
+      "center": [
+        29.3977,
+        38.6726
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.721,
+        38.147,
+        30.048,
+        38.967
+      ],
+      "place": 5470,
+      "country": "TR",
+      "localTrips": 1016337.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "bfr",
+      "name": "Bafra",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.9028,
+        "lat": 41.5644
+      },
+      "center": [
+        35.9028,
+        41.5644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.199,
+        41.192,
+        36.175,
+        42.117
+      ],
+      "place": 5471,
+      "country": "TR",
+      "localTrips": 1114085.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "plt",
+      "name": "Polatlı",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.1459,
+        "lat": 39.5809
+      },
+      "center": [
+        32.1459,
+        39.5809
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.566,
+        38.835,
+        32.458,
+        39.976
+      ],
+      "place": 5475,
+      "country": "TR",
+      "localTrips": 357303.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ate",
+      "name": "Altıeylül",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.8802,
+        "lat": 39.6434
+      },
+      "center": [
+        27.8802,
+        39.6434
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.552,
+        39.053,
+        29.023,
+        40.687
+      ],
+      "place": 5476,
+      "country": "TR",
+      "localTrips": 3886558.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "sve",
+      "name": "Siverek",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.3132,
+        "lat": 37.751
+      },
+      "center": [
+        39.3132,
+        37.751
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.48,
+        36.65,
+        40.262,
+        38.039
+      ],
+      "place": 5477,
+      "country": "TR",
+      "localTrips": 4088386.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kys",
+      "name": "Kayseri",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.6122,
+        "lat": 38.7882
+      },
+      "center": [
+        35.6122,
+        38.7882
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.936,
+        38.484,
+        35.91,
+        39.085
+      ],
+      "place": 5478,
+      "country": "TR",
+      "localTrips": 3417499.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kce",
+      "name": "Kocaeli",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.7495,
+        "lat": 40.7719
+      },
+      "center": [
+        29.7495,
+        40.7719
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.297,
+        40.511,
+        30.392,
+        41.236
+      ],
+      "place": 5479,
+      "country": "TR",
+      "localTrips": 3452491.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ons",
+      "name": "Onikişubat",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.8829,
+        "lat": 37.5831
+      },
+      "center": [
+        36.8829,
+        37.5831
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.178,
+        37.197,
+        37.775,
+        38.628
+      ],
+      "place": 5480,
+      "country": "TR",
+      "localTrips": 3048862.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "bnz",
+      "name": "Bingöl merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.4924,
+        "lat": 38.886
+      },
+      "center": [
+        40.4924,
+        38.886
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.083,
+        37.494,
+        41.39,
+        39.493
+      ],
+      "place": 5481,
+      "country": "TR",
+      "localTrips": 2382512.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "slr",
+      "name": "Şanlıurfa",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.8006,
+        "lat": 37.1684
+      },
+      "center": [
+        38.8006,
+        37.1684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.397,
+        36.792,
+        39.577,
+        37.575
+      ],
+      "place": 5482,
+      "country": "TR",
+      "localTrips": 3416610.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "dir",
+      "name": "Diyarbakir",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.2362,
+        "lat": 37.9191
+      },
+      "center": [
+        40.2362,
+        37.9191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.78,
+        37.698,
+        40.694,
+        38.317
+      ],
+      "place": 5483,
+      "country": "TR",
+      "localTrips": 3241093.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "isr",
+      "name": "Isparta merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.5535,
+        "lat": 37.7598
+      },
+      "center": [
+        30.5535,
+        37.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.302,
+        36.779,
+        32.031,
+        38.524
+      ],
+      "place": 5484,
+      "country": "TR",
+      "localTrips": 1946319.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "adm",
+      "name": "Adıyaman merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.2655,
+        "lat": 37.7598
+      },
+      "center": [
+        38.2655,
+        37.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.555,
+        37.391,
+        39.287,
+        38.229
+      ],
+      "place": 5486,
+      "country": "TR",
+      "localTrips": 1551732.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kse",
+      "name": "Kırşehir merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.1613,
+        "lat": 39.1529
+      },
+      "center": [
+        34.1613,
+        39.1529
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.107,
+        38.654,
+        34.729,
+        40.102
+      ],
+      "place": 5487,
+      "country": "TR",
+      "localTrips": 1160482.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "nix",
+      "name": "Niğde (merkez)",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.6797,
+        "lat": 37.9722
+      },
+      "center": [
+        34.6797,
+        37.9722
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.658,
+        37.341,
+        35.26,
+        38.409
+      ],
+      "place": 5488,
+      "country": "TR",
+      "localTrips": 1401036.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "blm",
+      "name": "Bolu Merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.6008,
+        "lat": 40.736
+      },
+      "center": [
+        31.6008,
+        40.736
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        30.538,
+        39.831,
+        32.946,
+        41.117
+      ],
+      "place": 5489,
+      "country": "TR",
+      "localTrips": 1162763.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "ksa",
+      "name": "Kastamonu merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.7736,
+        "lat": 41.375
+      },
+      "center": [
+        33.7736,
+        41.375
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.722,
+        40.795,
+        34.506,
+        42.038
+      ],
+      "place": 5490,
+      "country": "TR",
+      "localTrips": 975455.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "syi",
+      "name": "Seydikemer",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.2727,
+        "lat": 36.3326
+      },
+      "center": [
+        29.2727,
+        36.3326
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.077,
+        36.112,
+        30.275,
+        36.999
+      ],
+      "place": 5491,
+      "country": "TR",
+      "localTrips": 645450.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "dve",
+      "name": "Develi",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.4886,
+        "lat": 38.3886
+      },
+      "center": [
+        35.4886,
+        38.3886
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.823,
+        37.673,
+        36.983,
+        39.341
+      ],
+      "place": 5492,
+      "country": "TR",
+      "localTrips": 634858.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kmn",
+      "name": "Karaman merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.2223,
+        "lat": 37.186
+      },
+      "center": [
+        33.2223,
+        37.186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.156,
+        36.417,
+        33.757,
+        37.584
+      ],
+      "place": 5493,
+      "country": "TR",
+      "localTrips": 739134.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "cnm",
+      "name": "Çankırı merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.6211,
+        "lat": 40.6013
+      },
+      "center": [
+        33.6211,
+        40.6013
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.856,
+        39.93,
+        34.19,
+        41.116
+      ],
+      "place": 5494,
+      "country": "TR",
+      "localTrips": 427774.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "gai",
+      "name": "Gaziantep",
+      "origin": {
+        "lon": 37.3955,
+        "lat": 37.045
+      },
+      "center": [
+        37.3955,
+        37.045
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.42,
+        36.685,
+        37.911,
+        37.976
+      ],
+      "place": 5495,
+      "country": "TR",
+      "localTrips": 7164939.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "anl",
+      "name": "Antalya",
+      "origin": {
+        "lon": 30.7126,
+        "lat": 36.9393
+      },
+      "center": [
+        30.7126,
+        36.9393
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.566,
+        36.191,
+        31.012,
+        37.619
+      ],
+      "place": 5496,
+      "country": "TR",
+      "localTrips": 5060566.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "sey",
+      "name": "Seyhan",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.2877,
+        "lat": 37.0186
+      },
+      "center": [
+        35.2877,
+        37.0186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.747,
+        36.681,
+        36.433,
+        38.423
+      ],
+      "place": 5497,
+      "country": "TR",
+      "localTrips": 6414808.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "sva",
+      "name": "Sivas merkez",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.012,
+        "lat": 39.7506
+      },
+      "center": [
+        37.012,
+        39.7506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.815,
+        39.035,
+        37.52,
+        40.238
+      ],
+      "place": 5498,
+      "country": "TR",
+      "localTrips": 1341440.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "yum",
+      "name": "Yumurtalık",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.7891,
+        "lat": 36.7721
+      },
+      "center": [
+        35.7891,
+        36.7721
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.888,
+        36.52,
+        36.122,
+        37.295
+      ],
+      "place": 5499,
+      "country": "TR",
+      "localTrips": 533072.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "srz",
+      "name": "Siirt (merkez)",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.9419,
+        "lat": 37.9368
+      },
+      "center": [
+        41.9419,
+        37.9368
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.334,
+        37.571,
+        42.908,
+        38.281
+      ],
+      "place": 5500,
+      "country": "TR",
+      "localTrips": 890487.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "tba",
+      "name": "Torbalı",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.3558,
+        "lat": 38.1581
+      },
+      "center": [
+        27.3558,
+        38.1581
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.727,
+        37.797,
+        27.547,
+        38.359
+      ],
+      "place": 5501,
+      "country": "TR",
+      "localTrips": 1029006.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "arv",
+      "name": "Arnavutköy",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.7474,
+        "lat": 41.1857
+      },
+      "center": [
+        28.7474,
+        41.1857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.465,
+        41.07,
+        28.846,
+        41.427
+      ],
+      "place": 5502,
+      "country": "TR",
+      "localTrips": 732349.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kik",
+      "name": "Kilis (merkez)",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.1129,
+        "lat": 36.7193
+      },
+      "center": [
+        37.1129,
+        36.7193
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.691,
+        36.613,
+        37.592,
+        36.899
+      ],
+      "place": 5503,
+      "country": "TR",
+      "localTrips": 558651.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "osi",
+      "name": "Osmaniye (merkez)",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.2417,
+        "lat": 37.0626
+      },
+      "center": [
+        36.2417,
+        37.0626
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.853,
+        36.911,
+        36.747,
+        37.768
+      ],
+      "place": 5504,
+      "country": "TR",
+      "localTrips": 1601525.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "pld",
+      "name": "Palandöken",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.276,
+        "lat": 39.9043
+      },
+      "center": [
+        41.276,
+        39.9043
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.222,
+        39.134,
+        42.644,
+        40.856
+      ],
+      "place": 5506,
+      "country": "TR",
+      "localTrips": 1885211.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "kon",
+      "name": "Konya",
+      "origin": {
+        "lon": 32.4846,
+        "lat": 37.8714
+      },
+      "center": [
+        32.4846,
+        37.8714
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.214,
+        36.963,
+        33.997,
+        38.87
+      ],
+      "place": 5507,
+      "country": "TR",
+      "localTrips": 5397305.0,
+      "realm": "turkey"
+    },
+    {
+      "id": "min",
+      "name": "Minsk",
+      "origin": {
+        "lon": 27.5522,
+        "lat": 53.8994
+      },
+      "center": [
+        27.5522,
+        53.8994
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.506,
+        53.481,
+        28.886,
+        54.792
+      ],
+      "place": 5508,
+      "country": "BY"
+    },
+    {
+      "id": "gme",
+      "name": "Gomel",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9984,
+        "lat": 52.4298
+      },
+      "center": [
+        30.9984,
+        52.4298
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.22,
+        51.244,
+        31.829,
+        53.373
+      ],
+      "place": 5509,
+      "country": "BY"
+    },
+    {
+      "id": "vik",
+      "name": "Vitebsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.2117,
+        "lat": 55.1686
+      },
+      "center": [
+        30.2117,
+        55.1686
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.176,
+        54.216,
+        31.243,
+        56.191
+      ],
+      "place": 5510,
+      "country": "BY"
+    },
+    {
+      "id": "bbo",
+      "name": "Brest",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.7229,
+        "lat": 52.0992
+      },
+      "center": [
+        23.7229,
+        52.0992
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        23.149,
+        51.48,
+        27.646,
+        53.008
+      ],
+      "place": 5511,
+      "country": "BY"
+    },
+    {
+      "id": "mgv",
+      "name": "Mogilev",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.3446,
+        "lat": 53.8698
+      },
+      "center": [
+        30.3446,
+        53.8698
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.051,
+        52.656,
+        32.794,
+        54.493
+      ],
+      "place": 5512,
+      "country": "BY"
+    },
+    {
+      "id": "bys",
+      "name": "Barysaw",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.3178,
+        "lat": 54.0968
+      },
+      "center": [
+        28.3178,
+        54.0968
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.194,
+        52.371,
+        29.524,
+        54.705
+      ],
+      "place": 5513,
+      "country": "BY"
+    },
+    {
+      "id": "bnc",
+      "name": "Baranovichy",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.0262,
+        "lat": 53.1231
+      },
+      "center": [
+        26.0262,
+        53.1231
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        24.672,
+        52.387,
+        27.369,
+        55.017
+      ],
+      "place": 5514,
+      "country": "BY"
+    },
+    {
+      "id": "gdn",
+      "name": "Grodno",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.8106,
+        "lat": 53.6925
+      },
+      "center": [
+        23.8106,
+        53.6925
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        23.481,
+        52.725,
+        25.211,
+        54.037
+      ],
+      "place": 5515,
+      "country": "BY"
+    },
+    {
+      "id": "nov",
+      "name": "Novosibirsk",
+      "origin": {
+        "lon": 82.9284,
+        "lat": 55.0291
+      },
+      "center": [
+        82.9284,
+        55.0291
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        81.298,
+        54.229,
+        85.12,
+        56.569
+      ],
+      "place": 5516,
+      "country": "RU"
+    },
+    {
+      "id": "msx",
+      "name": "Miass",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.1132,
+        "lat": 55.059
+      },
+      "center": [
+        60.1132,
+        55.059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        57.06,
+        54.378,
+        61.838,
+        56.765
+      ],
+      "place": 5539,
+      "country": "RU"
+    },
+    {
+      "id": "tye",
+      "name": "Tyumensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.6002,
+        "lat": 57.0805
+      },
+      "center": [
+        65.6002,
+        57.0805
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        64.793,
+        55.937,
+        68.588,
+        58.207
+      ],
+      "place": 5540,
+      "country": "RU"
+    },
+    {
+      "id": "mto",
+      "name": "Magnitogorsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 58.9887,
+        "lat": 53.4173
+      },
+      "center": [
+        58.9887,
+        53.4173
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        56.859,
+        51.653,
+        62.178,
+        54.927
+      ],
+      "place": 5541,
+      "country": "RU"
+    },
+    {
+      "id": "bya",
+      "name": "Bryansk",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.3653,
+        "lat": 53.2407
+      },
+      "center": [
+        34.3653,
+        53.2407
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.211,
+        51.825,
+        35.356,
+        54.053
+      ],
+      "place": 5542,
+      "country": "RU"
+    },
+    {
+      "id": "nok",
+      "name": "Novokuznetsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 87.1281,
+        "lat": 53.7615
+      },
+      "center": [
+        87.1281,
+        53.7615
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        85.989,
+        52.144,
+        89.272,
+        54.851
+      ],
+      "place": 5543,
+      "country": "RU"
+    },
+    {
+      "id": "pev",
+      "name": "Pervomaysky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 83.8318,
+        "lat": 53.5548
+      },
+      "center": [
+        83.8318,
+        53.5548
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        80.921,
+        52.383,
+        86.373,
+        54.771
+      ],
+      "place": 5544,
+      "country": "RU"
+    },
+    {
+      "id": "rya",
+      "name": "Ryazansky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.7986,
+        "lat": 54.6215
+      },
+      "center": [
+        39.7986,
+        54.6215
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.634,
+        53.29,
+        42.724,
+        55.385
+      ],
+      "place": 5545,
+      "country": "RU"
+    },
+    {
+      "id": "bey",
+      "name": "Belokalitvinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.8067,
+        "lat": 48.1793
+      },
+      "center": [
+        40.8067,
+        48.1793
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.633,
+        47.425,
+        44.452,
+        50.241
+      ],
+      "place": 5546,
+      "country": "RU"
+    },
+    {
+      "id": "kus",
+      "name": "Kursk",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.1891,
+        "lat": 51.7405
+      },
+      "center": [
+        36.1891,
+        51.7405
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.051,
+        50.883,
+        38.549,
+        52.464
+      ],
+      "place": 5547,
+      "country": "RU"
+    },
+    {
+      "id": "tav",
+      "name": "Tambov",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.455,
+        "lat": 52.732
+      },
+      "center": [
+        41.455,
+        52.732
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.885,
+        51.57,
+        43.279,
+        53.841
+      ],
+      "place": 5548,
+      "country": "RU"
+    },
+    {
+      "id": "ish",
+      "name": "Ishimbaysky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.0483,
+        "lat": 53.4468
+      },
+      "center": [
+        56.0483,
+        53.4468
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        54.521,
+        51.551,
+        58.232,
+        54.811
+      ],
+      "place": 5549,
+      "country": "RU"
+    },
+    {
+      "id": "iva",
+      "name": "Ivanovo",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.9859,
+        "lat": 57.0094
+      },
+      "center": [
+        40.9859,
+        57.0094
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.34,
+        56.334,
+        43.358,
+        57.759
+      ],
+      "place": 5550,
+      "country": "RU"
+    },
+    {
+      "id": "kiv",
+      "name": "Kirovo-Chepetsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.0458,
+        "lat": 58.5433
+      },
+      "center": [
+        50.0458,
+        58.5433
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.228,
+        56.042,
+        51.576,
+        61.086
+      ],
+      "place": 5551,
+      "country": "RU"
+    },
+    {
+      "id": "chv",
+      "name": "Cherepovets",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.8424,
+        "lat": 59.1429
+      },
+      "center": [
+        37.8424,
+        59.1429
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.683,
+        58.458,
+        42.209,
+        61.633
+      ],
+      "place": 5552,
+      "country": "RU"
+    },
+    {
+      "id": "top",
+      "name": "Tomsk municipal region",
+      "kind": "zone",
+      "origin": {
+        "lon": 84.8844,
+        "lat": 56.5942
+      },
+      "center": [
+        84.8844,
+        56.5942
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        80.757,
+        55.587,
+        89.413,
+        59.333
+      ],
+      "place": 5553,
+      "country": "RU"
+    },
+    {
+      "id": "ask",
+      "name": "Astrakhan",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.0761,
+        "lat": 46.3542
+      },
+      "center": [
+        48.0761,
+        46.3542
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        45.873,
+        45.386,
+        49.387,
+        47.932
+      ],
+      "place": 5554,
+      "country": "RU"
+    },
+    {
+      "id": "irk",
+      "name": "Irkutsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.369,
+        "lat": 52.2547
+      },
+      "center": [
+        104.369,
+        52.2547
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        100.594,
+        50.106,
+        107.105,
+        53.069
+      ],
+      "place": 5555,
+      "country": "RU"
+    },
+    {
+      "id": "kvk",
+      "name": "Kavkazsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.5626,
+        "lat": 45.4362
+      },
+      "center": [
+        40.5626,
+        45.4362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.089,
+        45.039,
+        41.299,
+        46.611
+      ],
+      "place": 5556,
+      "country": "RU"
+    },
+    {
+      "id": "stb",
+      "name": "Starooskolsky Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.898,
+        "lat": 51.3056
+      },
+      "center": [
+        37.898,
+        51.3056
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.531,
+        49.778,
+        39.31,
+        51.449
+      ],
+      "place": 5557,
+      "country": "RU"
+    },
+    {
+      "id": "naz",
+      "name": "Naberezhnye Chelny",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.4112,
+        "lat": 55.7586
+      },
+      "center": [
+        52.4112,
+        55.7586
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.4,
+        54.984,
+        53.613,
+        56.562
+      ],
+      "place": 5558,
+      "country": "RU"
+    },
+    {
+      "id": "lii",
+      "name": "Liskinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.5001,
+        "lat": 50.978
+      },
+      "center": [
+        39.5001,
+        50.978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.108,
+        49.539,
+        41.569,
+        51.743
+      ],
+      "place": 5559,
+      "country": "RU"
+    },
+    {
+      "id": "dze",
+      "name": "Dzerzhinsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.4072,
+        "lat": 56.2309
+      },
+      "center": [
+        43.4072,
+        56.2309
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.743,
+        54.94,
+        44.846,
+        56.898
+      ],
+      "place": 5560,
+      "country": "RU"
+    },
+    {
+      "id": "ore",
+      "name": "Orenburgsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.1403,
+        "lat": 51.7211
+      },
+      "center": [
+        55.1403,
+        51.7211
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.007,
+        50.509,
+        57.028,
+        52.694
+      ],
+      "place": 5561,
+      "country": "RU"
+    },
+    {
+      "id": "tli",
+      "name": "Talitsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 61.9242,
+        "lat": 56.4225
+      },
+      "center": [
+        61.9242,
+        56.4225
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.871,
+        56.112,
+        66.218,
+        59.4
+      ],
+      "place": 5562,
+      "country": "RU"
+    },
+    {
+      "id": "lix",
+      "name": "Lipetsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.5145,
+        "lat": 52.5857
+      },
+      "center": [
+        39.5145,
+        52.5857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.305,
+        51.235,
+        41.223,
+        53.605
+      ],
+      "place": 5563,
+      "country": "RU"
+    },
+    {
+      "id": "toy",
+      "name": "Tolyatti",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.3393,
+        "lat": 53.5352
+      },
+      "center": [
+        49.3393,
+        53.5352
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        48.309,
+        53.09,
+        50.085,
+        53.908
+      ],
+      "place": 5564,
+      "country": "RU"
+    },
+    {
+      "id": "vok",
+      "name": "Voskresensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.699,
+        "lat": 55.3083
+      },
+      "center": [
+        38.699,
+        55.3083
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.32,
+        54.975,
+        40.237,
+        56.008
+      ],
+      "place": 5565,
+      "country": "RU"
+    },
+    {
+      "id": "zel",
+      "name": "Zelenodolsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.4922,
+        "lat": 55.8489
+      },
+      "center": [
+        48.4922,
+        55.8489
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.979,
+        54.609,
+        49.136,
+        56.09
+      ],
+      "place": 5590,
+      "country": "RU"
+    },
+    {
+      "id": "grl",
+      "name": "Gorno-Altaysk",
+      "kind": "zone",
+      "origin": {
+        "lon": 85.1507,
+        "lat": 52.5175
+      },
+      "center": [
+        85.1507,
+        52.5175
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        82.893,
+        49.448,
+        88.494,
+        53.82
+      ],
+      "place": 5591,
+      "country": "RU"
+    },
+    {
+      "id": "vog",
+      "name": "Volgodonsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.1977,
+        "lat": 47.5121
+      },
+      "center": [
+        42.1977,
+        47.5121
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.22,
+        45.933,
+        44.352,
+        48.069
+      ],
+      "place": 5592,
+      "country": "RU"
+    },
+    {
+      "id": "rjo",
+      "name": "Rajon Nischnekamsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.8035,
+        "lat": 55.6484
+      },
+      "center": [
+        51.8035,
+        55.6484
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.538,
+        54.306,
+        52.104,
+        56.096
+      ],
+      "place": 5593,
+      "country": "RU"
+    },
+    {
+      "id": "kls",
+      "name": "Klinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.7229,
+        "lat": 56.3317
+      },
+      "center": [
+        36.7229,
+        56.3317
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.418,
+        54.486,
+        37.136,
+        56.616
+      ],
+      "place": 5594,
+      "country": "RU"
+    },
+    {
+      "id": "bly",
+      "name": "Balakovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.8329,
+        "lat": 52.0216
+      },
+      "center": [
+        47.8329,
+        52.0216
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        46.691,
+        49.783,
+        50.863,
+        52.838
+      ],
+      "place": 5595,
+      "country": "RU"
+    },
+    {
+      "id": "bok",
+      "name": "Borisoglebsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.2378,
+        "lat": 50.0767
+      },
+      "center": [
+        43.2378,
+        50.0767
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.978,
+        49.086,
+        44.659,
+        51.824
+      ],
+      "place": 5596,
+      "country": "RU"
+    },
+    {
+      "id": "psk",
+      "name": "Pskov",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.3379,
+        "lat": 57.8143
+      },
+      "center": [
+        28.3379,
+        57.8143
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.283,
+        55.57,
+        31.552,
+        59.04
+      ],
+      "place": 5597,
+      "country": "RU"
+    },
+    {
+      "id": "yed",
+      "name": "Yeysky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.2728,
+        "lat": 46.6707
+      },
+      "center": [
+        38.2728,
+        46.6707
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.708,
+        45.649,
+        40.173,
+        46.899
+      ],
+      "place": 5599,
+      "country": "RU"
+    },
+    {
+      "id": "ors",
+      "name": "Orsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 58.4809,
+        "lat": 51.2284
+      },
+      "center": [
+        58.4809,
+        51.2284
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        56.688,
+        50.477,
+        61.719,
+        52.506
+      ],
+      "place": 5600,
+      "country": "RU"
+    },
+    {
+      "id": "naf",
+      "name": "Naro-Fominsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.7239,
+        "lat": 55.3782
+      },
+      "center": [
+        36.7239,
+        55.3782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.831,
+        54.491,
+        37.225,
+        55.609
+      ],
+      "place": 5601,
+      "country": "RU"
+    },
+    {
+      "id": "bez",
+      "name": "Berezniki",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.7924,
+        "lat": 59.4026
+      },
+      "center": [
+        56.7924,
+        59.4026
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.185,
+        58.259,
+        59.519,
+        61.682
+      ],
+      "place": 5602,
+      "country": "RU"
+    },
+    {
+      "id": "nih",
+      "name": "Nizhnevartovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 76.5986,
+        "lat": 60.9443
+      },
+      "center": [
+        76.5986,
+        60.9443
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        74.471,
+        59.242,
+        86.014,
+        63.176
+      ],
+      "place": 5603,
+      "country": "RU"
+    },
+    {
+      "id": "noy",
+      "name": "Novomoskovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.2973,
+        "lat": 54.0079
+      },
+      "center": [
+        38.2973,
+        54.0079
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.355,
+        52.928,
+        38.983,
+        54.309
+      ],
+      "place": 5604,
+      "country": "RU"
+    },
+    {
+      "id": "bgs",
+      "name": "Buguruslan",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.2426,
+        "lat": 52.7711
+      },
+      "center": [
+        52.2426,
+        52.7711
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        50.738,
+        51.43,
+        55.452,
+        54.385
+      ],
+      "place": 5605,
+      "country": "RU"
+    },
+    {
+      "id": "cbb",
+      "name": "Chita",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.513,
+        "lat": 52.0313
+      },
+      "center": [
+        113.513,
+        52.0313
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        108.031,
+        49.692,
+        114.687,
+        53.081
+      ],
+      "place": 5606,
+      "country": "RU"
+    },
+    {
+      "id": "tys",
+      "name": "Tayshetsky Rayon",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.6213,
+        "lat": 56.1605
+      },
+      "center": [
+        101.6213,
+        56.1605
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        96.56,
+        54.622,
+        104.912,
+        59.337
+      ],
+      "place": 5607,
+      "country": "RU"
+    },
+    {
+      "id": "mrs",
+      "name": "Murmansk",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.065,
+        "lat": 68.9662
+      },
+      "center": [
+        33.065,
+        68.9662
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.365,
+        67.655,
+        36.484,
+        69.972
+      ],
+      "place": 5608,
+      "country": "RU"
+    },
+    {
+      "id": "siy",
+      "name": "Shipunovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 81.2105,
+        "lat": 51.4987
+      },
+      "center": [
+        81.2105,
+        51.4987
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        79.128,
+        50.712,
+        84.173,
+        52.819
+      ],
+      "place": 5609,
+      "country": "RU"
+    },
+    {
+      "id": "syz",
+      "name": "Syzran",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.4761,
+        "lat": 53.1623
+      },
+      "center": [
+        48.4761,
+        53.1623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        47.9,
+        51.754,
+        51.492,
+        53.511
+      ],
+      "place": 5610,
+      "country": "RU"
+    },
+    {
+      "id": "ngi",
+      "name": "Noginsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.4434,
+        "lat": 55.8589
+      },
+      "center": [
+        38.4434,
+        55.8589
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.019,
+        55.655,
+        38.712,
+        56.115
+      ],
+      "place": 5611,
+      "country": "RU"
+    },
+    {
+      "id": "bsk",
+      "name": "Balashovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.1529,
+        "lat": 51.547
+      },
+      "center": [
+        43.1529,
+        51.547
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        42.475,
+        50.98,
+        47.019,
+        52.747
+      ],
+      "place": 5612,
+      "country": "RU"
+    },
+    {
+      "id": "yee",
+      "name": "Yelets",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.4872,
+        "lat": 52.6247
+      },
+      "center": [
+        38.4872,
+        52.6247
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.692,
+        51.869,
+        39.87,
+        53.598
+      ],
+      "place": 5613,
+      "country": "RU"
+    },
+    {
+      "id": "bch",
+      "name": "Belorechensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.8764,
+        "lat": 44.7537
+      },
+      "center": [
+        39.8764,
+        44.7537
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.444,
+        43.741,
+        40.804,
+        45.141
+      ],
+      "place": 5614,
+      "country": "RU"
+    },
+    {
+      "id": "knh",
+      "name": "Kantalahti District",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.4107,
+        "lat": 67.1533
+      },
+      "center": [
+        32.4107,
+        67.1533
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.986,
+        66.327,
+        34.855,
+        68.341
+      ],
+      "place": 5640,
+      "country": "RU"
+    },
+    {
+      "id": "vot",
+      "name": "Vorkuta Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 64.0636,
+        "lat": 67.5095
+      },
+      "center": [
+        64.0636,
+        67.5095
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        61.573,
+        64.3,
+        70.776,
+        69.279
+      ],
+      "place": 5641,
+      "country": "RU"
+    },
+    {
+      "id": "jac",
+      "name": "Jaama District",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.6099,
+        "lat": 59.3818
+      },
+      "center": [
+        28.6099,
+        59.3818
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        26.848,
+        58.805,
+        29.231,
+        60.124
+      ],
+      "place": 5642,
+      "country": "RU"
+    },
+    {
+      "id": "tvr",
+      "name": "Tavrichesky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 73.6455,
+        "lat": 54.5818
+      },
+      "center": [
+        73.6455,
+        54.5818
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        71.955,
+        53.416,
+        75.883,
+        55.059
+      ],
+      "place": 5643,
+      "country": "RU"
+    },
+    {
+      "id": "iss",
+      "name": "Isilkulsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.2702,
+        "lat": 54.9196
+      },
+      "center": [
+        71.2702,
+        54.9196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        70.408,
+        54.076,
+        73.309,
+        56.71
+      ],
+      "place": 5644,
+      "country": "RU"
+    },
+    {
+      "id": "vey",
+      "name": "Velikoustyugsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.3263,
+        "lat": 60.7541
+      },
+      "center": [
+        46.3263,
+        60.7541
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.305,
+        59.103,
+        47.191,
+        61.214
+      ],
+      "place": 5646,
+      "country": "RU"
+    },
+    {
+      "id": "nik",
+      "name": "Nizhneudinsky Rayon",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.0247,
+        "lat": 54.8997
+      },
+      "center": [
+        99.0247,
+        54.8997
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        95.614,
+        52.945,
+        102.626,
+        55.984
+      ],
+      "place": 5647,
+      "country": "RU"
+    },
+    {
+      "id": "sld",
+      "name": "Shilkinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.0227,
+        "lat": 51.847
+      },
+      "center": [
+        116.0227,
+        51.847
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        114.967,
+        50.939,
+        119.888,
+        53.74
+      ],
+      "place": 5648,
+      "country": "RU"
+    },
+    {
+      "id": "ktc",
+      "name": "Kotlassky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.6183,
+        "lat": 61.2516
+      },
+      "center": [
+        46.6183,
+        61.2516
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.3,
+        60.819,
+        49.678,
+        62.87
+      ],
+      "place": 5649,
+      "country": "RU"
+    },
+    {
+      "id": "ukh",
+      "name": "Ukhta Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.7222,
+        "lat": 63.5435
+      },
+      "center": [
+        53.7222,
+        63.5435
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.829,
+        62.566,
+        56.837,
+        64.486
+      ],
+      "place": 5650,
+      "country": "RU"
+    },
+    {
+      "id": "kkm",
+      "name": "Kukmorsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.8947,
+        "lat": 56.1705
+      },
+      "center": [
+        50.8947,
+        56.1705
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.883,
+        55.625,
+        51.679,
+        56.697
+      ],
+      "place": 5651,
+      "country": "RU"
+    },
+    {
+      "id": "okt",
+      "name": "Oktyabrsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.4308,
+        "lat": 62.1372
+      },
+      "center": [
+        65.4308,
+        62.1372
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        64.525,
+        61.256,
+        68.077,
+        63.496
+      ],
+      "place": 5652,
+      "country": "RU"
+    },
+    {
+      "id": "akh",
+      "name": "Akhtubinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.1636,
+        "lat": 48.2924
+      },
+      "center": [
+        46.1636,
+        48.2924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        44.933,
+        47.646,
+        47.239,
+        48.882
+      ],
+      "place": 5653,
+      "country": "RU"
+    },
+    {
+      "id": "kre",
+      "name": "Krasnokamensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.0438,
+        "lat": 50.0958
+      },
+      "center": [
+        118.0438,
+        50.0958
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        116.196,
+        49.49,
+        120.808,
+        52.663
+      ],
+      "place": 5655,
+      "country": "RU"
+    },
+    {
+      "id": "sez",
+      "name": "Segezhsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.2874,
+        "lat": 63.7402
+      },
+      "center": [
+        34.2874,
+        63.7402
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.558,
+        61.196,
+        37.988,
+        65.14
+      ],
+      "place": 5657,
+      "country": "RU"
+    },
+    {
+      "id": "kny",
+      "name": "Khanty-Mansiysk Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 69.037,
+        "lat": 61.0078
+      },
+      "center": [
+        69.037,
+        61.0078
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.118,
+        59.821,
+        71.074,
+        63.006
+      ],
+      "place": 5658,
+      "country": "RU"
+    },
+    {
+      "id": "xaa",
+      "name": "Нижнеилимский район",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.9299,
+        "lat": 57.1414
+      },
+      "center": [
+        103.9299,
+        57.1414
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        102.506,
+        55.682,
+        107.345,
+        58.23
+      ],
+      "place": 5660,
+      "country": "RU"
+    },
+    {
+      "id": "xac",
+      "name": "городской округ Новый Урен",
+      "kind": "zone",
+      "origin": {
+        "lon": 76.6821,
+        "lat": 66.118
+      },
+      "center": [
+        76.6821,
+        66.118
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        76.325,
+        65.862,
+        78.382,
+        66.217
+      ],
+      "place": 5661,
+      "country": "RU"
+    },
+    {
+      "id": "mak",
+      "name": "Makhachkala",
+      "origin": {
+        "lon": 47.6375,
+        "lat": 42.8873
+      },
+      "center": [
+        47.6375,
+        42.8873
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.363,
+        42.451,
+        47.779,
+        43.944
+      ],
+      "place": 5663,
+      "country": "RU"
+    },
+    {
+      "id": "pyt",
+      "name": "Pyatigorsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.0633,
+        "lat": 44.0375
+      },
+      "center": [
+        43.0633,
+        44.0375
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.089,
+        43.78,
+        44.258,
+        45.381
+      ],
+      "place": 5664,
+      "country": "RU"
+    },
+    {
+      "id": "stv",
+      "name": "Stavropol",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.9163,
+        "lat": 45.0024
+      },
+      "center": [
+        41.9163,
+        45.0024
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.82,
+        44.312,
+        44.29,
+        46.255
+      ],
+      "place": 5665,
+      "country": "RU"
+    },
+    {
+      "id": "grz",
+      "name": "Groznensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.7616,
+        "lat": 43.2515
+      },
+      "center": [
+        45.7616,
+        43.2515
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.807,
+        42.798,
+        46.04,
+        44.029
+      ],
+      "place": 5666,
+      "country": "RU"
+    },
+    {
+      "id": "ceg",
+      "name": "Chegemsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.5802,
+        "lat": 43.5618
+      },
+      "center": [
+        43.5802,
+        43.5618
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.372,
+        42.871,
+        44.501,
+        44.039
+      ],
+      "place": 5667,
+      "country": "RU"
+    },
+    {
+      "id": "gus",
+      "name": "Gudermessky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.0966,
+        "lat": 43.3427
+      },
+      "center": [
+        46.0966,
+        43.3427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.06,
+        42.457,
+        46.688,
+        44.029
+      ],
+      "place": 5668,
+      "country": "RU"
+    },
+    {
+      "id": "vld",
+      "name": "Vladikavkaz City District",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.6769,
+        "lat": 43.0329
+      },
+      "center": [
+        44.6769,
+        43.0329
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.373,
+        42.529,
+        44.986,
+        43.854
+      ],
+      "place": 5669,
+      "country": "RU"
+    },
+    {
+      "id": "krb",
+      "name": "Karabudakhkentsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.6606,
+        "lat": 42.86
+      },
+      "center": [
+        47.6606,
+        42.86
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.948,
+        41.658,
+        48.136,
+        44.716
+      ],
+      "place": 5671,
+      "country": "RU"
+    },
+    {
+      "id": "cek",
+      "name": "Cherkessk",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.0423,
+        "lat": 44.1933
+      },
+      "center": [
+        42.0423,
+        44.1933
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.65,
+        43.168,
+        42.707,
+        44.516
+      ],
+      "place": 5673,
+      "country": "RU"
+    },
+    {
+      "id": "boy",
+      "name": "Botlikhsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.6001,
+        "lat": 43.2515
+      },
+      "center": [
+        46.6001,
+        43.2515
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.581,
+        41.784,
+        47.167,
+        43.651
+      ],
+      "place": 5674,
+      "country": "RU"
+    },
+    {
+      "id": "nzr",
+      "name": "Nazranovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.8211,
+        "lat": 43.2151
+      },
+      "center": [
+        44.8211,
+        43.2151
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.453,
+        42.596,
+        45.284,
+        43.633
+      ],
+      "place": 5675,
+      "country": "RU"
+    },
+    {
+      "id": "buv",
+      "name": "Budyonnovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.1619,
+        "lat": 44.7813
+      },
+      "center": [
+        44.1619,
+        44.7813
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.575,
+        43.64,
+        45.742,
+        45.619
+      ],
+      "place": 5676,
+      "country": "RU"
+    },
+    {
+      "id": "prz",
+      "name": "Partizansk",
+      "kind": "zone",
+      "origin": {
+        "lon": 131.8858,
+        "lat": 43.1148
+      },
+      "center": [
+        131.8858,
+        43.1148
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        130.369,
+        42.275,
+        136.218,
+        45.19
+      ],
+      "place": 5677,
+      "country": "RU"
+    },
+    {
+      "id": "khv",
+      "name": "Khabarovsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 135.0724,
+        "lat": 48.4717
+      },
+      "center": [
+        135.0724,
+        48.4717
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        132.725,
+        46.62,
+        138.113,
+        50.6
+      ],
+      "place": 5678,
+      "country": "RU"
+    },
+    {
+      "id": "sps",
+      "name": "Spassk-Dalny",
+      "kind": "zone",
+      "origin": {
+        "lon": 131.9459,
+        "lat": 43.7995
+      },
+      "center": [
+        131.9459,
+        43.7995
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        130.932,
+        43.378,
+        135.24,
+        45.359
+      ],
+      "place": 5679,
+      "country": "RU"
+    },
+    {
+      "id": "sek",
+      "name": "Seryshevsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.5216,
+        "lat": 50.2679
+      },
+      "center": [
+        127.5216,
+        50.2679
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.119,
+        48.835,
+        131.556,
+        51.463
+      ],
+      "place": 5680,
+      "country": "RU"
+    },
+    {
+      "id": "kms",
+      "name": "Komsomolsk-on-Amur",
+      "kind": "zone",
+      "origin": {
+        "lon": 137.0124,
+        "lat": 50.5457
+      },
+      "center": [
+        137.0124,
+        50.5457
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        134.174,
+        48.18,
+        139.462,
+        52.383
+      ],
+      "place": 5681,
+      "country": "RU"
+    },
+    {
+      "id": "yak",
+      "name": "Yakutsk Urban District",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.7393,
+        "lat": 62.03
+      },
+      "center": [
+        129.7393,
+        62.03
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.467,
+        60.527,
+        134.691,
+        63.75
+      ],
+      "place": 5682,
+      "country": "RU"
+    },
+    {
+      "id": "khd",
+      "name": "Kholmsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 142.7389,
+        "lat": 46.9506
+      },
+      "center": [
+        142.7389,
+        46.9506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 11,
+      "market": -1,
+      "box": [
+        141.184,
+        45.874,
+        143.644,
+        49.842
+      ],
+      "place": 5683,
+      "country": "RU"
+    },
+    {
+      "id": "pep",
+      "name": "Petropavlovsk-Kamchatsky",
+      "kind": "zone",
+      "origin": {
+        "lon": 158.6403,
+        "lat": 53.0546
+      },
+      "center": [
+        158.6403,
+        53.0546
+      ],
+      "zoom": 10.5,
+      "utcOffset": 12,
+      "market": -1,
+      "box": [
+        155.979,
+        50.846,
+        162.188,
+        55.185
+      ],
+      "place": 5684,
+      "country": "RU"
+    },
+    {
+      "id": "bbz",
+      "name": "Birobidzhan",
+      "kind": "zone",
+      "origin": {
+        "lon": 132.9001,
+        "lat": 48.8025
+      },
+      "center": [
+        132.9001,
+        48.8025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        130.493,
+        47.638,
+        135.02,
+        49.513
+      ],
+      "place": 5685,
+      "country": "RU"
+    },
+    {
+      "id": "skv",
+      "name": "Skovorodinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.1296,
+        "lat": 51.3731
+      },
+      "center": [
+        128.1296,
+        51.3731
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        121.597,
+        50.875,
+        131.526,
+        54.567
+      ],
+      "place": 5686,
+      "country": "RU"
+    },
+    {
+      "id": "poy",
+      "name": "Pozharsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 133.3984,
+        "lat": 45.4639
+      },
+      "center": [
+        133.3984,
+        45.4639
+      ],
+      "zoom": 10.5,
+      "utcOffset": 10,
+      "market": -1,
+      "box": [
+        133.059,
+        44.633,
+        137.905,
+        47.327
+      ],
+      "place": 5687,
+      "country": "RU"
+    },
+    {
+      "id": "kgr",
+      "name": "Kaliningrad",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.5111,
+        "lat": 54.7009
+      },
+      "center": [
+        20.5111,
+        54.7009
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.607,
+        54.3,
+        22.918,
+        55.313
+      ],
+      "place": 5688,
+      "country": "RU"
+    },
+    {
+      "id": "yek",
+      "name": "Yekaterinburg",
+      "origin": {
+        "lon": 60.5856,
+        "lat": 56.8269
+      },
+      "center": [
+        60.5856,
+        56.8269
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        59.579,
+        56.289,
+        61.778,
+        57.731
+      ],
+      "place": 5689,
+      "country": "RU"
+    },
+    {
+      "id": "niz",
+      "name": "Nizhny Novgorod",
+      "origin": {
+        "lon": 44.0067,
+        "lat": 56.3216
+      },
+      "center": [
+        44.0067,
+        56.3216
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.237,
+        56.038,
+        45.306,
+        57.438
+      ],
+      "place": 5690,
+      "country": "RU"
+    },
+    {
+      "id": "sam",
+      "name": "Samara",
+      "origin": {
+        "lon": 50.119,
+        "lat": 53.1917
+      },
+      "center": [
+        50.119,
+        53.1917
+      ],
+      "zoom": 11.2,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        49.554,
+        52.168,
+        51.439,
+        53.848
+      ],
+      "place": 5691,
+      "country": "RU"
+    },
+    {
+      "id": "che",
+      "name": "Chelyabinsk",
+      "origin": {
+        "lon": 61.3044,
+        "lat": 55.1786
+      },
+      "center": [
+        61.3044,
+        55.1786
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.164,
+        54.833,
+        62.652,
+        56.259
+      ],
+      "place": 5692,
+      "country": "RU"
+    },
+    {
+      "id": "kaz",
+      "name": "Kazan",
+      "origin": {
+        "lon": 49.1171,
+        "lat": 55.7887
+      },
+      "center": [
+        49.1171,
+        55.7887
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.377,
+        55.182,
+        50.333,
+        56.693
+      ],
+      "place": 5693,
+      "country": "RU"
+    },
+    {
+      "id": "sar",
+      "name": "Saratov",
+      "origin": {
+        "lon": 46.0268,
+        "lat": 51.5277
+      },
+      "center": [
+        46.0268,
+        51.5277
+      ],
+      "zoom": 11.2,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        44.499,
+        50.504,
+        47.848,
+        52.149
+      ],
+      "place": 5694,
+      "country": "RU"
+    },
+    {
+      "id": "ufa",
+      "name": "Ufa",
+      "origin": {
+        "lon": 55.9482,
+        "lat": 54.7307
+      },
+      "center": [
+        55.9482,
+        54.7307
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        55.288,
+        54.428,
+        57.292,
+        55.569
+      ],
+      "place": 5695,
+      "country": "RU"
+    },
+    {
+      "id": "spl",
+      "name": "Sarapul",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.2135,
+        "lat": 56.837
+      },
+      "center": [
+        53.2135,
+        56.837
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        51.091,
+        55.832,
+        56.185,
+        58.438
+      ],
+      "place": 5696,
+      "country": "RU"
+    },
+    {
+      "id": "buy",
+      "name": "Buinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.5867,
+        "lat": 54.3737
+      },
+      "center": [
+        48.5867,
+        54.3737
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.765,
+        52.514,
+        50.275,
+        55.532
+      ],
+      "place": 5697,
+      "country": "RU"
+    },
+    {
+      "id": "prm",
+      "name": "Permsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.1051,
+        "lat": 57.9781
+      },
+      "center": [
+        56.1051,
+        57.9781
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        54.518,
+        56.087,
+        58.155,
+        59.104
+      ],
+      "place": 5698,
+      "country": "RU"
+    },
+    {
+      "id": "veh",
+      "name": "Verkhnesaldinsky Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.5638,
+        "lat": 58.0499
+      },
+      "center": [
+        60.5638,
+        58.0499
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        56.603,
+        56.035,
+        63.25,
+        59.267
+      ],
+      "place": 5699,
+      "country": "RU"
+    },
+    {
+      "id": "pez",
+      "name": "Penza",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.0126,
+        "lat": 53.2015
+      },
+      "center": [
+        45.0126,
+        53.2015
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.051,
+        52.273,
+        47.012,
+        54.049
+      ],
+      "place": 5700,
+      "country": "RU"
+    },
+    {
+      "id": "kov",
+      "name": "Kovrov",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.3572,
+        "lat": 56.1101
+      },
+      "center": [
+        40.3572,
+        56.1101
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.235,
+        55.083,
+        43.009,
+        56.831
+      ],
+      "place": 5701,
+      "country": "RU"
+    },
+    {
+      "id": "tve",
+      "name": "Tver",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.9127,
+        "lat": 56.8573
+      },
+      "center": [
+        35.9127,
+        56.8573
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        30.695,
+        55.613,
+        38.361,
+        58.882
+      ],
+      "place": 5702,
+      "country": "RU"
+    },
+    {
+      "id": "yar",
+      "name": "Yaroslavl",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.8786,
+        "lat": 57.6303
+      },
+      "center": [
+        39.8786,
+        57.6303
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.294,
+        56.516,
+        41.228,
+        58.975
+      ],
+      "place": 5703,
+      "country": "RU"
+    },
+    {
+      "id": "nos",
+      "name": "Novocheboksarsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.4491,
+        "lat": 56.1101
+      },
+      "center": [
+        47.4491,
+        56.1101
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.878,
+        55.496,
+        48.099,
+        56.347
+      ],
+      "place": 5704,
+      "country": "RU"
+    },
+    {
+      "id": "alk",
+      "name": "Aleksinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.0613,
+        "lat": 54.5025
+      },
+      "center": [
+        37.0613,
+        54.5025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.867,
+        53.237,
+        38.561,
+        54.87
+      ],
+      "place": 5705,
+      "country": "RU"
+    },
+    {
+      "id": "srb",
+      "name": "Saransk Urban District",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.1818,
+        "lat": 54.1857
+      },
+      "center": [
+        45.1818,
+        54.1857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.432,
+        53.624,
+        46.761,
+        55.945
+      ],
+      "place": 5706,
+      "country": "RU"
+    },
+    {
+      "id": "kgn",
+      "name": "Kurgan",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.3301,
+        "lat": 55.4382
+      },
+      "center": [
+        65.3301,
+        55.4382
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        61.934,
+        54.169,
+        68.754,
+        56.861
+      ],
+      "place": 5707,
+      "country": "RU"
+    },
+    {
+      "id": "sml",
+      "name": "Smolensk",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.0356,
+        "lat": 54.7704
+      },
+      "center": [
+        32.0356,
+        54.7704
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        30.72,
+        53.39,
+        33.973,
+        55.805
+      ],
+      "place": 5708,
+      "country": "RU"
+    },
+    {
+      "id": "blk",
+      "name": "Belgorodsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.6966,
+        "lat": 50.5361
+      },
+      "center": [
+        36.6966,
+        50.5361
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.297,
+        50.26,
+        37.231,
+        51.222
+      ],
+      "place": 5709,
+      "country": "RU"
+    },
+    {
+      "id": "ses",
+      "name": "Sergiyevo-Posadsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.1459,
+        "lat": 56.3216
+      },
+      "center": [
+        38.1459,
+        56.3216
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.676,
+        55.863,
+        38.479,
+        56.977
+      ],
+      "place": 5710,
+      "country": "RU"
+    },
+    {
+      "id": "dyu",
+      "name": "Dyurtyulinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.264,
+        "lat": 56.09
+      },
+      "center": [
+        54.264,
+        56.09
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.125,
+        54.645,
+        57.738,
+        56.553
+      ],
+      "place": 5711,
+      "country": "RU"
+    },
+    {
+      "id": "ory",
+      "name": "Oryol",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.0763,
+        "lat": 52.9665
+      },
+      "center": [
+        36.0763,
+        52.9665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.761,
+        51.916,
+        38.098,
+        53.671
+      ],
+      "place": 5712,
+      "country": "RU"
+    },
+    {
+      "id": "lyd",
+      "name": "Lyudinovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.2677,
+        "lat": 54.5124
+      },
+      "center": [
+        36.2677,
+        54.5124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.41,
+        53.258,
+        37.307,
+        54.885
+      ],
+      "place": 5713,
+      "country": "RU"
+    },
+    {
+      "id": "yos",
+      "name": "Yoshkar-Ola",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.8947,
+        "lat": 56.6346
+      },
+      "center": [
+        47.8947,
+        56.6346
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.59,
+        55.811,
+        50.236,
+        57.362
+      ],
+      "place": 5714,
+      "country": "RU"
+    },
+    {
+      "id": "sov",
+      "name": "Sarov",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.3712,
+        "lat": 54.9395
+      },
+      "center": [
+        43.3712,
+        54.9395
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.132,
+        53.715,
+        46.217,
+        56.498
+      ],
+      "place": 5715,
+      "country": "RU"
+    },
+    {
+      "id": "tuk",
+      "name": "Tuymazinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.7013,
+        "lat": 54.6016
+      },
+      "center": [
+        53.7013,
+        54.6016
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.35,
+        53.323,
+        55.848,
+        55.012
+      ],
+      "place": 5716,
+      "country": "RU"
+    },
+    {
+      "id": "alv",
+      "name": "Almetyevsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.302,
+        "lat": 54.8997
+      },
+      "center": [
+        52.302,
+        54.8997
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.969,
+        53.956,
+        54.298,
+        55.948
+      ],
+      "place": 5717,
+      "country": "RU"
+    },
+    {
+      "id": "kmu",
+      "name": "Kolomna urban okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.8286,
+        "lat": 55.059
+      },
+      "center": [
+        38.8286,
+        55.059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.641,
+        54.237,
+        39.642,
+        55.299
+      ],
+      "place": 5718,
+      "country": "RU"
+    },
+    {
+      "id": "sug",
+      "name": "Surgut",
+      "kind": "zone",
+      "origin": {
+        "lon": 73.4243,
+        "lat": 61.2516
+      },
+      "center": [
+        73.4243,
+        61.2516
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.699,
+        58.645,
+        76.713,
+        63.445
+      ],
+      "place": 5719,
+      "country": "RU"
+    },
+    {
+      "id": "kst",
+      "name": "Kostroma",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.9482,
+        "lat": 57.7632
+      },
+      "center": [
+        40.9482,
+        57.7632
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.356,
+        57.253,
+        42.825,
+        59.039
+      ],
+      "place": 5720,
+      "country": "RU"
+    },
+    {
+      "id": "sec",
+      "name": "Sergiyevsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.3463,
+        "lat": 53.378
+      },
+      "center": [
+        51.3463,
+        53.378
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        49.897,
+        52.287,
+        52.599,
+        54.696
+      ],
+      "place": 5721,
+      "country": "RU"
+    },
+    {
+      "id": "skh",
+      "name": "Shakhunya Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.6137,
+        "lat": 57.6712
+      },
+      "center": [
+        46.6137,
+        57.6712
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.479,
+        56.429,
+        47.807,
+        59.642
+      ],
+      "place": 5722,
+      "country": "RU"
+    },
+    {
+      "id": "nvo",
+      "name": "Novolyalinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.5234,
+        "lat": 59.1844
+      },
+      "center": [
+        60.5234,
+        59.1844
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        58.331,
+        58.355,
+        64.087,
+        61.965
+      ],
+      "place": 5723,
+      "country": "RU"
+    },
+    {
+      "id": "glz",
+      "name": "Glazov",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.6444,
+        "lat": 58.1525
+      },
+      "center": [
+        52.6444,
+        58.1525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        49.764,
+        57.392,
+        53.965,
+        60.825
+      ],
+      "place": 5724,
+      "country": "RU"
+    },
+    {
+      "id": "isi",
+      "name": "Ishimsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 69.536,
+        "lat": 56.1403
+      },
+      "center": [
+        69.536,
+        56.1403
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.951,
+        55.127,
+        71.711,
+        58.689
+      ],
+      "place": 5725,
+      "country": "RU"
+    },
+    {
+      "id": "svt",
+      "name": "Sovetsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 63.5706,
+        "lat": 61.3684
+      },
+      "center": [
+        63.5706,
+        61.3684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.781,
+        58.561,
+        69.745,
+        62.307
+      ],
+      "place": 5726,
+      "country": "RU"
+    },
+    {
+      "id": "try",
+      "name": "Troitsky district",
+      "kind": "zone",
+      "origin": {
+        "lon": 61.7371,
+        "lat": 54.0474
+      },
+      "center": [
+        61.7371,
+        54.0474
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.456,
+        53.88,
+        63.383,
+        55.006
+      ],
+      "place": 5727,
+      "country": "RU"
+    },
+    {
+      "id": "ksn",
+      "name": "Krasnokamsk District",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.7463,
+        "lat": 58.0806
+      },
+      "center": [
+        55.7463,
+        58.0806
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.669,
+        57.189,
+        56.331,
+        58.851
+      ],
+      "place": 5728,
+      "country": "RU"
+    },
+    {
+      "id": "src",
+      "name": "Serpukhovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.459,
+        "lat": 54.9196
+      },
+      "center": [
+        37.459,
+        54.9196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.052,
+        54.695,
+        37.943,
+        55.087
+      ],
+      "place": 5729,
+      "country": "RU"
+    },
+    {
+      "id": "nyb",
+      "name": "Noyabrsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 75.4427,
+        "lat": 63.1951
+      },
+      "center": [
+        75.4427,
+        63.1951
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        75.105,
+        62.948,
+        77.117,
+        63.29
+      ],
+      "place": 5731,
+      "country": "RU"
+    },
+    {
+      "id": "vol",
+      "name": "Volgograd",
+      "origin": {
+        "lon": 44.7976,
+        "lat": 48.7741
+      },
+      "center": [
+        44.7976,
+        48.7741
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.177,
+        47.514,
+        46.081,
+        49.962
+      ],
+      "place": 5732,
+      "country": "RU"
+    },
+    {
+      "id": "ros",
+      "name": "Rostov-on-Don",
+      "origin": {
+        "lon": 39.7152,
+        "lat": 47.2217
+      },
+      "center": [
+        39.7152,
+        47.2217
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.658,
+        46.541,
+        40.763,
+        47.891
+      ],
+      "place": 5733,
+      "country": "RU"
+    },
+    {
+      "id": "anb",
+      "name": "Anapa Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.3235,
+        "lat": 44.8826
+      },
+      "center": [
+        37.3235,
+        44.8826
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.564,
+        44.314,
+        39.553,
+        46.022
+      ],
+      "place": 5734,
+      "country": "RU"
+    },
+    {
+      "id": "krc",
+      "name": "Krasnodar Municipality",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.9651,
+        "lat": 45.0208
+      },
+      "center": [
+        38.9651,
+        45.0208
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.359,
+        44.363,
+        40.044,
+        45.444
+      ],
+      "place": 5735,
+      "country": "RU"
+    },
+    {
+      "id": "kry",
+      "name": "Kurganinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.1239,
+        "lat": 45.0024
+      },
+      "center": [
+        41.1239,
+        45.0024
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.062,
+        43.514,
+        41.77,
+        45.282
+      ],
+      "place": 5736,
+      "country": "RU"
+    },
+    {
+      "id": "shs",
+      "name": "Shakhty City District",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.2159,
+        "lat": 47.7091
+      },
+      "center": [
+        40.2159,
+        47.7091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.803,
+        46.43,
+        42.164,
+        48.006
+      ],
+      "place": 5737,
+      "country": "RU"
+    },
+    {
+      "id": "res",
+      "name": "Resort Town of Sochi (municipal formation)",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.7351,
+        "lat": 43.5801
+      },
+      "center": [
+        39.7351,
+        43.5801
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.582,
+        43.366,
+        40.687,
+        44.689
+      ],
+      "place": 5738,
+      "country": "RU"
+    },
+    {
+      "id": "kmy",
+      "name": "Kamyshin",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.4264,
+        "lat": 50.1054
+      },
+      "center": [
+        45.4264,
+        50.1054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.995,
+        48.413,
+        47.46,
+        51.23
+      ],
+      "place": 5739,
+      "country": "RU"
+    },
+    {
+      "id": "tga",
+      "name": "Taganrog City District",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.8643,
+        "lat": 47.2217
+      },
+      "center": [
+        38.8643,
+        47.2217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.194,
+        47.096,
+        39.428,
+        47.895
+      ],
+      "place": 5740,
+      "country": "RU"
+    },
+    {
+      "id": "lgk",
+      "name": "Lagansky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.2687,
+        "lat": 46.3077
+      },
+      "center": [
+        44.2687,
+        46.3077
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.607,
+        44.741,
+        47.594,
+        48.009
+      ],
+      "place": 5741,
+      "country": "RU"
+    },
+    {
+      "id": "oms",
+      "name": "Omsk",
+      "origin": {
+        "lon": 73.397,
+        "lat": 54.9892
+      },
+      "center": [
+        73.397,
+        54.9892
+      ],
+      "zoom": 11.2,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        71.888,
+        54.497,
+        75.44,
+        56.148
+      ],
+      "place": 5742,
+      "country": "RU"
+    },
+    {
+      "id": "krs",
+      "name": "Krasnoyarsk",
+      "origin": {
+        "lon": 92.9131,
+        "lat": 56.0397
+      },
+      "center": [
+        92.9131,
+        56.0397
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        90.431,
+        54.595,
+        94.703,
+        56.946
+      ],
+      "place": 5743,
+      "country": "RU"
+    },
+    {
+      "id": "keo",
+      "name": "Kemerovo",
+      "kind": "zone",
+      "origin": {
+        "lon": 86.15,
+        "lat": 55.3483
+      },
+      "center": [
+        86.15,
+        55.3483
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        83.56,
+        53.992,
+        89.435,
+        56.854
+      ],
+      "place": 5744,
+      "country": "RU"
+    },
+    {
+      "id": "msk",
+      "name": "Minusinsk Urban District",
+      "kind": "zone",
+      "origin": {
+        "lon": 91.6766,
+        "lat": 53.6925
+      },
+      "center": [
+        91.6766,
+        53.6925
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        87.824,
+        51.266,
+        94.776,
+        55.456
+      ],
+      "place": 5745,
+      "country": "RU"
+    },
+    {
+      "id": "kba",
+      "name": "Kabansky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 107.5837,
+        "lat": 51.847
+      },
+      "center": [
+        107.5837,
+        51.847
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        104.524,
+        49.951,
+        114.406,
+        53.603
+      ],
+      "place": 5746,
+      "country": "RU"
+    },
+    {
+      "id": "zal",
+      "name": "Zalari municipal region",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.8635,
+        "lat": 52.5077
+      },
+      "center": [
+        103.8635,
+        52.5077
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        100.307,
+        51.853,
+        109.098,
+        55.471
+      ],
+      "place": 5747,
+      "country": "RU"
+    },
+    {
+      "id": "uzh",
+      "name": "Uzhursky Rayon",
+      "kind": "zone",
+      "origin": {
+        "lon": 90.4841,
+        "lat": 56.2511
+      },
+      "center": [
+        90.4841,
+        56.2511
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        88.565,
+        53.916,
+        93.361,
+        56.565
+      ],
+      "place": 5748,
+      "country": "RU"
+    },
+    {
+      "id": "krt",
+      "name": "Karasuksky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 78.0555,
+        "lat": 53.7319
+      },
+      "center": [
+        78.0555,
+        53.7319
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        76.404,
+        51.904,
+        81.049,
+        55.057
+      ],
+      "place": 5749,
+      "country": "RU"
+    },
+    {
+      "id": "ryi",
+      "name": "Rybinsky Rayon",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.7102,
+        "lat": 56.2007
+      },
+      "center": [
+        95.7102,
+        56.2007
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        93.506,
+        54.215,
+        96.978,
+        56.662
+      ],
+      "place": 5750,
+      "country": "RU"
+    },
+    {
+      "id": "kuv",
+      "name": "Kuybyshevsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 78.319,
+        "lat": 55.4482
+      },
+      "center": [
+        78.319,
+        55.4482
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        75.055,
+        54.104,
+        82.187,
+        57.136
+      ],
+      "place": 5751,
+      "country": "RU"
+    },
+    {
+      "id": "dzn",
+      "name": "Dzun-Khemchiksky Kozhuun",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.4229,
+        "lat": 51.7017
+      },
+      "center": [
+        94.4229,
+        51.7017
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        88.762,
+        49.894,
+        95.984,
+        52.934
+      ],
+      "place": 5752,
+      "country": "RU"
+    },
+    {
+      "id": "bzi",
+      "name": "Borzinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.526,
+        "lat": 50.3924
+      },
+      "center": [
+        116.526,
+        50.3924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        112.255,
+        49.837,
+        118.808,
+        52.629
+      ],
+      "place": 5754,
+      "country": "RU"
+    },
+    {
+      "id": "kme",
+      "name": "Kamensky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 81.3425,
+        "lat": 53.791
+      },
+      "center": [
+        81.3425,
+        53.791
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        79.334,
+        52.192,
+        83.089,
+        54.394
+      ],
+      "place": 5755,
+      "country": "RU"
+    },
+    {
+      "id": "tsk",
+      "name": "Tarsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 74.3748,
+        "lat": 56.8978
+      },
+      "center": [
+        74.3748,
+        56.8978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        71.036,
+        55.164,
+        76.337,
+        58.594
+      ],
+      "place": 5756,
+      "country": "RU"
+    },
+    {
+      "id": "xad",
+      "name": "городской округ Норильск",
+      "kind": "zone",
+      "origin": {
+        "lon": 88.4021,
+        "lat": 69.487
+      },
+      "center": [
+        88.4021,
+        69.487
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        86.71,
+        68.049,
+        89.087,
+        69.614
+      ],
+      "place": 5757,
+      "country": "RU"
+    },
+    {
+      "id": "pls",
+      "name": "Plesetsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.5273,
+        "lat": 64.5539
+      },
+      "center": [
+        40.5273,
+        64.5539
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        35.85,
+        60.617,
+        43.713,
+        64.792
+      ],
+      "place": 5758,
+      "country": "RU"
+    },
+    {
+      "id": "gak",
+      "name": "Gatchinsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.1334,
+        "lat": 59.5691
+      },
+      "center": [
+        30.1334,
+        59.5691
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        28.641,
+        58.399,
+        32.074,
+        60.966
+      ],
+      "place": 5759,
+      "country": "RU"
+    },
+    {
+      "id": "pto",
+      "name": "Petroskoi District",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.3478,
+        "lat": 61.784
+      },
+      "center": [
+        34.3478,
+        61.784
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.267,
+        60.663,
+        35.74,
+        63.073
+      ],
+      "place": 5761,
+      "country": "RU"
+    },
+    {
+      "id": "olh",
+      "name": "Olhava District",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.3574,
+        "lat": 59.9031
+      },
+      "center": [
+        32.3574,
+        59.9031
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        31.352,
+        59.066,
+        35.738,
+        61.331
+      ],
+      "place": 5762,
+      "country": "RU"
+    },
+    {
+      "id": "syk",
+      "name": "Syktyvkar Urban Okrug",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.8264,
+        "lat": 61.6666
+      },
+      "center": [
+        50.8264,
+        61.6666
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.381,
+        59.179,
+        53.608,
+        64.536
+      ],
+      "place": 5763,
+      "country": "RU"
+    },
+    {
+      "id": "vyb",
+      "name": "Vyborgsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.7702,
+        "lat": 60.7013
+      },
+      "center": [
+        28.7702,
+        60.7013
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        27.732,
+        60.14,
+        31.426,
+        61.348
+      ],
+      "place": 5764,
+      "country": "RU"
+    },
+    {
+      "id": "vex",
+      "name": "Velsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.102,
+        "lat": 61.0713
+      },
+      "center": [
+        42.102,
+        61.0713
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.894,
+        60.711,
+        48.189,
+        63.243
+      ],
+      "place": 5765,
+      "country": "RU"
+    },
+    {
+      "id": "urb",
+      "name": "urban okrug of Derbent",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.2975,
+        "lat": 42.0525
+      },
+      "center": [
+        48.2975,
+        42.0525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.735,
+        41.166,
+        48.617,
+        43.53
+      ],
+      "place": 5766,
+      "country": "RU"
+    },
+    {
+      "id": "khy",
+      "name": "Khasavyurtovsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.869,
+        "lat": 43.201
+      },
+      "center": [
+        46.869,
+        43.201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.078,
+        43.046,
+        47.701,
+        45.01
+      ],
+      "place": 5768,
+      "country": "RU"
+    },
+    {
+      "id": "vei",
+      "name": "Veliky Novgorod",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.275,
+        "lat": 58.5215
+      },
+      "center": [
+        31.275,
+        58.5215
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        29.583,
+        56.891,
+        36.264,
+        59.451
+      ],
+      "place": 5769,
+      "country": "RU"
+    },
+    {
+      "id": "nii",
+      "name": "Nizhneingashsky Rayon",
+      "kind": "zone",
+      "origin": {
+        "lon": 92.481,
+        "lat": 58.235
+      },
+      "center": [
+        92.481,
+        58.235
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        88.467,
+        55.781,
+        97.916,
+        59.672
+      ],
+      "place": 5770,
+      "country": "RU"
+    },
+    {
+      "id": "tbo",
+      "name": "Tobolsky District",
+      "kind": "zone",
+      "origin": {
+        "lon": 68.253,
+        "lat": 58.198
+      },
+      "center": [
+        68.253,
+        58.198
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.916,
+        57.543,
+        69.195,
+        59.179
+      ],
+      "place": 5771,
+      "country": "RU"
     }
   ]
 }

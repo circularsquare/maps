@@ -37,6 +37,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - replan2 (abaa9dba7f94a9a7b) handed back at a clean point (~300k tokens): nothing landed or retired; its .cmd kit
   and "State at hand-back" in notes/T-1189.md list steps 1-7. **Resume it with SendMessage for the go** (it keeps
   its context). T-2326 filed (AWS seed carries world_field and sea polygons).
+- ~05:55 RU/BY regate 75/79: **177/181 gated**; vei, nii, tbo, khy (origins off their towns; khy now "Kizilyurt")
+  rebuilding and gating (log artifacts/trainworld/countries/t2295-gate3.log). Turkey's T-2054 chain done 05:33 (173
+  terrain grids, 406 drive places, terrain-fine 3.8 GB all kept). Then: commit + 8800, US sequence, RU/BY join.
+- ~05:30 RU/BY gate: 102/181 gated (Belarus 8/8), 79 parked: 72 on page errors from app/WASM changing under the
+  gate's Vite (my landings' agents), 7 relaxed (one-town job shares, nyb commute), khy timeout. **Rerun of the 79
+  (gate only, ~25 min) go given; no app/WASM changes until it ends.**
 - **~05:05 US wave home**: t2301-us-3 built 155/155 (inbox artifacts/trainworld/aws/inbox/t2301-us-3, 2.25 GB); all
   three AWS runs $0.74, NOTHING RUNNING OR BILLING (bucket still holds us-3's 13 objects until landed). PR 4 built at
   home. **Plan**: when countries' RU/BY gate and Turkey's terrain chain end, I commit the game json and rebuild 8800
@@ -81,7 +87,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **solvespeed DONE, committed ce6a8f6d** (retired): T-2307 partly (7.8% over the pre-T-2265 solve, from 10.5%,
   side-by-side; 1% sliver lie, +161 rail trips on the real save), rest T-2324 [P2]; T-2308 greyed toggle; ferry
   constant; $10B comment. Not on 8800 yet.
-- acfe7114188110530 **passing** (Opus, ~04:20): T-2245, T-2248, T-2249. Port 6181. Ids T-2330, T-2331.
+- **passing DONE, committed ecce08c4** (retired): T-2245 (overtakes timetabled at a set headway, time behind an
+  express counted; T-2232's local 13m07s a round trip, express panel shows "Behind slower trains 17s"), T-2248,
+  T-2249. Not on 8800 yet. T-2239/40/41 still open.
 - **colours DONE, committed 784f0a82** (retired): T-2291 (re-pick after stop edits while the line is new; beside =
   shared edge/station or stop within 300 m; under 19 CIEDE2000); T-2332 filed (copied, bus and ferry lines). Not on
   8800 yet. Undo may step through the recolour first (unchecked).
@@ -127,6 +135,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2195, building hover T-2220): not acknowledged as far as I know.
 
 ## Lessons from this run
+- A gate's browser checks run on a Vite over the main tree: an agent's app edit or `npm run wasm` mid-gate makes
+  every page throw (72 Russian rows parked on "no page errors", 2026-11-04). Hold code agents' app/WASM work while a
+  gate runs, or gate from a frozen tree.
 - Before starting an "Open" task, `git log --grep "T-<id>"`.
 - Her TODO.md can repeat an earlier batch word for word: diff against notes/todo-*.md before filing.
 - Commit as agents report when their files are separable; untangle shared docs with keep_hunks.py (-U0).
