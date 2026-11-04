@@ -5,10 +5,8 @@ Updated: 2026-11-04 18:40. **Anita restarts VS Code now; the next orchestrator t
 trainworld`.** No agent of maps-17's is running; nothing is mid-flight; maps-5c is done (Jakarta committed 670d3241).
 
 ## Start here (next orchestrator)
-1. Land, in order: profit2, achieve, deadcode, diagborders, termtrain (details under "In flight"). Before landing,
-   commit the main tree's uncommitted records by path (TASKS.md, ARCHIVE.md, DECISIONS.md, docs/track-and-service.md,
-   notes/handoff.md): the land's fast-forward fails on uncommitted edits in files a commit touches. DECISIONS.md has
-   countries3's T-2341 line and three T-2344 lines: check e2a06912 did not already take them (no duplicates).
+1. Land, in order: profit2, achieve, deadcode, diagborders, termtrain (details under "In flight"). The records are
+   committed (03baa406); keep the main tree clean of edits in files a land touches, or its fast-forward fails.
 2. Rebuild 8800 on the result (it is still build 917, without Jakarta), smoke light and dark. Then delete
    data/work/pre-T2341/ (2.3 GB), pre-T2294/, pre-T2418/.
 3. Run checks/city-browser.mjs on one zone, then start a fresh Opus agent on Ukraine T-2344 (notes/T-2344.md
