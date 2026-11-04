@@ -1,10 +1,9 @@
 // T-2420 (design notes/T-2411.md): money by stretch of track, for the Profit track display. On the day
 // shown, each running rail line's money is placed on the edges of its path, then summed over the lines
 // on each edge:
-// - fares: the per-km part (and demand's bent-curve extra) by the paid passenger-km on each stretch
-//   between stops, both directions, as `incomeFor` charges it; the line's base fares (its T-2104 share)
-//   half by those passenger-km, half by boardings at the stretch's two stops (a through stop's half to
-//   each side, an end stop's all to its one stretch);
+// - fares: the per-km part (and demand's bent-curve extra) and the line's base fares (its T-2104 share)
+//   all by the paid passenger-km on each stretch between stops, both directions, as `incomeFor` charges
+//   the per-km part (T-2440: a line's form of spreading each trip's fare over the km it rides);
 // - running trains: the line's train-km cost a day (as `runningToday`, over a whole day) by length;
 // - upkeep: each edge's split between the lines on it by trains a day, as `line_upkeep` does; each
 //   station's split so between the lines stopping there, then half to the stretch on each side.
@@ -13,10 +12,10 @@
 // are not placed yet (their share of a station's upkeep is left off the track).
 //
 // A track stretch, what the colour and the hover cover, runs between stations, junctions and track
-// ends; every edge on it takes the stretch's profit over its km.
+// ends; every edge on it takes the stretch's fares over its costs (running trains and upkeep).
 
 import { computed } from "@preact/signals";
-import { demandView, type DemandView } from "./demand";
+import { demandView, lineFiguresIn, type DemandView } from "./demand";
 import { faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { lineFares } from "./fareInEffect";
 import { trainKind } from "./format";
@@ -36,17 +35,22 @@ export interface StretchFigures extends Money3 {
   km: number;
   /** no running line uses it */
   bare: boolean;
+  /** a running line on it has no demand figures for its stops yet */
+  noFigures: boolean;
 }
 export interface StretchMoney {
   /** by edge id: the money placed on it, each line's part by line id */
   edges: Map<number, { all: Money3; lines: Map<string, Money3> }>;
   /** by edge id: its track stretch's figures (every edge of a stretch shares the object) */
   stretchOf: Map<number, StretchFigures>;
-  /** by edge id, its stretch's profit per km a day; `NO_PROFIT` for blueprint track and ids with no edge */
-  perKm: Float32Array;
+  /** by edge id, its stretch's fares over its costs; `NO_PROFIT` for blueprint track, stretches with no
+   * figures yet and ids with no edge */
+  ratio: Float32Array;
 }
 /** What `perKm` holds where there is no figure. */
 export const NO_PROFIT = 1e30;
+/** The ratio of fares to costs where there are fares and no costs. */
+const FREE_RATIO = 1000;
 
 const zero = (): Money3 => ({ fares: 0, running: 0, upkeep: 0 });
 
@@ -85,6 +89,8 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     if (w.lineStats[l.id]?.status !== "running") continue;
     weight.set(l.id, l.tph.high * LEVEL_HOURS[0] + l.tph.medium * LEVEL_HOURS[1] + l.tph.low * LEVEL_HOURS[2]);
   }
+  /** running rail lines with no demand figures for their stops yet (the game loading, a new line) */
+  const dark = new Set<string>();
   const based = baseTrips(shape, dv, t.fares, byId);
   const curves = new Map<Fares, Fares>();
   /** per rail line placed: each stretch between stops, its edges and their metres in it */
@@ -95,6 +101,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     const pieces = stretchEdges(l, st.path, st.stopS[0], edgeById);
     if (!pieces) continue;
     placed.set(l.id, pieces);
+    if (!lineFiguresIn(dv, l.id, n)) dark.add(l.id);
     // running trains by length along the path
     const k = trainKind(m, st.fast);
     const runDay = (k.runCostTrainKm + st.cars * k.runCostCarKm) * E * (weight.get(l.id) ?? 0) * 2 * st.km;
@@ -109,7 +116,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     const lf = lineFares(dm, t.fares);
     let f = curves.get(lf);
     if (!f) curves.set(lf, (f = faresOf(lf, lf)));
-    const { sc, from } = scalesOf(g, sl, byId, lf);
+    const { from } = scalesOf(g, sl, byId, lf);
     const pk = new Array<number>(n - 1).fill(0);
     for (const seg of dm.loads) {
       if (seg.length !== km.length) continue;
@@ -122,17 +129,9 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
     const mul = lineFareMul({ fast: st.fast, ferry: false }, lf);
     const base = E * f.base * (based.get(l.id) ?? 0);
-    const bw = new Array<number>(n - 1).fill(0);
-    let bwAll = 0;
-    dm.boardings.forEach((v, s) => {
-      const b = v * (sc[s] ?? 1), sides = s === 0 || s === n - 1 ? 1 : 2;
-      if (s > 0) bw[s - 1] += b / sides;
-      if (s < n - 1) bw[s] += b / sides;
-      bwAll += b;
-    });
     for (let s = 0; s < n - 1; s++) {
       const share = pk[s] / pkAll;
-      const fare = E * (mul * f.perKm * pk[s] + fx * share) + base / 2 * share + base / 2 * (bwAll > 0 ? bw[s] / bwAll : share);
+      const fare = E * (mul * f.perKm * pk[s] + fx * share) + base * share;
       spread(pieces[s], (edge, sh) => (part(edge, l.id).fares += fare * sh));
     }
   }
@@ -178,24 +177,26 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
   for (const v of edges.values()) {
     for (const p of v.lines.values()) { v.all.fares += p.fares; v.all.running += p.running; v.all.upkeep += p.upkeep; }
   }
-  // track stretches, and each edge's profit per km
+  // track stretches, and each edge's fares over costs
   const stretchOf = new Map<number, StretchFigures>();
   let maxId = 0;
   for (const e of w.edges) maxId = Math.max(maxId, e.id);
-  const perKm = new Float32Array(maxId + 1).fill(NO_PROFIT);
+  const ratio = new Float32Array(maxId + 1).fill(NO_PROFIT);
   for (const chain of trackStretches(w)) {
-    const fig: StretchFigures = { fares: 0, running: 0, upkeep: 0, km: 0, bare: true };
+    const fig: StretchFigures = { fares: 0, running: 0, upkeep: 0, km: 0, bare: true, noFigures: false };
     for (const e of chain) {
       const a = edges.get(e.id)?.all;
       if (a) { fig.fares += a.fares; fig.running += a.running; fig.upkeep += a.upkeep; }
       fig.upkeep += bareUpkeep.get(e.id) ?? 0;
       if (e.lines.some((id) => (weight.get(id) ?? 0) > 0)) fig.bare = false;
+      if (e.lines.some((id) => dark.has(id))) fig.noFigures = true;
       fig.km += e.lengthM / 1000;
     }
-    const v = fig.km > 0 ? (fig.fares - fig.running - fig.upkeep) / fig.km : 0;
-    for (const e of chain) { stretchOf.set(e.id, fig); perKm[e.id] = v; }
+    const costs = fig.running + fig.upkeep;
+    const v = fig.noFigures ? NO_PROFIT : costs > 0 ? fig.fares / costs : fig.fares > 0 ? FREE_RATIO : NO_PROFIT;
+    for (const e of chain) { stretchOf.set(e.id, fig); ratio[e.id] = v; }
   }
-  return { edges, stretchOf, perKm };
+  return { edges, stretchOf, ratio };
 }
 
 /** A line's stretches between stops along its path: each one's edges and the metres of each inside

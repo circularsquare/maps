@@ -708,15 +708,15 @@ export class NetworkRenderer {
     this.loadTex =this.texture(new Float32Array(1), "r32f", TEX_W, []);
   }
 
-  /** T-2420: each edge id's stretch profit per km a day for the Profit view (`stretchMoney`'s
-   * `perKm`, `NO_PROFIT` where none), or null for none at all. */
-  setProfit(perKm: Float32Array | null) {
+  /** T-2420: each edge id's stretch fares over costs for the Profit view (`stretchMoney`'s
+   * `ratio`, `NO_PROFIT` where none), or null for none at all. */
+  setProfit(ratio: Float32Array | null) {
     const gl = this.gl;
-    this.profitData = perKm;
+    this.profitData = ratio;
     if (!gl) return;
     if (this.profitTex) gl.deleteTexture(this.profitTex);
-    this.profitTex = perKm?.length ? this.texture(perKm, "r32f", TEX_W, []) : null;
-    this.profitN = this.profitTex ? perKm!.length : 0;
+    this.profitTex = ratio?.length ? this.texture(ratio, "r32f", TEX_W, []) : null;
+    this.profitN = this.profitTex ? ratio!.length : 0;
   }
 
   private texture(data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number, list = this.res): WebGLTexture {

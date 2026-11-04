@@ -10,7 +10,7 @@ import { ARTIFACTS, REAL_SAVE, collectErrors, demandFinal, importSave, launchChr
 
 const BASE = process.argv[2] ?? 'http://localhost:6195/';
 const WORKERS = process.env.DEMAND_WORKERS ?? 2;
-const OUT = `${ARTIFACTS}profit/`;
+const OUT = `${ARTIFACTS}${process.env.SHOTS_DIR ?? 'profit'}/`;
 mkdirSync(OUT, { recursive: true });
 const { ctx, close } = await launchChrome({ prefix: 'tw-t2411-', size: [1400, 900] });
 const results = [];
@@ -24,6 +24,11 @@ try {
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.moneyState?.value, undefined, { timeout: 180000 });
   await importSave(page, readFileSync(REAL_SAVE));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 180000 });
+  // just loaded, before any figures: the Profit view is the neutral grey, not red
+  await page.evaluate(async () => (await import('/src/game/ui.ts')).setDisplay('trackColour', 'profit'));
+  await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.5, 40.95], zoom: 7.6 }));
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}profit-just-loaded.png` });
   await demandFinal(page, { timeout: 900000 });
   const sums = await page.evaluate(async () => {
     const { setDisplay } = await import('/src/game/ui.ts');
@@ -105,7 +110,7 @@ try {
         for (let r = 0; r <= 12; r += 2) for (const [dx, dy] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) {
           const rows = trackTip(ov, p.x + dx, p.y + dy, 14);
           const text = (rows ?? []).map((x) => (typeof x === 'string' ? x : x.textContent)).join('\n');
-          if (/^Profit/.test(text)) {
+          if (/^Fares cover/.test(text)) {
             const box = window.tw.map.getContainer().getBoundingClientRect();
             return { text, x: box.left + p.x + dx, y: box.top + p.y + dy };
           }
@@ -120,7 +125,7 @@ try {
     }
     await page.screenshot({ path: `${OUT}profit-hover.png` });
   }
-  report('the track hover gives profit, per km, fares, running trains and upkeep', /Profit −?\$[\d.]+[kMB]? per weekday/.test(tag) && /per km/.test(tag) && /Fares \$/.test(tag) && /Running trains −\$/.test(tag) && /Upkeep −\$/.test(tag), JSON.stringify(tag));
+  report('the track hover gives the share of costs the fares cover, profit, per km, fares, running trains and upkeep', /^Fares cover [\d,]+% of costs/.test(tag) && /Profit −?\$[\d.]+[kMB]? per weekday/.test(tag) && /per km/.test(tag) && /Fares \$/.test(tag) && /Running trains −\$/.test(tag) && /Upkeep −\$/.test(tag), JSON.stringify(tag));
   const pressed = await page.$$eval('.demand-selector button[aria-pressed="true"]', (bs) => bs.map((b) => b.textContent));
   report('the Profit button is on', pressed.includes('Profit'), JSON.stringify(pressed));
 } catch (e) {

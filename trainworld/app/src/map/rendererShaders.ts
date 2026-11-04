@@ -40,11 +40,11 @@ const HOT_LINE_MIX = "0.3";
 const rampBlend = (s: [number, string][], v: string) => {
   const v3 = (hex: string) => `vec3(${rgb(hex).map((c) => (c / 255).toFixed(4)).join(", ")})`;
   return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([at, hex], i) =>
-    `v_color = mix(v_color, ${v3(hex)}, clamp((${v} - ${s[i][0].toFixed(1)}) / ${(at - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
+    `v_color = mix(v_color, ${v3(hex)}, clamp((${v} - ${s[i][0].toFixed(4)}) / ${(at - s[i][0]).toFixed(4)}, 0.0, 1.0));`)].join("\n    ");
 };
 /** The Max speed colour (T-843). */
 const SPEED_BLEND = rampBlend(SPEED_STOPS, "a_speed");
-/** T-2420: the Profit view's colour, by the edge's stretch's profit per km a day (`u_profit`). */
+/** T-2420: the Profit view's colour, by the edge's stretch's fares over costs (`u_profit`). */
 const PROFIT_BLEND = rampBlend(PROFIT_STOPS, "pv");
 /** T-2236: a crowded stretch's red edge and darkening (the traffic view) as a share of track at
  * capacity's, by its busiest hour's load as a share of the rated load: FULL_FLOOR just past

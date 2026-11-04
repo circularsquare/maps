@@ -27,6 +27,8 @@ const KEEP: Record<Span, number> = { "1d": 24, "30d": 30, all: Infinity };
 interface Entry { at: number; fares: number; running: number; upkeep?: number; loan?: number; trains: number; build: number; rides?: number; from?: number; to?: number; n?: number }
 
 const W = 300, H = 96, PAD = 3;
+/** the space between two days' bars (T-2444) */
+const GAP = 1.5;
 /** A young game's few entries sit at the right of this many slots, not stretched over the width. */
 const MIN_SLOTS = { day: 7, hour: 12 };
 /** T-2143: at most this many columns of days; past it a column is a week, then a month, then several months. */
@@ -111,7 +113,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const x0 = W - list.length * col;
   const cx = (i: number) => x0 + (i + 0.5) * col;
   const last = list.length - 1;
-  const bw = Math.max(1, col * 0.7);
+  const bw = Math.max(1, col - GAP);
   /** a binned column's figures are per day */
   const per = binned ? "/day" : "";
   const name = (e: Entry, i: number) => (binned ? dateRange(e.from!, e.to!) : when(e, hours, sh)) + (i === last ? " so far" : "");
@@ -119,16 +121,16 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
 
-  // T-2340: each column three narrow bars side by side, fares, running costs and one-off costs (new
-  // trains, construction), scaled to the larger of the first two; a one-off bar past the top is cut
-  // with a cap so a build day cannot flatten the others (T-452)
+  // T-2340, T-2444: each column a fares bar and a running costs bar side by side, the one-off costs (new
+  // trains, construction) a paler bar behind both, scaled to the larger of the first two; a one-off bar
+  // past the top is cut with a cap so a build day cannot flatten the others (T-452)
   const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
   const y1 = yScale(top);
-  const b3 = (col * 0.72) / 3;
-  const bx = (i: number, k: number) => cx(i) + (k - 1.5) * b3;
-  const bar = (cls: string, i: number, k: number, v: number) => {
+  /** bar `k` of `n` across a column's width */
+  const bx = (i: number, k: number, n: number) => cx(i) - bw / 2 + (k * bw) / n;
+  const bar = (cls: string, i: number, k: number, n: number, v: number) => {
     const y = Math.max(PAD, y1(v));
-    return <rect class={cls + (i === last ? " now" : "")} x={bx(i, k)} y={y} width={b3} height={Math.max(0.5, H - PAD - y)} />;
+    return <rect class={cls + (i === last ? " now" : "")} x={bx(i, k, n)} y={y} width={bw / n} height={Math.max(0.5, H - PAD - y)} />;
   };
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
@@ -173,10 +175,10 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         {list.map((e, i) => {
           const v = oneOff(e);
           return <>
-            {bar("hist-fares", i, 0, e.fares)}
-            {bar("hist-costs", i, 1, run(e))}
-            {v > 0 && bar("hist-oneoff", i, 2, v)}
-            {v > top && <path class="hist-oneoff cap" d={`M${bx(i, 2)},${PAD + 3}L${bx(i, 2.5)},0L${bx(i, 3)},${PAD + 3}Z`} />}
+            {v > 0 && bar("hist-oneoff", i, 0, 1, v)}
+            {v > top && <path class="hist-oneoff cap" d={`M${bx(i, 0, 1)},${PAD + 3}L${bx(i, 0.5, 1)},0L${bx(i, 1, 1)},${PAD + 3}Z`} />}
+            {bar("hist-fares", i, 0, 2, e.fares)}
+            {bar("hist-costs", i, 1, 2, run(e))}
           </>;
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}

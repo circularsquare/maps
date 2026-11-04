@@ -220,8 +220,8 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : [...money, ...facts];
 }
 
-/** T-2420: the Profit view's rows for the track stretch an edge is on: its profit on its colour,
- * per km, then fares, running trains and upkeep; bare track its upkeep. None for blueprint track. */
+/** T-2420: the Profit view's rows for the track stretch an edge is on: the share of its costs the fares cover on
+ * its colour, its profit, per km, then fares, running trains and upkeep; bare track its upkeep. None for blueprint track. */
 function profitRows(edge: number): TipLine[] {
   const sm = stretchMoney.peek();
   if (!sm) return demandView.peek() ? [] : ["Calculating demand"];
@@ -235,10 +235,13 @@ function profitRows(edge: number): TipLine[] {
     return d;
   };
   if (s.bare) return ["No trains run here", row("Upkeep ", -s.upkeep, " per day")];
-  const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0;
-  const top = document.createElement("div");
-  top.append("Profit ", chip(`${money(profit)} ${shownDayPhrase.peek()}`, profitColour(perKm)));
-  return [top, row("", perKm, " per km"), row("Fares ", s.fares), row("Running trains ", -s.running), row("Upkeep ", -s.upkeep)];
+  if (s.noFigures) return ["Calculating demand"];
+  const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0, costs = s.running + s.upkeep;
+  const rows = [row("Profit ", profit, ` ${shownDayPhrase.peek()}`), row("", perKm, " per km"), row("Fares ", s.fares), row("Running trains ", -s.running), row("Upkeep ", -s.upkeep)];
+  if (!(costs > 0)) return rows;
+  const ratio = s.fares / costs, top = document.createElement("div");
+  top.append("Fares cover ", chip(`${Math.round(100 * ratio).toLocaleString("en-US")}%`, profitColour(ratio)), " of costs");
+  return [top, ...rows];
 }
 
 /** The lines whose path uses an edge, in the save's order. */

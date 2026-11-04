@@ -19,7 +19,7 @@ import { ARTIFACTS, collectErrors, demandFinal, importSave, launchChrome, REAL_S
 const OUT = join(ARTIFACTS, 'tripui');
 const SHOTS = process.argv.includes('--shots');
 if (SHOTS) await mkdir(OUT, { recursive: true });
-const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6189/';
+const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6184/';
 let fail = 0;
 const check = (ok, what, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}${detail ? `  (${detail})` : ''}`); if (!ok) fail++; };
 const ZONE = 'nyc';
@@ -100,7 +100,15 @@ async function run(label, page) {
   await page.waitForFunction(() => /Distance/.test([...document.querySelectorAll('.ui-tag')].find((t) => t.style.display !== 'none')?.innerText ?? ''), undefined, { timeout: 30000, polling: 250 }).catch(() => {});
   const top = await page.evaluate(() => [...document.querySelectorAll('.ui-tag')].find((t) => t.style.display !== 'none')?.innerText ?? '');
   check(/Per day in New York/.test(top) && /Trip count/.test(top) && /Distance/.test(top) && /Walking/.test(top) && /km/.test(top), `${label}: the top bar's hover`, top.replace(/\n/g, ' | '));
-  if (SHOTS) await page.screenshot({ path: join(OUT, `${label}-topbar-hover.png`), clip: { x: Math.max(0, split.left - 60), y: 0, width: 520, height: 220 } });
+  // T-2443: every figure sits inside the tag's box
+  const over = await page.evaluate(() => {
+    const tag = [...document.querySelectorAll('.ui-tag')].find((t) => t.style.display !== 'none');
+    if (!tag) return ['no tag'];
+    const box = tag.getBoundingClientRect();
+    return [...tag.querySelectorAll('.tip-grid > div')].filter((c) => c.getBoundingClientRect().right > box.right + 0.5).map((c) => c.textContent);
+  });
+  check(over.length === 0, `${label}: the top bar's figures sit inside its tooltip`, over.join(', '));
+  if (SHOTS) await page.screenshot({ path: join(OUT, `${label}-topbar-hover.png`), clip: { x: Math.max(0, split.left - 60), y: 0, width: 720, height: 260 } });
   await page.mouse.move(5, 600);
 
   if (SHOTS) {

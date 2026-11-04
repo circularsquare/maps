@@ -3,7 +3,7 @@
 // them at their places' distance, planes on top. Under it a strip of each length's mode shares.
 // Hover: the length band under the pointer, its trips by mode.
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { City } from "../../game/cities";
 import { demandView, intercityDemand } from "../../game/demand";
 import { count } from "../../game/format";
@@ -60,14 +60,10 @@ function edge(xs: number[], ys: number[], keep: (k: number) => boolean): string 
   return d;
 }
 
-export function TripGraph({ city }: { city: City }) {
-  const dv = demandView.value, day = shownDay.value;
-  useEffect(() => { wantLengths(city.id); }, [city.id, dv?.version, dv?.round, day]);
-  const [hoverX, setHoverX] = useState<number | null>(null);
-  const local = lengthsOf(city.id);
-  const market = intercityDemand.value;
-  if (!local) return null;
-  const Ls = lengthLayers(local, market ? farTrips(city.place, market.corridors) : []);
+/** What the pointer does not change: the curves, the strip, the labels and their drawing (kept as one
+ * element, so a hover re-renders only the band and the hover rect, T-2439). */
+function drawGraph(local: NonNullable<ReturnType<typeof lengthsOf>>, market: ReturnType<typeof intercityDemand.peek>, place: City["place"]) {
+  const Ls = lengthLayers(local, market ? farTrips(place, market.corridors) : []);
   const [u0, u1] = axisSpan(Ls);
   const { u, y } = layerCurves(Ls, u0, u1, N);
   const x = (v: number) => L + ((v - u0) / (u1 - u0)) * (R - L);
@@ -99,44 +95,67 @@ export function TripGraph({ city }: { city: City }) {
     if (labels.some((o) => l < o.r + 5 && r > o.l - 5)) continue;
     labels.push({ t, x: tx, text, end, l, r });
   }
-
-  const hoverKm = hoverX === null ? null : Math.pow(10, u0 + ((hoverX - L) / (R - L)) * (u1 - u0));
-  const hb = hoverKm === null ? null : bandAt(Ls.edges, hoverKm);
   const hx = (km: number) => Math.max(L, Math.min(R, km <= 0 ? L : km === Infinity ? R : x(Math.log10(km))));
+  const drawn = (
+    <>
+      {labels.map((l) => <line class="tg-grid" x1={l.x} x2={l.x} y1={T} y2={B} />)}
+      {LAYERS.map((l, j) => (
+        <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(xs, tops[j].map(py), (j ? tops[j - 1] : total.map(() => 0)).map(py))} />
+      ))}
+      {/* each layer's top: a gap in the panel's colour, then a line in its own */}
+      {LAYERS.map((l, j) => {
+        const d = edge(xs, tops[j].map(py), (k) => (y[l][k] / peak) * (B - T) > EDGE_MIN);
+        return d && <>
+          <path class="tg-gap" d={d} />
+          <path class="tg-edge" style={{ stroke: `var(--mode-${COLOUR_KEY[l]})` }} d={d} />
+        </>;
+      })}
+      <line class="tg-axis" x1={L} x2={R} y1={B + 0.5} y2={B + 0.5} />
+      {runs.map(([a, b]) => {
+        const rx = xs.slice(a, b + 1);
+        return LAYERS.map((l, j) => {
+          const f = (k: number) => tops[j][k] / total[k], g = (k: number) => (j ? tops[j - 1][k] / total[k] : 0);
+          const top = rx.map((_, i) => sy(f(a + i))), bot = rx.map((_, i) => sy(g(a + i)));
+          return top.some((t, i) => bot[i] - t > 0.05) && <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(rx, top, bot)} />;
+        });
+      })}
+      {labels.map((l) => <text class="tg-label" x={l.x} y={LABEL_Y} text-anchor={l.end ? "end" : "middle"}>{l.text}</text>)}
+    </>
+  );
+  return { Ls, u0, u1, hx, drawn };
+}
+
+export function TripGraph({ city }: { city: City }) {
+  const dv = demandView.value, day = shownDay.value;
+  useEffect(() => { wantLengths(city.id); }, [city.id, dv?.version, dv?.round, day]);
+  // the km under the pointer, set only when the pointer moves into another band
+  const [hoverKm, setHoverKm] = useState<number | null>(null);
+  const band0 = useRef<number | null>(null);
+  const local = lengthsOf(city.id);
+  const market = intercityDemand.value;
+  const g = useMemo(() => (local ? drawGraph(local, market, city.place) : null), [local, market, city.place]);
+  if (!g) return null;
+  const { Ls, u0, u1, hx, drawn } = g;
+  const hb = hoverKm === null ? null : bandAt(Ls.edges, hoverKm);
   const pointer = (e: PointerEvent) => {
     const r = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect();
-    setHoverX(Math.max(L, Math.min(R, ((e.clientX - r.left) * W) / r.width)));
+    const px = Math.max(L, Math.min(R, ((e.clientX - r.left) * W) / r.width));
+    const km = Math.pow(10, u0 + ((px - L) / (R - L)) * (u1 - u0));
+    const b = bandAt(Ls.edges, km);
+    if (band0.current === b.lo) return;
+    band0.current = b.lo;
+    setHoverKm(km);
   };
+  const leave = () => { band0.current = null; setHoverKm(null); };
 
   return (
     <>
       <div class="h">By trip length</div>
       <svg class="trip-graph" viewBox={`0 0 ${W} ${H}`}>
-        {labels.map((l) => <line class="tg-grid" x1={l.x} x2={l.x} y1={T} y2={B} />)}
-        {LAYERS.map((l, j) => (
-          <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(xs, tops[j].map(py), (j ? tops[j - 1] : total.map(() => 0)).map(py))} />
-        ))}
-        {/* each layer's top: a gap in the panel's colour, then a line in its own */}
-        {LAYERS.map((l, j) => {
-          const d = edge(xs, tops[j].map(py), (k) => (y[l][k] / peak) * (B - T) > EDGE_MIN);
-          return d && <>
-            <path class="tg-gap" d={d} />
-            <path class="tg-edge" style={{ stroke: `var(--mode-${COLOUR_KEY[l]})` }} d={d} />
-          </>;
-        })}
-        <line class="tg-axis" x1={L} x2={R} y1={B + 0.5} y2={B + 0.5} />
-        {runs.map(([a, b]) => {
-          const rx = xs.slice(a, b + 1);
-          return LAYERS.map((l, j) => {
-            const f = (k: number) => tops[j][k] / total[k], g = (k: number) => (j ? tops[j - 1][k] / total[k] : 0);
-            const top = rx.map((_, i) => sy(f(a + i))), bot = rx.map((_, i) => sy(g(a + i)));
-            return top.some((t, i) => bot[i] - t > 0.05) && <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(rx, top, bot)} />;
-          });
-        })}
-        {labels.map((l) => <text class="tg-label" x={l.x} y={LABEL_Y} text-anchor={l.end ? "end" : "middle"}>{l.text}</text>)}
+        {drawn}
         {hb && <rect class="tg-band" x={hx(hb.lo)} y={T} width={Math.max(1, hx(hb.hi) - hx(hb.lo))} height={S1 - T} />}
         <rect class="tg-hover" x={L} y={T} width={R - L} height={S1 - T} data-tip={hoverKm === null ? undefined : bandTip(Ls, hoverKm)}
-          onPointerMove={pointer} onPointerDown={pointer} onPointerLeave={() => setHoverX(null)} />
+          onPointerMove={pointer} onPointerDown={pointer} onPointerLeave={leave} />
       </svg>
     </>
   );

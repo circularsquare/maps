@@ -1038,6 +1038,8 @@ button.save-add:hover { color: var(--text); }
   background: var(--map-land); border: 1.5px solid var(--map-ink); }
 .tool-tag .tip-strip.stops.dense i { height: 3px; border-radius: 1.5px; }
 /* T-2365: a small table in a hover (`tipGrid`): the first column left, figures right, strips a fixed width */
+/* T-2443: a table is nowrap, so its tag grows to the table rather than letting figures run out of the box */
+.tool-tag:has(.tip-grid) { max-width: none; }
 .tool-tag .tip-grid { display: grid; column-gap: 10px; row-gap: 1px; align-items: center; margin: 2px 0; }
 .tool-tag .tip-grid > div { white-space: nowrap; }
 .tool-tag .tip-grid > .num { text-align: right; }

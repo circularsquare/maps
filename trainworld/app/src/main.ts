@@ -217,7 +217,7 @@ effect(() => {
 });
 // T-2420: the Profit view's colours, worked out only while it is shown
 effect(() => {
-  renderer.setProfit(display.value.trackColour === "profit" ? stretchMoney.value?.perKm ?? null : null);
+  renderer.setProfit(display.value.trackColour === "profit" ? stretchMoney.value?.ratio ?? null : null);
   overlay.invalidate();
 });
 if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`

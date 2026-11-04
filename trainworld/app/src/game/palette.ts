@@ -46,10 +46,11 @@ function rampColour(stops: [number, string][], v: number): string {
 /** The colour the Speed display gives `kmh`. */
 export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
 
-/** T-2420: the Profit view's colour by a stretch's profit per km per day, US$: red losses, grey about
- * even, blue profits (blue, not green, for red-green colour blindness), the same in both themes. */
-export const PROFIT_STOPS: [number, string][] = [[-300e3, "#b2182b"], [-100e3, "#e0603f"], [-20e3, "#f4a582"], [0, "#bdbab3"], [1e6, "#92c5de"], [4e6, "#4393c3"], [8e6, "#2166ac"]];
-export const profitColour = (perKm: number) => rampColour(PROFIT_STOPS, perKm);
+/** T-2420, T-2440: the Profit view's colour by a stretch's fares over its costs: deep red at none,
+ * orange at half, yellow just under break-even, pale green just over it, then light blue to deep blue
+ * at three times (blue past green for red-green colour blindness), the same in both themes. */
+export const PROFIT_STOPS: [number, string][] = [[0, "#b2182b"], [0.5, "#e9853b"], [0.95, "#f1d54a"], [1.05, "#96d58f"], [1.6, "#8ecae6"], [3, "#2166ac"]];
+export const profitColour = (ratio: number) => rampColour(PROFIT_STOPS, ratio);
 
 /** T-2236: crowding's colour by trains' load as a share of the rated load (the busiest hour's), the
  * same in both themes: green to 100%, then yellow-green at 110%, yellow at 120%, orange at 130%,
