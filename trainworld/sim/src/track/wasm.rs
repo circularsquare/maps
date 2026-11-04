@@ -336,8 +336,6 @@ impl TrackApi {
     /// last list.
     pub fn set_line_holidays(&mut self, packed: Vec<f64>) {
         self.boarding.set_holidays(&packed);
-        // T-1720: the drawn trains run a quiet day's timetable by the same calendar
-        self.w.svc.cal = self.boarding.holidays.clone();
     }
     /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
     /// a kind of day (T-260); empty before riders.
@@ -395,7 +393,6 @@ impl TrackApi {
         net.roads = self.w.net.roads.clone();
         net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
-        self.w.svc.cal = self.boarding.holidays.clone();
         self.rebuild_water();
         true
     }
@@ -559,8 +556,6 @@ impl TrackApi {
                 net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
-                // T-1720: the calendar the clock worker last sent (it sends again when it changes)
-                self.w.svc.cal = self.boarding.holidays.clone();
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();
                 // a save made while trains changed over loads with them where they were (T-1071)

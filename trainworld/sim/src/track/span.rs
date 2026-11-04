@@ -102,11 +102,10 @@ pub fn stop_phi(deps: &[f64]) -> [f32; PERIODS] {
     stop_mask(deps).phi.map(|p| ((p * 100.0).round() / 100.0) as f32)
 }
 
-/// Each stop's departures in a steady day of pattern `lat` for run `r`, local time, sorted; a
-/// quiet day's (T-1720) or a weekday's.
-pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize, quiet: bool) -> Vec<Vec<f64>> {
+/// Each stop's departures in a steady day of pattern `lat` for run `r`, local time, sorted.
+pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
     let mut first = vec![];
-    lattice_deps_local(lat, r, DAY, 2.0 * DAY, &|_| quiet, &mut first);
+    lattice_deps_local(lat, r, DAY, 2.0 * DAY, &mut first);
     (0..ls.stops.len())
         .map(|k| {
             let mut deps: Vec<f64> = first.iter().map(|&(d, lev, _)| (d + ls.runs[r].prof[lev as usize].dep.get(k).copied().unwrap_or(0.0)).rem_euclid(DAY)).collect();
@@ -122,7 +121,7 @@ pub fn line_span(ls: &LineSvc, lat: &Lattice) -> Vec<f32> {
     let n = ls.stops.len();
     let mut out = vec![0.0f32; PERIODS * 2 * n];
     for r in 0..2 {
-        for (k, deps) in stop_deps(ls, lat, r, false).iter().enumerate() {
+        for (k, deps) in stop_deps(ls, lat, r).iter().enumerate() {
             for (q, phi) in stop_phi(deps).into_iter().enumerate() {
                 out[(q * 2 + r) * n + k] = phi;
             }

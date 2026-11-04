@@ -59,15 +59,11 @@ of a purpose in period q are the weekday's times
 on the main thread and every query (bubbles, catchments, selections, longer trips, transfers)
 weighs its periods the same way in the workers, with the everyday purposes' per-direction shares
 where it reads directions. Both keep the weekday's crowded route and mode choices (fewer riders
-would crowd less). **Weekend timetable** (T-1720, Anita 2026-10-28, "the simpler version"): a
-Saturday and a Sunday, and a holiday that runs as a Sunday, run each line's medium-level timetable
-through the hours high on a weekday (6-20, so medium 6-24) and low at night (`QUIET_LEVEL`,
-`quiet_kind` in `sim/src/track/params.rs`; `levelOn` in `app/src/game/days.ts`); a superholiday's
-day away, going-out and coming-back days run the weekday's. The drawn trains follow it
-(`Service::run_deps` by each line's calendar, `Service::cal`), the boarding account works out a
-weekend day's crowding on those trains from its scaled riders, and running cost charges them.
-Riders are still the weekday solve's, scaled: they do not react to the thinner service (no longer
-waits, no lost trips; T-261 would need its own solve). **A superholiday's day away** (T-264) is a fourth kind,
+would crowd less). **Every kind of day runs the same trains** (T-2335, Anita 2026-11-04: "weekends
+are juts busier than weekday evenings"): each level's trains in its own hours, high 6-20, medium
+20-24, low 0-6, so the boarding account works out a weekend day's crowding from its scaled riders on
+the weekday's timetable, and running cost is the same every day. Weekend schedules of their own are
+T-2336. **A superholiday's day away** (T-264) is a fourth kind,
 worked out the same way: a Sunday's load factor times `AWAY_RATE` (local outings 0.7, attractions
 1.5, the rest 1), not in the average day. **Its going-out and coming-back days** (T-1373) are a
 weekday and a Sunday with the longer trips `RUSH_LONGER` (2) times a weekday's, at a weekday's and

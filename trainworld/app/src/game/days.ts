@@ -31,12 +31,6 @@ export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "o
 /** The ordinary kind a superholiday's day stands in for while none is near (T-1373): a day away and a
  * coming-back day a Sunday, a going-out day a weekday. */
 export const PLAIN_KIND: DayKind[] = [0, 1, 2, 2, 0, 2];
-/** T-1720: a Saturday and a Sunday (a quiet holiday runs as one) run the medium level's trains
- * through the hours high on a weekday; a superholiday's days keep the weekday's timetable
- * (params.rs `QUIET_LEVEL`). */
-export const quietKind = (k: number): boolean => k === 1 || k === 2;
-/** The level (0 high, 1 medium, 2 low) running in place of `level` on kind of day `k`. */
-export const levelOn = (k: number, level: number): number => (level === 0 && quietKind(k) ? 1 : level);
 const WEEKDAY_NAME =["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */

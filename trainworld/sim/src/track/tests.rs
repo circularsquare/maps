@@ -1205,32 +1205,22 @@ fn the_middle_of_a_long_line_changes_period_on_time() {
     }
 }
 
-/// T-1720: a Saturday and a Sunday run the medium level's trains 6-24; a superholiday's day away
-/// on a Saturday keeps the weekday's.
+/// T-2335: a Saturday and a Sunday run the same trains as a weekday, each level in its own hours.
 #[test]
-fn weekends_run_the_medium_timetable() {
+fn weekends_run_the_weekday_timetable() {
     let (mut w, ns) = corridor(31);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
-    let count = |w: &TrackWorld, day: f64| {
+    let day_of = |w: &TrackWorld, day: f64| -> Vec<(f64, u8)> {
         let deps = deps_of(w, id, 0, day - 86400.0, day + 2.0 * 86400.0);
-        let today: Vec<_> = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).cloned().collect();
-        today
+        deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).map(|t| (t.dep - day, t.level)).collect()
     };
-    let (tue, sat, sun) = (2.0 * 86400.0, 6.0 * 86400.0, 7.0 * 86400.0);
-    let wk = count(&w, tue).len() as f64;
-    assert!((wk - day_count([12.0, 6.0, 3.0])).abs() <= 1.0, "{wk}");
-    for day in [sat, sun] {
-        let d = count(&w, day);
-        assert!(d.iter().all(|t| t.level as usize != HIGH), "a high-level train on a weekend");
-        let want = 6.0 * 18.0 + 3.0 * 6.0;
-        assert!((d.len() as f64 - want).abs() <= 1.0, "{} weekend departures, want {want}", d.len());
+    let tue = day_of(&w, 2.0 * 86400.0);
+    assert!((tue.len() as f64 - day_count([12.0, 6.0, 3.0])).abs() <= 1.0, "{}", tue.len());
+    for day in [6.0 * 86400.0, 7.0 * 86400.0] {
+        let d = day_of(&w, day);
+        assert_eq!(d.len(), tue.len());
+        assert!(d.iter().zip(&tue).all(|(a, b)| (a.0 - b.0).abs() < 1e-6 && a.1 == b.1), "a weekend's trains differ from a weekday's");
     }
-    // a superholiday's day away on that Saturday runs the weekday's trains
-    w.svc.cal.insert(id, vec![(6, AWAY)]);
-    assert!((count(&w, sat).len() as f64 - wk).abs() <= 1.0);
-    // a holiday that runs as a Sunday on the Tuesday runs the weekend's
-    w.svc.cal.insert(id, vec![(2, 2)]);
-    assert!(count(&w, tue).iter().all(|t| t.level as usize != HIGH));
 }
 
 #[test]

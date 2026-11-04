@@ -46,14 +46,10 @@ import { UPGRADE } from "../../game/upgrades";
 
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
-/** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
- * demand: 06:00-20:00 on weekdays". */
+/** When a demand level runs, in the line's local time (the hour spans of game/periods.ts), every
+ * kind of day alike (T-2335): "High demand period: 06:00-20:00". */
 export function levelTimes(d: Demand): string {
-  const own = levelHours(d);
-  const hours = `${DEMAND_LABEL[d]} demand: ${own.map(([a, b]) => hourSpan(a, b)).join(", ")}`;
-  // T-1720: a weekend day runs the medium trains through the high hours
-  const high = levelHours("high");
-  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length && own.length ? `${hours} on weekdays, ${hourSpan(high[0][0], own[own.length - 1][1])} on weekends` : hours;
+  return `${DEMAND_LABEL[d]} demand period: ${levelHours(d).map(([a, b]) => hourSpan(a, b)).join(", ")}`;
 }
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
@@ -304,17 +300,19 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
   return room > 0 ? Math.min(CRUSH_PER_CAR / RATED_PER_CAR, aboard / room) : null;
 }
 
-/** T-477, T-515, T-2236: one dot per demand level, coloured by the busiest hour's load on the line's
- * stretches over the level's periods (`crowdLevel`), from the boarding account. The hover
- * gives each of the level's periods its load (T-1523). */
-export function CrowdDots({ v, wk, d, stops, kind }: { v: Float64Array; wk: Float64Array | null; d: Demand; stops: number; kind: number }) {
-  const weekday = wk === v;
-  const c = crowdLevel(v, d, stops, kind), r = !wk ? null : weekday ? c : crowdLevel(wk, d, stops);
-  // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's.
-  // T-2271: a level that runs no trains today (High on a weekend, T-1720) has only the ring.
-  if (!c && !r) return null;
-  const tip = !c ? `Medium demand trains run in these hours today\nOn weekdays, ${r!.tip.charAt(0).toLowerCase()}${r!.tip.slice(1)}` : r && !weekday ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
-  return <i class={"crowd-dot" + (c ? "" : " ring-only")} style={{ background: c ? crowdColour(c.load) : "transparent", outlineColor: r ? crowdColour(r.load) : "transparent" }} data-tip={tip} data-guide={d === "high" ? "crowd" : undefined} />;
+/** T-477, T-515, T-2236, T-2335: a demand level's name in the schedule table, after its crowding dot
+ * on today's kind of day (`crowdLevel`, from the boarding account) while `v` has one: the fill graded
+ * over the line's stretches, the ring (1 px out with a 1 px gap) at its fullest. One hover for both
+ * (T-2334): the level's hours, then the dot's. */
+function LevelName({ v, d, stops, pending }: { v: Float64Array | null; d: Demand; stops: number; pending: boolean }) {
+  const c = v ? crowdLevel(v, d, stops) : null;
+  return (
+    <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
+      {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
+        : pending && <Spinner class="row-dot" tip="Waiting for demand to load" />}
+      {DEMAND_LABEL[d]}
+    </span>
+  );
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -834,9 +832,6 @@ function RailLineInspector({ id }: { id: string }) {
   const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
   const acct = accountVersion.value;
   const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
-  // T-1671, T-1684: the crowding dots' rings are a weekday's, so a weekend does not hide peak crowding
-  const weekdayPeriods = useClockQuery(l && kind !== 0 ? { what: "linePeriods", line: l.num, day: 0 } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
-  const ringPeriods = kind === 0 ? periods : weekdayPeriods;
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
   // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
@@ -1092,12 +1087,16 @@ function RailLineInspector({ id }: { id: string }) {
           <th>Trains</th>
           <th>Headway</th>
         </tr>
-        {DEMANDS.map((d) => (
+        {DEMANDS.map((d) => {
+          const dot = st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0;
+          const v = dot && periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? periods : null;
+          return (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} stops={l.stops.length} kind={kind} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td><LevelName v={v} d={d} stops={l.stops.length} pending={dot && !v && demandPending.value} /></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
-        ))}
+          );
+        })}
       </table>
       {st.status !== "broken" && <TrainType l={l} st={st} lev={lev} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}

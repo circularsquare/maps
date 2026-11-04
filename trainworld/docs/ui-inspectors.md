@@ -83,17 +83,16 @@ purpose filter the purpose drawn is ringed in the bar.
   ([ui-map.md](ui-map.md) "Edit note").
 - **Trains to add** [T-472, T-1677, T-2236]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the line's load in the period now on today's kind of
-  day, otherwise muted (a 0 is muted and has no hover): the busiest hour's mean load of the trains on the line's
-  fullest stretch (the fuller direction) as a share of the rated load, 160 a car (`period_peaks` in
-  `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad` in `game/today.ts`);
-  with `CROWD_MEAN_ON` the stretch mean of the period's intervals instead (`periodLoad`, from `linesPeriods` for
-  each line's own kind of day) [T-2279].
+  day, otherwise muted (a 0 is muted and has no hover): the stretch mean of the period's intervals, as the line
+  panel's dot grades a level (`periodLoad` in `game/today.ts`, from `linesPeriods` for each line's own kind of
+  day) [T-2279, T-2335]; before those numbers come, the busiest hour's mean load on the line's fullest stretch
+  (`period_peaks` in `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad`).
   Grades (`CROWD_GRADES`, the colour scale's steps): past 100% from 100.5%, orange from 130%, red from 140%;
   orange and red colour the count (`crowdClass`). The hover is the line panel's dot hover for the same level on
-  a weekday [T-1672, T-1677]: "Peak load 132%", the strip of intervals, then one line per period of the
-  level; one function (`crowdLevel` in `game/today.ts`) builds both, the cell's from the weekday's
-  `line_periods` numbers, which the tab asks for every running train line in one clock query (`linesPeriods`,
-  each line's numbers after their count). A bus line's hover is its bus count.
+  the line's own kind of day without the level's hours [T-1672, T-1677, T-2334]: "Peak load 132%", the bar of
+  intervals, then one line per period of the level; one function (`crowdLevel` in `game/today.ts`) builds both,
+  from the `line_periods` numbers the tab asks for every running train line in one clock query per kind of day
+  (`linesPeriods`, each line's numbers after their count). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
@@ -234,29 +233,29 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   trains than fit, is red, with the same hover; an edit refused for cash shakes its control for
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
-  level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00-20:00 on weekdays", "Medium demand: 20:00-24:00 on weekdays, 06:00-24:00 on weekends" (a weekend day
-  runs the medium trains 6-24, T-1720), "Low demand: 00:00-06:00" (hours as the clock writes them, `hourSpan`, T-2271): that one line only [T-406, T-1536,
+  level's times of day in the line's local time, the same every kind of day (T-2335), from the period table in
+  `game/periods.ts`: "High demand period: 06:00-20:00", "Medium demand period: 20:00-24:00", "Low demand
+  period: 00:00-06:00" (hours as the clock writes them, `hourSpan`, T-2271; `levelTimes`) [T-406, T-1536,
   T-1797]; on a
-  running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
-  load past the rated load, as in Trains to add [T-2236]: the busiest hour's mean load of the trains on the
-  line's fullest stretch (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
-  and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`; on a Saturday
-  or Sunday the high hours run the medium level's trains, T-1720, so they count as Medium and the High dot is its
-  ring alone, hover "Medium demand trains run in these hours today" then the weekday's hover as "On weekdays,
-  peak load 140%" [T-2271]); with `CROWD_MEAN_ON` (off; `?crowdMean=1` turns it on for a look) the dot and the
-  Lines list's trains count take 100% plus the power-3 mean over every interval of its load past 100% instead
-  (`stretchLoad`, notes/T-2279.md) [T-2279]; its colour
+  running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on [T-1671], by the
+  load past the rated load, as in Trains to add [T-2236]: each interval's load is the busiest hour's mean load
+  of the trains on it (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
+  and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`); the dot's
+  fill is 100% plus the power-3 mean over every interval of its load past 100% (`stretchLoad`,
+  notes/T-2279.md) and its 1 px ring 1 px outside it (a gap between) the fullest interval's load, so one
+  packed interval among many reads yellow inside a crimson ring [T-2279, T-2335]; its colour
   running smoothly with that load: green to 100%, yellow-green at 110%, yellow at 120%, orange at 130%, red at
   140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
   the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,
-  T-2236]; hover "Peak load 132%", then, where any interval (the run between two stops, the fuller way) is past
-  100%, a thin strip of one cell per interval in the crowding colour of its load over the level's periods, with
-  "Past 100% on 2 of 14 intervals" below it ("Past 100% on all 14 intervals"; no line for a single interval;
-  T-2023: "interval", Anita's word, in every shown string) [T-1926, T-1901; `tipStrip` in `ui/tip.ts`; the Lines
-  tab's trains hover has the same strip], then, for a level of more than one period with trains, a line for each
-  in time order: "10:00-16:00: 118%" [T-1523, T-1672, T-1797, T-2271], then, only when the line's day is not a weekday, "On
-  weekdays, peak load 140%" [T-1684, T-1797, T-1893]; the dot's hover reaches 6 px round it (5 px on the
+  T-2236]. The dot and the level's name share one hover (`LevelName`, T-2334): the level's hours as above,
+  "Peak load 132%", a bar of the line's intervals (the run between two stops, the fuller way) in the crowding
+  colour of each one's load over the level's periods, all green when nothing is crowded, with a station dot
+  at each stop between them and at both ends; where the dots would leave an interval under 6 px, only the end
+  dots stay and the intervals are thinner pills (`tipStrip` with stops in `ui/tip.ts`, `STOP_CELL_PX`)
+  [T-1926, T-1901, T-2334], then, for a level of more than one period with trains, a line for each in time
+  order: "10:00-16:00 load: 118%" [T-1523, T-1672, T-1797, T-2271, T-2334]; in the tutorial, where at most half
+  the intervals are past 100%, "Only a short stretch is crowded. More trains would run mostly empty, and may
+  cost more than they earn." last [T-2263]; the dot's hover reaches 6 px round it (5 px on the
   name's side) [T-2271]; riders left at the platform by trains at crush are the
   station panel's and the trouble list's, not the dots'; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each

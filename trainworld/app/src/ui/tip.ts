@@ -17,9 +17,39 @@ const BULLET = /\u0002([^|\u0003]*)\|([^\u0003]*)\u0003/;
 export const tipBullet = (letter: string, colour: string) => `\u0002${letter.replace(/[\u0002\u0003|]/g, "")}|${colour}\u0003`;
 
 /** T-1926: a line of its own in a hover's text drawn as a thin strip, one cell per colour
- * (`tipStrip`), as wide as the hover's text. */
-const STRIP = /^\u0004([^\u0005]*)\u0005$/;
-export const tipStrip = (colours: string[]) => `\u0004${colours.join(";")}\u0005`;
+ * (`tipStrip`), as wide as the hover's text. T-2334: with `stops`, the cells are a line's stretches,
+ * a station dot between each two and at both ends; where the dots would leave a cell less than
+ * `STOP_CELL_PX`, only the end dots stay and the cells are thinner pills. */
+const STRIP = /^\u0004(\|?)([^\u0005]*)\u0005$/;
+export const tipStrip = (colours: string[], stops = false) => `\u0004${stops ? "|" : ""}${colours.join(";")}\u0005`;
+const STOP_CELL_PX = 6;
+/** a station dot and the gaps either side of it, and the widest a hover's text runs (`.tool-tag`) */
+const STOP_DOT_PX = 9, TAG_TEXT_PX = 328;
+function stripCells(d: HTMLElement, colours: string[], stops: boolean) {
+  const dot = () => { const s = document.createElement("b"); d.append(s); };
+  // a strip with a dot at every station widens its hover to fit them while it can
+  const want = colours.length * (STOP_CELL_PX + STOP_DOT_PX) + STOP_DOT_PX;
+  if (stops && want <= TAG_TEXT_PX) d.style.width = `${want}px`;
+  if (stops) dot();
+  colours.forEach((c, k) => {
+    if (stops && k > 0) dot();
+    const cell = document.createElement("i");
+    cell.style.background = c;
+    d.append(cell);
+  });
+  if (stops) dot();
+}
+/** T-2334: a stops strip too narrow for a dot at every station keeps the end ones (`STOP_CELL_PX`) */
+function fitStrips(tag: HTMLElement) {
+  for (const s of tag.querySelectorAll<HTMLElement>(".tip-strip.stops")) {
+    const cells = s.querySelectorAll("i").length, dots = s.querySelectorAll("b");
+    if (dots.length < 3) continue;
+    const dotW = dots[0].getBoundingClientRect().width + 2;
+    if ((s.clientWidth - dots.length * dotW) / cells >= STOP_CELL_PX) continue;
+    s.classList.add("dense");
+    for (let k = 1; k < dots.length - 1; k++) dots[k].remove();
+  }
+}
 
 /** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
  * "Keep placing (Caps Lock)", is lettered in the theme's accent, the brackets and all faded as a hint (T-2157). */
@@ -85,18 +115,15 @@ export function startTips() {
   const fill = () => {
     const t = el?.getAttribute("data-tip") ?? "";
     if (!t || !el?.isConnected) return hide();
-    if (t !== text) {
+    const fresh = t !== text;
+    if (fresh) {
       text = t;
       tag.replaceChildren(...t.split("\n").map((line) => {
         const d = document.createElement("div");
         const strip = STRIP.exec(line);
         if (strip) {
-          d.className = "tip-strip";
-          for (const c of strip[1].split(";")) {
-            const cell = document.createElement("i");
-            cell.style.background = c;
-            d.append(cell);
-          }
+          d.className = strip[1] ? "tip-strip stops" : "tip-strip";
+          stripCells(d, strip[2].split(";"), !!strip[1]);
           return d;
         }
         const parts = line.split(BULLET);
@@ -115,6 +142,7 @@ export function startTips() {
     }
     if (tag.style.display === "none") raise();
     tag.style.display = "";
+    if (fresh) fitStrips(tag);
     place();
   };
   // T-1656: a modal dialog (the saves panel) is in the top layer, over any z-index; a popover shown

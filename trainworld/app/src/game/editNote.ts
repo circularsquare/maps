@@ -12,7 +12,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { demandByDay, demandUpdating, editsSettling, roughZones, type DayDemand, type DemandView } from "./demand";
-import { DAY_KINDS, DEMAND_DAY_PHRASE, levelOn } from "./days";
+import { DAY_KINDS, DEMAND_DAY_PHRASE } from "./days";
 import { editStamp, lastEdit } from "./editCap";
 import { trainKind } from "./format";
 import { loadProgress } from "./loading";
@@ -108,13 +108,13 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
       const k = trainKind(m, st.fast);
       const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
       const tph = [l.tph.high, l.tph.medium, l.tph.low];
-      PERIODS.forEach((p, i) => { run += tph[levelOn(kind, DEMAND_INDEX[p.demand])] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
+      PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
     }
     lines.set(l.id, { riders: r, money: fares - run - st.upkeep });
   }
   let fares = 0, run = 0;
   inc.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p]; });
-  PERIODS.forEach((p, i) => { run += m.runningPerHour[levelOn(kind, DEMAND_INDEX[p.demand])] * PERIOD_HOURS[i]; });
+  PERIODS.forEach((p, i) => { run += m.runningPerHour[DEMAND_INDEX[p.demand]] * PERIOD_HOURS[i]; });
   const upkeep = m.upkeep.track + m.upkeep.stations + m.upkeep.buses;
   return { trips: d ? railTrips(d) : 0, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1, rough: [...roughZones.peek()].sort().join() };
 }

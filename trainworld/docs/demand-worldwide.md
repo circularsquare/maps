@@ -821,8 +821,8 @@ notes/T-420.md has the tables.
   Year) the long-distance factor is a holiday matter, not a weekend one (T-264, below). The calendar's
   game day 1 being a Monday is a game choice, not a rule. The weekend also keeps the weekday's
   crowded route choices, which matters more where weekday crowding is extreme (Tokyo, Mumbai), and
-  its riders do not react to the weekend timetable (the medium trains 6-24, T-1720): where real
-  weekend service is much thinner than a weekday's evening, fewer would ride. Check: each new country's national travel survey by day of week and purpose (most publish it:
+  runs the weekday's trains (T-2335): where real weekend service is much thinner than a weekday's,
+  its crowding reads lighter than real. Check: each new country's national travel survey by day of week and purpose (most publish it:
   MiD Germany, ENTD France, the Japanese person trip surveys, the Korean household travel survey),
   and its legal weekend days.
 - **Superholidays' days away** (T-264, docs/world.md "Calendar"): a Sunday with local outings

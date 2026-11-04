@@ -1019,6 +1019,12 @@ button.save-add:hover { color: var(--text); }
 /* T-1926: a strip of cells in a hover; width 0 with a full minimum keeps it from widening the tag */
 .tool-tag .tip-strip { display: flex; gap: 1px; width: 0; min-width: 100%; height: 5px; margin: 3px 0; }
 .tool-tag .tip-strip i { flex: 1 1 0; min-width: 0; }
+/* T-2334: a line's stretches between station dots; `dense`, too many for a dot at each, keeps the end ones */
+.tool-tag .tip-strip.stops { max-width: 100%; height: 7px; align-items: center; margin: 4px 0; }
+.tool-tag .tip-strip.stops i { height: 5px; }
+.tool-tag .tip-strip.stops b { flex: none; width: 7px; height: 7px; box-sizing: border-box; border-radius: 50%;
+  background: var(--map-land); border: 1.5px solid var(--map-ink); }
+.tool-tag .tip-strip.stops.dense i { height: 3px; border-radius: 1.5px; }
 /* T-2271: a count's size on a log scale, a tick at each power of ten (the station tool's trips near) */
 .tool-tag .size-bar { position: relative; width: 0; min-width: 100%; height: 4px; margin: 3px 0 2px;
   background: color-mix(in srgb, var(--map-ink) 14%, transparent); }

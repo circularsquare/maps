@@ -4,7 +4,7 @@
 // and moving from the Lines tab to New line, the close confirmation, a line built with stops, then
 // the ripple on Continue. The second card: trains at High (Medium and Low stay 0: T-2092's fill is
 // gone), the game paused from the start until the play step (T-2142), which now comes before the
-// crowding dot, the dot's longer tutorial hover, every level, Traffic, the 2% share step; the road
+// crowding dot, its hover merged with the level name's (T-2334), every level, Traffic, the 2% share step; the road
 // crossings chip's tutorial wording and its short one once the card is closed; Start again in
 // Settings. Run 2: Choose on map, whose first step is a zoom.
 // Screenshots in artifacts/trainworld/t2123/.
@@ -209,9 +209,10 @@ const startGame = async (page) => {
     await page.waitForSelector('[data-guide="crowd"]', { timeout: 120000 }).catch(() => {});
     await page.waitForTimeout(1500);
     check(await ringOn(page, '[data-guide="crowd"]'), 'the crowding step ripples the dot by High');
-    const crowdTip = await page.$eval('[data-guide="crowd"]', (e) => e.dataset.tip).catch(() => '');
+    const crowdTip = await page.$eval('[data-guide="crowd"]', (e) => e.closest('[data-tip]')?.dataset.tip).catch(() => '');
     console.log('crowd tip', JSON.stringify(crowdTip));
-    check(/Maximum crowding in the busiest hour/.test(crowdTip), 'the dot has its longer tutorial hover');
+    // T-2334: one hover for the dot and the level's name: its hours, the peak, the stretches, each period
+    check(/^High demand period: 06:00-20:00\nPeak load \d+%\n\u0004\|/.test(crowdTip) && /\n06:00-10:00 load: \d+%/.test(crowdTip), 'the dot and High share the merged hover');
     await shotCard(page, '10-crowd-step');
     await page.hover('[data-guide="crowd"]');
     check(await waitStep(page, 'levels', 5000), `hovering the dot ticks (now ${await stepNow(page)})`);

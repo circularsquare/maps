@@ -761,10 +761,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
-  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on a weekday and a superholiday's days; a Saturday,
-  a Sunday and a holiday that runs as a Sunday (by the line's country, docs/world.md "Calendar") run
-  medium 6-24 and low 0-6 (`QUIET_LEVEL`, T-1720, [demand-timing.md](demand-timing.md) "Kinds of
-  day"), so a line with no medium trains runs none on a weekend day. New rail lines start at 0 / 0 / 0 and each level is
+  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on every kind of day, weekends and holidays too
+  (T-2335, [demand-timing.md](demand-timing.md) "Kinds of day"). New rail lines start at 0 / 0 / 0 and each level is
   set on its own, so a line given trains at high alone stops at 20:00 (T-2123; the tutorial's last
   steps ask for trains at every level); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
@@ -803,9 +801,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per stretch of one level (consecutive periods at the same
-  level that day: high demand's 6-20 is one stretch, a weekend day's medium 6-24 another,
-  `level_stretches`, T-1536, T-1720; a day's kind is the line's calendar, `Service::cal`, which the
-  clock worker sends with the boarding account's) of the line's local time (T-309: its first
+  level: high demand's 6-20 is one stretch, `level_stretches`, T-1536; every kind of day the same,
+  T-2335) of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
   Paris line would run on London's), the first departure half a one-way run before the stretch's
   start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean
@@ -1018,7 +1015,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
 - **Running cost** US$4 per train-km plus US$2 per car-km (trains an hour each way x line length at
-  the level running that hour: a weekend day's 6-20 at medium, T-1720,
+  the level running that hour,
   times 4 + 2 x cars: a 4-car train US$12 a train-km, 9 cars US$22, 12 cars US$28; under real
   figures so fares can cover it, T-805, T-807, real figures in research/running-costs.md;
   `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
@@ -1057,8 +1054,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   out again on the loaded network at the rate the kept whole days show); edits' charges in them stay, on the clock's day. After a load the main thread sends the
   income, region shares and points again even when they match the last game's. **How much each
   game hour gets** (T-736, `app/src/game/moneyTiming.ts`): demand gives fares and rides per hour of
-  each period and kind of day, the timetable a running cost per hour of each level, by country so
-each runs its weekend timetable on its own days (T-1720, `costParts` in the clock worker). An hour's rides
+  each period and kind of day, the timetable a running cost per hour of each level, the same every
+  day (`costParts` in the clock worker). An hour's rides
   are the period's spread over its hours by the boarding account's arrival shape (6.6: tent, falling
   or valley, at the busiest-hour factor of that kind of day), counted when riders set out; its fares
   and points follow the same shape but land as the ride ends, spread over a trailing window as long

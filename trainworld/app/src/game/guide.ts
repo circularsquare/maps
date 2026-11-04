@@ -47,7 +47,7 @@ const WORDS: Record<Exclude<GuideId, "star">, string> = {
   bubble: "Click a red bubble to see where its trips go",
   trip: "Click one of its destinations to see that trip",
   track: "Place 5km of track",
-  stations: "Place stations on the track (space them ~1km apart)",
+  stations: "Place stations on the track (space them 1-2km apart)",
   construct: "Construct your blueprints",
   line: "Create a line",
   stops: "Assign stops for the line by clicking them on the map",

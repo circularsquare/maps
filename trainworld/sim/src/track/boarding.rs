@@ -533,11 +533,9 @@ impl Boarding {
                 let lr = lr.unwrap();
                 // One day from the quiet of the night; a platform still waiting at its end means a
                 // queue that carries round, so that direction is run again from a day earlier.
-                // T-1720: a weekend day's account runs the quiet timetable's trains
-                let quiet = quiet_kind(day);
                 let runs = [0, 1].map(|r| {
-                    let a = simulate(net, svc, l, r, lr, &self.peak, false, quiet);
-                    if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true, quiet) } else { a }
+                    let a = simulate(net, svc, l, r, lr, &self.peak, false);
+                    if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true) } else { a }
                 });
                 self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
                 self.redone += 1;
@@ -1334,15 +1332,14 @@ pub const BUSY_PLATFORM_S: f64 = 60.0;
 
 /// One direction of one line for a day of departures from `START_HOUR`, from empty platforms;
 /// with `warm`, from a day earlier, keeping the second day. `leftover` says whether anyone was
-/// still waiting when the day ended (then the warm run is the right one). `quiet`: a weekend day's
-/// account, on the quiet timetable's departures (T-1720, `QUIET_LEVEL`).
+/// still waiting when the day ended (then the warm run is the right one).
 #[allow(clippy::too_many_arguments)]
-pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, quiet: bool) -> RunAccount {
+pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool) -> RunAccount {
     // T-798: on a circle the riders still aboard at the last stop ride on round: a second pass
     // queues them at the first stop when their train arrives there, ahead of later arrivals
     let wrap = svc.lines[l].kind == crate::track::net::LoopKind::Circle;
     let mut through = vec![];
-    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, quiet, wrap, &[], &mut through);
+    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &[], &mut through);
     if wrap && !through.is_empty() {
         through.sort_by(|a, b| a.0.total_cmp(&b.0));
         let mut sum = 0.0;
@@ -1350,7 +1347,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
             sum += x.1;
             x.1 = sum;
         }
-        acc = simulate_carry(net, svc, l, r, lr, peak, warm, quiet, wrap, &through, &mut vec![]);
+        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
     }
     acc.hour_load = acc.hour_loads();
     acc
@@ -1367,14 +1364,14 @@ impl Cum<'_> {
 /// `simulate`, with `carry_in` (time, riders so far, in time order) joining the first stop's queue,
 /// and on a circle (`wrap`) the riders staying aboard at the last stop pushed to `carry_out`.
 #[allow(clippy::too_many_arguments)]
-fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, quiet: bool, wrap: bool, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
+fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
     let ls = &svc.lines[l];
     let n = lr.n;
     let cap = ls.crush();
     let t0 = svc.account_start(l, START_HOUR);
     let from = if warm { t0 - DAY } else { t0 };
     let mut trips: Vec<Trip> = vec![];
-    svc.run_deps_as(net, l, r, from, t0 + DAY, Some(quiet), &mut trips);
+    svc.run_deps(net, l, r, from, t0 + DAY, &mut trips);
     // T-680: a change from a pattern with no trains is when the line's trains started; nobody
     // waited for them before it
     let open = svc.eras_of(l).iter().rev().find(|e| e.lat.tph.iter().all(|&t| t <= 0.0)).map(|e| e.until).filter(|&u| u > t0);
@@ -1389,7 +1386,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     let stop_dep: [Vec<f64>; LEVELS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
     // T-842b: riders arrive while a train is due within their tolerance, by the steady day's
     // departures, as demand prices them
-    let deps = svc.lattice(net, l).map(|lat| span::stop_deps(ls, &lat, r, quiet)).filter(|d| d.len() == n);
+    let deps = svc.lattice(net, l).map(|lat| span::stop_deps(ls, &lat, r)).filter(|d| d.len() == n);
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| {
             let per = std::array::from_fn(|p| {
