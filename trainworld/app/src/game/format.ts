@@ -205,8 +205,6 @@ export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCost
 export const busesText = (n: number) => plural(n, "bus", "buses");
 /** T-1464: "$3 per bus-km", in the shown unit. */
 export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runCostBusKm)} per bus-${distUnit()}`;
-/** T-1464: a route's upkeep, "$3k a km of route a day", at the game's economy. */
-export const busUpkeepRule = (m: { upkeepBusKm: number; economy: number }) => `${money(perDistance(m.upkeepBusKm * m.economy))} per ${distUnit()} of route per day`;
 /** T-1464: a route's price on Construct, "$1M per km of route". */
 export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} per ${distUnit()} of route`;
 export const boatsText = (n: number) => plural(n, "boat");

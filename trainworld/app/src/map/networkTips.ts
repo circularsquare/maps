@@ -15,7 +15,6 @@ import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { exact, forecast } from "../game/format";
-import { PERIODS, periodAt } from "../game/periods";
 import type { WorldView } from "../game/types";
 import { hasUpgrade, UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";

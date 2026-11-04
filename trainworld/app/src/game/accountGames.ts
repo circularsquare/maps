@@ -156,16 +156,6 @@ export async function addToAccount(slots: SaveSlot[]) {
 
 // ---------------------------------------------------------------- account backups
 
-/** The account's backups of slot's game, newest first, when the account listed it (T-1395: then the
- * saves panel shows these and not this browser's); null when it is not on this account or the
- * account did not answer. */
-export function accountBackups(slot: SaveSlot | undefined): AccountBackup[] | null {
-  const ctx = cloudContext();
-  if (!slot || !ctx?.on || !tiedTo(slot.cloud, ctx)) return null;
-  const g = accountList.value?.games.find((x) => x.id === slot.cloud!.id);
-  return g ? g.backups ?? [] : null;
-}
-
 /** An account backup of game `id` as a file named `name`, or null if it could not be downloaded. */
 export async function accountBackupFile(id: string, name: string, b: AccountBackup): Promise<File | null> {
   const ctx = cloudContext();
@@ -189,13 +179,6 @@ export async function restoreAccountBackup(id: string, name: string, origin: str
 /** sessionStorage: the account whose games leave this browser at the start menu, then signs out */
 const REMOVE_KEY = "trainworld.signout-remove";
 const removing = (): string => { try { return sessionStorage.getItem(REMOVE_KEY) ?? ""; } catch { return ""; } };
-
-/** How many slots in this browser are tied to the account signed in (the sign-out question's). */
-export async function tiedHere(): Promise<number> {
-  const acct = session.peek()?.account.id;
-  if (!acct) return 0;
-  return (await listSlots().catch(() => [] as SaveSlot[])).filter((s) => s.cloud?.acct === acct && !s.cloud.local).length;
-}
 
 /** Sign out, removing this account's games from this browser: from a game the page goes to the start
  * menu first (the game saved), where `removeOnStart` finishes. */

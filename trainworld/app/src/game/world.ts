@@ -290,7 +290,6 @@ const headwayLimits = new Map<LineId, readonly number[]>();
 export function noteHeadwayLimits(id: LineId, s: readonly number[]) {
   headwayLimits.set(id, s);
 }
-export const headwayLimitsOf = (id: LineId) => headwayLimits.get(id);
 
 /** T-1800: the trains a headway edit will leave each level with, as far as the panel can tell, or
  * null when it cannot. A level kept as it is keeps its trains. A headway at or over the level's

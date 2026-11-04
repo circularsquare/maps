@@ -22,12 +22,6 @@ export interface Opening {
 /** The lines on their opening day, by id. */
 export const openings = signal<ReadonlyMap<string, Opening>>(new Map());
 
-const listeners: ((ids: string[]) => void)[] = [];
-/** Told of the lines that just opened (a construct that opens several tells once). */
-export function onLinesOpened(f: (ids: string[]) => void) {
-  listeners.push(f);
-}
-
 /** The riders figure to show for a line on its opening day: the figure eased up from 0 (fast at first,
  * slow to finish) once it has landed. Null when the row is plain. */
 export function countingRiders(o: Opening | undefined, riders: number, now = performance.now()): number | null {
@@ -61,7 +55,6 @@ export function startOpeningDay() {
     const m = new Map(openings.peek()), at = clock.now();
     for (const id of opened) m.set(id, { at, landed: 0 });
     openings.value = m;
-    for (const f of listeners) f(opened);
   });
   // the first figure above 0 starts the count
   today.subscribe((t) => {

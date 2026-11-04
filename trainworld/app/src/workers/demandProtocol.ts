@@ -279,9 +279,6 @@ export type FromDemand =
       openMs: number;
       /** a solve on a small network, so V8 has optimised the kernel before the first real one */
       warmMs: number;
-      /** DemandApi.info(): cells, zones, home-to-work trips a day, walk share with no rail, open ms
-       * (the home city's; absent when `init` carried no pack for it) */
-      info?: number[];
       /** demand_periods(): 6 numbers per period (from, to, level, to-work share, to-home share, peak-hour factor) */
       periods: number[];
       /** T-260 `day_factors()`: load factor per kind of day, purpose and period, then each day's

@@ -96,10 +96,3 @@ export function inComplexView(id: StationId): boolean {
 export function stationScope(id: StationId): StationId[] {
   return inComplexView(id) ? complexOf(id) : [id];
 }
-
-/** The selected station's scope as ids joined by commas ("" when no station is selected): a
- * string, so effects that read it run again only when it changes, not on every setting. */
-export const selectedScope = computed(() => {
-  const s = selection.value;
-  return s?.kind === "station" ? stationScope(s.station).join(",") : "";
-});

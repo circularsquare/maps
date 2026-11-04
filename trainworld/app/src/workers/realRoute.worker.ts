@@ -41,7 +41,7 @@ export type FromRouter =
    * a click (or no graph there), "none" nothing joins them */
   | { kind: "line"; seq: number; line: Float64Array | null; lengthM: number; why?: "off" | "none"; ms: number; states: number }
   /** the fitted corners in `add_route`'s `pis` layout (x, y, radius, level each), null if the fit failed */
-  | { kind: "fit"; seq: number; pis: Float64Array | null; worst: number; mean: number; ms: number }
+  | { kind: "fit"; seq: number; pis: Float64Array | null; worst: number; ms: number }
   /** the reachable chains in view: chain i's lon, lat pairs are `xy[off[i] * 2]` up to
    * `xy[off[i + 1] * 2]`, its class `cls[i]` (0 main line, 1 other rail, 2 metro); `chains` reachable
    * in all */
@@ -623,8 +623,8 @@ async function handle(m: ToRouter) {
     const out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
     if (!out) return;
     const ms = performance.now() - t1;
-    if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, mean: 0, ms });
+    if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms });
     const pis = out.slice(3);
-    post({ kind: "fit", seq: m.seq, pis, worst: out[0], mean: out[1], ms }, [pis.buffer]);
+    post({ kind: "fit", seq: m.seq, pis, worst: out[0], ms }, [pis.buffer]);
   }
 }

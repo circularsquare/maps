@@ -124,9 +124,6 @@ const provisional = new Map<string, string[]>();
 let redraw: ((tiles: { z: number; x: number; y: number }[]) => void) | null = null;
 let redrawSoon = 0;
 
-/** for checks */
-export const provisionalKeys = () => [...provisional.keys()];
-
 /** `f` is called with the tiles to load again once a grid they waited for has come. */
 export function onRedraw(f: (tiles: { z: number; x: number; y: number }[]) => void) {
   redraw = f;

@@ -7,12 +7,6 @@
 import type { DemandView } from "./demand";
 import type { PurposeKey } from "./purposes";
 
-export interface RiderPick {
-  from: number;
-  to: number;
-  purpose: PurposeKey;
-}
-
 const share = (v: number | undefined) => Math.min(1, Math.max(0, v ?? 0));
 
 /** An index drawn in proportion to `w`; none carries weight, an even draw over `fallback`. */

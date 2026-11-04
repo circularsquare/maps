@@ -33,7 +33,6 @@ export class ShadeLayer implements CustomLayerInterface {
   readonly type = "custom";
   readonly renderingMode = "2d";
   private map: MlMap | null = null;
-  private gl: WebGL2RenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private vao: WebGLVertexArrayObject | null = null;
   private buffer: WebGLBuffer | null = null;
@@ -72,7 +71,6 @@ export class ShadeLayer implements CustomLayerInterface {
 
   onAdd(map: MlMap, gl: WebGL2RenderingContext) {
     this.map = map;
-    this.gl = gl;
     const p = (this.program = compile(gl, VERTEX, FRAGMENT));
     this.loc = uniforms(gl, p, ["u_matrix", "u_globe", "u_globe_plane", "u_globe_at", "u_center_hi", "u_center_lo", "u_wrap", "u_color"]);
     this.buffer = gl.createBuffer();
@@ -93,7 +91,7 @@ export class ShadeLayer implements CustomLayerInterface {
     gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vao);
     this.program = this.buffer = this.vao = null;
-    this.map = this.gl = null;
+    this.map = null;
   }
 
   render(gl: WebGL2RenderingContext, args: { defaultProjectionData: Parameters<typeof cameraFrom>[0] }) {

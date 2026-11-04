@@ -1,5 +1,5 @@
-// Shared-world demand worker (T-116/T-117). Owns New York local commutes,
-// Philadelphia local commutes and the separate regional market. Each assigned period
+// Shared-world demand worker (T-116/T-117). Owns the zones' local commutes and
+// the separate regional market. Each assigned period
 // advances all populations from one frozen total load vector at every crowding round.
 // Network messages supersede work between populations; queries require the same
 // version AND refinement round across all this worker's periods; one marked `wait` about a round
@@ -20,7 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
@@ -42,7 +42,6 @@ const cities = new Map<CityId, DemandApi>();
 /** the cities the network in hand was set on (`current`'s job): only these answer queries */
 let jobCities = new Set<CityId>();
 const everyday = new Map<CityId, EverydayApi>();
-const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 /** T-377: the zones' market packs open here, and `intercity` the market composed of all of them
  * (composed again whenever one opens or closes); it answers every question's all-mode part */
 let marketPacks: MarketPacks | null = null;
@@ -858,7 +857,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         const t2 = performance.now();
         const warmMs = warmUp() + everydayWarmMs;
         started = true;
-        sendMessage({ kind: "ready", cityInfo, wasmMs: t1 - t0, openMs: t2 - t1, warmMs, info: cityInfo[HOME_CITY], periods: Array.from(demand_periods()), days: Array.from(day_factors()), memBytes: wasm_memory_bytes(), heap: heap() });
+        sendMessage({ kind: "ready", cityInfo, wasmMs: t1 - t0, openMs: t2 - t1, warmMs, periods: Array.from(demand_periods()), days: Array.from(day_factors()), memBytes: wasm_memory_bytes(), heap: heap() });
       } catch (err) {
         failed(err);
       }
@@ -1056,7 +1055,7 @@ function query(msg: Query) {
       const layer = live ? everyday.get(msg.city) : undefined;
       // T-285: packed, only the far cells the selection's samples reach (demandProtocol `everyday`)
       const extra = layer?.selection_sparse_day(msg.end, msg.cells, day) ?? null;
-      const names = EVERYDAY_PURPOSES.slice(0, layer?.purpose_count() ?? 0);
+      const names = EVERYDAY_NAMES.slice(0, layer?.purpose_count() ?? 0);
       sendMessage({ kind: "purposes", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, work, everyday: extra, names }, [...(work ? [work.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "flows") {
       // reads the network's subzones and the sums it is given, not any period's state (as cellModes)
@@ -1160,7 +1159,7 @@ function query(msg: Query) {
       const work = b ? groupMasks.map((m) => b.a.purpose_timing_mask_day(msg.end, msg.cells, m, day)) : [];
       const e = b?.e;
       const extra = e ? groupMasks.map((m) => e.selection_sparse_mask_day(msg.end, msg.cells, m, day)) : [];
-      const names = EVERYDAY_PURPOSES.slice(0, e?.purpose_count() ?? 0);
+      const names = EVERYDAY_NAMES.slice(0, e?.purpose_count() ?? 0);
       const out = packed && packed.length ? packed : null;
       sendMessage({ kind: "bareFlows", id: msg.id, packed: out, masks: b ? groupMasks : [], work, everyday: extra, names }, [...(out ? [out.buffer] : []), ...work.map((v) => v.buffer), ...extra.map((v) => v.buffer)]);
     } else if (msg.kind === "bareSquares") {

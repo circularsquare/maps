@@ -21,9 +21,9 @@ import type { NetworkSnapshot } from "./protocol";
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
 export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
-export const CACHE_FORMAT = 7; // 3: the corridors as a shared table and the pairs with rail (T-1008); 4: Saturday and Sunday apart (T-262); 5: the away day, the average last (T-264); 6: the going-out and coming-back days (T-1373); 7: the bubbles' No route arrays (T-2215)
+export const CACHE_FORMAT = 7; // raise when the cached result's layout changes
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
- * question about it (a click waits for the fresh solve, as before T-328). */
+ * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;
 
 /** What the cache key is made of, besides the network's hash (its storage key). */

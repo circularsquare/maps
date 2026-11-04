@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { lineMoneyTip, Money } from "../MoneyText";
-import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
+import { andList, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, dayNote, peakLoadText, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";

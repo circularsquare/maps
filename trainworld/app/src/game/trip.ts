@@ -582,7 +582,7 @@ export function wholePeople(shares: number[], n: number, pooled = -1): number[] 
   const raw = shares.map((x) => (Math.max(0, x) / total) * n);
   const out = raw.map(Math.floor);
   const left = n - out.reduce((s, x) => s + x, 0);
-  const order = raw.map((r, i) => i).sort((a, b) => Number(a === pooled) - Number(b === pooled) || raw[b] - out[b] - (raw[a] - out[a]) || shares[b] - shares[a]);
+  const order = raw.map((_, i) => i).sort((a, b) => Number(a === pooled) - Number(b === pooled) || raw[b] - out[b] - (raw[a] - out[a]) || shares[b] - shares[a]);
   for (let k = 0; k < left; k++) out[order[k]]++;
   return out;
 }

@@ -497,13 +497,10 @@ export type FerryPortIn = { node: number } | { x: number; y: number; bx: number;
 
 /** Everything drawn, in local units (map/geo.ts). */
 export interface ClockRender {
-  /** per edge in `ClockState.edges` order: x, y, height (m) triples, concatenated; or `edgeParts` */
-  edgePts?: Float32Array;
-  /** start of each edge's points (in triples), edges + 1 entries */
-  edgeOff?: Uint32Array;
-  /** T-1029: each edge's points on its own, in `ClockState.edges` order (in the clock worker only:
-   * the same arrays while an edge is unchanged, never posted), with its speeds as `edgeSpeed`'s */
+  /** T-1029: each edge's points (x, y, height m triples) on its own, in `ClockState.edges` order (in
+   * the clock worker only: the same arrays while an edge is unchanged, never posted) */
   edgeParts?: Float32Array[];
+  /** each edge's geometry speed limit km/h per segment, indexed as its vertices */
   edgeSpeedParts?: (Float32Array | undefined)[];
   /** keyframes (notes/T-040.md): phases (t, s, v, a), per profile (first, count, trip s, length
    * m), run 0 of each line resampled (x, y, local units), per line id (first sample, count,
@@ -512,8 +509,6 @@ export interface ClockRender {
   meta: Float32Array;
   samples: Float32Array;
   lineTable: Float32Array;
-  /** Geometry speed limit km/h per rendered edge segment; indexed as edge vertices. */
-  edgeSpeed?: Float32Array;
 }
 
 /** A busy resource (SPEC 6.2: 75% and up), local units. `kind`: 0 track, 1 single track,

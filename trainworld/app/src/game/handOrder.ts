@@ -30,11 +30,3 @@ export function byHand<T>(items: readonly T[], idsOf: (t: T) => readonly string[
   const rank = (t: T) => idsOf(t).reduce((m, id) => Math.min(m, at.get(id) ?? Infinity), Infinity);
   return items.map((t, i) => ({ t, i, r: rank(t) })).sort((a, b) => (a.r === b.r ? a.i - b.i : a.r - b.r)).map((x) => x.t);
 }
-
-/** `order` with `moved` taken out and put back just before `before` (null: at the end). */
-export function moveIn(order: readonly string[], moved: string, before: string | null): string[] {
-  const out = order.filter((id) => id !== moved);
-  const i = before === null ? -1 : out.indexOf(before);
-  out.splice(i < 0 ? out.length : i, 0, moved);
-  return out;
-}

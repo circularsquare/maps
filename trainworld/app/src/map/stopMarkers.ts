@@ -148,7 +148,6 @@ export class StopMarkers {
   private h = 0;
   private reasonTimer = 0;
   private reasonFor: string | null = null;
-  private hoverId: string | null = null;
   /** the last tiers asked of the clock worker; an older answer is dropped */
   private asked = 0;
   /** the clock worker's last tiers for the line being edited */
@@ -360,7 +359,6 @@ export class StopMarkers {
 
   private hideTag() {
     this.tag.style.display = "none";
-    this.hoverId = null;
     this.reasonFor = null;
     window.clearTimeout(this.reasonTimer);
   }
@@ -371,10 +369,8 @@ export class StopMarkers {
     this.map.getCanvas().style.cursor = id ? "pointer" : "crosshair";
     if (id === null) {
       if (this.reasonFor === null) this.hideTag();
-      this.hoverId = null;
       return;
     }
-    this.hoverId = id;
     if (this.reasonFor !== null && this.reasonFor !== id) this.hideTag();
     if (this.reasonFor === null) this.showTag(this.words(id), px, py);
   }

@@ -118,7 +118,7 @@ function state(reverse=false){
  const points=[[0,0,0,100,0,0],[0,0,0,-100,0,0]];
  if(reverse){edges.reverse();points.reverse()}
  return {edges,lines:[],nodes:[{id:0,x:0,y:0,lng:-73.98,lat:40.73,platform:200,stationBuilt:false,ports:2}],
- render:{edgePts:F(points.flat()),edgeOff:new Uint32Array([0,2,4]),phases:F([]),meta:F([]),samples:F([]),lineTable:F([])}};
+ render:{edgeParts:points.map((p)=>F(p)),phases:F([]),meta:F([]),samples:F([]),lineTable:F([])}};
 }
 const net=networkFromState(state()),again=networkFromState(state(true));
 assert.deepEqual(net.stationAxis,again.stationAxis,'edge insertion order cannot flip the platform');
@@ -126,7 +126,7 @@ const half=100/Math.cos(40.73*Math.PI/180);
 near(Math.abs(net.stationAxis[0]),half,'',1e-2);near(net.stationAxis[1],0);near(net.stationShape[0],0);near(net.stationShape[2],0,'straight through');
 near(net.stationShape[3],6/Math.cos(40.73*Math.PI/180),'true half width',1e-3);
 assert.equal(net.stations[2]&2,2,'blueprint flag retained');
-const end=networkFromState({...state(),edges:[state().edges[0]],render:{...state().render,edgePts:F([0,0,0,300,0,0]),edgeOff:new Uint32Array([0,2])}});
+const end=networkFromState({...state(),edges:[state().edges[0]],render:{...state().render,edgeParts:[F([0,0,0,300,0,0])]}});
 near(end.stationShape[0],half,'dead end: middle along the track',1e-2);
 
 // --- picking on the drawn shape

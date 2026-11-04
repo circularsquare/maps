@@ -1,10 +1,8 @@
 // A bubble selection's everyday far end, added up over the demand workers (T-285; used by
 // demandClient.ts `flows`). Each worker answers `EverydayApi.selection_sparse_day` for its periods:
 // per purpose kind 30 timing values, m, then m far cells (ascending), their rail, walking and
-// driving legs. Only the far cells the selection's samples reach are sent, where every worker used
-// to send three values for each of the city's cells per purpose (14.6 MB a worker in New York) and
-// the main thread added them all up. The sums are the same f32 sums, in the same order, as that
-// dense layout gave. No imports, so a check script can run it under Node (checks/t285-merge-check.mjs).
+// driving legs. Only the far cells the selection's samples reach are sent. No imports, so a check
+// script can run it under Node (checks/t285-merge-check.mjs).
 
 /** Far cells (ascending) with their legs by mode. */
 export interface FarCells {

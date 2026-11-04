@@ -51,14 +51,3 @@ export function afterPaint(f: () => void) {
   requestAnimationFrame(() => { const ch = new MessageChannel(); ch.port1.onmessage = go; ch.port2.postMessage(0); });
   setTimeout(go, 500);
 }
-
-/**
- * Run `work` of `kind` over `units`: at once when it should be quick here, else with `text` shown
- * and painted first. `guess` is ms a unit before the kind has run on this device.
- */
-export function runBusy(kind: string, text: string, units: number, guess: number, work: () => void) {
-  const timed = () => { const t0 = performance.now(); try { work(); } finally { learnBusy(kind, units, performance.now() - t0); } };
-  if (expectedMs(kind, units, guess) <= BUSY_MS) { timed(); return; }
-  const token = showBusy(text);
-  afterPaint(() => { try { timed(); } finally { hideBusy(token); } });
-}

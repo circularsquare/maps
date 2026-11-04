@@ -242,8 +242,6 @@ const LEVEL_ZOOM_STEP = 1.8;
 /** The bubble detail setting (T-795): each step moves every band one aggregation level finer. */
 export const DETAIL_RANGE = { min: -1, max: 2 };
 let detail = 1;
-/** The zoom from which bubbles are the finest (resolution 9) at a detail setting. */
-export const finestFromZoom = (d: number) => LEVEL_ZOOMS[0] - LEVEL_ZOOM_STEP * d;
 
 /** Which aggregation level (index into BUBBLE_RES: resolution 9, 8, 7, 6) to show at a zoom; level
  * 0, resolution 9, is as fine as it gets at any detail. */

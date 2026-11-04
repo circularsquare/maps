@@ -1,9 +1,8 @@
 // Reshaping blueprint track (T-064, T-092): with a stretch of blueprint track selected, its points
 // of intersection (PIs, the corners the track turns at) show as squares that can be dragged, each
-// curve labelled with its radius and speed. While dragging, the clock worker previews the new
+// curve labelled with its speed. While dragging, the clock worker previews the new
 // shape as a trial edit (the same check an edit gets, one request in flight); letting go commits
-// it as one undoable edit, Escape puts the square back. The track inspector sets a curve's radius
-// (`setPis`) and the stretch's level (`edgeLevel`). Constructed track cannot be reshaped (SPEC
+// it as one undoable edit, Escape puts the square back. Constructed track cannot be reshaped (SPEC
 // 6.4). Track drawn while the track ran through the clicked points (T-079) shows its clicks as
 // the squares; its first reshape makes them corners like on any other track.
 
@@ -104,15 +103,6 @@ export class EdgeEditor {
     this.loading = false;
     this.shape = shape;
     this.place();
-  }
-
-  /** New PIs for a stretch (the inspector's radius stepper): one undoable edit. */
-  async setPis(edge: number, pis: EdgePi[]) {
-    await edit({ op: "edgePis", edge, pis: pis.map(toInput), design: designSpeed.peek() });
-  }
-
-  get dragging() {
-    return this.drag !== null;
   }
 
   /** Escape while dragging: the square goes back, nothing changes. */

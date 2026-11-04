@@ -1124,9 +1124,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const order = s.edges.map((_, i) => i).sort((i, j) => Number(!s.edges[i].built) - Number(!s.edges[j].built) || i - j);
   for (const i of order) {
     const e = s.edges[i];
-    const given = r.edgeParts ? r.edgeParts[i] : r.edgePts!.subarray(r.edgeOff![i] * 3, r.edgeOff![i + 1] * 3);
-    // as in one zero-filled array of every edge's speeds (`ClockRender.edgeSpeed`)
-    const sg: ArrayLike<number> | undefined = r.edgeParts ? r.edgeSpeedParts?.[i] : r.edgeSpeed?.subarray(r.edgeOff![i], r.edgeOff![i + 1]);
+    const given = r.edgeParts![i];
+    const sg: ArrayLike<number> | undefined = r.edgeSpeedParts?.[i];
     builtEdge.set(e.id, e.built);
     const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);

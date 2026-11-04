@@ -14,7 +14,7 @@ import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
-import { clockTime, count, trainKind } from "./format";
+import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
 import { crowdColour } from "./palette";
 import { tipStrip } from "../ui/tip";

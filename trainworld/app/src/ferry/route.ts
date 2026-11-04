@@ -343,12 +343,6 @@ function cellAt(r: Box, x: number, y: number): number {
   return c < 0 || w < 0 || c >= r.W || w >= r.H ? -1 : w * r.W + c;
 }
 
-/** The room at a point (longitude, latitude) in a raster, m; -1 outside it or on land. */
-export function roomAt(r: Raster, p: LonLat): number {
-  const i = cellAt(r, r.frame.x(p[0]), r.frame.y(p[1]));
-  return i < 0 || !r.water[i] ? -1 : Math.max(0, roomOf(r, i));
-}
-
 // ------------------------------------------------------------------ the search
 
 class Heap {

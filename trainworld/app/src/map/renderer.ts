@@ -24,7 +24,7 @@ import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_U
 import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
-import { StrokeGather, type StrokeCpu } from "./strokeGather";
+import { StrokeGather } from "./strokeGather";
 import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";

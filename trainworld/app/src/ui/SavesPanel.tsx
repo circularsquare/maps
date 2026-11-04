@@ -436,12 +436,6 @@ function onAccount(slot: SaveSlot): boolean {
   return !!ctx?.on && tiedTo(slot.cloud, ctx);
 }
 
-/** The confirmation before a slot is deleted; also the start menu's (T-1612). */
-export function deleteQuestion(slot: SaveSlot, playing = false): string {
-  const where = onAccount(slot) ? "this browser and your account" : "this browser";
-  return playing ? `Delete "${slot.name}" from ${where}? The game ends and you go back to the start menu.` : `Delete "${slot.name}" from ${where}?`;
-}
-
 /** The modal. */
 export function SavesPanel() {
   const open = savesOpen.value;

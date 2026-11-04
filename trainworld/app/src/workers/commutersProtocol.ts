@@ -1,5 +1,5 @@
-// Messages between the main thread (map/demandViews.ts) and the commuter bubble worker
-// (workers/commuters.worker.ts), T-097.
+// Messages between the main thread (map/bubbles.ts, commuterView.ts, demandHover.ts, demandOverlay.ts,
+// intercityView.ts) and the commuter bubble worker (workers/commuters.worker.ts), T-097.
 
 import type { FrameSpec } from "../game/frame";
 import type { BubbleEnd } from "../game/types";

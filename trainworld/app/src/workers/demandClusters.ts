@@ -50,8 +50,6 @@ export interface Cluster {
   stLocal: Int32Array;
   /** route node of `net` -> route node of the whole network */
   nodeGlobal: Uint32Array;
-  /** route node of the whole network -> route node of `net`, or -1 */
-  nodeLocal: Int32Array;
   /** everything its result depends on, so an unchanged cluster can keep its result */
   sig: string;
   /** T-1862: `sig` less the service values (run times, trains an hour, span) */
@@ -174,7 +172,7 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
         }
       }
     }
-    // `?perfOff=split`: the market's zones as one node, as before T-409
+    // `?perfOff=split`: the market's zones as one node
     if (oneMarket) for (let k = 1; k < M; k++) join(MARKET, MARKET + k);
   }
   // the clusters, in the order of their first population
@@ -380,7 +378,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const lineN = Uint32Array.from(lines, (l) => n.lineN[l]);
   const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
   const tph = new Float32Array(3 * lines.length), cars = new Float32Array(lines.length);
-  const nodeGlobal = new Uint32Array(2 * nStops), nodeLocal = new Int32Array(2 * n.stops.length).fill(-1);
+  const nodeGlobal = new Uint32Array(2 * nStops);
   let o = 0;
   lines.forEach((l, i) => {
     const m = n.lineN[l], g = lineOff[l];
@@ -388,7 +386,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     times.set(n.times.subarray(6 * g, 6 * (g + m)), 6 * o);
     // route nodes: each line's 2m nodes in a row, its runs' stops (`hopKm` alike)
     hopKm.set(n.hopKm.subarray(2 * g, 2 * (g + m)), 2 * o);
-    for (let r = 0; r < 2 * m; r++) { nodeGlobal[2 * o + r] = 2 * g + r; nodeLocal[2 * g + r] = 2 * o + r; }
+    for (let r = 0; r < 2 * m; r++) { nodeGlobal[2 * o + r] = 2 * g + r; }
     tph.set(n.tph.subarray(3 * l, 3 * l + 3), 3 * i);
     cars[i] = n.cars[l];
     o += m;
@@ -414,5 +412,5 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   // T-842: a period's own span, where there is one
   const nr = 2 * nStops;
   const psig = PERIODS.map((p, q) => span.length ? hashOf([levelSig[LEVEL[p.demand]], span.subarray(q * nr, (q + 1) * nr)]) : levelSig[LEVEL[p.demand]]);
-  return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, shape, psig };
+  return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, sig, shape, psig };
 }

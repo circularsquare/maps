@@ -70,7 +70,7 @@ export function startTerrainTint(map: MlMap): () => void {
     const x0 = nw.x - dx, x1 = se.x + dx, y0 = Math.max(top, nw.y - dy), y1 = Math.min(bottom, se.y + dy);
     const lonW = x0 * 360 - 180, lonE = x1 * 360 - 180;
     const perDeg = terrainGrids.values().next().value!.perDeg;
-    const cssW = box.clientWidth * (1 + 2 * MARGIN), cssH = box.clientHeight * (1 + 2 * MARGIN);
+    const cssW = box.clientWidth * (1 + 2 * MARGIN);
     const W = Math.max(1, Math.round(Math.min(MAX_PX, cssW / 2, (lonE - lonW) * perDeg * PX_PER_CELL)));
     const H = Math.max(1, Math.round(Math.min(MAX_PX, W * (y1 - y0) / (x1 - x0))));
     const s = shade.peek();

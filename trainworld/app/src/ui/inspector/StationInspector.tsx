@@ -104,25 +104,23 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
 }
 
 /** The complex now (game/complexLive.ts): worked out again every 10 game seconds or so (at most
- * every 150 ms of real time), and re-rendered only when something shown changed; it looks ahead
- * twice the game time between workings-out at the speed set. */
+ * every 150 ms of real time), and re-rendered only when something shown changed. */
 function useComplexNow(members: string[]): ComplexNow | null {
   const [now, setNow] = useState<ComplexNow | null>(() => complexNow(members));
   const scope = members.join(",");
   useEffect(() => {
-    let key = "", t = NaN, board: unknown = null, shown: ComplexNow | null = null;
+    let key = "", t = NaN, board: unknown = null;
     const tick = () => {
       const r = live.overlay?.renderer, at = clock.now();
       if (Math.abs(at - t) < 10 && r?.board === board) return;
       t = at;
       board = r?.board ?? null;
-      const c = complexNow(members, 2 * Math.max(10, 0.15 * clock.rate()) + 10);
+      const c = complexNow(members);
       const k = c?.key ?? "";
-      if (k !== key || !shown || !c) {
+      if (k !== key || !c) {
         key = k;
-        shown = c;
         setNow(c);
-      } else shown.trains = c.trains;
+      }
     };
     tick();
     const h = setInterval(tick, 150);
