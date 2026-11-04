@@ -42,11 +42,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **countries3** a98664e86d75b14a3 (Opus, 6194, ids T-2398..T-2402): paused before Jakarta; asks "go" before each pack
   write. Ukraine dry run ready (27 zones + kyi/kha/ode; Crimea as 3 zones to RUS; 959 councils left out). Tell Anita
   after: Sukabumi+Cianjur one zone, Karawang out of Jakarta; ISW line not an open licence (only whole units dropped).
-- **solveend** a6dd5545d2de795d1 (Opus, tree .tw-trees/t1734, 6187): T-1734 rebased and re-measured, then T-2410 (new
-  line skips local solve), then T-2409 (4x cap, status tag strings above; "how wrong" estimate only if useful).
-  Told about all landings since; it rebases before reporting.
-- **neartrips** ac66e591d8883cf7f (Opus, tree .tw-trees/neartrips, 6192): T-2430 the station tool's "n trips within
-  1km" tag no longer shows; bisect today's landings, fix, check.
+- solveend done: T-1734, T-2410, T-2409 landed 1179abad (+ notes dca06c0d); not on 8800 yet (post-waterroute rebuild,
+  smoke light and dark). Strings to show Anita: "Time capped at 4x while updating demand", "16x (time capped at 4x
+  while updating demand)", "Calculation 1 day behind" / "Calculation N days behind". Worktree t1734 removed.
+  waterroute's code-map.md line committed early (24a: market drives zone detours) so the land could fast-forward.
+- neartrips done: T-2430 landed 00791e1d (the tag's legs asked on tool pick, late answers kept, retried; was a
+  12-20 s wait with bubbles off on Tokyo). Not on 8800 yet: goes with the post-waterroute rebuild.
 - Next free id **T-2431**.
 
 ## Next
