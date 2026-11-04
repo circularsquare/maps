@@ -245,6 +245,27 @@ impl Grid {
         out.dedup();
         out
     }
+    /// Edges with a piece in a cell meeting the box `b` (`[xmin, ymin, xmax, ymax]`), sorted, without
+    /// duplicates; `None` when `b` spans more cells than the grid holds, where going through every
+    /// edge is quicker.
+    pub fn in_box(&self, b: [f64; 4]) -> Option<Vec<u32>> {
+        let (x0, y0, x1, y1) = ((b[0] / CELL).floor(), (b[1] / CELL).floor(), (b[2] / CELL).floor(), (b[3] / CELL).floor());
+        let n = (x1 - x0 + 1.0) * (y1 - y0 + 1.0);
+        if !(n <= self.cells.len() as f64) {
+            return None;
+        }
+        let mut out = Vec::new();
+        for cx in x0 as i32..=x1 as i32 {
+            for cy in y0 as i32..=y1 as i32 {
+                if let Some(v) = self.cells.get(&(cx, cy)) {
+                    out.extend_from_slice(v);
+                }
+            }
+        }
+        out.sort_unstable();
+        out.dedup();
+        Some(out)
+    }
     pub fn clear(&mut self) {
         self.cells.clear();
     }
@@ -257,6 +278,20 @@ mod tests {
 
     fn line(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Piece> {
         fit(&[Pi::new(x0, y0, 0.0, 0), Pi::new(x1, y1, 0.0, 0)]).pieces
+    }
+
+    #[test]
+    fn grid_in_box() {
+        let mut g = Grid::default();
+        g.insert(1, &line(0.0, 0.0, 5000.0, 0.0));
+        g.insert(2, &line(0.0, 3500.0, 0.0, 9000.0));
+        g.insert(3, &line(-3000.0, -3000.0, -2500.0, -2500.0));
+        assert_eq!(g.in_box([4200.0, -100.0, 4300.0, 100.0]), Some(vec![1]));
+        assert_eq!(g.in_box([-100.0, -100.0, 100.0, 4000.0]), Some(vec![1, 2]));
+        assert_eq!(g.in_box([20_000.0, 0.0, 20_100.0, 100.0]), Some(vec![]));
+        // a box over more cells than the grid holds, or unbounded: every edge is to be looked at
+        assert_eq!(g.in_box([-50_000.0, -50_000.0, 50_000.0, 50_000.0]), None);
+        assert_eq!(g.in_box([f64::NEG_INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::INFINITY]), None);
     }
 
     #[test]

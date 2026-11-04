@@ -180,6 +180,42 @@ pub fn crossings(len: f64, at: impl Fn(f64) -> (f64, f64), roads: &Roads, out: &
     out[start..].sort_by(|x, y| x[0].total_cmp(&y[0]));
 }
 
+/// The crossings `crossings` finds in tile (`tx`, `ty`) alone, of the chords between chainages `lo`
+/// and `hi` (T-2230: a tile landing adds only its own, as each crossing is found in one tile). The
+/// chords are those a whole pass samples, so the chainages are the same to the bit.
+#[allow(clippy::too_many_arguments)]
+pub fn crossings_in_tile(len: f64, lo: f64, hi: f64, at: impl Fn(f64) -> (f64, f64), tile: &RoadTile, tx: u32, ty: u32, out: &mut Vec<[f64; 2]>) {
+    if len <= 0.0 || lo > hi {
+        return;
+    }
+    let n = (len / ROAD_STEP).ceil().max(1.0) as usize;
+    let step = len / n as f64;
+    let j0 = ((lo / step).floor().max(0.0) as usize).min(n - 1);
+    let j1 = ((hi / step).ceil().max(0.0) as usize).clamp(j0 + 1, n);
+    let p = at(j0 as f64 * step);
+    let mut a = merc(p.0, p.1);
+    let (ox, oy) = (tx as f64 * EXTENT, ty as f64 * EXTENT);
+    let tile_of = |v: f64| (v / EXTENT).floor().max(0.0) as u32;
+    let start = out.len();
+    for j in j0..j1 {
+        let s0 = j as f64 * step;
+        let p = at((j + 1) as f64 * step);
+        let b = merc(p.0, p.1);
+        if (tile_of(a.0.min(b.0))..=tile_of(a.0.max(b.0))).contains(&tx) && (tile_of(a.1.min(b.1))..=tile_of(a.1.max(b.1))).contains(&ty) {
+            tile.cross((a.0 - ox, a.1 - oy), (b.0 - ox, b.1 - oy), |t, w| out.push([s0 + t * step, w as f64]));
+        }
+        a = b;
+    }
+    out[start..].sort_by(|x, y| x[0].total_cmp(&y[0]));
+}
+
+/// Whether no crossing of track with this vertical profile can ever be charged (`charge`): every
+/// breakpoint half a level or more off the ground, all on one side of it (heights are linear between).
+/// Such track keeps no crossings (T-2230: most of a big city's track is underground or on viaducts).
+pub fn off_ground(vert: &[[f64; 2]]) -> bool {
+    !vert.is_empty() && (vert.iter().all(|v| v[1] >= LEVEL_H / 2.0) || vert.iter().all(|v| v[1] <= -LEVEL_H / 2.0))
+}
+
 /// The crossings charged, weighted, and their price, US$M: those where the track is at level 0
 /// (under half a level from the ground, so the low half of a ramp too).
 pub fn charge(vert: &[[f64; 2]], crossings: &[[f64; 2]]) -> (f64, f64) {

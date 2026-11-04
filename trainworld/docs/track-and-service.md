@@ -949,8 +949,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   blueprint after a load, and puts each in the track model (`TrackApi::add_road_tile`,
   `track/roads.rs`: in Web Mercator tile units, indexed 32 x 32 cells a tile, never dropped in a
   session). Like terrain, each edge keeps its crossings' chainages (`Network::edge_roads`, the
-  alignment sampled every 20 m, `ROAD_STEP`), worked out again for the edges a tile reaches when
-  it lands; a split, a reshape or a load works them out from the tiles in hand, nothing is saved.
+  alignment sampled every 20 m, `ROAD_STEP`; none on a crossover or on track wholly half a level
+  or more off the ground, which can never be charged). Each crossing is found in one tile, so a
+  tile landing adds its own to the edges near it (found in the 1 km edge grid) and changes nothing
+  else; a split, a reshape or a load works them out from the tiles in hand, nothing is saved.
   No preview waits for tiles: one priced before they land is asked again when they do, and
   Construct waits for the tiles under the blueprint, so nothing is paid on a guess (a tile that
   cannot be fetched counts no roads). The blueprint quote has one "Road crossings" row, kind 7,

@@ -26,7 +26,6 @@ pub const MAX_PORTS: usize = 8;
 enum Ground {
     Water,
     Terrain,
-    Roads,
 }
 
 /// A run of items in a pool.
@@ -1424,15 +1423,45 @@ impl Network {
     }
 
     /// T-1929: a road tile added to those in use (`roads::Roads::key`), its bounds `b` in the
-    /// network frame: only the edges reaching into `b` have their crossings and price worked out
-    /// again, as for terrain.
+    /// network frame. T-2230: each crossing is found in one tile, so only the new tile's are looked
+    /// for, on the stretches of the edges near `b` (the grid's), and added to those each edge had; an
+    /// edge with none new keeps its price. Only prices change, which no line's rows hold, so
+    /// `repriced` is left alone. (Every edge worked out again took 2-11 ms a tile on New York's real save.)
     pub fn add_roads(&mut self, key: u32, tile: std::sync::Arc<roads::RoadTile>, b: [f64; 4]) {
-        self.roads.tiles.insert(key, tile);
-        self.rework_ground(b, Ground::Roads);
+        self.roads.tiles.insert(key, tile.clone());
+        let (tx, ty) = (key / roads::TILES, key % roads::TILES);
+        let frame = self.frame;
+        let edges = self.grid.in_box(b).unwrap_or_else(|| (0..self.edge_count() as u32).collect());
+        let mut cross = vec![];
+        for e in edges {
+            let i = e as usize;
+            // (as `derive`: a crossover's price has no crossings, and track off the ground keeps none)
+            if !self.edge_ok(e) || self.edge_crossover[i] || roads::off_ground(self.verts.get(self.edge_vert[i])) {
+                continue;
+            }
+            let pieces = self.pieces.get(self.edge_pieces[i]);
+            let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+            for p in pieces {
+                let q = p.bbox();
+                if q[0] <= b[2] && q[2] >= b[0] && q[1] <= b[3] && q[3] >= b[1] {
+                    lo = lo.min(p.s0);
+                    hi = hi.max(p.s0 + p.len);
+                }
+            }
+            cross.clear();
+            roads::crossings_in_tile(self.edge_len[i], lo, hi, |s| { let (x, y, _) = geom::pos_at(pieces, s); frame.to_lonlat(x, y) }, &tile, tx, ty, &mut cross);
+            if cross.is_empty() {
+                continue;
+            }
+            let mut all = self.road_spans.get(self.edge_roads[i]).to_vec();
+            all.extend_from_slice(&cross);
+            all.sort_by(|x, y| x[0].total_cmp(&y[0]));
+            self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &all);
+            self.edge_cost[i] = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+        }
     }
 
-    /// Work out again the water, the terrain or the road crossings, and the price, of the edges
-    /// reaching into `b`.
+    /// Work out again the water or the terrain, and the price, of the edges reaching into `b`.
     fn rework_ground(&mut self, b: [f64; 4], what: Ground) {
         self.repriced = true;
         let frame = self.frame;
@@ -1456,11 +1485,6 @@ impl Network {
                     let mut ground = vec![];
                     cost::terrain_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
                     self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
-                }
-                Ground::Roads => {
-                    let mut cross = vec![];
-                    roads::crossings(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
-                    self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
                 }
             }
             self.edge_cost[i] = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
@@ -1542,7 +1566,7 @@ impl Network {
             let frame = self.frame;
             cost::terrain_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
             let mut cross = vec![];
-            if !self.edge_crossover[i] {
+            if !self.edge_crossover[i] && !roads::off_ground(&f.vert) {
                 roads::crossings(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
             }
             self.edge_len[i] = f.len;

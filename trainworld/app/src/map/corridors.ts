@@ -68,6 +68,10 @@ let cache = new Map<number, Raw>();
 let cacheWithin = 0;
 /** what the last call gave, handed back while nothing has changed */
 let lastOut: Beside | null = null;
+/** per edge, its samples as last given (the same object while unchanged) and its pair sums */
+const made = new Map<number, { samples: EdgeSamples; sums: Map<number, [number, number, number]> }>();
+/** per edge, the edges whose own records see it */
+let seenBy = new Map<number, Set<number>>();
 
 function prepOf(id: number, p: Float32Array, a: number, b: number): Prep | null {
   const m = p.length / 3;
@@ -105,6 +109,12 @@ function carriesOn(e: Prep, f: Prep): boolean {
   }
   return false;
 }
+
+const sameArr = (a: ArrayLike<number>, b: ArrayLike<number>) => {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return false;
+  return true;
+};
 
 const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad < b[0] || b[2] + pad < a[0] || a[3] + pad < b[1] || b[3] + pad < a[1]);
 
@@ -283,56 +293,75 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
       raw.set(e.id, { prep: e, rec });
     }
   }
+  // T-2238: an edge's samples as given (its own records and the mirrors of others') are made again only
+  // where its own records or those of an edge seeing it were, so an edit's call costs what it touched
+  const whole = !lastOut || many || redo.length === list.length;
+  const redone: number[] = [];
+  for (const id of raw.keys()) if (whole || raw.get(id) !== cache.get(id)) redone.push(id);
+  for (const id of cache.keys()) if (!raw.has(id)) redone.push(id);
+  const targets = (r: Raw | undefined, f: (t: number) => void) => r?.rec.forEach((v) => { for (let q = 0; q < v.length; q += 4) f(v[q]); });
+  if (whole) seenBy = new Map();
+  const remake = new Set<number>();
+  for (const g of redone) {
+    if (raw.has(g)) remake.add(g);
+    if (!whole) targets(cache.get(g), (t) => { seenBy.get(t)?.delete(g); remake.add(t); });
+    targets(raw.get(g), (t) => {
+      let s = seenBy.get(t);
+      if (!s) seenBy.set(t, (s = new Set()));
+      s.add(g);
+      remake.add(t);
+    });
+  }
   cache = raw;
-  // the mirror of each record, where the other edge's sample there did not see this one itself
-  // (a sample's list is copied before the first mirror is added to it: the cache keeps the raw ones)
-  const rec = new Map<number, number[][]>(), copied = new Map<number, Set<number>>();
-  for (const [id, r] of raw) rec.set(id, r.rec.slice());
-  for (const [id, r] of raw) {
-    r.rec.forEach((v, i) => {
-      for (let q = 0; q < v.length; q += 4) {
-        const other = rec.get(v[q]);
-        if (!other) continue;
-        let w = other[v[q + 2]];
-        let has = false;
-        for (let s = 0; s < w.length && !has; s += 4) has = w[s] === id;
-        if (has) continue;
-        let c = copied.get(v[q]);
-        if (!c) copied.set(v[q], (c = new Set()));
-        if (!c.has(v[q + 2])) {
-          c.add(v[q + 2]);
-          other[v[q + 2]] = w = w.slice();
-        }
-        w.push(id, -v[q + 1] * v[q + 3], i, v[q + 3]);
+  const pos = new Map<number, number>();
+  for (const id of raw.keys()) pos.set(id, pos.size);
+  for (const id of [...made.keys()]) if (!raw.has(id)) (made.delete(id), seenBy.delete(id));
+  // per edge to make again, the records of the edges seeing it (sample, place in it), in the order
+  // the edges are given, each seeing edge's records read once
+  const seers = new Set<number>();
+  for (const f of remake) if (raw.has(f)) for (const g of seenBy.get(f) ?? []) if (raw.has(g)) seers.add(g);
+  const seenAt = new Map<number, number[]>();
+  for (const g of [...seers].sort((a, b) => pos.get(a)! - pos.get(b)!)) {
+    raw.get(g)!.rec.forEach((u, i) => {
+      for (let q = 0; q < u.length; q += 4) {
+        if (!remake.has(u[q])) continue;
+        let s = seenAt.get(u[q]);
+        if (!s) seenAt.set(u[q], (s = []));
+        s.push(g, i, q);
       }
     });
   }
-  const out: Beside = { edges: new Map(), pair: new Map() };
-  // each pair's offset over all the places it is side by side, from the lower id edge
-  const sums = new Map<number, Map<number, [number, number, number]>>();
-  for (const [id, v] of rec) {
+  for (const f of remake) {
+    const r = raw.get(f);
+    if (!r) continue;
+    // the mirror of each record of an edge seeing f, where f's sample there did not see that edge
+    // itself (a sample's list is copied before its first mirror)
+    // (per sample the edges it lists, kept once a mirror comes to it, rather than its list looked
+    // through for each: a sample in a bundle of thirty tracks takes hundreds)
+    const v = r.rec.slice(), lists = new Map<number, Set<number>>(), by = seenAt.get(f) ?? [];
+    for (let t = 0; t < by.length; t += 3) {
+      const g = by[t], i = by[t + 1], u = raw.get(g)!.rec[i], q = by[t + 2], s = u[q + 2];
+      let has = lists.get(s);
+      if (!has) {
+        has = new Set();
+        for (let x = 0; x < v[s].length; x += 4) has.add(v[s][x]);
+        lists.set(s, has);
+        v[s] = v[s].slice();
+      }
+      if (has.has(g)) continue;
+      has.add(g);
+      v[s].push(g, -u[q + 1] * u[q + 3], i, u[q + 3]);
+    }
+    // each pair's offset over all the places it is side by side, from the lower id edge
+    const sums = new Map<number, [number, number, number]>();
     for (const s of v) for (let q = 0; q < s.length; q += 4) {
-      if (s[q] < id) continue;
-      let m = sums.get(id);
-      if (!m) sums.set(id, (m = new Map()));
-      const old = m.get(s[q]);
+      if (s[q] < f) continue;
+      const old = sums.get(s[q]);
       if (old) {
         old[0] += s[q + 1];
         old[2]++;
-      } else m.set(s[q], [s[q + 1], s[q + 3], 1]);
+      } else sums.set(s[q], [s[q + 1], s[q + 3], 1]);
     }
-  }
-  const side = (a: number, b: number, x: [number, number, number]) => {
-    let m = out.pair.get(a);
-    if (!m) out.pair.set(a, (m = new Map()));
-    m.set(b, x);
-  };
-  for (const [id, m] of sums) for (const [f, [sum, rel, n]] of m) {
-    side(id, f, [sum / n, rel, n]);
-    side(f, id, [(-sum / n) * rel, rel, n]);
-  }
-  for (const [id, v] of rec) {
-    const r = raw.get(id)!;
     let total = 0;
     for (const s of v) total += s.length / 4;
     const first = new Int32Array(v.length + 1), edge = new Int32Array(total), off = new Float32Array(total), at = new Int32Array(total), rel = new Int8Array(total);
@@ -347,7 +376,24 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
       }
     });
     first[v.length] = o;
-    out.edges.set(id, { n: r.prep.n, len: r.prep.cum[r.prep.cum.length - 1] / r.prep.k, first, edge, off, at, rel });
+    const len = r.prep.cum[r.prep.cum.length - 1] / r.prep.k, was = made.get(f)?.samples;
+    // the same samples as before stay the same object, which tells `lineBands` nothing changed there
+    if (was && was.n === r.prep.n && Object.is(was.len, len) && sameArr(was.first, first) && sameArr(was.edge, edge) && sameArr(was.off, off) && sameArr(was.at, at) && sameArr(was.rel, rel)) continue;
+    made.set(f, { samples: { n: r.prep.n, len, first, edge, off, at, rel }, sums });
+  }
+  const out: Beside = { edges: new Map(), pair: new Map() };
+  const side = (a: number, b: number, x: [number, number, number]) => {
+    let m = out.pair.get(a);
+    if (!m) out.pair.set(a, (m = new Map()));
+    m.set(b, x);
+  };
+  for (const id of raw.keys()) {
+    const m = made.get(id)!;
+    out.edges.set(id, m.samples);
+    for (const [f, [sum, rel, n]] of m.sums) {
+      side(id, f, [sum / n, rel, n]);
+      side(f, id, [(-sum / n) * rel, rel, n]);
+    }
   }
   return (lastOut = out);
 }

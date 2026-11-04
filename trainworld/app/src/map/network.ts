@@ -416,6 +416,22 @@ const sameFloats = (a: Float32Array, b: Float32Array) => {
   return true;
 };
 
+/** Two band profiles that draw alike (T-2238): equal bit for bit but for the knots' Traffic recipe
+ * ids, which `bandPoints` reads only as none (-1) or the same as the next knot's. Those ids are
+ * numbered across the whole network, so a ribbon gained on one line renumbers every line after it. */
+const sameBand = (a: Float32Array, b: Float32Array) => {
+  if (a.length !== b.length || a[0] !== b[0]) return false;
+  const k0 = 2 + a[0];
+  const x = new Uint32Array(a.buffer, a.byteOffset, a.length), y = new Uint32Array(b.buffer, b.byteOffset, b.length);
+  for (let i = 0; i < k0; i++) if (x[i] !== y[i]) return false;
+  for (let i = k0; i < x.length; i++) {
+    if ((i - k0) % KNOT !== 3) {
+      if (x[i] !== y[i]) return false;
+    } else if ((a[i] < 0) !== (b[i] < 0) || (i + KNOT < a.length && (a[i] === a[i + KNOT]) !== (b[i] === b[i + KNOT]))) return false;
+  }
+  return true;
+};
+
 /** Where double track narrows to single, m (T-658). */
 const TAPER_M = 40;
 
@@ -1045,7 +1061,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
-    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || !sameFloats(c.band, band))) {
+    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || !sameBand(c.band, band))) {
       const lines = new StrokeBuilder(true);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop

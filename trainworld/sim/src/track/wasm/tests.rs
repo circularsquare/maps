@@ -92,7 +92,22 @@ fn roads_charge_ground_track_and_stay_through_splits_and_loads() {
     assert_eq!(a.add_route(&high, &[], 2, false), 0, "{}", a.issues());
     let before = a.blueprint_cost();
     assert!((before - 3.0 * (37.5 + 75.0)).abs() < 1e-6, "{before}");
+    a.w.net.take_repriced();
     add_road_grid(&mut a, -500.0, -1500.0, 3500.0, 1500.0, 200);
+    // T-2230: only edge prices changed, so no line's rows are read again; the crossings added tile
+    // by tile are a whole pass's over every tile, to the bit; the viaduct keeps none
+    assert!(!a.w.net.repriced());
+    let net = &a.w.net;
+    let frame = net.frame();
+    for e in (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e)) {
+        if crate::track::roads::off_ground(net.edge_vert(e)) {
+            assert!(net.edge_roads(e).is_empty());
+            continue;
+        }
+        let (pieces, mut whole) = (net.edge_pieces(e), vec![]);
+        crate::track::roads::crossings(net.edge_len[e as usize], |s| { let (x, y, _) = crate::track::geom::pos_at(pieces, s); frame.to_lonlat(x, y) }, &net.roads, &mut whole);
+        assert!(!whole.is_empty() && net.edge_roads(e) == &whole[..], "edge {e}: {:?} against {whole:?}", net.edge_roads(e));
+    }
     let after = a.blueprint_cost();
     let crossings = (after - before) / ROAD_CROSSING_COST;
     assert!((crossings - crossings.round()).abs() < 1e-9 && (30.0..=36.0).contains(&crossings), "{crossings} crossings");
