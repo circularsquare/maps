@@ -1,6 +1,7 @@
 // The network diagram's layout (T-2160, notes/T-2146.md section 3 steps 2 to 6), run in its own
 // worker (workers/diagram.worker.ts):
 //   A: real directions with each hop's length evened, by least squares;
+//   the blocks (blocks.ts, T-2407): each city moved as one, and the stations between cities placed;
 //   B: rounds of octilinear least squares from A (each edge toward the nearest free 45 degree
 //      direction, straight through two-edge stations, near the last round, kept apart), with room
 //      for each edge's bundle of strokes;
@@ -17,6 +18,7 @@
 import type { DiagramGraph } from "./graph";
 import { Terms } from "./lsqr";
 import { atan2, DIRS8 as DIRS, hyp, pow } from "./fmath";
+import { BLOCK_GAP, blockHops, crowded, findBlocks, finishBlocks, heldPairs, placeBlocks, samePairs, type Blocks } from "./blocks";
 
 export interface LayoutOptions {
   /** a hop's target length is L0 * (real length / L0) ^ alpha: the centre opens, the suburbs close in */
@@ -95,6 +97,8 @@ export const URBAN_M = 2500, URBAN_N = 3, ALONE_M = 4000;
 /** A's rounds: the options' up to A_ROUNDS_FROM complexes, rising to A_ROUNDS_MAX at A_ROUNDS_AT (T-2289) */
 const A_ROUNDS_FROM = 2000, A_ROUNDS_AT = 8000, A_ROUNDS_MAX = 40;
 const LONELY_MIN = 4;
+/** T-2407: a hop between blocks this many median hops long or more is a segment of its own */
+const LONG_HOP = 4;
 
 export interface Piece {
   /** the graph nodes along it, first to last */
@@ -121,9 +125,11 @@ export interface DiagramLayout {
   /** per node, its place after B, which a rebuild starts from */
   bx: Float64Array;
   by: Float64Array;
-  ms: { a: number; b: number; route: number; order: number; total: number };
+  ms: { a: number; b: number; route: number; order: number; total: number; blocks: number };
   straight: number;
   bent: number;
+  /** the city blocks (blocks.ts) */
+  blocks: Blocks;
 }
 
 /** how many strokes an edge's lines are drawn in (graph.ts' `stroke`) */
@@ -166,6 +172,10 @@ interface Prep {
   /** pairs of stations near each other in reality that share no edge, and the unit real bearing from
    * the first to the second: a, b, ux, uy per pair */
   side: Float64Array;
+  /** per node, its city (`cityParts`) */
+  city: Int32Array;
+  /** per node, 1 where a segment must end though the lines go on (a station between blocks on a long hop) */
+  keyNodes?: Uint8Array;
 }
 
 function prep(g: DiagramGraph, o: LayoutOptions): Prep {
@@ -186,8 +196,9 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
     hw[g.eb[e]] = Math.max(hw[g.eb[e]], h);
   }
   // the lonely stretches between cities drawn shorter, after the pitch is set from every hop (T-2289)
+  const parts = cityParts(g);
   if (o.lonely < 1) {
-    const lonely = cityParts(g).lonely;
+    const lonely = parts.lonely;
     for (let e = 0; e < m; e++) if (lonely[e]) L[e] = Math.max(Math.min(L[e], LONELY_MIN * pu), L[e] * o.lonely);
   }
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
@@ -211,7 +222,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       through[v].add(e1 * m + e2).add(e2 * m + e1);
     }
   }
-  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj) };
+  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city };
 }
 
 /** The cities and the lonely hops between them (T-2289): `city` per node, its city (-1 for a station in
@@ -382,8 +393,9 @@ function turnTerm(T: Terms, P: Prep, v: number, e1: number, e2: number, wt: numb
   T.add([2 * w + 1, 2 * v + 1, 2 * v, 2 * v + 1, 2 * u, 2 * u + 1], [f / L2, -f / L2, (-s * f) / L1, (-c * f) / L1, (s * f) / L1, (c * f) / L1], 0, wt);
 }
 
-/** rounds of least squares from `start`: option A (real directions) or B (octilinear) */
-function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx: number, wGeo: number, wOct: number, iters: number, tick?: (done: number) => void): Float64Array {
+/** rounds of least squares from `start`: option A (real directions) or B (octilinear); edges marked in `skip`
+ * left out */
+function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx: number, wGeo: number, wOct: number, iters: number, tick?: (done: number) => void, skip?: Uint8Array): Float64Array {
   let pos: Float64Array = Float64Array.from(start);
   const pairs: number[] = [];
   const I4 = [0, 0, 0, 0], C4 = [0, 0, 0, 0];
@@ -392,6 +404,7 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
     const T = new Terms(2 * P.n);
     const K = octi ? chooseDirs(P, pos) : null;
     for (let e = 0; e < P.ea.length; e++) {
+      if (skip?.[e]) continue;
       const a = P.ea[e], b = P.eb[e];
       const dx = K ? DIRS[K[e]][0] : P.gdx[e], dy = K ? DIRS[K[e]][1] : P.gdy[e];
       I4[0] = 2 * b, I4[1] = 2 * b + 1, I4[2] = 2 * a, I4[3] = 2 * a + 1;
@@ -469,7 +482,7 @@ function twoLegs(px: number, py: number, qx: number, qy: number): [number[], num
 }
 
 /** chains between key nodes: a branch or a line's end, or where the set of lines changes */
-function segments(g: DiagramGraph): number[][] {
+function segments(g: DiagramGraph, extra?: Uint8Array): number[][] {
   const n = g.key.length, m = g.ea.length;
   const adj: number[][] = Array.from({ length: n }, () => []);
   const sig: string[] = [];
@@ -486,7 +499,7 @@ function segments(g: DiagramGraph): number[][] {
   const key = new Uint8Array(n);
   for (let v = 0; v < n; v++) {
     const ns = adj[v];
-    if (ns.length !== 2 || ends.has(v) || sig[ek(v, ns[0])] !== sig[ek(v, ns[1])]) key[v] = 1;
+    if (ns.length !== 2 || ends.has(v) || sig[ek(v, ns[0])] !== sig[ek(v, ns[1])] || extra?.[v]) key[v] = 1;
   }
   const seen = new Uint8Array(m);
   const segs: number[][] = [];
@@ -518,7 +531,7 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
   for (let e = 0; e < g.ea.length; e++) hops.push(hyp(bx[g.eb[e]] - bx[g.ea[e]], by[g.eb[e]] - by[g.ea[e]]));
   const tol = TOL_SHARE * median(hops);
   const raw: number[][] = [];
-  for (const s of segments(g)) {
+  for (const s of segments(g, P.keyNodes)) {
     const fit = (i: number, j: number): number[] => {
       if (j - i <= 1) return [];
       const inner: number[] = [];
@@ -1465,12 +1478,13 @@ function order(g: DiagramGraph, pieces: Piece[], x: Float64Array, y: Float64Arra
   }
 }
 
-/** a layout's places by node key, for a rebuild: after B, and drawn (`lastPlaces`) */
-export type LastPlaces = Map<number, [number, number] | [number, number, number, number]>;
+/** a layout's places by node key, for a rebuild: after B, and drawn (`lastPlaces`); and its hops between blocks */
+export type LastPlaces = Map<number, [number, number] | [number, number, number, number]> & { blocks?: Set<string> };
 
 export function lastPlaces(g: DiagramGraph, lay: DiagramLayout): LastPlaces {
   const m: LastPlaces = new Map();
   for (let i = 0; i < g.key.length; i++) m.set(g.key[i], [lay.bx[i], lay.by[i], lay.x[i], lay.y[i]]);
+  if (lay.blocks.active) m.blocks = heldPairs(lay.blocks);
   return m;
 }
 
@@ -1480,9 +1494,20 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const t0 = performance.now();
   const n = g.key.length;
   const P = prep(g, o);
-  // a big network's A needs more rounds to draw its long stretches as short as their targets (T-2289);
-  // the loading bar keeps A's and B's shares of the time in step
-  const roundsA = Math.round(Math.min(A_ROUNDS_MAX, Math.max(o.roundsA, o.roundsA + ((A_ROUNDS_MAX - o.roundsA) * (n - A_ROUNDS_FROM)) / (A_ROUNDS_AT - A_ROUNDS_FROM))));
+  const hop = median(P.L);
+  const blocks = findBlocks(g, P.city);
+  // with two blocks or more, A lays out each city as if alone, the hops between them left to the blocks' stage
+  const skip = blocks.active ? blockHops(g, blocks) : undefined;
+  let nA = n;
+  if (skip) {
+    const size = new Int32Array(blocks.list.length);
+    for (let i = 0; i < n; i++) if (blocks.of[i] >= 0) size[blocks.of[i]]++;
+    nA = 0;
+    for (const s of size) nA = Math.max(nA, s);
+  }
+  // a big network's A needs more rounds to draw its long stretches as short as their targets (T-2289), a
+  // network of blocks as many as its biggest block; the loading bar keeps A's and B's shares of the time in step
+  const roundsA = Math.round(Math.min(A_ROUNDS_MAX, Math.max(o.roundsA, o.roundsA + ((A_ROUNDS_MAX - o.roundsA) * (nA - A_ROUNDS_FROM)) / (A_ROUNDS_AT - A_ROUNDS_FROM))));
   const progA = (PROGRESS_B * PROGRESS_A * roundsA) / (PROGRESS_A * roundsA + (PROGRESS_B - PROGRESS_A) * o.roundsA);
   const geo = new Float64Array(n * 2);
   for (let i = 0; i < n; i++) geo[i * 2] = g.x[i], (geo[i * 2 + 1] = g.y[i]);
@@ -1492,10 +1517,54 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   if (last && last.size) {
     start = warmStart(g, P, last);
     warm = true;
-  } else start = lsq(P, false, roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, progA));
+  } else {
+    let PA = P;
+    if (skip) {
+      const s: number[] = [];
+      for (let k = 0; k < P.side.length; k += 4) if (blocks.of[P.side[k]] >= 0 && blocks.of[P.side[k]] === blocks.of[P.side[k + 1]]) s.push(P.side[k], P.side[k + 1], P.side[k + 2], P.side[k + 3]);
+      PA = { ...P, side: Float64Array.from(s) };
+    }
+    start = lsq(PA, false, roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, progA), skip);
+  }
   const t1 = performance.now();
+  // the blocks' stage; a rebuild holds the hops between blocks it had as they are, and with no other places
+  // blocks only where boxes crowd
+  let mv: Float64Array | null = null;
+  if (skip) {
+    const held = warm ? last!.blocks ?? null : null;
+    if (!held || !samePairs(blocks, held) || crowded(blocks, start)) {
+      const linkTarget = (d: number) => {
+        const l = o.L0 * pow(d / o.L0, o.alpha);
+        return o.lonely < 1 ? Math.max(Math.min(l, LONELY_MIN * P.pu), l * o.lonely) : l;
+      };
+      mv = placeBlocks(g, blocks, start, P.L, P.gdx, P.gdy, P.pu, linkTarget, held);
+      for (let i = 0; i < n * 2; i++) start[i] += mv[i];
+    }
+    // the hops between blocks keep the length placed, so B and the drawing do not pull the cities together again;
+    // a station between blocks on a long hop ends a segment, so the routing draws each long hop on its own and
+    // cannot slide the stops along one long piece into a block
+    P.keyNodes = new Uint8Array(n);
+    for (let e = 0; e < P.ea.length; e++) if (skip[e]) {
+      const a = P.ea[e], b = P.eb[e];
+      P.L[e] = Math.max(P.L[e], hyp(start[b * 2] - start[a * 2], start[b * 2 + 1] - start[a * 2 + 1]));
+      if (P.L[e] > LONG_HOP * hop) for (const v of [a, b]) if (blocks.of[v] < 0) P.keyNodes[v] = 1;
+    }
+  }
+  const t1b = performance.now();
   // a rebuild starts near where B ended: fewer rounds, held closer to the last layout
   const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(progA, PROGRESS_B));
+  // B and the drawing widen blocks (their bundles' room): boxes B brought within 3/4 of the gap are moved apart
+  // to the gap again, each block and the hops between blocks as B left them
+  if (skip && crowded(blocks, B, 0.75 * BLOCK_GAP * P.pu)) {
+    const apart = placeBlocks(g, blocks, B, P.L, P.gdx, P.gdy, P.pu, () => 0, heldPairs(blocks), true);
+    for (let i = 0; i < n * 2; i++) B[i] += apart[i];
+    if (mv) for (let i = 0; i < n * 2; i++) mv[i] += apart[i];
+    else mv = apart;
+    for (let e = 0; e < P.ea.length; e++) if (skip[e]) {
+      const a = P.ea[e], b = P.eb[e];
+      P.L[e] = Math.max(P.L[e], hyp(B[b * 2] - B[a * 2], B[b * 2 + 1] - B[a * 2 + 1]));
+    }
+  }
   const t2 = performance.now();
   const bx = new Float64Array(n), by = new Float64Array(n);
   for (let i = 0; i < n; i++) bx[i] = B[i * 2], (by[i] = B[i * 2 + 1]);
@@ -1507,7 +1576,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
     let known = 0;
     for (let i = 0; i < n; i++) {
       const p = last!.get(g.key[i]);
-      if (p && p.length === 4) (prev[i * 2] = p[2]), (prev[i * 2 + 1] = p[3]), known++;
+      if (p && p.length === 4) (prev[i * 2] = p[2] + (mv ? mv[i * 2] : 0)), (prev[i * 2 + 1] = p[3] + (mv ? mv[i * 2 + 1] : 0)), known++;
     }
     if (known < PREV_SHARE * n) prev = null;
   }
@@ -1515,11 +1584,12 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   spread(P, r);
   const t3 = performance.now();
   order(g, r.pieces, r.x, r.y);
+  finishBlocks(g, blocks, r.x, r.y);
   const t4 = performance.now();
   return {
-    x: r.x, y: r.y, pieces: r.pieces, pu: P.pu, hop: median(P.L), hw: P.hw, bx, by,
-    ms: { a: warm ? 0 : t1 - t0, b: t2 - t1, route: t3 - t2, order: t4 - t3, total: t4 - t0 },
-    straight: r.straight, bent: r.bent,
+    x: r.x, y: r.y, pieces: r.pieces, pu: P.pu, hop, hw: P.hw, bx, by,
+    ms: { a: warm ? 0 : t1 - t0, blocks: t1b - t1, b: t2 - t1b, route: t3 - t2, order: t4 - t3, total: t4 - t0 },
+    straight: r.straight, bent: r.bent, blocks,
   };
 }
 
@@ -1559,9 +1629,27 @@ function warmStart(g: DiagramGraph, P: Prep, last: LastPlaces): Float64Array {
     for (let i = 0; i < n; i++) if (known[i] === 2) known[i] = 1;
     if (!grew) break;
   }
+  // the rest: off the nearest placed node in reality, not off the middle of all of them, which in a network of
+  // several cities lies between them (T-2417)
+  const near = c ? nearestKnown(g, known) : null;
   for (let i = 0; i < n; i++) if (!known[i]) {
-    pos[i * 2] = c ? sx / c + (g.x[i] - gx / c) * scale : g.x[i];
-    pos[i * 2 + 1] = c ? sy / c + (g.y[i] - gy / c) * scale : g.y[i];
+    const o = near ? near(i) : -1;
+    pos[i * 2] = o >= 0 ? pos[o * 2] + (g.x[i] - g.x[o]) * scale : g.x[i];
+    pos[i * 2 + 1] = o >= 0 ? pos[o * 2 + 1] + (g.y[i] - g.y[o]) * scale : g.y[i];
   }
   return pos;
+}
+
+/** per node, the nearest node in reality with `known` 1 (by every one: few nodes are placed this way) */
+function nearestKnown(g: DiagramGraph, known: Uint8Array): (i: number) => number {
+  const ids: number[] = [];
+  for (let i = 0; i < g.key.length; i++) if (known[i] === 1) ids.push(i);
+  return (i: number) => {
+    let best = -1, bd = Infinity;
+    for (const j of ids) {
+      const d = (g.x[j] - g.x[i]) * (g.x[j] - g.x[i]) + (g.y[j] - g.y[i]) * (g.y[j] - g.y[i]);
+      if (d < bd) (bd = d), (best = j);
+    }
+    return best;
+  };
 }

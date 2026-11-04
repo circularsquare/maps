@@ -2,7 +2,8 @@
 
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
-camera and the picture (T-2163); city boxes and water are T-2168 and T-2169.
+camera and the picture (T-2163), and city blocks (T-2407; notes/T-2407.md); the faint city outlines and water
+are T-2168 and T-2169.
 
 ## The button and key M
 
@@ -134,7 +135,29 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 - **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds up to 2,000
   complexes, rising evenly to 40 at 8,000 and over (a country's long stretches only reach their targets in
-  that many; T-2289).
+  that many; T-2289). With two blocks or more (below), A lays out each block as if alone: the hops between
+  blocks or touching a station between them, and sides across blocks, are left out, and the complexes counted
+  for its rounds are the biggest block's.
+- **Blocks** (T-2407, `diagram/blocks.ts`): cities as `cityParts` finds them, joined where their stations lie
+  within 15 km of each other, are blocks when they have 10 stations or more. Other stations, joined by their
+  hops into groups: a group whose hops reach one block is taken into it (a branch out of a city), one reaching
+  none is taken into the block with a station nearest it within 15 km (a piece of the city with no track to the
+  rest, such as Staten Island's railway), else it is a block of its own (a small network alone); a group
+  reaching two blocks or more stays between blocks. A block's box is its stations' bounding box. With one
+  block nothing below happens, so a single city lays out as without blocks.
+- **The blocks' stage**, between A and B, with two blocks or more: each block moves as one, and each station
+  between blocks on its own, by one least squares solve: each hop between them runs its real bearing for its
+  target plus, at each end in a block, the way from that station past the block's farthest station within 16
+  pitches either side of the bearing, plus half the gap (weight 1); blocks no track joins are linked, the
+  shortest links that join them all (each between the nearest pair of up to 64 stations a network), at a
+  lonely hop's target for the real length (so islands and separate networks pack close); each block held to
+  where it is at 0.001 times the root of its stations, each station between blocks at 0.001, which only picks
+  where the hops leave a choice, the big cities staying. Then up to 11 more solves keep boxes apart (10): any
+  two overlapping, grown by a fifth and padded by a gap of 16 pitches, are pushed apart along the axis they
+  overlap less on until the spacing is met. The hops between blocks then keep the length placed as their
+  target, so B and the drawing do not pull cities together; a station between blocks on a hop 4 median hops
+  long or more ends a segment. After B, boxes B brought within 12 pitches of each other are moved apart to the
+  gap again, the hops between blocks held as B left them.
 - **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
   being such stations within 2.5 km of each other (`cityParts`). A hop whose lines are all of one colour,
   between two stations with two hops or fewer each, that leaves a city or joins two, with an end alone (no
@@ -198,6 +221,12 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   to the last layout at 0.05 in place of A's 0.01: a new complex starts
   at its placed neighbours plus its real offset at the hop's scale, or failing any at its real place
   at the old layout's overall scale. Its separation keeps near the last drawing only when at least 90%
-  of its nodes were in it; otherwise it separates as a first layout does.
+  of its nodes were in it; otherwise it separates as a first layout does. With blocks, the stage runs only
+  where the hops between blocks and the links (by node keys) differ from the last layout's, or two boxes
+  overlap: each hop and link the last layout had is held as it is drawn, the new ones get their targets, and
+  boxes within the gap but not overlapping at the start are left so; each block's last places, B's and the
+  drawing's, move by the block's move, so an edit inside a city moves no block.
+- **Exposed** (`layout.blocks`, for T-2168's outlines and T-2169's water): per node its block (or none), per
+  block its drawn box, its move, and an affine fit from real places to drawn ones over its stations.
 
 `LAYOUT_R2` keeps round 2's options (alpha 0.35, pitch the median hop over 12, edges 1.6 half widths).
