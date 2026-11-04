@@ -149,7 +149,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   heavier than ordinary track [T-1097]. Once the two tracks part, the line runs between them in the
   track's or the line's own colour.
 - **Lines sharing track side by side** [T-1799, `map/lineBands.ts`, design notes/T-1799.md], only
-  with the Settings checkbox "Lines side by side" on (off by default, T-1886; `display.lineBands`,
+  with the Settings checkbox "Lines side by side" on (on by default, T-2346, a stored choice from before settings version 12
+  dropped once since the old default was stored with the rest; `display.lineBands`,
   set on `renderer.lineBands` in main.ts, redrawn at once). In the Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
   colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour, white in the light theme and dark in
   the dark one, shows between bands at every zoom), its sides and round caps smoothed on a sharp

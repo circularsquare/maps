@@ -13,7 +13,8 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { bpHover } from "../game/blueprintStretches";
-import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, switchPicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
+import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
+import { SWITCH_PICK_KEY } from "../ui/toolKeys";
 import { designSpeed, selection, tool } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
@@ -486,16 +487,15 @@ export class BlueprintBox {
     return bp.find((h) => !h.built && (h.edges.length || h.stations.length)) ?? bp[0] ?? none;
   }
 
-  /** The D and E keys: switch the pick off or on; Delete removes it (T-829). True if used. */
+  /** The E key: switch the pick on, or off when all of it is on (T-2338); Delete removes it (T-829). True if used. */
   key(e: KeyboardEvent): boolean {
     if (tool.peek() !== "blueprint" || e.ctrlKey || e.metaKey || e.altKey) return false;
     if (e.key === "Delete") {
       void removePicked();
       return true;
     }
-    const k = e.key.toLowerCase();
-    if (k !== "d" && k !== "e") return false;
-    void switchPicked(k === "d");
+    if (e.key.toLowerCase() !== SWITCH_PICK_KEY) return false;
+    void togglePicked();
     return true;
   }
 }

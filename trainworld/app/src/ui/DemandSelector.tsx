@@ -59,7 +59,8 @@ function NorthButton() {
   </button>;
 }
 
-const KEYED: Record<string, string | undefined> = { home: `Show homes (${DEMAND_KEY.toUpperCase()})`, work: `Show destinations (${DEMAND_KEY.toUpperCase()})` };
+const KEY = DEMAND_KEY.toUpperCase();
+const KEYED: Record<string, string> = { none: `Hide demand bubbles (${KEY})`, home: `Show homes (${KEY})`, work: `Show destinations (${KEY})`, both: `Show homes and destinations (${KEY})` };
 
 /** T-801: zoomed out the zones' bubbles need no zone in view */
 const demandReady = () => zoomedOut.value || (!!viewedZone.value && cityDemandViews.value.has(activeCity.value));
@@ -69,11 +70,13 @@ const showEnd = (value: "none" | "home" | "work" | "both") => {
   display.value = value === "none" ? { ...current, commuters: false } : { ...current, commuters: true, commuterEnd: value };
 };
 
-/** T-2271: the H key, homes to destinations and back; from none or total, homes. */
-export function flipDemandEnd() {
+const CYCLE = ["none", "home", "work", "both"] as const;
+
+/** T-2338: the D key, None to Homes to Destinations to Total and round again. */
+export function cycleDemandEnd() {
   if (!demandReady()) return;
   const d = display.peek();
-  showEnd(d.commuters && d.commuterEnd === "home" ? "work" : "home");
+  showEnd(CYCLE[(CYCLE.indexOf(d.commuters ? d.commuterEnd : "none") + 1) % CYCLE.length]);
 }
 
 /** The map's demand view stays within reach whichever dock tab is open. */

@@ -3,7 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HIDE_UI_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
+import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
 
@@ -30,14 +30,15 @@ const SECTIONS: [string, [string, string][]][] = [
     ["Click a bus route's end", "Draw from that end, or finish at the one in use"],
     ["Caps Lock", "Turn keep placing on or off"],
     ["Right drag", "Move the map in the blueprint tool"],
-    ["D, E, Delete", "Disable, enable or remove the picked blueprints"],
+    [SWITCH_PICK_KEY.toUpperCase(), "Enable or disable the picked blueprints"],
+    ["Delete", "Remove the picked blueprints"],
   ]],
   ["Keys", [
     ["Shift 1 to 7", "Draw at level +3 down to −3"],
     [tabKeys, "Build, Lines, Stations, Finances and Cities tabs"],
     [toolKeys, "Track, stations, delete and select tools"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],
-    [DEMAND_KEY.toUpperCase(), "Switch demand bubbles between homes and destinations"],
+    [DEMAND_KEY.toUpperCase(), "Switch demand bubbles to none, homes, destinations or total in turn"],
     [keyOf("newLine"), "Make a new line"],
     [BUS_KEY.toUpperCase(), "Draw a new bus line"],
     [keyOf("editStops"), "Edit the selected line's stops"],

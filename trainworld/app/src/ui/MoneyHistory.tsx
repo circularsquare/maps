@@ -1,5 +1,5 @@
 // The Money tab's history (T-447): revenue (fares) against expenses (running trains plus upkeep,
-// T-867, and one-off costs; blue and red, T-1111), then net, then train rides (T-565), per game hour
+// T-867, and one-off costs; blue and red, T-1111), then train rides (T-565), per game hour
 // over the past 24, per day over the past 30, or per day over every day kept (T-2143: a week or a month
 // to a column once there are many) (T-2271; the clock worker keeps the days and 48 hours and saves
 // them). Days run on the start zone's local time (`MoneyState.dayShift`) and hours are written in it.
@@ -15,7 +15,6 @@ import { cityById, isCity } from "../game/cities";
 import { calendarAt } from "../game/holidays";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
-import { Money } from "./MoneyText";
 
 type Span = "1d" | "30d" | "all";
 /** The span shown, kept while the game is open. */
@@ -36,8 +35,6 @@ const MAX_COLS = 90;
 const oneOff = (e: Entry) => e.trains + e.build;
 /** T-867: the cost line, running trains plus upkeep, and loan payments (T-1661, T-2022) */
 const run = (e: Entry) => e.running + (e.upkeep ?? 0) + (e.loan ?? 0);
-const costs = (e: Entry) => run(e) + oneOff(e);
-const net = (e: Entry) => e.fares - costs(e);
 const usd = (v: number) => money(v * 1e6);
 const rides = (e: Entry) => e.rides ?? 0;
 const exact = (v: number) => Math.round(v).toLocaleString("en-US");
@@ -122,15 +119,17 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
 
-  // fares and running costs as lines, scaled to the larger of the two; one-off costs (new trains,
-  // construction) as bars on the same scale, cut at the top with a cap so a build day cannot
-  // flatten the lines (T-452)
+  // T-2340: each column three narrow bars side by side, fares, running costs and one-off costs (new
+  // trains, construction), scaled to the larger of the first two; a one-off bar past the top is cut
+  // with a cap so a build day cannot flatten the others (T-452)
   const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
   const y1 = yScale(top);
-  // the day or hour now is drawn dashed: it is still filling
-  const pt = (v: (e: Entry) => number, i: number) => `${cx(i).toFixed(1)},${y1(v(list[i])).toFixed(1)}`;
-  const path = (v: (e: Entry) => number) => list.slice(0, last).map((_, i) => `${i ? "L" : "M"}${pt(v, i)}`).join("");
-  const tail = (v: (e: Entry) => number) => (last > 0 ? `M${pt(v, last - 1)}L${pt(v, last)}` : "");
+  const b3 = (col * 0.72) / 3;
+  const bx = (i: number, k: number) => cx(i) + (k - 1.5) * b3;
+  const bar = (cls: string, i: number, k: number, v: number) => {
+    const y = Math.max(PAD, y1(v));
+    return <rect class={cls + (i === last ? " now" : "")} x={bx(i, k)} y={y} width={b3} height={Math.max(0.5, H - PAD - y)} />;
+  };
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
     `Fares ${usd(e.fares)}${per}`,
@@ -142,12 +141,6 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
     ...(e.trains > 0 ? [`New trains ${usd(-e.trains)}${per}`] : []),
     ...(e.build > 0 ? [`Construction ${usd(-e.build)}${per}`] : []),
   ].join("\n");
-
-  // net: bars up or down from zero
-  const hi = Math.max(0, ...list.map(net)), lo = Math.min(0, ...list.map(net));
-  const range = hi - lo || 1e-9;
-  const y2 = (v: number) => PAD + ((hi - v) / range) * (H - 2 * PAD);
-  const zero = y2(0);
 
   // train rides (T-565): bars up from zero
   const rideTop = Math.max(...list.map(rides), 1e-9);
@@ -179,29 +172,14 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
           const v = oneOff(e);
-          if (v <= 0) return null;
-          const y = Math.max(PAD, y1(v));
           return <>
-            <rect class={"hist-oneoff" + (i === last ? " now" : "")} x={cx(i) - bw / 2} y={y} width={bw} height={Math.max(0.5, H - PAD - y)} />
-            {v > top && <path class="hist-oneoff cap" d={`M${cx(i) - bw / 2},${PAD + 3}L${cx(i)},0L${cx(i) + bw / 2},${PAD + 3}Z`} />}
+            {bar("hist-fares", i, 0, e.fares)}
+            {bar("hist-costs", i, 1, run(e))}
+            {v > 0 && bar("hist-oneoff", i, 2, v)}
+            {v > top && <path class="hist-oneoff cap" d={`M${bx(i, 2)},${PAD + 3}L${bx(i, 2.5)},0L${bx(i, 3)},${PAD + 3}Z`} />}
           </>;
         })}
-        <path class="hist-costs" d={path(run)} />
-        <path class="hist-fares" d={path((e) => e.fares)} />
-        <path class="hist-costs now" d={tail(run)} />
-        <path class="hist-fares now" d={tail((e) => e.fares)} />
-        {list.map((e, i) => <circle class="hist-costs dot" cx={cx(i)} cy={y1(run(e))} r={1.6} />)}
-        {list.map((e, i) => <circle class="hist-fares dot" cx={cx(i)} cy={y1(e.fares)} r={1.6} />)}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
-      </svg>
-      <div class="hist-title small"><span>Net</span><span class="right muted">{usd(hi)}{per}{lo < 0 ? <> to <Money dollars={lo * 1e6} />{per}</> : ""}</span></div>
-      <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
-        <line class="hist-axis" x1={0} x2={W} y1={zero} y2={zero} />
-        {list.map((e, i) => {
-          const v = net(e), y = y2(v);
-          return <rect class={(v < 0 ? "hist-loss" : "hist-gain") + (i === last ? " now" : "")} x={cx(i) - bw / 2} y={Math.min(y, zero)} width={bw} height={Math.max(0.5, Math.abs(y - zero))} />;
-        })}
-        {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\nNet ${usd(net(e))}${per}`} />)}
       </svg>
       <div class="hist-title small"><span>Train rides</span><span class="right muted">{count(rideTop)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>

@@ -75,7 +75,7 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { MapSky, TopBar } from "./ui/TopBar";
-import { flipDemandEnd, MapTopLeft } from "./ui/DemandSelector";
+import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
 import { MapToolBar } from "./ui/ToolBar";
@@ -524,10 +524,10 @@ window.addEventListener("keydown", (e) => {
     tab.value = tabKey;
     return;
   }
-  // H: the demand bubbles between homes and destinations (T-2271), from any tab
+  // D: the demand bubbles, None, Homes, Destinations, Total (T-2338), from any tab
   if (e.key.toLowerCase() === DEMAND_KEY && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
-    flipDemandEnd();
+    cycleDemandEnd();
     return;
   }
   const k = TOOL_KEYS[e.key.toLowerCase()];
@@ -539,7 +539,7 @@ window.addEventListener("keydown", (e) => {
     tab.value = "build";
     return;
   }
-  // the blueprint tool: Esc clears the pick, then leaves the tool; D and E switch the pick off or on
+  // the blueprint tool: Esc clears the pick, then leaves the tool; E switches the pick on or off
   if (tool.peek() === "blueprint" && e.key === "Escape" && (bpPicked.peek().edges.length || bpPicked.peek().stations.length)) {
     e.preventDefault();
     clearBpPicked();

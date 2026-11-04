@@ -17,6 +17,7 @@ import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/bluepri
 import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
+import { SWITCH_PICK_KEY } from "./toolKeys";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 
 // 6 T-1270's terrain, 7 T-1929's roads crossed at ground level, 8 and 9 T-1281's, 10 and 11 T-1464's
@@ -237,8 +238,8 @@ export function BlueprintBar() {
       )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip="Leave these out when constructing (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
-          <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
+          <button class="btn text" data-tip={`Leave these out when constructing${s.off ? "" : ` (${SWITCH_PICK_KEY.toUpperCase()})`}`} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
+          <button class="btn text" data-tip={`Enable the selection (${SWITCH_PICK_KEY.toUpperCase()})`} disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
         </div>
       )}
       <PickDoubleUp />

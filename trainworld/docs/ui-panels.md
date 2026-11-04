@@ -480,9 +480,9 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
 | U | start a new bus line (`BUS_KEY`) | any tab |
 | T | explore a trip; the tab stays | any tab |
-| H | demand bubbles: Homes to Destinations and back, Homes from None or Total, once the view's demand is ready (`DEMAND_KEY`; D is taken by the Select tool, T-2271); the Homes and Destinations hovers name it | any tab |
+| D | demand bubbles: None, Homes, Destinations, Total and round again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
-| D, E, Delete | disable, enable, remove the picked blueprints | select tool |
+| E, Delete | E enables the picked blueprints when any is off and disables them when all are on (`SWITCH_PICK_KEY`, T-2338; the Enable hover, and the Disable hover while all are on, name it); Delete removes them | select tool |
 | Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
 
 C stays Construct's, so Cities has Y; A opens Stations and S is Edit stops (Anita's pick); add-passed-stations
@@ -493,8 +493,8 @@ has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on S
 [T-908, `ui/HelpPanel.tsx`] The "?" at the top of Settings [T-1099] (hover "Controls") opens a panel over the
 map beside the dock, under the tab row, listing only the controls no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
-modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
-the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, H, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag, E and Delete in
+the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, D, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
 the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY`, `DEMAND_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
@@ -517,13 +517,13 @@ dismissed, and the map and tools are blocked meanwhile.
 `ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
-"Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, three sliders: Size
-(0.5-2x, [T-099]; the radius is the slider times `BUBBLE_BASE`, 0.75, so 1x is the old 0.75x, T-1852), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
+"Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, first the Day choice (Average, Weekday, Sat, Sun;
+"Demand shown for", below) [T-703], under this heading since it sets the day of every demand figure [T-2345], then three sliders: Size
+(0.25-2x, [T-099, T-2271]; the radius is the slider times `BUBBLE_BASE`, 0.75, so 1x is the old 0.75x, T-1852), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
 commuter and longer-trip bubbles, not station discs; ignored while bubbles are selected, T-936, but not while a whole zone is, T-1726) and Detail (4 steps from coarser to finer,
 the third by default; its hover reads "How many bubbles are aggregated together"; [T-795, T-1838]), the Colors
 choice (3-color by default [T-1724], the old Mode mix, or 2-color [T-833], the old Train share, which shows two colour pickers labelled 0% train and
-100% train; no hovers on any of it [T-804, T-1838]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), the Day choice (Average, Weekday, Sat, Sun;
-"Demand shown for", below) [T-703], Show (trains, station names [off by default, T-1729], "Track at capacity" [the capacity markers; hover "Marks where stations or track cannot smoothly handle scheduled train frequencies", T-1843], "Crowded trains" [T-1152, T-1843, T-2236: the Traffic view's red edges, on by default; hover "Stretches where trains carry more than their rated load at the busiest hour"; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings [no hover, T-1843], "Lines side by side" [T-1886: lines sharing track as bands beside each other, off by default; [ui-map.md](ui-map.md) "Lines sharing track side by side"], Drives [T-1435, T-1477: the car-flow arcs, off by default; hover "Show arcs for common driving trips", T-1843; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels, Real network, Terrain [hover "Construction is more expensive in steep terrain", T-1843]), Riders on trains
+100% train; no hovers on any of it [T-804, T-1838]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), Show (trains, station names [off by default, T-1729], "Track at capacity" [the capacity markers; hover "Marks where stations or track cannot smoothly handle scheduled train frequencies", T-1843], "Crowded trains" [T-1152, T-1843, T-2236: the Traffic view's red edges, on by default; hover "Stretches where trains carry more than their rated load at the busiest hour"; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings [no hover, T-1843], "Lines side by side" [T-1886: lines sharing track as bands beside each other, on by default, T-2346; [ui-map.md](ui-map.md) "Lines sharing track side by side"], Drives [T-1435, T-1477: the car-flow arcs, off by default; hover "Show arcs for common driving trips", T-1843; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels, Real network, Terrain [hover "Construction is more expensive in steep terrain", T-1843]), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, no hovers [T-1843], and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], and "Rotate map with right drag" (off by default, Anita 2026-11-02: with no tilt it adds little; off turns the map back to north; [ui-map.md](ui-map.md) "Globe") [T-2031], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is logged in ("Logged in as alice", "Logged in with
@@ -589,13 +589,14 @@ as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyTe
 with its minus when negative; hovers may give more. History
 [T-447, `ui/MoneyHistory.tsx`]: a 1d / 30d / All time switch [T-2271] (All time by default, kept while
 the game is open, no hovers): 1d is the past 24 hours, hourly, 30d the past 30 days and All time every
-day, daily; over three charts, each on a
+day, daily; over two charts, each on a
 linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
-theme, the tokens `--revenue` and `--expense`, T-1111), has fares and running costs with upkeep
-(T-867) as lines, scaled to the larger of the two, and one-off costs (new trains and construction)
-as pale red bars on the same scale, cut at the top with a red cap when larger, so a build day does
-not flatten the lines [T-452]; the top's figure at the right. Then net as bars up or down from zero
-(gains blue, losses red). Then
+theme, the tokens `--revenue` and `--expense`, T-1111), has three narrow bars side by side in each column
+[T-2340]: fares, running costs with upkeep and loan payments (T-867), and one-off costs (new trains and
+construction, pale red, its slot left empty when there are none), the three taking 72% of the column's
+width and the rest a gap before the next. Fares and running costs set the scale, the larger of the two;
+a one-off bar is on the same scale, cut at the top with a red cap when larger, so a build day does
+not flatten the others [T-452]; the top's figure at the right. Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides
 are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), every
@@ -604,14 +605,14 @@ weeks a calendar month, past 90 months a run of months, each column's figures an
 average over the days it covers ("$22.8M/day", the hover's name "Nov 10-16"), the day now counted as
 far as it has gone, and no holiday ticks (All time only; 30d is always one a column). A young game's
 few sit at the right of at least 7 days or 12 hours. The
-day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
+day or hour now is drawn as it fills (paler bars) and moves as fares land.
 Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
-costs and their parts, or net, or its train rides. Days run midnight to midnight in the start zone's
+costs and their parts, or its train rides. Days run midnight to midnight in the start zone's
 local time (the ledgers', [track-and-service.md](track-and-service.md) 6.4), so today's column turns as
 the top bar's clock passes midnight there; hours are written in that local time [T-2271]. The
 charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
-"Loan" line when it had loan payments, which the expenses line includes [T-2022]. The fares, whatever the toggle,
+"Loan" line when it had loan payments, which the expenses bar includes [T-2022]. The fares, whatever the toggle,
 are one country's [T-1277, T-1690]: the selected station's or city's, else that of the built station
 nearest the view's centre, else (nothing built) the zone in view's, else the home city's. The graph and rows show the network's curve times that country's fare scale, and
 an edit there sets the curve (divided back by the scale), so every country's fares move with it.

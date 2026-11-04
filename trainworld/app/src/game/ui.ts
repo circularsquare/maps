@@ -115,7 +115,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   capacity: true,
   fullMarks: true,
   flatMarks: true,
-  lineBands: false,
+  lineBands: true,
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: true,
@@ -163,8 +163,8 @@ export interface DockLayout {
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
  * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
- * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585). */
-const VERSION = 11;
+ * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346). */
+const VERSION = 12;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
   try {
@@ -196,6 +196,8 @@ if ((saved.v ?? 1) < 9) {
 }
 // T-1585: the circles are off to start with; a choice stored before is dropped once
 if ((saved.v ?? 1) < 11) delete migratedDisplay.stationUse;
+// T-2346: lines side by side are on to start with; the old default (off) was stored, so it is dropped once
+if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
 // T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
 const trackColour = (saved.v ?? 1) < 10
   ? oldDisplay?.trackColour === "height" || oldDisplay?.trackColour === "speed" ? oldDisplay.trackColour : DEFAULT_DISPLAY.trackColour

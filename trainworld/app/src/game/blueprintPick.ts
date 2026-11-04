@@ -229,6 +229,9 @@ export async function switchPicked(off: boolean) {
   await edit({ op: "blueprintOff", edges: p.edges, stations: p.stations, off }, true);
 }
 
+/** T-2338: the E key, the picked pieces on when any is off, else off. */
+export const togglePicked = () => switchPicked(pickedState.peek().off === 0);
+
 /** T-1420: switch every disabled blueprint piece on again, picked or not: one undoable edit. */
 export async function enableAll() {
   const w = world.peek();

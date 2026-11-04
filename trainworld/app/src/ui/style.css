@@ -525,14 +525,9 @@ svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none
 .fg-off { cursor: pointer; }
 .fg-arrow { fill: var(--accent); stroke: var(--bg); stroke-width: 1; }
 .fg-off:hover .fg-arrow { stroke: var(--text); }
-path.hist-fares { stroke: var(--revenue); }
-path.hist-costs { stroke: var(--expense); }
-circle.hist-fares { fill: var(--revenue); stroke: none; }
-circle.hist-costs { fill: var(--expense); stroke: none; }
-.hist-gain { fill: var(--revenue); stroke: none; }
-.hist-loss { fill: var(--bad); stroke: none; }
+rect.hist-fares { fill: var(--revenue); stroke: none; }
+rect.hist-costs { fill: var(--expense); stroke: none; }
 .hist-rides { fill: var(--accent); stroke: none; }
-path.now { stroke-dasharray: 3 3; }
 rect.now { fill-opacity: .45; }
 .hist-col { fill: var(--text); fill-opacity: 0; stroke: none; }
 .hist-col:hover { fill-opacity: .07; }

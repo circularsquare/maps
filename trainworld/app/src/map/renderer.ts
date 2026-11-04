@@ -25,7 +25,7 @@ import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
-import { perfOff } from "../perfFlags";
+import { capInside, perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
@@ -97,6 +97,8 @@ const BAND_FOLD_PX = [1.25, 1.75] as const;
 const MUTE: readonly [number, number] | null = perfOff("muteThin") ? null : [0.45, 0.5];
 /** T-2126: bands side by side with a pixel between (`?perfOff=bandGap`: touching, as before) */
 const BAND_GAP = !perfOff("bandGap");
+/** T-2347 mockup: the red marks inside the line's colour (perfFlags.ts `capInside`); 0 in play */
+const CAP_INSIDE = capInside();
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -667,7 +669,7 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1520,6 +1522,7 @@ export class NetworkRenderer {
     gl.uniform1f(u.u_full_out, 1 * fullScale);
     gl.uniform1f(u.u_full_dash, 16 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));
+    gl.uniform1i(u.u_full_inside, CAP_INSIDE);
     gl.uniform1i(u.u_ghost, 0);
     gl.uniform3fv(u.u_ghost_rgb, rgbf(shades.ghost));
     gl.uniform1i(u.u_ghost_layer, -1);
@@ -1575,7 +1578,7 @@ export class NetworkRenderer {
       // [casing px, selected only, T-819's red band under the lines on full track (1), and under it (2) its outline in the casing's colour, T-1284]
       const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
       // (and T-2184's red edges of bands with riders waiting, over the bands beside them, 3)
-      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]), passes.push([0, 0, 3]);
+      if (kind === 1 && fullPass && cap === 0 && !CAP_INSIDE) passes.unshift([casing, 0, 2], [casing, 0, 1]), passes.push([0, 0, 3]);
       if (sel) passes.push(...(cap > 0 ? [[0, 1, 0]] as [number, number, number][] : [[casing, 1, 0], [0, 1, 0]] as [number, number, number][]));
       for (const [cas, only, full] of passes) {
         gl.uniform1f(u.u_casing, cas);

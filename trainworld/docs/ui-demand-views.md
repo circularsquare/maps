@@ -55,7 +55,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **None / Homes / Destinations / Total** [T-132, T-1903, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101]; starting a new game turns Destinations on, a start on the world map included [T-801, T-1441], and opening a saved game leaves the setting as it is. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical, attractions); Total is both ends summed per bubble, trips to and from
-  the place (`commuterEnd` "both"), no hover on the button, like Homes and Destinations. While the
+  the place (`commuterEnd` "both"). The D key steps through the four in turn; the hovers name it ("Hide demand
+  bubbles (D)", "Show homes (D)", "Show destinations (D)", "Show homes and destinations (D)") [T-2338]. While the
   figures on show are final (not a solve's estimate), the bubbles of the two choices not on show are
   built too, for the zone in view and the nearby zones, and kept while those figures stand; a switch
   shows them at once, also while a newer result's bubbles are on their way, which then replace them
@@ -218,8 +219,8 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. While a bubble (local or
-  zone) is selected every bubble is drawn at the Opacity slider's 100% and 1 CSS px larger in
-  radius (so none is under 1 px), with the connecting lines starting at the larger edge, so a small bubble reads over the
+  zone) is selected every bubble is drawn at the Opacity slider's 100% and 0.5 CSS px larger in
+  radius (so none is under 0.5 px, and a 10-trip bubble stays small beside a 5,000-trip one, T-2343), with the connecting lines starting at the larger edge, so a small bubble reads over the
   network; hover and click use the larger radius too [T-936, T-1102, `DemandOverlay.setSelecting`]. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
 - **The colour is smoothed** [T-900, `smooth` in `workers/commuters.worker.ts`]: the model gives

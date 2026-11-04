@@ -46,6 +46,17 @@ export function SettingsTab() {
         {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>
       <div class="h">Demand bubbles</div>
+      {/* the day every demand figure is for, not only the bubbles' (T-2345) */}
+      <div class="slider" data-tip="Which day demand figures are shown for">
+        <span>Day</span>
+        <Segmented<DayShown> options={DAY_OPTIONS} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
+      </div>
+      {days.length > 0 && (
+        <div class="slider day-super">
+          <span />
+          <Segmented<DayShown> options={days} value={d.dayShown} onChange={(v) => setDisplay("dayShown", v)} />
+        </div>
+      )}
       <Slider label="Size" min={0.25} max={2} step={0.05} value={d.bubbleSize} percent set={(v) => setDisplay("bubbleSize", v)} />
       <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} percent set={(v) => setDisplay("bubbleOpacity", v)} />
       {/* finer bubbles are more and smaller ones, at the same area per trip */}
@@ -70,17 +81,6 @@ export function SettingsTab() {
       )}
       <div class="h">Station circles</div>
       <Slider label="Size" min={0.5} max={2} step={0.05} value={d.stationCircleSize} percent set={(v) => setDisplay("stationCircleSize", v)} />
-      {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
-      <div class="slider" data-tip="Which day demand figures are shown for">
-        <span>Day</span>
-        <Segmented<DayShown> options={DAY_OPTIONS} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
-      </div>
-      {days.length > 0 && (
-        <div class="slider day-super">
-          <span />
-          <Segmented<DayShown> options={days} value={d.dayShown} onChange={(v) => setDisplay("dayShown", v)} />
-        </div>
-      )}
       <div class="h">Show</div>
       <div class="checks">
         <Check checked={d.trains} onChange={(v) => setDisplay("trains", v)}>
