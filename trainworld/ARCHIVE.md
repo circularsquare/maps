@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2294 Turkey (2026-11-04, agent countries): the whole country from the world plan, 8 metro rows and 66 zones on the census totals, all 74 shipped (ten parks relaxed with the census or as one-town zones; Konya's and Erzurum's origins moved). notes/T-2294.md.
+- T-2079 Turkey's census totals (2026-11-04, agent countries): `admin_totals` config TR, the 2022 register by ilce plus the Syrians under temporary protection, four earthquake provinces scaled to 2023 (`tools/country/turkey_census.py`). notes/T-2294.md.
 - T-2249 Passing stations' riders (2026-11-04, agent passing): the crowd fills an island between the running track and the outer track's inner edge (`u_pass_in`). notes/T-2228.md 10.
 - T-2248 Passing stations on the map (2026-11-04, agent passing): a faster line stopping where a slower one does stops on the running track beside it (`innerStops`); outer tracks run on through plain nodes and are shortened before a junction (`passLead`). `t2233-passing-map.mjs`. notes/T-2228.md 10.
 - T-2245 The local's waits on T-2232's line (2026-11-04, agent passing): not right. The lines' trains ran 580/571 s, not 10/10, and a local held behind an express went uncounted; overtakes now timetabled at the set headways, the hold counted. 18m27s a round trip to 13m07s. notes/T-2228.md 10.

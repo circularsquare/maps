@@ -80,6 +80,17 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
 
+Rule keys a new country may need (T-2294, T-2295):
+- **`plan_units`** whenever the country gets a `ZONE_RULES` entry and its metro rows are already in the plan: an entry
+  makes the planner read units afresh, and a country in NUTS 2024 but planned on geoBoundaries (Turkey) then gets NUTS-3
+  provinces, which its metro rows' unit ids are not.
+- **`fua_whole`** (people) when the dry run cuts a city of 0.5-1M between zones (Turkey 0.5M: Diyarbakir, Kayseri,
+  Sanliurfa, Kocaeli); `FUA_WHOLE`'s 1M default only joins bigger ones.
+- **`beyond_europe`** for a European country reaching past `EUROPE_BOX` (Russia east of 45 E), else those units are
+  left out of the zones ("outside Europe, left out" in the log).
+- Metro rows planned before the country had an `ARCHETYPE` entry keep archetype D and no module: give them the
+  zones' module by hand under the plan lock before the run.
+
 **People where GHSL has them wrong.** Zones that are not cities but hold a city's people (Cambodia's
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
 figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a
@@ -104,7 +115,12 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
 
 1. **Origins** (FLAG origin): none of the country's zones over 25 km from the unit it leads with (grouped
    zones are not checked: their origin is in the group they are named after). Over: on the live plan (section 4),
-   `checks/zone_new_origins.py <ids> --apply` moves the row's origin to its lead unit's densest pixel.
+   `checks/zone_new_origins.py <ids> --apply` moves the row's origin to its lead unit's densest pixel. The check does
+   not see an origin inside its unit but off the town (a village or an outskirt: Konya, Erzurum, Veliky Novgorod,
+   Tobolsk parked on the browser check with 0 riders); those park at the gate and take the town's centre by hand
+   (status planned, rebuilt). Where lead units are named in another script (Russia's "городской округ" city okrugs),
+   the zone is named after the first Latin-script unit, often a district beside the city: name it after its lead
+   city in zone-names.json.
 2. **Scattered units** (FLAG scattered): no row with towns (1,000 people) in parts over 100 km from all its
    others. The planner already makes such a unit dead space when it is not its zone's most populous
    (`world_plan.far_towns`, T-1984: "Unincorporated NT"); far islets with next to no one are a NOTE. Fix:
@@ -176,6 +192,10 @@ draft). Never poll: no reading the log, no `status`, no foreground sleeps while 
 your whole context.
 
 Several countries at once: one run each with `--no-join`, its own port and log; one join for all.
+
+The gate's browser check serves the main tree's app/: before a run that gates, ask the orchestrator to hold app/ and
+WASM landings until it ends (a mid-gate WASM rebuild parked 72 of Russia's rows on "no page errors", T-2298). While
+another run or join holds the packs, `--build-only` builds the rows without registering them; a later run gates them.
 
 ## 6. Parks: one relax run
 
