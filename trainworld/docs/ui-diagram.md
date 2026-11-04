@@ -44,9 +44,17 @@ Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` 
 `diagram/draw.ts`. Each line is one ribbon (casing in the background colour, strokes 5/6.4 of a pitch
 wide), corners rounded with radius 6 stroke widths (3 at a station, so a line turning there passes
 under its pill) plus the bundle's half width, plus or minus the stroke's offset, so a bundle's bends
-are concentric. A slot change on a straight run is a 45 degree jog. A line with high-speed trains (T-817) has a
+are concentric. A slot change on a straight run is a 45 degree jog. Pieces the layout leaves going out of a
+node the same way (where it could turn none of them without folding a line) are drawn as one bundle there:
+the piece with the most strokes where it is, each other beside it along its whole length, on the side its
+stations lie in reality, nearest first (`besideShifts`, T-2405). Any two pieces' legs still drawn along each
+other over more than a pitch, nearer than their bundles' half widths together, have the piece with fewer
+strokes moved aside until the bundles sit side by side, the way it already lies, else the way its stations
+lie (`apart`; up to 4 passes). So no line is drawn under another (`checks/t2405-diagram-hidden.mjs`). A line with high-speed trains (T-817) has a
 stripe of the background colour along its middle, 0.34 of its stroke, so it reads as two thin strokes of its
-colour (T-2272; notes/T-2272.md for the maps this follows).
+colour (T-2272; notes/T-2272.md for the maps this follows). A stroke that would be under a device px wide
+is drawn a px wide at its width's share of its opacity, at least a quarter of it, so no line vanishes far
+out; a high-speed line drawn so has no stripe (T-2408).
 
 **Pills.** Each station's pill lies along an axis: of the four octilinear axes through its place, the
 one every line stopping there crosses, and of those the one giving the shortest pill. Where none
@@ -109,8 +117,10 @@ by its lowest station node id on the lines. Each rail line becomes the chain of 
 through, first stop to last: its own path's stations, and the stations whose platform is within
 35 m of its track and parallel (within about 25 degrees), found from `corridors.ts`' beside table (a
 station's own edges' end samples name the edges beside it). A complex met again within 300 m with
-one other between is met once. Edges join consecutive complexes of a chain and carry its lines. Each line
-carries its colour and whether it runs high-speed trains.
+one other between is met once. Edges join consecutive complexes of a chain and carry its lines, each with
+the stroke it is drawn in there (`stroke`): lines of one colour, both high-speed or both not, share one where
+at least half of the shorter one's track on that hop is track both run on (interlining); every other line has
+its own (T-2405). Each line carries its colour and whether it runs high-speed trains.
 Places are metres east and north of the network's middle.
 
 ## The layout
@@ -178,7 +188,8 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 - **The spread**: stations still nearer than their spacing slide along their pieces, each the least
   that clears the pair, between its neighbours, only where it leaves fewer close pairs; failing that
   both of the pair part of the way. Key nodes stay, so no angle changes.
-- **Order**: on each piece one stroke per colour, left to right by `lineBands.ts`' pairwise rule on
+- **Order**: on each piece one stroke per line, lines sharing a stroke on each of its edges sharing one,
+  left to right by `lineBands.ts`' pairwise rule on
   the diagram's own places (follow two lines ahead to where they part, the one turning left goes left;
   else look back), with a fixed order where three or more go round in a circle.
 - **A rebuild** starts from the last layout's B places by node key, skipping A, with 10 B rounds held

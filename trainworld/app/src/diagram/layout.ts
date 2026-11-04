@@ -10,7 +10,8 @@
 //   stations placed along it by their share of its length;
 //   the separation (T-2205): the drawing moved, octilinear throughout, until stations keep their
 //   spacing from each other and from other pieces;
-//   the order of the strokes (one per colour) on each piece, by lineBands.ts' pairwise rule.
+//   the order of the strokes (one per line, lines of a colour on the same track sharing one) on each
+//   piece, by lineBands.ts' pairwise rule.
 // Units: metres-like layout units, x east, y north. A rebuild starts from the last B positions.
 
 import type { DiagramGraph } from "./graph";
@@ -102,8 +103,9 @@ export interface Piece {
   verts: Float64Array;
   /** per node, its vertex */
   at: Int32Array;
-  /** its strokes' colours, left to right looking from its first node to its last */
-  cols: string[];
+  /** its strokes left to right looking from its first node to its last, each the lines (indices into the
+   * graph's lines) drawn in it */
+  strokes: number[][];
 }
 
 export interface DiagramLayout {
@@ -122,6 +124,13 @@ export interface DiagramLayout {
   ms: { a: number; b: number; route: number; order: number; total: number };
   straight: number;
   bent: number;
+}
+
+/** how many strokes an edge's lines are drawn in (graph.ts' `stroke`) */
+function strokesOn(g: DiagramGraph, e: number): number {
+  const s = new Set<number>();
+  for (let k = g.first[e]; k < g.first[e + 1]; k++) s.add(g.stroke[k]);
+  return s.size;
 }
 
 const median = (v: ArrayLike<number>) => {
@@ -172,9 +181,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
   const pu = mid / o.puDiv;
   const hw = new Float64Array(n).fill(pu);
   for (let e = 0; e < m; e++) {
-    const cols = new Set<string>();
-    for (let k = g.first[e]; k < g.first[e + 1]; k++) cols.add(g.lines[g.on[k]].colour);
-    const h = ((cols.size - 1) / 2) * pu + pu;
+    const h = ((strokesOn(g, e) - 1) / 2) * pu + pu;
     hw[g.ea[e]] = Math.max(hw[g.ea[e]], h);
     hw[g.eb[e]] = Math.max(hw[g.eb[e]], h);
   }
@@ -770,11 +777,7 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
     const b = r.bases[k], L = b.line, a = p[0], z = p[p.length - 1];
     const e = edgeOf.get(Math.min(p[0], p[1]) * n + Math.max(p[0], p[1]));
     let hw = P.pu;
-    if (e !== undefined) {
-      const cols = new Set<string>();
-      for (let j = g.first[e]; j < g.first[e + 1]; j++) cols.add(g.lines[g.on[j]].colour);
-      hw = ((cols.size - 1) / 2) * P.pu + P.pu;
-    }
+    if (e !== undefined) hw = ((strokesOn(g, e) - 1) / 2) * P.pu + P.pu;
     const tn = turned.get(k);
     const bent = L.length === 6 || !!tn;
     let d0 = nearestDir(L[2] - L[0], L[3] - L[1]), d1 = L.length === 6 ? nearestDir(L[4] - L[2], L[5] - L[3]) : null;
@@ -1236,7 +1239,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
     s.push(total);
     for (let i = 1; i < k; i++) s[i] = Math.max(s[i], s[i - 1] + gap);
     for (let i = k - 1; i >= 1; i--) s[i] = Math.min(s[i], s[i + 1] - gap);
-    const pc: Piece = { nodes: Int32Array.from(p), verts: new Float64Array(0), at: new Int32Array(0), cols: [] };
+    const pc: Piece = { nodes: Int32Array.from(p), verts: new Float64Array(0), at: new Int32Array(0), strokes: [] };
     const b: Base = { line, Ls, s, gap };
     placeOn(pc, b, x, y);
     pieces.push(pc);
@@ -1362,7 +1365,8 @@ function spread(P: Prep, r: Routed): void {
   }
 }
 
-/** per piece, its strokes (one per colour) left to right looking from its first node to its last:
+/** per piece, its strokes (one per line, but for lines of one colour and speed on the same track, which share
+ * one) left to right looking from its first node to its last:
  * of two lines, follow both ahead to where they part, and the one turning left goes left; if they
  * never part ahead, look back (lineBands.ts' rule, on the diagram's own positions) */
 function order(g: DiagramGraph, pieces: Piece[], x: Float64Array, y: Float64Array): void {
@@ -1406,33 +1410,58 @@ function order(g: DiagramGraph, pieces: Piece[], x: Float64Array, y: Float64Arra
   for (const pc of pieces) {
     const p = pc.nodes, e = edgeOf.get(Math.min(p[0], p[1]) * n + Math.max(p[0], p[1]));
     if (e === undefined) continue;
-    const rep = new Map<string, number>();
-    for (let k = g.first[e]; k < g.first[e + 1]; k++) {
-      const l = g.on[k], c = g.lines[l].colour, r = rep.get(c);
-      if (r === undefined || g.lines[l].chain.length > g.lines[r].chain.length) rep.set(c, l);
+    // lines share a stroke on the piece where they share one on each of its edges (graph.ts' `stroke`)
+    const sig = new Map<number, string>();
+    for (let k = g.first[e]; k < g.first[e + 1]; k++) sig.set(g.on[k], String(g.stroke[k]));
+    for (let i = 2; i < p.length; i++) {
+      const f = edgeOf.get(Math.min(p[i - 1], p[i]) * n + Math.max(p[i - 1], p[i]));
+      if (f === undefined) continue;
+      for (let k = g.first[f]; k < g.first[f + 1]; k++) {
+        const s = sig.get(g.on[k]);
+        if (s !== undefined) sig.set(g.on[k], s + "," + g.stroke[k]);
+      }
     }
-    const cols = [...rep.keys()].sort();
+    const groups = new Map<string, number[]>();
+    for (const [l, s] of sig) {
+      const v = groups.get(s);
+      if (v) v.push(l);
+      else groups.set(s, [l]);
+    }
+    // each stroke's lines, and the one it is walked by: the longest chain
+    const cols = [...groups.values()].map((v) => v.sort((a, b) => a - b)).sort((a, b) => (g.lines[a[0]].colour < g.lines[b[0]].colour ? -1 : g.lines[a[0]].colour > g.lines[b[0]].colour ? 1 : a[0] - b[0]));
+    const rep = cols.map((v) => v.reduce((a, b) => (g.lines[b].chain.length > g.lines[a].chain.length ? b : a)));
     const m = cols.length;
     if (m < 2) {
-      pc.cols = cols;
+      pc.strokes = cols;
       continue;
     }
-    const cmp = (ca: string, cb: string) => {
-      const la = rep.get(ca)!, lb = rep.get(cb)!;
+    const cmp = (ia: number, ib: number) => {
+      const la = rep[ia], lb = rep[ib];
       let v = walk(la, lb, p[p.length - 2], p[p.length - 1]);
       if (!v) v = -walk(la, lb, p[1], p[0]);
-      return v || (ca < cb ? -1 : 1);
+      return v || (ia < ib ? -1 : 1);
     };
     // by how many of the others each is left of, as lineBands does where partings go round a circle
     const wins = new Int32Array(m), c = new Int8Array(m * m);
     for (let i = 0; i < m; i++) for (let j = i + 1; j < m; j++) {
-      const r = cmp(cols[i], cols[j]);
+      const r = cmp(i, j);
       c[i * m + j] = r;
       c[j * m + i] = -r;
       if (r < 0) wins[i]++;
       else wins[j]++;
     }
-    pc.cols = cols.map((_, i) => i).sort((i, j) => wins[j] - wins[i] || c[i * m + j]).map((i) => cols[i]);
+    // ties in wins by the pairwise rule, by passes of swaps rather than a sort: where they go round in a
+    // circle the comparison is no order, and engines' sorts then differ (T-2405)
+    const ord = cols.map((_, i) => i).sort((i, j) => wins[j] - wins[i] || i - j);
+    for (let pass = 0; pass < m; pass++) {
+      let swapped = false;
+      for (let t = 0; t + 1 < m; t++) {
+        const i = ord[t], j = ord[t + 1];
+        if (wins[i] === wins[j] && c[i * m + j] > 0) (ord[t] = j), (ord[t + 1] = i), (swapped = true);
+      }
+      if (!swapped) break;
+    }
+    pc.strokes = ord.map((i) => cols[i]);
   }
 }
 

@@ -30,6 +30,8 @@ const ALONG_SLACK = 1.25;
 const AXIS_SHIFT = 2, AXIS_STEPS = 2, SHIFT_COST = 1;
 /** a passage between pills of one station is this share of a pill wide */
 const PASSAGE = 0.45;
+/** `apart`'s passes, each moving a piece at most once (T-2405) */
+const APART_PASSES = 4;
 /** pills are drawn from a pitch this many device px (T-2272) */
 const PILL_MIN_PX = 0.625;
 
@@ -121,6 +123,119 @@ export function pillSize(d: Drawing, k: number): [number, number] {
 
 type V = [number, number, number, number, number]; // x, y, offset left of travel, bundle half width, node (-1 none)
 
+/** Pieces leaving a node the same way (where the layout could turn none of them without folding a line)
+ * would be drawn over each other: drawn as one bundle there instead (T-2405). Of each such group the piece
+ * with the most strokes stays where it is, and the others go beside it, each to the side its stations lie
+ * on in reality, nearest first. Per piece, how far its strokes are moved, in pitches left of its travel. */
+export function besideShifts(g: DiagramGraph, lay: DiagramLayout): Float64Array {
+  const out = new Float64Array(lay.pieces.length);
+  const tiny = 1e-6 * lay.pu;
+  const groups = new Map<number, [number, 0 | 1][]>();
+  lay.pieces.forEach((pc, k) => {
+    const v = pc.verts, m = v.length / 2;
+    if (m < 2 || pc.nodes[0] === pc.nodes[pc.nodes.length - 1]) return;
+    for (const end of [0, 1] as const) {
+      let dx = 0, dy = 0;
+      for (let j = 1; j < m && Math.abs(dx) + Math.abs(dy) < tiny; j++) {
+        const a = end ? m - j : j - 1, b = end ? m - 1 - j : j;
+        (dx = v[b * 2] - v[a * 2]), (dy = v[b * 2 + 1] - v[a * 2 + 1]);
+      }
+      if (Math.abs(dx) + Math.abs(dy) < tiny) continue;
+      const port = ((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8, key = pc.nodes[end ? pc.nodes.length - 1 : 0] * 8 + port;
+      const list = groups.get(key);
+      if (list) list.push([k, end]);
+      else groups.set(key, [[k, end]]);
+    }
+  });
+  for (const [key, list] of groups) {
+    if (list.length < 2) continue;
+    const node = Math.floor(key / 8), [ux, uy] = DIRS8[key % 8];
+    // which side of the way out each piece's stations lie in reality, left positive
+    const side = list.map(([k]) => {
+      const p = lay.pieces[k].nodes;
+      let s = 0;
+      for (const v of p) if (v !== node) s += (ux * (g.y[v] - g.y[node]) - uy * (g.x[v] - g.x[node])) / Math.max(1, hyp(g.x[v] - g.x[node], g.y[v] - g.y[node]));
+      return s / Math.max(1, p.length - 1);
+    });
+    const width = (q: number) => lay.pieces[list[q][0]].strokes.length;
+    const main = list.reduce((a, _, q) => (width(q) > width(a) ? q : a), 0);
+    const rest = list.map((_, q) => q).filter((q) => q !== main).sort((a, b) => Math.abs(side[a]) - Math.abs(side[b]) || list[a][0] - list[b][0]);
+    let left = width(main) / 2, right = width(main) / 2;
+    for (const q of rest) {
+      const w = width(q), toLeft = side[q] >= side[main];
+      const s = toLeft ? left + w / 2 : -(right + w / 2);
+      if (toLeft) left += w;
+      else right += w;
+      // left of the way out is left of travel from the piece's first node, right from its last
+      const t = list[q][1] ? -s : s, k = list[q][0];
+      if (Math.abs(t) > Math.abs(out[k])) out[k] = t;
+    }
+  }
+  apart(g, lay, out);
+  return out;
+}
+
+/** Legs of two pieces still drawn along each other, nearer than their bundles' half widths together (the
+ * layout's spacing failed there), over more than a pitch: the piece with fewer strokes moved aside until the
+ * two bundles sit side by side, the way it already lies, else the way its stations lie in reality
+ * (`besideShifts`' second step, T-2405). Moves `shift` in place. */
+function apart(g: DiagramGraph, lay: DiagramLayout, shift: Float64Array): void {
+  const pu = lay.pu, tiny = 1e-6 * pu;
+  // each leg: its piece, axis (0 to 3, a direction and its reverse), its way along the axis (1 or -1), where
+  // it lies across the axis, and its span along it
+  const legs: { k: number; q: number; sgn: number; c: number; t0: number; t1: number }[] = [];
+  lay.pieces.forEach((pc, k) => {
+    const v = pc.verts;
+    for (let j = 2; j < v.length; j += 2) {
+      const dx = v[j] - v[j - 2], dy = v[j + 1] - v[j - 1], l = hyp(dx, dy);
+      if (l < pu) continue;
+      const p = ((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8, q = p % 4, [ux, uy] = DIRS8[q];
+      const ta = ux * v[j - 2] + uy * v[j - 1], tb = ux * v[j] + uy * v[j + 1];
+      legs.push({ k, q, sgn: p < 4 ? 1 : -1, c: (-uy * (v[j - 2] + v[j]) + ux * (v[j - 1] + v[j + 1])) / 2, t0: Math.min(ta, tb), t1: Math.max(ta, tb) });
+    }
+  });
+  if (legs.length < 2) return;
+  const width = (k: number) => lay.pieces[k].strokes.length;
+  let wmax = 1;
+  for (const pc of lay.pieces) wmax = Math.max(wmax, pc.strokes.length);
+  const cell = wmax * pu;
+  /** where a leg's bundle's middle lies across its axis, its piece's shift taken */
+  const mid = (L: (typeof legs)[number]) => L.c + shift[L.k] * pu * L.sgn;
+  for (let pass = 0; pass < APART_PASSES; pass++) {
+    const buckets = new Map<number, number[]>();
+    legs.forEach((L, i) => {
+      const key = L.q * 1e9 + Math.floor(mid(L) / cell);
+      const b = buckets.get(key);
+      if (b) b.push(i);
+      else buckets.set(key, [i]);
+    });
+    const moved = new Set<number>();
+    for (let i = 0; i < legs.length; i++) {
+      const A = legs[i], key = A.q * 1e9 + Math.floor(mid(A) / cell);
+      for (const nb of [key - 1, key, key + 1]) for (const j of buckets.get(nb) ?? []) {
+        const B = legs[j];
+        if (j <= i || B.k === A.k || B.q !== A.q || moved.has(A.k) || moved.has(B.k)) continue;
+        if (Math.min(A.t1, B.t1) - Math.max(A.t0, B.t0) <= pu) continue;
+        const need = ((width(A.k) + width(B.k)) / 2) * pu;
+        if (Math.abs(mid(B) - mid(A)) >= need - tiny) continue;
+        const [M, R] = width(A.k) < width(B.k) || (width(A.k) === width(B.k) && A.k > B.k) ? [A, B] : [B, A];
+        const rel = mid(M) - mid(R);
+        let dir = rel > tiny ? 1 : rel < -tiny ? -1 : 0;
+        if (!dir) {
+          // the way the moved piece's stations lie off the other's in reality
+          const [ux, uy] = DIRS8[M.q], r0 = lay.pieces[R.k].nodes[0];
+          let s = 0;
+          for (const v of lay.pieces[M.k].nodes) s += -uy * (g.x[v] - g.x[r0]) + ux * (g.y[v] - g.y[r0]);
+          dir = s < 0 ? -1 : 1;
+        }
+        shift[M.k] += ((dir * need - rel) / pu) * M.sgn;
+        moved.add(M.k);
+      }
+    }
+    if (!moved.size) return;
+  }
+}
+
 export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   const pitch = lay.pu, W = pitch * STROKE_SHARE, R0 = RADIUS_W * W, RS = RADIUS_STATION_W * W;
   const pieceOf = new Map<number, [Piece, number, number]>();
@@ -132,20 +247,22 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
       pieceOf.set(p[i + 1] * n + p[i], [r, i + 1, -1]);
     }
   }
-  const offs = new Map<Piece, Map<string, [number, Float64Array, number]>>();
-  for (const r of lay.pieces) {
-    const m = new Map<string, [number, Float64Array, number]>(), k = r.cols.length;
-    r.cols.forEach((c, j) => {
-      const o = ((k - 1) / 2 - j) * pitch;
-      m.set(c, [o, offsetKeep(r.verts, o), ((k - 1) / 2) * pitch]);
+  /** per piece, per line on it: its stroke's offset, the piece's drawing at that offset, the bundle's half width */
+  const offs = new Map<Piece, Map<number, [number, Float64Array, number]>>();
+  const shift = besideShifts(g, lay);
+  lay.pieces.forEach((r, pi) => {
+    const m = new Map<number, [number, Float64Array, number]>(), k = r.strokes.length, sh = shift[pi] * pitch;
+    r.strokes.forEach((ls, j) => {
+      const o = ((k - 1) / 2 - j) * pitch + sh, s: [number, Float64Array, number] = [o, offsetKeep(r.verts, o), ((k - 1) / 2) * pitch + Math.abs(sh)];
+      for (const l of ls) m.set(l, s);
     });
     offs.set(r, m);
-  }
+  });
   const lines: Drawing["lines"] = [];
   const stopsAt = new Map<number, [number, number][]>();
   const Vs: [DiagramGraph["lines"][number], V[]][] = [];
-  for (const ln of g.lines) {
-    const ch = ln.chain, c = ln.colour;
+  for (const [li, ln] of g.lines.entries()) {
+    const ch = ln.chain;
     const V: V[] = [];
     let i = 0;
     while (i < ch.length - 1) {
@@ -159,7 +276,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
         j++;
       }
       const b = a + d * (j - i);
-      const [o, op, hw] = offs.get(r)!.get(c) ?? [0, r.verts, 0];
+      const [o, op, hw] = offs.get(r)!.get(li) ?? [0, r.verts, 0];
       const va = r.at[a], vb = r.at[b];
       const nodeAt = new Map<number, number>();
       for (let t = 0; t <= j - i; t++) nodeAt.set(r.at[a + d * t], i + t);
@@ -460,6 +577,8 @@ export interface DiagramFocus {
 }
 /** the muted lines: their width's share and opacity over the background (the map's, renderer.ts MUTE) */
 export const MUTE_WIDTH = 0.45, MUTE_ALPHA = 0.5;
+/** a line thinner than a device px is drawn a px wide at its width's share of its opacity, at least this (T-2408) */
+const THIN_ALPHA = 0.25;
 /** faded pills' outlines and names: their opacity */
 export const FADE_ALPHA = 0.35;
 
@@ -482,21 +601,29 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
       ctx.stroke((l.path ??= toPath(l.cmds)));
     }
     ctx.strokeStyle = l.colour;
-    ctx.lineWidth = d.stroke;
+    const thin = width(d.stroke, 1);
     ctx.stroke((l.path ??= toPath(l.cmds)));
+    ctx.globalAlpha = 1;
     // a high-speed line: two strokes of its colour either side of a stripe of the background
-    if (l.fast) {
+    if (l.fast && !thin) {
       ctx.strokeStyle = theme.bg;
       ctx.lineWidth = d.stroke * FAST_CORE;
       ctx.stroke(l.path);
     }
   };
+  /** a stroke `w` wide at opacity `alpha`: under a device px, a px wide and fainter by as much, though never
+   * below THIN_ALPHA of it, so no line vanishes far out (T-2408); whether it was */
+  const width = (w: number, alpha: number): boolean => {
+    const px = w * scale;
+    ctx.lineWidth = px < 1 ? 1 / scale : w;
+    ctx.globalAlpha = px < 1 ? alpha * Math.max(THIN_ALPHA, px) : alpha;
+    return px < 1;
+  };
   ctx.strokeStyle = theme.bg;
   ctx.lineWidth = d.pitch;
   for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
   if (focus?.lines) {
-    ctx.globalAlpha = MUTE_ALPHA;
-    ctx.lineWidth = d.stroke * MUTE_WIDTH;
+    width(d.stroke * MUTE_WIDTH, MUTE_ALPHA);
     d.lines.forEach((l, i) => {
       if (full(i) || i === focus.hot) return;
       ctx.strokeStyle = l.colour;

@@ -139,9 +139,17 @@ function withStation(g) {
   });
   const em = new Map();
   lines.forEach((l, li) => { for (let i = 1; i < l.chain.length; i++) { const p = Math.min(l.chain[i - 1], l.chain[i]), q = Math.max(l.chain[i - 1], l.chain[i]); const k = p * (n + 1) + q; if (!em.has(k)) em.set(k, new Set()); em.get(k).add(li); } });
-  const ks = [...em.keys()].sort((p, q) => p - q), first = [0], on = [];
-  for (const k of ks) { on.push(...em.get(k)); first.push(on.length); }
-  return { ...g, key, x, y, lines, ea: Int32Array.from(ks, (k) => Math.floor(k / (n + 1))), eb: Int32Array.from(ks, (k) => k % (n + 1)), first: Int32Array.from(first), on: Int32Array.from(on) };
+  // each line's stroke (T-2405) as on the old edge; the two halves of the split one as on it
+  const was = new Map();
+  for (let e = 0; e < g.ea.length; e++) for (let j = g.first[e]; j < g.first[e + 1]; j++) was.set(`${g.ea[e]},${g.eb[e]},${g.on[j]}`, g.stroke?.[j]);
+  const ks = [...em.keys()].sort((p, q) => p - q), first = [0], on = [], stroke = [];
+  for (const k of ks) {
+    let p = Math.floor(k / (n + 1)), q = k % (n + 1);
+    if (p === n || q === n) (p = a), (q = b);
+    for (const li of em.get(k)) on.push(li), stroke.push(was.get(`${p},${q},${li}`) ?? li);
+    first.push(on.length);
+  }
+  return { ...g, key, x, y, lines, ea: Int32Array.from(ks, (k) => Math.floor(k / (n + 1))), eb: Int32Array.from(ks, (k) => k % (n + 1)), first: Int32Array.from(first), on: Int32Array.from(on), stroke: Int32Array.from(stroke) };
 }
 
 for (const name of which) {

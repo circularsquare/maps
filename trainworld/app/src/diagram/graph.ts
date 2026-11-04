@@ -15,6 +15,9 @@ const PARALLEL = 0.9;
 const DIR_M = 30;
 /** a complex met again this soon after it (m along the line), with one other between, was met once */
 const REVISIT_M = 300;
+/** lines of one colour and speed share a stroke on a hop where this share of the shorter one's track there
+ * is track both run on (T-2405) */
+const SAME_TRACK = 0.5;
 const NO_COMPLEX = 0xffffffff;
 /** each edge's arc lengths, kept while the clock worker keeps its points (map/network.ts' cache) */
 const arcs = new Map<number, { p: Float32Array; c: Float64Array }>();
@@ -45,6 +48,9 @@ export interface DiagramGraph {
   eb: Int32Array;
   first: Int32Array;
   on: Int32Array;
+  /** per entry of `on`, the stroke its line is drawn in there: the lowest line of those sharing it, lines of
+   * one colour and speed on the same track (T-2405) */
+  stroke: Int32Array;
   /** the middle the places are measured from, local units, and local units per metre there */
   mid: [number, number];
   k: number;
@@ -187,7 +193,11 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   };
 
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length >= 1 && l.stops.length >= 2);
-  const out: { id: number; colour: string; fast: boolean; chain: number[]; stop: number[] }[] = [];
+  /** per line: its chain, and per chain entry the range of its path the hops either side run on: the hop
+   * from entry i to i + 1 runs on path[lo[i]] to path[hi[i + 1]] */
+  type Out = { id: number; colour: string; fast: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[] };
+  const out: Out[] = [];
+  /** met: arc, node, lo, hi */
   const met: number[] = [];
   for (const l of rail) {
     met.length = 0;
@@ -196,34 +206,40 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
       const e = code >> 1, back = (code & 1) === 1, ed = ends.get(e);
       if (!ed) return;
       const from = back ? ed.b : ed.a, to = back ? ed.a : ed.b;
-      if (k === 0 && isStation(from)) met.push(arc, from);
+      if (k === 0 && isStation(from)) met.push(arc, from, 0, -1);
       const c = cumOf(e);
       const len = c ? c[c.length - 1] : 0;
       if (c) {
         const s = stationsBeside(e);
-        for (let i = 0; i < s.length; i += 2) met.push(arc + (back ? len - s[i] : s[i]), s[i + 1]);
+        for (let i = 0; i < s.length; i += 2) met.push(arc + (back ? len - s[i] : s[i]), s[i + 1], k, k);
       }
       arc += len;
-      if (isStation(to)) met.push(arc, to);
+      if (isStation(to)) met.push(arc, to, k + 1, k);
     });
-    const idx = Array.from({ length: met.length / 2 }, (_, i) => i).sort((i, j) => met[i * 2] - met[j * 2] || i - j);
+    const idx = Array.from({ length: met.length / 4 }, (_, i) => i).sort((i, j) => met[i * 4] - met[j * 4] || i - j);
     const stopSet = new Set(l.stops.map((s) => (isStation(s) ? complexOf[s] : NO_COMPLEX)));
-    const chain: number[] = [], at: number[] = [], stop: number[] = [], k0 = kAtY(met.length ? placeOf(met[1])?.[1] ?? 0 : 0);
+    const chain: number[] = [], at: number[] = [], stop: number[] = [], lo: number[] = [], hi: number[] = [], k0 = kAtY(met.length ? placeOf(met[1])?.[1] ?? 0 : 0);
     for (const i of idx) {
-      const n = met[i * 2 + 1], a = met[i * 2];
+      const n = met[i * 4 + 1], a = met[i * 4];
       const g = graphNode(n);
       place(g, n);
-      if (chain.length && chain[chain.length - 1] === g) continue;
+      if (chain.length && chain[chain.length - 1] === g) {
+        lo[lo.length - 1] = met[i * 4 + 2];
+        continue;
+      }
       // A, B, A within a short way (a beside platform of A on either side of B): A once
       if (chain.length >= 2 && chain[chain.length - 2] === g && a - at[at.length - 2] < REVISIT_M * k0) continue;
       chain.push(g);
       at.push(a);
       stop.push(stopSet.has(complexOf[n]) ? 1 : 0);
+      lo.push(met[i * 4 + 2]);
+      hi.push(met[i * 4 + 3]);
     }
     // from the first stop to the last: stations beside it beyond its ends are not the line's
     let i0 = stop.indexOf(1), i1 = stop.lastIndexOf(1);
     if (i0 < 0) continue;
-    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, chain: chain.slice(i0, i1 + 1), stop: stop.slice(i0, i1 + 1) });
+    const cut = <T>(v: T[]) => v.slice(i0, i1 + 1);
+    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi) });
   }
 
   // nodes on some kept chain only, numbered again in order of their keys
@@ -252,7 +268,10 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   });
   const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
   const em = new Map<number, number[]>();
+  /** per edge, per line on it, the track edges its hops there run on */
+  const runs = new Map<number, Map<number, Set<number>>>();
   dl.forEach((l, li) => {
+    const src = out[li];
     for (let i = 1; i < l.chain.length; i++) {
       const a = Math.min(l.chain[i - 1], l.chain[i]), b = Math.max(l.chain[i - 1], l.chain[i]);
       if (a === b) continue;
@@ -260,20 +279,47 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
       let v = em.get(kk);
       if (!v) em.set(kk, (v = []));
       if (v[v.length - 1] !== li) v.push(li);
+      let r = runs.get(kk);
+      if (!r) runs.set(kk, (r = new Map()));
+      let s = r.get(li);
+      if (!s) r.set(li, (s = new Set()));
+      for (let p = Math.max(0, src.lo[i - 1]); p <= Math.min(src.hi[i], src.path.length - 1); p++) s.add(src.path[p] >> 1);
     }
   });
+  const lenOf = (e: number) => { const c = cumOf(e); return c ? c[c.length - 1] : 0; };
+  /** whether two lines' hops on an edge run on the same track */
+  const sameTrack = (s: Set<number>, t: Set<number>): boolean => {
+    let both = 0, ls = 0, lt = 0;
+    for (const e of s) (ls += lenOf(e)), t.has(e) && (both += lenOf(e));
+    for (const e of t) lt += lenOf(e);
+    return both > 0 && both >= SAME_TRACK * Math.min(ls, lt);
+  };
   const ek = [...em.keys()].sort((a, b) => a - b);
   const ea = new Int32Array(ek.length), eb = new Int32Array(ek.length), first = new Int32Array(ek.length + 1);
   let total = 0;
   for (const kk of ek) total += em.get(kk)!.length;
-  const on = new Int32Array(total);
+  const on = new Int32Array(total), stroke = new Int32Array(total);
   let o = 0;
   ek.forEach((kk, i) => {
     ea[i] = Math.floor(kk / n);
     eb[i] = kk % n;
     first[i] = o;
-    for (const li of new Set(em.get(kk)!)) on[o++] = li;
+    const here = [...new Set(em.get(kk)!)], r = runs.get(kk)!;
+    // each line's stroke: the lowest line of one colour and speed reached through hops on the same track
+    const up = here.map((_, q) => q);
+    const find = (q: number): number => (up[q] === q ? q : (up[q] = find(up[q])));
+    for (let a = 0; a < here.length; a++) for (let b = a + 1; b < here.length; b++) {
+      const la = dl[here[a]], lb = dl[here[b]];
+      if (la.colour !== lb.colour || !!la.fast !== !!lb.fast || !sameTrack(r.get(here[a])!, r.get(here[b])!)) continue;
+      const ra = find(a), rb = find(b);
+      if (ra !== rb) up[Math.max(ra, rb)] = Math.min(ra, rb);
+    }
+    for (let q = 0; q < here.length; q++) {
+      on[o] = here[q];
+      // `here` is in line order, so a root is its group's lowest line
+      stroke[o++] = here[find(q)];
+    }
   });
   first[ek.length] = o;
-  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), mid: [mx, my], k };
+  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), stroke: stroke.subarray(0, o), mid: [mx, my], k };
 }

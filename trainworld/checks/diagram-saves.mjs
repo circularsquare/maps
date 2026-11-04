@@ -25,6 +25,8 @@ export const SAVES = {
   ne: { file: new URL('T-125-northeast.save', TW), lon: -73.985, lat: 40.758 },
   // T-2290: Anita's line 8 game as t2290-line8-game.mjs builds it
   l8: { file: new URL('../artifacts/trainworld/t2290/line8.save', TW), lon: -73.985, lat: 40.758 },
+  // T-2405: expresses on tracks of their own beside locals, as t2405-express-game.mjs builds it
+  xp: { file: new URL('../artifacts/trainworld/t2405/express.save', TW), lon: -73.985, lat: 40.758 },
 };
 
 /** the save `name` opened: its model, the inputs the clock worker has, and a `graph()` that builds
