@@ -1,17 +1,19 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8509086d-46cd-4c5f-8d59-da9348f4a5e0, name maps-c9, since 2026-11-03 23:29
-Updated: 2026-11-04 01:55
+Updated: 2026-11-04 02:15
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **bb48b358** (maps-c9 01:50: T-2263 tutorial with Anita's reworded strings, T-2266 fares lag, T-2290
-  Fleetwood side terms, T-2267/T-2270 design note). Before it 8dc8961f (maps-1c: T-2214 + T-2215 islands and No
-  route), af7a4271 (T-2257 Rikers, ferry " bus" fix). maps-1c has wound down; no Previous.
-- **8800 = build 868 (bb48b358)**, plain snapbuild from data/packs, smoke 23/23 light and dark; real save 11,721,348
-  rail trips. LIVE = 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word (release
-  "later this week").
+- master **8c965a29** (maps-c9 ~02:10: the UI batch T-2271/T-2269/T-2273..75/T-2286/T-2279-off and demand
+  T-2265/T-2278/T-2276). Before: 3ecdc51c audit, bb48b358 tutorial/fares/Fleetwood/design note, 8dc8961f islands
+  (maps-1c). Left out of 8c965a29 on purpose: diagram's WIP (app/src/diagram/*, its checks, ui-diagram.md, T-2272
+  DECISIONS lines), and countries'/replan's pipeline and game data (registry.json, market-rows.json,
+  zone-names.json, zone-successors.json, pipeline/*, tools/country/*, notes/T-1189.md, notes/T-2294.md).
+- **8800 = build 870 (8c965a29)** on the freeze, smoke 23/23 light and dark; real save 12,509,800 rail trips (frozen
+  packs lack the T-2257 Rikers fix: rebuild from data/packs once Taiwan's gate is done). LIVE = 821 (R2 `trainworld/2026-11-03b`,
+  website dc49c5f). Publish only on Anita's word (release "later this week").
 - Freeze: data/frozen/20261103-162459 (post-India). Build 8800 on it (`snapbuild-frozen.cmd`) while packs are written.
 - **Cores cap 15** overnight (Anita asleep, "feel free to use all cores overnight"); `python cores.py cap 10` when
   she is back at the machine.
@@ -30,49 +32,38 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Design T-2267/T-2270 (T-2282..T-2285): not answered yet; don't build.
 
 ## In flight (maps-c9's subagents, launched ~01:45; brief conditions in scratch common-brief.md, ownership there)
+- ~03:15 countries: **Turkey 74/74 built** (batch 20261104-021141, build-only). **Russia + Belarus building**
+  (batch 20261104-024516, 181 rows: 173 RU + 8 BY, build-only, claims 11). Russia's 13 rows and Minsk unheld; 4 lone
+  Siberian towns held (suk xaf gub xag); realms "turkey", "belarus" added; geoBoundaries RUS stops at the recognised
+  border (no Crimea/occupied areas built). **Waiting: Turkey's gate run (`run --countries TR --no-join`, 30-60 min)
+  gets my go once Taiwan's join ends.**
 - abb1ccd32095e266b **countries** (Opus): Turkey T-2079 + build, then Russia (unheld) + Belarus, Ukraine if data;
   territory default = recognised borders, Crimea/occupied unbuilt (ask Anita). Ids T-2294..99. Joins/pack writes
   only after my "go" (one writer at a time with replan).
 - a24a3ce58427a5a79 **replan** (Opus): T-1189 (Taiwan, US+PR, Europe): prerequisites (T-1999, T-774 in
   pipeline/world_plan.py: go given 01:55, countries told to keep off that file), dry runs and a look, then builds.
-  Ids T-2300..04. Pack writes only after my "go". **Pack lock: replan, since ~02:20** (Taiwan: retire ead/zht/xid,
+  Ids T-2300..04. Pack writes only after my "go". **~02:40: Taiwan gated 7/7, successors final (ead->eai, xid/zht->zhb); join go given (backup prejoin-tw,
+  join_tw.cmd).** Turkey's run batch 20261104-021141 (PID 22384) started without a go at ~02:11, at its extract;
+  asked countries whether it gates soon. Earlier: **Pack lock: replan, since ~02:20** (Taiwan: retire ead/zht/xid,
   world_run TW --no-join, 7 new zones; backup data/work/pre-T1189/pre-tw; batch 20261104-015157, PID 17932).
   Build 8800 frozen until it releases. Successors interim (xid, zht -> tai; ead -> none) until the gate registers the
   new zones, then replan sets ead=eai, xid=zhb, zht=zhb. **Next lock: countries (Turkey, 76 rows: 8 metros, 68
   zones; TUR and RUS rules in world_plan.py)**, waiting for my go after Taiwan's gate.
-- **audit DONE** (3ecdc51c): 13 closed or abandoned, 6 trimmed; CLAUDE.md "task is done" rule now says to update
-  every line naming an archived id and archive a parent with its last stage. Unsure, left open: T-430, T-340 (moot
-  once T-2282 drops quad), T-2267/T-2270 (archive when T-2282..85 start), T-1193, T-1867, T-1444; T-1920 and T-2058
-  asked in for-anita.md. notes/audit-2026-11-04.md.
-- a0c6d307f45a77263 **diagram** (Opus, ~02:10): T-2272 friend items (dark ring, small local stops, HSR, faint big
-  names, stations 4x further out) then T-2289 condense lonely stretches. Port 6179. Ids T-2321..23.
-- aa63180067dce711c **demand** (Opus): T-2265 walk rule, T-2278 parking by income, T-2276 buildings 1 min +
-  waiting room. Port 6178. Ids T-2306..08.
-- **display DONE, uncommitted** (a9dff6b277a205075, retired ~03:35): T-2271 map items (whole T-2271 archived),
-  T-2279 behind `CROWD_MEAN_ON = false` in game/today.ts (`?crowdMean=1` previews; on her OK set true and archive),
-  linesPeriods fix in clock.worker.ts. Smoke 23/23 on 6174. Commit with the UI batch (waiting on demand's and
-  diagram's file lists to leave their hunks out).
-- **panels DONE, uncommitted** (ad9dc5e7e818a8799, retired ~03:20): T-2271 panel items (name cap 140 px in style.css;
-  hourSpan/hourText in game/periods.ts "06:00"; H key toolKeys/main/DemandSelector; MoneyHistory 1d/30d/All; ledger
-  local days in clock.worker dayShift + protocol MoneyState.dayShift; hammer widgets.tsx; START_CASH 10000 and
-  NEW_LINE_CARS 5 in saveFile.ts) + T-2286 (LineDemand.solvedFares stamped in daysOf; main.ts wrap gone). t2266
-  10/10; smoke 22/23 (t1053 during replan's write, passes alone). Stale "$6B" comment in sim wasm.rs. Commit with
-  the UI batch.
-- **buildtab DONE, uncommitted** (a6302f2fb8bb72c39, retired ~03:05): level hover in new ui/trackPrice.ts (for
-  T-2282), 1x yellow costTint; T-2269 breakdown (BuildTab.tsx, Blueprint.tsx, new game/blueprintStretches.ts, map/
-  blueprintBox.ts bpHover, ui/locate.ts locateNodes, WASM `blueprint_piece_costs` in sim track/net.rs +
-  track/wasm/money.rs, protocol "blueprintPieces", clock.worker one line, game/quotes.ts). cargo 354 + 521, wasm
-  rebuilt in main tree. Smoke 22/23: t1053-zone-ids fails on replan's Taiwan retire (asked replan to run
-  zone_successors.py). Commit with the UI batch. Strings in for-anita.md.
-- **ferries DONE, uncommitted** (aae6e3f95e13b0381, retired ~02:40): T-2273 (tag no longer hides: ferryDraw.ts;
-  leg to pointer #1d4f91 / dark #9cc2ee `--ferry-ghost`; headways 20/30/none in clock.worker.ts), T-2274 (Traffic view
-  bus and ferry widths by stretch: demandLayers busWidths, busLayer.ts, demandViews.ts; hover finds the stretch;
-  ferry panel port list drawn like stops), T-2275 (click a port dot to remove, drag rows, one undoable
-  FerryDraw.setPorts). check t2273-ferry-panel.mjs; smoke 23/23 on 6177. T-2320 filed (train drag reorder). Its
-  hunks share files with display/panels/buildtab (style.css, demandViews, LineInspector, docs): commit with that UI
-  batch. Loose end: sim ferry::FERRY_HEADWAYS_S unused, still 900/1200/1800: fix at the next sim landing.
-  Strings: "Click to remove the stop at X" (port dot), "A ferry line needs at least two ports."
-- Next free id **T-2324**.
+- **audit DONE** (3ecdc51c): 13 closed or abandoned, 6 trimmed; CLAUDE.md "task is done" rule updated. Unsure, left
+  open: T-430, T-340, T-2267/T-2270 (archive when T-2282..85 start), T-1193, T-1867, T-1444. notes/audit-2026-11-04.md.
+- **diagram DONE, committed 47fe69ec** (a0c6d307f45a77263, retired, ~520k tokens): T-2272, T-2289; T-2321 filed (all
+  Japan +3 overlaps/+4 close pairs; tyo-game close pairs 0 -> 2 new FAIL line; NYC wrong-side 10 -> 18). Not on 8800
+  yet: next build after Taiwan's join.
+- Next to start once the join ends and cores free (Turkey's build holds ~10): T-2137 Delhi phone memory (Sonnet),
+  passing tracks T-2245/T-2248/T-2249 (Opus), T-2291 colour near-duplicates + T-2280 tutorial hovers (Sonnet).
+- a92f3da5ec3aa7955 **solvespeed** (Opus, ~02:15): T-2307 (T-2265's walk rule made the solve ~20% slower; done when
+  within 5% of before, rail identical), then sim FERRY_HEADWAYS_S, the "$6B" comment, T-2308 waiting room toggle.
+  Owns sim/src/demand/*. Port 6180. Ids T-2324, T-2325.
+- **DONE in 8c965a29** (agents retired): display (T-2271 map items; T-2279 behind `CROWD_MEAN_ON = false` in
+  game/today.ts, `?crowdMean=1` previews, set true on Anita's OK), panels (T-2271 panel items, T-2286), buildtab
+  (T-2269, level hover; ui/trackPrice.ts ready for T-2282), ferries (T-2273..75; T-2320 filed), demand (T-2265:
+  real save 12,509,688 rail trips; T-2278; T-2276; T-2307, T-2308 filed). Strings for Anita in notes/for-anita.md.
+- Next free id **T-2326**.
 
 ## Next
 1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while

@@ -11,9 +11,11 @@
     { "id": "central-europe", "name": "Central Europe", "countries": ["CZ", "SK", "HU"] },
     { "id": "nordic", "name": "Nordic countries", "countries": ["SE", "NO", "DK", "FI", "IS", "AX", "FO"] },
     { "id": "baltic", "name": "Baltic states", "countries": ["EE", "LV", "LT"] },
+    { "id": "belarus", "name": "Belarus", "countries": ["BY"] },
     { "id": "balkans", "name": "Balkans", "countries": ["SI", "HR", "BA", "RS", "ME", "XK", "MK", "AL", "BG"] },
     { "id": "ro-md", "name": "Romania and Moldova", "countries": ["RO", "MD"] },
     { "id": "gr-cy", "name": "Greece and Cyprus", "countries": ["GR", "CY"] },
+    { "id": "turkey", "name": "Turkey", "countries": ["TR"] },
     { "id": "ru-west", "name": "Russia west", "units": { "RU": "*" } },
     { "id": "ru-east", "name": "Russia east", "units": { "RU": [
       "Sverdlovsk", "Chelyabinsk", "Kurgan", "Tyumen", "Khanty-Mansiysk", "Yamalo-Nenets",

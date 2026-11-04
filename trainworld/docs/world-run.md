@@ -209,7 +209,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
     GHS-FUA gives a town grown up to a metro a FUA of its own (Ikorodu beside Lagos; T-556).
   - **Order.** The UK, then the rest of Europe, then everywhere else, each largest first. A
     rerun keeps each earlier row's order and id: a row inherits them from the previous plan's row
-    it shares the most people with; rows with none follow the last.
+    it shares the most people with; rows with none follow the last. A row inheriting a `held` row's id
+    stays held (T-774).
   - **Units.** NUTS-3 2024 in Europe, ITL3 in the UK, Census 2020 counties in the US and Puerto
     Rico; elsewhere geoBoundaries gbOpen at the finest
     of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that

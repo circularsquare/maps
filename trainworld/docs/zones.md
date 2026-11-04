@@ -110,8 +110,8 @@ d^-0.8 e^(-d/30 km) over pairs within 200 km. A zone of 100,000 or more crosses 
 Rows built before the floor keep their size: Spain, Italy, France, Portugal and Greece, and T-788's
 first wave (Germany, the UK, Ireland and the Benelux at 0.1-1.2M); rows built before the merge rule
 (every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189):
-`zones --countries CN --replan` regroups a country's built zone rows too, their packs then counted
-as free land; a new zone with an old row's exact units keeps its id, order, status and gate
+`zones --countries CN --replan` regroups a country's built zone rows too (never a `held` one, T-774), their
+packs then counted as free land; a new zone with an old row's exact units keeps its id, order, status and gate
 relaxations. Any other new zone (in any zones rerun, not only `--replan`) inherits each relaxation of a
 check about the ground or the country's data (`world_plan.CARRY_RELAX`: drive_factor_median,
 water_points_in_water, university_rate, and mean_commute_km when the new zone has at least as many units
@@ -135,7 +135,9 @@ Three rules after the merge, in every country (T-1984):
   Nhulunbuy and Alyangula in Darwin's zone), when those pieces hold at least half its people (`FAR_SHARE`:
   Kota Ternate keeps its Batang Dua islands, 1% of its people).
 - **No tiny zones**: a zone under **50,000** people is dead space (`ZONE_ALONE_MIN`; `ALONE_MIN` for a
-  country's own figure): such zones parked on their own figures (Muong Nhe, Con Dao, Whyalla).
+  country's own figure): such zones parked on their own figures (Muong Nhe, Con Dao, Whyalla). A zone of
+  **10,000** or more that touches no unit of its region by land but dead space, so can join nothing, stays a
+  zone (`CUT_OFF_MIN`, T-1999: Vieques with Culebra, Nantucket, Aland, Ceuta, Gorazde, Trebinje).
 A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below; China's zones take the `china` module, so their

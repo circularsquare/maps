@@ -96,6 +96,20 @@ CONFIGS = {
         "national_total": (4_993_920, 0.0001),
         "mode": "factor",
     },
+    # T-2079: the 2022 register plus the Syrians under temporary protection it leaves out; the four earthquake provinces
+    # scaled to their 2023 register totals (tools/country/turkey_census.py)
+    "TR": {
+        "source": "TurkStat ADNKS address register 31 Dec 2022 by ilce with the Syrians under temporary protection "
+                  "(COD-PS TUR, HDX, CC BY-IGO), on COD-AB TUR ilce",
+        "polygons": {"file": "TR/tur_admin_boundaries.gdb.zip",
+                     "url": "https://data.humdata.org/dataset/d74086a0-f398-4474-9e12-1b9a70907bd0/resource/"
+                            "943e3673-d99b-4ba6-ae53-32cbd2422047/download/tur_admin_boundaries.gdb.zip",
+                     "layer": "tur_admin2", "code": "adm2_pcode", "name": "adm2_name"},
+        "totals": {"file": "TR/tr_ilce_2022.csv", "made_by": "tools/country/turkey_census.py", "code": "code", "pop": "pop"},
+        "parent": r"^(TUR\d{3})\d{3}$",
+        "national": "TUR",
+        "mode": "factor",
+    },
     # T-2111: 2011 is still the latest count (the 2027 census has no results yet), so shares within each state
     "IN": {
         "source": "Census of India 2011, Primary Census Abstract by district (NADA catalog 6191), on Datameet's 2011 "

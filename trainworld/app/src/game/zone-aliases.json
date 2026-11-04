@@ -693,11 +693,8 @@
 "tac": ["臺中市", "Changhua City", "彰化市", "Yuanlin City", "員林市", "員林鎮", "Nantou City", "南投市", "Caotun Township", "草屯鎮", "Hemei Township", "和美鎮"],
 "kao": ["高雄市", "Pingtung City", "屏東市", "Wandan", "萬丹鄉", "Dongang", "東港鎮", "Xinyuan", "新園鄉", "Changzhi", "長治鄉", "Changjhih"],
 "taa": ["臺南市", "Yongkang District", "永康區", "Annan District", "安南區", "Rende District", "仁德區", "Guiren District", "歸仁區", "Shanhua District", "善化區"],
-"ead": ["Chiayi", "嘉義市", "Douliu City", "斗六市", "Puli Township", "埔里鎮", "Xinying District", "新營區", "Minxueng Township", "民雄鄉", "Huwei Township", "虎尾鎮"],
-"xid": ["Hsinchu", "新竹市", "East District", "東區", "North District", "北區", "Toufen", "頭份市", "Miaoli", "苗栗市", "Zhunan Town", "竹南鎮"],
 "mgg": ["馬公市"],
 "mcu": ["澳門 Macau"],
-"zht": ["竹北市", "Taitung", "臺東市", "Hualien", "花蓮市", "Zhudong", "竹東鎮", "Yilan City", "宜蘭市", "Ji'an", "吉安鄉"],
 "jiw": ["金城鎮", "Jinning Township", "金寧鄉", "Jinhu Town", "金湖鎮", "Jinsha Town", "金沙鎮"],
 "atl": ["Sandy Springs", "South Fulton", "Roswell", "Johns Creek", "Alpharetta"],
 "bio": ["Macon", "Athens", "Warner Robins", "Wellston"],
@@ -2590,5 +2587,12 @@
 "koa": ["Varkala", "Chathannoor", "Mayyanad"],
 "cpu": ["Yadgiri", "Yadagir", "Shahapura", "Shahabad", "Surapura", "Shorapur", "Sedam"],
 "thd": ["Ulliyeri"],
-"bhs": ["Yawal", "Raver", "Faizpur", "Savda"]
+"bhs": ["Yawal", "Raver", "Faizpur", "Savda"],
+"tig": ["Douliu City", "斗六市", "Taitung", "臺東市", "Hualien", "花蓮市", "Ji'an", "吉安鄉", "Puli Township", "埔里鎮", "Zhushan Township", "竹山鎮"],
+"zhb": ["Hsinchu", "新竹市", "竹北市", "East District", "東區", "North District", "北區", "Zhudong", "竹東鎮", "Hukou", "湖口鄉"],
+"zhn": ["Toufen", "頭份市", "Miaoli", "苗栗市", "竹南鎮", "Yuanli", "苑裡鎮", "Houlong", "後龍鎮", "Tongxiao", "通霄鎮"],
+"mig": ["Xinying District", "新營區", "Minxueng Township", "民雄鄉", "Jiali District", "佳里區", "Shuishang Township", "水上鄉", "Madou District", "麻豆區", "蔴荳社", "Puzi City", "朴子市"],
+"eai": ["Chiayi", "嘉義市", "Zhongpu Township", "中埔鄉", "Zhuqi Township", "竹崎鄉", "Baihe District", "白河區", "Liujia District", "六甲區", "Guantian District", "官田區"],
+"huw": ["Huwei Township", "虎尾鎮", "Erlin Township", "二林鎮", "Xiluo Township", "西螺鎮", "Mailiao Township", "麥寮鄉", "Beigang Township", "北港鎮", "Fangyuan Township", "芳苑鄉"],
+"yil": ["宜蘭市", "Luodong", "羅東鎮", "Dongshan", "冬山鄉", "Su'ao Township", "蘇澳鎮", "Wujie", "五結鄉", "Jiaoxi Township", "礁溪鄉"]
 }

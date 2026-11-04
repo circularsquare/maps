@@ -69,6 +69,32 @@ are written "06:00" to match the top bar clock (you wrote "6:00"; say if you wan
   demand trains run in these hours today", then "On weekdays, peak load 140%" and the weekday strip.
 - Fixed on the way: the Lines tab's trains hover showed nothing for most lines since T-2236.
 
+### Demand rules (T-2265, T-2278, T-2276, done overnight)
+- **Walking check in real minutes**: a station pair is refused only when walking the whole way is quicker in real
+  minutes (no fare, crowding or weights); T-1782's "only a little quicker" fade is gone. Real save 11.72M -> 12.51M
+  rail trips a day (+6.7%). It made the demand solve about 20% slower; an agent is on getting that back (T-2307).
+- **Parking by income**: paid parking times min(1, (GDP per head / $35,000)^0.3), from parking price surveys across
+  57 cities (notes/T-2278.md). India 0.46, Vietnam 0.56, China 0.76, Turkey 0.83; 1 from Japan and Korea up. With no
+  rail, Ho Chi Minh City's car share 53.7% -> 60.6%, Delhi 59.7% -> 60.9%, rich cities unchanged. Curve:
+  artifacts/trainworld/demand/t2278-curve.png.
+- **Station buildings**: a change inside counts 1 of the fixed 2 minutes; waits inside count 0.8 (a waiting room).
+- Strings: trip explorer no-train line "Walking there is shorter than the walks to, between and from the stations."
+  -> "Walking there is quicker than the train.", its new hover "By train at least 34 min, walking 28 min." /
+  "Nobody takes a train that takes longer than walking."; removed: "Only a little quicker than walking, so fewer take
+  the train." and its hovers; lifted-route hover -> "From these two points walking takes 28 min, less than any
+  train. The train trips counted here are worked out for the areas around the two points."; building hover
+  "Changing trains inside it feels a little quicker." -> "Changing trains inside it feels 1 minute shorter." plus
+  "Waiting in it for a train feels 20% shorter."
+
+### Network diagram (T-2272, T-2289, done overnight; no strings)
+Dark mode: black ring, white centre (a thin rim keeps it off the background). Local stops (one line stops, or only
+one colour's lines) drawn small. High-speed lines get a centre stripe (as the shinkansen symbol in Japanese atlases).
+Stations kept 4x further out. Faint names at far zooms for stations with 3+ lines and no bigger one within 120 px.
+Long lonely stretches between cities condensed: all Japan 9,902 x 13,310 -> 8,120 x 10,145, longest stretch 1,111 ->
+587. A few more close pairs and overlaps on all Japan and Tokyo came with it (T-2321). Shots:
+artifacts/trainworld/diagram/nyc-mid-dark-after.png (before: nyc-mid-dark-before.png), jpn-whole-after.png (before:
+jpn-whole-base.png), tyo-out-dark-after.png.
+
 ### Older asks found open by the audit (2026-11-04)
 - T-1920: a zone's rail commuters are dealt over all its work cells by jobs, so cells no station reaches get
   train riders (5 of 71 New York pairs). Deal them only over cells within reach? A demand rule, so yours.

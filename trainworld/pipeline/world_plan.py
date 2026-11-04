@@ -157,6 +157,22 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "module": "admin_totals", "task": "T-1738"},
               # the default rule; the north-west's people scaled to the 2019 census by district (T-2000)
               "KHM": {"module": "admin_totals", "task": "T-2000"},
+              # Turkey's ilce with a density floor of 10 a km2: at the default 20, 232 of 973 were dead space and the
+              # interior's provincial towns (Erzincan, Cankiri, Kirsehir, Sivas) were zones of 0.1-0.5M in a hole (T-2294);
+              # people scaled to the 2022 register by ilce with the Syrians under temporary protection (T-2079);
+              # `plan_units` keeps the state's geoBoundaries ilce, which the metro rows were planned on (read afresh, the
+              # units are NUTS-3 provinces: Turkey is in NUTS 2024); `fua_whole` 0.5M keeps the cities of 0.5-1M whole
+              # (at FUA_WHOLE's 1M the zones cut Diyarbakir in two, Kayseri in two and Sanliurfa in three)
+              "TUR": {"min_density": 10.0, "plan_units": True, "fua_whole": 500_000, "module": "admin_totals",
+                      "task": "T-2294"},
+              # Russia's cities and the corridors between on Canada's rule (Anita 2026-11-04); the state's
+              # geoBoundaries ADM2 units, which its metro rows were planned on; `beyond_europe` zones the units east of
+              # EUROPE_BOX too (the Urals, Siberia, the Far East), which the box leaves out of a European country
+              "RUS": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
+                      "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "beyond_europe": True,
+                      "task": "T-2295"},
+              # Belarus's raions are settled countryside at 10-20 a km2: at the default 20, 76 of 118 were dead space
+              "BLR": {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": "T-2295"},
               # New Zealand's wards by territorial authority with no density floor (at 20 a km2 the wards left 1.19M
               # dead, Selwyn and Gisborne among them), zones not joining over 250 km (else Christchurch and Dunedin
               # were one zone of the whole South Island; T-1738)
@@ -191,6 +207,10 @@ ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one a
 # figures (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800, T-1744; Whyalla, 24,000 between dead LGAs, T-1857)
 ZONE_ALONE_MIN = 50_000
 ALONE_MIN = {}  # a country's own figure, where it needs one
+# T-1999: an island or exclave with no land neighbour in its region can merge with nothing, so it stays a zone down to
+# this (Vieques with Culebra 10,600, Nantucket, Aland, Ceuta, Gorazde shipped); islets below it stay dead space (T-897)
+CUT_OFF_MIN = 10_000
+CUT_OFF_TOUCH_M = 100.0  # units this near count as land neighbours (slivers between boundary files)
 # a GHS-FUA whose units (FUA_SHARE of their free people in it) hold this many free people is one zone, over the cap
 # if need be, when zones each holding FUA_CUT_SHARE of its main urban centre's people split it (T-1984: the cap had cut
 # Adelaide in two; the Red River and Mekong deltas' big FUAs are countryside round smaller centres, not cut)
@@ -236,7 +256,8 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
-             "NZL": ("C", "admin_totals")}
+             "NZL": ("C", "admin_totals"),
+             "TUR": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
@@ -1322,6 +1343,11 @@ def finish(st, rows, taken=None, prev=(), others=()):
     return out, feats
 
 
+def held_row(r):
+    """A row Anita holds (Russia, Belarus, Ukraine): it keeps its id, order and status through any replan (T-774)."""
+    return bool(r.get("units")) and r.get("status") == "held"
+
+
 def alone_row(r):
     """A metro row of a FUA country, planned alone (plan_metros)."""
     return r.get("kind") != "zone" and bool(r.get("units")) and set(r.get("countries", ())) <= FUA_COUNTRIES
@@ -2343,6 +2369,17 @@ CARRY_RELAX = ("drive_factor_median", "water_points_in_water", "university_rate"
 CARRY_IF_NO_SMALLER = ("mean_commute_km",)
 
 
+def cut_off(zunits, region, ids, dead=()):
+    """T-1999: whether the zone of units `ids` touches no other unit of its region by land but `dead` space: an
+    island, an exclave (Ceuta, Gorazde) or a town ringed by dead units (Trebinje); a unit any row or pack holds
+    counts."""
+    mine = set(ids)
+    reg = {region[i] for i in ids}
+    g = union_all([u.geom for u in zunits if u.id in mine])
+    return not any(u.id not in mine and u.id not in dead and region.get(u.id) in reg
+                   and u.geom.distance(g) <= CUT_OFF_TOUCH_M for u in zunits)
+
+
 def carried_relax(units, iso, old):
     """A regrouped zone row's gate relaxations (T-1307): each CARRY_RELAX check that one of the `old`
     rows sharing any of its `units` had relaxed, with the reason of the one sharing the most (then the
@@ -2417,7 +2454,7 @@ def plan_zones(isos3, out_path=None, replan=False):
         # a zone row the runner has moved on (built, gated, shipped, parked) keeps its units; only
         # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave), all with `replan`
         old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})
-               and (replan or r.get("status", "planned") == "planned")}
+               and ((replan and r.get("status") != "held") or r.get("status", "planned") == "planned")}
         kept = [r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {}) and r["id"] not in old]
         held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
         pk = {k: v for k, v in pk.items() if k not in old}
@@ -2433,7 +2470,7 @@ def plan_zones(isos3, out_path=None, replan=False):
                 if u.id not in held:
                     dead.append({"unit": u.id, "name": u.name, "people": round(u.pop), "outside_zoned": True})
                 continue
-            if iso in st["europe"]:
+            if iso in st["europe"] and not rule.get("beyond_europe"):
                 lon, lat = INV.transform(*u.geom.representative_point().coords[0])
                 if not (EUROPE_BOX[0] <= lon <= EUROPE_BOX[2] and EUROPE_BOX[1] <= lat <= EUROPE_BOX[3]):
                     away.append(u.name)
@@ -2557,7 +2594,7 @@ def plan_zones(isos3, out_path=None, replan=False):
         big = rule.get("big_km2", BIG_ZONE_KM2)
         city_pop = rule.get("city_pop", CITY_POP)
         cities = city_units(zunits, zfree, city_pop)
-        (whole, core), fua_zones = big_fuas(zby, zfree, iso) if FUA_WHOLE else ({}, {}), {}
+        (whole, core), fua_zones = big_fuas(zby, zfree, iso, rule.get("fua_whole", FUA_WHOLE)) if FUA_WHOLE else ({}, {}), {}
         groups, lines = zone_groups(zunits, zfree, region, floor, cap, rule.get("contiguous", False), fixed, travel,
                                     fixed_units, big, cities, rule.get("join_km", 0.0), whole, core, fua_zones)
         if level is None:
@@ -2569,6 +2606,11 @@ def plan_zones(isos3, out_path=None, replan=False):
         alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN)
         if alone_min:  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < alone_min]:
+                n = sum(zby[i].free for i in groups[lead])
+                if n >= CUT_OFF_MIN and cut_off(zunits, region, groups[lead], {d["unit"] for d in dead}):
+                    lines.append(f"  {zby[lead].name}: {n:,.0f} people, under {alone_min:,} but with no land neighbour "
+                                 "in its region but dead space, kept (T-1999)")
+                    continue
                 for i in (m for g in groups.pop(lead) for m in members[g]):
                     dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "alone": True})
         lead_of = {lead: sorted((zby[g] for g in ids), key=lambda u: -u.free) for lead, ids in groups.items()}
@@ -2793,7 +2835,8 @@ def plan_metros(isos3):
             r["name"] = METRO_NAMES.get(iso, {}).get(r["name"], r["name"])
         mine = [r for r in rows if alone_row(r) and r["countries"] == [iso]]
         others = [r for r in rows if r not in mine]
-        out, feats = finish(st, planned, pk, prev=[r for r in mine if plan_config.is_plan_row(r)], others=others)
+        out, feats = finish(st, planned, pk, prev=[r for r in mine if plan_config.is_plan_row(r) or held_row(r)],
+                            others=others)
         was = {r["id"]: r for r in mine}
         by = {u.id: u for u in units}
         for r in out:
@@ -2806,6 +2849,8 @@ def plan_metros(isos3):
                 for k in ("status", "run", "gate_relax"):
                     if k in o:
                         r[k] = o[k]
+            elif o and held_row(o):
+                r["status"] = "held"
             log(f"  {r['order']:>4} {r['id']} {r['name']}: {r['people'] / 1e6:.2f}M, {len(r['units'][iso])} units, "
                 f"{r.get('solve_region')}, extracts {r['extracts']}")
         gone = [r["id"] for r in mine if r["id"] not in {o["id"] for o in out}]
@@ -2854,7 +2899,7 @@ def main(argv):
     rows, dropped = plan(st, st["packs"])
     import plan_config
     have = json.loads(OUT.read_text(encoding="utf-8"))["metros"] if OUT.exists() else []
-    prev = [r for r in have if plan_config.is_plan_row(r) and not alone_row(r)]
+    prev = [r for r in have if (plan_config.is_plan_row(r) or held_row(r)) and not alone_row(r)]
     out, feats = finish(st, rows, prev=prev, others=[r for r in have if r.get("kind") == "zone" or alone_row(r)])
     # T-540: a row the runner moved on keeps its status and record while its units are the same
     was = {r["id"]: r for r in prev}
@@ -2866,6 +2911,8 @@ def main(argv):
             r["status"] = o["status"]
             if "run" in o:
                 r["run"] = o["run"]
+        elif o and held_row(o):  # T-774: a hold is on the place, whatever its units became
+            r["status"] = "held"
     write(st, out, feats, dropped)
     if "check" in argv:
         log(f"largest overlap between planned extents or with a pack: {overlaps(feats, st['packs']):.3f} km2")
