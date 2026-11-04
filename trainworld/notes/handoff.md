@@ -1,12 +1,12 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8509086d-46cd-4c5f-8d59-da9348f4a5e0, name maps-c9, since 2026-11-03 23:29
-Updated: 2026-11-04 06:20
+Updated: 2026-11-04 08:50 (context past 500k: a fresh orchestrator can take over any time)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **95a724e0**. Tonight, newest first: 95a724e0/889628f4 Turkey shipped + RU/BY gated + US/PR planned and
+- master **7c7b87b5** (Anita's morning notes filed), 20a6e867 Delhi phone check T-2137. Before, newest first: 95a724e0/889628f4 Turkey shipped + RU/BY gated + US/PR planned and
   built, ecce08c4 passing tracks, 784f0a82 line colours, ce6a8f6d walk-rule speed + T-2308, 11405b29 Taiwan replan,
   47fe69ec diagram T-2272/T-2289, 8c965a29 UI + demand batch, 3ecdc51c audit, bb48b358 tutorial/fares/Fleetwood.
 - **8800 = build 877 (95a724e0)**, plain from data/packs, smoke 23/23 light and dark; real save 12,509,849 rail trips.
@@ -15,9 +15,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Freeze: data/frozen/20261103-162459 (post-India, old: lacks Rikers, Taiwan, Turkey). **Do not rebuild 8800 from
   packs while the US is half-retired** (from replan2's retire until its join ships); use the freeze if a code
   change must reach 8800 meanwhile.
-- **Cores cap 15** overnight; `python cores.py cap 10` when Anita is back at the machine.
-- Disk ~32 GB free. Worktrees: .tw-trees/t1734 (kept, T-1734) only. data/work/terrain-fine (3.8 GB) is kept.
-- Uncommitted: TODO.md (Anita's) only, as of 06:20.
+- **Cores cap 15**: Anita, back at 08:05, said "using lots of cores is fine"; lower to 10 if she asks.
+- Disk ~32 GB free. Worktrees: .tw-trees/t1734 (kept), crowd, panels2, trackbar. data/work/terrain-fine (3.8 GB) is kept.
+- Uncommitted: replan2's app/src/game/registry.json, market-rows.json and pipeline/world_plan.json (US join under
+  way: commit after it ships); TODO.md (Anita's).
 
 ## Anita before bed (2026-11-04 ~01:20), in her words where it matters
 - "we can continue to run more countries overnight? perhaps turkey or russia / eastern europe?"; "we can addd more
@@ -28,47 +29,43 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Tutorial strings: her rewording applied in bb48b358 (green-bubble note dropped; "Red borders indicate track at full
   capacity." is my correction of her "crowded segments": red borders mark track at capacity, ui-map.md). Notes show
   only in the tutorial card (she asked; yes).
-- Design T-2267/T-2270 (T-2282..T-2285): not answered yet; don't build.
+- Morning (08:05+): design OK with changes (T-2282..84 building), all other answers in notes/todo-2026-11-04a.md.
 
-## In flight
-- ~08:10 US join: the South Atlantic unit (atl, 42 packs) re-gate failed other_packs_unchanged on old member brv
-  (built 10-23): group restored, 30 new rows parked (FL, GA, Carolinas, VA, WV are holes until fixed). Other units
-  going on (Northeast shipped). replan2 will settle brv (hint: T-2213's parts fields in old headers), re-gate the
-  30, re-join that unit alone: +30-45 min after the join.
-- **US join running since 07:33** at 12 jobs (159/159 gated; python 23116, log artifacts/trainworld/t1189-us-join.log;
-  1.5-3 h). It can't change jobs mid-run: if Anita needs cores before it ends, tell her it holds 12 until ~09:00-10:30.
-  Then: T-2054 chain, names, successors, smoke, real save; then commit + 8800; then the RU/BY join.
-- ~07:40 US gate 152/159; 7 parked (6 mean_commute_km 25.1-27.9 countryside zones, fab jobs share), relaxed with
-  reasons, re-gating (log artifacts/trainworld/t1189-us-gate2.log); join straight after.
-- ~06:40 replan2: 155 landed, **163 old US ids retired (the US is half-removed until the join ships)**, market heal
-  20 packs; retire.py's stale-file move briefly took the 159 rows' files, all put back and the kit fixed. **US gate
-  running** (python 21884, port 6373, log artifacts/trainworld/t1189-us-gate.log), 8 cores.
-- **Pack lock: replan2** (abaa9dba7f94a9a7b, Opus), go given ~06:20 for T-2301's steps 1-6: backup prejoin-us,
-  land.py t2301-us-3 (155 rows from AWS), retire_us.cmd (163 old ids), gate_us.cmd (159 rows, 8 cores, port 6373),
-  join_us.cmd (1.5-3 h), T-2054 chain, names.py --write, zone_successors --set, smoke, real save; then
-  `bucket.py rm t2301-us-3`. Kit: scratch replan2\; steps in notes/T-1189.md "State at hand-back". It reports any
-  park between retire and join at once.
-- **Next pack lock: Russia + Belarus join** (181/181 gated; countries agent retired): `backup.py T2295 prejoin
-  RU,BY,<neighbours>`, `<kit>\join_ru.cmd`, then `terrain_ru.cmd` (terrain_fine, zone_terrain, market_drives,
-  build_inputs). Kit: scratch countries\; steps in notes/T-2295.md "Next". Needs a fresh agent (Opus) after the US
-  join, or run the .cmd files directly.
-- Done tonight, agents retired: tutorial T-2263, fares T-2266, Fleetwood T-2290, design T-2267/T-2270, audit,
-  UI batch T-2271/T-2269/T-2273..75/T-2286, demand T-2265/T-2278/T-2276, diagram T-2272/T-2289, walk-rule speed
-  T-2307 (rest T-2324), T-2308, line colours T-2291, passing T-2245/48/49, Taiwan T-1189 part, Turkey T-2294 (74
-  shipped), Russia/Belarus T-2295 (181 gated). Strings and pictures: notes/for-anita.md "Open now".
-- **phone DONE, committed 20a6e867**: T-2137 met (Delhi renderer 1.22 GB at worst, both emulated phones; T-2333 unused).
-- Not started, could go next: T-2324 rest of the walk-rule cost, T-2302 Europe
-  replan after the US (628 zones to 462), T-2296 plan on census totals, T-2300 Taiwan's Central Range split,
-  T-2321 diagram overlaps, T-2332 copied/bus/ferry colours, T-2326 AWS seed, T-2298 gate on a frozen app.
-- Next free id **T-2333** (T-2327..29 handed to replan2, T-2330/31 unused).
+## In flight (Anita awake since ~08:05; her morning notes: notes/todo-2026-11-04a.md, filed T-2333..T-2347)
+- **Worktrees** (made 08:35 from 7c7b87b5; UI agents work in them so the main tree's app/ and sim/ stay still under
+  pipeline gates): .tw-trees/crowd, panels2, trackbar (+ t1734 kept). Land each with `agent-tree.mjs land <name>`
+  after smoke in the tree (How to below), one at a time, then rebuild 8800.
+  - ac5dd0c7e9c9f4fd3 **crowd** (Opus, port 6184): T-2335 undo weekends-run-Medium, dot = mean, ring = peak (takes in
+    T-2279); T-2334 merged crowding hover with bars and station dots; T-2333 tutorial strings. Ids T-2348/49.
+  - af74ea5e3acd95ea2 **panels2** (Opus, port 6185): T-2338 D cycles demand, E enable/disable; T-2340 money bars, no
+    Net; T-2343 bubble floor 0.5 px; T-2345 Day under Demand bubbles; T-2346 side by side on; T-2347 capacity marks
+    inside the line as a `?capInside=1` mockup. Ids T-2350/51.
+  - ad213cd44e2fcd6fc **trackbar** (Opus, port 6186): T-2282 bars (level buttons today's size), T-2283, T-2284 aura
+    (8 px fade, controls brought in, Stop (Esc) cross), T-2339 breakdown stretches collapsed. Ids T-2352/53.
+- **Pack lock: replan2** (abaa9dba7f94a9a7b): US/PR join running since 07:33 at 12 jobs (log
+  artifacts/trainworld/t1189-us-join.log); the South Atlantic unit (atl, 30 new rows) was parked on old member brv's
+  header check and gets fixed and re-joined after (hint: T-2213's parts fields). The US has holes until then: no 8800
+  rebuild from packs.
+- **Next pack lock: countries2** (a072f929f244f1cc5, Opus): RU/BY join + T-2054 chain (kit scratch countries\), then
+  T-2344 Ukraine by de facto borders (Crimea with Russia if drawable, occupied areas not drawn), then T-2341 Jakarta
+  (Sukabumi/Cianjur/Cipanas cut out). Ids T-2354..58. Asks my go for every pack write.
+- Then: T-2302 Europe replan (628 zones to 462).
+- Done overnight (agents retired): see State's commit list; strings for Anita: notes/for-anita.md "Open now".
+- Next free id **T-2359**.
 
 ## Next
-1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while
-   packs are written), smoke light and dark. Strings to Anita in the morning.
-2. Grant pack-write "go"s one at a time (countries, replan); rebuild 8800 from packs after each ships.
-3. When agents finish: T-2216 market across parts, T-2256; diagram T-2289, T-2242, T-2246, T-2247, T-2168, T-2169,
-   T-2272; passing tracks T-2245, T-2248, T-2249, T-2239/40/41; T-2280, T-2291.
-4. Morning: the design OK (T-2282..85), T-2279 curve, territory question, all strings.
+1. As agents report: trees -> smoke in the tree, `agent-tree.mjs land`, `remove`, one at a time (rebase on master
+   first; a landing that changed sim/ rebuilds the main tree's WASM: do that only while no gate runs). Pipeline ->
+   commit app/src/game/*.json, pipeline/ and notes after each join ships. Then rebuild 8800 from packs once the US
+   is whole, smoke light and dark; show Anita the strings (old -> new) from each report.
+2. Pack-lock queue: replan2's US join and atl fix -> countries2 (RU/BY join, Ukraine, Jakarta) -> T-2302 Europe.
+3. Then, as cores and files allow: T-2324 walk-rule cost, T-2300 Taiwan's Central Range, T-2296 census plan, T-2321
+   diagram overlaps, T-2332 colours for copied/bus/ferry lines, T-2326 AWS seed, T-2298 gate on a frozen app,
+   T-2216/T-2256 islands, T-2242/T-2246/T-2247/T-2168/T-2169 diagram, T-2239/40/41 passing.
+4. Open with Anita: T-1920 (rail commuters only over cells a station reaches?).
+5. **Takeover note**: this session's subagents report only to this session (maps-c9). A new orchestrator should
+   ask maps-c9 (SendMessage) to relay or land each in-flight agent's report, or wait for maps-c9 to wind down per
+   /handoff, before relaunching anything listed above.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\8509086d-46cd-4c5f-8d59-da9348f4a5e0\scratchpad
