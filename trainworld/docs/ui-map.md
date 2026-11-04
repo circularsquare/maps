@@ -307,7 +307,13 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   with a stop within 15 km, topped up with the next nearest to six, ties at random
   (`nextFreeColour` in `game/lineActions.ts`, T-1278). The first six (red, blue, green, orange,
   purple, yellow) are the plain ones: a city's first four lines take only these, and later lines
-  count their distance 1.3 times, so they win unless clearly taken nearby (T-1894).
+  count their distance 1.3 times, so they win unless clearly taken nearby (T-1894). While a line is
+  still the new one (stop editing from New line), each stop edit checks the lines beside it: those on
+  a track edge or station it shares, or with a stop within 300 m of one of its stops. If its colour,
+  still the one the game picked, is under 19 apart in CIEDE2000 (the palette's own spacing) from one
+  of them, it takes the default farthest from the colours beside it, ties at random, unless none is
+  farther than it already is. A colour the player sets is never changed, nor an older line's
+  (`colourPick.ts`, `lineColour.ts`, T-2291).
 - **Marks on the track** [T-629, T-655, T-1871; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):

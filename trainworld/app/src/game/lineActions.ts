@@ -7,7 +7,8 @@ import { money } from "./format";
 import { viewedZone, type CityId } from "./cities";
 import { stationZone } from "./listScope";
 import { blueprintQuote } from "./quotes";
-import { colourDistanceFrom, LINE_PALETTE } from "./palette";
+import { pickColour } from "./colourPick";
+import { rememberPicked, settleNewLineColour } from "./lineColour";
 import type { LineInput, StationInput, TrackEdge } from "./types";
 
 /** The lines that share a new line's city: a line's city is its first stop's zone (the Lines tab's
@@ -33,10 +34,6 @@ const NEAR_M = 15_000;
 /** ... topped up with the nearest lines beyond to this many. */
 const NEAR_MIN = 6;
 
-/** T-1894: the palette's first colours (red, blue, green, orange, purple, yellow) are the plain
- * ones: a city's first lines take only these, later ones favour them by this factor on distance. */
-const BASIC = 6, BASIC_FIRST = 4, BASIC_BIAS = 1.3;
-
 /** T-1278: the palette colour farthest in OKLab from the colours of the lines near `at` (lng, lat;
  * none: every line), ties at random; `cityLines` the lines already in the new line's city. */
 export function nextFreeColour(at: [number, number] | null, cityLines = Infinity): string {
@@ -52,12 +49,7 @@ export function nextFreeColour(at: [number, number] | null, cityLines = Infinity
     }
     return { colour: l.colour, d: at ? d : 0 };
   }).sort((a, b) => a.d - b.d);
-  const used = near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => colourDistanceFrom(x.colour));
-  const first = cityLines < BASIC_FIRST;
-  const score = LINE_PALETTE.map((c, i) => (first && i >= BASIC ? -Infinity : (used.length ? used.reduce((m, f) => Math.min(m, f(c)), Infinity) : 1) * (i < BASIC ? BASIC_BIAS : 1)));
-  const best = Math.max(...score);
-  const pool = LINE_PALETTE.filter((_, i) => score[i] >= best - 1e-6);
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pickColour(near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => x.colour), cityLines);
 }
 
 /** Where a new line starts: its first stop, else the middle of the map. */
@@ -84,6 +76,8 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   selection.value = { kind: "line", line: String(a.line) };
   tool.value = "line";
   newLine.value = { line: a.line, fast: !!world.peek()?.lineStats[String(a.line)]?.fast };
+  rememberPicked(a.line, colour);
+  void settleNewLineColour(a.line);
 }
 
 /** The N key: a new line, starting on the selected track when no line runs on it. */

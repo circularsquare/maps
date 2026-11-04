@@ -95,6 +95,11 @@ Long lonely stretches between cities condensed: all Japan 9,902 x 13,310 -> 8,12
 artifacts/trainworld/diagram/nyc-mid-dark-after.png (before: nyc-mid-dark-before.png), jpn-whole-after.png (before:
 jpn-whole-base.png), tyo-out-dark-after.png.
 
+### Waiting room in a station building (T-2308, done overnight)
+The toggle is greyed at a building's stations (a building already counts as one), unless one is already bought.
+- Hover, at a member: "...Costs $X / Click to build" -> "Waiting room / Waiting here for a train feels 20% shorter. / The station building already counts as a waiting room."
+- Same in complex view, with "Waiting at any station in this complex for a train feels 20% shorter."
+
 ### Older asks found open by the audit (2026-11-04)
 - T-1920: a zone's rail commuters are dealt over all its work cells by jobs, so cells no station reaches get
   train riders (5 of 71 New York pairs). Deal them only over cells within reach? A demand rule, so yours.

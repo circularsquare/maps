@@ -163,7 +163,9 @@ purpose filter the purpose drawn is ringed in the bar.
   stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
   is the `LINE_PALETTE` colour farthest from the lines near it, ties at random [T-856, T-1278]; a
   city's first four lines take only red, blue, green, orange, purple or yellow, and later ones
-  favour those six (their distance counted 1.3 times) [T-1894]
+  favour those six (their distance counted 1.3 times) [T-1894]; once its stops are picked, a colour
+  within 19 (CIEDE2000) of a line beside it is replaced by the default farthest from those beside it
+  [T-2291, ui-map.md "Line colours"]
   (`nextLineName`, `nextFreeColour` in `game/lineActions.ts`). A copy is named "<name> copy". The N key does it from any tab
   [T-670]; the same on a selected track no line runs on (its inspector's "Lines here" heading
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the

@@ -108,7 +108,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
   the pills' hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
-  (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `scheduleCopy.ts`
+  (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `colourPick.ts`
+  (the automatic line colour pick as pure functions: palette pick, CIEDE2000, the lines beside a line, T-2291;
+  `lineColour.ts` re-picks a new line's colour after its stop edits; `checks/t2291-line-colour.mjs` in Node and
+  `t2291-line-colour-game.mjs` in the game), `scheduleCopy.ts`
   (a line's schedule settings copied and pasted, kept in localStorage, T-1293), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once

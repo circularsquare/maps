@@ -30,6 +30,7 @@ import { count, distance, money, moneyShort, speed, unitMetres, unitShort } from
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
+import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
 import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
@@ -1212,6 +1213,7 @@ export class Tools {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
       this.noteFast(id);
+      void settleNewLineColour(id);
     }
   }
 
@@ -1251,6 +1253,7 @@ export class Tools {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
       this.noteFast(id);
+      void settleNewLineColour(id);
     }
   }
 

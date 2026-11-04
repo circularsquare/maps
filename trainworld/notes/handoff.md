@@ -49,20 +49,29 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   once countries confirms its gate counts); the US retire waits until the 159 rows are built (hours at 1-4 cores;
   AWS suggested), then retire, gate and join back to back, so data/packs never sits for hours with the US
   half-removed.** Don't rebuild 8800 from packs between a retire and its join.
+- ~04:30 AWS: t2301-us-1 built nothing (osmdata.openstreetmap.de, the coastline water polygons, unreachable from AWS
+  and home); torn down 0.54 h, $0.20. **t2301-us-2 running**, same machine, seeded with home's cached water
+  polygons clipped to the US (301 MB); timer ends 08:00. replan2 confirms the check row (fab) before `go`.
 - ~03:55 **AWS run t2301-us-1 approved** (replan2): one m7a.8xlarge one-time spot, us-east-2, 4 h hard timer, the 155
   new US rows on 6 lines (~1-1.5 h, under $1); tools/aws/bundle.py gained `--head-sim` (commit it). Run id and
   timer end go in notes/T-1189.md; teardown.py must end it. PR's 4 rows build at home. Then land + retire + gate +
   join back to back, on my go.
 - abaa9dba7f94a9a7b **replan2** (Opus, ~03:00): T-2301 US + Puerto Rico replan (then T-2302 Europe if time). Kit from
   scratch replan\, its own scratch replan2\. Asks my go for plan write, retire, register/gate, join. Ids T-2326..29.
-- a92f3da5ec3aa7955 **solvespeed** (Opus): T-2307 (walk rule solve -20%), sim FERRY_HEADWAYS_S, "$6B" comment, T-2308.
-  Owns sim/src/demand/*, StationUpgrades.tsx, ui-inspectors.md's T-2308 lines (uncommitted). Port 6180.
+- **solvespeed DONE, committed ce6a8f6d** (retired): T-2307 partly (7.8% over the pre-T-2265 solve, from 10.5%,
+  side-by-side; 1% sliver lie, +161 rail trips on the real save), rest T-2324 [P2]; T-2308 greyed toggle; ferry
+  constant; $10B comment. Not on 8800 yet.
+- acfe7114188110530 **passing** (Opus, ~04:20): T-2245, T-2248, T-2249. Port 6181. Ids T-2330, T-2331.
+- a07a81b0fd2e0605c **colours** (Sonnet, ~04:20): T-2291 auto line colour avoids near-duplicates beside it. Port
+  6182. Id T-2332.
+- Uncommitted on purpose: registry.json, market-rows.json, zone-names.json, world_plan.json (Turkey's join and the
+  replans write them; commit after Turkey's join ends, then rebuild 8800 from packs).
 - **Done tonight** (agents retired): audit (3ecdc51c); replan Taiwan (11405b29; tig "Taitung" 1.29M Central Range
   zone, follow-up T-2300); diagram (47fe69ec; T-2321); display, panels, buildtab, ferries, demand (8c965a29).
   Strings and pictures for Anita: notes/for-anita.md "Open now".
 - Next to start once cores free (after Russia's build): T-2137 Delhi phone memory (Sonnet), passing tracks
   T-2245/T-2248/T-2249 (Opus), T-2291 colour near-duplicates + T-2280 tutorial hovers (Sonnet).
-- Next free id **T-2330**.
+- Next free id **T-2333**.
 
 ## Next
 1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while
