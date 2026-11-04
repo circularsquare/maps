@@ -1006,8 +1006,10 @@ def pack_hashes(city):
     # the merge's stamp of the res-9 pack it came from changes with the res-9 pack's gravity (T-540)
     stamp = (rest.get("merged") or {}).get("source") if isinstance(rest.get("merged"), dict) else None
     if stamp is not None:
-        # also the merge's own wording and its walk-part count (T-725): the arrays show any change to cells
-        rest["merged"] = {k: v for k, v in rest["merged"].items() if k not in ("source", "rule", "parents_split_by_part")}
+        # the whole merge block, its counts included: the arrays show any change to cells, and a re-merge by
+        # newer merge_cells code counts differently with the same cells (T-725's part count; T-2301's brv,
+        # merged 2026-10-23, re-merged with identical arrays and cells_merged 5485 -> 5487)
+        rest.pop("merged")
     # figures to 9 significant digits: a re-merge recomputes shares in another order (T-540:
     # Rotterdam's school location_match_share moved by one bit in its last place)
     out["header"] = hashlib.sha1(json.dumps(_round(rest), sort_keys=True).encode()).hexdigest()

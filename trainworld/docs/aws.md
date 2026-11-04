@@ -57,7 +57,10 @@ not found, reload PATH: `$env:PATH = [Environment]::GetEnvironmentVariable('PATH
    states, built one after another.
 4. `trainworld\tools\aws\launch.py <run> --kind wave --type m7a.8xlarge --hours 3 --disk 100
    --file code=<code.tgz> --file reqs=trainworld\tools\aws\requirements.txt --get go
-   --put results_<name> ...` (one put a plan line) with a new run name; `--dry` first prints the zone,
+   --put results_<name> ...` (one put a plan line) with a new run name, and `--file seed=<seed.tgz>`: home's
+   `data/work/world_field.*` and `outside.json` (routes reads the world field, T-2213) and the sea polygons'
+   `.fgb` clipped to the wave's box with an empty older `.zip` beside it (osmdata.openstreetmap.de did not
+   answer on 2026-11-04): `tools/aws/seed.py <seed.tgz> [w,s,e,n]` makes it; `bundle.py --head-sim` when sim/ is mid-edit. `--dry` first prints the zone,
    price, bid cap and AMI. `userdata/wave.sh` sets up, builds the check row while it makes the state
    caches and reads the extracts (four reads at most at once), sends `results_<check>`, then waits up
    to 90 minutes for `<run>/go`: compare the check row with a Windows build, then
