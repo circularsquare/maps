@@ -25,7 +25,7 @@ export type MapRow = "bubbles" | "stations" | "track";
 
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
-  trackColour: "line" | "traffic" | "height" | "speed";
+  trackColour: "line" | "traffic" | "height" | "speed" | "profit";
   trains: boolean;
   stationNames: boolean;
   capacity: boolean;

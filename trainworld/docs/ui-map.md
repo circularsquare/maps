@@ -233,7 +233,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   zero) goes under every line that runs trains; within each group the shorter route (end to end,
   one direction) is on top, ties to the higher id. The line on top wins a click. It is rebuilt when
   lines or fleets change.
-- **Track display** [T-105, T-703; on the map under the demand buttons], four choices, remembered per browser:
+- **Track display** [T-105, T-703; on the map under the demand buttons], five choices, remembered per browser:
   - **Line** (the default [T-1101]; a stored Traffic from before settings version 10 is dropped
     once, T-1244): uniform width in the line colours.
   - **Traffic**: line colours, width by riders over the day shown
@@ -282,7 +282,23 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     sits beside the display buttons for the speed or the elevation colours (T-1499): the track hover
     says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
     network").
-  In Elevation and Speed the width is uniform and trains keep their line colours.
+  - **Profit** [T-2420, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by its
+    stretch's profit per km a day on the day shown, worked out only while the view is on (`game/stretchMoney.ts`).
+    A stretch is the track between two stations, junctions or track ends. Each running rail line's money goes
+    onto the edges of its path: its per-km fares by the paid passenger-km on each stretch between its stops,
+    both directions, as its fare income counts them; its base fares (its share by T-2104) half by those
+    passenger-km and half by boardings at the stretch's two stops (a through stop's half to each side, an end
+    stop's all to its one stretch); its running trains' cost a day by length; its share of each edge's upkeep
+    (by trains a day, as the line's upkeep share is split) and of each station's, half to the stretch on each
+    side. Summed over the lines on each edge, a line's edges come to its fares that day and its upkeep share
+    exactly (`checks/t2411-profit-map.mjs`). Track no running line uses has its own upkeep. Construction and
+    trains bought are left out, as in the Cities tab; bus and ferry lines are not placed yet (drawn as in the
+    other views; their share of a station's upkeep is off the track). Colours (`PROFIT_STOPS`, blended in the
+    stroke shader, the same in both themes): −$300k a km a day #b2182b, −$100k #e0603f, −$20k #f4a582, 0
+    #bdbab3, +$1M #92c5de, +$4M #4393c3, +$8M and over #2166ac; blue for profit, so red-green colour
+    blindness still reads it. Track with no figure (before demand answers, blueprint) is plain track. No key
+    (as T-1499): the hover gives the numbers.
+  In Elevation, Speed and Profit the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   (`BP_NARROW`) of a line plus a rail of 16% of a line width (at least 1 px) either side, the rails
@@ -777,7 +793,10 @@ those who got on, less the load carried on.
   half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap
   (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what
   the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
-  here" where the limit is shown [T-1271]; and last, over bare track only, every line using the track as
+  here" where the limit is shown [T-1271]; in the Profit view the first rows are the stretch's
+  "Profit −$280k per day" (the day shown's phrase, the figure on its colour), "−$512k per km",
+  "Fares $400k", "Running trains −$590k" and "Upkeep −$90k", negative money red; on bare track "No
+  trains run here" and "Upkeep −$40k per day"; "Calculating demand" before the first answer [T-2420]; and last, over bare track only, every line using the track as
   line bullets, in the save's order, wrapping (over a line the tag is that line's alone, its bullet
   heading it [T-2007, T-2387]) (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs

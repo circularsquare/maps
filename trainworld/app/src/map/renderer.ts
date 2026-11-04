@@ -145,6 +145,8 @@ export interface DrawOptions {
   showTrains: boolean;
   byLevel: boolean;
   bySpeed?: boolean;
+  /** T-2420: the track coloured by its stretch's profit (`setProfit`) */
+  byProfit?: boolean;
   /** selected line id, -1 for none */
   selLine: number;
   /** T-1812: more lines drawn selected, a selected group's (at most SEL_SET_MAX); the bus layer takes `selLine` only */
@@ -316,6 +318,10 @@ export class NetworkRenderer {
   }
   /** the hour's loads (T-164), replaced with the trips; kept apart from `res`, like the trips */
   private loadTex: WebGLTexture | null = null;
+  /** T-2420: the Profit view's figure per edge id, and how many ids it holds */
+  private profitTex: WebGLTexture | null = null;
+  private profitN = 0;
+  private profitData: Float32Array | null = null;
   private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
   /** The boarding account's hour the trip buffer holds (T-164), or null before demand has riders. */
   board: BoardHour | null = null;
@@ -663,6 +669,9 @@ export class NetworkRenderer {
         };
       }
     }
+    // a new context: the old texture went with the old one
+    this.profitTex = null;
+    if (this.profitData) this.setProfit(this.profitData);
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     for (const a of ["a_seg", "a_colour", "a_edge", "a_level", "a_flags", "a_speed", "a_lane", "a_wmul", "a_full", "a_band", "a_band_m"]) this.strokeLoc[a] = gl.getAttribLocation(this.strokeProg, a);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
@@ -673,7 +682,7 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -697,6 +706,17 @@ export class NetworkRenderer {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(1), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.loadTex =this.texture(new Float32Array(1), "r32f", TEX_W, []);
+  }
+
+  /** T-2420: each edge id's stretch profit per km a day for the Profit view (`stretchMoney`'s
+   * `perKm`, `NO_PROFIT` where none), or null for none at all. */
+  setProfit(perKm: Float32Array | null) {
+    const gl = this.gl;
+    this.profitData = perKm;
+    if (!gl) return;
+    if (this.profitTex) gl.deleteTexture(this.profitTex);
+    this.profitTex = perKm?.length ? this.texture(perKm, "r32f", TEX_W, []) : null;
+    this.profitN = this.profitTex ? perKm!.length : 0;
   }
 
   private texture(data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number, list = this.res): WebGLTexture {
@@ -1565,8 +1585,8 @@ export class NetworkRenderer {
     // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
     // again only when one of those changes; GL uploads outside the per-frame passes count as a change
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
-    const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
+    const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed && !opt.byProfit;
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1591,14 +1611,19 @@ export class NetworkRenderer {
     gl.uniform2f(u.u_mute, mute?.[0] ?? 0, mute?.[1] ?? 0);
     gl.uniform1i(u.u_by_level, opt.byLevel ? 1 : 0);
     gl.uniform1i(u.u_by_speed, opt.bySpeed ? 1 : 0);
+    gl.uniform1i(u.u_by_profit, opt.byProfit && this.profitTex ? 1 : 0);
+    gl.uniform1i(u.u_profit_n, this.profitTex ? this.profitN : 0);
+    gl.activeTexture(gl.TEXTURE12);
+    gl.bindTexture(gl.TEXTURE_2D, this.profitTex);
+    gl.uniform1i(u.u_profit, 12);
     // Lines sharing track are drawn over each other, the last on top (T-190); picking knows the
     // line width, and that no line strokes are drawn when the track is coloured by height or speed.
-    this.slotPx = opt.byLevel || opt.bySpeed ? 0 : wLine / dpr;
+    this.slotPx = opt.byLevel || opt.bySpeed || opt.byProfit ? 0 : wLine / dpr;
     // T-1799: lines sharing track side by side in the Line view, folding into one stroke as lines
     // thin out zoomed out and as double track opens into its two tracks close in
     const lanes = laneState(zoom);
     // and in the Traffic view (stage 2) each band its riders' width, the shifts `a_wmul.yz`
-    const bandOn = !this.lineBands || opt.byLevel || opt.bySpeed || (this.trafficWidths && !this.trafficBands) ? 0 : smoothstep(BAND_FOLD_PX[0], BAND_FOLD_PX[1], wLine / dpr) * (1 - lanes.grow);
+    const bandOn = !this.lineBands || opt.byLevel || opt.bySpeed || opt.byProfit || (this.trafficWidths && !this.trafficBands) ? 0 : smoothstep(BAND_FOLD_PX[0], BAND_FOLD_PX[1], wLine / dpr) * (1 - lanes.grow);
     this.bandPx = bandOn * wLine / dpr;
     this.bandShiftM = this.bandPx / (pxPerUnitAt(zoom) * kAtY(0));
     this.bandOn = bandOn;
@@ -1701,8 +1726,8 @@ export class NetworkRenderer {
     const trackStrokes = (cap = 0) => {
       for (const part of this.hasBlueprint ? [1, 2] : [0]) {
         gl.uniform1i(u.u_bp_part, part);
-        stroke(this.track, 0, opt.byLevel || opt.bySpeed ? wLine : wTrack, opt.selEdge >= 0, cap);
-        if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, cap);
+        stroke(this.track, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, cap);
+        if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) stroke(this.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, cap);
       }
       gl.uniform1i(u.u_bp_part, 0);
       // passing stations' outer tracks along their platforms (T-2233)

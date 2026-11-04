@@ -29,12 +29,13 @@ import { hiddenRealmTip } from "./realmOverlay";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf, stopKey } from "../game/complexView";
-import { clockTime, forecast } from "../game/format";
+import { clockTime, forecast, money, moneyNegative } from "../game/format";
+import { stretchMoney } from "../game/stretchMoney";
 import type { CrowdedStretch } from "../game/boarding";
 import { loadText } from "../game/today";
 import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { stretchLoad, tripsLanded } from "./stretchLoad";
-import { crowdColour } from "../game/palette";
+import { crowdColour, profitColour } from "../game/palette";
 import { floorAt } from "./buildingFloors";
 import { buildingMembersById, hallWaiting } from "../game/buildingView";
 import type { BuildingInput } from "../game/types";
@@ -212,10 +213,32 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   // T-473: always the elevation, speed and lines on it, whatever the track display; no lines row
   // where none runs (T-526). Track under a bundle of lines loses to the lines, except at its edges.
   const on = linesOn(w, hit.edge);
+  const money = d.trackColour === "profit" ? profitRows(hit.edge) : [];
   if (on.length) {
-    return [...edgeRiders(n, hit.edge, on), ...facts, lineBullets(on)];
+    return [...money, ...edgeRiders(n, hit.edge, on), ...facts, lineBullets(on)];
   }
-  return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : facts;
+  return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : [...money, ...facts];
+}
+
+/** T-2420: the Profit view's rows for the track stretch an edge is on: its profit on its colour,
+ * per km, then fares, running trains and upkeep; bare track its upkeep. None for blueprint track. */
+function profitRows(edge: number): TipLine[] {
+  const sm = stretchMoney.peek();
+  if (!sm) return demandView.peek() ? [] : ["Calculating demand"];
+  const s = sm.stretchOf.get(edge);
+  if (!s) return [];
+  const row = (label: string, v: number, after = "") => {
+    const d = document.createElement("div");
+    const m = Object.assign(document.createElement("span"), { textContent: money(v) });
+    if (moneyNegative(v)) m.className = "money-neg";
+    d.append(label, m, after);
+    return d;
+  };
+  if (s.bare) return ["No trains run here", row("Upkeep ", -s.upkeep, " per day")];
+  const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0;
+  const top = document.createElement("div");
+  top.append("Profit ", chip(`${money(profit)} ${shownDayPhrase.peek()}`, profitColour(perKm)));
+  return [top, row("", perKm, " per km"), row("Fares ", s.fares), row("Running trains ", -s.running), row("Upkeep ", -s.upkeep)];
 }
 
 /** The lines whose path uses an edge, in the save's order. */

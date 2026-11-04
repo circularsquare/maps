@@ -107,6 +107,7 @@ const TRACK_OPTIONS = [
   ["traffic", "Traffic", "Show line colors, thickness by traffic"],
   ["height", "Level", "Show track level colors"],
   ["speed", "Speed", "Show track speed"],
+  ["profit", "Profit", "Show track profit colors"],
 ] as const;
 
 /** The row's icon, a button folding the row down to it and opening it again (T-1448). */
@@ -146,8 +147,8 @@ function StationRidership() {
   </div>;
 }
 
-/** The track display (T-703): the four ways the network is coloured, switched often, so on the map
- * under the demand buttons. No key for the height and speed colours (T-1499): the track's hover says. */
+/** The track display (T-703): the five ways the network is coloured, switched often, so on the map
+ * under the demand buttons. No key for the height, speed and profit colours (T-1499, T-2420): the track's hover says. */
 function TrackDisplay() {
   const mode = display.value.trackColour;
   return <div class="demand-selector" role="group" aria-label="Track display">

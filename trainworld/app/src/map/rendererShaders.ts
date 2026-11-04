@@ -2,7 +2,7 @@
 // outline, trains and the position probe, with the constants they and the renderer share.
 
 import { BOAT_CARS, BUS_CARS, CRUSH_PER_CAR, RATED_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
-import { rgb, SPEED_STOPS } from "../game/palette";
+import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
@@ -36,13 +36,16 @@ const SEL_RING_GAP_PX = 6;
 /** Hovered (T-730): a line's or bare track's colour mixed this far toward white; a station's rim
  * likewise, `HOT_STATIONS` of a complex at most. */
 const HOT_LINE_MIX = "0.3";
-/** The Max speed colour as GLSL (T-843): `SPEED_STOPS` blended in order, so the stops cannot drift from the key. */
-const SPEED_BLEND = (() => {
+/** A ramp's colour of `v` as GLSL: `stops` blended in order, so the shader cannot drift from the tags' colours. */
+const rampBlend = (s: [number, string][], v: string) => {
   const v3 = (hex: string) => `vec3(${rgb(hex).map((c) => (c / 255).toFixed(4)).join(", ")})`;
-  const s = SPEED_STOPS;
-  return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([kmh, hex], i) =>
-    `v_color = mix(v_color, ${v3(hex)}, clamp((a_speed - ${s[i][0].toFixed(1)}) / ${(kmh - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
-})();
+  return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([at, hex], i) =>
+    `v_color = mix(v_color, ${v3(hex)}, clamp((${v} - ${s[i][0].toFixed(1)}) / ${(at - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
+};
+/** The Max speed colour (T-843). */
+const SPEED_BLEND = rampBlend(SPEED_STOPS, "a_speed");
+/** T-2420: the Profit view's colour, by the edge's stretch's profit per km a day (`u_profit`). */
+const PROFIT_BLEND = rampBlend(PROFIT_STOPS, "pv");
 /** T-2236: a crowded stretch's red edge and darkening (the traffic view) as a share of track at
  * capacity's, by its busiest hour's load as a share of the rated load: FULL_FLOOR just past
  * CROWD_LOAD_FROM, all of it at CROWD_LOAD_STRONG, crush. */
@@ -90,6 +93,9 @@ uniform float u_dim;        // line strokes other than the selected line's: shar
 uniform vec2 u_mute;        // T-2058 prototype: those strokes' width share (0 as built) and colour mixed to the casing's
 uniform int u_by_level;
 uniform int u_by_speed;
+uniform int u_by_profit;      // T-2420: coloured by u_profit, per edge id (TEX_W wide), u_profit_n of them
+uniform highp sampler2D u_profit;
+uniform int u_profit_n;
 uniform vec3 u_level_colours[7];
 uniform vec3 u_track;
 uniform vec3 u_bad;
@@ -294,6 +300,14 @@ void main() {
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
     ${SPEED_BLEND}
+  }
+  else if (u_by_profit == 1) {
+    int ei = int(a_edge);
+    float pv = ei < u_profit_n ? texelFetch(u_profit, ivec2(ei % ${TEX_W}, ei / ${TEX_W}), 0).x : 1e30;
+    if (pv > 1e29) v_color = u_track;
+    else {
+      ${PROFIT_BLEND}
+    }
   }
   else if (placement) v_color = ghost ? u_bp_mid : vec3(1.0);
   else if (u_kind == 0 && bpTrack && !sel) { v_color = swOff ? u_bp_off_mid : u_bp_mid; bpMid = true; }

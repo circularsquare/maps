@@ -28,6 +28,7 @@ import { stopsById, world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
+import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
@@ -182,6 +183,7 @@ const overlay = new Overlay(map, renderer, () => {
     showTrains: d.trains,
     byLevel: d.trackColour === "height",
     bySpeed: d.trackColour === "speed",
+    byProfit: d.trackColour === "profit",
     selLine: hovered ?? (sel?.kind === "line" || sel?.kind === "train" ? Number(sel.line) : -1),
     selLines: groupLines,
     selTrain: sel?.kind === "train" ? sel : null, // T-242: drawn over the others with a halo
@@ -211,6 +213,11 @@ live.map = map;
 live.overlay = overlay;
 effect(() => {
   renderer.lineBands = display.value.lineBands && !perfOff("bands"); // T-1886
+  overlay.invalidate();
+});
+// T-2420: the Profit view's colours, worked out only while it is shown
+effect(() => {
+  renderer.setProfit(display.value.trackColour === "profit" ? stretchMoney.value?.perKm ?? null : null);
   overlay.invalidate();
 });
 if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`

@@ -220,6 +220,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       upkeep: (l.upkeep ?? 0) * 1e6,
       stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
       stopS: l.stopS,
+      path: l.path,
       dwellS: l.dwell,
       turnaroundS: l.turnaround,
       shift: l.shift,

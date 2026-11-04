@@ -183,6 +183,8 @@ export interface LineStats {
   stretches: { reached: number; limit: number; why: number }[];
   /** where each stop is along run 0's and run 1's path, m */
   stopS: [number[], number[]];
+  /** its edges first stop to last, `edge << 1 | direction` (T-2420) */
+  path: number[];
   /** dwell at each intermediate stop, and the layover at each end, s */
   dwellS: number;
   turnaroundS: number;
