@@ -19,12 +19,13 @@ export function DiagramButton() {
   </button>;
 }
 
-/** T-2161, T-2163: the map's upper left while the diagram is up: the save button, the first layout's
- * loading bar (T-2235, as the demand status's) and the busy tag. */
+/** T-2161, T-2163: the map's upper left while the diagram is up: the way back to the map (T-2416), the
+ * save button, the first layout's loading bar (T-2235, as the demand status's) and the busy tag. */
 export function DiagramTopLeft() {
   const share = diagramProgress.value;
   return <div class="map-top-left">
     <div class="map-top-row">
+      <button type="button" class="btn icon diagram-exit" data-tip="Show map (M)" aria-label="Show map (M)" onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip="Save picture" aria-label="Save picture" onClick={saveDiagramPicture}><Icon.download /></button>}
       {share !== null && <div class="status-tag" role="status">
         <BunnyTrain small />

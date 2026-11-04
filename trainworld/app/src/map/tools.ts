@@ -1097,6 +1097,8 @@ export class Tools {
     }
     if (hit) return hit;
     const s = this.snap(px, py, this.map.unproject([px, py]));
+    const under = this.stationUnder(s);
+    if (under) return under;
     if (s.kind === "edge") return { kind: "track", edge: s.edge, lx: s.lx, ly: s.ly };
     if (s.kind === "node") {
       // a plain node (track end, junction): the stretch nearest to the pointer there
@@ -1121,6 +1123,33 @@ export class Tools {
     const here = b && this.overlay.screenToLocal(px, py);
     if (b && here) return { kind: "building", id: b.id, lx: here[0], ly: here[1] };
     return null;
+  }
+
+  /** T-2412: the delete tool on a station's node or its platform's stretch of track (half the platform
+   * and 4 m either side, what `stationTrim` keeps) takes the station, whose own mark is small zoomed
+   * out; the track stays, as when the station is clicked. Not where stations are hidden (T-205). */
+  private stationUnder(s: Snap): (Removable & { lx: number; ly: number }) | null {
+    const w = world.peek(), n = this.overlay.renderer.net;
+    if (!w || !n || this.overlay.renderer.stationStyle.hidden || (s.kind !== "node" && s.kind !== "edge")) return null;
+    const station = (id: number) => {
+      const node = w.nodes.get(id);
+      return node && node.platform > 0 && !node.bus && !node.port ? node : null;
+    };
+    const hit = (id: number) => {
+      const node = w.nodes.get(id)!, [lx, ly] = toLocal(node.lng, node.lat);
+      return { kind: "station" as const, node: id, lx, ly };
+    };
+    if (s.kind === "node") return station(s.node) ? hit(s.node) : null;
+    const e = w.edges.find((x) => x.id === s.edge), pts = n.edgePts.get(s.edge);
+    if (!e || !pts || e.crossover) return null;
+    const along = fractionAlong(pts, s.lx, s.ly) * e.lengthM;
+    const reach = (id: number, d: number) => {
+      const node = station(id);
+      return node ? node.platform / 2 + 4 - d : -Infinity;
+    };
+    const ra = reach(e.a, along), rb = reach(e.b, e.lengthM - along);
+    if (ra < 0 && rb < 0) return null;
+    return hit(ra >= rb ? e.a : e.b);
   }
 
   /** T-1872: the red stretch is the shared preview, so it goes with the hover whichever way the pointer or tool leaves. */

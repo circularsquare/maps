@@ -68,8 +68,8 @@ export const Icon = {
   switchOff: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /><path d="M4.1 11.9l7.8-7.8" /></svg>,
   switchOn: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /><path d="M5.3 8.3l1.8 1.8 3.6-3.9" /></svg>,
   // the dock's tabs and the save button
-  // T-2271: a hammer for Build (a wrench read as settings)
-  hammer: () => <svg viewBox="0 0 16 16"><path d="M2 6.9L8 .9l2.1 2.1-6 6z" /><path d="M6.6 6.6l7 7" /></svg>,
+  // Build's wrench (T-2415: a claw hammer is not a train-building tool)
+  wrench: () => <svg viewBox="0 0 16 16"><path d="M13.2 4.6a3.3 3.3 0 01-4.4 3.6L3.9 13.1a1.3 1.3 0 01-1.9-1.9l4.9-4.9a3.3 3.3 0 013.6-4.4L8.6 4l.5 2.4 2.4.5z" /></svg>,
   route: () => <svg viewBox="0 0 16 16"><path d="M2.5 12.5l4-6 4 3 3-6.5" /><circle class="solid" cx="2.5" cy="12.5" r="1.5" /><circle class="solid" cx="6.5" cy="6.5" r="1.5" /><circle class="solid" cx="10.5" cy="9.5" r="1.5" /><circle class="solid" cx="13.5" cy="3" r="1.5" /></svg>,
   // a platform under its canopy, the track beside it
   building: () => <svg viewBox="0 0 16 16"><path d="M1.5 5.5h13l-2-3h-9zM4 5.5v5M12 5.5v5M1.5 10.5h13M1.5 13.5h13" /></svg>,

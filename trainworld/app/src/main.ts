@@ -76,7 +76,7 @@ import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
-import { startDiagramView } from "./diagram/view";
+import { diagramShown, startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
 import { MapToolBar } from "./ui/ToolBar";
 import { startTroubleList } from "./ui/TroubleList";
@@ -478,7 +478,7 @@ window.addEventListener("keydown", (e) => {
   if (keyIsTheirs(e)) return;
   // Esc, one thing at a time (T-096): a question waiting above the bottom bar is answered no; a
   // node or corner being dragged goes back (T-093, T-064); a half-drawn route is dropped, and the
-  // next Esc leaves the tool (tools.key); with no tool on, the selection clears (below).
+  // next Esc leaves the tool (tools.key); with no tool on, the selection clears, then the diagram closes (below).
   if (e.key === "Escape" && ask.peek()) {
     ask.value = null;
     e.preventDefault();
@@ -567,7 +567,10 @@ window.addEventListener("keydown", (e) => {
       return;
     }
   }
-  if (e.key === "Escape") selection.value = null;
+  if (e.key === "Escape") {
+    if (selection.peek() === null && diagramShown.peek()) diagramShown.value = false;
+    else selection.value = null;
+  }
   // Space: pause, or carry on at the speed that was running (the clock keeps it while paused).
   if (e.key === " " && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
     e.preventDefault();

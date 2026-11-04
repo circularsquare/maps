@@ -64,7 +64,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 **Fixed layout, no floating windows** (the saved games panel, confirmations and the
 [tutorial card](#tutorial-card) are the exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
-- A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a hammer, T-2271), **Lines** (a route with stops),
+- A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a wrench, T-2415), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Finances** (a bill and a coin) [T-1819], **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab

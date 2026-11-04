@@ -509,7 +509,10 @@ other track (below). The clock worker's `previewCrossover` and `crossover` edit 
 drawn red (one piece of a drawn route, or "the crossover", both diagonals drawn red since it goes whole), a station or a
 flyover ringed, its name by the cursor. The red goes with the pointer leaving the map or the tool
 changing by any route, and a delete's late reply does not draw it again under another tool [T-1872;
-`clearDelHover` in `map/tools.ts`]. A piece beside a through station is drawn red, and named by its
+`clearDelHover` in `map/tools.ts`]. The track under a station takes the station [T-2412; `stationUnder` in
+`map/tools.ts`]: the pointer snapped to its node, or on its platform's stretch of track (half the platform
+and 4 m either side), rings and removes the station, with its own question, and the track stays; not
+zoomed out where stations are hidden. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog

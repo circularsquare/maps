@@ -25,7 +25,7 @@ import { tabKeyName } from "./toolKeys";
 
 /** T-252: the tabs are icons, their names in the hover */
 const TABS: [Tab, string, () => JSX.Element][] = [
-  ["build", "Build", Icon.hammer],
+  ["build", "Build", Icon.wrench],
   ["lines", "Lines", Icon.route],
   ["stations", "Stations", Icon.building],
   ["money", "Finances", Icon.money],

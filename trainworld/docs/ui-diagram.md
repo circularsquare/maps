@@ -9,9 +9,11 @@ camera and the picture (T-2163); city boxes and water are T-2168 and T-2169.
 A button at the top left of the Cities tab, on the row with the leaderboards' trophy and the
 achievements' medal at its right (`ui/DiagramButton.tsx`, placed by `AchievementsButton`; Anita,
 2026-11-03), and key **M** (`diagram/view.ts`) swap the map for the diagram, and back. Hover: "Show
-network diagram (M)", and while the diagram is up "Show map (M)". The diagram is a 2D canvas over the
-map; the dock and top bar stay, and the map's upper left gives way to the diagram's own row
-(`DiagramTopLeft`): the save button once a drawing is up, the busy tag, and during the first layout
+network diagram (M)", and while the diagram is up "Show map (M)". **Esc** goes back to the map too, once
+nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
+The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
+the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map (M)", T-2416), the
+save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: the bunny's train, "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
 the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
