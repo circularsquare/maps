@@ -10,6 +10,8 @@ import type { DiagramLayout, Piece } from "./layout";
 export const STROKE_SHARE = 5 / 6.4;
 /** a corner's radius is this many stroke widths, plus the bundle's half width and the offset */
 const RADIUS_W = 6;
+/** at a station, so a line turning there passes near its place and under its pill (T-2244) */
+const RADIUS_STATION_W = 3;
 /** a pill's half width and its outline, in stroke widths */
 export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
 /** stop points of one station this many pitches apart or nearer share a pill */
@@ -47,6 +49,8 @@ export interface Drawing {
   passages: [number, number, number, number][];
   /** per passage, its station */
   passageOf: number[];
+  /** stations with a round stop off their axis (a hook, for checks) */
+  hooks: number[];
   box: [number, number, number, number];
 }
 
@@ -83,7 +87,7 @@ function offsetKeep(v: Float64Array, o: number): Float64Array {
 type V = [number, number, number, number, number]; // x, y, offset left of travel, bundle half width, node (-1 none)
 
 export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
-  const pitch = lay.pu, W = pitch * STROKE_SHARE, R0 = RADIUS_W * W;
+  const pitch = lay.pu, W = pitch * STROKE_SHARE, R0 = RADIUS_W * W, RS = RADIUS_STATION_W * W;
   const pieceOf = new Map<number, [Piece, number, number]>();
   const n = g.key.length;
   for (const r of lay.pieces) {
@@ -162,7 +166,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   // ribbon crosses the axis, and a line ending there has its last run carried on, or cut back, to it.
   const ribs = Vs.map(([, V]) => {
     const r: Ribbon = { pts: [], vi: [] };
-    return { r, cmds: filleted(V, R0, r) };
+    return { r, cmds: filleted(V, R0, r, RS) };
   });
   type Occ = { li: number; i0: number; i1: number; end: -1 | 0 | 1 };
   const occAt = new Map<number, Occ[]>();
@@ -236,7 +240,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   }
   for (const li of dirty) {
     const r: Ribbon = { pts: [], vi: [] };
-    ribs[li] = { r, cmds: filleted(Vs[li][1], R0, r) };
+    ribs[li] = { r, cmds: filleted(Vs[li][1], R0, r, RS) };
   }
   const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
@@ -257,7 +261,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     }
     stopsAt.set(k, list);
   }
-  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [], passageOf: number[] = [];
+  const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [], passageOf: number[] = [], hooks: number[] = [];
   for (const [k, raw] of stopsAt) {
     const firstPassage = passages.length;
     const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!;
@@ -280,6 +284,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     for (let q = 1; q < centres.length; q++) passages.push([centres[q - 1][0], centres[q - 1][1], centres[q][0], centres[q][1]]);
     // a line running along the axis, off it: a round stop on its own ribbon, joined to the nearest pill
     const dots: [number, number][] = [];
+    if (off.length && (on.length || off.length > 1)) hooks.push(k);
     for (const [, , px, py] of off) {
       if (dots.some((d) => Math.hypot(d[0] - px, d[1] - py) < 0.5 * pitch)) continue;
       dots.push([px, py]);
@@ -299,7 +304,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, box: [x0, y0, x1, y1] };
+  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, box: [x0, y0, x1, y1] };
 }
 
 /** a line's commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy to x, y */
@@ -338,7 +343,7 @@ const CURVE_SAMPLES = 8;
 
 /** a path through V with each corner rounded, its radius by offset so a bundle's bends are concentric;
  * `out` gets the same path sampled */
-function filleted(V: V[], R0: number, out: Ribbon): Float64Array | null {
+function filleted(V: V[], R0: number, out: Ribbon, RS = R0): Float64Array | null {
   const P: V[] = [], src: number[] = [];
   V.forEach((v, i) => {
     if (!P.length || Math.hypot(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v), src.push(i);
@@ -365,7 +370,7 @@ function filleted(V: V[], R0: number, out: Ribbon): Float64Array | null {
       at(P[i][0], P[i][1], i);
       continue;
     }
-    const r = R0 + P[i][3] + (th > 0 ? -P[i][2] : P[i][2]);
+    const r = (P[i][4] >= 0 ? RS : R0) + P[i][3] + (th > 0 ? -P[i][2] : P[i][2]);
     const t = Math.min(Math.max(0, r) * Math.tan(Math.abs(th) / 2), 0.49 * la, 0.49 * lb);
     const x0 = P[i][0] - ax * t, y0 = P[i][1] - ay * t, x2 = P[i][0] + bx * t, y2 = P[i][1] + by * t;
     path.lineTo(x0, y0);

@@ -2,7 +2,9 @@
 // real network: every drawn stretch within 0.5 degrees of 0, 45 or 90; no two stations that share no
 // edge closer than their half widths plus half a hop; New York in under 5 s, Tokyo in under 8 s; one
 // station added (a new complex halfway along a hop) moves the median complex less than a tenth of a hop
-// on the rebuild, which starts from the last layout.
+// on the rebuild, which starts from the last layout; no line doubles back at a station (T-2243: drawn
+// turning 180 degrees where the real line turns less than 90, or 135 where it turns less than 45; 135
+// where it turns 45 to 90 is counted as a sharp corner, not failed).
 //   node trainworld/checks/t2160-diagram-layout.mjs [nyc,tyo] [r2]      (about a minute; `r2` lays out with
 //   round 2's options instead of the game's; figures in artifacts/trainworld/t2160/check.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -17,6 +19,41 @@ let failed = 0;
 const out = {};
 const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
 const median = (v) => { const s = [...v].sort((a, b) => a - b); return s.length ? s[s.length >> 1] : 0; };
+const turnDeg = (a, b) => Math.abs(Math.atan2(a[0] * b[1] - a[1] * b[0], a[0] * b[0] + a[1] * b[1])) * 180 / Math.PI;
+
+/** each line's stations where its drawing turns 135 degrees or more and the real line less than 90: [line, node, drawn,
+ * real, whether it doubles back: a U-turn, or a hairpin where the real line turns less than 45 (else a sharp corner)] */
+function doublings(g, lay) {
+  const n = g.key.length, at = new Map();
+  for (const pc of lay.pieces) for (let i = 0; i + 1 < pc.nodes.length; i++) {
+    at.set(pc.nodes[i] * n + pc.nodes[i + 1], [pc, i, 1]);
+    at.set(pc.nodes[i + 1] * n + pc.nodes[i], [pc, i + 1, -1]);
+  }
+  /** the drawn way from u toward w (a hop on one piece) as it leaves u */
+  const leaving = (u, w) => {
+    const x = at.get(u * n + w);
+    if (!x) return null;
+    const [pc, i, d] = x, v = pc.verts;
+    for (let t = pc.at[i]; t !== pc.at[i + d]; t += d) {
+      const dx = v[(t + d) * 2] - v[t * 2], dy = v[(t + d) * 2 + 1] - v[t * 2 + 1];
+      if (Math.hypot(dx, dy) > 1e-6 * lay.hop) return [dx, dy];
+    }
+    return null;
+  };
+  const out = [];
+  g.lines.forEach((l, li) => {
+    const c = l.chain;
+    for (let i = 1; i + 1 < c.length; i++) {
+      if (c[i - 1] === c[i + 1]) continue;
+      const a = leaving(c[i], c[i - 1]), b = leaving(c[i], c[i + 1]);
+      if (!a || !b) continue;
+      const drawn = turnDeg([-a[0], -a[1]], b);
+      const real = turnDeg([g.x[c[i]] - g.x[c[i - 1]], g.y[c[i]] - g.y[c[i - 1]]], [g.x[c[i + 1]] - g.x[c[i]], g.y[c[i + 1]] - g.y[c[i]]]);
+      if (drawn > 112.5 && real < 90) out.push([li, c[i], Math.round(drawn), Math.round(real), drawn > 157.5 || real < 45]);
+    }
+  });
+  return out;
+}
 
 /** the graph with one more complex halfway along its longest hop among lines (each line on it stops there) */
 function withStation(g) {
@@ -47,6 +84,7 @@ function withStation(g) {
 for (const name of which) {
   const s = openSave(name);
   const { g } = s.graph();
+  const names = [...g.key].map((k) => s.name(k) ?? '');
   s.api.free();
   L.layoutDiagram(g, OPTS); // the code compiled
   const t0 = performance.now();
@@ -84,11 +122,14 @@ for (const name of which) {
   // how compact: the drawing's extent in stroke pitches
   const ext = (v) => Math.max(...v) - Math.min(...v);
   const size = [ext(lay.x) / lay.pu, ext(lay.y) / lay.pu];
-  const r = { complexes: n, ms: Math.round(ms), phases: lay.ms, pieces: lay.pieces.length, straight: lay.straight, bent: lay.bent, worstDeg: worst, stretches, close, worstShare, rebuildMs: Math.round(ms2), movedMedian: median(moved), movedP90: [...moved].sort((a, b) => a - b)[Math.floor(n * 0.9)], movedBMedian: median(movedB), sizePitches: size.map(Math.round) };
+  const turns = doublings(g, lay), back = turns.filter((b) => b[4]), sharp = turns.filter((b) => !b[4]);
+  const backAt = [...new Set(back.map((b) => names[b[1]]))], sharpAt = [...new Set(sharp.map((b) => names[b[1]]))];
+  const r = { complexes: n, ms: Math.round(ms), phases: lay.ms, pieces: lay.pieces.length, straight: lay.straight, bent: lay.bent, worstDeg: worst, stretches, close, worstShare, rebuildMs: Math.round(ms2), movedMedian: median(moved), movedP90: [...moved].sort((a, b) => a - b)[Math.floor(n * 0.9)], movedBMedian: median(movedB), sizePitches: size.map(Math.round), doublings: turns.map(([li, k, d, rl]) => `${names[k]} (${g.lines[li].colour}) ${d} drawn, ${rl} real`) };
   out[name] = r;
   line(worst <= 0.5, `${name}: every drawn stretch within 0.5 degrees of 0/45/90`, `worst ${worst.toFixed(3)} of ${stretches} stretches; ${r.pieces} pieces, ${r.straight} straight, ${r.bent} with one bend`);
   line(close === 0, `${name}: no stations closer than their half widths plus half a hop`, `${close} pairs closer; the closest at ${worstShare.toFixed(2)} of its distance`);
   line(ms < LIMIT[name], `${name}: laid out in under ${LIMIT[name] / 1000} s`, `${(ms / 1000).toFixed(2)} s (A ${(lay.ms.a / 1000).toFixed(2)}, B ${(lay.ms.b / 1000).toFixed(2)}, routing ${(lay.ms.route / 1000).toFixed(2)}, order ${(lay.ms.order / 1000).toFixed(2)}); ${n} complexes; ${size.map(Math.round).join(' x ')} pitches across`);
+  line(back.length === 0, `${name}: no line doubles back at a station`, `${back.length} lines at ${backAt.length} stations${backAt.length ? ': ' + backAt.slice(0, 6).join(', ') : ''}; sharp corners (135 drawn, 45 to 90 real) ${sharp.length} at ${sharpAt.length}${sharpAt.length ? ': ' + sharpAt.slice(0, 6).join(', ') : ''}`);
   line(r.movedMedian < 0.1, `${name}: one added station moves the median complex under a tenth of a hop`, `median ${r.movedMedian.toFixed(3)} hops (B ${r.movedBMedian.toFixed(3)}), 90th percentile ${r.movedP90.toFixed(3)}; rebuild ${(ms2 / 1000).toFixed(2)} s`);
 }
 mkdirSync(`${ARTIFACTS}t2160`, { recursive: true });

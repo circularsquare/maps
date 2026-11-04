@@ -48,6 +48,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   light and dark. Filed T-2248 (second stopping line on the inner track, short edges), T-2249 (platform crowd with
   outer tracks). Started af25dc1d4819a3f3d **t2236** crowding by load (Vite 6187) and a95e57756862f26bc **t2219**
   building drawing (Vite 6189), both main tree, both told to keep renderer edits local.
+- ~19:00: master **16181a2e**: d3ad2f27 (T-2196 ferry fans, WASM interface `set_ferry`), 15034a96 (T-2220 0.8 rule,
+  fixed minutes only; hover "Changing trains inside it feels a little quicker."), 16181a2e (paperwork). Trees t2196,
+  t2220 removed; only t1734 left. **8800 = build 854**, built on freeze 20261103-162459 (t2213 writes data/packs),
+  smoke 23/23 light and dark. Only agent running: aff494fb99488aab4 **t2213** islands (main tree pipeline; its
+  uncommitted files: pipeline/{routes,market_zones,merge_cells,packio,parts_run}.py, checks/t2213_*.py,
+  docs/demand-mode.md, demand-sources.md, notes/T-2213.md). Next to start: T-2214 after T-2213; T-2218 tool's
+  offered rectangle misses same-named stations (notes/T-2208.md follow-up); T-2242..47 diagram polish; T-2238.
+  Started ~19:05: a0d2a3c6ec243b0e9 **t2238** (T-2238 2 s placement + T-2230 road tile install; tree t2238, Vite
+  6188) and a646f254e229a6d49 **t2243** (T-2243 Shinjuku loop + T-2244 hooks; main tree diagram, Vite 6194).
 - ~18:00: T-2220 built in tree t2220; with the walk at 0.8 the S shuttle moved +83% on a Times Sq building (outline
   left 5 Av/7 out). My call: fixed minutes only (all lines within 3.1%, transfers +12.7%); agent resumed to make it so,
   then land t2220 (rebase if t2196 lands first). Hover adds "Changing trains inside it feels 20% shorter." Tell Anita.

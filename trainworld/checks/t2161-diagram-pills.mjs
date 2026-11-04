@@ -1,6 +1,6 @@
 // T-2161: the network diagram's pills (app/src/diagram/draw.ts) on the real New York save and Tokyo's real
 // network: no pill wider than two pitches across (Times Sq, 14 St and 59 St named), no two stations' pills
-// overlapping, and how many stations need more than one pill.
+// overlapping, no hook at the stations that had one (T-2244), and how many stations need more than one pill.
 //   node trainworld/checks/t2161-diagram-pills.mjs [nyc,tyo]      (about a minute; figures in
 //   artifacts/trainworld/t2161/pills.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -11,6 +11,8 @@ globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
 const A = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, PILL_R, PILL_OUTLINE, STROKE_SHARE } from '@app/src/diagram/draw.ts';`);
 const which = (process.argv[2] ?? 'nyc,tyo').split(',');
 const NAMED = { nyc: ['Times Sq-42 St', '14 St-Union Sq', '59 St-Columbus Circle', '34 St-Penn Station'], tyo: ['新宿', '代々木', '渋谷', '池袋'] };
+/** stations that had hooks (T-2206, T-2244) */
+const HOOKLESS = { nyc: ['Times Sq-42 St', '34 St-Penn Station', 'Atlantic Av-Barclays Ctr'], tyo: ['新宿', '西日暮里'] };
 let failed = 0;
 const out = {};
 const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
@@ -67,9 +69,12 @@ for (const name of which) {
   for (const k of d.pillOf) perStation.set(k, (perStation.get(k) ?? 0) + 1);
   const several = [...perStation.values()].filter((v) => v > 1).length;
   const widest = Math.max(...across);
-  out[name] = { pills: d.pills.length, stations: perStation.size, several, passages: d.passages.length, widest, overlaps, overlapExamples: pairs, named };
+  const hookNames = d.hooks.map((k) => names[k]);
+  const hooked = HOOKLESS[name].filter((nm) => hookNames.some((x) => x && x.split('/').includes(nm)));
+  out[name] = { pills: d.pills.length, stations: perStation.size, several, passages: d.passages.length, widest, overlaps, overlapExamples: pairs, named, hooks: hookNames };
   line(widest <= 2.001, `${name}: no pill wider than two pitches across`, `widest ${widest.toFixed(2)}; ${Object.entries(named).map(([k, v]) => `${k} ${v.pills} pill${v.pills === 1 ? '' : 's'}, ${v.longest.toFixed(1)} pitches long`).join('; ')}`);
   line(overlaps === 0, `${name}: no two stations' pills overlap`, `${overlaps} pairs${pairs.length ? ', e.g. ' + pairs.slice(0, 3).join(', ') : ''}`);
+  line(hooked.length === 0, `${name}: no hook (a round stop off the pill's axis) at ${HOOKLESS[name].join(', ')}`, `${hooked.length ? 'hooks at ' + hooked.join(', ') + '; ' : ''}${hookNames.length} stations with a hook in all${hookNames.length ? ': ' + hookNames.slice(0, 8).join(', ') : ''}`);
   console.log(`     ${name}: ${perStation.size} stations, ${several} with more than one pill, ${d.passages.length} passages`);
 }
 mkdirSync(`${ARTIFACTS}t2161`, { recursive: true });

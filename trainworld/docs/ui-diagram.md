@@ -42,8 +42,9 @@ Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` 
 ## The drawing
 
 `diagram/draw.ts`. Each line is one ribbon (casing in the background colour, strokes 5/6.4 of a pitch
-wide), corners rounded with radius 6 stroke widths plus the bundle's half width, plus or minus the
-stroke's offset, so a bundle's bends are concentric. A slot change on a straight run is a 45 degree jog.
+wide), corners rounded with radius 6 stroke widths (3 at a station, so a line turning there passes
+under its pill) plus the bundle's half width, plus or minus the stroke's offset, so a bundle's bends
+are concentric. A slot change on a straight run is a 45 degree jog.
 
 **Pills.** Each station's pill lies along an axis: of the four octilinear axes through its place, the
 one every line stopping there crosses, and of those the one giving the shortest pill. Where none
@@ -108,25 +109,36 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
 - **B**: 30 rounds of octilinear least squares from A: each edge toward the nearest free 45 degree
   direction at both ends, straight through two-edge stations, near the last round (0.1) and A (0.01),
   unconnected stations nearer than 1.12 times their spacing (their half widths plus half the median
-  hop) pushed out to that (3.5). A stroke pitch is the median hop over 9; a node's half width is its
-  widest bundle's; every edge is at least 1.4 times its ends' half widths.
+  hop) pushed out to that (3.5), and a line through a junction keeping its real turn there (1). A stroke
+  pitch is the median hop over 9; a node's half width is its widest bundle's; every edge is at least 1.4
+  times its ends' half widths.
+- **Folding back**: a line that turns less than a right angle in reality never leaves a station the way
+  it came in, or within 45 degrees of it (a U-turn or a hairpin). Each step below avoids it where it can.
 - **Segments** between key nodes (a branch, a line's end, the lines changing), split at the station
   farthest off whenever its stations fit neither a straight run within 11 degrees nor one bend, within
   0.5 of the median hop.
-- **The snap**: one solve on every node: a piece within 11 degrees of a 45 degree direction is made
-  exact with its stations on it (weight 30), unconnected stations too close are pushed apart (2),
-  everything else stays near B (1).
-- **Routing**: a piece within 0.5 degrees is drawn straight, any other as an orthogonal leg and a
-  diagonal leg or the reverse, whichever passes nearer its stations, and not leaving a node the way
-  another piece does where the other choice avoids it; each station goes where it projects onto the
-  drawing, in order, at least half an even share of the piece from the next.
+- **The snap**: four rounds of one solve on every node: a piece within 11 degrees of a 45 degree
+  direction after B, or in the last round, is made exact with its stations on it (weight 30), the way
+  the real line runs; every hop keeps its length along its direction (its snapped piece's, else B's, or
+  the real one where B turned it back), at least half its target (30); of two snapped pieces that would
+  fold a line between them, the one further off its direction is left to the routing; a line B turned
+  more than 45 degrees past its real turn at a station is drawn back toward it (10); unconnected
+  stations too close are pushed apart (2); everything else stays near B (1).
+- **Routing**: a piece within 5 degrees is drawn straight (the separation makes it exact), unless that
+  folds a line against a straight neighbour; any other as an orthogonal leg and a diagonal leg or the
+  reverse, whichever folds fewer lines (4 times its length a fold), leaves its ends by ways no other
+  piece takes (its length each) and passes nearer its stations, chosen in order and then again against
+  all the others; each station goes where it projects onto the drawing, in order, at least half an even
+  share of the piece from the next.
 - **The separation** (3 passes, each drawn again as above): the drawing in terms that keep it
   octilinear: each piece's ends free, each station a distance along its leg, a bent piece's legs
-  meeting where their directions say. Of two straight pieces leaving a node the same way, all but the
-  one with most stations get a first leg 45 degrees off toward where their stations lay after B. Linear
-  terms: straight pieces stay straight (a station pushed across one moves both its ends alike); stations
-  keep their order along a leg and gaps of half their hop's target or 1.25 times their half widths
-  together, round a bend too; unconnected stations within 1.25 times their spacing are pushed to 1.15
+  meeting where their directions say. Of two straight pieces leaving a node the same way, all but one
+  get a first leg 45 degrees off toward where their stations lay after B, or the other side where that
+  folds a line, and none where both would; the one kept is one that cannot turn without folding a line,
+  else the one with most stations. Linear terms: straight pieces stay straight (a station pushed across
+  one moves both its ends alike); stations keep their order along a leg and gaps of half their hop's
+  target or 1.25 times their half widths together, round a bend too; a leg with no stations may shrink to
+  nothing, but keeps 2 pitches where the piece would then leave its end a way that folds a line; unconnected stations within 1.25 times their spacing are pushed to 1.15
   times it, and stations within their half width, the leg's and a pitch of another piece's leg are
   pushed off it. These are linearised about the drawing, 10 rounds a pass. A first layout meets them by
   sweeps of projections (each term not met moves its variables the least way); a rebuild by Hildreth's
