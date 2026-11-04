@@ -866,25 +866,23 @@ pub(super) struct Stretch {
     longer: f64,
     spacing: f64,
     span: (f64, f64),
-    /// T-1965: the two runs are the same path end to end, so the faster one never gets away
-    locked: bool,
     /// T-2231: the slower run stops at a passing station inside: the overtake plan
     plan: Option<Plan>,
 }
 
-/// T-1965: on a following resource, a slower user's `stop` when it runs the faster run's whole path
-/// and turns where it turns: with no passing, order on the line never changes, so the faster train
-/// ends up behind a slower one on every trip and loses all of `D`.
-pub const FOLLOW_LOCKED: i32 = 1;
+/// T-2419: on a following resource, a slower user's `stop` when it is the only slower line there and
+/// stops at no passing station inside: the two are timetabled together, the faster trains placed
+/// just ahead of slower ones (`follow_best`).
+pub const FOLLOW_TIMED: i32 = 1;
 /// T-2231: on a following resource, a slower user's `stop` when it stops at a passing station
 /// inside the stretch: the loss is its overtake plan's (`Capacity::plans`).
 pub const FOLLOW_PASSING: i32 = 2;
 /// T-2231: the least a faster line's trains are placed after a slower line's they pass (s), so a
 /// plan's offset of 0 still reads as a pair (`follow_targets`).
 const PASS_OFFSET_MIN_S: f64 = 1.0;
-/// T-1965: two lines that differ by less than this over a shared path (s) are taken as one pattern,
-/// never one locked behind the other.
-const FOLLOW_LOCK_MIN_S: f64 = 30.0;
+/// T-2419: two lines that differ by less than this over a stretch (s) are taken as one pattern, not
+/// timetabled one behind the other.
+const FOLLOW_TIMED_MIN_S: f64 = 30.0;
 
 /// T-1924 (notes/T-1900.md N1): the stretches each run of line `f` shares with slower lines `live`
 /// accepts, in the same direction, by run. A shared stretch is a run of path entries both lines take
@@ -942,7 +940,10 @@ pub(super) fn stretches(net: &Network, lines: &[LineSvc], f: u32, live: &dyn Fn(
                 let j1 = j0 + (last - i0);
                 let (fa, fb) = (run.seg_off[i0], run.node_s[last + 1]);
                 let (sa, sb) = (s_run.seg_off[j0], s_run.node_s[j1 + 1]);
-                let longer = (leave_at(s_run, sb) - leave_at(s_run, sa)) - (reach_at(run, fb) - leave_at(run, fa));
+                // (where either run ends it arrives and goes no further: no wait for the slower one
+                // to leave; the platform's own queue covers the rest)
+                let s_end = if j1 + 1 == s_run.segs.len() || last + 1 == ns { reach_at(s_run, sb) } else { leave_at(s_run, sb) };
+                let longer = (s_end - leave_at(s_run, sa)) - (reach_at(run, fb) - leave_at(run, fa));
                 if longer < FOLLOW_MIN_S {
                     continue;
                 }
@@ -954,12 +955,7 @@ pub(super) fn stretches(net: &Network, lines: &[LineSvc], f: u32, live: &dyn Fn(
                 } else {
                     None
                 };
-                // T-1965: the same path end to end, the slower one reaching the end a while
-                // later: the faster one arrives with it, so loses that
-                let lock = (reach_at(s_run, sb) - leave_at(s_run, sa)) - (reach_at(run, fb) - leave_at(run, fa));
-                let locked = plan.is_none() && i0 == 0 && last + 1 == ns && j0 == 0 && j1 + 1 == s_run.segs.len() && lock >= FOLLOW_LOCK_MIN_S;
-                let longer = if locked { lock } else { longer };
-                stretches.push(Stretch { i0, i1: last, j0, line: l, run: r, longer, spacing, span: (fa, fb), locked, plan });
+                stretches.push(Stretch { i0, i1: last, j0, line: l, run: r, longer, spacing, span: (fa, fb), plan });
             }
             if i == ns {
                 break;
@@ -983,6 +979,7 @@ pub(super) fn stretches(net: &Network, lines: &[LineSvc], f: u32, live: &dyn Fn(
 /// them (`stretches`). Stretches of one run with different slower lines that overlap are one
 /// resource, its one owner spanning them all. T-2231: a slower run that stops at a passing station
 /// inside its stretch waits there for the faster one (`overtake`), a wait resource at each.
+/// T-2419: a stretch behind one slower line and no other is timetabled with it (`follow_best`).
 fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capacity) {
     let mut users: Vec<User> = vec![];
     for &f in owners {
@@ -1000,10 +997,20 @@ fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capa
                 }
                 let a = stretches[g..end].iter().map(|s| s.span.0).fold(f64::INFINITY, f64::min);
                 let b = stretches[g..end].iter().map(|s| s.span.1).fold(f64::NEG_INFINITY, f64::max);
+                // T-2419: behind one slower line the two are timetabled together; behind several, one
+                // phase cannot suit them all, so they keep the random-meeting average, as do lines
+                // that differ by too little to tell apart
+                let one = stretches[g..end].iter().all(|s| s.line == stretches[g].line);
                 users.clear();
                 users.push(User { line: f, run: fr as u8, owner: true, occ: b, at: a, stop: -1 });
                 users.extend(stretches[g..end].iter().map(|s| {
-                    let stop = if s.plan.is_some() { FOLLOW_PASSING } else if s.locked { FOLLOW_LOCKED } else { -1 };
+                    let stop = if s.plan.is_some() {
+                        FOLLOW_PASSING
+                    } else if one && s.longer >= FOLLOW_TIMED_MIN_S {
+                        FOLLOW_TIMED
+                    } else {
+                        -1
+                    };
                     User { line: s.line, run: s.run, owner: false, occ: s.longer, at: s.spacing, stop }
                 }));
                 let plans: Vec<Arc<Plan>> = stretches[g..end].iter_mut().filter_map(|s| s.plan.take()).map(Arc::new).collect();
@@ -1034,21 +1041,21 @@ fn build_follow(net: &Network, lines: &[LineSvc], owners: &[u32], cap: &mut Capa
 /// spacing `s` it must keep and then follows: on average `D - (H - s)/2` when `D` is at least
 /// `H - s` (it always catches up), else `D² / 2(H - s)`. Slower lines are taken together from the
 /// slowest: the loss behind those at least as slow as each is worked out with their trains
-/// together, and the largest counts. Behind a slower line it can never get away from
-/// (`FOLLOW_LOCKED`, T-1965) the loss is all of `D`. Behind one that steps aside at passing
-/// stations (`FOLLOW_PASSING`, T-2231) it is its overtake plan's (`plans`, one per such user in
-/// order), and the largest of those and the rest counts.
+/// together, and the largest counts. Behind the one slower line it is timetabled with
+/// (`FOLLOW_TIMED`, T-2419) it is `follow_best`'s; behind one that steps aside at passing stations
+/// (`FOLLOW_PASSING`, T-2231) its overtake plan's (`plans`, one per such user in order); the largest
+/// of those and the rest counts.
 pub fn follow_loss(us: &[User], net: &Network, lev: usize, plans: &[Arc<Plan>]) -> (f64, u32) {
     let Some(f) = us.iter().find(|u| u.owner) else { return (0.0, u32::MAX) };
     if net.line_tph[f.line as usize][lev] <= 0.0 {
         return (0.0, u32::MAX);
     }
-    let mut slow: Vec<(f64, f64, f64, u32, u8, bool)> = vec![]; // longer, spacing, tph, line, run, locked
+    let mut slow: Vec<(f64, f64, f64, u32, u8)> = vec![]; // longer, spacing, tph, line, run
     let (mut passed, mut by) = (0.0, u32::MAX);
     let mut plan = plans.iter();
     for u in us.iter().filter(|u| !u.owner) {
-        if u.stop == FOLLOW_PASSING {
-            let loss = plan.next().map_or(0.0, |p| p.outcome(net, lev).loss);
+        if u.stop == FOLLOW_TIMED || u.stop == FOLLOW_PASSING {
+            let loss = if u.stop == FOLLOW_TIMED { timed(net, f.line, u, lev).0 } else { plan.next().map_or(0.0, |p| p.outcome(net, lev).loss) };
             if loss > passed {
                 (passed, by) = (loss, u.line);
             }
@@ -1058,23 +1065,21 @@ pub fn follow_loss(us: &[User], net: &Network, lev: usize, plans: &[Arc<Plan>]) 
         if tph <= 0.0 {
             continue;
         }
-        let locked = u.stop == FOLLOW_LOCKED;
         match slow.iter_mut().find(|x| (x.3, x.4) == (u.line, u.run)) {
             Some(x) => {
                 if u.occ > x.0 {
                     (x.0, x.1) = (u.occ, u.at);
                 }
-                x.5 |= locked;
             }
-            None => slow.push((u.occ, u.at, tph, u.line, u.run, locked)),
+            None => slow.push((u.occ, u.at, tph, u.line, u.run)),
         }
     }
     slow.sort_by(|a, b| b.0.total_cmp(&a.0).then((a.3, a.4).cmp(&(b.3, b.4))));
     let (mut best, mut who, mut tph) = (0.0, u32::MAX, 0.0);
-    for &(d, s, t, l, _, locked) in &slow {
+    for &(d, s, t, l, _) in &slow {
         tph += t;
         let gap = (3600.0 / tph - s).max(0.0);
-        let loss = if locked { d } else if d >= gap { d - 0.5 * gap } else { d * d / (2.0 * gap) };
+        let loss = if d >= gap { d - 0.5 * gap } else { d * d / (2.0 * gap) };
         if loss > best {
             (best, who) = (loss, l);
         }
@@ -1083,6 +1088,34 @@ pub fn follow_loss(us: &[User], net: &Network, lev: usize, plans: &[Arc<Plan>]) 
         (best, who) = (passed, by);
     }
     (best, who)
+}
+
+/// T-2419 (notes/T-2413.md): a faster line timetabled with the one slower line on a stretch with no
+/// passing station, both at the headways they keep (`overtake::pattern_tph`): its loss per train and
+/// how long after a slower train its first train of a slower headway reaches the stretch (s), or
+/// (0, 0) when either does not run. See `follow_best`.
+fn timed(net: &Network, fast: u32, slow: &User, lev: usize) -> (f64, f64) {
+    let (tf, ts) = (overtake::pattern_tph(net, fast, lev) as f64, overtake::pattern_tph(net, slow.line, lev) as f64);
+    if !(tf > 0.0 && ts > 0.0) {
+        return (0.0, 0.0);
+    }
+    follow_best(slow.occ, slow.at, 3600.0 / ts, 3600.0 / tf)
+}
+
+/// T-2419: the faster trains' mean loss over a stretch the slower one takes `d` longer on, with
+/// spacing `s`, slower headway `hs` and faster `hf`, when each slower headway's faster trains leave
+/// as late as they can, the last `s` before the next slower train: that one closes the gap `hs - 2s`
+/// and loses `d + 2s - hs` if more, each one before it a faster headway more. A fractional last
+/// train counts by its share, so the loss runs smoothly with the rates (count schedules settle on
+/// it). No passing: a faster line that gains more than the gap still ends up behind, as before.
+/// Returns the loss and where the first of them leaves after a slower train.
+pub fn follow_best(d: f64, s: f64, hs: f64, hf: f64) -> (f64, f64) {
+    let a = d + 2.0 * s - hs;
+    let k = hs / hf;
+    let n = k.floor();
+    let sum: f64 = (0..n as usize).map(|j| (a + j as f64 * hf).max(0.0)).sum::<f64>() + (k - n) * (a + n * hf).max(0.0);
+    let at = if k <= 1.0 { hs - s } else { (hs - s - (k.ceil() - 1.0) * hf).max(s) };
+    (sum / k, at)
 }
 
 impl Capacity {
@@ -1104,10 +1137,10 @@ impl Capacity {
         matches!(self.tag[r], Tag::Wait { .. }).then(|| self.users_of(r).iter().find(|u| !u.owner).map(|u| u.line)).flatten()
     }
 
-    /// T-1965, T-2231: following pairs whose trains belong at a set place behind one another at a
+    /// T-2231, T-2419: following pairs whose trains belong at a set place behind one another at a
     /// level (`spacing::place`): (faster line, run), (slower line, run), and how long after the
-    /// slower one's trains the faster one's reach their shared track (s). A pair that can never
-    /// part keeps the spacing; one with passing stations keeps its overtake plan's offset.
+    /// slower one's trains the faster one's reach their shared track (s): just ahead of a slower
+    /// one (`follow_best`), or with passing stations their overtake plan's offset.
     pub fn follow_targets(&self, net: &Network, lev: usize) -> Vec<((u32, u8), (u32, u8), f64)> {
         let mut out = vec![];
         for r in (0..self.res.len()).filter(|&r| matches!(self.tag[r], Tag::Follow { .. })) {
@@ -1115,14 +1148,12 @@ impl Capacity {
             let Some(f) = us.iter().find(|u| u.owner) else { continue };
             let mut plan = self.plans[r].iter();
             for u in us.iter().filter(|u| !u.owner) {
-                match u.stop {
-                    FOLLOW_LOCKED => out.push(((f.line, f.run), (u.line, u.run), u.at)),
-                    FOLLOW_PASSING => {
-                        let at = plan.next().map_or(0.0, |p| p.outcome(net, lev).offset);
-                        out.push(((f.line, f.run), (u.line, u.run), at.max(PASS_OFFSET_MIN_S)));
-                    }
-                    _ => {}
-                }
+                let at = match u.stop {
+                    FOLLOW_TIMED => timed(net, f.line, u, lev).1,
+                    FOLLOW_PASSING => plan.next().map_or(0.0, |p| p.outcome(net, lev).offset),
+                    _ => continue,
+                };
+                out.push(((f.line, f.run), (u.line, u.run), at.max(PASS_OFFSET_MIN_S)));
             }
         }
         out

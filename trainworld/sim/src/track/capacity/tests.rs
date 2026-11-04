@@ -571,6 +571,22 @@ fn following_loss_formula() {
     assert_eq!(follow_loss(&us, &w.net, 2, &[]).0, 0.0, "no express trains, no loss");
 }
 
+/// T-2419: the timetabled loss. At one headway each, `D + 2s - H`, or nothing where the gap holds the
+/// gain; fewer faster trains the same; more of them, each a faster headway more; smooth in the rates.
+#[test]
+fn timetabled_following_loss() {
+    let (d, s) = (900.0, 100.0);
+    assert_eq!(follow_best(d, s, 600.0, 600.0), (500.0, 500.0));
+    assert_eq!(follow_best(d, s, 1800.0, 1800.0).0, 0.0);
+    assert_eq!(follow_best(d, s, 600.0, 1200.0).0, 500.0);
+    // two faster trains a slower headway: 500 and 800 s
+    assert!((follow_best(d, s, 600.0, 300.0).0 - 650.0).abs() < 1e-9);
+    let at = |k: f64| follow_best(d, s, 600.0, 600.0 / k).0;
+    for k in [1.0, 2.0, 3.0] {
+        assert!((at(k - 1e-7) - at(k)).abs() < 1e-3, "smooth at {k}: {} {}", at(k - 1e-7), at(k));
+    }
+}
+
 /// A straight 20 km double track with a station every km (stops `n[0..=20]`), and a second
 /// double track beside it with stations only at its ends (`q`), as an express pair of quad track
 /// is: separate edges.
@@ -586,16 +602,14 @@ fn twenty_km() -> (TrackWorld, Vec<u32>, [u32; 2]) {
     (w, n, q)
 }
 
-/// T-1924: an express behind a local on 20 km of shared double track takes about the local's time;
-/// on its own track (quad track's other pair) it keeps its speed. Its loss waits outside the
-/// stations the local stops at, never as one long stop at the start.
+/// T-1924: an express behind a local on 20 km of shared double track, a local every 6 minutes,
+/// takes about the local's time; on its own track (quad track's other pair) it keeps its speed. Its
+/// loss is slower running over the stretch, never a stand between stops (T-2018).
 #[test]
 fn express_behind_local_takes_about_its_time() {
     use super::super::tests::line;
     let (mut w, n, q) = twenty_km();
     let local = line(&mut w, &n, [10.0, 4.0, 0.0]);
-    // (from the second station: an express turning where the local does would never get away from
-    // it, `express_locked_behind_local`)
     let express = line(&mut w, &[n[1], n[20]], [6.0, 2.0, 2.0]);
     let own = line(&mut w, &q, [6.0, 2.0, 2.0]);
     same_as_global(&w, "express and local");
@@ -647,27 +661,31 @@ fn never_stands_between_stops(run: &super::super::service::Run, lev: usize) {
     }
 }
 
-/// T-1965: an express that turns where the local turns, on its whole path, can never get away from
-/// it: it takes the local's time at every headway, and leaves right behind the local's trains.
+/// T-2419: an express that turns where the local turns is timetabled just ahead of a local: with a
+/// local every 15 minutes it gains more than the gap and catches the local ahead, losing its gain
+/// less the gap; with one an hour it gets through. It leaves a little before a local.
 #[test]
-fn express_locked_behind_local() {
+fn express_on_the_locals_path_leaves_just_ahead_of_it() {
     use super::super::tests::line;
     let (mut w, n, _) = twenty_km();
     let local = line(&mut w, &n, [4.0, 1.0, 0.0]);
     let express = line(&mut w, &[n[0], n[20]], [2.0, 1.0, 1.0]);
-    same_as_global(&w, "locked");
+    same_as_global(&w, "same path");
     let dur = |w: &TrackWorld, l: u32, lev: usize| w.svc.lines[l as usize].runs[0].prof[lev].duration;
+    let free = |w: &TrackWorld, l: u32| w.svc.lines[l as usize].runs[0].free.duration;
+    let gain = free(&w, local) - free(&w, express);
     for lev in 0..2 {
-        let (lo, ex) = (dur(&w, local, lev), dur(&w, express, lev));
-        eprintln!("level {lev}: local {lo:.0} s, express {ex:.0} s (free {:.0} s)", w.svc.lines[express as usize].runs[0].free.duration);
-        assert!((ex - lo).abs() < 120.0, "level {lev}: the express takes the local's time: {ex} against {lo}");
+        eprintln!("level {lev}: local {:.0} s, express {:.0} s (free {:.0} s, gain {gain:.0} s)", dur(&w, local, lev), dur(&w, express, lev), free(&w, express));
     }
-    assert!((dur(&w, express, 2) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0, "no local at low");
+    let lost = dur(&w, express, 0) - free(&w, express);
+    assert!(lost > gain - 900.0 && lost < gain - 600.0, "a local every 15 minutes: the express loses its gain less the gap: {lost:.0} of {gain:.0} s");
+    assert!(dur(&w, express, 1) - free(&w, express) < 60.0, "a local an hour: the express gets through");
+    assert!((dur(&w, express, 2) - free(&w, express)).abs() < 1.0, "no local at low");
     // T-2018: it runs the whole way at a lowered speed, never standing between its two stops
     for r in 0..2 {
         never_stands_between_stops(&w.svc.lines[express as usize].runs[r], 0);
     }
-    // its departures right behind the local's (T-1965 spacing): within a few minutes after one
+    // its departures a little before a local's
     let deps = |l: u32| {
         let mut out = vec![];
         let t0 = 86400.0 + 8.0 * 3600.0;
@@ -676,8 +694,41 @@ fn express_locked_behind_local() {
     };
     let (dl, dx) = (deps(local), deps(express));
     for x in &dx {
-        let after = dl.iter().map(|l| x - l).filter(|d| *d > 0.0).fold(f64::INFINITY, f64::min);
-        assert!(after < 300.0, "an express leaves {after:.0} s after a local: {dl:?} {dx:?}");
+        let before = dl.iter().map(|l| l - x).filter(|d| *d > 0.0).fold(f64::INFINITY, f64::min);
+        assert!(before < 300.0, "an express leaves {before:.0} s before a local: {dl:?} {dx:?}");
+    }
+}
+
+/// T-2419 (Anita, 2026-11-04: "you should not helpfully be able to put the 7 express and local on the
+/// double same track in nyc"): an express and a local on one double track, 16 km with a station every
+/// 800 m, the express at every fourth, both every 3 minutes (high) and every 4 (medium), no passing
+/// tracks: the express loses most of what it would gain, and the track is as full as two lines
+/// sharing it make it.
+#[test]
+fn seven_express_and_local_on_one_double_track() {
+    use super::super::tests::{edge, line, node, station, world};
+    let mut w = world();
+    let n: Vec<u32> = (0..=20).map(|k| node(&mut w, k as f64 * 800.0, 0.0, 0)).collect();
+    for k in 0..20 { edge(&mut w, n[k], n[k + 1], &[], 0).unwrap(); }
+    for &x in &n { station(&mut w, x, 200); }
+    let local = line(&mut w, &n, [20.0, 15.0, 0.0]);
+    let stops: Vec<u32> = n.iter().step_by(4).copied().collect();
+    let express = line(&mut w, &stops, [20.0, 15.0, 0.0]);
+    same_as_global(&w, "the 7");
+    let run = |l: u32| &w.svc.lines[l as usize].runs[0];
+    let gain = run(local).free.duration - run(express).free.duration;
+    let rho = |lev: usize| (0..w.svc.cap.res.len()).filter(|&r| w.svc.cap.res[r].kind == ResKind::Section).map(|r| w.svc.cap.rho[r][lev]).fold(0.0, f64::max);
+    for lev in 0..2 {
+        let lost = run(express).prof[lev].duration - run(express).free.duration;
+        let cap = &w.svc.cap;
+        let behind = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 11 && cap.users_of(r).iter().any(|u| u.owner && u.line == express && u.run == 0)).map(|r| cap.delay[r][lev]).fold(0.0, f64::max);
+        eprintln!(
+            "level {lev}: local {:.0} s ({:.0} free), express {:.0} s ({:.0} free), gain {gain:.0} s, lost {lost:.0} s of which behind the local {behind:.0} s; trains an hour {:?} {:?}; fullest track {:.0}%",
+            run(local).prof[lev].duration, run(local).free.duration, run(express).prof[lev].duration, run(express).free.duration,
+            w.net.line_tph[local as usize][lev], w.net.line_tph[express as usize][lev], 100.0 * rho(lev)
+        );
+        assert!(behind > 0.75 * gain, "level {lev}: the express keeps under a quarter of its gain: behind the local {behind:.0} of {gain:.0} s");
+        assert!(rho(lev) > 0.8, "level {lev}: the shared track is busy: {:.2}", rho(lev));
     }
 }
 
@@ -703,6 +754,7 @@ fn high_speed_behind_ordinary_trains() {
     eprintln!("high speed {:.0} s (free {:.0} s), ordinary {:.0} s", run.prof[0].duration, run.free.duration, slow_run.prof[0].duration);
     assert!(run.free.duration < slow_run.free.duration - 500.0);
     assert!(run.prof[0].duration > run.free.duration + 300.0, "it is held behind the ordinary trains");
-    // with the same two ends it never gets away from them (T-1965): their time
-    assert!((run.prof[0].duration - slow_run.prof[0].duration).abs() < 120.0);
+    // timetabled just ahead of an ordinary train every 7.5 minutes (T-2419), it catches the one ahead
+    // and keeps only the gap of what it would gain
+    assert!(run.prof[0].duration < slow_run.prof[0].duration - 60.0, "it keeps some of its gain");
 }

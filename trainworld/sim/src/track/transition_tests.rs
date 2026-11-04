@@ -199,6 +199,19 @@ fn a_change_on_shared_track_moves_no_other_train() {
 }
 
 #[test]
+fn a_change_to_a_slower_line_moves_no_train_behind_it() {
+    // T-2419: an express timetabled with the local it follows moves with the local's count
+    let (mut w, ns) = corridor(7);
+    let local = line(&mut w, &ns, [8.0, 6.0, 3.0]);
+    let express = line(&mut w, &[ns[0], ns[6]], [8.0, 6.0, 3.0]);
+    counts(&mut w, local, [4, 4, 4]);
+    counts(&mut w, express, [3, 3, 3]);
+    edit_at(&mut w, MIDDAY, "local, more", |w| counts(w, local, [7, 4, 4]));
+    edit_at(&mut w, MIDDAY + 3.0 * 3600.0, "local, fewer", |w| counts(w, local, [2, 4, 4]));
+    edit_at(&mut w, MIDDAY + 6.0 * 3600.0, "express, more", |w| counts(w, express, [5, 3, 3]));
+}
+
+#[test]
 fn a_change_on_full_track_moves_no_train() {
     // two lines filling their shared track: one's fleet makes or takes the other's room (T-517)
     let (mut w, ns) = corridor(5);

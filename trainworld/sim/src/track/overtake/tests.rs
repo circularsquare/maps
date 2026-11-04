@@ -70,9 +70,12 @@ fn passing_tracks_let_the_express_by() {
     let (mut w, n, local, express) = shinkansen();
     let free = |l: u32| w.svc.lines[l as usize].runs[0].free.duration / 60.0;
     eprintln!("free: local {:.1} min, express {:.1} min", free(local), free(express));
-    for lev in 0..2 {
+    // without them, timetabled just ahead of a local (T-2419): every 10 minutes each it still catches
+    // the local ahead and loses most of its 10.7 minute gain; with locals every 30 most trips get
+    // through first
+    for (lev, most) in [(0, 8.0), (1, 2.0)] {
         eprintln!("level {lev} without: local +{:.1?} express +{:.1?}", over(&w, local, lev), over(&w, express, lev));
-        assert!(over(&w, express, lev).iter().all(|&m| m > 8.0), "without passing tracks the express trails the local");
+        assert!(over(&w, express, lev).iter().all(|&m| m > most), "level {lev}: without passing tracks the express trails the local");
     }
     set_passing(&mut w, &n[1..6], true);
     same_as_global(&w, "passing B to F");
@@ -121,7 +124,7 @@ fn passing_tracks_let_the_express_by() {
     let with = over(&w, express, 0);
     set_passing(&mut w, &n[1..6], false);
     same_as_global(&w, "passing removed");
-    assert!(over(&w, express, 0).iter().all(|&m| m > 8.0));
+    assert!(over(&w, express, 0).iter().all(|&m| m > 8.0) && over(&w, express, 0) != with);
     assert!(!(0..w.svc.cap.res.len()).any(|r| w.svc.cap.wire_kind(r) == 13));
     w.undo().unwrap().unwrap();
     same_as_global(&w, "passing undone");

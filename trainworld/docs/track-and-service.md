@@ -562,18 +562,25 @@ slower one stops at a station with passing tracks inside the stretch (below). A 
 lines take one after the other (same edge, same direction), cut where either turns back or they part.
 Quad track is two edges, so lines on its two pairs share nothing and an express on its own pair keeps
 its speed. Over the stretch the slower line takes `D` longer than the faster one from their free
-profiles (leaving the entry; the faster one reaching the exit, the slower one leaving it), with
-headway `H` and the spacing a train behind it keeps `s` (the section occupancy above at its top speed
-there). The faster train meets the slower ones at a random place in their headway, so its loss on
-average is `D - (H - s)/2` when `D >= H - s` (it always catches up and ends at the slower line's time
-less a minute or two), else `D² / 2(H - s)` (some trips get through first). Slower lines are taken
-together from the slowest: for each, the loss behind those at least as slow with their trains
-summed; the largest counts (`capacity::follow_loss`). **Locked behind** (T-1965): where the two
-runs are the same path end to end (both turn at the faster line's two ends) and the slower one
-reaches the end at least 30 s later (`FOLLOW_LOCK_MIN_S`), order on the line never changes, so every
-faster train ends up behind a slower one: its loss is the whole difference, start to arrival
-(`FOLLOW_LOCKED`), at any headway. An express copied from a local takes the local's time. A high-speed train behind ordinary trains on
-high-speed track counts the same way. Stretches of one direction with different slower lines that
+profiles (leaving the entry; the faster one reaching the exit, the slower one leaving it, or reaching
+it where either run ends there), with headway `H` and the spacing a train behind it keeps `s` (the
+section occupancy above at its top speed there). **Timetabled together** (T-2419, notes/T-2413.md):
+behind one slower line and no other, the timetable sends each faster train out as late as it can,
+`s` before the next slower train, at the headways the two keep (`overtake::pattern_tph`). That one
+closes the gap `H - 2s` to the slower train ahead before it catches it, so it loses
+`max(0, D + 2s - H)`; where the faster line runs more often, each of a slower headway's faster trains
+leaves a faster headway `h` earlier than the next and loses `h` more, the last one in the headway
+counting by its share so the loss runs smoothly with the rates (`capacity::follow_best`). So a fast
+line catches a slow one only when it gains more than the gap: 180 km of high-speed track with
+ordinary trains at all seven stations every 30 min and high-speed ones at three every 30 min, the
+high-speed train loses 11.7 min of the 36.9 it would gain; every 10 min each, 31.7 min (each besides
+the queue on the shared track, a minute or two). Two lines that
+differ by less than 30 s (`FOLLOW_TIMED_MIN_S`) are one pattern. **Behind several slower lines** on one
+stretch, where no phase suits them all, the faster train meets them at a random place in their
+headway, so its loss on average is `D - (H - s)/2` when `D >= H - s`, else `D² / 2(H - s)`; slower
+lines are taken together from the slowest: for each, the loss behind those at least as slow with
+their trains summed; the largest counts (`capacity::follow_loss`). A high-speed train behind
+ordinary trains on high-speed track counts the same way. Stretches of one direction with different slower lines that
 overlap are one resource (`ResKind::Follow`, wire kind 11, `build_follow`), with no utilisation, so
 no map dot, and it neither fills nor caps track. The loss is a hold like the others, so it is in round
 trips, trains needed, average speed and demand. It is run off as slower running over the whole
@@ -583,15 +590,17 @@ between stops for it. A loss too big even at 0.5 m/s (`FOLLOW_CRAWL_MIN_V`) wait
 stop before the stretch. Drawn, the faster train closes on the one ahead while that one stands at
 its stations and is held behind it by the display guard ([ui-map.md](ui-map.md) "Never through the train ahead"), so
 it trails it. Worked example (20 km, a station every
-km, 10 locals an hour, 6 expresses from end to end, double track, `express_behind_local_takes_about_
-its_time`): the local takes 33.3 min one way, the express 8.4 min free and 31.3 min behind it. With the
-formula alone, the note's 80 km/h figures (16.5 min longer, a local every 6 min, 1m47s spacing) give
-a 14.4 min loss. A line's following losses are built again whenever any edge it runs over is (the
+km, 10 locals an hour, 6 expresses from the second station to the end, double track,
+`express_behind_local_takes_about_its_time`): the local takes 33.4 min one way, the express 8.0 min
+free and 29.5 min behind it. An express and a local on one double track every 3 minutes each, as
+New York's 7 runs (16 km, a station every 800 m, the express at every fourth,
+`seven_express_and_local_on_one_double_track`): the express loses more than all of its 16.7 minute
+gain behind the local, and the track is 142% full. A line's following losses are built again whenever any edge it runs over is (the
 slower line's path and stops change its `D`), and solved again when a line on them is rescheduled.
 
 **Waiting for faster trains** (T-2231, `track/overtake.rs`, notes/T-2228.md 5). Where the slower run
 stops at a station with passing tracks strictly inside the stretch (a passing point), the timetable
-makes it wait there instead, and the stretch is never locked behind. Per demand level, from the two
+makes it wait there instead. Per demand level, from the two
 lines' headways and free profiles, train by train over one cycle of departures (the shortest whole
 number of the slower headway that is a whole number of the faster one, at most 12 of them and 2 hours,
 else 2 hours), after a warm-up. The headways are those the timetable runs to (T-2245,
@@ -611,14 +620,14 @@ hold at that stop (`stop_holds`; `ResKind::Wait`, wire kind 13, `Resource::node`
 faster run and passing point, with no utilisation, so no map dot, and it neither fills nor caps
 track), and the faster line's remaining loss is its following loss (kind 11) for that slower line;
 behind several slower lines the largest loss counts, as above. The departures placement (6.3) puts
-the faster line's trains at that offset behind the slower one's, as it places a locked pair; the two
+the faster line's trains at that offset behind the slower one's; the two
 directions each take their own best offset, so where one phase cannot give both, the figures can be
 better than what the drawn trains do. When the headways are multiples of each other every slower trip
-waits at the same stations. Stretches with no passing point are worked out as above, to the bit.
+waits at the same stations.
 Worked example (180 km of high-speed track, stations every 30 km, high-speed locals at all seven and
 expresses at three, passing tracks at the five between, `passing_tracks_let_the_express_by`): free,
-49.3 and 38.6 min one way; every 10 minutes each, the express loses 8 s to overtakes (it trails the
-local by 11 min without them) and the local waits 117 s and 277 s at two stations, 7.7 min more in
+49.3 and 38.6 min one way; every 10 minutes each, the express loses 8 s to overtakes (9.3 min
+behind the local without them; 3 min with locals every 30) and the local waits 117 s and 277 s at two stations, 7.7 min more in
 all; locals every 30 minutes, the express loses nothing and the local 7.1 min. Both still pay the
 queue on track two lines share (about a minute at 12 trains an hour). The same with both lines
 keeping a 10 minute headway (`passing_tracks_on_headway_lines`): the same waits, 12 locals and 9
@@ -830,11 +839,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
   as they can (`spacing::place`: per train of an hour, how far it falls short of half the smaller
   headway from the other line's nearest there, squared, summed; 24 phases tried a headway). A pair
-locked behind (6.2) is placed the other way (T-1965): each of the faster line's trains as near as
-it can be to the spacing `s` behind one of the slower line's, so it is drawn following it rather
-than catching it up midway (the share of half the smaller headway it is off, squared). A pair that
-passes at passing stations (6.2, T-2231) is placed the same way, at its overtake plan's offset
-instead of `s`. Greedy on
+timetabled together (6.2, "Behind slower trains", T-2419) is placed the other way: each of the
+faster line's trains as near as it can be to its place after one of the slower line's (the share of
+half the smaller headway it is off, squared): `s` before the next slower train, or for a pair that
+passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   edits: only the lines an edit changes directly are placed, in id order, against the others as they
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
