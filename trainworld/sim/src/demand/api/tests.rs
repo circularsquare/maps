@@ -163,7 +163,7 @@ fn searching_only_the_egress_stations_changes_nothing() {
     api.crowd(0);
     let st = api.per[0].as_ref().unwrap();
     clear_skim_cache();
-    let (rail, rail_walk, l, pairs, sub, _) = api.pass(&st.g, &st.p, 0, None);
+    let (rail, rail_walk, l, pairs, sub, _, _) = api.pass(&st.g, &st.p, 0, None);
     // the reference: every station searched, nothing cached
     let sz = api.sz.as_ref().unwrap();
     let sk = kernel::skims(&st.g, &st.p);
@@ -1588,5 +1588,77 @@ fn t2278_car_shares_by_income() {
         let (f0, c0, e0, _, _) = shares(&as_us);
         let all = |c: f64, e: f64| (c * ct + e * et) / (ct + et);
         println!("{id} {country}: factor {f1:.3} (as US {f0:.3}); car share of commutes {:.2}% -> {:.2}%, everyday {:.2}% -> {:.2}%, all {:.2}% -> {:.2}%", 100.0 * c0, 100.0 * c1, 100.0 * e0, 100.0 * e1, 100.0 * all(c0, e0), 100.0 * all(c1, e1));
+    }
+}
+
+/// T-2365: the commutes by length add up to the periods' summaries, block by block, on any kind
+/// of day, through crowding rounds, the capacity cap and an estimated period.
+#[test]
+fn trip_lengths_add_up_to_the_summary() {
+    use crate::demand::days::{AVERAGE, SATURDAY};
+    use crate::demand::lengths::N_LEN;
+    let (mut api, xy, n, stops, times, mut tph, mut cars) = small();
+    tph[3] = 3.0;
+    cars[1] = 12.0;
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    for q in 0..PERIODS - 1 {
+        assert!(api.solve(q));
+    }
+    for _ in 0..2 {
+        assert!(api.crowd(0));
+    }
+    let total = [api.seg(0), api.board(0), api.alight(0)].concat();
+    assert!(api.cap_with_external(0, &total));
+    assert!(api.estimate(1, PERIODS - 1));
+    for day in [WEEKDAY, SATURDAY, AVERAGE] {
+        let v = api.trip_lengths_day(day as u32, 0b11111);
+        let block = |b: usize| v[b * N_LEN..(b + 1) * N_LEN].iter().sum::<f64>();
+        let mut want = [0f64; 4];
+        for q in 0..PERIODS {
+            let s = api.summary(q);
+            let f = load_factor(day, WORK, q) as f64;
+            for (k, i) in [1, 2, 3, 13].into_iter().enumerate() {
+                want[k] += f * s[i];
+            }
+        }
+        for k in 0..4 {
+            assert!((block(k) - want[k]).abs() <= 1e-6 * want[0], "day {day} block {k}: {} vs {}", block(k), want[k]);
+        }
+        assert!(want[1] > 0.0 && want[2] > 0.0);
+        // every bin's driving is at least 0, and the km are the trips' times their bins' lengths
+        for b in 0..N_LEN {
+            let drive = v[b] - v[N_LEN + b] - v[2 * N_LEN + b] - v[3 * N_LEN + b];
+            assert!(drive >= -1e-6 * v[b].max(1.0), "day {day} bin {b}: {drive}");
+        }
+        let km = block(4) / block(0);
+        assert!(km > 1.0 && km < 30.0, "mean trip {km} km");
+    }
+    // only the periods asked for
+    let one = api.trip_lengths_day(WEEKDAY as u32, 1);
+    let t: f64 = one[..N_LEN].iter().sum();
+    assert!((t - api.summary(0)[1]).abs() < 1e-6 * t);
+}
+
+/// T-2365: a real pack's commutes by length against its gravity: the zone pairs' sum before
+/// scaling and the mean trip length (`Gravity::mean_km`), and how long the table takes.
+///   T2365_PACKS=nyc,lon cargo test --release --features demand --lib t2365 -- --ignored --nocapture
+#[test]
+#[ignore]
+fn t2365_commute_lengths_of_real_packs() {
+    use crate::demand::lengths::N_LEN;
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let ids = std::env::var("T2365_PACKS").unwrap_or_else(|_| "nyc,lon".into());
+    for id in ids.split(',') {
+        let (h, b) = pack::load_raw(&format!("{root}/data/packs/{id}.json")).unwrap();
+        let a = DemandApi::new(&h, &b).unwrap();
+        let t0 = now_ms();
+        let raw = a.len_base_raw();
+        let ms = now_ms() - t0;
+        let t: f64 = raw.trips[..N_LEN].iter().sum();
+        let km: f64 = raw.trips[N_LEN..].iter().sum();
+        let w: f64 = raw.walk[..N_LEN].iter().sum();
+        let band = |lo: f32, hi: f32| (0..N_LEN).filter(|&k| { let a = if k == 0 { 0.0 } else { crate::demand::lengths::LEN_EDGES_KM[k - 1] }; a >= lo && a < hi }).map(|k| raw.trips[k]).sum::<f64>() / t;
+        println!("{id}: {} zones, {ms:.0} ms; trips {t:.0} vs gravity {:.0} ({:+.2e}); mean {:.2} km vs gravity {:.2}; walking {w:.0} vs {:.0}; shares under 1 km {:.3}, 1-2 {:.3}, 2-5 {:.3}, 5-10 {:.3}, 10-20 {:.3}, 20+ {:.3}",
+            a.z.n, a.gr.total, t / a.gr.total - 1.0, km / t, a.gr.mean_km, a.walk_all, band(0.0, 1.0), band(1.0, 2.0), band(2.0, 5.0), band(5.0, 10.0), band(10.0, 20.0), band(20.0, 1e9));
     }
 }

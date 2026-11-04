@@ -6,6 +6,7 @@ use super::{
     clock::now_ms,
     days::{day_rate, everyday, load_factor, share_out, share_ret, SATURDAY, SUNDAY, WEEKDAY},
     kernel::*,
+    lengths::{add_in, len_bin, scale_to, N_LEN},
     network::PERIODS,
     pack,
     trip::NEAR_CELL_M,
@@ -986,6 +987,8 @@ pub struct EverydayApi {
     wpark: Vec<(f32, f32, f32)>,
     /// trip kilometres by purpose, for `info` (summed once at opening, T-172)
     km: Vec<f64>,
+    /// T-2365: `totals`, `walks` and `unrs` by length (`lengths::LenSums` each), purpose by purpose.
+    lens: Vec<f64>,
     /// Optional enrollment budgets: school generation samples homes FROM each activity site.
     school_enrollment: Vec<f32>,
     university_enrollment: Vec<f32>,
@@ -1123,6 +1126,12 @@ impl EverydayApi {
                 self.unrs[kind] += w as f64;
             }
             self.km[kind] += distance as f64 * w as f64 / 1000.0;
+            let (km, o) = (distance / 1000.0, kind * 6 * N_LEN);
+            add_in(km, w as f64, &mut self.lens[o..o + 2 * N_LEN]);
+            add_in(km, (w * walk) as f64, &mut self.lens[o + 2 * N_LEN..o + 4 * N_LEN]);
+            if self.apart(c, d) {
+                add_in(km, w as f64, &mut self.lens[o + 4 * N_LEN..o + 6 * N_LEN]);
+            }
         }
     }
     /// T-2214: cells c and d are on two land parts.
@@ -1911,6 +1920,7 @@ impl EverydayApi {
             walks: vec![0.0; kinds],
             unrs: vec![0.0; kinds],
             km: vec![0.0; kinds],
+            lens: vec![0.0; kinds * 6 * N_LEN],
             school_enrollment: school_enrollment.unwrap_or_default(),
             university_enrollment: university_enrollment.unwrap_or_default(),
             airport_origin,
@@ -2456,6 +2466,57 @@ impl EverydayApi {
             let pr = st.probability[i];
             out[3 * pair.kind() as usize + 1] += pair.trips as f64
                 * (OUTWARD[pair.kind() as usize][q] as f64 * pr[0] as f64 + RETURN[pair.kind() as usize][q] as f64 * pr[1] as f64);
+        }
+        out
+    }
+    /// T-2365: as `DemandApi::trip_lengths_day`, every purpose by its own load factor. A sample
+    /// counts at its own distance; the rail of a subzone pair at the pair's mean distance, and the
+    /// walkers it takes (and the trips between land parts) there too, scaled to the period's.
+    pub fn trip_lengths_day(&self, day: u32, mask: u32) -> Vec<f64> {
+        let nk = self.totals.len();
+        let n2 = 2 * N_LEN;
+        let mut out = vec![0f64; 8 * N_LEN];
+        let sz = self.engine.sz.as_ref();
+        let parted = sz.is_some_and(|s| !s.part.is_empty());
+        let (mut wl, mut ul) = (vec![0f64; nk * n2], vec![0f64; nk * n2]);
+        for q in 0..PERIODS {
+            if mask >> q & 1 == 0 {
+                continue;
+            }
+            let Some(st) = self.per.get(q).and_then(|v| v.as_ref()) else { continue };
+            let f: Vec<f64> = (0..nk).map(|k| load_factor(day as usize, everyday(k), q) as f64).collect();
+            wl.fill(0.0);
+            ul.fill(0.0);
+            for (i, pair) in self.pairs.iter().enumerate() {
+                let pr = st.probability[i];
+                let k = pair.kind() as usize;
+                let r = pair.trips as f64 * (OUTWARD[k][q] as f64 * pr[0] as f64 + RETURN[k][q] as f64 * pr[1] as f64);
+                if !(r > 0.0) {
+                    continue;
+                }
+                let km = pair.distance / 1000.0;
+                let b = len_bin(km);
+                out[N_LEN + b] += f[k] * r;
+                out[5 * N_LEN + b] += f[k] * r * km as f64;
+                add_in(km, r * pair.walk as f64, &mut wl[k * n2..(k + 1) * n2]);
+                if parted && sz.unwrap().apart(pair.u() as usize, pair.v as usize) {
+                    add_in(km, r, &mut ul[k * n2..(k + 1) * n2]);
+                }
+            }
+            for k in 0..nk {
+                scale_to(&mut wl[k * n2..(k + 1) * n2], st.walk_lost[k]);
+                scale_to(&mut ul[k * n2..(k + 1) * n2], st.unr_lost.get(k).copied().unwrap_or(0.0));
+                let lead = if st.part.0 == 0 { (OUTWARD[k][q] + RETURN[k][q]) as f64 } else { 0.0 };
+                let o = k * 6 * N_LEN;
+                for x in 0..2 {
+                    for b in 0..N_LEN {
+                        let i = x * N_LEN + b;
+                        out[4 * x * N_LEN + b] += f[k] * lead * self.lens[o + i];
+                        out[(4 * x + 2) * N_LEN + b] += f[k] * (lead * self.lens[o + n2 + i] - wl[k * n2 + i]);
+                        out[(4 * x + 3) * N_LEN + b] += f[k] * (lead * self.lens[o + 2 * n2 + i] - ul[k * n2 + i]);
+                    }
+                }
+            }
         }
         out
     }

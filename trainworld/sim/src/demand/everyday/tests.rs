@@ -1154,3 +1154,36 @@ fn ferry_fans_real_cost() {
         println!("ferry lines {}: five periods, free flow and a round, {ms:.0} ms; rail {rail:.0}", flags.iter().filter(|&&f| f == 1).count());
     }
 }
+/// T-2365: the outings by length add up to the periods' summaries, block by block.
+#[test]
+fn trip_lengths_add_up_to_the_summary() {
+    use crate::demand::days::AVERAGE;
+    let (h, b) = fixture(4000.0);
+    let mut a = EverydayApi::new(&h, &b).unwrap();
+    network(&mut a, 4000.0, [12.0; 3]);
+    for q in 0..5 {
+        assert!(a.solve(q));
+    }
+    let shared: Vec<_> = a.seg(0).iter().map(|v| v * 100.0).collect();
+    assert!(a.crowd_with_external(0, &shared));
+    for day in [WEEKDAY, SATURDAY, AVERAGE] {
+        let v = a.trip_lengths_day(day as u32, 0b11111);
+        let block = |k: usize| v[k * N_LEN..(k + 1) * N_LEN].iter().sum::<f64>();
+        let mut want = [0f64; 4];
+        for q in 0..5 {
+            let kt = a.kind_totals(q);
+            for k in 0..kt.len() / 3 {
+                let f = load_factor(day, everyday(k), q) as f64;
+                for m in 0..3 {
+                    want[m] += f * kt[3 * k + m];
+                }
+            }
+        }
+        for k in 0..3 {
+            assert!((block(k) - want[k]).abs() <= 1e-6 * want[0].max(1.0), "day {day} block {k}: {} vs {}", block(k), want[k]);
+        }
+        assert!(want[1] > 0.0, "no rail");
+        // the trips are 4 km long
+        assert!((block(4) / block(0) - 4.0).abs() < 1e-3);
+    }
+}

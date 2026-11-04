@@ -82,6 +82,7 @@ import type { BareFigures, DemandNetwork, FromDemand, Heap, OpenRejected, ToDema
 import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
 import { primeDealt } from "../game/farChunks";
 import { driveLevels, type DriveInput, type DriveLevel, type DriveSquares } from "../game/drives";
+import { tripLengthsOf, type TripLengths } from "../game/tripLengths";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
@@ -206,7 +207,7 @@ interface Service {
 
 /** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
 type Result = Extract<FromDemand, { kind: "result" }> & { corridorDay?: [number, number] };
-type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "icTrip" | "bare" | "bareFlows" | "bareSquares" | "driveRail" | "driveBase";
+type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "icTrip" | "bare" | "bareFlows" | "bareSquares" | "driveRail" | "driveBase" | "tripLengths";
 type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
 type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
@@ -2475,7 +2476,7 @@ class DemandClient {
 
   /** A question's answer (from either pool): true if `msg` is one. */
   private reply(i: number, msg: FromDemand): msg is Reply {
-    if (!(msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares" || msg.kind === "driveRail" || msg.kind === "driveBase")) return false;
+    if (!(msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares" || msg.kind === "driveRail" || msg.kind === "driveBase" || msg.kind === "tripLengths")) return false;
     const w = this.pendingQueries.get(msg.id);
     if (!w) return true;
     const t = msg as { qStart?: number; qMs?: number };
@@ -3261,6 +3262,42 @@ class DemandClient {
     return p;
   }
   private drivesP: { key: string; p: Promise<DriveLevel[] | null> } | null = null;
+
+  /** T-2365: a zone's trips a day by length on the day shown (game/tripLengths.ts), from every
+   * solving worker's periods, or for a zone open bare the aux worker's; cached per zone, solve,
+   * round and day; null while not known. */
+  tripLengths(zone?: CityId): Promise<TripLengths | null> {
+    this.syncFocus();
+    const dv = demandView.peek();
+    if (!dv) return Promise.resolve(null);
+    const city = zone ?? activeCity.peek(), day = shownDay.peek(), { version, round } = dv;
+    const src = this.cityVersion.get(city); // T-392, as in cellModes
+    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
+    const key = `${city}:${version}:${round}:${day}:${src ?? ""}`;
+    const had = this.lengthsP.get(key);
+    if (had) return had;
+    const p = (async (): Promise<TripLengths | null> => {
+      const bare = this.isBare(city);
+      const replies = bare
+        ? await this.ask((id) => ({ kind: "tripLengths", id, version: 0, bare: true }), [this.computeN], [], city)
+        : byMask(await this.ask((id) => ({ kind: "tripLengths", id, version: at.version }), undefined, [], city, at));
+      let mask = 0, sum: Float64Array | null = null, edges: Float32Array | null = null;
+      for (const r of replies) {
+        if (r?.kind !== "tripLengths" || !r.commute) return null;
+        mask |= r.mask;
+        edges = r.edges;
+        sum ??= new Float64Array(r.commute.length);
+        for (const v of [r.commute, r.everyday]) if (v?.length === sum.length) for (let k = 0; k < v.length; k++) sum[k] += v[k];
+      }
+      if (mask !== ALL_PERIODS || !sum || !edges || shownDay.peek() !== day) return null;
+      return tripLengthsOf(version, day, edges, sum);
+    })();
+    this.lengthsP.set(key, p);
+    if (this.lengthsP.size > 8) this.lengthsP.delete(this.lengthsP.keys().next().value!);
+    p.then((v) => { if (!v && this.lengthsP.get(key) === p) this.lengthsP.delete(key); });
+    return p;
+  }
+  private lengthsP = new Map<string, Promise<TripLengths | null>>();
   /** T-1435: the squares and the tables with no rail, from `driveTable`. */
   private async driveBase(city: CityId, day: DemandDay): Promise<Omit<DriveInput, "commuteRail" | "everydayRail"> | null> {
     const [c, e] = await Promise.all([this.driveTable(city, day, 0), this.driveTable(city, day, 1)]);
@@ -4082,7 +4119,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members), drives: () => c.driveArcs() });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;
 }
 

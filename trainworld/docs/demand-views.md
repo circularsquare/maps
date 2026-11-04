@@ -113,3 +113,17 @@ to): exact in total, blurred per pair; a pair's car legs are its car legs with n
 times their share of its legs. The client (`driveArcs`) asks for the first part once per zone and
 day and for the second with each demand result, and the sums worker makes the view's groupings
 (`game/drives.ts`). Display only: demand is untouched.
+
+**Trips by length** (T-2365, for the city view's trip-length graph; `sim/src/demand/lengths.rs`).
+`trip_lengths_day(day, mask)` on the commutes and on the everyday layer: a zone's trips over the
+periods in `mask`, each purpose by the day's load factor, in 58 bins of straight-line length
+(`trip_length_edges`: 0.25 km steps to 3 km, 0.5 km to 10, 1 km to 20, 2.5 km to 50, then wider to
+300 km and over), as trips, rail, walking and no route, then the km of each; driving is trips less
+the rest. Each block adds up to the periods' summaries, so the bins of all workers add up to the
+zone's split. The commutes are counted between zones: each zone pair's trips are spread over the
+distances between points spread evenly over its two squares (out to 24 km, then at the centres'
+distance), the zone's own pair keeping its 0.52 of a side; their trips, walking with no rail and
+no route are summed once per zone on the first ask, the rail in each pass (`ModeOut::len`).
+Everyday outings take each sample's own distance, their rail its subzone pair's mean distance. The
+client's `tripLengths(zone?)` adds every solving worker's answer (a zone open bare: the aux
+worker's), cached per zone, solve, round and day (`game/tripLengths.ts`).

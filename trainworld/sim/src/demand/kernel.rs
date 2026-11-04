@@ -1266,6 +1266,19 @@ impl Gravity {
         };
         if dx == 0.0 && dy == 0.0 { 0.52 * self.zk * own } else { self.zk * (dx * dx + dy * dy).sqrt() }
     }
+    /// T-2365: table index `k`'s pair as `dist_km` reads it: the centres' offset in half squares,
+    /// and the two zones' sides in squares (2 for a block).
+    pub fn half_offset(&self, k: usize) -> (i32, i32, i32, i32) {
+        let (r, y) = (k as i32 / self.th - self.offx, k as i32 % self.th);
+        let h = self.kb / 2;
+        if self.kb == 0 || y < 2 * h - 1 {
+            (2 * r, 2 * (y - self.offy), 1, 1)
+        } else if y < 4 * h - 1 {
+            (2 * r + 1, 2 * (y - 3 * h + 1) + 1, 1, 2)
+        } else {
+            (2 * (r + 1), 2 * (y - 5 * h + 2), 2, 2)
+        }
+    }
     /// The cost of walking the whole way between zone centres at table index `k`
     /// (`Params::walk_trip_cost`; `NO_WALK` before `set_walk`).
     #[inline]
@@ -4549,6 +4562,9 @@ pub struct ModeOut {
     /// station from that subzone; at the work end, leaving the train there for that subzone.
     pub acc_home: Vec<f32>,
     pub acc_work: Vec<f32>,
+    /// T-2365: `rail`, `rail_walk` and `rail_unr` by trip length, each zone pair's spread as its
+    /// trips are (`lengths::LenKernel`).
+    pub len: super::lengths::LenOut,
 }
 
 /// Rail, the car and walking the whole way (T-558; the zone pair's walk) in one logit per
@@ -4706,6 +4722,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
         unr_lost_to_sub: if parted { vec![0.0; sz.n] } else { vec![] },
         acc_home: vec![0.0; sz.acc_st.len()],
         acc_work: vec![0.0; sz.acc_st.len()],
+        len: super::lengths::LenOut::zero(),
     };
     let ozones: Vec<usize> = (0..z.n).filter(|&i| sz.zo_off[i + 1] > sz.zo_off[i]).collect();
     // Destination zones by their cheapest walk (their first subzone: `build_subzones` sorts
@@ -4825,6 +4842,13 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     let mut visit: Vec<[f32; 4]> = Vec::with_capacity(dz.len());
     let mut visit_w: Vec<f32> = Vec::with_capacity(dz.len());
     let mut visit_b: Vec<u8> = Vec::with_capacity(dz.len());
+    // T-2365: each visit's destination zone, and per destination zone the origin zone's rail
+    // trips, walkers taken and trips between land parts, spread by length once the zone is done
+    let mut visit_k: Vec<u32> = Vec::with_capacity(dz.len());
+    let mut len_z = vec![[0f64; 3]; dz.len()];
+    let mut len_mark = vec![false; dz.len()];
+    let mut len_touched: Vec<u32> = vec![];
+    let lk = super::lengths::len_kernel(z.zone_m);
     for (oi, &i) in ozones.iter().enumerate() {
         if n > 1 && oi as u32 % n != k {
             continue;
@@ -4932,7 +4956,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             let nz = reach(u);
             // the bands this origin's pairs fall in
             let mut used = 0u32;
-            for ((((zj, &[f, cw, df, long]), &w0), &zb), &m) in dz[..nz].iter().zip(&fz).zip(&fzw).zip(&fzb).zip(&fm) {
+            for (zk, ((((zj, &[f, cw, df, long]), &w0), &zb), &m)) in dz[..nz].iter().zip(&fz).zip(&fzw).zip(&fzb).zip(&fm).enumerate() {
                 let by_ride = rides && long > 0.0;
                 let (m_o, wmax) = if by_ride { (m_r, wmax_r) } else { (m_u, wmax) };
                 if zj.min > wmax {
@@ -4954,6 +4978,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let nv = if zj.max <= wmax { zj.q1 - zj.q0 } else { dd[zj.q0 as usize..zj.q1 as usize].partition_point(|d| d[1][2] <= wmax) as u32 };
                 n_pairs += nv as usize;
                 let zv = visit.len() as u32 | (by_ride as u32) << 31;
+                visit_k.push(zk as u32);
                 visit.push([tu, cw, df, m_o]);
                 visit_w.push(w0);
                 visit_b.push(zb);
@@ -5233,14 +5258,22 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     d_sum += xd[l];
                     dk_sum += xd[l] * dk[l];
                     rk_sum += xa[l] * dk[l];
+                    let lz = visit_k[(c[l][1] & 0x7fff_ffff) as usize] as usize;
+                    if !len_mark[lz] {
+                        len_mark[lz] = true;
+                        len_touched.push(lz as u32);
+                    }
                     if cross >> l & 1 != 0 {
                         // it takes trips no way served, never walkers
                         wl[l] = 0.0;
                         unr_sum += xa[l];
                         unr_q[q[l]] += xa[l];
+                        len_z[lz][2] += xa[l] as f64;
                     }
                     walk_sum += wl[l];
                     lost_q[q[l]] += wl[l];
+                    len_z[lz][0] += xa[l] as f64;
+                    len_z[lz][1] += wl[l] as f64;
                     if whole >> l & 1 == 0 {
                         // pads add 0 to their own dummies: the block's one count predicts well
                         for k in 0..kn {
@@ -5271,6 +5304,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             }
             cand.clear();
             visit.clear();
+            visit_k.clear();
             visit_w.clear();
             visit_b.clear();
             out.trips_access += all_sum as f64;
@@ -5327,6 +5361,21 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 }
             }
         }
+        // T-2365: the zone's figures by length, each destination zone's spread as its trips are
+        for &k in &len_touched {
+            let (k, j) = (k as usize, dz[k as usize].zid as usize);
+            let (hdx, hdy, sj) = (dz[k].hx - hxi, dz[k].hy - hyi, z.side(j));
+            let [r, w, u] = std::mem::take(&mut len_z[k]);
+            len_mark[k] = false;
+            lk.add(hdx, hdy, z.side(i), sj, r, &mut out.len.rail);
+            if w != 0.0 {
+                lk.add(hdx, hdy, z.side(i), sj, w, &mut out.len.walk);
+            }
+            if u != 0.0 {
+                lk.add(hdx, hdy, z.side(i), sj, u, &mut out.len.unr);
+            }
+        }
+        len_touched.clear();
     }
     for (q, a) in acc_q.iter().enumerate() {
         for k in 0..eg_n[q] as usize {

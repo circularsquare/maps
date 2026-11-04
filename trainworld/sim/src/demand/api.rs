@@ -19,6 +19,7 @@ use super::clock::now_ms;
 use super::network::Catch;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
+use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
 use super::network::{Network, BUS_CARS, PERIODS};
 use super::pack::{self, City};
@@ -391,6 +392,8 @@ pub(crate) struct Period {
     rail: f64,
     /// T-1300: `ModeOut::sense`, averaged like `rail`
     rail_d: FareSense,
+    /// T-2365: `ModeOut::len`, averaged like `rail`
+    len: LenOut,
     walk: f64,
     /// T-2214: trips no way serves (between two land parts, not by rail), as `walk`.
     unr: f64,
@@ -557,6 +560,16 @@ pub struct DemandApi {
     pub(crate) lod: Lod,
     /// T-1543 (`set_part`): the part of the origins `solve` covers, part k of n; (0, 1) all.
     pub(crate) part: (u32, u32),
+    /// T-2365: the day's commutes by length (`len_base`), worked out on first use.
+    len_base: std::cell::OnceCell<LenBase>,
+}
+
+/// T-2365: a pack's commutes a day by length with no network: all, walking, and between two land
+/// parts (`LenSums` each; `DemandApi::len_base`).
+struct LenBase {
+    trips: LenSums,
+    walk: LenSums,
+    unr: LenSums,
 }
 
 /// Per period: start hour, end hour, demand level (0 high, 1 medium, 2 low), share of trips to
@@ -653,7 +666,7 @@ impl DemandApi {
     /// the crowding factors already set). Returns the rail trips (both directions), the walk
     /// trips rail took, the loads, the pairs, the rail trips by place and (T-1300) the rail trips'
     /// fare sensitivity (`ModeOut::sense`). Adds the transfers into `xfer` when given (T-176).
-    fn pass(&self, g: &Graph, p: &Params, q: usize, xfer: Option<(&XferIndex, &mut [f32])>) -> (f64, f64, Loads, u64, SubOut, FareSense) {
+    fn pass(&self, g: &Graph, p: &Params, q: usize, xfer: Option<(&XferIndex, &mut [f32])>) -> (f64, f64, Loads, u64, SubOut, FareSense, LenOut) {
         let sz = self.sz.as_ref().unwrap();
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l) = with_skims(g, p, &self.want, |sk| {
@@ -690,7 +703,7 @@ impl DemandApi {
             acc_work: mo.acc_work,
             od: self.compact_od(&mo.od, g.n_st),
         };
-        (mo.rail, mo.rail_walk, l, mo.pairs, sub, mo.sense)
+        (mo.rail, mo.rail_walk, l, mo.pairs, sub, mo.sense, mo.len)
     }
 
     /// An S x S station-pair table over `od_st` only (`SubOut::od`).
@@ -716,6 +729,87 @@ impl DemandApi {
 impl DemandApi {
     pub(crate) fn period(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|p| p.as_ref())
+    }
+
+    /// T-2365: the day's commutes by length with no network, each block scaled to its total
+    /// (`gr.total`, `walk_all`, `unr_all`): the zone pairs' sums differ from those by rounding only.
+    fn len_base(&self) -> &LenBase {
+        self.len_base.get_or_init(|| {
+            let mut b = self.len_base_raw();
+            scale_to(&mut b.trips, self.gr.total);
+            scale_to(&mut b.walk, self.walk_all);
+            scale_to(&mut b.unr, self.unr_all);
+            b
+        })
+    }
+
+    /// `len_base` before scaling: every zone pair's trips (`Gravity::t`) spread by length, those
+    /// walking with no rail as `Gravity::no_rail_by_slot` has them, and (T-2214) those between two
+    /// land parts by the pair's slots.
+    fn len_base_raw(&self) -> LenBase {
+        let (z, gr, p) = (&*self.z, &*self.gr, &self.base);
+        let lk = len_kernel(z.zone_m);
+        let (mut trips, mut walk, mut unr) = (len_zero(), len_zero(), len_zero());
+        let pp = p.parts.as_deref();
+        // the share of a pair's trips with both ends on one part
+        let same = |i: usize, j: usize| -> f64 {
+            let Some(pp) = pp else { return 1.0 };
+            if z.pop[i] <= 0.0 || z.jobs[j] <= 0.0 {
+                return 1.0;
+            }
+            let mut s = 0.0;
+            for a in pp.slots(i) {
+                for b in pp.slots(j) {
+                    if pp.s_part[a] == pp.s_part[b] {
+                        s += pp.s_pop[a] / z.pop[i] * pp.s_jobs[b] / z.jobs[j];
+                    }
+                }
+            }
+            s
+        };
+        // the trips by decay table index (one zone offset and pair of sides each), spread once
+        // each after; the walking and the trips between parts pair by pair
+        let mut by_k = vec![0f64; gr.ftab.len()];
+        let cols: Vec<(u32, i32, i32, f64, u8)> = (0..z.n).filter(|&j| gr.col[j] > 0.0).map(|j| (j as u32, gr.key(z, j), z.gx[j], gr.col[j], z.region[j])).collect();
+        let r = (WALK_REACH_KM * 1000.0 / z.zone_m).ceil() as i32 + 2;
+        for i in 0..z.n {
+            if gr.row[i] == 0.0 {
+                continue;
+            }
+            let (base, ri, gxi) = (gr.base(z, i), z.region[i], z.gx[i]);
+            let rb = gr.row[i] * gr.border as f64;
+            for &(j, key, gxj, col, rj) in &cols {
+                let k = (base + key) as usize;
+                let t = (if rj == ri { gr.row[i] } else { rb }) * col * gr.ftab[k] as f64;
+                by_k[k] += t;
+                if (gxj - gxi).abs() > r || !(t > 0.0) {
+                    continue;
+                }
+                let j = j as usize;
+                let near = gr.walk_set && (z.gy[j] - z.gy[i]).abs() <= r && gr.walk_c(k) < NO_WALK;
+                if !near && pp.is_none() {
+                    continue;
+                }
+                let (hdx, hdy, si, sj) = (z.hx(j) - z.hx(i), z.hy(j) - z.hy(i), z.side(i), z.side(j));
+                let one = same(i, j);
+                if one < 1.0 {
+                    lk.add(hdx, hdy, si, sj, t * (1.0 - one), &mut unr);
+                }
+                if near {
+                    let w = self.nr.split(gr, p, i, j, k);
+                    if w > 0.0 {
+                        lk.add(hdx, hdy, si, sj, t * w as f64 * one, &mut walk);
+                    }
+                }
+            }
+        }
+        for (k, &t) in by_k.iter().enumerate() {
+            if t > 0.0 {
+                let (hdx, hdy, si, sj) = gr.half_offset(k);
+                lk.add(hdx, hdy, si, sj, t, &mut trips);
+            }
+        }
+        LenBase { trips, walk, unr }
     }
     /// Rail trips starting at each station (first boarding) in period `q`.
     pub fn entries(&self, q: usize) -> Vec<f32> {
@@ -813,6 +907,7 @@ impl DemandApi {
         self.unr_work = ns.unr_work;
         self.gr = Arc::new(gr);
         self.reusable = false;
+        self.len_base = std::cell::OnceCell::new();
     }
     /// Commutes with no rail between zones within `WALK_FINE_R` squares, by the straight-line
     /// distance of six cell pairs a zone pair (`walk_points`; bands `WALK_BANDS_KM`, then beyond):
@@ -901,6 +996,7 @@ impl DemandApi {
             reusable: false,
             lod: self.lod,
             part: (0, 1),
+            len_base: std::cell::OnceCell::new(),
         }
     }
     /// The home weights access and subzones are built on (`with_weights`).
@@ -1006,7 +1102,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1) })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1285,15 +1381,15 @@ impl DemandApi {
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
         let mut xfer = vec![0.0; xi.len];
-        let (rail, rail_walk, avg, pairs, sub, rail_d) = if self.sz.is_some() {
+        let (rail, rail_walk, avg, pairs, sub, rail_d, len) = if self.sz.is_some() {
             self.pass(&g, &p, q, Some((&xi, &mut xfer)))
         } else {
-            (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty(), FareSense::default())
+            (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty(), FareSense::default(), LenOut::zero())
         };
         let walk0 = if self.part.0 == 0 { walk0 } else { 0.0 };
         let unr0 = if self.part.0 == 0 { self.unr_all * p.period_share as f64 } else { 0.0 };
         let unr = unr0 - sub.unr_rail();
-        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer, part: self.part });
+        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, len, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer, part: self.part });
         true
     }
 
@@ -1322,7 +1418,9 @@ impl DemandApi {
         let xfer = if xi.len == src.xi.len { src.xfer.iter().map(|x| x * k as f32).collect() } else { vec![0.0; xi.len] };
         let mut rail_d = src.rail_d.clone();
         rail_d.scale(k);
-        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, walk: src.walk * k, unr: src.unr * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer, part: src.part };
+        let mut len = src.len.clone();
+        len.scale(k, k, k);
+        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, len, walk: src.walk * k, unr: src.unr * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer, part: src.part };
         self.per[to] = Some(est);
         true
     }
@@ -1373,7 +1471,7 @@ impl DemandApi {
             st.uniform = false;
             st.fac = fac;
             let mut xfer = vec![0.0; st.xi.len];
-            let (rail, rail_walk, l, _, sub, rail_d) = self.pass(&st.g, &st.p, q, Some((&st.xi, &mut xfer)));
+            let (rail, rail_walk, l, _, sub, rail_d, len) = self.pass(&st.g, &st.p, q, Some((&st.xi, &mut xfer)));
             st.round += 1;
             let r = st.round;
             msa(&mut st.xfer, &xfer, r);
@@ -1389,6 +1487,7 @@ impl DemandApi {
             let w = 1.0 / (r as f64 + 1.0);
             st.rail += (rail - st.rail) * w;
             st.rail_d.toward(rail_d, w);
+            st.len.toward(&len, w);
             let walk = self.walk_all * st.p.period_share as f64 - rail_walk;
             st.walk += (walk - st.walk) * w;
             if !self.unr_home.is_empty() {
@@ -1472,10 +1571,15 @@ impl DemandApi {
         st.rail *= all as f64;
         st.rail_d.scale(all as f64);
         let rail_walk = self.walk_all * st.p.period_share as f64 - st.walk;
-        st.walk += rail_walk * (1.0 - if lost0 > 0.0 { lost1 / lost0 } else { all as f64 });
+        let kw = if lost0 > 0.0 { lost1 / lost0 } else { all as f64 };
+        st.walk += rail_walk * (1.0 - kw);
+        // T-2365: the bins follow, the trips between land parts by what their subzones kept
+        let unr_before: f64 = st.len.unr[..N_LEN].iter().sum();
         if !self.unr_home.is_empty() {
             st.unr = self.unr_all * st.p.period_share as f64 - st.sub.unr_rail();
         }
+        let ku = if unr_before > 0.0 { st.sub.unr_rail() / unr_before } else { all as f64 };
+        st.len.scale(all as f64, kw, ku);
         true
     }
 
@@ -1681,6 +1785,34 @@ impl DemandApi {
     pub fn cell_modes_day(&self, sums: &[f32], day: u32) -> Vec<f32> {
         let mut out = self.modes_cells(sums, day);
         out.truncate(6 * self.city.len());
+        out
+    }
+
+    /// T-2365: the commutes a day on `day` by straight-line length, over this worker's solved
+    /// periods in `mask` (bit q = period q): eight blocks of one value per bin
+    /// (`lengths::trip_length_edges`): trips, rail, walking, no way (T-2214), then the km of each.
+    /// Driving is the trips less the other three. Each block adds up to the periods' `summary` as
+    /// the day weighs it (`days::load_factor`).
+    pub fn trip_lengths_day(&self, day: u32, mask: u32) -> Vec<f64> {
+        let b = self.len_base();
+        let mut out = vec![0f64; 8 * N_LEN];
+        for q in 0..PERIODS {
+            if mask >> q & 1 == 0 {
+                continue;
+            }
+            let Some(st) = self.period(q) else { continue };
+            let f = load_factor(day as usize, WORK, q) as f64;
+            let lead = if st.part.0 == 0 { st.p.period_share as f64 } else { 0.0 };
+            for x in 0..2 {
+                for k in 0..N_LEN {
+                    let i = x * N_LEN + k;
+                    out[4 * x * N_LEN + k] += f * lead * b.trips[i];
+                    out[(4 * x + 1) * N_LEN + k] += f * st.len.rail[i];
+                    out[(4 * x + 2) * N_LEN + k] += f * (lead * b.walk[i] - st.len.walk[i]);
+                    out[(4 * x + 3) * N_LEN + k] += f * (lead * b.unr[i] - st.len.unr[i]);
+                }
+            }
+        }
         out
     }
 

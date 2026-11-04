@@ -257,7 +257,10 @@ export type ToDemand =
   | { kind: "driveRail"; id: number; city: CityId; version: number; round: number }
   /** T-1435: the zone's squares and one table with no rail, any version: `part` 0 the commutes'
    * (`DemandApi.drive_base_day`), 1 the everyday layer's */
-  | { kind: "driveBase"; id: number; city: CityId; version: number; round: number; part: 0 | 1 };
+  | { kind: "driveBase"; id: number; city: CityId; version: number; round: number; part: 0 | 1 }
+  /** T-2365: the zone's trips by length over this worker's periods (`DemandApi.trip_lengths_day`,
+   * `EverydayApi.trip_lengths_day`); `bare`: the aux worker's for a zone open bare, every period */
+  | { kind: "tripLengths"; id: number; city: CityId; version: number; round: number; bare?: boolean };
 
 /** T-1205: the WASM heap in use and the most it has been since the worker's last solve began
  * (`wasm_heap_bytes`, `wasm_heap_peak`), bytes */
@@ -441,4 +444,7 @@ export type FromDemand =
   | { kind: "driveRail"; id: number; city: CityId; version: number; mask: number; commute: Float32Array | null; everyday: Float32Array | null }
   /** T-1435: `squares` as `DriveSquares::packed` with x and y as longitude and latitude; `base` the part's
    * table; both null when the zone (or, for part 1, its everyday layer) is not held here */
-  | { kind: "driveBase"; id: number; city: CityId; squares: Float64Array | null; base: Float32Array | null };
+  | { kind: "driveBase"; id: number; city: CityId; squares: Float64Array | null; base: Float32Array | null }
+  /** T-2365: eight blocks of `trip_length_edges` bins each (trips, rail, walking, no way, then their
+   * km); null: not `version` and `round` (or not held here); `everyday` null for a zone without the layer */
+  | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null };
