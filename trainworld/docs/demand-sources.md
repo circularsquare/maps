@@ -39,7 +39,8 @@ nearest cell of its zone at or over 50, which keeps its index and its place; a z
 becomes one cell at its busiest (T-850b). In a pack with walk parts (`walk_part`, a zone's cells split by bank,
 T-700), each part of a zone counts as the zone in all of this: no merged cell spans two banks, and
 every zone keeps all its parts, which the walk table's layout needs; a parent merged in two parts of
-one zone gives each its busiest child's index (T-725). The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
+one zone gives each its busiest child's index (T-725). A cell's land part (`part`, T-2213) counts the
+same way, so no merged cell spans two parts. The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
 zone's land. Enrichments and routes run on the res-9 pack, kept in `data/work/res9/`.
 
 **Jobs data is real job counts at the place of work**, not a proxy, where it exists:

@@ -707,7 +707,18 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   a pack that joins nothing when the balance's rules change (T-1091's flat near end).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
-  changes a pack's zones, `--check` lists stale ones; T-275).
+  changes a pack's zones, `--check` lists stale ones; T-275). It also makes the land parts (`part`,
+  header `parts`, T-2213); `routes.py <id> --stage parts` makes only those, for a finished pack,
+  merged or not (into the res-9 copy and the merged pack as `nocar.py` does, or merged again where a
+  merged cell would span two parts).
+- `parts_run.py [ids | --from file | --all] [--workers N] [--downloads N] [--dry]` (T-2213): the land
+  parts of many packs, extract by extract: downloads ahead of the readers into `data/raw/osm_parts/`
+  (deleted once read), pixels per pack and extract in `data/work/parts/px/`, then per pack a backup
+  to `data/work/pre-T2213/`, the parts, its zone file's part fields (`market_zones.py --parts`) and a
+  summary `data/work/parts/<id>.json`; restartable. Every pack: 67 GB of extracts, under 2 hours on 4
+  readers. Checks: `checks/t2213_islands.py` (the islands and joins of notes/T-2207.md 3),
+  `checks/t2213_interior.py` (the most populous parts no road leaves), `checks/t2213_packs_load.py`
+  (every pack through the sim's `zone_summary`, against an earlier run).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the

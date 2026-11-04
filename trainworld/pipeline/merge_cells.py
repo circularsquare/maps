@@ -57,15 +57,17 @@ REACH = 700.0  # m, a lone cell's group at most this far from its centre: about 
 # notes/archive/t0500-0999/T-850.md 5); nocar.py remerges by this default too
 FLOOR = 50.0
 RES_MASK = np.uint64(0xF) << np.uint64(52)
-INT_SAME = ("zone", "region", "walk_part")  # integer per-cell arrays, equal within a merged cell
+INT_SAME = ("zone", "region", "walk_part", "part")  # integer per-cell arrays, equal within a merged cell
 
 
 def _bank(a):
     """Each cell's zone and walk part as one key: cells merge only within one part of a zone, so a
     merged cell never spans a river and every zone keeps its parts (the sim counts a zone's parts
-    by its cells' highest `walk_part`; T-725)."""
+    by its cells' highest `walk_part`; T-725). Its land part too (`part`, T-2213): no merged cell
+    spans two parts."""
     zone = a["zone"].astype(np.uint64)
-    return zone * np.uint64(256) + a["walk_part"].astype(np.uint64) if "walk_part" in a else zone
+    key = zone * np.uint64(256) + a["walk_part"].astype(np.uint64) if "walk_part" in a else zone
+    return key * np.uint64(65536) + a["part"].astype(np.uint64) if "part" in a else key
 
 
 def sha(path):
@@ -302,7 +304,7 @@ def _floor(a, e, h3, head, nx, ny, floor):
         from scipy.spatial import cKDTree
         bi = np.nonzero(big)[0]
         # a zone part a third axis 1e7 m apart, so the nearest within 1e6 m is in the same part
-        zb = bank.astype(np.float64) * 1e7
+        zb = np.unique(bank, return_inverse=True)[1].ravel().astype(np.float64) * 1e7
         d, k = cKDTree(np.c_[x[bi], y[bi], zb[bi]]).query(np.c_[x[li], y[li], zb[li]], distance_upper_bound=1e6)
         found = np.isfinite(d)
         to[li[found]] = bi[k[found]]

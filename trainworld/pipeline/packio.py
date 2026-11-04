@@ -29,6 +29,30 @@ def write_header(path, header):
     os.replace(path + ".part", path)
 
 
+def put_arrays(stem, header, arrays, block_key=None, block=None):
+    """Write `arrays` {name: (values, dtype, per)} into the pack at `stem`, .bin first: over an
+    array of that name and byte size in place, else appended (a replaced array's old bytes stay
+    until the next rewrite); with `block_key`, header[block_key] = block. `header` is not changed."""
+    with open(stem + ".bin", "rb") as f:
+        buf = bytearray(f.read())
+    header = json.loads(json.dumps(header))
+    np_dt = {"f32": "<f4", "f64": "<f8", "u8": "u1", "u16": "<u2", "u32": "<u4", "u64": "<u8", "i32": "<i4"}
+    for name, (values, dtype, per) in arrays.items():
+        v = np.ascontiguousarray(values, dtype=np_dt[dtype]).tobytes()
+        old = [e for e in header["arrays"] if e["name"] == name]
+        if old and old[0]["dtype"] == dtype and old[0]["count"] * SIZES[dtype] == len(v):
+            buf[old[0]["offset"]:old[0]["offset"] + len(v)] = v
+            continue
+        header["arrays"] = [e for e in header["arrays"] if e["name"] != name]
+        buf += b"\0" * (-len(buf) % 8)
+        header["arrays"].append({"name": name, "dtype": dtype, "per": per, "offset": len(buf), "count": len(values)})
+        buf += v
+    if block_key is not None:
+        header[block_key] = block
+    write(stem, header, buf)
+    return header
+
+
 def replace_cell_arrays(header, buf, replacements, per="cell"):
     """The .bin with the arrays named in `replacements` ({name: per-cell f32 values, or per `per`})
     dropped and written again at its end, every other array's bytes kept exactly; header["arrays"]

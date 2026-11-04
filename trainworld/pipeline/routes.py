@@ -4,8 +4,10 @@
     python pipeline/routes.py --download <city> ...      (only fetch and read the OSM extracts)
     python pipeline/routes.py --stage walk --unparted [--list]   (the walk factors of every pack
                                                   made before T-700's split by bank; --list: only name them)
+    python pipeline/routes.py <city> --stage parts   (only the land parts, for a finished pack, merged
+                                                  or not; parts_run.py does every pack, extract by extract)
 
-Adds three things to data/packs/<city>.json/.bin in place (nothing else in the pack changes):
+Adds four things to data/packs/<city>.json/.bin in place (nothing else in the pack changes):
 
 - `walk`: the walking barrier raster, `walk_row`/`walk_x` (row runs like the water mask, at
   `WALK_CELL_M`): water from the pack's own water mask, with every OSM way a person may walk
@@ -17,7 +19,10 @@ Adds three things to data/packs/<city>.json/.bin in place (nothing else in the p
 - `drive`: routed road distance over straight distance between zones (u8, `ln(f) * 64`), for
   zones within `DRIVE_WIN` squares (`drive_near`, each zone's window in canonical order) and
   between supercells of `SUPER` x `SUPER` squares per region beyond it (`drive_far`; `SUPER_ZONE`
-  for a countryside zone, T-1084).
+  for a countryside zone, T-1084). Places join roads on their own land part.
+- `part`: each cell's land part (u16, T-2213), land a car can reach from any point of it, and the
+  header block `parts` (per part its people, jobs, cells, whether it reaches the grid's edge, its
+  world landmass). See "land parts" below.
 
 Roads and bridges come from Geofabrik's OpenStreetMap extracts, one per first-level region of the
 pack (`EXTRACTS`; any country's region ids can be added there, or `--extracts` names them), read
@@ -115,10 +120,12 @@ def tag(other, key):
     return other[j:other.find('"', j)]
 
 
-def read_ways(extract, keep_pbf=False):
-    """The extract's drivable roads and walkable bridges, cached as an .npz:
+def read_ways(extract, keep_pbf=False, cache=True):
+    """The extract's drivable roads and walkable bridges, cached as an .npz (unless not `cache`):
     per way its class (index into DRIVE_CLASSES, or 255 for walk-only), flags (1 drivable,
-    2 bridge a person may walk on), and its points (lon, lat) in one flat array with offsets."""
+    2 bridge a person may walk on, 4 any other way some car may use, private roads, service ways
+    and tracks included: it joins land parts, T-2213), and its points (lon, lat) in one flat array
+    with offsets. Caches written before T-2213 have no flag 4."""
     out = npz_path(extract)
     if os.path.exists(out):
         return dict(np.load(out))
@@ -139,12 +146,14 @@ def read_ways(extract, keep_pbf=False):
         h = hw[i]
         access = tag(o, "access")
         motor = tag(o, "motor_vehicle") or tag(o, "motorcar")
-        if h in dclass and access not in ("no", "private") and motor not in ("no", "private"):
-            area = tag(o, "area")
-            if area != "yes":
+        bridge = tag(o, "bridge") not in ("", "no")
+        if access != "no" and motor != "no" and tag(o, "area") != "yes" and (h in dclass or h in ("service", "track")):
+            if h in dclass and access != "private" and motor != "private":
                 cls[i] = dclass[h]
                 flags[i] |= 1
-        if tag(o, "bridge") not in ("", "no") and h in WALK_CLASSES:
+            else:
+                flags[i] |= 4
+        if bridge and h in WALK_CLASSES:
             foot = tag(o, "foot")
             walkable = foot not in ("no", "private") and (access not in ("no", "private") or foot in ("yes", "designated", "permissive"))
             if h in ("trunk", "trunk_link") and foot not in ("yes", "designated", "permissive"):
@@ -158,11 +167,14 @@ def read_ways(extract, keep_pbf=False):
     off = np.zeros(len(geoms) + 1, np.int64)
     np.add.at(off, idx + 1, 1)
     off = np.cumsum(off)
-    np.savez(out, cls=cls[keep], flags=flags[keep], off=off, lon=coords[:, 0].astype(np.float64), lat=coords[:, 1].astype(np.float64))
-    print(f"  {extract}: {int(keep.sum()):,} kept ({int((flags[keep] & 1).sum()):,} drivable, {int((flags[keep] & 2).sum()):,} walkable bridges), {len(coords):,} points", flush=True)
+    w = dict(cls=cls[keep], flags=flags[keep], off=off, lon=coords[:, 0].astype(np.float64), lat=coords[:, 1].astype(np.float64))
+    if cache:
+        np.savez(out, **w)
+    print(f"  {extract}: {int(keep.sum()):,} kept ({int((flags[keep] & 1).sum()):,} drivable, {int((flags[keep] & 2).sum()):,} walkable bridges, "
+          f"{int((flags[keep] & 4).sum()):,} other ways a car may use), {len(coords):,} points", flush=True)
     if not keep_pbf:
         os.remove(path)
-    return dict(np.load(out))
+    return w
 
 
 # ---------------------------------------------------------------- frame and helpers
@@ -215,39 +227,57 @@ def water_mask(header, a):
 
 # ---------------------------------------------------------------- walking barrier raster
 
-def burn(bar, x, y, off, x0, y0, cell):
-    """Clear (make walkable) the pixels under each polyline (4-connected, so a path can follow
-    it pixel to pixel without cutting a corner), its ends carried BRIDGE_EXTEND_M onto the bank."""
-    H, W = bar.shape
+def line_pixels(x, y, off, x0, y0, cell, W, H, extend_m=0.0, step=None, chunk=400_000):
+    """Flat indices (row x W + column) of the pixels of a W x H grid under each polyline,
+    4-connected (a diagonal step takes its corner too, so a path can follow it pixel to pixel
+    without cutting a corner), each end carried `extend_m` on; sampled every `step` metres
+    (cell / 5 by default)."""
+    step = cell / 5 if step is None else step
     nway = len(off) - 1
-    first, last = off[:-1], off[1:] - 1
-    ok = last > first
-    x = x.copy()
-    y = y.copy()
-    for a_, b_ in ((first[ok], first[ok] + 1), (last[ok], last[ok] - 1)):
-        dx, dy = x[a_] - x[b_], y[a_] - y[b_]
-        n = np.maximum(np.hypot(dx, dy), 1e-6)
-        x[a_] += dx / n * BRIDGE_EXTEND_M
-        y[a_] += dy / n * BRIDGE_EXTEND_M
+    if extend_m:
+        first, last = off[:-1], off[1:] - 1
+        ok = last > first
+        x = x.copy()
+        y = y.copy()
+        for a_, b_ in ((first[ok], first[ok] + 1), (last[ok], last[ok] - 1)):
+            dx, dy = x[a_] - x[b_], y[a_] - y[b_]
+            n = np.maximum(np.hypot(dx, dy), 1e-6)
+            x[a_] += dx / n * extend_m
+            y[a_] += dy / n * extend_m
     way = np.repeat(np.arange(nway), np.diff(off))
     s = np.nonzero(way[1:] == way[:-1])[0]
-    xa, ya, xb, yb = x[s], y[s], x[s + 1], y[s + 1]
-    L = np.hypot(xb - xa, yb - ya)
-    k = np.ceil(L / (cell / 5)).astype(np.int64) + 1
-    seg = np.repeat(np.arange(len(s)), k)
-    t = (np.arange(k.sum()) - np.repeat(np.cumsum(k) - k, k)) / np.repeat(np.maximum(k - 1, 1), k)
-    px = xa[seg] + (xb - xa)[seg] * t
-    py = ya[seg] + (yb - ya)[seg] * t
-    c = np.floor((px - x0) / cell).astype(np.int64)
-    r = np.floor((py - y0) / cell).astype(np.int64)
-    inb = (c >= 0) & (c < W) & (r >= 0) & (r < H)
-    bar[r[inb], c[inb]] = False
-    # a diagonal step between consecutive samples of one segment: clear the corner too
-    same = seg[1:] == seg[:-1]
-    diag = same & (c[1:] != c[:-1]) & (r[1:] != r[:-1])
-    rc, cc = r[:-1][diag], c[1:][diag]
-    inb = (cc >= 0) & (cc < W) & (rc >= 0) & (rc < H)
-    bar[rc[inb], cc[inb]] = False
+    return seg_pixels(x[s], y[s], x[s + 1], y[s + 1], x0, y0, cell, W, H, step, chunk)
+
+
+def seg_pixels(xa_all, ya_all, xb_all, yb_all, x0, y0, cell, W, H, step, chunk=400_000):
+    """line_pixels for straight segments (a, b)."""
+    out = []
+    for s0 in range(0, len(xa_all), chunk):
+        sl = slice(s0, s0 + chunk)
+        xa, ya, xb, yb = xa_all[sl], ya_all[sl], xb_all[sl], yb_all[sl]
+        L = np.hypot(xb - xa, yb - ya)
+        k = np.ceil(L / step).astype(np.int64) + 1
+        seg = np.repeat(np.arange(len(xa)), k)
+        t = (np.arange(k.sum()) - np.repeat(np.cumsum(k) - k, k)) / np.repeat(np.maximum(k - 1, 1), k)
+        px = xa[seg] + (xb - xa)[seg] * t
+        py = ya[seg] + (yb - ya)[seg] * t
+        c = np.floor((px - x0) / cell).astype(np.int64)
+        r = np.floor((py - y0) / cell).astype(np.int64)
+        inb = (c >= 0) & (c < W) & (r >= 0) & (r < H)
+        out.append(r[inb] * W + c[inb])
+        same = seg[1:] == seg[:-1]
+        diag = same & (c[1:] != c[:-1]) & (r[1:] != r[:-1])
+        rc, cc = r[:-1][diag], c[1:][diag]
+        inb = (cc >= 0) & (cc < W) & (rc >= 0) & (rc < H)
+        out.append(rc[inb] * W + cc[inb])
+    return np.unique(np.concatenate(out)) if out else np.zeros(0, np.int64)
+
+
+def burn(bar, x, y, off, x0, y0, cell):
+    """Clear (make walkable) the pixels under each polyline, its ends carried BRIDGE_EXTEND_M
+    onto the bank."""
+    H, W = bar.shape
+    bar.flat[line_pixels(x, y, off, x0, y0, cell, W, H, extend_m=BRIDGE_EXTEND_M)] = False
 
 
 def walk_raster(header, a, ways):
@@ -277,6 +307,197 @@ def walk_raster(header, a, ways):
     info = {"bridges": len(off) - 1, "pixels_opened": before - int(bar.sum()) + int(islets.sum()),
             "islets_closed": int(islets.sum())}
     return out, info
+
+
+# ---------------------------------------------------------------- land parts (T-2213)
+# A part is land a car can reach from any other point of it: the pack's water at 50 m with every
+# pixel under a drivable way made land (bridges, tunnels, causeways, and wherever the mask and the
+# roads disagree), islets closed as for the walk, then 8-connected land. Ferries join nothing
+# (Anita, 2026-11-03: the player's ferry is an island's only way). notes/T-2207.md 2.
+
+PART_FLAGS = 1 | 4    # read_ways flags of the ways that join land
+PART_PAD_M = 20_000.0 # segments with an end this near the 50 m grid are drawn on it
+SNAP_SEP = 1e8        # a third coordinate per part, so the nearest road point is on the cell's own part
+
+
+def water50(header, a):
+    """The pack's water at WALK_CELL_M as the walk raster has it before its bridges (a pixel water
+    when 3 of its 4 mask pixels are), and the grid's origin (x0, y0) in the pack frame."""
+    m = water_mask(header, a)
+    f = int(round(WALK_CELL_M / m.cell))
+    return m.dense(f) >= WALK_WATER_FRAC, (m.x0, m.y0)
+
+
+def way_segments(ways, flag, lon0, lat0):
+    """The straight segments (xa, ya, xb, yb) of the ways with `flag`, in the frame at (lon0, lat0)."""
+    off, lon, lat, _ = merged(ways, flag)
+    x, y = local_xy(lon, lat, lon0, lat0)
+    way = np.repeat(np.arange(len(off) - 1), np.diff(off))
+    s = np.nonzero(way[1:] == way[:-1])[0]
+    return x[s], y[s], x[s + 1], y[s + 1]
+
+
+def road_water_pixels(bar, origin, xa, ya, xb, yb):
+    """The water pixels of `bar` (flat indices) under the segments, sampled every half pixel."""
+    H, W = bar.shape
+    x0, y0 = origin
+    x1, y1 = x0 + W * WALK_CELL_M, y0 + H * WALK_CELL_M
+
+    def near(x, y):
+        return (x >= x0 - PART_PAD_M) & (x <= x1 + PART_PAD_M) & (y >= y0 - PART_PAD_M) & (y <= y1 + PART_PAD_M)
+    k = near(xa, ya) | near(xb, yb)
+    idx = seg_pixels(xa[k], ya[k], xb[k], yb[k], x0, y0, WALK_CELL_M, W, H, WALK_CELL_M / 2)
+    return idx[bar.flat[idx]].astype(np.uint32)
+
+
+def land_labels(bar, opened):
+    """The land of `bar` with the `opened` pixels made land and islets (under MIN_LAND_PX, off the
+    grid's edge) made water, labelled 8-connected (int32, 0 water); the labels on the edge; a summary."""
+    from scipy.ndimage import label
+    bar = bar.copy()
+    bar.flat[opened] = False
+    lab, n = label(~bar, structure=np.ones((3, 3), bool))
+    size = np.bincount(lab.ravel(), minlength=n + 1)
+    edge = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
+    small = size < MIN_LAND_PX
+    small[0] = False
+    small[edge] = False
+    islets = small[lab]
+    lab[islets] = 0
+    return lab, edge[edge > 0], {"pixels_opened": int(len(opened)), "islets_closed": int(islets.sum())}
+
+
+def pixel_labels(lab, origin, x, y):
+    """The label under each point; a point on water takes the nearest land pixel's (0 if none)."""
+    H, W = lab.shape
+    c = np.clip(np.floor((x - origin[0]) / WALK_CELL_M).astype(np.int64), 0, W - 1)
+    r = np.clip(np.floor((y - origin[1]) / WALK_CELL_M).astype(np.int64), 0, H - 1)
+    out = lab[r, c].astype(np.int64)
+    for i in np.nonzero(out == 0)[0]:
+        for R in (8, 40, 200, 1000, max(H, W)):
+            sub = lab[max(0, r[i] - R):r[i] + R + 1, max(0, c[i] - R):c[i] + R + 1]
+            rr, cc = np.nonzero(sub)
+            if len(rr):
+                k = np.argmin((rr + max(0, r[i] - R) - r[i]) ** 2 + (cc + max(0, c[i] - R) - c[i]) ** 2)
+                out[i] = sub[rr[k], cc[k]]
+                break
+    return out
+
+
+def land_parts(header, a, lab, edge, origin, info, extracts, wf=None):
+    """Each cell's part (u16) and the `parts` header block, from the labelled land. A part is a
+    label holding cells, or all the labels reaching the grid's edge on one world landmass (land
+    that goes on past the grid, joined there by roads the pack does not see: a river's two banks
+    with the bridge beyond the edge); numbered by people and jobs, most first. Also the label ->
+    part map (-1 for land with no cell)."""
+    import datetime
+    import water
+    import world_field
+    x, y = a["x_m"].astype(np.float64), a["y_m"].astype(np.float64)
+    pop, jobs = a["pop"].astype(np.float64), a["jobs"].astype(np.float64)
+    w = pop + jobs
+    lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
+    wf = wf or world_field.load()
+
+    def busiest(group):
+        """Each group's busiest cell (groups 0..n-1 of the cells)."""
+        o = np.lexsort((-w, group))
+        return o[np.r_[0, np.nonzero(np.diff(group[o]))[0] + 1]]
+    cl = pixel_labels(lab, origin, x, y)
+    labels, inv = np.unique(cl, return_inverse=True)
+    inv = inv.ravel()
+    lon, lat = water.to_lonlat(x[busiest(inv)], y[busiest(inv)], lon0, lat0)
+    lmass = np.array([wf.locate(float(lo), float(la))[1] for lo, la in zip(lon, lat)], np.int64)
+    is_open = np.isin(labels, edge)
+    # a group per interior label, one per landmass for the open ones
+    key = np.where(is_open, -1 - lmass, labels)
+    keys, ginv = np.unique(key, return_inverse=True)
+    ginv = ginv.ravel()
+    g_cell = ginv[inv]
+    pp = np.bincount(g_cell, pop, len(keys))
+    jj = np.bincount(g_cell, jobs, len(keys))
+    order = np.lexsort((keys, -(pp + jj)))
+    assert len(order) <= 65535, f"{len(order)} parts"
+    rank = np.empty(len(order), np.int64)
+    rank[order] = np.arange(len(order))
+    part = rank[g_cell].astype(np.uint16)
+    n = len(order)
+    top = busiest(part.astype(np.int64))
+    lon, lat = water.to_lonlat(x[top], y[top], lon0, lat0)
+    g_open = np.zeros(len(keys), bool)
+    g_open[ginv[is_open]] = True
+    g_mass = np.zeros(len(keys), np.int64)
+    g_mass[ginv] = lmass
+    landmass = [int(v) for v in g_mass[order]]
+    lab_part = np.full(int(lab.max()) + 1, -1, np.int64)
+    lab_part[labels] = rank[ginv]
+    block = {"task": "T-2213", "built": str(datetime.date.today()),
+             "rule": "land of the pack's water mask at 50 m (a pixel water when 3 of its 4 mask pixels are), every pixel "
+                     "under an OSM way some car may use (DRIVE_CLASSES, service ways and tracks, private ones too) made "
+                     "land, islets under 0.1 km2 off the grid's edge made water; a part is 8-connected land holding cells, "
+                     "or all such land reaching the grid's edge on one world landmass (joined beyond the edge); a cell's "
+                     "part the land under its centre or the nearest land; numbered by people and jobs, most first. "
+                     "Ferries join nothing",
+             "osm": "Geofabrik extracts, (c) OpenStreetMap contributors, ODbL", "extracts": list(extracts),
+             "layout": "per part: people, jobs, cells, open (its land reaches the grid's edge, so it may go on into "
+                       "a neighbouring pack), landmass (the world field's, T-375, at its busiest cell), lon and lat of that "
+                       "cell; `part` per cell",
+             "parts": n, **info,
+             "people": [round(float(v), 1) for v in pp[order]], "jobs": [round(float(v), 1) for v in jj[order]],
+             "cells": [int(v) for v in np.bincount(part, minlength=n)],
+             "open": [int(v) for v in g_open[order]],
+             "landmass": landmass, "lon": [round(float(v), 5) for v in lon], "lat": [round(float(v), 5) for v in lat]}
+    return part, block, lab_part
+
+
+def pack_parts(header, a, ways, extracts):
+    """`land_parts` for a pack from its extracts' ways; also the labels and their origin, for the snap."""
+    bar, origin = water50(header, a)
+    seg = way_segments(ways, PART_FLAGS, header["origin"]["lon"], header["origin"]["lat"])
+    opened = road_water_pixels(bar, origin, *seg)
+    lab, edge, info = land_labels(bar, opened)
+    part, block, lab_part = land_parts(header, a, lab, edge, origin, info, extracts)
+    return part, block, lab_part, lab, origin
+
+
+def write_parts(city, part, block, dry=False):
+    """`part` (the res-9 pack's cells') and the `parts` block into data/packs/<city>. A merged pack
+    takes them in its res-9 copy and, merged by merge_cells' rule, in itself (as nocar.py does);
+    one whose merged cells would span two parts is merged again from the res-9 copy. `dry`: only
+    say which it would be."""
+    import merge_cells as mc
+    import packio
+    from read_pack import load_pack
+    with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
+        live = json.load(f)
+    arr = {"part": (part, "u16", "cell")}
+    if "merged" not in live:
+        if not dry:
+            write_arrays(city, arr, "parts", block)
+        return "res-9 pack"
+    if mc.written(city) != mc.stamp(PACKS, city):
+        sys.exit(f"{city}: the merged pack changed after merging; merge it again first")
+    h9, a9 = load_pack(city, mc.WORK)
+    assert len(part) == h9["cells"], f"{city}: {len(part)} parts for {h9['cells']} res-9 cells"
+    specs = [e for e in h9["arrays"] if e["name"] != "part"] + [{"name": "part", "dtype": "u16", "per": "cell", "count": h9["cells"]}]
+    cells, _ = mc.merge(dict(h9, arrays=specs), dict(a9, part=part))
+    lh, la = load_pack(city, PACKS)
+    same = all(np.array_equal(cells[e["name"]], la[e["name"]]) for e in lh["arrays"]
+               if e.get("per") == "cell" and e["name"] != "part")
+    if dry:
+        return "would add" if same else f"would merge again ({lh['cells']:,} -> {len(cells['h3']):,} cells)"
+    packio.put_arrays(os.path.join(mc.WORK, city), h9, arr, "parts", block)
+    if not same:
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            info = mc.run(city)
+        return f"merged again ({h9['cells']:,} -> {info['cells']:,} cells, was {lh['cells']:,})"
+    lh["merged"]["source"] = mc.stamp(mc.WORK, city)
+    packio.put_arrays(os.path.join(PACKS, city), lh, {"part": (cells["part"], "u16", "cell")}, "parts", block)
+    with open(os.path.join(mc.WORK, f"{city}.merged.json"), "w") as f:
+        json.dump(mc.stamp(PACKS, city), f)
+    return "added"
 
 
 # ---------------------------------------------------------------- the road graph
@@ -371,12 +592,22 @@ class RoadGraph:
             n = max(n, int(max(ea.max(), eb.max())) + 1)
         return coo_matrix((np.concatenate([ln, ln]), (np.concatenate([lo, hi]), np.concatenate([hi, lo]))), shape=(n, n)).tocsr()
 
-    def snap(self, px, py, water_dense=None, wm=None, k=8):
+    def snap(self, px, py, water_dense=None, wm=None, k=8, part=None, road_part=None):
         """Each place's nearest road point whose straight line to it crosses no water (the 25 m
-        mask), else the nearest. Returns the point's index and the metres to it."""
+        mask), else the nearest. With `part` (each place's) and `road_part` (each road point's, -1
+        for none), only road points on the place's own part, where its part has any (T-2213).
+        Returns the point's index and the metres to it."""
         from scipy.spatial import cKDTree
         tree = cKDTree(np.column_stack([self.px, self.py]))
         d, i = tree.query(np.column_stack([px, py]), k=k)
+        if part is not None:
+            t3 = cKDTree(np.column_stack([self.px, self.py, road_part * SNAP_SEP]))
+            d3, i3 = t3.query(np.column_stack([px, py, np.asarray(part, np.float64) * SNAP_SEP]), k=k,
+                              distance_upper_bound=SNAP_SEP / 2)
+            miss = ~np.isfinite(d3)
+            d3[miss], i3[miss] = np.repeat(d3[:, :1], k, 1)[miss], np.repeat(i3[:, :1], k, 1)[miss]
+            has = np.isfinite(d3[:, 0])
+            d[has], i[has] = d3[has], i3[has]
         choice = np.zeros(len(px), np.int64)
         if water_dense is not None:
             done = np.zeros(len(px), bool)
@@ -527,13 +758,15 @@ def super_of(city):
     return SUPER_ZONE if b.CITIES.get(city, {}).get("kind") == "zone" else SUPER
 
 
-def drive_tables(zs, graph, wm, dense, workers=2, log=print, side=SUPER):
-    """Near (zone windows) and far (supercells of side x side squares) drive factors."""
+def drive_tables(zs, graph, wm, dense, workers=2, log=print, side=SUPER, cell_part=None, road_part=None):
+    """Near (zone windows) and far (supercells of side x side squares) drive factors. With
+    `cell_part` and `road_part`, places join roads on their own land part (T-2213)."""
     import multiprocessing as mp
     import tempfile
     t0 = time.time()
-    zp, zd = graph.snap(zs.rx, zs.ry, dense, wm)
-    cp, cd = graph.snap(zs.cx, zs.cy, dense, wm)
+    rp = None if cell_part is None else cell_part[zs.rep]
+    zp, zd = graph.snap(zs.rx, zs.ry, dense, wm, part=rp, road_part=road_part)
+    cp, cd = graph.snap(zs.cx, zs.cy, dense, wm, part=cell_part, road_part=road_part)
     log(f"  snapped {zs.n:,} zones and {len(zs.cx):,} cells to the roads in {time.time() - t0:.0f} s "
         f"(median cell {np.median(cd):.0f} m from a road, 95% {np.quantile(cd, 0.95):.0f} m)", flush=True)
     nj = graph.n
@@ -691,6 +924,8 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     the first stage's raster in the pack)."""
     from read_pack import load_pack
     t_all = time.time()
+    if stage == "parts":
+        return parts_stage(city, ex_arg, keep)
     with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
         refuse_merged(city, json.load(f))
     if stage == "walk":
@@ -706,6 +941,10 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     walk, winfo = walk_raster(header, a, ways)
     print(f"  walk raster {walk.W} x {walk.H} of {WALK_CELL_M:.0f} m: {walk.water_pixels() / (walk.W * walk.H):.1%} barrier, "
           f"{winfo['bridges']:,} walkable bridges opened {winfo['pixels_opened']:,} pixels ({time.time() - t0:.0f} s)", flush=True)
+    t0 = time.time()
+    part, pblock, lab_part, lab, porigin = pack_parts(header, a, ways, exs)
+    print(f"  land parts: {pblock['parts']:,}, {sum(pblock['people'][1:]):,.0f} people off the first, "
+          f"{pblock['pixels_opened']:,} water pixels opened under roads ({time.time() - t0:.0f} s)", flush=True)
     zs = ZoneSet(header, a)
     t0 = time.time()
     pad = 20_000.0
@@ -714,7 +953,15 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     print(f"  road graph: {graph.n:,} junctions, {graph.edges:,} roads, from {graph.points:,} points ({time.time() - t0:.0f} s)", flush=True)
     t_drive = time.time()
     side = super_of(city)
-    near_q, sup, far_q, stats, diag = drive_tables(zs, graph, wm, dense, workers=workers, side=side)
+    # road points take the part of the land under them (none off the grid or on land with no cell)
+    H, W = lab.shape
+    c = np.floor((graph.px - porigin[0]) / WALK_CELL_M).astype(np.int64)
+    r = np.floor((graph.py - porigin[1]) / WALK_CELL_M).astype(np.int64)
+    inb = (c >= 0) & (c < W) & (r >= 0) & (r < H)
+    road_part = np.full(len(c), -1.0)
+    road_part[inb] = lab_part[lab[r[inb], c[inb]]]
+    near_q, sup, far_q, stats, diag = drive_tables(zs, graph, wm, dense, workers=workers, side=side,
+                                                   cell_part=part.astype(np.int64), road_part=road_part)
     stats["seconds"] = round(time.time() - t_drive)
     f = diag[2]
     print(f"  drive factors: near pairs {len(f):,}, median {np.median(f):.3f}, "
@@ -742,8 +989,30 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
                         "drive_near": (near_q, "u8", "routes"),
                         "drive_super": (sup, "u16", "zone"),
                         "drive_far": (far_q, "u8", "routes")}, "routes", block, drop=("walk_zone", "walk_part"))
+    write_arrays(city, {"part": (part, "u16", "cell")}, "parts", pblock)
     if stage == "all":
         walk_stage(city, t_all)
+
+
+def res9_pack(city):
+    """The pack's res-9 version (header, arrays): data/packs's, or a merged pack's copy in data/work/res9."""
+    import merge_cells as mc
+    from read_pack import load_pack
+    with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
+        merged_ = "merged" in json.load(f)
+    return load_pack(city, mc.WORK if merged_ else PACKS)
+
+
+def parts_stage(city, ex_arg=None, keep=False):
+    """Only the land parts (`part`, `parts`), for a finished pack, merged or not (T-2213)."""
+    t0 = time.time()
+    header, a = res9_pack(city)
+    exs = ex_arg or header.get("routes", {}).get("extracts") or extracts_of(header)
+    ways = [read_ways(e, keep) for e in exs]
+    part, block = pack_parts(header, a, ways, exs)[:2]
+    how = write_parts(city, part, block)
+    print(f"{city}: {block['parts']:,} land parts, {sum(block['people'][1:]):,.0f} people off the first; {how} "
+          f"({time.time() - t0:.0f} s)", flush=True)
 
 
 def walk_stage(city, t_all):

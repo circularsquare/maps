@@ -194,13 +194,24 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   over the other zone's cells) to every zone within 6 squares (`drive_near`), and between
   supercells of 4 x 4 squares per region beyond (8 x 8 in a countryside zone, T-1084)
   (`drive_far`, `drive_super`). The roads are
-  every public road but service ways; each place joins its nearest road point whose straight
-  line crosses no water, at 1.3x that line. The speeds stay the density model's above: only the
+  every public road but service ways; each place joins its nearest road point on its own land part
+  (below; any road point where its part has none) whose straight line crosses no water, at 1.3x that line. The speeds stay the density model's above: only the
   road's length comes from the routes. The factor is multiplied by `road_routed_scale`,
   1.3 / 1.210 (New York's commute- and distance-weighted routed factor): the density speeds were
   fitted on New York with 1.3, so New York keeps its fitted level and other places their
   difference from it (and the longer, faster roads drivers really take are covered). Hoboken to
   Midtown is 7.5 km by road, St George to Wall St 22 km, Stamford to Huntington 83 km.
+- **Land parts** (T-2213, `part` per cell, header `parts`; notes/T-2207.md). Land a car can reach
+  from any point of it: the 50 m water as the walk raster has it before its bridges, every pixel
+  under an OSM way some car may use made land (the drive's roads, service ways and tracks, private
+  ones too: a gated island's bridge joins it), islets under 0.1 km² off the grid's edge made water, then 8-connected
+  land holding cells; all such land reaching the grid's edge on one world landmass is one part
+  (joined beyond the edge: a river's two banks whose bridge is outside the grid). Ferries join
+  nothing. A cell's part is the land under its centre, or the nearest. Per part the header lists
+  people, jobs, cells, `open` (it reaches the grid's edge, so it may go on into a neighbouring pack)
+  and the world field's landmass at its busiest cell: two cells of one pack are joined when their
+  part is the same, two in different packs when both parts are open and on one landmass. `routes.py --stage parts` makes them for a finished pack,
+  `parts_run.py` for every pack. The sim does not read them yet (T-2214).
 - **Not routed**: walking transfers between stations (300 m and complexes) stay straight x 1.3,
   because every population must build the same graph from the same stations to share its
   strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has

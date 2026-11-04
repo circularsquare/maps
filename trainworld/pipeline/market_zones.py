@@ -3,6 +3,7 @@
     python pipeline/market_zones.py [id ...]     every registered zone, or only those named
     python pipeline/market_zones.py --air        only every zone file's airports (T-378), then the rows
     python pipeline/market_zones.py --rows       only the rows (after a zone left the registry)
+    python pipeline/market_zones.py --parts [id ...]   only the land part fields (T-2213) into the zone files as they are
     ... --full    (with any of these) every row worked out again, not only those a change reaches
 
 Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`,
@@ -19,7 +20,8 @@ density, notes/T-376.md), its 6 km zones with their two normalisers against the 
 ground and tail, constants in pipeline/longhaul.json), the commutes from it to other zones (its joint
 gravity group's, from data/work/<group>.joint_commutes.json, T-463), the everyday outings from it
 across zone lines (T-1175, from data/work/<unit>.cross_everyday.json), and (T-378) the airports its
-people fly from with the zones each flies to directly.
+people fly from with the zones each flies to directly. A pack with land parts (T-2213) gives its file
+`site_part`, `zone_parts` (each 6 km zone's [part, share]) and its `parts` table.
 """
 import csv
 import hashlib
@@ -174,9 +176,11 @@ def equirect(lon0, lat0):
     return to_xy, to_ll
 
 
-def own_sites(cid, frame):
+def own_sites(cid, frame, with_parts=False):
     """A zone's sites from its own pack ([x, y, people, jobs] in `frame`) and their parking: its
-    cells grouped by 600 m square, each at its people-and-jobs centre."""
+    cells grouped by 600 m square, each at its people-and-jobs centre. With `with_parts`, also each
+    site's people and jobs by land part ({part: weight}; None for a pack without parts, T-2213)
+    and the pack's header."""
     h, a = load_pack(cid)
     o = h["origin"]
     _, pack_ll = equirect(o["lon"], o["lat"])
@@ -184,20 +188,42 @@ def own_sites(cid, frame):
     park = park_by_cell(h, a, lon, lat)
     to_xy, _ = equirect(frame["lon"], frame["lat"])
     x, y = to_xy(lon, lat)
+    part = a["part"] if "part" in a else np.zeros(len(x), np.uint16)
     groups = {}
-    for xx, yy, pp, jj, pk in zip(x, y, a["pop"], a["jobs"], park):
+    for xx, yy, pp, jj, pk, pt in zip(x, y, a["pop"], a["jobs"], park, part):
         if pp + jj <= 0:
             continue
-        r = groups.setdefault((int(xx // SITE_M), int(yy // SITE_M)), [0., 0., 0., 0., 0., 0.])
+        r = groups.setdefault((int(xx // SITE_M), int(yy // SITE_M)), [0., 0., 0., 0., 0., 0., {}])
         r[0] += xx * (pp + jj); r[1] += yy * (pp + jj)
         r[2] += pp; r[3] += jj
         r[4] += pk * (jj + 1e-6); r[5] += jj + 1e-6
+        r[6][int(pt)] = r[6].get(int(pt), 0.0) + float(pp + jj)
     sites, parks = [], []
     for r in groups.values():
         w = r[2] + r[3]
         sites.append([round(float(r[0] / w), 1), round(float(r[1] / w), 1), round(float(r[2]), 3), round(float(r[3]), 3)])
         parks.append(round(float(r[4] / r[5]), 2))
+    if with_parts:
+        return sites, parks, ([r[6] for r in groups.values()] if "part" in a else None), h, list(groups)
     return sites, parks
+
+
+def part_fields(site_parts, zi, nz, header):
+    """T-2213: a zone file's land parts: each site's part (its people and jobs' most), each 6 km
+    zone's [part, share of its people and jobs] (most first), and the pack's parts table (people,
+    jobs, open, landmass; header `parts`), which says whether two parts in two packs can join."""
+    zw = [{} for _ in range(nz)]
+    for sp, z in zip(site_parts, zi):
+        for p, w in sp.items():
+            zw[z][p] = zw[z].get(p, 0.0) + w
+    zone_parts = []
+    for d in zw:
+        t = sum(d.values()) or 1.0
+        zone_parts.append([[p, round(w / t, 4)] for p, w in sorted(d.items(), key=lambda kv: (-kv[1], kv[0])) if w / t >= 5e-5])
+    pb = header["parts"]
+    return {"site_part": [max(sp.items(), key=lambda kv: (kv[1], -kv[0]))[0] for sp in site_parts],
+            "zone_parts": zone_parts,
+            "parts": {k: pb[k] for k in ("people", "jobs", "open", "landmass")}}
 
 
 class Groups:
@@ -338,7 +364,7 @@ def build(cid, reg, F, air):
     cinfo = F.wf.countries[country]
     inc = min(cinfo["gdp"] / RULE["y_us"], 1.0)
     frame = {"kind": "equirect", "lon": city["origin"]["lon"], "lat": city["origin"]["lat"]}
-    sites, parks = own_sites(cid, frame)
+    sites, parks, site_parts, head, _ = own_sites(cid, frame, with_parts=True)
     keys, zi, cx, cy = zones_of(sites)
     _, to_ll = equirect(frame["lon"], frame["lat"])
     zlon, zlat = to_ll(cx, cy)
@@ -355,6 +381,8 @@ def build(cid, reg, F, air):
            "cell_pop": [round(float(v)) for v in cell],
            "sources": ["the zone pack's cells (600 m squares)", "the world field (T-375: Kontur 2023, Natural Earth, World Bank GDP per head)",
                        "pipeline/longhaul.json (T-376)"]}
+    if site_parts is not None:
+        out.update(part_fields(site_parts, zi, len(keys), head))
     out.update(air.get(cid, {}))
     out["sources"].append(AIR_SOURCE)
     if cid in groups.rows:
@@ -518,8 +546,45 @@ def main(ids=None):
         _main(args)
 
 
+def parts_only(ids):
+    """T-2213: the land part fields into each zone file as it stands (nothing else changes), each
+    site's from the pack's cells in its 600 m square (the nearest square holding cells where its own
+    has none). Returns the ids whose sites differ a little from their pack's cells now (a pack merged
+    again since its file was built): their next build moves them."""
+    moved = []
+    for cid in ids:
+        path = PACKS / f"{cid}.market.json"
+        if not path.exists():
+            continue
+        out = json.loads(path.read_text(encoding="utf-8"))
+        sites, _, site_parts, head, keys = own_sites(cid, out["frame"], with_parts=True)
+        if site_parts is None:
+            continue
+        if [s[:4] for s in out["sites"]] != sites:
+            moved.append(cid)
+        at = {k: i for i, k in enumerate(keys)}
+        ka = np.array(keys, np.float64).reshape(-1, 2)
+        sp = []
+        for s in out["sites"]:
+            k = (int(s[0] // SITE_M), int(s[1] // SITE_M))
+            i = at.get(k)
+            if i is None:
+                i = int(np.argmin((ka[:, 0] - k[0]) ** 2 + (ka[:, 1] - k[1]) ** 2))
+            sp.append(site_parts[i])
+        zi = [s[4] for s in out["sites"]]
+        out.update(part_fields(sp, zi, len(out["zones"]), head))
+        write(path, out)
+    print(f"part fields in {len(ids)} zone files; sites a little off their pack's cells (merged again since): "
+          f"{' '.join(moved) or 'none'}", flush=True)
+    return moved
+
+
 def _main(args):
     global groups
+    if "--parts" in args:
+        reg = shared_lock.read_json(REG)
+        parts_only([a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]])
+        return
     air_only = "--air" in args
     reg = shared_lock.read_json(REG)
     assign_places(reg)

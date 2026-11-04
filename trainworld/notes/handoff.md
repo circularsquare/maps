@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6b129d28-dd4c-41cd-a38e-7497bd99e810, name maps-1c, since 2026-11-03 12:49
-Updated: 2026-11-03 17:15
+Updated: 2026-11-03 20:30
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -55,6 +55,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   uncommitted files: pipeline/{routes,market_zones,merge_cells,packio,parts_run}.py, checks/t2213_*.py,
   docs/demand-mode.md, demand-sources.md, notes/T-2213.md). Next to start: T-2214 after T-2213; T-2218 tool's
   offered rectangle misses same-named stations (notes/T-2208.md follow-up); T-2242..47 diagram polish; T-2238.
+  ~20:30: 6cd0a31d T-2243/T-2244 diagram folds and hooks (agent at 535k tokens, retired); T-2255 filed (game-graph
+  hairpins). **8800 = build 855**, smoke 23/23 light and dark. Next free id T-2256 (t2213 holds T-2252..54).
   Started ~19:05: a0d2a3c6ec243b0e9 **t2238** (T-2238 2 s placement + T-2230 road tile install; tree t2238, Vite
   6188) and a646f254e229a6d49 **t2243** (T-2243 Shinjuku loop + T-2244 hooks; main tree diagram, Vite 6194).
 - ~18:00: T-2220 built in tree t2220; with the walk at 0.8 the S shuttle moved +83% on a Times Sq building (outline
@@ -143,4 +145,4 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Disk (2026-11-03): delete orphaned temp files always; keep only the current build and the latest published ones
   in artifacts/trainworld/publish/ and data/frozen/ (prune after each publish or freeze).
 
-Next free task id: T-2248 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25; check before use).
+Next free task id: T-2256 (T-2252..54 held by t2213) (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25; check before use).
