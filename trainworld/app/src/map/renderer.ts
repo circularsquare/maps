@@ -25,7 +25,7 @@ import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
@@ -97,10 +97,6 @@ const BAND_FOLD_PX = [1.25, 1.75] as const;
 const MUTE: readonly [number, number] | null = perfOff("muteThin") ? null : [0.45, 0.5];
 /** T-2126: bands side by side with a pixel between (`?perfOff=bandGap`: touching, as before) */
 const BAND_GAP = !perfOff("bandGap");
-/** T-2223 prototypes of the gap between bands (`?perfTry=`): 1 bandEdge touching with a tinted inner
- * edge, 2 bandWide 2 px, 3 bandFine 1 px kept dark at any phase, 4 bandSpaced a share of the band's
- * width; 0 T-2183's 1 px. 2-4 also round their caps to the band's own width. */
-const BAND_LOOK = perfTry("bandEdge") ? 1 : perfTry("bandWide") ? 2 : perfTry("bandFine") ? 3 : perfTry("bandSpaced") ? 4 : 0;
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -671,7 +667,7 @@ export class NetworkRenderer {
     this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_look", "u_band_edge", "u_band_m", "u_mute"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1508,12 +1504,6 @@ export class NetworkRenderer {
     gl.uniform1f(u.u_band_m, pxPerUnitAt(zoom) * kAtY(0) * dpr);
     gl.uniform1i(u.u_band_traffic, this.trafficWidths ? 1 : 0);
     gl.uniform1f(u.u_band_gap, BAND_GAP ? BAND_GAP_PX * dpr : 0);
-    gl.uniform1i(u.u_band_look, BAND_LOOK);
-    {
-      // the edge tint: darker on light casing, lighter on the dark theme's
-      const [r, g, b] = rgbf(shadeColours().casing), light = 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
-      gl.uniform4f(u.u_band_edge, light ? 0 : 1, light ? 0 : 1, light ? 0 : 1, 1.5 * dpr);
-    }
     gl.uniform3fv(u.u_level_colours, this.levelColours);
     gl.uniform3fv(u.u_track, TRACK_RGB);
     gl.uniform3fv(u.u_bad, BAD_RGB);

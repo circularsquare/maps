@@ -113,7 +113,6 @@ uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple 
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
-uniform int u_band_look;     // T-2223 prototypes (renderer.ts BAND_LOOK), 0 as built
 uniform float u_band_m;     // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
 in vec4 a_seg;
 in uint a_colour;
@@ -204,8 +203,7 @@ void main() {
     // T-2126: a band of shared track a pixel narrower in colour than its slot, the casing showing between
     // (none for a line easing out of the ribbon to its full width)
     if (shared && u_casing <= 0.0 && !full) {
-      float gp = u_band_look == 1 ? 0.0 : u_band_look == 2 ? 2.0 * u_band_gap : u_band_look == 4 ? max(1.5 * u_band_gap, 0.2 * w) : u_band_gap;
-      w = max(1.0, w - gp * clamp(mix(a_band.z, a_band.w, along) / ${(1 - BAND_SHARE).toFixed(2)}, 0.0, 1.0));
+      w = max(1.0, w - u_band_gap * clamp(mix(a_band.z, a_band.w, along) / ${(1 - BAND_SHARE).toFixed(2)}, 0.0, 1.0));
     }
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
@@ -242,8 +240,7 @@ void main() {
   } else if (shared && u_casing <= 0.0 && !full && u_lane_mode == 0) {
     // (half a pixel more each side, for the smoothed edge)
     v_aa = 0.5 * w;
-    // (T-2223's touching bands abut unsmoothed, tinted inside their edge)
-    if (u_band_look != 1) w += 1.0;
+    w += 1.0;
   }
   float side = id < 2 ? -1.0 : 1.0;
   vec4 c0 = project(a_seg.xy);
@@ -332,8 +329,6 @@ flat in float v_aa;
 uniform vec3 u_full_rgb;
 uniform vec3 u_casing_rgb;
 uniform float u_full_out;
-uniform highp int u_band_look;
-uniform vec4 u_band_edge;  // T-2223 look 1: the edge tint's colour and width (px)
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
@@ -349,13 +344,10 @@ void main() {
     a *= clamp(v_inner.x + v_inner.y + v_inner.z + 0.5 - d, 0.0, 1.0);
   }
   if (v_aa > 0.0) {
-    if (u_band_look == 1) c = mix(c, u_band_edge.rgb, 0.3 * smoothstep(v_aa - u_band_edge.w, v_aa, abs(v_cap.z)));
-    else if (u_band_look >= 2) {
-      // the cap as round as the sides, not half a pixel fatter (it pinched the gap at every joint);
-      // look 3: a sharper ramp, so a gap falling between two pixels still leaves them 70% casing
-      float d = v_aa + 0.5 - (past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z));
-      a = v_alpha * clamp(u_band_look == 3 ? 1.6 * d - 0.5 : d, 0.0, 1.0);
-    } else a *= clamp(v_aa + 0.5 - abs(v_cap.z), 0.0, 1.0);
+    // T-2223: the cap as round as the sides, not half a pixel fatter (it pinched the gap at every
+    // joint), and a sharp ramp, so a gap falling between two pixels still leaves them 70% casing
+    float d = v_aa + 0.5 - (past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z));
+    a = v_alpha * clamp(1.6 * d - 0.5, 0.0, 1.0);
   }
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);

@@ -195,6 +195,13 @@ export interface NetPatch {
   ranges: Record<StrokeKind, Int32Array>;
 }
 
+/** T-2258: the shortest segment of built track and line strokes, plane m. The shader shifts a band
+ * or a parted track sideways along its segment's own normal, and points arrive as float32 plane
+ * metres (1-2 m apart far from the frame's origin, as all of Japan is), so a shorter segment, or
+ * one of no length where a band's knot meets an edge's end, pointed anywhere and drew its round
+ * cap off its band, a rounded prong. A chord this long strays under 0.1 m from a 100 m curve. */
+export const MIN_SEG_M = 8;
+
 /** Stroke segments into typed arrays that grow by doubling (number[] pushes cost ~25 ms for a
  * 2,000 km network, T-063). */
 class StrokeBuilder {
@@ -211,7 +218,8 @@ class StrokeBuilder {
   lane = new Uint8Array(0);
   /** `Strokes.band`, only when built with `withStretch` (line strokes) */
   band = new Int16Array(0);
-  constructor(private withStretch = false) {}
+  /** `minSeg`: points closer than this (plane m) to the last one kept are dropped (`MIN_SEG_M`) */
+  constructor(private withStretch = false, private minSeg = 0) {}
   private grow(need: number) {
     if (need <= this.cap) return;
     // a fresh builder takes what it is asked for: most hold one edge, and a 1,024 floor made every
@@ -235,16 +243,32 @@ class StrokeBuilder {
   }
   /** pts: x, y, z triples; `stretch` as `Strokes.stretch`, for every segment added; `lane`: per point of
    * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all; `band`: per point, its
-   * shift (line widths), `1 - width share` and metres (`Strokes.band`) */
-  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255, band?: ArrayLike<number>, ease?: Uint8Array): number {
+   * shift (line widths), `1 - width share` and metres (`Strokes.band`); `from`, if given, gets each
+   * added segment's first segment of `pts` (a to b order), which differ once `minSeg` drops points */
+  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255, band?: ArrayLike<number>, ease?: Uint8Array, from?: number[]): number {
     const n = pts.length / 3;
     let d = dist0;
     this.grow(this.count + Math.max(0, n - 1));
     if (stretch !== undefined && this.withStretch) this.stretch.fill(stretch, this.count, this.count + Math.max(0, n - 1));
-    for (let k = 0; k < n - 1; k++) {
-      const i = reverse ? n - 1 - k : k, j = reverse ? i - 1 : i + 1;
+    const first = this.count, ms = this.minSeg;
+    // i: the point the next segment starts from; s: where the last one added started
+    let i = reverse ? n - 1 : 0, s = i;
+    for (let k = 1; k < n; k++) {
+      const j = reverse ? n - 1 - k : k;
+      const near = ms > 0 && Math.hypot(pts[j * 3] - pts[i * 3], pts[j * 3 + 1] - pts[i * 3 + 1]) < ms;
+      if (near && k < n - 1) continue;
+      // the last point near the one kept before it: the segment before ends on it instead
+      if (near && this.count > first) {
+        this.count--;
+        from?.pop();
+        d = this.dist[this.count];
+        i = s;
+      }
       const x0 = pts[i * 3], y0 = pts[i * 3 + 1], x1 = pts[j * 3], y1 = pts[j * 3 + 1];
-      const c = this.count++;
+      const c = this.count++, lo = Math.min(i, j), hi = Math.max(i, j);
+      from?.push(lo);
+      let eased = false;
+      for (let q = lo; ease && q < hi && !eased; q++) eased = ease[q] === 1;
       this.seg[c * 4] = x0;
       this.seg[c * 4 + 1] = y0;
       this.seg[c * 4 + 2] = x1;
@@ -252,7 +276,7 @@ class StrokeBuilder {
       this.colour[c] = colour;
       this.edge[c] = edge;
       this.level[c] = Math.round(pts[i * 3 + 2] / 8);
-      this.flags[c] = ease?.[Math.min(i, j)] ? flags | F_EASE : flags;
+      this.flags[c] = eased ? flags | F_EASE : flags;
       this.dist[c] = d;
       this.lane[c * 2] = typeof lane === "number" ? lane : lane[i];
       this.lane[c * 2 + 1] = typeof lane === "number" ? lane : lane[j];
@@ -266,6 +290,8 @@ class StrokeBuilder {
         this.band[o + 5] = Math.round(Math.max(-1, Math.min(1, band[j * 3 + 2] / BAND_M_RANGE)) * 32767);
       }
       d += Math.hypot(x1 - x0, y1 - y0);
+      s = i;
+      i = j;
     }
     return d;
   }
@@ -1008,12 +1034,14 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     } else {
       const own = given.slice();
       const lp = lanePoints(own, lanes);
-      const b = new StrokeBuilder();
-      b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane);
+      const b = new StrokeBuilder(false, MIN_SEG_M), from: number[] = [];
+      b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane, undefined, undefined, from);
       const ramps: number[] = [];
       rampMarks(own, e.built ? 0 : 1, ramps);
       const strokes = b.build();
-      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, ...lp, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
+      // each stroke segment's segment of the edge's given points, for its speed
+      const src = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
+      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, ...lp, src, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
     }
     if (c.speedGiven !== sg || (!sg && c.vmin !== e.vminKmh) || c.speed.length !== c.strokes.count) {
       const n = c.strokes.count, speed = new Float32Array(n), src = c.src;
@@ -1062,7 +1090,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
     if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || !sameBand(c.band, band))) {
-      const lines = new StrokeBuilder(true);
+      const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
       // stretch it is on (T-084)

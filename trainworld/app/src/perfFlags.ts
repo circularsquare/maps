@@ -91,15 +91,12 @@
 //   noDouble     adopted as default in T-075; use perfOff=noDouble for the old behavior
 //   focusFirst   the main pool's solving workers hold their solve and opening while the focus pool
 //                solves the zone in view (T-2045: Tokyo settled 5% sooner, the load's final 37% later)
-//   bandEdge bandWide bandFine bandSpaced  T-2223's looks for the gap between lines side by side
-//                (renderer.ts BAND_LOOK): touching with a tinted inner edge, 2 px, 1 px kept dark at
-//                any phase, a fifth of the band's width
 
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
 export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "fans" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads") => off.has(part);
-export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst" | "bandEdge" | "bandWide" | "bandFine" | "bandSpaced") => tries.has(fix);
+export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
 /** T-2058: how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

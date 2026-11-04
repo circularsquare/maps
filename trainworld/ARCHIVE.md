@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2222 A band snapping to its own track (2026-11-03, agent t2222b): same fault as T-2258, seen on her day 414 save north of Shinjuku in the Traffic view; gone at zoom 10-15 in both views. Sweep check covers the save at its opened zoom. notes/T-2058.md 3h
+- T-2258 The rounded prong on the curve (2026-11-03, agent t2222b): zero- and near-zero-length stroke segments (band knots, float32 points) pointed anywhere, so their round caps were shifted off the band. Strokes keep no segment under 8 plane m (`MIN_SEG_M`). notes/T-2058.md 3h
+- T-2223 The gap between bands (2026-11-03, agent t2222b): `bandFine` built in (1 px, caps as round as the sides, sharper ramp; Anita's pick), the other three looks and their flags removed. notes/T-2058.md 3g
 - T-2215 Islands I3, the grey "No route" (2026-11-03, agent t2215, lands with T-2214): bubbles pulled to grey by no-way trips, a fourth bar part and row (hovers, top bar, Cities, city view, selection, trip explorer), "No road between these two places". Bars add up to trips again; checks/t2215-no-route.mjs. notes/T-2207.md 4
 - T-2255 Diagram on the game's own graphs (2026-11-03, agent t2255): layout maths engine-independent (fmath.ts), checks capture and lay out the game's graphs (diagram-game.mjs); snap turn terms each round, separation redone where it folds. Doubling back over 16 samples 27 to 4, game's New York 5 to 0. notes/T-2255.md
 

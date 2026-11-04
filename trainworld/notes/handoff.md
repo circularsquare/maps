@@ -38,6 +38,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   picture, T-2222 the band snap on her export (artifacts/trainworld/anita-2026-11-03e/tokyo-day-414.save, default
   zoom, Yamanote north of Shinjuku). Main tree renderer, Vite 6189.
 
+- 23:00: c7066737 T-2255 (engine-independent diagram maths, checks on the game's graphs; T-2259/60/61 filed); 8800
+  build at c7066737 on the freeze, **8800 = build 862**, smoke 23/23 light and dark. **T-2215 DONE in tree
+  t2214** (check t2215-no-route 22/22, smoke 23/23; strings to show Anita; its ARCHIVE/TASKS/DECISIONS lines are
+  already committed). Land t2214 after t2257 reports. After landing: fix "Cheung Chau ferry bus to" (RouteParts.tsx
+  ~62 adds " bus" to ferries) and file the airport badge hover leaving No route out.
+
 ## Next
 1. When t2257 and t2215 report: commit t2257, land t2214, rebuild 8800 (plain snapbuild once nobody writes packs).
 2. T-2216 the market across parts (rebuild the 901 zone files then; Sunshine Coast lie, notes/T-2213.md), T-2256.

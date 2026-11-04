@@ -150,10 +150,14 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   with the Settings checkbox "Lines side by side" on (off by default, T-1886; `display.lineBands`,
   set on `renderer.lineBands` in main.ts, redrawn at once). In the Line view: on an edge with two or more lines each line is a band 80% of a line's width in its
   colour less 1 px (`BAND_GAP_PX`, T-2126: the casing's colour, white in the light theme and dark in
-  the dark one, shows between bands at every zoom), its sides smoothed over a pixel so the gap keeps
-  its width at every angle (T-2183, `v_aa`), one casing round them all (every casing is drawn
-  before any colour). Other looks for the gap are on trial, none the default (T-2223, notes/T-2058.md
-  3g; `?perfTry=bandEdge`, `bandWide`, `bandFine`, `bandSpaced`, renderer.ts `BAND_LOOK`).
+  the dark one, shows between bands at every zoom), its sides and round caps smoothed on a sharp
+  ramp (1.6 x the distance to the edge, minus 0.5 px) so the gap keeps its width at every angle and
+  a gap falling between two pixel columns still leaves them 70% casing, and the caps no fatter than
+  the sides, so curves made of short segments do not pinch it (T-2183, T-2223, `v_aa`); one casing
+  round them all (every casing is drawn before any colour). A band is shifted along its own
+  segment's normal, so line and track strokes keep no segment under 8 plane m (`MIN_SEG_M` in
+  network.ts, T-2258) unless it is all of its edge: a point closer than that to the last one kept
+  is dropped, the edge's last point moving the segment before it.
   Order on each edge, left to right: of two lines, the one turning more to the left where they
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
   number on the left of that line's travel; an edge's order is by how many of the others each line

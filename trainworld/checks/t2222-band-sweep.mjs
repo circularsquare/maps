@@ -1,8 +1,12 @@
-// T-2222: lines side by side drawn where their bands say, at every zoom. On the real New York save and
-// Anita's Tokyo save (skipped when absent), in the Line view and, once demand is final, the Traffic
-// view: at each zoom from 10.5 to 14.75 by 0.25 the simplified copy the renderer draws there
-// (strokeLod.ts) is compared with the full strokes at every vertex it merged away; and the full
-// strokes' band shifts are checked for jumps between joined segments and for metres past BAND_M_RANGE.
+// T-2222, T-2258: lines side by side drawn where their bands say, at every zoom. On the real New York
+// save and Anita's two Tokyo saves (skipped when absent; day 414 is the one her band snap was seen on,
+// T-2222), each opened as a load opens it (the camera fitted to its network), in the Line view and,
+// once demand is final, the Traffic view: at the zoom the load opened at and at each from 10 to 15 by
+// 0.25 the simplified copy the renderer draws there (strokeLod.ts) is compared with the full strokes
+// at every vertex it merged away; the full strokes' band shifts are checked for jumps between joined
+// segments and for metres past BAND_M_RANGE; and no line or track segment is shorter than
+// network.ts' MIN_SEG_M unless it is all of its edge (a shorter one points anywhere, so its band or
+// track is shifted the wrong way: the round prong and the band snapping to its own track).
 //   node trainworld/checks/t2222-band-sweep.mjs [url] [--line]     (default http://localhost:6189/)
 // One PASS or FAIL line per save, view and check; figures in artifacts/trainworld/t2222/sweep.json.
 import { existsSync } from 'node:fs';
@@ -12,8 +16,9 @@ import { ARTIFACTS, REAL_SAVE, launchChrome, importSave, collectErrors, demandFi
 const URL = process.argv.find((a, i) => i > 1 && !a.startsWith('--')) ?? 'http://localhost:6189/';
 const LINE_ONLY = process.argv.includes('--line');
 const TOKYO = 'C:/Users/anita/Documents/trainworld/Tokyo Seoul Fukuoka Busan (from anita.garden).save';
-const SAVES = [['real', REAL_SAVE], ['tokyo', TOKYO]].filter(([, f]) => existsSync(f));
-const ZOOMS = Array.from({ length: 18 }, (_, i) => 10.5 + i * 0.25);
+const DAY414 = `${ARTIFACTS}anita-2026-11-03e/tokyo-day-414.save`;
+const SAVES = [['real', REAL_SAVE], ['tokyo', TOKYO], ['day414', DAY414]].filter(([, f]) => existsSync(f));
+const ZOOMS = Array.from({ length: 21 }, (_, i) => 10 + i * 0.25);
 // (in the page: a merged vertex may sit at most 1 px off its band; a join may step 0.05 line widths
 // and 1 m in the Line view, 0.2 line widths in the Traffic view)
 const out = {};
@@ -67,6 +72,28 @@ const sweep = async ({ zooms, at }) => {
   return { jumps: jumps.length, jumpsAt: jumps.slice(0, 10), clamped, zooms: zs };
 };
 
+// in the page: line and track segments shorter than MIN_SEG_M that are not all of their edge's stroke
+const short = async () => {
+  const tw = window.tw, net = tw.renderer.net;
+  const { MIN_SEG_M } = await import('/src/map/network.ts');
+  const out = {};
+  for (const name of ['lines', 'track']) {
+    const S = net[name], n = S.count, at = [];
+    let count = 0, whole = 0, wholeMin = Infinity;
+    const same = (i, k) => k >= 0 && k < n && S.edge[k] === S.edge[i] && S.colour[k] === S.colour[i];
+    for (let i = 0; i < n; i++) {
+      const L = Math.hypot(S.seg[i * 4 + 2] - S.seg[i * 4], S.seg[i * 4 + 3] - S.seg[i * 4 + 1]);
+      if (L >= MIN_SEG_M) continue;
+      // (an edge drawn as one short segment: reported, not failed)
+      if (!(same(i, i - 1) || same(i, i + 1))) { whole++; wholeMin = Math.min(wholeMin, L); continue; }
+      count++;
+      if (at.length < 10) { const p = tw.toLngLat(S.seg[i * 4], S.seg[i * 4 + 1]); at.push([S.colour[i], S.edge[i], +L.toFixed(2), +(p.lng ?? p[0]).toFixed(5), +(p.lat ?? p[1]).toFixed(5)]); }
+    }
+    out[name] = { count, at, whole, wholeMin: whole ? +wholeMin.toFixed(2) : null };
+  }
+  return { min: MIN_SEG_M, ...out };
+};
+
 const { ctx, close } = await launchChrome({ prefix: 'tw-t2222-', size: [1400, 900], args: GL });
 const page = ctx.pages()[0] ?? await ctx.newPage();
 const errors = [];
@@ -75,11 +102,15 @@ try {
   await page.goto(`${URL}?debug=1&new=1&paused=1&demandWorkers=1`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   for (const [name, file] of SAVES) {
-    await page.evaluate(() => { window.tw.client.lastLoad = null; window.twPrev = [window.tw.renderer.net, window.tw.client.lastLines]; });
+    await page.evaluate(() => { window.tw.client.lastLoad = null; window.twPrev = [window.tw.renderer.net, window.tw.client.lastLines]; window.tw.client.fitNextGame(); });
     await importSave(page, await readFile(file));
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.renderer.net?.lines.count > 0 && window.tw.client.lastLines?.length > 0 && window.tw.renderer.net !== window.twPrev[0] && window.tw.client.lastLines !== window.twPrev[1], undefined, { timeout: 600000 });
     await new Promise((r) => setTimeout(r, 2000));
-    const at = await page.evaluate(() => { const c = window.tw.map.getCenter(); return [c.lng, c.lat]; });
+    const [at, opened] = await page.evaluate(() => { const m = window.tw.map, c = m.getCenter(); return [[c.lng, c.lat], +m.getZoom().toFixed(2)]; });
+    const zooms = [...new Set([opened, ...ZOOMS])];
+    const sh = await page.evaluate(short);
+    out[`${name}-short`] = sh;
+    line(sh.lines.count + sh.track.count === 0, `${name}: no line or track segment under ${sh.min} m but its edge's only one`, sh.lines.count + sh.track.count ? `lines ${sh.lines.count}, track ${sh.track.count}, first ${JSON.stringify(sh.lines.at[0] ?? sh.track.at[0])}` : `opened at zoom ${opened}; edges drawn as one short segment: lines ${sh.lines.whole}${sh.lines.whole ? ` (shortest ${sh.lines.wholeMin} m)` : ''}, track ${sh.track.whole}`);
     for (const view of LINE_ONLY ? ['line'] : ['line', 'traffic']) {
       if (view === 'traffic') await demandFinal(page, { polling: 1000, lines: 1 }).catch((e) => console.log(`(${name}) demand wait: ${e.message.split('\n')[0]}`));
       await page.evaluate((v) => {
@@ -89,7 +120,7 @@ try {
         tw.overlay.invalidate();
       }, view);
       await new Promise((r) => setTimeout(r, 3000));
-      const r = await page.evaluate(sweep, { zooms: ZOOMS, at });
+      const r = await page.evaluate(sweep, { zooms, at });
       out[`${name}-${view}`] = r;
       const bad = r.zooms.filter((z) => z.over > 0);
       line(bad.length === 0, `${name} ${view}: drawn copies on their bands at every zoom`, bad.length ? bad.map((z) => `z${z.z} ${z.over} (max ${z.max} px)`).join(', ') : `max ${Math.max(...r.zooms.map((z) => z.max))} px, ${r.zooms.filter((z) => z.lod).length} of ${r.zooms.length} zooms simplified`);
