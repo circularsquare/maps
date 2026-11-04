@@ -1192,13 +1192,25 @@ impl Service {
     /// it stands; its stand there is the timing hold.
     fn hand_over(trips: &mut [Trip], eras: &[Era], is_loop: bool) {
         let ready: Vec<f64> = trips.iter().map(|t| t.end).collect();
+        // T-2429: a train standing at the terminal across a change, which its new, quicker run would
+        // have had ready before it, waits from the change, and up to the half headway the new
+        // pattern's first departure may be put back (MIN_GAP_SHARE)
+        let from: Vec<f64> = trips
+            .iter()
+            .zip(&ready)
+            .map(|(t, &r)| eras.iter().filter(|e| r < e.until && e.drawn.contains(&(t.run, t.dep))).fold(r, |m, e| m.max(e.until)))
+            .collect();
         // whether train `w` may stand until `d`: within the departure's headway, and not across a
         // change unless it was drawn then
         let can = |trips: &[Trip], w: usize, d: f64, hw: f64| {
+            let span = if from[w] > ready[w] { 1.0 + MIN_GAP_SHARE } else { 1.0 };
             d >= ready[w] - HANDOVER_TOL_S
-                && d - ready[w] <= HANDOVER_MAX_S.min(hw.max(1.0)) + HANDOVER_TOL_S
+                && d - from[w] <= HANDOVER_MAX_S.min(span * hw.max(1.0)) + HANDOVER_TOL_S
                 && eras.iter().all(|e| !(ready[w] < e.until && d > e.until) || e.drawn.contains(&(trips[w].run, trips[w].dep)))
         };
+        for (t, &f) in trips.iter_mut().zip(&from) {
+            t.end = f;
+        }
         for r in 0..2u8 {
             // trains finishing run r stand at the first stop of the other run, or of run r on a loop
             let mut ev: Vec<(f64, u8, usize)> = vec![];

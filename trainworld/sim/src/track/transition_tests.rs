@@ -224,6 +224,20 @@ fn a_change_on_full_track_moves_no_train() {
 }
 
 #[test]
+fn a_change_to_a_following_pair_on_full_track_moves_no_train() {
+    // T-2429: an express behind a local, both at 40 trains, more than the track takes. Fewer locals
+    // make the express's run much quicker, so a train standing at its terminal at the edit would
+    // have been ready to leave before it
+    let (mut w, ns) = corridor(7);
+    let local = line(&mut w, &ns, [8.0, 6.0, 3.0]);
+    let express = line(&mut w, &[ns[0], ns[6]], [8.0, 6.0, 3.0]);
+    counts(&mut w, local, [40, 40, 2]);
+    counts(&mut w, express, [40, 40, 2]);
+    edit_at(&mut w, MIDDAY, "local, fewer", |w| counts(w, local, [3, 40, 2]));
+    edit_at(&mut w, MIDDAY + 4.0 * 3600.0, "express, fewer", |w| counts(w, express, [3, 40, 2]));
+}
+
+#[test]
 fn a_headway_change_moves_no_train() {
     let (mut w, ns) = corridor(7);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
