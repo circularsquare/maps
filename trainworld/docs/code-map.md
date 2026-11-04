@@ -929,10 +929,12 @@ only the rows of zones whose market pack changed, came or went and of places wit
 them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929;
 the joint and everyday files with pairs from the named zones only, picked by `pair_files.py`'s index,
 whose `unused --move` moves files that give no zone a pair to `data/work/retired/`, T-1976),
-`market_drives.py build` for new or moved places (the routed drives between places,
-`data/packs/market-drives.bin`; each place's paths cached in `data/work/market_drives/sources/`, so
-only new places are routed, minutes; the first run makes the world slope grid there, about 5
-minutes on 4 cores, and routes every place, about 80 minutes on 4; T-279),
+`market_drives.py build` for new or moved places (the routed drives between places and each zone's
+own detour towards each partner, `data/packs/market-drives.bin`; each place's paths cached in
+`data/work/market_drives/sources/`, so only new places and places with a new or moved partner are
+routed, minutes; zone centres cached in `zones.json`, OSM's car ferries in `car_ferries.npy` from
+Overpass tiles in `data/raw/market_drives/`; the first run makes the world slope grid there, about 5
+minutes on 4 cores, and routes every place; T-279, T-2424),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
 first, or one step through `merge_cells.py <ids> --through`).
