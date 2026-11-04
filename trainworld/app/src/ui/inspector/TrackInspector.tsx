@@ -1,8 +1,7 @@
-// The track inspector (SPEC 8): a stretch of track, its elevation while a blueprint, and double up.
+// The track inspector (SPEC 8): a stretch of track and double up; a blueprint piece's level is set in the
+// selection bar, which a click on it opens too (T-2283).
 
 import { distance, levelLabel, money, speed, upkeepText } from "../../game/format";
-import { LEVELS, type Level } from "../../game/types";
-import { parseEdgePis, type EdgePis } from "../../map/edgeEdit";
 import { selection } from "../../game/ui";
 import { edit, say, world } from "../../game/world";
 import { createLine } from "../../game/lineActions";
@@ -12,33 +11,6 @@ import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
 import { Built, Chip, ConstructRemove, Icon, Row } from "../widgets";
 import { useClockQuery } from "../useClockQuery";
-
-/** A blueprint stretch's elevation. Corners are dragged on the map (map/edgeEdit.ts). */
-function Shape({ edge, version }: { edge: number; version: number }) {
-  const shape = useClockQuery<EdgePis>({ what: "edgePis", edge }, [edge, version], parseEdgePis, true);
-  if (!shape) return null;
-  const pis = shape.pis;
-  const track = world.value?.edges.find(e => e.id === edge);
-  // a straight piece has no corners, so its elevation is its ends', moved by edgesLevel as in the selection bar
-  const level = pis.length ? (pis.every((p) => p.level === pis[0].level) ? pis[0].level : null) : track && track.levelMin === track.levelMax ? track.levelMin : null;
-  const setLevel = async (l: Level) => {
-    if (pis.length) return void edit({ op: "edgeLevel", edge, level: l });
-    const a = await edit({ op: "edgesLevel", edges: [edge], level: l }, true);
-    if (!a.ok) say(`This track cannot go to level ${levelLabel(l)}.`, true);
-  };
-  return (
-    <>
-      <div class="h">Level</div>
-      <div class="group levels">
-        {LEVELS.map((l) => (
-          <button class={"btn" + (l === level ? " on" : "")} onClick={() => void setLevel(l)}>
-            {levelLabel(l)}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
 
 /** Double up: an express pair beside this double track as far as its run goes, as
  * blueprint. The hover gives the price or why not. */
@@ -100,7 +72,6 @@ export function TrackInspector({ edge }: { edge: number }) {
           </Row>
         )}
       </ul>
-      {!e.built && !e.crossover && <Shape edge={e.id} version={w.version} />}
       {lines.length > 0 && <div class="h">Lines here</div>}
       {lines.length === 0 && (
         <div class="h">

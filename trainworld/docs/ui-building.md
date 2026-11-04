@@ -11,65 +11,31 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
 - **Tools**: draw track (key 1), station (2), delete (3), select (4, [below](#the-select-tool)), in a
-  2 by 2 grid [T-1128], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
-  [T-1514]; then the level, headed "Level" (seven buttons
-  tinted in their Level colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  (hover "Ground level (Shift+4)" and so on, then "0.5x cost, $37.5M per km", that level's multiplier
-  and price as the price row below gives them [T-2271], then "Upkeep $20k per km per day", that
-  elevation's upkeep for one km of the picked track type (both pairs on Quad), `edgeUpkeep` [T-2006, T-2009];
-  the three lines are `levelTip` in `ui/trackPrice.ts`): Shift+1 to Shift+7 pick the drawing
-  elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
-  switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
-  `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
-  (below), then the **ramp switch** (track humping over a line seen side on;
-  hover "Automatically try to ramp over crossed tracks at the same level."; on by default) [T-1615, [track-and-service.md](track-and-service.md)
-  6.1 "Ramping over track"], then the **Terrain** switch (a mountain;
-  hover "Show terrain. Steep terrain costs more to build on.", as Settings' Terrain row [T-2158]), the same switch as
-  Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394], both left aligned after the price [T-1802]. The price is the picked elevation's price per km and multiplier, "$99M per
-  km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground; with Quad
-  picked, both pairs': the price and the upkeep lines are two double tracks', the multiplier stays
-  the elevation's [T-2009]), the
-  multiplier on the track tool's tag colours: light yellow at 1x [T-2271], yellow growing above it,
-  light green growing below it (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
-  [T-1159] (with ", high-speed track" or ", quad track" after it) [T-2009] and gives the same upkeep line as the elevation buttons [T-2006]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
-  the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
-  by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
-  6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High
-  speed sets it to 320 (it can still be stepped down) and picking Double or Quad again puts back
-  the speed from before [T-817], and the platform
-  length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool, and the game
-  adds none: the player draws crossing track [T-733, T-1688, [track-and-service.md](track-and-service.md) 6.1].
-  Everything the player reads says level for the track's seven steps, never elevation ("Level",
-  "Level +1", "Levels go from −3 to +3."; "ground level" is one of them) [T-2226, reversing T-526].
-  Beside keep placing, the **snap switch** (a magnet, "Snap to real world network") [T-727]: while
-  it is on and the track tool is in hand, the real network is drawn at full strength
-  ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  Then the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
-  region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
-  does is under [Drawing track](#drawing-track).
-  The elevation, the auto elevation and ramp switches, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap and beside switches are remembered per
-  browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
-  by default [T-942]. A browser with nothing remembered starts at +1, the first visit's elevation
-  (ground track bridges water and ramps over other track, which brings refusals a new player has no
-  reason to expect) [T-1822].
+  2 by 2 grid [T-1128], and under them Bus (U, [below](#drawing-a-bus-line)) [T-1514] and Ferry (O).
+  The tools' options are on the map while the tool is on ([below](#the-track-and-station-bars)), so
+  the tab holds the tools, the "N disabled" count and the blueprint [T-2282]. There is no terrain
+  switch here: Settings > Show > Terrain is the one ([ui-map.md](ui-map.md)) [T-1394, T-2282].
   The tool letters work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. Three more letter keys work from any tab [T-670, `ACTION_KEYS` in
   `ui/toolKeys.ts`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
   there is nothing to build), N makes a new line and S starts or finishes editing the selected line's
   stops; none fires while a text field has focus or a question is open. Full key list: Keys and focus in
-  [ui-panels.md](ui-panels.md#keys-and-focus). There is no button for plain selecting: clicking the active tool again or
-  leaving it with Esc returns to selecting. The trip tool (key T) is in
+  [ui-panels.md](ui-panels.md#keys-and-focus). There is no button for plain selecting: clicking the active tool again,
+  leaving it with Esc or the descriptor's cross returns to selecting. The trip tool (key T) is in
   [ui-inspectors.md](ui-inspectors.md).
-- **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
+- **The blueprint**, under the tools and taking the rest of the pane: the blueprint total, undo
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
   ([below](#the-select-tool)). The total is red when it is more than the cash on hand [T-527]. It includes the new
   train cars that constructing starts, after spare cars.
   Under the total and its upkeep line, above Construct, is the **Cost breakdown** [T-2269], collapsed
-  by default (it opens and closes with its heading; the bottom area takes at most 60% of the pane
-  and the breakdown scrolls within it). Open, it lists the blueprint by **part**: track joined by
+  by default (it opens and closes with its heading, 13 px and semibold over rows of 12 px with the
+  parts' names in medium weight, T-2339; past the pane's height the breakdown scrolls within it).
+  Open, it lists the blueprint by **part**: track joined by
   blueprint track (crossovers included), biggest price first, each a heading row named by the first
   and last stations met walking it from an end ("Alpha St to Charlie Sq"; one station's name; "Track"
-  with none) and then, when it has more than one row, its rows in track order: each blueprint
+  with none). A part is that one line until its chevron opens it [T-2339]; each part opens and
+  folds on its own, all folded at first, and stays open across edits while the breakdown is open. A
+  part with more than one row has the chevron, and open it shows its rows in track order: each blueprint
   station ("Alpha St", its upgrades and passages in its price) and each **stretch**, the track
   between two stations, junctions or track ends, named by its ends ("Alpha St to Bravo Av",
   "Alpha St to a junction", "Bravo Av to a track end", "Bravo Av to built track"; an end within
@@ -104,11 +70,82 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   out for it [T-1039], then the tool is left for selecting, then the selection clears. Leaving the
   track tool any other way (another tool, a game loaded) drops the route too.
 - A refused edit's reason and what an edit did ("Blueprint added: ...") show at the map's bottom
-  left ([ui-panels.md](ui-panels.md) "The dock"). The build tools (track, station, delete, select)
+  left, under the mode's descriptor ([ui-panels.md](ui-panels.md) "The dock"). The build tools (track, station, delete, select)
   show no instructions there (Anita, T-1159); stop editing and the trip tool keep their one-line hints.
-- **Spacing**: in the Build tab the Track row, Target max speed and Platform length are 6 px apart,
-  so rows of one kind are never further apart than from the controls above them; the Target max
-  speed box fits "320 km/h" [T-1159].
+
+## The track and station bars
+
+[T-2282; `ui/ToolBar.tsx`; design notes/T-2267.md] The track and station tools' options are in a bar
+on the map while the tool is on, in the selection bar's box and place: top centre, lower on narrower
+maps as the selection bar goes (`.blueprint-bar` rules), and on a phone the map's bottom edge. Only one
+of the three bars shows at a time; the other modes have none.
+
+- **The track bar**, two rows. First "Level" (muted), the seven level buttons, the size they had in
+  the Build tab, tinted in their Level colours, the chosen one solid with a dark outline, a light one
+  in the dark theme [T-478, T-692]; hover "Ground level (Shift+4)" and so on, then "0.5x cost, $37.5M
+  per km", that level's multiplier and price as the price gives them [T-2271], then "Upkeep $20k per
+  km per day", that level's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006] (the
+  three lines are `levelTip` in `ui/trackPrice.ts`). Shift+1 to Shift+7 pick the drawing level from
+  any tab, by key code, 4 being 0 [T-1701, T-1834]; every segment's open-ground end takes the level
+  picked (`Tools.freeLevel`). Then the **ramp switch** (track humping over a line seen side on; hover
+  "Automatically try to ramp over crossed tracks at the same level."; on by default) [T-1615,
+  [track-and-service.md](track-and-service.md) 6.1 "Ramping over track"], then the price: the picked
+  level's price per km and multiplier, "$99M per km (1.1x cost)" (with High speed picked,
+  high-speed track's: 1.5x, so 0.75x at ground), the multiplier on the track tool's tag colours:
+  light yellow at 1x [T-2271], yellow growing above it, light green growing below it (`costTint` in
+  `map/trackTagRows.ts`); its hover names the level [T-1159] (with ", high-speed track" after it)
+  and gives the same upkeep line as the level buttons [T-2006].
+  The second row: **Regular** or **High speed** track [T-255, T-817; no single track, T-733], the
+  selection bar's words. Quad left the choice [T-2282]: old quad track is two double-track pieces
+  side by side and shows, runs and is edited as before, and Double up (the track inspector's and the
+  selection bar's) still adds the pair beside a run; a browser that remembered Quad starts on Regular.
+  Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
+  while it is on and the track tool is in hand, the real network is drawn at full strength
+  ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network);
+  and the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
+  region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
+  does is under [Drawing track](#drawing-track). Last **Target max speed** (hover "Attempt to draw
+  track straight enough to reach this speed."), a stepper through 160, 200, 250 and 320 km/h, 160 by
+  default, its box fitting "320 km/h"; higher lays the curves of newly drawn track wider,
+  [track-and-service.md](track-and-service.md) 6.1 [T-817, T-1127]; picking High speed sets it to 320
+  (it can still be stepped down) and picking Regular again puts back the speed from before [T-817].
+  There is no crossover tool, and the game adds none: the player draws crossing track [T-733, T-1688,
+  [track-and-service.md](track-and-service.md) 6.1]. Everything the player reads says level for the
+  track's seven steps, never elevation ("Level", "Level +1", "Levels go from −3 to +3."; "ground
+  level" is one of them) [T-2226, reversing T-526].
+- **The station bar**, one row: **Platform length** and its stepper, for new stations. The station
+  tool reads no other option.
+- The level, the ramp switch, the track type, the target max speed, the keep placing switch and the
+  snap and beside switches are remembered per browser (localStorage with the other panel settings,
+  not in the save) [T-468]; keep placing is on by default [T-942]. A browser with nothing remembered
+  starts at +1, the first visit's level (ground track bridges water and ramps over other track, which
+  brings refusals a new player has no reason to expect) [T-1822].
+- **On a phone** (at most 600 px wide and at least 560 px tall) the bar is one row of 36 px buttons on
+  the map's bottom edge, 10 px in, that fits 390 px (scrolling sideways when narrower): the chosen
+  level as one button in its colour, the track type as a button showing "Regular" or "High speed",
+  the ramp switch, the three switches, and the target speed as a button showing "160"; a tap on the
+  level, type or speed button opens its choices above the bar (the selection bar's pattern, T-1263),
+  and a pick closes them. The price is not shown there. The tool notes sit right above the bar and
+  give way while a choice is open.
+
+## Click modes: the aura and the descriptor
+
+[T-2284; `MapToolBar` in `ui/ToolBar.tsx`, `ui/ToolNotes.tsx`, `CLICK_MODE_COLOURS` in
+`game/palette.ts`; design notes/T-2267.md 3.7] Each click mode but plain selecting has its own
+colour: track `#0a819d`, station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
+ferry `#16716f`, line stops `#d777ed`, trip explorer `#268769`, station building `#a15b7b`, passage
+`#b0866a`, the same in both shades (chosen 11 or more CIEDE2000 from every colour the game draws).
+
+- **The aura**: the mode's colour round the inside of the map, full at the edge and fading to nothing
+  8 px in, still, taking no pointer events; none while plain selecting, so an aura means a click does
+  something other than open an inspector. Nothing at the map's edges sits within it: the tool notes,
+  the attribution and the phone bars are 10 px in, the other map controls were already.
+- **The descriptor** is the first line of the tool notes: a 10 px square in the mode's colour, then
+  what the player is doing: "Placing track", "Placing stations", "Deleting", "Selecting track and
+  stations", "Exploring a trip" (its hint under it), "New passage from Bedford Av", each with a cross
+  after it to leave the mode (hover "Stop (Esc)", for a phone, which has no Esc). The bus, ferry,
+  stop editing and station building tools' rows are their descriptors, the square before their words
+  ("New bus line: 3 points" with Cancel and Make line, and so on).
 
 ## Building by touch
 
@@ -137,7 +174,7 @@ mouse moving again takes it back).
   drawn it drops the start and the waiting end both, so the next taps are a new start and end and
   the tool stays on [T-1703]; with none in progress it takes back the last segment as Backspace
   does) and stop (a red cross; the run ends and its track stays, or the placement is dropped; the
-  tool stays on). The elevation and track type are the Build tab's [T-1706].
+  tool stays on). The level and track type are the track bar's [T-1706, T-2282].
 - **Bus points** drag with a finger and are deleted by holding one (Drawing a bus line, T-1517).
 - **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
   a fling is no tap (MapLibre's own rule).
@@ -173,7 +210,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
   places the segment and starts the next one at its end; without Shift the tool is ready for a new
-  start. The **keep placing** button (an icon beside the Double and Quad choice) does the
+  start. The **keep placing** button (an icon beside the Regular and High speed choice) does the
   same for every click until it is switched off; it is on by default, and each press of Caps Lock
   flips it, whatever the lock's own light shows (the button shows the switch) [T-445, T-942]. A
   segment that joins track (a loose end or other node, or the middle of a piece of track or
@@ -532,11 +569,14 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
 - **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
-  map while the tool has a selection (on the demand buttons' row on a map column over 1350 px, so it
+  map while the tool has a selection, and while plain selecting has a blueprint piece clicked
+  [T-2283]: the click opens the track inspector (which has no level buttons) and makes that one
+  piece the pick, so the bar acts on it; any other selection, Esc or Clear drops it, and built
+  track clicked gets no bar (on the demand buttons' row on a map column over 1350 px, so it
   clears the status tag beside them [T-349]; one row lower below that, lower again below 680 px; it
   appears and goes in one step) is the pick's inspector: "N selected" (its hover says blueprint or
   constructed and lists track and stations), the picked track's total length, and the actions.
-  For blueprint: the seven elevation buttons tinted as in the Build tab (the one all the picked
+  For blueprint: the seven level buttons tinted as in the track bar (the one all the picked
   track is on solid), **Regular** and **High speed** while the pick holds blueprint double track
   [T-1898; `hsrPicked`, `TrackApi::set_edges_hsr`] (the kind all of it is solid, neither when
   mixed; High speed's hover gives its 1.5x price): every picked double piece to that kind in one
@@ -617,10 +657,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
 - **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
-  says "Remove track"), the elevation buttons and the lines here [T-1669]. It has no corner list and
-  no curve radius: corners are dragged on the map. The elevation buttons put the piece on one
-  elevation: all its corners, or for a straight piece with none its ends, as the selection bar does
-  for one piece (`edgesLevel`; a notice says when it cannot change) [T-841, T-244]. On double track (blueprint or
+  says "Remove track") and the lines here [T-1669]. It has no corner list and
+  no curve radius: corners are dragged on the map. Its level is set in the selection bar, which the
+  click on the piece opens too (`edgesLevel`; a notice says when it cannot change) [T-841, T-244,
+  T-2283]. On double track (blueprint or
   built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/TrackInspector.tsx`], an
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint
   ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or

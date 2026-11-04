@@ -12,7 +12,7 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
-import { designSpeed, trackCount } from "../game/ui";
+import { designSpeed } from "../game/ui";
 import { dataUrl } from "../game/dataBase";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
@@ -294,7 +294,7 @@ export class RealSnap {
     s.phase = "search";
     s.t0 = performance.now();
     setTimeout(() => this.redraw(), SLOW_MS + 20);
-    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: trackCount.peek(), level: this.level(), tol: TOL_M, design: designSpeed.peek() });
+    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: 2, level: this.level(), tol: TOL_M, design: designSpeed.peek() });
   }
 
   private finish(s: Spot, phase: "done" | "none" | "off") {

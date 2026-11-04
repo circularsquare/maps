@@ -8,7 +8,7 @@ import { bigDistance, distance, levelLabel } from "./format";
 import { describeIssues } from "./issues";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge } from "./types";
-import { ask, tool } from "./ui";
+import { ask, selection, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
 
 export interface BpPicked {
@@ -293,6 +293,13 @@ effect(() => {
   const next = trimNodes({ edges: p.edges.filter((e) => edges.has(e)), stations: p.stations.filter((s) => stations.has(s)), built: p.built, ...(p.nodes ? { nodes: p.nodes } : {}) });
   if (next.edges.length !== p.edges.length || next.stations.length !== p.stations.length || next.nodes?.length !== p.nodes?.length) bpPicked.value = next;
 });
+// T-2283: a plain click on blueprint track makes that piece the pick too, so the selection bar shows
+// for it; anything else selected clears it.
 effect(() => {
-  if (tool.value !== "blueprint") clearBpPicked();
+  const t = tool.value, sel = selection.value;
+  if (t === "blueprint") return;
+  const e = t === "select" && sel?.kind === "track" ? world.peek()?.edges.find((x) => x.id === sel.edge) : undefined;
+  if (!e || e.built || e.crossover) return clearBpPicked();
+  const p = bpPicked.peek();
+  if (p.edges.length !== 1 || p.edges[0] !== e.id || p.stations.length) bpPicked.value = { edges: [e.id], stations: [] };
 });

@@ -75,13 +75,15 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes. By
   default it is 36% of the dock but at least 440 px (the inspector keeps 160 px), which holds the
-  Build tab's tools, elevation, track rows and blueprint bar whole; only a blueprint's cost
-  breakdown, the lists and Money and Settings scroll [T-1128].
+  Build tab's tools and blueprint whole; only a blueprint's cost breakdown, the lists and Money and
+  Settings scroll [T-1128].
 - The player can drag the dock wider or narrower and move the divider between tab area and
   inspector; both are remembered per browser. Each tab keeps its own scroll position for the
   session, opening at its top the first time [T-215].
-- A refused edit's reason, what an edit did, and the stop editor's and trip tool's one-line hints
-  show at the map's bottom left (`ui/ToolNotes.tsx`); the build tools have no hint there [T-1159].
+- The **tool notes** at the map's bottom left, 10 px in (`ui/ToolNotes.tsx`): first the click mode's
+  descriptor ([ui-building.md](ui-building.md#click-modes-the-aura-and-the-descriptor)), then the stop
+  editor's and trip tool's one-line hints (the build tools have none, T-1159), then a refused edit's
+  reason or what an edit did.
 - **Narrow screens** [T-951, T-1259, `style.css`]: at most 600 px wide and at least 560 px tall (a
   phone held upright) the dock goes under the map, full width and 40% of the height, so the map and
   top bar keep the whole width and the map column's container queries see the real width. A strip

@@ -13,7 +13,7 @@ import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
 import { world } from "../game/world";
 import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
-import { blueprintParts, bpHover, switchRow } from "../game/blueprintStretches";
+import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/blueprintStretches";
 import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
@@ -204,7 +204,7 @@ function PickDoubleUp() {
   );
 }
 
-/** T-353, T-815, T-829: while the Select tool has a selection, a bar at the map's top centre, the
+/** T-353, T-815, T-829: while the Select tool has a selection (or a blueprint piece is clicked, T-2283), a bar at the map's top centre, the
  * selection's inspector: how many pieces and how much track, then for blueprint the elevation
  * buttons, regular or high-speed track (T-1898, for its double track), Disable and Enable; Remove
  * and Clear for either kind. Appears and goes in one step. */
@@ -213,7 +213,8 @@ export function BlueprintBar() {
   const n = s.edges + s.stations;
   const [levels, setLevels] = useState(false);
   useEffect(() => { if (n === 0) setLevels(false); }, [n]);
-  if (tool.value !== "blueprint" || n === 0) return null;
+  // T-2283: the plain select tool's pick is the blueprint track clicked (game/blueprintPick.ts)
+  if ((tool.value !== "blueprint" && tool.value !== "select") || n === 0) return null;
   const piece = (s.built ? "Built: " : "Blueprint: ") + pieces(s.edges, s.stations);
   const levelTip = (l: Level) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`;
   const canLevel = !s.built && s.edges > 0;
@@ -304,6 +305,10 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
   const pieces = useBlueprintPieces(open);
   const w = world.value;
   const parts = useMemo(() => (open && w && pieces ? blueprintParts(w, pieces) : []), [open, w, pieces]);
+  // T-2339: each part one line until its chevron opens it, kept by its first piece across edits
+  const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(new Set());
+  const partKey = (p: BpPart) => (p.edges.length ? `e${Math.min(...p.edges)}` : `s${p.stations[0]}`);
+  const fold = (k: string) => setUnfolded((was) => { const s = new Set(was); s.has(k) ? s.delete(k) : s.add(k); return s; });
   useEffect(() => () => { bpHover.value = []; }, []);
   // the switched-off blueprint counts, so a blueprint all switched off can be switched back on here
   if (!items.length && !(w && w.money.blueprintCost > 0)) return null;
@@ -311,16 +316,22 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
     <details class="blueprint-breakdown" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
       <summary>Cost breakdown</summary>
       <div class="bp-breakdown-list">
-        {parts.map((p) => (
+        {parts.map((p) => {
+          const k = partKey(p), many = p.rows.length > 1 || p.junctions > 0, isOpen = many && unfolded.has(k);
+          return (
           <div class="bp-part">
             <ul class="rows pick blueprint-items">
               <li class={"bp-part-head" + (p.on ? "" : " bp-off")} {...hover(p.edges)} onClick={() => locateNodes(p.nodes)}
                 data-tip={[p.stationCount ? plural(p.stationCount, "station") : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean).join(", ")}>
+                {many ? (
+                  <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} aria-label={isOpen ? "Fold" : "Unfold"} aria-expanded={isOpen}
+                    onClick={(e) => { e.stopPropagation(); fold(k); }}><Icon.chevron /></button>
+                ) : <span class="bp-fold-gap" />}
                 <OffSwitch on={p.on} what="all joined track" flip={() => void switchRow(p)} />
-                <span class="grow b">{p.label}</span>
+                <span class="grow">{p.label}</span>
                 <span class="val">{money(p.on ? p.onCost : p.cost)}</span>
               </li>
-              {(p.rows.length > 1 || p.junctions > 0) && p.rows.map((r) => (
+              {isOpen && p.rows.map((r) => (
                 <li class={"bp-sub" + (r.on ? "" : " bp-off")} {...hover(r.edges)} onClick={() => locateNodes(r.nodes)}
                   data-tip={r.kind === "stretch" ? [levelsText(r), r.crossings ? `${plural(r.crossings, "flat crossing")}, ${money(r.crossingCost)}` : ""].filter(Boolean).join("\n") : undefined}>
                   <OffSwitch on={r.on} what={r.kind === "stretch" ? "this stretch" : "this station"} flip={() => void switchRow(r)} />
@@ -329,7 +340,7 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
                   <span class="val">{money(r.on ? r.onCost : r.cost)}</span>
                 </li>
               ))}
-              {p.junctions > 0 && (
+              {isOpen && p.junctions > 0 && (
                 <li class={"bp-sub bp-fixed" + (p.junctionOnCost > 0 || !p.junctionCost ? "" : " bp-off")} {...hover(p.edges)}>
                   <span class="grow">{plural(p.junctions, "junction")}</span>
                   <span class="val">{money(p.junctionOnCost > 0 ? p.junctionOnCost : p.junctionCost)}</span>
@@ -337,7 +348,8 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
               )}
             </ul>
           </div>
-        ))}
+          );
+        })}
         <KindRows items={items} only={NOT_TRACK} />
         {items.length > 0 && (
           <details class="bp-by-kind">

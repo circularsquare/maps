@@ -78,6 +78,7 @@ import { MapSky, TopBar } from "./ui/TopBar";
 import { flipDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
+import { MapToolBar } from "./ui/ToolBar";
 import { startTroubleList } from "./ui/TroubleList";
 import { mountGuide } from "./ui/Guide";
 import { guideNewGame } from "./game/guide";
@@ -153,6 +154,9 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
+const toolBarRoot = document.createElement("div");
+map.getContainer().appendChild(toolBarRoot);
+render(h(MapToolBar, null), toolBarRoot); // T-2282, T-2284: the track and station bars in its place, and the mode's aura
 const skyRoot = document.createElement("div");
 map.getContainer().appendChild(skyRoot);
 render(h(MapSky, null), skyRoot); // T-1868: the day and night picture at the map's top right

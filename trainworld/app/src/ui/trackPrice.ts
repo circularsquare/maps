@@ -1,5 +1,4 @@
-// The track tool's price at a level and its level buttons' hovers (T-2271), apart from the Build tab
-// so the on-map track bar (T-2282) can take them as they are.
+// The track tool's price at a level and its level buttons' hovers (T-2271), for the track bar (T-2282).
 
 import { distUnit, levelName, levelUpkeepLine, perDistance } from "../game/format";
 import type { MoneyState } from "../workers/protocol";
@@ -18,14 +17,12 @@ const HSR_COST = 1.5;
 export const trackMult = (l: Level, t: TrackType) => MULT[l] * (t === "hsr" ? HSR_COST : 1);
 /** "1.0x", "1.50x" for high-speed track */
 export const multText = (l: Level, t: TrackType) => `${trackMult(l, t).toFixed(t === "hsr" ? 2 : 1)}x`;
-/** T-2009: quad is two double tracks side by side, so its price and upkeep are two doubles' */
-const pairs = (t: TrackType) => (t === 4 ? 2 : 1);
 /** The price in US$M per shown distance unit, to a tenth. */
-export const unitPrice = (l: Level, t: TrackType) => Math.round(perDistance(BASE_M_PER_KM * trackMult(l, t) * pairs(t)) * 10) / 10;
+export const unitPrice = (l: Level, t: TrackType) => Math.round(perDistance(BASE_M_PER_KM * trackMult(l, t)) * 10) / 10;
 
 /** "Upkeep $20k per km per day", or "" before the money has come. */
 export function upkeepAt(l: Level, t: TrackType, m: MoneyState | null): string {
-  return m ? levelUpkeepLine(pairs(t) * edgeUpkeep({ built: true, tracks: 2, hsr: t === "hsr", lengthM: 1000, levelMin: l, levelMax: l }, m)) : "";
+  return m ? levelUpkeepLine(edgeUpkeep({ built: true, tracks: 2, hsr: t === "hsr", lengthM: 1000, levelMin: l, levelMax: l }, m)) : "";
 }
 
 /** A level button's hover: "Viaduct (Shift+3)", "1.0x cost, $75M per km", "Upkeep $20k per km per day". */

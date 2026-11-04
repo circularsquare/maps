@@ -874,7 +874,7 @@ button.save-add:hover { color: var(--text); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
 .choosing #dock-root, .choosing #topbar-root, .choosing #tools-root { display: none; }
-.choosing .map-top-left, .choosing .map-sky, .choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
+.choosing .map-top-left, .choosing .map-sky, .choosing .blueprint-bar, .choosing .tool-bar, .choosing .mode-aura, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
 /* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
 .load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
 .load-fill { display: block; height: 100%; background: var(--accent); }
@@ -911,10 +911,11 @@ button.save-add:hover { color: var(--text); }
 .stn-label.bld.inside { font-size: calc(14px * var(--ui, 1)); font-weight: 700; color: #2b2926; text-shadow: 0 0 2px #f9f7f3, 0 0 2px #f9f7f3, 0 0 3px #f9f7f3; }
 
 #tools {
-  position: absolute; left: 0; bottom: 0; z-index: 3; max-width: 100%;
+  position: absolute; left: 10px; bottom: 10px; z-index: 3; max-width: calc(100% - 20px);
 }
 .pane.build-pane { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
-.build-options { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 14px 12px; }
+/* T-2282: with the track options on the map, the blueprint follows the tools and takes the rest of the pane */
+.build-options { flex: none; padding: 10px 14px 12px; }
 .blueprint-controls { flex: none; padding: 8px 14px; border-top: 1px solid var(--rule); }
 .blueprint-panel { margin-top: 14px; }
 .blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -924,22 +925,24 @@ button.save-add:hover { color: var(--text); }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
 /* T-2269: the breakdown under the blueprint total scrolls on its own; switched-off rows grey */
-.blueprint-controls { display: flex; flex-direction: column; max-height: 60%; }
+.blueprint-controls { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; }
 .blueprint-controls > * { flex: none; }
 .blueprint-controls > .blueprint-breakdown { flex: 0 1 auto; min-height: 0; overflow-y: auto; margin: 0 -14px 8px; padding: 0 14px; }
 .blueprint-controls .blueprint-breakdown summary { margin-top: 2px; }
-.bp-part { margin-top: 6px; }
+.bp-part { margin-top: 2px; }
+/* T-2339: the heading a step bigger and heavier than the rows, which are 12 px, the parts' names no longer bold */
+.blueprint-controls .blueprint-breakdown > summary { font-size: 13px; font-weight: 600; color: var(--text); }
+.bp-breakdown-list { font-size: 12px; }
+.bp-breakdown-list .blueprint-category .b { font-weight: 500; }
 .blueprint-items > li.bp-part-head, .blueprint-items > li.bp-sub { align-items: center; gap: 6px; padding: 2px 6px; }
-.blueprint-items > li.bp-sub { padding-left: 32px; }
+.bp-part-head .chevron { margin: 0 -4px 0 -6px; }
+.bp-part-head .chevron.open svg { transform: rotate(90deg); }
+.bp-fold-gap { flex: none; width: 16px; margin-left: -6px; }
+.blueprint-items > li.bp-sub { padding-left: 50px; }
 .blueprint-items > li.bp-fixed { cursor: default; }
 .bp-part-head .grow, .bp-sub .grow { white-space: normal; }
 .blueprint-items > li.bp-off, .blueprint-items > li.bp-off .val { color: var(--muted); }
 .bp-by-kind summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 10px; }
-/* T-1159: the Track row, Target max speed and Platform length the same 6 px apart */
-.build-rows { margin-top: 6px; }
-.build-rows > li { padding: 0; min-height: 0; }
-.build-rows > li + li { margin-top: 6px; }
-.build-rows .stepper.wide .v { min-width: 72px; }
 /* T-1159: the price's cost multiplier on `costTint`'s colour (map/trackTagRows.ts), as in the track tool's tag */
 .cost-mult.tinted { padding: 0 3px; border-radius: 2px; color: var(--text); }
 .blueprint-items > li { padding: 6px 0; align-items: flex-start; }
@@ -949,17 +952,32 @@ button.save-add:hover { color: var(--text); }
 .blueprint-pick { margin-top: 14px; }
 /* T-353: the Select tool's bar at the map's top centre, level with the demand buttons. Lower on narrower
    maps, where the demand buttons with the status tag (T-349) and the search box take the row. */
-.blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 6px 8px;
+.blueprint-bar, .tool-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 6px 8px;
   padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
   /* T-841: 260 px kept clear each side (the tool panel, the debug panel); a narrower map wraps the bar's groups onto more rows */
   flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 600px)); }
 .blueprint-bar .count { min-width: 58px; }
 .blueprint-bar .btn.lv { min-width: 27px; }
-@container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
-@container map-column (max-width: 1000px) { .blueprint-bar { top: 80px; } }
-@container map-column (max-width: 680px) { .blueprint-bar { top: 148px; } }
+@container map-column (max-width: 1350px) { .blueprint-bar, .tool-bar { top: 46px; } }
+@container map-column (max-width: 1000px) { .blueprint-bar, .tool-bar { top: 80px; } }
+@container map-column (max-width: 680px) { .blueprint-bar, .tool-bar { top: 148px; } }
+/* T-2282: the track and station tools' bars in the selection bar's box and place; the track bar's two
+   rows, the level buttons as the Build tab had them */
+.tool-bar { flex-direction: column; align-items: stretch; padding: 6px 10px; }
+.tool-bar .tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.tool-bar .tb-speed { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.tool-bar .price { margin: 0; }
+.tool-bar .stepper.wide .v { min-width: 72px; }
+.tool-bar .btn.icon svg { width: 19px; height: 19px; }
+.tool-bar .tb-narrow, .tool-bar-pop { display: none; }
+/* T-2284: the click mode's colour round the map, full at the edge and gone 8 px in; nothing at the
+   map's edges sits within it (the tool notes, the attribution, the phone bars are 10 px in) */
+.mode-aura { position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: linear-gradient(to right, var(--mode), transparent 8px), linear-gradient(to left, var(--mode), transparent 8px),
+    linear-gradient(to bottom, var(--mode), transparent 8px), linear-gradient(to top, var(--mode), transparent 8px); }
+.mode-sq { display: inline-block; width: 10px; height: 10px; margin-right: 6px; background: var(--muted); vertical-align: -1px; }
+#tool-notes .mode-stop { margin: -4px -6px -4px 0; }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
-.build-track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
 /* T-1837: the three toggles after the track type share one line, wrapping together */
 .build-toggles { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
@@ -974,15 +992,12 @@ button.save-add:hover { color: var(--text); }
 .group.tool-pick > .btn:nth-child(odd) { margin-left: 0; }
 #tool-notes .bus-acts { display: flex; gap: 4px; }
 .pane .price { margin-top: 4px; }
-.price-row { flex-wrap: nowrap; margin-top: 4px; }
-.price-row .price { margin: 0; min-width: 0; }
-#tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
-              border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+#tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content; border: 1px solid var(--rule); }
 #tool-notes p + p { margin-top: 4px; }
 .tool-pick > .btn { padding: 0 6px; gap: 4px; }
 /* T-1802: the construct icons a tad bigger than the 14 px text-button glyph and the 16 px icon-button one */
 .tool-pick > .btn svg { width: 17px; height: 17px; }
-.build-track-row > .btn.icon svg, .btn.icon.new-bus svg, .btn.icon.new-ferry svg { width: 19px; height: 19px; }
+.btn.icon.new-bus svg, .btn.icon.new-ferry svg { width: 19px; height: 19px; }
 .tool-pick .key { margin-left: 2px; }
 #tool-notes .bad, .tool-tag.bad, .tool-tag .bad { color: var(--bad); }
 
@@ -1197,7 +1212,7 @@ button.save-add:hover { color: var(--text); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib { background: var(--bg) !important; color: var(--muted); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib a { color: var(--muted); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
-.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
 @container map-column (max-width: 1000px) {
@@ -1253,8 +1268,8 @@ button.save-add:hover { color: var(--text); }
   .dock-grab::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; bottom: 0; }
   .dock-grab::after { content: ""; position: absolute; left: calc(50% - 16px); top: 3px; width: 32px; height: 3px; border-radius: 2px; background: var(--rule); }
   .dock-grab:hover::after, .dock-grab.on::after { background: var(--accent); }
-  #tools { right: 0; }
-  #tool-notes { width: auto; max-width: none; border-right: 0; }
+  #tools { right: 10px; }
+  #tool-notes { width: auto; max-width: none; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
   /* T-1259, T-1852, T-1885: under the tab row the tab area takes the dock's whole height, the inspector
      always beside it (40% and 60% until the divider is dragged); a tab wider than its share scrolls */
@@ -1266,9 +1281,6 @@ button.save-add:hover { color: var(--text); }
   #inspector table.sched th:not(:first-child), #inspector table.sched td:not(:first-child) { padding-left: 4px; }
   #dock .pane { container: pane / inline-size; }
   #dock .blueprint-construct { white-space: normal; height: auto; min-height: 28px; }
-  /* the Build tab at part of the width: its rows of buttons share the width */
-  #dock .build-track-row > .group { display: flex; flex: 1 1 100%; min-width: 0; }
-  #dock .build-track-row > .group > .btn { flex: 1 1 0; min-width: 0; padding: 0 2px; height: auto; min-height: 28px; line-height: 1.1; }
 }
 
 /* T-1259: the tab area beside the inspector on a phone: the tools by their icons (names in the
@@ -1460,7 +1472,7 @@ button.save-add:hover { color: var(--text); }
   .guide:not(.open) .guide-steps:not(:has(.now)) li:last-child { display: grid; }
 }
 /* T-1433: the trouble list at the map's lower right, over the attribution button; quiet when shut */
-.trouble { position: absolute; right: 10px; bottom: 34px; z-index: 4; zoom: var(--ui, 1);
+.trouble { position: absolute; right: 10px; bottom: 44px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
 /* T-2125: what the last edit did, under the view rows at the upper left: text on the map with a halo,
@@ -1511,11 +1523,33 @@ button.save-add:hover { color: var(--text); }
 /* T-1263: on a phone the Select tool's bar sits on the map's bottom edge in one row that fits a 390 px
    screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is
    one button that opens the seven above the bar (as the touch bar's does), the actions are icons
-   (names in the hovers); under the tool notes (z-index 3), which share that corner */
+   (names in the hovers); the tool notes sit right above it */
 .blueprint-bar .bp-level, .blueprint-bar .bp-ico, .blueprint-levels { display: none; }
 @media (max-width: 600px) and (min-height: 560px) {
-  .blueprint-bar { top: auto; bottom: 0; left: 0; right: 0; transform: none; z-index: 2; width: auto; max-width: none;
-    flex-wrap: nowrap; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: none; border-width: 1px 0 0; padding: 4px 6px; }
+  /* T-2284: 10 px in from the map's edges, clear of the mode aura */
+  .blueprint-bar, .tool-bar { top: auto; bottom: 10px; left: 10px; right: 10px; transform: none; z-index: 2; width: auto; max-width: none;
+    flex-wrap: nowrap; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 4px 6px; }
+  /* T-2282: the track bar in one row; the level, track type and target speed one button each, opening their choices above it */
+  .tool-bar { flex-direction: row; align-items: center; }
+  .tool-bar .tb-row { display: contents; }
+  .tool-bar .tb-row > *, .tool-bar .build-toggles { flex: none; }
+  .tool-bar .tb-wide { display: none; }
+  .tool-bar .btn.tb-narrow { display: inline-grid; place-items: center; }
+  .tool-bar .btn, .tool-bar .btn.icon { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); }
+  .tool-bar .btn.tb-type, .tool-bar .btn.tb-speed-btn { padding: 0 8px; }
+  .tool-bar .build-toggles { gap: 4px; }
+  .tool-bar .tb-level { order: 0; }
+  .tool-bar .tb-type { order: 1; }
+  .tool-bar .tb-ramp { order: 2; }
+  .tool-bar .build-toggles { order: 3; }
+  .tool-bar .tb-speed-btn { order: 4; }
+  .station-bar { gap: 8px; padding-left: 10px; }
+  .tool-bar-pop { display: block; position: absolute; left: 50%; bottom: calc(36px / var(--ui, 1) + 26px); transform: translateX(-50%); z-index: 4; white-space: nowrap; }
+  .tool-bar-pop .btn { height: calc(36px / var(--ui, 1)); }
+  .tool-bar-pop .btn.lv { min-width: calc(40px / var(--ui, 1)); }
+  /* the tool notes (the mode's descriptor first) right above a bar */
+  #main:has(.tool-bar, .blueprint-bar) #tools { bottom: calc(36px / var(--ui, 1) + 26px); }
+  #main:has(.tool-bar-pop, .blueprint-levels) #tools { visibility: hidden; }
   .blueprint-bar > * { flex: none; }
   .blueprint-bar .bp-label { display: none; }
   .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
@@ -1524,7 +1558,7 @@ button.save-add:hover { color: var(--text); }
   .blueprint-bar .btn, .blueprint-bar .btn.bp-level { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); padding: 0; }
   .blueprint-bar .btn.bp-level { display: inline-grid; }
   .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }
-  .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(46px / var(--ui, 1)); transform: translateX(-50%); z-index: 4; }
+  .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(36px / var(--ui, 1) + 26px); transform: translateX(-50%); z-index: 4; }
 }
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */
@@ -1544,12 +1578,12 @@ button.save-add:hover { color: var(--text); }
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
-#dock, #topbar, .save-notice, #tools, .map-top-left, .map-sky, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-sky, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

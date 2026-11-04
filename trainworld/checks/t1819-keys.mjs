@@ -22,7 +22,8 @@ try {
     const b = document.querySelector('.tool-pick button.on');
     return b ? (b.querySelector('.tool-label')?.textContent ?? '') : null;
   });
-  const levelOn = () => page.evaluate(() => [...document.querySelectorAll('.levels button')].findIndex((b) => b.classList.contains('on')));
+  // T-2282: the level buttons are on the map's track bar only while the track tool is on, so the level is read from its signal
+  const levelOn = () => page.evaluate(async () => { const [ui, t] = await Promise.all([import('/src/game/ui.ts'), import('/src/game/types.ts')]); return t.LEVELS.indexOf(ui.buildLevel.value); });
   const press = async (k) => { await page.keyboard.press(k); await page.waitForTimeout(150); };
 
   // tabs, from any tab
@@ -53,9 +54,11 @@ try {
   await press('Shift+2');
   await press('b');
   check(await levelOn() === 1, 'Shift+digit sets the elevation from the Lines tab');
-  const lvTips = await page.evaluate(() => [...document.querySelectorAll('.levels button')].map((b) => b.getAttribute('data-tip')));
+  await press('1');
+  const lvTips = await page.evaluate(() => [...document.querySelectorAll('.tool-bar .levels button')].map((b) => b.getAttribute('data-tip')));
+  await press('Escape');
   console.log('elevation hovers', JSON.stringify(lvTips));
-  check(lvTips.every((t, i) => t.endsWith(`(Shift+${i + 1})`)), 'elevation hovers end in Shift+number');
+  check(lvTips.length === 7 && lvTips.every((t, i) => t.split('\n')[0].endsWith(`(Shift+${i + 1})`)), 'the track bar\'s level hovers name Shift+number');
 
   // tools, from another tab; the Build tab opens
   for (const [k, name] of [['1', 'Track'], ['2', 'Station'], ['3', 'Delete'], ['4', 'Select']]) {

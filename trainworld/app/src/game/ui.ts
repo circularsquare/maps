@@ -257,7 +257,7 @@ export const purposeFilter = signal<PurposeFilter>("all");
 export const relatedLines = signal(true);
 /** Platform length for new stations, m. */
 export const buildPlatform = signal(200);
-/** T-468: the three Build tab track settings below are remembered per browser with the rest of the
+/** T-468: the track bar's settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
 export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
 /** T-1822: this browser has finished the Getting started guide once, so new games start without it. */
@@ -268,9 +268,6 @@ export const guideVerbose = signal(false);
 /** T-1615: track drawn across other track at its own elevation ramps over it (under it from -1
  * down) where that fits; on unless turned off. */
 export const autoRamp = signal(saved.build?.ramp !== false);
-/** Track the drawing tool lays: double or quad (two doubles side by side, T-255). Single track is
- * not offered (T-733), so a remembered 1 reads as double. */
-export const trackCount = signal<2 | 4>(saved.build?.tracks === 4 ? 4 : 2);
 /** T-445: the track tool starts each segment where the last ended. The Build tab's button and
  * Caps Lock set it; Shift continues a run for one click without it. */
 export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== false);
@@ -283,26 +280,25 @@ export const snapBeside = signal(saved.build?.beside === true);
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
 export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
-/** T-817: the track tool lays high-speed track, always double (`trackCount` is 2 meanwhile). */
-export const highSpeed = signal(saved.build?.hsr === true && trackCount.peek() === 2);
-/** The design speed before High speed was picked, put back when Double or Quad is picked again. */
+/** T-817: the track tool lays high-speed track, else regular double track. Quad left the choice
+ * (T-2282; old quad track is two doubles side by side), so a remembered quad starts on regular. */
+export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4);
+/** The design speed before High speed was picked, put back when Regular is picked again. */
 let designBeforeHsr: DesignSpeed | null = null;
-export type TrackType = 2 | 4 | "hsr";
-export const trackType = computed<TrackType>(() => (highSpeed.value ? "hsr" : trackCount.value));
-/** The Build tab's Double / Quad / High speed choice. High speed sets the design speed to its top
- * (the player can step it down); leaving it puts back the speed there was before. One batch, so the
- * track tool never sees a mix of the old and new type, such as quad high-speed track (T-1001). */
+export type TrackType = 2 | "hsr";
+export const trackType = computed<TrackType>(() => (highSpeed.value ? "hsr" : 2));
+/** The track bar's Regular / High speed choice. High speed sets the design speed to its top (the
+ * player can step it down); leaving it puts back the speed there was before. One batch, so the track
+ * tool never sees the old type with the new speed (T-1001). */
 export function setTrackType(t: TrackType) {
   const was = highSpeed.peek();
   if (t === "hsr" && was) return;
   batch(() => {
     if (t === "hsr") {
       designBeforeHsr = designSpeed.peek();
-      trackCount.value = 2;
       highSpeed.value = true;
       designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
     } else {
-      trackCount.value = t;
       highSpeed.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
@@ -358,7 +354,7 @@ if (typeof window !== "undefined") {
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

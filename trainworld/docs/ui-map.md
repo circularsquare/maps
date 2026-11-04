@@ -268,7 +268,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   - **Level** (`height` in code; hover "Show track level colors"): the track coloured by level, blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
-    the Build tab's level buttons, the Settings key and the level in the track tags.
+    the track bar's level buttons, the Settings key and the level in the track tags.
   - **Speed** [T-1271]: built track a running line with trains uses is coloured by the trains'
     speed there, the rest by its speed limit (the geometry's, curve limits included: 160 km/h on
     ordinary track, up to 320 on high-speed track). The trains' speed at a stroke segment's middle

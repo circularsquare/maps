@@ -3,14 +3,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { plural } from "../game/format";
 import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
-import { linesByNum, notice, world } from "../game/world";
+import { linesByNum, notice, stationsById, world } from "../game/world";
+import { cancelLink, linking } from "../game/links";
+import { CLICK_MODE_COLOURS } from "../game/palette";
 import { live } from "../map/live";
+import { clickMode, type ClickMode } from "./ToolBar";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
 import { buildingDraft } from "../game/buildingView";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
-import { Chip } from "./widgets";
+import { Chip, Icon } from "./widgets";
 import { AchievementToasts } from "./Achievements";
 
 // The build tools carry no hint (Anita, T-1159).
@@ -25,6 +28,16 @@ const HINT: Record<Tool, string> = {
   bus: "",
   ferry: "",
   building: "",
+};
+
+/** T-2284: the descriptor of the modes with no bar of their own here; bus, ferry, stop editing and the
+ * station building tool say theirs in their own rows. */
+const SIMPLE: Partial<Record<ClickMode, string>> = {
+  track: "Placing track",
+  station: "Placing stations",
+  delete: "Deleting",
+  blueprint: "Selecting track and stations",
+  trip: "Exploring a trip",
 };
 
 /** T-1649: a removal that breaks dozens of lines lists the first few and counts the rest. */
@@ -97,14 +110,25 @@ function Notice() {
   const ferryLine = ferry && ferry.line !== null && world.value ? linesByNum(world.value).get(ferry.line) : undefined;
   // T-2218: the station building tool: the outline's corners, and Construct or Save outline
   const building = t === "building" ? buildingDraft.value : null;
-  if (!show && !hint && !bus && !ferry && !building) return null;
+  // T-2284: what a click does now, first, by the mode's colour; the simple modes' words and a cross to leave
+  const mode = clickMode.value;
+  const linkFrom = linking.value;
+  const simple = mode === "passage" ? `New passage from ${(linkFrom !== null && world.value && stationsById(world.value).get(linkFrom)?.name) || "a station"}` : SIMPLE[mode];
+  if (!show && !hint && !bus && !ferry && !building && !simple) return null;
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = t === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
+  const sq = mode !== "select" && <span class="mode-sq" style={{ background: CLICK_MODE_COLOURS[mode] }} />;
   return (
     <div id="tool-notes">
+      {simple && (
+        <p class="stop-edit-head mode-desc">
+          <span>{sq}{simple}</span>
+          <button class="btn icon mini mode-stop" data-tip="Stop (Esc)" aria-label="Stop" onClick={() => (mode === "passage" ? cancelLink() : live.tools?.exit())}><Icon.cross /></button>
+        </p>
+      )}
       {bus && (
         <p class="stop-edit-head">
-          <span>{busLine ? `Route of ${busLine.name}` : "New bus line"}: {plural(bus.points, "point")}</span>
+          <span>{sq}{busLine ? `Route of ${busLine.name}` : "New bus line"}: {plural(bus.points, "point")}</span>
           <span class="bus-acts">
             <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
             <button class="btn text" data-tip="Enter" disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>{busLine ? "Save route" : "Make line"}</button>
@@ -113,7 +137,7 @@ function Notice() {
       )}
       {ferry && (
         <p class="stop-edit-head">
-          <span>{ferryLine ? `Route of ${ferryLine.name}` : "New ferry line"}: {plural(ferry.points, "port")}</span>
+          <span>{sq}{ferryLine ? `Route of ${ferryLine.name}` : "New ferry line"}: {plural(ferry.points, "port")}</span>
           <span class="bus-acts">
             <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
             <button class="btn text" data-tip="Enter" disabled={ferry.points < 2} onClick={() => void live.tools?.ferry.finish()}>{ferryLine ? "Save route" : "Make line"}</button>
@@ -122,7 +146,7 @@ function Notice() {
       )}
       {building && (
         <p class="stop-edit-head">
-          <span>{building.id === null ? "New station building" : "Station building outline"}: {plural(building.corners, "corner")}</span>
+          <span>{sq}{building.id === null ? "New station building" : "Station building outline"}: {plural(building.corners, "corner")}</span>
           <span class="bus-acts">
             <button class="btn text" data-tip="Esc" onClick={() => live.tools?.exit()}>Cancel</button>
             <button class="btn text" data-tip="Enter" disabled={!building.closed} onClick={() => void live.tools?.building.finish()}>{building.id === null ? "Construct" : "Save outline"}</button>
@@ -131,7 +155,7 @@ function Notice() {
       )}
       {editing && (
         <p class="stop-edit-head">
-          <span>Editing stops on {editing.name}: {plural(editing.stops.length, "stop")}</span>
+          <span>{sq}Editing stops on {editing.name}: {plural(editing.stops.length, "stop")}</span>
           <button class="btn text" onClick={() => live.tools?.exit()}>Done</button>
         </p>
       )}

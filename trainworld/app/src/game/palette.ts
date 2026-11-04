@@ -252,6 +252,21 @@ export function legibleOn(hex: string, dark: boolean): string {
   return "#" + mix(hi).map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
+/** T-2284: each click mode's colour, for the aura round the map and the descriptor's square; plain
+ * selecting has none. Chosen against every colour the game draws, in both shades (notes/T-2267.md 3.7). */
+export const CLICK_MODE_COLOURS = {
+  track: "#0a819d",
+  station: "#8d71b1",
+  delete: "#d63f73",
+  blueprint: "#9c7b31",
+  bus: "#a09e2d",
+  ferry: "#16716f",
+  line: "#d777ed",
+  trip: "#268769",
+  building: "#a15b7b",
+  passage: "#b0866a",
+} as const;
+
 /** Letter colour on a line chip: dark on light lines (yellow), white on the rest. */
 export function inkOn(hex: string): string {
   const [r, g, b] = rgb(hex).map((v) => v / 255);
