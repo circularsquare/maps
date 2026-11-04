@@ -15,6 +15,7 @@
 
 import type { DiagramGraph } from "./graph";
 import { Terms } from "./lsqr";
+import { atan2, DIRS8 as DIRS, hyp, pow } from "./fmath";
 
 export interface LayoutOptions {
   /** a hop's target length is L0 * (real length / L0) ^ alpha: the centre opens, the suburbs close in */
@@ -53,8 +54,8 @@ const B_NEAR = 1.2, B_AIM = 1.12;
  * LSQR iterations a solve, the push's weight and how far past the spacing it aims */
 const SNAP_PASSES = 1, SNAP_ROUNDS = 4, SNAP_ITERS = 600, W_SNAP_PUSH = 2, PUSH_OVER = 1.05;
 /** the snap (T-2243): each hop held its length along its direction with this weight, at least this
- * share of its target; a line B turned too far at a station drawn back toward its real turn with this */
-const W_HOLD = 30, HOLD_MIN = 0.5, W_SNAP_TURN = 10;
+ * share of its target; a line turned too far at a station drawn back toward its real turn with this (T-2255) */
+const W_HOLD = 30, HOLD_MIN = 0.5, W_SNAP_TURN = 20;
 /** B: a line through a junction keeps its real turn there with this weight (T-2243) */
 const W_TURN = 1;
 /** a rebuild's B rounds, and its pull to the last layout */
@@ -81,7 +82,6 @@ const PROGRESS_A = 0.2, PROGRESS_B = 0.7;
 const SEP_CAP = 0.3;
 /** a rebuild keeps to the last drawing when at least this share of its nodes were in it */
 const PREV_SHARE = 0.9;
-const DIRS: [number, number][] = Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)]);
 
 export interface Piece {
   /** the graph nodes along it, first to last */
@@ -117,13 +117,13 @@ const median = (v: ArrayLike<number>) => {
   return s.length ? (s.length % 2 ? s[s.length >> 1] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : 0;
 };
 const octiDev = (dx: number, dy: number) => {
-  let a = ((Math.atan2(dy, dx) * 180) / Math.PI) % 45;
+  let a = ((atan2(dy, dx) * 180) / Math.PI) % 45;
   if (a < 0) a += 45;
   return Math.min(a, 45 - a);
 };
 const nearestDir = (dx: number, dy: number): [number, number] => {
-  const k = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
-  return [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)];
+  const d = DIRS[((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8];
+  return [d[0], d[1]];
 };
 
 /** what both layout stages share: each edge's target length and direction, the stations' half widths */
@@ -148,8 +148,8 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
   const n = g.key.length, m = g.ea.length;
   const L = new Float64Array(m), gdx = new Float64Array(m), gdy = new Float64Array(m);
   for (let e = 0; e < m; e++) {
-    const a = g.ea[e], b = g.eb[e], dx = g.x[b] - g.x[a], dy = g.y[b] - g.y[a], gl = Math.max(1, Math.hypot(dx, dy));
-    L[e] = o.L0 * (gl / o.L0) ** o.alpha;
+    const a = g.ea[e], b = g.eb[e], dx = g.x[b] - g.x[a], dy = g.y[b] - g.y[a], gl = Math.max(1, hyp(dx, dy));
+    L[e] = o.L0 * pow(gl / o.L0, o.alpha);
     gdx[e] = dx / gl;
     gdy[e] = dy / gl;
   }
@@ -191,7 +191,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
  * angles, the surest first; where the two ends disagree, the end deviating less wins */
 function chooseDirs(P: Prep, pos: Float64Array): Int8Array {
   const m = P.ea.length, ang = new Float64Array(m);
-  for (let e = 0; e < m; e++) ang[e] = Math.atan2(pos[P.eb[e] * 2 + 1] - pos[P.ea[e] * 2 + 1], pos[P.eb[e] * 2] - pos[P.ea[e] * 2]);
+  for (let e = 0; e < m; e++) ang[e] = atan2(pos[P.eb[e] * 2 + 1] - pos[P.ea[e] * 2 + 1], pos[P.eb[e] * 2] - pos[P.ea[e] * 2]);
   const q = Math.PI / 4;
   const dev = (a: number) => Math.abs(a - Math.round(a / q) * q);
   const propD = new Float64Array(m).fill(Infinity), propK = new Int8Array(m);
@@ -239,7 +239,7 @@ function closePairs(P: Prep, pos: Float64Array, out: number[], over = 1): void {
       if (!v) continue;
       for (const j of v) {
         if (j <= i || P.adj.has(i * P.n + j)) continue;
-        const d = Math.hypot(pos[j * 2] - pos[i * 2], pos[j * 2 + 1] - pos[i * 2 + 1]);
+        const d = hyp(pos[j * 2] - pos[i * 2], pos[j * 2 + 1] - pos[i * 2 + 1]);
         if (d < (P.dmin + P.hw[i] + P.hw[j]) * over) out.push(i, j);
       }
     }
@@ -307,7 +307,7 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
     for (let k = 0; k < pairs.length; k += 2) {
       const a = pairs[k], b = pairs[k + 1];
       let ux = pos[b * 2] - pos[a * 2], uy = pos[b * 2 + 1] - pos[a * 2 + 1];
-      const dl = Math.hypot(ux, uy);
+      const dl = hyp(ux, uy);
       if (dl > 1e-6) ux /= dl, uy /= dl;
       else ux = 1, uy = 0;
       if (dl < (P.dmin + P.hw[a] + P.hw[b]) * B_AIM) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], (P.dmin + P.hw[a] + P.hw[b]) * B_AIM, W_PUSH);
@@ -321,9 +321,9 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
 
 function segDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
-  if (l2 < 1e-12) return Math.hypot(px - ax, py - ay);
+  if (l2 < 1e-12) return hyp(px - ax, py - ay);
   const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2));
-  return Math.hypot(px - ax - dx * t, py - ay - dy * t);
+  return hyp(px - ax - dx * t, py - ay - dy * t);
 }
 /** the farthest of points `pts` (x, y pairs) from the polyline `poly` */
 function polyDev(pts: number[], poly: number[]): number {
@@ -389,7 +389,7 @@ interface Routed { pieces: Piece[]; x: Float64Array; y: Float64Array; straight: 
 function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, prev: Float64Array | null, tick?: (done: number) => void): Routed {
   const n = g.key.length;
   const hops: number[] = [];
-  for (let e = 0; e < g.ea.length; e++) hops.push(Math.hypot(bx[g.eb[e]] - bx[g.ea[e]], by[g.eb[e]] - by[g.ea[e]]));
+  for (let e = 0; e < g.ea.length; e++) hops.push(hyp(bx[g.eb[e]] - bx[g.ea[e]], by[g.eb[e]] - by[g.ea[e]]));
   const tol = TOL_SHARE * median(hops);
   const raw: number[][] = [];
   for (const s of segments(g)) {
@@ -434,7 +434,7 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
   const holdB = (T: Terms, u: number, w: number) => {
     let dx = q0[w * 2] - q0[u * 2], dy = q0[w * 2 + 1] - q0[u * 2 + 1];
     if (realDot(u, w, dx, dy) < 0) (dx = g.x[w] - g.x[u]), (dy = g.y[w] - g.y[u]);
-    const l = Math.hypot(dx, dy);
+    const l = hyp(dx, dy);
     if (l > 1e-9) hold(T, u, w, dx / l, dy / l);
   };
   /** which pieces snap and which way (first to last, the way the real line runs): those near a 45 degree
@@ -460,15 +460,19 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
     }
     return out;
   };
-  // lines B turned at a station more than 45 degrees past their real turn are drawn back toward it
-  const bent: [number, number, number][] = [], m = P.ea.length;
-  for (let v = 0; v < n; v++) for (const k of P.through[v]) {
-    const e1 = Math.floor(k / m), e2 = k % m;
-    if (e1 > e2) continue;
-    const [u, w, c, s] = throughOf(P, v, e1, e2);
-    const ax = q0[v * 2] - q0[u * 2], ay = q0[v * 2 + 1] - q0[u * 2 + 1], bx2 = q0[w * 2] - q0[v * 2], by2 = q0[w * 2 + 1] - q0[v * 2 + 1];
-    if (Math.abs(Math.atan2(ax * by2 - ay * bx2, ax * bx2 + ay * by2)) - Math.abs(Math.atan2(s, c)) > Math.PI / 4) bent.push([v, e1, e2]);
-  }
+  // lines turned at a station more than 45 degrees past their real turn, by B or by any round so far, are
+  // drawn back toward it (T-2255: the snap itself folded lines B had turned less)
+  const bent = new Set<number>(), m = P.ea.length;
+  const findBent = (Q: Float64Array) => {
+    for (let v = 0; v < n; v++) for (const k of P.through[v]) {
+      const e1 = Math.floor(k / m), e2 = k % m;
+      if (e1 > e2) continue;
+      const [u, w, c, s] = throughOf(P, v, e1, e2);
+      const ax = Q[v * 2] - Q[u * 2], ay = Q[v * 2 + 1] - Q[u * 2 + 1], bx2 = Q[w * 2] - Q[v * 2], by2 = Q[w * 2 + 1] - Q[v * 2 + 1];
+      if (Math.abs(atan2(ax * by2 - ay * bx2, ax * bx2 + ay * by2)) - Math.abs(atan2(s, c)) > Math.PI / 4) bent.add(v * m * m + k);
+    }
+  };
+  findBent(q0);
   const pushed = new Set<number>();
   const pairs: number[] = [];
   let drawn: Routed | null = null;
@@ -488,14 +492,18 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
           hold(T, p[i - 1], p[i], dx, dy);
         }
       }
-      for (const [v, e1, e2] of bent) turnTerm(T, P, v, e1, e2, W_SNAP_TURN);
+      if (it) findBent(q);
+      for (const b of bent) {
+        const v = Math.floor(b / (m * m)), k = b % (m * m);
+        turnTerm(T, P, v, Math.floor(k / m), k % m, W_SNAP_TURN);
+      }
       for (let i = 0; i < q.length; i++) T.add([i], [1], q0[i], 1);
       closePairs(P, q, pairs);
       for (let k = 0; k < pairs.length; k += 2) pushed.add(pairs[k] * n + pairs[k + 1]);
       for (const pk of pushed) {
         const a = Math.floor(pk / n), b = pk % n;
         let ux = q[b * 2] - q[a * 2], uy = q[b * 2 + 1] - q[a * 2 + 1];
-        const dl = Math.hypot(ux, uy);
+        const dl = hyp(ux, uy);
         if (dl > 1e-6) (ux /= dl), (uy /= dl);
         else (ux = 1), (uy = 0);
         const want = (P.dmin + P.hw[a] + P.hw[b]) * PUSH_OVER;
@@ -509,12 +517,51 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
     if (!pairs.length) break;
     for (let k = 0; k < pairs.length; k += 2) pushed.add(pairs[k] * n + pairs[k + 1]);
   }
+  // A pass that folds a line the drawing it started from did not (a bent piece's leg shrunk to nothing, so it
+  // leaves its end another way) is done again with those bent pieces' empty legs held (T-2255).
+  const keepLegs = new Set<number>();
   for (let pass = 0; pass < SEP_PASSES; pass++) {
     tick?.((pass + 1) / (SEP_PASSES + 1));
-    const s = separate(g, P, pieces0, drawn!, bx, by, prev, links);
-    drawn = draw(pieces0, s.q, n, s.bends);
+    const before = foldedEnds(drawn!, links, 1e-3 * P.pu);
+    for (let tries = 0; ; tries++) {
+      const s = separate(g, P, pieces0, drawn!, bx, by, prev, links, keepLegs);
+      const next = draw(pieces0, s.q, n, s.bends);
+      let grew = false;
+      if (tries < 2) for (const [ke, o] of foldedEnds(next, links, 1e-3 * P.pu)) {
+        if (before.has(ke)) continue;
+        for (const k of [ke >> 1, o >> 1]) if (drawn!.bases[k].line.length === 6 && !keepLegs.has(k)) keepLegs.add(k), (grew = true);
+      }
+      if (!grew) {
+        drawn = next;
+        break;
+      }
+    }
   }
   return drawn!;
+}
+
+/** per piece end whose port folds a line with a linked piece end's, that end (legs up to `tiny` long left out) */
+function foldedEnds(r: Routed, links: Links, tiny: number): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const [ke, list] of links) for (const o of list) {
+    const la = r.bases[ke >> 1].line, lb = r.bases[o >> 1].line;
+    if (la.length < 4 || lb.length < 4) continue;
+    const d = Math.abs(portOfLine(la, ke & 1, tiny) - portOfLine(lb, o & 1, tiny)) % 8;
+    if (Math.min(d, 8 - d) <= 1) out.set(ke, o);
+  }
+  return out;
+}
+
+/** the port (0 to 7, 45 degree steps from east) a drawn piece leaves its first (0) or last (1) end by: its
+ * first leg longer than `tiny` from that end */
+function portOfLine(l: number[], end: number, tiny: number): number {
+  const m = l.length;
+  let dx = 0, dy = 0;
+  for (let j = 0; j + 3 < m && Math.abs(dx) + Math.abs(dy) < tiny; j += 2) {
+    dx = end ? l[m - 4 - j] - l[m - 2 - j] : l[j + 2] - l[j];
+    dy = end ? l[m - 3 - j] - l[m - 1 - j] : l[j + 3] - l[j + 1];
+  }
+  return ((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
 }
 
 /** The separation (T-2205; notes/T-2205.md): the drawing as drawn, moved in terms that keep it
@@ -525,7 +572,7 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
  * each round). A first layout meets them by sweeps of projections; a rebuild (`prev`, the last drawing's
  * places) by Hildreth's method from the last drawing, which finds the drawing nearest it, each term's
  * pull capped, so an edit moves little. Returns the places to draw from, and each bent piece's bend. */
-function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Float64Array, by: Float64Array, prev: Float64Array | null, links?: Links): { q: Float64Array; bends: Map<number, [number, number]> } {
+function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Float64Array, by: Float64Array, prev: Float64Array | null, links?: Links, keepLegs?: Set<number>): { q: Float64Array; bends: Map<number, [number, number]> } {
   const n = P.n;
   // the variables: x, y of each piece end (and of stations on a piece with no length), then one
   // distance per station along its leg
@@ -533,7 +580,7 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
   let nv = 0;
   const ok = raw.map((p, k) => {
     const L = r.bases[k].line;
-    return p[0] !== p[p.length - 1] && Math.hypot(L[L.length - 2] - L[0], L[L.length - 1] - L[1]) > 1e-9;
+    return p[0] !== p[p.length - 1] && hyp(L[L.length - 2] - L[0], L[L.length - 1] - L[1]) > 1e-9;
   });
   raw.forEach((p, k) => {
     for (const v of ok[k] ? [p[0], p[p.length - 1]] : p) if (xyVar[v] < 0) (xyVar[v] = nv), (nv += 2);
@@ -554,7 +601,7 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
   // parts them: all but one straight piece among them gets a short first leg 45 degrees off, toward the
   // side its stations lay on after B (or the other, or none, where that would fold a line back), which
   // the spacing then lengthens.
-  const port = (dx: number, dy: number) => ((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
+  const port = (dx: number, dy: number) => ((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
   const portsAt = new Map<number, number[]>();
   const portOf = (k: number, end: 0 | 1) => {
     const L = r.bases[k].line, m = L.length;
@@ -639,7 +686,8 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
     // a leg with no stations may shrink to nothing, unless the piece would then leave its end another way
     // that folds a line back there
     const held: [number, number] = [0, 0];
-    if (L.length === 6 && !tn) {
+    if (L.length === 6 && !tn && keepLegs?.has(k)) (held[0] = LEG_MIN * P.pu), (held[1] = LEG_MIN * P.pu);
+    else if (L.length === 6 && !tn) {
       if (folds(k * 2, port(d1![0], d1![1])) && !folds(k * 2, portOf(k, 0))) held[0] = LEG_MIN * P.pu;
       if (folds(k * 2 + 1, port(-d0[0], -d0[1])) && !folds(k * 2 + 1, portOf(k, 1))) held[1] = LEG_MIN * P.pu;
     }
@@ -841,7 +889,7 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
       if (key < n * n) {
         const a = Math.floor(key / n), b = key % n;
         let ux = q[b * 2] - q[a * 2], uy = q[b * 2 + 1] - q[a * 2 + 1];
-        const dl = Math.hypot(ux, uy);
+        const dl = hyp(ux, uy);
         if (dl > 1e-6) (ux /= dl), (uy /= dl);
         else if (old) {
           live.push(old);
@@ -971,14 +1019,14 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
   let straight = 0, bent = 0;
   // each piece leaves a node in one of eight directions; two pieces leaving it the same way would be
   // drawn over each other
-  const port = (dx: number, dy: number) => ((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
+  const port = (dx: number, dy: number) => ((Math.round(atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
   const portAt = (l: number[], end: number) => {
     const m = l.length;
     return end ? port(l[m - 4] - l[m - 2], l[m - 3] - l[m - 1]) : port(l[2] - l[0], l[3] - l[1]);
   };
   const isStraight = (p: number[]) => {
     const vx = x[p[p.length - 1]] - x[p[0]], vy = y[p[p.length - 1]] - y[p[0]];
-    return Math.hypot(vx, vy) >= 1e-9 && octiDev(vx, vy) <= (bends ? STRAIGHT_DEG : ROUTE_STRAIGHT_DEG);
+    return hyp(vx, vy) >= 1e-9 && octiDev(vx, vy) <= (bends ? STRAIGHT_DEG : ROUTE_STRAIGHT_DEG);
   };
   const lines: number[][] = [], options: ([number[], number[]] | null)[] = [], inner: number[][] = [];
   /** per node * 8 + port, how many pieces leave the node that way */
@@ -994,7 +1042,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
     const vx = cx - ax, vy = cy - ay;
     options.push(null);
     inner.push([]);
-    if (Math.hypot(vx, vy) < 1e-9) lines.push([ax, ay, cx, cy]);
+    if (hyp(vx, vy) < 1e-9) lines.push([ax, ay, cx, cy]);
     else if (isStraight(p)) {
       lines.push([ax, ay, cx, cy]);
       take(lines[pi], p, 1);
@@ -1003,7 +1051,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
       for (let i = 1; i < p.length - 1; i++) inner[pi].push(q[p[i] * 2], q[p[i] * 2 + 1]);
       const [l1, l2] = twoLegs(ax, ay, cx, cy);
       const bd = bends?.get(pi);
-      lines.push(bd ? (Math.hypot(l2[2] - bd[0], l2[3] - bd[1]) < Math.hypot(l1[2] - bd[0], l1[3] - bd[1]) ? l2 : l1) : []);
+      lines.push(bd ? (hyp(l2[2] - bd[0], l2[3] - bd[1]) < hyp(l1[2] - bd[0], l1[3] - bd[1]) ? l2 : l1) : []);
       if (!bd) options[pi] = [l1, l2];
       bent++;
     }
@@ -1022,7 +1070,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
   // a piece only near straight that would fold a line against a straight neighbour is bent instead
   if (!bends) for (const [pi, p] of raw.entries()) {
     const l = lines[pi], vx = l[2] - l[0], vy = l[3] - l[1];
-    if (l.length !== 4 || Math.hypot(vx, vy) < 1e-9 || octiDev(vx, vy) <= STRAIGHT_DEG || !folds(pi, l)) continue;
+    if (l.length !== 4 || hyp(vx, vy) < 1e-9 || octiDev(vx, vy) <= STRAIGHT_DEG || !folds(pi, l)) continue;
     take(l, p, -1);
     for (let i = 1; i < p.length - 1; i++) inner[pi].push(q[p[i] * 2], q[p[i] * 2 + 1]);
     options[pi] = twoLegs(l[0], l[1], l[2], l[3]);
@@ -1031,7 +1079,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
   }
   const choose = (pi: number) => {
     const p = raw[pi], [l1, l2] = options[pi]!;
-    const len = Math.hypot(l1[4] - l1[0], l1[5] - l1[1]);
+    const len = hyp(l1[4] - l1[0], l1[5] - l1[1]);
     const cost = (l: number[]) => {
       let c = (inner[pi].length ? polyDev(inner[pi], l) : 0) + folds(pi, l) * FOLD_COST * len;
       for (const end of [0, 1]) if (taken.get(p[end ? p.length - 1 : 0] * 8 + portAt(l, end))) c += PORT_COST * len;
@@ -1050,7 +1098,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
     const line = lines[pi];
     const nl = line.length / 2;
     const Ls = [0];
-    for (let i = 1; i < nl; i++) Ls.push(Ls[i - 1] + Math.hypot(line[i * 2] - line[i * 2 - 2], line[i * 2 + 1] - line[i * 2 - 1]));
+    for (let i = 1; i < nl; i++) Ls.push(Ls[i - 1] + hyp(line[i * 2] - line[i * 2 - 2], line[i * 2 + 1] - line[i * 2 - 1]));
     // after the separation, which kept the stations' gaps itself, only their order is held
     const total = Ls[nl - 1], k = p.length - 1, gap = ((bends ? 0.1 : 0.5) * total) / Math.max(1, k);
     const s = [0];
@@ -1061,7 +1109,7 @@ function draw(raw: number[][], q: Float64Array, n: number, bends?: Map<number, [
       for (let j = 0; j + 1 < nl; j++) {
         const x0 = line[j * 2], y0 = line[j * 2 + 1], dx = line[j * 2 + 2] - x0, dy = line[j * 2 + 3] - y0, l2 = dx * dx + dy * dy;
         const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
-        const d = Math.hypot(x0 + dx * t - px, y0 + dy * t - py);
+        const d = hyp(x0 + dx * t - px, y0 + dy * t - py);
         if (d < best) (best = d), (arc = Ls[j] + t * Math.sqrt(l2));
       }
       s.push(arc);
@@ -1182,7 +1230,7 @@ function spread(P: Prep, r: Routed): void {
         if (pick) break;
         const s1a = Math.max(loa, Math.min(hia, sa + da * f * w)), s1b = Math.max(lob, Math.min(hib, sb + db * f * w));
         const [ax, ay] = arcAt(ba, s1a), [bx2, by2] = arcAt(bb, s1b);
-        if (Math.hypot(ax - bx2, ay - by2) < want(a, b)) continue;
+        if (hyp(ax - bx2, ay - by2) < want(a, b)) continue;
         const ox = pos[a * 2], oy = pos[a * 2 + 1];
         (pos[a * 2] = ax), (pos[a * 2 + 1] = ay);
         const after = crowd(a, ax, ay) + crowd(b, bx2, by2);
@@ -1219,7 +1267,7 @@ function order(g: DiagramGraph, pieces: Piece[], x: Float64Array, y: Float64Arra
   };
   const turn = (prev: number, cur: number, nx: number) => {
     const ax = x[cur] - x[prev], ay = y[cur] - y[prev], bxx = x[nx] - x[cur], byy = y[nx] - y[cur];
-    return Math.atan2(ax * byy - ay * bxx, ax * bxx + ay * byy);
+    return atan2(ax * byy - ay * bxx, ax * bxx + ay * byy);
   };
   const walk = (la: number, lb: number, prev: number, cur: number): number => {
     for (let s = 0; s < 400; s++) {
@@ -1337,8 +1385,8 @@ function warmStart(g: DiagramGraph, P: Prep, last: LastPlaces): Float64Array {
   for (let i = 0; i < n; i++) if (known[i]) (sx += pos[i * 2]), (sy += pos[i * 2 + 1]), (gx += g.x[i]), (gy += g.y[i]), c++;
   let num = 0, den = 0;
   for (let i = 0; i < n; i++) if (known[i]) {
-    num += Math.hypot(pos[i * 2] - sx / c, pos[i * 2 + 1] - sy / c);
-    den += Math.hypot(g.x[i] - gx / c, g.y[i] - gy / c);
+    num += hyp(pos[i * 2] - sx / c, pos[i * 2 + 1] - sy / c);
+    den += hyp(g.x[i] - gx / c, g.y[i] - gy / c);
   }
   const scale = den > 0 ? num / den : 1;
   for (let pass = 0; pass < n && known.includes(0); pass++) {
@@ -1349,7 +1397,7 @@ function warmStart(g: DiagramGraph, P: Prep, last: LastPlaces): Float64Array {
       for (const e of P.nbr[i]) {
         const o = P.ea[e] === i ? P.eb[e] : P.ea[e];
         if (known[o] !== 1) continue;
-        const dx = g.x[i] - g.x[o], dy = g.y[i] - g.y[o], gl = Math.max(1, Math.hypot(dx, dy)), s = P.L[e] / gl;
+        const dx = g.x[i] - g.x[o], dy = g.y[i] - g.y[o], gl = Math.max(1, hyp(dx, dy)), s = P.L[e] / gl;
         ax += pos[o * 2] + dx * s;
         ay += pos[o * 2 + 1] + dy * s;
         k++;

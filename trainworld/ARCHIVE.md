@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2215 Islands I3, the grey "No route" (2026-11-03, agent t2215, lands with T-2214): bubbles pulled to grey by no-way trips, a fourth bar part and row (hovers, top bar, Cities, city view, selection, trip explorer), "No road between these two places". Bars add up to trips again; checks/t2215-no-route.mjs. notes/T-2207.md 4
+- T-2255 Diagram on the game's own graphs (2026-11-03, agent t2255): layout maths engine-independent (fmath.ts), checks capture and lay out the game's graphs (diagram-game.mjs); snap turn terms each round, separation redone where it folds. Doubling back over 16 samples 27 to 4, game's New York 5 to 0. notes/T-2255.md
+
+- T-2214 Islands I2, local demand between land parts (2026-11-03, agent t2214): no car or walk between parts, access within one, rail held by the 3-4x fade, the rest "no way" in totals. No network: Athens 23,559, Kagawa 5,788, Hong Kong 48,752; test Sado ferry clean; parts off to the bit; solve +1.7%. notes/T-2214.md
 - T-2238 A placement that took 2 s (2026-11-03, agent t2238): it cut line 11's edge, so every line's bands and 92 lines' strokes were made again; now only lines it can change. Place 5 1,723 to 369-446 ms (others 228-308, machine loaded). notes/T-2238.md
 - T-2230 Road tiles installed faster (2026-11-03, agent t2238): a tile adds only its own crossings, on edges from the grid, without `repriced`; off-ground track keeps none. Real save 0.9-6.5 to 0.0-0.9 ms a tile (worst 2.3); t1929 8/8, same prices. notes/T-2238.md
 

@@ -103,7 +103,9 @@ Places are metres east and north of the network's middle.
 ## The layout
 
 In a worker of its own (`workers/diagram.worker.ts`, `diagram/layout.ts`, `diagram/lsqr.ts`), one
-graph at a time, the newest waiting one next; the last drawing stays up meanwhile.
+graph at a time, the newest waiting one next; the last drawing stays up meanwhile. The layout, drawing
+and names use no maths beyond `+ - * /` and square roots (`diagram/fmath.ts` has atan2 and powers from
+those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 - **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds.
 - **B**: 30 rounds of octilinear least squares from A: each edge toward the nearest free 45 degree
@@ -121,8 +123,9 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
   direction after B, or in the last round, is made exact with its stations on it (weight 30), the way
   the real line runs; every hop keeps its length along its direction (its snapped piece's, else B's, or
   the real one where B turned it back), at least half its target (30); of two snapped pieces that would
-  fold a line between them, the one further off its direction is left to the routing; a line B turned
-  more than 45 degrees past its real turn at a station is drawn back toward it (10); unconnected
+  fold a line between them, the one further off its direction is left to the routing; a line turned
+  more than 45 degrees past its real turn at a station, by B or by any round so far, is drawn back
+  toward it (20); unconnected
   stations too close are pushed apart (2); everything else stays near B (1).
 - **Routing**: a piece within 5 degrees is drawn straight (the separation makes it exact), unless that
   folds a line against a straight neighbour; any other as an orthogonal leg and a diagonal leg or the
@@ -138,7 +141,9 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
   else the one with most stations. Linear terms: straight pieces stay straight (a station pushed across
   one moves both its ends alike); stations keep their order along a leg and gaps of half their hop's
   target or 1.25 times their half widths together, round a bend too; a leg with no stations may shrink to
-  nothing, but keeps 2 pitches where the piece would then leave its end a way that folds a line; unconnected stations within 1.25 times their spacing are pushed to 1.15
+  nothing, but keeps 2 pitches where the piece would then leave its end a way that folds a line (and a
+  pass whose drawing folds a line its start did not is done again with both legs of those bent pieces
+  kept so); unconnected stations within 1.25 times their spacing are pushed to 1.15
   times it, and stations within their half width, the leg's and a pitch of another piece's leg are
   pushed off it. These are linearised about the drawing, 10 rounds a pass. A first layout meets them by
   sweeps of projections (each term not met moves its variables the least way); a rebuild by Hildreth's

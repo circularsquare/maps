@@ -5,6 +5,7 @@
 
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout, Piece } from "./layout";
+import { atan2, DIRS8, hyp } from "./fmath";
 
 /** a stroke is this share of a pitch wide; the rest is the gap between neighbours */
 export const STROKE_SHARE = 5 / 6.4;
@@ -59,7 +60,7 @@ function offsetKeep(v: Float64Array, o: number): Float64Array {
   const n = v.length / 2, out = new Float64Array(v.length);
   const dir = (i: number, step: number): [number, number] | null => {
     for (; i >= 0 && i < n - 1; i += step) {
-      const dx = v[i * 2 + 2] - v[i * 2], dy = v[i * 2 + 3] - v[i * 2 + 1], l = Math.hypot(dx, dy);
+      const dx = v[i * 2 + 2] - v[i * 2], dy = v[i * 2 + 3] - v[i * 2 + 1], l = hyp(dx, dy);
       if (l > 1e-9) return [dx / l, dy / l];
     }
     return null;
@@ -74,7 +75,7 @@ function offsetKeep(v: Float64Array, o: number): Float64Array {
       continue;
     }
     let mx = -a[1] - b[1], my = a[0] + b[0];
-    const l = Math.hypot(mx, my);
+    const l = hyp(mx, my);
     if (l < 1e-9) (mx = -a[1]), (my = a[0]);
     else (mx /= l), (my /= l);
     const c = Math.max(0.4, mx * -a[1] + my * a[0]);
@@ -138,19 +139,19 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
         const p1 = V[V.length - 1], p0 = V.length > 1 ? V[V.length - 2] : null, q1 = run[0], q2 = run[1];
         let d1x = p0 ? p1[0] - p0[0] : q2[0] - q1[0], d1y = p0 ? p1[1] - p0[1] : q2[1] - q1[1];
         let d2x = q2[0] - q1[0], d2y = q2[1] - q1[1];
-        const l1 = Math.hypot(d1x, d1y), l2 = Math.hypot(d2x, d2y);
+        const l1 = hyp(d1x, d1y), l2 = hyp(d2x, d2y);
         if (l1 > 1e-9 && l2 > 1e-9) {
           d1x /= l1, d1y /= l1, d2x /= l2, d2y /= l2;
           const cr = d1x * d2y - d1y * d2x;
           if (Math.abs(cr) > 0.02) {
             const t = ((q1[0] - p1[0]) * d2y - (q1[1] - p1[1]) * d2x) / cr;
             const xx = p1[0] + d1x * t, xy = p1[1] + d1y * t;
-            if (Math.hypot(xx - p1[0], xy - p1[1]) < 6 * pitch + 1e-9) {
+            if (hyp(xx - p1[0], xy - p1[1]) < 6 * pitch + 1e-9) {
               V[V.length - 1] = [xx, xy, p1[2], p1[3], p1[4]];
               run.shift();
             }
-          } else if (Math.hypot(q1[0] - p1[0], q1[1] - p1[1]) > 1e-6) {
-            const jog = Math.hypot(q1[0] - p1[0], q1[1] - p1[1]), ta = Math.min(jog, 0.45 * l1), tb = Math.min(jog, 0.45 * l2);
+          } else if (hyp(q1[0] - p1[0], q1[1] - p1[1]) > 1e-6) {
+            const jog = hyp(q1[0] - p1[0], q1[1] - p1[1]), ta = Math.min(jog, 0.45 * l1), tb = Math.min(jog, 0.45 * l2);
             V[V.length - 1] = [p1[0] - d1x * ta, p1[1] - d1y * ta, p1[2], p1[3], p1[4]];
             run[0] = [q1[0] + d2x * tb, q1[1] + d2y * tb, q1[2], q1[3], q1[4]];
           } else run.shift();
@@ -187,11 +188,11 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   const endOn = (V: V[], end: 0 | 1, cx: number, cy: number, ax: [number, number]): [number, number] | null => {
     const v = V[end ? V.length - 1 : 0], o = V[end ? V.length - 2 : 1];
     const dx = v[0] - o[0], dy = v[1] - o[1], cr = dx * ax[1] - dy * ax[0];
-    if (Math.abs(cr) < 0.2 * Math.hypot(dx, dy)) return null;
+    if (Math.abs(cr) < 0.2 * hyp(dx, dy)) return null;
     const t = ((cx - o[0]) * ax[1] - (cy - o[1]) * ax[0]) / cr;
-    return t > 0.3 && Math.abs(t - 1) * Math.hypot(dx, dy) < 3 * pitch ? [o[0] + dx * t, o[1] + dy * t] : null;
+    return t > 0.3 && Math.abs(t - 1) * hyp(dx, dy) < 3 * pitch ? [o[0] + dx * t, o[1] + dy * t] : null;
   };
-  const AX: [number, number][] = [0, 1, 2, 3].map((q) => [Math.cos((q * Math.PI) / 4), Math.sin((q * Math.PI) / 4)]);
+  const AX: [number, number][] = [0, 1, 2, 3].map((q) => [DIRS8[q][0], DIRS8[q][1]]);
   const axisOf = new Map<number, [number, number]>();
   /** per station, the point its axis passes through */
   const originOf = new Map<number, [number, number]>();
@@ -286,13 +287,13 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     const dots: [number, number][] = [];
     if (off.length && (on.length || off.length > 1)) hooks.push(k);
     for (const [, , px, py] of off) {
-      if (dots.some((d) => Math.hypot(d[0] - px, d[1] - py) < 0.5 * pitch)) continue;
+      if (dots.some((d) => hyp(d[0] - px, d[1] - py) < 0.5 * pitch)) continue;
       dots.push([px, py]);
       pills.push([px, py, px, py, 0]);
       pillOf.push(k);
       let bq = -1, bd = Infinity;
       centres.forEach((c, q) => {
-        const d = Math.hypot(c[0] - px, c[1] - py);
+        const d = hyp(c[0] - px, c[1] - py);
         if (d < bd) (bd = d), (bq = q);
       });
       if (bq >= 0) passages.push([centres[bq][0], centres[bq][1], px, py]);
@@ -329,7 +330,7 @@ function crossesAny(ribs: { r: Ribbon }[], x0: number, y0: number, x1: number, y
       if (Math.max(p[j], p[j + 2]) < lx || Math.min(p[j], p[j + 2]) > hx || Math.max(p[j + 1], p[j + 3]) < ly || Math.min(p[j + 1], p[j + 3]) > hy) continue;
       const d1 = side(x0, y0, x1, y1, p[j], p[j + 1]), d2 = side(x0, y0, x1, y1, p[j + 2], p[j + 3]);
       // a ribbon running along the segment does not cross it
-      if (Math.abs(d1 - d2) < 0.2 * Math.hypot(x1 - x0, y1 - y0) * Math.hypot(p[j + 2] - p[j], p[j + 3] - p[j + 1])) continue;
+      if (Math.abs(d1 - d2) < 0.2 * hyp(x1 - x0, y1 - y0) * hyp(p[j + 2] - p[j], p[j + 3] - p[j + 1])) continue;
       const d3 = side(p[j], p[j + 1], p[j + 2], p[j + 3], x0, y0), d4 = side(p[j], p[j + 1], p[j + 2], p[j + 3], x1, y1);
       if ((d1 > 0) !== (d2 > 0) && (d3 > 0) !== (d4 > 0)) return true;
     }
@@ -346,7 +347,7 @@ const CURVE_SAMPLES = 8;
 function filleted(V: V[], R0: number, out: Ribbon, RS = R0): Float64Array | null {
   const P: V[] = [], src: number[] = [];
   V.forEach((v, i) => {
-    if (!P.length || Math.hypot(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v), src.push(i);
+    if (!P.length || hyp(v[0] - P[P.length - 1][0], v[1] - P[P.length - 1][1]) > 1e-9) P.push(v), src.push(i);
   });
   if (P.length < 2) return null;
   const cmd: number[] = [];
@@ -363,15 +364,16 @@ function filleted(V: V[], R0: number, out: Ribbon, RS = R0): Float64Array | null
   at(P[0][0], P[0][1], 0);
   for (let i = 1; i < P.length - 1; i++) {
     let ax = P[i][0] - P[i - 1][0], ay = P[i][1] - P[i - 1][1], bx = P[i + 1][0] - P[i][0], by = P[i + 1][1] - P[i][1];
-    const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+    const la = hyp(ax, ay), lb = hyp(bx, by);
     ax /= la, ay /= la, bx /= lb, by /= lb;
-    const th = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
+    const sn = ax * by - ay * bx, cs = ax * bx + ay * by, th = atan2(sn, cs);
     if (Math.abs(th) < Math.PI / 180) {
       at(P[i][0], P[i][1], i);
       continue;
     }
     const r = (P[i][4] >= 0 ? RS : R0) + P[i][3] + (th > 0 ? -P[i][2] : P[i][2]);
-    const t = Math.min(Math.max(0, r) * Math.tan(Math.abs(th) / 2), 0.49 * la, 0.49 * lb);
+    // tan(|th| / 2) from the unit vectors' sine and cosine
+    const t = Math.min(Math.max(0, r) * (cs > -1 + 1e-12 ? Math.abs(sn) / (1 + cs) : 1e16), 0.49 * la, 0.49 * lb);
     const x0 = P[i][0] - ax * t, y0 = P[i][1] - ay * t, x2 = P[i][0] + bx * t, y2 = P[i][1] + by * t;
     path.lineTo(x0, y0);
     path.quadraticCurveTo(P[i][0], P[i][1], x2, y2);
@@ -392,13 +394,13 @@ function stopOn(r: Ribbon, i0: number, i1: number, cx: number, cy: number, ax: [
   let best: [number, number] | null = null, bd = Infinity, near: [number, number] = [cx, cy], nd = Infinity;
   for (let j = 0; j < r.vi.length; j++) {
     if (r.vi[j] < i0 || r.vi[j] > i1) continue;
-    const s0 = side(j), dc = Math.hypot(r.pts[j * 2] - cx, r.pts[j * 2 + 1] - cy);
+    const s0 = side(j), dc = hyp(r.pts[j * 2] - cx, r.pts[j * 2 + 1] - cy);
     if (dc < nd) (nd = dc), (near = [r.pts[j * 2], r.pts[j * 2 + 1]]);
     if (j + 1 >= r.vi.length || r.vi[j + 1] > i1) continue;
     const s1 = side(j + 1);
     if ((s0 > 0) === (s1 > 0) && s0 !== 0) continue;
     const f = s0 === s1 ? 0 : s0 / (s0 - s1), px = r.pts[j * 2] + (r.pts[j * 2 + 2] - r.pts[j * 2]) * f, py = r.pts[j * 2 + 1] + (r.pts[j * 2 + 3] - r.pts[j * 2 + 1]) * f;
-    const d = Math.hypot(px - cx, py - cy);
+    const d = hyp(px - cx, py - cy);
     if (d < bd) (bd = d), (best = [px, py]);
   }
   // a crossing much farther off than the ribbon's nearest point is another stretch of it
@@ -524,5 +526,5 @@ export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: nu
 function segDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
   const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
-  return Math.hypot(px - ax - dx * t, py - ay - dy * t);
+  return hyp(px - ax - dx * t, py - ay - dy * t);
 }

@@ -11,6 +11,7 @@ import { BoxGrid } from "../map/labelLayout";
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout } from "./layout";
 import { PILL_OUTLINE, PILL_R, type Drawing } from "./draw";
+import { hyp, pow } from "./fmath";
 
 /** px between a pill's outline and its name */
 const GAP_PX = 3;
@@ -23,7 +24,7 @@ const LIFT_MAX_PX = 32;
 /** a name keeps this many pitches, plus a px, from a line's middle (the casing's half width) */
 const CLEAR = 0.5;
 /** the zoom levels, a pitch in CSS px: BASE times STEP to the powers LO to HI */
-const LEVEL_BASE = 7, LEVEL_STEP = 2 ** 0.25, LEVEL_LO = -3, LEVEL_HI = 12;
+const LEVEL_BASE = 7, LEVEL_STEP = pow(2, 0.25), LEVEL_LO = -3, LEVEL_HI = 12;
 /** a name's box is this many times the font size tall, and a second line adds this many */
 export const NAME_LINE = 1.2, NAME_LINE2 = 1.05;
 /** a name over two lines costs this much more than on one, and the second distance this much more */
@@ -125,9 +126,9 @@ function segHits(x0: number, y0: number, x1: number, y1: number, b: ArrayLike<nu
 const ptSeg = (px: number, py: number, x0: number, y0: number, x1: number, y1: number) => {
   const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
   const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
-  return Math.hypot(x0 + dx * t - px, y0 + dy * t - py);
+  return hyp(x0 + dx * t - px, y0 + dy * t - py);
 };
-const ptBox = (px: number, py: number, b: ArrayLike<number>) => Math.hypot(Math.max(b[0] - px, 0, px - b[2]), Math.max(b[1] - py, 0, py - b[3]));
+const ptBox = (px: number, py: number, b: ArrayLike<number>) => hyp(Math.max(b[0] - px, 0, px - b[2]), Math.max(b[1] - py, 0, py - b[3]));
 /** the distance from a segment to box b */
 export function segBoxDist(x0: number, y0: number, x1: number, y1: number, b: ArrayLike<number>): number {
   if (segHits(x0, y0, x1, y1, b)) return 0;
@@ -229,7 +230,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
       // the leg's direction: toward the bend, or end to end
       const a = li === 0 ? 0 : bend, b = li === 0 ? (bend >= 0 ? bend : nv - 1) : nv - 1;
       let dx = v[b * 2] - v[a * 2], dy = v[b * 2 + 1] - v[a * 2 + 1];
-      const l = Math.hypot(dx, dy);
+      const l = hyp(dx, dy);
       if (l < 1e-9) return;
       (dx /= l), (dy /= l);
       const nx = -dy, ny = dx;
@@ -259,7 +260,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
   const cands: Cand[][] = Array.from({ length: n }, () => []);
   for (const k of order) {
     for (const pi of pillsOf[k]) {
-      const p = d.pills[pi], r = R + p[4], ex = p[2] - p[0], ey = p[3] - p[1], el = Math.hypot(ex, ey);
+      const p = d.pills[pi], r = R + p[4], ex = p[2] - p[0], ey = p[3] - p[1], el = hyp(ex, ey);
       const axx = el > 1e-9 ? ex / el : 0, axy = el > 1e-9 ? ey / el : 0;
       for (let dir = 0; dir < 8; dir++) {
         const [cx, cy] = DIR8[dir];
@@ -290,7 +291,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
   const T = [0, 0, 0, 0];
   for (let lv = LEVEL_LO; lv <= LEVEL_HI; lv++) {
     tick?.((lv - LEVEL_LO) / (LEVEL_HI - LEVEL_LO + 1));
-    const P = LEVEL_BASE * LEVEL_STEP ** lv, s = P / pitch, boxes = new BoxGrid();
+    const P = LEVEL_BASE * pow(LEVEL_STEP, lv), s = P / pitch, boxes = new BoxGrid();
     const clear = CLEAR * pitch + 1 / s;
     const now = new Map<number, Cand>();
     const node: number[] = [], xs: number[] = [], ys: number[] = [], dirs: number[] = [], slides: number[] = [], lifts: number[] = [], wraps: number[] = [];

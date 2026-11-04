@@ -4,15 +4,19 @@
 // station added (a new complex halfway along a hop) moves the median complex less than a tenth of a hop
 // on the rebuild, which starts from the last layout; no line doubles back at a station (T-2243: drawn
 // turning 180 degrees where the real line turns less than 90, or 135 where it turns less than 45; 135
-// where it turns 45 to 90 is counted as a sharp corner, not failed).
-//   node trainworld/checks/t2160-diagram-layout.mjs [nyc,tyo] [r2]      (about a minute; `r2` lays out with
-//   round 2's options instead of the game's; figures in artifacts/trainworld/t2160/check.json)
+// where it turns 45 to 90 is counted as a sharp corner, not failed). `nyc-game` and `tyo-game` are the graphs
+// the game itself builds from those saves, captured by diagram-game.mjs (T-2255): Node lays them out exactly
+// as the page's worker does, which is checked against the capture, and their time is the page worker's.
+//   node trainworld/checks/diagram-game.mjs http://localhost:6194/      (first, after any change to the layout)
+//   node trainworld/checks/t2160-diagram-layout.mjs [nyc,tyo,nyc-game,tyo-game] [r2]      (about two minutes;
+//   `r2` lays out with round 2's options instead of the game's; figures in artifacts/trainworld/t2160/check.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { openSave, layoutApp } from './diagram-saves.mjs';
+import { gameGraph, splitCity, bitsHash } from './diagram-game.mjs';
 import { ARTIFACTS } from './lib.mjs';
 
 const L = await layoutApp();
-const which = (process.argv[2] ?? 'nyc,tyo').split(',');
+const which = (process.argv[2] ?? 'nyc,tyo,nyc-game,tyo-game').split(',');
 const OPTS = process.argv[3] === 'r2' ? L.LAYOUT_R2 : L.LAYOUT;
 const LIMIT = { nyc: 5000, tyo: 8000 };
 let failed = 0;
@@ -82,14 +86,31 @@ function withStation(g) {
 }
 
 for (const name of which) {
-  const s = openSave(name);
-  const { g } = s.graph();
-  const names = [...g.key].map((k) => s.name(k) ?? '');
-  s.api.free();
+  const [city, game] = splitCity(name);
+  let g, names, cap = null;
+  if (game) {
+    cap = gameGraph(city);
+    if (!cap) { console.log(`SKIP ${name}: no capture; run diagram-game.mjs first`); continue; }
+    ({ g } = cap);
+    names = cap.text;
+  } else {
+    const s = openSave(city);
+    ({ g } = s.graph());
+    names = [...g.key].map((k) => s.name(k) ?? '');
+    s.api.free();
+  }
   L.layoutDiagram(g, OPTS); // the code compiled
   const t0 = performance.now();
   const lay = L.layoutDiagram(g, OPTS);
-  const ms = performance.now() - t0;
+  let ms = performance.now() - t0, phases = lay.ms;
+  // the game's graph: the page's own time, when the capture is of this layout code
+  const pageOk = cap && cap.fresh && OPTS === L.LAYOUT;
+  if (cap && !pageOk) console.log(`INFO ${name}: the capture (${cap.captured}) is older than the layout code${cap.graphFresh ? '' : ' and graph.ts'}; times are Node's, and the page is not compared; run diagram-game.mjs`);
+  if (pageOk) {
+    const same = bitsHash(lay.x, lay.y) === cap.page.places;
+    line(same, `${name}: Node lays out the game's graph exactly as the page's worker did`, same ? '' : 'places differ: some engine-dependent maths in the layout (diagram/fmath.ts)');
+    (ms = cap.page.ms.total), (phases = cap.page.ms);
+  }
   // every drawn stretch: each piece's segments between vertices
   let worst = 0, stretches = 0;
   for (const p of lay.pieces) for (let i = 2; i < p.verts.length; i += 2) {
@@ -124,11 +145,11 @@ for (const name of which) {
   const size = [ext(lay.x) / lay.pu, ext(lay.y) / lay.pu];
   const turns = doublings(g, lay), back = turns.filter((b) => b[4]), sharp = turns.filter((b) => !b[4]);
   const backAt = [...new Set(back.map((b) => names[b[1]]))], sharpAt = [...new Set(sharp.map((b) => names[b[1]]))];
-  const r = { complexes: n, ms: Math.round(ms), phases: lay.ms, pieces: lay.pieces.length, straight: lay.straight, bent: lay.bent, worstDeg: worst, stretches, close, worstShare, rebuildMs: Math.round(ms2), movedMedian: median(moved), movedP90: [...moved].sort((a, b) => a - b)[Math.floor(n * 0.9)], movedBMedian: median(movedB), sizePitches: size.map(Math.round), doublings: turns.map(([li, k, d, rl]) => `${names[k]} (${g.lines[li].colour}) ${d} drawn, ${rl} real`) };
+  const r = { complexes: n, ms: Math.round(ms), phases, pieces: lay.pieces.length, straight: lay.straight, bent: lay.bent, worstDeg: worst, stretches, close, worstShare, rebuildMs: Math.round(ms2), movedMedian: median(moved), movedP90: [...moved].sort((a, b) => a - b)[Math.floor(n * 0.9)], movedBMedian: median(movedB), sizePitches: size.map(Math.round), doublings: turns.map(([li, k, d, rl]) => `${names[k]} (${g.lines[li].colour}) ${d} drawn, ${rl} real`) };
   out[name] = r;
   line(worst <= 0.5, `${name}: every drawn stretch within 0.5 degrees of 0/45/90`, `worst ${worst.toFixed(3)} of ${stretches} stretches; ${r.pieces} pieces, ${r.straight} straight, ${r.bent} with one bend`);
   line(close === 0, `${name}: no stations closer than their half widths plus half a hop`, `${close} pairs closer; the closest at ${worstShare.toFixed(2)} of its distance`);
-  line(ms < LIMIT[name], `${name}: laid out in under ${LIMIT[name] / 1000} s`, `${(ms / 1000).toFixed(2)} s (A ${(lay.ms.a / 1000).toFixed(2)}, B ${(lay.ms.b / 1000).toFixed(2)}, routing ${(lay.ms.route / 1000).toFixed(2)}, order ${(lay.ms.order / 1000).toFixed(2)}); ${n} complexes; ${size.map(Math.round).join(' x ')} pitches across`);
+  line(ms < LIMIT[city], `${name}: laid out in under ${LIMIT[city] / 1000} s${pageOk ? " in the page's worker" : ''}`, `${(ms / 1000).toFixed(2)} s (A ${(phases.a / 1000).toFixed(2)}, B ${(phases.b / 1000).toFixed(2)}, routing ${(phases.route / 1000).toFixed(2)}, order ${(phases.order / 1000).toFixed(2)}); ${n} complexes; ${size.map(Math.round).join(' x ')} pitches across`);
   line(back.length === 0, `${name}: no line doubles back at a station`, `${back.length} lines at ${backAt.length} stations${backAt.length ? ': ' + backAt.slice(0, 6).join(', ') : ''}; sharp corners (135 drawn, 45 to 90 real) ${sharp.length} at ${sharpAt.length}${sharpAt.length ? ': ' + sharpAt.slice(0, 6).join(', ') : ''}`);
   line(r.movedMedian < 0.1, `${name}: one added station moves the median complex under a tenth of a hop`, `median ${r.movedMedian.toFixed(3)} hops (B ${r.movedBMedian.toFixed(3)}), 90th percentile ${r.movedP90.toFixed(3)}; rebuild ${(ms2 / 1000).toFixed(2)} s`);
 }
