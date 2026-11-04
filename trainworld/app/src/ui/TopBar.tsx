@@ -16,7 +16,8 @@ import { BusyTag } from "./BusyTag";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
-import { splitTip } from "../game/splitTip";
+import { splitTable, splitTip } from "../game/splitTip";
+import { lengthsOf, wantLengths } from "../game/zoneLengths";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 import { world } from "../game/world";
@@ -260,6 +261,10 @@ function SaveNotice() {
 }
 
 export function TopBar() {
+  // T-2365: the zone's km by mode for the split's hover, asked for while the pointer is on it
+  const [over, setOver] = useState(false);
+  const dv = demandView.value, zone = !worldView.value && viewedZone.value ? activeCity.value : null;
+  useEffect(() => { if (over && zone) wantLengths(zone); }, [over, zone, dv?.version, dv?.round, shownDay.value]);
   const w = world.value;
   if (!w) return <header id="topbar" />;
   // T-1110: zoomed far out the bar names the world and sums every city, as the Cities tab's first row does
@@ -284,7 +289,8 @@ export function TopBar() {
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name="World" tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
       <div class="split">
-        <div data-tip={total ? worldShareTip(total, where, note) : splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
+        <div data-tip={total ? worldShareTip(total, where, note) : splitTable(where, known, rides, city ? lengthsOf(city.id) : null, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}
+          onPointerEnter={() => setOver(true)} onPointerLeave={() => setOver(false)}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />

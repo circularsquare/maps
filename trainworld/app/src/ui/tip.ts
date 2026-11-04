@@ -21,23 +21,94 @@ export const tipBullet = (letter: string, colour: string) => `\u0002${letter.rep
  * a station dot between each two and at both ends; where the dots would leave a cell less than
  * `STOP_CELL_PX`, only the end dots stay and the cells are thinner pills. */
 const STRIP = /^\u0004(\|?)([^\u0005]*)\u0005$/;
-export const tipStrip = (colours: string[], stops = false) => `\u0004${stops ? "|" : ""}${colours.join(";")}\u0005`;
+/** T-2365: with `weights`, each cell as wide as its weight (a mode split); cells weighing 0 are left out */
+export const tipStrip = (colours: string[], stops = false, weights?: number[]) =>
+  `\u0004${stops ? "|" : ""}${colours.map((c, k) => (weights ? `${c}@${weights[k] > 0 ? weights[k] : 0}` : c)).join(";")}\u0005`;
 const STOP_CELL_PX = 6;
 /** a station dot and the gaps either side of it, and the widest a hover's text runs (`.tool-tag`) */
 const STOP_DOT_PX = 9, TAG_TEXT_PX = 328;
-function stripCells(d: HTMLElement, colours: string[], stops: boolean) {
+function stripCells(d: HTMLElement, cells: string[], stops: boolean) {
   const dot = () => { const s = document.createElement("b"); d.append(s); };
   // a strip with a dot at every station widens its hover to fit them while it can
-  const want = colours.length * (STOP_CELL_PX + STOP_DOT_PX) + STOP_DOT_PX;
+  const want = cells.length * (STOP_CELL_PX + STOP_DOT_PX) + STOP_DOT_PX;
   if (stops && want <= TAG_TEXT_PX) d.style.width = `${want}px`;
   if (stops) dot();
-  colours.forEach((c, k) => {
+  cells.forEach((c, k) => {
+    const [colour, weight] = c.split("@");
+    if (weight !== undefined && !(Number(weight) > 0)) return;
     if (stops && k > 0) dot();
     const cell = document.createElement("i");
-    cell.style.background = c;
+    cell.style.background = colour;
+    if (weight !== undefined) cell.style.flex = `${weight} 1 0`;
     d.append(cell);
   });
   if (stops) dot();
+}
+
+/** T-2365: a line of its own in a hover's text drawn as a small table, `rows` of cells, each cell
+ * drawn as a line is (text, bullets, a strip); `tipSpan` makes a cell take several columns. The first
+ * column is left-aligned, the rest right; a row of one empty cell is a small gap. */
+const GRID = /^\u0006([^\u0006]*)\u0006$/;
+export const tipGrid = (rows: string[][]) => `\u0006${rows.map((r) => r.join("\u001f")).join("\u001e")}\u0006`;
+const SPAN = /^\u0007(\d+)/;
+export const tipSpan = (n: number, cell: string) => `\u0007${n}${cell}`;
+function gridCells(d: HTMLElement, text: string) {
+  const rows = text.split("\u001e").map((r) => r.split("\u001f").map((c) => {
+    const m = SPAN.exec(c);
+    return m ? { span: Number(m[1]), text: c.slice(m[0].length) } : { span: 1, text: c };
+  }));
+  const cols = Math.max(1, ...rows.map((r) => r.reduce((s, c) => s + c.span, 0)));
+  d.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+  for (const r of rows) {
+    if (r.length === 1 && !r[0].text) {
+      const gap = document.createElement("div");
+      gap.className = "tip-gap";
+      gap.style.gridColumn = `span ${cols}`;
+      d.append(gap);
+      continue;
+    }
+    r.forEach((c, k) => {
+      const cell = lineEl(c.text);
+      if (k > 0) cell.classList.add("num");
+      if (c.span > 1) cell.style.gridColumn = `span ${c.span}`;
+      d.append(cell);
+    });
+  }
+}
+
+/** One line of a hover's text (or a table's cell): a strip, a table, or text with bullets. A bullet
+ * with no letter is a plain square of its colour. */
+function lineEl(line: string): HTMLElement {
+  const d = document.createElement("div");
+  const strip = STRIP.exec(line);
+  if (strip) {
+    d.className = strip[1] ? "tip-strip stops" : "tip-strip";
+    stripCells(d, strip[2].split(";"), !!strip[1]);
+    return d;
+  }
+  const grid = GRID.exec(line);
+  if (grid) {
+    d.className = "tip-grid";
+    gridCells(d, grid[1]);
+    return d;
+  }
+  const parts = line.split(BULLET);
+  for (let i = 0; i < parts.length; i += 3) {
+    if (parts[i]) appendWithKeys(d, parts[i]);
+    if (i + 2 >= parts.length) break;
+    const s = document.createElement(parts[i + 1] ? "span" : "i");
+    if (parts[i + 1]) {
+      s.className = "chip sm tip-chip";
+      s.style.setProperty("--c", parts[i + 2]);
+      s.style.setProperty("--ct", inkOn(parts[i + 2]));
+      s.textContent = parts[i + 1];
+    } else {
+      s.className = "tip-swatch";
+      s.style.background = parts[i + 2];
+    }
+    d.append(s);
+  }
+  return d;
 }
 /** T-2334: a stops strip too narrow for a dot at every station keeps the end ones (`STOP_CELL_PX`) */
 function fitStrips(tag: HTMLElement) {
@@ -118,27 +189,7 @@ export function startTips() {
     const fresh = t !== text;
     if (fresh) {
       text = t;
-      tag.replaceChildren(...t.split("\n").map((line) => {
-        const d = document.createElement("div");
-        const strip = STRIP.exec(line);
-        if (strip) {
-          d.className = strip[1] ? "tip-strip stops" : "tip-strip";
-          stripCells(d, strip[2].split(";"), !!strip[1]);
-          return d;
-        }
-        const parts = line.split(BULLET);
-        for (let i = 0; i < parts.length; i += 3) {
-          if (parts[i]) appendWithKeys(d, parts[i]);
-          if (i + 2 >= parts.length) break;
-          const s = document.createElement("span");
-          s.className = "chip sm tip-chip";
-          s.style.setProperty("--c", parts[i + 2]);
-          s.style.setProperty("--ct", inkOn(parts[i + 2]));
-          s.textContent = parts[i + 1];
-          d.append(s);
-        }
-        return d;
-      }));
+      tag.replaceChildren(...t.split("\n").map(lineEl));
     }
     if (tag.style.display === "none") raise();
     tag.style.display = "";

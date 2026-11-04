@@ -53,6 +53,10 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   too); no `title` attribute is written anywhere, and one met under the pointer (MapLibre's
   controls) is turned into the tag first. The tag is a manual popover, shown again each time it
   appears, so it sits over a modal dialog such as the saved games panel [T-1656].
+  Besides text, a hover's line can be a chip (`tipBullet`; with no letter a plain 8 px square of its colour), a
+  thin strip of colour cells (`tipStrip`; equal cells, or as wide as their weights for a split [T-2365]) or a small
+  table (`tipGrid`, T-2365): the first column left, the rest right, a cell can span columns (`tipSpan`), a strip in
+  it at least 130 px wide, a row of one empty cell a 4 px gap.
 - **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles,
   inter-city and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
@@ -125,13 +129,19 @@ wide so a longer date moves nothing [T-1868].
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of trips per day, not people [T-342].
-  The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]); the
-  bar's hover gives all three shares with their counts and the total [T-1107]. The player's job is
+  The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]). The
+  bar's hover [T-1107, T-2365, `splitTable` in `game/splitTip.ts`; the city view's Train share row has the same] is a
+  title, "Per day in New York", then a small table: **Trip count**, a strip of the modes as wide as their trips and
+  the total ("68.2M"); **Distance**, the same by the trips' straight-line km ("516.5M km", from the zone's trips by
+  length, asked for while the pointer is on the bar and left out until they come); then heads "Train", "Walking",
+  "Driving" (and "No route" where its share shows as 0.1% or more), each with a square of its colour, over the
+  shares of the trip count and of the distance. The bar, its number, the goal ticks and the star stay on the share
+  of trips (T-2364). The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
-  **The zone's goals** [T-1437, `ui/GoalTicks.tsx`; on the city panel's "Within" bar only, not on
+  **The zone's goals** [T-1437, `ui/GoalTicks.tsx`; on the city panel's "Trips within" bar only, not on
   this one, T-1551] are at train shares of 10%, 20%, 30% and 40% (`GOAL_SHARES`); only 10% and 20%
   are drawn, as ticks over the bar [T-2145], laid over it so nothing moves, 1 px past the bar at either side: a reached goal's tick is 2 px in
   the text colour, an unreached one 1 px muted; under the 10% tick is the star, 7 px, filled in the

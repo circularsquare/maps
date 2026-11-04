@@ -10,6 +10,7 @@ import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
 import type { DriveLevel } from "./drives";
+import type { TripLengths } from "./tripLengths";
 import type { Fares } from "./fareCurve";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
@@ -490,6 +491,7 @@ export interface DemandQueries {
   intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
   intercityStation(stationId: string, members?: string[]): Promise<IntercityStation | null>;
   drives(): Promise<DriveLevel[] | null>;
+  tripLengths(zone?: CityId): Promise<TripLengths | null>;
 }
 
 let queries: DemandQueries | null = null;
@@ -502,6 +504,8 @@ export function setDemandQueries(q: DemandQueries) {
 export const cityCells = (city?: CityId): Promise<CityCells | null> => queries?.cityCells(city) ?? Promise.resolve(null);
 /** T-1435: the focused zone's drive arcs for the solve shown (game/drives.ts); null while unknown. */
 export const driveArcs = (): Promise<DriveLevel[] | null> => queries?.drives() ?? Promise.resolve(null);
+/** T-2365: a zone's local trips a day by length on the day shown (game/tripLengths.ts); null while unknown. */
+export const zoneTripLengths = (zone?: CityId): Promise<TripLengths | null> => queries?.tripLengths(zone) ?? Promise.resolve(null);
 /** Local trip legs a day per cell by mode, for the solve `demandView` shows. One 4.9 MB answer in
  * New York. `purpose`: one purpose's legs only (T-158); longer trips have no local legs (zeros).
  * `city`: a nearby zone's (T-276), not cached; null while that zone is not in the solve shown. */

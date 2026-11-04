@@ -43,8 +43,9 @@ nearby zones', a selection's own, the zone bubbles zoomed out) is pulled towards
 of its trips, under either colouring (`towardNone` in `game/palette.ts`: 214 in the dark theme, 182 in the light,
 lighter and flatter than the mix grey; a bubble of only such trips is that grey). Bars and swatches give them a
 fourth part after car, "No route", in the same grey (`--none-grey`, `modeColours().none`), shown only where there
-are any: the hover bars, the top bar's and the Cities tab's train share bars (their hover adds "No route 0.8%
-(86k)"), the city view's Within bar, a selection's rows and the trip explorer. No legend entry.
+are any: the hover bars, the top bar's and the Cities tab's train share bars (the Cities tab's hover adds "No route 0.8%
+(86k)", the top bar's a No route column where it shows as 0.1% or more), the city view's Trips within bar and trip
+length graph, a selection's rows and the trip explorer. No legend entry.
 
 **Purpose colours** [T-142, T-143, T-192]: work blue, school and university blue-green,
 social/leisure purple, shopping/errands red, airport olive, medical pink, attractions orange [T-263] (CIEDE2000 22 apart at the
@@ -448,7 +449,7 @@ inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, an ico
 that moves the camera to its centre and clears the selection [T-220, T-1134], then the city view's
 own rows ([ui-inspectors.md](ui-inspectors.md#the-city-view), T-1438), then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
-"Within Philadelphia" (train, walking, car and, where there are any, No route from the open zone's split, the
-last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
-red), then the three places with the most trips, name and trips a day. No table of every place.
+"Trips within Philadelphia" [T-2365] (train, walking, car and, where there are any, No route from the open zone's split, the
+last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, train blue, car
+red and planes in the muted grey), then both by trip length as a graph ([ui-inspectors.md](ui-inspectors.md#the-city-view)), then the three places with the most trips, name and trips a day. No table of every place.
 For a zone with stations the city view goes on with its boardings by purpose and its top lines and stations.

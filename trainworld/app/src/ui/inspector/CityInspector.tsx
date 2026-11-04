@@ -19,6 +19,7 @@ import { builtCities } from "../../game/worldTotals";
 import { GoalTicks } from "../GoalTicks";
 import { CityFigures, CityNetwork } from "./CityDetails";
 import { HomeButton } from "./HomeButton";
+import { TripGraph } from "./TripGraph";
 
 /** `note`: a second line for the part's hover */
 type Part = { name: string; n: number; cls: string; note?: string };
@@ -47,18 +48,20 @@ export function CityInspector({ id }: { id: string }) {
   // T-421: a zone still loading (its bar on the map) has no figures to state yet
   const market = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
   if (!city) return null;
-  const byPlace = new Map<number, { all: number; rail: number }>();
+  const byPlace = new Map<number, { all: number; rail: number; air: number }>();
   const c = market?.corridors;
   if (c) eachCorridor(c, (from, to) => from !== to && (from === city.place || to === city.place), (j, v) => {
     const other = c.table.from[j] === city.place ? c.table.to[j] : c.table.from[j];
-    const p = byPlace.get(other) ?? { all: 0, rail: 0 };
+    const p = byPlace.get(other) ?? { all: 0, rail: 0, air: 0 };
     p.all += v.trips;
     p.rail += v.rail;
+    p.air += v.air;
     byPlace.set(other, p);
   });
   const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
   const interAll = places.reduce((s, [, p]) => s + p.all, 0);
   const interRail = places.reduce((s, [, p]) => s + p.rail, 0);
+  const interAir = places.reduce((s, [, p]) => s + p.air, 0);
   // T-378: both ways, as the corridors count them
   const elsewhere = 2 * (market?.elsewhere?.[city.place] ?? 0);
   // within the zone: the open zone's modelled split, or only a count for a zone not opened
@@ -94,7 +97,7 @@ export function CityInspector({ id }: { id: string }) {
           <ul class="rows">
             {lm ? (
               <TripsBar
-                label={`Within ${city.name}`}
+                label={`Trips within ${city.name}`}
                 what={`trips within ${city.name}`}
                 parts={[
                   { name: "Train", n: lm.train, cls: "seg-train" },
@@ -107,7 +110,7 @@ export function CityInspector({ id }: { id: string }) {
             ) : localAll > 0 ? (
               <li class="zone-trips">
                 <div class="line">
-                  <span class="grow">Within {city.name}</span>
+                  <span class="grow">Trips within {city.name}</span>
                   <span class="val" data-tip={`${exact(localAll)} trips ${shownDayPhrase.value} within ${city.name}`}>{count(localAll)}</span>
                 </div>
               </li>
@@ -118,10 +121,12 @@ export function CityInspector({ id }: { id: string }) {
               what={`inter-city trips to and from ${city.name}`}
               parts={[
                 { name: "Train", n: interRail, cls: "seg-train" },
-                { name: "Car or plane", n: Math.max(0, interAll - interRail), cls: "seg-drive" },
+                { name: "Car", n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
+                ...(interAir > 0 ? [{ name: "Plane", n: interAir, cls: "seg-other" }] : []),
               ]}
             />
           </ul>
+          {lm && <TripGraph city={city} />}
           {top.length > 0 && (
             <ul class="rows">
               <li class="muted small">Top destinations</li>

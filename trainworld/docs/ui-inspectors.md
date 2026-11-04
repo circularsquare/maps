@@ -23,15 +23,31 @@ game is opened ([ui-panels.md](ui-panels.md#start-menu)); it is filled while the
 it then clears the home. Hover "Set as home" with "Start here whenever you open this game" under it, or when home
 "Home" with "You start here whenever you open this game". One home per game, kept in the save (`home`). Under the
 title, rows: **Train share** (the
-zone's, as the top bar gives it; hover the split with counts), and for a zone with a built station
+zone's, as the top bar gives it; hover the top bar's split hover, [ui-panels.md](ui-panels.md#the-top-bar)), and for a zone with a built station
 **Stations** (built ones, the Cities tab's count), **Lines** (lines with a stop in the zone) and
 **Train trips** ("12.3M/day", the Cities tab's Trips figure for the day shown, hover the whole figure
 "per weekday" and so on) [T-1892], then **Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
 tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
 star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
-[T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): within
-the zone, with the goal ticks over its mode bar (a grey No route part where some trips have no way, T-2215), to other places, the top three
-destinations. Then, for a zone with a built station: **By purpose**, the purpose bar of the
+[T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): **Trips
+within New York**, with the goal ticks over its mode bar (a grey No route part where some trips have no way, T-2215), **To
+other places** (train, car, and planes in the muted grey). Then **By trip length** [T-2365,
+`TripGraph.tsx`], for a zone with its own split: both rows' trips together by straight-line length, a log axis
+from 0.125 km to the farthest trips (at least 100 km), labelled at powers of ten, then fives, then twos where they
+fit ("0.5", "1", "2", "5", "10", "20", "50", "100", "1,000 km"). Each mode is stacked as trips a day per decade of
+length, so a colour's area is its trips: train at the bottom, then walking, driving, No route, planes. The zone's
+own trips go by the demand kernel's bins (`trip_lengths_day`, notes/T-2365.md), its trips to other places by the
+distance between the two places' first zones' centres (their car trips with driving, their rail with the train);
+the trips of 1,000 km and more are drawn together over 1,000 to 2,000 km. Each bin's trips are spread evenly over
+its width on the axis and blurred by a normal curve of 0.05 decades, reflected at the axis's ends, so the curves
+are smooth and keep every trip. Fills at 80% (90% in the dark theme), each layer's top a 1.3 px line in its colour
+behind a thin gap in the panel's background (only where the layer is over 0.6 px thick), faint vertical lines at
+the labels, no y axis. Under the plot a 10 px strip of each length's mode shares, where the length has trips. Hover
+(the plot or the strip): the length band under the pointer shaded, and its trips ("Trips of 10-15 km per day",
+then each mode's share and count, No route and Plane only where the band has some, "All", and "To other places"
+where some are), the bands breaking at 0.5, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500 and
+1,000 km ("Trips under 0.5 km per day", "Trips over 1,000 km per day"). Then the top three destinations. Then, for
+a zone with a built station: **By purpose**, the purpose bar of the
 inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
 **Top lines**, the five lines with most boardings at the zone's stations today
 (bullet, name, count with hover; the header's right says "boardings today"); **Top stations**, the five complexes (or lone stations) in the
