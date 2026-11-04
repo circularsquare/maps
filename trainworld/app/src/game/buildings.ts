@@ -116,13 +116,49 @@ export function withBuildingLinks<T extends readonly (readonly [StationId, Stati
 // ---------------------------------------------------------------- the tool's shapes (T-2218)
 // Pack units throughout: the frame is conformal, so its angles are true ones.
 
-/** The smallest rectangle round these stations' boxes, turned to the longest platform, OFFER_PAD_M
- * out from them: four corners, flat, its first edge along that platform. Null for no platform. */
+/** Platforms whose directions are within this count as parallel when choosing the offered
+ * rectangle's direction (T-2363). */
+export const PARALLEL_RAD = (15 * Math.PI) / 180;
+
+/** A platform's direction taken as if it were straight: from its drawn line's first point to its
+ * last, or its heading when it has no line. */
+export function platformChord(s: Geo): number {
+  const l = s.line;
+  if (l && l.length >= 4) {
+    const dx = l[l.length - 2] - l[0], dy = l[l.length - 1] - l[1];
+    if (dx || dy) return Math.atan2(dy, dx);
+  }
+  return s.heading;
+}
+
+/** How far apart two directions are as lines (either way along them), radians, 0 to pi / 2. */
+function lineGap(a: number, b: number): number {
+  const r = (((a - b) % Math.PI) + Math.PI) % Math.PI;
+  return Math.min(r, Math.PI - r);
+}
+
+/** The offered rectangle's direction (T-2363): each platform's chord gathers those within PARALLEL_RAD
+ * of it; the largest gathering wins, the longer total platform length on a tie, and the rectangle
+ * follows the longest platform in it. */
+export function offeredDirection(plat: readonly Geo[]): number {
+  const dir = plat.map(platformChord);
+  let best: number[] = [], bestN = -1, bestLen = -1;
+  for (let i = 0; i < plat.length; i++) {
+    const g: number[] = [];
+    let len = 0;
+    for (let j = 0; j < plat.length; j++) if (lineGap(dir[i], dir[j]) <= PARALLEL_RAD) { g.push(j); len += plat[j].length; }
+    if (g.length > bestN || (g.length === bestN && len > bestLen)) [best, bestN, bestLen] = [g, g.length, len];
+  }
+  return dir[best.reduce((a, b) => (plat[b].length > plat[a].length ? b : a))];
+}
+
+/** The smallest rectangle round these stations' boxes along `offeredDirection`, OFFER_PAD_M out from
+ * them: four corners, flat, its first edge along that direction. Null for no platform. */
 export function offeredRectangle(stations: readonly Geo[], kAt: (y: number) => number = () => 1): number[] | null {
   const plat = stations.filter((s) => s.length > 0);
   if (!plat.length) return null;
-  const lead = plat.reduce((a, b) => (b.length > a.length ? b : a));
-  const c = Math.cos(lead.heading), s = Math.sin(lead.heading);
+  const a = offeredDirection(plat);
+  const c = Math.cos(a), s = Math.sin(a);
   let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity, my = 0;
   for (const st of plat) {
     const p = platformOffsets(st, kAt(st.y));

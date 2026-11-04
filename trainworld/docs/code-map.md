@@ -101,7 +101,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `buildings.ts` (station buildings' members, the stations whose platform touches
   the outline, and the pairs that join them into one complex, T-2217; the tool's rectangle offered
-  and snaps, T-2218), `buildingView.ts` (the buildings as panels and the map read them: members by
+  and snaps, T-2218, its direction T-2363, check `checks/t2363-building-offer.mjs`), `buildingView.ts` (the buildings as panels and the map read them: members by
   building, a complex's building, the one under a point, the tool's `buildingDraft`, T-2218), `complexBuilder.ts` (`ComplexBuilder`: the same complexes kept up to date from the
   stations that changed, the world's in `complexView.ts` and the clock worker's snapshot in
   `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or

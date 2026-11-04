@@ -679,8 +679,11 @@ stations are constructed.
 
 - **The tool** starts only from the station building icon at the end of the upgrade row (no Build tab
   button or key). On a complex with no building it opens on the smallest rectangle round the
-  complex's boxes, turned to its longest platform, 15 m out from them (`offeredRectangle`); on one
-  with a building it opens that outline to edit. Its hover: "Station building", what it does (it joins
+  complex's boxes, 15 m out from them, its first edge along one platform taken as straight (its
+  drawn line's first point to its last): of the platforms within 15° of each platform's direction,
+  the largest such group wins, the longer total platform length on a tie, and the rectangle follows
+  the longest platform in it (`offeredRectangle`, T-2363); on one with a building it opens that
+  outline to edit. Its hover: "Station building", what it does (it joins
   the stations it touches; "Changing trains inside it feels 1 minute shorter." and "Waiting in it for a train feels 20%
   shorter.", T-2220, T-2276), "Costs
   $2,000 per m²" ($186 per sq ft with US units), then "Click, then change its outline on the map",
