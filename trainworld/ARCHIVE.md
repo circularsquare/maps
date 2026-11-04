@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2238 A placement that took 2 s (2026-11-03, agent t2238): it cut line 11's edge, so every line's bands and 92 lines' strokes were made again; now only lines it can change. Place 5 1,723 to 369-446 ms (others 228-308, machine loaded). notes/T-2238.md
+- T-2230 Road tiles installed faster (2026-11-03, agent t2238): a tile adds only its own crossings, on edges from the grid, without `repriced`; off-ground track keeps none. Real save 0.9-6.5 to 0.0-0.9 ms a tile (worst 2.3); t1929 8/8, same prices. notes/T-2238.md
+
 - T-2213 Islands I1, land parts in the packs (2026-11-03, agent t2213): `part` per cell and header `parts` in all 3,138 packs (roads and private ways join land, ferries none; open parts on one landmass one part); 14 test packs' islands and joins 53/53, top 60 interior parts all real islands. notes/T-2213.md.
 - T-2243 Diagram lines doubling back (2026-11-03, agent t2243): the snap flipped short hops (Seibu-Shinjuku south of Shinjuku); B, routing and separation fixed to avoid folds. Lines turning 135+ where real under 90: New York 56 to 0, Tokyo 33 to 0; t2160 counts them. notes/T-2243.md
 - T-2244 Diagram hooks (2026-11-03, agent t2243): the three hooks were folding lines; gone with T-2243, plus a station corner's radius 3 strokes (Atlantic Av on the game's graph). Hooks: New York 2 to 0, Tokyo 1 to 0; t2161 counts them. notes/T-2243.md
