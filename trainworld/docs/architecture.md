@@ -225,7 +225,9 @@ Web first, so it can be shared as a link.
   cluster [T-756, "Each population on its reach"]. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
-  service change or change to the built stations (one on no line included) [T-1368] goes to every worker; a worker takes a newer one between populations. Messages:
+  service change or change to the built stations (one on no line included) [T-1368] reaches the
+  page; stations on no line only reach zones, outside the network solved [T-2410], and a changed
+  network goes to every worker, which takes a newer one between populations. Messages:
   `workers/demandProtocol.ts`; results land in `game/demand.ts`. A sums worker with no WASM
   (`workers/demandSums.worker.ts`) adds up what the main thread used to [T-1208, T-1210]: each
   published round's views of the four kinds of day, applied on the main thread in the order published,

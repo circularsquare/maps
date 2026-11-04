@@ -200,6 +200,8 @@ export const intercityDemand = computed<IntercityDemand | null>(() => demandByDa
 /** A solve is running for a newer network than the one `demandView` shows (or, T-328, the shown
  * figures are the cache's and the same network is being solved again). */
 export const demandUpdating = signal(false);
+/** T-2409: the game minute (world time) of the oldest edit no final result covers yet, or null */
+export const demandBehindFrom = signal<number | null>(null);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });

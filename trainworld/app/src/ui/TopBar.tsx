@@ -209,7 +209,7 @@ function Speed() {
   }, [open]);
   const chosen = clock.chosenRate.value / SPEEDS[0];
   const held = capped && chosen > DEMAND_CAP;
-  const heldTip = (title: string) => (held ? `${times(chosen)} (capped at ${times(DEMAND_CAP)} while updating demand)` : title);
+  const heldTip = (title: string) => (held ? `${times(chosen)} (time capped at ${times(DEMAND_CAP)} while updating demand)` : title);
   const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
     const on = running && (custom !== null ? 2 : speed) === i;
     return (

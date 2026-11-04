@@ -331,8 +331,11 @@ read through its old route nodes, carried to the new network's by line and stati
 puts its lines, their stations and those zones' views in (never the market's own figures) and
 clears the lines' pending label ("constructing..." or "loading...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
-within that time (the stations, then the line) is solved locally too; the whole solves follow as
-above and replace everything.
+within that time is solved locally too; the whole solves follow as above and replace everything.
+**Stations on no line** (T-2410, `?perfOff=alone` off) are left out of the network demand solves
+(`serviceFromSnapshot`; passages with an end among them too), so building stations ahead of their
+line changes no key and starts no solve; their positions still reach zones, whose packs open ahead
+of the line. The line then comes as one edit against the last solve, solved locally like any other.
 **The market's pairs in a window** (T-1735, notes/T-1735.md, `?perfOff=window` off): when the
 edit's longest changed run (between a line's first and last changed stops: a stop added or dropped,
 or a hop's run time past 1%, trains an hour not counted; the edit diffed against the network the
@@ -349,6 +352,16 @@ in one pass a period at the crowding the touched cities' last round ended on, th
 trains' room with them; the old market part gives the same pairs' old loads in one pass at its last
 crowding (`window_loads`), and the result's loads are the frozen market's less those plus the
 window's, each purpose to its own. A shorter edit (a city line) leaves the whole market frozen.
+**An edit's solve runs to its end** (T-1734, notes/T-1734.md, `?perfOff=firm` off): from when the
+page sends a solve without the barrier until its final is shown, a newer network (an edit, a zone
+opened or at another level) is held on the page, not sent, and goes the moment that final shows,
+solved locally on top of it. The one gap is those 8 s before `whole`: a network that arrives in them
+goes at once, and one held since before them waits for the final, so edits coming faster than the
+local solve never keep a whole solve from starting. A worker replaced meanwhile still re-solves at
+once. So building steadily, a whole solve lands about every local solve plus whole solve (a line a
+minute on 2 workers: all of China every 60-90 s, all of Japan every 19-26 minutes), and an edit made during one
+shows its figures when it has landed and the local solve on top is done. A solve with the barrier (a load, a zone just opened)
+is still cut short by a newer network.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the zone in view's is one of them (T-402): that cluster alone first, through every round, each

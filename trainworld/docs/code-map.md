@@ -75,7 +75,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   snapshot signal and the edit functions), `ui.ts` (tab, selection, display settings, theme),
   `cloneNames.ts` (a copied line's name and symbol, T-1872), `northUp.ts` (which end of a line its
   diagram puts on top, T-1894).
-- Time: `clock.ts`, `lineFigures.ts` (the 4x clock cap while demand updates, T-1665), `editCap.ts` (which edits cap it, T-1803; `checks/t1803-cap.mjs`), `localTime.ts` (each region's local time and the local time in view, T-309),
+- Time: `clock.ts`, `lineFigures.ts` (the 4x clock cap while demand updates, T-1665, and while a new line has no riders, T-2409), `editCap.ts` (which edits cap it, T-1803; `checks/t1803-cap.mjs`), `localTime.ts` (each region's local time and the local time in view, T-309),
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `attractions.ts` (the world's attractions from `attractions.json`, made by `pipeline/attractions_json.py`, and their visits on a kind of day, T-263),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;

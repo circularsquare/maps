@@ -181,7 +181,12 @@ wide so a longer date moves nothing [T-1868].
   game's load solves the zone in view on its own first, which says "Trips here being recomputed…"
   [T-2045]; it goes once the zone in view's figures are final, though other zones still solve
   [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The clock cap (below) follows the same rule, so the cap lifts at that
-  moment too. While capped, the tag's hover says "Clock capped at 4x while updating demand". While the
+  moment too. While capped, the tag's hover says "Time capped at 4x while updating demand".
+  **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
+  day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while
+  some figures in play still miss it: a line reading "constructing..." or "loading...", or the zone
+  in view recomputing [T-2409]. Lines whose local result is in count for nothing: they are within
+  about 2% of the whole solve [T-1733, T-2410]. While the
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
   "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar
@@ -258,6 +263,9 @@ wide so a longer date moves nothing [T-1868].
   the clock runs no faster than 4x [T-1665, `game/lineFigures.ts`]: the chosen speed's button is dimmed,
   its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
   the cap lifts by itself when demand is final; the status tag shows all the while it holds [T-1790].
+  A new line with no riders yet ("constructing...", running trains that cost and earn nothing) holds
+  the cap wherever it is, in view or not, until its riders land [T-2409]. The cap is never lower
+  than 4x (Anita, 2026-11-04).
   Demand that stopped (its red alert) caps nothing. **A quiet edit does not cap** [T-1803,
   `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
   less than half of what it was (counted from before the edits since demand last settled, in trains

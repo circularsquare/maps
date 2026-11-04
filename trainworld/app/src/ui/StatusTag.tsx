@@ -2,7 +2,9 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandScope, demandSolving, demandView, focusZones, refiningZone, viewRecomputing } from "../game/demand";
+import { computed } from "@preact/signals";
+import { demandBehindFrom, demandScope, demandSolving, demandView, focusZones, refiningZone, viewRecomputing } from "../game/demand";
+import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
@@ -10,6 +12,15 @@ import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFa
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting } from "../map/commuterView";
+
+/** T-2409: whole game days since the oldest edit no final covers, while figures in play still miss it
+ * (a line with no riders or old ones, or the zone in view recomputing); 0 otherwise. A computed, so
+ * the tag renders when the count changes, not each game minute. */
+const behindDays = computed(() => {
+  const from = demandBehindFrom.value;
+  if (from === null || !(linesPending.value.size || viewRecomputing.value)) return 0;
+  return Math.max(0, Math.floor((clock.minute.value - from) / 1440));
+});
 
 function recomputing(): string {
   // T-2045: the zone in view being solved alone ahead of a load's whole solve
@@ -37,6 +48,7 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? "Loading data…"
+    : behindDays.value >= 1 ? (behindDays.value === 1 ? "Calculation 1 day behind" : `Calculation ${count(behindDays.value)} days behind`)
     // T-1851: every case where the trips in view are rough, early, from before an edit or on their way
     // say one thing; once the zone in view is final, other zones still solving show nothing
     // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
@@ -46,7 +58,7 @@ export function StatusTag() {
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
     : "");
-  const tip = [base, clock.capped.value ? `Clock capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
+  const tip = [base, clock.capped.value ? `Time capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
   return <div class="status-tag" role="status" data-tip={tip}>
     {!loadFailure.value && !zoneFailure && <BunnyTrain small />}
     <span class="demand-busy">{busy}</span>

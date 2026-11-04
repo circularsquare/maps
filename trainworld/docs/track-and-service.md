@@ -1227,8 +1227,8 @@ resources. Count schedules then settle their derived rates against changed round
 the worker sends service to demand (T-104). A city's demand is dirtied only by service
 changes: a line's stops or frequency, a station-to-station time moving 5 s or more, or the fare
 curve changing. Fare edits use the same debounce and supersede older solves. Drawing
-track no line uses never wakes demand. Demand starts after edits pause (~0.5 s), and a newer edit
-cancels a running solve. An edit is refused only for problems it adds (radius, ramps, crossings,
+track no line uses, or building stations no line stops at yet (T-2410), never wakes demand. Demand starts after edits pause (~0.5 s); a newer edit waits
+for a running edit's solve to finish (T-1734, docs/demand-runtime.md) and cuts a load's solve short. An edit is refused only for problems it adds (radius, ramps, crossings,
 platforms, ground over water); problems already there, say from a newer water mask, do not block
 edits nearby. Every edit returns its inverse, which is undo (for blueprint edits; 6.4). Blueprint
 track wakes neither profiles nor demand until it is constructed, except a line planned over it,

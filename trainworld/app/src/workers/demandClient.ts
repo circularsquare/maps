@@ -38,6 +38,7 @@ import {
   demandStep,
   demandScope,
   demandUpdating,
+  demandBehindFrom,
   demandView,
   setDemandQueries,
   type CellModes,
@@ -66,6 +67,7 @@ import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
+import { clock } from "../game/clock";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
 import { perfOff, perfTry } from "../perfFlags";
@@ -203,7 +205,13 @@ interface Service {
   lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
+  /** T-2410: stations no line stops at, left out of `stations`: their positions only reach zones
+   * (opened ahead of a line on them); never in the key */
+  alone?: [number, number][];
 }
+
+/** A service's key: what demand reads of it (not `alone`). */
+const keyOf = (svc: Service) => JSON.stringify({ ...svc, alone: undefined });
 
 /** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
 type Result = Extract<FromDemand, { kind: "result" }> & { corridorDay?: [number, number] };
@@ -341,10 +349,13 @@ interface Solve {
    * whether `whole` went */
   localPlans?: number[];
   wholeSent?: boolean;
-  /** T-1790: local cluster results shown so far */
+  /** T-1790: local cluster results shown so far, and (T-1734) when the first was */
   localShown?: number;
+  localShownAt?: number;
   /** solved with the round barrier (estimates by round); else after an edit, counted by stage */
   barrier?: boolean;
+  /** T-1734: networks held back while it ran, and when the first came */
+  heldFrom?: number;
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -477,13 +488,20 @@ function solveEstimate(stops: number | null, toFinal: boolean | "all" = false): 
   return ms;
 }
 
+/** T-2410: a station no line stops at changes no figure, so building stations ahead of their line
+ * starts no solve (it would set every population on its network, and the line after it could not be
+ * solved locally) */
 function serviceFromSnapshot(s: NetworkSnapshot): Service {
+  const used = new Set(perfOff("alone") ? s.stations.map((st) => String(st.id)) : s.lines.flatMap((l) => l.stops.map(String)));
+  const alone = s.stations.filter((st) => !used.has(String(st.id))).map((st): [number, number] => [st.x, st.y]);
+  const passages = (s.passages ?? []).filter(([a, b]) => used.has(String(a)) && used.has(String(b)));
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
-    stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
+    stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
     lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
-    ...(s.passages?.length ? { passages: s.passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
+    ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
+    ...(alone.length ? { alone } : {}),
   };
 }
 
@@ -611,6 +629,8 @@ class DemandClient {
   /** a service waiting for the pool to start */
   private waiting: { svc: Service; arrivedAt: number } | null = null;
   private lastKey = "";
+  /** T-2409: the edits' networks no final has covered yet, oldest first, with the game minute each came */
+  private uncovered: { svc: Service; minute: number }[] = [];
   readonly log: Solve[] = [];
   private nextQuery = 1;
   private pendingQueries = new Map<number, { left: number; replies: Reply[]; done: (r: Reply[]) => void }>();
@@ -873,6 +893,8 @@ class DemandClient {
 
   private settleIdle() {
     demandUpdating.value = false; // a waiting network stays: it is solved when the view or a station needs a pack
+    this.uncovered = [];
+    demandBehindFrom.value = null;
     this.job = null;
     clearInterval(this.progressTick);
     this.progressTick = 0;
@@ -899,7 +921,7 @@ class DemandClient {
    * footprint failed counts as reached. */
   private reachedSet(svc: Service | null): Set<CityId> | null {
     if (!svc) return null;
-    if (svc.stations.length === 0) return new Set();
+    if (svc.stations.length === 0 && !svc.alone?.length) return new Set();
     let reached = this.reach.get(svc);
     if (reached) return reached;
     const { ll, near } = this.nearOf(svc);
@@ -928,10 +950,10 @@ class DemandClient {
   private nearOf(svc: Service): { ll: Float64Array; near: CityId[]; markets: CityId[] } {
     let o = this.nearZones.get(svc);
     if (!o) {
-      const f = makeFrame(svc.frame), ll = new Float64Array(2 * svc.stations.length);
+      const f = makeFrame(svc.frame), at = [...svc.stations.map((s): [number, number] => [s.x, s.y]), ...(svc.alone ?? [])], ll = new Float64Array(2 * at.length);
       const markets = new Set<CityId>();
-      svc.stations.forEach((s, k) => {
-        const [lon, lat] = f.toLonLat(s.x, s.y);
+      at.forEach(([x, y], k) => {
+        const [lon, lat] = f.toLonLat(x, y);
         ll[2 * k] = lon; ll[2 * k + 1] = lat;
         for (const id of marketZonesNear(lon, lat)) markets.add(id);
       });
@@ -1642,9 +1664,13 @@ class DemandClient {
 
   /** Send the waiting service when everything it needs is open; or solve again for a city opened
    * since the newest solve (the viewed city after a pan). */
-  private flush() {
+  private flush(force = false) {
     if (this.status.startsWith("failed")) return;
     if (this.idle()) return this.settleIdle();
+    if (!force && this.firm()) {
+      if (this.waiting && this.cur) this.cur.heldFrom ??= performance.now();
+      return;
+    }
     // T-325: a solve waits for, and covers, the cities stations reach and those opened in every
     // worker; a zone opened bare is never waited for and starts no solve
     if (this.waiting) {
@@ -1664,6 +1690,20 @@ class DemandClient {
     // (T-1223: or opened again at another level since)
     const coarse = new Set(s.coarse ?? []);
     if ([...need].some((id) => !s.cities.includes(id) || coarse.has(id) !== (this.levelPosted.get(id) === LOD_COARSE)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
+  }
+
+  /**
+   * T-1734: an edit's solve runs to its end: from when it is sent until its final lands, a newer
+   * network (an edit, a zone opened or at another level) waits, and is sent the moment the final
+   * is shown, solved locally on top of it. The one gap is the moment after the local result shows,
+   * until `whole` goes (`EDIT_SETTLE_MS`), so an edit right after another (a line, then its trains)
+   * is solved locally too; a network held back since before that waits for the final, or edits faster than
+   * the local solve would never let a whole solve start.
+   */
+  private firm(): boolean {
+    const s = this.cur;
+    if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || perfOff("firm")) return false;
+    return !(s.localShownAt !== undefined && !s.wholeSent && (s.heldFrom === undefined || s.heldFrom > s.localShownAt));
   }
 
   /**
@@ -2095,7 +2135,7 @@ class DemandClient {
     const cm = m && m.version === s.version && (m.day === 0 || !perfOff("daySums")) ? await m.p : null;
     // T-1539: the network the loaded save worked out, so the next load of it shows this at once
     const lk = this.loadKey;
-    const ahead = lk?.snapshot && lk.svcKey === JSON.stringify(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
+    const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
     // the result shown at load is the same one, unless it can now add its bubbles or its network
     if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
@@ -2321,7 +2361,7 @@ class DemandClient {
     // the replacement composed its market once from every pack, where the others may still hold
     // parts of older compositions (their corridor tables then differ): all make theirs afresh
     this.freshParts = true;
-    if (this.waiting) this.flush();
+    if (this.waiting) this.flush(true);
     else if (this.cur) this.dispatch(this.cur.svc, performance.now());
     else this.respawn.clear();
   }
@@ -2880,10 +2920,21 @@ class DemandClient {
     this.checkHold();
   }
 
+  /** T-2410: `svc`'s stations on no line are `alone` now; whether that changed them (its reach is
+   * then worked out again) */
+  private setAlone(svc: Service, alone: Service["alone"]): boolean {
+    if (JSON.stringify(svc.alone ?? []) === JSON.stringify(alone ?? [])) return false;
+    if (alone) svc.alone = alone;
+    else delete svc.alone;
+    this.reach.delete(svc);
+    this.nearZones.delete(svc);
+    return true;
+  }
+
   /** A network from the clock worker (T-025), or the test network. */
   submitNetwork(snap: NetworkSnapshot) {
     let svc = serviceFromSnapshot(snap);
-    const key = JSON.stringify(svc);
+    const key = keyOf(svc);
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
@@ -2895,16 +2946,25 @@ class DemandClient {
     if (gameLoad && this.loadKey && !this.loadKey.svcKey) Object.assign(this.loadKey, { svcKey: key, snapshot: snap });
     else if (gameLoad) this.loadKey = null;
     if (early) this.aheadLog = { at: performance.now(), same: early.key === key, shown: !!early.shown };
-    if (early?.key === key) svc = early.svc;
-    else if (early?.shown) this.dropEarly(early.svc);
+    if (early?.key === key) {
+      this.setAlone(early.svc, svc.alone);
+      svc = early.svc;
+    } else if (early?.shown) this.dropEarly(early.svc);
     if (key === this.lastKey) {
-      // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's
+      // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's; stations
+      // built or removed on no line may reach other zones (T-2410)
+      const held = this.latest();
+      if (held && held !== svc && this.setAlone(held, svc.alone)) this.ensure();
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
       this.checkHold();
       return;
     }
     this.lastKey = key;
     this.lastStir = performance.now();
+    if (gameLoad) this.uncovered = [];
+    else this.uncovered.push({ svc, minute: clock.minute.peek() });
+    if (this.uncovered.length > 50) this.uncovered.splice(1, 1); // (the oldest's minute is what counts)
+    demandBehindFrom.value = this.uncovered[0]?.minute ?? null;
     // T-2045: the focus pool is a game load's; an edit's network ends it
     if (!gameLoad) this.endFocus();
     else if (svc.stations.length) this.startFocus();
@@ -2953,7 +3013,7 @@ class DemandClient {
       const stored = await readDemandAhead<StoredDemand>(key);
       if (!stored?.ahead || stored.ahead.save !== key || this.loadKey?.key !== key || !gameLoadArmed()) return;
       const svc = serviceFromSnapshot(stored.ahead.snapshot);
-      this.early = { svc, key: JSON.stringify(svc) };
+      this.early = { svc, key: keyOf(svc) };
       await this.tryCache(svc, stored);
     })();
   }
@@ -3890,6 +3950,11 @@ class DemandClient {
       if (final && s === this.cur) this.endFocus();
       if (final) {
         s.refinedAt = performance.now();
+        const k = this.uncovered.findIndex((u) => u.svc === s.svc);
+        if (k >= 0) {
+          this.uncovered.splice(0, k + 1);
+          demandBehindFrom.value = this.uncovered[0]?.minute ?? null;
+        }
         // an older solve's figures are never read again (its svc and layout are); a few MB each
         for (const o of this.log) if (o.version < s.version) (o.results = []), (o.byRound = []), (o.clusterRes = undefined);
         this.aheadP.clear();
@@ -3899,6 +3964,8 @@ class DemandClient {
           demandSolving.value = null;
           this.unsettled = null;
           setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
+          // T-1734: what was held back meanwhile
+          if (s.barrier === false) this.flush();
         }
         const t = this.timeRest;
         if (t?.version === s.version) {
@@ -4029,7 +4096,10 @@ class DemandClient {
         }
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
         linesSettled(fresh.map((l) => l.id));
-        if (c.local) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
+        if (c.local) {
+          s.localShownAt ??= performance.now();
+          setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
+        }
         // T-1790: an edit's step 2 (the whole solve) once every local result is in
         if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) {
           demandStep.value = { done: 1, of: 2 };

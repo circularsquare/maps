@@ -55,6 +55,8 @@
 //   window   an edit's local solve leaves the whole market frozen (T-1735)
 //   noise    a cluster whose run times and trains an hour moved within noise of what it solved on
 //            is solved again, not kept (before T-1862)
+//   firm     an edit cancels the edit's solve still running (before T-1734)
+//   alone    stations no line stops at are in demand's network, so building them starts a solve (before T-2410)
 //   strokeCache the track and line strokes drawn every frame, not kept in a texture between
 //            camera and network changes (before T-1638; `renderer.strokeCache` switches it live)
 //   strokeCull every stroke chunk drawn, also those off the view (before T-1639; `renderer.strokeCull`)
@@ -96,7 +98,7 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "fans" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "fans" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "firm" | "alone" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
 /** T-2347 mockup, off unless the URL asks: `?capInside=1` draws the Traffic view's red marks (track at
  * capacity, crowded trains) as a see-through red stripe down the middle of the line's own colour, in
